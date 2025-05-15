@@ -1,0 +1,26 @@
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+!.yarn/cache
+.pnp.*
+
+# Built artifacts
+dist
+
+# Coverage reports
+coverage
+
+# Dependency directory
+node_modules
+
+# Editors
+.idea
+*.iml
+
+# OS metadata
+.DS_Store
+Thumbs.db

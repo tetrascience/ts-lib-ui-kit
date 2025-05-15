@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  pull_request:
+    branches:
+      - main
+      - "release/**"
+
+jobs:
+  ci:
+    uses: tetrascience/ts-data-insights-ci-cd-common/.github/workflows/npm_package_ci.yml@main
+
+    secrets:
+      JFROG_ARTIFACTORY_NPM_VIRTUAL_URL: '${{ secrets.JFROG_ARTIFACTORY_NPM_VIRTUAL_URL }}'
+      JFROG_ARTIFACTORY_READ_NPM_AUTH: '${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}'
+

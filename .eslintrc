@@ -1,0 +1,43 @@
+{
+	"root": true,
+	"overrides": [
+		{
+			"files": ["**/*.js"],
+			"parserOptions": {
+				"ecmaVersion": 11
+			}
+		},
+		{
+			"files": ["**/*.ts"],
+			"parser": "@typescript-eslint/parser",
+			"plugins": ["@typescript-eslint"],
+			"parserOptions": {
+				"project": "tsconfig.json"
+			},
+			"extends": ["plugin:@typescript-eslint/recommended"],
+			"rules": {
+				"@typescript-eslint/no-explicit-any": "off",
+				"@typescript-eslint/no-floating-promises": ["error", {"ignoreIIFE": true}],
+				"@typescript-eslint/ban-ts-comment": ["error", {"ts-ignore": "allow-with-description"}],
+				"@typescript-eslint/ban-types": "warn",
+				"@typescript-eslint/no-misused-promises": ["error", {"checksVoidReturn": false}],
+				"@typescript-eslint/no-unused-vars": ["warn", {"argsIgnorePattern": "^_", "varsIgnorePattern": "^_"}]
+			}
+		},
+		{
+			"files": ["**/*.test.ts"],
+			"rules": {
+				"@typescript-eslint/ban-ts-comment": [
+					"error",
+					{"ts-ignore": "allow-with-description", "ts-expect-error": "allow-with-description"}
+				]
+			}
+		}
+	],
+	"ignorePatterns": ["dist/**/*"],
+	"extends": ["eslint:recommended", "prettier"],
+	"env": {
+		"node": true,
+		"es6": true
+	}
+}

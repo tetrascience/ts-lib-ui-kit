@@ -84,4 +84,4 @@ The project uses path aliases for cleaner imports:
 
 ## License
 
-Properietary © TetraScience
+Proprietary © TetraScience

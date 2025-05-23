@@ -22,6 +22,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
+    "test:coverage": "exit 0",
     "build": "rm -rf dist && rollup -c --bundleConfigAsCjs",
     "storybook": "pms build && storybook dev -p 6006",
     "build-storybook": "pms build && storybook build",

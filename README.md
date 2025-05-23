@@ -67,7 +67,6 @@ Visit http://localhost:6006 to view the component library in Storybook.
 - `yarn build` - Build for production (using Rollup)
 - `yarn storybook` - Run Storybook development server on port 6006
 - `yarn build-storybook` - Build Storybook for deployment
-- `yarn init-msw` - Initialize Mock Service Worker
 - `yarn prepare` - Set up Husky git hooks
 - `yarn prepublishOnly` - Build the package before publishing
 

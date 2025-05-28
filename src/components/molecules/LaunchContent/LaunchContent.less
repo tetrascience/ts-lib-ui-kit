@@ -1,0 +1,42 @@
+@import '../../../styles/mixins.less';
+
+.launch {
+  &-container {
+    width: 100%;
+  }
+
+  &-header {
+    .flexBetween();
+    margin-bottom: 16px;
+    background-color: var(--grey-100);
+  }
+
+  &-title {
+    .title();
+    .titleText();
+    color: var(--black-900);
+    margin: 0;
+  }
+
+  &-controls {
+    .flexRow();
+    gap: 16px;
+  }
+
+  &-version-container {
+    .flexRow();
+  }
+
+  &-separator {
+    width: 1px;
+    height: 20px;
+    background-color: var(--grey-200);
+  }
+
+  &-toast-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 16px;
+  }
+}

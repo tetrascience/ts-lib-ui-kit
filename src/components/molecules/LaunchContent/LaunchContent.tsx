@@ -14,55 +14,13 @@ export interface LaunchContentProps {
   onVersionChange?: (version: string) => void;
 }
 
-const Container = styled.div``;
-
-const Header = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  background-color: var(--grey-100);
-`;
-
-const Title = styled.h1`
-  color: var(--black-900);
-  font-family: "Inter", sans-serif;
-  font-size: 18px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: 28px;
-  margin: 0;
-`;
-
-const Controls = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-`;
-
-const VersionContainer = styled.div`
-  display: flex;
-  align-items: center;
-`;
-
-const Separator = styled.div`
-  width: 1px;
-  height: 20px;
-  background-color: var(--grey-200);
-`;
+import "./LaunchContent.less";
 
 const defaultInitialCode = `protocolSchema: v3
 name: v3
 description: No description
 config: {}
 steps: []`;
-
-const ToastWrapper = styled.div`
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  margin-bottom: 16px;
-`;
 
 const LaunchContent: React.FC<LaunchContentProps> = ({
   initialCode = defaultInitialCode,
@@ -123,10 +81,10 @@ const LaunchContent: React.FC<LaunchContentProps> = ({
   };
 
   return (
-    <Container>
-      <Header>
-        <Title>Launch</Title>
-        <Controls>
+    <div className="launch-container">
+      <div className="launch-header">
+        <h1 className="launch-title">Launch</h1>
+        <div className="launch-controls">
           <Toggle
             checked={overwriteMode}
             onChange={setOverwriteMode}
@@ -134,8 +92,8 @@ const LaunchContent: React.FC<LaunchContentProps> = ({
             disabled={isDeploying}
           />
 
-          <Separator />
-          <VersionContainer>
+          <div className="launch-separator" />
+          <div className="launch-version-container">
             <Dropdown
               options={versions.map((v) => ({ label: v, value: v }))}
               value={currentVersion}
@@ -144,7 +102,7 @@ const LaunchContent: React.FC<LaunchContentProps> = ({
               size="small"
               disabled={isDeploying}
             />
-          </VersionContainer>
+          </div>
 
           <Button
             variant="primary"
@@ -154,34 +112,34 @@ const LaunchContent: React.FC<LaunchContentProps> = ({
           >
             Deploy
           </Button>
-        </Controls>
-      </Header>
+        </div>
+      </div>
 
       {infoToast && (
-        <ToastWrapper>
+        <div className="launch-toast-wrapper">
           <Toast
             type="info"
             heading="Building Protocol: Status=IN_PROGRESS, Phase=FINALIZING"
           />
-        </ToastWrapper>
+        </div>
       )}
 
       {successToast && (
-        <ToastWrapper>
+        <div className="launch-toast-wrapper">
           <Toast
             type="success"
             heading={`Pipeline visual-pipeline-builder-protocol-${currentVersion}-pipeline deployed successfully! Deployment complete`}
           />
-        </ToastWrapper>
+        </div>
       )}
 
       {errorToast && (
-        <ToastWrapper>
+        <div className="launch-toast-wrapper">
           <Toast
             type="danger"
             heading={`Failed to deploy pipeline visual-pipeline-builder-protocol-${currentVersion}-pipeline. Please try again.`}
           />
-        </ToastWrapper>
+        </div>
       )}
 
       <CodeEditor
@@ -194,7 +152,7 @@ const LaunchContent: React.FC<LaunchContentProps> = ({
         onLaunch={handleLaunch}
         disabled={!overwriteMode}
       />
-    </Container>
+    </div>
   );
 };
 

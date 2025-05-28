@@ -1,0 +1,23 @@
+@import '../../../styles/mixins.less';
+
+.menu {
+  &-container {
+    width: 100%;
+    .cardBox();
+  }
+
+  &-title {
+    .text();
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    color: var(--grey-600);
+    border-bottom: 1px solid var(--grey-200);
+  }
+
+  &-items {
+    display: flex;
+    flex-direction: column;
+  }
+}

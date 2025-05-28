@@ -1,0 +1,82 @@
+@import '../../../styles/mixins.less';
+
+.navbar {
+  &-container {
+    .flexRow();
+    background-color: var(--blue-900);
+    height: 80px;
+    width: 100%;
+    padding: 12px 24px 12px 128px;
+    box-sizing: border-box;
+    color: var(--white-900);
+    gap: 40px;
+  }
+
+  &-section {
+    .flexRow();
+    height: 100%;
+  }
+
+  &-organization-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &-section-title {
+    .title();
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    color: var(--white-900);
+    font-size: 10px;
+    line-height: 16px;
+    letter-spacing: 0.2px;
+  }
+
+  &-first-column {
+    .flexRow();
+    gap: 8px;
+    width: 320px;
+  }
+
+  &-logo-container {
+    .flexCenter();
+  }
+
+  &-default-logo {
+    .flexCenter();
+    border-radius: 4px;
+  }
+
+  &-organization-name {
+    .title();
+    font-size: 14px;
+    line-height: 22px;
+  }
+
+  &-organization-subtext {
+    .text();
+    color: var(--grey-400);
+    font-size: 12px;
+    font-style: italic;
+    font-weight: 500;
+    line-height: 16px;
+  }
+
+  &-project-selector {
+    .flexRow();
+    padding: 6px 0;
+    border-radius: 4px;
+    gap: 8px;
+  }
+
+  &-icon-wrapper {
+    .flexCenter();
+  }
+
+  &-project-name {
+    .title();
+    color: var(--grey-400);
+    font-size: 14px;
+    line-height: 22px;
+  }
+}

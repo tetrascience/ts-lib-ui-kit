@@ -1,0 +1,15 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* Ensure fonts are available in the preview */
+body {
+  /* Add fallback fonts */
+  --font-mono: "IBM Plex Mono", monospace;
+  --font-sans: "Inter", sans-serif;
+
+  font-family: var(--font-sans);
+}
+
+code {
+  font-family: var(--font-mono);
+}

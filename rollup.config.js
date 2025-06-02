@@ -3,13 +3,14 @@ import commonjs from "@rollup/plugin-commonjs";
 import typescript from "rollup-plugin-typescript2";
 import peerDepsExternal from "rollup-plugin-peer-deps-external";
 import postcss from "rollup-plugin-postcss";
+import postcssLess from "postcss-less";
 import { dts } from "rollup-plugin-dts";
 import { terser } from "rollup-plugin-terser";
 import json from "@rollup/plugin-json";
 import pkg from "./package.json" assert { type: "json" };
 
 export default [
-  // JS build (swallow any component .scss imports)
+  // JS build (processes .less and .css)
   {
     input: "src/index.ts",
     output: [
@@ -45,18 +46,19 @@ export default [
         clean:           true,
       }),
       postcss({
-        extensions: [".css", ".scss"],
+        extensions: [".css", ".less"],
         extract:    false,
         inject:     false,
         minimize:   true,
-        use:        ["sass"],
+        use:        ["less"],
+        syntax:     postcssLess,
         autoModules: false,
       }),
       terser({ output: { comments: false }, compress: { drop_console: false } }),
     ],
   },
 
-  // CSS -> single CSS file (dist/index.css)
+  // CSS bundle (only .css)
   {
     input: "src/index.css",
     output: {
@@ -65,10 +67,9 @@ export default [
     },
     plugins: [
       postcss({
-        extensions: [".css", ".scss"],
+        extensions: [".css"],
         extract:    "index.css",
         minimize:   true,
-        use:        ["sass"],
       }),
     ],
   },
@@ -77,7 +78,7 @@ export default [
   {
     input:  "src/index.ts",
     output: { file: "dist/index.d.ts", format: "es" },
-    external:[ /\.scss$/ ],
+    external:[ /\.less$/ ],
     plugins:[ dts() ],
   },
 ];

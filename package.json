@@ -79,6 +79,8 @@
     "husky": "^9.1.7",
     "less": "^4.3.0",
     "less-loader": "^12.3.0",
+    "lint-staged": "^16.1.0",
+    "prettier": "3.2.5",
     "rollup": "^4.41.0",
     "rollup-plugin-dts": "^6.2.1",
     "rollup-plugin-peer-deps-external": "^2.2.4",
@@ -96,6 +98,14 @@
   "eslintConfig": {
     "extends": [
       "plugin:storybook/recommended"
+    ]
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx}": [
+      "eslint --fix"
+    ],
+    "src/**/*.{css,less}": [
+      "prettier --write"
     ]
   },
   "packageManager": "yarn@4.5.0"

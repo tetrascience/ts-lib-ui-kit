@@ -9139,6 +9139,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"postcss-less@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "postcss-less@npm:6.0.0"
+  peerDependencies:
+    postcss: ^8.3.5
+  checksum: 10c0/09869ba66e1340f03d6ffd34cba2721f48d1c4a71314af5b10d8a3cc4f78c15f22da809442bf5e50d04eff2a96389d6a0fdb9f0c20a191945aacfb1747fd47ca
+  languageName: node
+  linkType: hard
+
 "postcss-load-config@npm:^3.0.0":
   version: 3.1.4
   resolution: "postcss-load-config@npm:3.1.4"
@@ -11372,6 +11381,7 @@ __metadata:
     monaco-themes: "npm:^0.4.5"
     plotly.js: "npm:^3.0.1"
     pmswitch: "npm:^1.0.8"
+    postcss-less: "npm:^6.0.0"
     prettier: "npm:3.2.5"
     react: "npm:^18.3.0"
     react-dom: "npm:^18.3.0"

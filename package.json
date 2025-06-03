@@ -27,7 +27,8 @@
     "storybook": "pms build && storybook dev -p 6006",
     "build-storybook": "pms build && storybook build",
     "prepare": "husky",
-    "prepublishOnly": "pms run build"
+    "prepublishOnly": "pms run build",
+    "lint-staged": "lint-staged"
   },
   "dependencies": {
     "@dagrejs/dagre": "^1.1.4",

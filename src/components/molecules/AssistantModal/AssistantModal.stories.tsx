@@ -1,5 +1,5 @@
-import { useState } from "react";
-import AssistantModal from "./AssistantModal";
+import React, { useState } from "react";
+import { AssistantModal } from "./AssistantModal";
 
 export default {
   title: "Molecules/AssistantModal",

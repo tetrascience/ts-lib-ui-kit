@@ -1,6 +1,6 @@
 import React from "react";
 import { Meta, StoryObj } from "@storybook/react";
-import TabGroup from "./TabGroup";
+import { TabGroup } from "./TabGroup";
 
 const meta: Meta<typeof TabGroup> = {
   title: "Molecules/TabGroup",

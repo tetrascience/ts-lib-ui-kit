@@ -1,5 +1,5 @@
+import React from "react";
 import { Meta, StoryObj } from "@storybook/react";
-import styled from "styled-components";
 import { Toast, ToastProps } from "./Toast";
 
 const meta: Meta<ToastProps> = {
@@ -21,12 +21,12 @@ const meta: Meta<ToastProps> = {
 export default meta;
 type Story = StoryObj<ToastProps>;
 
-const ToastContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 400px;
-`;
+const containerStyle: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "16px",
+  width: "400px",
+};
 
 export const Default: Story = {
   args: {
@@ -38,13 +38,13 @@ export const Default: Story = {
 
 export const AllTypes: Story = {
   render: () => (
-    <ToastContainer>
+    <div style={containerStyle}>
       <Toast type="default" heading="Heading" description="Description" />
       <Toast type="info" heading="Heading" description="Description" />
       <Toast type="success" heading="Heading" description="Description" />
       <Toast type="warning" heading="Heading" description="Description" />
       <Toast type="danger" heading="Heading" description="Description" />
-    </ToastContainer>
+    </div>
   ),
 };
 

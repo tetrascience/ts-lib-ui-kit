@@ -1,0 +1,92 @@
+@use "../../../styles/variables.scss";
+
+// Navbar component SCSS file
+.navbar {
+  &__container {
+    display: flex;
+    align-items: center;
+    background-color: var(--blue-900);
+    height: 80px;
+    width: 100%;
+    padding: 12px 24px 12px 128px;
+    box-sizing: border-box;
+    color: var(--white-900);
+    gap: 40px;
+  }
+
+  &__section {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+
+  &__section-title {
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    color: var(--white-900);
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 16px;
+    letter-spacing: 0.2px;
+    font-family: "Inter", sans-serif;
+  }
+
+  &__organization-name {
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 22px;
+    font-family: "Inter", sans-serif;
+  }
+
+  &__organization-subtext {
+    color: var(--grey-400);
+    font-size: 12px;
+    font-style: italic;
+    font-weight: 500;
+    line-height: 16px;
+    font-family: "Inter", sans-serif;
+  }
+
+  &__organization-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__project-selector {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    border-radius: 4px;
+    gap: 8px;
+  }
+
+  &__project-name {
+    font-family: "Inter", sans-serif;
+    color: var(--grey-400);
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 22px;
+  }
+
+  &__icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__first-column {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 320px;
+  }
+}

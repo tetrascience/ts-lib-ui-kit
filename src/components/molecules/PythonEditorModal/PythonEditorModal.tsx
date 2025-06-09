@@ -1,20 +1,15 @@
 import React, { useState } from "react";
-import styled from "styled-components";
 import { CodeEditor } from "@atoms/CodeEditor";
 import { Modal } from "@atoms/Modal";
+import "./PythonEditorModal.scss";
 
-export interface PythonEditorModalProps {
+interface PythonEditorModalProps {
   open: boolean;
   initialValue?: string;
   title?: string;
   onSave: (value: string) => void;
   onCancel: () => void;
 }
-
-const EditorWrapper = styled.div`
-  padding: 12px 0;
-  flex: 1;
-`;
 
 const PythonEditorModal: React.FC<PythonEditorModalProps> = ({
   open,
@@ -39,7 +34,7 @@ const PythonEditorModal: React.FC<PythonEditorModalProps> = ({
       title={title}
       width="600px"
     >
-      <EditorWrapper>
+      <div className="python-editor-modal__editor-wrapper">
         <CodeEditor
           value={code}
           onChange={(v) => setCode(v ?? "")}
@@ -49,9 +44,10 @@ const PythonEditorModal: React.FC<PythonEditorModalProps> = ({
           onCopy={() => {}}
           onLaunch={() => {}}
         />
-      </EditorWrapper>
+      </div>
     </Modal>
   );
 };
 
-export default PythonEditorModal;
+export { PythonEditorModal };
+export type { PythonEditorModalProps };

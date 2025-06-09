@@ -1,2 +1,5 @@
-export type { ButtonControlGroupProps } from "./ButtonControlGroup";
-export { default as ButtonControlGroup } from "./ButtonControlGroup";
+export { ButtonControlGroup } from "./ButtonControlGroup";
+export type {
+  ButtonControlGroupProps,
+  ButtonControlItem,
+} from "./ButtonControlGroup";

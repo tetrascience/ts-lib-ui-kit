@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react";
-import Toggle from "./Toggle";
+import { Toggle } from "./Toggle";
 
 const meta: Meta<typeof Toggle> = {
   title: "Atoms/Toggle",

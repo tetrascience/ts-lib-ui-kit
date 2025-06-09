@@ -1,8 +1,8 @@
 import React, { ChangeEvent, forwardRef } from "react";
-import styled from "styled-components";
 import { Icon, IconName } from "@atoms/Icon";
+import "./Checkbox.scss";
 
-export interface CheckboxProps {
+interface CheckboxProps {
   checked?: boolean;
   onChange?: (checked: boolean) => void;
   disabled?: boolean;
@@ -12,61 +12,11 @@ export interface CheckboxProps {
   noPadding?: boolean;
 }
 
-const CheckboxContainer = styled.label<{
-  disabled?: boolean;
-  noPadding?: boolean;
-}>`
-  display: inline-flex;
-  align-items: center;
-  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
-  opacity: ${(props) => (props.disabled ? 0.6 : 1)};
-  padding: ${(props) => (props.noPadding ? "0" : "12px 16px")};
-  width: 100%;
-`;
-
-const HiddenCheckbox = styled.input.attrs({ type: "checkbox" })`
-  position: absolute;
-  opacity: 0;
-  height: 0;
-  width: 0;
-`;
-
-const StyledCheckbox = styled.div<{ checked?: boolean; disabled?: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  background: ${(props) =>
-    props.checked ? "var(--blue-600)" : "var(--white-900)"};
-  border: 1px solid
-    ${(props) => (props.checked ? "var(--blue-600)" : "var(--grey-300)")};
-  border-radius: 3px;
-  transition: all 0.2s;
-
-  ${(props) =>
-    !props.disabled &&
-    `
-		&:hover {
-			border-color: var(--blue-600);
-		}
-	`}
-`;
-
 const CheckIcon = () => (
   <Icon name={IconName.CHECK_SQUARE} fill="var(--blue-600)" />
 );
 
-const StyledLabel = styled.span`
-  margin-left: 10px;
-  font-family: "Inter", sans-serif;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 20px;
-`;
-
-export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
+const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   (
     {
       checked = false,
@@ -91,28 +41,37 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
       }
     };
 
+    const checkboxClasses = [
+      "checkbox",
+      disabled && "checkbox--disabled",
+      noPadding && "checkbox--no-padding",
+      className,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const boxClasses = ["checkbox__box", checked && "checkbox__box--checked"]
+      .filter(Boolean)
+      .join(" ");
+
     return (
-      <CheckboxContainer
-        className={className}
-        disabled={disabled}
-        noPadding={noPadding}
-        onClick={handleClick}
-      >
-        <HiddenCheckbox
+      <label className={checkboxClasses} onClick={handleClick}>
+        <input
           ref={ref}
+          className="checkbox__input"
+          type="checkbox"
           checked={checked}
           onChange={handleChange}
           disabled={disabled}
         />
-        <StyledCheckbox checked={checked} disabled={disabled}>
-          {checked && <CheckIcon />}
-        </StyledCheckbox>
-        {label && <StyledLabel>{label}</StyledLabel>}
-      </CheckboxContainer>
+        <div className={boxClasses}>{checked && <CheckIcon />}</div>
+        {label && <span className="checkbox__label">{label}</span>}
+      </label>
     );
   }
 );
 
 Checkbox.displayName = "Checkbox";
 
-export default Checkbox;
+export { Checkbox };
+export type { CheckboxProps };

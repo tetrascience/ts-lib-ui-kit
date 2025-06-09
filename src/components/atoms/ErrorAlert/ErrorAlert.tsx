@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { AxiosError } from "axios";
-import styled from "styled-components";
+import "./ErrorAlert.scss";
 
 interface ErrorObject {
   isAxiosError?: boolean;
@@ -8,119 +8,6 @@ interface ErrorObject {
   error?: string;
   detail?: string;
 }
-
-// Styled components to replace Ant Design components
-const AlertContainer = styled.div<{
-  type: "error" | "warning" | "info" | "success";
-}>`
-  width: 100%;
-  padding: 15px;
-  border-radius: 4px;
-  margin-bottom: 16px;
-  background-color: #fff2f0;
-  border: 1px solid #ffccc7;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const AlertHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-`;
-
-const IconContainer = styled.div`
-  color: #ff4d4f;
-  font-size: 18px;
-  margin-right: 12px;
-  display: flex;
-  align-items: center;
-`;
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  color: rgba(0, 0, 0, 0.45);
-  padding: 0;
-  line-height: 1;
-  &:hover {
-    color: rgba(0, 0, 0, 0.75);
-  }
-`;
-
-const TitleContainer = styled.div`
-  font-weight: 500;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  flex-grow: 1;
-`;
-
-const StyledSpace = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-`;
-
-const Paragraph = styled.p`
-  margin: 0;
-  padding: 0;
-  line-height: 1.5;
-`;
-
-const Text = styled.span<{ strong?: boolean; type?: "secondary" | "primary" }>`
-  font-weight: ${(props) => (props.strong ? "600" : "400")};
-  color: ${(props) =>
-    props.type === "secondary" ? "rgba(0, 0, 0, 0.45)" : "inherit"};
-`;
-
-const SecondaryText = styled(Text).attrs({ type: "secondary" })``;
-
-const CollapseContainer = styled.div`
-  margin-left: -15px;
-  margin-right: -15px;
-  margin-bottom: -5px;
-`;
-
-const CollapseHeader = styled.div<{ isActive: boolean }>`
-  padding: 12px 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  user-select: none;
-
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.02);
-  }
-
-  &::after {
-    content: "${(props) => (props.isActive ? "▼" : "▶")}";
-    font-size: 12px;
-    margin-left: 8px;
-  }
-`;
-
-const CollapseContent = styled.div<{ isVisible: boolean }>`
-  padding: ${(props) => (props.isVisible ? "0 16px 12px" : "0 16px")};
-  max-height: ${(props) => (props.isVisible ? "300px" : "0")};
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-`;
-
-const PreContainer = styled.pre`
-  white-space: pre-wrap;
-  word-break: break-all;
-  max-height: 300px;
-  overflow-y: auto;
-  background: #f5f5f5;
-  padding: 10px;
-  border-radius: 4px;
-  margin: 0;
-`;
 
 // Helper function to check if an error is an AxiosError (more robust than instanceof)
 // You might already have axios installed and can use axios.isAxiosError directly.
@@ -135,7 +22,7 @@ function isAxiosError(error: unknown): error is AxiosError {
   );
 }
 
-export interface ErrorAlertProps {
+interface ErrorAlertProps {
   /** The error object to display. Can be Error, AxiosError, string, or any other type. */
   error: unknown;
   /** Optional title for the error alert. Defaults to 'An Error Occurred'. */
@@ -162,13 +49,21 @@ const Collapse = ({
 
   return (
     <div>
-      <CollapseHeader
-        isActive={isExpanded}
+      <div
+        className={`collapse-header ${
+          isExpanded ? "collapse-header--active" : ""
+        }`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {header}
-      </CollapseHeader>
-      <CollapseContent isVisible={isExpanded}>{children}</CollapseContent>
+      </div>
+      <div
+        className={`collapse-content ${
+          isExpanded ? "collapse-content--visible" : ""
+        }`}
+      >
+        {children}
+      </div>
     </div>
   );
 };
@@ -268,33 +163,38 @@ const ErrorAlert: React.FC<ErrorAlertProps> = ({
   // else: message remains 'An unexpected error occurred.'
 
   return (
-    <AlertContainer type="error">
-      <AlertHeader>
-        <TitleContainer>
-          <IconContainer>⚠️</IconContainer>
+    <div className="alert-container alert-container--error">
+      <div className="alert-header">
+        <div className="title-container">
+          <div className="icon-container">⚠️</div>
           {title}
-        </TitleContainer>
-        {onClose && <CloseButton onClick={onClose}>✕</CloseButton>}
-      </AlertHeader>
-      <StyledSpace>
-        <Paragraph>
-          <Text strong>{errorType}:</Text> {message}
-        </Paragraph>
+        </div>
+        {onClose && (
+          <button className="close-button" onClick={onClose}>
+            ✕
+          </button>
+        )}
+      </div>
+      <div className="styled-space">
+        <p className="paragraph">
+          <span className="text text--strong">{errorType}:</span> {message}
+        </p>
         {description && (
-          <Paragraph>
-            <SecondaryText>{description}</SecondaryText>
-          </Paragraph>
+          <p className="paragraph">
+            <span className="text text--secondary">{description}</span>
+          </p>
         )}
         {details && (
-          <CollapseContainer>
+          <div className="collapse-container">
             <Collapse header="Details" defaultExpanded={showDetailsDefault}>
-              <PreContainer>{details}</PreContainer>
+              <pre className="pre-container">{details}</pre>
             </Collapse>
-          </CollapseContainer>
+          </div>
         )}
-      </StyledSpace>
-    </AlertContainer>
+      </div>
+    </div>
   );
 };
 
-export default ErrorAlert;
+export { ErrorAlert };
+export type { ErrorAlertProps };

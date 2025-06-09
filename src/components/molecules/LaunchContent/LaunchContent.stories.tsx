@@ -8,13 +8,6 @@ const meta: Meta<typeof LaunchContent> = {
     layout: "fullscreen",
   },
   tags: ["autodocs"],
-  decorators: [
-    (Story) => (
-      <>
-        <Story />
-      </>
-    ),
-  ],
 };
 
 export default meta;

@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
-import { action } from "@storybook/addon-actions";
+import React, { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { AxiosError } from "axios"; // Import type for creating mock errors
-import { Button } from "@atoms/Button";
-import { ErrorAlert } from "@atoms/ErrorAlert";
+import { Button } from "../Button";
+import { ErrorAlert } from "./ErrorAlert";
+
+const action =
+  (name: string) =>
+  (...args: any[]) =>
+    console.log(name, ...args);
 
 // --- Mock AxiosError Factory ---
 // A helper to create realistic-looking AxiosError objects for testing

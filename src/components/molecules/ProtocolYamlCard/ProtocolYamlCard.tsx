@@ -1,11 +1,11 @@
 import React from "react";
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { CodeEditor } from "@atoms/CodeEditor";
 import { Dropdown, DropdownOption } from "@atoms/Dropdown";
 import { Toggle } from "@atoms/Toggle";
+import "./ProtocolYamlCard.scss";
 
-export interface ProtocolYamlCardProps {
+interface ProtocolYamlCardProps {
   title: string;
   newVersionMode: boolean;
   onToggleNewVersionMode: (checked: boolean) => void;
@@ -16,57 +16,6 @@ export interface ProtocolYamlCardProps {
   yaml: string;
   onYamlChange: (value: string) => void;
 }
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 0;
-  gap: 16px;
-  width: 928px;
-  background: transparent;
-`;
-
-const Header = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  width: 928px;
-  height: 36px;
-`;
-
-const Title = styled.span`
-  font-family: "Inter", sans-serif;
-  font-weight: 600;
-  font-size: 18px;
-  line-height: 28px;
-  color: var(--black-900);
-`;
-
-const Controls = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 16px;
-  justify-content: flex-end;
-`;
-
-const Divider = styled.div`
-  width: 1px;
-  height: 20px;
-  background: var(--grey-200);
-`;
-
-const EditorContainer = styled.div`
-  width: 100%;
-`;
-
-const StyledToggle = styled(Toggle)`
-  min-width: 176px;
-`;
-
-const StyledDropdown = styled(Dropdown)``;
 
 const ProtocolYamlCard: React.FC<ProtocolYamlCardProps> = ({
   title,
@@ -80,17 +29,18 @@ const ProtocolYamlCard: React.FC<ProtocolYamlCardProps> = ({
   onYamlChange,
 }) => {
   return (
-    <Container>
-      <Header>
-        <Title>{title}</Title>
-        <Controls>
-          <StyledToggle
+    <div className="protocol-yaml-card__container">
+      <div className="protocol-yaml-card__header">
+        <span className="protocol-yaml-card__title">{title}</span>
+        <div className="protocol-yaml-card__controls">
+          <Toggle
+            className="protocol-yaml-card__toggle"
             checked={newVersionMode}
             onChange={onToggleNewVersionMode}
             label="New Version Mode"
           />
-          <Divider />
-          <StyledDropdown
+          <div className="protocol-yaml-card__divider" />
+          <Dropdown
             options={versionOptions}
             value={selectedVersion}
             onChange={onVersionChange}
@@ -100,9 +50,9 @@ const ProtocolYamlCard: React.FC<ProtocolYamlCardProps> = ({
           <Button variant="primary" size="medium" onClick={onDeploy}>
             Deploy
           </Button>
-        </Controls>
-      </Header>
-      <EditorContainer>
+        </div>
+      </div>
+      <div className="protocol-yaml-card__editor-container">
         <CodeEditor
           value={yaml}
           onChange={(v) => onYamlChange(v ?? "")}
@@ -111,9 +61,10 @@ const ProtocolYamlCard: React.FC<ProtocolYamlCardProps> = ({
           onCopy={() => {}}
           onLaunch={() => {}}
         />
-      </EditorContainer>
-    </Container>
+      </div>
+    </div>
   );
 };
 
-export default ProtocolYamlCard;
+export { ProtocolYamlCard };
+export type { ProtocolYamlCardProps };

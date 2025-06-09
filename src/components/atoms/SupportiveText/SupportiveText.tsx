@@ -1,41 +1,29 @@
 import React from "react";
-import styled from "styled-components";
 import { Icon, IconName } from "@atoms/Icon";
+import "./SupportiveText.scss";
 
-export interface SupportiveTextProps {
+interface SupportiveTextProps {
   children: React.ReactNode;
   showCheck?: boolean;
   className?: string;
 }
 
-const Container = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--grey-600);
-  text-overflow: ellipsis;
-  font-family: "Inter", sans-serif;
-  font-size: 13px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 18px;
-`;
-
 const CheckIcon = () => (
   <Icon name={IconName.CHECK_CIRCLE} fill="var(--grey-600)" />
 );
 
-export const SupportiveText: React.FC<SupportiveTextProps> = ({
+const SupportiveText: React.FC<SupportiveTextProps> = ({
   children,
   showCheck = false,
   className,
 }) => {
   return (
-    <Container className={className}>
+    <div className={`supportive-text ${className || ""}`}>
       {showCheck && <CheckIcon />}
       {children}
-    </Container>
+    </div>
   );
 };
 
-export default SupportiveText;
+export { SupportiveText };
+export type { SupportiveTextProps };

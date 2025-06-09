@@ -1,100 +1,20 @@
 import React from "react";
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
+import "./AppHeader.scss";
 
 interface UserProfileProps {
   name: string;
   avatar?: string;
 }
 
-export interface AppHeaderProps {
+interface AppHeaderProps {
   hostname: string;
   userProfile: UserProfileProps;
   onHomeClick?: () => void;
   onSettingsClick?: () => void;
   onUserProfileClick?: () => void;
 }
-
-const HeaderContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: auto;
-  width: 100%;
-  padding: 16px 28px;
-  box-sizing: border-box;
-  border-bottom: 1px solid var(--grey-200);
-  background-color: var(--white-900);
-`;
-
-const HostnameText = styled.div`
-  color: var(--black-900);
-  font-family: "Inter", sans-serif;
-  font-size: 18px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 28px;
-`;
-
-const ActionsContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const UserProfileContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  border-radius: 4px;
-
-  &:hover {
-    background-color: var(--grey-100);
-  }
-`;
-
-const Avatar = styled.div<{ src?: string }>`
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: var(--blue-100);
-  background-image: ${(props) => (props.src ? `url(${props.src})` : "none")};
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--blue-600);
-  font-weight: 500;
-  font-size: 14px;
-  font-family: "Inter", sans-serif;
-`;
-
-const UserName = styled.div`
-  font-family: "Inter", sans-serif;
-  color: var(--grey-400);
-  font-size: 16px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 24px;
-`;
-
-const IconButtonStyle = styled(Button)`
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  min-height: 0;
-  border-radius: 4px;
-`;
-
-const Separator = styled.div`
-  height: 20px;
-  width: 1px;
-  background-color: var(--grey-200);
-  margin: 0;
-`;
 
 const AppHeader: React.FC<AppHeaderProps> = ({
   hostname,
@@ -113,16 +33,21 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       .substring(0, 2);
   };
 
-  return (
-    <HeaderContainer>
-      <HostnameText>{hostname}</HostnameText>
+  const avatarStyle = userProfile.avatar
+    ? { backgroundImage: `url(${userProfile.avatar})` }
+    : {};
 
-      <ActionsContainer>
-        <IconButtonStyle
+  return (
+    <div className="app-header">
+      <div className="app-header__hostname">{hostname}</div>
+
+      <div className="app-header__actions">
+        <Button
           variant="tertiary"
           size="small"
           onClick={onHomeClick}
           aria-label="Home"
+          className="app-header__icon-button"
         >
           <Icon
             name={IconName.HOME}
@@ -130,13 +55,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             height="20"
             fill="var(--grey-600)"
           />
-        </IconButtonStyle>
+        </Button>
 
-        <IconButtonStyle
+        <Button
           variant="tertiary"
           size="small"
           onClick={onSettingsClick}
           aria-label="Settings"
+          className="app-header__icon-button"
         >
           <Icon
             name={IconName.GEAR}
@@ -144,19 +70,25 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             height="20"
             fill="var(--grey-600)"
           />
-        </IconButtonStyle>
+        </Button>
 
-        <Separator />
+        <div className="app-header__separator" />
 
-        <UserProfileContainer onClick={onUserProfileClick}>
-          <Avatar src={userProfile.avatar}>
+        <div className="app-header__user-profile" onClick={onUserProfileClick}>
+          <div
+            className={`app-header__avatar ${
+              userProfile.avatar ? "app-header__avatar--with-image" : ""
+            }`}
+            style={avatarStyle}
+          >
             {!userProfile.avatar && getInitials(userProfile.name)}
-          </Avatar>
-          <UserName>{userProfile.name}</UserName>
-        </UserProfileContainer>
-      </ActionsContainer>
-    </HeaderContainer>
+          </div>
+          <div className="app-header__user-name">{userProfile.name}</div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default AppHeader;
+export { AppHeader };
+export type { AppHeaderProps };

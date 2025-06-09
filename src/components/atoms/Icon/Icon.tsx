@@ -41,21 +41,20 @@ import Text from "@assets/icon/Text";
 import Trash from "@assets/icon/Trash";
 import ViewfinderCircle from "@assets/icon/ViewfinderCircle";
 
-export interface IconsProps {
+interface IconsProps {
   fill?: string;
   width?: string;
   height?: string;
   name: IconName;
 }
 
-export interface IconProps {
+interface IconProps {
   fill?: string;
   width?: string;
   height?: string;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
-export enum IconName {
+enum IconName {
   BARS_3_BOTTOM_LEFT = "bars-3-bottom-left",
   BUILDING = "building",
   BULK_CHECK = "bulk-check",
@@ -234,4 +233,5 @@ const Icon = (props: IconsProps) => {
   return <div style={{ display: "inline-flex" }}>{svg}</div>;
 };
 
-export default Icon;
+export { Icon, IconName };
+export type { IconProps, IconsProps };

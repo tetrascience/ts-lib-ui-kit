@@ -1,0 +1,14 @@
+@use "../../../styles/variables.scss";
+
+.form-field {
+  &__container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+
+  &__label {
+    margin-bottom: 2px;
+  }
+}

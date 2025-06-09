@@ -1,0 +1,50 @@
+@use "../../../styles/variables.scss";
+
+// LaunchContent component SCSS file
+.launch-content {
+  &__container {
+    // Base container styles
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    background-color: var(--grey-100);
+  }
+
+  &__title {
+    color: var(--black-900);
+    font-family: "Inter", sans-serif;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 28px;
+    margin: 0;
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__version-container {
+    display: flex;
+    align-items: center;
+  }
+
+  &__separator {
+    width: 1px;
+    height: 20px;
+    background-color: var(--grey-200);
+  }
+
+  &__toast-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 16px;
+  }
+}

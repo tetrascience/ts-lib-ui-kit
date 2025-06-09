@@ -1,6 +1,6 @@
-import { Icon, IconName } from "@atoms/Icon";
+import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-
+import { Icon, IconName } from "./../../atoms/Icon";
 import { Badge } from "./Badge";
 
 const meta: Meta<typeof Badge> = {

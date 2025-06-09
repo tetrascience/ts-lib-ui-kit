@@ -1,13 +1,13 @@
 import React from "react";
-import styled from "styled-components";
 import { MenuItem, MenuItemProps } from "@atoms/MenuItem";
+import "./Menu.scss";
 
-export interface MenuItemData
+interface MenuItemData
   extends Omit<MenuItemProps, "onClick" | "onCheckChange"> {
   id: string;
 }
 
-export interface MenuProps {
+interface MenuProps {
   title?: string;
   items: MenuItemData[];
   onItemClick?: (itemId: string) => void;
@@ -16,33 +16,7 @@ export interface MenuProps {
   className?: string;
 }
 
-const MenuContainer = styled.div`
-  width: 100%;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0px 4px 12px 0px var(--black-100),
-    0px 2px 4px -2px var(--black-100);
-  background-color: var(--white-900);
-  border: 1px solid var(--grey-200);
-`;
-
-const MenuTitle = styled.div`
-  padding: 8px 16px;
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 16px;
-  color: var(--grey-600);
-  border-bottom: 1px solid var(--grey-200);
-`;
-
-const MenuItems = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-export const Menu: React.FC<MenuProps> = ({
+const Menu: React.FC<MenuProps> = ({
   title,
   items,
   onItemClick,
@@ -63,9 +37,9 @@ export const Menu: React.FC<MenuProps> = ({
   };
 
   return (
-    <MenuContainer className={className}>
-      {title && <MenuTitle>{title}</MenuTitle>}
-      <MenuItems>
+    <div className={`menu__container ${className || ""}`}>
+      {title && <div className="menu__title">{title}</div>}
+      <div className="menu__items">
         {items.map((item) => (
           <MenuItem
             key={item.id}
@@ -77,9 +51,10 @@ export const Menu: React.FC<MenuProps> = ({
             onCheckChange={(checked) => handleItemCheckChange(item.id, checked)}
           />
         ))}
-      </MenuItems>
-    </MenuContainer>
+      </div>
+    </div>
   );
 };
 
-export default Menu;
+export { Menu };
+export type { MenuProps, MenuItemData };

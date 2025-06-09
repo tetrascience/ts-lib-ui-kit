@@ -1,6 +1,6 @@
 import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import AppHeader from "./AppHeader";
+import { AppHeader } from "./AppHeader";
 
 const meta: Meta<typeof AppHeader> = {
   title: "Molecules/AppHeader",

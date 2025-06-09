@@ -1,0 +1,72 @@
+@use "../../../styles/variables.scss";
+
+.protocol-configuration {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--grey-100);
+    padding: 0 0 24px;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+  }
+
+  &__title {
+    color: var(--blue-900);
+    font-family: "Inter", sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+    margin: 0;
+  }
+
+  &__edit-mode-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--grey-600);
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  &__container {
+    background-color: var(--white-900);
+    border-radius: 24px;
+    border: 1px solid var(--grey-200);
+    width: 100%;
+  }
+
+  &__config-header {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--grey-200);
+    padding-bottom: 16px;
+    padding: 12px 24px;
+  }
+
+  &__config-title {
+    color: var(--blue-900);
+    font-family: "Inter", sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+    margin: 0;
+  }
+
+  &__config-content {
+    padding: 20px 24px 36px 24px;
+  }
+
+  &__empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  &__empty-state-text {
+    color: var(--grey-400);
+    font-size: 14px;
+    font-weight: 500;
+  }
+}

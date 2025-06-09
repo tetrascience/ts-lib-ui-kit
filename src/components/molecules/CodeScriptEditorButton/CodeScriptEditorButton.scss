@@ -1,0 +1,22 @@
+@use "../../../styles/variables.scss";
+
+// CodeScriptEditorButton component SCSS file
+.code-script-editor-button {
+  &__container {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 16px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  &__status-text {
+    font-size: 12px;
+    color: var(--grey-400);
+  }
+
+  &__editor-container {
+    margin: 16px 0;
+  }
+}

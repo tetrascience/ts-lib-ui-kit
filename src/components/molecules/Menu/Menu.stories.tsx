@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import Menu, { MenuItemData } from "./Menu";
+import { Menu, MenuItemData } from "./Menu";
 
 const meta: Meta<typeof Menu> = {
   title: "Molecules/Menu",

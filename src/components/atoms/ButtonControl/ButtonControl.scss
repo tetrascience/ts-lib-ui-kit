@@ -1,0 +1,53 @@
+@use "../../../styles/variables.scss";
+
+// ButtonControl component SCSS file
+.button-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: var(--white-900);
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  padding: 0;
+
+  &:hover:not(:disabled) {
+    background-color: var(--grey-100);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--grey-100);
+    outline: none;
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline-color: var(--blue-600) !important;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    background-color: var(--grey-50);
+    border-color: var(--grey-200);
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    color: var(--blue-900);
+  }
+
+  &:disabled svg {
+    color: var(--grey-400);
+  }
+}
+
+// Selected state modifier
+.button-control--selected {
+  background-color: var(--grey-100);
+}

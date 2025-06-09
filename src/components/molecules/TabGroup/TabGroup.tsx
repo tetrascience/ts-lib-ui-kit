@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import styled from "styled-components";
 import { Tab, TabProps, TabSize } from "@atoms/Tab";
+import "./TabGroup.scss";
 
-export interface TabItem extends Omit<TabProps, "active" | "onClick"> {
+interface TabItem extends Omit<TabProps, "active" | "onClick"> {
   id: string;
 }
 
-export interface TabGroupProps {
+interface TabGroupProps {
   tabs: TabItem[];
   activeTab?: string;
   onChange?: (tabId: string) => void;
@@ -14,21 +14,7 @@ export interface TabGroupProps {
   size?: TabSize;
 }
 
-const TabGroupContainer = styled.div`
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--grey-200);
-  overflow-x: auto;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-`;
-
-export const TabGroup: React.FC<TabGroupProps> = ({
+const TabGroup: React.FC<TabGroupProps> = ({
   tabs,
   activeTab,
   onChange,
@@ -47,7 +33,7 @@ export const TabGroup: React.FC<TabGroupProps> = ({
   };
 
   return (
-    <TabGroupContainer>
+    <div className="tab-group-container">
       {tabs.map((tab) => (
         <Tab
           key={tab.id}
@@ -58,8 +44,9 @@ export const TabGroup: React.FC<TabGroupProps> = ({
           onClick={() => handleTabClick(tab.id)}
         />
       ))}
-    </TabGroupContainer>
+    </div>
   );
 };
 
-export default TabGroup;
+export { TabGroup };
+export type { TabGroupProps, TabItem };

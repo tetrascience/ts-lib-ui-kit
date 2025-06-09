@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 // import { ReactFlowProvider } from "@xyflow/react";
-import styled from "styled-components";
+import "./Main.scss";
 import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
 import { AppHeader } from "@molecules/AppHeader";
@@ -12,7 +12,7 @@ import { ProtocolConfiguration } from "@molecules/ProtocolConfiguration";
 import { Sidebar } from "@molecules/Sidebar";
 import { TabGroup } from "@molecules/TabGroup";
 
-export interface MainProps {
+interface MainProps {
   userProfile: {
     name: string;
     avatar?: string;
@@ -24,138 +24,6 @@ export interface MainProps {
     logo?: React.ReactNode;
   };
 }
-
-const MainContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100vw;
-  height: 100vh;
-`;
-
-const ContentContainer = styled.div`
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-`;
-
-const MainContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-`;
-
-const ContainerWithTabs = styled.div`
-  display: flex;
-  flex-direction: column;
-  background-color: var(--white-900);
-  flex: 1;
-  overflow: hidden;
-`;
-
-const MainTabsContainer = styled.div`
-  border-bottom: 1px solid var(--grey-200);
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-`;
-
-const TemplatesHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24px 0;
-  background-color: var(--white-900);
-`;
-
-const TemplatesTitle = styled.h2`
-  font-family: "Inter", sans-serif;
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--black-900);
-  margin: 0;
-`;
-
-const ButtonsContainer = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-const IconButton = styled(Button)`
-  border-radius: 4px;
-  width: 32px;
-  height: 32px;
-`;
-
-const LeftSide = styled.div`
-  width: 360px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 16px 24px;
-  overflow: hidden;
-  max-height: 100%;
-`;
-
-const RightSide = styled.div`
-  flex: 1;
-  height: 100%;
-  background-color: var(--grey-100);
-  display: flex;
-  flex-direction: column;
-`;
-
-const RightSideTabGroupContainer = styled.div`
-  padding: 16px 24px 0 24px;
-`;
-
-const TemplatesList = styled.div`
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  flex: 1;
-  margin-top: 8px;
-  max-height: calc(100vh - 240px);
-`;
-
-const EmptyStateContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-`;
-
-const EmptyStateText = styled.div`
-  color: var(--grey-400);
-  font-size: 14px;
-  font-weight: 500;
-`;
-
-const TemplateCardContainer = styled.div`
-  cursor: pointer;
-
-  &:last-child {
-    border-bottom: none;
-  }
-`;
-
-const TemplateCardSidebar = styled(CardSidebar)``;
-
-const ContentWrapper = styled.div`
-  padding: 24px;
-  margin-top: -1px;
-  flex: 1;
-  border-top: 1px solid var(--grey-200);
-`;
-
-const PipelineWrapper = styled.div`
-  height: 100%;
-  border: 1px solid var(--grey-200);
-  border-radius: 8px;
-  overflow: hidden;
-`;
 
 const Main: React.FC<MainProps> = ({ userProfile, hostname, organization }) => {
   // Define sidebar items
@@ -287,17 +155,17 @@ const Main: React.FC<MainProps> = ({ userProfile, hostname, organization }) => {
   };
 
   return (
-    <MainContainer>
+    <div className="main-container">
       <Navbar organization={organization} />
 
-      <ContentContainer>
+      <div className="content-container">
         <Sidebar
           items={sidebarItems}
           activeItem={activeItem}
           onItemClick={handleSidebarItemClick}
         />
 
-        <MainContent>
+        <div className="main-content">
           <AppHeader
             hostname={hostname}
             userProfile={userProfile}
@@ -306,10 +174,10 @@ const Main: React.FC<MainProps> = ({ userProfile, hostname, organization }) => {
             onUserProfileClick={handleUserProfileClick}
           />
 
-          <ContainerWithTabs>
-            <MainTabsContainer>
-              <div style={{ display: "flex", height: "100%" }}>
-                <LeftSide>
+          <div className="container-with-tabs">
+            <div className="main-tabs-container">
+              <div className="main-layout">
+                <div className="left-side">
                   <TabGroup
                     tabs={leftTabs}
                     activeTab={activeLeftTab}
@@ -317,10 +185,11 @@ const Main: React.FC<MainProps> = ({ userProfile, hostname, organization }) => {
                   />
                   {activeLeftTab === "templates" && (
                     <>
-                      <TemplatesHeader>
-                        <TemplatesTitle>Templates</TemplatesTitle>
-                        <ButtonsContainer>
-                          <IconButton
+                      <div className="templates-header">
+                        <h2 className="templates-title">Templates</h2>
+                        <div className="buttons-container">
+                          <Button
+                            className="icon-button"
                             variant="tertiary"
                             size="small"
                             aria-label="Delete"
@@ -332,8 +201,9 @@ const Main: React.FC<MainProps> = ({ userProfile, hostname, organization }) => {
                               height="20"
                               fill="var(--red-error)"
                             />
-                          </IconButton>
-                          <IconButton
+                          </Button>
+                          <Button
+                            className="icon-button"
                             variant="primary"
                             size="small"
                             aria-label="Add"
@@ -345,18 +215,19 @@ const Main: React.FC<MainProps> = ({ userProfile, hostname, organization }) => {
                               height="20"
                               fill="var(--white-900)"
                             />
-                          </IconButton>
-                        </ButtonsContainer>
-                      </TemplatesHeader>
+                          </Button>
+                        </div>
+                      </div>
 
-                      <TemplatesList>
+                      <div className="templates-list">
                         {templates.length > 0 ? (
                           templates.map((template) => (
-                            <TemplateCardContainer
+                            <div
                               key={template.id}
+                              className="template-card-container"
                               onClick={() => handleTemplateClick(template.id)}
                             >
-                              <TemplateCardSidebar
+                              <CardSidebar
                                 title={template.title}
                                 description={template.description}
                                 buttonText={template.buttonText}
@@ -373,38 +244,39 @@ const Main: React.FC<MainProps> = ({ userProfile, hostname, organization }) => {
                                   handleViewTemplate(template.id)
                                 }
                               />
-                            </TemplateCardContainer>
+                            </div>
                           ))
                         ) : (
-                          <EmptyStateContainer>
+                          <div className="empty-state-container">
                             <Icon
                               name={IconName.INBOX}
                               width="40"
                               height="40"
                               fill="var(--grey-400)"
                             />
-                            <EmptyStateText>No data</EmptyStateText>
-                          </EmptyStateContainer>
+                            <div className="empty-state-text">No data</div>
+                          </div>
                         )}
-                      </TemplatesList>
+                      </div>
                     </>
                   )}
 
                   {activeLeftTab === "protocol" && (
                     <>
-                      <TemplatesHeader>
-                        <TemplatesTitle>
+                      <div className="templates-header">
+                        <h2 className="templates-title">
                           Protocol ({protocol.length})
-                        </TemplatesTitle>
-                      </TemplatesHeader>
-                      <TemplatesList>
+                        </h2>
+                      </div>
+                      <div className="templates-list">
                         {protocol.length > 0 ? (
                           protocol.map((template) => (
-                            <TemplateCardContainer
+                            <div
                               key={template.id}
+                              className="template-card-container"
                               onClick={() => handleTemplateClick(template.id)}
                             >
-                              <TemplateCardSidebar
+                              <CardSidebar
                                 title={template.title}
                                 description={template.description}
                                 status={
@@ -419,38 +291,39 @@ const Main: React.FC<MainProps> = ({ userProfile, hostname, organization }) => {
                                   handleViewTemplate(template.id)
                                 }
                               />
-                            </TemplateCardContainer>
+                            </div>
                           ))
                         ) : (
-                          <EmptyStateContainer>
+                          <div className="empty-state-container">
                             <Icon
                               name={IconName.INBOX}
                               width="40"
                               height="40"
                               fill="var(--grey-400)"
                             />
-                            <EmptyStateText>No data</EmptyStateText>
-                          </EmptyStateContainer>
+                            <div className="empty-state-text">No data</div>
+                          </div>
                         )}
-                      </TemplatesList>
+                      </div>
                     </>
                   )}
 
                   {activeLeftTab === "steps" && (
                     <>
-                      <TemplatesHeader>
-                        <TemplatesTitle>
+                      <div className="templates-header">
+                        <h2 className="templates-title">
                           Task Scripts ({steps.length})
-                        </TemplatesTitle>
-                      </TemplatesHeader>
-                      <TemplatesList>
+                        </h2>
+                      </div>
+                      <div className="templates-list">
                         {protocol.length > 0 ? (
                           protocol.map((template) => (
-                            <TemplateCardContainer
+                            <div
                               key={template.id}
+                              className="template-card-container"
                               onClick={() => handleTemplateClick(template.id)}
                             >
-                              <TemplateCardSidebar
+                              <CardSidebar
                                 title={template.title}
                                 description={template.description}
                                 status={
@@ -465,52 +338,53 @@ const Main: React.FC<MainProps> = ({ userProfile, hostname, organization }) => {
                                   handleViewTemplate(template.id)
                                 }
                               />
-                            </TemplateCardContainer>
+                            </div>
                           ))
                         ) : (
-                          <EmptyStateContainer>
+                          <div className="empty-state-container">
                             <Icon
                               name={IconName.INBOX}
                               width="40"
                               height="40"
                               fill="var(--grey-400)"
                             />
-                            <EmptyStateText>No data</EmptyStateText>
-                          </EmptyStateContainer>
+                            <div className="empty-state-text">No data</div>
+                          </div>
                         )}
-                      </TemplatesList>
+                      </div>
                     </>
                   )}
-                </LeftSide>
-                <RightSide>
-                  <RightSideTabGroupContainer>
+                </div>
+                <div className="right-side">
+                  <div className="right-side-tab-group-container">
                     <TabGroup
                       tabs={rightTabs}
                       activeTab={activeRightTab}
                       onChange={handleRightTabChange}
                     />
-                  </RightSideTabGroupContainer>
-                  <ContentWrapper>
+                  </div>
+                  <div className="content-wrapper">
                     {activeRightTab === "pipelineBuilder" && (
-                      <PipelineWrapper>
+                      <div className="pipeline-wrapper">
                         {/* <ReactFlowProvider>
                           <PipelineBuilder width="100%" height="100%" />
                         </ReactFlowProvider> */}
-                      </PipelineWrapper>
+                      </div>
                     )}
                     {activeRightTab === "configuration" && (
                       <ProtocolConfiguration />
                     )}
                     {activeRightTab === "launch" && <LaunchContent />}
-                  </ContentWrapper>
-                </RightSide>
+                  </div>
+                </div>
               </div>
-            </MainTabsContainer>
-          </ContainerWithTabs>
-        </MainContent>
-      </ContentContainer>
-    </MainContainer>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default Main;
+export { Main };
+export type { MainProps };

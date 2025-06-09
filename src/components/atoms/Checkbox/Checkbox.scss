@@ -1,0 +1,57 @@
+@use "../../../styles/variables.scss";
+
+// Checkbox component SCSS file
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  opacity: 1;
+  padding: 12px 16px;
+  width: 100%;
+
+  &--disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &--no-padding {
+    padding: 0;
+  }
+}
+
+.checkbox__input {
+  position: absolute;
+  opacity: 0;
+  height: 0;
+  width: 0;
+}
+
+.checkbox__box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: var(--white-900);
+  border: 1px solid var(--grey-300);
+  border-radius: 3px;
+  transition: all 0.2s;
+
+  &--checked {
+    background: var(--blue-600);
+    border-color: var(--blue-600);
+  }
+
+  .checkbox:not(.checkbox--disabled) &:hover {
+    border-color: var(--blue-600);
+  }
+}
+
+.checkbox__label {
+  margin-left: 10px;
+  @include variables.font-family-base;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+}

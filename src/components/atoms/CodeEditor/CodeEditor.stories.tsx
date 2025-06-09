@@ -1,7 +1,6 @@
-import { Meta, StoryObj } from "@storybook/react";
 import React from "react";
-
-import CodeEditor from "./CodeEditor";
+import { Meta, StoryObj } from "@storybook/react";
+import { CodeEditor } from "./CodeEditor";
 
 const meta: Meta<typeof CodeEditor> = {
   title: "Atoms/CodeEditor",

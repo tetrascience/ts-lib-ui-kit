@@ -1,106 +1,16 @@
 import React from "react";
-import styled from "styled-components";
 import { Icon, IconName } from "@atoms/Icon";
+import "./Navbar.scss";
 
-// Types
 interface OrganizationInfo {
   name: string;
   subtext?: string;
   logo?: React.ReactNode;
 }
 
-export interface NavbarProps {
+interface NavbarProps {
   organization: OrganizationInfo;
 }
-
-// Styled components
-const NavbarContainer = styled.div`
-  display: flex;
-  align-items: center;
-  background-color: var(--blue-900);
-  height: 80px;
-  width: 100%;
-  padding: 12px 24px 12px 128px;
-  box-sizing: border-box;
-  color: var(--white-900);
-  gap: 40px;
-`;
-
-const Section = styled.div`
-  display: flex;
-  align-items: center;
-  height: 100%;
-`;
-
-const SectionTitle = styled.div`
-  text-transform: uppercase;
-  margin-bottom: 2px;
-  color: var(--white-900);
-  font-size: 10px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 16px;
-  letter-spacing: 0.2px;
-  font-family: "Inter", sans-serif;
-`;
-
-const OrganizationName = styled.div`
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 22px;
-  font-family: "Inter", sans-serif;
-`;
-
-const OrganizationSubtext = styled.div`
-  color: var(--grey-400);
-  font-size: 12px;
-  font-style: italic;
-  font-weight: 500;
-  line-height: 16px;
-  font-family: "Inter", sans-serif;
-`;
-
-const OrganizationContent = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const LogoContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const ProjectSelector = styled.div`
-  display: flex;
-  align-items: center;
-  padding: 6px 0;
-  border-radius: 4px;
-  gap: 8px;
-`;
-
-const ProjectName = styled.div`
-  font-family: "Inter", sans-serif;
-  color: var(--grey-400);
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 22px;
-`;
-
-const IconWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const FirstColumn = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 320px;
-`;
 
 // Default logo component
 const DefaultLogo = () => (
@@ -128,37 +38,42 @@ const DefaultProjectIcon = () => (
 
 const Navbar: React.FC<NavbarProps> = ({ organization }) => {
   return (
-    <NavbarContainer>
-      <Section>
-        <OrganizationContent>
-          <SectionTitle>ORGANIZATION</SectionTitle>
-          <FirstColumn>
-            <LogoContainer>
+    <div className="navbar__container">
+      <div className="navbar__section">
+        <div className="navbar__organization-content">
+          <div className="navbar__section-title">ORGANIZATION</div>
+          <div className="navbar__first-column">
+            <div className="navbar__logo-container">
               {organization.logo || <DefaultLogo />}
-            </LogoContainer>
+            </div>
             <div>
-              <OrganizationName>{organization.name}</OrganizationName>
+              <div className="navbar__organization-name">
+                {organization.name}
+              </div>
               {organization.subtext && (
-                <OrganizationSubtext>
+                <div className="navbar__organization-subtext">
                   {organization.subtext}
-                </OrganizationSubtext>
+                </div>
               )}
             </div>
-          </FirstColumn>
-        </OrganizationContent>
-      </Section>
+          </div>
+        </div>
+      </div>
 
-      <Section>
-        <OrganizationContent>
-          <SectionTitle>PROJECT</SectionTitle>
-          <ProjectSelector>
-            <IconWrapper>{<DefaultProjectIcon />}</IconWrapper>
-            <ProjectName>{"Not Selected"}</ProjectName>
-          </ProjectSelector>
-        </OrganizationContent>
-      </Section>
-    </NavbarContainer>
+      <div className="navbar__section">
+        <div className="navbar__organization-content">
+          <div className="navbar__section-title">PROJECT</div>
+          <div className="navbar__project-selector">
+            <div className="navbar__icon-wrapper">
+              <DefaultProjectIcon />
+            </div>
+            <div className="navbar__project-name">Not Selected</div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default Navbar;
+export { Navbar };
+export type { NavbarProps };

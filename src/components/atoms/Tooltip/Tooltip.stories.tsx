@@ -1,5 +1,5 @@
+import React from "react";
 import { Meta, StoryObj } from "@storybook/react";
-import styled from "styled-components";
 import { Tooltip, TooltipProps } from "./Tooltip";
 
 const meta: Meta<TooltipProps> = {
@@ -21,53 +21,53 @@ const meta: Meta<TooltipProps> = {
 export default meta;
 type Story = StoryObj<TooltipProps>;
 
-const TooltipDemo = styled.div`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--blue-900);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-family: "Inter", sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  user-select: none;
-`;
+const tooltipDemoStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "var(--blue-900)",
+  color: "white",
+  padding: "8px 12px",
+  borderRadius: "6px",
+  fontFamily: "Inter, sans-serif",
+  fontSize: "14px",
+  fontWeight: 500,
+  cursor: "pointer",
+  userSelect: "none",
+};
 
-const TooltipContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 40px;
-  justify-content: center;
-  margin: 50px;
-`;
+const tooltipContainerStyle: React.CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "40px",
+  justifyContent: "center",
+  margin: "50px",
+};
 
 export const Default: Story = {
   args: {
     content: "This is a tooltip content",
     placement: "top",
-    children: <TooltipDemo>Hover me</TooltipDemo>,
+    children: <div style={tooltipDemoStyle}>Hover me</div>,
   },
 };
 
 export const AllPlacements: Story = {
   render: () => (
-    <TooltipContainer>
+    <div style={tooltipContainerStyle}>
       <Tooltip content="Tooltip on top" placement="top">
-        <TooltipDemo>Top</TooltipDemo>
+        <div style={tooltipDemoStyle}>Top</div>
       </Tooltip>
       <Tooltip content="Tooltip on right" placement="right">
-        <TooltipDemo>Right</TooltipDemo>
+        <div style={tooltipDemoStyle}>Right</div>
       </Tooltip>
       <Tooltip content="Tooltip on bottom" placement="bottom">
-        <TooltipDemo>Bottom</TooltipDemo>
+        <div style={tooltipDemoStyle}>Bottom</div>
       </Tooltip>
       <Tooltip content="Tooltip on left" placement="left">
-        <TooltipDemo>Left</TooltipDemo>
+        <div style={tooltipDemoStyle}>Left</div>
       </Tooltip>
-    </TooltipContainer>
+    </div>
   ),
 };
 
@@ -76,7 +76,7 @@ export const WithLongContent: Story = {
     content:
       "This is a tooltip with a very long content that will wrap into multiple lines to demonstrate how the tooltip handles long text content.",
     placement: "top",
-    children: <TooltipDemo>Hover for long content</TooltipDemo>,
+    children: <div style={tooltipDemoStyle}>Hover for long content</div>,
   },
 };
 
@@ -85,6 +85,6 @@ export const CustomDelay: Story = {
     content: "This tooltip appears with a 1 second delay",
     placement: "top",
     delay: 1000,
-    children: <TooltipDemo>Delayed Tooltip</TooltipDemo>,
+    children: <div style={tooltipDemoStyle}>Delayed Tooltip</div>,
   },
 };

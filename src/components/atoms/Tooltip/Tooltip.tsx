@@ -1,9 +1,9 @@
 import React, { ReactNode, useEffect, useRef, useState } from "react";
-import styled, { css } from "styled-components";
+import "./Tooltip.scss";
 
-export type TooltipPlacement = "top" | "right" | "bottom" | "left";
+type TooltipPlacement = "top" | "right" | "bottom" | "left";
 
-export interface TooltipProps {
+interface TooltipProps {
   content: ReactNode;
   children: ReactNode;
   placement?: TooltipPlacement;
@@ -11,123 +11,7 @@ export interface TooltipProps {
   delay?: number;
 }
 
-interface TooltipContentProps {
-  placement: TooltipPlacement;
-  isVisible: boolean;
-}
-
-const TooltipContainer = styled.div`
-  position: relative;
-  display: inline-flex;
-  width: fit-content;
-`;
-
-const TooltipContent = styled.div<TooltipContentProps>`
-  position: absolute;
-  background-color: var(--black);
-  color: var(--white);
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-family: "Inter", sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 18px;
-  max-width: 250px;
-  min-width: min-content;
-  width: max-content;
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.2s, visibility 0.2s;
-  white-space: normal;
-  word-wrap: break-word;
-  box-sizing: border-box;
-  text-align: left;
-
-  ${(props) =>
-    props.isVisible &&
-    css`
-      opacity: 1;
-      visibility: visible;
-    `}
-
-  ${(props) => {
-    switch (props.placement) {
-      case "top":
-        return css`
-          bottom: 100%;
-          left: 50%;
-          transform: translateX(-50%) translateY(-8px);
-
-          &::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -6px;
-            border-width: 6px;
-            border-style: solid;
-            border-color: var(--black) transparent transparent transparent;
-          }
-        `;
-      case "right":
-        return css`
-          top: 50%;
-          left: 100%;
-          transform: translateY(-50%) translateX(8px);
-
-          &::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            right: 100%;
-            margin-top: -6px;
-            border-width: 6px;
-            border-style: solid;
-            border-color: transparent var(--black) transparent transparent;
-          }
-        `;
-      case "bottom":
-        return css`
-          top: 100%;
-          left: 50%;
-          transform: translateX(-50%) translateY(8px);
-
-          &::after {
-            content: "";
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            margin-left: -6px;
-            border-width: 6px;
-            border-style: solid;
-            border-color: transparent transparent var(--black) transparent;
-          }
-        `;
-      case "left":
-        return css`
-          top: 50%;
-          right: 100%;
-          transform: translateY(-50%) translateX(-8px);
-
-          &::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 100%;
-            margin-top: -6px;
-            border-width: 6px;
-            border-style: solid;
-            border-color: transparent transparent transparent var(--black);
-          }
-        `;
-      default:
-        return "";
-    }
-  }}
-`;
-
-export const Tooltip: React.FC<TooltipProps> = ({
+const Tooltip: React.FC<TooltipProps> = ({
   content,
   children,
   placement = "top",
@@ -161,18 +45,25 @@ export const Tooltip: React.FC<TooltipProps> = ({
     };
   }, []);
 
+  const tooltipContentClasses = [
+    "tooltip-content",
+    `placement-${placement}`,
+    isVisible ? "visible" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <TooltipContainer
-      className={className}
+    <div
+      className={`tooltip-container ${className || ""}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {children}
-      <TooltipContent placement={placement} isVisible={isVisible}>
-        {content}
-      </TooltipContent>
-    </TooltipContainer>
+      <div className={tooltipContentClasses}>{content}</div>
+    </div>
   );
 };
 
-export default Tooltip;
+export { Tooltip };
+export type { TooltipProps, TooltipPlacement };

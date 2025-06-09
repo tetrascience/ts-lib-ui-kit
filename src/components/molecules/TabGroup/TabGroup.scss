@@ -1,0 +1,15 @@
+@use "../../../styles/variables.scss";
+
+.tab-group-container {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--grey-200);
+  overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

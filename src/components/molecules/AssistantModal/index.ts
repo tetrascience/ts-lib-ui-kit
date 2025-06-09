@@ -1,2 +1,2 @@
+export { AssistantModal } from "./AssistantModal";
 export type { AssistantModalProps } from "./AssistantModal";
-export { default as AssistantModal } from "./AssistantModal";

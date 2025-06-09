@@ -1,5 +1,6 @@
+import React from "react";
 import { Meta, StoryObj } from "@storybook/react";
-import FormField from "./FormField";
+import { FormField } from "./FormField";
 
 const meta: Meta<typeof FormField> = {
   title: "Molecules/FormField",

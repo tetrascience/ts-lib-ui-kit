@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { DropdownOption } from "@atoms/Dropdown";
-import ProtocolYamlCard from "./ProtocolYamlCard";
+import React, { useState } from "react";
+import type { DropdownOption } from "./../../atoms/Dropdown";
+import { ProtocolYamlCard } from "./ProtocolYamlCard";
 
 export default {
   title: "Molecules/ProtocolYamlCard",

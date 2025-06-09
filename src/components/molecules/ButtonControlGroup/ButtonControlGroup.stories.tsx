@@ -1,6 +1,6 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Meta, StoryObj } from "@storybook/react";
-import ButtonControlGroup from "./ButtonControlGroup";
+import { ButtonControlGroup } from "./ButtonControlGroup";
 
 const meta: Meta<typeof ButtonControlGroup> = {
   title: "Molecules/ButtonControlGroup",
@@ -23,7 +23,7 @@ export default meta;
 type Story = StoryObj<typeof ButtonControlGroup>;
 
 // SVG Icons
-const Icon = () => (
+const Icon = (): React.ReactNode => (
   <svg
     width="20"
     height="20"
@@ -89,16 +89,18 @@ export const MixedStateGroup: Story = {
 const InteractiveGroupExample = () => {
   const [selectedId, setSelectedId] = useState("btn1");
 
+  const controls = [
+    { id: "btn1", icon: <Icon /> },
+    { id: "btn2", icon: <Icon /> },
+    { id: "btn3", icon: <Icon /> },
+    { id: "btn4", icon: <Icon /> },
+  ];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <h3>Click buttons to change selection</h3>
       <ButtonControlGroup
-        controls={[
-          { id: "btn1", icon: <Icon /> },
-          { id: "btn2", icon: <Icon /> },
-          { id: "btn3", icon: <Icon /> },
-          { id: "btn4", icon: <Icon /> },
-        ]}
+        controls={controls}
         selectedId={selectedId}
         onChange={setSelectedId}
       />

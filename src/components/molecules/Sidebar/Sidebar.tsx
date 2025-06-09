@@ -1,6 +1,6 @@
 import React from "react";
-import styled from "styled-components";
 import { Icon, IconName } from "@atoms/Icon";
+import "./Sidebar.scss";
 
 interface SidebarItemProps {
   icon: IconName;
@@ -9,57 +9,11 @@ interface SidebarItemProps {
   onClick?: () => void;
 }
 
-export interface SidebarProps {
+interface SidebarProps {
   items: SidebarItemProps[];
   activeItem?: string;
   onItemClick?: (label: string) => void;
 }
-
-const SidebarContainer = styled.div`
-  width: 104px;
-  height: 100%;
-  background-color: var(--blue-900);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0;
-`;
-
-const SidebarItemContainer = styled.div<{ active?: boolean }>`
-  width: 100%;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px 0;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  background-color: ${(props) =>
-    props.active ? "var(--white-100)" : "transparent"};
-
-  &:hover {
-    background-color: var(--white-50);
-  }
-`;
-
-const IconWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 10px;
-  color: var(--white-900);
-`;
-
-const Label = styled.div`
-  color: var(--white-900);
-  text-align: center;
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 16px;
-  text-align: center;
-  padding: 0 8px;
-`;
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
   icon,
@@ -68,12 +22,15 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   onClick,
 }) => {
   return (
-    <SidebarItemContainer active={active} onClick={onClick}>
-      <IconWrapper>
+    <div
+      className={`sidebar-item-container ${active ? "active" : ""}`}
+      onClick={onClick}
+    >
+      <div className="icon-wrapper">
         <Icon name={icon} fill="var(--white-900)" width="20" height="20" />
-      </IconWrapper>
-      <Label>{label}</Label>
-    </SidebarItemContainer>
+      </div>
+      <div className="label">{label}</div>
+    </div>
   );
 };
 
@@ -89,7 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <SidebarContainer>
+    <div className="sidebar-container">
       {items.map((item) => (
         <SidebarItem
           key={item.label}
@@ -99,8 +56,9 @@ const Sidebar: React.FC<SidebarProps> = ({
           onClick={() => handleItemClick(item.label)}
         />
       ))}
-    </SidebarContainer>
+    </div>
   );
 };
 
-export default Sidebar;
+export { Sidebar };
+export type { SidebarProps };

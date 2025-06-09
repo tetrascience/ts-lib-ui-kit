@@ -1,8 +1,8 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Meta, StoryObj } from "@storybook/react";
 import styled from "styled-components";
-import { Button } from "@atoms/Button";
-import PythonEditorModal from "./PythonEditorModal";
+import { Button } from "./../../atoms/Button";
+import { PythonEditorModal } from "./PythonEditorModal";
 
 const meta: Meta<typeof PythonEditorModal> = {
   title: "Molecules/PythonEditorModal",

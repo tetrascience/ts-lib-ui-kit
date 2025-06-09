@@ -3,16 +3,24 @@ import MonacoEditor, { Monaco, OnChange } from "@monaco-editor/react";
 import { editor } from "monaco-editor";
 // @ts-expect-error - This is a workaround to avoid the error when importing the themes
 import themes from "monaco-themes/themes/themelist";
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
 import { Tooltip } from "@atoms/Tooltip";
+import "./CodeEditor.scss";
 
-const themeModules = import.meta.glob(
-  "/node_modules/monaco-themes/themes/*.json"
-);
+// Helper function to dynamically import theme data
+const loadTheme = async (themeName: string) => {
+  try {
+    // Use dynamic import instead of import.meta.glob for better bundler compatibility
+    const themeModule = await import(`monaco-themes/themes/${themeName}.json`);
+    return themeModule.default;
+  } catch (error) {
+    console.warn(`Failed to load theme ${themeName}:`, error);
+    return null;
+  }
+};
 
-export interface CodeEditorProps {
+interface CodeEditorProps {
   value: string;
   onChange: OnChange;
   language?: string;
@@ -31,41 +39,6 @@ const THEME_MAP = {
   light: "github-light",
   dark: "dracula",
 };
-
-const EditorContainer = styled.div<{ themeMode?: string; disabled?: boolean }>`
-  border-radius: 16px;
-  overflow: hidden;
-  background-color: ${(props) =>
-    props.themeMode === "dark" ? "var(--grey-800)" : "var(--grey-50)"};
-  position: relative;
-  border: 1px solid var(--grey-200);
-  opacity: ${(props) => (props.disabled ? 0.6 : 1)};
-  cursor: ${(props) => (props.disabled ? "not-allowed" : "default")};
-`;
-
-const EditorActions = styled.div`
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-  padding: 8px 16px;
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 1;
-`;
-
-const ButtonWrapper = styled.div`
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const StyledButton = styled(Button)`
-  width: 100%;
-  height: 100%;
-`;
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
   value,
@@ -117,12 +90,8 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       const themeFile = themes[monacoTheme];
 
       if (themeFile) {
-        const themeModule =
-          themeModules[`/node_modules/monaco-themes/themes/${themeFile}.json`];
-        if (themeModule) {
-          const themeData = (
-            (await themeModule()) as { default: editor.IStandaloneThemeData }
-          ).default;
+        const themeData = await loadTheme(themeFile);
+        if (themeData) {
           monaco.editor.defineTheme(monacoTheme, themeData);
         }
       }
@@ -146,13 +115,21 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     ...options,
   };
 
+  const containerClasses = [
+    "code-editor",
+    `code-editor--${theme}`,
+    disabled && "code-editor--disabled",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <EditorContainer themeMode={theme} disabled={disabled}>
-      <EditorActions>
+    <div className={containerClasses}>
+      <div className="code-editor__actions">
         {onCopy && (
           <Tooltip content={copyState} placement="bottom">
-            <ButtonWrapper>
-              <StyledButton
+            <div className="code-editor__button-wrapper">
+              <Button
                 variant="tertiary"
                 size="small"
                 leftIcon={<Icon name={IconName.COPY} />}
@@ -162,14 +139,14 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                 disabled={disabled}
               >
                 {null}
-              </StyledButton>
-            </ButtonWrapper>
+              </Button>
+            </div>
           </Tooltip>
         )}
         {onLaunch && (
           <Tooltip content={launchState} placement="bottom">
-            <ButtonWrapper>
-              <StyledButton
+            <div className="code-editor__button-wrapper">
+              <Button
                 variant="tertiary"
                 size="small"
                 leftIcon={<Icon name={IconName.ROCKET_LAUNCH} />}
@@ -179,11 +156,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                 disabled={disabled}
               >
                 {null}
-              </StyledButton>
-            </ButtonWrapper>
+              </Button>
+            </div>
           </Tooltip>
         )}
-      </EditorActions>
+      </div>
 
       <MonacoEditor
         value={value}
@@ -195,8 +172,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         options={defaultOptions}
         beforeMount={handleEditorWillMount}
       />
-    </EditorContainer>
+    </div>
   );
 };
 
-export default CodeEditor;
+export { CodeEditor };
+export type { CodeEditorProps };

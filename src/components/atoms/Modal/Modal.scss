@@ -1,0 +1,186 @@
+@use "../../../styles/variables.scss";
+
+// Global style for body when modal is open
+:global(body.stop-scrolling) {
+  overflow: hidden;
+}
+
+// Keyframes
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes backdropFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.modal-root {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10000;
+  animation: modalFadeIn 0.3s ease forwards;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.fade-out {
+    animation: modalFadeOut 0.3s ease forwards;
+  }
+}
+
+.backdrop {
+  background-color: var(--black-500);
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  backdrop-filter: blur(2px);
+  box-shadow: none;
+  border: none;
+  height: 100%;
+  animation: backdropFadeIn 0.3s ease forwards;
+  cursor: pointer;
+
+  &.fade-out {
+    animation: backdropFadeOut 0.3s ease forwards;
+  }
+}
+
+.modal-container {
+  position: relative;
+  background: var(--white-900);
+  border-radius: 16px;
+  width: 480px;
+  max-width: 90vw;
+  padding: 0;
+  box-shadow: 0px 4px 12px 0px var(--black-100),
+    0px 2px 4px -2px var(--black-100);
+  z-index: 1;
+  transform: scale(1);
+  opacity: 1;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+
+  &.fade-out {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  &.custom-width {
+    width: var(--modal-width);
+  }
+
+  @media (max-width: 767px) {
+    width: calc(100% - 40px) !important;
+  }
+}
+
+.header-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--grey-100);
+}
+
+.modal-title {
+  margin: 0;
+  @include variables.font-family-base;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 28px;
+  color: var(--black-900);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--black-900);
+  width: 24px;
+  height: 24px;
+
+  &:hover {
+    color: var(--black-900);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &.absolute {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+}
+
+.actions {
+  margin: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  @media (max-width: 767px) {
+    justify-content: center !important;
+
+    .button {
+      display: flex !important;
+      width: 100%;
+    }
+  }
+}
+
+.modal-content {
+  color: var(--grey-500);
+  @include variables.font-family-base;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+  margin: 16px 24px;
+  overflow-y: auto;
+  flex: 1;
+  max-height: calc(90vh - 140px); /* Account for header and footer */
+}

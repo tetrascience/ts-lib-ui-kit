@@ -1,10 +1,10 @@
 import { forwardRef } from "react";
-import styled, { css } from "styled-components";
 import { Button } from "@atoms/Button";
+import "./CardSidebar.scss";
 
-export type CardSidebarStatus = "default" | "active" | "hover" | "disabled";
+type CardSidebarStatus = "default" | "active" | "hover" | "disabled";
 
-export interface CardSidebarProps {
+interface CardSidebarProps {
   title: string;
   description?: string;
   buttonText?: string;
@@ -15,115 +15,7 @@ export interface CardSidebarProps {
   className?: string;
 }
 
-interface CardContainerProps {
-  status: CardSidebarStatus;
-}
-
-const getBackgroundColor = (status: CardSidebarStatus) => {
-  switch (status) {
-    case "active":
-      return "var(--blue-100)";
-    case "hover":
-      return "var(--grey-100)";
-    case "disabled":
-      return "transparent";
-    default:
-      return "transparent";
-  }
-};
-
-const getTitleColor = (status: CardSidebarStatus) => {
-  switch (status) {
-    case "disabled":
-      return "var(--grey-400)";
-    default:
-      return "var(--black-900)";
-  }
-};
-
-const getDescriptionColor = (status: CardSidebarStatus) => {
-  switch (status) {
-    case "disabled":
-      return "var(--grey-400)";
-    default:
-      return "var(--grey-400)";
-  }
-};
-
-const getLinkColor = (status: CardSidebarStatus) => {
-  switch (status) {
-    case "disabled":
-      return "var(--grey-400)";
-    default:
-      return "var(--blue-600)";
-  }
-};
-
-const CardContainer = styled.div<CardContainerProps>`
-  padding: 20px 16px;
-  border-radius: 8px;
-  background-color: ${(props) => getBackgroundColor(props.status)};
-  cursor: ${(props) =>
-    props.status === "disabled" ? "not-allowed" : "pointer"};
-  transition: background-color 0.2s ease;
-
-  ${(props) =>
-    props.status === "default" &&
-    css`
-      &:hover {
-        background-color: var(--grey-100);
-      }
-    `}
-`;
-
-const Title = styled.h3<{ status: CardSidebarStatus }>`
-  margin: 0 0 4px 0;
-  font-family: "Inter", sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 24px;
-  color: ${(props) => getTitleColor(props.status)};
-`;
-
-const Description = styled.p<{ status: CardSidebarStatus }>`
-  margin: 0 0 16px 0;
-  font-family: "Inter", sans-serif;
-  font-size: 13px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 18px;
-  line-height: 20px;
-  color: ${(props) => getDescriptionColor(props.status)};
-`;
-
-const ActionContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-`;
-
-const StyledButton = styled(Button)`
-  flex-shrink: 0;
-`;
-
-const Link = styled.a<{ status: CardSidebarStatus }>`
-  font-family: "Inter", sans-serif;
-  font-size: 13px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 18px;
-  color: ${(props) => getLinkColor(props.status)};
-  text-decoration: none;
-  cursor: ${(props) =>
-    props.status === "disabled" ? "not-allowed" : "pointer"};
-
-  &:hover {
-    text-decoration: ${(props) =>
-      props.status === "disabled" ? "none" : "underline"};
-  }
-`;
-
-export const CardSidebar = forwardRef<HTMLDivElement, CardSidebarProps>(
+const CardSidebar = forwardRef<HTMLDivElement, CardSidebarProps>(
   (
     {
       title,
@@ -151,19 +43,28 @@ export const CardSidebar = forwardRef<HTMLDivElement, CardSidebarProps>(
       }
     };
 
+    const containerClasses = [
+      "card-sidebar",
+      `card-sidebar--${status}`,
+      className,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     return (
-      <CardContainer ref={ref} status={status} className={className}>
-        <Title status={status}>{title}</Title>
+      <div ref={ref} className={containerClasses}>
+        <h3 className="card-sidebar__title">{title}</h3>
         {description && (
-          <Description status={status}>{description}</Description>
+          <p className="card-sidebar__description">{description}</p>
         )}
-        <ActionContainer>
+        <div className="card-sidebar__action-container">
           {buttonText && (
-            <StyledButton
+            <Button
               variant="secondary"
               size="small"
               disabled={status === "disabled"}
               onClick={handleButtonClick}
+              className="card-sidebar__button"
               leftIcon={
                 <svg
                   width="16"
@@ -184,23 +85,24 @@ export const CardSidebar = forwardRef<HTMLDivElement, CardSidebarProps>(
               }
             >
               {buttonText}
-            </StyledButton>
+            </Button>
           )}
           {linkText && (
-            <Link
-              status={status}
+            <a
+              className="card-sidebar__link"
               onClick={handleLinkClick}
               href={status === "disabled" ? undefined : "#"}
             >
               {linkText}
-            </Link>
+            </a>
           )}
-        </ActionContainer>
-      </CardContainer>
+        </div>
+      </div>
     );
   }
 );
 
 CardSidebar.displayName = "CardSidebar";
 
-export default CardSidebar;
+export { CardSidebar };
+export type { CardSidebarProps };

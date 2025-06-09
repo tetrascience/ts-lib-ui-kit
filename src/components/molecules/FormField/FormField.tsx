@@ -1,10 +1,10 @@
 import { forwardRef } from "react";
-import styled from "styled-components";
 import { Input, InputProps } from "@atoms/Input";
 import { Label } from "@atoms/Label";
 import { SupportiveText } from "@atoms/SupportiveText";
+import "./FormField.scss";
 
-export interface FormFieldProps extends Omit<InputProps, "className"> {
+interface FormFieldProps extends Omit<InputProps, "className"> {
   label: string;
   infoText?: string;
   supportiveText?: string;
@@ -12,18 +12,7 @@ export interface FormFieldProps extends Omit<InputProps, "className"> {
   className?: string;
 }
 
-const FormFieldContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-`;
-
-const StyledLabel = styled(Label)`
-  margin-bottom: 2px;
-`;
-
-export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
+const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
   (
     {
       label,
@@ -36,19 +25,22 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
     ref
   ) => {
     return (
-      <FormFieldContainer className={className}>
-        <StyledLabel infoText={infoText}>{label}</StyledLabel>
+      <div className={`form-field__container ${className || ""}`}>
+        <Label className="form-field__label" infoText={infoText}>
+          {label}
+        </Label>
         <Input ref={ref} {...inputProps} />
         {supportiveText && (
           <SupportiveText showCheck={showSupportiveCheck}>
             {supportiveText}
           </SupportiveText>
         )}
-      </FormFieldContainer>
+      </div>
     );
   }
 );
 
 FormField.displayName = "FormField";
 
-export default FormField;
+export { FormField };
+export type { FormFieldProps };

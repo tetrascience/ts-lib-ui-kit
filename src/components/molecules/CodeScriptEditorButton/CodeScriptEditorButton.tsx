@@ -1,30 +1,12 @@
 import { useCallback, useState } from "react";
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { CodeEditor } from "@atoms/CodeEditor";
 import { IconName } from "@atoms/Icon";
 import { Icon } from "@atoms/Icon";
 import { Modal } from "@atoms/Modal";
+import "./CodeScriptEditorButton.scss";
 
-const ButtonContainer = styled.div`
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  gap: 16px;
-  flex-wrap: wrap;
-  width: 100%;
-`;
-
-const EditorContainer = styled.div`
-  margin: 16px 0;
-`;
-
-const StatusText = styled.span`
-  font-size: 12px;
-  color: var(--grey-400);
-`;
-
-export interface CodeScriptEditorButtonProps {
+interface CodeScriptEditorButtonProps {
   initialCode?: string;
   onCodeSave?: (newCode: string) => void;
   language?: string;
@@ -42,7 +24,7 @@ export interface CodeScriptEditorButtonProps {
 /**
  * Renders an 'Edit code' button that opens a modal with a Monaco code editor.
  */
-export const CodeScriptEditorButton = ({
+const CodeScriptEditorButton = ({
   initialCode = "",
   onCodeSave,
   language = "python",
@@ -80,7 +62,7 @@ export const CodeScriptEditorButton = ({
 
   return (
     <>
-      <ButtonContainer>
+      <div className="code-script-editor-button__container">
         <Button
           leftIcon={<Icon name={IconName.PENCIL} />}
           onClick={handleOpenModal}
@@ -92,10 +74,13 @@ export const CodeScriptEditorButton = ({
         >
           {buttonText}
         </Button>
-        <StatusText title={`${lineCount} lines, ${charCount} characters`}>
+        <span
+          className="code-script-editor-button__status-text"
+          title={`${lineCount} lines, ${charCount} characters`}
+        >
           {lineCount} lines / {charCount} chars
-        </StatusText>
-      </ButtonContainer>
+        </span>
+      </div>
 
       <Modal
         isOpen={isModalOpen}
@@ -104,10 +89,10 @@ export const CodeScriptEditorButton = ({
         onCloseLabel="Cancel"
         onConfirmLabel="Save Code"
         title={modalTitle}
-        width="80%"
+        width="650px"
         {...modalProps}
       >
-        <EditorContainer>
+        <div className="code-script-editor-button__editor-container">
           <CodeEditor
             height="400px"
             language={language}
@@ -117,10 +102,11 @@ export const CodeScriptEditorButton = ({
               minimap: { enabled: false },
             }}
           />
-        </EditorContainer>
+        </div>
       </Modal>
     </>
   );
 };
 
-export default CodeScriptEditorButton;
+export { CodeScriptEditorButton };
+export type { CodeScriptEditorButtonProps };

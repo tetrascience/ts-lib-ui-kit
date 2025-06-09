@@ -1,13 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import styled from "styled-components";
 import { Toast, ToastProps, ToastType } from "@atoms/Toast";
-
-declare module "styled-components" {
-  interface DefaultTheme {
-    position: ToastPosition;
-  }
-}
+import "./ToastManager.scss";
 
 export type ToastPosition = "top" | "bottom";
 
@@ -19,45 +13,6 @@ export interface ToastItem extends Omit<ToastProps, "className"> {
 export interface ToastContainerProps {
   position: ToastPosition;
 }
-
-const ToastContainer = styled.div<ToastContainerProps>`
-  position: fixed;
-  ${(props) => (props.position === "top" ? "top: 16px;" : "bottom: 16px;")}
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9999;
-  width: 100%;
-  max-width: 500px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
-`;
-
-const ToastWrapper = styled.div`
-  opacity: 0;
-  transform: translateY(
-    ${(props) => (props.theme.position === "top" ? "-10px" : "10px")}
-  );
-  animation: ${(props) =>
-      props.theme.position === "top" ? "slideDownFade" : "slideUpFade"}
-    0.3s forwards;
-  pointer-events: auto;
-
-  @keyframes slideDownFade {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes slideUpFade {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
 
 type ToastContextType = {
   toasts: ToastItem[];
@@ -197,17 +152,17 @@ export const ToastManager: React.FC<ToastManagerProps> = ({
   if (!isMounted) return null;
 
   return createPortal(
-    <ToastContainer position={position}>
+    <div className={`toast-container position-${position}`}>
       {currentToasts.map((toast) => (
-        <ToastWrapper key={toast.id} theme={{ position }}>
+        <div key={toast.id} className={`toast-wrapper position-${position}`}>
           <Toast
             type={toast.type}
             heading={toast.heading}
             description={toast.description}
           />
-        </ToastWrapper>
+        </div>
       ))}
-    </ToastContainer>,
+    </div>,
     document.body
   );
 };

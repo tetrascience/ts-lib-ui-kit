@@ -18,25 +18,44 @@ export default [
         format: "cjs",
         sourcemap: true,
         exports: "named",
-        banner: "/* octant-ui-components – proprietary licence, © Octant 2025 */",
+        banner: "/* tetrascience-ui – proprietary licence, © Tetrascience 2025 */",
       },
       {
         file: pkg.module,
         format: "esm",
         sourcemap: true,
         exports: "named",
-        banner: "/* octant-ui-components – proprietary licence, © Octant 2025 */",
+        banner: "/* tetrascience-ui – proprietary licence, © Tetrascience 2025 */",
       },
     ],
     external: [
       "react",
       "react-dom",
+      "styled-components",
+      "@monaco-editor/react",
+      "monaco-editor",
+      "react-markdown",
+      "react-syntax-highlighter",
+      "rehype-raw",
+      "remark-gfm",
+      "plotly.js",
       ...Object.keys(pkg.peerDependencies || {}),
       ...Object.keys(pkg.dependencies   || {}),
     ],
     plugins: [
       peerDepsExternal(),
-      resolve({ extensions: [".js", ".jsx", ".ts", ".tsx", ".json"] }),
+      resolve({ 
+        extensions: [".js", ".jsx", ".ts", ".tsx", ".json"],
+        alias: {
+          '@': 'src',
+          '@atoms': 'src/components/atoms',
+          '@molecules': 'src/components/molecules',
+          '@organisms': 'src/components/organisms',
+          '@styles': 'src/styles',
+          '@utils': 'src/utils',
+          '@assets': 'src/assets',
+        }
+      }),
       commonjs(),
       json(),
       typescript({
@@ -49,16 +68,20 @@ export default [
         extract:    false,
         inject:     false,
         minimize:   true,
-        use:        ["sass"],
+        use:        {
+          sass: {
+            silenceDeprecations: ['legacy-js-api'],
+          }
+        },
         autoModules: false,
       }),
       terser({ output: { comments: false }, compress: { drop_console: false } }),
     ],
   },
 
-  // CSS -> single CSS file (dist/index.css)
+  // SCSS -> single CSS file (dist/index.css)
   {
-    input: "src/index.css",
+    input: "src/styles/index.scss",
     output: {
       dir:            "dist",
       assetFileNames: "[name][extname]"
@@ -68,7 +91,11 @@ export default [
         extensions: [".css", ".scss"],
         extract:    "index.css",
         minimize:   true,
-        use:        ["sass"],
+        use:        {
+          sass: {
+            silenceDeprecations: ['legacy-js-api'],
+          }
+        },
       }),
     ],
   },
@@ -77,7 +104,29 @@ export default [
   {
     input:  "src/index.ts",
     output: { file: "dist/index.d.ts", format: "es" },
-    external:[ /\.scss$/ ],
-    plugins:[ dts() ],
+    external:[ 
+      /\.scss$/, 
+      "react", 
+      "react-dom",
+      "styled-components",
+      "monaco-editor",
+      "@monaco-editor/react" 
+    ],
+    plugins:[ 
+      dts({
+        respectExternal: true,
+        compilerOptions: {
+          baseUrl: ".",
+          paths: {
+            "@/*": ["src/*"],
+            "@atoms/*": ["src/components/atoms/*"],
+            "@molecules/*": ["src/components/molecules/*"],
+            "@organisms/*": ["src/components/organisms/*"],
+            "@styles/*": ["src/styles/*"],
+            "@utils/*": ["src/utils/*"]
+          }
+        }
+      }) 
+    ],
   },
 ];

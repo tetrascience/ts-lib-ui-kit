@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import Main from "./Main";
+import { Main } from "./Main";
 
 const meta: Meta<typeof Main> = {
   title: "Organisms/Main",

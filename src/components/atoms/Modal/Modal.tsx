@@ -92,8 +92,8 @@ const Backdrop = styled.button<{ isFadeOut: boolean }>`
 
 const ModalContainer = styled.div<{ isFadeOut: boolean; width?: string }>`
   position: relative;
-  background: var(--white-900);
-  border-radius: 16px;
+  background: var(--theme-background, var(--white-900));
+  border-radius: var(--theme-radius-large, 16px);
   width: ${(props) => props.width || "480px"};
   max-width: 90vw;
   padding: 0;

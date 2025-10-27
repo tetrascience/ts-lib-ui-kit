@@ -1,0 +1,57 @@
+@use "../../../styles/variables.scss";
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  @include variables.font-family-base;
+  font-size: 14px;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  border-bottom: 1px solid var(--grey-200);
+
+  &.default {
+    color: var(--grey-600);
+    background-color: var(--white-900);
+    padding: 12px 16px;
+
+    &:hover {
+      background-color: var(--grey-50);
+    }
+  }
+
+  &.active {
+    color: var(--blue-900);
+    background-color: var(--grey-100);
+
+    &:hover {
+      background-color: var(--grey-100);
+    }
+  }
+
+  &.with-checkbox {
+    padding: 0;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.item-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  @include variables.font-family-base;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 1;
+  width: 100%;
+}

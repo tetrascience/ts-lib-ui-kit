@@ -1,0 +1,53 @@
+@use "../../../styles/variables.scss";
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.button {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &.variant-info {
+    background-color: #4072d2;
+  }
+
+  &.variant-success {
+    background-color: #08ad37;
+  }
+
+  &.variant-warning {
+    background-color: #f9ad14;
+  }
+
+  &.variant-danger {
+    background-color: #f93614;
+  }
+
+  &.variant-default {
+    background-color: #48566a;
+  }
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 8px;
+  border: 1px solid #e1e4e8;
+  width: 600px;
+}

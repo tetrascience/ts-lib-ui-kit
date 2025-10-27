@@ -1,0 +1,91 @@
+@use "../../../styles/variables.scss";
+
+.card-sidebar {
+  padding: 20px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  // Status variants
+  &--default {
+    background-color: transparent;
+
+    &:hover {
+      background-color: var(--grey-100);
+    }
+  }
+
+  &--active {
+    background-color: var(--blue-100);
+  }
+
+  &--hover {
+    background-color: var(--grey-100);
+  }
+
+  &--disabled {
+    background-color: transparent;
+    cursor: not-allowed;
+  }
+
+  &__title {
+    margin: 0 0 4px 0;
+    font-family: "Inter", sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: var(--black-900);
+
+    .card-sidebar--disabled & {
+      color: var(--grey-400);
+    }
+  }
+
+  &__description {
+    margin: 0 0 16px 0;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 18px;
+    color: var(--grey-400);
+
+    .card-sidebar--disabled & {
+      color: var(--grey-400);
+    }
+  }
+
+  &__action-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__button {
+    flex-shrink: 0;
+  }
+
+  &__link {
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 18px;
+    color: var(--blue-600);
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    .card-sidebar--disabled & {
+      color: var(--grey-400);
+      cursor: not-allowed;
+
+      &:hover {
+        text-decoration: none;
+      }
+    }
+  }
+}

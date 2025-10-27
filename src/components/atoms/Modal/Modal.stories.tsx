@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Button } from "@atoms/Button";
 import { Modal } from "@atoms/Modal";
+import { ThemeProvider } from "../../../theme";
 
 const meta: Meta<typeof Modal> = {
   title: "Atoms/Modal",
@@ -132,4 +133,123 @@ export const CustomContent: Story = {
       </div>
     ),
   },
+};
+
+// Theme examples
+export const WithSharpCorners: Story = {
+  args: {
+    ...Default.args,
+    title: "Sharp Corners Modal",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          radius: {
+            large: "4px",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export const WithCustomBackground: Story = {
+  args: {
+    ...Default.args,
+    title: "Custom Background Modal",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            background: "#FEF3C7",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export const WithFullTheme: Story = {
+  args: {
+    ...Default.args,
+    title: "Fully Themed Modal",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            background: "#F3E8FF",
+            primary: "#9333EA",
+            primaryHover: "#7E22CE",
+            primaryActive: "#6B21A8",
+          },
+          radius: {
+            large: "24px",
+            medium: "12px",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export const InteractiveWithTheme: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleOpen = () => {
+    setIsOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+  };
+
+  const handleConfirm = () => {
+    console.log("Reset confirmed");
+    setIsOpen(false);
+  };
+
+  return (
+    <ThemeProvider
+      theme={{
+        colors: {
+          primary: "#DC2626",
+          primaryHover: "#B91C1C",
+          primaryActive: "#991B1B",
+          background: "#FEE2E2",
+        },
+        radius: {
+          large: "8px",
+          medium: "8px",
+        },
+      }}
+    >
+      <div>
+        <Button onClick={handleOpen} variant="primary">
+          Open Themed Modal
+        </Button>
+        <Modal
+          isOpen={isOpen}
+          onClose={handleClose}
+          onConfirm={handleConfirm}
+          title="Themed Modal"
+        >
+          <p>
+            This modal and button are both themed with custom red colors and
+            sharp corners!
+          </p>
+        </Modal>
+      </div>
+    </ThemeProvider>
+  );
 };

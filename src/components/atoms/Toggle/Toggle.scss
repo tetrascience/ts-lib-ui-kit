@@ -1,0 +1,66 @@
+@use "../../../styles/variables.scss";
+
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+
+  &.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.toggle-switch {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border-radius: 100px;
+  border: 2px solid var(--black-200);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-sizing: border-box;
+
+  &.checked {
+    background-color: var(--blue-600);
+  }
+
+  &.unchecked {
+    background-color: var(--grey-500);
+  }
+
+  &.disabled {
+    cursor: not-allowed;
+  }
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 0px;
+  width: 16px;
+  height: 16px;
+  background-color: var(--white-900);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px var(--black-300);
+  transition: all 0.2s ease;
+
+  &.checked {
+    left: 12px;
+  }
+
+  &.unchecked {
+    left: 0px;
+  }
+}
+
+.toggle-label {
+  @include variables.font-family-base;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px;
+  user-select: none;
+  pointer-events: none;
+  color: var(--grey-500);
+}

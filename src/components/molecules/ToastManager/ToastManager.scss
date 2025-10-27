@@ -1,0 +1,53 @@
+@use "../../../styles/variables.scss";
+
+.toast-container {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+
+  &.position-top {
+    top: 16px;
+  }
+
+  &.position-bottom {
+    bottom: 16px;
+  }
+}
+
+.toast-wrapper {
+  opacity: 0;
+  animation-duration: 0.3s;
+  animation-fill-mode: forwards;
+  pointer-events: auto;
+
+  &.position-top {
+    transform: translateY(-10px);
+    animation-name: slideDownFade;
+  }
+
+  &.position-bottom {
+    transform: translateY(10px);
+    animation-name: slideUpFade;
+  }
+}
+
+@keyframes slideDownFade {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUpFade {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

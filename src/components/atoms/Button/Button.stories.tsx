@@ -1,5 +1,6 @@
 import { Icon, IconName } from "@atoms/Icon";
 import type { Meta, StoryObj } from "@storybook/react";
+import { ThemeProvider } from "../../../theme";
 
 import { Button } from "./Button";
 
@@ -113,4 +114,94 @@ export const FullWidth: Story = {
     children: "Full Width Button",
     fullWidth: true,
   },
+};
+
+// Theme examples
+export const WithRedTheme: Story = {
+  args: {
+    children: "Red Theme Button",
+    variant: "primary",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            primary: "#DC2626",
+            primaryHover: "#B91C1C",
+            primaryActive: "#991B1B",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export const WithPurpleTheme: Story = {
+  args: {
+    children: "Purple Theme Button",
+    variant: "primary",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            primary: "#9333EA",
+            primaryHover: "#7E22CE",
+            primaryActive: "#6B21A8",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export const WithCustomRadius: Story = {
+  args: {
+    children: "Sharp Corners Button",
+    variant: "primary",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          radius: {
+            medium: "4px",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export const WithFullCustomTheme: Story = {
+  args: {
+    children: "Fully Custom Button",
+    variant: "primary",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            primary: "#F59E0B",
+            primaryHover: "#D97706",
+            primaryActive: "#B45309",
+          },
+          radius: {
+            medium: "20px",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
 };

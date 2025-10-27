@@ -41,6 +41,7 @@
     "monaco-editor": "^0.52.2",
     "monaco-themes": "^0.4.5",
     "plotly.js": "^3.0.1",
+    "plotly.js-dist": "^2.35.2",
     "pmswitch": "^1.0.8",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
@@ -83,6 +84,7 @@
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-typescript2": "^0.36.0",
+    "sass": "^1.89.0",
     "storybook": "^8.5.6",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
@@ -96,5 +98,8 @@
       "plugin:storybook/recommended"
     ]
   },
-  "packageManager": "yarn@4.5.0"
+  "packageManager": "yarn@4.5.0",
+  "workspaces": [
+    "examples/*"
+  ]
 }

@@ -1,0 +1,87 @@
+@use "../../../styles/variables.scss";
+
+.toast {
+  display: flex;
+  padding: 8px;
+  gap: 8px;
+  align-items: flex-start;
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid;
+
+  &--info {
+    background-color: var(--blue-100);
+    border-color: var(--blue-600);
+  }
+
+  &--success {
+    background-color: var(--green-bg);
+    border-color: var(--green-success);
+  }
+
+  &--warning {
+    background-color: var(--orange-bg);
+    border-color: var(--orange-caution);
+  }
+
+  &--danger {
+    background-color: var(--red-bg);
+    border-color: var(--red-error);
+  }
+
+  &--default {
+    background-color: var(--white-900);
+    border-color: var(--grey-300);
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  &__heading {
+    margin: 0;
+    color: var(--black-900);
+    @include variables.font-family-base;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+  }
+
+  &__description {
+    margin: 0;
+    color: var(--grey-500);
+    text-overflow: ellipsis;
+    @include variables.font-family-base;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 18px;
+  }
+
+  &__icon {
+    &--info {
+      color: var(--blue-600);
+    }
+
+    &--success {
+      color: var(--green-success);
+    }
+
+    &--warning {
+      color: var(--orange-caution);
+    }
+
+    &--danger {
+      color: var(--red-error);
+    }
+
+    &--default {
+      color: var(--grey-600);
+    }
+  }
+}

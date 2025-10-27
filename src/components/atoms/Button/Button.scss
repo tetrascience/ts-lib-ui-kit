@@ -1,0 +1,146 @@
+@use "../../../styles/variables.scss";
+
+// Button component SCSS file
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  @include variables.font-family-base;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  min-height: 20px;
+  user-select: none;
+  border: 1px solid transparent;
+
+  &:disabled {
+    cursor: not-allowed;
+    user-select: none;
+    pointer-events: none;
+    background-color: var(--grey-300);
+    border-color: var(--grey-300);
+    color: var(--white-900);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0px 0px 0px 1px var(--white-900),
+      0px 0px 0px 3px var(--blue-600);
+  }
+}
+
+// Size variants
+.button--small {
+  height: 34px;
+  padding: 7px 10px;
+}
+
+.button--medium {
+  height: 38px;
+  padding: 9px 12px;
+}
+
+// Color variants
+.button--primary {
+  color: var(--white-900);
+  background-color: var(--blue-900);
+  border-color: var(--blue-900);
+
+  &:hover:not(:disabled) {
+    background-color: var(--blue-800);
+    border-color: var(--blue-800);
+  }
+
+  &:focus:not(:disabled) {
+    background-color: var(--blue-800);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--blue-700);
+    border-color: var(--blue-800);
+  }
+}
+
+.button--secondary {
+  color: var(--blue-600);
+  background-color: var(--white-900);
+  border-color: var(--blue-600);
+
+  &:hover:not(:disabled) {
+    background-color: var(--blue-50);
+    border-color: var(--blue-700);
+  }
+
+  &:focus:not(:disabled) {
+    background-color: var(--blue-100);
+  }
+
+  &:active:not(:disabled) {
+    border-color: var(--blue-700);
+    background-color: var(--blue-100);
+  }
+}
+
+.button--tertiary {
+  color: var(--black-900);
+  background-color: var(--white-900);
+  border-color: var(--grey-300);
+
+  &:hover:not(:disabled) {
+    background-color: var(--grey-50);
+    border-color: var(--grey-400);
+  }
+
+  &:focus:not(:disabled) {
+    background-color: var(--grey-100);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--grey-100);
+  }
+}
+
+// Utility modifiers
+.button--full-width {
+  width: 100%;
+}
+
+.button--no-padding {
+  padding: 0;
+}
+
+// Icon positioning
+.button__icon {
+  flex-shrink: 0;
+}
+
+// Loading state
+.button--loading {
+  position: relative;
+
+  .button__content {
+    opacity: 0;
+  }
+
+  .button__spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: button-spin 1s linear infinite;
+  }
+}
+
+@keyframes button-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}

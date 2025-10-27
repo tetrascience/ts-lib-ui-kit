@@ -1,0 +1,136 @@
+@use "../../../styles/variables.scss";
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+}
+
+.content-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.container-with-tabs {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--white-900);
+  flex: 1;
+  overflow: hidden;
+}
+
+.main-tabs-container {
+  border-bottom: 1px solid var(--grey-200);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.templates-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0;
+  background-color: var(--white-900);
+}
+
+.templates-title {
+  font-family: "Inter", sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--black-900);
+  margin: 0;
+}
+
+.buttons-container {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-button {
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+}
+
+.left-side {
+  width: 360px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 24px;
+  overflow: hidden;
+  max-height: 100%;
+}
+
+.right-side {
+  flex: 1;
+  height: 100%;
+  background-color: var(--grey-100);
+  display: flex;
+  flex-direction: column;
+}
+
+.right-side-tab-group-container {
+  padding: 16px 24px 0 24px;
+}
+
+.templates-list {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
+  margin-top: 8px;
+  max-height: calc(100vh - 240px);
+}
+
+.empty-state-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.empty-state-text {
+  color: var(--grey-400);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.template-card-container {
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.content-wrapper {
+  padding: 24px;
+  margin-top: -1px;
+  flex: 1;
+  border-top: 1px solid var(--grey-200);
+}
+
+.pipeline-wrapper {
+  height: 100%;
+  border: 1px solid var(--grey-200);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.main-layout {
+  display: flex;
+  height: 100%;
+}

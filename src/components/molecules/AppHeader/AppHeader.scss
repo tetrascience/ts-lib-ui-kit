@@ -1,0 +1,84 @@
+@use "../../../styles/variables.scss";
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: auto;
+  width: 100%;
+  padding: 16px 28px;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--grey-200);
+  background-color: var(--white-900);
+
+  &__hostname {
+    color: var(--black-900);
+    font-family: "Inter", sans-serif;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 28px;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__icon-button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    min-height: 0;
+    border-radius: 4px;
+  }
+
+  &__separator {
+    height: 20px;
+    width: 1px;
+    background-color: var(--grey-200);
+    margin: 0;
+  }
+
+  &__user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    border-radius: 4px;
+
+    &:hover {
+      background-color: var(--grey-100);
+    }
+  }
+
+  &__avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--blue-100);
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--blue-600);
+    font-weight: 500;
+    font-size: 14px;
+    font-family: "Inter", sans-serif;
+
+    &--with-image {
+      background-image: var(--avatar-image);
+    }
+  }
+
+  &__user-name {
+    font-family: "Inter", sans-serif;
+    color: var(--grey-400);
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+  }
+}

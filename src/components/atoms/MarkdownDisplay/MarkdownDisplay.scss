@@ -1,0 +1,37 @@
+@use "../../../styles/variables.scss";
+
+.markdown-display {
+  @include variables.font-family-base;
+}
+
+.markdown-space {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.code-text {
+  background-color: var(--black-50);
+  border-radius: 3px;
+  @include variables.font-family-code;
+  padding: 0.2em 0.4em;
+  font-size: 85%;
+}
+
+.code-block-container {
+  position: relative;
+  margin-bottom: 1em;
+}
+
+.copy-button-wrapper {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s ease-in-out;
+
+  &:hover {
+    opacity: 1;
+  }
+}

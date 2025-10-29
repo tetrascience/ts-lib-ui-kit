@@ -10630,39 +10630,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tetrascience-ui@file:../../::locator=vite-themed-app%40workspace%3Aexamples%2Fvite-themed-app":
-  version: 0.2.0
-  resolution: "tetrascience-ui@file:../../#../../::hash=bc85a3&locator=vite-themed-app%40workspace%3Aexamples%2Fvite-themed-app"
-  dependencies:
-    "@dagrejs/dagre": "npm:^1.1.4"
-    "@monaco-editor/react": "npm:^4.7.0"
-    "@types/plotly.js": "npm:^3.0.0"
-    "@types/react-plotly.js": "npm:^2.6.3"
-    "@xyflow/react": "npm:^12.6.4"
-    axios: "npm:^1.9.0"
-    elkjs: "npm:^0.10.0"
-    immer: "npm:^10.1.1"
-    monaco-editor: "npm:^0.52.2"
-    monaco-themes: "npm:^0.4.5"
-    plotly.js: "npm:^3.0.1"
-    plotly.js-dist: "npm:^2.35.2"
-    pmswitch: "npm:^1.0.8"
-    react: "npm:^18.3.0"
-    react-dom: "npm:^18.3.0"
-    react-markdown: "npm:^10.1.0"
-    react-plotly.js: "npm:^2.6.0"
-    react-syntax-highlighter: "npm:^15.6.1"
-    rehype-raw: "npm:^7.0.0"
-    remark-gfm: "npm:^4.0.1"
-    styled-components: "npm:^6.1.18"
-    use-immer: "npm:^0.11.0"
-  bin:
-    tetrascience-ui: ./bin/cli.js
-  checksum: 10c0/283b53b2ccf8472301dad925ca3cbcf8e409968dce2914f8e94b288c5d018e98a5215dd1aee5f18f38fbb57d2a167687ba30102c9154bdc838ebe0685a6d5d69
-  languageName: node
-  linkType: hard
-
-"tetrascience-ui@workspace:.":
+"tetrascience-ui@workspace:*, tetrascience-ui@workspace:.":
   version: 0.0.0-use.local
   resolution: "tetrascience-ui@workspace:."
   dependencies:
@@ -11283,7 +11251,7 @@ __metadata:
     "@vitejs/plugin-react": "npm:^4.3.1"
     react: "npm:^18.3.0"
     react-dom: "npm:^18.3.0"
-    tetrascience-ui: "file:../../"
+    tetrascience-ui: "workspace:*"
     typescript: "npm:^5.5.3"
     vite: "npm:^5.4.1"
   languageName: unknown

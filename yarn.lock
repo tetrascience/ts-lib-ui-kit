@@ -10632,7 +10632,7 @@ __metadata:
 
 "tetrascience-ui@file:../../::locator=vite-themed-app%40workspace%3Aexamples%2Fvite-themed-app":
   version: 0.2.0
-  resolution: "tetrascience-ui@file:../../#../../::hash=2047f6&locator=vite-themed-app%40workspace%3Aexamples%2Fvite-themed-app"
+  resolution: "tetrascience-ui@file:../../#../../::hash=a7d3dd&locator=vite-themed-app%40workspace%3Aexamples%2Fvite-themed-app"
   dependencies:
     "@dagrejs/dagre": "npm:^1.1.4"
     "@monaco-editor/react": "npm:^4.7.0"
@@ -10658,7 +10658,7 @@ __metadata:
     use-immer: "npm:^0.11.0"
   bin:
     tetrascience-ui: ./bin/cli.js
-  checksum: 10c0/308bfc7beee2b828c01e1ee5c1f207455b730b8c6286456f5332422cf866ca3302d30743e83846cbebdb710d52b3b9fbc72f5b872945c2fd9c2de3cd8e24aee5
+  checksum: 10c0/42cf55e2106e13aa8ba8bb8b75693c9a7783f2c9bf576e9f505c5583d102e03f1be4741e7ef0301216b857fc2ef6b475fb9c26880f915b530632b48c9d75300e
   languageName: node
   linkType: hard
 

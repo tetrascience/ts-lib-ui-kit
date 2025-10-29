@@ -1,0 +1,174 @@
+/* Centralized color definitions are loaded globally via CSS custom properties */
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-size: 100%;
+  outline: none;
+  font-family: "Inter", sans-serif;
+  font-style: 400;
+  color: #333;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+p,
+label {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 100%;
+  line-height: 1;
+  font-family: inherit;
+  vertical-align: baseline;
+  vertical-align: middle;
+  line-height: normal;
+  overflow: visible;
+  font-family: "Inter", sans-serif;
+}
+
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+button,
+input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+  cursor: pointer;
+  -webkit-appearance: button;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(359deg);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: italic;
+  font-weight: 400;
+  src: url(https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap);
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap);
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  src: url(https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap);
+}
+
+.type-light {
+  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 300;
+}
+
+.type-bold {
+  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 700;
+}
+
+.type-italic {
+  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  font-size: 14px;
+  line-height: 20px;
+  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-style: 400;
+  padding: 0.75rem 0;
+  line-height: 1.5rem !important;
+  border: none;
+  border-radius: 0;
+  box-sizing: border-box;
+  color: #333;
+  outline: none;
+}
+
+.checkbox {
+  display: inline-block;
+  height: 3rem;
+  position: relative;
+  vertical-align: middle;
+  width: 44px;
+}
+
+.checkbox input[type="checkbox"] {
+  font-size: 1em;
+  visibility: hidden;
+}
+
+.checkbox input[type="checkbox"] + span:before {
+  position: absolute;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  width: 0.85em;
+  height: 0.85em;
+  transform: translate3d(-50%, -50%, 0);
+  background: transparent;
+  box-shadow: #2cc5d2 0 0 0 1px inset;
+  content: "";
+  display: block;
+}
+
+.checkbox input[type="checkbox"]:checked + span:before {
+  font-size: 16px;
+  line-height: 24px;
+  box-shadow: none;
+  color: #2cc5d2;
+  margin-top: -1px;
+  font-family: "percolate";
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  content: "\e65e";
+}

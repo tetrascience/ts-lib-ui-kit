@@ -1,0 +1,162 @@
+// SCSS Color Variables for development
+// Base color values
+$black-base: #1a1a1a;
+$white-base: #ffffff;
+$blue-base: #2d9cdb;
+$grey-base: #64748b;
+
+// SCSS Functions for generating color scales
+@function rgba-alpha($color, $alpha) {
+  @return rgba($color, $alpha);
+}
+
+// Mixins for common color patterns
+@mixin color-scale($base-color, $prefix) {
+  --#{$prefix}-50: #{rgba-alpha($base-color, 0.05)};
+  --#{$prefix}-100: #{rgba-alpha($base-color, 0.1)};
+  --#{$prefix}-200: #{rgba-alpha($base-color, 0.2)};
+  --#{$prefix}-300: #{rgba-alpha($base-color, 0.3)};
+  --#{$prefix}-400: #{rgba-alpha($base-color, 0.4)};
+  --#{$prefix}-500: #{rgba-alpha($base-color, 0.5)};
+  --#{$prefix}-600: #{rgba-alpha($base-color, 0.6)};
+  --#{$prefix}-700: #{rgba-alpha($base-color, 0.7)};
+  --#{$prefix}-800: #{rgba-alpha($base-color, 0.8)};
+  --#{$prefix}-900: #{$base-color};
+}
+
+// CSS Custom Properties (CSS Variables)
+:root {
+  // Black scale - specific values for design system (v1.1.0)
+  --black-50: rgba(26, 26, 26, 0.08);
+  --black-100: rgba(26, 26, 26, 0.12);
+  --black-200: rgba(26, 26, 26, 0.16);
+  --black-300: rgba(26, 26, 26, 0.24);
+  --black-400: rgba(26, 26, 26, 0.32);
+  --black-500: rgba(26, 26, 26, 0.44);
+  --black-600: rgba(26, 26, 26, 0.56);
+  --black-700: rgba(26, 26, 26, 0.68);
+  --black-800: rgba(26, 26, 26, 0.8);
+  --black-900: rgba(26, 26, 26, 1);
+
+  // White scale - specific values for design system (v1.1.0)
+  --white-50: rgba(255, 255, 255, 0.08);
+  --white-100: rgba(255, 255, 255, 0.12);
+  --white-200: rgba(255, 255, 255, 0.18);
+  --white-300: rgba(255, 255, 255, 0.26);
+  --white-400: rgba(255, 255, 255, 0.36);
+  --white-500: rgba(255, 255, 255, 0.48);
+  --white-600: rgba(255, 255, 255, 0.6);
+  --white-700: rgba(255, 255, 255, 0.7);
+  --white-800: rgba(255, 255, 255, 0.8);
+  --white-900: rgba(255, 255, 255, 1);
+
+  // Blue scale - specific values for design system (v1.1.0)
+  --blue-50: rgba(240, 249, 255, 1);
+  --blue-100: rgba(225, 243, 254, 1);
+  --blue-200: rgba(186, 229, 253, 1);
+  --blue-300: rgba(126, 212, 252, 1);
+  --blue-400: rgba(58, 191, 248, 1);
+  --blue-500: rgba(27, 173, 240, 1);
+  --blue-600: rgba(64, 114, 210, 1);
+  --blue-700: rgba(3, 105, 160, 1);
+  --blue-800: rgba(6, 69, 103, 1);
+  --blue-900: rgba(4, 38, 63, 1);
+
+  // Grey scale - specific values for design system (v1.1.0)
+  --grey-50: rgba(248, 250, 252, 1);
+  --grey-100: rgba(241, 245, 249, 1);
+  --grey-200: rgba(225, 231, 239, 1);
+  --grey-300: rgba(200, 214, 229, 1);
+  --grey-400: rgba(158, 172, 192, 1);
+  --grey-500: rgba(101, 117, 139, 1);
+  --grey-600: rgba(72, 86, 106, 1);
+  --grey-700: rgba(52, 66, 86, 1);
+  --grey-800: rgba(29, 40, 58, 1);
+  --grey-900: rgba(20, 30, 53, 1);
+
+  // Semantic colors (v1.1.0)
+  --green-bg: rgba(234, 254, 229, 1);
+  --green-success: rgba(8, 173, 55, 1);
+  --orange-bg: rgba(254, 250, 229, 1);
+  --orange-caution: rgba(249, 173, 20, 1);
+  --red-bg: rgba(254, 234, 229, 1);
+  --red-error: rgba(216, 36, 44, 1);
+
+  // Graph primary colors (v1.1.0)
+  --graph-primary-orange: rgba(255, 166, 46, 1);
+  --graph-primary-red: rgba(255, 92, 100, 1);
+  --graph-primary-green: rgba(165, 195, 78, 1);
+  --graph-primary-blue: rgba(45, 156, 219, 1);
+  --graph-primary-yellow: rgba(251, 237, 83, 1);
+  --graph-primary-purple: rgba(122, 81, 171, 1);
+
+  // Graph secondary colors (v1.1.0)
+  --graph-secondary-brown: rgba(173, 121, 66, 1);
+  --graph-secondary-pink: rgba(251, 145, 180, 1);
+  --graph-secondary-teal: rgba(60, 202, 186, 1);
+  --graph-secondary-dark-blue: rgba(64, 114, 210, 1);
+  --graph-secondary-black: rgba(66, 78, 98, 1);
+  --graph-secondary-grey: rgba(180, 180, 180, 1);
+}
+
+// SCSS Variables for component development (can be used in component SCSS files)
+// These are available for @import into individual component SCSS files
+$color-black-50: var(--black-50);
+$color-black-100: var(--black-100);
+$color-black-200: var(--black-200);
+$color-black-300: var(--black-300);
+$color-black-400: var(--black-400);
+$color-black-500: var(--black-500);
+$color-black-600: var(--black-600);
+$color-black-700: var(--black-700);
+$color-black-800: var(--black-800);
+$color-black-900: var(--black-900);
+
+$color-white-50: var(--white-50);
+$color-white-100: var(--white-100);
+$color-white-200: var(--white-200);
+$color-white-300: var(--white-300);
+$color-white-400: var(--white-400);
+$color-white-500: var(--white-500);
+$color-white-600: var(--white-600);
+$color-white-700: var(--white-700);
+$color-white-800: var(--white-800);
+$color-white-900: var(--white-900);
+
+$color-blue-50: var(--blue-50);
+$color-blue-100: var(--blue-100);
+$color-blue-200: var(--blue-200);
+$color-blue-300: var(--blue-300);
+$color-blue-400: var(--blue-400);
+$color-blue-500: var(--blue-500);
+$color-blue-600: var(--blue-600);
+$color-blue-700: var(--blue-700);
+$color-blue-800: var(--blue-800);
+$color-blue-900: var(--blue-900);
+
+$color-grey-50: var(--grey-50);
+$color-grey-100: var(--grey-100);
+$color-grey-200: var(--grey-200);
+$color-grey-300: var(--grey-300);
+$color-grey-400: var(--grey-400);
+$color-grey-500: var(--grey-500);
+$color-grey-600: var(--grey-600);
+$color-grey-700: var(--grey-700);
+$color-grey-800: var(--grey-800);
+$color-grey-900: var(--grey-900);
+
+// Semantic color variables
+$color-green-bg: var(--green-bg);
+$color-green-success: var(--green-success);
+$color-orange-bg: var(--orange-bg);
+$color-orange-caution: var(--orange-caution);
+$color-red-bg: var(--red-bg);
+$color-red-error: var(--red-error);
+
+// Graph color variables
+$color-graph-primary-orange: var(--graph-primary-orange);
+$color-graph-primary-red: var(--graph-primary-red);
+$color-graph-primary-green: var(--graph-primary-green);
+$color-graph-primary-blue: var(--graph-primary-blue);
+$color-graph-primary-yellow: var(--graph-primary-yellow);
+$color-graph-primary-purple: var(--graph-primary-purple);

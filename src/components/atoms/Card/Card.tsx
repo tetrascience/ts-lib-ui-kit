@@ -28,16 +28,16 @@ const sizeStyles = {
 
 const variantStyles = {
   default: css`
-    background-color: var(--white-900);
-    border: 1px solid var(--grey-200);
+    background-color: var(--theme-cardBackground, var(--white-900));
+    border: 1px solid var(--theme-cardBorder, var(--grey-200));
   `,
   outlined: css`
-    background-color: var(--white-900);
-    border: 1px solid var(--grey-200);
+    background-color: var(--theme-cardBackground, var(--white-900));
+    border: 1px solid var(--theme-cardBorder, var(--grey-200));
   `,
   elevated: css`
-    background-color: var(--white-900);
-    border: 1px solid var(--grey-200);
+    background-color: var(--theme-cardBackground, var(--white-900));
+    border: 1px solid var(--theme-cardBorder, var(--grey-200));
     box-shadow: 0px 2px 4px var(--black-100);
   `,
 };
@@ -47,7 +47,7 @@ const CardContainer = styled.div<{
   $variant: CardVariant;
   $fullWidth?: boolean;
 }>`
-  border-radius: 16px;
+  border-radius: var(--theme-radius-large, 16px);
   width: ${(props) => (props.$fullWidth ? "100%" : "auto")};
   ${(props) => variantStyles[props.$variant]}
   transition: all 0.2s ease;
@@ -62,8 +62,8 @@ const CardTitle = styled.div<{
   font-weight: 600;
   line-height: 20px;
   background-color: var(--grey-50);
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
+  border-top-left-radius: var(--theme-radius-large, 16px);
+  border-top-right-radius: var(--theme-radius-large, 16px);
   ${(props) => sizeStyles[props.$size]}
 `;
 

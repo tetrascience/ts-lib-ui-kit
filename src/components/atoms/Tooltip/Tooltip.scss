@@ -1,0 +1,109 @@
+@use "../../../styles/variables.scss";
+
+.tooltip-container {
+  position: relative;
+  display: inline-flex;
+  width: fit-content;
+}
+
+.tooltip-content {
+  position: absolute;
+  background-color: var(--black-900);
+  color: var(--white-900);
+  padding: 8px 12px;
+  border-radius: 6px;
+
+  @include variables.font-family-base;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+
+  max-width: 250px;
+  min-width: min-content;
+  width: max-content;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  white-space: normal;
+  word-wrap: break-word;
+  box-sizing: border-box;
+  text-align: left;
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  // Top placement
+  &.placement-top {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: var(--black-900) transparent transparent transparent;
+    }
+  }
+
+  // Right placement
+  &.placement-right {
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%) translateX(8px);
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      margin-top: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: transparent var(--black-900) transparent transparent;
+    }
+  }
+
+  // Bottom placement
+  &.placement-bottom {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: transparent transparent var(--black-900) transparent;
+    }
+  }
+
+  // Left placement
+  &.placement-left {
+    top: 50%;
+    right: 100%;
+    transform: translateY(-50%) translateX(-8px);
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      margin-top: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: transparent transparent transparent var(--black-900);
+    }
+  }
+}

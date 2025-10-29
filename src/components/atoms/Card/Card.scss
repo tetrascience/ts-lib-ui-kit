@@ -1,0 +1,68 @@
+@use "../../../styles/variables.scss";
+
+.card {
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  @include variables.font-family-base;
+
+  &--full-width {
+    width: 100%;
+  }
+
+  // Variant styles
+  &--default {
+    background-color: var(--white-900);
+    border: 1px solid var(--grey-200);
+  }
+
+  &--outlined {
+    background-color: var(--white-900);
+    border: 1px solid var(--grey-200);
+  }
+
+  &--elevated {
+    background-color: var(--white-900);
+    border: 1px solid var(--grey-200);
+    box-shadow: 0px 2px 4px var(--black-100);
+  }
+}
+
+.card__title {
+  @include variables.font-family-base;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 20px;
+  background-color: var(--grey-50);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+
+  // Size styles for title
+  &--small {
+    padding: 12px;
+  }
+
+  &--medium {
+    padding: 16px;
+  }
+
+  &--large {
+    padding: 20px;
+  }
+}
+
+.card__content {
+  @include variables.font-family-base;
+  // Size styles for content
+  &--small {
+    padding: 12px;
+  }
+
+  &--medium {
+    padding: 16px;
+  }
+
+  &--large {
+    padding: 20px;
+  }
+}

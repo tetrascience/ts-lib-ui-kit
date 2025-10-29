@@ -1,4 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react";
+import { ThemeProvider } from "../../../theme";
 
 import Card from "./Card";
 
@@ -137,4 +138,91 @@ export const AllSizes: Story = {
       </Card>
     </div>
   ),
+};
+
+// Theme examples
+export const WithCustomBorder: Story = {
+  args: {
+    children: "Card with custom border color",
+    title: "Custom Border Card",
+    variant: "outlined",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            cardBorder: "#DC2626",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export const WithCustomBackground: Story = {
+  args: {
+    children: "Card with custom background",
+    title: "Custom Background Card",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            cardBackground: "#FEF3C7",
+            cardBorder: "#F59E0B",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export const WithSharpCorners: Story = {
+  args: {
+    children: "Card with sharp corners",
+    title: "Sharp Corners Card",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          radius: {
+            large: "4px",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export const WithFullTheme: Story = {
+  args: {
+    children: "Fully themed card with purple background and rounded corners",
+    title: "Themed Card",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            cardBackground: "#F3E8FF",
+            cardBorder: "#9333EA",
+          },
+          radius: {
+            large: "24px",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
 };

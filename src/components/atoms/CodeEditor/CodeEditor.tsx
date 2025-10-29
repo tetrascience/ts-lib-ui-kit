@@ -8,9 +8,10 @@ import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
 import { Tooltip } from "@atoms/Tooltip";
 
-const themeModules = import.meta.glob(
-  "/node_modules/monaco-themes/themes/*.json"
-);
+// Use import.meta.glob only if available (Vite), otherwise use empty object (webpack/Next.js)
+const themeModules = typeof import.meta.glob === 'function'
+  ? import.meta.glob("/node_modules/monaco-themes/themes/*.json")
+  : {};
 
 export interface CodeEditorProps {
   value: string;

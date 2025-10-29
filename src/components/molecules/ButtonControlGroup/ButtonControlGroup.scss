@@ -1,0 +1,49 @@
+@use "../../../styles/variables.scss";
+
+.button-control-group {
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--grey-200);
+
+  &--vertical {
+    flex-direction: column;
+    width: 40px;
+
+    .button-control-group__item:not(:last-child) {
+      border-bottom: 1px solid var(--grey-200);
+    }
+
+    .button-control-group__item:first-child button {
+      border-top-right-radius: 6px;
+      border-top-left-radius: 6px;
+    }
+
+    .button-control-group__item:last-child button {
+      border-bottom-right-radius: 6px;
+      border-bottom-left-radius: 6px;
+    }
+  }
+
+  &--horizontal {
+    flex-direction: row;
+
+    .button-control-group__item:not(:last-child) {
+      border-right: 1px solid var(--grey-200);
+    }
+
+    .button-control-group__item:first-child button {
+      border-top-left-radius: 6px;
+      border-bottom-left-radius: 6px;
+    }
+
+    .button-control-group__item:last-child button {
+      border-top-right-radius: 6px;
+      border-bottom-right-radius: 6px;
+    }
+  }
+
+  &__item {
+    // Individual button wrapper styles
+  }
+}

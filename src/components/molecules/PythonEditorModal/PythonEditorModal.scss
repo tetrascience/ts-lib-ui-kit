@@ -1,0 +1,8 @@
+@use "../../../styles/variables.scss";
+
+.python-editor-modal {
+  &__editor-wrapper {
+    padding: 12px 0;
+    flex: 1;
+  }
+}

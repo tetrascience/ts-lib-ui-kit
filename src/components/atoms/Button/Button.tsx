@@ -28,21 +28,21 @@ const heightStyles = {
 const variantStyles = {
   primary: css`
     color: var(--white-900);
-    background-color: var(--blue-900);
-    border: 1px solid var(--blue-900);
+    background-color: var(--theme-primary, var(--blue-900));
+    border: 1px solid var(--theme-primary, var(--blue-900));
 
     &:hover:not(:disabled) {
-      background-color: var(--blue-800);
-      border-color: var(--blue-800);
+      background-color: var(--theme-primaryHover, var(--blue-800));
+      border-color: var(--theme-primaryHover, var(--blue-800));
     }
 
     &:focus:not(:disabled) {
-      background-color: var(--blue-800);
+      background-color: var(--theme-primaryHover, var(--blue-800));
     }
 
     &:active:not(:disabled) {
-      background-color: var(--blue-800);
-      border-color: var(--blue-800);
+      background-color: var(--theme-primaryActive, var(--blue-800));
+      border-color: var(--theme-primaryActive, var(--blue-800));
     }
   `,
   secondary: css`
@@ -101,7 +101,7 @@ const StyledButton = styled.button<ButtonProps>`
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 8px;
+  border-radius: var(--theme-radius-medium, 8px);
   font-family: "Inter", sans-serif;
   font-weight: 600;
   cursor: pointer;

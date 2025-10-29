@@ -11136,7 +11136,7 @@ __metadata:
 
 "tetrascience-ui@file:../../::locator=vite-themed-app%40workspace%3Aexamples%2Fvite-themed-app":
   version: 0.2.0
-  resolution: "tetrascience-ui@file:../../#../../::hash=3e9408&locator=vite-themed-app%40workspace%3Aexamples%2Fvite-themed-app"
+  resolution: "tetrascience-ui@file:../../#../../::hash=dab52d&locator=vite-themed-app%40workspace%3Aexamples%2Fvite-themed-app"
   dependencies:
     "@dagrejs/dagre": "npm:^1.1.4"
     "@monaco-editor/react": "npm:^4.7.0"

@@ -119,6 +119,14 @@ export const WithFiltering: Story = {
 export const WithSelection: Story = {
   render: () => {
     const [selected, setSelected] = useState<SampleData[]>([]);
+    const dataSubset = sampleData.slice(0, 8);
+
+    const handleRowSelect = (rows: SampleData[]) => {
+      setSelected(rows);
+      if (rows.length === dataSubset.length) {
+        alert(`${rows.length} items selected`);
+      }
+    };
 
     const columns: TableColumn<SampleData>[] = [
       { key: "name", header: "Name" },
@@ -133,10 +141,10 @@ export const WithSelection: Story = {
         </div>
         <Table
           columns={columns}
-          data={sampleData.slice(0, 8)}
+          data={dataSubset}
           rowKey={(row) => row.id}
           selectable
-          onRowSelect={setSelected}
+          onRowSelect={handleRowSelect}
           pageSize={-1}
         />
       </div>
@@ -167,6 +175,15 @@ export const WithPagination: Story = {
 export const FullyFeatured: Story = {
   render: () => {
     const [selected, setSelected] = useState<SampleData[]>([]);
+    const pageSize = 5;
+    const totalPages = Math.ceil(sampleData.length / pageSize);
+
+    const handleRowSelect = (rows: SampleData[]) => {
+      setSelected(rows);
+      if (rows.length === sampleData.length) {
+        alert(`${rows.length} items selected, across ${totalPages} pages`);
+      }
+    };
 
     const columns: TableColumn<SampleData>[] = [
       { key: "id", header: "ID", width: "80px", sortable: true },
@@ -214,8 +231,8 @@ export const FullyFeatured: Story = {
           data={sampleData}
           rowKey={(row) => row.id}
           selectable
-          onRowSelect={setSelected}
-          pageSize={5}
+          onRowSelect={handleRowSelect}
+          pageSize={pageSize}
         />
       </div>
     );

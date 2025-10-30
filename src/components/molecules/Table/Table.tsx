@@ -259,7 +259,7 @@ export function Table<T extends Record<string, any>>({
   };
 
   const handleSelectAll = (checked: boolean) => {
-    const newSelection = checked ? [...paginatedData] : [];
+    const newSelection = checked ? [...sortedData] : [];
     if (isControlledSelection && onRowSelect) {
       onRowSelect(newSelection);
     } else {
@@ -289,8 +289,8 @@ export function Table<T extends Record<string, any>>({
   };
 
   const allCurrentPageSelected =
-    paginatedData.length > 0 &&
-    paginatedData.every((row) => isRowSelected(row));
+    sortedData.length > 0 &&
+    sortedData.every((row) => isRowSelected(row));
 
   const handleFilterChange = (columnKey: string, value: string) => {
     setColumnFilters((prev) => ({

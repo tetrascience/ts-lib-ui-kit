@@ -60,10 +60,14 @@ const DropdownContainer = styled.div`
   box-sizing: border-box;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
 
-  /* Override dropdown styles to fit in header */
   & > div {
     height: 32px;
+  }
+
+  li {
+    text-align: left;
   }
 `;
 

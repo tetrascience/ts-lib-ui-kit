@@ -19,7 +19,8 @@ export interface TableColumn<T = any> {
 export interface TableProps<T = any> {
   columns: TableColumn<T>[];
   data: T[];
-  pageSize?: number; // -1 for no pagination
+  pageSize?: number;
+  rowKey?: keyof T | ((row: T) => string | number);
   selectable?: boolean;
   onRowSelect?: (selectedRows: T[]) => void;
   // Controlled mode props (optional)
@@ -134,6 +135,7 @@ export function Table<T extends Record<string, any>>({
   columns,
   data,
   pageSize = 10,
+  rowKey,
   selectable = false,
   onRowSelect,
   sortKey: controlledSortKey,
@@ -297,7 +299,12 @@ export function Table<T extends Record<string, any>>({
     }));
   };
 
-  // Generate page numbers for pagination
+  const getRowKey = (row: T, index: number): string | number => {
+    if (!rowKey) return index;
+    if (typeof rowKey === "function") return rowKey(row);
+    return row[rowKey] as string | number;
+  };
+
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     const maxVisible = 5;
@@ -370,7 +377,7 @@ export function Table<T extends Record<string, any>>({
         <TableBody>
           {paginatedData.map((row, rowIndex) => (
             <TableRow
-              key={rowIndex}
+              key={getRowKey(row, rowIndex)}
               selectable={selectable}
               onClick={
                 selectable

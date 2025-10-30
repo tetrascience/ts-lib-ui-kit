@@ -52,7 +52,8 @@ export const Basic: Story = {
   args: {
     columns: basicColumns,
     data: sampleData.slice(0, 5),
-    pageSize: -1, // No pagination
+    pageSize: -1,
+    rowKey: (row: SampleData) => row.id,
   },
 };
 
@@ -109,6 +110,7 @@ export const WithFiltering: Story = {
         columns={columns}
         data={sampleData}
         pageSize={-1}
+        rowKey={(row) => row.id}
       />
     );
   },
@@ -132,6 +134,7 @@ export const WithSelection: Story = {
         <Table
           columns={columns}
           data={sampleData.slice(0, 8)}
+          rowKey={(row) => row.id}
           selectable
           onRowSelect={setSelected}
           pageSize={-1}
@@ -155,6 +158,7 @@ export const WithPagination: Story = {
         columns={columns}
         data={sampleData}
         pageSize={5}
+        rowKey={(row) => row.id}
       />
     );
   },
@@ -208,6 +212,7 @@ export const FullyFeatured: Story = {
         <Table
           columns={columns}
           data={sampleData}
+          rowKey={(row) => row.id}
           selectable
           onRowSelect={setSelected}
           pageSize={5}
@@ -247,6 +252,7 @@ export const ControlledMode: Story = {
         <Table
           columns={columns}
           data={sampleData}
+          rowKey={(row) => row.id}
           selectable
           sortKey={sortKey}
           sortDirection={sortDirection}
@@ -315,6 +321,7 @@ export const CustomCellRendering: Story = {
         columns={columns}
         data={sampleData}
         pageSize={8}
+        rowKey={(row) => row.id}
       />
     );
   },
@@ -334,6 +341,7 @@ export const NoPagination: Story = {
         columns={columns}
         data={sampleData}
         pageSize={-1}
+        rowKey={(row) => row.id}
       />
     );
   },
@@ -352,6 +360,7 @@ export const EmptyState: Story = {
         columns={columns}
         data={[]}
         pageSize={10}
+        rowKey={(row) => row.id}
       />
     );
   },

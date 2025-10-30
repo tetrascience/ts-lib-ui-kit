@@ -37,7 +37,7 @@ const TableContainer = styled.div`
   width: 100%;
   border: 1px solid var(--grey-200);
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible;
   background-color: var(--white-900);
 `;
 

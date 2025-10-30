@@ -432,11 +432,7 @@ export function Table<T extends Record<string, any>>({
               <PageNumber
                 key={index}
                 active={page === currentPage}
-                onClick={() =>
-                  typeof page === "number"
-                    ? handlePageChange(page)
-                    : undefined
-                }
+                onClick={typeof page === "number" ? () => handlePageChange(page) : undefined}
                 disabled={typeof page !== "number"}
               >
                 {page}

@@ -285,7 +285,7 @@ export function Table<T extends Record<string, any>>({
   };
 
   const isRowSelected = (row: T) => {
-    return selectedRows.some((r) => r === row);
+    return selectedRows.some((r) => getRowKey(r, 0) === getRowKey(row, 0));
   };
 
   const allCurrentPageSelected =

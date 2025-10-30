@@ -268,6 +268,12 @@ export function Table<T extends Record<string, any>>({
     }
   };
 
+  const getRowKey = (row: T, index: number): string | number => {
+    if (!rowKey) return index;
+    if (typeof rowKey === "function") return rowKey(row);
+    return row[rowKey] as string | number;
+  };
+
   const handleRowSelect = (row: T, checked: boolean) => {
     let newSelection: T[];
     if (checked) {
@@ -297,12 +303,6 @@ export function Table<T extends Record<string, any>>({
       ...prev,
       [columnKey]: value,
     }));
-  };
-
-  const getRowKey = (row: T, index: number): string | number => {
-    if (!rowKey) return index;
-    if (typeof rowKey === "function") return rowKey(row);
-    return row[rowKey] as string | number;
   };
 
   const getPageNumbers = () => {

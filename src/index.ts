@@ -16,6 +16,8 @@ export * from "@atoms/Modal";
 export * from "@atoms/PopConfirm";
 export * from "@atoms/SupportiveText";
 export * from "@atoms/Tab";
+export * from "@atoms/TableCell";
+export * from "@atoms/TableHeaderCell";
 export * from "@atoms/Textarea";
 export * from "@atoms/Toast";
 export * from "@atoms/Toggle";
@@ -36,6 +38,7 @@ export * from "@molecules/ProtocolYamlCard";
 export * from "@molecules/PythonEditorModal";
 export * from "@molecules/SelectField";
 export * from "@molecules/Sidebar";
+export * from "@molecules/Table";
 export * from "@molecules/TabGroup";
 export * from "@molecules/ToastManager";
 
@@ -72,6 +75,8 @@ export type { ModalProps } from "@atoms/Modal";
 export type { PopConfirmProps } from "@atoms/PopConfirm";
 export type { SupportiveTextProps } from "@atoms/SupportiveText";
 export type { TabProps } from "@atoms/Tab";
+export type { TableCellProps } from "@atoms/TableCell";
+export type { TableHeaderCellProps } from "@atoms/TableHeaderCell";
 export type { TextareaProps } from "@atoms/Textarea";
 export type { ToastProps } from "@atoms/Toast";
 export type { ToggleProps } from "@atoms/Toggle";
@@ -91,6 +96,7 @@ export type { ProtocolYamlCardProps } from "@molecules/ProtocolYamlCard";
 export type { PythonEditorModalProps } from "@molecules/PythonEditorModal";
 export type { SelectFieldProps } from "@molecules/SelectField";
 export type { SidebarProps } from "@molecules/Sidebar";
+export type { TableProps, TableColumn } from "@molecules/Table";
 export type { TabGroupProps } from "@molecules/TabGroup";
 export type {
   ToastContainerProps,

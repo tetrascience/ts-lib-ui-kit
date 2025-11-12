@@ -1,0 +1,384 @@
+import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
+import { Table, TableColumn } from "./Table";
+
+const meta: Meta<typeof Table> = {
+  title: "Molecules/Table",
+  component: Table,
+  parameters: {
+    layout: "padded",
+  },
+  tags: ["autodocs"],
+};
+
+export default meta;
+type Story = StoryObj<typeof Table>;
+
+// Sample data
+interface SampleData {
+  id: number;
+  name: string;
+  status: string;
+  category: string;
+  value: number;
+  date: string;
+}
+
+const sampleData: SampleData[] = [
+  { id: 1, name: "Item 1", status: "Active", category: "Type A", value: 100, date: "2024-01-15" },
+  { id: 2, name: "Item 2", status: "Inactive", category: "Type B", value: 250, date: "2024-02-20" },
+  { id: 3, name: "Item 3", status: "Active", category: "Type A", value: 75, date: "2024-01-30" },
+  { id: 4, name: "Item 4", status: "Pending", category: "Type C", value: 180, date: "2024-03-10" },
+  { id: 5, name: "Item 5", status: "Active", category: "Type B", value: 320, date: "2024-02-05" },
+  { id: 6, name: "Item 6", status: "Inactive", category: "Type A", value: 95, date: "2024-01-25" },
+  { id: 7, name: "Item 7", status: "Active", category: "Type C", value: 210, date: "2024-03-15" },
+  { id: 8, name: "Item 8", status: "Pending", category: "Type B", value: 140, date: "2024-02-12" },
+  { id: 9, name: "Item 9", status: "Active", category: "Type A", value: 290, date: "2024-01-18" },
+  { id: 10, name: "Item 10", status: "Inactive", category: "Type C", value: 165, date: "2024-03-05" },
+  { id: 11, name: "Item 11", status: "Active", category: "Type B", value: 125, date: "2024-02-28" },
+  { id: 12, name: "Item 12", status: "Pending", category: "Type A", value: 310, date: "2024-01-22" },
+  { id: 13, name: "Item 13", status: "Active", category: "Type C", value: 85, date: "2024-03-20" },
+  { id: 14, name: "Item 14", status: "Inactive", category: "Type B", value: 240, date: "2024-02-15" },
+  { id: 15, name: "Item 15", status: "Active", category: "Type A", value: 195, date: "2024-01-28" },
+];
+
+const basicColumns: TableColumn<SampleData>[] = [
+  { key: "name", header: "Name" },
+  { key: "status", header: "Status" },
+  { key: "value", header: "Value", align: "right" },
+];
+
+export const Basic: Story = {
+  args: {
+    columns: basicColumns,
+    data: sampleData.slice(0, 5),
+    pageSize: -1,
+    rowKey: (row: SampleData) => row.id,
+  },
+};
+
+export const WithSorting: Story = {
+  render: () => {
+    const columns: TableColumn<SampleData>[] = [
+      { key: "name", header: "Name", sortable: true },
+      { key: "status", header: "Status", sortable: true },
+      { key: "value", header: "Value", align: "right", sortable: true },
+      { key: "date", header: "Date", sortable: true },
+    ];
+
+    return (
+      <Table
+        columns={columns}
+        data={sampleData}
+        pageSize={-1}
+      />
+    );
+  },
+};
+
+export const WithFiltering: Story = {
+  render: () => {
+    const columns: TableColumn<SampleData>[] = [
+      { key: "name", header: "Name" },
+      {
+        key: "status",
+        header: "Status",
+        filterable: true,
+        filterOptions: [
+          { value: "", label: "All" },
+          { value: "Active", label: "Active" },
+          { value: "Inactive", label: "Inactive" },
+          { value: "Pending", label: "Pending" },
+        ],
+      },
+      {
+        key: "category",
+        header: "Category",
+        filterable: true,
+        filterOptions: [
+          { value: "", label: "All Categories" },
+          { value: "Type A", label: "Type A" },
+          { value: "Type B", label: "Type B" },
+          { value: "Type C", label: "Type C" },
+        ],
+      },
+      { key: "value", header: "Value", align: "right" },
+    ];
+
+    return (
+      <Table
+        columns={columns}
+        data={sampleData}
+        pageSize={-1}
+        rowKey={(row) => row.id}
+      />
+    );
+  },
+};
+
+export const WithSelection: Story = {
+  render: () => {
+    const [selected, setSelected] = useState<SampleData[]>([]);
+    const dataSubset = sampleData.slice(0, 8);
+
+    const handleRowSelect = (rows: SampleData[]) => {
+      setSelected(rows);
+      if (rows.length === dataSubset.length) {
+        alert(`${rows.length} items selected`);
+      }
+    };
+
+    const columns: TableColumn<SampleData>[] = [
+      { key: "name", header: "Name" },
+      { key: "status", header: "Status" },
+      { key: "value", header: "Value", align: "right" },
+    ];
+
+    return (
+      <div>
+        <div style={{ marginBottom: "16px" }}>
+          Selected: {selected.length} row(s)
+        </div>
+        <Table
+          columns={columns}
+          data={dataSubset}
+          rowKey={(row) => row.id}
+          selectable
+          onRowSelect={handleRowSelect}
+          pageSize={-1}
+        />
+      </div>
+    );
+  },
+};
+
+export const WithPagination: Story = {
+  render: () => {
+    const columns: TableColumn<SampleData>[] = [
+      { key: "name", header: "Name" },
+      { key: "status", header: "Status" },
+      { key: "value", header: "Value", align: "right" },
+      { key: "date", header: "Date" },
+    ];
+
+    return (
+      <Table
+        columns={columns}
+        data={sampleData}
+        pageSize={5}
+        rowKey={(row) => row.id}
+      />
+    );
+  },
+};
+
+export const FullyFeatured: Story = {
+  render: () => {
+    const [selected, setSelected] = useState<SampleData[]>([]);
+    const pageSize = 5;
+    const totalPages = Math.ceil(sampleData.length / pageSize);
+
+    const handleRowSelect = (rows: SampleData[]) => {
+      setSelected(rows);
+      if (rows.length === sampleData.length) {
+        alert(`${rows.length} items selected, across ${totalPages} pages`);
+      }
+    };
+
+    const columns: TableColumn<SampleData>[] = [
+      { key: "id", header: "ID", width: "80px", sortable: true },
+      { key: "name", header: "Name", sortable: true },
+      {
+        key: "status",
+        header: "Status",
+        sortable: true,
+        filterable: true,
+        filterOptions: [
+          { value: "", label: "All" },
+          { value: "Active", label: "Active" },
+          { value: "Inactive", label: "Inactive" },
+          { value: "Pending", label: "Pending" },
+        ],
+      },
+      {
+        key: "category",
+        header: "Category",
+        filterable: true,
+        filterOptions: [
+          { value: "", label: "All" },
+          { value: "Type A", label: "Type A" },
+          { value: "Type B", label: "Type B" },
+          { value: "Type C", label: "Type C" },
+        ],
+      },
+      {
+        key: "value",
+        header: "Value",
+        align: "right",
+        sortable: true,
+        render: (value) => `$${value.toLocaleString()}`,
+      },
+      { key: "date", header: "Date", sortable: true },
+    ];
+
+    return (
+      <div>
+        <div style={{ marginBottom: "16px", fontFamily: "Inter" }}>
+          <strong>Selected:</strong> {selected.length} row(s)
+        </div>
+        <Table
+          columns={columns}
+          data={sampleData}
+          rowKey={(row) => row.id}
+          selectable
+          onRowSelect={handleRowSelect}
+          pageSize={pageSize}
+        />
+      </div>
+    );
+  },
+};
+
+export const ControlledMode: Story = {
+  render: () => {
+    const [sortKey, setSortKey] = useState<string>("name");
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [selected, setSelected] = useState<SampleData[]>([]);
+
+    const columns: TableColumn<SampleData>[] = [
+      { key: "name", header: "Name", sortable: true },
+      { key: "status", header: "Status", sortable: true },
+      { key: "value", header: "Value", align: "right", sortable: true },
+      { key: "date", header: "Date", sortable: true },
+    ];
+
+    return (
+      <div>
+        <div style={{ marginBottom: "16px", fontFamily: "Inter", display: "flex", gap: "16px" }}>
+          <div>
+            <strong>Sort:</strong> {sortKey} ({sortDirection})
+          </div>
+          <div>
+            <strong>Page:</strong> {currentPage}
+          </div>
+          <div>
+            <strong>Selected:</strong> {selected.length}
+          </div>
+        </div>
+        <Table
+          columns={columns}
+          data={sampleData}
+          rowKey={(row) => row.id}
+          selectable
+          sortKey={sortKey}
+          sortDirection={sortDirection}
+          onSort={(key, direction) => {
+            setSortKey(key);
+            setSortDirection(direction);
+          }}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          selectedRows={selected}
+          onRowSelect={setSelected}
+          pageSize={5}
+        />
+      </div>
+    );
+  },
+};
+
+export const CustomCellRendering: Story = {
+  render: () => {
+    const columns: TableColumn<SampleData>[] = [
+      { key: "name", header: "Name" },
+      {
+        key: "status",
+        header: "Status",
+        render: (value) => (
+          <span
+            style={{
+              padding: "4px 8px",
+              borderRadius: "4px",
+              backgroundColor:
+                value === "Active"
+                  ? "var(--green-bg)"
+                  : value === "Inactive"
+                  ? "var(--red-bg)"
+                  : "var(--orange-bg)",
+              color:
+                value === "Active"
+                  ? "var(--green-success)"
+                  : value === "Inactive"
+                  ? "var(--red-error)"
+                  : "var(--orange-caution)",
+              fontWeight: 500,
+              fontSize: "12px",
+            }}
+          >
+            {value}
+          </span>
+        ),
+      },
+      {
+        key: "value",
+        header: "Value",
+        align: "right",
+        sortable: true,
+        render: (value) => (
+          <span style={{ fontWeight: 600 }}>
+            ${value.toLocaleString()}
+          </span>
+        ),
+      },
+    ];
+
+    return (
+      <Table
+        columns={columns}
+        data={sampleData}
+        pageSize={8}
+        rowKey={(row) => row.id}
+      />
+    );
+  },
+};
+
+export const NoPagination: Story = {
+  render: () => {
+    const columns: TableColumn<SampleData>[] = [
+      { key: "id", header: "ID", width: "80px" },
+      { key: "name", header: "Name" },
+      { key: "status", header: "Status" },
+      { key: "value", header: "Value", align: "right" },
+    ];
+
+    return (
+      <Table
+        columns={columns}
+        data={sampleData}
+        pageSize={-1}
+        rowKey={(row) => row.id}
+      />
+    );
+  },
+};
+
+export const EmptyState: Story = {
+  render: () => {
+    const columns: TableColumn<SampleData>[] = [
+      { key: "name", header: "Name" },
+      { key: "status", header: "Status" },
+      { key: "value", header: "Value" },
+    ];
+
+    return (
+      <Table
+        columns={columns}
+        data={[]}
+        pageSize={10}
+        rowKey={(row) => row.id}
+      />
+    );
+  },
+};

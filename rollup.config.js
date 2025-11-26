@@ -9,7 +9,7 @@ import json from "@rollup/plugin-json";
 import pkg from "./package.json" assert { type: "json" };
 
 const banner = `/*
- * tetrascience-ui
+ * tetrascience-react-ui
  * Copyright ${new Date().getFullYear()} TetraScience, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");

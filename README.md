@@ -1,86 +1,122 @@
-# TetraScience UI
+# tetrascience-react-ui
 
 <p align="center">
   <img alt="TetraScience" src="public/logo.png" width="60" />
 </p>
 
-## Overview
+React component library for building TetraScience applications.
 
-TetraScience UI is a React-based user interface library for TetraScience applications. Built with a robust component architecture following atomic design principles, it provides a comprehensive set of UI components and visualization tools.
+This library provides:
 
-## Project Structure
+- **UI Components**: Reusable React components following atomic design principles
+- **Data Visualisation**: Interactive charts powered by Plotly.js
+- **Theming**: Customisable design system with ThemeProvider
+- **TypeScript**: Full type support with exported prop types
 
-```
-└── tetrascience-ui/
-    ├── src/
-    │   ├── assets/          # Icons and other static assets
-    │   ├── components/      # UI components organized by atomic design
-    │   │   ├── atoms/       # Basic building blocks (Button, Input, etc.)
-    │   │   ├── molecules/   # Combinations of atoms (Forms, Menus, etc.)
-    │   │   └── organisms/   # Complex UI sections (Charts, Graphs, etc.)
-    │   └── types/           # TypeScript type definitions
-    └── .storybook/          # Storybook configuration
+## Installation
+
+```bash
+yarn add tetrascience-react-ui
 ```
 
-## Features
+## Quick Start
 
-- **Component Library**: Comprehensive set of UI components built with React and TypeScript
-- **Data Visualization**: Various chart types including Line, Bar, Scatter, and Heatmap graphs
-- **Protocol Configuration**: Components for protocol configuration and YAML editing
-- **Code Editor**: Monaco-based code editor integration for Python and other languages
-- **Design System**: Consistent design language across all components
+```tsx
+// 1. Import the CSS (required)
+import 'tetrascience-react-ui/index.css';
+
+// 2. Import components
+import { Button, Card, BarGraph } from 'tetrascience-react-ui';
+
+function App() {
+  return (
+    <Card title="Welcome">
+      <p>My first TetraScience app!</p>
+      <Button variant="primary">Get Started</Button>
+    </Card>
+  );
+}
+```
+
+## Components
+
+### Atoms (Basic Building Blocks)
+
+Badge, Button, ButtonControl, Card, Checkbox, CodeEditor, Dropdown, ErrorAlert, Icon, Input, Label, MarkdownDisplay, MenuItem, Modal, PopConfirm, SupportiveText, Tab, TableCell, TableHeaderCell, Textarea, Toast, Toggle, Tooltip
+
+### Molecules (Composed Components)
+
+AppHeader, AssistantModal, ButtonControlGroup, CardSidebar, CodeScriptEditorButton, FormField, LaunchContent, Menu, Navbar, ProtocolConfiguration, ProtocolYamlCard, PythonEditorModal, SelectField, Sidebar, TabGroup, Table, ToastManager
+
+### Organisms (Data Visualisation)
+
+AppLayout, AreaGraph, BarGraph, Boxplot, Chromatogram, DotPlot, Heatmap, Histogram, LineGraph, Main, PieChart, ScatterGraph, TaskScripts
+
+## Theming
+
+Customise colours, border radius, and spacing:
+
+```tsx
+import { ThemeProvider } from 'tetrascience-react-ui';
+
+const customTheme = {
+  colors: {
+    primary: '#DC2626',
+    primaryHover: '#B91C1C',
+  },
+  radius: {
+    medium: '12px',
+  },
+};
+
+<ThemeProvider theme={customTheme}>
+  <App />
+</ThemeProvider>
+```
+
+See [THEMING.md](./THEMING.md) for the complete theming guide.
+
+## TypeScript Support
+
+Full TypeScript support with exported types:
+
+```tsx
+import { Button } from 'tetrascience-react-ui';
+import type { ButtonProps, BarGraphProps, BarDataSeries } from 'tetrascience-react-ui';
+```
+
+## Examples
+
+The repository includes example applications in the `examples/` directory:
+
+```bash
+# Clone the repository
+git clone https://github.com/tetrascience/ts-lib-ui-kit-react.git
+cd ts-lib-ui-kit-react
+
+# Install dependencies
+yarn
+
+# Run the themed example app
+yarn workspace vite-themed-app dev
+```
+
+Visit http://localhost:5173 to see the example app with custom theming.
+
+## Documentation
+
+- [Getting Started Guide](https://github.com/tetrascience/ts-lib-ui-kit-react/blob/main/get_started_1.md) - Step-by-step tutorial
+- [Theming Guide](https://github.com/tetrascience/ts-lib-ui-kit-react/blob/main/THEMING.md) - Customise the design system
+- [Storybook](https://github.com/tetrascience/ts-lib-ui-kit-react/blob/main/DEVELOPERS.md#development-setup) - Clone the repo and run `yarn storybook`
 
 ## Tech Stack
 
-- **React 18**: Modern React with functional components and hooks
-- **TypeScript**: Type-safe development experience
-- **Vite**: Fast and lean development server and build tool
-- **Storybook**: Component development and documentation
-- **Plotly.js**: Advanced data visualization
-- **Monaco Editor**: Code editing capabilities
-- **React Flow**: Workflow and diagram visualization
-
-## Getting Started
-
-1. **Install dependencies**
-
-```bash
-yarn
-```
-
-2. **Start development server**
-
-```bash
-yarn dev
-```
-
-3. **Run Storybook**
-
-```bash
-yarn storybook
-```
-
-Visit http://localhost:6006 to view the component library in Storybook.
-
-## Available Scripts
-
-- `yarn build` - Build for production (using Rollup)
-- `yarn storybook` - Run Storybook development server on port 6006
-- `yarn build-storybook` - Build Storybook for deployment
-- `yarn prepare` - Set up Husky git hooks
-- `yarn prepublishOnly` - Build the package before publishing
-
-## Path Aliases
-
-The project uses path aliases for cleaner imports:
-
-- `@/*` → `src/*`
-- `@assets/*` → `src/assets/*`
-- `@atoms/*` → `src/components/atoms/*`
-- `@molecules/*` → `src/components/molecules/*`
-- `@organisms/*` → `src/components/organisms/*`
-- `@styles/*` → `src/styles/*`
-- `@utils/*` → `src/utils/*`
+- React 18
+- TypeScript
+- styled-components
+- Plotly.js (charts)
+- Monaco Editor (code editing)
+- React Flow (workflow diagrams)
 
 ## License
 

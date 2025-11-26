@@ -16,7 +16,7 @@ export interface ThemeProviderProps {
  *
  * @example
  * ```tsx
- * import { ThemeProvider, Button } from 'tetrascience-ui';
+ * import { ThemeProvider, Button } from 'tetrascience-react-ui';
  *
  * const customTheme = {
  *   colors: {

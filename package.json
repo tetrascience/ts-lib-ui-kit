@@ -100,7 +100,7 @@
     ]
   },
   "lint-staged": {
-    "*.{ts,tsx}": "eslint --fix"
+    "*.{js,jsx,ts,tsx}": "eslint --fix"
   },
   "packageManager": "yarn@4.5.0",
   "workspaces": [

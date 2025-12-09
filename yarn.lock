@@ -7828,7 +7828,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"micromatch@npm:^4.0.5":
+"micromatch@npm:^4.0.5, micromatch@npm:^4.0.8":
   version: 4.0.8
   resolution: "micromatch@npm:4.0.8"
   dependencies:
@@ -7999,12 +7999,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"monaco-themes@npm:^0.4.5":
-  version: 0.4.8
-  resolution: "monaco-themes@npm:0.4.8"
+"monaco-themes@npm:0.4.7":
+  version: 0.4.7
+  resolution: "monaco-themes@npm:0.4.7"
   dependencies:
     fast-plist: "npm:^0.1.3"
-  checksum: 10c0/4533e90a98961931a0cf62049a4d501fceaaab09ac2b9ca0e1fbb5479f3a0707122c64b365dce9701afbbf25d1e5030bd349c634ce421c7fd2bc2327faf34886
+  checksum: 10c0/872bb90826bc737bb6647978d7c0783207e0fc9dc42fdbe760c2d6b56ec75a207b882ee5c401a3c9830d3663e9e0cfaeac9d7bf58a5dc52842d81414ec8351c1
   languageName: node
   linkType: hard
 
@@ -9868,6 +9868,13 @@ __metadata:
   version: 0.12.0
   resolution: "retry@npm:0.12.0"
   checksum: 10c0/59933e8501727ba13ad73ef4a04d5280b3717fd650408460c987392efe9d7be2040778ed8ebe933c5cbd63da3dcc37919c141ef8af0a54a6e4fca5a2af177bfe
+  languageName: node
+  linkType: hard
+
+"rfdc@npm:^1.4.1":
+  version: 1.4.1
+  resolution: "rfdc@npm:1.4.1"
+  checksum: 10c0/4614e4292356cafade0b6031527eea9bc90f2372a22c012313be1dcc69a3b90c7338158b414539be863fa95bfcb2ddcd0587be696841af4e6679d85e62c060c7
   languageName: node
   linkType: hard
 

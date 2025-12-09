@@ -120,4 +120,4 @@ Visit http://localhost:5173 to see the example app with custom theming.
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
+Licensed under the Apache License, Version 2.0 – see [LICENSE](LICENSE) for details.

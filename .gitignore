@@ -24,3 +24,9 @@ node_modules
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Internal working files
+release-punchlist.txt
+license-compliance.txt
+table-comparison-googledoc.md
+dependency-licenses.csv

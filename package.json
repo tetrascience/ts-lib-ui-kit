@@ -1,5 +1,5 @@
 {
-  "name": "tetrascience-ui",
+  "name": "tetrascience-react-ui",
   "version": "0.2.0",
   "description": "Tetrascience React UI",
   "type": "module",
@@ -10,11 +10,9 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    ".storybook",
     "LICENSE",
     "README.md"
   ],
-  "bin": "./bin/cli.js",
   "exports": {
     ".": {
       "import": "./dist/esm/index.js",
@@ -41,7 +39,7 @@
     "elkjs": "^0.10.0",
     "immer": "^10.1.1",
     "monaco-editor": "^0.52.2",
-    "monaco-themes": "^0.4.5",
+    "monaco-themes": "0.4.7",
     "plotly.js": "^3.0.1",
     "plotly.js-dist": "^2.35.2",
     "react": "^18.3.0",
@@ -79,6 +77,7 @@
     "eslint-plugin-storybook": "^0.11.2",
     "globals": "^15.9.0",
     "husky": "^9.1.7",
+    "lint-staged": "^15.2.0",
     "pmswitch": "^1.0.8",
     "rollup": "^4.41.0",
     "rollup-plugin-dts": "^6.2.1",
@@ -100,6 +99,9 @@
     "extends": [
       "plugin:storybook/recommended"
     ]
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": "eslint --fix"
   },
   "packageManager": "yarn@4.5.0",
   "workspaces": [

@@ -92,7 +92,8 @@
     "vite": "^5.4.1"
   },
   "resolutions": {
-    "jackspeak": "2.1.1"
+    "jackspeak": "2.1.1",
+    "typescript": "5.6.3"
   },
   "eslintConfig": {
     "extends": [

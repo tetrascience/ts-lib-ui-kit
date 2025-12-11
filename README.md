@@ -1,9 +1,5 @@
 # tetrascience-react-ui
 
-<p align="center">
-  <img alt="TetraScience" src="public/logo.png" width="60" />
-</p>
-
 React component library for building TetraScience applications.
 
 This library provides:

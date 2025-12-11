@@ -7,7 +7,7 @@ The TetraScience UI Kit supports custom theming through the `ThemeProvider` comp
 Wrap your application with the `ThemeProvider` and pass a custom theme object:
 
 ```tsx
-import { ThemeProvider, Button, Card, Modal } from 'tetrascience-react-ui';
+import { ThemeProvider, Button, Card, Modal } from '@tetrascience-npm/tetrascience-react-ui';
 
 const customTheme = {
   colors: {

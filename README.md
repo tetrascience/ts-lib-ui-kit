@@ -12,17 +12,17 @@ This library provides:
 ## Installation
 
 ```bash
-yarn add tetrascience-react-ui
+yarn add @tetrascience-npm/tetrascience-react-ui
 ```
 
 ## Quick Start
 
 ```tsx
 // 1. Import the CSS (required)
-import 'tetrascience-react-ui/index.css';
+import '@tetrascience-npm/tetrascience-react-ui/index.css';
 
 // 2. Import components
-import { Button, Card, BarGraph } from 'tetrascience-react-ui';
+import { Button, Card, BarGraph } from '@tetrascience-npm/tetrascience-react-ui';
 
 function App() {
   return (
@@ -53,7 +53,7 @@ AppLayout, AreaGraph, BarGraph, Boxplot, Chromatogram, DotPlot, Heatmap, Histogr
 Customise colours, border radius, and spacing:
 
 ```tsx
-import { ThemeProvider } from 'tetrascience-react-ui';
+import { ThemeProvider } from '@tetrascience-npm/tetrascience-react-ui';
 
 const customTheme = {
   colors: {
@@ -77,8 +77,8 @@ See [THEMING.md](./THEMING.md) for the complete theming guide.
 Full TypeScript support with exported types:
 
 ```tsx
-import { Button } from 'tetrascience-react-ui';
-import type { ButtonProps, BarGraphProps, BarDataSeries } from 'tetrascience-react-ui';
+import { Button } from '@tetrascience-npm/tetrascience-react-ui';
+import type { ButtonProps, BarGraphProps, BarDataSeries } from '@tetrascience-npm/tetrascience-react-ui';
 ```
 
 ## Examples

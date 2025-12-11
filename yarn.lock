@@ -1899,6 +1899,71 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tetrascience-npm/tetrascience-react-ui@workspace:*, @tetrascience-npm/tetrascience-react-ui@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@tetrascience-npm/tetrascience-react-ui@workspace:."
+  dependencies:
+    "@dagrejs/dagre": "npm:^1.1.4"
+    "@eslint/js": "npm:^9.9.0"
+    "@monaco-editor/react": "npm:^4.7.0"
+    "@rollup/plugin-commonjs": "npm:^28.0.3"
+    "@rollup/plugin-json": "npm:^6.1.0"
+    "@rollup/plugin-node-resolve": "npm:^16.0.1"
+    "@storybook/addon-essentials": "npm:^8.5.6"
+    "@storybook/addon-interactions": "npm:^8.5.6"
+    "@storybook/addon-links": "npm:^8.5.6"
+    "@storybook/blocks": "npm:^8.5.6"
+    "@storybook/react": "npm:^8.5.6"
+    "@storybook/react-vite": "npm:^8.5.6"
+    "@storybook/test": "npm:^8.5.6"
+    "@types/plotly.js": "npm:^3.0.0"
+    "@types/react": "npm:^18.3.3"
+    "@types/react-dom": "npm:^18.3.0"
+    "@types/react-plotly.js": "npm:^2.6.3"
+    "@types/react-syntax-highlighter": "npm:^15"
+    "@types/rollup-plugin-peer-deps-external": "npm:^2"
+    "@vitejs/plugin-react": "npm:^4.3.1"
+    "@xyflow/react": "npm:^12.6.4"
+    axios: "npm:^1.9.0"
+    elkjs: "npm:^0.10.0"
+    eslint: "npm:^9.9.0"
+    eslint-plugin-import: "npm:^2.31.0"
+    eslint-plugin-react: "npm:^7.34.1"
+    eslint-plugin-react-hooks: "npm:^5.1.0-rc.0"
+    eslint-plugin-react-refresh: "npm:^0.4.9"
+    eslint-plugin-storybook: "npm:^0.11.2"
+    globals: "npm:^15.9.0"
+    husky: "npm:^9.1.7"
+    immer: "npm:^10.1.1"
+    lint-staged: "npm:^15.2.0"
+    monaco-editor: "npm:^0.52.2"
+    monaco-themes: "npm:0.4.7"
+    plotly.js: "npm:^3.0.1"
+    plotly.js-dist: "npm:^2.35.2"
+    pmswitch: "npm:^1.0.8"
+    react: "npm:^18.3.0"
+    react-dom: "npm:^18.3.0"
+    react-markdown: "npm:^10.1.0"
+    react-plotly.js: "npm:^2.6.0"
+    react-syntax-highlighter: "npm:^15.6.1"
+    rehype-raw: "npm:^7.0.0"
+    remark-gfm: "npm:^4.0.1"
+    rollup: "npm:^4.41.0"
+    rollup-plugin-dts: "npm:^6.2.1"
+    rollup-plugin-peer-deps-external: "npm:^2.2.4"
+    rollup-plugin-postcss: "npm:^4.0.2"
+    rollup-plugin-terser: "npm:^7.0.2"
+    rollup-plugin-typescript2: "npm:^0.36.0"
+    sass: "npm:^1.89.0"
+    storybook: "npm:^8.5.6"
+    styled-components: "npm:^6.1.18"
+    typescript: "npm:^5.5.3"
+    typescript-eslint: "npm:^8.0.1"
+    use-immer: "npm:^0.11.0"
+    vite: "npm:^5.4.1"
+  languageName: unknown
+  linkType: soft
+
 "@trysound/sax@npm:0.2.0":
   version: 0.2.0
   resolution: "@trysound/sax@npm:0.2.0"
@@ -2183,11 +2248,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*":
-  version: 24.10.2
-  resolution: "@types/node@npm:24.10.2"
+  version: 25.0.0
+  resolution: "@types/node@npm:25.0.0"
   dependencies:
     undici-types: "npm:~7.16.0"
-  checksum: 10c0/560c894e1a9bf7468718ceca8cd520361fd0d3fcc0b020c2f028fc722b28b5b56aecd16736a9b753d52a14837c066cf23480a8582ead59adc63a7e4333bc976c
+  checksum: 10c0/5a10d6f873ad326e46fac923ea4305b7fea3de0cf7e11c835d1fdc99d4b4d0f3f108035432ec1732f505c97d367b9abf618ecbdfb02a75a5306665ecce2a81a6
   languageName: node
   linkType: hard
 
@@ -2222,12 +2287,12 @@ __metadata:
   linkType: hard
 
 "@types/react-plotly.js@npm:^2.6.3":
-  version: 2.6.3
-  resolution: "@types/react-plotly.js@npm:2.6.3"
+  version: 2.6.4
+  resolution: "@types/react-plotly.js@npm:2.6.4"
   dependencies:
     "@types/plotly.js": "npm:*"
     "@types/react": "npm:*"
-  checksum: 10c0/8cd6f99766009d541615471251b377200c5fd00a08995b64566f4cdfb6d1938ee64ba38d3847c7fe3d1d7515e59c1b0111e3262481480540b1a5e5a041cc4e3b
+  checksum: 10c0/e1483e77b2162a7284b186665131a053560a84293c85ade16cd65039383c3894550397cf2b599ce1c870521622f81b176ddbdbe7a10da937b3b88e4aa4b90d4a
   languageName: node
   linkType: hard
 
@@ -2929,11 +2994,11 @@ __metadata:
   linkType: hard
 
 "baseline-browser-mapping@npm:^2.9.0":
-  version: 2.9.5
-  resolution: "baseline-browser-mapping@npm:2.9.5"
+  version: 2.9.6
+  resolution: "baseline-browser-mapping@npm:2.9.6"
   bin:
     baseline-browser-mapping: dist/cli.js
-  checksum: 10c0/581bd4f578a1b5ccd48ad0155f760c412803f02e97259deec99150b87c95766266b607b09aefa65da96dc5b925165706d675f10413630e767391e26a4f7afcdf
+  checksum: 10c0/9d9bae544342c02200e0a489d4caf3611a2a517d0d7a8c97e1dd7d640ac18d2784710bf08375b5951fb9034bd18d902b50797d90218a33b88e6244ae917f881f
   languageName: node
   linkType: hard
 
@@ -10123,8 +10188,8 @@ __metadata:
   linkType: hard
 
 "sass@npm:^1.89.0":
-  version: 1.95.0
-  resolution: "sass@npm:1.95.0"
+  version: 1.96.0
+  resolution: "sass@npm:1.96.0"
   dependencies:
     "@parcel/watcher": "npm:^2.4.1"
     chokidar: "npm:^4.0.0"
@@ -10135,7 +10200,7 @@ __metadata:
       optional: true
   bin:
     sass: sass.js
-  checksum: 10c0/5f4093eb6fe569d65fbf30baf1fdd36b499ebc90a2f36fedf64aea2f5a72889a9df34cc96cd7cb640a10156708c9b8894b6f89953f26b57b44b96731e9c27fb5
+  checksum: 10c0/a932054bcee6935757417af6072d31b65ce3557798a53351b3e1369d7f06e24b0ec211e1617bdaaee998b429a44bf0f52acd240fd47f88422d5bc241eeb71672
   languageName: node
   linkType: hard
 
@@ -10884,71 +10949,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tetrascience-react-ui@workspace:*, tetrascience-react-ui@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "tetrascience-react-ui@workspace:."
-  dependencies:
-    "@dagrejs/dagre": "npm:^1.1.4"
-    "@eslint/js": "npm:^9.9.0"
-    "@monaco-editor/react": "npm:^4.7.0"
-    "@rollup/plugin-commonjs": "npm:^28.0.3"
-    "@rollup/plugin-json": "npm:^6.1.0"
-    "@rollup/plugin-node-resolve": "npm:^16.0.1"
-    "@storybook/addon-essentials": "npm:^8.5.6"
-    "@storybook/addon-interactions": "npm:^8.5.6"
-    "@storybook/addon-links": "npm:^8.5.6"
-    "@storybook/blocks": "npm:^8.5.6"
-    "@storybook/react": "npm:^8.5.6"
-    "@storybook/react-vite": "npm:^8.5.6"
-    "@storybook/test": "npm:^8.5.6"
-    "@types/plotly.js": "npm:^3.0.0"
-    "@types/react": "npm:^18.3.3"
-    "@types/react-dom": "npm:^18.3.0"
-    "@types/react-plotly.js": "npm:^2.6.3"
-    "@types/react-syntax-highlighter": "npm:^15"
-    "@types/rollup-plugin-peer-deps-external": "npm:^2"
-    "@vitejs/plugin-react": "npm:^4.3.1"
-    "@xyflow/react": "npm:^12.6.4"
-    axios: "npm:^1.9.0"
-    elkjs: "npm:^0.10.0"
-    eslint: "npm:^9.9.0"
-    eslint-plugin-import: "npm:^2.31.0"
-    eslint-plugin-react: "npm:^7.34.1"
-    eslint-plugin-react-hooks: "npm:^5.1.0-rc.0"
-    eslint-plugin-react-refresh: "npm:^0.4.9"
-    eslint-plugin-storybook: "npm:^0.11.2"
-    globals: "npm:^15.9.0"
-    husky: "npm:^9.1.7"
-    immer: "npm:^10.1.1"
-    lint-staged: "npm:^15.2.0"
-    monaco-editor: "npm:^0.52.2"
-    monaco-themes: "npm:0.4.7"
-    plotly.js: "npm:^3.0.1"
-    plotly.js-dist: "npm:^2.35.2"
-    pmswitch: "npm:^1.0.8"
-    react: "npm:^18.3.0"
-    react-dom: "npm:^18.3.0"
-    react-markdown: "npm:^10.1.0"
-    react-plotly.js: "npm:^2.6.0"
-    react-syntax-highlighter: "npm:^15.6.1"
-    rehype-raw: "npm:^7.0.0"
-    remark-gfm: "npm:^4.0.1"
-    rollup: "npm:^4.41.0"
-    rollup-plugin-dts: "npm:^6.2.1"
-    rollup-plugin-peer-deps-external: "npm:^2.2.4"
-    rollup-plugin-postcss: "npm:^4.0.2"
-    rollup-plugin-terser: "npm:^7.0.2"
-    rollup-plugin-typescript2: "npm:^0.36.0"
-    sass: "npm:^1.89.0"
-    storybook: "npm:^8.5.6"
-    styled-components: "npm:^6.1.18"
-    typescript: "npm:^5.5.3"
-    typescript-eslint: "npm:^8.0.1"
-    use-immer: "npm:^0.11.0"
-    vite: "npm:^5.4.1"
-  languageName: unknown
-  linkType: soft
-
 "through2@npm:^0.6.3":
   version: 0.6.5
   resolution: "through2@npm:0.6.5"
@@ -11499,12 +11499,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "vite-themed-app@workspace:examples/vite-themed-app"
   dependencies:
+    "@tetrascience-npm/tetrascience-react-ui": "workspace:*"
     "@types/react": "npm:^18.3.0"
     "@types/react-dom": "npm:^18.3.0"
     "@vitejs/plugin-react": "npm:^4.3.1"
     react: "npm:^18.3.0"
     react-dom: "npm:^18.3.0"
-    tetrascience-react-ui: "workspace:*"
     typescript: "npm:^5.5.3"
     vite: "npm:^5.4.1"
   languageName: unknown
@@ -11791,11 +11791,11 @@ __metadata:
   linkType: hard
 
 "yaml@npm:^2.7.0":
-  version: 2.8.1
-  resolution: "yaml@npm:2.8.1"
+  version: 2.8.2
+  resolution: "yaml@npm:2.8.2"
   bin:
     yaml: bin.mjs
-  checksum: 10c0/7c587be00d9303d2ae1566e03bc5bc7fe978ba0d9bf39cc418c3139d37929dfcb93a230d9749f2cb578b6aa5d9ebebc322415e4b653cb83acd8bc0bc321707f3
+  checksum: 10c0/703e4dc1e34b324aa66876d63618dcacb9ed49f7e7fe9b70f1e703645be8d640f68ab84f12b86df8ac960bac37acf5513e115de7c970940617ce0343c8c9cd96
   languageName: node
   linkType: hard
 

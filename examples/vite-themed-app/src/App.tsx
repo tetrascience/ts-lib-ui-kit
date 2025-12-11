@@ -1,6 +1,6 @@
 import { useState } from 'react';
 // @ts-ignore
-import { ThemeProvider, Button, Card, Modal } from 'tetrascience-react-ui';
+import { ThemeProvider, Button, Card, Modal } from '@tetrascience-npm/tetrascience-react-ui';
 
 // Color palette - easy to identify and change
 const COLORS = {

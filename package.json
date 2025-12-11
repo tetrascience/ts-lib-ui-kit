@@ -1,9 +1,9 @@
 {
-  "name": "tetrascience-react-ui",
+  "name": "@tetrascience-npm/tetrascience-react-ui",
   "version": "0.2.0",
-  "description": "Tetrascience React UI",
+  "description": "TetraScience React UI",
   "type": "module",
-  "author": "Tetrascience",
+  "author": "TetraScience",
   "license": "Apache-2.0",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -103,8 +103,24 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": "eslint --fix"
   },
-  "packageManager": "yarn@4.5.0",
+  "packageManager": "yarn@4.12.0",
   "workspaces": [
     "examples/*"
-  ]
+  ],
+  "directories": {
+    "example": "examples"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tetrascience/ts-lib-ui-kit.git"
+  },
+  "keywords": [
+    "tetrascience",
+    "react",
+    "ui"
+  ],
+  "bugs": {
+    "url": "https://github.com/tetrascience/ts-lib-ui-kit/issues"
+  },
+  "homepage": "https://github.com/tetrascience/ts-lib-ui-kit#readme"
 }

@@ -14,20 +14,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Cache yarn dependencies
-        uses: actions/cache@v4
+      - uses: actions/setup-node@v4
         with:
-          path: .yarn/cache
-          key: yarn-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            yarn-
+          node-version: "20"
+          cache: "yarn"
 
       - name: Configure JFrog Artifactory
         run: |

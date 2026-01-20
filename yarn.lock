@@ -1899,9 +1899,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tetrascience-npm/tetrascience-react-ui@workspace:*, @tetrascience-npm/tetrascience-react-ui@workspace:.":
+"@tetrascience/tetrascience-react-ui@workspace:*, @tetrascience/tetrascience-react-ui@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@tetrascience-npm/tetrascience-react-ui@workspace:."
+  resolution: "@tetrascience/tetrascience-react-ui@workspace:."
   dependencies:
     "@dagrejs/dagre": "npm:^1.1.4"
     "@eslint/js": "npm:^9.9.0"
@@ -11499,7 +11499,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "vite-themed-app@workspace:examples/vite-themed-app"
   dependencies:
-    "@tetrascience-npm/tetrascience-react-ui": "workspace:*"
+    "@tetrascience/tetrascience-react-ui": "workspace:*"
     "@types/react": "npm:^18.3.0"
     "@types/react-dom": "npm:^18.3.0"
     "@vitejs/plugin-react": "npm:^4.3.1"

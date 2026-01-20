@@ -22,7 +22,7 @@ Before you begin, make sure you have:
 ## Step 1: Installation
 
 ```bash
-yarn add @tetrascience-npm/tetrascience-react-ui
+yarn add @tetrascience/tetrascience-react-ui
 ```
 
 ### Important: Import the CSS
@@ -31,7 +31,7 @@ After installing, you **must** import the CSS file in your application entry poi
 
 ```tsx
 // In your App.tsx or index.tsx
-import '@tetrascience-npm/tetrascience-react-ui/index.css';
+import '@tetrascience/tetrascience-react-ui/index.css';
 ```
 
 Without this import, components will not be styled correctly.
@@ -98,8 +98,8 @@ Let's create your first application step by step.
 yarn create vite my-tetrascience-app --template react-ts
 cd my-tetrascience-app
 
-# Install @tetrascience-npm/tetrascience-react-ui
-yarn add @tetrascience-npm/tetrascience-react-ui
+# Install @tetrascience/tetrascience-react-ui
+yarn add @tetrascience/tetrascience-react-ui
 ```
 
 ### Set Up the Entry Point
@@ -112,7 +112,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 
 // Important: Import the CSS
-import '@tetrascience-npm/tetrascience-react-ui/index.css';
+import '@tetrascience/tetrascience-react-ui/index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -126,7 +126,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 Edit your `src/App.tsx`:
 
 ```tsx
-import { Button, Card } from '@tetrascience-npm/tetrascience-react-ui';
+import { Button, Card } from '@tetrascience/tetrascience-react-ui';
 
 function App() {
   return (
@@ -159,8 +159,8 @@ Your browser should open showing your new TetraScience app!
 Let's add a bar graph to visualise some data:
 
 ```tsx
-import { Button, Card, BarGraph } from '@tetrascience-npm/tetrascience-react-ui';
-import type { BarDataSeries } from '@tetrascience-npm/tetrascience-react-ui';
+import { Button, Card, BarGraph } from '@tetrascience/tetrascience-react-ui';
+import type { BarDataSeries } from '@tetrascience/tetrascience-react-ui';
 
 function App() {
   const experimentData: BarDataSeries[] = [
@@ -211,8 +211,8 @@ export default App;
 Customise the look and feel with the ThemeProvider:
 
 ```tsx
-import { ThemeProvider, Button, Card } from '@tetrascience-npm/tetrascience-react-ui';
-import type { Theme } from '@tetrascience-npm/tetrascience-react-ui';
+import { ThemeProvider, Button, Card } from '@tetrascience/tetrascience-react-ui';
+import type { Theme } from '@tetrascience/tetrascience-react-ui';
 
 // Define your custom theme
 const customTheme: Partial<Theme> = {
@@ -251,7 +251,7 @@ Create interactive forms with validation:
 
 ```tsx
 import { useState } from 'react';
-import { Card, FormField, SelectField, Button, Toggle } from '@tetrascience-npm/tetrascience-react-ui';
+import { Card, FormField, SelectField, Button, Toggle } from '@tetrascience/tetrascience-react-ui';
 
 function SampleForm() {
   const [sampleName, setSampleName] = useState('');
@@ -309,8 +309,8 @@ function SampleForm() {
 The library is fully typed. Import types alongside components:
 
 ```tsx
-import { Button, BarGraph } from '@tetrascience-npm/tetrascience-react-ui';
-import type { ButtonProps, BarGraphProps, BarDataSeries } from '@tetrascience-npm/tetrascience-react-ui';
+import { Button, BarGraph } from '@tetrascience/tetrascience-react-ui';
+import type { ButtonProps, BarGraphProps, BarDataSeries } from '@tetrascience/tetrascience-react-ui';
 
 // Use types for props validation
 const MyButton = (props: ButtonProps) => <Button {...props} />;
@@ -324,7 +324,7 @@ const chartData: BarDataSeries[] = [/* ... */];
 Build complex UIs by composing simpler components:
 
 ```tsx
-import { Card, FormField, Button, Modal } from '@tetrascience-npm/tetrascience-react-ui';
+import { Card, FormField, Button, Modal } from '@tetrascience/tetrascience-react-ui';
 
 function DataEntryCard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -361,7 +361,7 @@ Wrap component usage in error boundaries for production apps:
 
 ```tsx
 import { ErrorBoundary } from 'react-error-boundary';
-import { BarGraph } from '@tetrascience-npm/tetrascience-react-ui';
+import { BarGraph } from '@tetrascience/tetrascience-react-ui';
 
 function ChartWithErrorHandling({ data }) {
   return (
@@ -404,7 +404,7 @@ if (validateChartData(myData)) {
 
 ```tsx
 // Import everything to explore
-import * as TetraScienceUI from '@tetrascience-npm/tetrascience-react-ui';
+import * as TetraScienceUI from '@tetrascience/tetrascience-react-ui';
 
 // Log available exports
 console.log(Object.keys(TetraScienceUI));
@@ -431,7 +431,7 @@ Visit http://localhost:6006 to explore all components with live examples.
 
 **Solution**: Ensure you've imported the CSS:
 ```tsx
-import '@tetrascience-npm/tetrascience-react-ui/index.css';
+import '@tetrascience/tetrascience-react-ui/index.css';
 ```
 
 ### TypeScript Errors
@@ -440,7 +440,7 @@ import '@tetrascience-npm/tetrascience-react-ui/index.css';
 
 **Solution**: Import types explicitly:
 ```tsx
-import type { ButtonProps } from '@tetrascience-npm/tetrascience-react-ui';
+import type { ButtonProps } from '@tetrascience/tetrascience-react-ui';
 ```
 
 ### Charts Not Rendering

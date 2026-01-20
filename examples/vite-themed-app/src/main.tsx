@@ -1,10 +1,10 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import '@tetrascience-npm/tetrascience-react-ui/index.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "@tetrascience/tetrascience-react-ui/index.css";
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>
+  </React.StrictMode>,
 );

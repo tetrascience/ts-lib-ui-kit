@@ -1,5 +1,5 @@
 {
-  "name": "@tetrascience-npm/tetrascience-react-ui",
+  "name": "@tetrascience/tetrascience-react-ui",
   "version": "0.2.0",
   "description": "TetraScience React UI",
   "type": "module",

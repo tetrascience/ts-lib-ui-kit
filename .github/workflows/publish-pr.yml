@@ -1,0 +1,52 @@
+name: Publish PR
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  publish-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Cache yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-
+
+      - name: Configure JFrog Artifactory
+        run: |
+          echo "npmRegistryServer: ${{ secrets.JFROG_ARTIFACTORY_NPM_VIRTUAL_URL }}" >> .yarnrc.yml
+          echo "npmAuthIdent: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}" >> .yarnrc.yml
+          echo "npmAlwaysAuth: true" >> .yarnrc.yml
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build package
+        run: yarn build
+
+      - name: Update version for PR release
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          NEW_VERSION="${CURRENT_VERSION}-alpha.${{ github.run_number }}"
+          npm version $NEW_VERSION --no-git-tag-version
+          echo "Publishing version: $NEW_VERSION"
+
+      - name: Configure JFrog Artifactory (Publish)
+        run: |
+          sed -i "s|npmRegistryServer: .*|npmRegistryServer: ${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_URL }}|g" .yarnrc.yml
+          sed -i "s|npmAuthIdent: .*|npmAuthIdent: ${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_AUTH }}|g" .yarnrc.yml
+
+      - name: Publish package
+        run: yarn npm publish --tag alpha
+

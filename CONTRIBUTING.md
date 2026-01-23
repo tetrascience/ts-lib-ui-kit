@@ -12,10 +12,12 @@ ts-lib-ui-kit-react/
 │   │   ├── atoms/       # Basic building blocks (Button, Input, etc.)
 │   │   ├── molecules/   # Combinations of atoms (Forms, Menus, etc.)
 │   │   └── organisms/   # Complex UI sections (Charts, Graphs, etc.)
+│   ├── server/          # Server-side utilities (imported via /server subpath)
+│   │   └── auth/        # Authentication utilities (JWT Token Manager)
 │   ├── styles/          # Global styles and SCSS variables
 │   ├── theme/           # ThemeProvider and theme utilities
 │   ├── types/           # TypeScript type definitions
-│   └── utils/           # Utility functions and colour tokens
+│   └── utils/           # Pure utility functions (colors, formatters)
 ├── .storybook/          # Storybook configuration
 ├── examples/            # Example applications
 └── dist/                # Built library output (generated)
@@ -67,6 +69,7 @@ The project uses path aliases for cleaner imports (configured in `tsconfig.app.j
 | `@organisms/*` | `src/components/organisms/*` |
 | `@styles/*` | `src/styles/*` |
 | `@utils/*` | `src/utils/*` |
+| `@server/*` | `src/server/*` |
 
 ## Build System
 

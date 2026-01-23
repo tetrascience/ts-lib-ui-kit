@@ -10,6 +10,7 @@
 
 # Built artifacts
 dist
+*.tgz
 
 # Coverage reports
 coverage

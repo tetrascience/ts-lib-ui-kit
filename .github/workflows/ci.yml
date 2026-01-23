@@ -10,11 +10,22 @@ on:
       - main
       - "release/**"
 
+permissions:
+  contents: read
+
 jobs:
-  ci:
-    uses: tetrascience/ts-data-insights-ci-cd-common/.github/workflows/npm_package_ci.yml@main
+  build:
+    runs-on: ubuntu-latest
 
-    secrets:
-      JFROG_ARTIFACTORY_NPM_VIRTUAL_URL: '${{ secrets.JFROG_ARTIFACTORY_NPM_VIRTUAL_URL }}'
-      JFROG_ARTIFACTORY_READ_NPM_AUTH: '${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        run: yarn install --immutable
 
+      - name: Run Tests
+        run: yarn run test:coverage

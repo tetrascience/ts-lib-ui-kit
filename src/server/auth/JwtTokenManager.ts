@@ -36,6 +36,12 @@ interface JwtPayload {
   [key: string]: unknown;
 }
 
+/** Cached token entry storing both raw token and parsed payload */
+interface CachedTokenEntry {
+  token: string;
+  payload: JwtPayload;
+}
+
 const DEFAULT_TOKEN_REFRESH_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
@@ -43,21 +49,35 @@ const DEFAULT_TOKEN_REFRESH_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
  * Supports both ts-auth-token (direct JWT) and ts-token-ref (resolved via connector store).
  */
 export class JwtTokenManager {
-  private baseUrl: string;
+  private baseUrlOverride: string | undefined;
   private connectorId: string | undefined;
   private orgSlug: string | undefined;
-  private tokenCache: Map<string, string>;
+  private tokenCache: Map<string, CachedTokenEntry>;
   private tokenRefreshThresholdMs: number;
   private tdpClient: TDPClient | null;
 
   constructor(config: JwtTokenManagerConfig = {}) {
-    this.baseUrl = config.baseUrl || process.env.TDP_ENDPOINT || "";
+    this.baseUrlOverride = config.baseUrl;
     this.connectorId = process.env.CONNECTOR_ID;
     this.orgSlug = process.env.ORG_SLUG;
     this.tokenCache = new Map();
     this.tokenRefreshThresholdMs =
       config.tokenRefreshThresholdMs || DEFAULT_TOKEN_REFRESH_THRESHOLD_MS;
     this.tdpClient = null;
+  }
+
+  /**
+   * Get the base URL for TDP API calls.
+   * Throws an error if not configured (either via config.baseUrl or TDP_ENDPOINT env var).
+   */
+  private getBaseUrl(): string {
+    const baseUrl = this.baseUrlOverride || process.env.TDP_ENDPOINT;
+    if (!baseUrl) {
+      throw new Error(
+        "TDP base URL not configured. Set TDP_ENDPOINT environment variable or pass baseUrl in config.",
+      );
+    }
+    return baseUrl;
   }
 
   /**
@@ -88,29 +108,23 @@ export class JwtTokenManager {
     }
   }
 
-  /** Check if token is expiring within the refresh threshold */
-  private isTokenExpiringSoon(token: string): boolean {
-    const payload = this.decodeJwtPayload(token);
-    if (!payload?.exp) {
-      if (!payload) {
-        return true;
-      }
+  /** Check if payload is expiring within the refresh threshold */
+  private isPayloadExpiringSoon(payload: JwtPayload): boolean {
+    if (!payload.exp) {
       console.warn("JWT token has no expiration claim");
       return true;
     }
 
     const expiryTimeMs = payload.exp * 1000;
     const refreshTimeMs = Date.now() + this.tokenRefreshThresholdMs;
-    const isExpiring = expiryTimeMs <= refreshTimeMs;
-
-    return isExpiring;
+    return expiryTimeMs <= refreshTimeMs;
   }
 
   /** Get valid cached token if not expiring */
   private getValidUserJwt(tokenRef: string): string | null {
     const cached = this.tokenCache.get(tokenRef);
-    if (cached && !this.isTokenExpiringSoon(cached)) {
-      return cached;
+    if (cached && !this.isPayloadExpiringSoon(cached.payload)) {
+      return cached.token;
     }
     // Clean up expired entry to prevent unbounded cache growth
     if (cached) {
@@ -127,16 +141,15 @@ export class JwtTokenManager {
       return this.tdpClient;
     }
 
-    if (!this.connectorId || !this.baseUrl || !this.orgSlug) {
-      console.error(
-        "Missing required configuration: CONNECTOR_ID, baseUrl, or ORG_SLUG",
-      );
+    if (!this.connectorId || !this.orgSlug) {
+      console.error("Missing required configuration: CONNECTOR_ID or ORG_SLUG");
       return null;
     }
 
     try {
+      const baseUrl = this.getBaseUrl();
       const client = new TDPClient({
-        tdpEndpoint: this.baseUrl,
+        tdpEndpoint: baseUrl,
         connectorId: this.connectorId,
         orgSlug: this.orgSlug,
       });
@@ -168,7 +181,11 @@ export class JwtTokenManager {
 
       if (values && values.length > 0 && values[0]?.jwt) {
         const jwtToken = values[0].jwt;
-        this.tokenCache.set(tokenRef, jwtToken);
+        // Parse and cache both the raw token and its payload to avoid repeated decoding
+        const payload = this.decodeJwtPayload(jwtToken);
+        if (payload) {
+          this.tokenCache.set(tokenRef, { token: jwtToken, payload });
+        }
         return jwtToken;
       }
 
@@ -182,7 +199,7 @@ export class JwtTokenManager {
 
   /** Resolve ts-token-ref to full JWT token (with caching) */
   async getJwtFromTokenRef(tokenRef: string): Promise<string | null> {
-    if (!tokenRef || !this.orgSlug || !this.baseUrl) {
+    if (!tokenRef || !this.orgSlug) {
       console.warn("Missing required parameters for JWT token retrieval");
       return null;
     }

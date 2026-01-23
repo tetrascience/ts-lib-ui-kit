@@ -114,11 +114,18 @@ describe("JwtTokenManager", () => {
       delete process.env.ORG_SLUG;
       const manager2 = new JwtTokenManager({ baseUrl: "https://api.com" });
       expect(await manager2.getJwtFromTokenRef("token-ref")).toBeNull();
+    });
 
-      // Missing baseUrl
+    it("should throw error when baseUrl is not configured", async () => {
+      process.env.CONNECTOR_ID = "test-connector";
       process.env.ORG_SLUG = "test-org";
-      const managerNoUrl = new JwtTokenManager({ baseUrl: "" });
-      expect(await managerNoUrl.getJwtFromTokenRef("token-ref")).toBeNull();
+      delete process.env.TDP_ENDPOINT;
+
+      const managerNoUrl = new JwtTokenManager();
+      // getJwtFromTokenRef will try to get TDP client, which calls getBaseUrl() and throws
+      await expect(
+        managerNoUrl.getJwtFromTokenRef("token-ref"),
+      ).rejects.toThrow("TDP base URL not configured");
     });
   });
 

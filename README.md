@@ -72,6 +72,37 @@ const customTheme = {
 
 See [THEMING.md](./THEMING.md) for the complete theming guide.
 
+## Library Features (lib)
+
+Beyond UI components, this library includes helper functions for building TetraScience applications:
+
+### Authentication (`server/auth`)
+
+**JWT Token Manager** - Manages JWT token retrieval and validation for data apps:
+
+```typescript
+import { jwtManager } from '@tetrascience-npm/tetrascience-react-ui/server';
+
+// In Express middleware
+app.use(async (req, res, next) => {
+  const token = await jwtManager.getTokenFromExpressRequest(req);
+  req.tdpAuth = { token, orgSlug: process.env.ORG_SLUG };
+  next();
+});
+
+// Or with raw cookies
+const token = await jwtManager.getUserToken(req.cookies);
+```
+
+**Environment Variables:**
+
+- `ORG_SLUG` - Organization slug (required)
+- `CONNECTOR_ID` - Connector ID for ts-token-ref flow
+- `TDP_ENDPOINT` or `TDP_INTERNAL_ENDPOINT` - API base URL
+- `TS_AUTH_TOKEN` - Service account token (fallback for local dev)
+
+See [server/auth/README.md](./src/server/auth/README.md) for complete documentation.
+
 ## TypeScript Support
 
 Full TypeScript support with exported types:

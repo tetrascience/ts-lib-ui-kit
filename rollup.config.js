@@ -26,7 +26,7 @@ const banner = `/*
  */`;
 
 export default [
-  // JS build (swallow any component .scss imports)
+  // React components (swallow any component .scss imports)
   {
     input: "src/index.ts",
     output: [
@@ -49,7 +49,7 @@ export default [
       "react",
       "react-dom",
       ...Object.keys(pkg.peerDependencies || {}),
-      ...Object.keys(pkg.dependencies   || {}),
+      ...Object.keys(pkg.dependencies || {}),
     ],
     plugins: [
       peerDepsExternal(),
@@ -57,19 +57,58 @@ export default [
       commonjs(),
       json(),
       typescript({
-        tsconfig:        "./tsconfig.app.json",
-        tsconfigOverride:{ compilerOptions: { declaration: false } },
-        clean:           true,
+        tsconfig: "./tsconfig.app.json",
+        tsconfigOverride: { compilerOptions: { declaration: false } },
+        clean: true,
       }),
       postcss({
         extensions: [".css", ".scss"],
-        extract:    false,
-        inject:     false,
-        minimize:   true,
-        use:        ["sass"],
+        extract: false,
+        inject: false,
+        minimize: true,
+        use: ["sass"],
         autoModules: false,
       }),
-      terser({ output: { comments: false }, compress: { drop_console: false } }),
+      terser({
+        output: { comments: false },
+        compress: { drop_console: false },
+      }),
+    ],
+  },
+
+  // Server JS build
+  {
+    input: "src/server.ts",
+    output: [
+      {
+        file: "dist/cjs/server.js",
+        format: "cjs",
+        sourcemap: true,
+        exports: "named",
+        banner,
+      },
+      {
+        file: "dist/esm/server.js",
+        format: "esm",
+        sourcemap: true,
+        exports: "named",
+        banner,
+      },
+    ],
+    external: [...Object.keys(pkg.dependencies || {})],
+    plugins: [
+      resolve({ extensions: [".js", ".jsx", ".ts", ".tsx", ".json"] }),
+      commonjs(),
+      json(),
+      typescript({
+        tsconfig: "./tsconfig.app.json",
+        tsconfigOverride: { compilerOptions: { declaration: false } },
+        clean: true,
+      }),
+      terser({
+        output: { comments: false },
+        compress: { drop_console: false },
+      }),
     ],
   },
 
@@ -77,24 +116,31 @@ export default [
   {
     input: "src/index.css",
     output: {
-      dir:            "dist",
-      assetFileNames: "[name][extname]"
+      dir: "dist",
+      assetFileNames: "[name][extname]",
     },
     plugins: [
       postcss({
         extensions: [".css", ".scss"],
-        extract:    "index.css",
-        minimize:   true,
-        use:        ["sass"],
+        extract: "index.css",
+        minimize: true,
+        use: ["sass"],
       }),
     ],
   },
 
-  // Bundle type declarations
+  // Bundle type declarations for main entry
   {
-    input:  "src/index.ts",
+    input: "src/index.ts",
     output: { file: "dist/index.d.ts", format: "es" },
-    external:[ /\.scss$/ ],
-    plugins:[ dts() ],
+    external: [/\.scss$/],
+    plugins: [dts()],
+  },
+
+  // Bundle type declarations for server entry
+  {
+    input: "src/server.ts",
+    output: { file: "dist/server.d.ts", format: "es" },
+    plugins: [dts()],
   },
 ];

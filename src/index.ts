@@ -113,16 +113,10 @@ export type {
   BarGraphProps,
 } from "@organisms/BarGraph";
 export type { BoxplotProps } from "@organisms/Boxplot";
-export type {
-  PeakData,
-  ChromatogramProps,
-} from "@organisms/Chromatogram";
+export type { PeakData, ChromatogramProps } from "@organisms/Chromatogram";
 export type { DotPlotProps } from "@organisms/DotPlot";
 export type { HeatmapProps } from "@organisms/Heatmap";
-export type {
-  HistogramProps,
-  HistogramDataSeries,
-} from "@organisms/Histogram";
+export type { HistogramProps, HistogramDataSeries } from "@organisms/Histogram";
 export type {
   LineDataSeries,
   LineGraphVariant,
@@ -143,6 +137,10 @@ export type {
 // utils
 export { COLORS, CHART_COLORS } from "./utils/colors";
 export type { ColorToken } from "./utils/colors";
+
+// Server
+// Backend utilities and API helpers
+export * from "./server";
 
 // theme
 export { ThemeProvider, defaultTheme } from "./theme";

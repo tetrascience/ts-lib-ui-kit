@@ -136,18 +136,21 @@ export class JwtTokenManager {
   }
 
   /** Initialize or get TDP client */
-  private async getTdpClient(): Promise<TDPClient | null> {
+  private async getTdpClient(): Promise<TDPClient> {
     if (this.tdpClient !== null) {
       return this.tdpClient;
     }
 
     if (!this.connectorId || !this.orgSlug) {
-      console.error("Missing required configuration: CONNECTOR_ID or ORG_SLUG");
-      return null;
+      throw new Error(
+        "Missing required configuration: CONNECTOR_ID or ORG_SLUG",
+      );
     }
 
+    // getBaseUrl() throws if TDP_ENDPOINT not configured - let it propagate
+    const baseUrl = this.getBaseUrl();
+
     try {
-      const baseUrl = this.getBaseUrl();
       const client = new TDPClient({
         tdpEndpoint: baseUrl,
         connectorId: this.connectorId,
@@ -159,8 +162,9 @@ export class JwtTokenManager {
       this.tdpClient = client;
       return this.tdpClient;
     } catch (error) {
-      console.error("Failed to create TDP client instance:", error);
-      return null;
+      // Log init errors but rethrow so callers know something went wrong
+      console.error("Failed to initialize TDP client:", error);
+      throw error;
     }
   }
 
@@ -168,13 +172,10 @@ export class JwtTokenManager {
   private async getJwtFromTokenRefInternal(
     tokenRef: string,
   ): Promise<string | null> {
-    try {
-      const tdpClient = await this.getTdpClient();
-      if (!tdpClient) {
-        console.error("Failed to get TDP client instance");
-        return null;
-      }
+    // getTdpClient() throws on config errors - let those propagate
+    const tdpClient = await this.getTdpClient();
 
+    try {
       // getValues returns array of values for the given keys
       // Each value is expected to have a jwt property: { jwt: "..." }
       const values = await tdpClient.getValues([tokenRef]);

@@ -190,18 +190,24 @@ describe("JwtTokenManager", () => {
       expect(mockInit).toHaveBeenCalledTimes(1); // Client reused
     });
 
-    it("should handle TDP client errors gracefully", async () => {
+    it("should throw error when TDP client init fails", async () => {
       process.env.CONNECTOR_ID = "test-connector";
       process.env.ORG_SLUG = "test-org";
       const manager = new JwtTokenManager({ baseUrl: "https://api.com" });
 
       mockInit.mockRejectedValueOnce(new Error("Connection failed"));
-      expect(await manager.getJwtFromTokenRef("ref-1")).toBeNull();
+      await expect(manager.getJwtFromTokenRef("ref-1")).rejects.toThrow(
+        "Connection failed",
+      );
+    });
 
-      // Reset for next call
-      mockInit.mockResolvedValue(undefined);
+    it("should return null when getValues fails but client is initialized", async () => {
+      process.env.CONNECTOR_ID = "test-connector";
+      process.env.ORG_SLUG = "test-org";
+      const manager = new JwtTokenManager({ baseUrl: "https://api.com" });
+
       mockGetValues.mockRejectedValueOnce(new Error("Network error"));
-      expect(await manager.getJwtFromTokenRef("ref-2")).toBeNull();
+      expect(await manager.getJwtFromTokenRef("ref-1")).toBeNull();
     });
   });
 

@@ -138,10 +138,6 @@ export type {
 export { COLORS, CHART_COLORS } from "./utils/colors";
 export type { ColorToken } from "./utils/colors";
 
-// Server
-// Backend utilities and API helpers
-export * from "./server";
-
 // theme
 export { ThemeProvider, defaultTheme } from "./theme";
 export type {

@@ -4,6 +4,11 @@
  * Handles authentication token retrieval from Express request cookies,
  * supporting both direct JWT tokens (ts-auth-token) and token references
  * (ts-token-ref) that are resolved via the connector K/V store.
+ *
+ * Note: This manager does not perform cryptographic verification of JWT signatures.
+ * Signature verification is the responsibility of the consuming application or
+ * the upstream authentication layer. The JWT payload is decoded only to read
+ * expiration times for cache invalidation.
  */
 
 import { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
@@ -21,7 +26,7 @@ export interface CookieDict {
 
 /** Express-like request interface (works with Express, Koa, etc.) */
 export interface ExpressRequestLike {
-  cookies: CookieDict;
+  cookies?: CookieDict;
 }
 
 /** JWT payload structure */
@@ -55,7 +60,11 @@ export class JwtTokenManager {
     this.tdpClient = null;
   }
 
-  /** Decode JWT payload */
+  /**
+   * Decode JWT payload without verifying signature.
+   * Used only for reading expiration times for cache invalidation.
+   * Signature verification is NOT performed here.
+   */
   private decodeJwtPayload(token: string): JwtPayload | null {
     try {
       const parts = token.split(".");
@@ -71,7 +80,8 @@ export class JwtTokenManager {
         "=",
       );
 
-      return JSON.parse(atob(paddedBase64));
+      // Use Buffer.from for Node.js compatibility (atob not available in all runtimes)
+      return JSON.parse(Buffer.from(paddedBase64, "base64").toString("utf-8"));
     } catch (error) {
       console.warn("Error decoding JWT token:", error);
       return null;
@@ -102,6 +112,12 @@ export class JwtTokenManager {
     if (cached && !this.isTokenExpiringSoon(cached)) {
       return cached;
     }
+    // Clean up expired entry to prevent unbounded cache growth
+    if (cached) {
+      // TODO: If data apps become high-traffic, consider enhancing with
+      // an LRU cache (e.g., lru-cache package) to purge stale entries automatically
+      this.tokenCache.delete(tokenRef);
+    }
     return null;
   }
 
@@ -119,13 +135,15 @@ export class JwtTokenManager {
     }
 
     try {
-      this.tdpClient = new TDPClient({
+      const client = new TDPClient({
         tdpEndpoint: this.baseUrl,
         connectorId: this.connectorId,
         orgSlug: this.orgSlug,
       });
 
-      await this.tdpClient.init();
+      await client.init();
+      // Only assign after successful initialization to allow retry on failure
+      this.tdpClient = client;
       return this.tdpClient;
     } catch (error) {
       console.error("Failed to create TDP client instance:", error);
@@ -219,7 +237,8 @@ export class JwtTokenManager {
   async getTokenFromExpressRequest(
     req: ExpressRequestLike,
   ): Promise<string | null> {
-    return this.getUserToken(req.cookies);
+    // Handle missing cookies gracefully (e.g., if cookie-parser middleware not installed)
+    return this.getUserToken(req.cookies || {});
   }
 
   /** Clear the token cache */
@@ -228,5 +247,15 @@ export class JwtTokenManager {
   }
 }
 
-/** Global singleton instance */
+/**
+ * Global singleton instance.
+ *
+ * Note: This instance is created when the module is imported. Configuration
+ * that depends on environment variables (CONNECTOR_ID, ORG_SLUG, TDP_ENDPOINT)
+ * is read at module load time. Ensure these environment
+ * variables are set before importing this module.
+ *
+ * If you need different configuration at runtime, create a new JwtTokenManager
+ * instance instead of using this singleton.
+ */
 export const jwtManager = new JwtTokenManager();

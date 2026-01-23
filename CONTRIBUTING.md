@@ -12,7 +12,7 @@ ts-lib-ui-kit-react/
 │   │   ├── atoms/       # Basic building blocks (Button, Input, etc.)
 │   │   ├── molecules/   # Combinations of atoms (Forms, Menus, etc.)
 │   │   └── organisms/   # Complex UI sections (Charts, Graphs, etc.)
-│   ├── lib/             # Business logic and helper functions
+│   ├── server/          # Server-side utilities (imported via /server subpath)
 │   │   └── auth/        # Authentication utilities (JWT Token Manager)
 │   ├── styles/          # Global styles and SCSS variables
 │   ├── theme/           # ThemeProvider and theme utilities

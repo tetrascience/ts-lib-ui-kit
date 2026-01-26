@@ -4,6 +4,8 @@ on:
   push:
     tags: '*'
 
+permissions: {}
+
 jobs:
   approve:
     runs-on: ubuntu-latest

@@ -9,7 +9,7 @@ permissions: {}
 
 jobs:
   publish:
-    uses: tetrascience/devops/.github/workflows/publish-npm-package.yml@main
+    uses: tetrascience/ts-ci-cd-lib/.github/workflows/publish-npm-package.yml@main
     with:
       prerelease_tag: alpha
     secrets:

@@ -15,7 +15,7 @@ jobs:
 
   publish:
     needs: approve
-    uses: tetrascience/devops/.github/workflows/publish-npm-package.yml@main
+    uses: tetrascience/ts-ci-cd-lib/.github/workflows/publish-npm-package.yml@main
     with:
       publish_to_public_npm: true
     secrets:

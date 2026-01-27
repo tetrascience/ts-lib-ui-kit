@@ -16,6 +16,6 @@ jobs:
       prerelease_tag: alpha
     secrets:
       AUTH_TOKEN: '${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_AUTH }}'
-      REGISTRY: '${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_URL }}'
+      REGISTRY: '${{ secrets.JFROG_ARTIFACTORY_NPM_VIRTUAL_URL }}'
       PUBLISH_REGISTRY: '${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_URL }}'
 

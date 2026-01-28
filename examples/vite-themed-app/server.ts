@@ -74,8 +74,14 @@ app.get("/api/providers", async (_req, res) => {
 app.post("/api/query", async (req, res) => {
   const { providerName, sql } = req.body;
 
-  if (!sql) {
-    return res.status(400).json({ error: "SQL query is required" });
+  if (typeof sql !== "string" || sql.trim() === "") {
+    return res.status(400).json({ error: "SQL query must be a non-empty string" });
+  }
+
+  // Basic safeguard against excessively large queries
+  const MAX_SQL_LENGTH = 262144;
+  if (sql.length > MAX_SQL_LENGTH) {
+    return res.status(400).json({ error: "SQL query length exceeds allowed limit" });
   }
 
   try {

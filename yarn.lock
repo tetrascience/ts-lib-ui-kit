@@ -2079,7 +2079,7 @@ __metadata:
 
 "@tetrascience-npm/ts-connectors-sdk@npm:^3.1.1":
   version: 3.1.1
-  resolution: "@tetrascience-npm/ts-connectors-sdk@npm:3.1.1"
+  resolution: "@tetrascience-npm/ts-connectors-sdk@npm:3.1.1::__archiveUrl=https%3A%2F%2Ftetrascience.jfrog.io%2Fartifactory%2Fapi%2Fnpm%2Fts-npm-virtual%2F%40tetrascience-npm%2Fts-connectors-sdk%2F-%2F%40tetrascience-npm%2Fts-connectors-sdk-3.1.1.tgz"
   dependencies:
     "@smithy/node-http-handler": "npm:^3.1.1"
     dotenv: "npm:^16.3.1"
@@ -2116,59 +2116,59 @@ __metadata:
   linkType: hard
 
 "@turf/area@npm:^7.1.0":
-  version: 7.3.2
-  resolution: "@turf/area@npm:7.3.2"
+  version: 7.3.3
+  resolution: "@turf/area@npm:7.3.3"
   dependencies:
-    "@turf/helpers": "npm:7.3.2"
-    "@turf/meta": "npm:7.3.2"
+    "@turf/helpers": "npm:7.3.3"
+    "@turf/meta": "npm:7.3.3"
     "@types/geojson": "npm:^7946.0.10"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/51b2d127cb7127260d42554cab2bcbb64fd37485f37326c43e39fe2171dde1e8567cdf4941dede29075b5198080ffe67a1f5144d7bc8dfea12c060b06ebd19ad
+  checksum: 10c0/8d87e81383da1bfbbecf22b19fe43fbebb6b2d102628905d75bdb99b036b6b9ccfe2044fb6db90e22828a7f3a84f26f45aa83fa5f94eadde9edf4b281b9893ea
   languageName: node
   linkType: hard
 
 "@turf/bbox@npm:^7.1.0":
-  version: 7.3.2
-  resolution: "@turf/bbox@npm:7.3.2"
+  version: 7.3.3
+  resolution: "@turf/bbox@npm:7.3.3"
   dependencies:
-    "@turf/helpers": "npm:7.3.2"
-    "@turf/meta": "npm:7.3.2"
+    "@turf/helpers": "npm:7.3.3"
+    "@turf/meta": "npm:7.3.3"
     "@types/geojson": "npm:^7946.0.10"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/ef2f83d1304cd580ace47c88a004469c63d62c587410b9aea3e2930b9b311233cfaf4109949d1a903517521b0baeb92518b5820eb38f452c24feec19a5629d4c
+  checksum: 10c0/1a3a3fed86cd2a56733b53b24c7bdecbe93f40a2e171613b60892a7a9adf96043802f1dd1adb3162468d3f0a3630295420580402162a24d550d6165421970627
   languageName: node
   linkType: hard
 
 "@turf/centroid@npm:^7.1.0":
-  version: 7.3.2
-  resolution: "@turf/centroid@npm:7.3.2"
+  version: 7.3.3
+  resolution: "@turf/centroid@npm:7.3.3"
   dependencies:
-    "@turf/helpers": "npm:7.3.2"
-    "@turf/meta": "npm:7.3.2"
+    "@turf/helpers": "npm:7.3.3"
+    "@turf/meta": "npm:7.3.3"
     "@types/geojson": "npm:^7946.0.10"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/eac709bd312596619d58b6396e68d21b8bbc99bf30638251e399dcf07c2c1f4b22ceb30acbe241ad236542aecc09689350d32e0a5c815a0a0c3c0cae95ebc46c
+  checksum: 10c0/d0b916b0d28a2f2fa773b5982d9b2cb780f48c63a9774a4c10d26f662d186001fc8852a8abb8bfb8aaee597f7fefd0d48168a46efbcfe9f45e3fac19c1b3fa4e
   languageName: node
   linkType: hard
 
-"@turf/helpers@npm:7.3.2":
-  version: 7.3.2
-  resolution: "@turf/helpers@npm:7.3.2"
+"@turf/helpers@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@turf/helpers@npm:7.3.3"
   dependencies:
     "@types/geojson": "npm:^7946.0.10"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/8576c32793268b2e7ba9d82691a57f6d544d2362ca2176a351ac11c2fac8e04ff069ab327c26b21cf1929b7b8562e77fd56d6db61718cb7bb01621fce06dabfb
+  checksum: 10c0/dd4ea19b6d6f93bb268a46846ecb731f731b1a8a0bc2e864dd9a74ac5aee6ba72cab34202d6ef4394793464aa5dc0c21a99aa12832a72e29150536a98bf18bce
   languageName: node
   linkType: hard
 
-"@turf/meta@npm:7.3.2":
-  version: 7.3.2
-  resolution: "@turf/meta@npm:7.3.2"
+"@turf/meta@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@turf/meta@npm:7.3.3"
   dependencies:
-    "@turf/helpers": "npm:7.3.2"
+    "@turf/helpers": "npm:7.3.3"
     "@types/geojson": "npm:^7946.0.10"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/fa0dbf88e54d8416463d85dcb79f23a106765efe27e21284a36c54a53859f95a19494680f865df8b2c1a0c66e95d7f5d8c6d546fe33b3309668bacd86d505233
+  checksum: 10c0/4b8824dff1f3d9d7511989e2176ba53a8b21723e959b508fe46ad35d2619513b558d6b159ef5acdfbadde30230be9a7f02ee04f4fb0161122cceb5dc3be63f7b
   languageName: node
   linkType: hard
 
@@ -3235,11 +3235,11 @@ __metadata:
   linkType: hard
 
 "baseline-browser-mapping@npm:^2.9.0":
-  version: 2.9.18
-  resolution: "baseline-browser-mapping@npm:2.9.18"
+  version: 2.9.19
+  resolution: "baseline-browser-mapping@npm:2.9.19"
   bin:
     baseline-browser-mapping: dist/cli.js
-  checksum: 10c0/869bdbb2784f8b1bc49b52d54ea48bf9ea6da8309195e3a0b3f4625197b8187a9b557b1d02f1b6b6dd51f163840a87db259e2b791eed35f0c5fddf3110c4cf28
+  checksum: 10c0/569928db78bcd081953d7db79e4243a59a579a34b4ae1806b9b42d3b7f84e5bc40e6e82ae4fa06e7bef8291bf747b33b3f9ef5d3c6e1e420cb129d9295536129
   languageName: node
   linkType: hard
 
@@ -11395,15 +11395,15 @@ __metadata:
   linkType: hard
 
 "tar@npm:^7.5.4":
-  version: 7.5.6
-  resolution: "tar@npm:7.5.6"
+  version: 7.5.7
+  resolution: "tar@npm:7.5.7"
   dependencies:
     "@isaacs/fs-minipass": "npm:^4.0.0"
     chownr: "npm:^3.0.0"
     minipass: "npm:^7.1.2"
     minizlib: "npm:^3.1.0"
     yallist: "npm:^5.0.0"
-  checksum: 10c0/08af3807035957650ad5f2a300c49ca4fe0566ac0ea5a23741a5b5103c6da42891a9eeaed39bc1fbcf21c5cac4dc846828a004727fb08b9d946322d3144d1fd2
+  checksum: 10c0/51f261afc437e1112c3e7919478d6176ea83f7f7727864d8c2cce10f0b03a631d1911644a567348c3063c45abdae39718ba97abb073d22aa3538b9a53ae1e31c
   languageName: node
   linkType: hard
 

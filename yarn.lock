@@ -2079,7 +2079,7 @@ __metadata:
 
 "@tetrascience-npm/ts-connectors-sdk@npm:^3.1.1":
   version: 3.1.1
-  resolution: "@tetrascience-npm/ts-connectors-sdk@npm:3.1.1::__archiveUrl=https%3A%2F%2Ftetrascience.jfrog.io%2Fartifactory%2Fapi%2Fnpm%2Fts-npm-virtual%2F%40tetrascience-npm%2Fts-connectors-sdk%2F-%2F%40tetrascience-npm%2Fts-connectors-sdk-3.1.1.tgz"
+  resolution: "@tetrascience-npm/ts-connectors-sdk@npm:3.1.1"
   dependencies:
     "@smithy/node-http-handler": "npm:^3.1.1"
     dotenv: "npm:^16.3.1"

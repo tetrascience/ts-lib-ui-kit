@@ -2079,7 +2079,7 @@ __metadata:
 
 "@tetrascience-npm/ts-connectors-sdk@npm:^3.1.1":
   version: 3.1.1
-  resolution: "@tetrascience-npm/ts-connectors-sdk@npm:3.1.1::__archiveUrl=https%3A%2F%2Ftetrascience.jfrog.io%2Fartifactory%2Fapi%2Fnpm%2Fts-npm-virtual%2F%40tetrascience-npm%2Fts-connectors-sdk%2F-%2F%40tetrascience-npm%2Fts-connectors-sdk-3.1.1.tgz"
+  resolution: "@tetrascience-npm/ts-connectors-sdk@npm:3.1.1"
   dependencies:
     "@smithy/node-http-handler": "npm:^3.1.1"
     dotenv: "npm:^16.3.1"
@@ -2097,7 +2097,7 @@ __metadata:
     "@aws-sdk/client-ssm": ">=3.0.0 <4.0.0"
     "@aws-sdk/lib-storage": ">=3.0.0 <4.0.0"
     axios: ">=1.5.0 <2.0.0"
-  checksum: 10c0/dd29ba6df7f6a66e1f4aa1ee3eb482b6efa2dbe262bba03fac997bc1b599cec64acd6948a1a681d6d705a95005e822bfe69f768af309562d6317e6c7417d6a9b
+  checksum: 10c0/b73ce272c2deed4b8828fc55131f4446a402cb861cf59c83fce05d00b40616b4167f233c4e496930396f0dc1fb735a6f95a90493080469277f1e4144890d88c9
   languageName: node
   linkType: hard
 

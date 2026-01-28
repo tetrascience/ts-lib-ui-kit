@@ -132,11 +132,13 @@ export async function getProviderConfigurations(
     const provider = await client.getProvider(minimalProvider.id);
 
     // Build fields from environment variables
+    // Use secret.name as the key (canonical field name like "user", "password", "server_hostname")
+    // and read the value from the environment variable specified by secret.envName
     const fields: Record<string, string | undefined> = {};
     for (const secret of provider.secrets) {
-      const secretName = secret.envName;
+      const fieldName = secret.name;
       const secretValue = process.env[secret.envName];
-      fields[secretName] = secretValue;
+      fields[fieldName] = secretValue;
     }
 
     const config: ProviderConfiguration = {

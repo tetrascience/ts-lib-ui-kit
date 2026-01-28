@@ -159,7 +159,11 @@ export class AthenaProvider {
 
       if (isFirstPage && response.ResultSet?.ResultSetMetadata?.ColumnInfo) {
         columnNames = response.ResultSet.ResultSetMetadata.ColumnInfo.map(
-          (col) => col.Name ?? "",
+          (col, idx) => {
+            // Handle empty or missing column names by using a fallback
+            const name = col.Name;
+            return name && name.trim() !== "" ? name : `column_${idx}`;
+          },
         );
       }
 
@@ -170,6 +174,7 @@ export class AthenaProvider {
       for (const row of dataRows) {
         const rowData: Record<string, unknown> = {};
         row.Data?.forEach((cell, index) => {
+          // columnNames already has fallback values, so we can use them directly
           const columnName = columnNames[index] ?? `column_${index}`;
           rowData[columnName] = cell.VarCharValue ?? null;
         });
@@ -197,12 +202,12 @@ export class AthenaProvider {
  * Creates an Athena provider using TDP environment configuration
  *
  * @returns Promise resolving to Athena data provider
+ * @throws {Error} If ATHENA_S3_OUTPUT_LOCATION is not set when using the 'primary' workgroup
  */
 export async function getTdpAthenaProvider(): Promise<AthenaProvider> {
   const orgSlug = process.env.ORG_SLUG ?? "";
   const orgSlugDbFriendly = orgSlug.replace(/-/g, "_");
   const athenaQueryBucket = process.env.ATHENA_S3_OUTPUT_LOCATION;
-  const athenaOutputLocation = `s3://${athenaQueryBucket}/${orgSlugDbFriendly}/`;
   const athenaRegion = process.env.AWS_REGION;
   const athenaSchema = `${orgSlugDbFriendly}__tss__default`;
   const athenaWorkgroup = orgSlug;
@@ -223,6 +228,15 @@ export async function getTdpAthenaProvider(): Promise<AthenaProvider> {
     return new AthenaProvider(client, athenaWorkgroup, athenaSchema);
   } catch {
     // Workgroup doesn't exist or access denied, use 'primary' workgroup
+    // The 'primary' workgroup requires an explicit output location
+    if (!athenaQueryBucket) {
+      throw new Error(
+        "ATHENA_S3_OUTPUT_LOCATION environment variable is required when using the 'primary' workgroup. " +
+          "Either set this variable or ensure the org-specific workgroup exists.",
+      );
+    }
+
+    const athenaOutputLocation = `s3://${athenaQueryBucket}/${orgSlugDbFriendly}/`;
     return new AthenaProvider(
       client,
       "primary",

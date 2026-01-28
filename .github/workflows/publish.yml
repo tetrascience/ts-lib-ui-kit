@@ -4,12 +4,23 @@ on:
   push:
     tags: '*'
 
-jobs:
-  publish:
-    uses: tetrascience/devops/.github/workflows/publish-npm-package.yml@main
+permissions: {}
 
+jobs:
+  approve:
+    runs-on: ubuntu-latest
+    environment: PROD
+    steps:
+      - run: echo "Approved"
+
+  publish:
+    needs: approve
+    uses: tetrascience/ts-ci-cd-lib/.github/workflows/publish-npm-package.yml@main
+    with:
+      publish_to_public_npm: true
     secrets:
       AUTH_TOKEN: '${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_AUTH }}'
-      REGISTRY: '${{ secrets.JFROG_ARTIFACTORY_NPM_VIRTUAL_URL }}'
-      PUBLISH_REGISTRY: '${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_URL }}'
+      REGISTRY: 'https://registry.npmjs.org'
+      PUBLISH_REGISTRY: 'https://registry.npmjs.org'
+      NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
 

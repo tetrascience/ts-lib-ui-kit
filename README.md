@@ -103,6 +103,111 @@ const token = await jwtManager.getUserToken(req.cookies);
 
 > **Note:** The singleton `jwtManager` reads environment variables when the module is imported. Ensure these are set before importing the module.
 
+### Data App Providers (`server/providers`)
+
+TypeScript equivalents of the Python helpers from `ts-lib-ui-kit-streamlit` for connecting to database providers (Snowflake, Databricks, Athena).
+
+**Getting Provider Configurations:**
+
+```typescript
+import {
+  DataAppProviderClient,
+  getProviderConfigurations,
+  buildProvider,
+} from '@tetrascience-npm/tetrascience-react-ui/server';
+
+// Create a client for TDP API calls
+const client = new DataAppProviderClient();
+
+// Get all configured providers for this data app
+const providers = await getProviderConfigurations(client);
+
+for (const config of providers) {
+  console.log(`Provider: ${config.name} (${config.type})`);
+
+  // Build a database connection from the config
+  const provider = await buildProvider(config);
+  const results = await provider.query('SELECT * FROM my_table LIMIT 10');
+  await provider.close();
+}
+```
+
+**Using Specific Providers:**
+
+```typescript
+import {
+  buildSnowflakeProvider,
+  buildDatabricksProvider,
+  getTdpAthenaProvider,
+  type ProviderConfiguration,
+} from '@tetrascience-npm/tetrascience-react-ui/server';
+
+// Snowflake
+const snowflakeProvider = await buildSnowflakeProvider(config);
+const data = await snowflakeProvider.query('SELECT * FROM users');
+await snowflakeProvider.close();
+
+// Databricks
+const databricksProvider = await buildDatabricksProvider(config);
+const data = await databricksProvider.query('SELECT * FROM events');
+await databricksProvider.close();
+
+// TDP Athena (uses environment configuration)
+const athenaProvider = await getTdpAthenaProvider();
+const data = await athenaProvider.query('SELECT * FROM files');
+await athenaProvider.close();
+```
+
+**Exception Handling:**
+
+```typescript
+import {
+  QueryError,
+  MissingTableError,
+  ProviderConnectionError,
+  InvalidProviderConfigurationError,
+} from '@tetrascience-npm/tetrascience-react-ui/server';
+
+try {
+  const results = await provider.query('SELECT * FROM missing_table');
+} catch (error) {
+  if (error instanceof MissingTableError) {
+    console.error('Table not found:', error.message);
+  } else if (error instanceof QueryError) {
+    console.error('Query failed:', error.message);
+  }
+}
+```
+
+**Environment Variables:**
+
+- `DATA_APP_PROVIDER_CONFIG` - JSON override for local development
+- `CONNECTOR_ID` - Connector ID for fetching providers from TDP
+- `TDP_ENDPOINT` or `TDP_INTERNAL_ENDPOINT` - TDP API base URL
+- `TS_AUTH_TOKEN` - Authentication token
+- `ORG_SLUG` - Organization slug
+- `ATHENA_S3_OUTPUT_LOCATION` - S3 bucket for Athena query results
+- `AWS_REGION` - AWS region for Athena
+
+**Python to TypeScript Mapping:**
+
+| Python (Streamlit UI Kit) | TypeScript (React UI Kit) |
+| ------------------------- | ------------------------- |
+| `get_provider_configurations()` | `getProviderConfigurations()` |
+| `build_provider()` | `buildProvider()` |
+| `build_snowflake_provider()` | `buildSnowflakeProvider()` |
+| `build_databricks_provider()` | `buildDatabricksProvider()` |
+| `get_tdp_athena_provider()` | `getTdpAthenaProvider()` |
+| `SnowflakeProvider` | `SnowflakeProvider` |
+| `DatabricksProvider` | `DatabricksProvider` |
+| `AthenaProvider` | `AthenaProvider` |
+| `ProviderConfiguration` | `ProviderConfiguration` |
+| `ProviderError` | `ProviderError` |
+| `QueryError` | `QueryError` |
+| `MissingTableError` | `MissingTableError` |
+| `ConnectionError` | `ProviderConnectionError` |
+| `InvalidProviderConfigurationError` | `InvalidProviderConfigurationError` |
+
 ## TypeScript Support
 
 Full TypeScript support with exported types:

@@ -20,7 +20,7 @@ jobs:
       publish_to_public_npm: true
     secrets:
       AUTH_TOKEN: '${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_AUTH }}'
-      REGISTRY: '${{ secrets.JFROG_ARTIFACTORY_NPM_VIRTUAL_URL }}'
+      REGISTRY: 'https://registry.npmjs.org'
       PUBLISH_REGISTRY: 'https://registry.npmjs.org'
       NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
 

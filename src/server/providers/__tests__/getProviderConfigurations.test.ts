@@ -209,8 +209,9 @@ describe("getProviderConfigurations", () => {
         type: "snowflake",
         iconUrl: "https://example.com/snowflake.png",
         fields: {
-          SNOWFLAKE_PROVIDER_USER: "myuser",
-          SNOWFLAKE_PROVIDER_PASSWORD: "mypassword",
+          // Uses secret.name (canonical field name) as key, not secret.envName
+          user: "myuser",
+          password: "mypassword",
         },
       });
       expect(client.getContainerDataApp).toHaveBeenCalledWith("test-connector-id");

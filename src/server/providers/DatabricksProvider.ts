@@ -40,9 +40,13 @@ export class DatabricksProvider {
     _params: Record<string, unknown> = {},
   ): Promise<Array<Record<string, unknown>>> {
     const operation = await this.session.executeStatement(sqlQuery);
-    const result = await operation.fetchAll();
-    await operation.close();
-    return result as Array<Record<string, unknown>>;
+    try {
+      const result = await operation.fetchAll();
+      return result as Array<Record<string, unknown>>;
+    } finally {
+      // Always close the operation to avoid leaking server-side resources
+      await operation.close();
+    }
   }
 
   /**

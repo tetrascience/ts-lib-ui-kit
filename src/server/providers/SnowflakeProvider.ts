@@ -32,17 +32,24 @@ export class SnowflakeProvider {
    * Query the Snowflake database
    *
    * @param sqlText - SQL query to execute
-   * @param params - Parameters to pass to the query
+   * @param params - Parameters to pass to the query. For positional binds, use an array.
+   *                 For named binds, use an object with keys matching the bind variable names.
    * @returns Promise resolving to array of row objects
    */
   async query(
     sqlText: string,
-    params: Record<string, unknown> = {},
+    params: Record<string, unknown> | unknown[] = {},
   ): Promise<Array<Record<string, unknown>>> {
+    // Snowflake SDK supports both positional binds (array) and named binds (object)
+    // Pass params directly to preserve named bind semantics
+    const binds = Array.isArray(params)
+      ? (params as unknown as snowflake.Binds)
+      : (params as unknown as snowflake.Binds);
+
     return new Promise((resolve, reject) => {
       this.connection.execute({
         sqlText,
-        binds: Object.values(params) as snowflake.Binds,
+        binds,
         complete: (
           err: snowflake.SnowflakeError | undefined,
           _stmt: snowflake.RowStatement | snowflake.FileAndStageBindStatement,

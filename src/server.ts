@@ -55,4 +55,6 @@ export type {
   DataAppProviderClientConfig,
   GetProviderConfigurationsOptions,
   DataProvider,
+  ProviderInfo,
+  QueryResult,
 } from "./server/providers";

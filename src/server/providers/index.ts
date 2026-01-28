@@ -39,4 +39,6 @@ export type {
   OrganizationApiResponse,
   DataAppProviderClientConfig,
   GetProviderConfigurationsOptions,
+  ProviderInfo,
+  QueryResult,
 } from "./types";

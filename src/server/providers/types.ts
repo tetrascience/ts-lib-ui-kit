@@ -128,3 +128,37 @@ export interface GetProviderConfigurationsOptions {
   connectorId?: string;
 }
 
+/**
+ * Display-friendly provider information for UI components.
+ *
+ * A simplified subset of ProviderConfiguration containing only the
+ * fields needed for displaying provider information in the UI.
+ */
+export interface ProviderInfo {
+  /** Human-readable name of the provider */
+  name: string;
+  /** Provider type (snowflake, databricks, athena, etc.) */
+  type: string;
+  /** Optional URL to the provider's icon */
+  iconUrl?: string | null;
+}
+
+/**
+ * Standardized query result from data providers.
+ *
+ * This interface provides a consistent shape for query results across
+ * all provider types (Snowflake, Databricks, Athena), with optional
+ * metadata for API responses.
+ */
+export interface QueryResult {
+  /** Array of row objects returned by the query */
+  data: Array<Record<string, unknown>>;
+  /** Number of rows returned */
+  rowCount: number;
+  /** Name of the provider that executed the query */
+  provider?: string;
+  /** Whether this is mock/demo data */
+  mock?: boolean;
+  /** Optional message (e.g., for errors or warnings) */
+  message?: string;
+}

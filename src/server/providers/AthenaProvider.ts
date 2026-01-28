@@ -60,8 +60,6 @@ export class AthenaProvider {
    * with Athena. Callers are responsible for properly sanitizing any user input
    * before constructing the SQL query string. This is a known limitation of the
    * Athena service, not a design flaw in this implementation.
-   *
-   * @see https://docs.aws.amazon.com/athena/latest/ug/querying.html
    */
   async query(
     sqlQuery: string,
@@ -74,9 +72,8 @@ export class AthenaProvider {
     // Start query execution
     // Note: Athena does not support parameterized queries. The sqlQuery is passed
     // directly to Athena. Callers must sanitize user input before constructing queries.
-    // lgtm[js/sql-injection] - Athena does not support parameterized queries
     const startCommand = new StartQueryExecutionCommand({
-      QueryString: sqlQuery, // codeql[js/sql-injection] Athena does not support parameterized queries; caller must sanitize
+      QueryString: sqlQuery,
       WorkGroup: this.workgroup,
       QueryExecutionContext: {
         Database: this.database,

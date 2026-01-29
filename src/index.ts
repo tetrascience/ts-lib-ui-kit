@@ -48,6 +48,7 @@ export * from "@organisms/AreaGraph";
 export * from "@organisms/BarGraph";
 export * from "@organisms/Boxplot";
 export * from "@organisms/Chromatogram";
+export * from "@organisms/ChromatogramChart";
 export * from "@organisms/DotPlot";
 export * from "@organisms/Heatmap";
 export * from "@organisms/Histogram";
@@ -115,6 +116,11 @@ export type {
 } from "@organisms/BarGraph";
 export type { BoxplotProps } from "@organisms/Boxplot";
 export type { PeakData, ChromatogramProps } from "@organisms/Chromatogram";
+export type {
+  ChromatogramSeries,
+  PeakAnnotation,
+  ChromatogramChartProps,
+} from "@organisms/ChromatogramChart";
 export type { DotPlotProps } from "@organisms/DotPlot";
 export type { HeatmapProps } from "@organisms/Heatmap";
 export type { HistogramProps, HistogramDataSeries } from "@organisms/Histogram";

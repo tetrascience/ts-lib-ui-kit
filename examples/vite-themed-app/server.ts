@@ -21,6 +21,8 @@ import {
   MissingTableError,
   ProviderConnectionError,
   type ProviderConfiguration,
+  type ProviderInfo,
+  type QueryResult,
 } from "@tetrascience-npm/tetrascience-react-ui/server";
 
 const app = express();
@@ -42,23 +44,25 @@ app.get("/api/providers", async (_req, res) => {
 
     if (!client.isConfigured) {
       // Return mock data when not configured (for demo purposes)
+      const mockProviders: ProviderInfo[] = [
+        { name: "Demo Snowflake", type: "snowflake", iconUrl: null },
+        { name: "Demo Databricks", type: "databricks", iconUrl: null },
+      ];
       return res.json({
-        providers: [
-          { name: "Demo Snowflake", type: "snowflake", iconUrl: null },
-          { name: "Demo Databricks", type: "databricks", iconUrl: null },
-        ],
+        providers: mockProviders,
         configured: false,
         message: "Using mock providers. Set environment variables to use real providers.",
       });
     }
 
-    const providers = await getProviderConfigurations(client);
+    const configs = await getProviderConfigurations(client);
+    const providers: ProviderInfo[] = configs.map((p) => ({
+      name: p.name,
+      type: p.type,
+      iconUrl: p.iconUrl,
+    }));
     return res.json({
-      providers: providers.map((p) => ({
-        name: p.name,
-        type: p.type,
-        iconUrl: p.iconUrl,
-      })),
+      providers,
       configured: true,
     });
   } catch (error) {
@@ -89,7 +93,7 @@ app.post("/api/query", async (req, res) => {
 
     if (!client.isConfigured) {
       // Return mock data when not configured
-      return res.json({
+      const mockResult: QueryResult = {
         data: [
           { id: 1, name: "Sample Record 1", value: 42.5, created_at: "2026-01-28" },
           { id: 2, name: "Sample Record 2", value: 73.2, created_at: "2026-01-27" },
@@ -98,12 +102,13 @@ app.post("/api/query", async (req, res) => {
         rowCount: 3,
         mock: true,
         message: "Mock data returned. Configure providers for real queries.",
-      });
+      };
+      return res.json(mockResult);
     }
 
     // Get provider configurations
-    const providers = await getProviderConfigurations(client);
-    const config = providers.find((p) => p.name === providerName) || providers[0];
+    const configs = await getProviderConfigurations(client);
+    const config = configs.find((c) => c.name === providerName) || configs[0];
 
     if (!config) {
       return res.status(404).json({ error: "No providers configured" });
@@ -117,12 +122,12 @@ app.post("/api/query", async (req, res) => {
     await provider.close();
     activeProvider = null;
 
-    return res.json({
+    const queryResult: QueryResult = {
       data: results,
       rowCount: results.length,
       provider: config.name,
-      type: config.type,
-    });
+    };
+    return res.json(queryResult);
   } catch (error) {
     // Clean up on error
     if (activeProvider) {

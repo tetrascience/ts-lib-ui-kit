@@ -4,14 +4,14 @@ import path from "path";
 export default defineConfig({
   test: {
     globals: true,
-    environment: "node",
-    include: ["src/**/*.test.ts", "src/**/*.spec.ts"],
+    environment: "jsdom",
+    include: ["src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.test.tsx", "src/**/*.spec.tsx"],
     exclude: ["node_modules", "dist", "examples"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      include: ["src/server/**/*.ts"],
-      exclude: ["**/*.test.ts", "**/*.spec.ts", "**/index.ts"],
+      include: ["src/server/**/*.ts", "src/components/**/*.tsx"],
+      exclude: ["**/*.test.ts", "**/*.spec.ts", "**/*.test.tsx", "**/*.spec.tsx", "**/index.ts", "**/*.stories.tsx"],
     },
     mockReset: true,
     restoreMocks: true,

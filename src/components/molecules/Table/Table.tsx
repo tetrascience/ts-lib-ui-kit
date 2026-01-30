@@ -29,6 +29,7 @@ export interface TableProps<T = any> {
   onSort?: (key: string, direction: "asc" | "desc") => void;
   currentPage?: number;
   onPageChange?: (page: number) => void;
+  totalItems?: number; // For server-side pagination
   selectedRows?: T[];
   className?: string;
 }
@@ -143,6 +144,7 @@ export function Table<T extends Record<string, any>>({
   onSort: controlledOnSort,
   currentPage: controlledCurrentPage,
   onPageChange: controlledOnPageChange,
+  totalItems,
   selectedRows: controlledSelectedRows,
   className,
 }: TableProps<T>) {
@@ -212,12 +214,17 @@ export function Table<T extends Record<string, any>>({
 
   // Calculate pagination
   const totalPages =
-    pageSize === -1 ? 1 : Math.ceil(sortedData.length / pageSize);
+    pageSize === -1 ? 1 : Math.ceil((totalItems || sortedData.length) / pageSize);
   const paginatedData = useMemo(() => {
+    // If totalItems is provided, we're in server-side pagination mode
+    // and data is already paginated, so just return it
+    if (totalItems !== undefined) return sortedData;
+    
+    // Otherwise, do client-side pagination
     if (pageSize === -1) return sortedData;
     const start = (currentPage - 1) * pageSize;
     return sortedData.slice(start, start + pageSize);
-  }, [sortedData, currentPage, pageSize]);
+  }, [sortedData, currentPage, pageSize, totalItems]);
 
   // Reset to first page when filters or sort changes
   useEffect(() => {

@@ -56,6 +56,7 @@ export * from "@organisms/Main";
 export * from "@organisms/PieChart";
 export * from "@organisms/ScatterGraph";
 export * from "@organisms/TaskScripts";
+export * from "@organisms/TdpSearch";
 
 // common types
 export type { BadgeProps } from "@atoms/Badge";
@@ -133,10 +134,24 @@ export type {
   ScatterDataSeries,
   ScatterGraphProps,
 } from "@organisms/ScatterGraph";
+export type {
+  TdpSearchProps,
+  TdpSearchColumn,
+  TdpSearchFilter,
+  TdpSearchSort,
+} from "@organisms/TdpSearch";
 
 // utils
 export { COLORS, CHART_COLORS } from "./utils/colors";
 export type { ColorToken } from "./utils/colors";
+export { TdpSearchClient } from "./utils/tdpClient";
+export type {
+  TdpSearchClientConfig,
+  EqlQuery,
+  SearchResult,
+  SearchResponse,
+  TdpErrorResponse,
+} from "./utils/tdpClient";
 
 // theme
 export { ThemeProvider, defaultTheme } from "./theme";

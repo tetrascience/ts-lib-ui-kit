@@ -1,205 +1,100 @@
-import React, { useEffect, useRef, useMemo } from "react";
-import Plotly from "plotly.js-dist";
-import "./Heatmap.scss";
+import React from "react";
+import { PlateMap, ColorScale } from "../PlateMap";
 
+/**
+ * Props for the Heatmap component
+ * @deprecated Use PlateMap component instead. Heatmap is now a wrapper around PlateMap for backward compatibility.
+ */
 interface HeatmapProps {
+  /** 2D array of numeric values */
   data?: number[][];
+  /** Custom x-axis labels (column labels) */
   xLabels?: string[] | number[];
+  /** Custom y-axis labels (row labels) */
   yLabels?: string[] | number[];
+  /** Chart title */
   title?: string;
+  /** X-axis title */
   xTitle?: string;
+  /** Y-axis title */
   yTitle?: string;
+  /** Color scale - string name or array of [position, color] pairs */
   colorscale?: string | Array<[number, string]>;
+  /** Chart width in pixels */
   width?: number;
+  /** Chart height in pixels */
   height?: number;
+  /** Show color scale legend */
   showScale?: boolean;
+  /** Number of decimal places for values */
   precision?: number;
+  /** Minimum value for color scale */
   zmin?: number;
+  /** Maximum value for color scale */
   zmax?: number;
+  /** Value unit suffix */
   valueUnit?: string;
 }
 
-function generateRandomData(
-  rows: number,
-  cols: number,
-  min: number = 0,
-  max: number = 1
-): number[][] {
-  const result: number[][] = [];
-  for (let i = 0; i < rows; i++) {
-    const row: number[] = [];
-    for (let j = 0; j < cols; j++) {
-      row.push(min + Math.random() * (max - min));
-    }
-    result.push(row);
-  }
-  return result;
-}
-
-function generateAlphabetLabels(count: number): string[] {
-  return Array.from({ length: count }, (_, i) => String.fromCharCode(65 + i));
-}
-
-function normalizeData(data: number[][]): number[][] {
-  if (!data || data.length === 0) return [];
-
-  const maxLength = Math.max(...data.map((row) => row.length));
-
-  return data.map((row) => {
-    if (row.length === maxLength) return row;
-
-    const newRow = [...row];
-    while (newRow.length < maxLength) {
-      newRow.push(0);
-    }
-    return newRow;
-  });
-}
-
-const defaultColorScale: Array<[number, string]> = [
-  [0, "#092761"],
-  [0.15, "#141950"],
-  [0.3, "#282D73"],
-  [0.45, "#463782"],
-  [0.6, "#643C8C"],
-  [0.7, "#8C4696"],
-  [0.8, "#B45096"],
-  [0.9, "#DC5A8C"],
-  [0.95, "#FA6482"],
-  [1, "#FF5C64"],
-];
-
+/**
+ * Heatmap component for 2D data visualization
+ * @deprecated Use PlateMap component instead. This component is now a wrapper around PlateMap for backward compatibility.
+ *
+ * @example
+ * ```tsx
+ * <Heatmap
+ *   data={[[1, 2, 3], [4, 5, 6]]}
+ *   xLabels={['A', 'B', 'C']}
+ *   yLabels={['Row 1', 'Row 2']}
+ *   title="My Heatmap"
+ * />
+ * ```
+ */
 const Heatmap: React.FC<HeatmapProps> = ({
   data,
   xLabels,
   yLabels,
   title,
-  xTitle = "Columns",
-  yTitle = "Rows",
-  colorscale = defaultColorScale,
+  xTitle,
+  yTitle,
+  colorscale,
   width = 800,
   height = 600,
   showScale = true,
   precision = 0,
-  zmin = 0,
-  zmax = 50000,
+  zmin,
+  zmax,
   valueUnit = "",
 }) => {
-  const plotRef = useRef<HTMLDivElement>(null);
+  // Determine rows and columns from data or labels
+  const rows = data?.length ?? (yLabels?.length ?? 16);
+  const columns = data?.[0]?.length ?? (xLabels?.length ?? 24);
 
-  const chartData = useMemo(() => {
-    const rawData = data || generateRandomData(16, 24, 5000, 50000);
-    return normalizeData(rawData);
-  }, [data]);
-
-  const maxCols = chartData.length > 0 ? chartData[0].length : 24;
-
-  const defaultXLabels = useMemo(
-    () => xLabels || Array.from({ length: maxCols }, (_, i) => i + 1),
-    [xLabels, maxCols],
-  );
-
-  const defaultYLabels = useMemo(
-    () => yLabels || generateAlphabetLabels(chartData.length),
-    [yLabels, chartData.length],
-  );
-
-  useEffect(() => {
-    if (!plotRef.current) return;
-
-    const plotData = [
-      {
-        z: chartData,
-        x: defaultXLabels,
-        y: defaultYLabels,
-        type: "heatmap" as const,
-        colorscale: colorscale,
-        showscale: showScale,
-        zsmooth: false as const,
-        hovertemplate: `Row: %{y}<br>Column: %{x}<br>Value: %{z:.${precision}f}${valueUnit}<extra></extra>`,
-        zmin: zmin,
-        zmax: zmax,
-        colorbar: {
-          thickness: 28,
-          len: 1,
-          outlinewidth: 0,
-          ticksuffix: valueUnit,
-          y: 0.5,
-          yanchor: "middle" as const,
-        },
-      },
-    ];
-
-    const layout = {
-      title: {
-        text: title || "",
-        font: {
-          family: "Inter, sans-serif",
-          size: 20,
-          color: "var(--black-300)",
-        },
-        y: 0.98,
-        yanchor: "top" as const,
-      },
-      width: width,
-      height: height,
-      margin: { l: 70, r: 70, b: 70, t: 100, pad: 5 },
-      xaxis: {
-        title: {
-          text: xTitle,
-          font: {
-            size: 16,
-            color: "var(--black-300)",
-            family: "Inter, sans-serif",
-          },
-          standoff: 15,
-        },
-        side: "top" as const,
-        fixedrange: true,
-      },
-      yaxis: {
-        title: {
-          text: yTitle,
-          font: {
-            size: 16,
-            color: "var(--black-300)",
-            family: "Inter, sans-serif",
-          },
-          standoff: 15,
-        },
-        autorange: "reversed" as const,
-        fixedrange: true,
-      },
-      paper_bgcolor: "var(--white-900)",
-      plot_bgcolor: "var(--white-900)",
-      font: {
-        family: "Inter, sans-serif",
-        color: "var(--grey-600)",
-      },
-    };
-
-    const config = {
-      responsive: true,
-      displayModeBar: false,
-      displaylogo: false,
-    };
-
-    Plotly.newPlot(plotRef.current, plotData, layout, config);
-
-    // Capture ref value for cleanup
-    const plotElement = plotRef.current;
-
-    return () => {
-      if (plotElement) {
-        Plotly.purge(plotElement);
-      }
-    };
-  }, [chartData, defaultXLabels, defaultYLabels, title, xTitle, yTitle, colorscale, width, height, showScale, precision, zmin, zmax, valueUnit]);
+  // Convert colorscale to PlateMap ColorScale format if provided
+  const plateMapColorScale: ColorScale | undefined = colorscale
+    ? (Array.isArray(colorscale) ? colorscale : undefined)
+    : undefined;
 
   return (
-    <div className="heatmap-container">
-      <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
-    </div>
+    <PlateMap
+      data={data as (number | null)[][] | undefined}
+      plateFormat="custom"
+      rows={rows}
+      columns={columns}
+      title={title}
+      xTitle={xTitle}
+      yTitle={yTitle}
+      xLabels={xLabels}
+      yLabels={yLabels}
+      colorScale={plateMapColorScale}
+      valueMin={zmin}
+      valueMax={zmax}
+      showColorBar={showScale}
+      width={width}
+      height={height}
+      valueUnit={valueUnit}
+      precision={precision}
+    />
   );
 };
 

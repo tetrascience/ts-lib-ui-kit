@@ -54,6 +54,7 @@ export * from "@organisms/Histogram";
 export * from "@organisms/LineGraph";
 export * from "@organisms/Main";
 export * from "@organisms/PieChart";
+export * from "@organisms/PlateMap";
 export * from "@organisms/ScatterGraph";
 export * from "@organisms/TaskScripts";
 
@@ -117,6 +118,12 @@ export type { PeakData, ChromatogramProps } from "@organisms/Chromatogram";
 export type { DotPlotProps } from "@organisms/DotPlot";
 export type { HeatmapProps } from "@organisms/Heatmap";
 export type { HistogramProps, HistogramDataSeries } from "@organisms/Histogram";
+export type {
+  PlateMapProps,
+  WellData,
+  PlateFormat,
+  ColorScale,
+} from "@organisms/PlateMap";
 export type {
   LineDataSeries,
   LineGraphVariant,

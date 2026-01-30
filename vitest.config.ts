@@ -7,9 +7,13 @@ export default defineConfig({
   test: {
     name: "unit",
     globals: true,
-    environment: "node",
-    include: ["src/**/*.test.ts", "src/**/*.spec.ts", "scripts/**/*.test.ts"],
+    environment: "jsdom",
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.spec.ts", "src/**/*.spec.tsx", "scripts/**/*.test.ts"],
     exclude: ["node_modules", "dist", "examples"],
+    environmentMatchGlobs: [
+      // Server tests should use node environment
+      ["src/server/**/*.test.ts", "node"],
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

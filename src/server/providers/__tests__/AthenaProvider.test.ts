@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import * as athenaSDK from "@aws-sdk/client-athena";
 import { QueryExecutionState } from "@aws-sdk/client-athena";
 
 // Create mock client
@@ -38,6 +39,7 @@ describe("AthenaProvider", () => {
       const mockClient = { send: mockSend, destroy: mockDestroy };
       const provider = new AthenaProvider(
         mockClient as unknown as import("@aws-sdk/client-athena").AthenaClient,
+        athenaSDK,
         "test-workgroup",
         "test-database",
       );
@@ -76,6 +78,7 @@ describe("AthenaProvider", () => {
       const mockClient = { send: mockSend, destroy: mockDestroy };
       const provider = new AthenaProvider(
         mockClient as unknown as import("@aws-sdk/client-athena").AthenaClient,
+        athenaSDK,
         "test-workgroup",
         "test-database",
       );
@@ -99,6 +102,7 @@ describe("AthenaProvider", () => {
       const mockClient = { send: mockSend, destroy: mockDestroy };
       const provider = new AthenaProvider(
         mockClient as unknown as import("@aws-sdk/client-athena").AthenaClient,
+        athenaSDK,
         "test-workgroup",
         "test-database",
       );
@@ -120,6 +124,7 @@ describe("AthenaProvider", () => {
       const mockClient = { send: mockSend, destroy: mockDestroy };
       const provider = new AthenaProvider(
         mockClient as unknown as import("@aws-sdk/client-athena").AthenaClient,
+        athenaSDK,
         "test-workgroup",
         "test-database",
       );
@@ -133,6 +138,7 @@ describe("AthenaProvider", () => {
       const mockClient = { send: mockSend, destroy: mockDestroy };
       const provider = new AthenaProvider(
         mockClient as unknown as import("@aws-sdk/client-athena").AthenaClient,
+        athenaSDK,
         "test-workgroup",
         "test-database",
       );

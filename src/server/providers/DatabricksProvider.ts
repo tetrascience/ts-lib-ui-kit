@@ -3,12 +3,39 @@
  *
  * TypeScript equivalent of DatabricksProvider from
  * ts-lib-ui-kit-streamlit/tetrascience/data_app_providers/provider.py
+ *
+ * @remarks
+ * This provider requires the `@databricks/sql` package to be installed.
+ * It is an optional peer dependency - install it only if you need Databricks support:
+ * ```bash
+ * npm install @databricks/sql
+ * # or
+ * yarn add @databricks/sql
+ * ```
  */
 
-import { DBSQLClient } from "@databricks/sql";
-import type IDBSQLSession from "@databricks/sql/dist/contracts/IDBSQLSession";
 import type { ProviderConfiguration } from "./types";
 import { InvalidProviderConfigurationError } from "./exceptions";
+
+// Type imports for @databricks/sql (these don't require the package at runtime)
+type DBSQLClient = import("@databricks/sql").DBSQLClient;
+type IDBSQLSession = import("@databricks/sql/dist/contracts/IDBSQLSession").default;
+
+/**
+ * Dynamically import @databricks/sql
+ * @throws {InvalidProviderConfigurationError} If @databricks/sql is not installed
+ */
+async function getDatabricksSQL(): Promise<typeof import("@databricks/sql")> {
+  try {
+    const databricks = await import("@databricks/sql");
+    return databricks;
+  } catch {
+    throw new InvalidProviderConfigurationError(
+      "The '@databricks/sql' package is required to use the Databricks provider. " +
+        "Please install it: npm install @databricks/sql",
+    );
+  }
+}
 
 /**
  * Databricks data provider
@@ -72,10 +99,14 @@ function getDefaultSchema(): string {
  *
  * @param config - Provider configuration
  * @returns Promise resolving to Databricks data provider
+ * @throws {InvalidProviderConfigurationError} If @databricks/sql is not installed or config is invalid
  */
 export async function buildDatabricksProvider(
   config: ProviderConfiguration,
 ): Promise<DatabricksProvider> {
+  // Dynamically import @databricks/sql
+  const { DBSQLClient } = await getDatabricksSQL();
+
   const requiredFields = [
     "server_hostname",
     "http_path",

@@ -34,6 +34,36 @@
         "default": "./dist/cjs/server.js"
       }
     },
+    "./server/providers/athena": {
+      "import": {
+        "types": "./dist/providers/athena.d.ts",
+        "default": "./dist/esm/providers/athena.js"
+      },
+      "require": {
+        "types": "./dist/providers/athena.d.ts",
+        "default": "./dist/cjs/providers/athena.js"
+      }
+    },
+    "./server/providers/snowflake": {
+      "import": {
+        "types": "./dist/providers/snowflake.d.ts",
+        "default": "./dist/esm/providers/snowflake.js"
+      },
+      "require": {
+        "types": "./dist/providers/snowflake.d.ts",
+        "default": "./dist/cjs/providers/snowflake.js"
+      }
+    },
+    "./server/providers/databricks": {
+      "import": {
+        "types": "./dist/providers/databricks.d.ts",
+        "default": "./dist/esm/providers/databricks.js"
+      },
+      "require": {
+        "types": "./dist/providers/databricks.d.ts",
+        "default": "./dist/cjs/providers/databricks.js"
+      }
+    },
     "./index.css": "./dist/index.css",
     "./package.json": "./package.json"
   },
@@ -48,15 +78,12 @@
     "prepublishOnly": "pms run build"
   },
   "dependencies": {
-    "@aws-sdk/client-athena": "^3.975.0",
     "@dagrejs/dagre": "^1.1.4",
-    "@databricks/sql": "^1.12.0",
     "@monaco-editor/react": "^4.7.0",
     "@tetrascience-npm/ts-connectors-sdk": "^3.1.1",
     "@types/plotly.js": "^3.0.0",
     "@types/react-plotly.js": "^2.6.3",
     "@xyflow/react": "^12.6.4",
-    "apache-arrow": "^21.1.0",
     "axios": "^1.9.0",
     "elkjs": "^0.10.0",
     "immer": "^10.1.1",
@@ -71,15 +98,34 @@
     "react-syntax-highlighter": "^15.6.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
-    "snowflake-sdk": "^2.3.3",
     "styled-components": "^6.1.18",
     "use-immer": "^0.11.0"
   },
   "peerDependencies": {
+    "@aws-sdk/client-athena": "^3.975.0",
+    "@databricks/sql": "^1.12.0",
+    "apache-arrow": "^21.1.0",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "react-dom": "^18.3.0",
+    "snowflake-sdk": "^2.3.3"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-athena": {
+      "optional": true
+    },
+    "@databricks/sql": {
+      "optional": true
+    },
+    "apache-arrow": {
+      "optional": true
+    },
+    "snowflake-sdk": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@aws-sdk/client-athena": "^3.975.0",
+    "@databricks/sql": "^1.12.0",
     "@eslint/js": "^9.9.0",
     "@rollup/plugin-commonjs": "^28.0.3",
     "@rollup/plugin-json": "^6.1.0",
@@ -97,6 +143,7 @@
     "@types/rollup-plugin-peer-deps-external": "^2",
     "@vitejs/plugin-react": "^4.3.1",
     "@vitest/coverage-v8": "^2.1.0",
+    "apache-arrow": "^21.1.0",
     "eslint": "^9.9.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-react": "^7.34.1",
@@ -114,6 +161,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-typescript2": "^0.36.0",
     "sass": "^1.89.0",
+    "snowflake-sdk": "^2.3.3",
     "storybook": "^8.5.6",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",

@@ -8,7 +8,7 @@
  * override or by fetching from the TDP API.
  */
 
-import { DataAppProviderClient } from "./DataAppProviderClient";
+import type { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
 import { InvalidProviderConfigurationError } from "./exceptions";
 import type {
   GetProviderConfigurationsOptions,
@@ -32,16 +32,25 @@ export { InvalidProviderConfigurationError };
  * Option 1 is used for local development to specify the provider configurations directly.
  * Option 2 is used in production to fetch the provider configurations from TDP.
  *
- * @param client - DataAppProviderClient instance for TDP API calls
+ * @param client - Initialized TDPClient instance (call client.init() first)
  * @param options - Optional configuration overrides
  * @returns Array of provider configurations
  * @throws {InvalidProviderConfigurationError} If provider config JSON is invalid
+ * @throws {Error} If TDPClient is not initialized
  *
  * @example
  * ```typescript
- * import { getProviderConfigurations, DataAppProviderClient } from '@tetrascience-npm/tetrascience-react-ui/server';
+ * import { TDPClient } from '@tetrascience-npm/ts-connectors-sdk';
+ * import { getProviderConfigurations } from '@tetrascience-npm/tetrascience-react-ui/server';
  *
- * const client = new DataAppProviderClient();
+ * // Initialize TDPClient with user's JWT token
+ * const client = new TDPClient({
+ *   authToken: userJwtToken, // from jwtManager.getTokenFromExpressRequest(req)
+ *   orgSlug: process.env.ORG_SLUG,
+ *   tdpEndpoint: process.env.TDP_ENDPOINT,
+ * });
+ * await client.init();
+ *
  * const providers = await getProviderConfigurations(client);
  *
  * for (const provider of providers) {
@@ -50,7 +59,7 @@ export { InvalidProviderConfigurationError };
  * ```
  */
 export async function getProviderConfigurations(
-  client: DataAppProviderClient,
+  client: TDPClient,
   options: GetProviderConfigurationsOptions = {},
 ): Promise<ProviderConfiguration[]> {
   // Check for override from options or environment variable
@@ -111,6 +120,13 @@ export async function getProviderConfigurations(
     }
   }
 
+  // Ensure TDPClient is initialized
+  if (!client.isInitialized) {
+    throw new Error(
+      "TDPClient is not initialized. Call await client.init() before using getProviderConfigurations.",
+    );
+  }
+
   // Get connector ID from options or environment variable
   const connectorId = options.connectorId || process.env.CONNECTOR_ID;
 
@@ -121,15 +137,23 @@ export async function getProviderConfigurations(
     return [];
   }
 
+  // Get orgId from organization lookup (needed for getProviderById)
+  const orgSlug = client.config.orgSlug;
+  const organization = await client.api!.dataApps.getOrganizationBySlug(orgSlug);
+  const orgId = organization.id;
+
   // Fetch container data app from TDP
-  const containerApp = await client.getContainerDataApp(connectorId);
+  const containerApp = await client.api!.dataApps.getContainerDataApp(connectorId);
 
   // Get provider configurations with secrets from environment variables
   const providerConfigurations: ProviderConfiguration[] = [];
 
   for (const minimalProvider of containerApp.providers) {
     // Get full provider with secret names
-    const provider = await client.getProvider(minimalProvider.id);
+    const provider = await client.api!.dataApps.getProviderById(
+      minimalProvider.id,
+      orgId,
+    );
 
     // Build fields from environment variables
     // Use secret.name as the key (canonical field name like "user", "password", "server_hostname")

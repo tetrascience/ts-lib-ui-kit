@@ -3,17 +3,42 @@
  *
  * TypeScript equivalent of AthenaProvider from
  * ts-lib-ui-kit-streamlit/tetrascience/data_app_providers/provider.py
+ *
+ * @remarks
+ * This provider requires the `@aws-sdk/client-athena` package to be installed.
+ * It is an optional peer dependency - install it only if you need Athena support:
+ * ```bash
+ * npm install @aws-sdk/client-athena
+ * # or
+ * yarn add @aws-sdk/client-athena
+ * ```
  */
 
 import {
-  AthenaClient,
-  StartQueryExecutionCommand,
-  GetQueryExecutionCommand,
-  GetQueryResultsCommand,
-  GetWorkGroupCommand,
-  QueryExecutionState,
-} from "@aws-sdk/client-athena";
-import { QueryError, MissingTableError } from "./exceptions";
+  QueryError,
+  MissingTableError,
+  InvalidProviderConfigurationError,
+} from "./exceptions";
+
+// Type imports for @aws-sdk/client-athena (these don't require the package at runtime)
+type AthenaClient = import("@aws-sdk/client-athena").AthenaClient;
+type AthenaSDK = typeof import("@aws-sdk/client-athena");
+
+/**
+ * Dynamically import @aws-sdk/client-athena
+ * @throws {InvalidProviderConfigurationError} If @aws-sdk/client-athena is not installed
+ */
+async function getAthenaSDK(): Promise<AthenaSDK> {
+  try {
+    const athena = await import("@aws-sdk/client-athena");
+    return athena;
+  } catch {
+    throw new InvalidProviderConfigurationError(
+      "The '@aws-sdk/client-athena' package is required to use the Athena provider. " +
+        "Please install it: npm install @aws-sdk/client-athena",
+    );
+  }
+}
 
 /** Maximum query length allowed by Athena */
 const MAX_QUERY_LENGTH = 262144;
@@ -23,6 +48,7 @@ const MAX_QUERY_LENGTH = 262144;
  */
 export class AthenaProvider {
   private client: AthenaClient;
+  private sdk: AthenaSDK;
   private workgroup: string;
   private database: string;
   private outputLocation?: string;
@@ -31,17 +57,20 @@ export class AthenaProvider {
    * Initialize the Athena data provider
    *
    * @param client - AWS Athena client
+   * @param sdk - AWS Athena SDK module (for accessing command classes)
    * @param workgroup - Athena workgroup to use
    * @param database - Default database/schema
    * @param outputLocation - Optional S3 output location
    */
   constructor(
     client: AthenaClient,
+    sdk: AthenaSDK,
     workgroup: string,
     database: string,
     outputLocation?: string,
   ) {
     this.client = client;
+    this.sdk = sdk;
     this.workgroup = workgroup;
     this.database = database;
     this.outputLocation = outputLocation;
@@ -72,7 +101,7 @@ export class AthenaProvider {
     // Start query execution
     // Note: Athena does not support parameterized queries. The sqlQuery is passed
     // directly to Athena. Callers must sanitize user input before constructing queries.
-    const startCommand = new StartQueryExecutionCommand({
+    const startCommand = new this.sdk.StartQueryExecutionCommand({
       QueryString: sqlQuery,
       WorkGroup: this.workgroup,
       QueryExecutionContext: {
@@ -109,19 +138,19 @@ export class AthenaProvider {
     const startTime = Date.now();
 
     while (Date.now() - startTime < maxWaitTime) {
-      const command = new GetQueryExecutionCommand({
+      const command = new this.sdk.GetQueryExecutionCommand({
         QueryExecutionId: queryExecutionId,
       });
       const response = await this.client.send(command);
       const state = response.QueryExecution?.Status?.State;
 
-      if (state === QueryExecutionState.SUCCEEDED) {
+      if (state === this.sdk.QueryExecutionState.SUCCEEDED) {
         return;
       }
 
       if (
-        state === QueryExecutionState.FAILED ||
-        state === QueryExecutionState.CANCELLED
+        state === this.sdk.QueryExecutionState.FAILED ||
+        state === this.sdk.QueryExecutionState.CANCELLED
       ) {
         const reason =
           response.QueryExecution?.Status?.StateChangeReason ?? "Unknown error";
@@ -159,7 +188,7 @@ export class AthenaProvider {
     let isFirstPage = true;
 
     do {
-      const command = new GetQueryResultsCommand({
+      const command = new this.sdk.GetQueryResultsCommand({
         QueryExecutionId: queryExecutionId,
         NextToken: nextToken,
       });
@@ -211,9 +240,13 @@ export class AthenaProvider {
  * Creates an Athena provider using TDP environment configuration
  *
  * @returns Promise resolving to Athena data provider
+ * @throws {InvalidProviderConfigurationError} If @aws-sdk/client-athena is not installed
  * @throws {Error} If ATHENA_S3_OUTPUT_LOCATION is not set when using the 'primary' workgroup
  */
 export async function getTdpAthenaProvider(): Promise<AthenaProvider> {
+  // Dynamically import @aws-sdk/client-athena
+  const athenaSDK = await getAthenaSDK();
+
   const orgSlug = process.env.ORG_SLUG ?? "";
   const orgSlugDbFriendly = orgSlug.replace(/-/g, "_");
   const athenaQueryBucket = process.env.ATHENA_S3_OUTPUT_LOCATION;
@@ -221,20 +254,20 @@ export async function getTdpAthenaProvider(): Promise<AthenaProvider> {
   const athenaSchema = `${orgSlugDbFriendly}__tss__default`;
   const athenaWorkgroup = orgSlug;
 
-  const client = new AthenaClient({
+  const client = new athenaSDK.AthenaClient({
     region: athenaRegion,
   });
 
   // Check if the org-specific workgroup exists
   try {
     await client.send(
-      new GetWorkGroupCommand({
+      new athenaSDK.GetWorkGroupCommand({
         WorkGroup: athenaWorkgroup,
       }),
     );
 
     // Workgroup exists, use it
-    return new AthenaProvider(client, athenaWorkgroup, athenaSchema);
+    return new AthenaProvider(client, athenaSDK, athenaWorkgroup, athenaSchema);
   } catch {
     // Workgroup doesn't exist or access denied, use 'primary' workgroup
     // The 'primary' workgroup requires an explicit output location
@@ -248,6 +281,7 @@ export async function getTdpAthenaProvider(): Promise<AthenaProvider> {
     const athenaOutputLocation = `s3://${athenaQueryBucket}/${orgSlugDbFriendly}/`;
     return new AthenaProvider(
       client,
+      athenaSDK,
       "primary",
       athenaSchema,
       athenaOutputLocation,

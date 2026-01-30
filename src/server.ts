@@ -21,7 +21,6 @@ export type {
 
 // Data App Providers - Configuration utilities
 export {
-  DataAppProviderClient,
   getProviderConfigurations,
   InvalidProviderConfigurationError,
 } from "./server/providers";
@@ -52,7 +51,6 @@ export type {
   ProviderApiResponse,
   ContainerDataApp,
   OrganizationApiResponse,
-  DataAppProviderClientConfig,
   GetProviderConfigurationsOptions,
   DataProvider,
   ProviderInfo,

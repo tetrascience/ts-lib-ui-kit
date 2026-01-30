@@ -8,19 +8,23 @@
  * - DATA_APP_PROVIDER_CONFIG: JSON override for local development
  * - CONNECTOR_ID: Connector ID for fetching providers from TDP
  * - TDP_ENDPOINT: TDP API base URL
- * - TS_AUTH_TOKEN: Authentication token
  * - ORG_SLUG: Organization slug
+ *
+ * In production, user authentication is handled via JWT tokens in request cookies.
+ * The jwtManager extracts the user's token from ts-auth-token or ts-token-ref cookies.
  */
 
 import express from "express";
+import cookieParser from "cookie-parser";
+import { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
 import {
-  DataAppProviderClient,
   getProviderConfigurations,
   buildProvider,
+  jwtManager,
   QueryError,
   MissingTableError,
   ProviderConnectionError,
-  type ProviderConfiguration,
+  InvalidProviderConfigurationError,
   type ProviderInfo,
   type QueryResult,
 } from "@tetrascience-npm/tetrascience-react-ui/server";
@@ -30,6 +34,7 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json());
+app.use(cookieParser()); // Required for jwtManager to extract tokens from cookies
 
 // Store active provider connections
 let activeProvider: Awaited<ReturnType<typeof buildProvider>> | null = null;
@@ -37,13 +42,18 @@ let activeProvider: Awaited<ReturnType<typeof buildProvider>> | null = null;
 /**
  * GET /api/providers
  * Returns list of configured data app providers
+ *
+ * Note: This example uses the user's JWT token from request cookies for authentication.
+ * The jwtManager handles both ts-auth-token (direct JWT) and ts-token-ref (reference
+ * that is resolved via the connector K/V store).
  */
-app.get("/api/providers", async (_req, res) => {
+app.get("/api/providers", async (req, res) => {
   try {
-    const client = new DataAppProviderClient();
+    // Extract user's JWT token from request cookies
+    const userToken = await jwtManager.getTokenFromExpressRequest(req);
 
-    if (!client.isConfigured) {
-      // Return mock data when not configured (for demo purposes)
+    if (!userToken) {
+      // Return mock data when not authenticated (for demo purposes)
       const mockProviders: ProviderInfo[] = [
         { name: "Demo Snowflake", type: "snowflake", iconUrl: null },
         { name: "Demo Databricks", type: "databricks", iconUrl: null },
@@ -51,9 +61,15 @@ app.get("/api/providers", async (_req, res) => {
       return res.json({
         providers: mockProviders,
         configured: false,
-        message: "Using mock providers. Set environment variables to use real providers.",
+        message: "Not authenticated. Set environment variables or log in to use real providers.",
       });
     }
+
+    // Create TDPClient with user's auth token
+    const client = new TDPClient({
+      authToken: userToken,
+    });
+    await client.init();
 
     const configs = await getProviderConfigurations(client);
     const providers: ProviderInfo[] = configs.map((p) => ({
@@ -74,10 +90,15 @@ app.get("/api/providers", async (_req, res) => {
 /**
  * POST /api/query
  * Execute a SQL query against a provider
+ *
+ * SECURITY NOTE: This example includes basic input validation. In production,
+ * you should use parameterized queries to prevent SQL injection.
  */
 app.post("/api/query", async (req, res) => {
   const { providerName, sql } = req.body;
 
+  // ===== INPUT VALIDATION =====
+  // Basic validation - in production, consider more robust validation
   if (typeof sql !== "string" || sql.trim() === "") {
     return res.status(400).json({ error: "SQL query must be a non-empty string" });
   }
@@ -88,11 +109,34 @@ app.post("/api/query", async (req, res) => {
     return res.status(400).json({ error: "SQL query length exceeds allowed limit" });
   }
 
-  try {
-    const client = new DataAppProviderClient();
+  // Validate provider name if specified (prevent injection via provider name)
+  if (providerName !== undefined && (typeof providerName !== "string" || providerName.length > 256)) {
+    return res.status(400).json({ error: "Invalid provider name" });
+  }
 
-    if (!client.isConfigured) {
-      // Return mock data when not configured
+  // Example: Block dangerous SQL patterns (this is NOT a substitute for parameterized queries)
+  // In production, prefer using the provider's built-in parameterized query support:
+  //   await provider.query("SELECT * FROM users WHERE id = ?", [userId]);
+  const dangerousPatterns = [
+    /;\s*(DROP|DELETE|TRUNCATE|ALTER|CREATE|INSERT|UPDATE)\s+/i,
+    /--/,  // SQL comments
+    /\/\*/, // Block comments
+  ];
+  for (const pattern of dangerousPatterns) {
+    if (pattern.test(sql)) {
+      return res.status(400).json({
+        error: "Query contains potentially dangerous patterns. Use parameterized queries instead.",
+      });
+    }
+  }
+  // ===== END INPUT VALIDATION =====
+
+  try {
+    // Extract user's JWT token from request cookies
+    const userToken = await jwtManager.getTokenFromExpressRequest(req);
+
+    if (!userToken) {
+      // Return mock data when not authenticated
       const mockResult: QueryResult = {
         data: [
           { id: 1, name: "Sample Record 1", value: 42.5, created_at: "2026-01-28" },
@@ -101,10 +145,16 @@ app.post("/api/query", async (req, res) => {
         ],
         rowCount: 3,
         mock: true,
-        message: "Mock data returned. Configure providers for real queries.",
+        message: "Mock data returned. Not authenticated - configure providers for real queries.",
       };
       return res.json(mockResult);
     }
+
+    // Create TDPClient with user's auth token
+    const client = new TDPClient({
+      authToken: userToken,
+    });
+    await client.init();
 
     // Get provider configurations
     const configs = await getProviderConfigurations(client);
@@ -135,6 +185,9 @@ app.post("/api/query", async (req, res) => {
       activeProvider = null;
     }
 
+    if (error instanceof InvalidProviderConfigurationError) {
+      return res.status(401).json({ error: "Not authenticated", details: error.message });
+    }
     if (error instanceof MissingTableError) {
       return res.status(404).json({ error: "Table not found", details: error.message });
     }

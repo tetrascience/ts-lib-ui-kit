@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react";
+import React from "react";
 import styled, { css } from "styled-components";
 
 export type CardSize = "small" | "medium" | "large";
@@ -12,6 +12,7 @@ export interface CardProps
   variant?: CardVariant;
   className?: string;
   fullWidth?: boolean;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
 const sizeStyles = {
@@ -73,35 +74,29 @@ const CardContent = styled.div<{
   ${(props) => sizeStyles[props.$size]}
 `;
 
-export const Card = forwardRef<HTMLDivElement, CardProps>(
-  (
-    {
-      children,
-      title,
-      size = "medium",
-      variant = "default",
-      className,
-      fullWidth = false,
-      ...rest
-    },
-    ref
-  ) => {
-    return (
-      <CardContainer
-        ref={ref}
-        $size={size}
-        $variant={variant}
-        $fullWidth={fullWidth}
-        className={className}
-        {...rest}
-      >
-        {title && <CardTitle $size={size}>{title}</CardTitle>}
-        <CardContent $size={size}>{children}</CardContent>
-      </CardContainer>
-    );
-  }
-);
-
-Card.displayName = "Card";
+export const Card = ({
+  children,
+  title,
+  size = "medium",
+  variant = "default",
+  className,
+  fullWidth = false,
+  ref,
+  ...rest
+}: CardProps) => {
+  return (
+    <CardContainer
+      ref={ref}
+      $size={size}
+      $variant={variant}
+      $fullWidth={fullWidth}
+      className={className}
+      {...rest}
+    >
+      {title && <CardTitle $size={size}>{title}</CardTitle>}
+      <CardContent $size={size}>{children}</CardContent>
+    </CardContainer>
+  );
+};
 
 export default Card;

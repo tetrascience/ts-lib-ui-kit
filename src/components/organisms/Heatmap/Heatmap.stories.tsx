@@ -1,8 +1,16 @@
 import { Meta, StoryObj } from "@storybook/react";
 import { Heatmap } from "./Heatmap";
 
+/**
+ * @deprecated The Heatmap component is now a wrapper around PlateMap.
+ * For new projects, use PlateMap directly which provides more features including:
+ * - Plate format presets (96, 384 wells)
+ * - Well ID-based data input
+ * - Click handlers with metadata
+ * - Custom tooltip formatting
+ */
 const meta: Meta<typeof Heatmap> = {
-  title: "Organisms/Heatmap",
+  title: "Organisms/Heatmap (Deprecated)",
   component: Heatmap,
   parameters: {
     layout: "centered",

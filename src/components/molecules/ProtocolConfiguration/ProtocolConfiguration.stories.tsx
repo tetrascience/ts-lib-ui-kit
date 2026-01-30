@@ -1,6 +1,6 @@
 import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { ProtocolConfiguration } from "./ProtocolConfiguration";
+import ProtocolConfiguration from "./ProtocolConfiguration";
 
 const meta: Meta<typeof ProtocolConfiguration> = {
   title: "Molecules/ProtocolConfiguration",

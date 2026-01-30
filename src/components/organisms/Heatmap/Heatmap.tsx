@@ -50,6 +50,25 @@ interface HeatmapProps {
  * />
  * ```
  */
+/**
+ * Normalize jagged 2D array to consistent width (backward compatibility)
+ */
+function normalizeData(data: number[][]): number[][] {
+  if (!data || data.length === 0) return [];
+
+  const maxLength = Math.max(...data.map((row) => row.length));
+
+  return data.map((row) => {
+    if (row.length === maxLength) return row;
+
+    const newRow = [...row];
+    while (newRow.length < maxLength) {
+      newRow.push(0);
+    }
+    return newRow;
+  });
+}
+
 const Heatmap: React.FC<HeatmapProps> = ({
   data,
   xLabels,
@@ -66,18 +85,19 @@ const Heatmap: React.FC<HeatmapProps> = ({
   zmax,
   valueUnit = "",
 }) => {
-  // Determine rows and columns from data or labels
-  const rows = data?.length ?? (yLabels?.length ?? 16);
-  const columns = data?.[0]?.length ?? (xLabels?.length ?? 24);
+  // Normalize jagged arrays to consistent width (backward compatibility)
+  const normalizedData = data ? normalizeData(data) : undefined;
 
-  // Convert colorscale to PlateMap ColorScale format if provided
-  const plateMapColorScale: ColorScale | undefined = colorscale
-    ? (Array.isArray(colorscale) ? colorscale : undefined)
-    : undefined;
+  // Determine rows and columns from normalized data or labels
+  const rows = normalizedData?.length ?? (yLabels?.length ?? 16);
+  const columns = normalizedData?.[0]?.length ?? (xLabels?.length ?? 24);
+
+  // Pass colorscale directly - PlateMap's ColorScale type supports both string and array formats
+  const plateMapColorScale: ColorScale | undefined = colorscale;
 
   return (
     <PlateMap
-      data={data as (number | null)[][] | undefined}
+      data={normalizedData as (number | null)[][] | undefined}
       plateFormat="custom"
       rows={rows}
       columns={columns}

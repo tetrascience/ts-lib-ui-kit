@@ -164,7 +164,8 @@ function wellDataToGrid(
   
   for (const well of wells) {
     const parsed = parseWellId(well.wellId);
-    if (parsed && parsed.row < rows && parsed.col < columns) {
+    // Check bounds including >= 0 to prevent negative indices (e.g., "A0" -> col=-1)
+    if (parsed && parsed.row >= 0 && parsed.col >= 0 && parsed.row < rows && parsed.col < columns) {
       grid[parsed.row][parsed.col] = well.value;
       if (well.metadata) {
         metadata.set(well.wellId.toUpperCase(), well.metadata);
@@ -276,7 +277,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   colorScale = DEFAULT_COLOR_SCALE,
   valueMin,
   valueMax,
-  emptyWellColor: _emptyWellColor = "#f0f0f0",
+  emptyWellColor = "#f0f0f0",
   showColorBar = true,
   width = 800,
   height = 500,
@@ -336,11 +337,57 @@ const PlateMap: React.FC<PlateMapProps> = ({
   const zMin = valueMin ?? range.min;
   const zMax = valueMax ?? range.max;
 
+  // Check if grid has any null values
+  const hasNullValues = grid.some(row => row.some(val => val === null));
+
+  // Create sentinel value for empty wells (below the data range)
+  // This allows us to show emptyWellColor for null cells
+  const sentinelValue = zMin - (zMax - zMin) * 0.01 - 1;
+
+  // Replace null values with sentinel for Plotly rendering
+  const displayGrid = hasNullValues
+    ? grid.map(row => row.map(val => val === null ? sentinelValue : val))
+    : grid;
+
+  // Extend colorscale to include emptyWellColor at the bottom for null values
+  const effectiveColorScale = useMemo(() => {
+    if (!hasNullValues) return colorScale;
+
+    // If colorScale is a string (named scale), we can't easily extend it
+    // In this case, use the emptyWellColor as plot background
+    if (typeof colorScale === "string") {
+      return colorScale;
+    }
+
+    // For array colorscales, prepend emptyWellColor at position 0
+    // and shift all other positions proportionally
+    const totalRange = zMax - sentinelValue;
+    const dataStartRatio = (zMin - sentinelValue) / totalRange;
+
+    // Create new colorscale with emptyWellColor at the bottom
+    const extendedScale: Array<[number, string]> = [
+      [0, emptyWellColor],
+      [dataStartRatio * 0.99, emptyWellColor], // Small band for empty wells
+    ];
+
+    // Remap original colorscale positions to the remaining range
+    for (const [pos, color] of colorScale) {
+      const newPos = dataStartRatio + pos * (1 - dataStartRatio);
+      extendedScale.push([newPos, color]);
+    }
+
+    return extendedScale;
+  }, [colorScale, hasNullValues, zMin, zMax, sentinelValue, emptyWellColor]);
+
+  // Effective zMin includes sentinel value if we have nulls
+  const effectiveZMin = hasNullValues ? sentinelValue : zMin;
+
   // Build custom hover text matrix
   const hoverText: string[][] = grid.map((row, rowIdx) =>
     row.map((val, colIdx) => {
       const wellId = `${rowLabels[rowIdx]}${colLabels[colIdx]}`;
-      const metadata = metadataMap.get(wellId);
+      // Uppercase wellId for metadata lookup to match how keys are stored
+      const metadata = metadataMap.get(String(wellId).toUpperCase());
 
       if (tooltipFormatter) {
         return tooltipFormatter(wellId, val, metadata);
@@ -367,16 +414,16 @@ const PlateMap: React.FC<PlateMapProps> = ({
     // Cast to Plotly.Data to handle text as 2D array (Plotly supports this for heatmaps)
     const plotData: Plotly.Data[] = [
       {
-        z: grid,
+        z: displayGrid,
         x: colLabels,
         y: rowLabels,
         type: "heatmap" as const,
-        colorscale: colorScale,
+        colorscale: effectiveColorScale,
         showscale: showColorBar,
         zsmooth: false as const,
         hoverinfo: "text" as const,
         text: hoverText as unknown as string,
-        zmin: zMin,
+        zmin: effectiveZMin,
         zmax: zMax,
         colorbar: {
           thickness: 28,
@@ -455,25 +502,26 @@ const PlateMap: React.FC<PlateMapProps> = ({
 
     Plotly.newPlot(currentRef, plotData, layout, config);
 
-    // Add click handler
-    if (onWellClickRef.current) {
-      (currentRef as unknown as Plotly.PlotlyHTMLElement).on("plotly_click", (eventData: Plotly.PlotMouseEvent) => {
-        const point = eventData.points[0];
-        if (point) {
-          // Cast labels to handle union type
-          const rowLabelsArr = rowLabels as (string | number)[];
-          const colLabelsArr = colLabels as (string | number)[];
-          const rowIdx = rowLabelsArr.indexOf(point.y as string | number);
-          const colIdx = colLabelsArr.indexOf(point.x as string | number);
-          if (rowIdx >= 0 && colIdx >= 0) {
-            const wellId = `${rowLabelsArr[rowIdx]}${colLabelsArr[colIdx]}`;
-            const value = grid[rowIdx][colIdx];
-            const metadata = metadataMap.get(wellId);
-            onWellClickRef.current?.(wellId, value, metadata);
-          }
+    // Always attach click handler - check onWellClickRef.current inside callback
+    // This ensures handler is registered even if onWellClick is provided after initial render
+    (currentRef as unknown as Plotly.PlotlyHTMLElement).on("plotly_click", (eventData: Plotly.PlotMouseEvent) => {
+      if (!onWellClickRef.current) return;
+      const point = eventData.points[0];
+      if (point) {
+        // Cast labels to handle union type
+        const rowLabelsArr = rowLabels as (string | number)[];
+        const colLabelsArr = colLabels as (string | number)[];
+        const rowIdx = rowLabelsArr.indexOf(point.y as string | number);
+        const colIdx = colLabelsArr.indexOf(point.x as string | number);
+        if (rowIdx >= 0 && colIdx >= 0) {
+          const wellId = `${rowLabelsArr[rowIdx]}${colLabelsArr[colIdx]}`;
+          const value = grid[rowIdx][colIdx];
+          // Uppercase wellId for metadata lookup to match how keys are stored
+          const metadata = metadataMap.get(String(wellId).toUpperCase());
+          onWellClickRef.current?.(wellId, value, metadata);
         }
-      });
-    }
+      }
+    });
 
     return () => {
       if (currentRef) {
@@ -481,12 +529,12 @@ const PlateMap: React.FC<PlateMapProps> = ({
       }
     };
   }, [
-    grid,
+    displayGrid,
     colLabels,
     rowLabels,
-    colorScale,
+    effectiveColorScale,
     showColorBar,
-    zMin,
+    effectiveZMin,
     zMax,
     valueUnit,
     title,
@@ -497,6 +545,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
     hoverText,
     precision,
     metadataMap,
+    grid,
   ]);
 
   return (

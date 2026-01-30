@@ -3,10 +3,22 @@
  *
  * TypeScript equivalents of the Python helpers from ts-lib-ui-kit-streamlit
  * for retrieving data app provider configurations and database providers.
+ *
+ * Note: This module uses TDPClient from @tetrascience-npm/ts-connectors-sdk
+ * for TDP API calls. Initialize TDPClient with the user's JWT token:
+ *
+ * @example
+ * ```typescript
+ * import { TDPClient } from '@tetrascience-npm/ts-connectors-sdk';
+ * import { getProviderConfigurations } from '@tetrascience-npm/tetrascience-react-ui/server';
+ *
+ * const client = new TDPClient({ authToken: userJwt });
+ * await client.init();
+ * const providers = await getProviderConfigurations(client);
+ * ```
  */
 
-// Client and configuration utilities
-export { DataAppProviderClient } from "./DataAppProviderClient";
+// Configuration utilities
 export { getProviderConfigurations } from "./getProviderConfigurations";
 
 // Exception classes
@@ -37,7 +49,6 @@ export type {
   ProviderApiResponse,
   ContainerDataApp,
   OrganizationApiResponse,
-  DataAppProviderClientConfig,
   GetProviderConfigurationsOptions,
   ProviderInfo,
   QueryResult,

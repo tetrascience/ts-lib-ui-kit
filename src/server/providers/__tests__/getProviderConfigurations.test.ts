@@ -3,23 +3,36 @@ import {
   getProviderConfigurations,
   InvalidProviderConfigurationError,
 } from "../getProviderConfigurations";
-import { DataAppProviderClient } from "../DataAppProviderClient";
+import type { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
 import type { ContainerDataApp, ProviderApiResponse } from "../types";
 
-// Mock the DataAppProviderClient
-vi.mock("../DataAppProviderClient", () => ({
-  DataAppProviderClient: vi.fn(() => ({
-    getContainerDataApp: vi.fn(),
-    getProvider: vi.fn(),
-    isConfigured: vi.fn(() => true),
-  })),
-}));
-
+/**
+ * Creates a mock TDPClient that mimics the structure of an initialized TDPClient.
+ * TDPClient exposes api.dataApps.* methods after init() is called.
+ */
 function createMockClient() {
-  return new DataAppProviderClient() as unknown as {
-    getContainerDataApp: ReturnType<typeof vi.fn>;
-    getProvider: ReturnType<typeof vi.fn>;
-    isConfigured: ReturnType<typeof vi.fn>;
+  const mockDataApps = {
+    getContainerDataApp: vi.fn(),
+    getOrganizationBySlug: vi.fn().mockResolvedValue({ id: "org-123" }),
+    getProviderById: vi.fn(),
+  };
+
+  return {
+    isInitialized: true,
+    config: {
+      orgSlug: "test-org",
+    },
+    api: {
+      dataApps: mockDataApps,
+    },
+  } as unknown as TDPClient & {
+    api: {
+      dataApps: {
+        getContainerDataApp: ReturnType<typeof vi.fn>;
+        getOrganizationBySlug: ReturnType<typeof vi.fn>;
+        getProviderById: ReturnType<typeof vi.fn>;
+      };
+    };
   };
 }
 
@@ -48,11 +61,11 @@ describe("getProviderConfigurations", () => {
       process.env.DATA_APP_PROVIDER_CONFIG = JSON.stringify(config);
 
       const client = createMockClient();
-      const result = await getProviderConfigurations(client as unknown as DataAppProviderClient);
+      const result = await getProviderConfigurations(client);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual(config[0]);
-      expect(client.getContainerDataApp).not.toHaveBeenCalled();
+      expect(client.api!.dataApps.getContainerDataApp).not.toHaveBeenCalled();
     });
 
     it("should parse valid JSON from options override", async () => {
@@ -65,7 +78,7 @@ describe("getProviderConfigurations", () => {
       ];
 
       const client = createMockClient();
-      const result = await getProviderConfigurations(client as unknown as DataAppProviderClient, {
+      const result = await getProviderConfigurations(client, {
         providerConfigOverride: JSON.stringify(config),
       });
 
@@ -79,9 +92,9 @@ describe("getProviderConfigurations", () => {
       process.env.DATA_APP_PROVIDER_CONFIG = "not valid json";
 
       const client = createMockClient();
-      await expect(
-        getProviderConfigurations(client as unknown as DataAppProviderClient),
-      ).rejects.toThrow(InvalidProviderConfigurationError);
+      await expect(getProviderConfigurations(client)).rejects.toThrow(
+        InvalidProviderConfigurationError,
+      );
     });
 
     it("should throw InvalidProviderConfigurationError when config is not an array", async () => {
@@ -90,9 +103,7 @@ describe("getProviderConfigurations", () => {
       });
 
       const client = createMockClient();
-      await expect(
-        getProviderConfigurations(client as unknown as DataAppProviderClient),
-      ).rejects.toThrow("expected an array");
+      await expect(getProviderConfigurations(client)).rejects.toThrow("expected an array");
     });
 
     it("should throw InvalidProviderConfigurationError when entry is missing name", async () => {
@@ -101,9 +112,7 @@ describe("getProviderConfigurations", () => {
       ]);
 
       const client = createMockClient();
-      await expect(
-        getProviderConfigurations(client as unknown as DataAppProviderClient),
-      ).rejects.toThrow("'name' must be a string");
+      await expect(getProviderConfigurations(client)).rejects.toThrow("'name' must be a string");
     });
 
     it("should throw InvalidProviderConfigurationError when entry is missing type", async () => {
@@ -112,9 +121,7 @@ describe("getProviderConfigurations", () => {
       ]);
 
       const client = createMockClient();
-      await expect(
-        getProviderConfigurations(client as unknown as DataAppProviderClient),
-      ).rejects.toThrow("'type' must be a string");
+      await expect(getProviderConfigurations(client)).rejects.toThrow("'type' must be a string");
     });
 
     it("should throw InvalidProviderConfigurationError when entry is missing fields", async () => {
@@ -123,9 +130,7 @@ describe("getProviderConfigurations", () => {
       ]);
 
       const client = createMockClient();
-      await expect(
-        getProviderConfigurations(client as unknown as DataAppProviderClient),
-      ).rejects.toThrow("'fields' must be an object");
+      await expect(getProviderConfigurations(client)).rejects.toThrow("'fields' must be an object");
     });
   });
 
@@ -135,10 +140,10 @@ describe("getProviderConfigurations", () => {
       delete process.env.CONNECTOR_ID;
 
       const client = createMockClient();
-      const result = await getProviderConfigurations(client as unknown as DataAppProviderClient);
+      const result = await getProviderConfigurations(client);
 
       expect(result).toEqual([]);
-      expect(client.getContainerDataApp).not.toHaveBeenCalled();
+      expect(client.api!.dataApps.getContainerDataApp).not.toHaveBeenCalled();
     });
 
     it("should fetch providers from TDP when CONNECTOR_ID is set", async () => {
@@ -198,10 +203,10 @@ describe("getProviderConfigurations", () => {
       };
 
       const client = createMockClient();
-      client.getContainerDataApp.mockResolvedValue(mockContainerApp);
-      client.getProvider.mockResolvedValue(mockProvider);
+      client.api!.dataApps.getContainerDataApp.mockResolvedValue(mockContainerApp);
+      client.api!.dataApps.getProviderById.mockResolvedValue(mockProvider);
 
-      const result = await getProviderConfigurations(client as unknown as DataAppProviderClient);
+      const result = await getProviderConfigurations(client);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
@@ -214,8 +219,8 @@ describe("getProviderConfigurations", () => {
           password: "mypassword",
         },
       });
-      expect(client.getContainerDataApp).toHaveBeenCalledWith("test-connector-id");
-      expect(client.getProvider).toHaveBeenCalledWith("provider-1");
+      expect(client.api!.dataApps.getContainerDataApp).toHaveBeenCalledWith("test-connector-id");
+      expect(client.api!.dataApps.getProviderById).toHaveBeenCalledWith("provider-1", "org-123");
     });
 
     it("should use connectorId from options over environment variable", async () => {
@@ -236,13 +241,13 @@ describe("getProviderConfigurations", () => {
       };
 
       const client = createMockClient();
-      client.getContainerDataApp.mockResolvedValue(mockContainerApp);
+      client.api!.dataApps.getContainerDataApp.mockResolvedValue(mockContainerApp);
 
-      await getProviderConfigurations(client as unknown as DataAppProviderClient, {
+      await getProviderConfigurations(client, {
         connectorId: "options-connector",
       });
 
-      expect(client.getContainerDataApp).toHaveBeenCalledWith("options-connector");
+      expect(client.api!.dataApps.getContainerDataApp).toHaveBeenCalledWith("options-connector");
     });
 
     it("should handle missing environment variables for secrets", async () => {
@@ -294,12 +299,26 @@ describe("getProviderConfigurations", () => {
       };
 
       const client = createMockClient();
-      client.getContainerDataApp.mockResolvedValue(mockContainerApp);
-      client.getProvider.mockResolvedValue(mockProvider);
+      client.api!.dataApps.getContainerDataApp.mockResolvedValue(mockContainerApp);
+      client.api!.dataApps.getProviderById.mockResolvedValue(mockProvider);
 
-      const result = await getProviderConfigurations(client as unknown as DataAppProviderClient);
+      const result = await getProviderConfigurations(client);
 
-      expect(result[0].fields.MISSING_SECRET).toBeUndefined();
+      // Uses secret.name as the field key, not envName
+      expect(result[0].fields.secret).toBeUndefined();
+    });
+
+    it("should throw error when TDPClient is not initialized", async () => {
+      delete process.env.DATA_APP_PROVIDER_CONFIG;
+      process.env.CONNECTOR_ID = "test-connector-id";
+
+      const client = createMockClient();
+      // Override isInitialized to return false
+      Object.defineProperty(client, "isInitialized", { value: false });
+
+      await expect(getProviderConfigurations(client)).rejects.toThrow(
+        "TDPClient is not initialized",
+      );
     });
   });
 });

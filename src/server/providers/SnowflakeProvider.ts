@@ -3,9 +3,17 @@
  *
  * TypeScript equivalent of SnowflakeProvider from
  * ts-lib-ui-kit-streamlit/tetrascience/data_app_providers/provider.py
+ *
+ * @remarks
+ * This provider requires the `snowflake-sdk` package to be installed.
+ * It is an optional peer dependency - install it only if you need Snowflake support:
+ * ```bash
+ * npm install snowflake-sdk
+ * # or
+ * yarn add snowflake-sdk
+ * ```
  */
 
-import snowflake from "snowflake-sdk";
 import type { ProviderConfiguration } from "./types";
 import {
   QueryError,
@@ -13,18 +21,44 @@ import {
   InvalidProviderConfigurationError,
 } from "./exceptions";
 
+// Type imports for snowflake-sdk (these don't require the package at runtime)
+type SnowflakeSDK = typeof import("snowflake-sdk");
+type SnowflakeConnection = import("snowflake-sdk").Connection;
+type SnowflakeBinds = import("snowflake-sdk").Binds;
+type SnowflakeError = import("snowflake-sdk").SnowflakeError;
+type SnowflakeConnectionOptions = import("snowflake-sdk").ConnectionOptions;
+type SnowflakeRowStatement = import("snowflake-sdk").RowStatement;
+type SnowflakeFileAndStageBindStatement =
+  import("snowflake-sdk").FileAndStageBindStatement;
+
+/**
+ * Dynamically import snowflake-sdk
+ * @throws {InvalidProviderConfigurationError} If snowflake-sdk is not installed
+ */
+async function getSnowflakeSDK(): Promise<SnowflakeSDK> {
+  try {
+    const snowflake = await import("snowflake-sdk");
+    return snowflake.default || snowflake;
+  } catch {
+    throw new InvalidProviderConfigurationError(
+      "The 'snowflake-sdk' package is required to use the Snowflake provider. " +
+        "Please install it: npm install snowflake-sdk",
+    );
+  }
+}
+
 /**
  * Snowflake data provider
  */
 export class SnowflakeProvider {
-  private connection: snowflake.Connection;
+  private connection: SnowflakeConnection;
 
   /**
    * Initialize the Snowflake data provider
    *
    * @param connection - Snowflake connection
    */
-  constructor(connection: snowflake.Connection) {
+  constructor(connection: SnowflakeConnection) {
     this.connection = connection;
   }
 
@@ -43,16 +77,16 @@ export class SnowflakeProvider {
     // Snowflake SDK supports both positional binds (array) and named binds (object)
     // Pass params directly to preserve named bind semantics
     const binds = Array.isArray(params)
-      ? (params as unknown as snowflake.Binds)
-      : (params as unknown as snowflake.Binds);
+      ? (params as unknown as SnowflakeBinds)
+      : (params as unknown as SnowflakeBinds);
 
     return new Promise((resolve, reject) => {
       this.connection.execute({
         sqlText,
         binds,
         complete: (
-          err: snowflake.SnowflakeError | undefined,
-          _stmt: snowflake.RowStatement | snowflake.FileAndStageBindStatement,
+          err: SnowflakeError | undefined,
+          _stmt: SnowflakeRowStatement | SnowflakeFileAndStageBindStatement,
           rows?: Array<Record<string, unknown>>,
         ) => {
           if (err) {
@@ -74,7 +108,7 @@ export class SnowflakeProvider {
    */
   async close(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.connection.destroy((err: snowflake.SnowflakeError | undefined) => {
+      this.connection.destroy((err: SnowflakeError | undefined) => {
         if (err) {
           reject(err);
           return;
@@ -90,10 +124,14 @@ export class SnowflakeProvider {
  *
  * @param config - Provider configuration
  * @returns Promise resolving to Snowflake data provider
+ * @throws {InvalidProviderConfigurationError} If snowflake-sdk is not installed or config is invalid
  */
 export async function buildSnowflakeProvider(
   config: ProviderConfiguration,
 ): Promise<SnowflakeProvider> {
+  // Dynamically import snowflake-sdk
+  const snowflake = await getSnowflakeSDK();
+
   const requiredFields = [
     "user",
     "password",
@@ -113,7 +151,7 @@ export async function buildSnowflakeProvider(
     }
   }
 
-  const connectionOptions: snowflake.ConnectionOptions = {
+  const connectionOptions: SnowflakeConnectionOptions = {
     account: config.fields["account"]!,
     username: config.fields["user"]!,
     password: config.fields["password"]!,
@@ -127,7 +165,7 @@ export async function buildSnowflakeProvider(
     const connection = snowflake.createConnection(connectionOptions);
 
     connection.connect(
-      (err: snowflake.SnowflakeError | undefined, conn: snowflake.Connection) => {
+      (err: SnowflakeError | undefined, conn: SnowflakeConnection) => {
         if (err) {
           reject(
             new ProviderConnectionError(
@@ -144,9 +182,7 @@ export async function buildSnowflakeProvider(
         // to match the timezone of delta table timestamps.
         conn.execute({
           sqlText: "ALTER SESSION SET TIMEZONE = 'UTC'",
-          complete: (
-            tzErr: snowflake.SnowflakeError | undefined,
-          ) => {
+          complete: (tzErr: SnowflakeError | undefined) => {
             if (tzErr) {
               // Log warning but don't fail - timezone setting is not critical
               console.warn(

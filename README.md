@@ -181,32 +181,14 @@ try {
 
 **Environment Variables:**
 
-- `DATA_APP_PROVIDER_CONFIG` - JSON override for local development
+- `DATA_APP_PROVIDER_CONFIG` - JSON override for local development only
 - `CONNECTOR_ID` - Connector ID for fetching providers from TDP
-- `TDP_ENDPOINT` or `TDP_INTERNAL_ENDPOINT` - TDP API base URL
-- `TS_AUTH_TOKEN` - Authentication token
+- `TDP_ENDPOINT` - TDP API base URL
 - `ORG_SLUG` - Organization slug
 - `ATHENA_S3_OUTPUT_LOCATION` - S3 bucket for Athena query results
 - `AWS_REGION` - AWS region for Athena
 
-**Python to TypeScript Mapping:**
-
-| Python (Streamlit UI Kit) | TypeScript (React UI Kit) |
-| ------------------------- | ------------------------- |
-| `get_provider_configurations()` | `getProviderConfigurations()` |
-| `build_provider()` | `buildProvider()` |
-| `build_snowflake_provider()` | `buildSnowflakeProvider()` |
-| `build_databricks_provider()` | `buildDatabricksProvider()` |
-| `get_tdp_athena_provider()` | `getTdpAthenaProvider()` |
-| `SnowflakeProvider` | `SnowflakeProvider` |
-| `DatabricksProvider` | `DatabricksProvider` |
-| `AthenaProvider` | `AthenaProvider` |
-| `ProviderConfiguration` | `ProviderConfiguration` |
-| `ProviderError` | `ProviderError` |
-| `QueryError` | `QueryError` |
-| `MissingTableError` | `MissingTableError` |
-| `ConnectionError` | `ProviderConnectionError` |
-| `InvalidProviderConfigurationError` | `InvalidProviderConfigurationError` |
+> **Note:** Authentication tokens are obtained from the user's JWT via `jwtManager`. The `TS_AUTH_TOKEN` environment variable is only for local development fallback.
 
 ## TypeScript Support
 

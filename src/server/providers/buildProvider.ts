@@ -37,9 +37,11 @@ export type DataProvider =
  *
  * @example
  * ```typescript
- * import { buildProvider, getProviderConfigurations, DataAppProviderClient } from '@tetrascience-npm/tetrascience-react-ui/server';
+ * import { TDPClient } from '@tetrascience-npm/ts-connectors-sdk';
+ * import { buildProvider, getProviderConfigurations } from '@tetrascience-npm/tetrascience-react-ui/server';
  *
- * const client = new DataAppProviderClient();
+ * const client = new TDPClient({ authToken: userJwt });
+ * await client.init();
  * const configs = await getProviderConfigurations(client);
  *
  * const snowflakeConfig = configs.find(c => c.type === 'snowflake');

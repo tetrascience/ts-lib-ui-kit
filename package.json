@@ -34,6 +34,36 @@
         "default": "./dist/cjs/server.js"
       }
     },
+    "./server/providers/athena": {
+      "import": {
+        "types": "./dist/providers/athena.d.ts",
+        "default": "./dist/esm/providers/athena.js"
+      },
+      "require": {
+        "types": "./dist/providers/athena.d.ts",
+        "default": "./dist/cjs/providers/athena.js"
+      }
+    },
+    "./server/providers/snowflake": {
+      "import": {
+        "types": "./dist/providers/snowflake.d.ts",
+        "default": "./dist/esm/providers/snowflake.js"
+      },
+      "require": {
+        "types": "./dist/providers/snowflake.d.ts",
+        "default": "./dist/cjs/providers/snowflake.js"
+      }
+    },
+    "./server/providers/databricks": {
+      "import": {
+        "types": "./dist/providers/databricks.d.ts",
+        "default": "./dist/esm/providers/databricks.js"
+      },
+      "require": {
+        "types": "./dist/providers/databricks.d.ts",
+        "default": "./dist/cjs/providers/databricks.js"
+      }
+    },
     "./index.css": "./dist/index.css",
     "./package.json": "./package.json"
   },

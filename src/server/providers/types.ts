@@ -105,20 +105,6 @@ export interface OrganizationApiResponse {
 }
 
 /**
- * Configuration options for DataAppProviderClient
- */
-export interface DataAppProviderClientConfig {
-  /** TDP API base URL (defaults to TDP_INTERNAL_ENDPOINT or TDP_ENDPOINT env var) */
-  baseUrl?: string;
-  /** Authentication token (defaults to TS_AUTH_TOKEN env var) */
-  authToken?: string;
-  /** Organization slug (defaults to ORG_SLUG env var) */
-  orgSlug?: string;
-  /** Request timeout in milliseconds (default: 30000) */
-  timeout?: number;
-}
-
-/**
  * Options for getProviderConfigurations function
  */
 export interface GetProviderConfigurationsOptions {

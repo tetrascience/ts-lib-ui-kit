@@ -29,7 +29,7 @@ const sizeStyles = {
 };
 
 const TabContainer = styled.button<{
-  active?: boolean;
+  $active?: boolean;
   disabled?: boolean;
   size: TabSize;
 }>`
@@ -45,7 +45,7 @@ const TabContainer = styled.button<{
   ${(props) => sizeStyles[props.size]}
   color: ${(props) => {
     if (props.disabled) return "var(--grey-400)";
-    return props.active ? "var(--blue-900)" : "var(--grey-500)";
+    return props.$active ? "var(--blue-900)" : "var(--grey-500)";
   }};
   transition: all 0.2s ease;
 
@@ -62,7 +62,7 @@ const TabContainer = styled.button<{
       props.disabled ? "var(--grey-400)" : "var(--blue-900)"};
     bottom: 0;
     left: 0;
-    opacity: ${(props) => (props.active ? 1 : 0)};
+    opacity: ${(props) => (props.$active ? 1 : 0)};
     transition: opacity 0.2s ease;
   }
 
@@ -81,7 +81,7 @@ export const Tab: React.FC<TabProps> = ({
 }) => {
   return (
     <TabContainer
-      active={active}
+      $active={active}
       disabled={disabled}
       size={size}
       onClick={onClick}

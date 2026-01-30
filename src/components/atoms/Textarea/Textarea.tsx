@@ -29,18 +29,20 @@ const sizeStyles = {
 };
 
 const TextareaContainer = styled.div<{
-  fullWidth?: boolean;
-  disabled?: boolean;
-  error?: boolean;
+  $fullWidth?: boolean;
 }>`
   position: relative;
   display: inline-flex;
   align-items: center;
-  width: ${(props) => (props.fullWidth ? "100%" : "auto")};
+  width: ${(props) => (props.$fullWidth ? "100%" : "auto")};
   gap: 8px;
 `;
 
-const StyledTextarea = styled.textarea<TextareaProps & StyleProps>`
+interface StyledTextareaProps extends StyleProps {
+  $error?: boolean;
+}
+
+const StyledTextarea = styled.textarea<StyledTextareaProps>`
   width: 100%;
   border-radius: 6px;
   font-family: "Inter", sans-serif;
@@ -49,7 +51,7 @@ const StyledTextarea = styled.textarea<TextareaProps & StyleProps>`
   line-height: 20px;
   border: 1px solid
     ${(props) =>
-      props.error
+      props.$error
         ? "var(--red-error)"
         : props.disabled
         ? "var(--grey-300)"
@@ -66,7 +68,7 @@ const StyledTextarea = styled.textarea<TextareaProps & StyleProps>`
 
   &:hover:not(:disabled):not(:focus) {
     border-color: ${(props) =>
-      props.error ? "var(--red-error)" : "var(--blue-600)"};
+      props.$error ? "var(--red-error)" : "var(--blue-600)"};
   }
 
   &:focus {
@@ -74,14 +76,14 @@ const StyledTextarea = styled.textarea<TextareaProps & StyleProps>`
     box-shadow: 0px 0px 0px 1px var(--white-900),
       0px 0px 0px 3px var(--blue-600);
     border-color: ${(props) =>
-      props.error ? "var(--red-error)" : "var(--blue-600)"};
+      props.$error ? "var(--red-error)" : "var(--blue-600)"};
   }
 
   &:active {
     outline: none;
     box-shadow: 0px 0px 0px 2px var(--blue-200);
     border-color: ${(props) =>
-      props.error ? "var(--red-error)" : "var(--blue-600)"};
+      props.$error ? "var(--red-error)" : "var(--blue-600)"};
   }
 
   &:disabled {
@@ -108,15 +110,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     ref
   ) => {
     return (
-      <TextareaContainer
-        fullWidth={fullWidth}
-        disabled={disabled}
-        error={error}
-      >
+      <TextareaContainer $fullWidth={fullWidth}>
         <StyledTextarea
           ref={ref}
           size={size}
-          error={error}
+          $error={error}
           disabled={disabled}
           rows={rows}
           {...rest}

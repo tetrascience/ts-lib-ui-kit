@@ -15,6 +15,12 @@ dist
 # Coverage reports
 coverage
 
+# Test results
+test-results
+
+# Storybook build output
+storybook-static
+
 # Dependency directory
 node_modules
 

@@ -31,7 +31,7 @@ const DropdownContainer = styled.div<{ width?: string }>`
 
 const DropdownButton = styled.button<{
   open: boolean;
-  error?: boolean;
+  $error?: boolean;
   disabled?: boolean;
   size: DropdownSize;
 }>`
@@ -45,7 +45,7 @@ const DropdownButton = styled.button<{
     props.disabled ? "var(--grey-100)" : "var(--white-900)"};
   border: 1px solid
     ${(props) => {
-      if (props.error) return "var(--red-error)";
+      if (props.$error) return "var(--red-error)";
       if (props.disabled) return "var(--grey-200)";
       if (props.open) return "var(--blue-600)";
       return "var(--grey-300)";
@@ -68,7 +68,7 @@ const DropdownButton = styled.button<{
 
   &:hover:not(:disabled) {
     border-color: ${(props) =>
-      props.error ? "var(--red-error)" : "var(--blue-600)"};
+      props.$error ? "var(--red-error)" : "var(--blue-600)"};
     color: var(--black-900) !important;
   }
 
@@ -84,11 +84,11 @@ const DropdownButton = styled.button<{
   &:focus {
     outline: none;
     box-shadow: ${(props) =>
-      props.error
+      props.$error
         ? "0px 0px 0px 3px var(--red-bg)"
         : "0px 0px 0px 1px var(--white-900), 0px 0px 0px 3px var(--blue-600)"};
     border-color: ${(props) =>
-      props.error ? "var(--red-error)" : "var(--blue-600)"};
+      props.$error ? "var(--red-error)" : "var(--blue-600)"};
   }
 `;
 
@@ -355,7 +355,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
         onKeyDown={handleButtonKeyDown}
         open={isOpen}
         disabled={disabled}
-        error={error}
+        $error={error}
         size={size}
         aria-haspopup="listbox"
         aria-expanded={isOpen}

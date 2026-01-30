@@ -30,11 +30,11 @@ const StyledTableHeaderCell = styled.th<{ width?: string }>`
   }
 `;
 
-const HeaderContent = styled.div<{ clickable?: boolean }>`
+const HeaderContent = styled.div<{ $clickable?: boolean }>`
   display: flex;
   align-items: center;
   gap: 4px;
-  cursor: ${(props) => (props.clickable ? "pointer" : "default")};
+  cursor: ${(props) => (props.$clickable ? "pointer" : "default")};
   user-select: none;
 `;
 
@@ -128,7 +128,7 @@ export const TableHeaderCell = forwardRef<
         className={className}
         {...props}
       >
-        <HeaderContent clickable={sortable} onClick={handleSort}>
+        <HeaderContent $clickable={sortable} onClick={handleSort}>
           <HeaderText>{children}</HeaderText>
           {sortable && (
             <SortIcon

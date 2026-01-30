@@ -13,7 +13,7 @@ export interface TooltipProps {
 
 interface TooltipContentProps {
   placement: TooltipPlacement;
-  isVisible: boolean;
+  $isVisible: boolean;
 }
 
 const TooltipContainer = styled.div`
@@ -45,7 +45,7 @@ const TooltipContent = styled.div<TooltipContentProps>`
   text-align: left;
 
   ${(props) =>
-    props.isVisible &&
+    props.$isVisible &&
     css`
       opacity: 1;
       visibility: visible;
@@ -168,7 +168,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       onMouseLeave={handleMouseLeave}
     >
       {children}
-      <TooltipContent placement={placement} isVisible={isVisible}>
+      <TooltipContent placement={placement} $isVisible={isVisible}>
         {content}
       </TooltipContent>
     </TooltipContainer>

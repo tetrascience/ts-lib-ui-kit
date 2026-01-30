@@ -55,7 +55,7 @@ export const Error: Story = {
 // With value
 export const WithValue: Story = {
   args: {
-    value:
+    defaultValue:
       "This is a textarea with some initial value that shows how the text would look when filled in by the user.",
     rows: 5,
   },

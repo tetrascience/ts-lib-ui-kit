@@ -72,13 +72,13 @@ const Paragraph = styled.p`
   line-height: 1.5;
 `;
 
-const Text = styled.span<{ strong?: boolean; type?: "secondary" | "primary" }>`
-  font-weight: ${(props) => (props.strong ? "600" : "400")};
+const Text = styled.span<{ $strong?: boolean; $type?: "secondary" | "primary" }>`
+  font-weight: ${(props) => (props.$strong ? "600" : "400")};
   color: ${(props) =>
-    props.type === "secondary" ? "rgba(0, 0, 0, 0.45)" : "inherit"};
+    props.$type === "secondary" ? "rgba(0, 0, 0, 0.45)" : "inherit"};
 `;
 
-const SecondaryText = styled(Text).attrs({ type: "secondary" })``;
+const SecondaryText = styled(Text).attrs({ $type: "secondary" })``;
 
 const CollapseContainer = styled.div`
   margin-left: -15px;
@@ -86,7 +86,7 @@ const CollapseContainer = styled.div`
   margin-bottom: -5px;
 `;
 
-const CollapseHeader = styled.div<{ isActive: boolean }>`
+const CollapseHeader = styled.div<{ $isActive: boolean }>`
   padding: 12px 16px;
   cursor: pointer;
   display: flex;
@@ -98,15 +98,15 @@ const CollapseHeader = styled.div<{ isActive: boolean }>`
   }
 
   &::after {
-    content: "${(props) => (props.isActive ? "▼" : "▶")}";
+    content: "${(props) => (props.$isActive ? "▼" : "▶")}";
     font-size: 12px;
     margin-left: 8px;
   }
 `;
 
-const CollapseContent = styled.div<{ isVisible: boolean }>`
-  padding: ${(props) => (props.isVisible ? "0 16px 12px" : "0 16px")};
-  max-height: ${(props) => (props.isVisible ? "300px" : "0")};
+const CollapseContent = styled.div<{ $isVisible: boolean }>`
+  padding: ${(props) => (props.$isVisible ? "0 16px 12px" : "0 16px")};
+  max-height: ${(props) => (props.$isVisible ? "300px" : "0")};
   overflow: hidden;
   transition: max-height 0.3s ease;
 `;
@@ -163,12 +163,12 @@ const Collapse = ({
   return (
     <div>
       <CollapseHeader
-        isActive={isExpanded}
+        $isActive={isExpanded}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {header}
       </CollapseHeader>
-      <CollapseContent isVisible={isExpanded}>{children}</CollapseContent>
+      <CollapseContent $isVisible={isExpanded}>{children}</CollapseContent>
     </div>
   );
 };
@@ -278,7 +278,7 @@ const ErrorAlert: React.FC<ErrorAlertProps> = ({
       </AlertHeader>
       <StyledSpace>
         <Paragraph>
-          <Text strong>{errorType}:</Text> {message}
+          <Text $strong>{errorType}:</Text> {message}
         </Paragraph>
         {description && (
           <Paragraph>

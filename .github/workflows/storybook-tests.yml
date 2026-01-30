@@ -1,0 +1,81 @@
+name: Storybook Tests
+
+on:
+  push:
+    branches:
+      - main
+      - development
+  pull_request:
+    branches:
+      - main
+      - development
+  workflow_dispatch:
+    inputs:
+      report_to_zephyr:
+        description: 'Report results to Zephyr Scale'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  storybook-tests:
+    name: Storybook E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: 🧶 Enable Corepack
+        run: corepack enable
+
+      - name: 💾 Cache Yarn
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: |
+            ~/.yarn/cache
+            .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: 📦 Install dependencies
+        run: yarn install --immutable
+
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: 🧪 Run Storybook tests
+        run: yarn test:storybook:ci
+        continue-on-error: true
+        id: test
+
+      - name: 📊 Upload JUnit test results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: storybook-junit-results
+          path: test-results/storybook-junit.xml
+          retention-days: 7
+
+      - name: 📸 Upload failure artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure() || steps.test.outcome == 'failure'
+        with:
+          name: storybook-test-failures
+          path: test-results/
+          retention-days: 7
+
+      - name: ❌ Fail if tests failed
+        if: steps.test.outcome == 'failure'
+        run: exit 1

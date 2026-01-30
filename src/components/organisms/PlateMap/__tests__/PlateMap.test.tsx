@@ -164,11 +164,16 @@ describe("PlateMap", () => {
 
       const [, plotData] = mockNewPlot.mock.calls[0];
       const grid = plotData[0].z;
+      const zmin = plotData[0].zmin;
 
       expect(grid[0][0]).toBe(1000);
-      expect(grid[0][1]).toBeNull();
-      expect(grid[1][0]).toBeNull();
       expect(grid[1][1]).toBe(2000);
+      // Empty wells are represented as sentinel values (below data range) for emptyWellColor support
+      // The sentinel value should be less than the data minimum (1000)
+      expect(grid[0][1]).toBeLessThan(1000);
+      expect(grid[1][0]).toBeLessThan(1000);
+      // zmin should include the sentinel value range
+      expect(zmin).toBeLessThan(1000);
     });
 
     it("should handle wells not provided (sparse data)", () => {
@@ -186,9 +191,9 @@ describe("PlateMap", () => {
       expect(grid[0][0]).toBe(1000);
       // H12 should have data (row 7, col 11)
       expect(grid[7][11]).toBe(5000);
-      // Other wells should be null
-      expect(grid[0][5]).toBeNull();
-      expect(grid[3][3]).toBeNull();
+      // Other wells are represented as sentinel values (below data range) for emptyWellColor support
+      expect(grid[0][5]).toBeLessThan(1000);
+      expect(grid[3][3]).toBeLessThan(1000);
     });
 
     it("should handle case-insensitive well IDs", () => {
@@ -222,8 +227,8 @@ describe("PlateMap", () => {
       const grid = plotData[0].z;
 
       expect(grid[0][0]).toBe(1000);
-      // Invalid wells should not appear - grid should be mostly null
-      expect(grid[0][1]).toBeNull();
+      // Invalid wells should not appear - represented as sentinel values (below data range)
+      expect(grid[0][1]).toBeLessThan(1000);
     });
   });
 
@@ -239,7 +244,9 @@ describe("PlateMap", () => {
 
       const [, plotData] = mockNewPlot.mock.calls[0];
 
-      expect(plotData[0].zmin).toBe(100);
+      // zmin includes sentinel value range for empty wells (emptyWellColor support)
+      // The actual data range is 100-500, but zmin is adjusted for null cells
+      expect(plotData[0].zmin).toBeLessThan(100);
       expect(plotData[0].zmax).toBe(500);
     });
 
@@ -255,7 +262,8 @@ describe("PlateMap", () => {
 
       const [, plotData] = mockNewPlot.mock.calls[0];
 
-      expect(plotData[0].zmin).toBe(0);
+      // zmin includes sentinel value range for empty wells (emptyWellColor support)
+      expect(plotData[0].zmin).toBeLessThan(0);
       expect(plotData[0].zmax).toBe(10000);
     });
 
@@ -269,8 +277,8 @@ describe("PlateMap", () => {
 
       const [, plotData] = mockNewPlot.mock.calls[0];
 
-      // Should default to 0-1 range when all nulls
-      expect(plotData[0].zmin).toBe(0);
+      // With all nulls, data range defaults to 0-1, then zmin adjusted for sentinel
+      expect(plotData[0].zmin).toBeLessThan(0);
       expect(plotData[0].zmax).toBe(1);
     });
   });
@@ -369,7 +377,16 @@ describe("PlateMap", () => {
 
       const [, plotData] = mockNewPlot.mock.calls[0];
 
-      expect(plotData[0].colorscale).toEqual(customScale);
+      // Colorscale is extended with emptyWellColor for null cells
+      // The extended scale should include emptyWellColor at the beginning
+      // and the custom scale colors at the end
+      const resultColorscale = plotData[0].colorscale as Array<[number, string]>;
+      expect(Array.isArray(resultColorscale)).toBe(true);
+      // First entries should be the emptyWellColor (default #f0f0f0)
+      expect(resultColorscale[0][1]).toBe("#f0f0f0");
+      // Last entry should be the end of our custom scale
+      expect(resultColorscale[resultColorscale.length - 1][0]).toBe(1);
+      expect(resultColorscale[resultColorscale.length - 1][1]).toBe("#FFFFFF");
     });
   });
 

@@ -11,6 +11,10 @@ on:
       - development
   workflow_dispatch:
     inputs:
+      test_cases:
+        description: 'Comma-separated Zephyr test case IDs (e.g., SW-T1,SW-T2,SW-T3). Leave empty to run all tests.'
+        required: false
+        type: string
       report_to_zephyr:
         description: 'Report results to Zephyr Scale'
         required: false
@@ -23,6 +27,8 @@ permissions:
 jobs:
   storybook-tests:
     name: Storybook E2E Tests
+    # Don't run on forked PRs to protect secrets
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -55,10 +61,25 @@ jobs:
       - name: 🎭 Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: 🧪 Run Storybook tests
+      - name: 🧪 Run Storybook tests (all)
+        if: ${{ !inputs.test_cases }}
         run: yarn test:storybook:ci
         continue-on-error: true
         id: test
+
+      - name: 🧪 Run Storybook tests (filtered)
+        if: ${{ inputs.test_cases }}
+        env:
+          TEST_CASES: ${{ inputs.test_cases }}
+        run: |
+          # Convert comma-separated IDs to pipe-separated regex pattern
+          # Input: SW-T1,SW-T2,SW-T3
+          # Output: SW-T1|SW-T2|SW-T3
+          TEST_FILTER=$(echo "$TEST_CASES" | tr ',' '|')
+          echo "Running tests matching: $TEST_FILTER"
+          yarn test:storybook:ci -- -t "$TEST_FILTER"
+        continue-on-error: true
+        id: test_filtered
 
       - name: 📊 Upload JUnit test results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -70,12 +91,19 @@ jobs:
 
       - name: 📸 Upload failure artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: failure() || steps.test.outcome == 'failure'
+        if: failure() || steps.test.outcome == 'failure' || steps.test_filtered.outcome == 'failure'
         with:
           name: storybook-test-failures
           path: test-results/
           retention-days: 7
 
+      - name: 📤 Report to Zephyr
+        if: ${{ inputs.report_to_zephyr && always() }}
+        env:
+          ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
+          JUNIT_PATH: test-results/storybook-junit.xml
+        run: npx tsx scripts/zephyr/report-zephyr-results.ts
+
       - name: ❌ Fail if tests failed
-        if: steps.test.outcome == 'failure'
+        if: steps.test.outcome == 'failure' || steps.test_filtered.outcome == 'failure'
         run: exit 1

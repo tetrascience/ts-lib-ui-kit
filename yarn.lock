@@ -1882,21 +1882,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/addon-interactions@npm:^8.5.6":
-  version: 8.6.15
-  resolution: "@storybook/addon-interactions@npm:8.6.15"
-  dependencies:
-    "@storybook/global": "npm:^5.0.0"
-    "@storybook/instrumenter": "npm:8.6.15"
-    "@storybook/test": "npm:8.6.15"
-    polished: "npm:^4.2.2"
-    ts-dedent: "npm:^2.2.0"
-  peerDependencies:
-    storybook: ^8.6.15
-  checksum: 10c0/acc5ec58c551e4ae5fa1396dd80dc4fe5c5a69825ce74e75a08888923e097ae63c0bd2accf08ca93cff54d4812f75ee5a28a9732d73c9ec7e08734ca2d88f888
-  languageName: node
-  linkType: hard
-
 "@storybook/addon-links@npm:^8.5.6":
   version: 8.6.15
   resolution: "@storybook/addon-links@npm:8.6.15"
@@ -2208,7 +2193,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/test@npm:8.6.15, @storybook/test@npm:^8.5.6":
+"@storybook/test@npm:^8.5.6":
   version: 8.6.15
   resolution: "@storybook/test@npm:8.6.15"
   dependencies:
@@ -2310,7 +2295,6 @@ __metadata:
     "@rollup/plugin-json": "npm:^6.1.0"
     "@rollup/plugin-node-resolve": "npm:^16.0.1"
     "@storybook/addon-essentials": "npm:^8.5.6"
-    "@storybook/addon-interactions": "npm:^8.5.6"
     "@storybook/addon-links": "npm:^8.5.6"
     "@storybook/blocks": "npm:^8.5.6"
     "@storybook/experimental-addon-test": "npm:8.6.14"

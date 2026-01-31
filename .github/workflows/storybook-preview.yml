@@ -14,16 +14,20 @@ permissions:
 
 jobs:
   build-and-deploy:
-    if: github.event.action != 'closed'
+    # Don't run on forked PRs to protect secrets (GITHUB_TOKEN is read-only on forks)
+    if: github.event.action != 'closed' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "20"
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -32,7 +36,7 @@ jobs:
         run: yarn build-storybook
 
       - name: Upload Storybook artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: storybook-${{ github.event.pull_request.number }}
           path: storybook-static
@@ -47,33 +51,35 @@ jobs:
           keep_files: true
 
       - name: Comment PR with Storybook link
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
             const repo = context.repo;
             const storybookUrl = `https://${repo.owner}.github.io/${repo.repo}/pr-${prNumber}/`;
-            
+
             // Check if we already commented
             const comments = await github.rest.issues.listComments({
               owner: repo.owner,
               repo: repo.repo,
               issue_number: prNumber,
             });
-            
-            const botComment = comments.data.find(comment => 
-              comment.user.type === 'Bot' && 
+
+            const botComment = comments.data.find(comment =>
+              comment.user.type === 'Bot' &&
               comment.body.includes('📚 Storybook Preview')
             );
-            
-            const body = `## 📚 Storybook Preview
 
-            Your Storybook preview is ready!
+            const body = [
+              '## 📚 Storybook Preview',
+              '',
+              'Your Storybook preview is ready!',
+              '',
+              `**🔗 [View Storybook](${storybookUrl})**`,
+              '',
+              '_This preview will be available for 14 days._'
+            ].join('\n');
 
-            **🔗 [View Storybook](${storybookUrl})**
-
-            _This preview will be available for 14 days._`;
-            
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: repo.owner,
@@ -91,11 +97,12 @@ jobs:
             }
 
   cleanup:
-    if: github.event.action == 'closed'
+    # Don't run on forked PRs to protect secrets (GITHUB_TOKEN is read-only on forks)
+    if: github.event.action == 'closed' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout gh-pages branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: gh-pages
           persist-credentials: true

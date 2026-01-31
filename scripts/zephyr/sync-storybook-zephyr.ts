@@ -15,8 +15,16 @@
 
 import fs from "fs";
 import path from "path";
+import { Project, VariableDeclaration, Node } from "ts-morph";
 
-interface StoryCase {
+// ============================================================================
+// TypeScript Types
+// ============================================================================
+
+/** Represents the type of story export pattern detected */
+export type StoryPattern = "csf3-object" | "csf2-template-bind" | "arrow-function" | "react-fc" | "unknown";
+
+export interface StoryCase {
   filePath: string;
   lineNumber: number;
   storyName: string;
@@ -25,6 +33,8 @@ interface StoryCase {
   componentType: string;
   hasZephyrId: boolean;
   existingId?: string;
+  /** The detected story pattern for proper update handling */
+  pattern: StoryPattern;
 }
 
 interface ZephyrFolder { id: string; name: string; }
@@ -32,8 +42,16 @@ interface FolderCache { [key: string]: string | null; }
 interface ZephyrTestCase { key: string; name: string; }
 
 const ZEPHYR_BASE_URL = "https://api.zephyrscale.smartbear.com/v2";
-const ZEPHYR_TOKEN = process.env.ZEPHYR_TOKEN;
 const PROJECT_KEY = process.env.ZEPHYR_PROJECT_KEY || "SW";
+
+function getZephyrToken(): string {
+  const token = process.env.ZEPHYR_TOKEN;
+  if (!token) {
+    console.error("[ERROR] ZEPHYR_TOKEN environment variable is required");
+    process.exit(1);
+  }
+  return token;
+}
 const ZEPHYR_LABELS = process.env.ZEPHYR_LABELS?.split(",").map((l) => l.trim()).filter(Boolean) || ["storybook", "vitest", "automated"];
 
 // Folder prefix for Zephyr - can be customized via env var
@@ -65,11 +83,6 @@ function generateFolderMapping(): { [key: string]: string } {
 const FOLDER_MAPPING = generateFolderMapping();
 const folderIdCache: FolderCache = {};
 
-if (!ZEPHYR_TOKEN) {
-  console.error("[ERROR] ZEPHYR_TOKEN environment variable is required");
-  process.exit(1);
-}
-
 function findStoryFiles(dir: string): string[] {
   const storyFiles: string[] = [];
   if (!fs.existsSync(dir)) return storyFiles;
@@ -85,9 +98,99 @@ function findStoryFiles(dir: string): string[] {
   return storyFiles;
 }
 
-function parseStoryFile(filePath: string, content: string): StoryCase[] {
+// ============================================================================
+// AST-based Story Parsing
+// ============================================================================
+
+/** Determines the story pattern from a variable declaration's initializer */
+export function detectStoryPattern(declaration: VariableDeclaration): StoryPattern {
+  const typeNode = declaration.getTypeNode();
+  const initializer = declaration.getInitializer();
+
+  // Check type annotation first
+  if (typeNode) {
+    const typeText = typeNode.getText();
+    if (typeText === "Story" || typeText.includes("StoryObj")) {
+      return "csf3-object";
+    }
+    if (typeText.includes("React.FC") || typeText.includes("FC<")) {
+      return "react-fc";
+    }
+  }
+
+  if (!initializer) return "unknown";
+
+  // Check initializer pattern
+  if (Node.isCallExpression(initializer)) {
+    const expression = initializer.getExpression();
+    // Template.bind({}) pattern
+    if (Node.isPropertyAccessExpression(expression)) {
+      const propName = expression.getName();
+      if (propName === "bind") {
+        return "csf2-template-bind";
+      }
+    }
+  }
+
+  if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
+    return "arrow-function";
+  }
+
+  if (Node.isObjectLiteralExpression(initializer)) {
+    return "csf3-object";
+  }
+
+  return "unknown";
+}
+
+/** Extracts the name property value from a story object if present */
+export function extractNameFromStory(declaration: VariableDeclaration): string | undefined {
+  const initializer = declaration.getInitializer();
+  if (!initializer || !Node.isObjectLiteralExpression(initializer)) return undefined;
+
+  const nameProp = initializer.getProperty("name");
+  if (!nameProp || !Node.isPropertyAssignment(nameProp)) return undefined;
+
+  const nameInit = nameProp.getInitializer();
+  if (!nameInit || !Node.isStringLiteral(nameInit)) return undefined;
+
+  return nameInit.getLiteralText();
+}
+
+/** Checks for .storyName assignment after the declaration */
+export function findStoryNameAssignment(declaration: VariableDeclaration): string | undefined {
+  const exportName = declaration.getName();
+  const sourceFile = declaration.getSourceFile();
+
+  // Look for: ExportName.storyName = "..."
+  const statements = sourceFile.getStatements();
+  for (const stmt of statements) {
+    if (!Node.isExpressionStatement(stmt)) continue;
+
+    const expr = stmt.getExpression();
+    if (!Node.isBinaryExpression(expr)) continue;
+
+    const left = expr.getLeft();
+    if (!Node.isPropertyAccessExpression(left)) continue;
+
+    const objExpr = left.getExpression();
+    if (!Node.isIdentifier(objExpr) || objExpr.getText() !== exportName) continue;
+
+    if (left.getName() !== "storyName") continue;
+
+    const right = expr.getRight();
+    if (Node.isStringLiteral(right)) {
+      return right.getLiteralText();
+    }
+  }
+
+  return undefined;
+}
+
+/** Parses a story file using TypeScript AST to extract story exports */
+export function parseStoryFile(filePath: string, content: string): StoryCase[] {
   const stories: StoryCase[] = [];
-  const lines = content.split("\n");
+  const zephyrIdPattern = /\[([A-Z]+-T\d+(?:,[A-Z]+-T\d+)*)\]\s*(.+)/;
 
   // Extract component type from path using detected folder mapping
   const componentTypes = Object.keys(FOLDER_MAPPING);
@@ -97,46 +200,109 @@ function parseStoryFile(filePath: string, content: string): StoryCase[] {
   const pathMatch = componentTypePattern ? filePath.match(componentTypePattern) : null;
   const componentType = pathMatch ? pathMatch[1] : "other";
 
-  const titleMatch = content.match(/title:\s*["'](.+?)["']/);
-  const componentName = titleMatch ? titleMatch[1].split("/").pop() || "Unknown" : path.basename(filePath, ".stories.tsx");
+  // Create a ts-morph project and parse the file
+  const project = new Project({ useInMemoryFileSystem: true });
+  const sourceFile = project.createSourceFile("temp.tsx", content);
 
-  const storyExportPattern = /^export\s+const\s+(\w+):\s*Story\s*=/;
-  const zephyrIdPattern = /\[([A-Z]+-T\d+(?:,[A-Z]+-T\d+)*)\]\s*(.+)/;
+  // Extract component name from meta/default export title
+  let componentName = path.basename(filePath, ".stories.tsx");
+  const defaultExport = sourceFile.getDefaultExportSymbol();
+  if (defaultExport) {
+    const declarations = defaultExport.getDeclarations();
+    for (const decl of declarations) {
+      if (Node.isExportAssignment(decl)) {
+        const expr = decl.getExpression();
+        if (Node.isObjectLiteralExpression(expr)) {
+          const titleProp = expr.getProperty("title");
+          if (titleProp && Node.isPropertyAssignment(titleProp)) {
+            const titleInit = titleProp.getInitializer();
+            if (titleInit && Node.isStringLiteral(titleInit)) {
+              const titleParts = titleInit.getLiteralText().split("/");
+              componentName = titleParts[titleParts.length - 1] || componentName;
+            }
+          }
+        }
+      }
+    }
+  }
 
-  lines.forEach((line, index) => {
-    const exportMatch = line.match(storyExportPattern);
-    if (exportMatch) {
-      const exportName = exportMatch[1];
-      if (exportName === "default" || exportName === "meta") return;
+  // Also check for `const meta = { title: ... }` pattern
+  const metaVar = sourceFile.getVariableDeclaration("meta");
+  if (metaVar) {
+    const init = metaVar.getInitializer();
+    if (init && Node.isObjectLiteralExpression(init)) {
+      const titleProp = init.getProperty("title");
+      if (titleProp && Node.isPropertyAssignment(titleProp)) {
+        const titleInit = titleProp.getInitializer();
+        if (titleInit && Node.isStringLiteral(titleInit)) {
+          const titleParts = titleInit.getLiteralText().split("/");
+          componentName = titleParts[titleParts.length - 1] || componentName;
+        }
+      }
+    }
+  }
 
+  // Find all exported variable declarations
+  const exportedDeclarations = sourceFile.getExportedDeclarations();
+
+  for (const [exportName, declarations] of exportedDeclarations) {
+    // Skip default export, meta, and Template
+    if (exportName === "default" || exportName === "meta" || exportName === "Template") continue;
+
+    for (const decl of declarations) {
+      if (!Node.isVariableDeclaration(decl)) continue;
+
+      const pattern = detectStoryPattern(decl);
+      if (pattern === "unknown") continue;
+
+      const lineNumber = decl.getStartLineNumber();
+
+      // Try to get story name from various sources
       let storyName = exportName;
       let hasZephyrId = false;
       let existingId: string | undefined;
 
-      for (let i = index; i < Math.min(index + 5, lines.length); i++) {
-        const nameMatch = lines[i].match(/name:\s*["'](.+?)["']/);
-        if (nameMatch) {
-          storyName = nameMatch[1];
-          const zephyrMatch = storyName.match(zephyrIdPattern);
-          if (zephyrMatch) {
-            hasZephyrId = true;
-            existingId = zephyrMatch[1];
-            storyName = zephyrMatch[2];
-          }
-          break;
-        }
+      // Check for name property in object literal
+      const nameFromObject = extractNameFromStory(decl);
+      if (nameFromObject) {
+        storyName = nameFromObject;
       }
 
-      stories.push({ filePath, lineNumber: index + 1, storyName, exportName, componentName, componentType, hasZephyrId, existingId });
+      // Check for .storyName assignment
+      const storyNameAssignment = findStoryNameAssignment(decl);
+      if (storyNameAssignment) {
+        storyName = storyNameAssignment;
+      }
+
+      // Check if name contains Zephyr ID
+      const zephyrMatch = storyName.match(zephyrIdPattern);
+      if (zephyrMatch) {
+        hasZephyrId = true;
+        existingId = zephyrMatch[1];
+        storyName = zephyrMatch[2];
+      }
+
+      stories.push({
+        filePath,
+        lineNumber,
+        storyName,
+        exportName,
+        componentName,
+        componentType,
+        hasZephyrId,
+        existingId,
+        pattern,
+      });
     }
-  });
+  }
+
   return stories;
 }
 
 async function getFolders(): Promise<FolderCache> {
   if (Object.keys(folderIdCache).length > 0) return folderIdCache;
   const url = `${ZEPHYR_BASE_URL}/folders?projectKey=${PROJECT_KEY}&folderType=TEST_CASE&maxResults=100`;
-  const response = await fetch(url, { method: "GET", headers: { Authorization: `Bearer ${ZEPHYR_TOKEN}`, "Content-Type": "application/json" } });
+  const response = await fetch(url, { method: "GET", headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" } });
   if (!response.ok) { console.warn("Could not fetch folders"); return {}; }
   const data = await response.json();
   const folders = data.values || [];
@@ -156,7 +322,7 @@ async function getFolders(): Promise<FolderCache> {
 
 async function createFolder(folderName: string): Promise<ZephyrFolder> {
   const url = `${ZEPHYR_BASE_URL}/folders`;
-  const response = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${ZEPHYR_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ projectKey: PROJECT_KEY, name: folderName, folderType: "TEST_CASE" }) });
+  const response = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" }, body: JSON.stringify({ projectKey: PROJECT_KEY, name: folderName, folderType: "TEST_CASE" }) });
   if (!response.ok) { const errorText = await response.text(); throw new Error(`Failed to create folder: ${response.status} ${errorText}`); }
   return await response.json();
 }
@@ -172,47 +338,118 @@ async function createTestCase(testName: string, objective: string, folderId: str
     projectKey: PROJECT_KEY, name: testName, objective, labels: ZEPHYR_LABELS,
   };
   if (folderId) body.folderId = folderId;
-  const response = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${ZEPHYR_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const response = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (!response.ok) { const errorText = await response.text(); throw new Error(`Failed to create test case: ${response.status} ${errorText}`); }
   return await response.json();
 }
 
-function updateStoryFile(filePath: string, lineNumber: number, exportName: string, zephyrKey: string): boolean {
-  const content = fs.readFileSync(filePath, "utf-8");
-  const lines = content.split("\n");
-  const lineIdx = lineNumber - 1;
+// ============================================================================
+// AST-based Story File Updates
+// ============================================================================
 
-  // Check if story already has a name property
-  let hasNameProp = false;
-  let nameLineIdx = -1;
-  for (let i = lineIdx; i < Math.min(lineIdx + 5, lines.length); i++) {
-    if (lines[i].match(/name:\s*["']/)) {
-      hasNameProp = true;
-      nameLineIdx = i;
+/** Converts PascalCase/camelCase to human-readable format */
+function toHumanName(name: string): string {
+  return name.replace(/([A-Z])/g, " $1").trim();
+}
+
+/** Updates a story file to add a Zephyr ID using AST manipulation */
+function updateStoryFile(
+  filePath: string,
+  _lineNumber: number,
+  exportName: string,
+  zephyrKey: string,
+  pattern: StoryPattern
+): boolean {
+  const content = fs.readFileSync(filePath, "utf-8");
+  const project = new Project({ useInMemoryFileSystem: true });
+  const sourceFile = project.createSourceFile(filePath, content);
+
+  const humanName = toHumanName(exportName);
+  const newName = `[${zephyrKey}] ${humanName}`;
+
+  // Find the variable declaration for this export
+  const declaration = sourceFile.getVariableDeclaration(exportName);
+  if (!declaration) {
+    console.warn(`  [WARN] Could not find declaration for "${exportName}" in ${filePath}`);
+    return false;
+  }
+
+  let updated = false;
+
+  switch (pattern) {
+    case "csf3-object": {
+      const initializer = declaration.getInitializer();
+      if (initializer && Node.isObjectLiteralExpression(initializer)) {
+        const nameProp = initializer.getProperty("name");
+        if (nameProp && Node.isPropertyAssignment(nameProp)) {
+          // Update existing name property
+          const nameInit = nameProp.getInitializer();
+          if (nameInit && Node.isStringLiteral(nameInit)) {
+            const existingName = nameInit.getLiteralText();
+            nameProp.setInitializer(`"[${zephyrKey}] ${existingName}"`);
+            updated = true;
+          }
+        } else {
+          // Add name property at the beginning
+          initializer.insertPropertyAssignment(0, { name: "name", initializer: `"${newName}"` });
+          updated = true;
+        }
+      }
       break;
     }
-    if (lines[i].match(/^\s*\};?\s*$/)) break; // End of object
+
+    case "csf2-template-bind":
+    case "arrow-function":
+    case "react-fc": {
+      // For these patterns, add a .storyName assignment after the declaration
+      // First check if one already exists
+      const existingAssignment = findStoryNameAssignment(declaration);
+      if (existingAssignment) {
+        // Update existing .storyName assignment
+        const statements = sourceFile.getStatements();
+        for (const stmt of statements) {
+          if (!Node.isExpressionStatement(stmt)) continue;
+          const expr = stmt.getExpression();
+          if (!Node.isBinaryExpression(expr)) continue;
+          const left = expr.getLeft();
+          if (!Node.isPropertyAccessExpression(left)) continue;
+          const objExpr = left.getExpression();
+          if (!Node.isIdentifier(objExpr) || objExpr.getText() !== exportName) continue;
+          if (left.getName() !== "storyName") continue;
+
+          const right = expr.getRight();
+          if (Node.isStringLiteral(right)) {
+            const existingName = right.getLiteralText();
+            expr.replaceWithText(`${exportName}.storyName = "[${zephyrKey}] ${existingName}"`);
+            updated = true;
+            break;
+          }
+        }
+      } else {
+        // Add new .storyName assignment after the variable statement
+        const varStatement = declaration.getVariableStatement();
+        if (varStatement) {
+          const stmtIndex = sourceFile.getStatements().indexOf(varStatement);
+          sourceFile.insertStatements(stmtIndex + 1, `${exportName}.storyName = "${newName}";`);
+          updated = true;
+        }
+      }
+      break;
+    }
+
+    default:
+      console.warn(`  [WARN] Unknown pattern "${pattern}" for story "${exportName}"`);
+      return false;
   }
 
-  if (hasNameProp && nameLineIdx >= 0) {
-    // Update existing name property
-    const oldLine = lines[nameLineIdx];
-    const nameMatch = oldLine.match(/(name:\s*["'])(.+?)(["'])/);
-    if (nameMatch) {
-      const newName = `[${zephyrKey}] ${nameMatch[2]}`;
-      lines[nameLineIdx] = oldLine.replace(nameMatch[0], `${nameMatch[1]}${newName}${nameMatch[3]}`);
-    }
-  } else {
-    // Add name property after the export line
-    const exportLine = lines[lineIdx];
-    if (exportLine.includes("{")) {
-      // Inline object: export const Primary: Story = { args: ... }
-      const humanName = exportName.replace(/([A-Z])/g, " $1").trim();
-      lines[lineIdx] = exportLine.replace("{", `{ name: "[${zephyrKey}] ${humanName}",`);
-    }
+  if (!updated) {
+    console.warn(`  [WARN] Could not update story "${exportName}" at ${filePath}`);
+    console.warn(`         Pattern: ${pattern}. Please add Zephyr ID manually.`);
+    return false;
   }
 
-  fs.writeFileSync(filePath, lines.join("\n"), "utf-8");
+  // Write the updated file
+  fs.writeFileSync(filePath, sourceFile.getFullText(), "utf-8");
   return true;
 }
 
@@ -254,6 +491,7 @@ async function main(): Promise<void> {
 
   let successCount = 0;
   let failCount = 0;
+  let updateFailCount = 0;
 
   for (const story of storiesNeedingIds) {
     const relativePath = path.relative(process.cwd(), story.filePath);
@@ -270,9 +508,14 @@ async function main(): Promise<void> {
       console.log(`  [SUCCESS] Created ${result.key}`);
 
       console.log(`  [UPDATE] Updating story file with ${result.key}`);
-      updateStoryFile(story.filePath, story.lineNumber, story.exportName, result.key);
+      const updateSuccess = updateStoryFile(story.filePath, story.lineNumber, story.exportName, result.key, story.pattern);
 
-      successCount++;
+      if (updateSuccess) {
+        successCount++;
+      } else {
+        updateFailCount++;
+        console.log(`  [PARTIAL] Test case created but story file not updated - manual update required`);
+      }
     } catch (error: unknown) {
       console.error(`  [ERROR] ${error instanceof Error ? error.message : String(error)}`);
       failCount++;
@@ -280,12 +523,20 @@ async function main(): Promise<void> {
   }
 
   console.log("\n=====================================");
-  console.log(`[INFO] Sync complete! Created: ${successCount}, Failed: ${failCount}`);
+  console.log(`[INFO] Sync complete!`);
+  console.log(`  Fully synced: ${successCount}`);
+  console.log(`  Created but needs manual update: ${updateFailCount}`);
+  console.log(`  Failed: ${failCount}`);
   if (failCount > 0) process.exit(1);
+  if (updateFailCount > 0) {
+    console.log("\n[WARN] Some stories require manual Zephyr ID tagging. See warnings above.");
+  }
 }
 
-main().catch((error) => {
-  console.error("[ERROR] Fatal error:", error);
-  process.exit(1);
-});
-
+// Only run main when script is executed directly (not imported for testing)
+if (process.env.NODE_ENV !== "test" && process.argv[1]?.includes("sync-storybook-zephyr")) {
+  main().catch((error) => {
+    console.error("[ERROR] Fatal error:", error);
+    process.exit(1);
+  });
+}

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import ReactMarkdown from "react-markdown";
+import React, { useState, HTMLAttributes, ClassAttributes } from "react";
+import ReactMarkdown, { ExtraProps } from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import type { SyntaxHighlighterProps } from "react-syntax-highlighter";
 import { nord } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -8,6 +8,13 @@ import remarkGfm from "remark-gfm";
 import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
+
+// Type for code component props from react-markdown
+type CodeComponentProps = ClassAttributes<HTMLElement> &
+  HTMLAttributes<HTMLElement> &
+  ExtraProps & {
+    inline?: boolean;
+  };
 
 // Styled components to replace Ant Design components
 const StyledSpace = styled.div`
@@ -24,27 +31,12 @@ const CodeText = styled.code`
   font-size: 85%;
 `;
 
+// Export CodeProps as an alias for backwards compatibility
+export type CodeProps = CodeComponentProps;
+
 export type MarkdownDisplayProps = {
   markdown: string;
-  codeRenderer?: ({
-    inline,
-    className,
-    children,
-    ...props
-  }: CodeProps) => React.ReactElement;
-};
-
-// Define type for code component props explicitly for clarity
-// (react-markdown doesn't export its internal types easily)
-export type CodeProps = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  node?: any; // The AST node for the code element
-  inline?: boolean; // True if it's an inline code span (`)
-  className?: string; // Class name (e.g., "language-js")
-  children?: React.ReactNode; // The content of the code element (optional)
-  // Include other potential props passed down by react-markdown/rehype-raw
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  codeRenderer?: (props: CodeComponentProps) => React.ReactElement;
 };
 
 export const BasicCodeRenderer = ({
@@ -52,7 +44,7 @@ export const BasicCodeRenderer = ({
   className,
   children,
   ...props
-}: CodeProps) => {
+}: CodeComponentProps) => {
   const match = /language-(\w+)/.exec(className || "");
   const language = match ? match[1] : undefined;
   const codeString = String(children).replace(/\n$/, "");

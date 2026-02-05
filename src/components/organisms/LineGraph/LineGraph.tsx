@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import Plotly from "plotly.js-dist";
 import "./LineGraph.scss";
 import { COLORS } from "../../../utils/colors";
@@ -191,7 +191,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
 
-  const calculateDataRanges = () => {
+  const { yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
     let maxX = Number.MIN_VALUE;
     let minY = Number.MAX_VALUE;
@@ -217,12 +217,14 @@ const LineGraph: React.FC<LineGraphProps> = ({
       yMin: minY - yPadding,
       yMax: maxY + yPadding,
     };
-  };
+  }, [dataSeries]);
 
-  const { yMin, yMax } = calculateDataRanges();
-  const effectiveYRange = yRange || [yMin, yMax];
+  const effectiveYRange = useMemo(
+    () => yRange || [yMin, yMax],
+    [yRange, yMin, yMax],
+  );
 
-  const generateYTicks = () => {
+  const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
     let step = Math.pow(10, Math.floor(Math.log10(range)));
 
@@ -236,12 +238,14 @@ const LineGraph: React.FC<LineGraphProps> = ({
       current += step;
     }
     return ticks;
-  };
+  }, [effectiveYRange]);
 
-  const xTicks = Array.from(new Set(dataSeries.flatMap((s) => s.x)));
-  const yTicks = generateYTicks();
+  const xTicks = useMemo(
+    () => Array.from(new Set(dataSeries.flatMap((s) => s.x))),
+    [dataSeries],
+  );
 
-  const getMode = () => {
+  const mode = useMemo((): "lines" | "lines+markers" => {
     switch (variant) {
       case "lines+markers":
       case "lines+markers+error_bars":
@@ -249,24 +253,27 @@ const LineGraph: React.FC<LineGraphProps> = ({
       default:
         return "lines";
     }
-  };
+  }, [variant]);
 
-  const tickOptions = {
-    tickcolor: COLORS.GREY_200,
-    ticklen: 12,
-    tickwidth: 1,
-    ticks: "outside" as const,
-    tickfont: {
-      size: 16,
-      color: COLORS.BLACK_900,
-      family: "Inter, sans-serif",
-      weight: 400,
-    },
-    linecolor: COLORS.BLACK_900,
-    linewidth: 1,
-    position: 0,
-    zeroline: false,
-  };
+  const tickOptions = useMemo(
+    () => ({
+      tickcolor: COLORS.GREY_200,
+      ticklen: 12,
+      tickwidth: 1,
+      ticks: "outside" as const,
+      tickfont: {
+        size: 16,
+        color: COLORS.BLACK_900,
+        family: "Inter, sans-serif",
+        weight: 400,
+      },
+      linecolor: COLORS.BLACK_900,
+      linewidth: 1,
+      position: 0,
+      zeroline: false,
+    }),
+    [],
+  );
 
   useEffect(() => {
     if (!plotRef.current) return;
@@ -275,7 +282,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
       x: series.x,
       y: series.y,
       type: "scatter" as const,
-      mode: getMode() as "lines" | "lines+markers",
+      mode: mode,
       name: series.name,
       line: {
         color: series.color,
@@ -383,22 +390,15 @@ const LineGraph: React.FC<LineGraphProps> = ({
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
 
+    // Capture ref value for cleanup
+    const plotElement = plotRef.current;
+
     return () => {
-      if (plotRef.current) {
-        Plotly.purge(plotRef.current);
+      if (plotElement) {
+        Plotly.purge(plotElement);
       }
     };
-  }, [
-    dataSeries,
-    width,
-    height,
-    xRange,
-    yRange,
-    variant,
-    xTitle,
-    yTitle,
-    title,
-  ]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, effectiveYRange, variant]);
 
   return (
     <div className="chart-container">

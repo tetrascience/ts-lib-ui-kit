@@ -5,14 +5,16 @@
  * This script:
  * 1. Parses JUnit XML reports from Vitest runs
  * 2. Extracts Zephyr test case IDs from test names
- * 3. Creates a test cycle in Zephyr Scale
- * 4. Reports test execution results (pass/fail) for each test
+ * 3. Reports test execution results (pass/fail) to a test cycle
  *
  * Environment Variables:
  *   ZEPHYR_TOKEN - Zephyr Scale API token (required)
  *   ZEPHYR_PROJECT_KEY - Jira project key (default: 'SW')
  *   JUNIT_PATH - Path to JUnit XML file (default: 'test-results/storybook-junit.xml')
- *   ZEPHYR_CYCLE_NAME_PREFIX - Prefix for cycle names (default: 'Storybook')
+ *
+ * Cycle Selection (in priority order):
+ *   ZEPHYR_CYCLE_KEY - Use this existing cycle key (for main branch or workflow_dispatch)
+ *   ZEPHYR_BRANCH + ZEPHYR_CYCLE_CACHE_FILE - Find-or-create cycle for feature branches
  */
 
 import fs from "fs";
@@ -90,7 +92,6 @@ interface TestResult {
 const ZEPHYR_BASE_URL = "https://api.zephyrscale.smartbear.com/v2";
 const PROJECT_KEY = process.env.ZEPHYR_PROJECT_KEY || "SW";
 const JUNIT_PATH = process.env.JUNIT_PATH || "test-results/storybook-junit.xml";
-const CYCLE_NAME_PREFIX = process.env.ZEPHYR_CYCLE_NAME_PREFIX || "Storybook";
 
 function getZephyrToken(): string {
   const token = process.env.ZEPHYR_TOKEN;
@@ -99,6 +100,91 @@ function getZephyrToken(): string {
     process.exit(1);
   }
   return token;
+}
+
+/** Validates that a cache file path is safe (no path traversal) */
+export function validateCacheFilePath(cacheFile: string): void {
+  if (cacheFile.includes('/') || cacheFile.includes('\\') || cacheFile.startsWith('..')) {
+    throw new Error("Invalid cache file path: must be a simple filename without path separators");
+  }
+}
+
+/** Reads a cached cycle key from the cache file, if it exists */
+export function getCachedCycleKey(cacheFile: string): string | null {
+  validateCacheFilePath(cacheFile);
+  if (fs.existsSync(cacheFile)) {
+    const key = fs.readFileSync(cacheFile, "utf-8").trim();
+    if (key) return key;
+  }
+  return null;
+}
+
+/** Writes a cycle key to the cache file for future runs */
+export function cacheCycleKey(cacheFile: string, cycleKey: string): void {
+  validateCacheFilePath(cacheFile);
+  fs.writeFileSync(cacheFile, cycleKey, "utf-8");
+}
+
+/** Sanitizes a branch name for use in cycle names */
+export function sanitizeBranchName(branch: string): string {
+  return branch.replace(/[^a-zA-Z0-9\-_/]/g, '-');
+}
+
+
+
+/** Creates a new test cycle and returns its key */
+async function createTestCycle(name: string): Promise<string> {
+  const url = `${ZEPHYR_BASE_URL}/testcycles`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ projectKey: PROJECT_KEY, name }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to create test cycle: HTTP ${response.status}`);
+  }
+  const data = await response.json();
+  return data.key;
+}
+
+/**
+ * Determines which test cycle to use based on environment variables.
+ * Returns the cycle key (existing or newly created) and the source.
+ */
+async function resolveCycleKey(): Promise<{ cycleKey: string; source: string }> {
+  const cycleKey = process.env.ZEPHYR_CYCLE_KEY?.trim();
+  const branch = process.env.ZEPHYR_BRANCH?.trim();
+  const cacheFile = process.env.ZEPHYR_CYCLE_CACHE_FILE || ".zephyr-cycle-key";
+
+  // Priority 1: Explicit cycle key (main branch or workflow_dispatch)
+  if (cycleKey) {
+    return { cycleKey, source: "explicit (ZEPHYR_CYCLE_KEY)" };
+  }
+
+  // Priority 2: Feature branch - check cache first, then create new cycle
+  if (branch) {
+    const cachedKey = getCachedCycleKey(cacheFile);
+    if (cachedKey) {
+      return { cycleKey: cachedKey, source: `cache (${cacheFile})` };
+    }
+
+    // Create new cycle for this branch (sanitize branch name for safety)
+    const safeBranch = sanitizeBranchName(branch);
+    const cycleName = `React UI Lib Storybook Tests - ${safeBranch}`;
+    console.log(`[INFO] Creating test cycle: ${cycleName}`);
+    const newKey = await createTestCycle(cycleName);
+    console.log(`[SUCCESS] Created test cycle: ${newKey}`);
+
+    // Cache the key for subsequent runs
+    cacheCycleKey(cacheFile, newKey);
+    console.log(`[INFO] Cached cycle key to: ${cacheFile}\n`);
+
+    return { cycleKey: newKey, source: "newly created" };
+  }
+
+  throw new Error(
+    "Unable to determine test cycle. Set ZEPHYR_CYCLE_KEY or ZEPHYR_BRANCH"
+  );
 }
 
 // ============================================================================
@@ -213,18 +299,6 @@ export function parseJUnitXML(xmlContent: string): TestResult[] {
   return results;
 }
 
-async function createTestCycle(name: string): Promise<string> {
-  const url = `${ZEPHYR_BASE_URL}/testcycles`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ projectKey: PROJECT_KEY, name }),
-  });
-  if (!response.ok) { const errorText = await response.text(); throw new Error(`Failed to create test cycle: ${response.status} ${errorText}`); }
-  const data = await response.json();
-  return data.key;
-}
-
 async function reportTestExecution(cycleKey: string, result: TestResult): Promise<void> {
   const url = `${ZEPHYR_BASE_URL}/testexecutions`;
   const body: { projectKey: string; testCycleKey: string; testCaseKey: string; statusName: string; executionTime?: number; comment?: string } = {
@@ -241,7 +315,9 @@ async function reportTestExecution(cycleKey: string, result: TestResult): Promis
     headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!response.ok) { const errorText = await response.text(); throw new Error(`Failed to report execution for ${result.testCaseKey}: ${response.status} ${errorText}`); }
+  if (!response.ok) {
+    throw new Error(`Failed to report execution for ${result.testCaseKey}: HTTP ${response.status}`);
+  }
 }
 
 async function main(): Promise<void> {
@@ -263,12 +339,9 @@ async function main(): Promise<void> {
     return;
   }
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  const cycleName = `${CYCLE_NAME_PREFIX} - ${timestamp}`;
-  console.log(`[INFO] Creating test cycle: ${cycleName}`);
-
-  const cycleKey = await createTestCycle(cycleName);
-  console.log(`[SUCCESS] Created test cycle: ${cycleKey}\n`);
+  // Determine the test cycle to use
+  const { cycleKey, source } = await resolveCycleKey();
+  console.log(`[INFO] Using test cycle: ${cycleKey} (${source})\n`);
 
   let passCount = 0, failCount = 0, errorCount = 0;
 
@@ -277,8 +350,8 @@ async function main(): Promise<void> {
       await reportTestExecution(cycleKey, result);
       if (result.status === "Pass") passCount++; else failCount++;
       console.log(`  [${result.status.toUpperCase()}] ${result.testCaseKey}`);
-    } catch (error: unknown) {
-      console.error(`  [ERROR] ${result.testCaseKey}: ${error instanceof Error ? error.message : String(error)}`);
+    } catch {
+      console.error(`  [ERROR] ${result.testCaseKey}: Failed to report`);
       errorCount++;
     }
   }
@@ -292,8 +365,8 @@ async function main(): Promise<void> {
 
 // Only run main when script is executed directly (not imported for testing)
 if (process.env.NODE_ENV !== "test" && process.argv[1]?.includes("report-zephyr-results")) {
-  main().catch((error) => {
-    console.error("[ERROR] Fatal error:", error);
+  main().catch(() => {
+    console.error("[ERROR] Fatal error occurred");
     process.exit(1);
   });
 }

@@ -37,9 +37,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Install tsx
-        run: yarn add -D tsx
-
       - name: Run Zephyr sync
         env:
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}

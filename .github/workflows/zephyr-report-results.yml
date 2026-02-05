@@ -1,9 +1,23 @@
 name: Report Test Results to Zephyr
 
+# This workflow reports Storybook test results to Zephyr Scale.
+# - Automatic (workflow_run): Uses persistent cycle for main, or find-or-create for feature branches
+# - Manual (workflow_dispatch): Reports to an existing test cycle you specify
+
 on:
   workflow_run:
     workflows: ["Storybook Tests"]
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      test_cycle:
+        description: 'Zephyr test cycle key to report results to (e.g., SW-R123)'
+        required: true
+        type: string
+      run_id:
+        description: 'Workflow run ID to download artifacts from'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -11,8 +25,11 @@ permissions:
 
 jobs:
   report:
-    # Only run if the triggering workflow succeeded or failed (not cancelled)
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure' }}
+    # Run on workflow_run (when Storybook Tests completes) or workflow_dispatch (manual)
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success' ||
+      github.event.workflow_run.conclusion == 'failure'
     runs-on: ubuntu-latest
 
     steps:
@@ -37,12 +54,34 @@ jobs:
           name: storybook-junit-results
           path: test-results/
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ inputs.run_id || github.event.workflow_run.id }}
 
+      # Restore cached cycle key for feature branches (not main, not workflow_dispatch)
+      - name: Restore cached cycle key
+        if: github.event_name == 'workflow_run' && github.event.workflow_run.head_branch != 'main'
+        id: cache-cycle
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: .zephyr-cycle-key
+          key: zephyr-cycle-${{ github.event.workflow_run.head_branch }}
+
+      # Report test results to Zephyr Scale
+      # - main branch or workflow_dispatch: Uses provided/hardcoded cycle key
+      # - feature branches: Find-or-create cycle, cached per branch
       - name: Report results to Zephyr
         env:
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
+          ZEPHYR_BRANCH: ${{ github.event.workflow_run.head_branch || '' }}
+          ZEPHYR_CYCLE_KEY: ${{ inputs.test_cycle || (github.event.workflow_run.head_branch == 'main' && 'SW-R33') || '' }}
+          ZEPHYR_CYCLE_CACHE_FILE: .zephyr-cycle-key
           JUNIT_PATH: test-results/storybook-junit.xml
-          ZEPHYR_CYCLE_NAME_PREFIX: "Storybook CI Run #${{ github.event.workflow_run.run_number }}"
         run: npx tsx scripts/zephyr/report-zephyr-results.ts
+
+      # Save cycle key to cache for feature branches (after script creates it)
+      - name: Save cycle key to cache
+        if: github.event_name == 'workflow_run' && github.event.workflow_run.head_branch != 'main' && steps.cache-cycle.outputs.cache-hit != 'true'
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: .zephyr-cycle-key
+          key: zephyr-cycle-${{ github.event.workflow_run.head_branch }}
 

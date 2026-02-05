@@ -4,22 +4,15 @@ on:
   push:
     branches:
       - main
-      - development
   pull_request:
     branches:
       - main
-      - development
   workflow_dispatch:
     inputs:
       test_cases:
         description: 'Comma-separated Zephyr test case IDs (e.g., SW-T1,SW-T2,SW-T3). Leave empty to run all tests.'
         required: false
         type: string
-      report_to_zephyr:
-        description: 'Report results to Zephyr Scale'
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -44,16 +37,6 @@ jobs:
 
       - name: 🧶 Enable Corepack
         run: corepack enable
-
-      - name: 💾 Cache Yarn
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: |
-            ~/.yarn/cache
-            .yarn/cache
-          key: yarn-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            yarn-${{ runner.os }}-
 
       - name: 📦 Install dependencies
         run: yarn install --immutable
@@ -96,13 +79,6 @@ jobs:
           name: storybook-test-failures
           path: test-results/
           retention-days: 7
-
-      - name: 📤 Report to Zephyr
-        if: ${{ inputs.report_to_zephyr && always() }}
-        env:
-          ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
-          JUNIT_PATH: test-results/storybook-junit.xml
-        run: npx tsx scripts/zephyr/report-zephyr-results.ts
 
       - name: ❌ Fail if tests failed
         if: steps.test.outcome == 'failure' || steps.test_filtered.outcome == 'failure'

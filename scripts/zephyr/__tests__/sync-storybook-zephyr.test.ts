@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Project, Node } from "ts-morph";
+import { Project } from "ts-morph";
 import {
   parseStoryFile,
   detectStoryPattern,

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import Plotly from "plotly.js-dist";
 import "./Chromatogram.scss";
 
@@ -62,50 +62,65 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
 
-  const positions = data.map((item) => item.position);
-  const sequence = data.map((item) => determineBase(item));
-  const peakA = data.map((item) => item.peakA);
-  const peakT = data.map((item) => item.peakT);
-  const peakG = data.map((item) => item.peakG);
-  const peakC = data.map((item) => item.peakC);
+  const positions = useMemo(() => data.map((item) => item.position), [data]);
+  const sequence = useMemo(() => data.map((item) => determineBase(item)), [data]);
+  const peakA = useMemo(() => data.map((item) => item.peakA), [data]);
+  const peakT = useMemo(() => data.map((item) => item.peakT), [data]);
+  const peakG = useMemo(() => data.map((item) => item.peakG), [data]);
+  const peakC = useMemo(() => data.map((item) => item.peakC), [data]);
 
-  const aTrace = {
-    x: positions,
-    y: peakA,
-    type: "scatter" as const,
-    mode: "lines" as const,
-    name: "A",
-    line: { color: colorA, width: 2, shape: "spline" as const },
-  };
+  const aTrace = useMemo(
+    () => ({
+      x: positions,
+      y: peakA,
+      type: "scatter" as const,
+      mode: "lines" as const,
+      name: "A",
+      line: { color: colorA, width: 2, shape: "spline" as const },
+    }),
+    [positions, peakA, colorA],
+  );
 
-  const tTrace = {
-    x: positions,
-    y: peakT,
-    type: "scatter" as const,
-    mode: "lines" as const,
-    name: "T",
-    line: { color: colorT, width: 2, shape: "spline" as const },
-  };
+  const tTrace = useMemo(
+    () => ({
+      x: positions,
+      y: peakT,
+      type: "scatter" as const,
+      mode: "lines" as const,
+      name: "T",
+      line: { color: colorT, width: 2, shape: "spline" as const },
+    }),
+    [positions, peakT, colorT],
+  );
 
-  const gTrace = {
-    x: positions,
-    y: peakG,
-    type: "scatter" as const,
-    mode: "lines" as const,
-    name: "G",
-    line: { color: colorG, width: 2, shape: "spline" as const },
-  };
+  const gTrace = useMemo(
+    () => ({
+      x: positions,
+      y: peakG,
+      type: "scatter" as const,
+      mode: "lines" as const,
+      name: "G",
+      line: { color: colorG, width: 2, shape: "spline" as const },
+    }),
+    [positions, peakG, colorG],
+  );
 
-  const cTrace = {
-    x: positions,
-    y: peakC,
-    type: "scatter" as const,
-    mode: "lines" as const,
-    name: "C",
-    line: { color: colorC, width: 2, shape: "spline" as const },
-  };
+  const cTrace = useMemo(
+    () => ({
+      x: positions,
+      y: peakC,
+      type: "scatter" as const,
+      mode: "lines" as const,
+      name: "C",
+      line: { color: colorC, width: 2, shape: "spline" as const },
+    }),
+    [positions, peakC, colorC],
+  );
 
-  const maxValue = Math.max(...peakA, ...peakT, ...peakG, ...peakC);
+  const maxValue = useMemo(
+    () => Math.max(...peakA, ...peakT, ...peakG, ...peakC),
+    [peakA, peakT, peakG, peakC],
+  );
 
   useEffect(() => {
     if (!plotRef.current || data.length === 0) return;
@@ -149,27 +164,15 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
 
+    // Capture ref value for cleanup
+    const plotElement = plotRef.current;
+
     return () => {
-      if (plotRef.current) {
-        Plotly.purge(plotRef.current);
+      if (plotElement) {
+        Plotly.purge(plotElement);
       }
     };
-  }, [
-    data,
-    width,
-    height,
-    positionInterval,
-    colorA,
-    colorT,
-    colorG,
-    colorC,
-    positions,
-    peakA,
-    peakT,
-    peakG,
-    peakC,
-    maxValue,
-  ]);
+  }, [data, width, height, aTrace, tTrace, gTrace, cTrace, maxValue, positions]);
 
   if (data.length === 0) {
     return <div className="chart-container">No data available</div>;

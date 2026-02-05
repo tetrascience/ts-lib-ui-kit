@@ -1,0 +1,40 @@
+# Augment Guidelines for ts-lib-ui-kit
+
+## Pre-commit Checks
+
+Before committing changes, always run the following checks:
+
+```bash
+yarn lint        # Run ESLint
+yarn typecheck   # Run TypeScript type checking
+yarn test:all    # Run all tests (unit + storybook)
+```
+
+## Testing
+
+- Use `yarn test:all` to run both unit tests and Storybook component tests
+- Use `yarn test` for unit tests only (faster, but doesn't include Storybook tests)
+- Test files are located in `__tests__` directories alongside the code they test
+- Storybook tests are in `*.stories.tsx` files
+
+## Code Style
+
+- ESLint configuration is in `eslint.config.js` (flat config format)
+- Prettier configuration is in `.prettierrc`
+- Do not use `eslint-disable-next-line` comments - refactor code instead
+- Use `useMemo` and `useCallback` for computed values in React components
+
+## Project Structure
+
+- `src/components/atoms/` - Basic UI components
+- `src/components/molecules/` - Composite components
+- `src/components/organisms/` - Complex components (graphs, layouts)
+- `src/server/` - Server-side utilities
+- `scripts/zephyr/` - Zephyr Scale integration scripts
+
+## Zephyr Integration
+
+- Test results are reported to Zephyr Scale via `scripts/zephyr/report-zephyr-results.ts`
+- Test case IDs are embedded in test names using format `[SW-T123]`
+- Multiple IDs can be specified: `[SW-T100,SW-T101]`
+

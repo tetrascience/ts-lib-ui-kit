@@ -116,40 +116,40 @@ export const WithFiltering: Story = {
   },
 };
 
+function WithSelectionDemo() {
+  const [selected, setSelected] = useState<SampleData[]>([]);
+  const dataSubset = sampleData.slice(0, 8);
+
+  const handleRowSelect = (rows: SampleData[]) => {
+    setSelected(rows);
+    if (rows.length === dataSubset.length) {
+      alert(`${rows.length} items selected`);
+    }
+  };
+
+  const columns: TableColumn<SampleData>[] = [
+    { key: "name", header: "Name" },
+    { key: "status", header: "Status" },
+    { key: "value", header: "Value", align: "right" },
+  ];
+
+  return (
+    <div>
+      <div style={{ marginBottom: "16px" }}>Selected: {selected.length} row(s)</div>
+      <Table
+        columns={columns}
+        data={dataSubset}
+        rowKey={(row) => row.id}
+        selectable
+        onRowSelect={handleRowSelect}
+        pageSize={-1}
+      />
+    </div>
+  );
+}
+
 export const WithSelection: Story = {
-  render: () => {
-    const [selected, setSelected] = useState<SampleData[]>([]);
-    const dataSubset = sampleData.slice(0, 8);
-
-    const handleRowSelect = (rows: SampleData[]) => {
-      setSelected(rows);
-      if (rows.length === dataSubset.length) {
-        alert(`${rows.length} items selected`);
-      }
-    };
-
-    const columns: TableColumn<SampleData>[] = [
-      { key: "name", header: "Name" },
-      { key: "status", header: "Status" },
-      { key: "value", header: "Value", align: "right" },
-    ];
-
-    return (
-      <div>
-        <div style={{ marginBottom: "16px" }}>
-          Selected: {selected.length} row(s)
-        </div>
-        <Table
-          columns={columns}
-          data={dataSubset}
-          rowKey={(row) => row.id}
-          selectable
-          onRowSelect={handleRowSelect}
-          pageSize={-1}
-        />
-      </div>
-    );
-  },
+  render: () => <WithSelectionDemo />,
 };
 
 export const WithPagination: Story = {
@@ -172,120 +172,124 @@ export const WithPagination: Story = {
   },
 };
 
-export const FullyFeatured: Story = {
-  render: () => {
-    const [selected, setSelected] = useState<SampleData[]>([]);
-    const pageSize = 5;
-    const totalPages = Math.ceil(sampleData.length / pageSize);
+function FullyFeaturedDemo() {
+  const [selected, setSelected] = useState<SampleData[]>([]);
+  const pageSize = 5;
+  const totalPages = Math.ceil(sampleData.length / pageSize);
 
-    const handleRowSelect = (rows: SampleData[]) => {
-      setSelected(rows);
-      if (rows.length === sampleData.length) {
-        alert(`${rows.length} items selected, across ${totalPages} pages`);
-      }
-    };
+  const handleRowSelect = (rows: SampleData[]) => {
+    setSelected(rows);
+    if (rows.length === sampleData.length) {
+      alert(`${rows.length} items selected, across ${totalPages} pages`);
+    }
+  };
 
-    const columns: TableColumn<SampleData>[] = [
-      { key: "id", header: "ID", width: "80px", sortable: true },
-      { key: "name", header: "Name", sortable: true },
-      {
-        key: "status",
-        header: "Status",
-        sortable: true,
-        filterable: true,
-        filterOptions: [
-          { value: "", label: "All" },
-          { value: "Active", label: "Active" },
-          { value: "Inactive", label: "Inactive" },
-          { value: "Pending", label: "Pending" },
-        ],
-      },
-      {
-        key: "category",
-        header: "Category",
-        filterable: true,
-        filterOptions: [
-          { value: "", label: "All" },
-          { value: "Type A", label: "Type A" },
-          { value: "Type B", label: "Type B" },
-          { value: "Type C", label: "Type C" },
-        ],
-      },
-      {
-        key: "value",
-        header: "Value",
-        align: "right",
-        sortable: true,
-        render: (value) => `$${value.toLocaleString()}`,
-      },
-      { key: "date", header: "Date", sortable: true },
-    ];
+  const columns: TableColumn<SampleData>[] = [
+    { key: "id", header: "ID", width: "80px", sortable: true },
+    { key: "name", header: "Name", sortable: true },
+    {
+      key: "status",
+      header: "Status",
+      sortable: true,
+      filterable: true,
+      filterOptions: [
+        { value: "", label: "All" },
+        { value: "Active", label: "Active" },
+        { value: "Inactive", label: "Inactive" },
+        { value: "Pending", label: "Pending" },
+      ],
+    },
+    {
+      key: "category",
+      header: "Category",
+      filterable: true,
+      filterOptions: [
+        { value: "", label: "All" },
+        { value: "Type A", label: "Type A" },
+        { value: "Type B", label: "Type B" },
+        { value: "Type C", label: "Type C" },
+      ],
+    },
+    {
+      key: "value",
+      header: "Value",
+      align: "right",
+      sortable: true,
+      render: (value) => `$${value.toLocaleString()}`,
+    },
+    { key: "date", header: "Date", sortable: true },
+  ];
 
-    return (
-      <div>
-        <div style={{ marginBottom: "16px", fontFamily: "Inter" }}>
-          <strong>Selected:</strong> {selected.length} row(s)
-        </div>
-        <Table
-          columns={columns}
-          data={sampleData}
-          rowKey={(row) => row.id}
-          selectable
-          onRowSelect={handleRowSelect}
-          pageSize={pageSize}
-        />
+  return (
+    <div>
+      <div style={{ marginBottom: "16px", fontFamily: "Inter" }}>
+        <strong>Selected:</strong> {selected.length} row(s)
       </div>
-    );
-  },
+      <Table
+        columns={columns}
+        data={sampleData}
+        rowKey={(row) => row.id}
+        selectable
+        onRowSelect={handleRowSelect}
+        pageSize={pageSize}
+      />
+    </div>
+  );
+}
+
+export const FullyFeatured: Story = {
+  render: () => <FullyFeaturedDemo />,
 };
 
-export const ControlledMode: Story = {
-  render: () => {
-    const [sortKey, setSortKey] = useState<string>("name");
-    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-    const [currentPage, setCurrentPage] = useState(1);
-    const [selected, setSelected] = useState<SampleData[]>([]);
+function ControlledModeDemo() {
+  const [sortKey, setSortKey] = useState<string>("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selected, setSelected] = useState<SampleData[]>([]);
 
-    const columns: TableColumn<SampleData>[] = [
-      { key: "name", header: "Name", sortable: true },
-      { key: "status", header: "Status", sortable: true },
-      { key: "value", header: "Value", align: "right", sortable: true },
-      { key: "date", header: "Date", sortable: true },
-    ];
+  const columns: TableColumn<SampleData>[] = [
+    { key: "name", header: "Name", sortable: true },
+    { key: "status", header: "Status", sortable: true },
+    { key: "value", header: "Value", align: "right", sortable: true },
+    { key: "date", header: "Date", sortable: true },
+  ];
 
-    return (
-      <div>
-        <div style={{ marginBottom: "16px", fontFamily: "Inter", display: "flex", gap: "16px" }}>
-          <div>
-            <strong>Sort:</strong> {sortKey} ({sortDirection})
-          </div>
-          <div>
-            <strong>Page:</strong> {currentPage}
-          </div>
-          <div>
-            <strong>Selected:</strong> {selected.length}
-          </div>
+  return (
+    <div>
+      <div style={{ marginBottom: "16px", fontFamily: "Inter", display: "flex", gap: "16px" }}>
+        <div>
+          <strong>Sort:</strong> {sortKey} ({sortDirection})
         </div>
-        <Table
-          columns={columns}
-          data={sampleData}
-          rowKey={(row) => row.id}
-          selectable
-          sortKey={sortKey}
-          sortDirection={sortDirection}
-          onSort={(key, direction) => {
-            setSortKey(key);
-            setSortDirection(direction);
-          }}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          selectedRows={selected}
-          onRowSelect={setSelected}
-          pageSize={5}
-        />
+        <div>
+          <strong>Page:</strong> {currentPage}
+        </div>
+        <div>
+          <strong>Selected:</strong> {selected.length}
+        </div>
       </div>
-    );
-  },
+      <Table
+        columns={columns}
+        data={sampleData}
+        rowKey={(row) => row.id}
+        selectable
+        sortKey={sortKey}
+        sortDirection={sortDirection}
+        onSort={(key, direction) => {
+          setSortKey(key);
+          setSortDirection(direction);
+        }}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        selectedRows={selected}
+        onRowSelect={setSelected}
+        pageSize={5}
+      />
+    </div>
+  );
+}
+
+export const ControlledMode: Story = {
+  render: () => <ControlledModeDemo />,
 };
 
 export const CustomCellRendering: Story = {

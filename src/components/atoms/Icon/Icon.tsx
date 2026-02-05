@@ -54,7 +54,6 @@ export interface IconProps {
   height?: string;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export enum IconName {
   BARS_3_BOTTOM_LEFT = "bars-3-bottom-left",
   BUILDING = "building",

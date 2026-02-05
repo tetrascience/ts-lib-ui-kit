@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import { COLORS } from "@utils/colors";
 import Plotly from "plotly.js-dist";
 import "./Histogram.scss";
@@ -99,24 +99,27 @@ const Histogram: React.FC<HistogramProps> = ({
   showDistributionLine = false,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
-  const seriesArray = Array.isArray(dataSeries) ? dataSeries : [dataSeries];
-  const effectiveBarMode:
-    | "stack"
-    | "group"
-    | "overlay"
-    | "relative"
-    | undefined = seriesArray.length > 1 ? "stack" : undefined;
+  const seriesArray = useMemo(
+    () => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]),
+    [dataSeries],
+  );
+  const effectiveBarMode = useMemo<
+    "stack" | "group" | "overlay" | "relative" | undefined
+  >(() => (seriesArray.length > 1 ? "stack" : undefined), [seriesArray.length]);
 
-  const defaultColors = [
-    COLORS.ORANGE,
-    COLORS.RED,
-    COLORS.BLUE,
-    COLORS.GREEN,
-    COLORS.PURPLE,
-    COLORS.YELLOW,
-  ];
+  const defaultColors = useMemo(
+    () => [
+      COLORS.ORANGE,
+      COLORS.RED,
+      COLORS.BLUE,
+      COLORS.GREEN,
+      COLORS.PURPLE,
+      COLORS.YELLOW,
+    ],
+    [],
+  );
 
-  const getSeriesWithColors = () => {
+  const seriesWithColors = useMemo(() => {
     return seriesArray.map((series, index) => {
       const hasDistributionLine =
         typeof series.showDistributionLine !== "undefined"
@@ -131,76 +134,85 @@ const Histogram: React.FC<HistogramProps> = ({
         lineWidth: series.lineWidth || 3,
       };
     });
-  };
-
-  const seriesWithColors = getSeriesWithColors();
+  }, [seriesArray, showDistributionLine, defaultColors]);
 
   const gridColor = COLORS.GREY_200;
 
-  const histogramData = seriesWithColors.map((series) => ({
-    type: "histogram" as const,
-    x: series.x,
-    name: series.name,
-    marker: {
-      color: series.color,
-      line: {
-        color: COLORS.WHITE,
-        width: 1,
-      },
-      opacity: series.opacity,
-    },
-    autobinx: series.autobinx,
-    xbins: series.xbins,
-    hovertemplate: `${xTitle}: %{x}<br>${yTitle}: %{y}<extra>${series.name}</extra>`,
-  }));
-
-  const distributionLines = seriesWithColors
-    .filter((series) => series.showDistributionLine)
-    .map((series) => {
-      const mean = calculateMean(series.x);
-      const stdDev = calculateStdDev(series.x, mean);
-
-      const min = Math.min(...series.x);
-      const max = Math.max(...series.x);
-      const range = max - min;
-      const start = min - range * 0.1;
-      const end = max + range * 0.1;
-
-      const bins = series.xbins || {
-        start: start,
-        end: end,
-        size: range / 10,
-      };
-
-      const curvePoints = generateNormalDistributionPoints(
-        mean,
-        stdDev,
-        start,
-        end,
-        100
-      );
-
-      const scaledYValues = scaleDistributionCurve(
-        curvePoints.y,
-        series.x,
-        bins
-      );
-
-      return {
-        type: "scatter" as const,
-        x: curvePoints.x,
-        y: scaledYValues,
-        mode: "lines" as const,
-        name: `${series.name} Distribution`,
-        line: {
+  const histogramData = useMemo(
+    () =>
+      seriesWithColors.map((series) => ({
+        type: "histogram" as const,
+        x: series.x,
+        name: series.name,
+        marker: {
           color: series.color,
-          width: series.lineWidth,
+          line: {
+            color: COLORS.WHITE,
+            width: 1,
+          },
+          opacity: series.opacity,
         },
-        hoverinfo: "none" as const,
-      };
-    });
+        autobinx: series.autobinx,
+        xbins: series.xbins,
+        hovertemplate: `${xTitle}: %{x}<br>${yTitle}: %{y}<extra>${series.name}</extra>`,
+      })),
+    [seriesWithColors, xTitle, yTitle],
+  );
 
-  const plotData = [...histogramData, ...distributionLines];
+  const distributionLines = useMemo(
+    () =>
+      seriesWithColors
+        .filter((series) => series.showDistributionLine)
+        .map((series) => {
+          const mean = calculateMean(series.x);
+          const stdDev = calculateStdDev(series.x, mean);
+
+          const min = Math.min(...series.x);
+          const max = Math.max(...series.x);
+          const range = max - min;
+          const start = min - range * 0.1;
+          const end = max + range * 0.1;
+
+          const bins = series.xbins || {
+            start: start,
+            end: end,
+            size: range / 10,
+          };
+
+          const curvePoints = generateNormalDistributionPoints(
+            mean,
+            stdDev,
+            start,
+            end,
+            100,
+          );
+
+          const scaledYValues = scaleDistributionCurve(
+            curvePoints.y,
+            series.x,
+            bins,
+          );
+
+          return {
+            type: "scatter" as const,
+            x: curvePoints.x,
+            y: scaledYValues,
+            mode: "lines" as const,
+            name: `${series.name} Distribution`,
+            line: {
+              color: series.color,
+              width: series.lineWidth,
+            },
+            hoverinfo: "none" as const,
+          };
+        }),
+    [seriesWithColors],
+  );
+
+  const plotData = useMemo(
+    () => [...histogramData, ...distributionLines],
+    [histogramData, distributionLines],
+  );
 
   useEffect(() => {
     if (!plotRef.current) return;
@@ -268,22 +280,15 @@ const Histogram: React.FC<HistogramProps> = ({
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
 
+    // Capture ref value for cleanup
+    const plotElement = plotRef.current;
+
     return () => {
-      if (plotRef.current) {
-        Plotly.purge(plotRef.current);
+      if (plotElement) {
+        Plotly.purge(plotElement);
       }
     };
-  }, [
-    dataSeries,
-    width,
-    height,
-    title,
-    xTitle,
-    yTitle,
-    bargap,
-    showDistributionLine,
-    plotData,
-  ]);
+  }, [width, height, xTitle, yTitle, bargap, plotData, effectiveBarMode, gridColor]);
 
   const ChartLegend: React.FC<{
     series: Array<{ name: string; color: string }>;

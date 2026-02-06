@@ -11,6 +11,7 @@
 # Built artifacts
 dist
 *.tgz
+storybook-static
 
 # Coverage reports
 coverage

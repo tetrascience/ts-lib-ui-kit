@@ -76,7 +76,7 @@ export default [
     ],
   },
 
-  // Server JS build
+  // Server JS build (main entry - includes all providers)
   {
     input: "src/server.ts",
     output: [
@@ -95,7 +95,55 @@ export default [
         banner,
       },
     ],
-    external: [...Object.keys(pkg.dependencies || {})],
+    external: [
+      ...Object.keys(pkg.dependencies || {}),
+      ...Object.keys(pkg.peerDependencies || {}),
+    ],
+    plugins: [
+      resolve({ extensions: [".js", ".jsx", ".ts", ".tsx", ".json"] }),
+      commonjs(),
+      json(),
+      typescript({
+        tsconfig: "./tsconfig.app.json",
+        tsconfigOverride: { compilerOptions: { declaration: false } },
+        clean: true,
+      }),
+      terser({
+        output: { comments: false },
+        compress: { drop_console: false },
+      }),
+    ],
+  },
+
+  // Individual provider builds for tree-shaking
+  {
+    input: {
+      athena: "src/server/providers/entries/athena.ts",
+      snowflake: "src/server/providers/entries/snowflake.ts",
+      databricks: "src/server/providers/entries/databricks.ts",
+    },
+    output: [
+      {
+        dir: "dist/cjs/providers",
+        format: "cjs",
+        sourcemap: true,
+        exports: "named",
+        entryFileNames: "[name].js",
+        banner,
+      },
+      {
+        dir: "dist/esm/providers",
+        format: "esm",
+        sourcemap: true,
+        exports: "named",
+        entryFileNames: "[name].js",
+        banner,
+      },
+    ],
+    external: [
+      ...Object.keys(pkg.dependencies || {}),
+      ...Object.keys(pkg.peerDependencies || {}),
+    ],
     plugins: [
       resolve({ extensions: [".js", ".jsx", ".ts", ".tsx", ".json"] }),
       commonjs(),
@@ -141,6 +189,21 @@ export default [
   {
     input: "src/server.ts",
     output: { file: "dist/server.d.ts", format: "es" },
+    plugins: [dts()],
+  },
+
+  // Bundle type declarations for individual providers
+  {
+    input: {
+      athena: "src/server/providers/entries/athena.ts",
+      snowflake: "src/server/providers/entries/snowflake.ts",
+      databricks: "src/server/providers/entries/databricks.ts",
+    },
+    output: {
+      dir: "dist/providers",
+      format: "es",
+      entryFileNames: "[name].d.ts",
+    },
     plugins: [dts()],
   },
 ];

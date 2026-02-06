@@ -45,6 +45,7 @@ const TooltipContainer = styled.div`
 `;
 
 export const Default: Story = {
+  name: "[SW-T867] Default",
   args: {
     content: "This is a tooltip content",
     placement: "top",
@@ -53,6 +54,7 @@ export const Default: Story = {
 };
 
 export const AllPlacements: Story = {
+  name: "[SW-T868] All Placements",
   render: () => (
     <TooltipContainer>
       <Tooltip content="Tooltip on top" placement="top">
@@ -72,6 +74,7 @@ export const AllPlacements: Story = {
 };
 
 export const WithLongContent: Story = {
+  name: "[SW-T869] With Long Content",
   args: {
     content:
       "This is a tooltip with a very long content that will wrap into multiple lines to demonstrate how the tooltip handles long text content.",
@@ -81,6 +84,7 @@ export const WithLongContent: Story = {
 };
 
 export const CustomDelay: Story = {
+  name: "[SW-T870] Custom Delay",
   args: {
     content: "This tooltip appears with a 1 second delay",
     placement: "top",

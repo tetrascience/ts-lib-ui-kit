@@ -10,6 +10,7 @@ import { Button } from "./Button";
 const meta: Meta<typeof Button> = {
   title: "Tests/Atoms/Button",
   component: Button,
+  tags: ["!dev"],
   parameters: {
     layout: "centered",
   },
@@ -19,6 +20,7 @@ export default meta;
 type Story = StoryObj<typeof Button>;
 
 export const ClickInteraction: Story = {
+  name: "[SW-T743] Click Interaction",
   args: {
     children: "Click Me",
     onClick: fn(),
@@ -41,6 +43,7 @@ export const ClickInteraction: Story = {
 };
 
 export const DisabledButtonInteraction: Story = {
+  name: "[SW-T744] Disabled Button Interaction",
   args: {
     children: "Disabled Button",
     disabled: true,
@@ -66,6 +69,7 @@ export const DisabledButtonInteraction: Story = {
 };
 
 export const HoverInteraction: Story = {
+  name: "[SW-T745] Hover Interaction",
   args: {
     children: "Hover Over Me",
     variant: "primary",
@@ -90,6 +94,7 @@ export const HoverInteraction: Story = {
 };
 
 export const KeyboardInteraction: Story = {
+  name: "[SW-T746] Keyboard Interaction",
   args: {
     children: "Press Enter",
     onClick: fn(),
@@ -112,4 +117,3 @@ export const KeyboardInteraction: Story = {
     await expect(args.onClick).toHaveBeenCalledTimes(1);
   },
 };
-

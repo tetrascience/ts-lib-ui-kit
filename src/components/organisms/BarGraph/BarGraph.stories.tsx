@@ -72,6 +72,7 @@ const generateStackedBarData = (): BarDataSeries[] => {
 };
 
 export const Basic: Story = {
+  name: "[SW-T966] Basic",
   args: {
     dataSeries: generateBasicData(),
     title: "Bar Graph",
@@ -81,6 +82,7 @@ export const Basic: Story = {
 };
 
 export const GroupedBars: Story = {
+  name: "[SW-T967] Grouped Bars",
   args: {
     dataSeries: generateGroupedBarData(),
     variant: "group",
@@ -91,6 +93,7 @@ export const GroupedBars: Story = {
 };
 
 export const StackedBars: Story = {
+  name: "[SW-T968] Stacked Bars",
   args: {
     dataSeries: generateStackedBarData(),
     variant: "stack",
@@ -101,6 +104,7 @@ export const StackedBars: Story = {
 };
 
 export const CustomStyling: Story = {
+  name: "[SW-T969] Custom Styling",
   args: {
     dataSeries: generateGroupedBarData(),
     title: "Custom Bar Graph",

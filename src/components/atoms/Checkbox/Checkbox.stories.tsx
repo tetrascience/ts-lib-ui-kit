@@ -15,6 +15,7 @@ export default meta;
 type Story = StoryObj<typeof Checkbox>;
 
 export const Unchecked: Story = {
+  name: "[SW-T764] Unchecked",
   args: {
     checked: false,
     label: "Unchecked option",
@@ -22,6 +23,7 @@ export const Unchecked: Story = {
 };
 
 export const Checked: Story = {
+  name: "[SW-T765] Checked",
   args: {
     checked: true,
     label: "Checked option",
@@ -29,12 +31,14 @@ export const Checked: Story = {
 };
 
 export const WithoutLabel: Story = {
+  name: "[SW-T766] Without Label",
   args: {
     checked: false,
   },
 };
 
 export const Disabled: Story = {
+  name: "[SW-T767] Disabled",
   args: {
     checked: false,
     disabled: true,
@@ -43,6 +47,7 @@ export const Disabled: Story = {
 };
 
 export const DisabledChecked: Story = {
+  name: "[SW-T768] Disabled Checked",
   args: {
     checked: true,
     disabled: true,
@@ -51,29 +56,29 @@ export const DisabledChecked: Story = {
 };
 
 export const NoPadding: Story = {
+  name: "[SW-T769] No Padding",
   args: {
     checked: false,
     label: "No padding option",
     noPadding: true,
   },
 };
-
-export const Interactive: React.FC = () => {
+const InteractiveComponent = () => {
   const [checked, setChecked] = useState(false);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-      <Checkbox
-        checked={checked}
-        onChange={(isChecked) => setChecked(isChecked)}
-        label="Click me to toggle"
-      />
+      <Checkbox checked={checked} onChange={(isChecked) => setChecked(isChecked)} label="Click me to toggle" />
       <div>Checkbox is {checked ? "checked" : "unchecked"}</div>
     </div>
   );
 };
 
-export const ComparisonWithAndWithoutPadding: React.FC = () => {
+export const Interactive: Story = {
+  name: "[SW-T770] Interactive",
+  render: () => <InteractiveComponent />,
+};
+const ComparisonWithAndWithoutPaddingComponent = () => {
   const [checked1, setChecked1] = useState(false);
   const [checked2, setChecked2] = useState(false);
 
@@ -88,11 +93,7 @@ export const ComparisonWithAndWithoutPadding: React.FC = () => {
       }}
     >
       <div style={{ borderBottom: "1px solid #eee" }}>
-        <Checkbox
-          checked={checked1}
-          onChange={(isChecked) => setChecked1(isChecked)}
-          label="With default padding"
-        />
+        <Checkbox checked={checked1} onChange={(isChecked) => setChecked1(isChecked)} label="With default padding" />
       </div>
       <div>
         <Checkbox
@@ -104,4 +105,9 @@ export const ComparisonWithAndWithoutPadding: React.FC = () => {
       </div>
     </div>
   );
+};
+
+export const ComparisonWithAndWithoutPadding: Story = {
+  name: "[SW-T771] Comparison With And Without Padding",
+  render: () => <ComparisonWithAndWithoutPaddingComponent />,
 };

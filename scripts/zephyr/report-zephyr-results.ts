@@ -17,9 +17,9 @@
  *   ZEPHYR_BRANCH + ZEPHYR_CYCLE_CACHE_FILE - Find-or-create cycle for feature branches
  */
 
-import fs from "fs";
-import path from "path";
-import { XMLParser } from "fast-xml-parser";
+import fs from 'fs';
+import path from 'path';
+import { XMLParser } from 'fast-xml-parser';
 
 // ============================================================================
 // TypeScript Types for JUnit XML Schema
@@ -27,41 +27,41 @@ import { XMLParser } from "fast-xml-parser";
 
 /** Represents a failure element in a test case */
 export interface JUnitFailure {
-  "@_message"?: string;
-  "@_type"?: string;
-  "#text"?: string;
+  '@_message'?: string;
+  '@_type'?: string;
+  '#text'?: string;
 }
 
 /** Represents an error element in a test case */
 export interface JUnitError {
-  "@_message"?: string;
-  "@_type"?: string;
-  "#text"?: string;
+  '@_message'?: string;
+  '@_type'?: string;
+  '#text'?: string;
 }
 
 /** Represents a skipped element in a test case */
 export interface JUnitSkipped {
-  "@_message"?: string;
+  '@_message'?: string;
 }
 
 /** Represents a single test case in JUnit XML */
 export interface JUnitTestCase {
-  "@_name": string;
-  "@_classname"?: string;
-  "@_time": string;
+  '@_name': string;
+  '@_classname'?: string;
+  '@_time': string;
   failure?: JUnitFailure | JUnitFailure[];
   error?: JUnitError | JUnitError[];
-  skipped?: JUnitSkipped | "";
+  skipped?: JUnitSkipped | '';
 }
 
 /** Represents a test suite in JUnit XML */
 export interface JUnitTestSuite {
-  "@_name"?: string;
-  "@_tests"?: string;
-  "@_failures"?: string;
-  "@_errors"?: string;
-  "@_skipped"?: string;
-  "@_time"?: string;
+  '@_name'?: string;
+  '@_tests'?: string;
+  '@_failures'?: string;
+  '@_errors'?: string;
+  '@_skipped'?: string;
+  '@_time'?: string;
   testcase?: JUnitTestCase | JUnitTestCase[];
   testsuite?: JUnitTestSuite | JUnitTestSuite[];
 }
@@ -80,7 +80,7 @@ interface JUnitXML {
 
 interface TestResult {
   testCaseKey: string;
-  status: "Pass" | "Fail" | "Not Executed";
+  status: 'Pass' | 'Fail' | 'Not Executed';
   executionTime: number;
   comment?: string;
 }
@@ -89,14 +89,14 @@ interface TestResult {
 // Configuration
 // ============================================================================
 
-const ZEPHYR_BASE_URL = "https://api.zephyrscale.smartbear.com/v2";
-const PROJECT_KEY = process.env.ZEPHYR_PROJECT_KEY || "SW";
-const JUNIT_PATH = process.env.JUNIT_PATH || "test-results/storybook-junit.xml";
+const ZEPHYR_BASE_URL = 'https://api.zephyrscale.smartbear.com/v2';
+const PROJECT_KEY = process.env.ZEPHYR_PROJECT_KEY || 'SW';
+const JUNIT_PATH = process.env.JUNIT_PATH || 'test-results/storybook-junit.xml';
 
 function getZephyrToken(): string {
   const token = process.env.ZEPHYR_TOKEN;
   if (!token) {
-    console.error("[ERROR] ZEPHYR_TOKEN environment variable is required");
+    console.error('[ERROR] ZEPHYR_TOKEN environment variable is required');
     process.exit(1);
   }
   return token;
@@ -105,7 +105,7 @@ function getZephyrToken(): string {
 /** Validates that a cache file path is safe (no path traversal) */
 export function validateCacheFilePath(cacheFile: string): void {
   if (cacheFile.includes('/') || cacheFile.includes('\\') || cacheFile.startsWith('..')) {
-    throw new Error("Invalid cache file path: must be a simple filename without path separators");
+    throw new Error('Invalid cache file path: must be a simple filename without path separators');
   }
 }
 
@@ -113,7 +113,7 @@ export function validateCacheFilePath(cacheFile: string): void {
 export function getCachedCycleKey(cacheFile: string): string | null {
   validateCacheFilePath(cacheFile);
   if (fs.existsSync(cacheFile)) {
-    const key = fs.readFileSync(cacheFile, "utf-8").trim();
+    const key = fs.readFileSync(cacheFile, 'utf-8').trim();
     if (key) return key;
   }
   return null;
@@ -122,7 +122,7 @@ export function getCachedCycleKey(cacheFile: string): string | null {
 /** Writes a cycle key to the cache file for future runs */
 export function cacheCycleKey(cacheFile: string, cycleKey: string): void {
   validateCacheFilePath(cacheFile);
-  fs.writeFileSync(cacheFile, cycleKey, "utf-8");
+  fs.writeFileSync(cacheFile, cycleKey, 'utf-8');
 }
 
 /** Sanitizes a branch name for use in cycle names */
@@ -130,14 +130,12 @@ export function sanitizeBranchName(branch: string): string {
   return branch.replace(/[^a-zA-Z0-9\-_/]/g, '-');
 }
 
-
-
 /** Creates a new test cycle and returns its key */
 async function createTestCycle(name: string): Promise<string> {
   const url = `${ZEPHYR_BASE_URL}/testcycles`;
   const response = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { Authorization: `Bearer ${getZephyrToken()}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ projectKey: PROJECT_KEY, name }),
   });
   if (!response.ok) {
@@ -154,11 +152,11 @@ async function createTestCycle(name: string): Promise<string> {
 async function resolveCycleKey(): Promise<{ cycleKey: string; source: string }> {
   const cycleKey = process.env.ZEPHYR_CYCLE_KEY?.trim();
   const branch = process.env.ZEPHYR_BRANCH?.trim();
-  const cacheFile = process.env.ZEPHYR_CYCLE_CACHE_FILE || ".zephyr-cycle-key";
+  const cacheFile = process.env.ZEPHYR_CYCLE_CACHE_FILE || '.zephyr-cycle-key';
 
   // Priority 1: Explicit cycle key (main branch or workflow_dispatch)
   if (cycleKey) {
-    return { cycleKey, source: "explicit (ZEPHYR_CYCLE_KEY)" };
+    return { cycleKey, source: 'explicit (ZEPHYR_CYCLE_KEY)' };
   }
 
   // Priority 2: Feature branch - check cache first, then create new cycle
@@ -179,12 +177,10 @@ async function resolveCycleKey(): Promise<{ cycleKey: string; source: string }> 
     cacheCycleKey(cacheFile, newKey);
     console.log(`[INFO] Cached cycle key to: ${cacheFile}\n`);
 
-    return { cycleKey: newKey, source: "newly created" };
+    return { cycleKey: newKey, source: 'newly created' };
   }
 
-  throw new Error(
-    "Unable to determine test cycle. Set ZEPHYR_CYCLE_KEY or ZEPHYR_BRANCH"
-  );
+  throw new Error('Unable to determine test cycle. Set ZEPHYR_CYCLE_KEY or ZEPHYR_BRANCH');
 }
 
 // ============================================================================
@@ -193,9 +189,9 @@ async function resolveCycleKey(): Promise<{ cycleKey: string; source: string }> 
 
 const xmlParser = new XMLParser({
   ignoreAttributes: false,
-  attributeNamePrefix: "@_",
-  textNodeName: "#text",
-  isArray: (name) => ["testcase", "testsuite", "failure", "error"].includes(name),
+  attributeNamePrefix: '@_',
+  textNodeName: '#text',
+  isArray: (name) => ['testcase', 'testsuite', 'failure', 'error'].includes(name),
 });
 
 /** Extracts all test cases from a test suite, including nested suites */
@@ -220,31 +216,36 @@ export function extractTestCases(suite: JUnitTestSuite): JUnitTestCase[] {
 }
 
 /** Determines the test status based on failure/error/skipped elements */
-export function determineTestStatus(testCase: JUnitTestCase): { status: TestResult["status"]; comment?: string } {
+export function determineTestStatus(testCase: JUnitTestCase): { status: TestResult['status']; comment?: string } {
   const hasFailure = testCase.failure !== undefined;
   const hasError = testCase.error !== undefined;
   const hasSkipped = testCase.skipped !== undefined;
 
   if (hasFailure || hasError) {
     const failureMessage = hasError
-      ? (Array.isArray(testCase.error) ? testCase.error[0]?.["@_message"] : testCase.error?.["@_message"])
-      : (Array.isArray(testCase.failure) ? testCase.failure[0]?.["@_message"] : testCase.failure?.["@_message"]);
+      ? Array.isArray(testCase.error)
+        ? testCase.error[0]?.['@_message']
+        : testCase.error?.['@_message']
+      : Array.isArray(testCase.failure)
+        ? testCase.failure[0]?.['@_message']
+        : testCase.failure?.['@_message'];
 
     return {
-      status: "Fail",
-      comment: failureMessage || (hasError ? "Test error - see CI logs for details" : "Test failed - see CI logs for details"),
+      status: 'Fail',
+      comment:
+        failureMessage || (hasError ? 'Test error - see CI logs for details' : 'Test failed - see CI logs for details'),
     };
   }
 
   if (hasSkipped) {
-    const skipMessage = typeof testCase.skipped === "object" ? testCase.skipped["@_message"] : undefined;
+    const skipMessage = typeof testCase.skipped === 'object' ? testCase.skipped['@_message'] : undefined;
     return {
-      status: "Not Executed",
-      comment: skipMessage || "Test was skipped",
+      status: 'Not Executed',
+      comment: skipMessage || 'Test was skipped',
     };
   }
 
-  return { status: "Pass" };
+  return { status: 'Pass' };
 }
 
 /** Parses JUnit XML content and extracts test results with Zephyr IDs */
@@ -265,9 +266,7 @@ export function parseJUnitXML(xmlContent: string): TestResult[] {
   }
 
   if (parsed.testsuite) {
-    const suites = Array.isArray(parsed.testsuite)
-      ? parsed.testsuite
-      : [parsed.testsuite];
+    const suites = Array.isArray(parsed.testsuite) ? parsed.testsuite : [parsed.testsuite];
     allSuites.push(...suites);
   }
 
@@ -276,14 +275,14 @@ export function parseJUnitXML(xmlContent: string): TestResult[] {
 
   // Process each test case
   for (const testCase of allTestCases) {
-    const testName = testCase["@_name"];
-    const time = testCase["@_time"];
+    const testName = testCase['@_name'];
+    const time = testCase['@_time'];
 
     // Check for Zephyr ID in test name
     const zephyrMatch = testName.match(zephyrIdPattern);
     if (!zephyrMatch) continue;
 
-    const ids = zephyrMatch[1].split(",");
+    const ids = zephyrMatch[1].split(',');
     const { status, comment } = determineTestStatus(testCase);
 
     for (const id of ids) {
@@ -301,7 +300,14 @@ export function parseJUnitXML(xmlContent: string): TestResult[] {
 
 async function reportTestExecution(cycleKey: string, result: TestResult): Promise<void> {
   const url = `${ZEPHYR_BASE_URL}/testexecutions`;
-  const body: { projectKey: string; testCycleKey: string; testCaseKey: string; statusName: string; executionTime?: number; comment?: string } = {
+  const body: {
+    projectKey: string;
+    testCycleKey: string;
+    testCaseKey: string;
+    statusName: string;
+    executionTime?: number;
+    comment?: string;
+  } = {
     projectKey: PROJECT_KEY,
     testCycleKey: cycleKey,
     testCaseKey: result.testCaseKey,
@@ -311,8 +317,8 @@ async function reportTestExecution(cycleKey: string, result: TestResult): Promis
   if (result.comment) body.comment = result.comment;
 
   const response = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { Authorization: `Bearer ${getZephyrToken()}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   if (!response.ok) {
@@ -329,13 +335,13 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const xmlContent = fs.readFileSync(junitPath, "utf-8");
+  const xmlContent = fs.readFileSync(junitPath, 'utf-8');
   const results = parseJUnitXML(xmlContent);
 
   console.log(`[INFO] Found ${results.length} test results with Zephyr IDs\n`);
 
   if (results.length === 0) {
-    console.log("[INFO] No test results with Zephyr IDs found. Skipping report.");
+    console.log('[INFO] No test results with Zephyr IDs found. Skipping report.');
     return;
   }
 
@@ -343,12 +349,15 @@ async function main(): Promise<void> {
   const { cycleKey, source } = await resolveCycleKey();
   console.log(`[INFO] Using test cycle: ${cycleKey} (${source})\n`);
 
-  let passCount = 0, failCount = 0, errorCount = 0;
+  let passCount = 0,
+    failCount = 0,
+    errorCount = 0;
 
   for (const result of results) {
     try {
       await reportTestExecution(cycleKey, result);
-      if (result.status === "Pass") passCount++; else failCount++;
+      if (result.status === 'Pass') passCount++;
+      else failCount++;
       console.log(`  [${result.status.toUpperCase()}] ${result.testCaseKey}`);
     } catch {
       console.error(`  [ERROR] ${result.testCaseKey}: Failed to report`);
@@ -356,7 +365,7 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log("\n=====================================");
+  console.log('\n=====================================');
   console.log(`[INFO] Report complete!`);
   console.log(`  Test Cycle: ${cycleKey}`);
   console.log(`  Passed: ${passCount}, Failed: ${failCount}, Errors: ${errorCount}`);
@@ -364,9 +373,9 @@ async function main(): Promise<void> {
 }
 
 // Only run main when script is executed directly (not imported for testing)
-if (process.env.NODE_ENV !== "test" && process.argv[1]?.includes("report-zephyr-results")) {
+if (process.env.NODE_ENV !== 'test' && process.argv[1]?.includes('report-zephyr-results')) {
   main().catch(() => {
-    console.error("[ERROR] Fatal error occurred");
+    console.error('[ERROR] Fatal error occurred');
     process.exit(1);
   });
 }

@@ -15,15 +15,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  name: "[SW-T1012] Default",
   args: {
     dataSeries: {
-      labels: [
-        "pH",
-        "Temperature",
-        "Dissolved Oxygen",
-        "Cell Density",
-        "Viability",
-      ],
+      labels: ["pH", "Temperature", "Dissolved Oxygen", "Cell Density", "Viability"],
       values: [12, 23, 35, 18, 12],
       name: "Bioreactor Parameters",
     },
@@ -37,24 +32,13 @@ export const Default: Story = {
 };
 
 export const WithCustomColors: Story = {
+  name: "[SW-T1013] With Custom Colors",
   args: {
     dataSeries: {
-      labels: [
-        "pH",
-        "Temperature",
-        "Dissolved Oxygen",
-        "Cell Density",
-        "Viability",
-      ],
+      labels: ["pH", "Temperature", "Dissolved Oxygen", "Cell Density", "Viability"],
       values: [12, 23, 35, 18, 12],
       name: "Bioreactor Parameters",
-      colors: [
-        COLORS.ORANGE,
-        COLORS.RED,
-        COLORS.GREEN,
-        COLORS.BLUE,
-        COLORS.PURPLE,
-      ],
+      colors: [COLORS.ORANGE, COLORS.RED, COLORS.GREEN, COLORS.BLUE, COLORS.PURPLE],
     },
     title: "Bioreactor Parameter Distribution",
     width: 480,
@@ -66,15 +50,10 @@ export const WithCustomColors: Story = {
 };
 
 export const DonutChart: Story = {
+  name: "[SW-T1014] Donut Chart",
   args: {
     dataSeries: {
-      labels: [
-        "pH",
-        "Temperature",
-        "Dissolved Oxygen",
-        "Cell Density",
-        "Viability",
-      ],
+      labels: ["pH", "Temperature", "Dissolved Oxygen", "Cell Density", "Viability"],
       values: [12, 23, 35, 18, 12],
       name: "Bioreactor Parameters",
     },
@@ -88,15 +67,10 @@ export const DonutChart: Story = {
 };
 
 export const WithLabelAndValues: Story = {
+  name: "[SW-T1015] With Label And Values",
   args: {
     dataSeries: {
-      labels: [
-        "pH",
-        "Temperature",
-        "Dissolved Oxygen",
-        "Cell Density",
-        "Viability",
-      ],
+      labels: ["pH", "Temperature", "Dissolved Oxygen", "Cell Density", "Viability"],
       values: [12, 23, 35, 18, 12],
       name: "Bioreactor Parameters",
     },
@@ -110,15 +84,10 @@ export const WithLabelAndValues: Story = {
 };
 
 export const WithRotation: Story = {
+  name: "[SW-T1016] With Rotation",
   args: {
     dataSeries: {
-      labels: [
-        "pH",
-        "Temperature",
-        "Dissolved Oxygen",
-        "Cell Density",
-        "Viability",
-      ],
+      labels: ["pH", "Temperature", "Dissolved Oxygen", "Cell Density", "Viability"],
       values: [12, 23, 35, 18, 12],
       name: "Bioreactor Parameters",
     },

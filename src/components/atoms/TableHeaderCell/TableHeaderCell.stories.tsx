@@ -21,6 +21,7 @@ export default meta;
 type Story = StoryObj<typeof TableHeaderCell>;
 
 export const Default: Story = {
+  name: "[SW-T847] Default",
   render: (args) => (
     <table style={{ borderCollapse: "collapse", width: "100%" }}>
       <thead>
@@ -62,6 +63,7 @@ function SortableDemo() {
 }
 
 export const Sortable: Story = {
+  name: "[SW-T848] Sortable",
   render: () => <SortableDemo />,
 };
 
@@ -90,6 +92,7 @@ function WithDropdownDemo() {
 }
 
 export const WithDropdown: Story = {
+  name: "[SW-T849] With Dropdown",
   render: () => <WithDropdownDemo />,
 };
 
@@ -143,6 +146,7 @@ function MultipleHeadersDemo() {
 }
 
 export const MultipleHeaders: Story = {
+  name: "[SW-T850] Multiple Headers",
   render: () => <MultipleHeadersDemo />,
 };
 
@@ -185,5 +189,6 @@ function MixedHeadersWithDropdownsDemo() {
 }
 
 export const MixedHeadersWithDropdowns: Story = {
+  name: "[SW-T851] Mixed Headers With Dropdowns",
   render: () => <MixedHeadersWithDropdownsDemo />,
 };

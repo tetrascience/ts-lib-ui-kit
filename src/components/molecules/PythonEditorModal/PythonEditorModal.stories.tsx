@@ -42,8 +42,7 @@ const Preview = styled.div`
 export const Interactive = () => {
   const [open, setOpen] = useState(false);
   const [lastSaved, setLastSaved] = useState("");
-  const initialCode =
-    "def add(a, b):\n  return a + b\n\nresult = add(5, 3)\nprint(result)";
+  const initialCode = "def add(a, b):\n  return a + b\n\nresult = add(5, 3)\nprint(result)";
 
   return (
     <StoryContainer>
@@ -73,14 +72,14 @@ export const Interactive = () => {
     </StoryContainer>
   );
 };
+Interactive.storyName = "[SW-T932] Interactive";
 
 export const DefaultStory: Story = {
-  name: "Default",
+  name: "[SW-T933] Default",
   args: {
     open: true,
     title: "Python Editor",
-    initialValue:
-      "def hello_world():\n  print('Hello, World!')\n\nhello_world()",
+    initialValue: "def hello_world():\n  print('Hello, World!')\n\nhello_world()",
     onSave: (value) => console.log("Saving code:", value),
     onCancel: () => console.log("Modal closed"),
   },

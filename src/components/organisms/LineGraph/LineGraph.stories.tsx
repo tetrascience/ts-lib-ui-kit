@@ -48,8 +48,7 @@ const generateBasicDemoData = (): LineDataSeries[] => {
 const generateDataStartingFromZero = (): LineDataSeries[] => {
   const x = [0, 125, 250, 375, 500, 625, 750, 875, 1000];
 
-  const rand = (min: number, max: number) =>
-    Math.round(Math.random() * (max - min) + min);
+  const rand = (min: number, max: number) => Math.round(Math.random() * (max - min) + min);
 
   return [
     {
@@ -288,6 +287,7 @@ export default meta;
 type Story = StoryObj<typeof LineGraph>;
 
 export const Basic: Story = {
+  name: "[SW-T998] Basic",
   args: {
     dataSeries: generateBasicDemoData(),
     title: "Basic Line Graph",
@@ -295,6 +295,7 @@ export const Basic: Story = {
 };
 
 export const WithMarkers: Story = {
+  name: "[SW-T999] With Markers",
   args: {
     dataSeries: generateDataStartingFromZero(),
     variant: "lines+markers",
@@ -303,6 +304,7 @@ export const WithMarkers: Story = {
 };
 
 export const WithErrorBars: Story = {
+  name: "[SW-T1000] With Error Bars",
   args: {
     dataSeries: generateDemoDataWithErrorBars(),
     variant: "lines+markers+error_bars",
@@ -311,6 +313,7 @@ export const WithErrorBars: Story = {
 };
 
 export const WideRange: Story = {
+  name: "[SW-T1001] Wide Range",
   args: {
     dataSeries: generateWideRangeData(),
     variant: "lines+markers",
@@ -319,6 +322,7 @@ export const WideRange: Story = {
 };
 
 export const NarrowRange: Story = {
+  name: "[SW-T1002] Narrow Range",
   args: {
     dataSeries: generateNarrowRangeData(),
     variant: "lines+markers",
@@ -327,6 +331,7 @@ export const NarrowRange: Story = {
 };
 
 export const CustomAxes: Story = {
+  name: "[SW-T1003] Custom Axes",
   args: {
     dataSeries: generateBasicDemoData(),
     xTitle: "Time (s)",
@@ -336,6 +341,7 @@ export const CustomAxes: Story = {
 };
 
 export const CustomRange: Story = {
+  name: "[SW-T1004] Custom Range",
   args: {
     dataSeries: generateBasicDemoData(),
     xRange: [300, 800],
@@ -345,6 +351,7 @@ export const CustomRange: Story = {
 };
 
 export const AutoRangeLineGraph: Story = {
+  name: "[SW-T1005] Auto Range Line Graph",
   args: {
     width: 1000,
     height: 600,
@@ -364,6 +371,7 @@ export const AutoRangeLineGraph: Story = {
 };
 
 export const WideRangeAutoScaled: Story = {
+  name: "[SW-T1006] Wide Range Auto Scaled",
   args: {
     width: 1000,
     height: 600,
@@ -375,14 +383,14 @@ export const WideRangeAutoScaled: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          "A graph with a wider data range, demonstrating how the LineGraph adapts its scales automatically.",
+        story: "A graph with a wider data range, demonstrating how the LineGraph adapts its scales automatically.",
       },
     },
   },
 };
 
 export const NarrowRangeAutoScaled: Story = {
+  name: "[SW-T1007] Narrow Range Auto Scaled",
   args: {
     width: 1000,
     height: 600,
@@ -394,14 +402,14 @@ export const NarrowRangeAutoScaled: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          "A graph with a narrower data range, showing how the LineGraph adapts to focused data.",
+        story: "A graph with a narrower data range, showing how the LineGraph adapts to focused data.",
       },
     },
   },
 };
 
 export const OnlyXRangeProvided: Story = {
+  name: "[SW-T1008] Only X Range Provided",
   args: {
     width: 1000,
     height: 600,
@@ -414,14 +422,14 @@ export const OnlyXRangeProvided: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          "In this example, only the X-axis range is provided, while the Y-axis uses autorange.",
+        story: "In this example, only the X-axis range is provided, while the Y-axis uses autorange.",
       },
     },
   },
 };
 
 export const OnlyYRangeProvided: Story = {
+  name: "[SW-T1009] Only Y Range Provided",
   args: {
     width: 1000,
     height: 600,
@@ -434,14 +442,14 @@ export const OnlyYRangeProvided: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          "In this example, only the Y-axis range is provided, while the X-axis uses autorange.",
+        story: "In this example, only the Y-axis range is provided, while the X-axis uses autorange.",
       },
     },
   },
 };
 
 export const LineGraphStartingFromZero: Story = {
+  name: "[SW-T1010] Line Graph Starting From Zero",
   args: {
     width: 1000,
     height: 600,
@@ -453,8 +461,7 @@ export const LineGraphStartingFromZero: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          "This graph demonstrates data that starts from 0 on both axes, with evenly distributed data points.",
+        story: "This graph demonstrates data that starts from 0 on both axes, with evenly distributed data points.",
       },
     },
   },

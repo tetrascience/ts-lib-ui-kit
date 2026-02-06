@@ -21,10 +21,12 @@ type Story = StoryObj<typeof ProtocolConfiguration>;
 
 // Basic examples
 export const Default: Story = {
+  name: "[SW-T927] Default",
   args: {},
 };
 
 export const WithCustomClassName: Story = {
+  name: "[SW-T928] With Custom Class Name",
   args: {
     className: "custom-protocol-config",
   },
@@ -32,12 +34,12 @@ export const WithCustomClassName: Story = {
 
 // Interactive example showing both states
 export const Interactive: Story = {
+  name: "[SW-T929] Interactive",
   args: {},
   parameters: {
     docs: {
       description: {
-        story:
-          "Toggle the Edit Mode switch to see the different states of the component.",
+        story: "Toggle the Edit Mode switch to see the different states of the component.",
       },
     },
   },
@@ -45,6 +47,7 @@ export const Interactive: Story = {
 
 // Container example to show how it looks in a layout
 export const InContainer: Story = {
+  name: "[SW-T930] In Container",
   args: {},
   decorators: [
     (Story) => (

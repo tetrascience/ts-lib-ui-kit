@@ -15,11 +15,7 @@ export default meta;
 type Story = StoryObj<typeof DotPlot>;
 
 // Generate grid data for dotplot
-const generateGridData = (
-  rows: number,
-  cols: number,
-  density: number = 0.15
-): { x: number[]; y: number[] } => {
+const generateGridData = (rows: number, cols: number, density: number = 0.15): { x: number[]; y: number[] } => {
   const x: number[] = [];
   const y: number[] = [];
 
@@ -39,7 +35,7 @@ const generateGridData = (
 const generateStackedData = (
   rows: number,
   cols: number,
-  seriesCount: number
+  seriesCount: number,
 ): Array<{ x: number[]; y: number[]; name: string }> => {
   const series: Array<{ x: number[]; y: number[]; name: string }> = [];
   const baseNames = ["Label", "Label", "Label", "Label", "Label", "Label"];
@@ -57,6 +53,7 @@ const generateStackedData = (
 };
 
 export const Default: Story = {
+  name: "[SW-T978] Default",
   args: {
     dataSeries: {
       x: generateGridData(25, 41, 0.12).x,
@@ -75,20 +72,12 @@ export const Default: Story = {
 };
 
 export const Stacked: Story = {
+  name: "[SW-T979] Stacked",
   args: {
     dataSeries: generateStackedData(25, 41, 4).map((series, index) => ({
       ...series,
-      color: [
-        COLORS.ORANGE,
-        COLORS.RED,
-        COLORS.GREEN,
-        COLORS.BLUE,
-        COLORS.YELLOW,
-        COLORS.PURPLE,
-      ][index],
-      symbol: (
-        ["circle", "square", "diamond", "triangle-up"] as MarkerSymbol[]
-      )[index],
+      color: [COLORS.ORANGE, COLORS.RED, COLORS.GREEN, COLORS.BLUE, COLORS.YELLOW, COLORS.PURPLE][index],
+      symbol: (["circle", "square", "diamond", "triangle-up"] as MarkerSymbol[])[index],
     })),
     title: "Dotplot Stacked",
     xTitle: "Columns",
@@ -101,6 +90,7 @@ export const Stacked: Story = {
 };
 
 export const WithCustomColors: Story = {
+  name: "[SW-T980] With Custom Colors",
   args: {
     dataSeries: [
       {
@@ -129,6 +119,7 @@ export const WithCustomColors: Story = {
 };
 
 export const LargeMarkers: Story = {
+  name: "[SW-T981] Large Markers",
   args: {
     dataSeries: {
       x: generateGridData(12, 20, 0.18).x,
@@ -147,6 +138,7 @@ export const LargeMarkers: Story = {
 };
 
 export const MultipleSeriesColors: Story = {
+  name: "[SW-T982] Multiple Series Colors",
   args: {
     dataSeries: [
       {
@@ -189,6 +181,7 @@ export const MultipleSeriesColors: Story = {
 };
 
 export const SmallScale: Story = {
+  name: "[SW-T983] Small Scale",
   args: {
     dataSeries: {
       x: generateGridData(8, 12, 0.4).x,
@@ -207,6 +200,7 @@ export const SmallScale: Story = {
 };
 
 export const HighDensity: Story = {
+  name: "[SW-T984] High Density",
   args: {
     dataSeries: {
       x: generateGridData(20, 30, 0.25).x,

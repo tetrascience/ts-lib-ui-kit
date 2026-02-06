@@ -16,6 +16,7 @@ type Story = StoryObj<typeof AppHeader>;
 
 // Default example
 export const Default: Story = {
+  name: "[SW-T871] Default",
   args: {
     hostname: "localhost:3000",
     userProfile: {
@@ -26,6 +27,7 @@ export const Default: Story = {
 
 // With avatar
 export const WithAvatar: Story = {
+  name: "[SW-T872] With Avatar",
   args: {
     hostname: "localhost:3000",
     userProfile: {
@@ -36,7 +38,7 @@ export const WithAvatar: Story = {
 };
 
 // Interactive example with action logging
-export const Interactive: React.FC = () => {
+const InteractiveDemo = () => {
   const [clickedAction, setClickedAction] = React.useState<string | null>(null);
 
   const handleHomeClick = () => {
@@ -96,4 +98,9 @@ export const Interactive: React.FC = () => {
       </div>
     </div>
   );
+};
+
+export const Interactive: Story = {
+  name: "[SW-T873] Interactive",
+  render: () => <InteractiveDemo />,
 };

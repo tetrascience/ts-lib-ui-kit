@@ -49,6 +49,7 @@ const basicColumns: TableColumn<SampleData>[] = [
 ];
 
 export const Basic: Story = {
+  name: "[SW-T950] Basic",
   args: {
     columns: basicColumns,
     data: sampleData.slice(0, 5),
@@ -58,6 +59,7 @@ export const Basic: Story = {
 };
 
 export const WithSorting: Story = {
+  name: "[SW-T951] With Sorting",
   render: () => {
     const columns: TableColumn<SampleData>[] = [
       { key: "name", header: "Name", sortable: true },
@@ -66,17 +68,12 @@ export const WithSorting: Story = {
       { key: "date", header: "Date", sortable: true },
     ];
 
-    return (
-      <Table
-        columns={columns}
-        data={sampleData}
-        pageSize={-1}
-      />
-    );
+    return <Table columns={columns} data={sampleData} pageSize={-1} />;
   },
 };
 
 export const WithFiltering: Story = {
+  name: "[SW-T952] With Filtering",
   render: () => {
     const columns: TableColumn<SampleData>[] = [
       { key: "name", header: "Name" },
@@ -105,14 +102,7 @@ export const WithFiltering: Story = {
       { key: "value", header: "Value", align: "right" },
     ];
 
-    return (
-      <Table
-        columns={columns}
-        data={sampleData}
-        pageSize={-1}
-        rowKey={(row) => row.id}
-      />
-    );
+    return <Table columns={columns} data={sampleData} pageSize={-1} rowKey={(row) => row.id} />;
   },
 };
 
@@ -149,10 +139,12 @@ function WithSelectionDemo() {
 }
 
 export const WithSelection: Story = {
+  name: "[SW-T953] With Selection",
   render: () => <WithSelectionDemo />,
 };
 
 export const WithPagination: Story = {
+  name: "[SW-T954] With Pagination",
   render: () => {
     const columns: TableColumn<SampleData>[] = [
       { key: "name", header: "Name" },
@@ -161,14 +153,7 @@ export const WithPagination: Story = {
       { key: "date", header: "Date" },
     ];
 
-    return (
-      <Table
-        columns={columns}
-        data={sampleData}
-        pageSize={5}
-        rowKey={(row) => row.id}
-      />
-    );
+    return <Table columns={columns} data={sampleData} pageSize={5} rowKey={(row) => row.id} />;
   },
 };
 
@@ -238,6 +223,7 @@ function FullyFeaturedDemo() {
 }
 
 export const FullyFeatured: Story = {
+  name: "[SW-T955] Fully Featured",
   render: () => <FullyFeaturedDemo />,
 };
 
@@ -289,10 +275,12 @@ function ControlledModeDemo() {
 }
 
 export const ControlledMode: Story = {
+  name: "[SW-T956] Controlled Mode",
   render: () => <ControlledModeDemo />,
 };
 
 export const CustomCellRendering: Story = {
+  name: "[SW-T957] Custom Cell Rendering",
   render: () => {
     const columns: TableColumn<SampleData>[] = [
       { key: "name", header: "Name" },
@@ -305,17 +293,13 @@ export const CustomCellRendering: Story = {
               padding: "4px 8px",
               borderRadius: "4px",
               backgroundColor:
-                value === "Active"
-                  ? "var(--green-bg)"
-                  : value === "Inactive"
-                  ? "var(--red-bg)"
-                  : "var(--orange-bg)",
+                value === "Active" ? "var(--green-bg)" : value === "Inactive" ? "var(--red-bg)" : "var(--orange-bg)",
               color:
                 value === "Active"
                   ? "var(--green-success)"
                   : value === "Inactive"
-                  ? "var(--red-error)"
-                  : "var(--orange-caution)",
+                    ? "var(--red-error)"
+                    : "var(--orange-caution)",
               fontWeight: 500,
               fontSize: "12px",
             }}
@@ -329,26 +313,16 @@ export const CustomCellRendering: Story = {
         header: "Value",
         align: "right",
         sortable: true,
-        render: (value) => (
-          <span style={{ fontWeight: 600 }}>
-            ${value.toLocaleString()}
-          </span>
-        ),
+        render: (value) => <span style={{ fontWeight: 600 }}>${value.toLocaleString()}</span>,
       },
     ];
 
-    return (
-      <Table
-        columns={columns}
-        data={sampleData}
-        pageSize={8}
-        rowKey={(row) => row.id}
-      />
-    );
+    return <Table columns={columns} data={sampleData} pageSize={8} rowKey={(row) => row.id} />;
   },
 };
 
 export const NoPagination: Story = {
+  name: "[SW-T958] No Pagination",
   render: () => {
     const columns: TableColumn<SampleData>[] = [
       { key: "id", header: "ID", width: "80px" },
@@ -357,18 +331,12 @@ export const NoPagination: Story = {
       { key: "value", header: "Value", align: "right" },
     ];
 
-    return (
-      <Table
-        columns={columns}
-        data={sampleData}
-        pageSize={-1}
-        rowKey={(row) => row.id}
-      />
-    );
+    return <Table columns={columns} data={sampleData} pageSize={-1} rowKey={(row) => row.id} />;
   },
 };
 
 export const EmptyState: Story = {
+  name: "[SW-T959] Empty State",
   render: () => {
     const columns: TableColumn<SampleData>[] = [
       { key: "name", header: "Name" },
@@ -376,13 +344,6 @@ export const EmptyState: Story = {
       { key: "value", header: "Value" },
     ];
 
-    return (
-      <Table
-        columns={columns}
-        data={[]}
-        pageSize={10}
-        rowKey={(row) => row.id}
-      />
-    );
+    return <Table columns={columns} data={[]} pageSize={10} rowKey={(row) => row.id} />;
   },
 };

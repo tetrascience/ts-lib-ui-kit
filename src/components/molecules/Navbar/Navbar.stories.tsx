@@ -15,6 +15,7 @@ type Story = StoryObj<typeof Navbar>;
 
 // Default Navbar example
 export const Default: Story = {
+  name: "[SW-T926] Default",
   args: {
     organization: {
       name: "TetraScience",

@@ -13,16 +13,16 @@
  *   ZEPHYR_FOLDER_PREFIX - Prefix for Zephyr folder names (default: 'UI Kit')
  */
 
-import fs from "fs";
-import path from "path";
-import { Project, VariableDeclaration, Node } from "ts-morph";
+import fs from 'fs';
+import path from 'path';
+import { Project, VariableDeclaration, Node } from 'ts-morph';
 
 // ============================================================================
 // TypeScript Types
 // ============================================================================
 
 /** Represents the type of story export pattern detected */
-export type StoryPattern = "csf3-object" | "csf2-template-bind" | "arrow-function" | "react-fc" | "unknown";
+export type StoryPattern = 'csf3-object' | 'csf2-template-bind' | 'arrow-function' | 'react-fc' | 'unknown';
 
 export interface StoryCase {
   filePath: string;
@@ -37,33 +37,43 @@ export interface StoryCase {
   pattern: StoryPattern;
 }
 
-interface ZephyrFolder { id: string; name: string; }
-interface FolderCache { [key: string]: string | null; }
-interface ZephyrTestCase { key: string; name: string; }
+interface ZephyrFolder {
+  id: string;
+  name: string;
+}
+interface FolderCache {
+  [key: string]: string | null;
+}
+interface ZephyrTestCase {
+  key: string;
+  name: string;
+}
 
-const ZEPHYR_BASE_URL = "https://api.zephyrscale.smartbear.com/v2";
-const PROJECT_KEY = process.env.ZEPHYR_PROJECT_KEY || "SW";
+const ZEPHYR_BASE_URL = 'https://api.zephyrscale.smartbear.com/v2';
+const PROJECT_KEY = process.env.ZEPHYR_PROJECT_KEY || 'SW';
 
 function getZephyrToken(): string {
   const token = process.env.ZEPHYR_TOKEN;
   if (!token) {
-    console.error("[ERROR] ZEPHYR_TOKEN environment variable is required");
+    console.error('[ERROR] ZEPHYR_TOKEN environment variable is required');
     process.exit(1);
   }
   return token;
 }
-const ZEPHYR_LABELS = process.env.ZEPHYR_LABELS?.split(",").map((l) => l.trim()).filter(Boolean) || ["storybook", "vitest", "automated"];
+const ZEPHYR_LABELS = process.env.ZEPHYR_LABELS?.split(',')
+  .map((l) => l.trim())
+  .filter(Boolean) || ['storybook', 'vitest', 'automated'];
 
 // Folder prefix for Zephyr - can be customized via env var
-const FOLDER_PREFIX = process.env.ZEPHYR_FOLDER_PREFIX || "UI Kit";
+const FOLDER_PREFIX = process.env.ZEPHYR_FOLDER_PREFIX || 'UI Kit';
 
 // Dynamically generate folder mapping from src/components directory structure
 function generateFolderMapping(): { [key: string]: string } {
-  const componentsDir = path.join(process.cwd(), "src", "components");
+  const componentsDir = path.join(process.cwd(), 'src', 'components');
   const mapping: { [key: string]: string } = {};
 
   if (!fs.existsSync(componentsDir)) {
-    console.warn("[WARN] src/components directory not found, using empty folder mapping");
+    console.warn('[WARN] src/components directory not found, using empty folder mapping');
     return mapping;
   }
 
@@ -91,7 +101,7 @@ function findStoryFiles(dir: string): string[] {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       storyFiles.push(...findStoryFiles(fullPath));
-    } else if (entry.name.endsWith(".stories.tsx")) {
+    } else if (entry.name.endsWith('.stories.tsx')) {
       storyFiles.push(fullPath);
     }
   }
@@ -110,15 +120,15 @@ export function detectStoryPattern(declaration: VariableDeclaration): StoryPatte
   // Check type annotation first
   if (typeNode) {
     const typeText = typeNode.getText();
-    if (typeText === "Story" || typeText.includes("StoryObj")) {
-      return "csf3-object";
+    if (typeText === 'Story' || typeText.includes('StoryObj')) {
+      return 'csf3-object';
     }
-    if (typeText.includes("React.FC") || typeText.includes("FC<")) {
-      return "react-fc";
+    if (typeText.includes('React.FC') || typeText.includes('FC<')) {
+      return 'react-fc';
     }
   }
 
-  if (!initializer) return "unknown";
+  if (!initializer) return 'unknown';
 
   // Check initializer pattern
   if (Node.isCallExpression(initializer)) {
@@ -126,21 +136,21 @@ export function detectStoryPattern(declaration: VariableDeclaration): StoryPatte
     // Template.bind({}) pattern
     if (Node.isPropertyAccessExpression(expression)) {
       const propName = expression.getName();
-      if (propName === "bind") {
-        return "csf2-template-bind";
+      if (propName === 'bind') {
+        return 'csf2-template-bind';
       }
     }
   }
 
   if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
-    return "arrow-function";
+    return 'arrow-function';
   }
 
   if (Node.isObjectLiteralExpression(initializer)) {
-    return "csf3-object";
+    return 'csf3-object';
   }
 
-  return "unknown";
+  return 'unknown';
 }
 
 /** Extracts the name property value from a story object if present */
@@ -148,7 +158,7 @@ export function extractNameFromStory(declaration: VariableDeclaration): string |
   const initializer = declaration.getInitializer();
   if (!initializer || !Node.isObjectLiteralExpression(initializer)) return undefined;
 
-  const nameProp = initializer.getProperty("name");
+  const nameProp = initializer.getProperty('name');
   if (!nameProp || !Node.isPropertyAssignment(nameProp)) return undefined;
 
   const nameInit = nameProp.getInitializer();
@@ -176,7 +186,7 @@ export function findStoryNameAssignment(declaration: VariableDeclaration): strin
     const objExpr = left.getExpression();
     if (!Node.isIdentifier(objExpr) || objExpr.getText() !== exportName) continue;
 
-    if (left.getName() !== "storyName") continue;
+    if (left.getName() !== 'storyName') continue;
 
     const right = expr.getRight();
     if (Node.isStringLiteral(right)) {
@@ -194,18 +204,17 @@ export function parseStoryFile(filePath: string, content: string): StoryCase[] {
 
   // Extract component type from path using detected folder mapping
   const componentTypes = Object.keys(FOLDER_MAPPING);
-  const componentTypePattern = componentTypes.length > 0
-    ? new RegExp(`components/(${componentTypes.join("|")})/`)
-    : null;
+  const componentTypePattern =
+    componentTypes.length > 0 ? new RegExp(`components/(${componentTypes.join('|')})/`) : null;
   const pathMatch = componentTypePattern ? filePath.match(componentTypePattern) : null;
-  const componentType = pathMatch ? pathMatch[1] : "other";
+  const componentType = pathMatch ? pathMatch[1] : 'other';
 
   // Create a ts-morph project and parse the file
   const project = new Project({ useInMemoryFileSystem: true });
-  const sourceFile = project.createSourceFile("temp.tsx", content);
+  const sourceFile = project.createSourceFile('temp.tsx', content);
 
   // Extract component name from meta/default export title
-  let componentName = path.basename(filePath, ".stories.tsx");
+  let componentName = path.basename(filePath, '.stories.tsx');
   const defaultExport = sourceFile.getDefaultExportSymbol();
   if (defaultExport) {
     const declarations = defaultExport.getDeclarations();
@@ -213,11 +222,11 @@ export function parseStoryFile(filePath: string, content: string): StoryCase[] {
       if (Node.isExportAssignment(decl)) {
         const expr = decl.getExpression();
         if (Node.isObjectLiteralExpression(expr)) {
-          const titleProp = expr.getProperty("title");
+          const titleProp = expr.getProperty('title');
           if (titleProp && Node.isPropertyAssignment(titleProp)) {
             const titleInit = titleProp.getInitializer();
             if (titleInit && Node.isStringLiteral(titleInit)) {
-              const titleParts = titleInit.getLiteralText().split("/");
+              const titleParts = titleInit.getLiteralText().split('/');
               componentName = titleParts[titleParts.length - 1] || componentName;
             }
           }
@@ -227,15 +236,15 @@ export function parseStoryFile(filePath: string, content: string): StoryCase[] {
   }
 
   // Also check for `const meta = { title: ... }` pattern
-  const metaVar = sourceFile.getVariableDeclaration("meta");
+  const metaVar = sourceFile.getVariableDeclaration('meta');
   if (metaVar) {
     const init = metaVar.getInitializer();
     if (init && Node.isObjectLiteralExpression(init)) {
-      const titleProp = init.getProperty("title");
+      const titleProp = init.getProperty('title');
       if (titleProp && Node.isPropertyAssignment(titleProp)) {
         const titleInit = titleProp.getInitializer();
         if (titleInit && Node.isStringLiteral(titleInit)) {
-          const titleParts = titleInit.getLiteralText().split("/");
+          const titleParts = titleInit.getLiteralText().split('/');
           componentName = titleParts[titleParts.length - 1] || componentName;
         }
       }
@@ -247,13 +256,13 @@ export function parseStoryFile(filePath: string, content: string): StoryCase[] {
 
   for (const [exportName, declarations] of exportedDeclarations) {
     // Skip default export, meta, and Template
-    if (exportName === "default" || exportName === "meta" || exportName === "Template") continue;
+    if (exportName === 'default' || exportName === 'meta' || exportName === 'Template') continue;
 
     for (const decl of declarations) {
       if (!Node.isVariableDeclaration(decl)) continue;
 
       const pattern = detectStoryPattern(decl);
-      if (pattern === "unknown") continue;
+      if (pattern === 'unknown') continue;
 
       const lineNumber = decl.getStartLineNumber();
 
@@ -302,19 +311,29 @@ export function parseStoryFile(filePath: string, content: string): StoryCase[] {
 async function getFolders(): Promise<FolderCache> {
   if (Object.keys(folderIdCache).length > 0) return folderIdCache;
   const url = `${ZEPHYR_BASE_URL}/folders?projectKey=${PROJECT_KEY}&folderType=TEST_CASE&maxResults=100`;
-  const response = await fetch(url, { method: "GET", headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" } });
-  if (!response.ok) { console.warn("Could not fetch folders"); return {}; }
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${getZephyrToken()}`, 'Content-Type': 'application/json' },
+  });
+  if (!response.ok) {
+    console.warn('Could not fetch folders');
+    return {};
+  }
   const data = await response.json();
   const folders = data.values || [];
   for (const [compType, folderName] of Object.entries(FOLDER_MAPPING)) {
     const existing = folders.find((f: ZephyrFolder) => f.name === folderName);
-    if (existing) { folderIdCache[compType] = existing.id; }
-    else {
+    if (existing) {
+      folderIdCache[compType] = existing.id;
+    } else {
       try {
         const newF = await createFolder(folderName);
         folderIdCache[compType] = newF.id;
         console.log(`[INFO] Created folder: ${folderName}`);
-      } catch (e: unknown) { console.warn(`[WARN] Could not create folder ${folderName}:`, e instanceof Error ? e.message : String(e)); folderIdCache[compType] = null; }
+      } catch (e: unknown) {
+        console.warn(`[WARN] Could not create folder ${folderName}:`, e instanceof Error ? e.message : String(e));
+        folderIdCache[compType] = null;
+      }
     }
   }
   return folderIdCache;
@@ -322,8 +341,15 @@ async function getFolders(): Promise<FolderCache> {
 
 async function createFolder(folderName: string): Promise<ZephyrFolder> {
   const url = `${ZEPHYR_BASE_URL}/folders`;
-  const response = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" }, body: JSON.stringify({ projectKey: PROJECT_KEY, name: folderName, folderType: "TEST_CASE" }) });
-  if (!response.ok) { const errorText = await response.text(); throw new Error(`Failed to create folder: ${response.status} ${errorText}`); }
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${getZephyrToken()}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ projectKey: PROJECT_KEY, name: folderName, folderType: 'TEST_CASE' }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to create folder: ${response.status} ${errorText}`);
+  }
   return await response.json();
 }
 
@@ -335,11 +361,21 @@ async function getFolderId(componentType: string): Promise<string | null> {
 async function createTestCase(testName: string, objective: string, folderId: string | null): Promise<ZephyrTestCase> {
   const url = `${ZEPHYR_BASE_URL}/testcases`;
   const body: { projectKey: string; name: string; objective: string; labels: string[]; folderId?: string } = {
-    projectKey: PROJECT_KEY, name: testName, objective, labels: ZEPHYR_LABELS,
+    projectKey: PROJECT_KEY,
+    name: testName,
+    objective,
+    labels: ZEPHYR_LABELS,
   };
   if (folderId) body.folderId = folderId;
-  const response = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  if (!response.ok) { const errorText = await response.text(); throw new Error(`Failed to create test case: ${response.status} ${errorText}`); }
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${getZephyrToken()}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to create test case: ${response.status} ${errorText}`);
+  }
   return await response.json();
 }
 
@@ -349,7 +385,7 @@ async function createTestCase(testName: string, objective: string, folderId: str
 
 /** Converts PascalCase/camelCase to human-readable format */
 function toHumanName(name: string): string {
-  return name.replace(/([A-Z])/g, " $1").trim();
+  return name.replace(/([A-Z])/g, ' $1').trim();
 }
 
 /** Updates a story file to add a Zephyr ID using AST manipulation */
@@ -358,9 +394,9 @@ function updateStoryFile(
   _lineNumber: number,
   exportName: string,
   zephyrKey: string,
-  pattern: StoryPattern
+  pattern: StoryPattern,
 ): boolean {
-  const content = fs.readFileSync(filePath, "utf-8");
+  const content = fs.readFileSync(filePath, 'utf-8');
   const project = new Project({ useInMemoryFileSystem: true });
   const sourceFile = project.createSourceFile(filePath, content);
 
@@ -377,10 +413,10 @@ function updateStoryFile(
   let updated = false;
 
   switch (pattern) {
-    case "csf3-object": {
+    case 'csf3-object': {
       const initializer = declaration.getInitializer();
       if (initializer && Node.isObjectLiteralExpression(initializer)) {
-        const nameProp = initializer.getProperty("name");
+        const nameProp = initializer.getProperty('name');
         if (nameProp && Node.isPropertyAssignment(nameProp)) {
           // Update existing name property
           const nameInit = nameProp.getInitializer();
@@ -391,16 +427,15 @@ function updateStoryFile(
           }
         } else {
           // Add name property at the beginning
-          initializer.insertPropertyAssignment(0, { name: "name", initializer: `"${newName}"` });
+          initializer.insertPropertyAssignment(0, { name: 'name', initializer: `"${newName}"` });
           updated = true;
         }
       }
       break;
     }
 
-    case "csf2-template-bind":
-    case "arrow-function":
-    case "react-fc": {
+    case 'csf2-template-bind':
+    case 'arrow-function': {
       // For these patterns, add a .storyName assignment after the declaration
       // First check if one already exists
       const existingAssignment = findStoryNameAssignment(declaration);
@@ -415,7 +450,7 @@ function updateStoryFile(
           if (!Node.isPropertyAccessExpression(left)) continue;
           const objExpr = left.getExpression();
           if (!Node.isIdentifier(objExpr) || objExpr.getText() !== exportName) continue;
-          if (left.getName() !== "storyName") continue;
+          if (left.getName() !== 'storyName') continue;
 
           const right = expr.getRight();
           if (Node.isStringLiteral(right)) {
@@ -437,6 +472,43 @@ function updateStoryFile(
       break;
     }
 
+    case 'react-fc': {
+      // Convert React.FC to CSF3 format: { name: "...", render: () => ... }
+      const initializer = declaration.getInitializer();
+      if (initializer && Node.isArrowFunction(initializer)) {
+        // Get the function body
+        const body = initializer.getBody();
+        const bodyText = body.getText();
+
+        // Check if the body uses React hooks (useState, useEffect, useCallback, useMemo, useRef, useContext, useReducer)
+        // Match both direct hook calls (useState) and React namespace calls (React.useState)
+        const usesHooks = /\buse[A-Z]\w*\s*\(/.test(bodyText) || /\bReact\.use[A-Z]\w*\s*\(/.test(bodyText);
+
+        if (usesHooks) {
+          // Extract as a separate component to satisfy React hooks rules
+          const componentName = `${exportName}Component`;
+          const varStatement = declaration.getVariableStatement();
+          if (varStatement) {
+            const stmtIndex = sourceFile.getStatements().indexOf(varStatement);
+            // Insert the component definition before the story
+            sourceFile.insertStatements(stmtIndex, `const ${componentName} = () => ${bodyText};\n`);
+            // Build the CSF3 object referencing the component
+            const csf3Object = `{\n  name: "${newName}",\n  render: () => <${componentName} />,\n}`;
+            declaration.setInitializer(csf3Object);
+            declaration.setType('Story');
+            updated = true;
+          }
+        } else {
+          // No hooks - can inline the render function
+          const csf3Object = `{\n  name: "${newName}",\n  render: () => ${bodyText},\n}`;
+          declaration.setInitializer(csf3Object);
+          declaration.setType('Story');
+          updated = true;
+        }
+      }
+      break;
+    }
+
     default:
       console.warn(`  [WARN] Unknown pattern "${pattern}" for story "${exportName}"`);
       return false;
@@ -449,31 +521,31 @@ function updateStoryFile(
   }
 
   // Write the updated file
-  fs.writeFileSync(filePath, sourceFile.getFullText(), "utf-8");
+  fs.writeFileSync(filePath, sourceFile.getFullText(), 'utf-8');
   return true;
 }
 
 function generateObjective(story: StoryCase): string {
-  const humanName = story.storyName.replace(/([A-Z])/g, " $1").trim();
+  const humanName = story.storyName.replace(/([A-Z])/g, ' $1').trim();
   const relativePath = path.relative(process.cwd(), story.filePath);
   return `Component: ${story.componentName}<br/>Story: ${humanName}<br/>File: \`${relativePath}\``;
 }
 
 async function main(): Promise<void> {
-  console.log("[INFO] Scanning for story files...\n");
+  console.log('[INFO] Scanning for story files...\n');
   console.log(`[INFO] Configuration:`);
   console.log(`  Project Key: ${PROJECT_KEY}`);
-  console.log(`  Labels: ${ZEPHYR_LABELS.join(", ")}`);
+  console.log(`  Labels: ${ZEPHYR_LABELS.join(', ')}`);
   console.log(`  Folder Prefix: ${FOLDER_PREFIX}`);
-  console.log(`  Detected Component Types: ${Object.keys(FOLDER_MAPPING).join(", ") || "(none)"}\n`);
+  console.log(`  Detected Component Types: ${Object.keys(FOLDER_MAPPING).join(', ') || '(none)'}\n`);
 
-  const srcDir = path.join(process.cwd(), "src");
+  const srcDir = path.join(process.cwd(), 'src');
   const storyFiles = findStoryFiles(srcDir);
   console.log(`[INFO] Found ${storyFiles.length} story file(s)\n`);
 
   const allStories: StoryCase[] = [];
   for (const file of storyFiles) {
-    const content = fs.readFileSync(file, "utf-8");
+    const content = fs.readFileSync(file, 'utf-8');
     const stories = parseStoryFile(file, content);
     allStories.push(...stories);
   }
@@ -485,7 +557,7 @@ async function main(): Promise<void> {
   console.log(`[INFO] Stories needing Zephyr IDs: ${storiesNeedingIds.length}\n`);
 
   if (storiesNeedingIds.length === 0) {
-    console.log("[INFO] All stories already have Zephyr IDs!\n");
+    console.log('[INFO] All stories already have Zephyr IDs!\n');
     return;
   }
 
@@ -500,7 +572,7 @@ async function main(): Promise<void> {
     try {
       const folderId = await getFolderId(story.componentType);
       const objective = generateObjective(story);
-      const humanName = story.storyName.replace(/([A-Z])/g, " $1").trim();
+      const humanName = story.storyName.replace(/([A-Z])/g, ' $1').trim();
       const testName = `${story.componentName} - ${humanName}`;
 
       console.log(`  [API] Creating test case in Zephyr...`);
@@ -508,7 +580,13 @@ async function main(): Promise<void> {
       console.log(`  [SUCCESS] Created ${result.key}`);
 
       console.log(`  [UPDATE] Updating story file with ${result.key}`);
-      const updateSuccess = updateStoryFile(story.filePath, story.lineNumber, story.exportName, result.key, story.pattern);
+      const updateSuccess = updateStoryFile(
+        story.filePath,
+        story.lineNumber,
+        story.exportName,
+        result.key,
+        story.pattern,
+      );
 
       if (updateSuccess) {
         successCount++;
@@ -522,21 +600,21 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log("\n=====================================");
+  console.log('\n=====================================');
   console.log(`[INFO] Sync complete!`);
   console.log(`  Fully synced: ${successCount}`);
   console.log(`  Created but needs manual update: ${updateFailCount}`);
   console.log(`  Failed: ${failCount}`);
   if (failCount > 0) process.exit(1);
   if (updateFailCount > 0) {
-    console.log("\n[WARN] Some stories require manual Zephyr ID tagging. See warnings above.");
+    console.log('\n[WARN] Some stories require manual Zephyr ID tagging. See warnings above.');
   }
 }
 
 // Only run main when script is executed directly (not imported for testing)
-if (process.env.NODE_ENV !== "test" && process.argv[1]?.includes("sync-storybook-zephyr")) {
+if (process.env.NODE_ENV !== 'test' && process.argv[1]?.includes('sync-storybook-zephyr')) {
   main().catch((error) => {
-    console.error("[ERROR] Fatal error:", error);
+    console.error('[ERROR] Fatal error:', error);
     process.exit(1);
   });
 }

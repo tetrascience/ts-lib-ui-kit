@@ -28,6 +28,7 @@ type Story = StoryObj<typeof Button>;
 
 // Basic examples
 export const Primary: Story = {
+  name: "[SW-T727] Primary",
   args: {
     children: "Primary Button",
     variant: "primary",
@@ -35,6 +36,7 @@ export const Primary: Story = {
 };
 
 export const Secondary: Story = {
+  name: "[SW-T728] Secondary",
   args: {
     children: "Secondary Button",
     variant: "secondary",
@@ -42,6 +44,7 @@ export const Secondary: Story = {
 };
 
 export const Tertiary: Story = {
+  name: "[SW-T729] Tertiary",
   args: {
     children: "Tertiary Button",
     variant: "tertiary",
@@ -50,6 +53,7 @@ export const Tertiary: Story = {
 
 // Size examples
 export const Small: Story = {
+  name: "[SW-T730] Small",
   args: {
     children: "Small Button",
     size: "small",
@@ -57,6 +61,7 @@ export const Small: Story = {
 };
 
 export const Medium: Story = {
+  name: "[SW-T731] Medium",
   args: {
     children: "Medium Button",
     size: "medium",
@@ -65,6 +70,7 @@ export const Medium: Story = {
 
 // State examples
 export const Disabled: Story = {
+  name: "[SW-T732] Disabled",
   args: {
     children: "Disabled Button",
     disabled: true,
@@ -72,6 +78,7 @@ export const Disabled: Story = {
 };
 
 export const Loading: Story = {
+  name: "[SW-T733] Loading",
   args: {
     children: "Loading Button",
     loading: true,
@@ -80,6 +87,7 @@ export const Loading: Story = {
 
 // With icons
 export const WithLeftIcon: Story = {
+  name: "[SW-T734] With Left Icon",
   args: {
     children: "Search",
     leftIcon: <Icon name={IconName.SEARCH} />,
@@ -87,6 +95,7 @@ export const WithLeftIcon: Story = {
 };
 
 export const WithRightIcon: Story = {
+  name: "[SW-T735] With Right Icon",
   args: {
     children: "Next",
     rightIcon: <Icon name={IconName.CHEVRON_DOWN} />,
@@ -94,6 +103,7 @@ export const WithRightIcon: Story = {
 };
 
 export const WithBothIcons: Story = {
+  name: "[SW-T736] With Both Icons",
   args: {
     children: "Search and Continue",
     leftIcon: <Icon name={IconName.SEARCH} />,
@@ -103,6 +113,7 @@ export const WithBothIcons: Story = {
 
 // Icon only button
 export const IconOnly: Story = {
+  name: "[SW-T737] Icon Only",
   args: {
     leftIcon: <Icon name={IconName.SEARCH} />,
     "aria-label": "Search",
@@ -110,6 +121,7 @@ export const IconOnly: Story = {
 };
 
 export const FullWidth: Story = {
+  name: "[SW-T738] Full Width",
   args: {
     children: "Full Width Button",
     fullWidth: true,
@@ -118,6 +130,7 @@ export const FullWidth: Story = {
 
 // Theme examples
 export const WithRedTheme: Story = {
+  name: "[SW-T739] With Red Theme",
   args: {
     children: "Red Theme Button",
     variant: "primary",
@@ -140,6 +153,7 @@ export const WithRedTheme: Story = {
 };
 
 export const WithPurpleTheme: Story = {
+  name: "[SW-T740] With Purple Theme",
   args: {
     children: "Purple Theme Button",
     variant: "primary",
@@ -162,6 +176,7 @@ export const WithPurpleTheme: Story = {
 };
 
 export const WithCustomRadius: Story = {
+  name: "[SW-T741] With Custom Radius",
   args: {
     children: "Sharp Corners Button",
     variant: "primary",
@@ -182,6 +197,7 @@ export const WithCustomRadius: Story = {
 };
 
 export const WithFullCustomTheme: Story = {
+  name: "[SW-T742] With Full Custom Theme",
   args: {
     children: "Fully Custom Button",
     variant: "primary",

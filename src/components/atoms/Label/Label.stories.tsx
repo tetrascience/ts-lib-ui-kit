@@ -15,12 +15,14 @@ export default meta;
 type Story = StoryObj<typeof Label>;
 
 export const Default: Story = {
+  name: "[SW-T808] Default",
   args: {
     children: "Label",
   },
 };
 
 export const WithInfoIcon: Story = {
+  name: "[SW-T809] With Info Icon",
   args: {
     children: "Label",
     infoText: "This is additional information about the label",
@@ -28,6 +30,7 @@ export const WithInfoIcon: Story = {
 };
 
 export const Complete: Story = {
+  name: "[SW-T810] Complete",
   args: {
     children: "Label",
     infoText: "This is additional information about the label",

@@ -22,6 +22,7 @@ export default meta;
 type Story = StoryObj<typeof LaunchContent>;
 
 export const Default: Story = {
+  name: "[SW-T916] Default",
   args: {
     initialCode: `protocolSchema: v3
 name: v3
@@ -34,6 +35,7 @@ steps: []`,
 };
 
 export const WithCallbacks: Story = {
+  name: "[SW-T917] With Callbacks",
   args: {
     ...Default.args,
     onDeploy: () => console.log("Deploy clicked!"),
@@ -42,6 +44,7 @@ export const WithCallbacks: Story = {
 };
 
 export const WithDeploymentFeedback: Story = {
+  name: "[SW-T918] With Deployment Feedback",
   args: {
     ...Default.args,
     onDeploy: () => {
@@ -52,14 +55,14 @@ export const WithDeploymentFeedback: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Click the "Deploy" button to see toast notifications showing deployment status and success.',
+        story: 'Click the "Deploy" button to see toast notifications showing deployment status and success.',
       },
     },
   },
 };
 
 export const EmptyEditor: Story = {
+  name: "[SW-T919] Empty Editor",
   args: {
     initialCode: "",
     versions: ["v0.0.7", "v0.0.6", "v0.0.5"],

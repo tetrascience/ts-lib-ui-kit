@@ -24,18 +24,13 @@ type Story = StoryObj<typeof ButtonControlGroup>;
 
 // SVG Icons
 const Icon = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 20 20"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="4" y="4" width="12" height="12" rx="2" fill="currentColor" />
   </svg>
 );
 
 export const VerticalGroup: Story = {
+  name: "[SW-T875] Vertical Group",
   args: {
     controls: [
       { id: "btn1", icon: <Icon /> },
@@ -49,6 +44,7 @@ export const VerticalGroup: Story = {
 };
 
 export const HorizontalGroup: Story = {
+  name: "[SW-T876] Horizontal Group",
   args: {
     controls: [
       { id: "btn1", icon: <Icon /> },
@@ -62,6 +58,7 @@ export const HorizontalGroup: Story = {
 };
 
 export const DisabledGroup: Story = {
+  name: "[SW-T877] Disabled Group",
   args: {
     controls: [
       { id: "btn1", icon: <Icon /> },
@@ -75,6 +72,7 @@ export const DisabledGroup: Story = {
 };
 
 export const MixedStateGroup: Story = {
+  name: "[SW-T878] Mixed State Group",
   args: {
     controls: [
       { id: "btn1", icon: <Icon /> },
@@ -107,5 +105,6 @@ const InteractiveGroupExample = () => {
 };
 
 export const Interactive: Story = {
+  name: "[SW-T879] Interactive",
   render: () => <InteractiveGroupExample />,
 };

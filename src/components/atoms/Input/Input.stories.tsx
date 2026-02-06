@@ -27,12 +27,14 @@ export default meta;
 type Story = StoryObj<typeof Input>;
 
 export const Default: Story = {
+  name: "[SW-T799] Default",
   args: {
     placeholder: "Placeholder",
   },
 };
 
 export const Small: Story = {
+  name: "[SW-T800] Small",
   args: {
     placeholder: "Placeholder",
     size: "small",
@@ -40,6 +42,7 @@ export const Small: Story = {
 };
 
 export const XSmall: Story = {
+  name: "[SW-T801] X Small",
   args: {
     placeholder: "Placeholder",
     size: "xsmall",
@@ -47,6 +50,7 @@ export const XSmall: Story = {
 };
 
 export const WithLeftIcon: Story = {
+  name: "[SW-T802] With Left Icon",
   args: {
     placeholder: "Placeholder",
     iconLeft: <Icon name={IconName.SEARCH} />,
@@ -54,6 +58,7 @@ export const WithLeftIcon: Story = {
 };
 
 export const WithRightIcon: Story = {
+  name: "[SW-T803] With Right Icon",
   args: {
     placeholder: "Placeholder",
     iconRight: <Icon name={IconName.CHEVRON_DOWN} />,
@@ -61,6 +66,7 @@ export const WithRightIcon: Story = {
 };
 
 export const WithBothIcons: Story = {
+  name: "[SW-T804] With Both Icons",
   args: {
     placeholder: "Placeholder",
     iconLeft: <Icon name={IconName.SEARCH} />,
@@ -69,6 +75,7 @@ export const WithBothIcons: Story = {
 };
 
 export const Error: Story = {
+  name: "[SW-T805] Error",
   args: {
     placeholder: "Placeholder",
     error: true,
@@ -76,6 +83,7 @@ export const Error: Story = {
 };
 
 export const Disabled: Story = {
+  name: "[SW-T806] Disabled",
   args: {
     placeholder: "Placeholder",
     disabled: true,
@@ -83,6 +91,7 @@ export const Disabled: Story = {
 };
 
 export const AllVariations: Story = {
+  name: "[SW-T807] All Variations",
   render: () => (
     <div
       style={{
@@ -95,14 +104,8 @@ export const AllVariations: Story = {
       <Input placeholder="Default" />
       <Input placeholder="Small" size="small" />
       <Input placeholder="XSmall" size="xsmall" />
-      <Input
-        placeholder="With left icon"
-        iconLeft={<Icon name={IconName.SEARCH} />}
-      />
-      <Input
-        placeholder="With right icon"
-        iconRight={<Icon name={IconName.CHEVRON_DOWN} />}
-      />
+      <Input placeholder="With left icon" iconLeft={<Icon name={IconName.SEARCH} />} />
+      <Input placeholder="With right icon" iconRight={<Icon name={IconName.CHEVRON_DOWN} />} />
       <Input
         placeholder="With both icons"
         iconLeft={<Icon name={IconName.SEARCH} />}

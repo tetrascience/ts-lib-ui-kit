@@ -24,6 +24,7 @@ export default meta;
 type Story = StoryObj<typeof FormField>;
 
 export const Default: Story = {
+  name: "[SW-T906] Default",
   args: {
     label: "Label",
     placeholder: "Placeholder",
@@ -31,6 +32,7 @@ export const Default: Story = {
 };
 
 export const WithInfoText: Story = {
+  name: "[SW-T907] With Info Text",
   args: {
     label: "Label",
     infoText: "This is some helpful information about this field",
@@ -39,6 +41,7 @@ export const WithInfoText: Story = {
 };
 
 export const WithSupportiveText: Story = {
+  name: "[SW-T908] With Supportive Text",
   args: {
     label: "Label",
     placeholder: "Placeholder",
@@ -47,6 +50,7 @@ export const WithSupportiveText: Story = {
 };
 
 export const WithSupportiveCheck: Story = {
+  name: "[SW-T909] With Supportive Check",
   args: {
     label: "Label",
     placeholder: "Placeholder",
@@ -56,6 +60,7 @@ export const WithSupportiveCheck: Story = {
 };
 
 export const WithError: Story = {
+  name: "[SW-T910] With Error",
   args: {
     label: "Label",
     placeholder: "Placeholder",
@@ -65,18 +70,13 @@ export const WithError: Story = {
 };
 
 export const WithIconLeft: Story = {
+  name: "[SW-T911] With Icon Left",
   args: {
     label: "Label",
     placeholder: "Placeholder",
     supportiveText: "Supportive Text",
     iconLeft: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 16 16"
-        fill="none"
-      >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
         <path
           fillRule="evenodd"
           clipRule="evenodd"
@@ -89,18 +89,13 @@ export const WithIconLeft: Story = {
 };
 
 export const WithIconRight: Story = {
+  name: "[SW-T912] With Icon Right",
   args: {
     label: "Label",
     placeholder: "Placeholder",
     supportiveText: "Supportive Text",
     iconRight: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 16 16"
-        fill="none"
-      >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
         <path
           fillRule="evenodd"
           clipRule="evenodd"
@@ -113,6 +108,7 @@ export const WithIconRight: Story = {
 };
 
 export const Disabled: Story = {
+  name: "[SW-T913] Disabled",
   args: {
     label: "Label",
     placeholder: "Placeholder",
@@ -122,6 +118,7 @@ export const Disabled: Story = {
 };
 
 export const Complete: Story = {
+  name: "[SW-T914] Complete",
   args: {
     label: "Label",
     infoText: "Additional information about this field",
@@ -132,17 +129,12 @@ export const Complete: Story = {
 };
 
 export const AsSelect: Story = {
+  name: "[SW-T915] As Select",
   args: {
     label: "Label",
     placeholder: "Placeholder",
     iconRight: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 16 16"
-        fill="none"
-      >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
         <path
           fillRule="evenodd"
           clipRule="evenodd"

@@ -14,11 +14,7 @@ const meta: Meta<typeof Histogram> = {
 export default meta;
 type Story = StoryObj<typeof Histogram>;
 
-const generateNormalData = (
-  mean: number,
-  stdDev: number,
-  count: number
-): number[] => {
+const generateNormalData = (mean: number, stdDev: number, count: number): number[] => {
   const data: number[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -33,6 +29,7 @@ const generateNormalData = (
 };
 
 export const Default: Story = {
+  name: "[SW-T990] Default",
   args: {
     dataSeries: {
       x: generateNormalData(20, 8, 200),
@@ -47,6 +44,7 @@ export const Default: Story = {
 };
 
 export const WithCustomColor: Story = {
+  name: "[SW-T991] With Custom Color",
   args: {
     dataSeries: {
       x: generateNormalData(20, 8, 200),
@@ -62,6 +60,7 @@ export const WithCustomColor: Story = {
 };
 
 export const WithCustomBins: Story = {
+  name: "[SW-T992] With Custom Bins",
   args: {
     dataSeries: {
       x: generateNormalData(20, 8, 200),
@@ -82,6 +81,7 @@ export const WithCustomBins: Story = {
 };
 
 export const StackedHistogram: Story = {
+  name: "[SW-T993] Stacked Histogram",
   args: {
     dataSeries: [
       {
@@ -104,6 +104,7 @@ export const StackedHistogram: Story = {
 };
 
 export const MultipleSeries: Story = {
+  name: "[SW-T994] Multiple Series",
   args: {
     dataSeries: [
       {
@@ -136,6 +137,7 @@ export const MultipleSeries: Story = {
 };
 
 export const WithDistributionLine: Story = {
+  name: "[SW-T995] With Distribution Line",
   args: {
     dataSeries: {
       x: generateNormalData(20, 8, 200),
@@ -152,6 +154,7 @@ export const WithDistributionLine: Story = {
 };
 
 export const WithCustomBinsAndDistributionLine: Story = {
+  name: "[SW-T996] With Custom Bins And Distribution Line",
   args: {
     dataSeries: {
       x: generateNormalData(20, 8, 200),
@@ -174,6 +177,7 @@ export const WithCustomBinsAndDistributionLine: Story = {
 };
 
 export const MultipleSeriesWithDistributionLines: Story = {
+  name: "[SW-T997] Multiple Series With Distribution Lines",
   args: {
     dataSeries: [
       {

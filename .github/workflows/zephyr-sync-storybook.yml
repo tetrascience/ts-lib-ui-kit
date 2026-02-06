@@ -17,7 +17,6 @@ jobs:
       (github.event_name == 'workflow_dispatch' || github.event.label.name == 'zephyr_sync') &&
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -28,8 +27,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: "20"
-          cache: "yarn"
+          node-version: '20'
+          cache: 'yarn'
 
       - name: Enable Corepack
         run: corepack enable
@@ -45,12 +44,11 @@ jobs:
       - name: Commit updated story files
         uses: stefanzweifel/git-auto-commit-action@8621497c8c39c72f3e2a999a26b4ca1b5058a842 # v5.1.0
         with:
-          commit_message: "chore: add Zephyr test case IDs to stories"
-          file_pattern: "src/**/*.stories.tsx"
+          commit_message: 'chore: add Zephyr test case IDs to stories'
+          file_pattern: 'src/**/*.stories.tsx'
 
       - name: Remove zephyr_sync label
         if: github.event_name == 'pull_request'
         uses: actions-ecosystem/action-remove-labels@2ce5d41b4b6aa8503e285553f75ed56e0a40bae0 # v1.3.0
         with:
           labels: zephyr_sync
-

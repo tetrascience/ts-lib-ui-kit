@@ -14,6 +14,7 @@ export default meta;
 type Story = StoryObj<typeof Main>;
 
 export const Default: Story = {
+  name: "[SW-T1011] Default",
   args: {
     hostname: "localhost:3000",
     userProfile: {

@@ -24,6 +24,7 @@ export default meta;
 type Story = StoryObj<typeof TabGroup>;
 
 export const Default: Story = {
+  name: "[SW-T944] Default",
   args: {
     tabs: [
       { id: "tab1", label: "Pipeline Builder" },
@@ -35,6 +36,7 @@ export const Default: Story = {
 };
 
 export const Medium: Story = {
+  name: "[SW-T945] Medium",
   args: {
     tabs: [
       { id: "tab1", label: "Pipeline Builder" },
@@ -47,6 +49,7 @@ export const Medium: Story = {
 };
 
 export const Small: Story = {
+  name: "[SW-T946] Small",
   args: {
     tabs: [
       { id: "tab1", label: "Pipeline Builder" },
@@ -59,6 +62,7 @@ export const Small: Story = {
 };
 
 export const Disabled: Story = {
+  name: "[SW-T947] Disabled",
   args: {
     tabs: [
       { id: "tab1", label: "Pipeline Builder" },
@@ -71,6 +75,7 @@ export const Disabled: Story = {
 };
 
 export const WithDisabledTab: Story = {
+  name: "[SW-T948] With Disabled Tab",
   args: {
     tabs: [
       { id: "tab1", label: "Pipeline Builder" },
@@ -102,5 +107,6 @@ const InteractiveExample = () => {
 };
 
 export const Interactive: Story = {
+  name: "[SW-T949] Interactive",
   render: () => <InteractiveExample />,
 };

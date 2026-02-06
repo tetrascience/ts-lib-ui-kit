@@ -15,12 +15,14 @@ export default meta;
 type Story = StoryObj<typeof SupportiveText>;
 
 export const Default: Story = {
+  name: "[SW-T835] Default",
   args: {
     children: "This is a supportive text",
   },
 };
 
 export const WithCheckIcon: Story = {
+  name: "[SW-T836] With Check Icon",
   args: {
     children: "This is a supportive text with check icon",
     showCheck: true,

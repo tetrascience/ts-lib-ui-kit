@@ -81,5 +81,5 @@ jobs:
           retention-days: 7
 
       - name: ❌ Fail if tests failed
-        if: steps.test.outcome == 'failure' || steps.test_filtered.outcome == 'failure'
+        if: steps.test.outcome == 'failure' || steps.test_filtered.outcome == 'failure' || steps.test.outcome == 'error' || steps.test_filtered.outcome == 'error'
         run: exit 1

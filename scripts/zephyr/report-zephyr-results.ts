@@ -102,6 +102,13 @@ function getZephyrToken(): string {
   return token;
 }
 
+/** Gets the GitHub Actions run URL from environment variable */
+function getGitHubActionsUrl(): string | null {
+  // GITHUB_ACTIONS_URL is set by the workflow to point to the correct run
+  // (the Storybook Tests run, not the report workflow)
+  return process.env.GITHUB_ACTIONS_URL || null;
+}
+
 /** Validates that a cache file path is safe (no path traversal) */
 export function validateCacheFilePath(cacheFile: string): void {
   if (cacheFile.includes('/') || cacheFile.includes('\\') || cacheFile.startsWith('..')) {
@@ -314,7 +321,18 @@ async function reportTestExecution(cycleKey: string, result: TestResult): Promis
     statusName: result.status,
   };
   if (result.executionTime) body.executionTime = result.executionTime;
-  if (result.comment) body.comment = result.comment;
+
+  // Build comment with GitHub Actions link if available
+  const githubUrl = getGitHubActionsUrl();
+  const githubLink = githubUrl ? `View CI run: ${githubUrl}` : null;
+
+  if (result.comment && githubLink) {
+    body.comment = `${result.comment}\n\n${githubLink}`;
+  } else if (result.comment) {
+    body.comment = result.comment;
+  } else if (githubLink) {
+    body.comment = githubLink;
+  }
 
   const response = await fetch(url, {
     method: 'POST',

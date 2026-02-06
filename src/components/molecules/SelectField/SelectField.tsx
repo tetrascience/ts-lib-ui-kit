@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import React from "react";
 import styled from "styled-components";
 import { Dropdown, DropdownProps } from "@atoms/Dropdown";
 import { Label } from "@atoms/Label";
@@ -10,6 +10,7 @@ export interface SelectFieldProps extends Omit<DropdownProps, "className"> {
   supportiveText?: string;
   showSupportiveCheck?: boolean;
   className?: string;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
 const SelectFieldContainer = styled.div`
@@ -23,32 +24,26 @@ const StyledLabel = styled(Label)`
   margin-bottom: 2px;
 `;
 
-export const SelectField = forwardRef<HTMLDivElement, SelectFieldProps>(
-  (
-    {
-      label,
-      infoText,
-      supportiveText,
-      showSupportiveCheck = false,
-      className,
-      ...dropdownProps
-    },
-    ref
-  ) => {
-    return (
-      <SelectFieldContainer className={className} ref={ref}>
-        <StyledLabel infoText={infoText}>{label}</StyledLabel>
-        <Dropdown {...dropdownProps} />
-        {supportiveText && (
-          <SupportiveText showCheck={showSupportiveCheck}>
-            {supportiveText}
-          </SupportiveText>
-        )}
-      </SelectFieldContainer>
-    );
-  }
-);
-
-SelectField.displayName = "SelectField";
+export const SelectField = ({
+  label,
+  infoText,
+  supportiveText,
+  showSupportiveCheck = false,
+  className,
+  ref,
+  ...dropdownProps
+}: SelectFieldProps) => {
+  return (
+    <SelectFieldContainer className={className} ref={ref}>
+      <StyledLabel infoText={infoText}>{label}</StyledLabel>
+      <Dropdown {...dropdownProps} />
+      {supportiveText && (
+        <SupportiveText showCheck={showSupportiveCheck}>
+          {supportiveText}
+        </SupportiveText>
+      )}
+    </SelectFieldContainer>
+  );
+};
 
 export default SelectField;

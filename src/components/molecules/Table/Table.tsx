@@ -37,12 +37,18 @@ const TableContainer = styled.div`
   width: 100%;
   border: 1px solid var(--grey-200);
   border-radius: 8px;
-  overflow: visible;
   background-color: var(--white-900);
+`;
+
+const TableScrollWrapper = styled.div`
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
 `;
 
 const StyledTable = styled.table`
   width: 100%;
+  min-width: max-content;
   border-collapse: collapse;
   border-spacing: 0;
 `;
@@ -339,78 +345,80 @@ export function Table<T extends Record<string, any>>({
 
   return (
     <TableContainer className={className}>
-      <StyledTable>
-        <thead>
-          <tr>
-            {selectable && (
-              <CheckboxHeaderCell>
-                <Checkbox
-                  checked={allCurrentPageSelected}
-                  onChange={handleSelectAll}
-                  noPadding
-                />
-              </CheckboxHeaderCell>
-            )}
-            {columns.map((column) => (
-              <TableHeaderCell
-                key={column.key}
-                width={column.width}
-                sortable={column.sortable}
-                sortDirection={
-                  sortKey === column.key ? sortDirection || null : null
-                }
-                onSort={column.sortable ? () => handleSort(column.key) : undefined}
-                filterable={column.filterable}
-                filterOptions={column.filterOptions}
-                filterValue={columnFilters[column.key] || ""}
-                onFilterChange={
-                  column.filterable
-                    ? (value) => handleFilterChange(column.key, value)
+      <TableScrollWrapper>
+        <StyledTable>
+          <thead>
+            <tr>
+              {selectable && (
+                <CheckboxHeaderCell>
+                  <Checkbox
+                    checked={allCurrentPageSelected}
+                    onChange={handleSelectAll}
+                    noPadding
+                  />
+                </CheckboxHeaderCell>
+              )}
+              {columns.map((column) => (
+                <TableHeaderCell
+                  key={column.key}
+                  width={column.width}
+                  sortable={column.sortable}
+                  sortDirection={
+                    sortKey === column.key ? sortDirection || null : null
+                  }
+                  onSort={column.sortable ? () => handleSort(column.key) : undefined}
+                  filterable={column.filterable}
+                  filterOptions={column.filterOptions}
+                  filterValue={columnFilters[column.key] || ""}
+                  onFilterChange={
+                    column.filterable
+                      ? (value) => handleFilterChange(column.key, value)
+                      : undefined
+                  }
+                >
+                  {column.header}
+                </TableHeaderCell>
+              ))}
+            </tr>
+          </thead>
+          <TableBody>
+            {paginatedData.map((row, rowIndex) => (
+              <TableRow
+                key={getRowKey(row, rowIndex)}
+                selectable={selectable}
+                onClick={
+                  selectable
+                    ? () => handleRowSelect(row, !isRowSelected(row))
                     : undefined
                 }
               >
-                {column.header}
-              </TableHeaderCell>
-            ))}
-          </tr>
-        </thead>
-        <TableBody>
-          {paginatedData.map((row, rowIndex) => (
-            <TableRow
-              key={getRowKey(row, rowIndex)}
-              selectable={selectable}
-              onClick={
-                selectable
-                  ? () => handleRowSelect(row, !isRowSelected(row))
-                  : undefined
-              }
-            >
-              {selectable && (
-                <CheckboxCell>
-                  <Checkbox
-                    checked={isRowSelected(row)}
-                    onChange={(checked) => handleRowSelect(row, checked)}
-                    noPadding
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </CheckboxCell>
-              )}
-              {columns.map((column) => {
-                const value = row[column.key];
-                const content = column.render
-                  ? column.render(value, row, rowIndex)
-                  : value;
+                {selectable && (
+                  <CheckboxCell>
+                    <Checkbox
+                      checked={isRowSelected(row)}
+                      onChange={(checked) => handleRowSelect(row, checked)}
+                      noPadding
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </CheckboxCell>
+                )}
+                {columns.map((column) => {
+                  const value = row[column.key];
+                  const content = column.render
+                    ? column.render(value, row, rowIndex)
+                    : value;
 
-                return (
-                  <TableCell key={column.key} align={column.align}>
-                    {content}
-                  </TableCell>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableBody>
-      </StyledTable>
+                  return (
+                    <TableCell key={column.key} align={column.align}>
+                      {content}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </StyledTable>
+      </TableScrollWrapper>
 
       {pageSize !== -1 && totalPages > 1 && (
         <PaginationContainer>

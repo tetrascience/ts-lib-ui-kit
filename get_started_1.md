@@ -16,7 +16,7 @@ Before you begin, make sure you have:
 
 - Node.js 18 or higher
 - [Yarn](https://yarnpkg.com/) package manager
-- A React 18+ project (or willingness to create one)
+- A React 19+ project (or willingness to create one)
 - Basic familiarity with React and TypeScript
 
 ## Step 1: Installation

@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react";
+import React from "react";
 import styled, { css } from "styled-components";
 
 export type InputSize = "xsmall" | "small";
@@ -10,6 +10,7 @@ export interface InputProps
   iconRight?: React.ReactNode;
   error?: boolean;
   disabled?: boolean;
+  ref?: React.Ref<HTMLInputElement>;
 }
 
 interface StyleProps {
@@ -123,44 +124,38 @@ const IconWrapper = styled.div<{ position: "left" | "right"; size: InputSize }>`
       : "width: 20px; height: 20px;"}
 `;
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  (
-    {
-      size = "small",
-      iconLeft,
-      iconRight,
-      error = false,
-      disabled = false,
-      ...rest
-    },
-    ref
-  ) => {
-    return (
-      <InputContainer size={size} disabled={disabled} error={error}>
-        {iconLeft && (
-          <IconWrapper position="left" size={size}>
-            {iconLeft}
-          </IconWrapper>
-        )}
-        <StyledInput
-          ref={ref}
-          size={size}
-          hasIconLeft={!!iconLeft}
-          hasIconRight={!!iconRight}
-          error={error}
-          disabled={disabled}
-          {...rest}
-        />
-        {iconRight && (
-          <IconWrapper position="right" size={size}>
-            {iconRight}
-          </IconWrapper>
-        )}
-      </InputContainer>
-    );
-  }
-);
-
-Input.displayName = "Input";
+export const Input = ({
+  size = "small",
+  iconLeft,
+  iconRight,
+  error = false,
+  disabled = false,
+  ref,
+  ...rest
+}: InputProps) => {
+  return (
+    <InputContainer size={size} disabled={disabled} error={error}>
+      {iconLeft && (
+        <IconWrapper position="left" size={size}>
+          {iconLeft}
+        </IconWrapper>
+      )}
+      <StyledInput
+        ref={ref}
+        size={size}
+        hasIconLeft={!!iconLeft}
+        hasIconRight={!!iconRight}
+        error={error}
+        disabled={disabled}
+        {...rest}
+      />
+      {iconRight && (
+        <IconWrapper position="right" size={size}>
+          {iconRight}
+        </IconWrapper>
+      )}
+    </InputContainer>
+  );
+};
 
 export default Input;

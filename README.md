@@ -9,6 +9,12 @@ This library provides:
 - **Theming**: Customisable design system with ThemeProvider
 - **TypeScript**: Full type support with exported prop types
 
+## Requirements
+
+- **React 19+**
+- **Node.js 18+**
+- **TypeScript 5.5+** (optional, but recommended)
+
 ## Installation
 
 ```bash

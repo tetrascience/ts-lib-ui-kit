@@ -40,9 +40,7 @@ export const Default = () => {
       {lastCode && (
         <div style={{ marginTop: 16 }}>
           <strong>Last Code:</strong>
-          <pre style={{ background: "#f5f5f5", padding: 8, borderRadius: 4 }}>
-            {lastCode}
-          </pre>
+          <pre style={{ background: "#f5f5f5", padding: 8, borderRadius: 4 }}>{lastCode}</pre>
         </div>
       )}
       {lastInput && (
@@ -53,3 +51,4 @@ export const Default = () => {
     </div>
   );
 };
+Default.storyName = "[SW-T874] Default";

@@ -27,6 +27,7 @@ export default meta;
 type Story = StoryObj<typeof Badge>;
 
 export const Default: Story = {
+  name: "[SW-T717] Default",
   args: {
     children: "Badge",
     variant: "default",
@@ -35,6 +36,7 @@ export const Default: Story = {
 };
 
 export const Primary: Story = {
+  name: "[SW-T718] Primary",
   args: {
     children: "Badge",
     variant: "primary",
@@ -43,6 +45,7 @@ export const Primary: Story = {
 };
 
 export const Small: Story = {
+  name: "[SW-T719] Small",
   args: {
     children: "Badge",
     variant: "default",
@@ -51,6 +54,7 @@ export const Small: Story = {
 };
 
 export const SmallPrimary: Story = {
+  name: "[SW-T720] Small Primary",
   args: {
     children: "Badge",
     variant: "primary",
@@ -59,6 +63,7 @@ export const SmallPrimary: Story = {
 };
 
 export const Disabled: Story = {
+  name: "[SW-T721] Disabled",
   args: {
     children: "Badge",
     variant: "default",
@@ -68,6 +73,7 @@ export const Disabled: Story = {
 };
 
 export const DisabledPrimary: Story = {
+  name: "[SW-T722] Disabled Primary",
   args: {
     children: "Badge",
     variant: "primary",
@@ -77,6 +83,7 @@ export const DisabledPrimary: Story = {
 };
 
 export const WithLeftIcon: Story = {
+  name: "[SW-T723] With Left Icon",
   args: {
     children: "Search",
     variant: "default",
@@ -86,6 +93,7 @@ export const WithLeftIcon: Story = {
 };
 
 export const WithRightIcon: Story = {
+  name: "[SW-T724] With Right Icon",
   args: {
     children: "Next",
     variant: "primary",
@@ -95,6 +103,7 @@ export const WithRightIcon: Story = {
 };
 
 export const WithBothIcons: Story = {
+  name: "[SW-T725] With Both Icons",
   args: {
     children: "Navigate",
     variant: "default",
@@ -105,6 +114,7 @@ export const WithBothIcons: Story = {
 };
 
 export const AllVariants: Story = {
+  name: "[SW-T726] All Variants",
   render: () => (
     <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
       <Badge variant="default" size="medium">
@@ -125,18 +135,10 @@ export const AllVariants: Story = {
       <Badge variant="primary" size="medium" disabled>
         Badge
       </Badge>
-      <Badge
-        variant="default"
-        size="medium"
-        iconLeft={<Icon name={IconName.SEARCH} />}
-      >
+      <Badge variant="default" size="medium" iconLeft={<Icon name={IconName.SEARCH} />}>
         With Icon
       </Badge>
-      <Badge
-        variant="primary"
-        size="medium"
-        iconRight={<Icon name={IconName.CLOSE} />}
-      >
+      <Badge variant="primary" size="medium" iconRight={<Icon name={IconName.CLOSE} />}>
         With Icon
       </Badge>
     </div>

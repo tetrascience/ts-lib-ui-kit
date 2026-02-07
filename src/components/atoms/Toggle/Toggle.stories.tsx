@@ -23,21 +23,26 @@ const meta: Meta<typeof Toggle> = {
 export default meta;
 type Story = StoryObj<typeof Toggle>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  name: "[SW-T863] Default",
+};
 
 export const WithLabel: Story = {
+  name: "[SW-T864] With Label",
   args: {
     label: "Label",
   },
 };
 
 export const CheckedState: Story = {
+  name: "[SW-T865] Checked State",
   args: {
     checked: true,
   },
 };
 
 export const Disabled: Story = {
+  name: "[SW-T866] Disabled",
   args: {
     disabled: true,
   },

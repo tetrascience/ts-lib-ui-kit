@@ -1,24 +1,25 @@
-import {StoryFn} from "@storybook/react";
+import { StoryFn } from "@storybook/react";
 import React from "react";
 
 import MarkdownDisplay from "./MarkdownDisplay"; // Adjust the path if needed
 
 export default {
-	title: "Atoms/MarkdownDisplay",
-	component: MarkdownDisplay,
-	argTypes: {
-		markdown: {
-			control: "text",
-			description: "The Markdown string to display.",
-		},
-	},
+  title: "Atoms/MarkdownDisplay",
+  component: MarkdownDisplay,
+  argTypes: {
+    markdown: {
+      control: "text",
+      description: "The Markdown string to display.",
+    },
+  },
 };
 
 const Template: StoryFn<React.ComponentProps<typeof MarkdownDisplay>> = (args) => <MarkdownDisplay {...args} />;
 
 export const Default = Template.bind({});
+Default.storyName = "[SW-T811] Default";
 Default.args = {
-	markdown: `
+  markdown: `
 # Welcome to Markdown Display
 
 This is a component for rendering Markdown with Ant Design styling.
@@ -68,8 +69,9 @@ This is a component for rendering Markdown with Ant Design styling.
 };
 
 export const WithCustomMarkdown = Template.bind({});
+WithCustomMarkdown.storyName = "[SW-T812] With Custom Markdown";
 WithCustomMarkdown.args = {
-	markdown: `
+  markdown: `
 ## Custom Markdown Example
 
 You can pass in any Markdown string you want.

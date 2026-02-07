@@ -13,8 +13,8 @@ export interface InputProps
 }
 
 interface StyleProps {
-  hasIconLeft?: boolean;
-  hasIconRight?: boolean;
+  $hasIconLeft?: boolean;
+  $hasIconRight?: boolean;
   size: InputSize;
 }
 
@@ -22,22 +22,22 @@ const sizeStyles = {
   xsmall: css<StyleProps>`
     height: 32px;
     padding: ${(props) =>
-      props.hasIconLeft && props.hasIconRight
+      props.$hasIconLeft && props.$hasIconRight
         ? "0 32px 0 32px"
-        : props.hasIconLeft
+        : props.$hasIconLeft
         ? "0 10px 0 32px"
-        : props.hasIconRight
+        : props.$hasIconRight
         ? "0 32px 0 10px"
         : "0 10px"};
   `,
   small: css<StyleProps>`
     height: 36px;
     padding: ${(props) =>
-      props.hasIconLeft && props.hasIconRight
+      props.$hasIconLeft && props.$hasIconRight
         ? "0 38px 0 38px"
-        : props.hasIconLeft
+        : props.$hasIconLeft
         ? "0 12px 0 38px"
-        : props.hasIconRight
+        : props.$hasIconRight
         ? "0 38px 0 12px"
         : "0 12px"};
   `,
@@ -46,7 +46,7 @@ const sizeStyles = {
 const InputContainer = styled.div<{
   size: InputSize;
   disabled?: boolean;
-  error?: boolean;
+  $error?: boolean;
 }>`
   position: relative;
   display: inline-flex;
@@ -55,7 +55,11 @@ const InputContainer = styled.div<{
   gap: 8px;
 `;
 
-const StyledInput = styled.input<InputProps & StyleProps>`
+interface StyledInputProps extends StyleProps {
+  $error?: boolean;
+}
+
+const StyledInput = styled.input<StyledInputProps>`
   width: 100%;
   border-radius: 6px;
   font-family: "Inter", sans-serif;
@@ -65,7 +69,7 @@ const StyledInput = styled.input<InputProps & StyleProps>`
   line-height: 20px;
   border: 1px solid
     ${(props) =>
-      props.error
+      props.$error
         ? "var(--red-error)"
         : props.disabled
         ? "var(--grey-300)"
@@ -80,7 +84,7 @@ const StyledInput = styled.input<InputProps & StyleProps>`
 
   &:hover:not(:disabled):not(:focus) {
     border-color: ${(props) =>
-      props.error ? "var(--red-error)" : "var(--blue-600)"};
+      props.$error ? "var(--red-error)" : "var(--blue-600)"};
   }
 
   &:focus {
@@ -88,14 +92,14 @@ const StyledInput = styled.input<InputProps & StyleProps>`
     box-shadow: 0px 0px 0px 1px var(--white-900),
       0px 0px 0px 3px var(--blue-600);
     border-color: ${(props) =>
-      props.error ? "var(--red-error)" : "var(--blue-600)"};
+      props.$error ? "var(--red-error)" : "var(--blue-600)"};
   }
 
   &:active {
     outline: none;
     box-shadow: 0px 0px 0px 2px var(--blue-200);
     border-color: ${(props) =>
-      props.error ? "var(--red-error)" : "var(--blue-600)"};
+      props.$error ? "var(--red-error)" : "var(--blue-600)"};
   }
 
   &:disabled {
@@ -136,7 +140,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     return (
-      <InputContainer size={size} disabled={disabled} error={error}>
+      <InputContainer size={size} disabled={disabled} $error={error}>
         {iconLeft && (
           <IconWrapper position="left" size={size}>
             {iconLeft}
@@ -145,9 +149,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <StyledInput
           ref={ref}
           size={size}
-          hasIconLeft={!!iconLeft}
-          hasIconRight={!!iconRight}
-          error={error}
+          $hasIconLeft={!!iconLeft}
+          $hasIconRight={!!iconRight}
+          $error={error}
           disabled={disabled}
           {...rest}
         />

@@ -33,11 +33,11 @@ const THEME_MAP = {
   dark: "dracula",
 };
 
-const EditorContainer = styled.div<{ themeMode?: string; disabled?: boolean }>`
+const EditorContainer = styled.div<{ $themeMode?: string; disabled?: boolean }>`
   border-radius: 16px;
   overflow: hidden;
   background-color: ${(props) =>
-    props.themeMode === "dark" ? "var(--grey-800)" : "var(--grey-50)"};
+    props.$themeMode === "dark" ? "var(--grey-800)" : "var(--grey-50)"};
   position: relative;
   border: 1px solid var(--grey-200);
   opacity: ${(props) => (props.disabled ? 0.6 : 1)};
@@ -148,7 +148,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   };
 
   return (
-    <EditorContainer themeMode={theme} disabled={disabled}>
+    <EditorContainer $themeMode={theme} disabled={disabled}>
       <EditorActions>
         {onCopy && (
           <Tooltip content={copyState} placement="bottom">

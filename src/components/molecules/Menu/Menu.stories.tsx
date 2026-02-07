@@ -27,12 +27,14 @@ const itemsWithCheckboxes: MenuItemData[] = [
 ];
 
 export const Default: Story = {
+  name: "[SW-T920] Default",
   args: {
     items: defaultItems,
   },
 };
 
 export const WithTitle: Story = {
+  name: "[SW-T921] With Title",
   args: {
     title: "Title",
     items: defaultItems,
@@ -40,6 +42,7 @@ export const WithTitle: Story = {
 };
 
 export const WithCheckboxes: Story = {
+  name: "[SW-T922] With Checkboxes",
   args: {
     title: "Title",
     items: itemsWithCheckboxes,
@@ -47,6 +50,7 @@ export const WithCheckboxes: Story = {
 };
 
 export const WithActiveItem: Story = {
+  name: "[SW-T923] With Active Item",
   args: {
     title: "Title",
     items: defaultItems,
@@ -54,7 +58,7 @@ export const WithActiveItem: Story = {
   },
 };
 
-export const Interactive: React.FC = () => {
+const InteractiveDemo = () => {
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [items, setItems] = useState<MenuItemData[]>([
     { id: "item1", label: "Menu Item 1", showCheckbox: true, checked: false },
@@ -67,11 +71,7 @@ export const Interactive: React.FC = () => {
   };
 
   const handleItemCheckChange = (itemId: string, checked: boolean) => {
-    setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === itemId ? { ...item, checked } : item
-      )
-    );
+    setItems((prevItems) => prevItems.map((item) => (item.id === itemId ? { ...item, checked } : item)));
   };
 
   return (
@@ -87,39 +87,47 @@ export const Interactive: React.FC = () => {
   );
 };
 
-export const MultipleMenus: React.FC = () => {
-  return (
-    <div style={{ display: "flex", gap: "20px" }}>
-      <div style={{ width: "300px" }}>
-        <Menu
-          title="Title"
-          items={[
-            { id: "item1", label: "Menu Item 1" },
-            { id: "item2", label: "Menu Item 2" },
-          ]}
-        />
+export const Interactive: Story = {
+  name: "[SW-T924] Interactive",
+  render: () => <InteractiveDemo />,
+};
+
+export const MultipleMenus: Story = {
+  name: "[SW-T925] Multiple Menus",
+  render: () => {
+    return (
+      <div style={{ display: "flex", gap: "20px" }}>
+        <div style={{ width: "300px" }}>
+          <Menu
+            title="Title"
+            items={[
+              { id: "item1", label: "Menu Item 1" },
+              { id: "item2", label: "Menu Item 2" },
+            ]}
+          />
+        </div>
+        <div style={{ width: "300px" }}>
+          <Menu
+            title="Title"
+            items={[
+              { id: "item1", label: "Menu Item 1" },
+              { id: "item2", label: "Menu Item 2" },
+              { id: "item3", label: "Menu Item 3" },
+            ]}
+          />
+        </div>
+        <div style={{ width: "300px" }}>
+          <Menu
+            title="Title"
+            items={[
+              { id: "item1", label: "Menu Item 1" },
+              { id: "item2", label: "Menu Item 2" },
+              { id: "item3", label: "Menu Item 3" },
+              { id: "item4", label: "Menu Item 4" },
+            ]}
+          />
+        </div>
       </div>
-      <div style={{ width: "300px" }}>
-        <Menu
-          title="Title"
-          items={[
-            { id: "item1", label: "Menu Item 1" },
-            { id: "item2", label: "Menu Item 2" },
-            { id: "item3", label: "Menu Item 3" },
-          ]}
-        />
-      </div>
-      <div style={{ width: "300px" }}>
-        <Menu
-          title="Title"
-          items={[
-            { id: "item1", label: "Menu Item 1" },
-            { id: "item2", label: "Menu Item 2" },
-            { id: "item3", label: "Menu Item 3" },
-            { id: "item4", label: "Menu Item 4" },
-          ]}
-        />
-      </div>
-    </div>
-  );
+    );
+  },
 };

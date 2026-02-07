@@ -17,6 +17,7 @@ export default meta;
 type Story = StoryObj<typeof PopConfirm>;
 
 export const Default: Story = {
+  name: "[SW-T830] Default",
   args: {
     title: "Are you sure?",
     description: "This action cannot be undone.",
@@ -30,6 +31,7 @@ export const Default: Story = {
 };
 
 export const WithIcon: Story = {
+  name: "[SW-T831] With Icon",
   args: {
     title: "Delete this item?",
     description: "This will permanently remove the item from your list.",
@@ -38,11 +40,7 @@ export const WithIcon: Story = {
     onConfirm: action("confirmed"),
     onCancel: action("canceled"),
     children: (
-      <Button
-        variant="tertiary"
-        size="small"
-        leftIcon={<Icon name={IconName.TRASH} width="16px" height="16px" />}
-      >
+      <Button variant="tertiary" size="small" leftIcon={<Icon name={IconName.TRASH} width="16px" height="16px" />}>
         Delete
       </Button>
     ),
@@ -51,6 +49,7 @@ export const WithIcon: Story = {
 };
 
 export const ConfirmDelete: Story = {
+  name: "[SW-T832] Confirm Delete",
   args: {
     title: "Are you sure to delete this input?",
     description: "Doing so will remove the connected edges as well.",
@@ -60,12 +59,7 @@ export const ConfirmDelete: Story = {
     onCancel: action("canceled"),
     placement: "left",
     children: (
-      <Button
-        variant="tertiary"
-        size="small"
-        leftIcon={<Icon name={IconName.TRASH} />}
-        aria-label="Remove item"
-      >
+      <Button variant="tertiary" size="small" leftIcon={<Icon name={IconName.TRASH} />} aria-label="Remove item">
         {""}
       </Button>
     ),
@@ -73,6 +67,7 @@ export const ConfirmDelete: Story = {
 };
 
 export const CustomButtons: Story = {
+  name: "[SW-T833] Custom Buttons",
   args: {
     title: "Are you sure?",
     description: "This will permanently delete this record.",
@@ -92,6 +87,7 @@ export const CustomButtons: Story = {
 };
 
 export const BottomRight: Story = {
+  name: "[SW-T834] Bottom Right",
   args: {
     title: "Are you sure?",
     description: "This action cannot be undone.",

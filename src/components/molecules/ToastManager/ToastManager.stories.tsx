@@ -64,19 +64,13 @@ const Container = styled.div`
 `;
 
 const Showcase = ({ position }: ShowcaseProps) => {
-  const showInfoToast = () =>
-    toast.info("Info Toast", "This is an information message");
-  const showSuccessToast = () =>
-    toast.success("Success Toast", "Operation completed successfully");
-  const showWarningToast = () =>
-    toast.warning("Warning Toast", "This action might have consequences");
-  const showDangerToast = () =>
-    toast.danger("Danger Toast", "An error has occurred");
-  const showDefaultToast = () =>
-    toast.default("Default Toast", "This is a default message");
+  const showInfoToast = () => toast.info("Info Toast", "This is an information message");
+  const showSuccessToast = () => toast.success("Success Toast", "Operation completed successfully");
+  const showWarningToast = () => toast.warning("Warning Toast", "This action might have consequences");
+  const showDangerToast = () => toast.danger("Danger Toast", "An error has occurred");
+  const showDefaultToast = () => toast.default("Default Toast", "This is a default message");
 
-  const showHeadingOnlyToast = () =>
-    toast.info("This toast has no description");
+  const showHeadingOnlyToast = () => toast.info("This toast has no description");
 
   return (
     <Container>
@@ -112,9 +106,11 @@ const Showcase = ({ position }: ShowcaseProps) => {
 };
 
 export const TopPosition: Story = {
+  name: "[SW-T960] Top Position",
   render: () => <Showcase position="top" />,
 };
 
 export const BottomPosition: Story = {
+  name: "[SW-T961] Bottom Position",
   render: () => <Showcase position="bottom" />,
 };

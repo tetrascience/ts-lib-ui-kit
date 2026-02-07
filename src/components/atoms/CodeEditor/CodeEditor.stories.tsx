@@ -49,6 +49,7 @@ const defaultHandlers = {
 };
 
 export const Default: Story = {
+  name: "[SW-T772] Default",
   args: {
     value: "print('Hello, world!')",
     language: "python",
@@ -61,6 +62,7 @@ export const Default: Story = {
 };
 
 export const LightMode: Story = {
+  name: "[SW-T773] Light Mode",
   args: {
     value: "console.log('Hello, world!')",
     language: "javascript",
@@ -73,6 +75,7 @@ export const LightMode: Story = {
 };
 
 export const ReactJavascriptExample: Story = {
+  name: "[SW-T774] React Javascript Example",
   args: {
     value: `import React, { useState, useEffect } from 'react';
 
@@ -103,9 +106,7 @@ export default Counter;`,
   },
 };
 
-const InteractiveComponent = (
-  args: React.ComponentProps<typeof CodeEditor>
-) => {
+const InteractiveComponent = (args: React.ComponentProps<typeof CodeEditor>) => {
   const [value, setValue] = React.useState(args.value);
   return (
     <CodeEditor
@@ -119,6 +120,7 @@ const InteractiveComponent = (
 };
 
 export const Interactive: Story = {
+  name: "[SW-T775] Interactive",
   render: (args) => <InteractiveComponent {...args} />,
   args: {
     value: "print('Hello, world!')",

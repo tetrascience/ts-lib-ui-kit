@@ -32,6 +32,7 @@ const sampleOptions = [
 ];
 
 export const Default: Story = {
+  name: "[SW-T934] Default",
   args: {
     label: "Label",
     placeholder: "Select an option",
@@ -40,6 +41,7 @@ export const Default: Story = {
 };
 
 export const WithInfoText: Story = {
+  name: "[SW-T935] With Info Text",
   args: {
     label: "Label",
     infoText: "This is some helpful information about this field",
@@ -49,6 +51,7 @@ export const WithInfoText: Story = {
 };
 
 export const WithSupportiveText: Story = {
+  name: "[SW-T936] With Supportive Text",
   args: {
     label: "Label",
     placeholder: "Select an option",
@@ -58,6 +61,7 @@ export const WithSupportiveText: Story = {
 };
 
 export const WithSupportiveCheck: Story = {
+  name: "[SW-T937] With Supportive Check",
   args: {
     label: "Label",
     placeholder: "Select an option",
@@ -68,6 +72,7 @@ export const WithSupportiveCheck: Story = {
 };
 
 export const WithError: Story = {
+  name: "[SW-T938] With Error",
   args: {
     label: "Label",
     placeholder: "Select an option",
@@ -78,6 +83,7 @@ export const WithError: Story = {
 };
 
 export const Disabled: Story = {
+  name: "[SW-T939] Disabled",
   args: {
     label: "Label",
     placeholder: "Select an option",
@@ -88,6 +94,7 @@ export const Disabled: Story = {
 };
 
 export const WithDefaultValue: Story = {
+  name: "[SW-T940] With Default Value",
   args: {
     label: "Label",
     placeholder: "Select an option",
@@ -98,6 +105,7 @@ export const WithDefaultValue: Story = {
 };
 
 export const Complete: Story = {
+  name: "[SW-T941] Complete",
   args: {
     label: "Label",
     infoText: "Additional information about this select field",

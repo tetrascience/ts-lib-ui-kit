@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import { COLORS } from "@utils/colors";
 import Plotly from "plotly.js-dist";
 import "./DotPlot.scss";
@@ -44,27 +44,36 @@ const DotPlot: React.FC<DotPlotProps> = ({
   markerSize = 8,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
-  const seriesArray = Array.isArray(dataSeries) ? dataSeries : [dataSeries];
+  const seriesArray = useMemo(
+    () => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]),
+    [dataSeries],
+  );
 
-  const defaultColors = [
-    COLORS.ORANGE,
-    COLORS.RED,
-    COLORS.GREEN,
-    COLORS.BLUE,
-    COLORS.YELLOW,
-    COLORS.PURPLE,
-  ];
+  const defaultColors = useMemo(
+    () => [
+      COLORS.ORANGE,
+      COLORS.RED,
+      COLORS.GREEN,
+      COLORS.BLUE,
+      COLORS.YELLOW,
+      COLORS.PURPLE,
+    ],
+    [],
+  );
 
-  const defaultSymbols: MarkerSymbol[] = [
-    "circle",
-    "square",
-    "diamond",
-    "triangle-up",
-    "triangle-down",
-    "star",
-  ];
+  const defaultSymbols: MarkerSymbol[] = useMemo(
+    () => [
+      "circle",
+      "square",
+      "diamond",
+      "triangle-up",
+      "triangle-down",
+      "star",
+    ],
+    [],
+  );
 
-  const getSeriesWithColors = () => {
+  const seriesWithColors = useMemo(() => {
     return seriesArray.map((series, index) => {
       if (variant === "default") {
         // Default variant: all circles, use first color or series color
@@ -85,62 +94,70 @@ const DotPlot: React.FC<DotPlotProps> = ({
         };
       }
     });
-  };
-
-  const seriesWithColors = getSeriesWithColors();
+  }, [seriesArray, variant, markerSize, defaultColors, defaultSymbols]);
 
   const gridColor = COLORS.GREY_200;
 
-  const plotData = seriesWithColors.map((series) => ({
-    type: "scatter" as const,
-    x: series.x,
-    y: series.y,
-    mode: "markers" as const,
-    name: series.name,
-    marker: {
-      color: series.color,
-      size: series.size,
-      symbol: series.symbol,
-      line: {
-        color: COLORS.WHITE,
-        width: 1,
+  const plotData = useMemo(
+    () =>
+      seriesWithColors.map((series) => ({
+        type: "scatter" as const,
+        x: series.x,
+        y: series.y,
+        mode: "markers" as const,
+        name: series.name,
+        marker: {
+          color: series.color,
+          size: series.size,
+          symbol: series.symbol,
+          line: {
+            color: COLORS.WHITE,
+            width: 1,
+          },
+        },
+        hovertemplate: `${xTitle}: %{x}<br>${yTitle}: %{y}<extra>${series.name}</extra>`,
+      })),
+    [seriesWithColors, xTitle, yTitle],
+  );
+
+  const tickOptions = useMemo(
+    () => ({
+      tickcolor: COLORS.GREY_200,
+      ticklen: 12,
+      tickwidth: 1,
+      ticks: "outside" as const,
+      tickfont: {
+        size: 16,
+        color: COLORS.BLACK_900,
+        family: "Inter, sans-serif",
+        weight: 400,
       },
-    },
-    hovertemplate: `${xTitle}: %{x}<br>${yTitle}: %{y}<extra>${series.name}</extra>`,
-  }));
+      linecolor: COLORS.BLACK_900,
+      linewidth: 1,
+      position: 0,
+      zeroline: false,
+    }),
+    [],
+  );
 
-  const tickOptions = {
-    tickcolor: COLORS.GREY_200,
-    ticklen: 12,
-    tickwidth: 1,
-    ticks: "outside" as const,
-    tickfont: {
-      size: 16,
-      color: COLORS.BLACK_900,
-      family: "Inter, sans-serif",
-      weight: 400,
-    },
-    linecolor: COLORS.BLACK_900,
-    linewidth: 1,
-    position: 0,
-    zeroline: false,
-  };
-
-  const titleOptions = {
-    text: title,
-    x: 0.5,
-    y: 0.95,
-    xanchor: "center" as const,
-    yanchor: "top" as const,
-    font: {
-      size: 32,
-      weight: 600,
-      family: "Inter, sans-serif",
-      color: COLORS.BLACK_900,
-      lineheight: 1.2,
-      standoff: 30,
-    },
-  };
+  const titleOptions = useMemo(
+    () => ({
+      text: title,
+      x: 0.5,
+      y: 0.95,
+      xanchor: "center" as const,
+      yanchor: "top" as const,
+      font: {
+        size: 32,
+        weight: 600,
+        family: "Inter, sans-serif",
+        color: COLORS.BLACK_900,
+        lineheight: 1.2,
+        standoff: 30,
+      },
+    }),
+    [title],
+  );
 
   useEffect(() => {
     if (!plotRef.current) return;
@@ -208,21 +225,15 @@ const DotPlot: React.FC<DotPlotProps> = ({
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
 
+    // Capture ref value for cleanup
+    const plotElement = plotRef.current;
+
     return () => {
-      if (plotRef.current) {
-        Plotly.purge(plotRef.current);
+      if (plotElement) {
+        Plotly.purge(plotElement);
       }
     };
-  }, [
-    dataSeries,
-    width,
-    height,
-    xTitle,
-    yTitle,
-    variant,
-    markerSize,
-    plotData,
-  ]);
+  }, [width, height, xTitle, yTitle, plotData, titleOptions, tickOptions, gridColor]);
 
   return (
     <div className="dotplot-container" style={{ width: width }}>

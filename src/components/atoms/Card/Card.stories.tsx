@@ -29,6 +29,7 @@ export default meta;
 type Story = StoryObj<typeof Card>;
 
 export const Default: Story = {
+  name: "[SW-T751] Default",
   args: {
     children: "Card content",
     title: "Card Title",
@@ -38,6 +39,7 @@ export const Default: Story = {
 };
 
 export const Outlined: Story = {
+  name: "[SW-T752] Outlined",
   args: {
     children: "Card content with outlined variant",
     title: "Outlined Card",
@@ -47,6 +49,7 @@ export const Outlined: Story = {
 };
 
 export const Elevated: Story = {
+  name: "[SW-T753] Elevated",
   args: {
     children: "Card content with elevated variant",
     title: "Elevated Card",
@@ -56,6 +59,7 @@ export const Elevated: Story = {
 };
 
 export const Small: Story = {
+  name: "[SW-T754] Small",
   args: {
     children: "Small card content",
     title: "Small Card",
@@ -65,6 +69,7 @@ export const Small: Story = {
 };
 
 export const Large: Story = {
+  name: "[SW-T755] Large",
   args: {
     children: "Large card content",
     title: "Large Card",
@@ -74,6 +79,7 @@ export const Large: Story = {
 };
 
 export const NoTitle: Story = {
+  name: "[SW-T756] No Title",
   args: {
     children: "Card with no title",
     size: "medium",
@@ -82,6 +88,7 @@ export const NoTitle: Story = {
 };
 
 export const FullWidth: Story = {
+  name: "[SW-T757] Full Width",
   args: {
     children: "This card will take full width of its container",
     title: "Full Width Card",
@@ -95,6 +102,7 @@ export const FullWidth: Story = {
 };
 
 export const AllVariants: Story = {
+  name: "[SW-T758] All Variants",
   render: () => (
     <div
       style={{
@@ -118,6 +126,7 @@ export const AllVariants: Story = {
 };
 
 export const AllSizes: Story = {
+  name: "[SW-T759] All Sizes",
   render: () => (
     <div
       style={{
@@ -142,6 +151,7 @@ export const AllSizes: Story = {
 
 // Theme examples
 export const WithCustomBorder: Story = {
+  name: "[SW-T760] With Custom Border",
   args: {
     children: "Card with custom border color",
     title: "Custom Border Card",
@@ -163,6 +173,7 @@ export const WithCustomBorder: Story = {
 };
 
 export const WithCustomBackground: Story = {
+  name: "[SW-T761] With Custom Background",
   args: {
     children: "Card with custom background",
     title: "Custom Background Card",
@@ -184,6 +195,7 @@ export const WithCustomBackground: Story = {
 };
 
 export const WithSharpCorners: Story = {
+  name: "[SW-T762] With Sharp Corners",
   args: {
     children: "Card with sharp corners",
     title: "Sharp Corners Card",
@@ -204,6 +216,7 @@ export const WithSharpCorners: Story = {
 };
 
 export const WithFullTheme: Story = {
+  name: "[SW-T763] With Full Theme",
   args: {
     children: "Fully themed card with purple background and rounded corners",
     title: "Themed Card",

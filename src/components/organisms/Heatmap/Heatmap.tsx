@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import Plotly from "plotly.js-dist";
 import "./Heatmap.scss";
 
@@ -87,15 +87,22 @@ const Heatmap: React.FC<HeatmapProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
 
-  let chartData = data || generateRandomData(16, 24, 5000, 50000);
-
-  chartData = normalizeData(chartData);
+  const chartData = useMemo(() => {
+    const rawData = data || generateRandomData(16, 24, 5000, 50000);
+    return normalizeData(rawData);
+  }, [data]);
 
   const maxCols = chartData.length > 0 ? chartData[0].length : 24;
 
-  const defaultXLabels =
-    xLabels || Array.from({ length: maxCols }, (_, i) => i + 1);
-  const defaultYLabels = yLabels || generateAlphabetLabels(chartData.length);
+  const defaultXLabels = useMemo(
+    () => xLabels || Array.from({ length: maxCols }, (_, i) => i + 1),
+    [xLabels, maxCols],
+  );
+
+  const defaultYLabels = useMemo(
+    () => yLabels || generateAlphabetLabels(chartData.length),
+    [yLabels, chartData.length],
+  );
 
   useEffect(() => {
     if (!plotRef.current) return;
@@ -179,27 +186,15 @@ const Heatmap: React.FC<HeatmapProps> = ({
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
 
+    // Capture ref value for cleanup
+    const plotElement = plotRef.current;
+
     return () => {
-      if (plotRef.current) {
-        Plotly.purge(plotRef.current);
+      if (plotElement) {
+        Plotly.purge(plotElement);
       }
     };
-  }, [
-    data,
-    xLabels,
-    yLabels,
-    title,
-    xTitle,
-    yTitle,
-    colorscale,
-    width,
-    height,
-    showScale,
-    precision,
-    zmin,
-    zmax,
-    valueUnit,
-  ]);
+  }, [chartData, defaultXLabels, defaultYLabels, title, xTitle, yTitle, colorscale, width, height, showScale, precision, zmin, zmax, valueUnit]);
 
   return (
     <div className="heatmap-container">

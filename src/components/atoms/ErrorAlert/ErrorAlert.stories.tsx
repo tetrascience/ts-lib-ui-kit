@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { action } from "@storybook/addon-actions";
 import type { Meta, StoryObj } from "@storybook/react";
@@ -15,7 +14,7 @@ const createMockAxiosError = (
   message: string = `Request failed with status code ${status}`,
   config: any = { url: "/api/data", method: "get" },
   request?: any, // Represents the XMLHttpRequest instance
-  code?: string // e.g., 'ECONNABORTED'
+  code?: string, // e.g., 'ECONNABORTED'
 ): AxiosError => {
   const error = new Error(message) as AxiosError;
   error.isAxiosError = true;
@@ -39,7 +38,7 @@ const createMockAxiosError = (
 
 const createMockNetworkError = (
   message: string = "Network Error",
-  config: any = { url: "/api/data", method: "get" }
+  config: any = { url: "/api/data", method: "get" },
 ): AxiosError => {
   const error = new Error(message) as AxiosError;
   error.isAxiosError = true;
@@ -90,6 +89,7 @@ type Story = StoryObj<typeof ErrorAlert>;
 // --- Stories ---
 
 export const NoError: Story = {
+  name: "[SW-T786] No Error",
   args: {
     error: null,
     title: "Status Indicator", // Example: use a different title when no error
@@ -98,6 +98,7 @@ export const NoError: Story = {
 };
 
 export const StandardError: Story = {
+  name: "[SW-T787] Standard Error",
   args: {
     error: new Error("Something went wrong during processing."),
     title: "Processing Error",
@@ -106,6 +107,7 @@ export const StandardError: Story = {
 };
 
 export const TypeErrorWithErrorStack: Story = {
+  name: "[SW-T788] Type Error With Error Stack",
   args: {
     error: (() => {
       try {
@@ -124,12 +126,13 @@ export const TypeErrorWithErrorStack: Story = {
 };
 
 export const AxiosError404: Story = {
+  name: "[SW-T789] Axios Error404",
   args: {
     error: createMockAxiosError(
       404,
       "Not Found",
       { message: "The requested resource could not be found." },
-      "Request failed with status code 404"
+      "Request failed with status code 404",
     ),
     title: "API Resource Not Found",
     onClose: action("closed"),
@@ -137,12 +140,13 @@ export const AxiosError404: Story = {
 };
 
 export const AxiosError500WithStringData: Story = {
+  name: "[SW-T790] Axios Error500 With String Data",
   args: {
     error: createMockAxiosError(
       500,
       "Internal Server Error",
       "An unexpected error occurred on the server.",
-      "Request failed with status code 500"
+      "Request failed with status code 500",
     ),
     title: "Server Error",
     onClose: action("closed"),
@@ -150,6 +154,7 @@ export const AxiosError500WithStringData: Story = {
 };
 
 export const AxiosError400WithObjectData: Story = {
+  name: "[SW-T791] Axios Error400 With Object Data",
   args: {
     error: createMockAxiosError(
       400,
@@ -159,7 +164,7 @@ export const AxiosError400WithObjectData: Story = {
         detail: "Username is required.",
         field: "username",
       },
-      "Request failed with status code 400"
+      "Request failed with status code 400",
     ),
     title: "Validation Failed",
     onClose: action("closed"),
@@ -168,6 +173,7 @@ export const AxiosError400WithObjectData: Story = {
 };
 
 export const AxiosNetworkError: Story = {
+  name: "[SW-T792] Axios Network Error",
   args: {
     error: createMockNetworkError(),
     title: "Connection Problem",
@@ -176,6 +182,7 @@ export const AxiosNetworkError: Story = {
 };
 
 export const StringError: Story = {
+  name: "[SW-T793] String Error",
   args: {
     error: "Invalid user input provided.",
     title: "Input Error",
@@ -184,6 +191,7 @@ export const StringError: Story = {
 };
 
 export const ObjectError: Story = {
+  name: "[SW-T794] Object Error",
   args: {
     error: {
       code: 123,
@@ -198,19 +206,18 @@ export const ObjectError: Story = {
 
 // --- Interactive Example with State ---
 export const Interactive: Story = {
+  name: "[SW-T795] Interactive",
   render: function InteractiveErrorHandler(args) {
     const [currentError, setCurrentError] = useState<unknown>(null);
 
-    const triggerStandardError = () =>
-      setCurrentError(new Error("A standard error occurred!"));
+    const triggerStandardError = () => setCurrentError(new Error("A standard error occurred!"));
     const triggerAxiosError = () =>
       setCurrentError(
         createMockAxiosError(503, "Service Unavailable", {
           detail: "The service is temporarily down for maintenance.",
-        })
+        }),
       );
-    const triggerNetworkError = () =>
-      setCurrentError(createMockNetworkError("Failed to connect to backend."));
+    const triggerNetworkError = () => setCurrentError(createMockNetworkError("Failed to connect to backend."));
     const clearError = () => setCurrentError(null);
 
     return (

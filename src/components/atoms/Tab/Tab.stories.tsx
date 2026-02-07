@@ -26,6 +26,7 @@ export default meta;
 type Story = StoryObj<typeof Tab>;
 
 export const Default: Story = {
+  name: "[SW-T837] Default",
   args: {
     label: "Label",
     size: "medium",
@@ -33,6 +34,7 @@ export const Default: Story = {
 };
 
 export const Small: Story = {
+  name: "[SW-T838] Small",
   args: {
     label: "Label",
     size: "small",
@@ -40,6 +42,7 @@ export const Small: Story = {
 };
 
 export const Medium: Story = {
+  name: "[SW-T839] Medium",
   args: {
     label: "Label",
     size: "medium",
@@ -47,6 +50,7 @@ export const Medium: Story = {
 };
 
 export const Active: Story = {
+  name: "[SW-T840] Active",
   args: {
     label: "Label",
     active: true,
@@ -54,6 +58,7 @@ export const Active: Story = {
 };
 
 export const Disabled: Story = {
+  name: "[SW-T841] Disabled",
   args: {
     label: "Label",
     disabled: true,
@@ -61,6 +66,7 @@ export const Disabled: Story = {
 };
 
 export const TabVariants: Story = {
+  name: "[SW-T842] Tab Variants",
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div>

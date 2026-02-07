@@ -29,6 +29,7 @@ const ToastContainer = styled.div`
 `;
 
 export const Default: Story = {
+  name: "[SW-T859] Default",
   args: {
     type: "default",
     heading: "Heading",
@@ -37,6 +38,7 @@ export const Default: Story = {
 };
 
 export const AllTypes: Story = {
+  name: "[SW-T860] All Types",
   render: () => (
     <ToastContainer>
       <Toast type="default" heading="Heading" description="Description" />
@@ -49,6 +51,7 @@ export const AllTypes: Story = {
 };
 
 export const WithoutDescription: Story = {
+  name: "[SW-T861] Without Description",
   args: {
     type: "info",
     heading: "Heading without description",
@@ -56,10 +59,10 @@ export const WithoutDescription: Story = {
 };
 
 export const LongContent: Story = {
+  name: "[SW-T862] Long Content",
   args: {
     type: "warning",
-    heading:
-      "This is a heading with a very long text that might wrap to multiple lines in some cases",
+    heading: "This is a heading with a very long text that might wrap to multiple lines in some cases",
     description:
       "And this is a description with very long text content that will definitely wrap to multiple lines to demonstrate how the component handles long content in both heading and description.",
   },

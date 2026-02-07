@@ -27,6 +27,7 @@ type Story = StoryObj<typeof CodeScriptEditorButton>;
 
 // Basic examples
 export const Default: Story = {
+  name: "[SW-T894] Default",
   args: {
     initialCode: `def hello_world():
     print("Hello, World!")
@@ -38,6 +39,7 @@ hello_world()`,
 };
 
 export const Empty: Story = {
+  name: "[SW-T895] Empty",
   args: {
     initialCode: "",
     language: "python",
@@ -45,6 +47,7 @@ export const Empty: Story = {
 };
 
 export const JavaScript: Story = {
+  name: "[SW-T896] Java Script",
   args: {
     initialCode: `function helloWorld() {
   console.log("Hello, World!");
@@ -57,6 +60,7 @@ helloWorld();`,
 };
 
 export const SQL: Story = {
+  name: "[SW-T897] S Q L",
   args: {
     initialCode: `SELECT 
   id,
@@ -72,6 +76,7 @@ LIMIT 10;`,
 };
 
 export const JSON: Story = {
+  name: "[SW-T898] J S O N",
   args: {
     initialCode: `{
   "name": "John Doe",
@@ -89,6 +94,7 @@ export const JSON: Story = {
 
 // State examples
 export const Disabled: Story = {
+  name: "[SW-T899] Disabled",
   args: {
     initialCode: `def example():
     return "This editor is disabled"`,
@@ -99,6 +105,7 @@ export const Disabled: Story = {
 
 // Custom text and titles
 export const CustomLabels: Story = {
+  name: "[SW-T900] Custom Labels",
   args: {
     initialCode: `# Custom configuration script
 config = {
@@ -114,6 +121,7 @@ config = {
 
 // With callback
 export const WithCallback: Story = {
+  name: "[SW-T901] With Callback",
   args: {
     initialCode: `print("Initial code")`,
     language: "python",
@@ -126,6 +134,7 @@ export const WithCallback: Story = {
 
 // Long code example
 export const LongCode: Story = {
+  name: "[SW-T902] Long Code",
   args: {
     initialCode: `import pandas as pd
 import numpy as np
@@ -198,6 +207,7 @@ if __name__ == "__main__":
 
 // Different button variants
 export const SmallButton: Story = {
+  name: "[SW-T903] Small Button",
   args: {
     initialCode: `console.log("Small button example");`,
     language: "javascript",
@@ -208,6 +218,7 @@ export const SmallButton: Story = {
 };
 
 export const PrimaryButton: Story = {
+  name: "[SW-T904] Primary Button",
   args: {
     initialCode: `console.log("Primary button example");`,
     language: "javascript",
@@ -218,6 +229,7 @@ export const PrimaryButton: Story = {
 };
 
 export const SecondaryButton: Story = {
+  name: "[SW-T905] Secondary Button",
   args: {
     initialCode: `console.log("Secondary button example");`,
     language: "javascript",

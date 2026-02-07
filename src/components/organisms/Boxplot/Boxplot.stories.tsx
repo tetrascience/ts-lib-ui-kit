@@ -64,10 +64,7 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
     {
       name: "Category A",
       color: COLORS.ORANGE,
-      y: [
-        155, 135, 175, 185, 120, 125, 140, 160, 180, 145, 170, 165, 150, 155,
-        135, 175, 185, 120, 125, 140,
-      ],
+      y: [155, 135, 175, 185, 120, 125, 140, 160, 180, 145, 170, 165, 150, 155, 135, 175, 185, 120, 125, 140],
       x: [
         "200",
         "200",
@@ -94,10 +91,7 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
     {
       name: "Category B",
       color: COLORS.RED,
-      y: [
-        90, 85, 95, 105, 75, 80, 88, 92, 98, 82, 96, 87, 91, 85, 95, 105, 75,
-        80, 88, 92,
-      ],
+      y: [90, 85, 95, 105, 75, 80, 88, 92, 98, 82, 96, 87, 91, 85, 95, 105, 75, 80, 88, 92],
       x: [
         "350",
         "350",
@@ -124,10 +118,7 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
     {
       name: "Category C",
       color: COLORS.GREEN,
-      y: [
-        68, 45, 85, 95, 30, 35, 48, 68, 88, 53, 78, 73, 58, 65, 75, 85, 40, 45,
-        58, 72,
-      ],
+      y: [68, 45, 85, 95, 30, 35, 48, 68, 88, 53, 78, 73, 58, 65, 75, 85, 40, 45, 58, 72],
       x: [
         "500",
         "500",
@@ -154,10 +145,7 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
     {
       name: "Category D",
       color: COLORS.BLUE,
-      y: [
-        220, 200, 240, 250, 185, 190, 205, 225, 245, 210, 235, 230, 215, 225,
-        195, 235, 245, 180, 185, 200,
-      ],
+      y: [220, 200, 240, 250, 185, 190, 205, 225, 245, 210, 235, 230, 215, 225, 195, 235, 245, 180, 185, 200],
       x: [
         "800",
         "800",
@@ -184,10 +172,7 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
     {
       name: "Category E",
       color: COLORS.PURPLE,
-      y: [
-        135, 115, 155, 165, 100, 105, 120, 140, 160, 125, 150, 145, 130, 125,
-        135, 145, 90, 95, 110, 130,
-      ],
+      y: [135, 115, 155, 165, 100, 105, 120, 140, 160, 125, 150, 145, 130, 125, 135, 145, 90, 95, 110, 130],
       x: [
         "1000",
         "1000",
@@ -215,6 +200,7 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
 };
 
 export const Basic: Story = {
+  name: "[SW-T970] Basic",
   args: {
     dataSeries: generateBasicBoxData(),
     title: "Boxplot",
@@ -224,6 +210,7 @@ export const Basic: Story = {
 };
 
 export const MultipleBoxes: Story = {
+  name: "[SW-T971] Multiple Boxes",
   args: {
     dataSeries: generateMultipleBoxData(),
     title: "Multiple Boxplots",
@@ -233,6 +220,7 @@ export const MultipleBoxes: Story = {
 };
 
 export const CategoricalData: Story = {
+  name: "[SW-T972] Categorical Data",
   args: {
     dataSeries: generateCategoricalBoxData(),
     title: "Boxplot",
@@ -244,6 +232,7 @@ export const CategoricalData: Story = {
 };
 
 export const WithOutliers: Story = {
+  name: "[SW-T973] With Outliers",
   args: {
     dataSeries: generateCategoricalBoxData(),
     title: "Boxplot with Outliers",
@@ -256,6 +245,7 @@ export const WithOutliers: Story = {
 };
 
 export const CustomStyling: Story = {
+  name: "[SW-T974] Custom Styling",
   args: {
     dataSeries: generateCategoricalBoxData(),
     title: "Custom Boxplot",

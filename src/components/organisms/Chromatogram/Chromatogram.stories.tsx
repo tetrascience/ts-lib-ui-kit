@@ -61,6 +61,7 @@ const dnaWithExplicitBases = [
 ];
 
 export const MockupMatch: Story = {
+  name: "[SW-T975] Mockup Match",
   args: {
     data: dnaSequenceData,
     width: 650,
@@ -69,6 +70,7 @@ export const MockupMatch: Story = {
 };
 
 export const WithExplicitBases: Story = {
+  name: "[SW-T976] With Explicit Bases",
   args: {
     data: dnaWithExplicitBases,
     width: 350,
@@ -77,6 +79,7 @@ export const WithExplicitBases: Story = {
 };
 
 export const CustomColors: Story = {
+  name: "[SW-T977] Custom Colors",
   args: {
     data: dnaSequenceData,
     width: 900,

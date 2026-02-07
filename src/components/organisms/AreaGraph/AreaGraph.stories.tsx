@@ -48,6 +48,7 @@ const sampleDataSeries = [
 ];
 
 export const Default: Story = {
+  name: "[SW-T963] Default",
   args: {
     dataSeries: sampleDataSeries,
     title: "Area Graph",
@@ -60,6 +61,7 @@ export const Default: Story = {
 };
 
 export const Stacked: Story = {
+  name: "[SW-T964] Stacked",
   args: {
     dataSeries: sampleDataSeries,
     title: "Stacked Area Graph",
@@ -72,6 +74,7 @@ export const Stacked: Story = {
 };
 
 export const CustomRange: Story = {
+  name: "[SW-T965] Custom Range",
   args: {
     dataSeries: sampleDataSeries,
     title: "Area Graph with Custom Range",

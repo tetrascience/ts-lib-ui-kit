@@ -12,24 +12,24 @@ export interface MenuItemProps {
   className?: string;
 }
 
-const StyledMenuItem = styled.div<{ active?: boolean; showCheckbox?: boolean }>`
+const StyledMenuItem = styled.div<{ $active?: boolean; $showCheckbox?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 14px;
   gap: 10px;
-  color: ${(props) => (props.active ? "var(--blue-900)" : "var(--grey-600)")};
+  color: ${(props) => (props.$active ? "var(--blue-900)" : "var(--grey-600)")};
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
   border-bottom: 1px solid var(--grey-200);
   background-color: ${(props) =>
-    props.active ? "var(--grey-100)" : "var(--white-900)"};
-  padding: ${(props) => (props.showCheckbox ? "0" : "12px 16px")};
+    props.$active ? "var(--grey-100)" : "var(--white-900)"};
+  padding: ${(props) => (props.$showCheckbox ? "0" : "12px 16px")};
 
   &:hover {
     background-color: ${(props) =>
-      props.active ? "var(--grey-100)" : "var(--grey-50)"};
+      props.$active ? "var(--grey-100)" : "var(--grey-50)"};
   }
 
   &:last-child {
@@ -88,8 +88,8 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
     return (
       <StyledMenuItem
         ref={ref}
-        active={active}
-        showCheckbox={showCheckbox}
+        $active={active}
+        $showCheckbox={showCheckbox}
         className={className}
         onClick={handleClick}
         role="button"

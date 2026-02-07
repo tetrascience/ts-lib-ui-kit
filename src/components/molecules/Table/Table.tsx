@@ -49,12 +49,12 @@ const StyledTable = styled.table`
 
 const TableBody = styled.tbody``;
 
-const TableRow = styled.tr<{ selectable?: boolean }>`
-  cursor: ${(props) => (props.selectable ? "pointer" : "default")};
+const TableRow = styled.tr<{ $selectable?: boolean }>`
+  cursor: ${(props) => (props.$selectable ? "pointer" : "default")};
 
   &:hover {
     background-color: ${(props) =>
-      props.selectable ? "var(--grey-50)" : "transparent"};
+      props.$selectable ? "var(--grey-50)" : "transparent"};
   }
 `;
 
@@ -108,7 +108,7 @@ const PageNumbers = styled.div`
   gap: 0;
 `;
 
-const PageNumber = styled.button<{ active?: boolean }>`
+const PageNumber = styled.button<{ $active?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -118,7 +118,7 @@ const PageNumber = styled.button<{ active?: boolean }>`
   border: none;
   border-radius: 6px;
   background-color: ${(props) =>
-    props.active ? "var(--grey-100)" : "transparent"};
+    props.$active ? "var(--grey-100)" : "transparent"};
   font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 13px;
   font-weight: 500;
@@ -378,7 +378,7 @@ export function Table<T extends Record<string, any>>({
           {paginatedData.map((row, rowIndex) => (
             <TableRow
               key={getRowKey(row, rowIndex)}
-              selectable={selectable}
+              $selectable={selectable}
               onClick={
                 selectable
                   ? () => handleRowSelect(row, !isRowSelected(row))
@@ -438,7 +438,7 @@ export function Table<T extends Record<string, any>>({
             {getPageNumbers().map((page, index) => (
               <PageNumber
                 key={index}
-                active={page === currentPage}
+                $active={page === currentPage}
                 onClick={typeof page === "number" ? () => handlePageChange(page) : undefined}
                 disabled={typeof page !== "number"}
               >

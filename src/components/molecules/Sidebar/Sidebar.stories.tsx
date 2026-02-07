@@ -37,15 +37,7 @@ const sidebarItems = [
 ];
 
 // Default sidebar with static items
-export const Default: Story = {
-  args: {
-    items: sidebarItems,
-    activeItem: "Pipelines",
-  },
-};
-
-// Interactive sidebar with state
-export const Interactive: React.FC = () => {
+const InteractiveComponent = () => {
   const [activeItem, setActiveItem] = useState("Pipelines");
 
   const handleItemClick = (label: string) => {
@@ -55,11 +47,7 @@ export const Interactive: React.FC = () => {
 
   return (
     <div style={{ display: "flex", height: "100%" }}>
-      <Sidebar
-        items={sidebarItems}
-        activeItem={activeItem}
-        onItemClick={handleItemClick}
-      />
+      <Sidebar items={sidebarItems} activeItem={activeItem} onItemClick={handleItemClick} />
       <div
         style={{
           padding: "20px",
@@ -85,4 +73,18 @@ export const Interactive: React.FC = () => {
       </div>
     </div>
   );
+};
+
+export const Default: Story = {
+  name: "[SW-T942] Default",
+  args: {
+    items: sidebarItems,
+    activeItem: "Pipelines",
+  },
+};
+
+// Interactive sidebar with state
+export const Interactive: Story = {
+  name: "[SW-T943] Interactive",
+  render: () => <InteractiveComponent />,
 };

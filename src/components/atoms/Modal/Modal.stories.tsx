@@ -18,6 +18,7 @@ type Story = StoryObj<typeof Modal>;
 
 // Base story
 export const Default: Story = {
+  name: "[SW-T820] Default",
   args: {
     isOpen: true,
     onClose: () => console.log("Modal closed"),
@@ -25,8 +26,8 @@ export const Default: Story = {
     title: "Title",
     children: (
       <p>
-        Are you sure you want to reset this view? you will need to input all the
-        settings and load all the graph from the start
+        Are you sure you want to reset this view? you will need to input all the settings and load all the graph from
+        the start
       </p>
     ),
   },
@@ -34,42 +35,13 @@ export const Default: Story = {
 
 // Modal with hidden actions
 export const HiddenActions: Story = {
+  name: "[SW-T821] Hidden Actions",
   args: {
     ...Default.args,
     hideActions: true,
   },
 };
-
-// Modal with custom width
-export const CustomWidth: Story = {
-  args: {
-    ...Default.args,
-    width: "800px",
-  },
-};
-
-// Modal with long scrollable content
-export const LongContent: Story = {
-  args: {
-    ...Default.args,
-    children: (
-      <>
-        {Array(10)
-          .fill(0)
-          .map((_, i) => (
-            <p key={i}>
-              This is paragraph {i + 1}. Lorem ipsum dolor sit amet, consectetur
-              adipiscing elit. Nullam eu justo eu nisi ultrices facilisis. Donec
-              vestibulum metus at sem faucibus, a commodo nunc ultricies.
-            </p>
-          ))}
-      </>
-    ),
-  },
-};
-
-// Interactive example
-export const Interactive: React.FC = () => {
+const InteractiveComponent = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleOpen = () => {
@@ -90,120 +62,47 @@ export const Interactive: React.FC = () => {
       <Button onClick={handleOpen} variant="primary">
         Open Modal
       </Button>
-      <Modal
-        isOpen={isOpen}
-        onClose={handleClose}
-        onConfirm={handleConfirm}
-        title="Title"
-      >
+      <Modal isOpen={isOpen} onClose={handleClose} onConfirm={handleConfirm} title="Title">
         <p>
-          Are you sure you want to reset this view? you will need to input all
-          the settings and load all the graph from the start
+          Are you sure you want to reset this view? you will need to input all the settings and load all the graph from
+          the start
         </p>
       </Modal>
     </div>
   );
 };
 
-// Modal with custom content
-export const CustomContent: Story = {
+// Modal with custom width
+export const CustomWidth: Story = {
+  name: "[SW-T822] Custom Width",
   args: {
     ...Default.args,
-    title: "Custom Form",
+    width: "800px",
+  },
+};
+
+// Modal with long scrollable content
+export const LongContent: Story = {
+  name: "[SW-T823] Long Content",
+  args: {
+    ...Default.args,
     children: (
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <input
-          type="text"
-          placeholder="Enter your name"
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid var(--grey-200)",
-          }}
-        />
-        <textarea
-          placeholder="Enter your message"
-          rows={4}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid var(--grey-200)",
-          }}
-        />
-      </div>
+      <>
+        {Array(10)
+          .fill(0)
+          .map((_, i) => (
+            <p key={i}>
+              This is paragraph {i + 1}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam eu justo eu
+              nisi ultrices facilisis. Donec vestibulum metus at sem faucibus, a commodo nunc ultricies.
+            </p>
+          ))}
+      </>
     ),
   },
 };
 
-// Theme examples
-export const WithSharpCorners: Story = {
-  args: {
-    ...Default.args,
-    title: "Sharp Corners Modal",
-  },
-  decorators: [
-    (Story) => (
-      <ThemeProvider
-        theme={{
-          radius: {
-            large: "4px",
-          },
-        }}
-      >
-        <Story />
-      </ThemeProvider>
-    ),
-  ],
-};
-
-export const WithCustomBackground: Story = {
-  args: {
-    ...Default.args,
-    title: "Custom Background Modal",
-  },
-  decorators: [
-    (Story) => (
-      <ThemeProvider
-        theme={{
-          colors: {
-            background: "#FEF3C7",
-          },
-        }}
-      >
-        <Story />
-      </ThemeProvider>
-    ),
-  ],
-};
-
-export const WithFullTheme: Story = {
-  args: {
-    ...Default.args,
-    title: "Fully Themed Modal",
-  },
-  decorators: [
-    (Story) => (
-      <ThemeProvider
-        theme={{
-          colors: {
-            background: "#F3E8FF",
-            primary: "#9333EA",
-            primaryHover: "#7E22CE",
-            primaryActive: "#6B21A8",
-          },
-          radius: {
-            large: "24px",
-            medium: "12px",
-          },
-        }}
-      >
-        <Story />
-      </ThemeProvider>
-    ),
-  ],
-};
-
-export const InteractiveWithTheme: React.FC = () => {
+// Interactive example
+const InteractiveWithThemeComponent = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleOpen = () => {
@@ -238,18 +137,122 @@ export const InteractiveWithTheme: React.FC = () => {
         <Button onClick={handleOpen} variant="primary">
           Open Themed Modal
         </Button>
-        <Modal
-          isOpen={isOpen}
-          onClose={handleClose}
-          onConfirm={handleConfirm}
-          title="Themed Modal"
-        >
-          <p>
-            This modal and button are both themed with custom red colors and
-            sharp corners!
-          </p>
+        <Modal isOpen={isOpen} onClose={handleClose} onConfirm={handleConfirm} title="Themed Modal">
+          <p>This modal and button are both themed with custom red colors and sharp corners!</p>
         </Modal>
       </div>
     </ThemeProvider>
   );
+};
+
+export const Interactive: Story = {
+  name: "[SW-T824] Interactive",
+  render: () => <InteractiveComponent />,
+};
+
+// Modal with custom content
+export const CustomContent: Story = {
+  name: "[SW-T825] Custom Content",
+  args: {
+    ...Default.args,
+    title: "Custom Form",
+    children: (
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <input
+          type="text"
+          placeholder="Enter your name"
+          style={{
+            padding: "8px",
+            borderRadius: "4px",
+            border: "1px solid var(--grey-200)",
+          }}
+        />
+        <textarea
+          placeholder="Enter your message"
+          rows={4}
+          style={{
+            padding: "8px",
+            borderRadius: "4px",
+            border: "1px solid var(--grey-200)",
+          }}
+        />
+      </div>
+    ),
+  },
+};
+
+// Theme examples
+export const WithSharpCorners: Story = {
+  name: "[SW-T826] With Sharp Corners",
+  args: {
+    ...Default.args,
+    title: "Sharp Corners Modal",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          radius: {
+            large: "4px",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export const WithCustomBackground: Story = {
+  name: "[SW-T827] With Custom Background",
+  args: {
+    ...Default.args,
+    title: "Custom Background Modal",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            background: "#FEF3C7",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export const WithFullTheme: Story = {
+  name: "[SW-T828] With Full Theme",
+  args: {
+    ...Default.args,
+    title: "Fully Themed Modal",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            background: "#F3E8FF",
+            primary: "#9333EA",
+            primaryHover: "#7E22CE",
+            primaryActive: "#6B21A8",
+          },
+          radius: {
+            large: "24px",
+            medium: "12px",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+
+export const InteractiveWithTheme: Story = {
+  name: "[SW-T829] Interactive With Theme",
+  render: () => <InteractiveWithThemeComponent />,
 };

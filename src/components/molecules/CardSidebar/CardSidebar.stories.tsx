@@ -22,6 +22,7 @@ export default meta;
 type Story = StoryObj<typeof CardSidebar>;
 
 export const Default: Story = {
+  name: "[SW-T880] Default",
   args: {
     title: "Title",
     description: "Description",
@@ -32,6 +33,7 @@ export const Default: Story = {
 };
 
 export const WithoutButton: Story = {
+  name: "[SW-T881] Without Button",
   args: {
     title: "Title",
     description: "Description",
@@ -41,6 +43,7 @@ export const WithoutButton: Story = {
 };
 
 export const WithoutLink: Story = {
+  name: "[SW-T882] Without Link",
   args: {
     title: "Title",
     description: "Description",
@@ -50,6 +53,7 @@ export const WithoutLink: Story = {
 };
 
 export const Active: Story = {
+  name: "[SW-T883] Active",
   args: {
     title: "Title",
     description: "Description",
@@ -60,6 +64,7 @@ export const Active: Story = {
 };
 
 export const Hover: Story = {
+  name: "[SW-T884] Hover",
   args: {
     title: "Title",
     description: "Description",
@@ -70,6 +75,7 @@ export const Hover: Story = {
 };
 
 export const Disabled: Story = {
+  name: "[SW-T885] Disabled",
   args: {
     title: "Title",
     description: "Description",
@@ -80,6 +86,7 @@ export const Disabled: Story = {
 };
 
 export const WithoutDescription: Story = {
+  name: "[SW-T886] Without Description",
   args: {
     title: "Title",
     buttonText: "Button",
@@ -88,6 +95,7 @@ export const WithoutDescription: Story = {
 };
 
 export const LinkOnly: Story = {
+  name: "[SW-T887] Link Only",
   args: {
     title: "Title",
     description: "Description with link only, no button",
@@ -96,6 +104,7 @@ export const LinkOnly: Story = {
 };
 
 export const ButtonOnly: Story = {
+  name: "[SW-T888] Button Only",
   args: {
     title: "Title",
     description: "Description with button only, no link",
@@ -104,6 +113,7 @@ export const ButtonOnly: Story = {
 };
 
 export const TitleOnly: Story = {
+  name: "[SW-T889] Title Only",
   args: {
     title: "Title Only",
     description: "No actions available on this card",
@@ -111,16 +121,17 @@ export const TitleOnly: Story = {
 };
 
 export const CustomText: Story = {
+  name: "[SW-T890] Custom Text",
   args: {
     title: "Custom Title",
-    description:
-      "This is a custom description that explains what this card does.",
+    description: "This is a custom description that explains what this card does.",
     buttonText: "Action",
     linkText: "Learn more",
   },
 };
 
 export const AllVariants: Story = {
+  name: "[SW-T891] All Variants",
   render: () => (
     <div
       style={{
@@ -130,39 +141,16 @@ export const AllVariants: Story = {
         width: "400px",
       }}
     >
-      <CardSidebar
-        title="Title"
-        description="Description"
-        buttonText="Button"
-        linkText="Link"
-        status="default"
-      />
-      <CardSidebar
-        title="Title"
-        description="Description"
-        buttonText="Button"
-        linkText="Link"
-        status="active"
-      />
-      <CardSidebar
-        title="Title"
-        description="Description"
-        buttonText="Button"
-        linkText="Link"
-        status="hover"
-      />
-      <CardSidebar
-        title="Title"
-        description="Description"
-        buttonText="Button"
-        linkText="Link"
-        status="disabled"
-      />
+      <CardSidebar title="Title" description="Description" buttonText="Button" linkText="Link" status="default" />
+      <CardSidebar title="Title" description="Description" buttonText="Button" linkText="Link" status="active" />
+      <CardSidebar title="Title" description="Description" buttonText="Button" linkText="Link" status="hover" />
+      <CardSidebar title="Title" description="Description" buttonText="Button" linkText="Link" status="disabled" />
     </div>
   ),
 };
 
 export const ActionVariations: Story = {
+  name: "[SW-T892] Action Variations",
   render: () => (
     <div
       style={{
@@ -178,25 +166,15 @@ export const ActionVariations: Story = {
         buttonText="Button"
         linkText="Link"
       />
-      <CardSidebar
-        title="Button Only"
-        description="This card has only a button"
-        buttonText="Button"
-      />
-      <CardSidebar
-        title="Link Only"
-        description="This card has only a link"
-        linkText="Link"
-      />
-      <CardSidebar
-        title="No Actions"
-        description="This card has no button or link"
-      />
+      <CardSidebar title="Button Only" description="This card has only a button" buttonText="Button" />
+      <CardSidebar title="Link Only" description="This card has only a link" linkText="Link" />
+      <CardSidebar title="No Actions" description="This card has no button or link" />
     </div>
   ),
 };
 
 export const WithoutButtonAndLink: Story = {
+  name: "[SW-T893] Without Button And Link",
   args: {
     title: "Title",
     description: "Description with no button and no link",

@@ -20,6 +20,7 @@ export default meta;
 type Story = StoryObj<typeof TableCell>;
 
 export const Default: Story = {
+  name: "[SW-T843] Default",
   render: (args) => (
     <table style={{ borderCollapse: "collapse", width: "100%" }}>
       <tbody>
@@ -35,6 +36,7 @@ export const Default: Story = {
 };
 
 export const Alignments: Story = {
+  name: "[SW-T844] Alignments",
   render: () => (
     <table style={{ borderCollapse: "collapse", width: "100%" }}>
       <tbody>
@@ -49,6 +51,7 @@ export const Alignments: Story = {
 };
 
 export const WithDifferentWidths: Story = {
+  name: "[SW-T845] With Different Widths",
   render: () => (
     <table style={{ borderCollapse: "collapse", width: "100%" }}>
       <tbody>
@@ -63,6 +66,7 @@ export const WithDifferentWidths: Story = {
 };
 
 export const MultipleRows: Story = {
+  name: "[SW-T846] Multiple Rows",
   render: () => (
     <table style={{ borderCollapse: "collapse", width: "100%" }}>
       <tbody>

@@ -16,9 +16,7 @@ const initialYaml = `protocolSchema: v3\nname: v3\ndescription: No description\n
 
 export const Default = () => {
   const [newVersionMode, setNewVersionMode] = useState(false);
-  const [selectedVersion, setSelectedVersion] = useState(
-    versionOptions[0].value
-  );
+  const [selectedVersion, setSelectedVersion] = useState(versionOptions[0].value);
   const [yaml, setYaml] = useState(initialYaml);
 
   return (
@@ -35,3 +33,4 @@ export const Default = () => {
     />
   );
 };
+Default.storyName = "[SW-T931] Default";

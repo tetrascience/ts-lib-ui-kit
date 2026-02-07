@@ -38,6 +38,7 @@ export default meta;
 type Story = StoryObj<typeof ScatterGraph>;
 
 export const Default: Story = {
+  name: "[SW-T1017] Default",
   args: {
     dataSeries: generateScatterDemoData(),
     width: 900,
@@ -49,6 +50,7 @@ export const Default: Story = {
 };
 
 export const CustomRanges: Story = {
+  name: "[SW-T1018] Custom Ranges",
   args: {
     ...Default.args,
     xRange: [300, 700],

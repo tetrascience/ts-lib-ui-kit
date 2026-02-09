@@ -88,7 +88,9 @@ jobs:
         if: always()
         with:
           name: storybook-junit-results
-          path: test-results/storybook-junit.xml
+          path: |
+            test-results/storybook-junit.xml
+            test-results/screenshot-urls.json
           retention-days: 7
 
       - name: 📸 Upload failure artifacts

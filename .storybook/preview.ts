@@ -10,6 +10,8 @@ const preview: Preview = {
         date: /Date$/,
       },
     },
+    // Use fullscreen layout for video recording - removes padding
+    layout: "fullscreen",
   },
 };
 

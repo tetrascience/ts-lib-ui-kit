@@ -20,9 +20,9 @@ export default defineWorkspace([
         provider: "playwright",
         headless: true,
         name: "chromium",
+        viewport: { width: 1920, height: 1080 },
       },
       setupFiles: [".storybook/vitest.setup.ts"],
     },
   },
 ]);
-

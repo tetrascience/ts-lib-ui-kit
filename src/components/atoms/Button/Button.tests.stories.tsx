@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { expect, fn, userEvent, within } from "@storybook/test";
 
 import { Button } from "./Button";
+import { ThemeProvider } from "../../../theme";
 
 /**
  * Interactive test stories for the Button component.
@@ -115,5 +116,133 @@ export const KeyboardInteraction: Story = {
 
     // Verify onClick was called
     await expect(args.onClick).toHaveBeenCalledTimes(1);
+  },
+};
+
+/**
+ * Helper function to convert hex color to RGB format for comparison
+ * Browser computed styles return RGB format, not hex
+ */
+function hexToRgb(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return hex;
+  const r = parseInt(result[1], 16);
+  const g = parseInt(result[2], 16);
+  const b = parseInt(result[3], 16);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+// Theme verification tests - these ensure the ThemeProvider correctly scopes CSS variables
+export const RedThemeVerification: Story = {
+  name: "Red Theme Color Verification",
+  args: {
+    children: "Red Theme Button",
+    variant: "primary",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            primary: "#DC2626",
+            primaryHover: "#B91C1C",
+            primaryActive: "#991B1B",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: /red theme button/i });
+
+    // Verify button is rendered
+    await expect(button).toBeInTheDocument();
+
+    // Get computed background color
+    const computedStyle = window.getComputedStyle(button);
+    const backgroundColor = computedStyle.backgroundColor;
+
+    // Verify the button has the correct red theme color (#DC2626 = rgb(220, 38, 38))
+    const expectedColor = hexToRgb("#DC2626");
+    await expect(backgroundColor).toBe(expectedColor);
+  },
+};
+
+export const PurpleThemeVerification: Story = {
+  name: "Purple Theme Color Verification",
+  args: {
+    children: "Purple Theme Button",
+    variant: "primary",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            primary: "#9333EA",
+            primaryHover: "#7E22CE",
+            primaryActive: "#6B21A8",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: /purple theme button/i });
+
+    // Verify button is rendered
+    await expect(button).toBeInTheDocument();
+
+    // Get computed background color
+    const computedStyle = window.getComputedStyle(button);
+    const backgroundColor = computedStyle.backgroundColor;
+
+    // Verify the button has the correct purple theme color (#9333EA = rgb(147, 51, 234))
+    const expectedColor = hexToRgb("#9333EA");
+    await expect(backgroundColor).toBe(expectedColor);
+  },
+};
+
+export const OrangeThemeVerification: Story = {
+  name: "Orange Theme Color Verification",
+  args: {
+    children: "Orange Theme Button",
+    variant: "primary",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            primary: "#F59E0B",
+            primaryHover: "#D97706",
+            primaryActive: "#B45309",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: /orange theme button/i });
+
+    // Verify button is rendered
+    await expect(button).toBeInTheDocument();
+
+    // Get computed background color
+    const computedStyle = window.getComputedStyle(button);
+    const backgroundColor = computedStyle.backgroundColor;
+
+    // Verify the button has the correct orange theme color (#F59E0B = rgb(245, 158, 11))
+    const expectedColor = hexToRgb("#F59E0B");
+    await expect(backgroundColor).toBe(expectedColor);
   },
 };

@@ -29,6 +29,20 @@ beforeEach(() => {
   };
 
   console.error = (...args: unknown[]) => {
+    // Ignore null errors from Monaco Editor (known issue in CI)
+    // Monaco Editor occasionally logs null during initialization in headless browsers
+    // See: https://github.com/microsoft/monaco-editor/issues/2810
+    if (args.length === 1 && args[0] === null) {
+      // Check if this error is coming from Monaco by inspecting the stack trace
+      const stack = new Error().stack || "";
+      const isFromMonaco = stack.includes("monaco") || stack.includes("MonacoEditor");
+
+      if (isFromMonaco) {
+        // Still log it to console, just don't fail the test
+        originalError.apply(console, args);
+        return;
+      }
+    }
     const message = args.map((arg) => String(arg)).join(" ");
     errors.push(message);
     originalError.apply(console, args);

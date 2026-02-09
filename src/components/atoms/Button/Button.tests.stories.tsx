@@ -134,7 +134,7 @@ function hexToRgb(hex: string): string {
 
 // Theme verification tests - these ensure the ThemeProvider correctly scopes CSS variables
 export const RedThemeVerification: Story = {
-  name: "Red Theme Color Verification",
+  name: "[SW-T1048] Red Theme Color Verification",
   args: {
     children: "Red Theme Button",
     variant: "primary",
@@ -172,7 +172,7 @@ export const RedThemeVerification: Story = {
 };
 
 export const PurpleThemeVerification: Story = {
-  name: "Purple Theme Color Verification",
+  name: "[SW-T1049] Purple Theme Color Verification",
   args: {
     children: "Purple Theme Button",
     variant: "primary",
@@ -210,7 +210,7 @@ export const PurpleThemeVerification: Story = {
 };
 
 export const OrangeThemeVerification: Story = {
-  name: "Orange Theme Color Verification",
+  name: "[SW-T1050] Orange Theme Color Verification",
   args: {
     children: "Orange Theme Button",
     variant: "primary",

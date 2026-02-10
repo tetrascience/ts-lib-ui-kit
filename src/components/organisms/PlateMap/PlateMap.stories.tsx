@@ -1,12 +1,19 @@
-import { Meta, StoryObj } from "@storybook/react";
-import { PlateMap, WellData } from "./PlateMap";
+import { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within, userEvent } from "storybook/test";
+import {
+  PlateMap,
+  WellData,
+  LayerConfig,
+  PlateRegion,
+  LegendConfig,
+} from "./PlateMap";
+
+/** Helper to add delay between interactive test actions for smoother viewing */
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const meta: Meta<typeof PlateMap> = {
   title: "Organisms/PlateMap",
   component: PlateMap,
-  parameters: {
-    layout: "centered",
-  },
   tags: ["autodocs"],
 };
 
@@ -19,22 +26,22 @@ type Story = StoryObj<typeof PlateMap>;
 function generate96WellData(): WellData[] {
   const wells: WellData[] = [];
   const rows = "ABCDEFGH";
-  
+
   for (let r = 0; r < 8; r++) {
     for (let c = 1; c <= 12; c++) {
       const wellId = `${rows[r]}${c}`;
       // Create some variation - higher values in center, some empty wells
       const baseValue = 5000 + Math.random() * 20000;
-      const centerBoost = (r >= 2 && r <= 5 && c >= 4 && c <= 9) ? 10000 : 0;
-      
+      const centerBoost = r >= 2 && r <= 5 && c >= 4 && c <= 9 ? 10000 : 0;
+
       // Make a few wells empty
       if ((r === 0 && c === 12) || (r === 7 && c === 1)) {
-        wells.push({ wellId, value: null });
+        wells.push({ wellId, values: { RFU: null } });
       } else {
         wells.push({
           wellId,
-          value: Math.round(baseValue + centerBoost),
-          metadata: { sampleId: `S${r * 12 + c}`, concentration: "100 nM" },
+          values: { RFU: Math.round(baseValue + centerBoost) },
+          tooltipData: { sampleId: `S${r * 12 + c}`, concentration: "100 nM" },
         });
       }
     }
@@ -47,40 +54,53 @@ function generate96WellData(): WellData[] {
  */
 function generate384WellGrid(): (number | null)[][] {
   const grid: (number | null)[][] = [];
-  
+
   for (let r = 0; r < 16; r++) {
     const row: (number | null)[] = [];
     for (let c = 0; c < 24; c++) {
       // Create a gradient pattern
-      const value = 1000 + (r * 1000) + (c * 500) + Math.random() * 2000;
-      // Some empty wells at corners
-      if ((r < 2 && c < 2) || (r >= 14 && c >= 22)) {
-        row.push(null);
-      } else {
-        row.push(Math.round(value));
-      }
+      const value = 1000 + r * 1000 + c * 500 + Math.random() * 2000;
+      row.push(Math.round(value));
     }
     grid.push(row);
   }
   return grid;
 }
 
+const layer96WellConfigs: LayerConfig[] = [
+  { id: "RFU", name: "Fluorescence", valueUnit: "RFU" },
+];
+
 /**
  * 96-well plate with WellData array input
- * Demonstrates the recommended data format with well IDs, values, and metadata
+ * Demonstrates the recommended data format with well IDs, values, and tooltipData
  */
 export const Plate96Well: Story = {
   args: {
     data: generate96WellData(),
     plateFormat: "96",
     title: "96-Well Plate Assay Results",
-    valueUnit: " RFU",
+    layerConfigs: layer96WellConfigs,
     precision: 0,
     width: 700,
     height: 450,
-    onWellClick: (wellId, value, metadata) => {
-      console.log(`Clicked ${wellId}:`, value, metadata);
+    onWellClick: (wellData) => {
+      console.log(`Clicked ${wellData.wellId}:`, wellData.values, wellData.tooltipData);
     },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("96-Well Plate Assay Results");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      // Verify the Plotly chart rendered by checking for chart title in the DOM
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
   },
 };
 
@@ -97,6 +117,63 @@ export const Plate384Well: Story = {
     precision: 0,
     width: 900,
     height: 500,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("384-Well Plate Screening");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+  },
+};
+
+/**
+ * 1536-well plate with double-letter row notation (AA-AF)
+ * Demonstrates high-density plate format with 32 rows × 48 columns
+ */
+export const Plate1536Well: Story = {
+  args: {
+    data: (() => {
+      const wells: WellData[] = [];
+      // Row labels for 1536-well: A-Z, then AA-AF (32 rows total)
+      const singleRows = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const doubleRows = ["AA", "AB", "AC", "AD", "AE", "AF"];
+      const allRows = [...singleRows.split(""), ...doubleRows];
+
+      for (let r = 0; r < 32; r++) {
+        for (let c = 1; c <= 48; c++) {
+          const wellId = `${allRows[r]}${c}`;
+          const value = 1000 + r * 500 + c * 100 + Math.random() * 500;
+          wells.push({ wellId, values: { Signal: Math.round(value) } });
+        }
+      }
+      return wells;
+    })(),
+    plateFormat: "1536",
+    title: "1536-Well High-Density Plate",
+    layerConfigs: [{ id: "Signal", valueUnit: "RFU" }],
+    precision: 0,
+    width: 1100,
+    height: 600,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("1536-Well High-Density Plate");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
   },
 };
 
@@ -120,6 +197,19 @@ export const CustomDimensions: Story = {
     width: 500,
     height: 350,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("Custom 3x4 Plate");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders with custom dimensions", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+  },
 };
 
 /**
@@ -129,23 +219,36 @@ export const CustomDimensions: Story = {
 export const PartialPlate: Story = {
   args: {
     data: [
-      { wellId: "A1", value: 5000 },
-      { wellId: "A2", value: 7500 },
-      { wellId: "A3", value: null },
-      { wellId: "B1", value: 6000 },
-      { wellId: "B2", value: 8500 },
-      { wellId: "B3", value: 9000 },
-      { wellId: "C1", value: null },
-      { wellId: "C2", value: 7000 },
-      { wellId: "D4", value: 12000 },
-      { wellId: "H12", value: 25000 },
-    ] as WellData[],
+      { wellId: "A1", values: { RFU: 5000 } },
+      { wellId: "A2", values: { RFU: 7500 } },
+      { wellId: "A3", values: { RFU: null } },
+      { wellId: "B1", values: { RFU: 6000 } },
+      { wellId: "B2", values: { RFU: 8500 } },
+      { wellId: "B3", values: { RFU: 9000 } },
+      { wellId: "C1", values: { RFU: null } },
+      { wellId: "C2", values: { RFU: 7000 } },
+      { wellId: "D4", values: { RFU: 12000 } },
+      { wellId: "H12", values: { RFU: 25000 } },
+    ],
     plateFormat: "96",
     title: "Partial Plate (Sparse Data)",
-    valueUnit: " RFU",
+    layerConfigs: [{ id: "RFU", valueUnit: "RFU" }],
     width: 700,
     height: 450,
     emptyWellColor: "#e0e0e0",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("Partial Plate (Sparse Data)");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders with sparse data", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
   },
 };
 
@@ -174,6 +277,28 @@ export const GenericHeatmap: Story = {
     height: 500,
     precision: 0,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("Generic Heatmap with Custom Labels");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Custom axis labels are displayed", async () => {
+      // Check for custom X-axis labels
+      expect(canvas.getByText("X1")).toBeInTheDocument();
+      expect(canvas.getByText("X5")).toBeInTheDocument();
+      // Check for custom Y-axis labels
+      expect(canvas.getByText("Y1")).toBeInTheDocument();
+      expect(canvas.getByText("Y5")).toBeInTheDocument();
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("X Axis")).toBeInTheDocument();
+      expect(canvas.getByText("Y Axis")).toBeInTheDocument();
+    });
+  },
 };
 
 /**
@@ -190,5 +315,477 @@ export const RandomData: Story = {
     precision: 0,
     width: 800,
     height: 500,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("Auto-generated Random Data");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders with auto-generated data", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+  },
+};
+
+/**
+ * Categorical visualization mode
+ * Demonstrates displaying well types with discrete colors
+ */
+export const CategoricalVisualization: Story = {
+  args: {
+    data: (() => {
+      const wells: WellData[] = [];
+      const rows = "ABCDEFGH";
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 1; c <= 12; c++) {
+          const wellId = `${rows[r]}${c}`;
+          // First column is controls, last column is blanks, rest are samples or standards
+          let wellType: string;
+          if (c === 1) wellType = "control";
+          else if (c === 12) wellType = "blank";
+          else if (r === 0 || r === 7) wellType = "standard";
+          else wellType = "sample";
+
+          wells.push({ wellId, values: { Type: wellType } });
+        }
+      }
+      return wells;
+    })(),
+    plateFormat: "96",
+    title: "Categorical Well Types",
+    layerConfigs: [
+      {
+        id: "Type",
+        visualizationMode: "categorical",
+        categoryColors: {
+          sample: "#4575b4",
+          control: "#d73027",
+          standard: "#fdae61",
+          blank: "#f0f0f0",
+        },
+      },
+    ],
+    width: 700,
+    height: 450,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart renders with title", async () => {
+      const title = canvas.getByText("Categorical Well Types");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Legend displays categories", async () => {
+      // Check that category labels appear in the legend
+      expect(canvas.getByText("sample")).toBeInTheDocument();
+      expect(canvas.getByText("control")).toBeInTheDocument();
+    });
+  },
+};
+
+/**
+ * Multi-layer data with layer toggling
+ * Demonstrates wells with multiple values and layer switching
+ */
+export const LayerToggling: Story = {
+  args: {
+    data: (() => {
+      const wells: WellData[] = [];
+      const rows = "ABCDEFGH";
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 1; c <= 12; c++) {
+          const wellId = `${rows[r]}${c}`;
+          const rawValue = 5000 + Math.random() * 20000;
+          const normalizedValue = rawValue / 25000;
+          const zScore = (rawValue - 15000) / 5000;
+
+          wells.push({
+            wellId,
+            values: {
+              Raw: Math.round(rawValue),
+              Normalized: Math.round(normalizedValue * 100) / 100,
+              ZScore: Math.round(zScore * 100) / 100,
+            },
+            tooltipData: { sampleId: `S${r * 12 + c}` },
+          });
+        }
+      }
+      return wells;
+    })(),
+    plateFormat: "96",
+    title: "Multi-Layer Assay Data",
+    layerConfigs: [
+      { id: "Raw", name: "Raw Signal", valueUnit: "RFU", colorScale: "Blues" },
+      {
+        id: "Normalized",
+        name: "Normalized",
+        valueMin: 0,
+        valueMax: 1,
+        colorScale: "Viridis",
+      },
+      {
+        id: "ZScore",
+        name: "Z-Score",
+        valueMin: -3,
+        valueMax: 3,
+        colorScale: "RdBu",
+      },
+    ],
+    initialLayerId: "Raw",
+    onLayerChange: (layerId) => console.log("Layer changed to:", layerId),
+    width: 700,
+    height: 450,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Layer toggle buttons are displayed", async () => {
+      expect(canvas.getByText("Raw Signal")).toBeInTheDocument();
+      expect(canvas.getByText("Normalized")).toBeInTheDocument();
+      expect(canvas.getByText("Z-Score")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+
+    await step("Raw Signal is initially active", async () => {
+      const rawButton = canvas.getByText("Raw Signal");
+      // Active button has blue background (#4575b4)
+      expect(rawButton).toHaveStyle({ backgroundColor: "rgb(69, 117, 180)" });
+    });
+
+    await step("Click Normalized layer toggles active state", async () => {
+      const normalizedButton = canvas.getByText("Normalized");
+      const rawButton = canvas.getByText("Raw Signal");
+
+      // Normalized should be inactive (white background)
+      expect(normalizedButton).toHaveStyle({ backgroundColor: "rgb(255, 255, 255)" });
+
+      await sleep(1000); // Delay before click for smoother viewing
+      await userEvent.click(normalizedButton);
+
+      // Now Normalized should be active
+      expect(normalizedButton).toHaveStyle({ backgroundColor: "rgb(69, 117, 180)" });
+      // Raw Signal should be inactive
+      expect(rawButton).toHaveStyle({ backgroundColor: "rgb(255, 255, 255)" });
+    });
+
+    await step("Click Z-Score layer toggles active state", async () => {
+      const zScoreButton = canvas.getByText("Z-Score");
+      const normalizedButton = canvas.getByText("Normalized");
+
+      await sleep(1000); // Delay before click for smoother viewing
+      await userEvent.click(zScoreButton);
+
+      // Now Z-Score should be active
+      expect(zScoreButton).toHaveStyle({ backgroundColor: "rgb(69, 117, 180)" });
+      // Normalized should be inactive
+      expect(normalizedButton).toHaveStyle({ backgroundColor: "rgb(255, 255, 255)" });
+    });
+
+    await step("Click Raw Signal layer to switch back", async () => {
+      const rawButton = canvas.getByText("Raw Signal");
+      const zScoreButton = canvas.getByText("Z-Score");
+
+      await sleep(1000); // Delay before click for smoother viewing
+      await userEvent.click(rawButton);
+
+      // Raw Signal should be active again
+      expect(rawButton).toHaveStyle({ backgroundColor: "rgb(69, 117, 180)" });
+      // Z-Score should be inactive
+      expect(zScoreButton).toHaveStyle({ backgroundColor: "rgb(255, 255, 255)" });
+    });
+  },
+};
+
+/**
+ * Region highlighting with PlateRegions
+ * Demonstrates rectangular region overlays with borders and fill colors
+ */
+export const RegionHighlighting: Story = {
+  args: {
+    data: (() => {
+      const wells: WellData[] = [];
+      const rows = "ABCDEFGH";
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 1; c <= 12; c++) {
+          const wellId = `${rows[r]}${c}`;
+          wells.push({
+            wellId,
+            values: { Signal: Math.round(5000 + Math.random() * 20000) },
+          });
+        }
+      }
+      return wells;
+    })(),
+    plateFormat: "96",
+    title: "Plate with Region Highlights",
+    layerConfigs: [{ id: "Signal", valueUnit: "RFU" }],
+    regions: [
+      {
+        id: "positive-controls",
+        name: "Positive Controls",
+        wells: "A1:A6",
+        borderColor: "#d73027",
+        borderWidth: 3,
+        fillColor: "rgba(215, 48, 39, 0.1)",
+      },
+      {
+        id: "negative-controls",
+        name: "Negative Controls",
+        wells: "A7:A12",
+        borderColor: "#4575b4",
+        borderWidth: 3,
+        fillColor: "rgba(69, 117, 180, 0.1)",
+      },
+      {
+        id: "samples",
+        name: "Sample Area",
+        wells: "B1:H12",
+        borderColor: "#1a9850",
+        borderWidth: 2,
+      },
+    ] as PlateRegion[],
+    width: 700,
+    height: 500,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart renders with title", async () => {
+      const title = canvas.getByText("Plate with Region Highlights");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Region legend items are displayed", async () => {
+      expect(canvas.getByText("Positive Controls")).toBeInTheDocument();
+      expect(canvas.getByText("Negative Controls")).toBeInTheDocument();
+      expect(canvas.getByText("Sample Area")).toBeInTheDocument();
+    });
+  },
+};
+
+/**
+ * Custom category colors
+ * Demonstrates overriding default categorical colors
+ */
+export const CustomCategoryColors: Story = {
+  args: {
+    data: (() => {
+      const wells: WellData[] = [];
+      const rows = "ABCDEFGH";
+      const statuses = ["pass", "fail", "pending", "review"];
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 1; c <= 12; c++) {
+          const wellId = `${rows[r]}${c}`;
+          const status = statuses[Math.floor(Math.random() * statuses.length)];
+          wells.push({ wellId, values: { QCStatus: status } });
+        }
+      }
+      return wells;
+    })(),
+    plateFormat: "96",
+    title: "QC Status with Custom Colors",
+    layerConfigs: [
+      {
+        id: "QCStatus",
+        name: "QC Status",
+        visualizationMode: "categorical",
+        categoryColors: {
+          pass: "#2ca02c",
+          fail: "#d62728",
+          pending: "#ff7f0e",
+          review: "#9467bd",
+        },
+      },
+    ],
+    width: 700,
+    height: 450,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Legend shows QC statuses", async () => {
+      expect(canvas.getByText("pass")).toBeInTheDocument();
+      expect(canvas.getByText("fail")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+  },
+};
+
+/**
+ * Mixed value types (numeric and categorical)
+ * Demonstrates layers with both heatmap and categorical visualization
+ */
+export const MixedValueTypes: Story = {
+  args: {
+    data: (() => {
+      const wells: WellData[] = [];
+      const rows = "ABCDEFGH";
+      const statuses = ["positive", "negative", "inconclusive"];
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 1; c <= 12; c++) {
+          const wellId = `${rows[r]}${c}`;
+          const fluorescence = Math.round(5000 + Math.random() * 20000);
+          const status = statuses[Math.floor(Math.random() * statuses.length)];
+
+          wells.push({
+            wellId,
+            values: {
+              Fluorescence: fluorescence,
+              Status: status,
+            },
+            tooltipData: { well: wellId },
+          });
+        }
+      }
+      return wells;
+    })(),
+    plateFormat: "96",
+    title: "Mixed Numeric and Categorical Data",
+    layerConfigs: [
+      {
+        id: "Fluorescence",
+        name: "Fluorescence",
+        visualizationMode: "heatmap",
+        valueUnit: "RFU",
+        colorScale: "Viridis",
+      },
+      {
+        id: "Status",
+        name: "Call Status",
+        visualizationMode: "categorical",
+        categoryColors: {
+          positive: "#d73027",
+          negative: "#4575b4",
+          inconclusive: "#fdae61",
+        },
+      },
+    ],
+    initialLayerId: "Fluorescence",
+    width: 700,
+    height: 450,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Both layer buttons are displayed", async () => {
+      expect(canvas.getByText("Fluorescence")).toBeInTheDocument();
+      expect(canvas.getByText("Call Status")).toBeInTheDocument();
+    });
+
+    await step("Fluorescence (heatmap) is initially active", async () => {
+      const fluorescenceButton = canvas.getByText("Fluorescence");
+      expect(fluorescenceButton).toHaveStyle({ backgroundColor: "rgb(69, 117, 180)" });
+    });
+
+    await step("Switch to Call Status (categorical) layer", async () => {
+      const callStatusButton = canvas.getByText("Call Status");
+      const fluorescenceButton = canvas.getByText("Fluorescence");
+
+      await sleep(1000);
+      await userEvent.click(callStatusButton);
+
+      // Call Status should now be active
+      expect(callStatusButton).toHaveStyle({ backgroundColor: "rgb(69, 117, 180)" });
+      // Fluorescence should be inactive
+      expect(fluorescenceButton).toHaveStyle({ backgroundColor: "rgb(255, 255, 255)" });
+    });
+
+    await step("Categorical legend appears when Call Status is active", async () => {
+      // Check that categorical legend items appear
+      expect(canvas.getByText("positive")).toBeInTheDocument();
+      expect(canvas.getByText("negative")).toBeInTheDocument();
+      expect(canvas.getByText("inconclusive")).toBeInTheDocument();
+    });
+
+    await step("Switch back to Fluorescence (heatmap) layer", async () => {
+      const fluorescenceButton = canvas.getByText("Fluorescence");
+
+      await sleep(1000);
+      await userEvent.click(fluorescenceButton);
+
+      // Fluorescence should be active again
+      expect(fluorescenceButton).toHaveStyle({ backgroundColor: "rgb(69, 117, 180)" });
+    });
+  },
+};
+
+/**
+ * Legend configuration options
+ * Demonstrates legend positioning and styling
+ */
+export const LegendConfiguration: Story = {
+  args: {
+    data: (() => {
+      const wells: WellData[] = [];
+      const rows = "ABCDEFGH";
+      const types = ["sample", "control", "standard"];
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 1; c <= 12; c++) {
+          const wellId = `${rows[r]}${c}`;
+          const type = types[Math.floor(Math.random() * types.length)];
+          wells.push({ wellId, values: { WellType: type } });
+        }
+      }
+      return wells;
+    })(),
+    plateFormat: "96",
+    title: "Legend at Bottom with Custom Styling",
+    layerConfigs: [
+      {
+        id: "WellType",
+        visualizationMode: "categorical",
+        categoryColors: {
+          sample: "#4575b4",
+          control: "#d73027",
+          standard: "#fdae61",
+        },
+      },
+    ],
+    legendConfig: {
+      position: "bottom",
+      fontSize: 14,
+      itemSpacing: 16,
+      swatchSize: 20,
+      title: "Well Types",
+    } as LegendConfig,
+    width: 700,
+    height: 500,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Legend title is displayed", async () => {
+      expect(canvas.getByText("Well Types")).toBeInTheDocument();
+    });
+
+    await step("Legend items are displayed", async () => {
+      expect(canvas.getByText("sample")).toBeInTheDocument();
+      expect(canvas.getByText("control")).toBeInTheDocument();
+      expect(canvas.getByText("standard")).toBeInTheDocument();
+    });
   },
 };

@@ -128,7 +128,7 @@ yarn
 yarn workspace vite-themed-app dev
 ```
 
-Visit http://localhost:5173 to see the example app with custom theming.
+Visit <http://localhost:5173> to see the example app with custom theming.
 
 ## Documentation
 

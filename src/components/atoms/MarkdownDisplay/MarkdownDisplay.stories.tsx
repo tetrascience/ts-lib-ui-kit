@@ -1,4 +1,4 @@
-import { StoryFn } from "@storybook/react";
+import { StoryFn } from "@storybook/react-vite";
 import React from "react";
 
 import MarkdownDisplay from "./MarkdownDisplay"; // Adjust the path if needed

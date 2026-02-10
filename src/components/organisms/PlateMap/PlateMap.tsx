@@ -1021,13 +1021,14 @@ const PlateMap: React.FC<PlateMapProps> = ({
     const plotWidth = width - leftMargin - rightMargin;
     const plotHeight = height - topMargin - bottomMargin;
 
-    // Calculate pixels per cell, use the smaller dimension to keep circles uniform
+    // Calculate pixels per cell, use the smaller dimension to keep markers uniform
     const cellWidth = plotWidth / columns;
     const cellHeight = plotHeight / rows;
     const cellSize = Math.min(cellWidth, cellHeight);
 
-    // Use 80% of cell size to leave gaps between markers
-    const markerSize = Math.max(4, cellSize * 0.8);
+    // Squares fill entire cell (100%) for seamless heatmap, circles leave gaps (80%)
+    const sizeMultiplier = markerShape === "square" ? 1.0 : 0.8;
+    const markerSize = Math.max(4, cellSize * sizeMultiplier);
 
     // Create scatter plot with markers
     const plotData: Plotly.Data[] = [

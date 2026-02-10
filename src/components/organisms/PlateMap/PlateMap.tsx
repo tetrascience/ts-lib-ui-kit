@@ -958,10 +958,9 @@ const PlateMap: React.FC<PlateMapProps> = ({
       // For columns: bounds.minCol=0 means column label 1, so x0 = 1 - inset
       // For rows: bounds.minRow=0 means row index 0, which is correct for y-axis
       //
-      // Dynamic inset based on marker shape:
-      // - Squares fill 100% of cell, so inset = 0.5 (exact cell edge)
-      // - Circles fill 80% of cell (radius = 0.4), so inset = 0.5 to avoid overlap
-      const inset = 0.5;
+      // Use 0.49 inset to place boundary just inside cell edge,
+      // avoiding line doubling when adjacent regions share a border
+      const inset = 0.49;
       const x0 = (bounds.minCol + 1) - inset;
       const x1 = (bounds.maxCol + 1) + inset;
       const y0 = bounds.minRow - inset;

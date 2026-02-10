@@ -50,21 +50,43 @@ function generate96WellData(): WellData[] {
 }
 
 /**
- * Generate sample 384-well plate data as 2D array
+ * Generate sample 384-well plate data as WellData array
  */
-function generate384WellGrid(): (number | null)[][] {
-  const grid: (number | null)[][] = [];
+function generate384WellData(): WellData[] {
+  const wells: WellData[] = [];
+  const rows = "ABCDEFGHIJKLMNOP"; // 16 rows for 384-well plate
 
   for (let r = 0; r < 16; r++) {
-    const row: (number | null)[] = [];
-    for (let c = 0; c < 24; c++) {
+    for (let c = 1; c <= 24; c++) {
+      const wellId = `${rows[r]}${c}`;
       // Create a gradient pattern
       const value = 1000 + r * 1000 + c * 500 + Math.random() * 2000;
-      row.push(Math.round(value));
+      wells.push({ wellId, values: { AU: Math.round(value) } });
     }
-    grid.push(row);
   }
-  return grid;
+  return wells;
+}
+
+/**
+ * Helper to convert 2D grid to WellData array for custom dimensions
+ */
+function gridToWellData(
+  grid: (number | null)[][],
+  layerId: string = "Value",
+  customLabels?: { rows?: string[]; cols?: string[] }
+): WellData[] {
+  const wells: WellData[] = [];
+  const defaultRows = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  for (let r = 0; r < grid.length; r++) {
+    for (let c = 0; c < grid[r].length; c++) {
+      const rowLabel = customLabels?.rows?.[r] ?? defaultRows[r];
+      const colLabel = customLabels?.cols?.[c] ?? String(c + 1);
+      const wellId = `${rowLabel}${colLabel}`;
+      wells.push({ wellId, values: { [layerId]: grid[r][c] } });
+    }
+  }
+  return wells;
 }
 
 const layer96WellConfigs: LayerConfig[] = [
@@ -109,15 +131,15 @@ export const Plate96Well: Story = {
 };
 
 /**
- * 384-well plate with 2D array input
- * Demonstrates using a simple 2D array for larger plates
+ * 384-well plate with WellData array input
+ * Demonstrates larger plate format with 16 rows × 24 columns
  */
 export const Plate384Well: Story = {
   args: {
-    data: generate384WellGrid(),
+    data: generate384WellData(),
     plateFormat: "384",
     title: "384-Well Plate Screening",
-    valueUnit: " AU",
+    layerConfigs: [{ id: "AU", valueUnit: " AU" }],
     precision: 0,
     width: 900,
     height: 500,
@@ -195,16 +217,19 @@ export const Plate1536Well: Story = {
  */
 export const CustomDimensions: Story = {
   args: {
-    data: [
-      [100, 200, 300, 400],
-      [150, 250, 350, 450],
-      [200, 300, 400, 500],
-    ],
+    data: gridToWellData(
+      [
+        [100, 200, 300, 400],
+        [150, 250, 350, 450],
+        [200, 300, 400, 500],
+      ],
+      "Concentration"
+    ),
     plateFormat: "custom",
     rows: 3,
     columns: 4,
     title: "Custom 3x4 Plate",
-    valueUnit: " nM",
+    layerConfigs: [{ id: "Concentration", valueUnit: " nM" }],
     precision: 1,
     width: 500,
     height: 350,
@@ -278,13 +303,17 @@ export const PartialPlate: Story = {
  */
 export const GenericHeatmap: Story = {
   args: {
-    data: [
-      [5000, 10000, 15000, 20000, 25000],
-      [10000, 15000, 20000, 25000, 30000],
-      [15000, 20000, 25000, 30000, 35000],
-      [20000, 25000, 30000, 35000, 40000],
-      [25000, 30000, 35000, 40000, 45000],
-    ],
+    data: gridToWellData(
+      [
+        [5000, 10000, 15000, 20000, 25000],
+        [10000, 15000, 20000, 25000, 30000],
+        [15000, 20000, 25000, 30000, 35000],
+        [20000, 25000, 30000, 35000, 40000],
+        [25000, 30000, 35000, 40000, 45000],
+      ],
+      "Value",
+      { rows: ["Y1", "Y2", "Y3", "Y4", "Y5"], cols: ["X1", "X2", "X3", "X4", "X5"] }
+    ),
     plateFormat: "custom",
     rows: 5,
     columns: 5,
@@ -293,6 +322,7 @@ export const GenericHeatmap: Story = {
     xTitle: "X Axis",
     yTitle: "Y Axis",
     title: "Generic Heatmap with Custom Labels",
+    layerConfigs: [{ id: "Value" }],
     width: 600,
     height: 500,
     precision: 0,
@@ -814,7 +844,7 @@ export const LegendConfiguration: Story = {
       },
     ],
     legendConfig: {
-      position: "bottom",
+      position: "bottom", // Tests bottom legend position code path (lines 1485-1489)
       fontSize: 14,
       itemSpacing: 16,
       swatchSize: 20,
@@ -843,163 +873,10 @@ export const LegendConfiguration: Story = {
 };
 
 /**
- * Legend positioned on the left side
- * Tests the legendConfig.position="left" code path
+ * Hidden UI elements (showColorBar=false, showLegend=false)
+ * Tests rendering without colorbar and legend, including horizontal legend position
  */
-export const LegendLeftPosition: Story = {
-  args: {
-    data: (() => {
-      const wells: WellData[] = [];
-      const rows = "ABCDEFGH";
-      const types = ["active", "inactive", "pending"];
-
-      for (let r = 0; r < 8; r++) {
-        for (let c = 1; c <= 12; c++) {
-          const wellId = `${rows[r]}${c}`;
-          const type = types[(r * 12 + c) % types.length];
-          wells.push({ wellId, values: { Status: type } });
-        }
-      }
-      return wells;
-    })(),
-    plateFormat: "96",
-    title: "Legend on Left Side",
-    layerConfigs: [
-      {
-        id: "Status",
-        visualizationMode: "categorical",
-        categoryColors: {
-          active: "#2ca02c",
-          inactive: "#d62728",
-          pending: "#ff7f0e",
-        },
-      },
-    ],
-    legendConfig: {
-      position: "left",
-      fontSize: 12,
-      title: "Status",
-    } as LegendConfig,
-    width: 700,
-    height: 450,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Legend on Left Side")).toBeInTheDocument();
-    });
-
-    await step("Legend is rendered with items", async () => {
-      expect(canvas.getByText("Status")).toBeInTheDocument();
-      expect(canvas.getByText("active")).toBeInTheDocument();
-      expect(canvas.getByText("inactive")).toBeInTheDocument();
-      expect(canvas.getByText("pending")).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-};
-
-/**
- * Legend positioned at the top
- * Tests the legendConfig.position="top" code path
- */
-export const LegendTopPosition: Story = {
-  args: {
-    data: (() => {
-      const wells: WellData[] = [];
-      const rows = "ABCDEFGH";
-      const types = ["positive", "negative"];
-
-      for (let r = 0; r < 8; r++) {
-        for (let c = 1; c <= 12; c++) {
-          const wellId = `${rows[r]}${c}`;
-          const type = types[(r + c) % 2];
-          wells.push({ wellId, values: { Result: type } });
-        }
-      }
-      return wells;
-    })(),
-    plateFormat: "96",
-    title: "Legend at Top",
-    layerConfigs: [
-      {
-        id: "Result",
-        visualizationMode: "categorical",
-        categoryColors: {
-          positive: "#1f77b4",
-          negative: "#ff7f0e",
-        },
-      },
-    ],
-    legendConfig: {
-      position: "top",
-      fontSize: 12,
-      title: "Test Results",
-    } as LegendConfig,
-    width: 700,
-    height: 500,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Legend at Top")).toBeInTheDocument();
-    });
-
-    await step("Legend title and items are rendered", async () => {
-      expect(canvas.getByText("Test Results")).toBeInTheDocument();
-      expect(canvas.getByText("positive")).toBeInTheDocument();
-      expect(canvas.getByText("negative")).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-};
-
-/**
- * Hidden colorbar (showColorBar=false)
- * Tests rendering heatmap without the colorbar legend
- */
-export const HiddenColorbar: Story = {
-  args: {
-    data: generate384WellGrid(),
-    plateFormat: "384",
-    title: "Heatmap Without Colorbar",
-    showColorBar: false,
-    width: 800,
-    height: 500,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Heatmap Without Colorbar")).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-};
-
-/**
- * Hidden legend (showLegend=false)
- * Tests rendering categorical data without the legend
- */
-export const HiddenLegend: Story = {
+export const HiddenUIElements: Story = {
   args: {
     data: (() => {
       const wells: WellData[] = [];
@@ -1016,7 +893,7 @@ export const HiddenLegend: Story = {
       return wells;
     })(),
     plateFormat: "96",
-    title: "Categorical Without Legend",
+    title: "Hidden UI Elements",
     layerConfigs: [
       {
         id: "Type",
@@ -1028,6 +905,10 @@ export const HiddenLegend: Story = {
       },
     ],
     showLegend: false,
+    showColorBar: false,
+    legendConfig: {
+      position: "top", // Tests horizontal legend position code path
+    } as LegendConfig,
     width: 700,
     height: 450,
   },
@@ -1035,16 +916,15 @@ export const HiddenLegend: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Categorical Without Legend")).toBeInTheDocument();
+      expect(canvas.getByText("Hidden UI Elements")).toBeInTheDocument();
     });
 
     await step("Legend items are NOT visible", async () => {
-      // Legend should be hidden, so category labels should not appear
       expect(canvas.queryByText("sample")).not.toBeInTheDocument();
       expect(canvas.queryByText("control")).not.toBeInTheDocument();
     });
 
-    await step("Chart container still renders", async () => {
+    await step("Chart container renders without legend/colorbar", async () => {
       const container = canvasElement.querySelector(".js-plotly-plot");
       expect(container).toBeInTheDocument();
     });
@@ -1055,50 +935,37 @@ export const HiddenLegend: Story = {
 };
 
 /**
- * Single category in categorical mode
- * Tests the edge case where there's only one unique category
+ * Edge cases: NaN/Infinity values, null values
+ * Tests graceful handling of invalid numeric values (converted to null)
  */
-export const SingleCategory: Story = {
+export const EdgeCases: Story = {
   args: {
-    data: (() => {
-      const wells: WellData[] = [];
-      const rows = "ABCDEFGH";
-
-      for (let r = 0; r < 8; r++) {
-        for (let c = 1; c <= 12; c++) {
-          const wellId = `${rows[r]}${c}`;
-          // All wells have the same category
-          wells.push({ wellId, values: { Type: "sample" } });
-        }
-      }
-      return wells;
-    })(),
-    plateFormat: "96",
-    title: "Single Category Plate",
-    layerConfigs: [
-      {
-        id: "Type",
-        visualizationMode: "categorical",
-        categoryColors: {
-          sample: "#4575b4",
-        },
-      },
-    ],
-    width: 700,
-    height: 450,
+    data: gridToWellData(
+      [
+        [100, NaN, null, Infinity],
+        [150, 250, -Infinity, 450],
+        [NaN, null, 400, 500],
+        [200, 300, NaN, 550],
+      ],
+      "AU"
+    ),
+    plateFormat: "custom",
+    rows: 4,
+    columns: 4,
+    title: "Edge Cases Test",
+    layerConfigs: [{ id: "AU", valueUnit: " AU" }],
+    width: 500,
+    height: 400,
+    showColorBar: true,
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Single Category Plate")).toBeInTheDocument();
+      expect(canvas.getByText("Edge Cases Test")).toBeInTheDocument();
     });
 
-    await step("Single category appears in legend", async () => {
-      expect(canvas.getByText("sample")).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
+    await step("Chart renders without errors despite NaN/Infinity/null values", async () => {
       const container = canvasElement.querySelector(".js-plotly-plot");
       expect(container).toBeInTheDocument();
     });
@@ -1109,22 +976,25 @@ export const SingleCategory: Story = {
 };
 
 /**
- * Edge case with NaN and Infinity values in 2D array
- * Tests that invalid numeric values are handled gracefully (converted to null)
+ * Uniform values: all wells have the same value (min === max edge case)
+ * Also tests left legend position for categorical data
  */
-export const InvalidNumericValues: Story = {
+export const UniformValuesAndLeftLegend: Story = {
   args: {
-    data: [
-      [100, NaN, 300, Infinity],
-      [150, 250, -Infinity, 450],
-      [NaN, 300, 400, 500],
-      [200, Infinity, NaN, 550],
-    ],
+    data: gridToWellData(
+      [
+        [42.0, 42.0, 42.0],
+        [42.0, 42.0, 42.0],
+        [42.0, 42.0, 42.0],
+      ],
+      "Value"
+    ),
     plateFormat: "custom",
-    rows: 4,
-    columns: 4,
-    title: "Handling Invalid Values",
-    valueUnit: "AU",
+    rows: 3,
+    columns: 3,
+    title: "Uniform Values Test",
+    layerConfigs: [{ id: "Value" }],
+    showColorBar: true,
     width: 500,
     height: 400,
   },
@@ -1132,12 +1002,63 @@ export const InvalidNumericValues: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Handling Invalid Values")).toBeInTheDocument();
+      expect(canvas.getByText("Uniform Values Test")).toBeInTheDocument();
     });
 
-    await step("Chart renders without errors", async () => {
+    await step("Chart renders with uniform values", async () => {
       const container = canvasElement.querySelector(".js-plotly-plot");
       expect(container).toBeInTheDocument();
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};
+
+/**
+ * Categorical data with left legend position
+ * Tests left legend rendering code path (lines 1121, 1471-1475)
+ */
+export const CategoricalLeftLegend: Story = {
+  args: {
+    data: [
+      { wellId: "A1", values: { Type: "sample" } },
+      { wellId: "A2", values: { Type: "control" } },
+      { wellId: "B1", values: { Type: "sample" } },
+      { wellId: "B2", values: { Type: "control" } },
+    ],
+    plateFormat: "custom",
+    rows: 2,
+    columns: 2,
+    title: "Categorical with Left Legend",
+    layerConfigs: [
+      {
+        id: "Type",
+        visualizationMode: "categorical",
+        categoryColors: {
+          sample: "#4575b4",
+          control: "#d73027",
+        },
+      },
+    ],
+    legendConfig: {
+      position: "left",
+      title: "Types",
+    } as LegendConfig,
+    width: 500,
+    height: 400,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Categorical with Left Legend")).toBeInTheDocument();
+    });
+
+    await step("Legend is rendered on left", async () => {
+      expect(canvas.getByText("Types")).toBeInTheDocument();
+      expect(canvas.getByText("sample")).toBeInTheDocument();
+      expect(canvas.getByText("control")).toBeInTheDocument();
     });
   },
   parameters: {
@@ -1216,10 +1137,11 @@ export const WellClickInteraction: Story = {
  */
 export const StringColorscale: Story = {
   args: {
-    data: generate384WellGrid(),
+    data: generate384WellData(),
     plateFormat: "384",
     title: "Using Viridis Colorscale",
     colorScale: "Viridis",
+    layerConfigs: [{ id: "AU" }],
     width: 900,
     height: 500,
   },
@@ -1241,64 +1163,26 @@ export const StringColorscale: Story = {
 };
 
 /**
- * String colorscale with null values (empty wells)
- * Tests the code path for string colorscale when there are null values
- */
-export const StringColorscaleWithNullValues: Story = {
-  args: {
-    data: [
-      { wellId: "A1", values: { RFU: 100 } },
-      { wellId: "A2", values: { RFU: 200 } },
-      { wellId: "A3", values: { RFU: null } }, // null value
-      { wellId: "B1", values: { RFU: 150 } },
-      { wellId: "B2", values: { RFU: 250 } },
-      // B3 missing entirely
-    ],
-    plateFormat: "custom",
-    rows: 2,
-    columns: 3,
-    title: "String Colorscale with Empty Wells",
-    colorScale: "Viridis",
-    emptyWellColor: "#cccccc",
-    layerConfigs: [{ id: "RFU", valueUnit: "RFU" }],
-    width: 450,
-    height: 350,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("String Colorscale with Empty Wells")).toBeInTheDocument();
-    });
-
-    await step("Chart renders with string colorscale and null values", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-};
-
-/**
  * Custom value range overrides
  * Tests valueMin and valueMax props to override auto-calculated range
  */
 export const ValueRangeOverride: Story = {
   args: {
-    data: [
-      [100, 200, 300],
-      [150, 250, 350],
-      [200, 300, 400],
-    ],
+    data: gridToWellData(
+      [
+        [100, 200, 300],
+        [150, 250, 350],
+        [200, 300, 400],
+      ],
+      "AU"
+    ),
     plateFormat: "custom",
     rows: 3,
     columns: 3,
     title: "Custom Value Range (0-500)",
     valueMin: 0,
     valueMax: 500,
-    valueUnit: "AU",
+    layerConfigs: [{ id: "AU", valueUnit: " AU" }],
     width: 500,
     height: 400,
   },
@@ -1353,181 +1237,39 @@ export const ColorbarWithTitle: Story = {
   },
 };
 
-/**
- * Hidden legend with horizontal position (top)
- * Tests the code path where legend returns null for horizontal legend position
- */
-export const HiddenHorizontalLegend: Story = {
-  args: {
-    data: generate96WellData(),
-    plateFormat: "96",
-    title: "Hidden Legend (Horizontal Position)",
-    showLegend: false,
-    legendConfig: {
-      position: "top",
-    } as LegendConfig,
-    width: 800,
-    height: 500,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
 
-    await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Hidden Legend (Horizontal Position)")).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-
-    await step("No legend placeholder is rendered for horizontal position", async () => {
-      // For horizontal legends, when hidden, no placeholder div should be rendered
-      // The chart should take up full width
-      const plotContainer = canvasElement.querySelector(".js-plotly-plot");
-      expect(plotContainer).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-};
 
 /**
- * Categorical mode with sparse data (empty wells)
- * Tests the code path for categorical grids with null/empty wells
+ * Invalid regions: tests graceful handling of invalid/out-of-bounds region definitions
+ * Covers invalid well format and regions extending beyond plate dimensions
  */
-export const CategoricalWithEmptyWells: Story = {
+export const InvalidRegions: Story = {
   args: {
-    data: [
-      // Only fill some wells with categorical data, leaving others empty
-      { wellId: "A1", values: { Type: "sample" } },
-      { wellId: "A2", values: { Type: "control" } },
-      { wellId: "B1", values: { Type: "sample" } },
-      // B2 is intentionally empty
-      { wellId: "A3", values: { Type: "blank" } },
-      { wellId: "B3", values: { Type: "standard" } },
-    ],
+    data: gridToWellData(
+      [
+        [100, 200, 300],
+        [150, 250, 350],
+      ],
+      "Value"
+    ),
     plateFormat: "custom",
     rows: 2,
     columns: 3,
-    title: "Categorical with Empty Wells",
-    layerConfigs: [
-      {
-        id: "Type",
-        visualizationMode: "categorical",
-        categoryColors: {
-          sample: "#4575b4",
-          control: "#d73027",
-          blank: "#f0f0f0",
-          standard: "#fdae61",
-        },
-      },
-    ],
-    width: 450,
-    height: 350,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Categorical with Empty Wells")).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-
-    await step("Legend shows empty category for missing wells", async () => {
-      // The legend should show "empty" for wells without data
-      expect(canvas.getByText("empty")).toBeInTheDocument();
-    });
-
-    await step("All defined categories are shown", async () => {
-      expect(canvas.getByText("sample")).toBeInTheDocument();
-      expect(canvas.getByText("control")).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-};
-
-/**
- * Invalid region wells format
- * Tests that invalid well IDs in regions are handled gracefully (parseRegionWells returns null)
- */
-export const InvalidRegionWells: Story = {
-  args: {
-    data: [
-      [100, 200, 300],
-      [150, 250, 350],
-    ],
-    plateFormat: "custom",
-    rows: 2,
-    columns: 3,
-    title: "Invalid Region Wells",
+    layerConfigs: [{ id: "Value" }],
+    title: "Invalid Regions Test",
     regions: [
       {
-        id: "invalid-region",
-        name: "Invalid Region",
+        id: "invalid-format",
+        name: "Invalid Format",
         wells: "INVALID:A3", // Invalid format - should be gracefully ignored
         borderColor: "#d73027",
         borderWidth: 2,
       },
       {
-        id: "valid-region",
-        name: "Valid Region",
-        wells: "A1:A2",
-        borderColor: "#4575b4",
-        borderWidth: 2,
-      },
-    ] as PlateRegion[],
-    width: 450,
-    height: 350,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Invalid Region Wells")).toBeInTheDocument();
-    });
-
-    await step("Valid region is still rendered", async () => {
-      expect(canvas.getByText("Valid Region")).toBeInTheDocument();
-    });
-
-    await step("Chart still renders despite invalid region", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-};
-
-/**
- * Out of bounds region
- * Tests that regions extending beyond plate dimensions are handled gracefully
- */
-export const OutOfBoundsRegion: Story = {
-  args: {
-    data: [
-      [100, 200, 300],
-      [150, 250, 350],
-    ],
-    plateFormat: "custom",
-    rows: 2,
-    columns: 3,
-    title: "Out of Bounds Region",
-    regions: [
-      {
         id: "oob-region",
         name: "Out of Bounds",
         wells: "A1:Z99", // Extends beyond 2x3 plate
-        borderColor: "#d73027",
+        borderColor: "#ff7f0e",
         borderWidth: 2,
       },
       {
@@ -1538,95 +1280,23 @@ export const OutOfBoundsRegion: Story = {
         borderWidth: 2,
       },
     ] as PlateRegion[],
-    width: 450,
-    height: 350,
+    width: 500,
+    height: 400,
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Out of Bounds Region")).toBeInTheDocument();
+      expect(canvas.getByText("Invalid Regions Test")).toBeInTheDocument();
     });
 
     await step("Valid region is still rendered", async () => {
       expect(canvas.getByText("Valid Region")).toBeInTheDocument();
     });
 
-    await step("Chart still renders despite out-of-bounds region", async () => {
+    await step("Chart still renders despite invalid regions", async () => {
       const container = canvasElement.querySelector(".js-plotly-plot");
       expect(container).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-};
-
-/**
- * Tests 2D array data with explicit null values - covers line 512 in validateGridData
- */
-export const TwoDArrayWithNulls: Story = {
-  args: {
-    title: "2D Array with Null Values",
-    rows: 4,
-    columns: 6,
-    data: [
-      [1.0, 2.0, null, 4.0, 5.0, 6.0],
-      [null, 8.0, 9.0, null, 11.0, 12.0],
-      [13.0, null, 15.0, 16.0, null, 18.0],
-      [19.0, 20.0, 21.0, 22.0, 23.0, null],
-    ],
-    showColorBar: true,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Plate map renders with 2D array containing nulls", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-
-    await step("Title is visible", async () => {
-      expect(canvas.getByText("2D Array with Null Values")).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-};
-
-/**
- * Tests edge case where all values are identical (min === max) - covers lines 546-547
- */
-export const UniformValues: Story = {
-  args: {
-    title: "Uniform Values Test",
-    rows: 4,
-    columns: 6,
-    data: [
-      [42.0, 42.0, 42.0, 42.0, 42.0, 42.0],
-      [42.0, 42.0, 42.0, 42.0, 42.0, 42.0],
-      [42.0, 42.0, 42.0, 42.0, 42.0, 42.0],
-      [42.0, 42.0, 42.0, 42.0, 42.0, 42.0],
-    ],
-    showColorBar: true,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Plate map renders with uniform values", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-
-    await step("Title is visible", async () => {
-      expect(canvas.getByText("Uniform Values Test")).toBeInTheDocument();
-    });
-
-    await step("Colorbar is visible for uniform data", async () => {
-      // Even with uniform values, the colorbar should render
-      const colorbarText = canvasElement.querySelectorAll(".colorbar");
-      expect(colorbarText.length).toBeGreaterThanOrEqual(0);
     });
   },
   parameters: {

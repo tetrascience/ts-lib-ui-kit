@@ -1,5 +1,5 @@
-import React from "react";
-import { PlateMap, ColorScale } from "../PlateMap";
+import React, { useMemo } from "react";
+import { PlateMap, ColorScale, WellData } from "../PlateMap";
 
 /**
  * Props for the Heatmap component
@@ -92,12 +92,30 @@ const Heatmap: React.FC<HeatmapProps> = ({
   const rows = normalizedData?.length ?? (yLabels?.length ?? 16);
   const columns = normalizedData?.[0]?.length ?? (xLabels?.length ?? 24);
 
+  // Convert 2D array to WellData format for PlateMap
+  const wellData: WellData[] | undefined = useMemo(() => {
+    if (!normalizedData) return undefined;
+
+    const defaultRows = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const wells: WellData[] = [];
+
+    for (let r = 0; r < normalizedData.length; r++) {
+      for (let c = 0; c < normalizedData[r].length; c++) {
+        const rowLabel = yLabels?.[r]?.toString() ?? defaultRows[r] ?? `R${r + 1}`;
+        const colLabel = xLabels?.[c]?.toString() ?? String(c + 1);
+        const wellId = `${rowLabel}${colLabel}`;
+        wells.push({ wellId, values: { Value: normalizedData[r][c] } });
+      }
+    }
+    return wells;
+  }, [normalizedData, xLabels, yLabels]);
+
   // Pass colorscale directly - PlateMap's ColorScale type supports both string and array formats
   const plateMapColorScale: ColorScale | undefined = colorscale;
 
   return (
     <PlateMap
-      data={normalizedData as (number | null)[][] | undefined}
+      data={wellData}
       plateFormat="custom"
       rows={rows}
       columns={columns}
@@ -112,7 +130,7 @@ const Heatmap: React.FC<HeatmapProps> = ({
       showColorBar={showScale}
       width={width}
       height={height}
-      valueUnit={valueUnit}
+      layerConfigs={[{ id: "Value", valueUnit }]}
       precision={precision}
     />
   );

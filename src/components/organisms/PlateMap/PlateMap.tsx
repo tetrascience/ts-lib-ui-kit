@@ -235,7 +235,7 @@ export interface PlateMapProps {
    * If wells have multiple values (via `values` property), layers are
    * auto-generated for each unique key, enabling layer toggling.
    */
-  data?: WellData[] | (number | null)[][];
+  data?: WellData[];
 
   /**
    * Configuration for auto-generated layers when using WellData with `values`.
@@ -494,31 +494,6 @@ function wellDataToGrid(
 /**
  * Validate and sanitize grid data
  */
-function validateGridData(
-  data: (number | null)[][],
-  rows: number,
-  columns: number
-): (number | null)[][] {
-  // Normalize to expected dimensions
-  const normalized: (number | null)[][] = [];
-  for (let r = 0; r < rows; r++) {
-    const row: (number | null)[] = [];
-    for (let c = 0; c < columns; c++) {
-      const value = data[r]?.[c];
-      // Sanitize: keep null/valid numbers, convert NaN/Infinity to null
-      if (value === null || value === undefined) {
-        row.push(null);
-      } else if (Number.isFinite(value)) {
-        row.push(value);
-      } else {
-        row.push(null);
-      }
-    }
-    normalized.push(row);
-  }
-  return normalized;
-}
-
 /**
  * Calculate min/max values from grid, ignoring nulls
  */
@@ -766,17 +741,12 @@ const PlateMap: React.FC<PlateMapProps> = ({
     let resultTooltipData = new Map<string, Record<string, unknown>>();
 
     if (Array.isArray(data) && data.length > 0) {
-      if ("wellId" in (data[0] as WellData)) {
-        // WellData array format - pass activeLayerId to extract the right layer
-        const result = wellDataToGrid(data as WellData[], rows, columns, activeLayerId_);
-        resultGrid = result.grid;
-        resultCategories = result.categories;
-        resultAllValues = result.allValues;
-        resultTooltipData = result.tooltipData;
-      } else {
-        // 2D array format
-        resultGrid = validateGridData(data as (number | null)[][], rows, columns);
-      }
+      // WellData array format - pass activeLayerId to extract the right layer
+      const result = wellDataToGrid(data, rows, columns, activeLayerId_);
+      resultGrid = result.grid;
+      resultCategories = result.categories;
+      resultAllValues = result.allValues;
+      resultTooltipData = result.tooltipData;
     } else {
       // Generate random data for demonstration when no data provided
       resultGrid = Array.from({ length: rows }, () =>

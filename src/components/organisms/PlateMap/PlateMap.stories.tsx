@@ -973,7 +973,7 @@ export const EdgeCases: Story = {
 
 /**
  * Uniform values: all wells have the same value (min === max edge case)
- * Also tests left legend position for categorical data
+ * Also tests left legend position for heatmap data
  */
 export const UniformValuesAndLeftLegend: Story = {
   args: {
@@ -991,6 +991,10 @@ export const UniformValuesAndLeftLegend: Story = {
     title: "Uniform Values Test",
     layerConfigs: [{ id: "Value" }],
     showColorBar: true,
+    legendConfig: {
+      position: "left",
+      title: "Values",
+    } as LegendConfig,
     width: 500,
     height: 400,
   },

@@ -69,19 +69,17 @@ function generate384WellData(): WellData[] {
 
 /**
  * Helper to convert 2D grid to WellData array for custom dimensions
+ * Note: wellId must be in standard format (e.g., "A1", "B2") for PlateMap to parse.
+ * Custom axis labels should be passed via xLabels/yLabels props, not in wellId.
  */
-function gridToWellData(
-  grid: (number | null)[][],
-  layerId: string = "Value",
-  customLabels?: { rows?: string[]; cols?: string[] }
-): WellData[] {
+function gridToWellData(grid: (number | null)[][], layerId: string = "Value"): WellData[] {
   const wells: WellData[] = [];
   const defaultRows = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
   for (let r = 0; r < grid.length; r++) {
     for (let c = 0; c < grid[r].length; c++) {
-      const rowLabel = customLabels?.rows?.[r] ?? defaultRows[r];
-      const colLabel = customLabels?.cols?.[c] ?? String(c + 1);
+      const rowLabel = defaultRows[r];
+      const colLabel = String(c + 1);
       const wellId = `${rowLabel}${colLabel}`;
       wells.push({ wellId, values: { [layerId]: grid[r][c] } });
     }
@@ -311,8 +309,7 @@ export const GenericHeatmap: Story = {
         [20000, 25000, 30000, 35000, 40000],
         [25000, 30000, 35000, 40000, 45000],
       ],
-      "Value",
-      { rows: ["Y1", "Y2", "Y3", "Y4", "Y5"], cols: ["X1", "X2", "X3", "X4", "X5"] }
+      "Value"
     ),
     plateFormat: "custom",
     rows: 5,

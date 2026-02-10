@@ -1021,10 +1021,16 @@ const PlateMap: React.FC<PlateMapProps> = ({
     const plotWidth = width - leftMargin - rightMargin;
     const plotHeight = height - topMargin - bottomMargin;
 
-    // Calculate pixels per cell, use the smaller dimension to keep markers uniform
+    // Calculate pixels per cell
     const cellWidth = plotWidth / columns;
     const cellHeight = plotHeight / rows;
-    const cellSize = Math.min(cellWidth, cellHeight);
+
+    // For circles: use smaller dimension to keep them uniform and avoid overlap
+    // For squares: use larger dimension so they fill the entire cell with no gaps
+    const cellSize =
+      markerShape === "square"
+        ? Math.max(cellWidth, cellHeight)
+        : Math.min(cellWidth, cellHeight);
 
     // Squares fill entire cell (100%) for seamless heatmap, circles leave gaps (80%)
     const sizeMultiplier = markerShape === "square" ? 1.0 : 0.8;

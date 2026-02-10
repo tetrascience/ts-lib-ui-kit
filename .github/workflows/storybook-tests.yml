@@ -14,7 +14,9 @@ on:
         required: false
         type: string
 
+# Required for AWS OIDC authentication
 permissions:
+  id-token: write
   contents: read
 
 jobs:
@@ -64,12 +66,31 @@ jobs:
         continue-on-error: true
         id: test_filtered
 
+      - name: 🔐 Configure AWS Credentials
+        if: always()
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          aws-region: ${{ secrets.TEST_ARTIFACTS_AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.TEST_ARTIFACTS_AWS_ACCOUNT_ID }}:role/${{ secrets.TEST_ARTIFACTS_POLICY_NAME}}
+          role-session-name: StorybookTestsSession
+
+      - name: 📤 Upload Test Screenshots to S3
+        if: always()
+        run: yarn tsx scripts/upload-test-screenshots.ts
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          S3_BUCKET: ${{ secrets.TEST_ARTIFACTS_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.TEST_ARTIFACTS_AWS_REGION }}
+
       - name: 📊 Upload JUnit test results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: storybook-junit-results
-          path: test-results/storybook-junit.xml
+          path: |
+            test-results/storybook-junit.xml
+            test-results/screenshot-urls.json
           retention-days: 7
 
       - name: 📸 Upload failure artifacts

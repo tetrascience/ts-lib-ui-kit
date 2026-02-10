@@ -1130,7 +1130,13 @@ const PlateMap: React.FC<PlateMapProps> = ({
               size: 20,
               color: "var(--black-300)",
             },
-            x: 0.425, // Center over graph area (domain [0, 0.85] / 2 = 0.425)
+            // Center title over graph area based on legend position
+            x: (() => {
+              const pos = legendConfig?.position ?? "right";
+              if (pos === "left") return 0.575; // midpoint of [0.15, 1]
+              if (pos === "right") return 0.425; // midpoint of [0, 0.85]
+              return 0.5; // top/bottom use full width
+            })(),
             xanchor: "center" as const,
             y: 0.98,
             yanchor: "top" as const,
@@ -1138,13 +1144,19 @@ const PlateMap: React.FC<PlateMapProps> = ({
         : undefined,
       width,
       height,
-      margin: {
-        l: yTitle ? 70 : 50,
-        r: 100, // Always reserve space for colorbar to prevent layout shift
-        b: 50,
-        t: title ? 100 : 40,
-        pad: 5
-      },
+      margin: (() => {
+        const pos = legendConfig?.position ?? "right";
+        const baseLeft = yTitle ? 70 : 50;
+        const baseRight = 50;
+        // Reserve extra space for colorbar on the appropriate side
+        return {
+          l: pos === "left" ? baseLeft + 50 : baseLeft,
+          r: pos === "right" ? baseRight + 50 : baseRight,
+          b: pos === "bottom" ? 80 : 50,
+          t: title ? (pos === "top" ? 130 : 100) : (pos === "top" ? 70 : 40),
+          pad: 5
+        };
+      })(),
       xaxis: {
         title: {
           text: xTitle || "",
@@ -1165,7 +1177,13 @@ const PlateMap: React.FC<PlateMapProps> = ({
         ticktext: colLabels.map(String),
         tickangle: 0, // Keep labels horizontal
         tickfont: { size: columns > 24 ? 8 : 11 }, // Smaller font for high-density plates
-        domain: [0, 0.85], // Fixed domain to prevent colorbar from affecting plot area
+        // Adjust domain based on legend position to prevent colorbar overlap
+        domain: (() => {
+          const pos = legendConfig?.position ?? "right";
+          if (pos === "left") return [0.15, 1];
+          if (pos === "right") return [0, 0.85];
+          return [0, 1]; // top/bottom don't need horizontal adjustment
+        })(),
       },
       yaxis: {
         title: {

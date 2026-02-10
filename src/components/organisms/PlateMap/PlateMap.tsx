@@ -228,9 +228,7 @@ export interface PlateRegion {
  */
 export interface PlateMapProps {
   /**
-   * Well data array. Can be provided as:
-   * - Array of WellData objects with wellId and values
-   * - 2D array of numbers (row-major order, null for empty wells)
+   * Well data array as WellData objects with wellId and values.
    *
    * If wells have multiple values (via `values` property), layers are
    * auto-generated for each unique key, enabling layer toggling.
@@ -337,13 +335,6 @@ export interface PlateMapProps {
 
   /** Number of decimal places for values (default: 0) */
   precision?: number;
-
-  /**
-   * Unit suffix for values (e.g., "RFU", "%").
-   * Only used with 2D array data format. A space is automatically added before the unit.
-   * For WellData format, specify valueUnit in layerConfigs instead.
-   */
-  valueUnit?: string;
 
   /**
    * Callback when a well/cell is clicked.
@@ -635,11 +626,10 @@ function parseRegionWells(
  * - Multiple data layers with independent visualization settings
  * - Control region highlighting with borders and fill colors
  * - Configurable color scales, tooltips, and click interactions
- * - Support for both WellData arrays and 2D numeric arrays
+ * - Support for WellData arrays with multi-layer visualization
  *
- * **Data Formats:**
- * - **WellData array**: `[{ wellId: "A1", value: 100, wellType: "sample" }, ...]`
- * - **2D array**: `[[100, 200, null], [300, 400, 500]]` (row-major order)
+ * **Data Format:**
+ * - **WellData array**: `[{ wellId: "A1", values: { RFU: 100 }, tooltipData: {...} }, ...]`
  *
  */
 const PlateMap: React.FC<PlateMapProps> = ({
@@ -668,7 +658,6 @@ const PlateMap: React.FC<PlateMapProps> = ({
   width = 800,
   height = 500,
   precision = 0,
-  valueUnit: propValueUnit,
   onWellClick,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
@@ -719,9 +708,8 @@ const PlateMap: React.FC<PlateMapProps> = ({
   const colorScale = activeLayer?.colorScale ?? propColorScale;
   const valueMin = activeLayer?.valueMin ?? propValueMin;
   const valueMax = activeLayer?.valueMax ?? propValueMax;
-  // Derive valueUnit: prefer layer config, fall back to prop (for 2D array data)
-  const rawValueUnit = activeLayer?.valueUnit ?? propValueUnit;
-  const valueUnit = rawValueUnit ? ` ${rawValueUnit}` : "";
+  // Derive valueUnit from layer config
+  const valueUnit = activeLayer?.valueUnit ? ` ${activeLayer.valueUnit}` : "";
 
   // Merge custom category colors with defaults, including layer-specific colors
   const categoryColors = useMemo(
@@ -851,7 +839,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
           }
         }
       } else if (val !== null) {
-        // Fallback for 2D array data
+        // Fallback for data without tooltipData
         text += `<br>Value: ${val.toFixed(precision)}${valueUnit}`;
       } else if (activeLayer) {
         // Note: The `category` branch was removed as unreachable - categoriesGrid is only

@@ -365,7 +365,6 @@ export const RandomData: Story = {
     title: "Auto-generated Random Data",
     xTitle: "Columns",
     yTitle: "Rows",
-    valueUnit: " RFU",
     precision: 0,
     width: 800,
     height: 500,

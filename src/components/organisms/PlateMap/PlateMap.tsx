@@ -337,6 +337,13 @@ export interface PlateMapProps {
   precision?: number;
 
   /**
+   * Marker shape for wells (default: "circle")
+   * - "circle": Round markers, ideal for plate-based data
+   * - "square": Square markers, ideal for generic heatmaps
+   */
+  markerShape?: "circle" | "square";
+
+  /**
    * Callback when a well/cell is clicked.
    * @param wellData - The full well data object including wellId, values, and tooltipData
    */
@@ -658,6 +665,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   width = 800,
   height = 500,
   precision = 0,
+  markerShape = "circle",
   onWellClick,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
@@ -1018,10 +1026,10 @@ const PlateMap: React.FC<PlateMapProps> = ({
     const cellHeight = plotHeight / rows;
     const cellSize = Math.min(cellWidth, cellHeight);
 
-    // Use 80% of cell size to leave gaps between circles
+    // Use 80% of cell size to leave gaps between markers
     const markerSize = Math.max(4, cellSize * 0.8);
 
-    // Create scatter plot with circle markers
+    // Create scatter plot with markers
     const plotData: Plotly.Data[] = [
       {
         x: xData,
@@ -1029,7 +1037,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
         mode: "markers" as const,
         type: "scatter" as const,
         marker: {
-          symbol: "circle" as const,
+          symbol: markerShape,
           size: markerSize,
           color: colorData,
           colorscale: plotColorScale,
@@ -1243,6 +1251,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
     rows,
     columns,
     legendConfig,
+    markerShape,
   ]);
 
   // Render layer selector tabs

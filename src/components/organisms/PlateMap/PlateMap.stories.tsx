@@ -323,6 +323,7 @@ export const GenericHeatmap: Story = {
     width: 600,
     height: 500,
     precision: 0,
+    markerShape: "square",
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);

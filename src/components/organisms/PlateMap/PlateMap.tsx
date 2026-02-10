@@ -954,11 +954,14 @@ const PlateMap: React.FC<PlateMapProps> = ({
 
       // Plotly heatmap uses the actual label values for positioning.
       // colLabels are 1-indexed (1, 2, 3, ...), so we need to convert from 0-indexed bounds.
-      // Each cell is centered on its label, so we offset by 0.45 to cover most of the cell
-      // while leaving a small gap to prevent overlap with circle marker borders.
-      // For columns: bounds.minCol=0 means column label 1, so x0 = 1 - 0.45 = 0.55
+      // Each cell is centered on its label, so we offset by inset to cover the cell.
+      // For columns: bounds.minCol=0 means column label 1, so x0 = 1 - inset
       // For rows: bounds.minRow=0 means row index 0, which is correct for y-axis
-      const inset = 0.45; // Slightly less than 0.5 to avoid overlapping with circle edges
+      //
+      // Dynamic inset based on marker shape:
+      // - Squares fill 100% of cell, so inset = 0.5 (exact cell edge)
+      // - Circles fill 80% of cell (radius = 0.4), so inset = 0.4 (at marker edge)
+      const inset = markerShape === "square" ? 0.5 : 0.4;
       const x0 = (bounds.minCol + 1) - inset;
       const x1 = (bounds.maxCol + 1) + inset;
       const y0 = bounds.minRow - inset;
@@ -982,7 +985,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
     }
 
     return shapes;
-  }, [regions, rowLabels, colLabels]);
+  }, [regions, rowLabels, colLabels, markerShape]);
 
   useEffect(() => {
     const currentRef = plotRef.current;

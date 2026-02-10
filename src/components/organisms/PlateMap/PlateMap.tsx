@@ -1130,6 +1130,8 @@ const PlateMap: React.FC<PlateMapProps> = ({
               size: 20,
               color: "var(--black-300)",
             },
+            x: 0.425, // Center over graph area (domain [0, 0.85] / 2 = 0.425)
+            xanchor: "center" as const,
             y: 0.98,
             yanchor: "top" as const,
           }

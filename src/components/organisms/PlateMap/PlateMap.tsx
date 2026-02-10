@@ -960,8 +960,8 @@ const PlateMap: React.FC<PlateMapProps> = ({
       //
       // Dynamic inset based on marker shape:
       // - Squares fill 100% of cell, so inset = 0.5 (exact cell edge)
-      // - Circles fill 80% of cell (radius = 0.4), so inset = 0.4 (at marker edge)
-      const inset = markerShape === "square" ? 0.5 : 0.4;
+      // - Circles fill 80% of cell (radius = 0.4), so inset = 0.5 to avoid overlap
+      const inset = 0.5;
       const x0 = (bounds.minCol + 1) - inset;
       const x1 = (bounds.maxCol + 1) + inset;
       const y0 = bounds.minRow - inset;

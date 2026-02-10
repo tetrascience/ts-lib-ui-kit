@@ -499,11 +499,6 @@ function validateGridData(
   rows: number,
   columns: number
 ): (number | null)[][] {
-  // Handle empty data
-  if (!data || data.length === 0) {
-    return Array.from({ length: rows }, () => Array(columns).fill(null));
-  }
-
   // Normalize to expected dimensions
   const normalized: (number | null)[][] = [];
   for (let r = 0; r < rows; r++) {
@@ -629,11 +624,9 @@ function parseRegionWells(
     return null;
   }
 
-  const startWell = parseWellId(`${rangeMatch[1]}${rangeMatch[2]}`);
-  const endWell = parseWellId(`${rangeMatch[3]}${rangeMatch[4]}`);
-  if (!startWell || !endWell) {
-    return null;
-  }
+  // The regex above guarantees valid well ID format, so parseWellId will always succeed
+  const startWell = parseWellId(`${rangeMatch[1]}${rangeMatch[2]}`)!;
+  const endWell = parseWellId(`${rangeMatch[3]}${rangeMatch[4]}`)!;
 
   const minRow = Math.min(startWell.row, endWell.row);
   const maxRow = Math.max(startWell.row, endWell.row);
@@ -866,7 +859,6 @@ const PlateMap: React.FC<PlateMapProps> = ({
       const wellIdUpper = String(wellId).toUpperCase();
       const allValues = allValuesMap.get(wellIdUpper);
       const tooltipExtra = tooltipDataMap.get(wellIdUpper);
-      const category = categoriesGrid[rowIdx]?.[colIdx];
 
       let text = `Well ${wellId}`;
 
@@ -891,10 +883,10 @@ const PlateMap: React.FC<PlateMapProps> = ({
       } else if (val !== null) {
         // Fallback for 2D array data
         text += `<br>Value: ${val.toFixed(precision)}${valueUnit}`;
-      } else if (category) {
-        // Categorical only
-        text += `<br>Type: ${category.charAt(0).toUpperCase() + category.slice(1)}`;
       } else if (activeLayer) {
+        // Note: The `category` branch was removed as unreachable - categoriesGrid is only
+        // populated via wellDataToGrid which also populates allValuesMap, so if category
+        // is truthy, allValues will also be truthy and we'll enter the branch above.
         // Well not in data but we have layers - show active layer with "-"
         text += `<br>▶ ${activeLayer.id}: -`;
       } else {

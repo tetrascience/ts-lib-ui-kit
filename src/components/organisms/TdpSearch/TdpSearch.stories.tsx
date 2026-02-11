@@ -10,9 +10,47 @@ const meta: Meta<typeof TdpSearch> = {
     layout: "padded",
     docs: {
       description: {
-        component:
-          `A search component for querying the TDP. <br/>
-          Provides search input, filters, sortable results table, and pagination.`,
+        component: `A search component for querying the TetraScience Data Platform (TDP). 
+          Provides a search input, filters, sortable results table, and pagination.
+
+## Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| \`baseUrl\` | \`string\` | Yes | TDP API base URL |
+| \`authToken\` | \`string\` | Yes | Authentication token |
+| \`orgSlug\` | \`string\` | Yes | Organization slug |
+| \`columns\` | \`TdpSearchColumn[]\` | Yes | Column definitions |
+| \`filters\` | \`TdpSearchFilter[]\` | No | Filter configurations |
+| \`sortOptions\` | \`TdpSearchSort[]\` | No | Default sort options |
+| \`pageSize\` | \`number\` | No | Results per page (default: 10) |
+| \`defaultQuery\` | \`string\` | No | Initial EQL query |
+| \`searchPlaceholder\` | \`string\` | No | Search input placeholder |
+| \`className\` | \`string\` | No | Custom CSS class |
+| \`onSearch\` | \`function\` | No | Callback when search executes |
+
+## EQL Query Language
+
+The component uses TetraScience's EQL (Event Query Language) for searching:
+
+\`\`\`sql
+-- Basic search
+SELECT * FROM samples LIMIT 10
+
+-- With filters
+SELECT * FROM samples WHERE type = 'experiment'
+
+-- With sorting
+SELECT * FROM samples ORDER BY createdAt DESC
+
+-- Complex query
+SELECT id, name, type FROM samples 
+WHERE type IN ('sample', 'experiment') 
+AND createdAt > '2024-01-01'
+ORDER BY name ASC
+LIMIT 20
+\`\`\`
+          `,
       },
     },
   },
@@ -89,6 +127,57 @@ const filters: TdpSearchFilter[] = [
     ],
   },
 ];
+
+/**
+ * Basic usage with minimal configuration.
+ * Shows simple columns without filters or custom rendering.
+ */
+export const BasicUsage: Story = {
+  args: {
+    ...mockConfig,
+    columns: [
+      { key: "id", header: "ID", width: "120px" },
+      { key: "name", header: "Name", sortable: true },
+      { key: "type", header: "Type", sortable: true },
+      { key: "createdAt", header: "Created", sortable: true },
+    ],
+    defaultQuery: "SELECT * FROM samples LIMIT 10",
+    searchPlaceholder: "Search samples...",
+  },
+};
+
+/**
+ * Search with filters applied.
+ * Users can filter results by type and status using dropdown filters.
+ */
+export const WithFilters: Story = {
+  args: {
+    ...mockConfig,
+    columns: [
+      { key: "id", header: "ID" },
+      { key: "name", header: "Name", sortable: true },
+      { key: "type", header: "Type", sortable: true },
+      { key: "status", header: "Status", sortable: true },
+    ],
+    filters,
+    defaultQuery: "SELECT * FROM samples",
+    pageSize: 10,
+  },
+};
+
+/**
+ * Custom cell rendering and formatting.
+ * Demonstrates custom rendering for status badges and formatted file sizes.
+ */
+export const CustomRendering: Story = {
+  args: {
+    ...mockConfig,
+    columns,
+    defaultQuery: "SELECT * FROM samples ORDER BY createdAt DESC",
+    pageSize: 10,
+    searchPlaceholder: "Search across all fields...",
+  },
+};
 
 /**
  * Full-featured TDP search component.

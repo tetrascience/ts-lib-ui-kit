@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import styled from "styled-components";
 import { Input } from "@atoms/Input";
 import { Button } from "@atoms/Button";
 import { Dropdown, DropdownOption } from "@atoms/Dropdown";
@@ -7,6 +6,7 @@ import { Table } from "@molecules/Table";
 import { ErrorAlert } from "@atoms/ErrorAlert";
 import Search from "@assets/icon/Search";
 import { TdpSearchClient, EqlQuery, SearchResult } from "@utils/tdpClient";
+import "./TdpSearch.scss";
 
 /** Configuration for a search filter */
 export interface TdpSearchFilter {
@@ -46,97 +46,6 @@ export interface TdpSearchProps {
   useMockData?: boolean;
   onSearch?: (query: EqlQuery, results: SearchResult[]) => void;
 }
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-`;
-
-const SearchBar = styled.div`
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  flex-wrap: wrap;
-`;
-
-const SearchInputWrapper = styled.div`
-  flex: 1;
-  min-width: 300px;
-`;
-
-const FiltersRow = styled.div`
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: center;
-`;
-
-const FilterWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 200px;
-`;
-
-const FilterLabel = styled.label`
-  font-family: "Inter", sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--grey-600);
-`;
-
-const ResultsHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--grey-200);
-`;
-
-const ResultsCount = styled.div`
-  font-family: "Inter", sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--grey-700);
-`;
-
-const LoadingOverlay = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 60px;
-  font-family: "Inter", sans-serif;
-  font-size: 14px;
-  color: var(--grey-500);
-`;
-
-const EmptyState = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  gap: 12px;
-  background-color: var(--grey-50);
-  border-radius: 8px;
-  border: 1px dashed var(--grey-300);
-`;
-
-const EmptyStateIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  color: var(--grey-400);
-`;
-
-const EmptyStateText = styled.div`
-  font-family: "Inter", sans-serif;
-  font-size: 14px;
-  color: var(--grey-600);
-  text-align: center;
-`;
-
 
 /**
  * TdpSearch Component
@@ -222,11 +131,7 @@ export function TdpSearch({
         filters: Object.keys(filterValues).length > 0 ? filterValues : undefined,
         size: pageSize,
         from: (page - 1) * pageSize,
-        sort: sortKey
-          ? [{ field: sortKey, order: sortDirection }]
-          : sortOptions.length > 0
-            ? sortOptions
-            : undefined,
+        sort: sortKey ? [{ field: sortKey, order: sortDirection }] : sortOptions.length > 0 ? sortOptions : undefined,
       };
 
       const response = await searchClient.searchEql(eqlQuery);
@@ -283,8 +188,8 @@ export function TdpSearch({
 
   const SearchBarComponent = () => {
     return (
-      <SearchBar>
-        <SearchInputWrapper>
+      <div className="tdp-search__search-bar">
+        <div className="tdp-search__search-input-wrapper">
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -293,67 +198,60 @@ export function TdpSearch({
             iconLeft={<Search />}
             size="small"
           />
-        </SearchInputWrapper>
-        <Button
-          variant="primary"
-          onClick={handleSearch}
-          disabled={!query.trim() || isLoading}
-        >
+        </div>
+        <Button variant="primary" onClick={handleSearch} disabled={!query.trim() || isLoading}>
           {isLoading ? "Searching..." : "Search"}
         </Button>
-      </SearchBar>
-    )
-  }
+      </div>
+    );
+  };
 
   const FiltersComponent = () => {
     return (
-      <FiltersRow>
+      <div className="tdp-search__filters-row">
         {filters.map((filter) => (
-          <FilterWrapper key={filter.key}>
-            <FilterLabel>{filter.label}</FilterLabel>
+          <div key={filter.key} className="tdp-search__filter-wrapper">
+            <label className="tdp-search__filter-label">{filter.label}</label>
             <Dropdown
               options={filter.options}
               value={filterValues[filter.key] || ""}
               onChange={(value) => handleFilterChange(filter.key, value)}
             />
-          </FilterWrapper>
+          </div>
         ))}
-      </FiltersRow>
-    )
-  }
+      </div>
+    );
+  };
 
   const NoResultsComponent = () => {
     return (
-      <EmptyState>
-        <EmptyStateIcon>
+      <div className="tdp-search__empty-state">
+        <div className="tdp-search__empty-state-icon">
           <Search />
-        </EmptyStateIcon>
-        <EmptyStateText>
+        </div>
+        <div className="tdp-search__empty-state-text">
           No results found. Try adjusting your search query or filters.
-        </EmptyStateText>
-      </EmptyState>
-    )
-  }
+        </div>
+      </div>
+    );
+  };
 
   const PlaceholderComponent = () => {
     return (
-      <EmptyState>
-        <EmptyStateIcon>
+      <div className="tdp-search__empty-state">
+        <div className="tdp-search__empty-state-icon">
           <Search />
-        </EmptyStateIcon>
-        <EmptyStateText>
-          Enter a search query and click Search to get started.
-        </EmptyStateText>
-      </EmptyState>)
-  }
+        </div>
+        <div className="tdp-search__empty-state-text">Enter a search query and click Search to get started.</div>
+      </div>
+    );
+  };
 
   return (
-    <Container className={className}>
+    <div className={`tdp-search ${className || ""}`}>
       <SearchBarComponent />
 
-      {filters.length > 0 && (
-        <FiltersComponent />
-      )}
+      {filters.length > 0 && <FiltersComponent />}
 
       {error && (
         <>
@@ -362,21 +260,17 @@ export function TdpSearch({
         </>
       )}
 
-      {isLoading && (
-        <LoadingOverlay>Loading results...</LoadingOverlay>
-      )}
+      {isLoading && <div className="tdp-search__loading-overlay">Loading results...</div>}
 
-      {!isLoading && !hasSearched && (
-        <PlaceholderComponent />
-      )}
+      {!isLoading && !hasSearched && <PlaceholderComponent />}
 
       {!isLoading && !error && hasSearched && results.length > 0 && (
         <>
-          <ResultsHeader>
-            <ResultsCount>
-              Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, total)} of {total} results
-            </ResultsCount>
-          </ResultsHeader>
+          <div className="tdp-search__results-header">
+            <div className="tdp-search__results-count">
+              Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, total)} of {total} results
+            </div>
+          </div>
           <Table
             columns={columns}
             data={results}
@@ -392,10 +286,8 @@ export function TdpSearch({
         </>
       )}
 
-      {!isLoading && !error && hasSearched && results.length === 0 && (
-        <NoResultsComponent />
-      )}
-    </Container>
+      {!isLoading && !error && hasSearched && results.length === 0 && <NoResultsComponent />}
+    </div>
   );
 }
 

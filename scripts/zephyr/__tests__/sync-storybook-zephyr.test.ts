@@ -4,6 +4,7 @@ import {
   parseStoryFile,
   detectStoryPattern,
   extractNameFromStory,
+  extractZephyrIdsFromParameters,
   findStoryNameAssignment,
 } from '../sync-storybook-zephyr';
 
@@ -145,6 +146,104 @@ export const Default: Story = {
       expect(stories[0].hasZephyrId).toBe(true);
       expect(stories[0].existingId).toBe('SW-T123');
       expect(stories[0].storyName).toBe('Default Input');
+    });
+
+    it('should detect stories with empty testCaseId in parameters', () => {
+      const content = `import type { Meta, StoryObj } from "@storybook/react";
+
+export default { title: "UI/Input" };
+type Story = StoryObj;
+
+export const Default: Story = {
+  args: {},
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};`;
+
+      const stories = parseStoryFile('src/components/atoms/Input.stories.tsx', content);
+      expect(stories).toHaveLength(1);
+      expect(stories[0].hasZephyrId).toBe(false);
+      expect(stories[0].hasEmptyZephyrProperty).toBe(true);
+    });
+
+    it('should detect stories with valid testCaseId in parameters', () => {
+      const content = `import type { Meta, StoryObj } from "@storybook/react";
+
+export default { title: "UI/Button" };
+type Story = StoryObj;
+
+export const Primary: Story = {
+  args: {},
+  parameters: {
+    zephyr: { testCaseId: "SW-T456" },
+  },
+};`;
+
+      const stories = parseStoryFile('src/components/atoms/Button.stories.tsx', content);
+      expect(stories).toHaveLength(1);
+      expect(stories[0].hasZephyrId).toBe(true);
+      expect(stories[0].existingId).toBe('SW-T456');
+      expect(stories[0].hasEmptyZephyrProperty).toBe(false);
+    });
+  });
+
+  describe('extractZephyrIdsFromParameters', () => {
+    it('should return hasZephyrProperty=true with empty ids for empty testCaseId', () => {
+      const decl = getDeclaration(
+        `export const Default: Story = {
+          args: {},
+          parameters: {
+            zephyr: { testCaseId: "" },
+          },
+        };`,
+        'Default',
+      );
+      const result = extractZephyrIdsFromParameters(decl!);
+      expect(result.hasZephyrProperty).toBe(true);
+      expect(result.ids).toEqual([]);
+    });
+
+    it('should return hasZephyrProperty=true with ids for valid testCaseId', () => {
+      const decl = getDeclaration(
+        `export const Default: Story = {
+          args: {},
+          parameters: {
+            zephyr: { testCaseId: "SW-T789" },
+          },
+        };`,
+        'Default',
+      );
+      const result = extractZephyrIdsFromParameters(decl!);
+      expect(result.hasZephyrProperty).toBe(true);
+      expect(result.ids).toEqual(['SW-T789']);
+    });
+
+    it('should return hasZephyrProperty=false when no zephyr property exists', () => {
+      const decl = getDeclaration(
+        `export const Default: Story = {
+          args: {},
+          parameters: {
+            docs: { story: "A story" },
+          },
+        };`,
+        'Default',
+      );
+      const result = extractZephyrIdsFromParameters(decl!);
+      expect(result.hasZephyrProperty).toBe(false);
+      expect(result.ids).toEqual([]);
+    });
+
+    it('should return hasZephyrProperty=false when no parameters exist', () => {
+      const decl = getDeclaration(
+        `export const Default: Story = {
+          args: {},
+        };`,
+        'Default',
+      );
+      const result = extractZephyrIdsFromParameters(decl!);
+      expect(result.hasZephyrProperty).toBe(false);
+      expect(result.ids).toEqual([]);
     });
   });
 });

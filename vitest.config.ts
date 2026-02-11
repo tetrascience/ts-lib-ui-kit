@@ -7,14 +7,27 @@ export default defineConfig({
   test: {
     name: "unit",
     globals: true,
-    environment: "node",
-    include: ["src/**/*.test.ts", "src/**/*.spec.ts", "scripts/**/*.test.ts"],
+    environment: "jsdom",
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.spec.ts", "src/**/*.spec.tsx", "scripts/**/*.test.ts"],
     exclude: ["node_modules", "dist", "examples"],
+    environmentMatchGlobs: [
+      // Server tests should use node environment
+      ["src/server/**/*.test.ts", "node"],
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      include: ["src/server/**/*.ts"],
-      exclude: ["**/*.test.ts", "**/*.spec.ts", "**/index.ts"],
+      include: ["src/**/*.ts", "src/**/*.tsx"],
+      exclude: [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "**/*.stories.ts",
+        "**/*.stories.tsx",
+        "**/index.ts",
+        "**/index.tsx",
+      ],
     },
     mockReset: true,
     restoreMocks: true,

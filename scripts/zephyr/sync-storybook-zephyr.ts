@@ -33,6 +33,8 @@ export interface StoryCase {
   componentType: string;
   hasZephyrId: boolean;
   existingId?: string;
+  /** Whether the story has a zephyr property with empty testCaseId (needs update, not creation) */
+  hasEmptyZephyrProperty: boolean;
   /** The detected story pattern for proper update handling */
   pattern: StoryPattern;
 }
@@ -167,6 +169,51 @@ export function extractNameFromStory(declaration: VariableDeclaration): string |
   return nameInit.getLiteralText();
 }
 
+/** Result of extracting Zephyr IDs from parameters */
+export interface ZephyrIdExtraction {
+  /** Array of non-empty Zephyr IDs found */
+  ids: string[];
+  /** Whether a zephyr.testCaseId property exists (even if empty) */
+  hasZephyrProperty: boolean;
+}
+
+/** Extracts Zephyr ID from parameters.zephyr.testCaseId if present */
+export function extractZephyrIdsFromParameters(declaration: VariableDeclaration): ZephyrIdExtraction {
+  const result: ZephyrIdExtraction = { ids: [], hasZephyrProperty: false };
+
+  const initializer = declaration.getInitializer();
+  if (!initializer || !Node.isObjectLiteralExpression(initializer)) return result;
+
+  const parametersProp = initializer.getProperty('parameters');
+  if (!parametersProp || !Node.isPropertyAssignment(parametersProp)) return result;
+
+  const parametersInit = parametersProp.getInitializer();
+  if (!parametersInit || !Node.isObjectLiteralExpression(parametersInit)) return result;
+
+  const zephyrProp = parametersInit.getProperty('zephyr');
+  if (!zephyrProp || !Node.isPropertyAssignment(zephyrProp)) return result;
+
+  const zephyrInit = zephyrProp.getInitializer();
+  if (!zephyrInit || !Node.isObjectLiteralExpression(zephyrInit)) return result;
+
+  const testCaseIdProp = zephyrInit.getProperty('testCaseId');
+  if (!testCaseIdProp || !Node.isPropertyAssignment(testCaseIdProp)) return result;
+
+  const testCaseIdInit = testCaseIdProp.getInitializer();
+  if (!testCaseIdInit || !Node.isStringLiteral(testCaseIdInit)) return result;
+
+  // Property exists - mark it as such
+  result.hasZephyrProperty = true;
+
+  // Only add non-empty IDs
+  const value = testCaseIdInit.getLiteralText();
+  if (value.trim()) {
+    result.ids = [value];
+  }
+
+  return result;
+}
+
 /** Checks for .storyName assignment after the declaration */
 export function findStoryNameAssignment(declaration: VariableDeclaration): string | undefined {
   const exportName = declaration.getName();
@@ -269,6 +316,7 @@ export function parseStoryFile(filePath: string, content: string): StoryCase[] {
       // Try to get story name from various sources
       let storyName = exportName;
       let hasZephyrId = false;
+      let hasEmptyZephyrProperty = false;
       let existingId: string | undefined;
 
       // Check for name property in object literal
@@ -283,12 +331,24 @@ export function parseStoryFile(filePath: string, content: string): StoryCase[] {
         storyName = storyNameAssignment;
       }
 
-      // Check if name contains Zephyr ID
-      const zephyrMatch = storyName.match(zephyrIdPattern);
-      if (zephyrMatch) {
+      // Priority 1: Check for Zephyr IDs in parameters.zephyr.testCaseIds (new format)
+      const zephyrExtraction = extractZephyrIdsFromParameters(decl);
+      if (zephyrExtraction.ids.length > 0) {
         hasZephyrId = true;
-        existingId = zephyrMatch[1];
-        storyName = zephyrMatch[2];
+        existingId = zephyrExtraction.ids.join(',');
+      } else if (zephyrExtraction.hasZephyrProperty) {
+        // Has zephyr property with empty testCaseId - needs ID to be filled in
+        hasEmptyZephyrProperty = true;
+      }
+
+      // Priority 2: Check if name contains Zephyr ID (legacy format - for backward compatibility)
+      if (!hasZephyrId && !hasEmptyZephyrProperty) {
+        const zephyrMatch = storyName.match(zephyrIdPattern);
+        if (zephyrMatch) {
+          hasZephyrId = true;
+          existingId = zephyrMatch[1];
+          storyName = zephyrMatch[2];
+        }
       }
 
       stories.push({
@@ -300,6 +360,7 @@ export function parseStoryFile(filePath: string, content: string): StoryCase[] {
         componentType,
         hasZephyrId,
         existingId,
+        hasEmptyZephyrProperty,
         pattern,
       });
     }
@@ -383,144 +444,231 @@ async function createTestCase(testName: string, objective: string, folderId: str
 // AST-based Story File Updates
 // ============================================================================
 
-/** Converts PascalCase/camelCase to human-readable format */
-function toHumanName(name: string): string {
-  return name.replace(/([A-Z])/g, ' $1').trim();
-}
-
-/** Updates a story file to add a Zephyr ID using AST manipulation */
+/**
+ * Updates a story file to add or update a Zephyr ID in parameters.zephyr.testCaseId
+ * Uses line-by-line text processing for better formatting control
+ */
 function updateStoryFile(
   filePath: string,
   _lineNumber: number,
   exportName: string,
   zephyrKey: string,
   pattern: StoryPattern,
+  hasEmptyZephyrProperty: boolean = false,
 ): boolean {
+  // Only CSF3 object pattern is supported for the new format
+  if (pattern !== 'csf3-object') {
+    console.warn(`  [WARN] Pattern "${pattern}" not supported for new Zephyr ID format.`);
+    console.warn(`         Please convert to CSF3 object format first.`);
+    return false;
+  }
+
   const content = fs.readFileSync(filePath, 'utf-8');
+
+  // If the story has an empty zephyr property, use simple string replacement
+  if (hasEmptyZephyrProperty) {
+    return updateEmptyZephyrId(filePath, content, exportName, zephyrKey);
+  }
+
+  const lines = content.split('\n');
+  const newLines: string[] = [];
+
+  // Find the story export and add parameters.zephyr.testCaseIds
+  const storyStartPattern = new RegExp(`^export const ${exportName}:\\s*Story\\s*=\\s*\\{`);
+  let inTargetStory = false;
+  let braceDepth = 0;
+  let foundParameters = false;
+  let foundZephyr = false;
+  let storyIndent = '';
+  let modified = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (!inTargetStory && storyStartPattern.test(line)) {
+      inTargetStory = true;
+      braceDepth = 1;
+      storyIndent = line.match(/^(\s*)/)?.[1] || '';
+      newLines.push(line);
+      continue;
+    }
+
+    if (inTargetStory) {
+      // Count braces to track when we exit the story object
+      const openBraces = (line.match(/\{/g) || []).length;
+      const closeBraces = (line.match(/\}/g) || []).length;
+      braceDepth += openBraces - closeBraces;
+
+      // Check if this line has parameters
+      if (line.includes('parameters:') && !foundParameters) {
+        foundParameters = true;
+        newLines.push(line);
+
+        // Check if zephyr is on the same line or next lines
+        if (line.includes('zephyr:')) {
+          foundZephyr = true;
+        }
+        continue;
+      }
+
+      // Check if we found zephyr inside parameters
+      if (foundParameters && !foundZephyr && line.includes('zephyr:')) {
+        foundZephyr = true;
+        newLines.push(line);
+        continue;
+      }
+
+      // If we're at the end of the story and haven't added parameters yet
+      if (braceDepth === 0) {
+        if (!foundParameters) {
+          // Insert parameters before the closing brace
+          newLines.push(`${storyIndent}  parameters: {`);
+          newLines.push(`${storyIndent}    zephyr: { testCaseId: "${zephyrKey}" },`);
+          newLines.push(`${storyIndent}  },`);
+          modified = true;
+        }
+        inTargetStory = false;
+        foundParameters = false;
+        foundZephyr = false;
+      }
+
+      // If we found parameters but not zephyr, and we're about to close parameters
+      if (foundParameters && !foundZephyr && braceDepth === 1 && line.trim().startsWith('},')) {
+        // Check if this closes the parameters block
+        const prevLine = newLines[newLines.length - 1] || '';
+        if (!prevLine.includes('zephyr:')) {
+          // Insert zephyr before closing parameters
+          newLines.push(`${storyIndent}    zephyr: { testCaseId: "${zephyrKey}" },`);
+          foundZephyr = true;
+          modified = true;
+        }
+      }
+
+      newLines.push(line);
+    } else {
+      newLines.push(line);
+    }
+  }
+
+  if (modified) {
+    fs.writeFileSync(filePath, newLines.join('\n'), 'utf-8');
+    return true;
+  }
+
+  // Fallback: If line-by-line didn't work, try AST approach
+  return updateStoryFileAST(filePath, exportName, zephyrKey);
+}
+
+/**
+ * Updates an existing empty testCaseId with the new Zephyr key
+ * Uses AST-based approach for precise replacement
+ */
+function updateEmptyZephyrId(
+  filePath: string,
+  content: string,
+  exportName: string,
+  zephyrKey: string,
+): boolean {
   const project = new Project({ useInMemoryFileSystem: true });
   const sourceFile = project.createSourceFile(filePath, content);
 
-  const humanName = toHumanName(exportName);
-  const newName = `[${zephyrKey}] ${humanName}`;
-
-  // Find the variable declaration for this export
   const declaration = sourceFile.getVariableDeclaration(exportName);
   if (!declaration) {
     console.warn(`  [WARN] Could not find declaration for "${exportName}" in ${filePath}`);
     return false;
   }
 
-  let updated = false;
-
-  switch (pattern) {
-    case 'csf3-object': {
-      const initializer = declaration.getInitializer();
-      if (initializer && Node.isObjectLiteralExpression(initializer)) {
-        const nameProp = initializer.getProperty('name');
-        if (nameProp && Node.isPropertyAssignment(nameProp)) {
-          // Update existing name property
-          const nameInit = nameProp.getInitializer();
-          if (nameInit && Node.isStringLiteral(nameInit)) {
-            const existingName = nameInit.getLiteralText();
-            nameProp.setInitializer(`"[${zephyrKey}] ${existingName}"`);
-            updated = true;
-          }
-        } else {
-          // Add name property at the beginning
-          initializer.insertPropertyAssignment(0, { name: 'name', initializer: `"${newName}"` });
-          updated = true;
-        }
-      }
-      break;
-    }
-
-    case 'csf2-template-bind':
-    case 'arrow-function': {
-      // For these patterns, add a .storyName assignment after the declaration
-      // First check if one already exists
-      const existingAssignment = findStoryNameAssignment(declaration);
-      if (existingAssignment) {
-        // Update existing .storyName assignment
-        const statements = sourceFile.getStatements();
-        for (const stmt of statements) {
-          if (!Node.isExpressionStatement(stmt)) continue;
-          const expr = stmt.getExpression();
-          if (!Node.isBinaryExpression(expr)) continue;
-          const left = expr.getLeft();
-          if (!Node.isPropertyAccessExpression(left)) continue;
-          const objExpr = left.getExpression();
-          if (!Node.isIdentifier(objExpr) || objExpr.getText() !== exportName) continue;
-          if (left.getName() !== 'storyName') continue;
-
-          const right = expr.getRight();
-          if (Node.isStringLiteral(right)) {
-            const existingName = right.getLiteralText();
-            expr.replaceWithText(`${exportName}.storyName = "[${zephyrKey}] ${existingName}"`);
-            updated = true;
-            break;
-          }
-        }
-      } else {
-        // Add new .storyName assignment after the variable statement
-        const varStatement = declaration.getVariableStatement();
-        if (varStatement) {
-          const stmtIndex = sourceFile.getStatements().indexOf(varStatement);
-          sourceFile.insertStatements(stmtIndex + 1, `${exportName}.storyName = "${newName}";`);
-          updated = true;
-        }
-      }
-      break;
-    }
-
-    case 'react-fc': {
-      // Convert React.FC to CSF3 format: { name: "...", render: () => ... }
-      const initializer = declaration.getInitializer();
-      if (initializer && Node.isArrowFunction(initializer)) {
-        // Get the function body
-        const body = initializer.getBody();
-        const bodyText = body.getText();
-
-        // Check if the body uses React hooks (useState, useEffect, useCallback, useMemo, useRef, useContext, useReducer)
-        // Match both direct hook calls (useState) and React namespace calls (React.useState)
-        const usesHooks = /\buse[A-Z]\w*\s*\(/.test(bodyText) || /\bReact\.use[A-Z]\w*\s*\(/.test(bodyText);
-
-        if (usesHooks) {
-          // Extract as a separate component to satisfy React hooks rules
-          const componentName = `${exportName}Component`;
-          const varStatement = declaration.getVariableStatement();
-          if (varStatement) {
-            const stmtIndex = sourceFile.getStatements().indexOf(varStatement);
-            // Insert the component definition before the story
-            sourceFile.insertStatements(stmtIndex, `const ${componentName} = () => ${bodyText};\n`);
-            // Build the CSF3 object referencing the component
-            const csf3Object = `{\n  name: "${newName}",\n  render: () => <${componentName} />,\n}`;
-            declaration.setInitializer(csf3Object);
-            declaration.setType('Story');
-            updated = true;
-          }
-        } else {
-          // No hooks - can inline the render function
-          const csf3Object = `{\n  name: "${newName}",\n  render: () => ${bodyText},\n}`;
-          declaration.setInitializer(csf3Object);
-          declaration.setType('Story');
-          updated = true;
-        }
-      }
-      break;
-    }
-
-    default:
-      console.warn(`  [WARN] Unknown pattern "${pattern}" for story "${exportName}"`);
-      return false;
-  }
-
-  if (!updated) {
-    console.warn(`  [WARN] Could not update story "${exportName}" at ${filePath}`);
-    console.warn(`         Pattern: ${pattern}. Please add Zephyr ID manually.`);
+  const initializer = declaration.getInitializer();
+  if (!initializer || !Node.isObjectLiteralExpression(initializer)) {
+    console.warn(`  [WARN] Story "${exportName}" is not an object literal`);
     return false;
   }
 
-  // Write the updated file
+  const parametersProp = initializer.getProperty('parameters');
+  if (!parametersProp || !Node.isPropertyAssignment(parametersProp)) {
+    console.warn(`  [WARN] Could not find parameters in "${exportName}"`);
+    return false;
+  }
+
+  const parametersInit = parametersProp.getInitializer();
+  if (!parametersInit || !Node.isObjectLiteralExpression(parametersInit)) {
+    console.warn(`  [WARN] Parameters is not an object in "${exportName}"`);
+    return false;
+  }
+
+  const zephyrProp = parametersInit.getProperty('zephyr');
+  if (!zephyrProp || !Node.isPropertyAssignment(zephyrProp)) {
+    console.warn(`  [WARN] Could not find zephyr property in "${exportName}"`);
+    return false;
+  }
+
+  const zephyrInit = zephyrProp.getInitializer();
+  if (!zephyrInit || !Node.isObjectLiteralExpression(zephyrInit)) {
+    console.warn(`  [WARN] Zephyr is not an object in "${exportName}"`);
+    return false;
+  }
+
+  const testCaseIdProp = zephyrInit.getProperty('testCaseId');
+  if (!testCaseIdProp || !Node.isPropertyAssignment(testCaseIdProp)) {
+    console.warn(`  [WARN] Could not find testCaseId in "${exportName}"`);
+    return false;
+  }
+
+  // Replace the empty string with the new key
+  const testCaseIdInit = testCaseIdProp.getInitializer();
+  if (testCaseIdInit && Node.isStringLiteral(testCaseIdInit)) {
+    testCaseIdInit.replaceWithText(`"${zephyrKey}"`);
+    fs.writeFileSync(filePath, sourceFile.getFullText(), 'utf-8');
+    return true;
+  }
+
+  console.warn(`  [WARN] testCaseId is not a string literal in "${exportName}"`);
+  return false;
+}
+
+/** Fallback AST-based update for complex cases */
+function updateStoryFileAST(filePath: string, exportName: string, zephyrKey: string): boolean {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const project = new Project({ useInMemoryFileSystem: true });
+  const sourceFile = project.createSourceFile(filePath, content);
+
+  const declaration = sourceFile.getVariableDeclaration(exportName);
+  if (!declaration) {
+    console.warn(`  [WARN] Could not find declaration for "${exportName}" in ${filePath}`);
+    return false;
+  }
+
+  const initializer = declaration.getInitializer();
+  if (!initializer || !Node.isObjectLiteralExpression(initializer)) {
+    console.warn(`  [WARN] Story "${exportName}" is not an object literal`);
+    return false;
+  }
+
+  // Check if parameters already exists
+  const parametersProp = initializer.getProperty('parameters');
+  if (parametersProp && Node.isPropertyAssignment(parametersProp)) {
+    const parametersInit = parametersProp.getInitializer();
+    if (parametersInit && Node.isObjectLiteralExpression(parametersInit)) {
+      // Check if zephyr already exists
+      const zephyrProp = parametersInit.getProperty('zephyr');
+      if (!zephyrProp) {
+        // Add zephyr to existing parameters with comment
+        // Note: ts-morph doesn't easily support adding leading comments to property assignments,
+        // so we use the line-by-line approach as the primary method. This fallback won't include the comment.
+        parametersInit.insertPropertyAssignment(0, {
+          name: 'zephyr',
+          initializer: `{ testCaseId: "${zephyrKey}" }`,
+        });
+      }
+    }
+  } else {
+    // Add parameters with zephyr
+    initializer.addPropertyAssignment({
+      name: 'parameters',
+      initializer: `{\n    // Auto-generated by sync-storybook-zephyr - do not add manually\n    zephyr: { testCaseId: "${zephyrKey}" },\n  }`,
+    });
+  }
+
   fs.writeFileSync(filePath, sourceFile.getFullText(), 'utf-8');
   return true;
 }
@@ -550,11 +698,17 @@ async function main(): Promise<void> {
     allStories.push(...stories);
   }
 
-  const storiesNeedingIds = allStories.filter((s) => !s.hasZephyrId);
+  // Stories needing IDs: either no Zephyr ID OR has empty Zephyr property
+  const storiesNeedingIds = allStories.filter((s) => !s.hasZephyrId || s.hasEmptyZephyrProperty);
+  const storiesWithEmptyProperty = storiesNeedingIds.filter((s) => s.hasEmptyZephyrProperty);
   const storiesWithIds = allStories.filter((s) => s.hasZephyrId);
 
   console.log(`[INFO] Stories with Zephyr IDs: ${storiesWithIds.length}`);
-  console.log(`[INFO] Stories needing Zephyr IDs: ${storiesNeedingIds.length}\n`);
+  console.log(`[INFO] Stories needing Zephyr IDs: ${storiesNeedingIds.length}`);
+  if (storiesWithEmptyProperty.length > 0) {
+    console.log(`  - ${storiesWithEmptyProperty.length} with empty testCaseId (will be updated)`);
+  }
+  console.log('');
 
   if (storiesNeedingIds.length === 0) {
     console.log('[INFO] All stories already have Zephyr IDs!\n');
@@ -567,7 +721,8 @@ async function main(): Promise<void> {
 
   for (const story of storiesNeedingIds) {
     const relativePath = path.relative(process.cwd(), story.filePath);
-    console.log(`\n[PROCESS] ${relativePath} - ${story.exportName}`);
+    const updateType = story.hasEmptyZephyrProperty ? 'UPDATE' : 'CREATE';
+    console.log(`\n[PROCESS] ${relativePath} - ${story.exportName} (${updateType})`);
 
     try {
       const folderId = await getFolderId(story.componentType);
@@ -586,6 +741,7 @@ async function main(): Promise<void> {
         story.exportName,
         result.key,
         story.pattern,
+        story.hasEmptyZephyrProperty,
       );
 
       if (updateSuccess) {

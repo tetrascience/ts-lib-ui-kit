@@ -927,7 +927,7 @@ export const HiddenUIElements: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T1064" },
   },
 };
 
@@ -968,7 +968,7 @@ export const EdgeCases: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T1065" },
   },
 };
 
@@ -1012,7 +1012,7 @@ export const UniformValuesAndLeftLegend: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T1066" },
   },
 };
 
@@ -1063,7 +1063,7 @@ export const CategoricalLeftLegend: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T1067" },
   },
 };
 
@@ -1128,7 +1128,7 @@ export const WellClickInteraction: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T1068" },
   },
 };
 
@@ -1159,7 +1159,7 @@ export const StringColorscale: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T1069" },
   },
 };
 
@@ -1200,7 +1200,7 @@ export const ValueRangeOverride: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T1070" },
   },
 };
 
@@ -1234,7 +1234,7 @@ export const ColorbarWithTitle: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T1071" },
   },
 };
 
@@ -1301,6 +1301,6 @@ export const InvalidRegions: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T1072" },
   },
 };

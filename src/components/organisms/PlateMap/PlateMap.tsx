@@ -2,619 +2,39 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Plotly from "plotly.js-dist";
 import "./PlateMap.scss";
 
-/**
- * Plate format presets for standard microplate configurations.
- * - `"96"`: 8 rows × 12 columns (wells A1-H12)
- * - `"384"`: 16 rows × 24 columns (wells A1-P24)
- * - `"1536"`: 32 rows × 48 columns (wells A1-AF48)
- * - `"custom"`: User-defined dimensions via `rows` and `columns` props
- */
-export type PlateFormat = "96" | "384" | "1536" | "custom";
-
-/**
- * Visualization mode for the plate map.
- * - `"heatmap"`: Displays quantitative values as a continuous color gradient.
- *   Use for OD readings, fluorescence intensity, or other numeric measurements.
- * - `"categorical"`: Displays well types with discrete colors.
- *   Use for showing sample types, control positions, or experimental conditions.
- */
-export type VisualizationMode = "heatmap" | "categorical";
-
-/**
- * Well type for categorical visualization.
- * Common types include:
- * - `"sample"`: Test samples (blue by default)
- * - `"control"`: Positive/negative controls (red by default)
- * - `"empty"`: Unused wells (light gray by default)
- *
- * Custom types can be added and colored via the `categoryColors` prop.
- */
-export type WellType = "sample" | "control" | "empty" | string;
-
-/**
- * Default category colors for well types in categorical visualization mode.
- * Override these by passing custom colors via the `categoryColors` prop.
- */
-export const DEFAULT_CATEGORY_COLORS: Record<string, string> = {
-  sample: "#4575b4", // Blue
-  control: "#d73027", // Red
-  empty: "#f0f0f0", // Light gray
-};
-
-/**
- * Well data for individual wells.
- *
- * @example
- * // Well with a single numeric value
- * { wellId: "A1", values: { "Fluorescence": 1500 } }
- *
- * @example
- * // Well with multiple values (creates multiple layers)
- * { wellId: "A1", values: { "Raw": 1500, "Normalized": 0.85, "Status": "positive" } }
- *
- * @example
- * // Well with tooltip-only data
- * { wellId: "A1", values: { "Value": 500 }, tooltipData: { compound: "Drug A", concentration: "10µM" } }
- */
-export interface WellData {
-  /**
-   * Well identifier in standard microplate notation.
-   * - Single letter + number for 96/384-well: "A1", "H12", "P24"
-   * - Double letter + number for 1536-well: "A1", "AA1", "AF48"
-   * Case-insensitive ("a1" and "A1" are equivalent).
-   */
-  wellId: string;
-  /**
-   * Named values for the well. Each key can become a visualization layer.
-   *
-   * - Numeric values: Displayed using heatmap visualization
-   * - String values: Displayed using categorical visualization
-   * - null: Empty/no data for that property
-   *
-   * All values are shown in the tooltip regardless of which layer is active.
-   *
-   * @example
-   * // Well with multiple measurement values (numeric)
-   * { wellId: "A1", values: { "Raw": 1500, "Normalized": 0.85, "Z-Score": 1.2 } }
-   *
-   * @example
-   * // Well with categorical values (string)
-   * { wellId: "A1", values: { "Status": "positive", "QC": "pass" } }
-   *
-   * @example
-   * // Mixed numeric and categorical
-   * { wellId: "A1", values: { "Fluorescence": 1500, "Status": "positive" } }
-   */
-  values?: Record<string, string | number | null>;
-  /**
-   * Optional data for tooltip display only (not visualized as layers).
-   * Keys become labels, values are displayed.
-   *
-   * @example
-   * { tooltipData: { sampleId: "S001", compound: "Drug A", concentration: "10µM" } }
-   */
-  tooltipData?: Record<string, unknown>;
-}
-
-/**
- * Color scale definition for the heatmap visualization mode.
- *
- * Can be:
- * - A named Plotly colorscale (e.g., "Viridis", "Blues", "Hot")
- * - An array of [position, color] tuples where position is 0-1
- *
- * @example
- * // Named colorscale
- * colorScale="Viridis"
- *
- * @example
- * // Custom gradient
- * colorScale={[
- *   [0, "#313695"],   // Dark blue at min
- *   [0.5, "#ffffbf"], // Yellow at midpoint
- *   [1, "#a50026"],   // Dark red at max
- * ]}
- */
-export type ColorScale = string | Array<[number, string]>;
-
-/**
- * Configuration for auto-generated layers when using WellData with `values`.
- *
- * When wells have multiple values (via the `values` property), layers are
- * auto-generated from the unique keys. Use LayerConfig to customize the
- * display name, visualization mode, and color scale for each layer.
- *
- * @example
- * // Configure layers for wells with { values: { "Raw": 100, "Normalized": 0.5 } }
- * const layerConfigs: LayerConfig[] = [
- *   { id: "Raw", name: "Raw Data", colorScale: "Blues" },
- *   { id: "Normalized", name: "Normalized Values", valueMin: 0, valueMax: 1 },
- * ];
- */
-export interface LayerConfig {
-  /** Layer ID (must match a key in WellData.values) */
-  id: string;
-  /** Display name for the layer (defaults to id if not provided) */
-  name?: string;
-  /** Visualization mode for this layer */
-  visualizationMode?: VisualizationMode;
-  /** Color scale for this layer (for heatmap mode) */
-  colorScale?: ColorScale;
-  /** Minimum value for color scaling */
-  valueMin?: number;
-  /** Maximum value for color scaling */
-  valueMax?: number;
-  /** Value unit suffix for tooltips and colorbar (e.g., "RFU", "%"). A space is automatically added before the unit. */
-  valueUnit?: string;
-  /**
-   * Custom colors for categorical visualization mode.
-   * Keys are category values (strings from `values`), values are hex colors.
-   * Merged with DEFAULT_CATEGORY_COLORS.
-   */
-  categoryColors?: Record<string, string>;
-}
-
-/**
- * Position for the legend display.
- * - `"right"`: Legend appears to the right of the plate (default)
- * - `"bottom"`: Legend appears below the plate
- * - `"left"`: Legend appears to the left of the plate
- * - `"top"`: Legend appears above the plate
- */
-export type LegendPosition = "right" | "bottom" | "left" | "top";
-
-/**
- * Configuration for legend styling and positioning.
- *
- * @example
- * // Legend on the bottom with custom styling
- * legendConfig={{
- *   position: "bottom",
- *   fontSize: 14,
- *   itemSpacing: 12,
- *   swatchSize: 20,
- * }}
- */
-export interface LegendConfig {
-  /**
-   * Position of the legend relative to the plate.
-   * @default "right"
-   */
-  position?: LegendPosition;
-  /**
-   * Font size for legend labels in pixels.
-   * @default 12
-   */
-  fontSize?: number;
-  /**
-   * Spacing between legend items in pixels.
-   * @default 4
-   */
-  itemSpacing?: number;
-  /**
-   * Size of the color swatch in pixels.
-   * @default 16
-   */
-  swatchSize?: number;
-  /**
-   * Title to display above the legend.
-   */
-  title?: string;
-}
-
-/**
- * A region to highlight on the plate (e.g., controls, sample areas, empty wells)
- */
-export interface PlateRegion {
-  /** Unique identifier for the region */
-  id: string;
-  /** Display name for the region (shown in legend) */
-  name: string;
-  /**
-   * Wells included in this region using range notation.
-   * Format: "StartWell:EndWell" (e.g., "A1:B6" for a rectangular block from A1 to B6)
-   */
-  wells: string;
-  /** Border color for the region highlight */
-  borderColor?: string;
-  /** Border width in pixels (default: 2) */
-  borderWidth?: number;
-  /** Optional fill color with transparency (e.g., "rgba(255, 0, 0, 0.1)") */
-  fillColor?: string;
-}
-
-/**
- * Props for PlateMap component
- */
-export interface PlateMapProps {
-  /**
-   * Well data array as WellData objects with wellId and values.
-   *
-   * If wells have multiple values (via `values` property), layers are
-   * auto-generated for each unique key, enabling layer toggling.
-   */
-  data?: WellData[];
-
-  /**
-   * Configuration for auto-generated layers when using WellData with `values`.
-   * Use this to customize display names, colors, and ranges for each layer.
-   * Only used when `data` contains wells with `values` property.
-   */
-  layerConfigs?: LayerConfig[];
-
-  /**
-   * Initial layer ID to display when the component mounts.
-   * If not provided, defaults to the first layer.
-   */
-  initialLayerId?: string;
-
-  /**
-   * Optional callback notified when the active layer changes.
-   * This is purely informational - the component manages layer state internally.
-   * Use this for logging, analytics, or syncing with external state.
-   */
-  onLayerChange?: (layerId: string) => void;
-
-  /** Plate format preset (default: "96") */
-  plateFormat?: PlateFormat;
-
-  /** Number of rows for custom format (default: 8 for 96-well, 16 for 384-well) */
-  rows?: number;
-
-  /** Number of columns for custom format (default: 12 for 96-well, 24 for 384-well) */
-  columns?: number;
-
-  /**
-   * Visualization mode (default: "heatmap")
-   * - "heatmap": Display quantitative values with color gradient
-   * - "categorical": Display well types with discrete colors
-   */
-  visualizationMode?: VisualizationMode;
-
-  /**
-   * Custom colors for categorical visualization mode.
-   * Keys are well types, values are hex colors.
-   * Merged with DEFAULT_CATEGORY_COLORS.
-   */
-  categoryColors?: Record<string, string>;
-
-  /**
-   * Regions to highlight on the plate (e.g., controls, sample areas, empty wells).
-   * Each region can specify wells and styling for visual distinction.
-   */
-  regions?: PlateRegion[];
-
-  /** Chart title */
-  title?: string;
-
-  /** X-axis title (e.g., "Columns") */
-  xTitle?: string;
-
-  /** Y-axis title (e.g., "Rows") */
-  yTitle?: string;
-
-  /** Custom x-axis labels (overrides auto-generated column numbers) */
-  xLabels?: string[] | number[];
-
-  /** Custom y-axis labels (overrides auto-generated row letters) */
-  yLabels?: string[] | number[];
-
-  /** Color scale for the heatmap (only used in heatmap mode) */
-  colorScale?: ColorScale;
-
-  /** Minimum value for color scale (auto-calculated if not provided) */
-  valueMin?: number;
-
-  /** Maximum value for color scale (auto-calculated if not provided) */
-  valueMax?: number;
-
-  /** Color for empty/null wells (default: "#f0f0f0") */
-  emptyWellColor?: string;
-
-  /** Show color bar legend for heatmap mode (default: true) */
-  showColorBar?: boolean;
-
-  /** Show categorical legend for categorical mode (default: true) */
-  showLegend?: boolean;
-
-  /**
-   * Configuration for legend positioning and styling.
-   * Applies to both heatmap colorbar and categorical legend.
-   *
-   * @example
-   * // Position legend at bottom with larger text
-   * legendConfig={{ position: "bottom", fontSize: 14 }}
-   */
-  legendConfig?: LegendConfig;
-
-  /** Chart width in pixels (default: 800) */
-  width?: number;
-
-  /** Chart height in pixels (default: 500) */
-  height?: number;
-
-  /** Number of decimal places for values (default: 0) */
-  precision?: number;
-
-  /**
-   * Marker shape for wells (default: "circle")
-   * - "circle": Round markers, ideal for plate-based data
-   * - "square": Square markers, ideal for generic heatmaps
-   */
-  markerShape?: "circle" | "square";
-
-  /**
-   * Callback when a well/cell is clicked.
-   * @param wellData - The full well data object including wellId, values, and tooltipData
-   */
-  onWellClick?: (wellData: WellData) => void;
-
-}
-
-/**
- * Plate dimension configurations
- */
-const PLATE_CONFIGS: Record<"96" | "384" | "1536", { rows: number; columns: number }> = {
-  "96": { rows: 8, columns: 12 },
-  "384": { rows: 16, columns: 24 },
-  "1536": { rows: 32, columns: 48 },
-};
-
-/**
- * Default color scale (blue to red gradient suitable for plate data)
- */
-const DEFAULT_COLOR_SCALE: Array<[number, string]> = [
-  [0, "#313695"],
-  [0.1, "#4575b4"],
-  [0.2, "#74add1"],
-  [0.3, "#abd9e9"],
-  [0.4, "#e0f3f8"],
-  [0.5, "#ffffbf"],
-  [0.6, "#fee090"],
-  [0.7, "#fdae61"],
-  [0.8, "#f46d43"],
-  [0.9, "#d73027"],
-  [1, "#a50026"],
-];
-
-/**
- * Generate row labels (A, B, C, ... for 96-well; A-P for 384-well; A-AF for 1536-well)
- * For rows beyond Z (26), uses AA, AB, AC, etc.
- */
-function generateRowLabels(count: number): string[] {
-  return Array.from({ length: count }, (_, i) => {
-    if (i < 26) {
-      return String.fromCharCode(65 + i);
-    }
-    // For rows 26+, use AA, AB, AC, etc.
-    return "A" + String.fromCharCode(65 + (i - 26));
-  });
-}
-
-/**
- * Generate column labels (1, 2, 3, ...)
- */
-function generateColumnLabels(count: number): number[] {
-  return Array.from({ length: count }, (_, i) => i + 1);
-}
-
-/**
- * Parse well ID to row and column indices
- * @param wellId - Well identifier (e.g., "A1", "H12", "P24", "AA1", "AF48")
- * @returns { row, col } zero-indexed
- */
-function parseWellId(wellId: string): { row: number; col: number } | null {
-  // Match single letter (A-Z) or double letter (AA-AF) followed by 1-2 digits
-  const match = wellId.match(/^([A-Z]{1,2})(\d{1,2})$/i);
-  if (!match) return null;
-
-  const rowStr = match[1].toUpperCase();
-  let row: number;
-
-  if (rowStr.length === 1) {
-    row = rowStr.charCodeAt(0) - 65;
-  } else {
-    // Double letter: AA=26, AB=27, ..., AF=31
-    row = 26 + (rowStr.charCodeAt(1) - 65);
-  }
-
-  const col = parseInt(match[2], 10) - 1;
-
-  return { row, col };
-}
-
-/**
- * Result of converting WellData array to grids
- */
-interface WellDataGridResult {
-  /** 2D grid of numeric values for the active layer */
-  grid: (number | null)[][];
-  /** 2D grid of string values for categorical visualization */
-  categories: (string | null)[][];
-  /** Map of wellId -> all values (for tooltip display) */
-  allValues: Map<string, Record<string, string | number | null>>;
-  /** Map of wellId -> tooltipData */
-  tooltipData: Map<string, Record<string, unknown>>;
-}
-
-/**
- * Convert WellData array to 2D grids for a specific layer
- */
-function wellDataToGrid(
-  wells: WellData[],
-  rows: number,
-  columns: number,
-  layerId?: string
-): WellDataGridResult {
-  // Initialize grids with nulls
-  const grid: (number | null)[][] = Array.from({ length: rows }, () =>
-    Array(columns).fill(null)
-  );
-  const categories: (string | null)[][] = Array.from({ length: rows }, () =>
-    Array(columns).fill(null)
-  );
-  const allValues = new Map<string, Record<string, string | number | null>>();
-  const tooltipData = new Map<string, Record<string, unknown>>();
-
-  for (const well of wells) {
-    const parsed = parseWellId(well.wellId);
-    // Check bounds including >= 0 to prevent negative indices (e.g., "A0" -> col=-1)
-    if (parsed && parsed.row >= 0 && parsed.col >= 0 && parsed.row < rows && parsed.col < columns) {
-      const wellIdUpper = well.wellId.toUpperCase();
-
-      // Store all values for tooltip
-      if (well.values) {
-        allValues.set(wellIdUpper, well.values);
-      }
-
-      // Store tooltipData
-      if (well.tooltipData) {
-        tooltipData.set(wellIdUpper, well.tooltipData);
-      }
-
-      // Extract value for the specified layer (or first layer if not specified)
-      if (well.values) {
-        const effectiveLayerId = layerId ?? Object.keys(well.values)[0];
-        const layerValue = effectiveLayerId ? well.values[effectiveLayerId] : null;
-
-        if (typeof layerValue === "number") {
-          grid[parsed.row][parsed.col] = layerValue;
-        } else if (typeof layerValue === "string") {
-          categories[parsed.row][parsed.col] = layerValue;
-        }
-      }
-    }
-  }
-
-  return { grid, categories, allValues, tooltipData };
-}
-
-/**
- * Validate and sanitize grid data
- */
-/**
- * Calculate min/max values from grid, ignoring nulls
- */
-function calculateValueRange(grid: (number | null)[][]): { min: number; max: number } {
-  let min = Infinity;
-  let max = -Infinity;
-
-  for (const row of grid) {
-    for (const val of row) {
-      if (val !== null && Number.isFinite(val)) {
-        min = Math.min(min, val);
-        max = Math.max(max, val);
-      }
-    }
-  }
-
-  // Handle case where all values are null
-  if (!Number.isFinite(min)) min = 0;
-  if (!Number.isFinite(max)) max = 1;
-
-  // Ensure min < max
-  if (min === max) {
-    max = min + 1;
-  }
-
-  return { min, max };
-}
-
-/**
- * Check if WellData array contains multi-value wells (has `values` property)
- */
-function hasMultiValueWells(data: WellData[]): boolean {
-  return data.some((well) => well.values && Object.keys(well.values).length > 0);
-}
-
-/**
- * Extract unique layer IDs from WellData array with `values`
- */
-function extractLayerIds(data: WellData[]): string[] {
-  const layerIds = new Set<string>();
-  for (const well of data) {
-    if (well.values) {
-      Object.keys(well.values).forEach((k) => layerIds.add(k));
-    }
-  }
-  return Array.from(layerIds);
-}
-
-/**
- * Check if a layer contains string values (categorical) or numeric values (heatmap)
- */
-function isStringValueLayer(data: WellData[], layerId: string): boolean {
-  for (const well of data) {
-    const val = well.values?.[layerId];
-    if (typeof val === "string") {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * Extract layer configs from multi-value WellData array.
- * Creates a layer entry for each unique key found in the `values` objects.
- * Merges with user-provided layerConfigs to apply custom settings.
- */
-function extractLayers(
-  data: WellData[],
-  layerConfigs?: LayerConfig[]
-): LayerConfig[] {
-  const layerIds = extractLayerIds(data);
-
-  return layerIds.map((id) => {
-    const config = layerConfigs?.find((c) => c.id === id);
-    const isStringLayer = isStringValueLayer(data, id);
-
-    return {
-      id,
-      name: config?.name ?? id,
-      // Auto-set categorical mode for string layers if not explicitly configured
-      visualizationMode: config?.visualizationMode ?? (isStringLayer ? "categorical" : undefined),
-      colorScale: config?.colorScale,
-      valueMin: config?.valueMin,
-      valueMax: config?.valueMax,
-      valueUnit: config?.valueUnit,
-      categoryColors: config?.categoryColors,
-    };
-  });
-}
-
-/**
- * Parse region wells from range notation like "A1:B6"
- * Returns the bounding box coordinates for overlay rendering
- */
-function parseRegionWells(
-  wells: string,
-  rowLabels: readonly (string | number)[],
-  colLabels: readonly (string | number)[]
-): { minRow: number; maxRow: number; minCol: number; maxCol: number } | null {
-  // Parse range notation like "A1:B6"
-  const rangeMatch = wells.match(/^([A-Z]{1,2})(\d{1,2}):([A-Z]{1,2})(\d{1,2})$/i);
-  if (!rangeMatch) {
-    return null;
-  }
-
-  // The regex above guarantees valid well ID format, so parseWellId will always succeed
-  const startWell = parseWellId(`${rangeMatch[1]}${rangeMatch[2]}`)!;
-  const endWell = parseWellId(`${rangeMatch[3]}${rangeMatch[4]}`)!;
-
-  const minRow = Math.min(startWell.row, endWell.row);
-  const maxRow = Math.max(startWell.row, endWell.row);
-  const minCol = Math.min(startWell.col, endWell.col);
-  const maxCol = Math.max(startWell.col, endWell.col);
-
-  // Validate bounds against actual labels
-  const numRows = rowLabels.length;
-  const numCols = colLabels.length;
-  if (minRow >= numRows || maxRow >= numRows || minCol >= numCols || maxCol >= numCols) {
-    return null;
-  }
-
-  return { minRow, maxRow, minCol, maxCol };
-}
+// Types
+import type {
+  PlateMapProps,
+  LayerConfig,
+  WellData,
+} from "./types";
+import {
+  PLATE_FORMAT_96,
+  PLATE_FORMAT_CUSTOM,
+} from "./types";
+
+// Re-export types and constants for external consumers
+export * from "./types";
+export { DEFAULT_CATEGORY_COLORS } from "./constants";
+
+// Constants
+import {
+  PLATE_CONFIGS,
+  DEFAULT_COLOR_SCALE,
+  COLORS,
+  DEFAULT_CATEGORY_COLORS,
+} from "./constants";
+
+// Utilities
+import {
+  generateRowLabels,
+  generateColumnLabels,
+  wellDataToGrid,
+  calculateValueRange,
+  hasMultiValueWells,
+  extractLayers,
+  parseRegionWells,
+} from "./utils";
 
 /**
  * PlateMap component for visualizing well plate data as a heatmap or categorical display.
@@ -644,7 +64,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   layerConfigs,
   initialLayerId,
   onLayerChange,
-  plateFormat = "96",
+  plateFormat = PLATE_FORMAT_96,
   rows: customRows,
   columns: customColumns,
   visualizationMode: propVisualizationMode = "heatmap",
@@ -658,7 +78,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   colorScale: propColorScale = DEFAULT_COLOR_SCALE,
   valueMin: propValueMin,
   valueMax: propValueMax,
-  emptyWellColor = "#f0f0f0",
+  emptyWellColor = COLORS.emptyWell,
   showColorBar = true,
   showLegend = true,
   legendConfig,
@@ -679,7 +99,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   let rows: number;
   let columns: number;
 
-  if (plateFormat === "custom") {
+  if (plateFormat === PLATE_FORMAT_CUSTOM) {
     rows = customRows ?? 8;
     columns = customColumns ?? 12;
   } else {
@@ -975,7 +395,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
         y0,
         y1,
         line: {
-          color: region.borderColor || "#333",
+          color: region.borderColor || COLORS.textDark,
           width: region.borderWidth ?? 2,
         },
         fillcolor: region.fillColor || "transparent",
@@ -984,7 +404,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
     }
 
     return shapes;
-  }, [regions, rowLabels, colLabels, markerShape]);
+  }, [regions, rowLabels, colLabels]);
 
   useEffect(() => {
     const currentRef = plotRef.current;
@@ -1290,36 +710,23 @@ const PlateMap: React.FC<PlateMapProps> = ({
     }
 
     return (
-      <div
-        className="platemap-layer-selector"
-        style={{
-          display: "flex",
-          gap: "4px",
-          marginBottom: "8px",
-        }}
-      >
-        {effectiveLayers.map((layer) => (
-          <button
-            key={layer.id}
-            type="button"
-            onClick={() => {
-              setActiveLayerId(layer.id);
-              onLayerChange?.(layer.id);
-            }}
-            style={{
-              padding: "6px 12px",
-              fontSize: "12px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              backgroundColor: activeLayer?.id === layer.id ? "#4575b4" : "#fff",
-              color: activeLayer?.id === layer.id ? "#fff" : "#333",
-              cursor: "pointer",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            {layer.name}
-          </button>
-        ))}
+      <div className="platemap-layer-selector">
+        {effectiveLayers.map((layer) => {
+          const isActive = activeLayer?.id === layer.id;
+          return (
+            <button
+              key={layer.id}
+              type="button"
+              className={`platemap-layer-selector__button${isActive ? " platemap-layer-selector__button--active" : ""}`}
+              onClick={() => {
+                setActiveLayerId(layer.id);
+                onLayerChange?.(layer.id);
+              }}
+            >
+              {layer.name}
+            </button>
+          );
+        })}
       </div>
     );
   };
@@ -1345,42 +752,33 @@ const PlateMap: React.FC<PlateMapProps> = ({
     if (!showLegend || (!hasCategoricalItems && !hasRegions)) {
       // Return empty placeholder to maintain consistent width (only for vertical legends)
       if (!isHorizontalLegend) {
-        return <div style={{ width: legendWidth, flexShrink: 0 }} />;
+        return <div className="platemap-legend-placeholder" style={{ width: legendWidth }} />;
       }
       return null;
     }
 
-    const legendStyle: React.CSSProperties = isHorizontalLegend
-      ? {
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "wrap",
-          gap: `${legendItemSpacing}px`,
-          padding: "8px",
-          justifyContent: "center",
-        }
-      : {
-          display: "flex",
-          flexDirection: "column",
-          gap: `${legendItemSpacing}px`,
-          padding: "8px",
-          marginLeft: legendPosition === "right" ? "8px" : undefined,
-          marginRight: legendPosition === "left" ? "8px" : undefined,
-          width: legendWidth,
-          flexShrink: 0,
-        };
+    // Build legend class names
+    const legendClassNames = ["platemap-legend"];
+    if (isHorizontalLegend) {
+      legendClassNames.push("platemap-legend--horizontal");
+    } else if (legendPosition === "left") {
+      legendClassNames.push("platemap-legend--left");
+    } else if (legendPosition === "right") {
+      legendClassNames.push("platemap-legend--right");
+    }
+
+    // Dynamic styles that depend on props
+    const legendStyle: React.CSSProperties = {
+      gap: `${legendItemSpacing}px`,
+      width: isHorizontalLegend ? undefined : legendWidth,
+    };
 
     return (
-      <div className="platemap-legend" style={legendStyle}>
+      <div className={legendClassNames.join(" ")} style={legendStyle}>
         {legendTitle && (
           <div
-            style={{
-              fontSize: `${legendFontSize}px`,
-              fontWeight: 600,
-              marginBottom: "4px",
-              width: isHorizontalLegend ? "100%" : undefined,
-              textAlign: isHorizontalLegend ? "center" : undefined,
-            }}
+            className={`platemap-legend__title${isHorizontalLegend ? " platemap-legend__title--horizontal" : ""}`}
+            style={{ fontSize: `${legendFontSize}px` }}
           >
             {legendTitle}
           </div>
@@ -1388,32 +786,18 @@ const PlateMap: React.FC<PlateMapProps> = ({
         {/* Categorical type items */}
         {hasCategoricalItems &&
           uniqueTypes.map((type) => (
-            <div
-              key={type}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
+            <div key={type} className="platemap-legend__item">
               <div
+                className="platemap-legend__swatch"
                 style={{
                   width: `${legendSwatchSize}px`,
                   height: `${legendSwatchSize}px`,
                   backgroundColor: categoryColors[type] || emptyWellColor,
-                  border: "1px solid #ccc",
-                  borderRadius: "2px",
-                  flexShrink: 0,
                 }}
               />
               <span
-                style={{
-                  fontSize: `${legendFontSize}px`,
-                  textTransform: "capitalize",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
+                className="platemap-legend__label platemap-legend__label--capitalize"
+                style={{ fontSize: `${legendFontSize}px` }}
               >
                 {type}
               </span>
@@ -1422,32 +806,19 @@ const PlateMap: React.FC<PlateMapProps> = ({
         {/* Region items */}
         {hasRegions &&
           regions.map((region) => (
-            <div
-              key={region.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
+            <div key={region.id} className="platemap-legend__item">
               <div
+                className="platemap-legend__swatch platemap-legend__swatch--region"
                 style={{
                   width: `${legendSwatchSize}px`,
                   height: `${legendSwatchSize}px`,
                   backgroundColor: region.fillColor || "transparent",
-                  border: `${region.borderWidth || 2}px solid ${region.borderColor || "#000"}`,
-                  borderRadius: "2px",
-                  flexShrink: 0,
-                  boxSizing: "border-box",
+                  border: `${region.borderWidth || 2}px solid ${region.borderColor || COLORS.regionBorder}`,
                 }}
               />
               <span
-                style={{
-                  fontSize: `${legendFontSize}px`,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
+                className="platemap-legend__label"
+                style={{ fontSize: `${legendFontSize}px` }}
               >
                 {region.name}
               </span>
@@ -1458,28 +829,28 @@ const PlateMap: React.FC<PlateMapProps> = ({
   };
 
   // Build the plot content based on legend position
-  const plotContent = <div ref={plotRef} style={{ width, height, flexShrink: 0 }} />;
+  const plotContent = <div ref={plotRef} className="platemap-plot" style={{ width, height }} />;
   const legendContent = renderLegend();
 
   const renderPlotWithLegend = () => {
     switch (legendPosition) {
       case "left":
         return (
-          <div style={{ display: "flex", alignItems: "flex-start" }}>
+          <div className="platemap-plot-wrapper platemap-plot-wrapper--vertical">
             {legendContent}
             {plotContent}
           </div>
         );
       case "top":
         return (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div className="platemap-plot-wrapper platemap-plot-wrapper--horizontal">
             {legendContent}
             {plotContent}
           </div>
         );
       case "bottom":
         return (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div className="platemap-plot-wrapper platemap-plot-wrapper--horizontal">
             {plotContent}
             {legendContent}
           </div>
@@ -1487,7 +858,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
       case "right":
       default:
         return (
-          <div style={{ display: "flex", alignItems: "flex-start" }}>
+          <div className="platemap-plot-wrapper platemap-plot-wrapper--vertical">
             {plotContent}
             {legendContent}
           </div>
@@ -1496,7 +867,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   };
 
   return (
-    <div className="platemap-container" style={{ display: "flex", flexDirection: "column", width: isHorizontalLegend ? undefined : width }}>
+    <div className="platemap-container" style={{ width: isHorizontalLegend ? undefined : width }}>
       {renderLayerSelector()}
       {renderPlotWithLegend()}
     </div>

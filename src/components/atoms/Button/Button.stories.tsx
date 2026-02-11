@@ -1,7 +1,8 @@
 import { Icon, IconName } from "@atoms/Icon";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ThemeProvider } from "../../../theme";
+import { expect, fn, userEvent, within } from "storybook/test";
 
+import { ThemeProvider } from "../../../theme";
 import { Button } from "./Button";
 
 const meta: Meta<typeof Button> = {
@@ -25,6 +26,19 @@ const meta: Meta<typeof Button> = {
 
 export default meta;
 type Story = StoryObj<typeof Button>;
+
+/**
+ * Helper function to convert hex color to RGB format for comparison
+ * Browser computed styles return RGB format, not hex
+ */
+function hexToRgb(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return hex;
+  const r = parseInt(result[1], 16);
+  const g = parseInt(result[2], 16);
+  const b = parseInt(result[3], 16);
+  return `rgb(${r}, ${g}, ${b})`;
+}
 
 // Basic examples
 export const Primary: Story = {
@@ -284,4 +298,197 @@ export const WithFullCustomTheme: Story = {
       </ThemeProvider>
     ),
   ],
+};
+
+// ============================================================================
+// Interactive Test Stories
+// These stories have play functions for automated testing
+// They are hidden from the Storybook UI with tags: ["!dev"]
+// ============================================================================
+
+export const ClickInteraction: Story = {
+  name: "Click Interaction",
+  tags: ["!dev"],
+  parameters: {
+    zephyr: { testCaseId: "SW-T743" },
+  },
+  args: {
+    children: "Click Me",
+    onClick: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: /click me/i });
+
+    await expect(button).toBeInTheDocument();
+    await userEvent.click(button);
+    await expect(args.onClick).toHaveBeenCalledTimes(1);
+  },
+};
+
+export const DisabledButtonInteraction: Story = {
+  name: "Disabled Button Interaction",
+  tags: ["!dev"],
+  parameters: {
+    zephyr: { testCaseId: "SW-T744" },
+  },
+  args: {
+    children: "Disabled Button",
+    disabled: true,
+    onClick: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: /disabled button/i });
+
+    await expect(button).toBeDisabled();
+    await userEvent.click(button).catch(() => {
+      // Expected to fail on disabled button
+    });
+    await expect(args.onClick).not.toHaveBeenCalled();
+  },
+};
+
+export const HoverInteraction: Story = {
+  name: "Hover Interaction",
+  tags: ["!dev"],
+  parameters: {
+    zephyr: { testCaseId: "SW-T745" },
+  },
+  args: {
+    children: "Hover Over Me",
+    variant: "primary",
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: /hover over me/i });
+
+    await expect(button).toBeInTheDocument();
+    await userEvent.hover(button);
+    await expect(button).toBeVisible();
+    await userEvent.unhover(button);
+  },
+};
+
+export const KeyboardInteraction: Story = {
+  name: "Keyboard Interaction",
+  tags: ["!dev"],
+  parameters: {
+    zephyr: { testCaseId: "SW-T746" },
+  },
+  args: {
+    children: "Press Enter",
+    onClick: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: /press enter/i });
+
+    await userEvent.tab();
+    await expect(button).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    await expect(args.onClick).toHaveBeenCalledTimes(1);
+  },
+};
+
+export const RedThemeVerification: Story = {
+  name: "[SW-T1048] Red Theme Color Verification",
+  tags: ["!dev"],
+  args: {
+    children: "Red Theme Button",
+    variant: "primary",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            primary: "#DC2626",
+            primaryHover: "#B91C1C",
+            primaryActive: "#991B1B",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: /red theme button/i });
+
+    await expect(button).toBeInTheDocument();
+    const computedStyle = window.getComputedStyle(button);
+    const backgroundColor = computedStyle.backgroundColor;
+    const expectedColor = hexToRgb("#DC2626");
+    await expect(backgroundColor).toBe(expectedColor);
+  },
+};
+
+export const PurpleThemeVerification: Story = {
+  name: "[SW-T1049] Purple Theme Color Verification",
+  tags: ["!dev"],
+  args: {
+    children: "Purple Theme Button",
+    variant: "primary",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            primary: "#9333EA",
+            primaryHover: "#7E22CE",
+            primaryActive: "#6B21A8",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: /purple theme button/i });
+
+    await expect(button).toBeInTheDocument();
+    const computedStyle = window.getComputedStyle(button);
+    const backgroundColor = computedStyle.backgroundColor;
+    const expectedColor = hexToRgb("#9333EA");
+    await expect(backgroundColor).toBe(expectedColor);
+  },
+};
+
+export const OrangeThemeVerification: Story = {
+  name: "[SW-T1050] Orange Theme Color Verification",
+  tags: ["!dev"],
+  args: {
+    children: "Orange Theme Button",
+    variant: "primary",
+  },
+  decorators: [
+    (Story) => (
+      <ThemeProvider
+        theme={{
+          colors: {
+            primary: "#F59E0B",
+            primaryHover: "#D97706",
+            primaryActive: "#B45309",
+          },
+        }}
+      >
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: /orange theme button/i });
+
+    await expect(button).toBeInTheDocument();
+    const computedStyle = window.getComputedStyle(button);
+    const backgroundColor = computedStyle.backgroundColor;
+    const expectedColor = hexToRgb("#F59E0B");
+    await expect(backgroundColor).toBe(expectedColor);
+  },
 };

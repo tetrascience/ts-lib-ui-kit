@@ -1,10 +1,122 @@
 @use "../../../styles/variables.scss";
 
+// PlateMap-specific color variables
+$platemap-primary: #4575b4;
+$platemap-border-light: #ccc;
+$platemap-text-dark: #333;
+
 .platemap-container {
   width: 100%;
   height: 100%;
   background-color: var(--white-900);
   border-radius: 8px;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
+// Plot wrapper layouts for different legend positions
+.platemap-plot-wrapper {
+  display: flex;
+  align-items: flex-start;
+
+  &--vertical {
+    flex-direction: row;
+  }
+
+  &--horizontal {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+// Plot content container
+.platemap-plot {
+  flex-shrink: 0;
+}
+
+// Legend placeholder (maintains width when legend is hidden)
+.platemap-legend-placeholder {
+  flex-shrink: 0;
+}
+
+// Layer selector tabs
+.platemap-layer-selector {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+
+  &__button {
+    padding: 6px 12px;
+    font-size: 12px;
+    border: 1px solid $platemap-border-light;
+    border-radius: 4px;
+    background-color: var(--white-900);
+    color: $platemap-text-dark;
+    cursor: pointer;
+    font-family: "Inter", sans-serif;
+
+    &--active {
+      background-color: $platemap-primary;
+      color: var(--white-900);
+    }
+  }
+}
+
+// Legend container
+.platemap-legend {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  flex-shrink: 0;
+
+  &--horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  &--left {
+    margin-right: 8px;
+  }
+
+  &--right {
+    margin-left: 8px;
+  }
+
+  &__title {
+    font-weight: 600;
+    margin-bottom: 4px;
+
+    &--horizontal {
+      width: 100%;
+      text-align: center;
+    }
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__swatch {
+    border: 1px solid $platemap-border-light;
+    border-radius: 2px;
+    flex-shrink: 0;
+
+    &--region {
+      box-sizing: border-box;
+    }
+  }
+
+  &__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &--capitalize {
+      text-transform: capitalize;
+    }
+  }
+}

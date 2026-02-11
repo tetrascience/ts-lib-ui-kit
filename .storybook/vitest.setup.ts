@@ -71,7 +71,7 @@ afterEach(async ({ task }) => {
         await page.screenshot({
           path: `../../../../test-results/screenshots/${zephyrId}.png`,
         });
-      } catch {
+      } catch (_error) {
         // Don't fail the test if screenshot fails - silently continue
         // Screenshots may fail in some environments
       }

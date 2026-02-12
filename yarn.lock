@@ -4642,7 +4642,7 @@ __metadata:
     "@storybook/addon-vitest": "npm:10.2.8"
     "@storybook/react": "npm:^10.2.8"
     "@storybook/react-vite": "npm:^10.2.8"
-    "@tetrascience-npm/ts-connectors-sdk": "npm:^3.1.1"
+    "@tetrascience-npm/ts-connectors-sdk": "npm:^3.2.0"
     "@types/eslint-plugin-jsx-a11y": "npm:^6"
     "@types/jsdom": "npm:^27"
     "@types/plotly.js": "npm:^3.0.0"
@@ -4710,9 +4710,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tetrascience-npm/ts-connectors-sdk@npm:^3.1.1":
-  version: 3.1.1
-  resolution: "@tetrascience-npm/ts-connectors-sdk@npm:3.1.1"
+"@tetrascience-npm/ts-connectors-sdk@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "@tetrascience-npm/ts-connectors-sdk@npm:3.2.0"
   dependencies:
     "@smithy/node-http-handler": "npm:^3.1.1"
     dotenv: "npm:^16.3.1"
@@ -4730,7 +4730,7 @@ __metadata:
     "@aws-sdk/client-ssm": ">=3.0.0 <4.0.0"
     "@aws-sdk/lib-storage": ">=3.0.0 <4.0.0"
     axios: ">=1.5.0 <2.0.0"
-  checksum: 10c0/b73ce272c2deed4b8828fc55131f4446a402cb861cf59c83fce05d00b40616b4167f233c4e496930396f0dc1fb735a6f95a90493080469277f1e4144890d88c9
+  checksum: 10c0/5642835b55a01eec9a8d7f6c1b1be20c26c7b044da497d43dadf770cf90e724235384df39ab510af79170cb97fa5059edb4c778e606cc88d85498081e6584861
   languageName: node
   linkType: hard
 

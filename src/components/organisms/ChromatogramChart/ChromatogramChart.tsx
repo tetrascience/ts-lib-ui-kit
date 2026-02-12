@@ -1,7 +1,10 @@
-import React, { useEffect, useRef } from "react";
 import Plotly from "plotly.js-dist";
-import "./ChromatogramChart.scss";
+import React, { useEffect, useRef } from "react";
+
 import { COLORS, CHART_COLORS } from "../../../utils/colors";
+
+import { CHROMATOGRAM_ANNOTATION, CHROMATOGRAM_LAYOUT } from "./constants";
+import "./ChromatogramChart.scss";
 
 /**
  * Data series for chromatogram visualization
@@ -59,6 +62,11 @@ export interface DetectedPeak {
 export type BaselineCorrectionMethod = "none" | "linear" | "rolling";
 
 /**
+ * Peak boundary marker style
+ */
+export type BoundaryMarkerStyle = "none" | "triangle" | "diamond" | "auto";
+
+/**
  * Peak detection options
  */
 export interface PeakDetectionOptions {
@@ -78,6 +86,14 @@ export interface PeakDetectionOptions {
    * Adjust based on your x-axis scale and label width.
    */
   annotationOverlapThreshold?: number;
+  /**
+   * Show peak boundary markers (default: "none").
+   * - "none": No boundary markers
+   * - "triangle": Triangle markers at peak start/end (for isolated peaks at baseline)
+   * - "diamond": Diamond markers with vertical lines (for overlapping peaks)
+   * - "auto": Automatically choose based on peak overlap detection
+   */
+  boundaryMarkers?: BoundaryMarkerStyle;
 }
 
 /**
@@ -190,6 +206,377 @@ function applyBaselineCorrection(
 }
 
 /**
+ * Calculate prominence of a peak (how much it stands out from neighbors)
+ */
+function calculateProminence(
+  y: number[],
+  peakIndex: number,
+  searchWindow: number
+): number {
+  let leftMin = y[peakIndex];
+  let rightMin = y[peakIndex];
+
+  for (let j = peakIndex - 1; j >= Math.max(0, peakIndex - searchWindow); j--) {
+    leftMin = Math.min(leftMin, y[j]);
+  }
+  for (let j = peakIndex + 1; j < Math.min(y.length, peakIndex + searchWindow); j++) {
+    rightMin = Math.min(rightMin, y[j]);
+  }
+
+  return y[peakIndex] - Math.max(leftMin, rightMin);
+}
+
+/**
+ * Find peak boundary indices by walking outward from peak
+ */
+function findPeakBoundaries(
+  y: number[],
+  peakIndex: number
+): { startIndex: number; endIndex: number } {
+  let startIndex = peakIndex;
+  let endIndex = peakIndex;
+
+  // Walk left to find start
+  for (let j = peakIndex - 1; j >= 0; j--) {
+    if (y[j] <= y[j + 1]) {
+      startIndex = j;
+    } else {
+      break;
+    }
+  }
+
+  // Walk right to find end
+  for (let j = peakIndex + 1; j < y.length; j++) {
+    if (y[j] <= y[j - 1]) {
+      endIndex = j;
+    } else {
+      break;
+    }
+  }
+
+  return { startIndex, endIndex };
+}
+
+/**
+ * Calculate peak area using trapezoidal integration
+ */
+function calculatePeakArea(
+  x: number[],
+  y: number[],
+  startIndex: number,
+  endIndex: number
+): number {
+  const baselineY = Math.min(y[startIndex], y[endIndex]);
+  let area = 0;
+
+  for (let j = startIndex; j < endIndex; j++) {
+    const h = x[j + 1] - x[j];
+    const y1 = y[j] - baselineY;
+    const y2 = y[j + 1] - baselineY;
+    area += (y1 + y2) * h / 2;
+  }
+
+  return area;
+}
+
+/**
+ * Calculate width at half maximum of a peak
+ */
+function calculateWidthAtHalfMax(
+  x: number[],
+  y: number[],
+  peakIndex: number,
+  startIndex: number,
+  endIndex: number
+): number {
+  const baselineY = Math.min(y[startIndex], y[endIndex]);
+  const halfMax = (y[peakIndex] + baselineY) / 2;
+  let leftHalf = peakIndex;
+  let rightHalf = peakIndex;
+
+  for (let j = peakIndex; j >= startIndex; j--) {
+    if (y[j] < halfMax) {
+      leftHalf = j;
+      break;
+    }
+  }
+  for (let j = peakIndex; j <= endIndex; j++) {
+    if (y[j] < halfMax) {
+      rightHalf = j;
+      break;
+    }
+  }
+
+  return x[rightHalf] - x[leftHalf];
+}
+
+/**
+ * Filter peaks by minimum distance, keeping more intense peaks
+ */
+function filterPeaksByDistance(
+  peaks: DetectedPeak[],
+  minDistance: number
+): DetectedPeak[] {
+  const filtered: DetectedPeak[] = [];
+
+  for (const peak of peaks) {
+    const tooClose = filtered.some(
+      (p) => Math.abs(p.index - peak.index) < minDistance
+    );
+    if (!tooClose) {
+      filtered.push(peak);
+    } else if (filtered.length > 0 && peak.intensity > filtered[filtered.length - 1].intensity) {
+      filtered.pop();
+      filtered.push(peak);
+    }
+  }
+
+  return filtered.sort((a, b) => a.retentionTime - b.retentionTime);
+}
+
+/**
+ * Metadata for a peak with its series index
+ */
+type PeakWithMeta = { peak: DetectedPeak; seriesIndex: number };
+
+/**
+ * Annotation slot positions for peak labels
+ */
+const ANNOTATION_SLOTS = {
+  default: { ax: 0, ay: -35 },
+  overlap: [
+    { ax: 50, ay: -35 },   // Right, level 1
+    { ax: -60, ay: -35 },  // Left, level 1
+    { ax: 70, ay: -55 },   // Right, level 2
+    { ax: -80, ay: -55 },  // Left, level 2
+    { ax: 50, ay: -75 },   // Right, level 3
+    { ax: -60, ay: -75 },  // Left, level 3
+  ],
+};
+
+/**
+ * Group overlapping peaks by retention time proximity
+ */
+function groupOverlappingPeaks(
+  peaksWithMeta: PeakWithMeta[],
+  overlapThreshold: number
+): PeakWithMeta[][] {
+  const sorted = [...peaksWithMeta].sort(
+    (a, b) => a.peak.retentionTime - b.peak.retentionTime
+  );
+
+  const groups: PeakWithMeta[][] = [];
+  let currentGroup: PeakWithMeta[] = [];
+
+  for (const current of sorted) {
+    if (currentGroup.length === 0) {
+      currentGroup.push(current);
+      continue;
+    }
+
+    const lastInGroup = currentGroup[currentGroup.length - 1];
+    const timeDiff = Math.abs(current.peak.retentionTime - lastInGroup.peak.retentionTime);
+
+    if (timeDiff < overlapThreshold) {
+      currentGroup.push(current);
+    } else {
+      groups.push(currentGroup);
+      currentGroup = [current];
+    }
+  }
+
+  if (currentGroup.length > 0) {
+    groups.push(currentGroup);
+  }
+
+  return groups;
+}
+
+/**
+ * Create a Plotly annotation for a peak
+ */
+function createPeakAnnotation(
+  peak: DetectedPeak,
+  seriesIndex: number,
+  slot: { ax: number; ay: number }
+): Partial<Plotly.Annotations> {
+  const color = CHART_COLORS[seriesIndex % CHART_COLORS.length];
+  return {
+    x: peak.retentionTime,
+    y: peak.intensity,
+    text: `Area: ${peak.area.toFixed(2)}`,
+    showarrow: true,
+    arrowhead: 2,
+    arrowsize: 1,
+    arrowwidth: 1,
+    arrowcolor: color,
+    ax: slot.ax,
+    ay: slot.ay,
+    font: {
+      size: 10,
+      color: color,
+      family: "Inter, sans-serif",
+    },
+    bgcolor: COLORS.WHITE,
+    borderpad: 2,
+    bordercolor: color,
+    borderwidth: 1,
+  };
+}
+
+/**
+ * Create annotations for a group of peaks, handling overlap positioning
+ */
+function createGroupAnnotations(group: PeakWithMeta[]): Partial<Plotly.Annotations>[] {
+  if (group.length === 1) {
+    const { peak, seriesIndex } = group[0];
+    return [createPeakAnnotation(peak, seriesIndex, ANNOTATION_SLOTS.default)];
+  }
+
+  // Sort by intensity (lowest first) so lower peaks get closer annotations
+  const sortedGroup = [...group].sort(
+    (a, b) => a.peak.intensity - b.peak.intensity
+  );
+
+  return sortedGroup.map(({ peak, seriesIndex }, slotIndex) => {
+    const slot = ANNOTATION_SLOTS.overlap[slotIndex % ANNOTATION_SLOTS.overlap.length];
+    return createPeakAnnotation(peak, seriesIndex, slot);
+  });
+}
+
+/**
+ * Check if two peaks overlap (share boundary indices)
+ */
+function peaksOverlap(peak1: DetectedPeak, peak2: DetectedPeak): boolean {
+  return peak1.endIndex >= peak2.startIndex && peak2.endIndex >= peak1.startIndex;
+}
+
+/**
+ * Determine if a peak boundary is shared with another peak
+ */
+function findOverlappingPeaks(
+  peaks: DetectedPeak[],
+  currentPeak: DetectedPeak
+): { startOverlaps: boolean; endOverlaps: boolean } {
+  let startOverlaps = false;
+  let endOverlaps = false;
+
+  for (const other of peaks) {
+    if (other.index === currentPeak.index) continue;
+    if (peaksOverlap(currentPeak, other)) {
+      // Check if start boundary is shared
+      if (Math.abs(currentPeak.startIndex - other.endIndex) <= 1) {
+        startOverlaps = true;
+      }
+      // Check if end boundary is shared
+      if (Math.abs(currentPeak.endIndex - other.startIndex) <= 1) {
+        endOverlaps = true;
+      }
+    }
+  }
+
+  return { startOverlaps, endOverlaps };
+}
+
+/**
+ * Create boundary marker traces for peaks
+ */
+function createBoundaryMarkerTraces(
+  allPeaks: { peaks: DetectedPeak[]; seriesIndex: number; x: number[]; y: number[] }[],
+  markerStyle: BoundaryMarkerStyle
+): Plotly.Data[] {
+  const traces: Plotly.Data[] = [];
+
+  // Flatten all peaks for overlap detection
+  const flatPeaks = allPeaks.flatMap(({ peaks }) => peaks);
+
+  for (const { peaks, seriesIndex, x, y } of allPeaks) {
+    const color = CHART_COLORS[seriesIndex % CHART_COLORS.length];
+
+    for (const peak of peaks) {
+      const { startOverlaps, endOverlaps } = markerStyle === "auto"
+        ? findOverlappingPeaks(flatPeaks, peak)
+        : { startOverlaps: markerStyle === "diamond", endOverlaps: markerStyle === "diamond" };
+
+      const startX = x[peak.startIndex];
+      const startY = y[peak.startIndex];
+      const endX = x[peak.endIndex];
+      const endY = y[peak.endIndex];
+
+      // Create start boundary marker
+      if (startOverlaps) {
+        // Diamond marker with vertical line for overlapping boundary
+        traces.push({
+          x: [startX, startX],
+          y: [0, startY],
+          type: "scatter" as const,
+          mode: "lines" as const,
+          line: { color, width: 1, dash: "dot" as const },
+          showlegend: false,
+          hoverinfo: "skip" as const,
+        });
+        traces.push({
+          x: [startX],
+          y: [startY],
+          type: "scatter" as const,
+          mode: "markers" as const,
+          marker: { symbol: "diamond" as const, size: 8, color },
+          showlegend: false,
+          hoverinfo: "skip" as const,
+        });
+      } else {
+        // Triangle marker for isolated boundary at baseline
+        traces.push({
+          x: [startX],
+          y: [startY],
+          type: "scatter" as const,
+          mode: "markers" as const,
+          marker: { symbol: "triangle-up" as const, size: 8, color },
+          showlegend: false,
+          hoverinfo: "skip" as const,
+        });
+      }
+
+      // Create end boundary marker
+      if (endOverlaps) {
+        // Diamond marker with vertical line for overlapping boundary
+        traces.push({
+          x: [endX, endX],
+          y: [0, endY],
+          type: "scatter" as const,
+          mode: "lines" as const,
+          line: { color, width: 1, dash: "dot" as const },
+          showlegend: false,
+          hoverinfo: "skip" as const,
+        });
+        traces.push({
+          x: [endX],
+          y: [endY],
+          type: "scatter" as const,
+          mode: "markers" as const,
+          marker: { symbol: "diamond" as const, size: 8, color },
+          showlegend: false,
+          hoverinfo: "skip" as const,
+        });
+      } else {
+        // Triangle marker for isolated boundary at baseline
+        traces.push({
+          x: [endX],
+          y: [endY],
+          type: "scatter" as const,
+          mode: "markers" as const,
+          marker: { symbol: "triangle-up" as const, size: 8, color },
+          showlegend: false,
+          hoverinfo: "skip" as const,
+        });
+      }
+    }
+  }
+
+  return traces;
+}
+
+/**
  * Detect peaks in signal data using derivative analysis.
  *
  * Default parameters are tuned for typical HPLC chromatograms:
@@ -202,11 +589,10 @@ function detectPeaks(
   y: number[],
   options: PeakDetectionOptions = {}
 ): DetectedPeak[] {
-  // Default values optimized for typical HPLC data with ~600 data points over 30 minutes
   const {
-    minHeight = 0.05,    // 5% of max signal - balances noise rejection vs sensitivity
-    minDistance = 5,     // ~5 data points - prevents detecting shoulder artifacts
-    prominence = 0.02,   // 2% of max signal - ensures peaks stand out from neighbors
+    minHeight = 0.05,
+    minDistance = 5,
+    prominence = 0.02,
     relativeThreshold = true,
   } = options;
 
@@ -215,105 +601,34 @@ function detectPeaks(
   const maxY = Math.max(...y);
   const threshold = relativeThreshold ? minHeight * maxY : minHeight;
   const prominenceThreshold = relativeThreshold ? prominence * maxY : prominence;
+  const searchWindow = minDistance * 3;
 
   const peaks: DetectedPeak[] = [];
 
   // Find local maxima
   for (let i = 1; i < y.length - 1; i++) {
-    if (y[i] > y[i - 1] && y[i] > y[i + 1] && y[i] >= threshold) {
-      // Check prominence (how much peak stands out from neighbors)
-      let leftMin = y[i];
-      let rightMin = y[i];
+    const isLocalMax = y[i] > y[i - 1] && y[i] > y[i + 1] && y[i] >= threshold;
+    if (!isLocalMax) continue;
 
-      for (let j = i - 1; j >= Math.max(0, i - minDistance * 3); j--) {
-        leftMin = Math.min(leftMin, y[j]);
-      }
-      for (let j = i + 1; j < Math.min(y.length, i + minDistance * 3); j++) {
-        rightMin = Math.min(rightMin, y[j]);
-      }
+    const peakProminence = calculateProminence(y, i, searchWindow);
+    if (peakProminence < prominenceThreshold) continue;
 
-      const peakProminence = y[i] - Math.max(leftMin, rightMin);
+    const { startIndex, endIndex } = findPeakBoundaries(y, i);
+    const area = calculatePeakArea(x, y, startIndex, endIndex);
+    const widthAtHalfMax = calculateWidthAtHalfMax(x, y, i, startIndex, endIndex);
 
-      if (peakProminence >= prominenceThreshold) {
-        // Find peak boundaries
-        let startIndex = i;
-        let endIndex = i;
-
-        // Walk left to find start
-        for (let j = i - 1; j >= 0; j--) {
-          if (y[j] <= y[j + 1]) {
-            startIndex = j;
-          } else {
-            break;
-          }
-        }
-
-        // Walk right to find end
-        for (let j = i + 1; j < y.length; j++) {
-          if (y[j] <= y[j - 1]) {
-            endIndex = j;
-          } else {
-            break;
-          }
-        }
-
-        // Calculate area using trapezoidal integration
-        let area = 0;
-        const baselineY = Math.min(y[startIndex], y[endIndex]);
-        for (let j = startIndex; j < endIndex; j++) {
-          const h = x[j + 1] - x[j];
-          const y1 = y[j] - baselineY;
-          const y2 = y[j + 1] - baselineY;
-          area += (y1 + y2) * h / 2;
-        }
-
-        // Calculate width at half maximum
-        const halfMax = (y[i] + baselineY) / 2;
-        let leftHalf = i;
-        let rightHalf = i;
-
-        for (let j = i; j >= startIndex; j--) {
-          if (y[j] < halfMax) {
-            leftHalf = j;
-            break;
-          }
-        }
-        for (let j = i; j <= endIndex; j++) {
-          if (y[j] < halfMax) {
-            rightHalf = j;
-            break;
-          }
-        }
-
-        peaks.push({
-          index: i,
-          retentionTime: x[i],
-          intensity: y[i],
-          area,
-          startIndex,
-          endIndex,
-          widthAtHalfMax: x[rightHalf] - x[leftHalf],
-        });
-      }
-    }
+    peaks.push({
+      index: i,
+      retentionTime: x[i],
+      intensity: y[i],
+      area,
+      startIndex,
+      endIndex,
+      widthAtHalfMax,
+    });
   }
 
-  // Filter by minimum distance
-  const filteredPeaks: DetectedPeak[] = [];
-  for (const peak of peaks) {
-    const tooClose = filteredPeaks.some(
-      (p) => Math.abs(p.index - peak.index) < minDistance
-    );
-    if (!tooClose || (filteredPeaks.length > 0 &&
-        peak.intensity > filteredPeaks[filteredPeaks.length - 1].intensity)) {
-      if (tooClose) {
-        filteredPeaks.pop();
-      }
-      filteredPeaks.push(peak);
-    }
-  }
-
-  return filteredPeaks.sort((a, b) => a.retentionTime - b.retentionTime);
+  return filterPeaksByDistance(peaks, minDistance);
 }
 
 const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
@@ -397,6 +712,19 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       return trace;
     });
 
+    // Add peak boundary markers if enabled
+    const boundaryMarkerStyle = peakDetectionOptions?.boundaryMarkers ?? "none";
+    if (boundaryMarkerStyle !== "none" && allDetectedPeaks.length > 0) {
+      const peaksWithData = allDetectedPeaks.map(({ peaks, seriesIndex }) => ({
+        peaks,
+        seriesIndex,
+        x: processedSeries[seriesIndex].x,
+        y: processedSeries[seriesIndex].y,
+      }));
+      const boundaryTraces = createBoundaryMarkerTraces(peaksWithData, boundaryMarkerStyle);
+      plotData.push(...boundaryTraces);
+    }
+
     // Build Plotly annotations from peak annotations
     const plotlyAnnotations: Partial<Plotly.Annotations>[] = annotations.map((ann) => ({
       x: ann.x,
@@ -408,7 +736,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       arrowwidth: 1,
       arrowcolor: COLORS.GREY_500,
       ax: ann.ax ?? 0,
-      ay: ann.ay ?? -30,
+      ay: ann.ay ?? CHROMATOGRAM_ANNOTATION.DEFAULT_ARROW_OFFSET_Y,
       font: {
         size: 11,
         color: COLORS.BLACK_900,
@@ -420,8 +748,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
 
     // Add peak area annotations if enabled
     if (showPeakAreas && enablePeakDetection) {
-      // Step 1: Collect all peaks with metadata
-      type PeakWithMeta = { peak: DetectedPeak; seriesIndex: number };
+      // Collect all peaks with metadata
       const allPeaksWithMeta: PeakWithMeta[] = [];
       allDetectedPeaks.forEach(({ peaks, seriesIndex }) => {
         peaks.forEach((peak) => {
@@ -429,118 +756,12 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
         });
       });
 
-      // Step 2: Sort by retention time
-      allPeaksWithMeta.sort(
-        (a, b) => a.peak.retentionTime - b.peak.retentionTime
-      );
-
-      // Step 3: Group overlapping peaks by retention time proximity
-      // Threshold of 0.4 minutes works well for typical HPLC/UPLC runs (0.05 min resolution)
-      // where annotation labels are ~60-80px wide at 10pt font
+      // Group overlapping peaks and create annotations
       const overlapThreshold = peakDetectionOptions?.annotationOverlapThreshold ?? 0.4;
-      const groups: PeakWithMeta[][] = [];
-      let currentGroup: PeakWithMeta[] = [];
+      const groups = groupOverlappingPeaks(allPeaksWithMeta, overlapThreshold);
 
-      for (let i = 0; i < allPeaksWithMeta.length; i++) {
-        const current = allPeaksWithMeta[i];
-
-        if (currentGroup.length === 0) {
-          currentGroup.push(current);
-        } else {
-          const lastInGroup = currentGroup[currentGroup.length - 1];
-          if (
-            Math.abs(
-              current.peak.retentionTime - lastInGroup.peak.retentionTime
-            ) < overlapThreshold
-          ) {
-            // Overlaps with group - add to it
-            currentGroup.push(current);
-          } else {
-            // No overlap - save current group and start new one
-            groups.push(currentGroup);
-            currentGroup = [current];
-          }
-        }
-      }
-      // Don't forget the last group
-      if (currentGroup.length > 0) {
-        groups.push(currentGroup);
-      }
-
-      // Step 4: Define annotation slots for positioning labels
-      // Slots alternate left/right and increase in vertical offset (ay) to create
-      // a staggered pattern. Values are in pixels relative to the peak point.
-      // - ax: horizontal offset (positive = right, negative = left)
-      // - ay: vertical offset (negative = above the peak)
-      // Offsets are sized to accommodate ~10pt font labels (~60-80px wide)
-      const defaultSlot = { ax: 0, ay: -35 }; // Centered directly above peak
-      const overlapSlots = [
-        { ax: 50, ay: -35 },   // Right, level 1
-        { ax: -60, ay: -35 },  // Left, level 1 (slightly wider to avoid arrow overlap)
-        { ax: 70, ay: -55 },   // Right, level 2 (20px higher)
-        { ax: -80, ay: -55 },  // Left, level 2
-        { ax: 50, ay: -75 },   // Right, level 3 (20px higher)
-        { ax: -60, ay: -75 },  // Left, level 3
-      ];
-
-      // Step 5: Process each group
       for (const group of groups) {
-        if (group.length === 1) {
-          // Single peak - use centered slot
-          const { peak, seriesIndex } = group[0];
-          plotlyAnnotations.push({
-            x: peak.retentionTime,
-            y: peak.intensity,
-            text: `Area: ${peak.area.toFixed(2)}`,
-            showarrow: true,
-            arrowhead: 2,
-            arrowsize: 1,
-            arrowwidth: 1,
-            arrowcolor: CHART_COLORS[seriesIndex % CHART_COLORS.length],
-            ax: defaultSlot.ax,
-            ay: defaultSlot.ay,
-            font: {
-              size: 10,
-              color: CHART_COLORS[seriesIndex % CHART_COLORS.length],
-              family: "Inter, sans-serif",
-            },
-            bgcolor: COLORS.WHITE,
-            borderpad: 2,
-            bordercolor: CHART_COLORS[seriesIndex % CHART_COLORS.length],
-            borderwidth: 1,
-          });
-        } else {
-          // Multiple peaks - sort by y position (lowest first) so peaks lower
-          // on the graph get annotations closer to them, avoiding arrow crossings
-          const sortedGroup = [...group].sort(
-            (a, b) => a.peak.intensity - b.peak.intensity
-          );
-
-          sortedGroup.forEach(({ peak, seriesIndex }, slotIndex) => {
-            const slot = overlapSlots[slotIndex % overlapSlots.length];
-            plotlyAnnotations.push({
-              x: peak.retentionTime,
-              y: peak.intensity,
-              text: `Area: ${peak.area.toFixed(2)}`,
-              showarrow: true,
-              arrowhead: 2,
-              arrowsize: 1,
-              arrowwidth: 1,
-              arrowcolor: CHART_COLORS[seriesIndex % CHART_COLORS.length],
-              ax: slot.ax,
-              ay: slot.ay,
-              font: {
-                size: 10,
-                color: CHART_COLORS[seriesIndex % CHART_COLORS.length],
-                family: "Inter, sans-serif",
-              },
-              bgcolor: COLORS.WHITE,
-              borderpad: 2,
-              bordercolor: CHART_COLORS[seriesIndex % CHART_COLORS.length],
-              borderwidth: 1,
-            });
-          });
-        }
+        plotlyAnnotations.push(...createGroupAnnotations(group));
       }
     }
 
@@ -557,7 +778,13 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
         : undefined,
       width,
       height,
-      margin: { l: 70, r: 30, b: 60, t: title ? 50 : 30, pad: 5 },
+      margin: {
+        l: CHROMATOGRAM_LAYOUT.MARGIN_LEFT,
+        r: CHROMATOGRAM_LAYOUT.MARGIN_RIGHT,
+        b: CHROMATOGRAM_LAYOUT.MARGIN_BOTTOM,
+        t: title ? CHROMATOGRAM_LAYOUT.MARGIN_TOP_WITH_TITLE : CHROMATOGRAM_LAYOUT.MARGIN_TOP_NO_TITLE,
+        pad: CHROMATOGRAM_LAYOUT.MARGIN_PAD,
+      },
       paper_bgcolor: COLORS.WHITE,
       plot_bgcolor: COLORS.WHITE,
       font: { family: "Inter, sans-serif" },

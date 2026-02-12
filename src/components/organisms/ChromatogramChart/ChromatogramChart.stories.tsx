@@ -1,9 +1,10 @@
-import type { Meta, StoryObj } from "@storybook/react";
 import {
   ChromatogramChart,
-  ChromatogramSeries,
-  PeakAnnotation,
+  type ChromatogramSeries,
+  type PeakAnnotation,
 } from "./ChromatogramChart";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 /**
  * Generate realistic HPLC chromatogram data with Gaussian peaks
@@ -174,3 +175,30 @@ export const FullFeatured: Story = {
   },
 };
 
+/**
+ * Peak boundary markers showing triangle markers for isolated peaks and diamond markers
+ * with vertical lines for overlapping peak boundaries.
+ */
+export const WithBoundaryMarkers: Story = {
+  args: {
+    series: [{ ...singleInjectionData, name: "Sample A" }],
+    title: "Peak Boundary Markers",
+    peakDetectionOptions: {
+      minHeight: 0.1,
+      prominence: 0.05,
+      minDistance: 20,
+      showAreas: true,
+      boundaryMarkers: "auto",
+    },
+    onPeaksDetected: (peaks, seriesIndex) => {
+      console.log(`Detected ${peaks.length} peaks in series ${seriesIndex}:`, peaks);
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Peak boundary markers visually indicate peak start and end points. Use 'auto' to automatically choose triangle markers (▲) for isolated boundaries at baseline or diamond markers (◆) with vertical lines for overlapping peaks. Set to 'triangle' or 'diamond' to force a specific marker style.",
+      },
+    },
+  },
+};

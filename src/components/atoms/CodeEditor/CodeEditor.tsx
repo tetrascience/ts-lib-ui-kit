@@ -1,8 +1,8 @@
-// @ts-expect-error - This is a workaround to avoid the error when importing the themes
 import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
 import { Tooltip } from "@atoms/Tooltip";
 import MonacoEditor from "@monaco-editor/react";
+// @ts-expect-error - This is a workaround to avoid the error when importing the themes
 import themes from "monaco-themes/themes/themelist";
 import React, { useCallback, useState } from "react";
 import styled from "styled-components";

@@ -23,11 +23,11 @@ const StatusText = styled.span`
   color: var(--grey-400);
 `;
 
-/** Button height constant for the edit code button */
-const EDIT_CODE_BUTTON_HEIGHT = 38;
-
-const EditCodeButton = styled(Button)`
-  height: ${EDIT_CODE_BUTTON_HEIGHT}px;
+/** Wrapper to set button height via CSS */
+const EditCodeButtonWrapper = styled.div`
+  & > button {
+    height: 38px;
+  }
 `;
 
 export interface CodeScriptEditorButtonProps {
@@ -87,16 +87,18 @@ export const CodeScriptEditorButton = ({
   return (
     <>
       <ButtonContainer>
-        <EditCodeButton
-          leftIcon={<Icon name={IconName.PENCIL} />}
-          onClick={handleOpenModal}
-          size="small"
-          variant="tertiary"
-          {...buttonProps}
-          disabled={disabled}
-        >
-          {buttonText}
-        </EditCodeButton>
+        <EditCodeButtonWrapper>
+          <Button
+            leftIcon={<Icon name={IconName.PENCIL} />}
+            onClick={handleOpenModal}
+            size="small"
+            variant="tertiary"
+            {...buttonProps}
+            disabled={disabled}
+          >
+            {buttonText}
+          </Button>
+        </EditCodeButtonWrapper>
         <StatusText title={`${lineCount} lines, ${charCount} characters`}>
           {lineCount} lines / {charCount} chars
         </StatusText>

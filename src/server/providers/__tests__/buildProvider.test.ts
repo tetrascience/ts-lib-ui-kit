@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { ProviderConfiguration } from "../types";
 
 // Mock the provider builders
 const mockSnowflakeProvider = { query: vi.fn(), close: vi.fn() };
@@ -24,6 +23,8 @@ vi.mock("../AthenaProvider", () => ({
 // Import after mocking
 import { buildProvider } from "../buildProvider";
 import { InvalidProviderConfigurationError } from "../getProviderConfigurations";
+
+import type { ProviderConfiguration } from "../types";
 
 describe("buildProvider", () => {
   beforeEach(() => {

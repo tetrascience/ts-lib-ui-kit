@@ -8,15 +8,85 @@
  * override or by fetching from the TDP API.
  */
 
-import type { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
 import { InvalidProviderConfigurationError } from "./exceptions";
+
 import type {
   GetProviderConfigurationsOptions,
   ProviderConfiguration,
 } from "./types";
+import type { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
 
 // Re-export for backwards compatibility
 export { InvalidProviderConfigurationError };
+
+/**
+ * Validates and parses a single provider configuration object.
+ * @internal
+ */
+function validateProviderConfigItem(
+  item: unknown,
+  index: number,
+): ProviderConfiguration {
+  if (typeof item !== "object" || item === null) {
+    throw new InvalidProviderConfigurationError(
+      `Invalid provider configuration at index ${index}: expected an object`,
+    );
+  }
+
+  const obj = item as Record<string, unknown>;
+
+  if (typeof obj.name !== "string") {
+    throw new InvalidProviderConfigurationError(
+      `Invalid provider configuration at index ${index}: 'name' must be a string`,
+    );
+  }
+  if (typeof obj.type !== "string") {
+    throw new InvalidProviderConfigurationError(
+      `Invalid provider configuration at index ${index}: 'type' must be a string`,
+    );
+  }
+  if (typeof obj.fields !== "object" || obj.fields === null) {
+    throw new InvalidProviderConfigurationError(
+      `Invalid provider configuration at index ${index}: 'fields' must be an object`,
+    );
+  }
+
+  return {
+    name: obj.name,
+    type: obj.type,
+    iconUrl: typeof obj.iconUrl === "string" ? obj.iconUrl : undefined,
+    fields: obj.fields as Record<string, string | undefined>,
+  } satisfies ProviderConfiguration;
+}
+
+/**
+ * Parses provider configurations from a JSON config string.
+ * @internal
+ */
+function parseProviderConfigOverride(
+  configStr: string,
+): ProviderConfiguration[] {
+  try {
+    const parsed = JSON.parse(configStr);
+
+    // Validate it's an array
+    if (!Array.isArray(parsed)) {
+      throw new InvalidProviderConfigurationError(
+        "Invalid provider configuration: expected an array of provider configurations",
+      );
+    }
+
+    // Validate each entry has required fields
+    return parsed.map(validateProviderConfigItem);
+  } catch (e) {
+    if (e instanceof InvalidProviderConfigurationError) {
+      throw e;
+    }
+    throw new InvalidProviderConfigurationError(
+      `Invalid provider configuration JSON in DATA_APP_PROVIDER_CONFIG: ${e instanceof Error ? e.message : String(e)}`,
+    );
+  }
+}
 
 /**
  * Get the provider configurations.
@@ -67,57 +137,7 @@ export async function getProviderConfigurations(
     options.providerConfigOverride || process.env.DATA_APP_PROVIDER_CONFIG;
 
   if (configStr) {
-    try {
-      const parsed = JSON.parse(configStr);
-
-      // Validate it's an array
-      if (!Array.isArray(parsed)) {
-        throw new InvalidProviderConfigurationError(
-          "Invalid provider configuration: expected an array of provider configurations",
-        );
-      }
-
-      // Validate each entry has required fields
-      return parsed.map((item: unknown, index: number) => {
-        if (typeof item !== "object" || item === null) {
-          throw new InvalidProviderConfigurationError(
-            `Invalid provider configuration at index ${index}: expected an object`,
-          );
-        }
-
-        const obj = item as Record<string, unknown>;
-
-        if (typeof obj.name !== "string") {
-          throw new InvalidProviderConfigurationError(
-            `Invalid provider configuration at index ${index}: 'name' must be a string`,
-          );
-        }
-        if (typeof obj.type !== "string") {
-          throw new InvalidProviderConfigurationError(
-            `Invalid provider configuration at index ${index}: 'type' must be a string`,
-          );
-        }
-        if (typeof obj.fields !== "object" || obj.fields === null) {
-          throw new InvalidProviderConfigurationError(
-            `Invalid provider configuration at index ${index}: 'fields' must be an object`,
-          );
-        }
-
-        return {
-          name: obj.name,
-          type: obj.type,
-          iconUrl: typeof obj.iconUrl === "string" ? obj.iconUrl : undefined,
-          fields: obj.fields as Record<string, string | undefined>,
-        } satisfies ProviderConfiguration;
-      });
-    } catch (e) {
-      if (e instanceof InvalidProviderConfigurationError) {
-        throw e;
-      }
-      throw new InvalidProviderConfigurationError(
-        `Invalid provider configuration JSON in DATA_APP_PROVIDER_CONFIG: ${e instanceof Error ? e.message : String(e)}`,
-      );
-    }
+    return parseProviderConfigOverride(configStr);
   }
 
   // Ensure TDPClient is initialized

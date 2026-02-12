@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import * as athenaSDK from "@aws-sdk/client-athena";
 import { QueryExecutionState } from "@aws-sdk/client-athena";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Create mock client
 const mockSend = vi.fn();

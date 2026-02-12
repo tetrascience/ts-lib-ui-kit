@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { ProviderConfiguration } from "../types";
 
 // Create mock objects
 const mockOperation = {
@@ -26,6 +25,8 @@ vi.mock("@databricks/sql", () => ({
 // Import after mocking
 import { DatabricksProvider, buildDatabricksProvider } from "../DatabricksProvider";
 import { InvalidProviderConfigurationError } from "../getProviderConfigurations";
+
+import type { ProviderConfiguration } from "../types";
 
 describe("DatabricksProvider", () => {
   const originalEnv = { ...process.env };

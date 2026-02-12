@@ -14,12 +14,13 @@
  * ```
  */
 
-import type { ProviderConfiguration } from "./types";
 import {
   QueryError,
   ProviderConnectionError,
   InvalidProviderConfigurationError,
 } from "./exceptions";
+
+import type { ProviderConfiguration } from "./types";
 
 // Type imports for snowflake-sdk (these don't require the package at runtime)
 type SnowflakeSDK = typeof import("snowflake-sdk");

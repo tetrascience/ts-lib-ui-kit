@@ -5,17 +5,21 @@
  * ts-lib-ui-kit-streamlit/tetrascience/data_app_providers/provider.py
  */
 
-import type { ProviderConfiguration } from "./types";
+import { getTdpAthenaProvider } from "./AthenaProvider";
 import {
-  SnowflakeProvider,
-  buildSnowflakeProvider,
-} from "./SnowflakeProvider";
-import {
-  DatabricksProvider,
   buildDatabricksProvider,
 } from "./DatabricksProvider";
-import { AthenaProvider, getTdpAthenaProvider } from "./AthenaProvider";
 import { InvalidProviderConfigurationError } from "./getProviderConfigurations";
+import {
+  buildSnowflakeProvider,
+} from "./SnowflakeProvider";
+
+import type { AthenaProvider} from "./AthenaProvider";
+import type {
+  DatabricksProvider} from "./DatabricksProvider";
+import type {
+  SnowflakeProvider} from "./SnowflakeProvider";
+import type { ProviderConfiguration } from "./types";
 
 /**
  * Union type of all supported data providers

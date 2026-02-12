@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
 import {
   getProviderConfigurations,
   InvalidProviderConfigurationError,
 } from "../getProviderConfigurations";
-import type { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
+
 import type { ContainerDataApp, ProviderApiResponse } from "../types";
+import type { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
 
 /**
  * Creates a mock TDPClient that mimics the structure of an initialized TDPClient.

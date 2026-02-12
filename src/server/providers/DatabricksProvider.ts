@@ -14,8 +14,9 @@
  * ```
  */
 
-import type { ProviderConfiguration } from "./types";
 import { InvalidProviderConfigurationError } from "./exceptions";
+
+import type { ProviderConfiguration } from "./types";
 
 // Type imports for @databricks/sql (these don't require the package at runtime)
 type DBSQLClient = import("@databricks/sql").DBSQLClient;
@@ -27,8 +28,7 @@ type IDBSQLSession = import("@databricks/sql/dist/contracts/IDBSQLSession").defa
  */
 async function getDatabricksSQL(): Promise<typeof import("@databricks/sql")> {
   try {
-    const databricks = await import("@databricks/sql");
-    return databricks;
+    return await import("@databricks/sql");
   } catch {
     throw new InvalidProviderConfigurationError(
       "The '@databricks/sql' package is required to use the Databricks provider. " +

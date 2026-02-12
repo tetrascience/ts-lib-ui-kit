@@ -20,6 +20,9 @@ import {
   InvalidProviderConfigurationError,
 } from "./exceptions";
 
+/** Milliseconds per second */
+const MILLISECONDS_PER_SECOND = 1000;
+
 // Type imports for @aws-sdk/client-athena (these don't require the package at runtime)
 type AthenaClient = import("@aws-sdk/client-athena").AthenaClient;
 type AthenaSDK = typeof import("@aws-sdk/client-athena");
@@ -30,8 +33,7 @@ type AthenaSDK = typeof import("@aws-sdk/client-athena");
  */
 async function getAthenaSDK(): Promise<AthenaSDK> {
   try {
-    const athena = await import("@aws-sdk/client-athena");
-    return athena;
+    return await import("@aws-sdk/client-athena");
   } catch {
     throw new InvalidProviderConfigurationError(
       "The '@aws-sdk/client-athena' package is required to use the Athena provider. " +
@@ -173,7 +175,9 @@ export class AthenaProvider {
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
 
-    throw new QueryError(`Query timed out after ${maxWaitTime / 1000} seconds`);
+    throw new QueryError(
+      `Query timed out after ${maxWaitTime / MILLISECONDS_PER_SECOND} seconds`,
+    );
   }
 
   /**

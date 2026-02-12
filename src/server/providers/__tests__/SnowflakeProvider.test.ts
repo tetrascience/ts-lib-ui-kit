@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { ProviderConfiguration } from "../types";
 
 // Create mock connection and functions
 const mockStatement = {
@@ -29,8 +28,10 @@ vi.mock("snowflake-sdk", () => ({
 }));
 
 // Import after mocking
-import { SnowflakeProvider, buildSnowflakeProvider } from "../SnowflakeProvider";
 import { InvalidProviderConfigurationError } from "../getProviderConfigurations";
+import { SnowflakeProvider, buildSnowflakeProvider } from "../SnowflakeProvider";
+
+import type { ProviderConfiguration } from "../types";
 
 describe("SnowflakeProvider", () => {
   beforeEach(() => {
@@ -61,7 +62,7 @@ describe("SnowflakeProvider", () => {
 
     it("should handle query errors", async () => {
       mockConnection.execute.mockImplementation((options) => {
-        options.complete(new Error("Query failed"), undefined, undefined);
+        options.complete(new Error("Query failed"));
       });
 
       const provider = new SnowflakeProvider(mockConnection as unknown as import("snowflake-sdk").Connection);
@@ -71,7 +72,7 @@ describe("SnowflakeProvider", () => {
 
     it("should close connection", async () => {
       mockConnection.destroy.mockImplementation((callback) => {
-        callback(undefined);
+        callback();
       });
 
       const provider = new SnowflakeProvider(mockConnection as unknown as import("snowflake-sdk").Connection);

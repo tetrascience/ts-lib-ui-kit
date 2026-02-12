@@ -1,18 +1,37 @@
 import React, { useState, useEffect } from "react";
+import { TDPClient, SearchEqlRequest, SearchEqlResponse } from "@tetrascience-npm/ts-connectors-sdk";
 import { Input } from "@atoms/Input";
 import { Button } from "@atoms/Button";
 import { Dropdown, DropdownOption } from "@atoms/Dropdown";
 import { Table } from "@molecules/Table";
 import { ErrorAlert } from "@atoms/ErrorAlert";
 import Search from "@assets/icon/Search";
-import { TdpSearchClient, EqlQuery, SearchResult } from "@utils/tdpClient";
 import "./TdpSearch.scss";
+
+/** Transformed search result (flattened from Elasticsearch hit format) */
+export interface SearchResult {
+  id: string;
+  _score?: number | null;
+  [key: string]: any;
+}
 
 /** Configuration for a search filter */
 export interface TdpSearchFilter {
   key: string;
   label: string;
   options: DropdownOption[];
+}
+
+/** Search expression for complex queries (matches SDK SearchEqlExpression) */
+export interface SearchEqlExpression {
+  g: "AND" | "OR";
+  e: Array<{
+    field?: string;
+    operator?: string;
+    value?: any;
+    g?: "AND" | "OR";
+    e?: SearchEqlExpression["e"];
+  }>;
 }
 
 /** Configuration for column display */
@@ -36,15 +55,32 @@ export interface TdpSearchProps {
   baseUrl: string;
   authToken: string;
   orgSlug: string;
+
+  // Search configuration
+  /** Default search term (default query) */
   defaultQuery?: string;
+  /** Display fields/columns for the results table */
   columns: TdpSearchColumn[];
+  /** UI filters displayed as dropdowns (for user selection) */
   filters?: TdpSearchFilter[];
-  sortOptions?: TdpSearchSort[];
+  /** Default sort configuration (sort options) */
+  defaultSort?: TdpSearchSort;
+
+  // Advanced search configuration (optional SDK parameters)
+  /**
+   * Additional search parameters to pass to the SDK's searchEql method.
+   * Allows customization of expression, selectedPipelineIds, selectedSourceTypes, etc.
+   */
+  advancedSearchParams?: Partial<Omit<SearchEqlRequest, "searchTerm" | "from" | "size" | "sort" | "order">>;
+
+  // UI configuration
   pageSize?: number;
   searchPlaceholder?: string;
   className?: string;
-  useMockData?: boolean;
-  onSearch?: (query: EqlQuery, results: SearchResult[]) => void;
+
+  // Callbacks
+  /** Callback fired when search is executed with the query and results */
+  onSearch?: (query: SearchEqlRequest, results: SearchResult[]) => void;
 }
 
 /**
@@ -52,18 +88,49 @@ export interface TdpSearchProps {
  *
  * A reusable search component for querying the TDP.
  *
- * @example
+ * @example Basic search
  * ```tsx
  * <TdpSearch
  *   baseUrl="https://api.tetrascience-dev.com"
  *   authToken={token}
  *   orgSlug="data-apps-demo"
- *   defaultQuery="SELECT * FROM samples"
+ *   defaultQuery="sample-data"
  *   columns={[
  *     { key: "id", header: "ID" },
- *     { key: "name", header: "Name", sortable: true }
+ *     { key: "filePath", header: "File Path", sortable: true },
+ *     { key: "sourceType", header: "Source Type" }
  *   ]}
+ *   defaultSort={{ field: "createdAt", order: "desc" }}
  *   pageSize={20}
+ * />
+ * ```
+ *
+ * @example With advanced search parameters
+ * ```tsx
+ * <TdpSearch
+ *   baseUrl="https://api.tetrascience-dev.com"
+ *   authToken={token}
+ *   orgSlug="data-apps-demo"
+ *   columns={columns}
+ *   filters={[
+ *     {
+ *       key: "status",
+ *       label: "Status",
+ *       options: [
+ *         { value: "processed", label: "Processed" },
+ *         { value: "pending", label: "Pending" }
+ *       ]
+ *     }
+ *   ]}
+ *   advancedSearchParams={{
+ *     selectedSourceTypes: ["instrument-data"],
+ *     expression: {
+ *       g: "AND",
+ *       e: [
+ *         { field: "status", operator: "eq", value: "processed" }
+ *       ]
+ *     }
+ *   }}
  * />
  * ```
  */
@@ -75,13 +142,15 @@ export function TdpSearch({
   defaultQuery = "",
   columns,
   filters = [],
-  sortOptions = [],
+  defaultSort,
+  advancedSearchParams,
   pageSize = 10,
-  searchPlaceholder = "Enter EQL query...",
+  searchPlaceholder = "Enter search term...",
   className,
   onSearch,
 }: TdpSearchProps) {
-  const [searchClient, setSearchClient] = useState<TdpSearchClient | null>(null);
+  const [tdpClient, setTdpClient] = useState<TDPClient | null>(null);
+  const [isClientReady, setIsClientReady] = useState(false);
   const [query, setQuery] = useState(defaultQuery);
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -93,31 +162,35 @@ export function TdpSearch({
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Initialize search client
+  // Initialize TDP client
   useEffect(() => {
     if (!baseUrl || !authToken || !orgSlug) {
       return;
     }
 
-    const client = new TdpSearchClient({
-      baseUrl,
-      authToken,
-      orgSlug,
-    });
+    const initClient = async () => {
+      const client = new TDPClient({
+        tdpEndpoint: baseUrl,
+        orgSlug,
+        authToken,
+        connectorId: "", // Not needed for search-only operations
+      });
 
-    setSearchClient(client);
+      try {
+        await client.init();
+        setTdpClient(client);
+        setIsClientReady(true);
+      } catch (err: any) {
+        setError(`Failed to initialize TDP client: ${err.message}`);
+      }
+    };
+
+    initClient();
   }, [baseUrl, authToken, orgSlug]);
-
-  // Update auth token when it changes
-  useEffect(() => {
-    if (searchClient && authToken) {
-      searchClient.updateAuthToken(authToken);
-    }
-  }, [searchClient, authToken]);
 
   // Execute search
   const executeSearch = async (page: number = 1) => {
-    if (!searchClient || !query.trim()) {
+    if (!tdpClient || !isClientReady || !query.trim()) {
       return;
     }
 
@@ -126,23 +199,37 @@ export function TdpSearch({
     setHasSearched(true);
 
     try {
-      const eqlQuery: EqlQuery = {
-        query: query.trim(),
-        filters: Object.keys(filterValues).length > 0 ? filterValues : undefined,
+      // Use user sort if available, otherwise fall back to defaultSort
+      const effectiveSort = sortKey || defaultSort?.field;
+      const effectiveOrder = sortKey ? sortDirection : defaultSort?.order || sortDirection;
+
+      const searchRequest: SearchEqlRequest = {
+        searchTerm: query.trim(),
         size: pageSize,
         from: (page - 1) * pageSize,
-        sort: sortKey ? [{ field: sortKey, order: sortDirection }] : sortOptions.length > 0 ? sortOptions : undefined,
+        sort: effectiveSort,
+        order: effectiveOrder,
+        ...advancedSearchParams, // Spread any additional SDK parameters
       };
 
-      const response = await searchClient.searchEql(eqlQuery);
-      const results = response.results || [];
-      const total = response.total || 0;
+      const response: SearchEqlResponse = await tdpClient.searchEql(searchRequest);
 
-      setResults(results);
+      // Transform Elasticsearch results to flat objects
+      // Each hit has _source containing the actual document data
+      const transformedResults: SearchResult[] = (response.hits.hits || []).map((hit) => ({
+        id: hit._id,
+        ...hit._source,
+        _score: hit._score,
+      }));
+
+      // Extract total (can be number or object with value)
+      const total = typeof response.hits.total === "number" ? response.hits.total : response.hits.total.value;
+
+      setResults(transformedResults);
       setTotal(total);
       setCurrentPage(page);
 
-      onSearch?.(eqlQuery, results);
+      onSearch?.(searchRequest, transformedResults);
     } catch (err: any) {
       setError(err.message || "An error occurred while searching");
       setResults([]);

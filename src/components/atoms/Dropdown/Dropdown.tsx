@@ -1,6 +1,6 @@
+import { Icon, IconName } from "@atoms/Icon";
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { Icon, IconName } from "@atoms/Icon";
 
 export type DropdownSize = "xsmall" | "small";
 
@@ -210,12 +210,10 @@ export const Dropdown: React.FC<DropdownProps> = ({
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
-      ) {
-        if (isOpen) {
+       && isOpen) {
           setIsOpen(false);
           onClose?.();
         }
-      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -266,6 +264,32 @@ export const Dropdown: React.FC<DropdownProps> = ({
     }
   };
 
+  /**
+   * Finds the next enabled option index after the given index.
+   * Returns -1 if no enabled option is found.
+   */
+  const findNextEnabledIndex = (currentIndex: number): number => {
+    for (let i = currentIndex + 1; i < options.length; i++) {
+      if (!options[i].disabled) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
+  /**
+   * Finds the previous enabled option index before the given index.
+   * Returns -1 if no enabled option is found.
+   */
+  const findPrevEnabledIndex = (currentIndex: number): number => {
+    for (let i = currentIndex - 1; i >= 0; i--) {
+      if (!options[i].disabled) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     const option = options[index];
 
@@ -277,32 +301,22 @@ export const Dropdown: React.FC<DropdownProps> = ({
           handleSelect(option);
         }
         break;
-      case "ArrowDown":
+      case "ArrowDown": {
         e.preventDefault();
-        if (index < options.length - 1) {
-          let nextIndex = index + 1;
-          while (nextIndex < options.length) {
-            if (!options[nextIndex].disabled) {
-              itemRefs.current[nextIndex]?.focus();
-              break;
-            }
-            nextIndex++;
-          }
+        const nextIndex = findNextEnabledIndex(index);
+        if (nextIndex !== -1) {
+          itemRefs.current[nextIndex]?.focus();
         }
         break;
-      case "ArrowUp":
+      }
+      case "ArrowUp": {
         e.preventDefault();
-        if (index > 0) {
-          let prevIndex = index - 1;
-          while (prevIndex >= 0) {
-            if (!options[prevIndex].disabled) {
-              itemRefs.current[prevIndex]?.focus();
-              break;
-            }
-            prevIndex--;
-          }
+        const prevIndex = findPrevEnabledIndex(index);
+        if (prevIndex !== -1) {
+          itemRefs.current[prevIndex]?.focus();
         }
         break;
+      }
       case "Escape":
         e.preventDefault();
         setIsOpen(false);

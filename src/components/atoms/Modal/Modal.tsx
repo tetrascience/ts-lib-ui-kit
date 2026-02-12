@@ -1,7 +1,12 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
-import styled, { createGlobalStyle, keyframes } from "styled-components";
 import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
+import { useEffect, useRef, useState } from "react";
+import styled, { createGlobalStyle, keyframes } from "styled-components";
+
+import type { ReactNode} from "react";
+
+/** Animation duration for modal fade in/out in milliseconds */
+const ANIMATION_DURATION_MS = 300;
 
 export interface ModalProps {
   isOpen: boolean;
@@ -131,7 +136,7 @@ const ModalTitle = styled.h3`
   color: var(--black-900);
 `;
 
-const CloseButton = styled.button`
+const CloseButton = styled.button<{ $absolute?: boolean }>`
   background: none;
   border: none;
   cursor: pointer;
@@ -142,6 +147,13 @@ const CloseButton = styled.button`
   color: var(--black-900);
   width: 24px;
   height: 24px;
+  ${(props) =>
+    props.$absolute &&
+    `
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  `}
 
   &:hover {
     color: var(--black-900);
@@ -213,7 +225,7 @@ const Modal = ({
       // Wait for animation to complete before hiding
       animationTimeout.current = setTimeout(() => {
         setIsVisible(false);
-      }, 300); // Animation duration
+      }, ANIMATION_DURATION_MS);
     }
 
     // Cleanup on unmount
@@ -251,7 +263,7 @@ const Modal = ({
     // Wait for animation to complete before calling onClose
     animationTimeout.current = setTimeout(() => {
       onClose();
-    }, 300); // Animation duration
+    }, ANIMATION_DURATION_MS);
   };
 
   return (
@@ -272,10 +284,7 @@ const Modal = ({
             )}
 
             {!title && (
-              <CloseButton
-                onClick={handleClose}
-                style={{ position: "absolute", top: "16px", right: "16px" }}
-              >
+              <CloseButton $absolute onClick={handleClose}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"

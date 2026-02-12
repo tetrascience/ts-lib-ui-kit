@@ -1,12 +1,14 @@
-import React, { useCallback, useState } from "react";
-import MonacoEditor, { Monaco, OnChange } from "@monaco-editor/react";
-import { editor } from "monaco-editor";
 // @ts-expect-error - This is a workaround to avoid the error when importing the themes
-import themes from "monaco-themes/themes/themelist";
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
 import { Tooltip } from "@atoms/Tooltip";
+import MonacoEditor from "@monaco-editor/react";
+import themes from "monaco-themes/themes/themelist";
+import React, { useCallback, useState } from "react";
+import styled from "styled-components";
+
+import type { Monaco, OnChange } from "@monaco-editor/react";
+import type { editor } from "monaco-editor";
 
 // Use import.meta.glob only if available (Vite), otherwise use empty object (webpack/Next.js)
 const themeModules = typeof import.meta.glob === 'function'
@@ -85,6 +87,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     "Launch"
   );
 
+  /** Feedback reset delay in milliseconds */
+  const FEEDBACK_RESET_DELAY_MS = 1000;
+
   const handleCopy = useCallback(
     (code: string) => {
       if (onCopy && !disabled) {
@@ -92,7 +97,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         setCopyState("Copied");
         setTimeout(() => {
           setCopyState("Copy");
-        }, 1000);
+        }, FEEDBACK_RESET_DELAY_MS);
       }
     },
     [onCopy, disabled]
@@ -105,7 +110,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         setLaunchState("Launched");
         setTimeout(() => {
           setLaunchState("Launch");
-        }, 1000);
+        }, FEEDBACK_RESET_DELAY_MS);
       }
     },
     [onLaunch, disabled]

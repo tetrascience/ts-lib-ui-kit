@@ -1,6 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import { COLORS } from "../../../utils/colors";
+
 import { DotPlot, type MarkerSymbol } from "./DotPlot";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof DotPlot> = {
   title: "Organisms/DotPlot",

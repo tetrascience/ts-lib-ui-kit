@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { CodeEditor } from "@atoms/CodeEditor";
 import { Icon, IconName } from "@atoms/Icon";
 import { Input } from "@atoms/Input";
+import React, { useState } from "react";
+import styled from "styled-components";
 
 export interface AssistantModalProps {
   open: boolean;

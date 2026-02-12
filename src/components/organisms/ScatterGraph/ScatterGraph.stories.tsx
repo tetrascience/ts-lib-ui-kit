@@ -1,6 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import { COLORS } from "../../../utils/colors";
-import { ScatterGraph, ScatterDataSeries } from "./ScatterGraph";
+
+import { ScatterGraph } from "./ScatterGraph";
+
+import type { ScatterDataSeries } from "./ScatterGraph";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const generateScatterDemoData = (): ScatterDataSeries[] => {
   return [

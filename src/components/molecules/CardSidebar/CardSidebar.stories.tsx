@@ -1,5 +1,7 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import CardSidebar from "./CardSidebar";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
+
 
 const meta: Meta<typeof CardSidebar> = {
   title: "Molecules/CardSidebar",

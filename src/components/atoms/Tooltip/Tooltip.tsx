@@ -1,5 +1,7 @@
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled, { css } from "styled-components";
+
+import type { ReactNode} from "react";
 
 export type TooltipPlacement = "top" | "right" | "bottom" | "left";
 

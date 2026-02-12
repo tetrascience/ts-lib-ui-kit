@@ -1,6 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import { COLORS } from "./../../../utils/colors";
-import { Boxplot, BoxDataSeries } from "./Boxplot";
+import { Boxplot } from "./Boxplot";
+
+import type { BoxDataSeries } from "./Boxplot";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Boxplot> = {
   title: "Organisms/Boxplot",

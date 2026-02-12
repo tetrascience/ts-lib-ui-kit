@@ -1,7 +1,9 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
+
 import { ThemeProvider } from "../../../theme";
 
 import Card from "./Card";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Card> = {
   title: "Atoms/Card",

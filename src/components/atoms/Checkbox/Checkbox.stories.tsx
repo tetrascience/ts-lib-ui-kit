@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+
 import Checkbox from "./Checkbox";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Checkbox> = {
   title: "Atoms/Checkbox",

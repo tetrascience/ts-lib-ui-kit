@@ -1,8 +1,10 @@
-import { forwardRef } from "react";
-import styled from "styled-components";
-import { Dropdown, DropdownProps } from "@atoms/Dropdown";
+import { Dropdown } from "@atoms/Dropdown";
 import { Label } from "@atoms/Label";
 import { SupportiveText } from "@atoms/SupportiveText";
+import { forwardRef } from "react";
+import styled from "styled-components";
+
+import type { DropdownProps } from "@atoms/Dropdown";
 
 export interface SelectFieldProps extends Omit<DropdownProps, "className"> {
   label: string;

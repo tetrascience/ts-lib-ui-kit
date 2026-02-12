@@ -1,5 +1,7 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import { Heatmap } from "./Heatmap";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
+
 
 /**
  * @deprecated The Heatmap component is now a wrapper around PlateMap.

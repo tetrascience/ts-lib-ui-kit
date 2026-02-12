@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import { SupportiveText } from "./SupportiveText";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof SupportiveText> = {
   title: "Atoms/SupportiveText",

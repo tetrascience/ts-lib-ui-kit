@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import React, { useState } from "react";
 
 import MenuItem from "./MenuItem";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof MenuItem> = {
   title: "Atoms/MenuItem",

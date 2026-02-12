@@ -1,9 +1,11 @@
 import { Icon, IconName } from "@atoms/Icon";
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 
 import { ThemeProvider } from "../../../theme";
+
 import { Button } from "./Button";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Button> = {
   title: "Atoms/Button",

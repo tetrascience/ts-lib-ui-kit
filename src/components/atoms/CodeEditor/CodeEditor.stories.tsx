@@ -1,7 +1,8 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import React from "react";
 
 import CodeEditor from "./CodeEditor";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof CodeEditor> = {
   title: "Atoms/CodeEditor",

@@ -1,6 +1,8 @@
+import { Icon } from "@atoms/Icon";
 import React from "react";
 import styled from "styled-components";
-import { Icon, IconName } from "@atoms/Icon";
+
+import type { IconName } from "@atoms/Icon";
 
 interface SidebarItemProps {
   icon: IconName;

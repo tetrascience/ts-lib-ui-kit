@@ -15,7 +15,10 @@
 
 import fs from 'fs';
 import path from 'path';
-import { Project, VariableDeclaration, Node } from 'ts-morph';
+
+import { Project, Node } from 'ts-morph';
+
+import type { VariableDeclaration} from 'ts-morph';
 
 // ============================================================================
 // TypeScript Types

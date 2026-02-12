@@ -1,6 +1,8 @@
-import React, { ChangeEvent, forwardRef } from "react";
-import styled from "styled-components";
 import { Icon, IconName } from "@atoms/Icon";
+import React, { forwardRef } from "react";
+import styled from "styled-components";
+
+import type { ChangeEvent} from "react";
 
 export interface CheckboxProps {
   checked?: boolean;

@@ -13,11 +13,12 @@
 const getCSSVar = (cssVar: string, fallback?: string): string => {
   if (typeof window !== "undefined") {
     const value = getComputedStyle(document.documentElement)
-      .getPropertyValue(`--${cssVar}`)
+      .getPropertyValue("--" + cssVar)
       .trim();
     return value || fallback || "";
   }
-  return `var(--${cssVar}${fallback ? `, ${fallback}` : ""})`;
+  const fallbackSuffix = fallback ? ", " + fallback : "";
+  return "var(--" + cssVar + fallbackSuffix + ")";
 };
 
 /**

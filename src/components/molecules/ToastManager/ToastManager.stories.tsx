@@ -1,6 +1,9 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import styled from "styled-components";
-import { ToastManager, ToastPosition, toast } from "./ToastManager";
+
+import { ToastManager, toast } from "./ToastManager";
+
+import type { ToastPosition} from "./ToastManager";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 interface ShowcaseProps {
   position: ToastPosition;

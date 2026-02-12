@@ -1,6 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import { COLORS } from "./../../../utils/colors";
-import { BarGraph, BarDataSeries } from "./BarGraph";
+import { BarGraph } from "./BarGraph";
+
+import type { BarDataSeries } from "./BarGraph";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof BarGraph> = {
   title: "Organisms/BarGraph",

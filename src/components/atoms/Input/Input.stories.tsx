@@ -1,6 +1,7 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import { Icon, IconName } from "@atoms/Icon";
 import { Input } from "@atoms/Input";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Input> = {
   title: "Atoms/Input",

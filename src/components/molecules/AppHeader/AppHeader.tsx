@@ -1,7 +1,7 @@
-import React from "react";
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
+import React from "react";
+import styled from "styled-components";
 
 interface UserProfileProps {
   name: string;

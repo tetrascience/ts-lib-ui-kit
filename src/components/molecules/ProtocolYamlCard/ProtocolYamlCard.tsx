@@ -1,9 +1,11 @@
-import React from "react";
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { CodeEditor } from "@atoms/CodeEditor";
-import { Dropdown, DropdownOption } from "@atoms/Dropdown";
+import { Dropdown } from "@atoms/Dropdown";
 import { Toggle } from "@atoms/Toggle";
+import React from "react";
+import styled from "styled-components";
+
+import type { DropdownOption } from "@atoms/Dropdown";
 
 export interface ProtocolYamlCardProps {
   title: string;

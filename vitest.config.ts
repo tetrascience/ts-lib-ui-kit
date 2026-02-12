@@ -1,5 +1,6 @@
-import { defineConfig } from "vitest/config";
 import path from "path";
+
+import { defineConfig } from "vitest/config";
 
 // Base config - unit tests only
 // Storybook tests are configured in vitest.workspace.ts

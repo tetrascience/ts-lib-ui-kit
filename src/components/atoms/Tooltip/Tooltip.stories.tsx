@@ -1,6 +1,9 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import styled from "styled-components";
-import { Tooltip, TooltipProps } from "./Tooltip";
+
+import { Tooltip } from "./Tooltip";
+
+import type { TooltipProps } from "./Tooltip";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<TooltipProps> = {
   title: "Atoms/Tooltip",

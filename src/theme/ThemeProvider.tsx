@@ -1,7 +1,9 @@
 import React, { useMemo } from "react";
-import { ThemeProvider as StyledThemeProvider } from "styled-components";
-import styled from "styled-components";
-import { Theme, defaultTheme } from "./types";
+import styled, { ThemeProvider as StyledThemeProvider } from "styled-components";
+
+import { defaultTheme } from "./types";
+
+import type { Theme} from "./types";
 
 export interface ThemeProviderProps {
   theme?: Theme;

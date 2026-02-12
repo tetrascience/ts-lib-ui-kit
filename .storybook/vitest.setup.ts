@@ -1,6 +1,7 @@
-import { beforeAll, beforeEach, afterEach, expect } from "vitest";
 import { setProjectAnnotations } from "@storybook/react";
 import { page } from "@vitest/browser/context";
+import { beforeAll, beforeEach, afterEach, expect } from "vitest";
+
 import * as previewAnnotations from "./preview";
 
 const annotations = setProjectAnnotations([previewAnnotations]);
@@ -71,7 +72,7 @@ afterEach(async ({ task }) => {
         await page.screenshot({
           path: `../../../../test-results/screenshots/${zephyrId}.png`,
         });
-      } catch (_error) {
+      } catch {
         // Don't fail the test if screenshot fails - silently continue
         // Screenshots may fail in some environments
       }
@@ -79,10 +80,12 @@ afterEach(async ({ task }) => {
   }
 
   if (warnings.length > 0) {
-    expect.fail(`Test produced console warnings:\n${warnings.map((w) => `  - ${w}`).join("\n")}`);
+    const warningList = warnings.map((w) => "  - " + w).join("\n");
+    expect.fail("Test produced console warnings:\n" + warningList);
   }
 
   if (errors.length > 0) {
-    expect.fail(`Test produced console errors:\n${errors.map((e) => `  - ${e}`).join("\n")}`);
+    const errorList = errors.map((e) => "  - " + e).join("\n");
+    expect.fail("Test produced console errors:\n" + errorList);
   }
 });

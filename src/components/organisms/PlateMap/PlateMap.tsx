@@ -1,31 +1,18 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
 import "./PlateMap.scss";
-
-// Types
-import type {
-  PlateMapProps,
-  LayerConfig,
-  WellData,
-} from "./types";
-import {
-  PLATE_FORMAT_96,
-  PLATE_FORMAT_CUSTOM,
-} from "./types";
-
-// Re-export types and constants for external consumers
-export * from "./types";
-export { DEFAULT_CATEGORY_COLORS } from "./constants";
-
-// Constants
 import {
   PLATE_CONFIGS,
   DEFAULT_COLOR_SCALE,
   COLORS,
   DEFAULT_CATEGORY_COLORS,
+  PLATEMAP_CONSTANTS,
 } from "./constants";
-
-// Utilities
+import {
+  PLATE_FORMAT_96,
+  PLATE_FORMAT_CUSTOM,
+} from "./types";
 import {
   generateRowLabels,
   generateColumnLabels,
@@ -34,7 +21,24 @@ import {
   hasMultiValueWells,
   extractLayers,
   parseRegionWells,
+  buildWellHoverText,
+  buildColorbarConfig,
+  buildPlotMargins,
+  calculateTitleX,
+  calculateAxisDomain,
+  flattenGridData,
+  calculateMarkerSize,
 } from "./utils";
+
+import type {
+  PlateMapProps,
+  LayerConfig,
+  WellData,
+} from "./types";
+
+// Re-export types and constants for external consumers
+export * from "./types";
+export { DEFAULT_CATEGORY_COLORS } from "./constants";
 
 /**
  * PlateMap component for visualizing well plate data as a heatmap or categorical display.
@@ -166,7 +170,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
     } else {
       // Generate random data for demonstration when no data provided
       resultGrid = Array.from({ length: rows }, () =>
-        Array.from({ length: columns }, () => Math.random() * 50000)
+        Array.from({ length: columns }, () => Math.random() * PLATEMAP_CONSTANTS.MAX_RANDOM_VALUE)
       );
     }
 
@@ -183,11 +187,11 @@ const PlateMap: React.FC<PlateMapProps> = ({
   const zMax = valueMax ?? range.max;
 
   // Check if grid has any null values
-  const hasNullValues = grid.some(row => row.some(val => val === null));
+  const hasNullValues = grid.some(row => row.includes(null));
 
   // Create sentinel value for empty wells (below the data range)
   // This allows us to show emptyWellColor for null cells
-  const sentinelValue = zMin - (zMax - zMin) * 0.01 - 1;
+  const sentinelValue = zMin - (zMax - zMin) * PLATEMAP_CONSTANTS.SENTINEL_RATIO - 1;
 
   // Replace null values with sentinel for Plotly rendering
   const displayGrid = hasNullValues
@@ -212,7 +216,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
     // Create new colorscale with emptyWellColor at the bottom
     const extendedScale: Array<[number, string]> = [
       [0, emptyWellColor],
-      [dataStartRatio * 0.99, emptyWellColor], // Small band for empty wells
+      [dataStartRatio * PLATEMAP_CONSTANTS.COLOR_SCALE_THRESHOLD, emptyWellColor], // Small band for empty wells
     ];
 
     // Remap original colorscale positions to the remaining range
@@ -243,50 +247,16 @@ const PlateMap: React.FC<PlateMapProps> = ({
     row.map((val, colIdx) => {
       const wellId = `${rowLabels[rowIdx]}${colLabels[colIdx]}`;
       const wellIdUpper = String(wellId).toUpperCase();
-      const allValues = allValuesMap.get(wellIdUpper);
-      const tooltipExtra = tooltipDataMap.get(wellIdUpper);
-
-      let text = `Well ${wellId}`;
-
-      // Show all values from the values object
-      // Mark the active layer with ▶ indicator
-      const activeLayerKey = activeLayer?.id;
-      if (allValues) {
-        for (const [key, value] of Object.entries(allValues)) {
-          const isActiveLayer = key === activeLayerKey;
-          const prefix = isActiveLayer ? "▶ " : "";
-          const rawLayerUnit = layerConfigMap.get(key)?.valueUnit;
-          const layerUnit = rawLayerUnit ? ` ${rawLayerUnit}` : "";
-          if (value === null) {
-            text += `<br>${prefix}${key}: -`;
-          } else if (typeof value === "number") {
-            text += `<br>${prefix}${key}: ${value.toFixed(precision)}${layerUnit}`;
-          } else {
-            // String value - capitalize first letter
-            text += `<br>${prefix}${key}: ${value.charAt(0).toUpperCase() + value.slice(1)}`;
-          }
-        }
-      } else if (val !== null) {
-        // Fallback for data without tooltipData
-        text += `<br>Value: ${val.toFixed(precision)}${valueUnit}`;
-      } else if (activeLayer) {
-        // Note: The `category` branch was removed as unreachable - categoriesGrid is only
-        // populated via wellDataToGrid which also populates allValuesMap, so if category
-        // is truthy, allValues will also be truthy and we'll enter the branch above.
-        // Well not in data but we have layers - show active layer with "-"
-        text += `<br>▶ ${activeLayer.id}: -`;
-      } else {
-        text += `<br>No data`;
-      }
-
-      // Add tooltipData
-      if (tooltipExtra) {
-        for (const [key, value] of Object.entries(tooltipExtra)) {
-          text += `<br>${key}: ${value}`;
-        }
-      }
-
-      return text;
+      return buildWellHoverText({
+        wellId,
+        value: val,
+        allValues: allValuesMap.get(wellIdUpper),
+        tooltipExtra: tooltipDataMap.get(wellIdUpper),
+        activeLayerId: activeLayer?.id,
+        layerConfigMap,
+        precision,
+        valueUnit,
+      });
     })
   );
 
@@ -312,7 +282,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
     if (hasNullCategory) {
       typesSet.add("empty");
     }
-    const types = Array.from(typesSet).sort();
+    const types = [...typesSet].sort();
 
     // Create numeric grid where each category maps to an index
     const typeToIndex = new Map<string, number>();
@@ -350,7 +320,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
         // Create a small band around each position
         const bandHalf = 0.5 / (numTypes - 1);
         const start = Math.max(0, normalizedPos - bandHalf);
-        const end = Math.min(1, normalizedPos + bandHalf - 0.001);
+        const end = Math.min(1, normalizedPos + bandHalf - PLATEMAP_CONSTANTS.COLOR_SCALE_EPSILON);
         catColorScale.push([start, color]);
         catColorScale.push([end, color]);
       });
@@ -418,45 +388,26 @@ const PlateMap: React.FC<PlateMapProps> = ({
     const plotZMax = isCategorical ? (catMax || 1) : zMax;
     const plotShowScale = isCategorical ? false : showColorBar;
 
-    // Flatten 2D grid data into arrays for scatter plot (circles)
-    const xData: number[] = [];
-    const yData: string[] = [];
-    const colorData: number[] = [];
-    const textData: string[] = [];
+    // Flatten 2D grid data into arrays for scatter plot
+    const { xData, yData, colorData, textData } = flattenGridData(
+      plotZ,
+      rowLabels,
+      hoverText,
+      rows,
+      columns,
+      plotZMin
+    );
 
-    for (let rowIdx = 0; rowIdx < rows; rowIdx++) {
-      for (let colIdx = 0; colIdx < columns; colIdx++) {
-        xData.push(colIdx + 1); // 1-indexed columns
-        yData.push(rowLabels[rowIdx] as string);
-        const zValue = plotZ[rowIdx][colIdx];
-        colorData.push(zValue ?? plotZMin); // Use min value for null wells (will be styled separately)
-        textData.push(hoverText[rowIdx][colIdx]);
-      }
-    }
-
-    // Calculate marker size based on actual plot area (accounting for margins)
-    // Use consistent margins regardless of colorbar visibility to prevent layout shift when switching layers
-    const leftMargin = yTitle ? 70 : 50;
-    const rightMargin = 100; // Always reserve space for colorbar to prevent layout shift
-    const topMargin = title ? 100 : 40;
-    const bottomMargin = 50;
-    const plotWidth = width - leftMargin - rightMargin;
-    const plotHeight = height - topMargin - bottomMargin;
-
-    // Calculate pixels per cell
-    const cellWidth = plotWidth / columns;
-    const cellHeight = plotHeight / rows;
-
-    // For circles: use smaller dimension to keep them uniform and avoid overlap
-    // For squares: use larger dimension so they fill the entire cell with no gaps
-    const cellSize =
-      markerShape === "square"
-        ? Math.max(cellWidth, cellHeight)
-        : Math.min(cellWidth, cellHeight);
-
-    // Squares fill entire cell (100%) for seamless heatmap, circles leave gaps (80%)
-    const sizeMultiplier = markerShape === "square" ? 1.0 : 0.8;
-    const markerSize = Math.max(4, cellSize * sizeMultiplier);
+    // Calculate marker size based on plot dimensions
+    const markerSize = calculateMarkerSize(
+      width,
+      height,
+      rows,
+      columns,
+      markerShape,
+      !!title,
+      !!yTitle
+    );
 
     // Create scatter plot with markers
     const plotData: Plotly.Data[] = [
@@ -473,62 +424,11 @@ const PlateMap: React.FC<PlateMapProps> = ({
           cmin: plotZMin,
           cmax: plotZMax,
           showscale: plotShowScale,
-          colorbar: (() => {
-            // Position colorbar based on legendConfig
-            const pos = legendConfig?.position ?? "right";
-            if (pos === "bottom") {
-              return {
-                orientation: "h" as const,
-                thickness: 20,
-                len: 0.75,
-                outlinewidth: 0,
-                ticksuffix: valueUnit,
-                y: -0.15,
-                yanchor: "top" as const,
-                x: 0.5,
-                xanchor: "center" as const,
-                title: legendConfig?.title ? { text: legendConfig.title, side: "top" as const } : undefined,
-              };
-            } else if (pos === "top") {
-              return {
-                orientation: "h" as const,
-                thickness: 20,
-                len: 0.75,
-                outlinewidth: 0,
-                ticksuffix: valueUnit,
-                y: 1.15,
-                yanchor: "bottom" as const,
-                x: 0.5,
-                xanchor: "center" as const,
-                title: legendConfig?.title ? { text: legendConfig.title, side: "bottom" as const } : undefined,
-              };
-            } else if (pos === "left") {
-              return {
-                thickness: 28,
-                len: 1,
-                outlinewidth: 0,
-                ticksuffix: valueUnit,
-                y: 0.5,
-                yanchor: "middle" as const,
-                x: -0.15,
-                xanchor: "right" as const,
-                title: legendConfig?.title ? { text: legendConfig.title, side: "right" as const } : undefined,
-              };
-            } else {
-              // "right" (default)
-              return {
-                thickness: 20,
-                len: 0.9,
-                outlinewidth: 0,
-                ticksuffix: valueUnit,
-                x: 0.88, // Fixed position within the reserved space (domain ends at 0.85)
-                xanchor: "left" as const,
-                y: 0.5,
-                yanchor: "middle" as const,
-                title: legendConfig?.title ? { text: legendConfig.title, side: "right" as const } : undefined,
-              };
-            }
-          })(),
+          colorbar: buildColorbarConfig(
+            legendConfig?.position ?? "right",
+            valueUnit,
+            legendConfig?.title
+          ),
           line: {
             color: "var(--grey-400)",
             width: 1,
@@ -538,6 +438,8 @@ const PlateMap: React.FC<PlateMapProps> = ({
         text: textData,
       },
     ];
+
+    const legendPosition = legendConfig?.position ?? "right";
 
     const layout = {
       autosize: false, // Prevent auto-sizing to maintain consistent layout
@@ -549,13 +451,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
               size: 20,
               color: "var(--black-300)",
             },
-            // Center title over graph area based on legend position
-            x: (() => {
-              const pos = legendConfig?.position ?? "right";
-              if (pos === "left") return 0.575; // midpoint of [0.15, 1]
-              if (pos === "right") return 0.425; // midpoint of [0, 0.85]
-              return 0.5; // top/bottom use full width
-            })(),
+            x: calculateTitleX(legendPosition),
             xanchor: "center" as const,
             y: 0.98,
             yanchor: "top" as const,
@@ -563,19 +459,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
         : undefined,
       width,
       height,
-      margin: (() => {
-        const pos = legendConfig?.position ?? "right";
-        const baseLeft = yTitle ? 70 : 50;
-        const baseRight = 50;
-        // Reserve extra space for colorbar on the appropriate side
-        return {
-          l: pos === "left" ? baseLeft + 50 : baseLeft,
-          r: pos === "right" ? baseRight + 50 : baseRight,
-          b: pos === "bottom" ? 80 : 50,
-          t: title ? (pos === "top" ? 130 : 100) : (pos === "top" ? 70 : 40),
-          pad: 5
-        };
-      })(),
+      margin: buildPlotMargins(legendPosition, !!title, !!yTitle),
       xaxis: {
         title: {
           text: xTitle || "",
@@ -595,14 +479,9 @@ const PlateMap: React.FC<PlateMapProps> = ({
         tickvals: Array.from({ length: columns }, (_, i) => i + 1),
         ticktext: colLabels.map(String),
         tickangle: 0, // Keep labels horizontal
-        tickfont: { size: columns > 24 ? 8 : 11 }, // Smaller font for high-density plates
+        tickfont: { size: columns > 24 ? 8 : PLATEMAP_CONSTANTS.FONT_SIZE_LARGE }, // Smaller font for high-density plates
         // Adjust domain based on legend position to prevent colorbar overlap
-        domain: (() => {
-          const pos = legendConfig?.position ?? "right";
-          if (pos === "left") return [0.15, 1];
-          if (pos === "right") return [0, 0.85];
-          return [0, 1]; // top/bottom don't need horizontal adjustment
-        })(),
+        domain: calculateAxisDomain(legendPosition),
       },
       yaxis: {
         title: {
@@ -616,12 +495,12 @@ const PlateMap: React.FC<PlateMapProps> = ({
         },
         fixedrange: true,
         dtick: 1,
-        range: [rows - 0.5, -0.5], // Reversed range: high to low puts row A at top
+        range: [rows + PLATEMAP_CONSTANTS.LABEL_CENTER_OFFSET, PLATEMAP_CONSTANTS.LABEL_CENTER_OFFSET], // Reversed range: high to low puts row A at top
         automargin: false, // Prevent auto margin adjustment
         tickmode: "array" as const,
         tickvals: Array.from({ length: rows }, (_, i) => i),
         ticktext: rowLabels.map(String),
-        tickfont: { size: rows > 16 ? 8 : 11 }, // Smaller font for high-density plates
+        tickfont: { size: rows > 16 ? 8 : PLATEMAP_CONSTANTS.FONT_SIZE_LARGE }, // Smaller font for high-density plates
       },
       paper_bgcolor: "var(--white-900)",
       plot_bgcolor: "var(--white-900)",

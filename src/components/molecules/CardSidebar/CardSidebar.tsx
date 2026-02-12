@@ -1,6 +1,6 @@
+import { Button } from "@atoms/Button";
 import { forwardRef } from "react";
 import styled, { css } from "styled-components";
-import { Button } from "@atoms/Button";
 
 export type CardSidebarStatus = "default" | "active" | "hover" | "disabled";
 

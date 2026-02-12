@@ -1,6 +1,4 @@
-import React, { useState } from "react";
 // import { ReactFlowProvider } from "@xyflow/react";
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
 import { AppHeader } from "@molecules/AppHeader";
@@ -11,6 +9,8 @@ import { Navbar } from "@molecules/Navbar";
 import { ProtocolConfiguration } from "@molecules/ProtocolConfiguration";
 import { Sidebar } from "@molecules/Sidebar";
 import { TabGroup } from "@molecules/TabGroup";
+import React, { useState } from "react";
+import styled from "styled-components";
 
 export interface MainProps {
   userProfile: {

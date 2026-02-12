@@ -1,5 +1,7 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import Toggle from "./Toggle";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
+
 
 const meta: Meta<typeof Toggle> = {
   title: "Atoms/Toggle",

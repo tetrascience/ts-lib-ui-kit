@@ -42,7 +42,11 @@ interface CachedTokenEntry {
   payload: JwtPayload;
 }
 
-const DEFAULT_TOKEN_REFRESH_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+/** Number of seconds in a minute */
+const SECONDS_PER_MINUTE = 60;
+/** Milliseconds per second */
+const MS_PER_SECOND = 1000;
+const DEFAULT_TOKEN_REFRESH_THRESHOLD_MS = 5 * SECONDS_PER_MINUTE * MS_PER_SECOND; // 5 minutes
 
 /**
  * Manages JWT token retrieval from request cookies.
@@ -115,7 +119,7 @@ export class JwtTokenManager {
       return true;
     }
 
-    const expiryTimeMs = payload.exp * 1000;
+    const expiryTimeMs = payload.exp * MS_PER_SECOND;
     const refreshTimeMs = Date.now() + this.tokenRefreshThresholdMs;
     return expiryTimeMs <= refreshTimeMs;
   }

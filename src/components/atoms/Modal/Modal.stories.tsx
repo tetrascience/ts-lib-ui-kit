@@ -1,8 +1,10 @@
-import React, { useState } from "react";
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "@atoms/Button";
 import { Modal } from "@atoms/Modal";
+import React, { useState } from "react";
+
 import { ThemeProvider } from "../../../theme";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Modal> = {
   title: "Atoms/Modal",

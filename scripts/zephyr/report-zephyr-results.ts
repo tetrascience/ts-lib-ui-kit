@@ -4,8 +4,11 @@
  *
  * This script:
  * 1. Parses JUnit XML reports from Vitest runs
- * 2. Extracts Zephyr test case IDs from test names
+ * 2. Extracts Zephyr test case IDs from story file parameters OR test names
  * 3. Reports test execution results (pass/fail) to a test cycle
+ *
+ * Zephyr ID Resolution:
+ *   Story mapping: Looks up IDs from parameters.zephyr.testCaseId in story files
  *
  * Environment Variables:
  *   ZEPHYR_TOKEN - Zephyr Scale API token (required)
@@ -19,7 +22,9 @@
 
 import fs from "fs";
 import path from "path";
+
 import { XMLParser } from "fast-xml-parser";
+import { Node, Project, type VariableDeclaration } from "ts-morph";
 
 // ============================================================================
 // Screenshot URL Mapping Types
@@ -38,6 +43,141 @@ interface ScreenshotUrlsFile {
   runNumber: string;
   repository: string;
   screenshots: ScreenshotUrlMapping[];
+}
+
+// ============================================================================
+// Story to Zephyr ID Mapping
+// ============================================================================
+
+/** Maps story key (classname::testName) to Zephyr test case IDs */
+export type ZephyrMapping = { [storyKey: string]: string[] };
+
+/**
+ * Converts a PascalCase or camelCase export name to Title Case with spaces
+ * E.g., "Plate96Well" -> "Plate 96 Well", "HiddenUIElements" -> "Hidden UI Elements"
+ *
+ * This matches Storybook's algorithm which treats consecutive capitals as acronyms.
+ */
+function exportNameToTestName(exportName: string): string {
+  // Handle acronyms (consecutive capitals) and add spaces appropriately
+  // Pattern: before a capital that's followed by lowercase (new word start),
+  // or before a number, or after a number followed by letter
+  return exportName
+    .replace(/([a-z])([A-Z])/g, "$1 $2") // lowercase followed by uppercase: "custom" + "D" -> "custom D"
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2") // acronym followed by word: "UI" + "Elements" -> "UI Elements"
+    .replace(/([a-zA-Z])(\d+)/g, "$1 $2") // letter followed by number: "Plate" + "96" -> "Plate 96"
+    .replace(/(\d+)([a-zA-Z])/g, "$1 $2"); // number followed by letter: "96" + "Well" -> "96 Well"
+}
+
+/** Extracts Zephyr ID from parameters.zephyr.testCaseId if present */
+function extractZephyrIdFromDeclaration(declaration: VariableDeclaration): string | undefined {
+  const initializer = declaration.getInitializer();
+  if (!initializer || !Node.isObjectLiteralExpression(initializer)) return undefined;
+
+  const parametersProp = initializer.getProperty("parameters");
+  if (!parametersProp || !Node.isPropertyAssignment(parametersProp)) return undefined;
+
+  const parametersInit = parametersProp.getInitializer();
+  if (!parametersInit || !Node.isObjectLiteralExpression(parametersInit)) return undefined;
+
+  const zephyrProp = parametersInit.getProperty("zephyr");
+  if (!zephyrProp || !Node.isPropertyAssignment(zephyrProp)) return undefined;
+
+  const zephyrInit = zephyrProp.getInitializer();
+  if (!zephyrInit || !Node.isObjectLiteralExpression(zephyrInit)) return undefined;
+
+  const testCaseIdProp = zephyrInit.getProperty("testCaseId");
+  if (!testCaseIdProp || !Node.isPropertyAssignment(testCaseIdProp)) return undefined;
+
+  const testCaseIdInit = testCaseIdProp.getInitializer();
+  if (!testCaseIdInit || !Node.isStringLiteral(testCaseIdInit)) return undefined;
+
+  const value = testCaseIdInit.getLiteralText();
+  return value.trim() || undefined;
+}
+
+/** Extracts the name property value from a story object if present */
+function extractNameFromStory(declaration: VariableDeclaration): string | undefined {
+  const initializer = declaration.getInitializer();
+  if (!initializer || !Node.isObjectLiteralExpression(initializer)) return undefined;
+
+  const nameProp = initializer.getProperty("name");
+  if (!nameProp || !Node.isPropertyAssignment(nameProp)) return undefined;
+
+  const nameInit = nameProp.getInitializer();
+  if (!nameInit || !Node.isStringLiteral(nameInit)) return undefined;
+
+  return nameInit.getLiteralText();
+}
+
+/** Recursively finds all story files in a directory */
+function findStoryFiles(dir: string): string[] {
+  const storyFiles: string[] = [];
+  if (!fs.existsSync(dir)) return storyFiles;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      storyFiles.push(...findStoryFiles(fullPath));
+    } else if (entry.name.endsWith(".stories.tsx")) {
+      storyFiles.push(fullPath);
+    }
+  }
+  return storyFiles;
+}
+
+/**
+ * Generates a mapping from story keys to Zephyr test case IDs
+ * Story key format: "path/to/file.stories.tsx::Test Name"
+ */
+export function generateZephyrMapping(): ZephyrMapping {
+  const mapping: ZephyrMapping = {};
+  const srcDir = path.join(process.cwd(), "src");
+  const storyFiles = findStoryFiles(srcDir);
+
+  console.log(`[INFO] Generating Zephyr mapping from ${storyFiles.length} story files...`);
+
+  for (const filePath of storyFiles) {
+    const content = fs.readFileSync(filePath, "utf-8");
+    const relativePath = path.relative(process.cwd(), filePath);
+
+    // Parse with ts-morph
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile("temp.tsx", content);
+
+    // Find all exported variable declarations
+    const exportedDeclarations = sourceFile.getExportedDeclarations();
+
+    for (const [exportName, declarations] of exportedDeclarations) {
+      // Skip default export, meta, and Template
+      if (exportName === "default" || exportName === "meta" || exportName === "Template") continue;
+
+      for (const decl of declarations) {
+        if (!Node.isVariableDeclaration(decl)) continue;
+
+        // Check if it's a Story type
+        const typeNode = decl.getTypeNode();
+        if (!typeNode) continue;
+        const typeText = typeNode.getText();
+        if (!typeText.includes("Story") && !typeText.includes("StoryObj")) continue;
+
+        // Extract Zephyr ID from parameters.zephyr.testCaseId
+        const zephyrId = extractZephyrIdFromDeclaration(decl);
+        if (!zephyrId) continue;
+
+        // Get test name (from name property or convert export name)
+        const nameFromStory = extractNameFromStory(decl);
+        const testName = nameFromStory || exportNameToTestName(exportName);
+
+        // Create story key in format: "path/to/file.stories.tsx::Test Name"
+        const storyKey = `${relativePath}::${testName}`;
+        mapping[storyKey] = [zephyrId];
+      }
+    }
+  }
+
+  console.log(`[INFO] Generated mapping with ${Object.keys(mapping).length} entries\n`);
+  return mapping;
 }
 
 // ============================================================================
@@ -321,9 +461,14 @@ export function determineTestStatus(testCase: JUnitTestCase): { status: TestResu
 }
 
 /** Parses JUnit XML content and extracts test results with Zephyr IDs */
-export function parseJUnitXML(xmlContent: string): TestResult[] {
+export function parseJUnitXML(
+  xmlContent: string,
+  mappingOverride?: ZephyrMapping,
+): TestResult[] {
   const results: TestResult[] = [];
-  const zephyrIdPattern = /\[([A-Z]+-T\d+(?:,[A-Z]+-T\d+)*)\]/;
+
+  // Use provided mapping or generate from story files (parameters.zephyr.testCaseId)
+  const mapping = mappingOverride ?? generateZephyrMapping();
 
   const parsed = xmlParser.parse(xmlContent) as JUnitXML;
 
@@ -348,13 +493,16 @@ export function parseJUnitXML(xmlContent: string): TestResult[] {
   // Process each test case
   for (const testCase of allTestCases) {
     const testName = testCase["@_name"];
+    const classname = testCase["@_classname"] || "";
     const time = testCase["@_time"];
 
-    // Check for Zephyr ID in test name
-    const zephyrMatch = testName.match(zephyrIdPattern);
-    if (!zephyrMatch) continue;
+    // Look up Zephyr ID from story mapping (parameters.zephyr.testCaseId)
+    const storyKey = `${classname}::${testName}`;
+    const ids: string[] = mapping[storyKey] || [];
 
-    const ids = zephyrMatch[1].split(",");
+    // Skip if no Zephyr IDs found
+    if (ids.length === 0) continue;
+
     const { status, comment } = determineTestStatus(testCase);
 
     for (const id of ids) {

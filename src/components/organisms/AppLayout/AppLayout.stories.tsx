@@ -1,7 +1,10 @@
 import React from "react";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+
 import { LineGraph } from "../LineGraph";
+
 import { AppLayout } from "./AppLayout";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta = {
   title: "Organisms/AppLayout",

@@ -1,8 +1,10 @@
-import { action } from "storybook/actions";
-import { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
+import { action } from "storybook/actions";
+
 import PopConfirm from "./PopConfirm";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof PopConfirm> = {
   title: "Atoms/PopConfirm",

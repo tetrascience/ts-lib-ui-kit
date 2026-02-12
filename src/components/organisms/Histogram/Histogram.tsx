@@ -1,7 +1,10 @@
-import React, { useEffect, useRef, useMemo } from "react";
 import { COLORS } from "@utils/colors";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useRef, useMemo } from "react";
 import "./Histogram.scss";
+
+/** Exponent coefficient for normal distribution calculation */
+const NORMAL_DISTRIBUTION_EXPONENT_COEFF = -0.5;
 
 interface HistogramDataSeries {
   x: number[];
@@ -57,7 +60,7 @@ const generateNormalDistributionPoints = (
     const x = start + i * step;
     xValues.push(x);
 
-    const exponent = -0.5 * Math.pow((x - mean) / stdDev, 2);
+    const exponent = NORMAL_DISTRIBUTION_EXPONENT_COEFF * Math.pow((x - mean) / stdDev, 2);
     const y = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
     yValues.push(y);
   }
@@ -122,9 +125,9 @@ const Histogram: React.FC<HistogramProps> = ({
   const seriesWithColors = useMemo(() => {
     return seriesArray.map((series, index) => {
       const hasDistributionLine =
-        typeof series.showDistributionLine !== "undefined"
-          ? series.showDistributionLine
-          : showDistributionLine;
+        typeof series.showDistributionLine === "undefined"
+          ? showDistributionLine
+          : series.showDistributionLine;
 
       return {
         ...series,

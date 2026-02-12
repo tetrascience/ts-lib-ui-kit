@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import { IconName } from "@atoms/Icon";
+import React, { useState } from "react";
+
 import Sidebar from "./Sidebar";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Sidebar> = {
   title: "Molecules/Sidebar",

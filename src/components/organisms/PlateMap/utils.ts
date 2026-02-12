@@ -1,17 +1,22 @@
-import type { WellData, WellDataGridResult, LayerConfig } from "./types";
+import { PLATEMAP_CONSTANTS } from "./constants";
+
+import type { WellData, WellDataGridResult, LayerConfig, LegendPosition } from "./types";
+
+/** ASCII code for uppercase 'A' */
+const ASCII_UPPERCASE_A = 65;
+/** Number of letters in the alphabet */
+const ALPHABET_LENGTH = 26;
 
 /**
  * Generate row labels (A, B, C, ... for 96-well; A-P for 384-well; A-AF for 1536-well)
  * For rows beyond Z (26), uses AA, AB, AC, etc.
  */
 export function generateRowLabels(count: number): string[] {
-  return Array.from({ length: count }, (_, i) => {
-    if (i < 26) {
-      return String.fromCharCode(65 + i);
-    }
-    // For rows 26+, use AA, AB, AC, etc.
-    return "A" + String.fromCharCode(65 + (i - 26));
-  });
+  return Array.from({ length: count }, (_, i) =>
+    i < ALPHABET_LENGTH
+      ? String.fromCharCode(ASCII_UPPERCASE_A + i)
+      : "A" + String.fromCharCode(ASCII_UPPERCASE_A + (i - ALPHABET_LENGTH))
+  );
 }
 
 /**
@@ -32,18 +37,63 @@ export function parseWellId(wellId: string): { row: number; col: number } | null
   if (!match) return null;
 
   const rowStr = match[1].toUpperCase();
-  let row: number;
-
-  if (rowStr.length === 1) {
-    row = rowStr.charCodeAt(0) - 65;
-  } else {
-    // Double letter: AA=26, AB=27, ..., AF=31
-    row = 26 + (rowStr.charCodeAt(1) - 65);
-  }
+  const row =
+    rowStr.length === 1
+      ? rowStr.charCodeAt(0) - ASCII_UPPERCASE_A
+      : ALPHABET_LENGTH + (rowStr.charCodeAt(1) - ASCII_UPPERCASE_A);
 
   const col = parseInt(match[2], 10) - 1;
 
   return { row, col };
+}
+
+/** Parsed well position */
+interface ParsedWellPosition {
+  row: number;
+  col: number;
+}
+
+/**
+ * Checks if a parsed well position is within grid bounds.
+ */
+function isValidWellPosition(
+  parsed: ParsedWellPosition | null,
+  rows: number,
+  columns: number
+): parsed is ParsedWellPosition {
+  if (!parsed) return false;
+  const { row, col } = parsed;
+  // Check bounds including >= 0 to prevent negative indices (e.g., "A0" -> col=-1)
+  return row >= 0 && col >= 0 && row < rows && col < columns;
+}
+
+/**
+ * Extracts the layer value from well values for the specified layer.
+ */
+function extractLayerValue(
+  values: Record<string, string | number | null> | undefined,
+  layerId?: string
+): string | number | null {
+  if (!values) return null;
+  const effectiveLayerId = layerId ?? Object.keys(values)[0];
+  return effectiveLayerId ? values[effectiveLayerId] : null;
+}
+
+/**
+ * Stores the layer value in the appropriate grid based on its type.
+ */
+function storeLayerValue(
+  layerValue: string | number | null,
+  row: number,
+  col: number,
+  grid: (number | null)[][],
+  categories: (string | null)[][]
+): void {
+  if (typeof layerValue === "number") {
+    grid[row][col] = layerValue;
+  } else if (typeof layerValue === "string") {
+    categories[row][col] = layerValue;
+  }
 }
 
 /**
@@ -67,32 +117,23 @@ export function wellDataToGrid(
 
   for (const well of wells) {
     const parsed = parseWellId(well.wellId);
-    // Check bounds including >= 0 to prevent negative indices (e.g., "A0" -> col=-1)
-    if (parsed && parsed.row >= 0 && parsed.col >= 0 && parsed.row < rows && parsed.col < columns) {
-      const wellIdUpper = well.wellId.toUpperCase();
+    if (!isValidWellPosition(parsed, rows, columns)) continue;
 
-      // Store all values for tooltip
-      if (well.values) {
-        allValues.set(wellIdUpper, well.values);
-      }
+    const wellIdUpper = well.wellId.toUpperCase();
 
-      // Store tooltipData
-      if (well.tooltipData) {
-        tooltipData.set(wellIdUpper, well.tooltipData);
-      }
-
-      // Extract value for the specified layer (or first layer if not specified)
-      if (well.values) {
-        const effectiveLayerId = layerId ?? Object.keys(well.values)[0];
-        const layerValue = effectiveLayerId ? well.values[effectiveLayerId] : null;
-
-        if (typeof layerValue === "number") {
-          grid[parsed.row][parsed.col] = layerValue;
-        } else if (typeof layerValue === "string") {
-          categories[parsed.row][parsed.col] = layerValue;
-        }
-      }
+    // Store all values for tooltip
+    if (well.values) {
+      allValues.set(wellIdUpper, well.values);
     }
+
+    // Store tooltipData
+    if (well.tooltipData) {
+      tooltipData.set(wellIdUpper, well.tooltipData);
+    }
+
+    // Extract and store the layer value
+    const layerValue = extractLayerValue(well.values, layerId);
+    storeLayerValue(layerValue, parsed.row, parsed.col, grid, categories);
   }
 
   return { grid, categories, allValues, tooltipData };
@@ -143,7 +184,7 @@ export function extractLayerIds(data: WellData[]): string[] {
       Object.keys(well.values).forEach((k) => layerIds.add(k));
     }
   }
-  return Array.from(layerIds);
+  return [...layerIds];
 }
 
 /**
@@ -222,3 +263,304 @@ export function parseRegionWells(
   return { minRow, maxRow, minCol, maxCol };
 }
 
+/** Options for building hover text for a well */
+export interface BuildHoverTextOptions {
+  wellId: string;
+  value: number | null;
+  allValues: Record<string, number | string | null> | undefined;
+  tooltipExtra: Record<string, unknown> | undefined;
+  activeLayerId: string | undefined;
+  layerConfigMap: Map<string, LayerConfig>;
+  precision: number;
+  valueUnit: string;
+}
+
+/**
+ * Builds the hover text HTML for a single well.
+ * Shows all layer values with the active layer marked.
+ */
+export function buildWellHoverText({
+  wellId,
+  value,
+  allValues,
+  tooltipExtra,
+  activeLayerId,
+  layerConfigMap,
+  precision,
+  valueUnit,
+}: BuildHoverTextOptions): string {
+  let text = `Well ${wellId}`;
+
+  if (allValues) {
+    text += formatAllLayerValues(allValues, activeLayerId, layerConfigMap, precision);
+  } else if (value !== null) {
+    text += `<br>Value: ${value.toFixed(precision)}${valueUnit}`;
+  } else if (activeLayerId) {
+    text += `<br>▶ ${activeLayerId}: -`;
+  } else {
+    text += `<br>No data`;
+  }
+
+  if (tooltipExtra) {
+    text += formatTooltipExtra(tooltipExtra);
+  }
+
+  return text;
+}
+
+/** Formats all layer values for hover text display */
+function formatAllLayerValues(
+  allValues: Record<string, number | string | null>,
+  activeLayerId: string | undefined,
+  layerConfigMap: Map<string, LayerConfig>,
+  precision: number
+): string {
+  let result = "";
+  for (const [key, value] of Object.entries(allValues)) {
+    const isActiveLayer = key === activeLayerId;
+    const prefix = isActiveLayer ? "▶ " : "";
+    const rawLayerUnit = layerConfigMap.get(key)?.valueUnit;
+    const layerUnit = rawLayerUnit ? ` ${rawLayerUnit}` : "";
+
+    if (value === null) {
+      result += `<br>${prefix}${key}: -`;
+    } else if (typeof value === "number") {
+      result += `<br>${prefix}${key}: ${value.toFixed(precision)}${layerUnit}`;
+    } else {
+      result += `<br>${prefix}${key}: ${value.charAt(0).toUpperCase() + value.slice(1)}`;
+    }
+  }
+  return result;
+}
+
+/** Formats tooltip extra data for display */
+function formatTooltipExtra(tooltipExtra: Record<string, unknown>): string {
+  let result = "";
+  for (const [key, value] of Object.entries(tooltipExtra)) {
+    result += `<br>${key}: ${String(value)}`;
+  }
+  return result;
+}
+
+/** Colorbar configuration for a specific position */
+export interface ColorbarConfig {
+  orientation?: "h" | "v";
+  thickness: number;
+  len: number;
+  outlinewidth: number;
+  ticksuffix: string;
+  x: number;
+  xanchor: "left" | "center" | "right";
+  y: number;
+  yanchor: "top" | "middle" | "bottom";
+  title?: { text: string; side: "top" | "bottom" | "right" };
+}
+
+/**
+ * Builds the colorbar configuration based on legend position.
+ */
+export function buildColorbarConfig(
+  position: LegendPosition,
+  valueUnit: string,
+  legendTitle?: string
+): ColorbarConfig {
+  const title = legendTitle ? { text: legendTitle } : undefined;
+
+  switch (position) {
+    case "bottom":
+      return {
+        orientation: "h",
+        thickness: 20,
+        len: 0.75,
+        outlinewidth: 0,
+        ticksuffix: valueUnit,
+        y: -0.15,
+        yanchor: "top",
+        x: 0.5,
+        xanchor: "center",
+        title: title ? { ...title, side: "top" } : undefined,
+      };
+    case "top":
+      return {
+        orientation: "h",
+        thickness: 20,
+        len: 0.75,
+        outlinewidth: 0,
+        ticksuffix: valueUnit,
+        y: 1.15,
+        yanchor: "bottom",
+        x: 0.5,
+        xanchor: "center",
+        title: title ? { ...title, side: "bottom" } : undefined,
+      };
+    case "left":
+      return {
+        thickness: 28,
+        len: 1,
+        outlinewidth: 0,
+        ticksuffix: valueUnit,
+        y: 0.5,
+        yanchor: "middle",
+        x: -0.15,
+        xanchor: "right",
+        title: title ? { ...title, side: "right" } : undefined,
+      };
+    default:
+      // "right" (default)
+      return {
+        thickness: 20,
+        len: 0.9,
+        outlinewidth: 0,
+        ticksuffix: valueUnit,
+        x: 0.88,
+        xanchor: "left",
+        y: 0.5,
+        yanchor: "middle",
+        title: title ? { ...title, side: "right" } : undefined,
+      };
+  }
+}
+
+/** Margin configuration for the plot */
+export interface PlotMargins {
+  l: number;
+  r: number;
+  b: number;
+  t: number;
+  pad: number;
+}
+
+/**
+ * Builds the margin configuration based on legend position and title presence.
+ */
+export function buildPlotMargins(
+  position: LegendPosition,
+  hasTitle: boolean,
+  hasYTitle: boolean
+): PlotMargins {
+  const baseLeft = hasYTitle ? PLATEMAP_CONSTANTS.MARGIN_TOP : PLATEMAP_CONSTANTS.MARGIN_RIGHT;
+  const baseRight = PLATEMAP_CONSTANTS.MARGIN_RIGHT;
+
+  const leftMargin = position === "left" ? baseLeft + PLATEMAP_CONSTANTS.MARGIN_RIGHT : baseLeft;
+  const rightMargin = position === "right" ? baseRight + PLATEMAP_CONSTANTS.MARGIN_RIGHT : baseRight;
+  const bottomMargin = position === "bottom" ? PLATEMAP_CONSTANTS.MARGIN_LEFT : PLATEMAP_CONSTANTS.MARGIN_RIGHT;
+
+  let topMargin: number;
+  if (hasTitle) {
+    topMargin = position === "top" ? PLATEMAP_CONSTANTS.COLORBAR_LENGTH : 100;
+  } else {
+    topMargin = position === "top" ? PLATEMAP_CONSTANTS.MARGIN_TOP : PLATEMAP_CONSTANTS.MARGIN_BOTTOM;
+  }
+
+  return { l: leftMargin, r: rightMargin, b: bottomMargin, t: topMargin, pad: 5 };
+}
+
+/**
+ * Calculates the title X position based on legend position.
+ */
+export function calculateTitleX(position: LegendPosition): number {
+  switch (position) {
+    case "left":
+      return PLATEMAP_CONSTANTS.MULTI_VALUE_PRIMARY_RATIO;
+    case "right":
+      return PLATEMAP_CONSTANTS.MULTI_VALUE_SECONDARY_RATIO;
+    default:
+      return 0.5;
+  }
+}
+
+/**
+ * Calculates the X-axis domain based on legend position.
+ */
+export function calculateAxisDomain(position: LegendPosition): [number, number] {
+  switch (position) {
+    case "left":
+      return [PLATEMAP_CONSTANTS.DOMAIN_COLORBAR_OFFSET, 1];
+    case "right":
+      return [0, PLATEMAP_CONSTANTS.DOMAIN_COLORBAR_END];
+    default:
+      return [0, 1];
+  }
+}
+
+/** Data arrays for scatter plot */
+export interface ScatterPlotData {
+  xData: number[];
+  yData: string[];
+  colorData: number[];
+  textData: string[];
+}
+
+/**
+ * Flattens 2D grid data into arrays for scatter plot rendering.
+ */
+export function flattenGridData(
+  plotZ: (number | null)[][],
+  rowLabels: (string | number)[],
+  hoverText: string[][],
+  rows: number,
+  columns: number,
+  plotZMin: number
+): ScatterPlotData {
+  const xData: number[] = [];
+  const yData: string[] = [];
+  const colorData: number[] = [];
+  const textData: string[] = [];
+
+  for (let rowIdx = 0; rowIdx < rows; rowIdx++) {
+    for (let colIdx = 0; colIdx < columns; colIdx++) {
+      xData.push(colIdx + 1); // 1-indexed columns
+      yData.push(rowLabels[rowIdx] as string);
+      const zValue = plotZ[rowIdx][colIdx];
+      colorData.push(zValue ?? plotZMin); // Use min value for null wells
+      textData.push(hoverText[rowIdx][colIdx]);
+    }
+  }
+
+  return { xData, yData, colorData, textData };
+}
+
+/** Marker size calculation result */
+export interface MarkerSizeResult {
+  markerSize: number;
+}
+
+/** Minimum marker size in pixels */
+const MIN_MARKER_SIZE = 4;
+/** Size multiplier for square markers (fill entire cell) */
+const SQUARE_SIZE_MULTIPLIER = 1.0;
+/** Size multiplier for circle markers (leave gaps) */
+const CIRCLE_SIZE_MULTIPLIER = 0.8;
+/** Default colorbar space reservation */
+const COLORBAR_SPACE = 100;
+
+/**
+ * Calculates the marker size based on plot dimensions and marker shape.
+ */
+export function calculateMarkerSize(
+  width: number,
+  height: number,
+  rows: number,
+  columns: number,
+  markerShape: "circle" | "square",
+  hasTitle: boolean,
+  hasYTitle: boolean
+): number {
+  const leftMargin = hasYTitle ? PLATEMAP_CONSTANTS.MARGIN_TOP : PLATEMAP_CONSTANTS.MARGIN_RIGHT;
+  const rightMargin = COLORBAR_SPACE; // Always reserve space for colorbar
+  const topMargin = hasTitle ? COLORBAR_SPACE : PLATEMAP_CONSTANTS.MARGIN_BOTTOM;
+  const bottomMargin = PLATEMAP_CONSTANTS.MARGIN_RIGHT;
+  const plotWidth = width - leftMargin - rightMargin;
+  const plotHeight = height - topMargin - bottomMargin;
+
+  const cellWidth = plotWidth / columns;
+  const cellHeight = plotHeight / rows;
+
+  // Circles: use smaller dimension; Squares: use larger dimension
+  const cellSize = markerShape === "square"
+    ? Math.max(cellWidth, cellHeight)
+    : Math.min(cellWidth, cellHeight);
+
+  const sizeMultiplier = markerShape === "square" ? SQUARE_SIZE_MULTIPLIER : CIRCLE_SIZE_MULTIPLIER;
+  return Math.max(MIN_MARKER_SIZE, cellSize * sizeMultiplier);
+}

@@ -1,5 +1,8 @@
 import React, { useMemo } from "react";
-import { PlateMap, ColorScale, WellData } from "../PlateMap";
+
+import { PlateMap } from "../PlateMap";
+
+import type { ColorScale, WellData } from "../PlateMap";
 
 /**
  * Props for the Heatmap component
@@ -94,7 +97,7 @@ const Heatmap: React.FC<HeatmapProps> = ({
 
   // Convert 2D array to WellData format for PlateMap
   const wellData: WellData[] | undefined = useMemo(() => {
-    if (!normalizedData) return undefined;
+    if (!normalizedData) return;
 
     const defaultRows = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const wells: WellData[] = [];

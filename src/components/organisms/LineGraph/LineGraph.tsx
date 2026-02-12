@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useMemo } from "react";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useRef, useMemo } from "react";
+
 import "./LineGraph.scss";
 import { COLORS } from "../../../utils/colors";
 
@@ -241,7 +242,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
   }, [effectiveYRange]);
 
   const xTicks = useMemo(
-    () => Array.from(new Set(dataSeries.flatMap((s) => s.x))),
+    () => [...new Set(dataSeries.flatMap((s) => s.x))],
     [dataSeries],
   );
 
@@ -289,13 +290,13 @@ const LineGraph: React.FC<LineGraphProps> = ({
         width: 1.5,
       },
       marker:
-        variant !== "lines"
-          ? {
+        variant === "lines"
+          ? { opacity: 0 }
+          : {
               color: series.color,
               size: 8,
               symbol: series.symbol || "triangle-up",
-            }
-          : { opacity: 0 },
+            },
       error_y:
         variant === "lines+markers+error_bars"
           ? series.error_y || {

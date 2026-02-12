@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import { COLORS } from "./../../../utils/colors";
 import { AreaGraph } from "./AreaGraph";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof AreaGraph> = {
   title: "organisms/AreaGraph",

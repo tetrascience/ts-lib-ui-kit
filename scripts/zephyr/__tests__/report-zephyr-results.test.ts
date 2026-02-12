@@ -1,5 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import fs from 'fs';
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import {
   parseJUnitXML,
   extractTestCases,
@@ -125,18 +127,28 @@ describe('report-zephyr-results', () => {
   });
 
   describe('parseJUnitXML', () => {
-    it('should parse XML and extract test results with Zephyr IDs', () => {
+    // Test mapping for parseJUnitXML tests
+    const testMapping = {
+      'src/components/Button.stories.tsx::Button renders correctly': ['SW-T123'],
+      'src/components/Button.stories.tsx::Button click handler': ['SW-T124'],
+      'src/components/Suite.stories.tsx::Shared test': ['SW-T100', 'SW-T101'],
+      'src/components/Suite.stories.tsx::Test with ID': ['SW-T200'],
+      'src/components/RootSuite.stories.tsx::Root level test': ['SW-T300'],
+      'src/components/Suite.stories.tsx::Timed test': ['SW-T400'],
+    };
+
+    it('should parse XML and extract test results with Zephyr IDs from story mapping', () => {
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
   <testsuite name="Button Tests" tests="2">
-    <testcase name="[SW-T123] Button renders correctly" time="0.5"/>
-    <testcase name="[SW-T124] Button click handler" time="0.3">
+    <testcase classname="src/components/Button.stories.tsx" name="Button renders correctly" time="0.5"/>
+    <testcase classname="src/components/Button.stories.tsx" name="Button click handler" time="0.3">
       <failure message="Expected button to be clicked"/>
     </testcase>
   </testsuite>
 </testsuites>`;
 
-      const results = parseJUnitXML(xml);
+      const results = parseJUnitXML(xml, testMapping);
       expect(results).toHaveLength(2);
       expect(results[0].testCaseKey).toBe('SW-T123');
       expect(results[0].status).toBe('Pass');
@@ -144,28 +156,28 @@ describe('report-zephyr-results', () => {
       expect(results[1].status).toBe('Fail');
     });
 
-    it('should handle multiple Zephyr IDs in a single test name', () => {
+    it('should handle multiple Zephyr IDs in a single test from story mapping', () => {
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <testsuite name="Suite">
-  <testcase name="[SW-T100,SW-T101] Shared test" time="0.1"/>
+  <testcase classname="src/components/Suite.stories.tsx" name="Shared test" time="0.1"/>
 </testsuite>`;
 
-      const results = parseJUnitXML(xml);
+      const results = parseJUnitXML(xml, testMapping);
       expect(results).toHaveLength(2);
       expect(results[0].testCaseKey).toBe('SW-T100');
       expect(results[1].testCaseKey).toBe('SW-T101');
     });
 
-    it('should skip test cases without Zephyr IDs', () => {
+    it('should skip test cases without Zephyr IDs in story mapping', () => {
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
   <testsuite name="Suite">
-    <testcase name="Test without Zephyr ID" time="0.1"/>
-    <testcase name="[SW-T200] Test with ID" time="0.2"/>
+    <testcase classname="src/components/Suite.stories.tsx" name="Test without Zephyr ID" time="0.1"/>
+    <testcase classname="src/components/Suite.stories.tsx" name="Test with ID" time="0.2"/>
   </testsuite>
 </testsuites>`;
 
-      const results = parseJUnitXML(xml);
+      const results = parseJUnitXML(xml, testMapping);
       expect(results).toHaveLength(1);
       expect(results[0].testCaseKey).toBe('SW-T200');
     });
@@ -173,10 +185,10 @@ describe('report-zephyr-results', () => {
     it('should handle testsuite at root level (without testsuites wrapper)', () => {
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <testsuite name="RootSuite">
-  <testcase name="[SW-T300] Root level test" time="0.5"/>
+  <testcase classname="src/components/RootSuite.stories.tsx" name="Root level test" time="0.5"/>
 </testsuite>`;
 
-      const results = parseJUnitXML(xml);
+      const results = parseJUnitXML(xml, testMapping);
       expect(results).toHaveLength(1);
       expect(results[0].testCaseKey).toBe('SW-T300');
       expect(results[0].status).toBe('Pass');
@@ -188,17 +200,17 @@ describe('report-zephyr-results', () => {
   <testsuite name="EmptySuite"/>
 </testsuites>`;
 
-      const results = parseJUnitXML(xml);
+      const results = parseJUnitXML(xml, testMapping);
       expect(results).toHaveLength(0);
     });
 
     it('should calculate execution time in milliseconds', () => {
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <testsuite name="Suite">
-  <testcase name="[SW-T400] Timed test" time="1.234"/>
+  <testcase classname="src/components/Suite.stories.tsx" name="Timed test" time="1.234"/>
 </testsuite>`;
 
-      const results = parseJUnitXML(xml);
+      const results = parseJUnitXML(xml, testMapping);
       expect(results[0].executionTime).toBe(1234);
     });
   });

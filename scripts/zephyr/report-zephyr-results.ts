@@ -126,6 +126,67 @@ function findStoryFiles(dir: string): string[] {
   return storyFiles;
 }
 
+/** CSF2 export info containing optional storyName and zephyrId */
+type CSF2ExportInfo = { storyName?: string; zephyrId?: string };
+
+/** Extracts Zephyr ID from CSF2 parameters object: { zephyr: { testCaseId: "..." } } */
+function extractZephyrIdFromParametersObject(parametersExpr: Node): string | undefined {
+  if (!Node.isObjectLiteralExpression(parametersExpr)) return undefined;
+
+  const zephyrProp = parametersExpr.getProperty("zephyr");
+  if (!zephyrProp || !Node.isPropertyAssignment(zephyrProp)) return undefined;
+
+  const zephyrInit = zephyrProp.getInitializer();
+  if (!zephyrInit || !Node.isObjectLiteralExpression(zephyrInit)) return undefined;
+
+  const testCaseIdProp = zephyrInit.getProperty("testCaseId");
+  if (!testCaseIdProp || !Node.isPropertyAssignment(testCaseIdProp)) return undefined;
+
+  const testCaseIdInit = testCaseIdProp.getInitializer();
+  if (!testCaseIdInit || !Node.isStringLiteral(testCaseIdInit)) return undefined;
+
+  return testCaseIdInit.getLiteralText();
+}
+
+/** Parses CSF2 style property assignments: ExportName.storyName and ExportName.parameters */
+function parseCSF2Exports(
+  sourceFile: ReturnType<Project["createSourceFile"]>,
+  exportedNames: Set<string>,
+): Map<string, CSF2ExportInfo> {
+  const csf2Exports = new Map<string, CSF2ExportInfo>();
+
+  for (const statement of sourceFile.getStatements()) {
+    if (!Node.isExpressionStatement(statement)) continue;
+    const expr = statement.getExpression();
+    if (!Node.isBinaryExpression(expr)) continue;
+
+    const left = expr.getLeft();
+    if (!Node.isPropertyAccessExpression(left)) continue;
+
+    const objectName = left.getExpression().getText();
+    const propertyName = left.getName();
+
+    // Skip if not an exported name
+    if (!exportedNames.has(objectName)) continue;
+
+    const right = expr.getRight();
+    const entry = csf2Exports.get(objectName) || {};
+
+    if (propertyName === "storyName" && Node.isStringLiteral(right)) {
+      entry.storyName = right.getLiteralText();
+      csf2Exports.set(objectName, entry);
+    } else if (propertyName === "parameters") {
+      const zephyrId = extractZephyrIdFromParametersObject(right);
+      if (zephyrId) {
+        entry.zephyrId = zephyrId;
+        csf2Exports.set(objectName, entry);
+      }
+    }
+  }
+
+  return csf2Exports;
+}
+
 /**
  * Generates a mapping from story keys to Zephyr test case IDs
  * Story key format: "path/to/file.stories.tsx::Test Name"
@@ -147,7 +208,9 @@ export function generateZephyrMapping(): ZephyrMapping {
 
     // Find all exported variable declarations
     const exportedDeclarations = sourceFile.getExportedDeclarations();
+    const exportedNames = new Set(exportedDeclarations.keys());
 
+    // CSF3: Process typed Story declarations with inline parameters
     for (const [exportName, declarations] of exportedDeclarations) {
       // Skip default export, meta, and Template
       if (exportName === "default" || exportName === "meta" || exportName === "Template") continue;
@@ -171,6 +234,20 @@ export function generateZephyrMapping(): ZephyrMapping {
 
         // Create story key in format: "path/to/file.stories.tsx::Test Name"
         const storyKey = `${relativePath}::${testName}`;
+        mapping[storyKey] = [zephyrId];
+      }
+    }
+
+    // CSF2: Process ExportName.parameters = { zephyr: { testCaseId: "..." } } pattern
+    const csf2Exports = parseCSF2Exports(sourceFile, exportedNames);
+
+    // Add CSF2 entries to mapping
+    for (const [exportName, { storyName, zephyrId }] of csf2Exports) {
+      if (!zephyrId) continue;
+      const testName = storyName || exportNameToTestName(exportName);
+      const storyKey = `${relativePath}::${testName}`;
+      // Only add if not already in mapping (CSF3 takes precedence)
+      if (!mapping[storyKey]) {
         mapping[storyKey] = [zephyrId];
       }
     }
@@ -626,8 +703,8 @@ async function main(): Promise<void> {
 
 // Only run main when script is executed directly (not imported for testing)
 if (process.env.NODE_ENV !== "test" && process.argv[1]?.includes("report-zephyr-results")) {
-  main().catch(() => {
-    console.error("[ERROR] Fatal error occurred");
+  main().catch((error) => {
+    console.error("[ERROR] Fatal error occurred:", error);
     process.exit(1);
   });
 }

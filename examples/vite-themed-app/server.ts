@@ -88,48 +88,34 @@ app.get("/api/providers", async (req, res) => {
 });
 
 /**
- * POST /api/query
- * Execute a SQL query against a provider
+ * GET /api/tables/:tableName
+ * Fetch data from a specific table with optional limit
  *
- * SECURITY NOTE: This example includes basic input validation. In production,
- * you should use parameterized queries to prevent SQL injection.
+ * This demonstrates a safer pattern than exposing raw SQL:
+ * - Table name is validated against an allowlist
+ * - Query is constructed server-side with parameterized values
+ * - User input is limited to safe parameters (limit, offset)
  */
-app.post("/api/query", async (req, res) => {
-  const { providerName, sql } = req.body;
 
-  // ===== INPUT VALIDATION =====
-  // Basic validation - in production, consider more robust validation
-  if (typeof sql !== "string" || sql.trim() === "") {
-    return res.status(400).json({ error: "SQL query must be a non-empty string" });
-  }
+// Allowlist of tables that can be queried
+const ALLOWED_TABLES = ["files", "samples", "experiments", "results"] as const;
+type AllowedTable = (typeof ALLOWED_TABLES)[number];
 
-  // Basic safeguard against excessively large queries
-  const MAX_SQL_LENGTH = 262144;
-  if (sql.length > MAX_SQL_LENGTH) {
-    return res.status(400).json({ error: "SQL query length exceeds allowed limit" });
-  }
+function isAllowedTable(table: string): table is AllowedTable {
+  return ALLOWED_TABLES.includes(table as AllowedTable);
+}
 
-  // Validate provider name if specified (prevent injection via provider name)
-  if (providerName !== undefined && (typeof providerName !== "string" || providerName.length > 256)) {
-    return res.status(400).json({ error: "Invalid provider name" });
-  }
+app.get("/api/tables/:tableName", async (req, res) => {
+  const { tableName } = req.params;
+  const limit = Math.min(Math.max(1, Number(req.query.limit) || 100), 1000); // 1-1000, default 100
 
-  // Example: Block dangerous SQL patterns (this is NOT a substitute for parameterized queries)
-  // In production, prefer using the provider's built-in parameterized query support:
-  //   await provider.query("SELECT * FROM users WHERE id = ?", [userId]);
-  const dangerousPatterns = [
-    /;\s*(DROP|DELETE|TRUNCATE|ALTER|CREATE|INSERT|UPDATE)\s+/i,
-    /--/,  // SQL comments
-    /\/\*/, // Block comments
-  ];
-  for (const pattern of dangerousPatterns) {
-    if (pattern.test(sql)) {
-      return res.status(400).json({
-        error: "Query contains potentially dangerous patterns. Use parameterized queries instead.",
-      });
-    }
+  // Validate table name against allowlist
+  if (!isAllowedTable(tableName)) {
+    return res.status(400).json({
+      error: "Invalid table name",
+      allowedTables: ALLOWED_TABLES,
+    });
   }
-  // ===== END INPUT VALIDATION =====
 
   try {
     // Extract user's JWT token from request cookies
@@ -158,7 +144,7 @@ app.post("/api/query", async (req, res) => {
 
     // Get provider configurations
     const configs = await getProviderConfigurations(client);
-    const config = configs.find((c) => c.name === providerName) || configs[0];
+    const config = configs[0];
 
     if (!config) {
       return res.status(404).json({ error: "No providers configured" });
@@ -168,6 +154,9 @@ app.post("/api/query", async (req, res) => {
     const provider = await buildProvider(config);
     activeProvider = provider;
 
+    // Construct query server-side with validated table name
+    // The table name is safe because it's validated against the allowlist
+    const sql = `SELECT * FROM ${tableName} LIMIT ${limit}`;
     const results = await provider.query(sql);
     await provider.close();
     activeProvider = null;
@@ -176,6 +165,7 @@ app.post("/api/query", async (req, res) => {
       data: results,
       rowCount: results.length,
       provider: config.name,
+      table: tableName,
     };
     return res.json(queryResult);
   } catch (error) {

@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useMemo } from "react";
 import { COLORS } from "@utils/colors";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useRef, useMemo } from "react";
 import "./BarGraph.scss";
 
 interface BarDataSeries {
@@ -78,7 +78,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
   );
 
   const xTicks = useMemo(
-    () => Array.from(new Set(dataSeries.flatMap((s) => s.x))),
+    () => [...new Set(dataSeries.flatMap((s) => s.x))],
     [dataSeries],
   );
 

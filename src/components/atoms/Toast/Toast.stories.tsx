@@ -1,6 +1,9 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import styled from "styled-components";
-import { Toast, ToastProps } from "./Toast";
+
+import { Toast } from "./Toast";
+
+import type { ToastProps } from "./Toast";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<ToastProps> = {
   title: "Atoms/Toast",

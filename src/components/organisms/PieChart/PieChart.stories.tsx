@@ -1,6 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import { COLORS } from "../../../utils/colors";
+
 import { PieChart } from "./index";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta = {
   title: "Organisms/PieChart",

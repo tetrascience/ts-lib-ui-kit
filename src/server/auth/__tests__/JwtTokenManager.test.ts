@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
 import { JwtTokenManager } from "../JwtTokenManager";
 
 const { mockGetValues, mockInit, MockTDPClient } = vi.hoisted(() => {
@@ -38,7 +39,7 @@ describe("JwtTokenManager", () => {
     MockTDPClient.mockClear();
     mockInit.mockReset();
     mockGetValues.mockReset();
-    mockInit.mockResolvedValue(undefined);
+    mockInit.mockResolvedValue();
     mockGetValues.mockResolvedValue([]);
     process.env = { ...originalEnv };
   });

@@ -1,7 +1,8 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 
 import Dropdown from "./Dropdown";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Dropdown> = {
   title: "Atoms/Dropdown",

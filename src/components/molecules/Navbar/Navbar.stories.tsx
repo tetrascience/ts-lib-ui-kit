@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import Navbar from "./Navbar";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Navbar> = {
   title: "Molecules/Navbar",

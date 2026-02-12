@@ -1,4 +1,3 @@
-import { ReactElement } from "react";
 import Bars3BottomLeft from "@assets/icon/Bars3BottomLeft";
 import Building from "@assets/icon/Building";
 import BulkCheck from "@assets/icon/BulkCheck";
@@ -40,6 +39,8 @@ import TetraScienceIcon from "@assets/icon/TetraScienceIcon";
 import Text from "@assets/icon/Text";
 import Trash from "@assets/icon/Trash";
 import ViewfinderCircle from "@assets/icon/ViewfinderCircle";
+
+import type { ReactElement } from "react";
 
 export interface IconsProps {
   fill?: string;

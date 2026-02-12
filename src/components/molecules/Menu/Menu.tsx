@@ -1,6 +1,8 @@
+import { MenuItem } from "@atoms/MenuItem";
 import React from "react";
 import styled from "styled-components";
-import { MenuItem, MenuItemProps } from "@atoms/MenuItem";
+
+import type { MenuItemProps } from "@atoms/MenuItem";
 
 export interface MenuItemData
   extends Omit<MenuItemProps, "onClick" | "onCheckChange"> {

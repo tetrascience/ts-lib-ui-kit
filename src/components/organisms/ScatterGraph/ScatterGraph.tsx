@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useMemo } from "react";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useRef, useMemo } from "react";
+
 import "./ScatterGraph.scss";
 import { COLORS } from "../../../utils/colors";
 

@@ -1,6 +1,11 @@
-import React, { useEffect, useRef, useMemo } from "react";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useRef, useMemo } from "react";
 import "./Chromatogram.scss";
+
+/** Height offset for the plot area in pixels */
+const PLOT_HEIGHT_OFFSET = 75;
+/** Scale factor for y-axis range to add padding above max value */
+const Y_AXIS_PADDING_FACTOR = 1.05;
 
 interface PeakData {
   position: number;
@@ -129,7 +134,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
 
     const layout: Partial<Plotly.Layout> = {
       width: width,
-      height: height - 75,
+      height: height - PLOT_HEIGHT_OFFSET,
       margin: { l: 0, r: 0, b: 20, t: 10, pad: 0 },
       paper_bgcolor: "var(--white-900)",
       plot_bgcolor: "var(--white-900)",
@@ -150,7 +155,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
         zeroline: false,
         showticklabels: false,
         showline: false,
-        range: [0, maxValue * 1.05],
+        range: [0, maxValue * Y_AXIS_PADDING_FACTOR],
         fixedrange: true,
       },
     };

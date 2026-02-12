@@ -1,6 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import { COLORS } from "../../../utils/colors";
-import { LineGraph, LineDataSeries } from "./LineGraph";
+
+import { LineGraph } from "./LineGraph";
+
+import type { LineDataSeries } from "./LineGraph";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const generateBasicDemoData = (): LineDataSeries[] => {
   const x = [200, 300, 400, 500, 600, 700, 800, 900, 1000];

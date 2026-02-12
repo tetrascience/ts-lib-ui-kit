@@ -1,12 +1,15 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within, userEvent } from "storybook/test";
+
 import {
-  PlateMap,
+  PlateMap
+} from "./PlateMap";
+
+import type {
   WellData,
   LayerConfig,
   PlateRegion,
-  LegendConfig,
-} from "./PlateMap";
+  LegendConfig} from "./PlateMap";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 /** Helper to add delay between interactive test actions for smoother viewing */
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -172,7 +175,7 @@ export const Plate1536Well: Story = {
       // Row labels for 1536-well: A-Z, then AA-AF (32 rows total)
       const singleRows = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
       const doubleRows = ["AA", "AB", "AC", "AD", "AE", "AF"];
-      const allRows = [...singleRows.split(""), ...doubleRows];
+      const allRows = [...[...singleRows], ...doubleRows];
 
       for (let r = 0; r < 32; r++) {
         for (let c = 1; c <= 48; c++) {

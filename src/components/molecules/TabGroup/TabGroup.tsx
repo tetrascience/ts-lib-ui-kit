@@ -1,6 +1,8 @@
+import { Tab } from "@atoms/Tab";
 import React, { useState } from "react";
 import styled from "styled-components";
-import { Tab, TabProps, TabSize } from "@atoms/Tab";
+
+import type { TabProps, TabSize } from "@atoms/Tab";
 
 export interface TabItem extends Omit<TabProps, "active" | "onClick"> {
   id: string;

@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useEffect } from "react";
-import styled from "styled-components";
+import { Checkbox } from "@atoms/Checkbox";
 import { TableCell } from "@atoms/TableCell";
 import { TableHeaderCell } from "@atoms/TableHeaderCell";
-import { Checkbox } from "@atoms/Checkbox";
-import { DropdownOption } from "@atoms/Dropdown";
+import React, { useState, useMemo, useEffect } from "react";
+import styled from "styled-components";
+
+import type { DropdownOption } from "@atoms/Dropdown";
 
 export interface TableColumn<T = any> {
   key: string;
@@ -200,11 +201,7 @@ export function Table<T extends Record<string, any>>({
       if (aValue === bValue) return 0;
 
       let comparison = 0;
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        comparison = aValue - bValue;
-      } else {
-        comparison = String(aValue).localeCompare(String(bValue));
-      }
+      comparison = typeof aValue === "number" && typeof bValue === "number" ? aValue - bValue : String(aValue).localeCompare(String(bValue));
 
       return sortDirection === "asc" ? comparison : -comparison;
     });
@@ -275,12 +272,7 @@ export function Table<T extends Record<string, any>>({
   };
 
   const handleRowSelect = (row: T, checked: boolean) => {
-    let newSelection: T[];
-    if (checked) {
-      newSelection = [...selectedRows, row];
-    } else {
-      newSelection = selectedRows.filter((r) => r !== row);
-    }
+    const newSelection: T[] = checked ? [...selectedRows, row] : selectedRows.filter((r) => r !== row);
 
     if (isControlledSelection && onRowSelect) {
       onRowSelect(newSelection);

@@ -5,6 +5,7 @@
 
 import fs from "fs";
 import path from "path";
+
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 // ============================================================================
@@ -125,7 +126,7 @@ function getScreenshotFiles(): { filename: string; zephyrId: string }[] {
     return [];
   }
 
-  const files = fs
+  return fs
     .readdirSync(SCREENSHOT_DIR)
     .filter((f) => f.endsWith(".png"))
     .map((filename) => {
@@ -136,8 +137,6 @@ function getScreenshotFiles(): { filename: string; zephyrId: string }[] {
       return null;
     })
     .filter((f): f is { filename: string; zephyrId: string } => f !== null);
-
-  return files;
 }
 
 // ============================================================================

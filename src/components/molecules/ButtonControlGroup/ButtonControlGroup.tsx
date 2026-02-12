@@ -1,6 +1,8 @@
+import { ButtonControl } from "@atoms/ButtonControl";
 import React from "react";
 import styled from "styled-components";
-import { ButtonControl, ButtonControlProps } from "@atoms/ButtonControl";
+
+import type { ButtonControlProps } from "@atoms/ButtonControl";
 
 export interface ButtonControlItem extends ButtonControlProps {
   id: string;

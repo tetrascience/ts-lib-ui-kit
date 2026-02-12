@@ -1,5 +1,7 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import LaunchContent from "./LaunchContent";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
+
 
 const meta: Meta<typeof LaunchContent> = {
   title: "Molecules/LaunchContent",

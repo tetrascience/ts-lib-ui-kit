@@ -1,5 +1,7 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import Tab from "./Tab";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
+
 
 const meta: Meta<typeof Tab> = {
   title: "Atoms/Tab",

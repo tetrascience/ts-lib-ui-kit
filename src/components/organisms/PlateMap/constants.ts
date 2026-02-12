@@ -61,3 +61,37 @@ export const COLORS = {
   emptyWell: "#f0f0f0",
 } as const;
 
+/**
+ * Numeric constants for PlateMap calculations and layout
+ */
+export const PLATEMAP_CONSTANTS = {
+  /** Maximum random data value for demonstration */
+  MAX_RANDOM_VALUE: 50000,
+  /** Sentinel value ratio for empty wells below data range */
+  SENTINEL_RATIO: 0.01,
+  /** Color scale data start ratio for extended scales */
+  COLOR_SCALE_THRESHOLD: 0.99,
+  /** Small epsilon for color scale band calculations */
+  COLOR_SCALE_EPSILON: 0.001,
+  /** Proportions for multi-value well display */
+  MULTI_VALUE_PRIMARY_RATIO: 0.575,
+  MULTI_VALUE_SECONDARY_RATIO: 0.425,
+  /** Font sizes */
+  FONT_SIZE_LARGE: 11,
+  /** Offset for centering labels */
+  LABEL_CENTER_OFFSET: -0.5,
+  /** Opacity values */
+  HOVER_OPACITY_FAINT: 0.15,
+  HOVER_OPACITY_VISIBLE: 0.85,
+  /** Layout margins */
+  MARGIN_TOP: 70,
+  MARGIN_RIGHT: 50,
+  MARGIN_BOTTOM: 40,
+  MARGIN_LEFT: 80,
+  /** Colorbar dimensions */
+  COLORBAR_LENGTH: 130,
+  COLORBAR_X_OFFSET: 70,
+  /** Domain position constants for legend placement */
+  DOMAIN_COLORBAR_OFFSET: 0.15,
+  DOMAIN_COLORBAR_END: 0.85,
+} as const;

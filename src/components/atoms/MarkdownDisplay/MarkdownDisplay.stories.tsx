@@ -1,6 +1,7 @@
+import MarkdownDisplay from "./MarkdownDisplay";
+
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import MarkdownDisplay from "./MarkdownDisplay";
 
 const meta: Meta<typeof MarkdownDisplay> = {
   title: "Atoms/MarkdownDisplay",

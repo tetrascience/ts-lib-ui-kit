@@ -1,5 +1,5 @@
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
+import styled from "styled-components";
 
 const AppContainer = styled.div`
   display: flex;

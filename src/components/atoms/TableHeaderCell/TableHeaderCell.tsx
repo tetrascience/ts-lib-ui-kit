@@ -1,6 +1,8 @@
+import { Dropdown } from "@atoms/Dropdown";
 import React, { forwardRef } from "react";
 import styled from "styled-components";
-import { Dropdown, DropdownOption } from "@atoms/Dropdown";
+
+import type { DropdownOption } from "@atoms/Dropdown";
 
 export interface TableHeaderCellProps
   extends React.ThHTMLAttributes<HTMLTableCellElement> {

@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
 import { Toggle } from "@atoms/Toggle";
+import React, { useState } from "react";
+import styled from "styled-components";
 
 export interface ProtocolConfigurationProps {
   className?: string;
@@ -99,13 +99,7 @@ const ProtocolConfiguration: React.FC<ProtocolConfigurationProps> = ({
           <ConfigurationTitle>Configuration</ConfigurationTitle>
         </ConfigurationHeader>
         <ConfigurationContent>
-          {!isEditMode ? (
-            <EmptyStateContainer>
-              <EmptyStateText>
-                No values, Use the 'edit' button to add values
-              </EmptyStateText>
-            </EmptyStateContainer>
-          ) : (
+          {isEditMode ? (
             <Button
               variant="secondary"
               size="medium"
@@ -120,6 +114,12 @@ const ProtocolConfiguration: React.FC<ProtocolConfigurationProps> = ({
             >
               Add Input
             </Button>
+          ) : (
+            <EmptyStateContainer>
+              <EmptyStateText>
+                No values, Use the 'edit' button to add values
+              </EmptyStateText>
+            </EmptyStateContainer>
           )}
         </ConfigurationContent>
       </ConfigurationContainer>

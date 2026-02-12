@@ -1,7 +1,9 @@
+import { Toast } from "@atoms/Toast";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
-import { Toast, ToastProps, ToastType } from "@atoms/Toast";
+
+import type { ToastProps, ToastType } from "@atoms/Toast";
 
 declare module "styled-components" {
   interface DefaultTheme {

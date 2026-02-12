@@ -1,6 +1,6 @@
+import { Checkbox } from "@atoms/Checkbox";
 import { forwardRef } from "react";
 import styled from "styled-components";
-import { Checkbox } from "@atoms/Checkbox";
 
 export interface MenuItemProps {
   label: string;

@@ -1,7 +1,10 @@
-import React, { useEffect, useRef, useMemo } from "react";
 import { COLORS } from "@utils/colors";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useRef, useMemo } from "react";
 import "./Boxplot.scss";
+
+/** Default point position offset from the box edge */
+const DEFAULT_POINT_POSITION = -1.8;
 
 interface BoxDataSeries {
   y: number[];
@@ -134,7 +137,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
       fillcolor: series.color + "40", // Add transparency
       boxpoints: showPoints ? series.boxpoints || "outliers" : (false as const),
       jitter: series.jitter || 0.3,
-      pointpos: series.pointpos || -1.8,
+      pointpos: series.pointpos || DEFAULT_POINT_POSITION,
     }));
 
     const layout = {

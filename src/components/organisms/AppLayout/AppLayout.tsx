@@ -1,9 +1,9 @@
-import React, { useState } from "react";
 import "./AppLayout.scss";
 import { IconName } from "@atoms/Icon";
 import { AppHeader } from "@molecules/AppHeader";
 import { Navbar } from "@molecules/Navbar";
 import { Sidebar } from "@molecules/Sidebar";
+import React, { useState } from "react";
 
 interface AppLayoutProps {
   userProfile: {

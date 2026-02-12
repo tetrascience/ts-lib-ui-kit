@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Meta, StoryObj } from "@storybook/react-vite";
+
 import ButtonControlGroup from "./ButtonControlGroup";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof ButtonControlGroup> = {
   title: "Molecules/ButtonControlGroup",

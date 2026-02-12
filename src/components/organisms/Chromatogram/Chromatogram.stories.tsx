@@ -1,5 +1,7 @@
-import { Meta, StoryObj } from "@storybook/react-vite";
 import { Chromatogram } from "./Chromatogram";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
+
 
 const meta: Meta<typeof Chromatogram> = {
   title: "Organisms/Chromatogram",

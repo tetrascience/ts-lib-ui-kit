@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import { CodeScriptEditorButton } from "./CodeScriptEditorButton";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof CodeScriptEditorButton> = {
   title: "Molecules/CodeScriptEditorButton",

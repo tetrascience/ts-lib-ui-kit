@@ -1,5 +1,5 @@
-import { defineWorkspace } from "vitest/config";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
+import { defineWorkspace } from "vitest/config";
 
 export default defineWorkspace([
   // Unit tests - use the vitest.config.ts

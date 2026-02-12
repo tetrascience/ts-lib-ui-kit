@@ -1,8 +1,7 @@
+import { Icon , IconName } from "@atoms/Icon";
+import { Tooltip } from "@atoms/Tooltip";
 import React from "react";
 import styled from "styled-components";
-import { Icon } from "@atoms/Icon";
-import { IconName } from "@atoms/Icon";
-import { Tooltip } from "@atoms/Tooltip";
 
 export interface LabelProps {
   children: React.ReactNode;

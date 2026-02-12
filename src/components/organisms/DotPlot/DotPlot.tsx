@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useMemo } from "react";
 import { COLORS } from "@utils/colors";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useRef, useMemo } from "react";
 import "./DotPlot.scss";
 
 type MarkerSymbol =

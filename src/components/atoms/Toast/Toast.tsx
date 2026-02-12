@@ -1,6 +1,8 @@
-import React, { ReactNode } from "react";
-import styled from "styled-components";
 import { Icon, IconName } from "@atoms/Icon";
+import React from "react";
+import styled from "styled-components";
+
+import type { ReactNode } from "react";
 
 export type ToastType = "info" | "success" | "warning" | "danger" | "default";
 

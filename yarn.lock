@@ -4705,8 +4705,18 @@ __metadata:
     vite: "npm:^5.4.1"
     vitest: "npm:^3"
   peerDependencies:
+    "@aws-sdk/client-athena": ^3.0.0
+    "@databricks/sql": ^1.0.0
     react: ^18.3.0
     react-dom: ^18.3.0
+    snowflake-sdk: ^2.0.0
+  peerDependenciesMeta:
+    "@aws-sdk/client-athena":
+      optional: true
+    "@databricks/sql":
+      optional: true
+    snowflake-sdk:
+      optional: true
   languageName: unknown
   linkType: soft
 

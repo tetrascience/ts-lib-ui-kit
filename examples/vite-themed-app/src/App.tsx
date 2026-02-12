@@ -15,7 +15,11 @@ interface QueryResult {
   mock?: boolean;
   message?: string;
   provider?: string;
+  table?: string;
 }
+
+// Allowlist of tables that can be queried (must match server)
+const ALLOWED_TABLES = ['files', 'samples', 'experiments', 'results'] as const;
 
 // Color palette - easy to identify and change
 const COLORS = {
@@ -69,6 +73,7 @@ function App() {
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTable, setSelectedTable] = useState<string>(ALLOWED_TABLES[0]);
 
   // Fetch providers on mount
   useEffect(() => {
@@ -78,19 +83,12 @@ function App() {
       .catch((err) => console.error('Failed to fetch providers:', err));
   }, []);
 
-  // Execute a sample query
-  const runSampleQuery = async () => {
+  // Fetch data from a table
+  const fetchTableData = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/query', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          providerName: providers[0]?.name,
-          sql: 'SELECT * FROM sample_table LIMIT 10',
-        }),
-      });
+      const res = await fetch(`/api/tables/${selectedTable}?limit=10`);
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Query failed');
@@ -98,7 +96,7 @@ function App() {
         setQueryResult(data);
       }
     } catch (err) {
-      setError('Failed to execute query');
+      setError('Failed to fetch table data');
     } finally {
       setIsLoading(false);
     }
@@ -237,15 +235,36 @@ function App() {
             )}
           </div>
 
-          {/* Query Button */}
-          <Button
-            variant="primary"
-            size="medium"
-            onClick={runSampleQuery}
-            disabled={isLoading || providers.length === 0}
-          >
-            {isLoading ? 'Running Query...' : 'Run Sample Query'}
-          </Button>
+          {/* Table Selector and Fetch Button */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
+            <label style={{ fontWeight: '500', color: '#374151' }}>Table:</label>
+            <select
+              value={selectedTable}
+              onChange={(e) => setSelectedTable(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #D1D5DB',
+                backgroundColor: '#FFFFFF',
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
+            >
+              {ALLOWED_TABLES.map((table) => (
+                <option key={table} value={table}>
+                  {table}
+                </option>
+              ))}
+            </select>
+            <Button
+              variant="primary"
+              size="medium"
+              onClick={fetchTableData}
+              disabled={isLoading || providers.length === 0}
+            >
+              {isLoading ? 'Fetching...' : 'Fetch Data'}
+            </Button>
+          </div>
 
           {/* Error Display */}
           {error && (

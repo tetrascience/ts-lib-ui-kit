@@ -13,13 +13,13 @@ import {
   validateSeriesData,
   applyBaselineCorrection,
   buildHoverExtraContent,
+  collectPeaksWithBoundaryData,
 } from "./dataProcessing";
 import { detectPeaks } from "./peakDetection";
 
 import type {
   ChromatogramSeries,
   PeakAnnotation,
-  DetectedPeak,
   BaselineCorrectionMethod,
   BoundaryMarkerStyle,
   PeakDetectionOptions,
@@ -28,11 +28,10 @@ import type {
 } from "./types";
 import "./ChromatogramChart.scss";
 
-// Re-export types for backwards compatibility
+// Re-export types for external use
 export type {
   ChromatogramSeries,
   PeakAnnotation,
-  DetectedPeak,
   BaselineCorrectionMethod,
   BoundaryMarkerStyle,
   PeakDetectionOptions,
@@ -59,17 +58,12 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   baselineCorrection = "none",
   baselineWindowSize = 50,
   peakDetectionOptions,
-  onPeaksDetected,
   showExportButton = true,
 }) => {
   // Derive peak detection state from options
   const enablePeakDetection = peakDetectionOptions !== undefined;
   const showPeakAreas = peakDetectionOptions?.showAreas ?? false;
   const plotRef = useRef<HTMLDivElement>(null);
-
-  // Use ref pattern to stabilize callback - prevents re-renders when callback reference changes
-  const onPeaksDetectedRef = useRef(onPeaksDetected);
-  onPeaksDetectedRef.current = onPeaksDetected;
 
   // Memoize processed series with baseline correction
   const processedSeries = useMemo(() => {
@@ -85,7 +79,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
 
   // Memoize peak detection results
   const allDetectedPeaks = useMemo(() => {
-    const peaks: { peaks: DetectedPeak[]; seriesIndex: number }[] = [];
+    const peaks: { peaks: PeakAnnotation[]; seriesIndex: number }[] = [];
     if (enablePeakDetection && peakDetectionOptions) {
       processedSeries.forEach((s, index) => {
         const detected = detectPeaks(s.x, s.y, peakDetectionOptions);
@@ -96,15 +90,6 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     }
     return peaks;
   }, [processedSeries, enablePeakDetection, peakDetectionOptions]);
-
-  // Call onPeaksDetected callback when peaks change
-  useEffect(() => {
-    if (enablePeakDetection) {
-      allDetectedPeaks.forEach(({ peaks, seriesIndex }) => {
-        onPeaksDetectedRef.current?.(peaks, seriesIndex);
-      });
-    }
-  }, [allDetectedPeaks, enablePeakDetection]);
 
   useEffect(() => {
     const currentRef = plotRef.current;
@@ -138,15 +123,12 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
 
     // Add peak boundary markers if enabled
     const boundaryMarkerStyle = peakDetectionOptions?.boundaryMarkers ?? "none";
-    if (boundaryMarkerStyle !== "none" && allDetectedPeaks.length > 0) {
-      const peaksWithData = allDetectedPeaks.map(({ peaks, seriesIndex }) => ({
-        peaks,
-        seriesIndex,
-        x: processedSeries[seriesIndex].x,
-        y: processedSeries[seriesIndex].y,
-      }));
-      const boundaryTraces = createBoundaryMarkerTraces(peaksWithData, boundaryMarkerStyle);
-      plotData.push(...boundaryTraces);
+    if (boundaryMarkerStyle !== "none") {
+      const peaksWithData = collectPeaksWithBoundaryData(allDetectedPeaks, annotations, processedSeries);
+      if (peaksWithData.length > 0) {
+        const boundaryTraces = createBoundaryMarkerTraces(peaksWithData, boundaryMarkerStyle);
+        plotData.push(...boundaryTraces);
+      }
     }
 
     // Build Plotly annotations from peak annotations

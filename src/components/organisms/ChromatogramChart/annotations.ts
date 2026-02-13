@@ -4,7 +4,7 @@
 
 import { COLORS, CHART_COLORS } from "../../../utils/colors";
 
-import type { DetectedPeak, PeakWithMeta } from "./types";
+import type { PeakAnnotation, PeakWithMeta } from "./types";
 import type Plotly from "plotly.js-dist";
 
 /**
@@ -23,15 +23,13 @@ export const ANNOTATION_SLOTS = {
 };
 
 /**
- * Group overlapping peaks by retention time proximity
+ * Group overlapping peaks by retention time (x) proximity
  */
 export function groupOverlappingPeaks(
   peaksWithMeta: PeakWithMeta[],
   overlapThreshold: number
 ): PeakWithMeta[][] {
-  const sorted = [...peaksWithMeta].sort(
-    (a, b) => a.peak.retentionTime - b.peak.retentionTime
-  );
+  const sorted = [...peaksWithMeta].sort((a, b) => a.peak.x - b.peak.x);
 
   const groups: PeakWithMeta[][] = [];
   let currentGroup: PeakWithMeta[] = [];
@@ -43,9 +41,7 @@ export function groupOverlappingPeaks(
     }
 
     const lastInGroup = currentGroup[currentGroup.length - 1];
-    const timeDiff = Math.abs(
-      current.peak.retentionTime - lastInGroup.peak.retentionTime
-    );
+    const timeDiff = Math.abs(current.peak.x - lastInGroup.peak.x);
 
     if (timeDiff < overlapThreshold) {
       currentGroup.push(current);
@@ -66,15 +62,17 @@ export function groupOverlappingPeaks(
  * Create a Plotly annotation for a peak
  */
 export function createPeakAnnotation(
-  peak: DetectedPeak,
+  peak: PeakAnnotation,
   seriesIndex: number,
   slot: { ax: number; ay: number }
 ): Partial<Plotly.Annotations> {
   const color = CHART_COLORS[seriesIndex % CHART_COLORS.length];
+  // Use provided text or auto-generate from area
+  const text = peak.text ?? (peak.area === undefined ? "" : `Area: ${peak.area.toFixed(2)}`);
   return {
-    x: peak.retentionTime,
-    y: peak.intensity,
-    text: `Area: ${peak.area.toFixed(2)}`,
+    x: peak.x,
+    y: peak.y,
+    text,
     showarrow: true,
     arrowhead: 2,
     arrowsize: 1,
@@ -105,10 +103,8 @@ export function createGroupAnnotations(
     return [createPeakAnnotation(peak, seriesIndex, ANNOTATION_SLOTS.default)];
   }
 
-  // Sort by intensity (lowest first) so lower peaks get closer annotations
-  const sortedGroup = [...group].sort(
-    (a, b) => a.peak.intensity - b.peak.intensity
-  );
+  // Sort by intensity (y, lowest first) so lower peaks get closer annotations
+  const sortedGroup = [...group].sort((a, b) => a.peak.y - b.peak.y);
 
   return sortedGroup.map(({ peak, seriesIndex }, slotIndex) => {
     const slot =

@@ -2,7 +2,7 @@
  * Peak detection algorithms for ChromatogramChart
  */
 
-import type { DetectedPeak, PeakDetectionOptions } from "./types";
+import type { PeakAnnotation, PeakDetectionOptions } from "./types";
 
 /**
  * Calculate prominence of a peak (how much it stands out from neighbors)
@@ -117,27 +117,27 @@ export function calculateWidthAtHalfMax(
  * Filter peaks by minimum distance, keeping more intense peaks
  */
 export function filterPeaksByDistance(
-  peaks: DetectedPeak[],
+  peaks: PeakAnnotation[],
   minDistance: number
-): DetectedPeak[] {
-  const filtered: DetectedPeak[] = [];
+): PeakAnnotation[] {
+  const filtered: PeakAnnotation[] = [];
 
   for (const peak of peaks) {
     const tooClose = filtered.some(
-      (p) => Math.abs(p.index - peak.index) < minDistance
+      (p) => Math.abs((p.index ?? 0) - (peak.index ?? 0)) < minDistance
     );
     if (!tooClose) {
       filtered.push(peak);
     } else if (
       filtered.length > 0 &&
-      peak.intensity > filtered[filtered.length - 1].intensity
+      peak.y > filtered[filtered.length - 1].y
     ) {
       filtered.pop();
       filtered.push(peak);
     }
   }
 
-  return filtered.sort((a, b) => a.retentionTime - b.retentionTime);
+  return filtered.sort((a, b) => a.x - b.x);
 }
 
 /**
@@ -152,7 +152,7 @@ export function detectPeaks(
   x: number[],
   y: number[],
   options: PeakDetectionOptions = {}
-): DetectedPeak[] {
+): PeakAnnotation[] {
   const {
     minHeight = 0.05,
     minDistance = 5,
@@ -167,7 +167,7 @@ export function detectPeaks(
   const prominenceThreshold = relativeThreshold ? prominence * maxY : prominence;
   const searchWindow = minDistance * 3;
 
-  const peaks: DetectedPeak[] = [];
+  const peaks: PeakAnnotation[] = [];
 
   // Find local maxima
   for (let i = 1; i < y.length - 1; i++) {
@@ -189,10 +189,10 @@ export function detectPeaks(
     );
 
     peaks.push({
-      index: i,
-      retentionTime: x[i],
-      intensity: y[i],
+      x: x[i],
+      y: y[i],
       area,
+      index: i,
       startIndex,
       endIndex,
       widthAtHalfMax,

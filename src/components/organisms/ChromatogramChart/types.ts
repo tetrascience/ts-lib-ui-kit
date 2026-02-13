@@ -19,39 +19,30 @@ export interface ChromatogramSeries {
 }
 
 /**
- * Peak annotation for labeling compounds
+ * Peak annotation for labeling peaks on the chromatogram.
+ * Used for both user-provided annotations and auto-detected peaks.
  */
 export interface PeakAnnotation {
-  /** Retention time of the peak */
+  /** Retention time of the peak (x-axis position) */
   x: number;
-  /** Signal intensity at peak */
+  /** Signal intensity at peak (y-axis position) */
   y: number;
-  /** Label text (e.g., compound name) */
-  text: string;
+  /** Label text (e.g., compound name). If not provided, auto-generated from area. */
+  text?: string;
   /** Vertical arrow offset in pixels (negative = above peak, default: -30) */
   ay?: number;
   /** Horizontal arrow offset in pixels (default: 0) */
   ax?: number;
-}
-
-/**
- * Detected peak with integration data
- */
-export interface DetectedPeak {
+  /** Peak area - used to auto-generate text label if text is not provided */
+  area?: number;
   /** Peak index in the data array */
-  index: number;
-  /** Retention time at peak apex */
-  retentionTime: number;
-  /** Signal intensity at peak apex */
-  intensity: number;
-  /** Peak area (integrated) */
-  area: number;
-  /** Start index of peak */
-  startIndex: number;
-  /** End index of peak */
-  endIndex: number;
+  index?: number;
+  /** Start index of peak boundary (for boundary markers) */
+  startIndex?: number;
+  /** End index of peak boundary (for boundary markers) */
+  endIndex?: number;
   /** Peak width at half maximum */
-  widthAtHalfMax: number;
+  widthAtHalfMax?: number;
 }
 
 /**
@@ -134,18 +125,14 @@ export interface ChromatogramChartProps {
   baselineWindowSize?: number;
   /** Peak detection options - if provided, enables automatic peak detection */
   peakDetectionOptions?: PeakDetectionOptions;
-  /**
-   * Callback when peaks are detected.
-   * This callback is internally stabilized using a ref pattern, so you don't need
-   * to memoize it - the chart won't re-render when the callback reference changes.
-   */
-  onPeaksDetected?: (peaks: DetectedPeak[], seriesIndex: number) => void;
   /** Show export button in modebar (default: true) */
   showExportButton?: boolean;
 }
 
 /**
- * Metadata for a peak with its series index
+ * Metadata for a peak annotation with its series index.
  */
-export type PeakWithMeta = { peak: DetectedPeak; seriesIndex: number };
-
+export type PeakWithMeta = {
+  peak: PeakAnnotation;
+  seriesIndex: number;
+};

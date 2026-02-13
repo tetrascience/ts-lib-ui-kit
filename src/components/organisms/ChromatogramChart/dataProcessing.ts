@@ -2,7 +2,54 @@
  * Data processing utilities for ChromatogramChart
  */
 
-import type { BaselineCorrectionMethod } from "./types";
+import type { BaselineCorrectionMethod, PeakAnnotation } from "./types";
+
+/**
+ * Data structure for peaks with their associated series data
+ */
+export type PeakDataWithSeries = {
+  peaks: PeakAnnotation[];
+  seriesIndex: number;
+  x: number[];
+  y: number[];
+};
+
+/**
+ * Collect peaks with boundary information from both auto-detected peaks and user-provided annotations.
+ * User-provided annotations with startIndex and endIndex are included for boundary marker rendering.
+ */
+export function collectPeaksWithBoundaryData(
+  allDetectedPeaks: { peaks: PeakAnnotation[]; seriesIndex: number }[],
+  annotations: PeakAnnotation[],
+  processedSeries: { x: number[]; y: number[] }[]
+): PeakDataWithSeries[] {
+  const peaksWithData: PeakDataWithSeries[] = [];
+
+  // Add auto-detected peaks
+  allDetectedPeaks.forEach(({ peaks, seriesIndex }) => {
+    peaksWithData.push({
+      peaks,
+      seriesIndex,
+      x: processedSeries[seriesIndex].x,
+      y: processedSeries[seriesIndex].y,
+    });
+  });
+
+  // Add user-provided annotations that have boundary info (startIndex and endIndex)
+  const annotationsWithBoundaries = annotations.filter(
+    (ann) => ann.startIndex !== undefined && ann.endIndex !== undefined
+  );
+  if (annotationsWithBoundaries.length > 0 && processedSeries.length > 0) {
+    peaksWithData.push({
+      peaks: annotationsWithBoundaries,
+      seriesIndex: 0, // User annotations apply to first series by default
+      x: processedSeries[0].x,
+      y: processedSeries[0].y,
+    });
+  }
+
+  return peaksWithData;
+}
 
 /**
  * Build the extra content for Plotly hovertemplate from series metadata.

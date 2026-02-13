@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import {
   ChromatogramChart,
   type ChromatogramSeries,
@@ -68,11 +70,46 @@ const multiInjectionData: ChromatogramSeries[] = [
   },
 ];
 
-// Peak annotations for compound identification
+// Peak annotations for compound identification (simple labels without boundaries)
 const sampleAnnotations: PeakAnnotation[] = [
   { x: 5.8, y: 420, text: "Caffeine", ay: -40 },
   { x: 12.5, y: 180, text: "Theobromine", ay: -55 },
   { x: 18.3, y: 350, text: "Theophylline", ay: -80 },
+];
+
+// User-defined peaks with boundary information for boundary markers
+// Index calculation: index = rt / 0.05 (since x values are 0 to 30 with 0.05 step)
+const userDefinedPeaksWithBoundaries: PeakAnnotation[] = [
+  {
+    x: 5.8,
+    y: 420,
+    text: "Caffeine",
+    ay: -40,
+    index: 116, // 5.8 / 0.05
+    startIndex: 100, // ~5.0 min
+    endIndex: 132, // ~6.6 min
+    area: 168.5,
+  },
+  {
+    x: 12.5,
+    y: 180,
+    text: "Theobromine",
+    ay: -55,
+    index: 250, // 12.5 / 0.05
+    startIndex: 230, // ~11.5 min
+    endIndex: 270, // ~13.5 min
+    area: 90.2,
+  },
+  {
+    x: 18.3,
+    y: 350,
+    text: "Theophylline",
+    ay: -80,
+    index: 366, // 18.3 / 0.05
+    startIndex: 346, // ~17.3 min
+    endIndex: 386, // ~19.3 min
+    area: 157.8,
+  },
 ];
 
 const meta: Meta<typeof ChromatogramChart> = {
@@ -95,6 +132,24 @@ export const SingleTrace: Story = {
     series: [{ ...singleInjectionData, name: "Sample A" }],
     title: "HPLC Chromatogram - Single Injection",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("HPLC Chromatogram - Single Injection");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+
+    await step("Trace is rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+  },
   parameters: {
     docs: {
       description: {
@@ -112,6 +167,30 @@ export const MultipleTraces: Story = {
     series: multiInjectionData,
     title: "HPLC Chromatogram - Injection Overlay",
     showCrosshairs: true,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("HPLC Chromatogram - Injection Overlay");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+
+    await step("Multiple traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(3);
+    });
+
+    await step("Legend shows all series names", async () => {
+      expect(canvas.getByText("Injection 1")).toBeInTheDocument();
+      expect(canvas.getByText("Injection 2")).toBeInTheDocument();
+      expect(canvas.getByText("Injection 3")).toBeInTheDocument();
+    });
   },
   parameters: {
     docs: {
@@ -166,6 +245,29 @@ export const WithMetadata: Story = {
     title: "Chromatogram with Injection Metadata",
     showCrosshairs: true,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("Chromatogram with Injection Metadata");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+
+    await step("Both traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(2);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Sample A - UV 254nm")).toBeInTheDocument();
+      expect(canvas.getByText("Sample B - UV 254nm")).toBeInTheDocument();
+    });
+  },
   parameters: {
     docs: {
       description: {
@@ -188,14 +290,30 @@ export const PeakDetection: Story = {
       minDistance: 20,
       showAreas: true,
     },
-    onPeaksDetected: (peaks, seriesIndex) => {
-      console.log(`Detected ${peaks.length} peaks in series ${seriesIndex}:`, peaks);
-    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("Automatic Peak Detection");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+
+    await step("Peak area annotations are displayed", async () => {
+      // Peak areas are displayed as annotations with "Area:" text
+      const annotations = canvasElement.querySelectorAll(".annotation-text");
+      expect(annotations.length).toBeGreaterThan(0);
+    });
   },
   parameters: {
     docs: {
       description: {
-        story: "Automatic peak detection identifies peaks based on height, prominence, and minimum distance. Peak areas are calculated using trapezoidal integration. Use onPeaksDetected callback to receive peak data.",
+        story: "Automatic peak detection identifies peaks based on height, prominence, and minimum distance. Peak areas are calculated using trapezoidal integration.",
       },
     },
   },
@@ -218,6 +336,35 @@ export const FullFeatured: Story = {
       prominence: 0.1,
       showAreas: true,
     },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("Full Featured Chromatogram");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+
+    await step("Multiple traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBeGreaterThanOrEqual(3);
+    });
+
+    await step("User annotations are displayed", async () => {
+      expect(canvas.getByText("Caffeine")).toBeInTheDocument();
+      expect(canvas.getByText("Theobromine")).toBeInTheDocument();
+      expect(canvas.getByText("Theophylline")).toBeInTheDocument();
+    });
+
+    await step("Peak area annotations are displayed", async () => {
+      const annotations = canvasElement.querySelectorAll(".annotation-text");
+      expect(annotations.length).toBeGreaterThan(3); // User annotations + peak areas
+    });
   },
   parameters: {
     docs: {
@@ -243,14 +390,153 @@ export const WithBoundaryMarkers: Story = {
       showAreas: true,
       boundaryMarkers: "auto",
     },
-    onPeaksDetected: (peaks, seriesIndex) => {
-      console.log(`Detected ${peaks.length} peaks in series ${seriesIndex}:`, peaks);
-    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("Peak Boundary Markers");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+
+    await step("Boundary marker traces are rendered", async () => {
+      // Boundary markers add additional scatter traces for the markers
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBeGreaterThan(1); // Main trace + boundary marker traces
+    });
+
+    await step("Peak area annotations are displayed", async () => {
+      const annotations = canvasElement.querySelectorAll(".annotation-text");
+      expect(annotations.length).toBeGreaterThan(0);
+    });
   },
   parameters: {
     docs: {
       description: {
         story: "Peak boundary markers visually indicate peak start and end points. Use 'auto' to automatically choose triangle markers (▲) for isolated boundaries at baseline or diamond markers (◆) with vertical lines for overlapping peaks. Set to 'triangle' or 'diamond' to force a specific marker style.",
+      },
+    },
+  },
+};
+
+/**
+ * User-defined peaks with boundary information. Users can provide their own peak
+ * annotations with startIndex and endIndex to display boundary markers without
+ * using automatic peak detection.
+ */
+export const UserDefinedPeakBoundaries: Story = {
+  args: {
+    series: [{ ...singleInjectionData, name: "Sample A" }],
+    title: "User-Defined Peak Boundaries",
+    annotations: userDefinedPeaksWithBoundaries,
+    peakDetectionOptions: {
+      boundaryMarkers: "triangle",
+    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("User-Defined Peak Boundaries");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+
+    await step("User-defined peak annotations are displayed", async () => {
+      expect(canvas.getByText("Caffeine")).toBeInTheDocument();
+      expect(canvas.getByText("Theobromine")).toBeInTheDocument();
+      expect(canvas.getByText("Theophylline")).toBeInTheDocument();
+    });
+
+    await step("Boundary marker traces are rendered for user-defined peaks", async () => {
+      // With boundary markers enabled, additional traces should be rendered
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBeGreaterThan(1);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Users can provide their own peak annotations with boundary information (startIndex, endIndex) to display boundary markers. This is useful when peak boundaries are known from external analysis or when manual peak integration is required. The annotations array accepts PeakAnnotation objects with optional index, startIndex, endIndex, and area fields.",
+      },
+    },
+  },
+};
+
+/**
+ * Combining automatic peak detection with user-defined annotations. Auto-detected peaks
+ * show computed areas while user annotations provide custom labels. Both can have
+ * boundary markers displayed.
+ */
+export const CombinedAutoAndUserPeaks: Story = {
+  args: {
+    series: [{ ...singleInjectionData, name: "Sample A" }],
+    title: "Combined Auto-Detected and User-Defined Peaks",
+    annotations: [
+      // User-defined annotation with boundaries (will show boundary markers)
+      {
+        x: 5.8,
+        y: 420,
+        text: "Caffeine (user-defined)",
+        ay: -40,
+        index: 116,
+        startIndex: 100,
+        endIndex: 132,
+        area: 168.5,
+      },
+      // Simple user annotation without boundaries (just a label)
+      { x: 24.1, y: 220, text: "Unknown Peak", ay: -60 },
+    ],
+    peakDetectionOptions: {
+      minHeight: 0.1,
+      prominence: 0.05,
+      showAreas: true,
+      boundaryMarkers: "auto",
+    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      const title = canvas.getByText("Combined Auto-Detected and User-Defined Peaks");
+      expect(title).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+
+    await step("User-defined annotations are displayed", async () => {
+      expect(canvas.getByText("Caffeine (user-defined)")).toBeInTheDocument();
+      expect(canvas.getByText("Unknown Peak")).toBeInTheDocument();
+    });
+
+    await step("Auto-detected peak area annotations are displayed", async () => {
+      // Peak areas from auto-detection + user annotations
+      const annotations = canvasElement.querySelectorAll(".annotation-text");
+      expect(annotations.length).toBeGreaterThan(2);
+    });
+
+    await step("Boundary markers from both sources are rendered", async () => {
+      // Main trace + boundary marker traces from both auto-detected and user-defined peaks
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBeGreaterThan(1);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "This example shows automatic peak detection combined with user-provided annotations. The auto-detected peaks display computed areas, while user annotations can provide custom labels. User annotations with boundary info (startIndex, endIndex) will also display boundary markers alongside auto-detected peaks.",
       },
     },
   },

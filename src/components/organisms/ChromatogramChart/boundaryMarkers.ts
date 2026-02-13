@@ -4,40 +4,47 @@
 
 import { CHART_COLORS } from "../../../utils/colors";
 
-import type { DetectedPeak, BoundaryMarkerStyle } from "./types";
+import type { PeakAnnotation, BoundaryMarkerStyle } from "./types";
 import type Plotly from "plotly.js-dist";
 
 /**
  * Check if two peaks overlap (share boundary indices)
  */
 export function peaksOverlap(
-  peak1: DetectedPeak,
-  peak2: DetectedPeak
+  peak1: PeakAnnotation,
+  peak2: PeakAnnotation
 ): boolean {
-  return (
-    peak1.endIndex >= peak2.startIndex && peak2.endIndex >= peak1.startIndex
-  );
+  const p1End = peak1.endIndex ?? 0;
+  const p1Start = peak1.startIndex ?? 0;
+  const p2End = peak2.endIndex ?? 0;
+  const p2Start = peak2.startIndex ?? 0;
+  return p1End >= p2Start && p2End >= p1Start;
 }
 
 /**
  * Determine if a peak boundary is shared with another peak
  */
 export function findOverlappingPeaks(
-  peaks: DetectedPeak[],
-  currentPeak: DetectedPeak
+  peaks: PeakAnnotation[],
+  currentPeak: PeakAnnotation
 ): { startOverlaps: boolean; endOverlaps: boolean } {
   let startOverlaps = false;
   let endOverlaps = false;
 
+  const currentStart = currentPeak.startIndex ?? 0;
+  const currentEnd = currentPeak.endIndex ?? 0;
+
   for (const other of peaks) {
     if (other.index === currentPeak.index) continue;
     if (peaksOverlap(currentPeak, other)) {
+      const otherStart = other.startIndex ?? 0;
+      const otherEnd = other.endIndex ?? 0;
       // Check if start boundary is shared
-      if (Math.abs(currentPeak.startIndex - other.endIndex) <= 1) {
+      if (Math.abs(currentStart - otherEnd) <= 1) {
         startOverlaps = true;
       }
       // Check if end boundary is shared
-      if (Math.abs(currentPeak.endIndex - other.startIndex) <= 1) {
+      if (Math.abs(currentEnd - otherStart) <= 1) {
         endOverlaps = true;
       }
     }
@@ -51,7 +58,7 @@ export function findOverlappingPeaks(
  */
 export function createBoundaryMarkerTraces(
   allPeaks: {
-    peaks: DetectedPeak[];
+    peaks: PeakAnnotation[];
     seriesIndex: number;
     x: number[];
     y: number[];
@@ -75,10 +82,12 @@ export function createBoundaryMarkerTraces(
               endOverlaps: markerStyle === "diamond",
             };
 
-      const startX = x[peak.startIndex];
-      const startY = y[peak.startIndex];
-      const endX = x[peak.endIndex];
-      const endY = y[peak.endIndex];
+      const startIdx = peak.startIndex ?? 0;
+      const endIdx = peak.endIndex ?? 0;
+      const startX = x[startIdx];
+      const startY = y[startIdx];
+      const endX = x[endIdx];
+      const endY = y[endIdx];
 
       // Create start boundary marker
       if (startOverlaps) {

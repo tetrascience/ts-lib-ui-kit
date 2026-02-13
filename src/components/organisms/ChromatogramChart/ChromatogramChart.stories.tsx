@@ -358,7 +358,8 @@ export const FullFeatured: Story = {
 
     await step("Peak area annotations are displayed", async () => {
       const annotations = canvasElement.querySelectorAll(".annotation-text");
-      expect(annotations.length).toBeGreaterThan(3); // User annotations + peak areas
+      // User annotations are displayed (auto-detected peaks at same positions are filtered out)
+      expect(annotations.length).toBeGreaterThanOrEqual(3);
     });
   },
   parameters: {

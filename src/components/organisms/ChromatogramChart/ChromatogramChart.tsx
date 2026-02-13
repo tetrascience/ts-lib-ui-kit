@@ -167,16 +167,22 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
 
     // Add peak area annotations if enabled
     if (showPeakAreas && enablePeakDetection) {
-      // Collect all peaks with metadata
+      // Collect all peaks with metadata, filtering out peaks that overlap with user annotations
+      const overlapThreshold = peakDetectionOptions?.annotationOverlapThreshold ?? 0.4;
       const allPeaksWithMeta: PeakWithMeta[] = [];
       allDetectedPeaks.forEach(({ peaks, seriesIndex }) => {
         peaks.forEach((peak) => {
-          allPeaksWithMeta.push({ peak, seriesIndex });
+          // Skip auto-detected peaks that are too close to user-defined annotations
+          const overlapsWithUserAnnotation = processedAnnotations.some(
+            (ann) => Math.abs(ann.x - peak.x) < overlapThreshold
+          );
+          if (!overlapsWithUserAnnotation) {
+            allPeaksWithMeta.push({ peak, seriesIndex });
+          }
         });
       });
 
       // Group overlapping peaks and create annotations
-      const overlapThreshold = peakDetectionOptions?.annotationOverlapThreshold ?? 0.4;
       const groups = groupOverlappingPeaks(allPeaksWithMeta, overlapThreshold);
 
       for (const group of groups) {

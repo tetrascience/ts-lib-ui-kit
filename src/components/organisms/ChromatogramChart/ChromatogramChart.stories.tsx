@@ -72,9 +72,9 @@ const multiInjectionData: ChromatogramSeries[] = [
 
 // Peak annotations for compound identification (simple labels without boundaries)
 const sampleAnnotations: PeakAnnotation[] = [
-  { x: 5.8, y: 420, text: "Caffeine", ay: -40 },
-  { x: 12.5, y: 180, text: "Theobromine", ay: -55 },
-  { x: 18.3, y: 350, text: "Theophylline", ay: -80 },
+  { x: 5.8, y: 420, text: "Caffeine", ax: 0, ay: -40 },
+  { x: 12.5, y: 180, text: "Theobromine", ax: 30, ay: -55 },
+  { x: 18.3, y: 350, text: "Theophylline", ax: -30, ay: -80 },
 ];
 
 // User-defined peaks with boundary information for boundary markers

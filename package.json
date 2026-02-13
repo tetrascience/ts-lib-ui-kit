@@ -59,7 +59,7 @@
   "dependencies": {
     "@dagrejs/dagre": "^1.1.4",
     "@monaco-editor/react": "^4.7.0",
-    "@tetrascience-npm/ts-connectors-sdk": "^3.1.1",
+    "@tetrascience-npm/ts-connectors-sdk": "^3.2.0",
     "@types/plotly.js": "^3.0.0",
     "@types/react-plotly.js": "^2.6.3",
     "@xyflow/react": "^12.6.4",

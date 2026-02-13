@@ -4,6 +4,8 @@
 
 import { COLORS, CHART_COLORS } from "../../../utils/colors";
 
+import { CHROMATOGRAM_ANNOTATION } from "./constants";
+
 import type { PeakAnnotation, PeakWithMeta } from "./types";
 import type Plotly from "plotly.js-dist";
 
@@ -59,16 +61,27 @@ export function groupOverlappingPeaks(
 }
 
 /**
- * Create a Plotly annotation for a peak
+ * Create a Plotly annotation for a peak.
+ * seriesIndex of -1 indicates a user-defined annotation (uses grey/black styling).
  */
 export function createPeakAnnotation(
   peak: PeakAnnotation,
   seriesIndex: number,
   slot: { ax: number; ay: number }
 ): Partial<Plotly.Annotations> {
-  const color = CHART_COLORS[seriesIndex % CHART_COLORS.length];
+  const isUserDefined = seriesIndex === -1;
+  const color = isUserDefined
+    ? COLORS.GREY_500
+    : CHART_COLORS[seriesIndex % CHART_COLORS.length];
+  const textColor = isUserDefined ? COLORS.BLACK_900 : color;
+
   // Use provided text or auto-generate from computed area
   const text = peak.text ?? (peak._computed?.area === undefined ? "" : `Area: ${peak._computed.area.toFixed(2)}`);
+
+  // For user-defined annotations, respect their ax/ay if provided
+  const ax = isUserDefined && peak.ax !== undefined ? peak.ax : slot.ax;
+  const ay = isUserDefined && peak.ay !== undefined ? peak.ay : slot.ay;
+
   return {
     x: peak.x,
     y: peak.y,
@@ -78,17 +91,19 @@ export function createPeakAnnotation(
     arrowsize: 1,
     arrowwidth: 1,
     arrowcolor: color,
-    ax: slot.ax,
-    ay: slot.ay,
+    ax,
+    ay,
     font: {
-      size: 10,
-      color: color,
+      size: isUserDefined
+        ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_FONT_SIZE
+        : CHROMATOGRAM_ANNOTATION.AUTO_ANNOTATION_FONT_SIZE,
+      color: textColor,
       family: "Inter, sans-serif",
     },
     bgcolor: COLORS.WHITE,
     borderpad: 2,
-    bordercolor: color,
-    borderwidth: 1,
+    bordercolor: isUserDefined ? undefined : color,
+    borderwidth: isUserDefined ? 0 : 1,
   };
 }
 

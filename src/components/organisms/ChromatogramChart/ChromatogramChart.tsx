@@ -8,7 +8,7 @@ import {
   createGroupAnnotations,
 } from "./annotations";
 import { createBoundaryMarkerTraces } from "./boundaryMarkers";
-import { CHROMATOGRAM_ANNOTATION, CHROMATOGRAM_LAYOUT } from "./constants";
+import { CHROMATOGRAM_LAYOUT } from "./constants";
 import {
   validateSeriesData,
   applyBaselineCorrection,
@@ -145,49 +145,29 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       }
     }
 
-    // Build Plotly annotations from peak annotations
-    const plotlyAnnotations: Partial<Plotly.Annotations>[] = processedAnnotations.map((ann) => ({
-      x: ann.x,
-      y: ann.y,
-      text: ann.text,
-      showarrow: true,
-      arrowhead: 2,
-      arrowsize: 1,
-      arrowwidth: 1,
-      arrowcolor: COLORS.GREY_500,
-      ax: ann.ax ?? 0,
-      ay: ann.ay ?? CHROMATOGRAM_ANNOTATION.DEFAULT_ARROW_OFFSET_Y,
-      font: {
-        size: 11,
-        color: COLORS.BLACK_900,
-        family: "Inter, sans-serif",
-      },
-      bgcolor: COLORS.WHITE,
-      borderpad: 2,
-    }));
+    // Collect all peaks for unified staggering logic
+    const allPeaksWithMeta: PeakWithMeta[] = [];
 
-    // Add peak area annotations if enabled
+    // Add user-defined annotations (seriesIndex -1 indicates user-defined)
+    processedAnnotations.forEach((ann) => {
+      allPeaksWithMeta.push({ peak: ann, seriesIndex: -1 });
+    });
+
+    // Add auto-detected peaks if enabled
     if (showPeakAreas && enablePeakDetection) {
-      // Collect all peaks with metadata, filtering out peaks that overlap with user annotations
-      const allPeaksWithMeta: PeakWithMeta[] = [];
       allDetectedPeaks.forEach(({ peaks, seriesIndex }) => {
         peaks.forEach((peak) => {
-          // Skip auto-detected peaks that are too close to user-defined annotations
-          const overlapsWithUserAnnotation = processedAnnotations.some(
-            (ann) => Math.abs(ann.x - peak.x) < annotationOverlapThreshold
-          );
-          if (!overlapsWithUserAnnotation) {
-            allPeaksWithMeta.push({ peak, seriesIndex });
-          }
+          allPeaksWithMeta.push({ peak, seriesIndex });
         });
       });
+    }
 
-      // Group overlapping peaks and create annotations
-      const groups = groupOverlappingPeaks(allPeaksWithMeta, annotationOverlapThreshold);
+    // Group all overlapping peaks and create annotations with staggering
+    const groups = groupOverlappingPeaks(allPeaksWithMeta, annotationOverlapThreshold);
+    const plotlyAnnotations: Partial<Plotly.Annotations>[] = [];
 
-      for (const group of groups) {
-        plotlyAnnotations.push(...createGroupAnnotations(group));
-      }
+    for (const group of groups) {
+      plotlyAnnotations.push(...createGroupAnnotations(group));
     }
 
     const layout: Partial<Plotly.Layout> = {

@@ -26,5 +26,9 @@ export const CHROMATOGRAM_LAYOUT = {
 export const CHROMATOGRAM_ANNOTATION = {
   /** Default vertical offset for annotation arrows (negative = above point) */
   DEFAULT_ARROW_OFFSET_Y: -30,
+  /** Font size for user-defined annotations */
+  USER_ANNOTATION_FONT_SIZE: 11,
+  /** Font size for auto-detected peak annotations */
+  AUTO_ANNOTATION_FONT_SIZE: 10,
 } as const;
 

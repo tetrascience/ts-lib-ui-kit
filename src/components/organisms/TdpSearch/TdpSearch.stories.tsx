@@ -8,51 +8,6 @@ const meta: Meta<typeof TdpSearch> = {
   component: TdpSearch,
   parameters: {
     layout: "padded",
-    docs: {
-      description: {
-        component: `A search component for querying the TetraScience Data Platform (TDP). 
-          Provides a search input, filters, sortable results table, and pagination.
-
-## Props
-
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| \`baseUrl\` | \`string\` | Yes | TDP API base URL |
-| \`authToken\` | \`string\` | Yes | Authentication token |
-| \`orgSlug\` | \`string\` | Yes | Organization slug |
-| \`columns\` | \`TdpSearchColumn[]\` | Yes | Column definitions |
-| \`filters\` | \`TdpSearchFilter[]\` | No | Filter configurations |
-| \`sortOptions\` | \`TdpSearchSort[]\` | No | Default sort options |
-| \`pageSize\` | \`number\` | No | Results per page (default: 10) |
-| \`defaultQuery\` | \`string\` | No | Initial EQL query |
-| \`searchPlaceholder\` | \`string\` | No | Search input placeholder |
-| \`className\` | \`string\` | No | Custom CSS class |
-| \`onSearch\` | \`function\` | No | Callback when search executes |
-
-## EQL Query Language
-
-The component uses TetraScience's EQL (Event Query Language) for searching:
-
-\`\`\`sql
--- Basic search
-SELECT * FROM samples LIMIT 10
-
--- With filters
-SELECT * FROM samples WHERE type = 'experiment'
-
--- With sorting
-SELECT * FROM samples ORDER BY createdAt DESC
-
--- Complex query
-SELECT id, name, type FROM samples 
-WHERE type IN ('sample', 'experiment') 
-AND createdAt > '2024-01-01'
-ORDER BY name ASC
-LIMIT 20
-\`\`\`
-          `,
-      },
-    },
   },
   tags: ["autodocs"],
 };
@@ -60,20 +15,13 @@ LIMIT 20
 export default meta;
 type Story = StoryObj<typeof TdpSearch>;
 
-// Mock config
-const mockConfig = {
-  baseUrl: "https://api.tetrascience-dev.com",
-  authToken: "demo-token",
-  orgSlug: "data-apps-demo",
-};
-
-// Columns with custom rendering
+// Columns with custom rendering for file search results
 const columns: TdpSearchColumn[] = [
-  { key: "id", header: "ID", width: "120px" },
-  { key: "name", header: "Name", sortable: true },
+  { key: "id", header: "File ID", width: "200px" },
+  { key: "filePath", header: "File Path", sortable: true },
   {
-    key: "status",
-    header: "Status",
+    key: "sourceType",
+    header: "Source Type",
     sortable: true,
     render: (value) => (
       <span
@@ -83,15 +31,15 @@ const columns: TdpSearchColumn[] = [
           border: "1px solid var(--grey-200)",
           fontWeight: 500,
           fontSize: "12px",
+          backgroundColor: "var(--grey-50)",
         }}
       >
-        {value}
+        {value || "unknown"}
       </span>
     ),
   },
-  { key: "type", header: "Type", sortable: true },
   {
-    key: "size",
+    key: "fileSize",
     header: "Size",
     align: "right" as const,
     sortable: true,
@@ -104,16 +52,16 @@ const columns: TdpSearchColumn[] = [
   { key: "createdAt", header: "Created At", sortable: true },
 ];
 
-// Filters
+// UI filters (for dropdown selection)
 const filters: TdpSearchFilter[] = [
   {
-    key: "type",
-    label: "Type",
+    key: "sourceType",
+    label: "Source Type",
     options: [
       { value: "", label: "All Types" },
-      { value: "sample", label: "Sample" },
-      { value: "experiment", label: "Experiment" },
-      { value: "protocol", label: "Protocol" },
+      { value: "instrument-data", label: "Instrument Data" },
+      { value: "manual-upload", label: "Manual Upload" },
+      { value: "pipeline-output", label: "Pipeline Output" },
     ],
   },
   {
@@ -121,79 +69,103 @@ const filters: TdpSearchFilter[] = [
     label: "Status",
     options: [
       { value: "", label: "All Statuses" },
-      { value: "active", label: "Active" },
+      { value: "processed", label: "Processed" },
       { value: "pending", label: "Pending" },
-      { value: "archived", label: "Archived" },
+      { value: "failed", label: "Failed" },
     ],
   },
 ];
 
 /**
  * Basic usage with minimal configuration.
- * Shows simple columns without filters or custom rendering.
  */
 export const BasicUsage: Story = {
   args: {
-    ...mockConfig,
     columns: [
       { key: "id", header: "ID", width: "120px" },
-      { key: "name", header: "Name", sortable: true },
-      { key: "type", header: "Type", sortable: true },
+      { key: "filePath", header: "File Path", sortable: true },
+      { key: "sourceType", header: "Source Type", sortable: true },
       { key: "createdAt", header: "Created", sortable: true },
     ],
-    defaultQuery: "SELECT * FROM samples LIMIT 10",
-    searchPlaceholder: "Search samples...",
+    defaultQuery: "sample-data",
+    searchPlaceholder: "Search files...",
   },
 };
 
 /**
- * Search with filters applied.
- * Users can filter results by type and status using dropdown filters.
+ * Search with filters.
  */
 export const WithFilters: Story = {
   args: {
-    ...mockConfig,
     columns: [
       { key: "id", header: "ID" },
-      { key: "name", header: "Name", sortable: true },
-      { key: "type", header: "Type", sortable: true },
+      { key: "filePath", header: "File Path", sortable: true },
+      { key: "sourceType", header: "Source Type", sortable: true },
       { key: "status", header: "Status", sortable: true },
     ],
     filters,
-    defaultQuery: "SELECT * FROM samples",
     pageSize: 10,
   },
 };
 
 /**
- * Custom cell rendering and formatting.
- * Demonstrates custom rendering for status badges and formatted file sizes.
+ * Custom cell rendering with badges and formatted sizes.
  */
 export const CustomRendering: Story = {
   args: {
-    ...mockConfig,
     columns,
-    defaultQuery: "SELECT * FROM samples ORDER BY createdAt DESC",
+    defaultQuery: "experiment",
+    defaultSort: { field: "createdAt", order: "desc" },
     pageSize: 10,
-    searchPlaceholder: "Search across all fields...",
   },
 };
 
 /**
- * Full-featured TDP search component.
- * Demonstrates filters, sorting, custom rendering, and pagination.
+ * Full-featured example with all options.
  */
 export const FullFeatured: Story = {
   args: {
-    ...mockConfig,
     columns,
     filters,
-    defaultQuery: "SELECT * FROM samples ORDER BY createdAt DESC",
+    defaultQuery: "sample",
+    defaultSort: { field: "createdAt", order: "desc" },
     pageSize: 15,
-    searchPlaceholder: "Search across all fields...",
     onSearch: (query, results) => {
       console.log("Search executed:", query);
       console.log("Results:", results);
+    },
+  },
+};
+
+/**
+ * Custom API endpoint.
+ */
+export const CustomEndpoint: Story = {
+  args: {
+    apiEndpoint: "/api/v1/tdp/search",
+    columns: [
+      { key: "id", header: "ID" },
+      { key: "filePath", header: "File Path", sortable: true },
+    ],
+    defaultQuery: "data",
+  },
+};
+
+/**
+ * With advanced search parameters.
+ */
+export const WithAdvancedParams: Story = {
+  args: {
+    columns,
+    filters,
+    advancedSearchParams: {
+      selectedSourceTypes: ["instrument-data", "manual-upload"],
+      expression: {
+        g: "AND",
+        e: [
+          { field: "status", operator: "eq", value: "processed" },
+        ],
+      },
     },
   },
 };

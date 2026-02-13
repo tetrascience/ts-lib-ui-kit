@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { TDPClient, SearchEqlRequest, SearchEqlResponse } from "@tetrascience-npm/ts-connectors-sdk";
+import React, { useState } from "react";
+import type { SearchEqlRequest } from "@tetrascience-npm/ts-connectors-sdk";
 import { Input } from "@atoms/Input";
 import { Button } from "@atoms/Button";
 import { Dropdown, DropdownOption } from "@atoms/Dropdown";
 import { Table } from "@molecules/Table";
 import { ErrorAlert } from "@atoms/ErrorAlert";
 import Search from "@assets/icon/Search";
+import { useServerSideSearch } from "./hooks/useServerSideSearch";
 import "./TdpSearch.scss";
 
 /** Transformed search result (flattened from Elasticsearch hit format) */
@@ -50,13 +51,24 @@ export interface TdpSearchSort {
   order: "asc" | "desc";
 }
 
-/** Props for TdpSearch component */
+/**
+ * Props for TdpSearch component
+ *
+ * Accepts search configuration as specified in the ticket:
+ * - fields (columns): Display columns for the table
+ * - filters: UI filters (for dropdown selection)
+ * - sort options: Default sort configuration
+ * - default query: Initial search term
+ */
 export interface TdpSearchProps {
-  baseUrl: string;
-  authToken: string;
-  orgSlug: string;
+  // Search mode configuration
+  /**
+   * API endpoint for server-side search mode. Defaults to '/api/search'.
+   * The backend endpoint should accept SearchEqlRequest and return SearchEqlResponse.
+   */
+  apiEndpoint?: string;
 
-  // Search configuration
+  // Search configuration (per ticket requirements)
   /** Default search term (default query) */
   defaultQuery?: string;
   /** Display fields/columns for the results table */
@@ -88,57 +100,22 @@ export interface TdpSearchProps {
  *
  * A reusable search component for querying the TDP.
  *
- * @example Basic search
+ * @example
  * ```tsx
  * <TdpSearch
- *   baseUrl="https://api.tetrascience-dev.com"
- *   authToken={token}
- *   orgSlug="data-apps-demo"
- *   defaultQuery="sample-data"
  *   columns={[
  *     { key: "id", header: "ID" },
- *     { key: "filePath", header: "File Path", sortable: true },
- *     { key: "sourceType", header: "Source Type" }
+ *     { key: "filePath", header: "File Path", sortable: true }
  *   ]}
- *   defaultSort={{ field: "createdAt", order: "desc" }}
+ *   defaultQuery="sample-data"
  *   pageSize={20}
- * />
- * ```
- *
- * @example With advanced search parameters
- * ```tsx
- * <TdpSearch
- *   baseUrl="https://api.tetrascience-dev.com"
- *   authToken={token}
- *   orgSlug="data-apps-demo"
- *   columns={columns}
- *   filters={[
- *     {
- *       key: "status",
- *       label: "Status",
- *       options: [
- *         { value: "processed", label: "Processed" },
- *         { value: "pending", label: "Pending" }
- *       ]
- *     }
- *   ]}
- *   advancedSearchParams={{
- *     selectedSourceTypes: ["instrument-data"],
- *     expression: {
- *       g: "AND",
- *       e: [
- *         { field: "status", operator: "eq", value: "processed" }
- *       ]
- *     }
- *   }}
  * />
  * ```
  */
 
 export function TdpSearch({
-  baseUrl,
-  authToken,
-  orgSlug,
+  apiEndpoint,
+  // standalone,
   defaultQuery = "",
   columns,
   filters = [],
@@ -149,100 +126,60 @@ export function TdpSearch({
   className,
   onSearch,
 }: TdpSearchProps) {
-  const [tdpClient, setTdpClient] = useState<TDPClient | null>(null);
-  const [isClientReady, setIsClientReady] = useState(false);
+  // Use appropriate search hook based on mode
+  const serverSideSearch = useServerSideSearch({
+    apiEndpoint: apiEndpoint || "/api/search",
+    pageSize,
+  });
+
+  // Select which search implementation to use
+  // Standalone search will be used for standalone mode (TBI)
+  /*
+    const isStandalone = !!standalone;
+    const searchHook = isStandalone ? standaloneSearch : serverSideSearch;
+  */
+
+  const searchHook = serverSideSearch;
+
+  const { results, total, currentPage, isLoading, error, executeSearch } = searchHook;
+
+  // UI state
   const [query, setQuery] = useState(defaultQuery);
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [total, setTotal] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Initialize TDP client
-  useEffect(() => {
-    if (!baseUrl || !authToken || !orgSlug) {
+  // Execute search with current UI state
+  const handleExecuteSearch = async (page: number = 1) => {
+    if (!query.trim()) {
       return;
     }
 
-    const initClient = async () => {
-      const client = new TDPClient({
-        tdpEndpoint: baseUrl,
-        orgSlug,
-        authToken,
-        connectorId: "", // Not needed for search-only operations
-      });
-
-      try {
-        await client.init();
-        setTdpClient(client);
-        setIsClientReady(true);
-      } catch (err: any) {
-        setError(`Failed to initialize TDP client: ${err.message}`);
-      }
-    };
-
-    initClient();
-  }, [baseUrl, authToken, orgSlug]);
-
-  // Execute search
-  const executeSearch = async (page: number = 1) => {
-    if (!tdpClient || !isClientReady || !query.trim()) {
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
     setHasSearched(true);
 
-    try {
-      // Use user sort if available, otherwise fall back to defaultSort
-      const effectiveSort = sortKey || defaultSort?.field;
-      const effectiveOrder = sortKey ? sortDirection : defaultSort?.order || sortDirection;
+    // Use user sort if available, otherwise fall back to defaultSort
+    const effectiveSort = sortKey || defaultSort?.field;
+    const effectiveOrder = sortKey ? sortDirection : defaultSort?.order || sortDirection;
 
-      const searchRequest: SearchEqlRequest = {
-        searchTerm: query.trim(),
-        size: pageSize,
-        from: (page - 1) * pageSize,
-        sort: effectiveSort,
-        order: effectiveOrder,
-        ...advancedSearchParams, // Spread any additional SDK parameters
-      };
+    const searchRequest: Omit<SearchEqlRequest, "from" | "size"> = {
+      searchTerm: query.trim(),
+      sort: effectiveSort,
+      order: effectiveOrder,
+      ...advancedSearchParams, // Spread any additional SDK parameters
+    };
 
-      const response: SearchEqlResponse = await tdpClient.searchEql(searchRequest);
+    await executeSearch(searchRequest, page);
 
-      // Transform Elasticsearch results to flat objects
-      // Each hit has _source containing the actual document data
-      const transformedResults: SearchResult[] = (response.hits.hits || []).map((hit) => ({
-        id: hit._id,
-        ...hit._source,
-        _score: hit._score,
-      }));
-
-      // Extract total (can be number or object with value)
-      const total = typeof response.hits.total === "number" ? response.hits.total : response.hits.total.value;
-
-      setResults(transformedResults);
-      setTotal(total);
-      setCurrentPage(page);
-
-      onSearch?.(searchRequest, transformedResults);
-    } catch (err: any) {
-      setError(err.message || "An error occurred while searching");
-      setResults([]);
-      setTotal(0);
-    } finally {
-      setIsLoading(false);
+    // Call onSearch callback if provided
+    if (onSearch) {
+      onSearch({ ...searchRequest, from: (page - 1) * pageSize, size: pageSize }, results);
     }
   };
 
   // Handle search button click
   const handleSearch = () => {
-    setCurrentPage(1);
-    executeSearch(1);
+    handleExecuteSearch(1);
   };
 
   // Handle Enter key in search input
@@ -262,15 +199,14 @@ export function TdpSearch({
 
   // Handle page change
   const handlePageChange = (page: number) => {
-    executeSearch(page);
+    handleExecuteSearch(page);
   };
 
   // Handle sort
   const handleSort = (key: string, direction: "asc" | "desc") => {
     setSortKey(key);
     setSortDirection(direction);
-    setCurrentPage(1);
-    executeSearch(1);
+    handleExecuteSearch(1);
   };
 
   const SearchBarComponent = () => {
@@ -342,7 +278,7 @@ export function TdpSearch({
 
       {error && (
         <>
-          <ErrorAlert error={error} onClose={() => setError(null)} />
+          <ErrorAlert error={error} onClose={() => {}} />
           <NoResultsComponent />
         </>
       )}

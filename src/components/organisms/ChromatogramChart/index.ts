@@ -5,6 +5,7 @@ export type {
   ChromatogramChartProps,
   DetectedPeak,
   BaselineCorrectionMethod,
+  BoundaryMarkerStyle,
   PeakDetectionOptions,
-} from "./ChromatogramChart";
+} from "./types";
 

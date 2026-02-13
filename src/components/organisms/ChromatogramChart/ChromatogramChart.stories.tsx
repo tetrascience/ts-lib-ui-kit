@@ -123,6 +123,59 @@ export const MultipleTraces: Story = {
 };
 
 /**
+ * Series with injection metadata displayed in tooltips.
+ */
+export const WithMetadata: Story = {
+  args: {
+    series: [
+      {
+        ...generateChromatogramData([
+          { rt: 5.8, height: 420, width: 0.4 },
+          { rt: 12.5, height: 180, width: 0.5 },
+          { rt: 18.3, height: 350, width: 0.45 },
+        ]),
+        name: "Sample A - UV 254nm",
+        metadata: {
+          sampleName: "Caffeine Standard",
+          injectionId: "INJ-2024-001",
+          detectorType: "UV",
+          wavelength: 254,
+          methodName: "Caffeine_HPLC_v2",
+          instrumentName: "Agilent 1260",
+          wellPosition: "A1",
+          injectionVolume: 10,
+        },
+      },
+      {
+        ...generateChromatogramData([
+          { rt: 5.9, height: 380, width: 0.42 },
+          { rt: 12.6, height: 195, width: 0.48 },
+          { rt: 18.4, height: 320, width: 0.47 },
+        ], 0.8),
+        name: "Sample B - UV 254nm",
+        metadata: {
+          sampleName: "Coffee Extract",
+          injectionId: "INJ-2024-002",
+          detectorType: "UV",
+          wavelength: 254,
+          methodName: "Caffeine_HPLC_v2",
+          wellPosition: "A2",
+        },
+      },
+    ],
+    title: "Chromatogram with Injection Metadata",
+    showCrosshairs: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Hover over traces to see injection metadata in the tooltip. Metadata includes sample name, injection ID, detector type, wavelength, method name, and well position.",
+      },
+    },
+  },
+};
+
+/**
  * Automatic peak detection with area calculations using trapezoidal integration.
  */
 export const PeakDetection: Story = {

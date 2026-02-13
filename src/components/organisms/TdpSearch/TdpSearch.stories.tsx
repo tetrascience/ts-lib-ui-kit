@@ -1,11 +1,51 @@
-import React from "react";
+import React, { useEffect } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { TdpSearch } from "./TdpSearch";
 import { TdpSearchColumn, TdpSearchFilter } from "./TdpSearch";
+import { mockSearchResponse } from "./TdpSearch.mocks";
+
+/**
+ * Mock fetch decorator to intercept API calls in Storybook
+ */
+const withMockFetch = (Story: any) => {
+  const MockWrapper = () => {
+    useEffect(() => {
+      const originalFetch = global.fetch;
+
+      // Mock fetch for /api/search
+      global.fetch = async (url: RequestInfo | URL, options?: RequestInit) => {
+        const urlString = url.toString();
+
+        if (urlString.includes("/api/search")) {
+          // Simulate network delay
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          return new Response(JSON.stringify(mockSearchResponse), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        // For other URLs, use original fetch
+        return originalFetch(url, options);
+      };
+
+      // Cleanup on unmount
+      return () => {
+        global.fetch = originalFetch;
+      };
+    }, []);
+
+    return <Story />;
+  };
+
+  return <MockWrapper />;
+};
 
 const meta: Meta<typeof TdpSearch> = {
   title: "Organisms/TdpSearch",
   component: TdpSearch,
+  decorators: [withMockFetch],
   parameters: {
     layout: "padded",
   },
@@ -162,9 +202,7 @@ export const WithAdvancedParams: Story = {
       selectedSourceTypes: ["instrument-data", "manual-upload"],
       expression: {
         g: "AND",
-        e: [
-          { field: "status", operator: "eq", value: "processed" },
-        ],
+        e: [{ field: "status", operator: "eq", value: "processed" }],
       },
     },
   },

@@ -331,6 +331,7 @@ export const FullFeatured: Story = {
       prominence: 0.1,
     },
     showPeakAreas: true,
+    boundaryMarkers: "enabled",
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);

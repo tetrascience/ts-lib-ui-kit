@@ -23,6 +23,7 @@ import type {
   PeakAnnotation,
   BaselineCorrectionMethod,
   BoundaryMarkerStyle,
+  BoundaryMarkerType,
   PeakDetectionOptions,
   ChromatogramChartProps,
   PeakWithMeta,
@@ -35,6 +36,7 @@ export type {
   PeakAnnotation,
   BaselineCorrectionMethod,
   BoundaryMarkerStyle,
+  BoundaryMarkerType,
   PeakDetectionOptions,
   ChromatogramChartProps,
 };
@@ -137,7 +139,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     if (boundaryMarkerStyle !== "none") {
       const peaksWithData = collectPeaksWithBoundaryData(allDetectedPeaks, processedAnnotations, processedSeries);
       if (peaksWithData.length > 0) {
-        const boundaryTraces = createBoundaryMarkerTraces(peaksWithData, boundaryMarkerStyle);
+        const boundaryTraces = createBoundaryMarkerTraces(peaksWithData);
         plotData.push(...boundaryTraces);
       }
     }

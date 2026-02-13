@@ -19,6 +19,11 @@ export interface ChromatogramSeries {
 }
 
 /**
+ * Individual boundary marker type for a single boundary point
+ */
+export type BoundaryMarkerType = "none" | "triangle" | "diamond";
+
+/**
  * Internal computed fields for peak annotations.
  * These are populated by the component during processing.
  * @internal
@@ -55,6 +60,10 @@ export interface PeakAnnotation {
   startX?: number;
   /** End retention time for peak boundary */
   endX?: number;
+  /** Marker style for start boundary (default: "triangle") */
+  startMarker?: BoundaryMarkerType;
+  /** Marker style for end boundary (default: "diamond") */
+  endMarker?: BoundaryMarkerType;
   /**
    * Internal computed fields populated by the component.
    * @internal Do not set these directly - they are computed from startX/endX or auto-detection.
@@ -68,9 +77,11 @@ export interface PeakAnnotation {
 export type BaselineCorrectionMethod = "none" | "linear" | "rolling";
 
 /**
- * Peak boundary marker style
+ * Global boundary marker style setting
+ * - "none": No boundary markers displayed
+ * - "enabled": Show boundary markers using per-peak settings (startMarker/endMarker) or defaults
  */
-export type BoundaryMarkerStyle = "none" | "triangle" | "diamond" | "auto";
+export type BoundaryMarkerStyle = "none" | "enabled";
 
 /**
  * Peak detection options
@@ -94,10 +105,10 @@ export interface PeakDetectionOptions {
   annotationOverlapThreshold?: number;
   /**
    * Show peak boundary markers (default: "none").
-   * - "none": No boundary markers
-   * - "triangle": Triangle markers at peak start/end (for isolated peaks at baseline)
-   * - "diamond": Diamond markers with vertical lines (for overlapping peaks)
-   * - "auto": Automatically choose based on peak overlap detection
+   * - "none": No boundary markers displayed
+   * - "enabled": Show boundary markers using per-peak startMarker/endMarker settings
+   *
+   * Per-peak marker defaults: startMarker="triangle", endMarker="diamond"
    */
   boundaryMarkers?: BoundaryMarkerStyle;
 }

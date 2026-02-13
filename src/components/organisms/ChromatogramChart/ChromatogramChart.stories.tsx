@@ -371,8 +371,8 @@ export const FullFeatured: Story = {
 };
 
 /**
- * Peak boundary markers showing triangle markers for isolated peaks and diamond markers
- * with vertical lines for overlapping peak boundaries.
+ * Peak boundary markers showing triangle markers at peak start and diamond markers
+ * with vertical lines at peak end (the default styling).
  */
 export const WithBoundaryMarkers: Story = {
   args: {
@@ -383,7 +383,7 @@ export const WithBoundaryMarkers: Story = {
       prominence: 0.05,
       minDistance: 20,
       showAreas: true,
-      boundaryMarkers: "auto",
+      boundaryMarkers: "enabled",
     },
   },
   play: async ({ canvasElement, step }) => {
@@ -430,7 +430,7 @@ export const UserDefinedPeakBoundaries: Story = {
     title: "User-Defined Peak Boundaries",
     annotations: userDefinedPeaksWithBoundaries,
     peakDetectionOptions: {
-      boundaryMarkers: "triangle",
+      boundaryMarkers: "enabled",
     },
   },
   play: async ({ canvasElement, step }) => {
@@ -494,7 +494,7 @@ export const CombinedAutoAndUserPeaks: Story = {
       minHeight: 0.1,
       prominence: 0.05,
       showAreas: true,
-      boundaryMarkers: "auto",
+      boundaryMarkers: "enabled",
     },
   },
   play: async ({ canvasElement, step }) => {

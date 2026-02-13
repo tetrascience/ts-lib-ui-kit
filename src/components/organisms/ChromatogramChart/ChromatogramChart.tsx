@@ -14,6 +14,7 @@ import {
   applyBaselineCorrection,
   buildHoverExtraContent,
   collectPeaksWithBoundaryData,
+  processUserAnnotations,
 } from "./dataProcessing";
 import { detectPeaks } from "./peakDetection";
 
@@ -77,6 +78,16 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     });
   }, [series, baselineCorrection, baselineWindowSize]);
 
+  // Process user annotations to convert startX/endX to indices and compute areas
+  const processedAnnotations = useMemo(() => {
+    if (annotations.length === 0 || processedSeries.length === 0) {
+      return annotations;
+    }
+    // Use first series data for index lookup (user annotations apply to first series)
+    const { x, y } = processedSeries[0];
+    return processUserAnnotations(annotations, x, y);
+  }, [annotations, processedSeries]);
+
   // Memoize peak detection results
   const allDetectedPeaks = useMemo(() => {
     const peaks: { peaks: PeakAnnotation[]; seriesIndex: number }[] = [];
@@ -124,7 +135,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     // Add peak boundary markers if enabled
     const boundaryMarkerStyle = peakDetectionOptions?.boundaryMarkers ?? "none";
     if (boundaryMarkerStyle !== "none") {
-      const peaksWithData = collectPeaksWithBoundaryData(allDetectedPeaks, annotations, processedSeries);
+      const peaksWithData = collectPeaksWithBoundaryData(allDetectedPeaks, processedAnnotations, processedSeries);
       if (peaksWithData.length > 0) {
         const boundaryTraces = createBoundaryMarkerTraces(peaksWithData, boundaryMarkerStyle);
         plotData.push(...boundaryTraces);
@@ -132,7 +143,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     }
 
     // Build Plotly annotations from peak annotations
-    const plotlyAnnotations: Partial<Plotly.Annotations>[] = annotations.map((ann) => ({
+    const plotlyAnnotations: Partial<Plotly.Annotations>[] = processedAnnotations.map((ann) => ({
       x: ann.x,
       y: ann.y,
       text: ann.text,
@@ -278,7 +289,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     };
   }, [
     processedSeries, allDetectedPeaks, series.length, width, height, title, xAxisTitle, yAxisTitle,
-    annotations, xRange, yRange, showLegend, showGridX, showGridY, showMarkers, markerSize,
+    processedAnnotations, xRange, yRange, showLegend, showGridX, showGridY, showMarkers, markerSize,
     showCrosshairs, enablePeakDetection, peakDetectionOptions, showPeakAreas, showExportButton,
   ]);
 

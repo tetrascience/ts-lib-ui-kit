@@ -2,6 +2,8 @@
  * Data processing utilities for ChromatogramChart
  */
 
+import { calculatePeakArea } from "./peakDetection";
+
 import type { BaselineCorrectionMethod, PeakAnnotation } from "./types";
 
 /**
@@ -15,8 +17,69 @@ export type PeakDataWithSeries = {
 };
 
 /**
+ * Find the closest index in an array for a given target value.
+ * Uses binary search for efficiency.
+ */
+export function findClosestIndex(arr: number[], target: number): number {
+  if (arr.length === 0) return 0;
+  if (arr.length === 1) return 0;
+
+  let left = 0;
+  let right = arr.length - 1;
+
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+    if (arr[mid] < target) {
+      left = mid + 1;
+    } else {
+      right = mid;
+    }
+  }
+
+  // Check if left-1 is closer
+  if (left > 0 && Math.abs(arr[left - 1] - target) < Math.abs(arr[left] - target)) {
+    return left - 1;
+  }
+  return left;
+}
+
+/**
+ * Process user annotations to convert startX/endX to startIndex/endIndex
+ * and compute area if boundaries are provided.
+ */
+export function processUserAnnotations(
+  annotations: PeakAnnotation[],
+  xArray: number[],
+  yArray: number[]
+): PeakAnnotation[] {
+  return annotations.map((ann) => {
+    // If startX/endX are provided, convert to indices
+    if (ann.startX !== undefined && ann.endX !== undefined) {
+      const startIndex = findClosestIndex(xArray, ann.startX);
+      const endIndex = findClosestIndex(xArray, ann.endX);
+      const index = findClosestIndex(xArray, ann.x);
+
+      // Calculate area if not provided
+      const area = ann._computed?.area ?? calculatePeakArea(xArray, yArray, startIndex, endIndex);
+
+      return {
+        ...ann,
+        _computed: {
+          ...ann._computed,
+          index,
+          startIndex,
+          endIndex,
+          area,
+        },
+      };
+    }
+    return ann;
+  });
+}
+
+/**
  * Collect peaks with boundary information from both auto-detected peaks and user-provided annotations.
- * User-provided annotations with startIndex and endIndex are included for boundary marker rendering.
+ * User-provided annotations with startIndex/endIndex or startX/endX are included for boundary marker rendering.
  */
 export function collectPeaksWithBoundaryData(
   allDetectedPeaks: { peaks: PeakAnnotation[]; seriesIndex: number }[],
@@ -35,9 +98,10 @@ export function collectPeaksWithBoundaryData(
     });
   });
 
-  // Add user-provided annotations that have boundary info (startIndex and endIndex)
+  // Add user-provided annotations that have boundary info (_computed.startIndex and _computed.endIndex)
+  // Note: annotations with startX/endX should already be processed to have _computed fields
   const annotationsWithBoundaries = annotations.filter(
-    (ann) => ann.startIndex !== undefined && ann.endIndex !== undefined
+    (ann) => ann._computed?.startIndex !== undefined && ann._computed?.endIndex !== undefined
   );
   if (annotationsWithBoundaries.length > 0 && processedSeries.length > 0) {
     peaksWithData.push({

@@ -14,10 +14,10 @@ export function peaksOverlap(
   peak1: PeakAnnotation,
   peak2: PeakAnnotation
 ): boolean {
-  const p1End = peak1.endIndex ?? 0;
-  const p1Start = peak1.startIndex ?? 0;
-  const p2End = peak2.endIndex ?? 0;
-  const p2Start = peak2.startIndex ?? 0;
+  const p1End = peak1._computed?.endIndex ?? 0;
+  const p1Start = peak1._computed?.startIndex ?? 0;
+  const p2End = peak2._computed?.endIndex ?? 0;
+  const p2Start = peak2._computed?.startIndex ?? 0;
   return p1End >= p2Start && p2End >= p1Start;
 }
 
@@ -31,14 +31,14 @@ export function findOverlappingPeaks(
   let startOverlaps = false;
   let endOverlaps = false;
 
-  const currentStart = currentPeak.startIndex ?? 0;
-  const currentEnd = currentPeak.endIndex ?? 0;
+  const currentStart = currentPeak._computed?.startIndex ?? 0;
+  const currentEnd = currentPeak._computed?.endIndex ?? 0;
 
   for (const other of peaks) {
-    if (other.index === currentPeak.index) continue;
+    if (other._computed?.index === currentPeak._computed?.index) continue;
     if (peaksOverlap(currentPeak, other)) {
-      const otherStart = other.startIndex ?? 0;
-      const otherEnd = other.endIndex ?? 0;
+      const otherStart = other._computed?.startIndex ?? 0;
+      const otherEnd = other._computed?.endIndex ?? 0;
       // Check if start boundary is shared
       if (Math.abs(currentStart - otherEnd) <= 1) {
         startOverlaps = true;
@@ -82,8 +82,8 @@ export function createBoundaryMarkerTraces(
               endOverlaps: markerStyle === "diamond",
             };
 
-      const startIdx = peak.startIndex ?? 0;
-      const endIdx = peak.endIndex ?? 0;
+      const startIdx = peak._computed?.startIndex ?? 0;
+      const endIdx = peak._computed?.endIndex ?? 0;
       const startX = x[startIdx];
       const startY = y[startIdx];
       const endX = x[endIdx];

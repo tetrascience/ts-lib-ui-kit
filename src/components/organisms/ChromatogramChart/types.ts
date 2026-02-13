@@ -19,6 +19,24 @@ export interface ChromatogramSeries {
 }
 
 /**
+ * Internal computed fields for peak annotations.
+ * These are populated by the component during processing.
+ * @internal
+ */
+export interface PeakComputedFields {
+  /** Peak area calculated using trapezoidal integration */
+  area?: number;
+  /** Peak index in the data array */
+  index?: number;
+  /** Start index of peak boundary in the data array */
+  startIndex?: number;
+  /** End index of peak boundary in the data array */
+  endIndex?: number;
+  /** Peak width at half maximum */
+  widthAtHalfMax?: number;
+}
+
+/**
  * Peak annotation for labeling peaks on the chromatogram.
  * Used for both user-provided annotations and auto-detected peaks.
  */
@@ -27,22 +45,21 @@ export interface PeakAnnotation {
   x: number;
   /** Signal intensity at peak (y-axis position) */
   y: number;
-  /** Label text (e.g., compound name). If not provided, auto-generated from area. */
+  /** Label text (e.g., compound name). If not provided, auto-generated from computed area. */
   text?: string;
   /** Vertical arrow offset in pixels (negative = above peak, default: -30) */
   ay?: number;
   /** Horizontal arrow offset in pixels (default: 0) */
   ax?: number;
-  /** Peak area - used to auto-generate text label if text is not provided */
-  area?: number;
-  /** Peak index in the data array */
-  index?: number;
-  /** Start index of peak boundary (for boundary markers) */
-  startIndex?: number;
-  /** End index of peak boundary (for boundary markers) */
-  endIndex?: number;
-  /** Peak width at half maximum */
-  widthAtHalfMax?: number;
+  /** Start retention time for peak boundary */
+  startX?: number;
+  /** End retention time for peak boundary */
+  endX?: number;
+  /**
+   * Internal computed fields populated by the component.
+   * @internal Do not set these directly - they are computed from startX/endX or auto-detection.
+   */
+  _computed?: PeakComputedFields;
 }
 
 /**

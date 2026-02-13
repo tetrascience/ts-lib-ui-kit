@@ -67,8 +67,8 @@ export function createPeakAnnotation(
   slot: { ax: number; ay: number }
 ): Partial<Plotly.Annotations> {
   const color = CHART_COLORS[seriesIndex % CHART_COLORS.length];
-  // Use provided text or auto-generate from area
-  const text = peak.text ?? (peak.area === undefined ? "" : `Area: ${peak.area.toFixed(2)}`);
+  // Use provided text or auto-generate from computed area
+  const text = peak.text ?? (peak._computed?.area === undefined ? "" : `Area: ${peak._computed.area.toFixed(2)}`);
   return {
     x: peak.x,
     y: peak.y,

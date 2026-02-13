@@ -78,37 +78,32 @@ const sampleAnnotations: PeakAnnotation[] = [
 ];
 
 // User-defined peaks with boundary information for boundary markers
-// Index calculation: index = rt / 0.05 (since x values are 0 to 30 with 0.05 step)
+// Users simply provide startX and endX (retention times) - the component handles the rest
 const userDefinedPeaksWithBoundaries: PeakAnnotation[] = [
   {
     x: 5.8,
     y: 420,
     text: "Caffeine",
     ay: -40,
-    index: 116, // 5.8 / 0.05
-    startIndex: 100, // ~5.0 min
-    endIndex: 132, // ~6.6 min
-    area: 168.5,
+    startX: 5.0, // Start retention time
+    endX: 6.6, // End retention time
+    // area is auto-computed from boundaries
   },
   {
     x: 12.5,
     y: 180,
     text: "Theobromine",
     ay: -55,
-    index: 250, // 12.5 / 0.05
-    startIndex: 230, // ~11.5 min
-    endIndex: 270, // ~13.5 min
-    area: 90.2,
+    startX: 11.5, // Start retention time
+    endX: 13.5, // End retention time
   },
   {
     x: 18.3,
     y: 350,
     text: "Theophylline",
     ay: -80,
-    index: 366, // 18.3 / 0.05
-    startIndex: 346, // ~17.3 min
-    endIndex: 386, // ~19.3 min
-    area: 157.8,
+    startX: 17.3, // Start retention time
+    endX: 19.3, // End retention time
   },
 ];
 
@@ -483,15 +478,14 @@ export const CombinedAutoAndUserPeaks: Story = {
     title: "Combined Auto-Detected and User-Defined Peaks",
     annotations: [
       // User-defined annotation with boundaries (will show boundary markers)
+      // Just provide startX and endX - area is auto-computed
       {
         x: 5.8,
         y: 420,
         text: "Caffeine (user-defined)",
         ay: -40,
-        index: 116,
-        startIndex: 100,
-        endIndex: 132,
-        area: 168.5,
+        startX: 5.0,
+        endX: 6.6,
       },
       // Simple user annotation without boundaries (just a label)
       { x: 24.1, y: 220, text: "Unknown Peak", ay: -60 },

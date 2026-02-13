@@ -124,7 +124,7 @@ export function filterPeaksByDistance(
 
   for (const peak of peaks) {
     const tooClose = filtered.some(
-      (p) => Math.abs((p.index ?? 0) - (peak.index ?? 0)) < minDistance
+      (p) => Math.abs((p._computed?.index ?? 0) - (peak._computed?.index ?? 0)) < minDistance
     );
     if (!tooClose) {
       filtered.push(peak);
@@ -191,11 +191,13 @@ export function detectPeaks(
     peaks.push({
       x: x[i],
       y: y[i],
-      area,
-      index: i,
-      startIndex,
-      endIndex,
-      widthAtHalfMax,
+      _computed: {
+        area,
+        index: i,
+        startIndex,
+        endIndex,
+        widthAtHalfMax,
+      },
     });
   }
 

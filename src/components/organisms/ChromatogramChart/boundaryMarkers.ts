@@ -7,10 +7,12 @@ import { CHART_COLORS } from "../../../utils/colors";
 import type { PeakAnnotation, BoundaryMarkerType } from "./types";
 import type Plotly from "plotly.js-dist";
 
-/** Base Y position for boundary markers (below the x-axis) */
-const BOUNDARY_MARKER_BASE_Y = -5;
+/** Base Y position for start boundary markers (below the x-axis) */
+const BOUNDARY_MARKER_START_Y = -5;
+/** Y position for end boundary markers (below start markers) */
+const BOUNDARY_MARKER_END_Y = -12;
 /** Y offset between series to prevent overlap */
-const BOUNDARY_MARKER_Y_OFFSET = -8;
+const BOUNDARY_MARKER_SERIES_OFFSET = -16;
 
 /**
  * Create a marker trace for a boundary point.
@@ -61,8 +63,10 @@ export function createBoundaryMarkerTraces(
 
   for (const { peaks, seriesIndex, x } of allPeaks) {
     const color = CHART_COLORS[seriesIndex % CHART_COLORS.length];
-    // Stagger y position by series index to prevent overlap
-    const markerY = BOUNDARY_MARKER_BASE_Y + seriesIndex * BOUNDARY_MARKER_Y_OFFSET;
+    // Separate y positions for start vs end markers to prevent overlap when peaks are adjacent
+    // Also stagger by series index to prevent overlap between different traces
+    const startMarkerY = BOUNDARY_MARKER_START_Y + seriesIndex * BOUNDARY_MARKER_SERIES_OFFSET;
+    const endMarkerY = BOUNDARY_MARKER_END_Y + seriesIndex * BOUNDARY_MARKER_SERIES_OFFSET;
 
     for (const peak of peaks) {
       const startIdx = peak._computed?.startIndex ?? 0;
@@ -74,11 +78,11 @@ export function createBoundaryMarkerTraces(
       const startMarkerType = peak.startMarker ?? "triangle";
       const endMarkerType = peak.endMarker ?? "diamond";
 
-      // Create start boundary marker (on x-axis below 0, staggered by series)
-      traces.push(...createMarkerTrace(startX, markerY, startMarkerType, color));
+      // Create start boundary marker (upper row, staggered by series)
+      traces.push(...createMarkerTrace(startX, startMarkerY, startMarkerType, color));
 
-      // Create end boundary marker (on x-axis below 0, staggered by series)
-      traces.push(...createMarkerTrace(endX, markerY, endMarkerType, color));
+      // Create end boundary marker (lower row, staggered by series)
+      traces.push(...createMarkerTrace(endX, endMarkerY, endMarkerType, color));
     }
   }
 

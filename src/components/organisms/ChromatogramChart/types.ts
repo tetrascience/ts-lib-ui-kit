@@ -84,7 +84,7 @@ export type BaselineCorrectionMethod = "none" | "linear" | "rolling";
 export type BoundaryMarkerStyle = "none" | "enabled";
 
 /**
- * Peak detection options
+ * Peak detection algorithm options
  */
 export interface PeakDetectionOptions {
   /** Minimum peak height threshold (absolute or relative to max, default: 0.05) */
@@ -95,22 +95,6 @@ export interface PeakDetectionOptions {
   prominence?: number;
   /** Use relative threshold as percentage of max signal (default: true) */
   relativeThreshold?: boolean;
-  /** Show peak areas as annotations (default: false) */
-  showAreas?: boolean;
-  /**
-   * Retention time threshold for grouping overlapping annotations (default: 0.4 minutes).
-   * Peaks closer than this threshold will have their annotations staggered to avoid overlap.
-   * Adjust based on your x-axis scale and label width.
-   */
-  annotationOverlapThreshold?: number;
-  /**
-   * Show peak boundary markers (default: "none").
-   * - "none": No boundary markers displayed
-   * - "enabled": Show boundary markers using per-peak startMarker/endMarker settings
-   *
-   * Per-peak marker defaults: startMarker="triangle", endMarker="diamond"
-   */
-  boundaryMarkers?: BoundaryMarkerStyle;
 }
 
 /**
@@ -151,8 +135,23 @@ export interface ChromatogramChartProps {
   baselineCorrection?: BaselineCorrectionMethod;
   /** Rolling baseline window size (default: 50) */
   baselineWindowSize?: number;
-  /** Peak detection options - if provided, enables automatic peak detection */
+  /** Peak detection algorithm options - if provided, enables automatic peak detection */
   peakDetectionOptions?: PeakDetectionOptions;
+  /** Show peak areas as annotations (default: false) */
+  showPeakAreas?: boolean;
+  /**
+   * Show peak boundary markers (default: "none").
+   * - "none": No boundary markers displayed
+   * - "enabled": Show boundary markers using per-peak startMarker/endMarker settings
+   *
+   * Per-peak marker defaults: startMarker="triangle", endMarker="diamond"
+   */
+  boundaryMarkers?: BoundaryMarkerStyle;
+  /**
+   * Retention time threshold for grouping overlapping annotations (default: 0.4 minutes).
+   * Peaks closer than this threshold will have their annotations staggered to avoid overlap.
+   */
+  annotationOverlapThreshold?: number;
   /** Show export button in modebar (default: true) */
   showExportButton?: boolean;
 }

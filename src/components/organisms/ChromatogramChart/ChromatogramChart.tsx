@@ -61,11 +61,13 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   baselineCorrection = "none",
   baselineWindowSize = 50,
   peakDetectionOptions,
+  showPeakAreas = false,
+  boundaryMarkers = "none",
+  annotationOverlapThreshold = 0.4,
   showExportButton = true,
 }) => {
   // Derive peak detection state from options
   const enablePeakDetection = peakDetectionOptions !== undefined;
-  const showPeakAreas = peakDetectionOptions?.showAreas ?? false;
   const plotRef = useRef<HTMLDivElement>(null);
 
   // Memoize processed series with baseline correction
@@ -135,8 +137,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     });
 
     // Add peak boundary markers if enabled
-    const boundaryMarkerStyle = peakDetectionOptions?.boundaryMarkers ?? "none";
-    if (boundaryMarkerStyle !== "none") {
+    if (boundaryMarkers !== "none") {
       const peaksWithData = collectPeaksWithBoundaryData(allDetectedPeaks, processedAnnotations, processedSeries);
       if (peaksWithData.length > 0) {
         const boundaryTraces = createBoundaryMarkerTraces(peaksWithData);
@@ -168,13 +169,12 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     // Add peak area annotations if enabled
     if (showPeakAreas && enablePeakDetection) {
       // Collect all peaks with metadata, filtering out peaks that overlap with user annotations
-      const overlapThreshold = peakDetectionOptions?.annotationOverlapThreshold ?? 0.4;
       const allPeaksWithMeta: PeakWithMeta[] = [];
       allDetectedPeaks.forEach(({ peaks, seriesIndex }) => {
         peaks.forEach((peak) => {
           // Skip auto-detected peaks that are too close to user-defined annotations
           const overlapsWithUserAnnotation = processedAnnotations.some(
-            (ann) => Math.abs(ann.x - peak.x) < overlapThreshold
+            (ann) => Math.abs(ann.x - peak.x) < annotationOverlapThreshold
           );
           if (!overlapsWithUserAnnotation) {
             allPeaksWithMeta.push({ peak, seriesIndex });
@@ -183,7 +183,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       });
 
       // Group overlapping peaks and create annotations
-      const groups = groupOverlappingPeaks(allPeaksWithMeta, overlapThreshold);
+      const groups = groupOverlappingPeaks(allPeaksWithMeta, annotationOverlapThreshold);
 
       for (const group of groups) {
         plotlyAnnotations.push(...createGroupAnnotations(group));
@@ -298,7 +298,8 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   }, [
     processedSeries, allDetectedPeaks, series.length, width, height, title, xAxisTitle, yAxisTitle,
     processedAnnotations, xRange, yRange, showLegend, showGridX, showGridY, showMarkers, markerSize,
-    showCrosshairs, enablePeakDetection, peakDetectionOptions, showPeakAreas, showExportButton,
+    showCrosshairs, enablePeakDetection, peakDetectionOptions, showPeakAreas, boundaryMarkers,
+    annotationOverlapThreshold, showExportButton,
   ]);
 
   return (

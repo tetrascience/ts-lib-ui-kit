@@ -283,8 +283,8 @@ export const PeakDetection: Story = {
       minHeight: 0.1,
       prominence: 0.05,
       minDistance: 20,
-      showAreas: true,
     },
+    showPeakAreas: true,
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -329,8 +329,8 @@ export const FullFeatured: Story = {
     peakDetectionOptions: {
       minHeight: 0.15,
       prominence: 0.1,
-      showAreas: true,
     },
+    showPeakAreas: true,
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -383,9 +383,9 @@ export const WithBoundaryMarkers: Story = {
       minHeight: 0.1,
       prominence: 0.05,
       minDistance: 20,
-      showAreas: true,
-      boundaryMarkers: "enabled",
     },
+    showPeakAreas: true,
+    boundaryMarkers: "enabled",
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -430,9 +430,7 @@ export const UserDefinedPeakBoundaries: Story = {
     series: [{ ...singleInjectionData, name: "Sample A" }],
     title: "User-Defined Peak Boundaries",
     annotations: userDefinedPeaksWithBoundaries,
-    peakDetectionOptions: {
-      boundaryMarkers: "enabled",
-    },
+    boundaryMarkers: "enabled",
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -494,9 +492,9 @@ export const CombinedAutoAndUserPeaks: Story = {
     peakDetectionOptions: {
       minHeight: 0.1,
       prominence: 0.05,
-      showAreas: true,
-      boundaryMarkers: "enabled",
     },
+    showPeakAreas: true,
+    boundaryMarkers: "enabled",
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);

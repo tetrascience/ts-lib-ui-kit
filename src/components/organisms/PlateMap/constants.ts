@@ -62,6 +62,83 @@ export const COLORS = {
 } as const;
 
 /**
+ * Named Plotly colorscales converted to array format.
+ * Used to extend colorscales with emptyWellColor when there are null values.
+ * Reference: https://plotly.com/javascript/colorscales/
+ */
+export const NAMED_COLORSCALES: Record<string, Array<[number, string]>> = {
+  Viridis: [
+    [0, "#440154"],
+    [0.25, "#414487"],
+    [0.5, "#2a788e"],
+    [0.75, "#22a884"],
+    [1, "#7ad151"],
+  ],
+  Blues: [
+    [0, "#f7fbff"],
+    [0.25, "#c6dbef"],
+    [0.5, "#6baed6"],
+    [0.75, "#2171b5"],
+    [1, "#08306b"],
+  ],
+  RdBu: [
+    [0, "#67001f"],
+    [0.25, "#d6604d"],
+    [0.5, "#f7f7f7"],
+    [0.75, "#4393c3"],
+    [1, "#053061"],
+  ],
+  Greens: [
+    [0, "#f7fcf5"],
+    [0.25, "#c7e9c0"],
+    [0.5, "#74c476"],
+    [0.75, "#238b45"],
+    [1, "#00441b"],
+  ],
+  Reds: [
+    [0, "#fff5f0"],
+    [0.25, "#fcbba1"],
+    [0.5, "#fb6a4a"],
+    [0.75, "#cb181d"],
+    [1, "#67000d"],
+  ],
+  Greys: [
+    [0, "#ffffff"],
+    [0.25, "#d9d9d9"],
+    [0.5, "#969696"],
+    [0.75, "#525252"],
+    [1, "#000000"],
+  ],
+  Hot: [
+    [0, "#000000"],
+    [0.33, "#e60000"],
+    [0.66, "#ffff00"],
+    [1, "#ffffff"],
+  ],
+  YlGnBu: [
+    [0, "#ffffd9"],
+    [0.25, "#c7e9b4"],
+    [0.5, "#41b6c4"],
+    [0.75, "#225ea8"],
+    [1, "#081d58"],
+  ],
+  YlOrRd: [
+    [0, "#ffffcc"],
+    [0.25, "#fed976"],
+    [0.5, "#fd8d3c"],
+    [0.75, "#e31a1c"],
+    [1, "#800026"],
+  ],
+  Plasma: [
+    [0, "#0d0887"],
+    [0.25, "#7e03a8"],
+    [0.5, "#cc4778"],
+    [0.75, "#f89540"],
+    [1, "#f0f921"],
+  ],
+};
+
+/**
  * Numeric constants for PlateMap calculations and layout
  */
 export const PLATEMAP_CONSTANTS = {

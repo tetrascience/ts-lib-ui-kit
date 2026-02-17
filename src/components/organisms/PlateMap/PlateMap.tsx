@@ -8,6 +8,7 @@ import {
   COLORS,
   DEFAULT_CATEGORY_COLORS,
   PLATEMAP_CONSTANTS,
+  NAMED_COLORSCALES,
 } from "./constants";
 import {
   PLATE_FORMAT_96,
@@ -202,10 +203,20 @@ const PlateMap: React.FC<PlateMapProps> = ({
   const effectiveColorScale = useMemo(() => {
     if (!hasNullValues) return colorScale;
 
-    // If colorScale is a string (named scale), we can't easily extend it
-    // In this case, use the emptyWellColor as plot background
+    // Convert colorScale to array format if it's a named string scale
+    let arrayColorScale: Array<[number, string]>;
     if (typeof colorScale === "string") {
-      return colorScale;
+      // Look up the named scale in our mapping
+      const namedScale = NAMED_COLORSCALES[colorScale];
+      if (namedScale) {
+        arrayColorScale = namedScale;
+      } else {
+        // Unknown named scale - can't extend it, return as-is
+        // This is a fallback for custom/unknown Plotly scale names
+        return colorScale;
+      }
+    } else {
+      arrayColorScale = colorScale;
     }
 
     // For array colorscales, prepend emptyWellColor at position 0
@@ -220,7 +231,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
     ];
 
     // Remap original colorscale positions to the remaining range
-    for (const [pos, color] of colorScale) {
+    for (const [pos, color] of arrayColorScale) {
       const newPos = dataStartRatio + pos * (1 - dataStartRatio);
       extendedScale.push([newPos, color]);
     }

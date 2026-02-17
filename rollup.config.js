@@ -182,14 +182,14 @@ export default [
     input: "src/index.ts",
     output: { file: "dist/index.d.ts", format: "es" },
     external: [/\.scss$/],
-    plugins: [dts()],
+    plugins: [dts({ tsconfig: "./tsconfig.app.json" })],
   },
 
   // Bundle type declarations for server entry
   {
     input: "src/server.ts",
     output: { file: "dist/server.d.ts", format: "es" },
-    plugins: [dts()],
+    plugins: [dts({ tsconfig: "./tsconfig.app.json" })],
   },
 
   // Bundle type declarations for individual providers

@@ -110,14 +110,23 @@ TypeScript equivalents of the Python helpers from `ts-lib-ui-kit-streamlit` for 
 **Getting Provider Configurations:**
 
 ```typescript
+import { TDPClient } from '@tetrascience-npm/ts-connectors-sdk';
 import {
-  DataAppProviderClient,
   getProviderConfigurations,
   buildProvider,
+  jwtManager,
 } from '@tetrascience-npm/tetrascience-react-ui/server';
 
-// Create a client for TDP API calls
-const client = new DataAppProviderClient();
+// Get user's auth token from request (e.g., in Express middleware)
+const userToken = await jwtManager.getTokenFromExpressRequest(req);
+
+// Create TDPClient with the user's auth token
+const client = new TDPClient({
+  authToken: userToken,
+  artifactType: 'data-app',
+  orgSlug: process.env.ORG_SLUG,
+});
+await client.init();
 
 // Get all configured providers for this data app
 const providers = await getProviderConfigurations(client);

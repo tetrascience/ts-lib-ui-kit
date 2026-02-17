@@ -68,6 +68,8 @@ app.get("/api/providers", async (req, res) => {
     // Create TDPClient with user's auth token
     const client = new TDPClient({
       authToken: userToken,
+      artifactType: "data-app",
+      orgSlug: process.env.ORG_SLUG,
     });
     await client.init();
 
@@ -139,6 +141,8 @@ app.get("/api/tables/:tableName", async (req, res) => {
     // Create TDPClient with user's auth token
     const client = new TDPClient({
       authToken: userToken,
+      artifactType: "data-app",
+      orgSlug: process.env.ORG_SLUG,
     });
     await client.init();
 

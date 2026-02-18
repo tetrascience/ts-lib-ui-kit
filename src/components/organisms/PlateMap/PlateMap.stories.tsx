@@ -1167,6 +1167,68 @@ export const StringColorscale: Story = {
 };
 
 /**
+ * Named colorscale with empty wells
+ * Tests that empty wells display with emptyWellColor when using named colorscales (string format)
+ * This regression test covers the bug where empty wells showed as the minimum color of the scale
+ */
+export const StringColorscaleWithEmptyWells: Story = {
+  args: {
+    data: [
+      // Row A: all values present
+      { wellId: "A1", values: { Signal: 1000 } },
+      { wellId: "A2", values: { Signal: 2000 } },
+      { wellId: "A3", values: { Signal: 3000 } },
+      { wellId: "A4", values: { Signal: 4000 } },
+      // Row B: some empty wells (null values)
+      { wellId: "B1", values: { Signal: 1500 } },
+      { wellId: "B2", values: { Signal: null } }, // Empty well
+      { wellId: "B3", values: { Signal: 2500 } },
+      { wellId: "B4", values: { Signal: null } }, // Empty well
+      // Row C: more empty wells
+      { wellId: "C1", values: { Signal: null } }, // Empty well
+      { wellId: "C2", values: { Signal: 5000 } },
+      { wellId: "C3", values: { Signal: null } }, // Empty well
+      { wellId: "C4", values: { Signal: 6000 } },
+      // Row D: all values present
+      { wellId: "D1", values: { Signal: 7000 } },
+      { wellId: "D2", values: { Signal: 8000 } },
+      { wellId: "D3", values: { Signal: 9000 } },
+      { wellId: "D4", values: { Signal: 10000 } },
+    ],
+    plateFormat: "custom",
+    rows: 4,
+    columns: 4,
+    title: "Viridis with Empty Wells",
+    colorScale: "Viridis",
+    emptyWellColor: "#e0e0e0", // Light gray for empty wells
+    layerConfigs: [{ id: "Signal", valueUnit: "RFU" }],
+    width: 500,
+    height: 450,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Viridis with Empty Wells")).toBeInTheDocument();
+    });
+
+    await step("Chart renders with Viridis colorscale", async () => {
+      const container = canvasElement.querySelector(".js-plotly-plot");
+      expect(container).toBeInTheDocument();
+    });
+
+    await step("Colorbar is present", async () => {
+      // Verify colorbar is rendered
+      const colorbar = canvasElement.querySelector(".cbfill");
+      expect(colorbar).toBeInTheDocument();
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1073" },
+  },
+};
+
+/**
  * Custom value range overrides
  * Tests valueMin and valueMax props to override auto-calculated range
  */

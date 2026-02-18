@@ -1,6 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 // @ts-ignore
 import { ThemeProvider, Button, Card, Modal } from '@tetrascience-npm/tetrascience-react-ui';
+
+// Types for provider data
+interface Provider {
+  name: string;
+  type: string;
+  iconUrl: string | null;
+}
+
+interface QueryResult {
+  data: Record<string, unknown>[];
+  rowCount: number;
+  mock?: boolean;
+  message?: string;
+  provider?: string;
+  table?: string;
+}
+
+// Allowlist of tables that can be queried (must match server)
+const ALLOWED_TABLES = ['files', 'samples', 'experiments', 'results'] as const;
 
 // Color palette - easy to identify and change
 const COLORS = {
@@ -50,6 +69,38 @@ const customTheme = {
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedTable, setSelectedTable] = useState<string>(ALLOWED_TABLES[0]);
+
+  // Fetch providers on mount
+  useEffect(() => {
+    fetch('/api/providers')
+      .then((res) => res.json())
+      .then((data) => setProviders(data.providers || []))
+      .catch((err) => console.error('Failed to fetch providers:', err));
+  }, []);
+
+  // Fetch data from a table
+  const fetchTableData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/tables/${selectedTable}?limit=10`);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Query failed');
+      } else {
+        setQueryResult(data);
+      }
+    } catch (err) {
+      setError('Failed to fetch table data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <ThemeProvider theme={customTheme}>
@@ -141,6 +192,159 @@ function App() {
               </div>
             </Card>
           </div>
+        </div>
+
+        {/* Data Providers Demo */}
+        <div style={{ marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#1F2937' }}>
+            Data App Providers (Server-Side)
+          </h2>
+          <p style={{ fontSize: '14px', color: '#6B7280', marginBottom: '16px' }}>
+            Connect to Snowflake, Databricks, or Athena using the provider helpers.
+          </p>
+
+          {/* Provider List */}
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            {providers.map((provider) => (
+              <div
+                key={provider.name}
+                style={{
+                  padding: '12px 16px',
+                  backgroundColor: '#F3F4F6',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: provider.type === 'snowflake' ? COLORS.blue :
+                    provider.type === 'databricks' ? COLORS.orange : COLORS.purple,
+                }} />
+                <span style={{ fontWeight: '500' }}>{provider.name}</span>
+                <span style={{ fontSize: '12px', color: '#9CA3AF' }}>({provider.type})</span>
+              </div>
+            ))}
+            {providers.length === 0 && (
+              <span style={{ color: '#9CA3AF', fontStyle: 'italic' }}>
+                Loading providers...
+              </span>
+            )}
+          </div>
+
+          {/* Table Selector and Fetch Button */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
+            <label style={{ fontWeight: '500', color: '#374151' }}>Table:</label>
+            <select
+              value={selectedTable}
+              onChange={(e) => setSelectedTable(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #D1D5DB',
+                backgroundColor: '#FFFFFF',
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
+            >
+              {ALLOWED_TABLES.map((table) => (
+                <option key={table} value={table}>
+                  {table}
+                </option>
+              ))}
+            </select>
+            <Button
+              variant="primary"
+              size="medium"
+              onClick={fetchTableData}
+              disabled={isLoading || providers.length === 0}
+            >
+              {isLoading ? 'Fetching...' : 'Fetch Data'}
+            </Button>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div style={{
+              marginTop: '16px',
+              padding: '12px',
+              backgroundColor: '#FEE2E2',
+              borderRadius: '8px',
+              color: COLORS.redDark,
+            }}>
+              ⚠️ {error}
+            </div>
+          )}
+
+          {/* Query Results */}
+          {queryResult && (
+            <div style={{ marginTop: '16px' }}>
+              {queryResult.mock && (
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: '#FEF3C7',
+                  borderRadius: '8px',
+                  marginBottom: '12px',
+                  color: COLORS.brown,
+                }}>
+                  💡 {queryResult.message}
+                </div>
+              )}
+              <div style={{
+                backgroundColor: '#F9FAFB',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                border: '1px solid #E5E7EB',
+              }}>
+                <div style={{
+                  padding: '12px 16px',
+                  backgroundColor: '#F3F4F6',
+                  borderBottom: '1px solid #E5E7EB',
+                  fontWeight: '600',
+                }}>
+                  Results ({queryResult.rowCount} rows)
+                </div>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        {queryResult.data[0] && Object.keys(queryResult.data[0]).map((key) => (
+                          <th key={key} style={{
+                            padding: '10px 16px',
+                            textAlign: 'left',
+                            borderBottom: '1px solid #E5E7EB',
+                            fontWeight: '600',
+                            fontSize: '13px',
+                            color: '#374151',
+                          }}>
+                            {key}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {queryResult.data.map((row, i) => (
+                        <tr key={i}>
+                          {Object.values(row).map((val, j) => (
+                            <td key={j} style={{
+                              padding: '10px 16px',
+                              borderBottom: '1px solid #E5E7EB',
+                              fontSize: '14px',
+                            }}>
+                              {String(val)}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Modal Example */}

@@ -34,6 +34,36 @@
         "default": "./dist/cjs/server.js"
       }
     },
+    "./server/providers/athena": {
+      "import": {
+        "types": "./dist/providers/athena.d.ts",
+        "default": "./dist/esm/providers/athena.js"
+      },
+      "require": {
+        "types": "./dist/providers/athena.d.ts",
+        "default": "./dist/cjs/providers/athena.js"
+      }
+    },
+    "./server/providers/snowflake": {
+      "import": {
+        "types": "./dist/providers/snowflake.d.ts",
+        "default": "./dist/esm/providers/snowflake.js"
+      },
+      "require": {
+        "types": "./dist/providers/snowflake.d.ts",
+        "default": "./dist/cjs/providers/snowflake.js"
+      }
+    },
+    "./server/providers/databricks": {
+      "import": {
+        "types": "./dist/providers/databricks.d.ts",
+        "default": "./dist/esm/providers/databricks.js"
+      },
+      "require": {
+        "types": "./dist/providers/databricks.d.ts",
+        "default": "./dist/cjs/providers/databricks.js"
+      }
+    },
     "./index.css": "./dist/index.css",
     "./package.json": "./package.json"
   },
@@ -61,10 +91,11 @@
   "dependencies": {
     "@dagrejs/dagre": "^1.1.4",
     "@monaco-editor/react": "^4.7.0",
-    "@tetrascience-npm/ts-connectors-sdk": "^3.1.1",
+    "@tetrascience-npm/ts-connectors-sdk": "^3.2.0",
     "@types/plotly.js": "^3.0.0",
     "@types/react-plotly.js": "^2.6.3",
     "@xyflow/react": "^12.6.4",
+    "apache-arrow": "^21.1.0",
     "axios": "^1.9.0",
     "elkjs": "^0.10.0",
     "immer": "^10.1.1",
@@ -83,12 +114,28 @@
     "use-immer": "^0.11.0"
   },
   "peerDependencies": {
+    "@aws-sdk/client-athena": "^3.0.0",
+    "@databricks/sql": "^1.0.0",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "react-dom": "^18.3.0",
+    "snowflake-sdk": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-athena": {
+      "optional": true
+    },
+    "@databricks/sql": {
+      "optional": true
+    },
+    "snowflake-sdk": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@aws-sdk/client-athena": "^3.975.0",
     "@aws-sdk/client-s3": "^3.985.0",
     "@aws-sdk/s3-request-presigner": "^3.985.0",
+    "@databricks/sql": "^1.12.0",
     "@eslint/js": "^9.9.0",
     "@rollup/plugin-commonjs": "^28.0.3",
     "@rollup/plugin-json": "^6.1.0",
@@ -131,6 +178,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-typescript2": "^0.36.0",
     "sass": "^1.89.0",
+    "snowflake-sdk": "^2.3.3",
     "storybook": "^10.2.8",
     "ts-morph": "^27.0.2",
     "tsx": "^4.21.0",

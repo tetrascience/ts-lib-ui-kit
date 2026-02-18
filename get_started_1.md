@@ -415,8 +415,8 @@ console.log(Object.keys(TetraScienceUI));
 For interactive component documentation, clone the repository and run Storybook:
 
 ```bash
-git clone https://github.com/tetrascience/ts-lib-ui-kit-react.git
-cd ts-lib-ui-kit-react
+git clone https://github.com/tetrascience/ts-lib-ui-kit.git
+cd ts-lib-ui-kit
 yarn
 yarn storybook
 ```
@@ -478,7 +478,7 @@ You've now learned how to:
 ### Additional Resources
 
 - [THEMING.md](./THEMING.md) - Complete theming guide
-- [DEVELOPERS.md](./DEVELOPERS.md) - Contributing and development setup
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contributing and development setup
 - Run Storybook locally for interactive documentation
 
 Start building amazing TetraScience applications!

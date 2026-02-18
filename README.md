@@ -214,8 +214,8 @@ The repository includes example applications in the `examples/` directory:
 
 ```bash
 # Clone the repository
-git clone https://github.com/tetrascience/ts-lib-ui-kit-react.git
-cd ts-lib-ui-kit-react
+git clone https://github.com/tetrascience/ts-lib-ui-kit.git
+cd ts-lib-ui-kit
 
 # Install dependencies
 yarn
@@ -228,9 +228,9 @@ Visit <http://localhost:5173> to see the example app with custom theming.
 
 ## Documentation
 
-- [Getting Started Guide](https://github.com/tetrascience/ts-lib-ui-kit-react/blob/main/get_started_1.md) - Step-by-step tutorial
-- [Theming Guide](https://github.com/tetrascience/ts-lib-ui-kit-react/blob/main/THEMING.md) - Customise the design system
-- [Storybook](https://github.com/tetrascience/ts-lib-ui-kit-react/blob/main/DEVELOPERS.md#development-setup) - Clone the repo and run `yarn storybook`
+- [Getting Started Guide](./get_started_1.md) - Step-by-step tutorial
+- [Theming Guide](./THEMING.md) - Customise the design system
+- [Contributing](./CONTRIBUTING.md#development-setup) - Clone the repo and run `yarn storybook`
 
 ## Tech Stack
 

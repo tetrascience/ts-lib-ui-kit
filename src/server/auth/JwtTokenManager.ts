@@ -65,8 +65,7 @@ export class JwtTokenManager {
     this.connectorId = process.env.CONNECTOR_ID;
     this.orgSlug = process.env.ORG_SLUG;
     this.tokenCache = new Map();
-    this.tokenRefreshThresholdMs =
-      config.tokenRefreshThresholdMs || DEFAULT_TOKEN_REFRESH_THRESHOLD_MS;
+    this.tokenRefreshThresholdMs = config.tokenRefreshThresholdMs || DEFAULT_TOKEN_REFRESH_THRESHOLD_MS;
     this.tdpClient = null;
   }
 
@@ -77,9 +76,7 @@ export class JwtTokenManager {
   private getBaseUrl(): string {
     const baseUrl = this.baseUrlOverride || process.env.TDP_ENDPOINT;
     if (!baseUrl) {
-      throw new Error(
-        "TDP base URL not configured. Set TDP_ENDPOINT environment variable or pass baseUrl in config.",
-      );
+      throw new Error("TDP base URL not configured. Set TDP_ENDPOINT environment variable or pass baseUrl in config.");
     }
     return baseUrl;
   }
@@ -99,10 +96,7 @@ export class JwtTokenManager {
 
       const payload = parts[1];
       const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-      const paddedBase64 = base64.padEnd(
-        base64.length + ((4 - (base64.length % 4)) % 4),
-        "=",
-      );
+      const paddedBase64 = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
 
       // Use Buffer.from for Node.js compatibility (atob not available in all runtimes)
       return JSON.parse(Buffer.from(paddedBase64, "base64").toString("utf-8"));
@@ -146,9 +140,7 @@ export class JwtTokenManager {
     }
 
     if (!this.connectorId || !this.orgSlug) {
-      throw new Error(
-        "Missing required configuration: CONNECTOR_ID or ORG_SLUG",
-      );
+      throw new Error("Missing required configuration: CONNECTOR_ID or ORG_SLUG");
     }
 
     // getBaseUrl() throws if TDP_ENDPOINT not configured - let it propagate
@@ -159,6 +151,7 @@ export class JwtTokenManager {
         tdpEndpoint: baseUrl,
         connectorId: this.connectorId,
         orgSlug: this.orgSlug,
+        artifactType: "data-app",
       });
 
       await client.init();
@@ -173,9 +166,7 @@ export class JwtTokenManager {
   }
 
   /** Retrieve JWT from connector K/V store using getValues (calls getConnectorData internally) */
-  private async getJwtFromTokenRefInternal(
-    tokenRef: string,
-  ): Promise<string | null> {
+  private async getJwtFromTokenRefInternal(tokenRef: string): Promise<string | null> {
     // getTdpClient() throws on config errors - let those propagate
     const tdpClient = await this.getTdpClient();
 
@@ -256,9 +247,7 @@ export class JwtTokenManager {
    * });
    * ```
    */
-  async getTokenFromExpressRequest(
-    req: ExpressRequestLike,
-  ): Promise<string | null> {
+  async getTokenFromExpressRequest(req: ExpressRequestLike): Promise<string | null> {
     // Handle missing cookies gracefully (e.g., if cookie-parser middleware not installed)
     return this.getUserToken(req.cookies || {});
   }

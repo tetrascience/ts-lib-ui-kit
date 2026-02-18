@@ -18,8 +18,7 @@ vi.mock("@tetrascience-npm/ts-connectors-sdk", () => ({
 
 function createMockJwt(payload: Record<string, unknown>): string {
   const header = { alg: "HS256", typ: "JWT" };
-  const encodePart = (obj: Record<string, unknown>) =>
-    Buffer.from(JSON.stringify(obj)).toString("base64url");
+  const encodePart = (obj: Record<string, unknown>) => Buffer.from(JSON.stringify(obj)).toString("base64url");
   return `${encodePart(header)}.${encodePart(payload)}.mock-signature`;
 }
 
@@ -124,9 +123,7 @@ describe("JwtTokenManager", () => {
 
       const managerNoUrl = new JwtTokenManager();
       // getJwtFromTokenRef will try to get TDP client, which calls getBaseUrl() and throws
-      await expect(
-        managerNoUrl.getJwtFromTokenRef("token-ref"),
-      ).rejects.toThrow("TDP base URL not configured");
+      await expect(managerNoUrl.getJwtFromTokenRef("token-ref")).rejects.toThrow("TDP base URL not configured");
     });
   });
 
@@ -146,6 +143,7 @@ describe("JwtTokenManager", () => {
         tdpEndpoint: "https://api.tetrascience.com",
         connectorId: "my-connector-id",
         orgSlug: "my-org-slug",
+        artifactType: "data-app",
       });
       expect(mockInit).toHaveBeenCalled();
       expect(mockGetValues).toHaveBeenCalledWith(["token-ref-123"]);
@@ -172,9 +170,7 @@ describe("JwtTokenManager", () => {
       process.env.ORG_SLUG = "test-org";
       const token1 = createExpiringToken(3600000);
       const token2 = createExpiringToken(3600000);
-      mockGetValues
-        .mockResolvedValueOnce([{ jwt: token1 }])
-        .mockResolvedValueOnce([{ jwt: token2 }]);
+      mockGetValues.mockResolvedValueOnce([{ jwt: token1 }]).mockResolvedValueOnce([{ jwt: token2 }]);
 
       const manager = new JwtTokenManager({ baseUrl: "https://api.com" });
 
@@ -197,9 +193,7 @@ describe("JwtTokenManager", () => {
       const manager = new JwtTokenManager({ baseUrl: "https://api.com" });
 
       mockInit.mockRejectedValueOnce(new Error("Connection failed"));
-      await expect(manager.getJwtFromTokenRef("ref-1")).rejects.toThrow(
-        "Connection failed",
-      );
+      await expect(manager.getJwtFromTokenRef("ref-1")).rejects.toThrow("Connection failed");
     });
 
     it("should return null when getValues fails but client is initialized", async () => {
@@ -219,9 +213,7 @@ describe("JwtTokenManager", () => {
       const expiringToken = createExpiringToken(60000); // 1 minute (within 5 min threshold)
       const freshToken = createExpiringToken(3600000);
 
-      mockGetValues
-        .mockResolvedValueOnce([{ jwt: expiringToken }])
-        .mockResolvedValueOnce([{ jwt: freshToken }]);
+      mockGetValues.mockResolvedValueOnce([{ jwt: expiringToken }]).mockResolvedValueOnce([{ jwt: freshToken }]);
 
       const manager = new JwtTokenManager({ baseUrl: "https://api.com" });
 

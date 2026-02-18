@@ -151,6 +151,7 @@ export const SingleTrace: Story = {
         story: "Basic chromatogram with a single trace. This is the simplest usage of the component.",
       },
     },
+    zephyr: { testCaseId: "SW-T1108" },
   },
 };
 
@@ -193,6 +194,7 @@ export const MultipleTraces: Story = {
         story: "Overlay multiple injections to compare retention times and peak intensities. Crosshairs help compare values across traces.",
       },
     },
+    zephyr: { testCaseId: "SW-T1109" },
   },
 };
 
@@ -269,6 +271,7 @@ export const WithMetadata: Story = {
         story: "Hover over traces to see injection metadata in the tooltip. Metadata includes sample name, injection ID, detector type, wavelength, method name, and well position.",
       },
     },
+    zephyr: { testCaseId: "SW-T1110" },
   },
 };
 
@@ -311,6 +314,7 @@ export const PeakDetection: Story = {
         story: "Automatic peak detection identifies peaks based on height, prominence, and minimum distance. Peak areas are calculated using trapezoidal integration.",
       },
     },
+    zephyr: { testCaseId: "SW-T1111" },
   },
 };
 
@@ -369,6 +373,7 @@ export const FullFeatured: Story = {
         story: "Combines all major features: multiple traces, grid lines, crosshairs, manual annotations, baseline correction, and automatic peak detection.",
       },
     },
+    zephyr: { testCaseId: "SW-T1112" },
   },
 };
 
@@ -418,6 +423,7 @@ export const WithBoundaryMarkers: Story = {
         story: "Peak boundary markers visually indicate peak start and end points. Use 'auto' to automatically choose triangle markers (▲) for isolated boundaries at baseline or diamond markers (◆) with vertical lines for overlapping peaks. Set to 'triangle' or 'diamond' to force a specific marker style.",
       },
     },
+    zephyr: { testCaseId: "SW-T1113" },
   },
 };
 
@@ -464,6 +470,7 @@ export const UserDefinedPeakBoundaries: Story = {
         story: "Users can provide their own peak annotations with boundary information (startIndex, endIndex) to display boundary markers. This is useful when peak boundaries are known from external analysis or when manual peak integration is required. The annotations array accepts PeakAnnotation objects with optional index, startIndex, endIndex, and area fields.",
       },
     },
+    zephyr: { testCaseId: "SW-T1114" },
   },
 };
 
@@ -533,5 +540,6 @@ export const CombinedAutoAndUserPeaks: Story = {
         story: "This example shows automatic peak detection combined with user-provided annotations. The auto-detected peaks display computed areas, while user annotations can provide custom labels. User annotations with boundary info (startIndex, endIndex) will also display boundary markers alongside auto-detected peaks.",
       },
     },
+    zephyr: { testCaseId: "SW-T1115" },
   },
 };

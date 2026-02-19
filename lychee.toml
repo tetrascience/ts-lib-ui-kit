@@ -1,0 +1,21 @@
+# Lychee link checker configuration
+# https://lychee.cli.rs/guides/config/
+
+# Max concurrent requests (be polite to external servers)
+max_concurrency = 4
+
+# Retry transient failures
+max_retries = 3
+
+# Timeout per request (seconds)
+timeout = 20
+
+# Accept these status codes as valid
+accept = [200, 204, 301, 429]
+
+# Exclude localhost/example URLs
+exclude = [
+  "^http://localhost",
+  "^http://127\\.0\\.0\\.1",
+  "^https?://example\\.com",
+]

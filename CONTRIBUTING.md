@@ -5,7 +5,7 @@ This document contains development setup and contribution guidelines for the Tet
 ## Project Structure
 
 ```
-ts-lib-ui-kit-react/
+ts-lib-ui-kit/
 ├── src/
 │   ├── assets/          # Icons and other static assets
 │   ├── components/      # UI components organised by atomic design

@@ -9,7 +9,7 @@ permissions: {}
 
 jobs:
   publish-internal:
-    uses: tetrascience/ts-ci-cd-lib/.github/workflows/publish-npm-package.yml@feat/oidc-trusted-publishing
+    uses: tetrascience/ts-ci-cd-lib/.github/workflows/publish-npm-package.yml@main
     with:
       prerelease_tag: beta
     secrets:

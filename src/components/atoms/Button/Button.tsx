@@ -155,9 +155,9 @@ export const Button = ({
       disabled={disabled || loading}
       {...rest}
     >
-      {leftIcon && leftIcon}
+      {leftIcon}
       {children}
-      {rightIcon && rightIcon}
+      {rightIcon}
     </StyledButton>
   );
 };

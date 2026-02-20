@@ -122,7 +122,7 @@ export const MyComponent = ({
 };
 ```
 
-**Important:** Do NOT use `React.forwardRef` - it's deprecated in React 19. Simply include `ref` as a regular prop.
+**Note:** `React.forwardRef` is deprecated in React 19. All components in this library use the ref-as-prop pattern instead. New components should follow this pattern.
 
 ### Adding a New Component
 

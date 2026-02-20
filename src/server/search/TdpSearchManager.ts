@@ -1,12 +1,13 @@
 /**
  * TDP Search Manager for TetraScience Data Apps
  *
- * Server-side handler for TDP search that uses JwtTokenManager for auth and
- * TDPClient for searchEql. Mount this as a single API route so the frontend
- * TdpSearch component (with useServerSideSearch) works with minimal wiring.
+ * Server-side handler for TDP search that uses JwtTokenManager for auth
+ * (from request cookies) and TDPClient for searchEql. Mount this as a
+ * single POST route so the frontend TdpSearch component works with
+ * minimal wiring.
  *
- * Use from Express, Next.js API routes, or any Node server that can provide
- * an Express-like request (cookies) and a JSON body (SearchEqlRequest).
+ * Use from Express, Next.js API routes, or any Node server that can
+ * provide an Express-like request (cookies) and a JSON body.
  */
 
 import { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
@@ -57,24 +58,8 @@ export class TdpSearchManager {
     return orgSlug;
   }
 
-  /**
-   * Request body may include optional auth for standalone mode (auth from request instead of cookies).
-   */
-  private getAuthFromBody(
-    body: SearchEqlRequest & { authToken?: string; baseUrl?: string; orgSlug?: string },
-  ): { token: string; baseUrl: string; orgSlug: string } | null {
-    if (!body.authToken) return null;
-    return {
-      token: body.authToken,
-      baseUrl: body.baseUrl ?? this.getBaseUrl(),
-      orgSlug: body.orgSlug ?? this.getOrgSlug(),
-    };
-  }
-
-  /** Strip auth fields and undefined values; convert searchTerm to ES query so TDP API accepts the body. */
-  private toSearchEqlRequest(
-    body: SearchEqlRequest,
-  ): Record<string, unknown> {
+  /** Strip undefined values; convert searchTerm to ES query so TDP API accepts the body. */
+  private toSearchEqlRequest(body: SearchEqlRequest): Record<string, unknown> {
     const { searchTerm, sort, order, ...rest } = body;
     const cleaned: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(rest)) {
@@ -102,45 +87,28 @@ export class TdpSearchManager {
   }
 
   /**
-   * Handle a search request: get JWT from request body (standalone) or cookies (server-side), call TDP searchEql, return response.
-   * Response shape matches what useServerSideSearch / useStandaloneSearch expect (hits.hits, hits.total).
+   * Handle a search request: resolves the JWT from request cookies via
+   * jwtManager, calls TDP searchEql, and returns the response.
    *
-   * Standalone: body may include authToken, baseUrl?, orgSlug? (frontend sends these).
-   * Server-side: auth from cookies via jwtManager.
-   *
-   * @param req - Express-like request (cookies used when body does not contain authToken)
-   * @param body - Search request body (searchTerm, from, size, sort, order, etc.; optional authToken, baseUrl, orgSlug for standalone)
+   * @param req - Express-like request (cookies must carry a valid JWT)
+   * @param body - Search request body (searchTerm, from, size, sort, order, …)
    * @returns Search response from TDP
    * @throws Error if auth or config is missing, or TDP request fails
    */
   async handleSearchRequest<TSource = Record<string, unknown>>(
     req: ExpressRequestLike,
-    body: SearchEqlRequest & { authToken?: string; baseUrl?: string; orgSlug?: string },
+    body: SearchEqlRequest,
   ): Promise<SearchEqlResponse<TSource>> {
     const searchBody = this.toSearchEqlRequest(body);
-    const authFromBody = this.getAuthFromBody(body);
 
-    let token: string;
-    let baseUrl: string;
-    let orgSlug: string;
-
-    if (authFromBody) {
-      token = authFromBody.token;
-      baseUrl = authFromBody.baseUrl;
-      orgSlug = authFromBody.orgSlug;
-    } else {
-      const cookieToken = await this.tokenManager.getTokenFromExpressRequest(req);
-      if (!cookieToken) {
-        throw new Error("No valid authentication token found in request");
-      }
-      token = cookieToken;
-      baseUrl = this.getBaseUrl();
-      orgSlug = this.getOrgSlug();
+    const token = await this.tokenManager.getTokenFromExpressRequest(req);
+    if (!token) {
+      throw new Error("No valid authentication token found in request");
     }
 
     const client = new TDPClient({
-      tdpEndpoint: baseUrl,
-      orgSlug,
+      tdpEndpoint: this.getBaseUrl(),
+      orgSlug: this.getOrgSlug(),
       authToken: token,
     });
 

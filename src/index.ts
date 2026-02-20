@@ -157,14 +157,6 @@ export type {
 // utils
 export { COLORS, CHART_COLORS } from "./utils/colors";
 export type { ColorToken } from "./utils/colors";
-export { TdpSearchClient } from "./utils/tdpClient";
-export type {
-  TdpSearchClientConfig,
-  EqlQuery,
-  SearchResult,
-  SearchResponse,
-  TdpErrorResponse,
-} from "./utils/tdpClient";
 
 // theme
 export { ThemeProvider, defaultTheme } from "./theme";

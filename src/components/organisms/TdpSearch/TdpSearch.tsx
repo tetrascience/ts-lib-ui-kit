@@ -1,18 +1,43 @@
-import React, { useState, useEffect } from "react";
-import styled from "styled-components";
-import { Input } from "@atoms/Input";
-import { Button } from "@atoms/Button";
-import { Dropdown, DropdownOption } from "@atoms/Dropdown";
-import { Table } from "@molecules/Table";
-import { ErrorAlert } from "@atoms/ErrorAlert";
 import Search from "@assets/icon/Search";
-import { TdpSearchClient, EqlQuery, SearchResult } from "@utils/tdpClient";
+import { Button } from "@atoms/Button";
+import { Dropdown } from "@atoms/Dropdown";
+import { ErrorAlert } from "@atoms/ErrorAlert";
+import { Input } from "@atoms/Input";
+import { Table } from "@molecules/Table";
+import React, { useState } from "react";
+
+import { useServerSideSearch } from "./hooks/useServerSideSearch";
+import { useStandaloneSearch } from "./hooks/useStandaloneSearch";
+
+import type { DropdownOption } from "@atoms/Dropdown";
+import type { SearchEqlRequest } from "@tetrascience-npm/ts-connectors-sdk";
+
+import "./TdpSearch.scss";
+
+/** Transformed search result (flattened from Elasticsearch hit format) */
+export interface SearchResult {
+  id: string;
+  _score?: number | null;
+  [key: string]: any;
+}
 
 /** Configuration for a search filter */
 export interface TdpSearchFilter {
   key: string;
   label: string;
   options: DropdownOption[];
+}
+
+/** Search expression for complex queries (matches SDK SearchEqlExpression) */
+export interface SearchEqlExpression {
+  g: "AND" | "OR";
+  e: Array<{
+    field?: string;
+    operator?: string;
+    value?: any;
+    g?: "AND" | "OR";
+    e?: SearchEqlExpression["e"];
+  }>;
 }
 
 /** Configuration for column display */
@@ -31,112 +56,64 @@ export interface TdpSearchSort {
   order: "asc" | "desc";
 }
 
-/** Props for TdpSearch component */
-export interface TdpSearchProps {
+/** Standalone search configuration (calls TDP API directly from the browser; no backend) */
+interface StandaloneSearchConfig {
+  /** Use standalone search mode (calls baseUrl + /v1/datalake/searchEql with auth headers) */
+  standalone: true;
+  /** TDP API base URL */
   baseUrl: string;
+  /** Authentication token */
   authToken: string;
+  /** Organization slug */
   orgSlug: string;
-  defaultQuery?: string;
-  columns: TdpSearchColumn[];
-  filters?: TdpSearchFilter[];
-  sortOptions?: TdpSearchSort[];
-  pageSize?: number;
-  searchPlaceholder?: string;
-  className?: string;
-  useMockData?: boolean;
-  onSearch?: (query: EqlQuery, results: SearchResult[]) => void;
 }
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-`;
+/** Server-side search configuration (API endpoint; backend uses TdpSearchManager or custom API) */
+interface ServerSideSearchConfig {
+  /** Use server-side search mode (default) */
+  standalone?: false;
+  /** API endpoint for search. Defaults to '/api/search' */
+  apiEndpoint?: string;
+  /** Optional: send as ts-auth-token / x-org-slug headers (e.g. emulate creds from Storybook) */
+  authToken?: string;
+  orgSlug?: string;
+}
 
-const SearchBar = styled.div`
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  flex-wrap: wrap;
-`;
+/** Common props shared by both search modes */
+interface CommonTdpSearchProps {
+  // Search configuration
+  /** Default search term (default query) */
+  defaultQuery?: string;
+  /** Display fields/columns for the results table */
+  columns: TdpSearchColumn[];
+  /** UI filters displayed as dropdowns (for user selection) */
+  filters?: TdpSearchFilter[];
+  /** Default sort configuration (sort options) */
+  defaultSort?: TdpSearchSort;
 
-const SearchInputWrapper = styled.div`
-  flex: 1;
-  min-width: 300px;
-`;
+  // Advanced search configuration (optional SDK parameters)
+  /**
+   * Additional search parameters to pass to the SDK's searchEql method.
+   * Allows customization of expression, selectedPipelineIds, selectedSourceTypes, etc.
+   */
+  advancedSearchParams?: Partial<Omit<SearchEqlRequest, "searchTerm" | "from" | "size" | "sort" | "order">>;
 
-const FiltersRow = styled.div`
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: center;
-`;
+  // UI configuration
+  /** Results per page. Defaults to 10 */
+  pageSize?: number;
+  /** Search input placeholder text */
+  searchPlaceholder?: string;
+  /** Custom CSS class */
+  className?: string;
 
-const FilterWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 200px;
-`;
+  /** Callback fired when search is executed with the query and results */
+  onSearch?: (query: SearchEqlRequest, results: SearchResult[]) => void;
+}
 
-const FilterLabel = styled.label`
-  font-family: "Inter", sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--grey-600);
-`;
-
-const ResultsHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--grey-200);
-`;
-
-const ResultsCount = styled.div`
-  font-family: "Inter", sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--grey-700);
-`;
-
-const LoadingOverlay = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 60px;
-  font-family: "Inter", sans-serif;
-  font-size: 14px;
-  color: var(--grey-500);
-`;
-
-const EmptyState = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  gap: 12px;
-  background-color: var(--grey-50);
-  border-radius: 8px;
-  border: 1px dashed var(--grey-300);
-`;
-
-const EmptyStateIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  color: var(--grey-400);
-`;
-
-const EmptyStateText = styled.div`
-  font-family: "Inter", sans-serif;
-  font-size: 14px;
-  color: var(--grey-600);
-  text-align: center;
-`;
-
+/**
+ * TdpSearch component props with conditional types (standalone or server-side).
+ */
+export type TdpSearchProps = CommonTdpSearchProps & (StandaloneSearchConfig | ServerSideSearchConfig);
 
 /**
  * TdpSearch Component
@@ -146,111 +123,104 @@ const EmptyStateText = styled.div`
  * @example
  * ```tsx
  * <TdpSearch
- *   baseUrl="https://api.tetrascience-dev.com"
- *   authToken={token}
- *   orgSlug="data-apps-demo"
- *   defaultQuery="SELECT * FROM samples"
  *   columns={[
  *     { key: "id", header: "ID" },
- *     { key: "name", header: "Name", sortable: true }
+ *     { key: "filePath", header: "File Path", sortable: true }
  *   ]}
+ *   defaultQuery="sample-data"
  *   pageSize={20}
  * />
  * ```
  */
 
-export function TdpSearch({
-  baseUrl,
-  authToken,
-  orgSlug,
+export const TdpSearch: React.FC<TdpSearchProps> = ({
   defaultQuery = "",
   columns,
   filters = [],
-  sortOptions = [],
+  defaultSort,
+  advancedSearchParams,
   pageSize = 10,
-  searchPlaceholder = "Enter EQL query...",
+  searchPlaceholder = "Enter search term...",
   className,
   onSearch,
-}: TdpSearchProps) {
-  const [searchClient, setSearchClient] = useState<TdpSearchClient | null>(null);
+  ...props
+}) => {
+  const isStandalone = "standalone" in props && props.standalone === true;
+
+  const standaloneConfig =
+    isStandalone && "baseUrl" in props && "authToken" in props && "orgSlug" in props
+      ? {
+          baseUrl: props.baseUrl,
+          authToken: props.authToken,
+          orgSlug: props.orgSlug,
+          pageSize,
+        }
+      : {
+          baseUrl: "",
+          authToken: "",
+          orgSlug: "",
+          pageSize,
+        };
+
+  const serverSideConfig = {
+    apiEndpoint: !isStandalone && "apiEndpoint" in props ? (props.apiEndpoint ?? "/api/search") : "/api/search",
+    pageSize,
+    ...(!isStandalone && "authToken" in props && "orgSlug" in props
+      ? { authToken: props.authToken, orgSlug: props.orgSlug }
+      : {}),
+  };
+
+  const standaloneResults = useStandaloneSearch(standaloneConfig);
+  const serverSideResults = useServerSideSearch(serverSideConfig);
+
+  const { results, total, currentPage, isLoading, error, executeSearch } = isStandalone
+    ? standaloneResults
+    : serverSideResults;
+
+  // UI state
   const [query, setQuery] = useState(defaultQuery);
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [total, setTotal] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Initialize search client
-  useEffect(() => {
-    if (!baseUrl || !authToken || !orgSlug) {
+  // Execute search with current UI state. Optional sortOverride avoids stale state when called from handleSort.
+  const handleExecuteSearch = async (
+    page: number = 1,
+    sortOverride?: { sortKey: string; sortDirection: "asc" | "desc" },
+  ) => {
+    if (!query.trim()) {
       return;
     }
 
-    const client = new TdpSearchClient({
-      baseUrl,
-      authToken,
-      orgSlug,
-    });
-
-    setSearchClient(client);
-  }, [baseUrl, authToken, orgSlug]);
-
-  // Update auth token when it changes
-  useEffect(() => {
-    if (searchClient && authToken) {
-      searchClient.updateAuthToken(authToken);
-    }
-  }, [searchClient, authToken]);
-
-  // Execute search
-  const executeSearch = async (page: number = 1) => {
-    if (!searchClient || !query.trim()) {
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
     setHasSearched(true);
 
-    try {
-      const eqlQuery: EqlQuery = {
-        query: query.trim(),
-        filters: Object.keys(filterValues).length > 0 ? filterValues : undefined,
-        size: pageSize,
-        from: (page - 1) * pageSize,
-        sort: sortKey
-          ? [{ field: sortKey, order: sortDirection }]
-          : sortOptions.length > 0
-            ? sortOptions
-            : undefined,
-      };
+    const effectiveSortKey = sortOverride?.sortKey ?? sortKey ?? defaultSort?.field;
+    const effectiveOrder =
+      sortOverride == null
+        ? sortKey
+          ? sortDirection
+          : (defaultSort?.order ?? sortDirection)
+        : sortOverride.sortDirection;
 
-      const response = await searchClient.searchEql(eqlQuery);
-      const results = response.results || [];
-      const total = response.total || 0;
+    const searchRequest: Omit<SearchEqlRequest, "from" | "size"> = {
+      searchTerm: query.trim(),
+      sort: effectiveSortKey ?? undefined,
+      order: effectiveOrder,
+      ...advancedSearchParams, // Spread any additional SDK parameters
+    };
 
-      setResults(results);
-      setTotal(total);
-      setCurrentPage(page);
+    const newResults = await executeSearch(searchRequest, page);
 
-      onSearch?.(eqlQuery, results);
-    } catch (err: any) {
-      setError(err.message || "An error occurred while searching");
-      setResults([]);
-      setTotal(0);
-    } finally {
-      setIsLoading(false);
+    // Call onSearch with the freshly fetched results (not stale state)
+    if (onSearch) {
+      onSearch({ ...searchRequest, from: (page - 1) * pageSize, size: pageSize }, newResults);
     }
   };
 
   // Handle search button click
   const handleSearch = () => {
-    setCurrentPage(1);
-    executeSearch(1);
+    handleExecuteSearch(1);
   };
 
   // Handle Enter key in search input
@@ -270,21 +240,20 @@ export function TdpSearch({
 
   // Handle page change
   const handlePageChange = (page: number) => {
-    executeSearch(page);
+    handleExecuteSearch(page);
   };
 
   // Handle sort
   const handleSort = (key: string, direction: "asc" | "desc") => {
     setSortKey(key);
     setSortDirection(direction);
-    setCurrentPage(1);
-    executeSearch(1);
+    handleExecuteSearch(1, { sortKey: key, sortDirection: direction });
   };
 
   const SearchBarComponent = () => {
     return (
-      <SearchBar>
-        <SearchInputWrapper>
+      <div className="tdp-search__search-bar">
+        <div className="tdp-search__search-input-wrapper">
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -293,90 +262,79 @@ export function TdpSearch({
             iconLeft={<Search />}
             size="small"
           />
-        </SearchInputWrapper>
-        <Button
-          variant="primary"
-          onClick={handleSearch}
-          disabled={!query.trim() || isLoading}
-        >
+        </div>
+        <Button variant="primary" onClick={handleSearch} disabled={!query.trim() || isLoading}>
           {isLoading ? "Searching..." : "Search"}
         </Button>
-      </SearchBar>
-    )
-  }
+      </div>
+    );
+  };
 
   const FiltersComponent = () => {
     return (
-      <FiltersRow>
+      <div className="tdp-search__filters-row">
         {filters.map((filter) => (
-          <FilterWrapper key={filter.key}>
-            <FilterLabel>{filter.label}</FilterLabel>
+          <div key={filter.key} className="tdp-search__filter-wrapper">
+            <label className="tdp-search__filter-label">{filter.label}</label>
             <Dropdown
               options={filter.options}
               value={filterValues[filter.key] || ""}
               onChange={(value) => handleFilterChange(filter.key, value)}
             />
-          </FilterWrapper>
+          </div>
         ))}
-      </FiltersRow>
-    )
-  }
+      </div>
+    );
+  };
 
   const NoResultsComponent = () => {
     return (
-      <EmptyState>
-        <EmptyStateIcon>
+      <div className="tdp-search__empty-state">
+        <div className="tdp-search__empty-state-icon">
           <Search />
-        </EmptyStateIcon>
-        <EmptyStateText>
+        </div>
+        <div className="tdp-search__empty-state-text">
           No results found. Try adjusting your search query or filters.
-        </EmptyStateText>
-      </EmptyState>
-    )
-  }
+        </div>
+      </div>
+    );
+  };
 
   const PlaceholderComponent = () => {
     return (
-      <EmptyState>
-        <EmptyStateIcon>
+      <div className="tdp-search__empty-state">
+        <div className="tdp-search__empty-state-icon">
           <Search />
-        </EmptyStateIcon>
-        <EmptyStateText>
-          Enter a search query and click Search to get started.
-        </EmptyStateText>
-      </EmptyState>)
-  }
+        </div>
+        <div className="tdp-search__empty-state-text">Enter a search query and click Search to get started.</div>
+      </div>
+    );
+  };
 
   return (
-    <Container className={className}>
+    <div className={`tdp-search ${className || ""}`}>
       <SearchBarComponent />
 
-      {filters.length > 0 && (
-        <FiltersComponent />
-      )}
+      {filters.length > 0 && <FiltersComponent />}
 
       {error && (
         <>
-          <ErrorAlert error={error} onClose={() => setError(null)} />
+          <ErrorAlert error={error} onClose={() => {}} />
           <NoResultsComponent />
         </>
       )}
 
-      {isLoading && (
-        <LoadingOverlay>Loading results...</LoadingOverlay>
-      )}
+      {isLoading && <div className="tdp-search__loading-overlay">Loading results...</div>}
 
-      {!isLoading && !hasSearched && (
-        <PlaceholderComponent />
-      )}
+      {!isLoading && !hasSearched && <PlaceholderComponent />}
 
       {!isLoading && !error && hasSearched && results.length > 0 && (
         <>
-          <ResultsHeader>
-            <ResultsCount>
-              Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, total)} of {total} results
-            </ResultsCount>
-          </ResultsHeader>
+          <div className="tdp-search__results-header">
+            <div className="tdp-search__results-count">
+              Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, total)} of {total} results
+            </div>
+          </div>
           <Table
             columns={columns}
             data={results}
@@ -392,11 +350,9 @@ export function TdpSearch({
         </>
       )}
 
-      {!isLoading && !error && hasSearched && results.length === 0 && (
-        <NoResultsComponent />
-      )}
-    </Container>
+      {!isLoading && !error && hasSearched && results.length === 0 && <NoResultsComponent />}
+    </div>
   );
-}
+};
 
 export default TdpSearch;

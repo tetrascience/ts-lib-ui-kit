@@ -205,6 +205,27 @@ try {
 
 > **Note:** Authentication tokens are obtained from the user's JWT via `jwtManager`. The `TS_AUTH_TOKEN` environment variable is only for local development fallback.
 
+### TDP Search (`server`)
+
+**TdpSearchManager** - Server-side handler for the TdpSearch component. Resolves auth from request cookies (via `jwtManager`), calls TDP `searchEql`, and returns the response so the frontend hook works with minimal wiring.
+
+```typescript
+import { tdpSearchManager } from "@tetrascience-npm/tetrascience-react-ui/server";
+
+// Express: mount a POST route (e.g. /api/search)
+app.post("/api/search", express.json(), async (req, res) => {
+  try {
+    const body = req.body; // SearchEqlRequest (searchTerm, from, size, sort, order, ...)
+    const response = await tdpSearchManager.handleSearchRequest(req, body);
+    res.json(response);
+  } catch (err) {
+    res.status(401).json({ error: err instanceof Error ? err.message : "Search failed" });
+  }
+});
+```
+
+Frontend: use `<TdpSearch columns={...} />` with default `apiEndpoint="/api/search"`, or pass `apiEndpoint` if you use a different path. Auth is taken from cookies (`ts-auth-token` or `ts-token-ref` via `jwtManager`).
+
 ## TypeScript Support
 
 Full TypeScript support with exported types:

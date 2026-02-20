@@ -37,13 +37,13 @@ export type MarkdownDisplayProps = {
 // Define type for code component props explicitly for clarity
 // (react-markdown doesn't export its internal types easily)
 export type CodeProps = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   node?: any; // The AST node for the code element
   inline?: boolean; // True if it's an inline code span (`)
   className?: string; // Class name (e.g., "language-js")
   children?: React.ReactNode; // The content of the code element (optional)
   // Include other potential props passed down by react-markdown/rehype-raw
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   [key: string]: any;
 };
 

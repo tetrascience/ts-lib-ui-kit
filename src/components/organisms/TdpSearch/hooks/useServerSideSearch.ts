@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { SearchResult } from "../TdpSearch";
+import type { SearchResult } from "../types";
 import type { SearchEqlRequest } from "@tetrascience-npm/ts-connectors-sdk";
 
 export interface ServerSideSearchConfig {

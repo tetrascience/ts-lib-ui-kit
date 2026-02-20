@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { TdpSearch } from "./TdpSearch";
 import { mockSearchResponse } from "./TdpSearch.mocks";
 
-import type { TdpSearchColumn, TdpSearchFilter } from "./TdpSearch";
+import type { TdpSearchColumn, TdpSearchFilter } from "./types";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 /** Mock /api/search so server-side stories work without a backend. */

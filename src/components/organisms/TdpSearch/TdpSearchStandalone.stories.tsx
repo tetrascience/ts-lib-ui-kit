@@ -1,6 +1,6 @@
 import { TdpSearch } from "./TdpSearch";
 
-import type { TdpSearchColumn } from "./TdpSearch";
+import type { TdpSearchColumn } from "./types";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const standaloneDefaults = {

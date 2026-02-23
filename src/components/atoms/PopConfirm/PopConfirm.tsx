@@ -1,6 +1,8 @@
-import React, { ReactNode, useEffect, useRef, useState } from "react";
-import styled, { css } from "styled-components";
 import { Button } from "@atoms/Button";
+import React, { useEffect, useRef, useState } from "react";
+import styled, { css } from "styled-components";
+
+import type { ReactNode} from "react";
 
 export type PopConfirmPlacement =
   | "top"
@@ -32,7 +34,7 @@ export interface PopConfirmProps {
 
 interface PopoverContainerProps {
   placement: PopConfirmPlacement;
-  isVisible: boolean;
+  $isVisible: boolean;
 }
 
 const PopoverContainer = styled.div<PopoverContainerProps>`
@@ -52,7 +54,7 @@ const PopoverContainer = styled.div<PopoverContainerProps>`
   font-family: "Inter", sans-serif;
 
   ${(props) =>
-    props.isVisible &&
+    props.$isVisible &&
     css`
       opacity: 1;
       visibility: visible;
@@ -339,10 +341,24 @@ export const PopConfirm: React.FC<PopConfirmProps> = ({
     setIsVisible(!isVisible);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleToggle();
+    }
+  };
+
   return (
     <PopConfirmWrapper ref={wrapperRef} className={className} {...rest}>
-      <div onClick={handleToggle}>{children}</div>
-      <PopoverContainer placement={placement} isVisible={isVisible}>
+      <div
+        onClick={handleToggle}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+      >
+        {children}
+      </div>
+      <PopoverContainer placement={placement} $isVisible={isVisible}>
         {title && <PopoverTitle>{title}</PopoverTitle>}
         {description && <PopoverContent>{description}</PopoverContent>}
         <ButtonsContainer>

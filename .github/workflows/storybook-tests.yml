@@ -1,0 +1,113 @@
+name: Storybook Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      test_cases:
+        description: 'Comma-separated Zephyr test case IDs (e.g., SW-T1,SW-T2,SW-T3). Leave empty to run all tests.'
+        required: false
+        type: string
+
+# Required for AWS OIDC authentication
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  storybook-tests:
+    name: Storybook E2E Tests
+    # Don't run on forked PRs to protect secrets
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: 🧶 Enable Corepack
+        run: corepack enable
+
+      - name: 📦 Install dependencies
+        run: yarn install --immutable
+
+      - name: 📦 Cache Playwright browsers
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: 🧪 Run Storybook tests (all)
+        if: ${{ !inputs.test_cases }}
+        run: yarn test:storybook:ci
+        continue-on-error: true
+        id: test
+
+      - name: 🧪 Run Storybook tests (filtered)
+        if: ${{ inputs.test_cases }}
+        env:
+          TEST_CASES: ${{ inputs.test_cases }}
+        run: |
+          # Convert comma-separated IDs to pipe-separated regex pattern
+          # Input: SW-T1,SW-T2,SW-T3
+          # Output: SW-T1|SW-T2|SW-T3
+          TEST_FILTER=$(echo "$TEST_CASES" | tr ',' '|')
+          echo "Running tests matching: $TEST_FILTER"
+          yarn test:storybook:ci -- -t "$TEST_FILTER"
+        continue-on-error: true
+        id: test_filtered
+
+      - name: 🔐 Configure AWS Credentials
+        if: always()
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          aws-region: ${{ secrets.TEST_ARTIFACTS_AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.TEST_ARTIFACTS_AWS_ACCOUNT_ID }}:role/${{ secrets.TEST_ARTIFACTS_POLICY_NAME}}
+          role-session-name: StorybookTestsSession
+
+      - name: 📤 Upload Test Screenshots to S3
+        if: always()
+        run: yarn tsx scripts/upload-test-screenshots.ts
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          S3_BUCKET: ${{ secrets.TEST_ARTIFACTS_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.TEST_ARTIFACTS_AWS_REGION }}
+
+      - name: 📊 Upload JUnit test results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: storybook-junit-results
+          path: |
+            test-results/storybook-junit.xml
+            test-results/screenshot-urls.json
+          retention-days: 7
+
+      - name: 📸 Upload failure artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure() || steps.test.outcome == 'failure' || steps.test_filtered.outcome == 'failure'
+        with:
+          name: storybook-test-failures
+          path: test-results/
+          retention-days: 7
+
+      - name: ❌ Fail if tests failed
+        if: steps.test.outcome == 'failure' || steps.test_filtered.outcome == 'failure' || steps.test.outcome == 'error' || steps.test_filtered.outcome == 'error'
+        run: exit 1

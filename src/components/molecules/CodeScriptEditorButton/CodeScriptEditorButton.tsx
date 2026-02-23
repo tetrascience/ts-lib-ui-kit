@@ -1,10 +1,9 @@
-import { useCallback, useState } from "react";
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { CodeEditor } from "@atoms/CodeEditor";
-import { IconName } from "@atoms/Icon";
-import { Icon } from "@atoms/Icon";
+import { IconName , Icon } from "@atoms/Icon";
 import { Modal } from "@atoms/Modal";
+import { useCallback, useState } from "react";
+import styled from "styled-components";
 
 const ButtonContainer = styled.div`
   display: flex;
@@ -22,6 +21,13 @@ const EditorContainer = styled.div`
 const StatusText = styled.span`
   font-size: 12px;
   color: var(--grey-400);
+`;
+
+/** Wrapper to set button height via CSS */
+const EditCodeButtonWrapper = styled.div`
+  & > button {
+    height: 38px;
+  }
 `;
 
 export interface CodeScriptEditorButtonProps {
@@ -81,17 +87,18 @@ export const CodeScriptEditorButton = ({
   return (
     <>
       <ButtonContainer>
-        <Button
-          leftIcon={<Icon name={IconName.PENCIL} />}
-          onClick={handleOpenModal}
-          size="small"
-          variant="tertiary"
-          {...buttonProps}
-          disabled={disabled}
-          style={{ height: 38 }}
-        >
-          {buttonText}
-        </Button>
+        <EditCodeButtonWrapper>
+          <Button
+            leftIcon={<Icon name={IconName.PENCIL} />}
+            onClick={handleOpenModal}
+            size="small"
+            variant="tertiary"
+            {...buttonProps}
+            disabled={disabled}
+          >
+            {buttonText}
+          </Button>
+        </EditCodeButtonWrapper>
         <StatusText title={`${lineCount} lines, ${charCount} characters`}>
           {lineCount} lines / {charCount} chars
         </StatusText>

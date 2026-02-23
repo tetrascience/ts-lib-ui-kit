@@ -1,6 +1,6 @@
+import { Icon, IconName } from "@atoms/Icon";
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { Icon, IconName } from "@atoms/Icon";
 
 export type DropdownSize = "xsmall" | "small";
 
@@ -31,7 +31,7 @@ const DropdownContainer = styled.div<{ width?: string }>`
 
 const DropdownButton = styled.button<{
   open: boolean;
-  error?: boolean;
+  $error?: boolean;
   disabled?: boolean;
   size: DropdownSize;
 }>`
@@ -45,7 +45,7 @@ const DropdownButton = styled.button<{
     props.disabled ? "var(--grey-100)" : "var(--white-900)"};
   border: 1px solid
     ${(props) => {
-      if (props.error) return "var(--red-error)";
+      if (props.$error) return "var(--red-error)";
       if (props.disabled) return "var(--grey-200)";
       if (props.open) return "var(--blue-600)";
       return "var(--grey-300)";
@@ -68,7 +68,7 @@ const DropdownButton = styled.button<{
 
   &:hover:not(:disabled) {
     border-color: ${(props) =>
-      props.error ? "var(--red-error)" : "var(--blue-600)"};
+      props.$error ? "var(--red-error)" : "var(--blue-600)"};
     color: var(--black-900) !important;
   }
 
@@ -84,11 +84,11 @@ const DropdownButton = styled.button<{
   &:focus {
     outline: none;
     box-shadow: ${(props) =>
-      props.error
+      props.$error
         ? "0px 0px 0px 3px var(--red-bg)"
         : "0px 0px 0px 1px var(--white-900), 0px 0px 0px 3px var(--blue-600)"};
     border-color: ${(props) =>
-      props.error ? "var(--red-error)" : "var(--blue-600)"};
+      props.$error ? "var(--red-error)" : "var(--blue-600)"};
   }
 `;
 
@@ -210,12 +210,10 @@ export const Dropdown: React.FC<DropdownProps> = ({
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
-      ) {
-        if (isOpen) {
+       && isOpen) {
           setIsOpen(false);
           onClose?.();
         }
-      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -266,6 +264,32 @@ export const Dropdown: React.FC<DropdownProps> = ({
     }
   };
 
+  /**
+   * Finds the next enabled option index after the given index.
+   * Returns -1 if no enabled option is found.
+   */
+  const findNextEnabledIndex = (currentIndex: number): number => {
+    for (let i = currentIndex + 1; i < options.length; i++) {
+      if (!options[i].disabled) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
+  /**
+   * Finds the previous enabled option index before the given index.
+   * Returns -1 if no enabled option is found.
+   */
+  const findPrevEnabledIndex = (currentIndex: number): number => {
+    for (let i = currentIndex - 1; i >= 0; i--) {
+      if (!options[i].disabled) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     const option = options[index];
 
@@ -277,32 +301,22 @@ export const Dropdown: React.FC<DropdownProps> = ({
           handleSelect(option);
         }
         break;
-      case "ArrowDown":
+      case "ArrowDown": {
         e.preventDefault();
-        if (index < options.length - 1) {
-          let nextIndex = index + 1;
-          while (nextIndex < options.length) {
-            if (!options[nextIndex].disabled) {
-              itemRefs.current[nextIndex]?.focus();
-              break;
-            }
-            nextIndex++;
-          }
+        const nextIndex = findNextEnabledIndex(index);
+        if (nextIndex !== -1) {
+          itemRefs.current[nextIndex]?.focus();
         }
         break;
-      case "ArrowUp":
+      }
+      case "ArrowUp": {
         e.preventDefault();
-        if (index > 0) {
-          let prevIndex = index - 1;
-          while (prevIndex >= 0) {
-            if (!options[prevIndex].disabled) {
-              itemRefs.current[prevIndex]?.focus();
-              break;
-            }
-            prevIndex--;
-          }
+        const prevIndex = findPrevEnabledIndex(index);
+        if (prevIndex !== -1) {
+          itemRefs.current[prevIndex]?.focus();
         }
         break;
+      }
       case "Escape":
         e.preventDefault();
         setIsOpen(false);
@@ -355,7 +369,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
         onKeyDown={handleButtonKeyDown}
         open={isOpen}
         disabled={disabled}
-        error={error}
+        $error={error}
         size={size}
         aria-haspopup="listbox"
         aria-expanded={isOpen}

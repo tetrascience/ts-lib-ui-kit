@@ -1,6 +1,8 @@
+import { Dropdown } from "@atoms/Dropdown";
 import React from "react";
 import styled from "styled-components";
-import { Dropdown, DropdownOption } from "@atoms/Dropdown";
+
+import type { DropdownOption } from "@atoms/Dropdown";
 
 export interface TableHeaderCellProps
   extends React.ThHTMLAttributes<HTMLTableCellElement> {
@@ -31,11 +33,11 @@ const StyledTableHeaderCell = styled.th<{ width?: string }>`
   }
 `;
 
-const HeaderContent = styled.div<{ clickable?: boolean }>`
+const HeaderContent = styled.div<{ $clickable?: boolean }>`
   display: flex;
   align-items: center;
   gap: 4px;
-  cursor: ${(props) => (props.clickable ? "pointer" : "default")};
+  cursor: ${(props) => (props.$clickable ? "pointer" : "default")};
   user-select: none;
 `;
 
@@ -123,7 +125,7 @@ export const TableHeaderCell = ({
       className={className}
       {...props}
     >
-      <HeaderContent clickable={sortable} onClick={handleSort}>
+      <HeaderContent $clickable={sortable} onClick={handleSort}>
         <HeaderText>{children}</HeaderText>
         {sortable && (
           <SortIcon

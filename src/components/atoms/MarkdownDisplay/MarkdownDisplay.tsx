@@ -1,20 +1,26 @@
+import { Button } from "@atoms/Button";
+import { Icon, IconName } from "@atoms/Icon";
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import type { SyntaxHighlighterProps } from "react-syntax-highlighter";
 import { nord } from "react-syntax-highlighter/dist/esm/styles/prism";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import styled from "styled-components";
-import { Button } from "@atoms/Button";
-import { Icon, IconName } from "@atoms/Icon";
 
-// Styled components to replace Ant Design components
-const StyledSpace = styled.div`
-  display: flex;
-  gap: 8px;
-  align-items: center;
-`;
+import type { HTMLAttributes, ClassAttributes } from "react";
+import type { ExtraProps } from "react-markdown";
+import type { SyntaxHighlighterProps } from "react-syntax-highlighter";
+
+/** Copy feedback reset delay in milliseconds */
+const COPY_FEEDBACK_DELAY_MS = 2000;
+
+// Type for code component props from react-markdown
+type CodeComponentProps = ClassAttributes<HTMLElement> &
+  HTMLAttributes<HTMLElement> &
+  ExtraProps & {
+    inline?: boolean;
+  };
 
 const CodeText = styled.code`
   background-color: rgba(0, 0, 0, 0.05);
@@ -24,27 +30,12 @@ const CodeText = styled.code`
   font-size: 85%;
 `;
 
+// Export CodeProps as an alias for backwards compatibility
+export type CodeProps = CodeComponentProps;
+
 export type MarkdownDisplayProps = {
   markdown: string;
-  codeRenderer?: ({
-    inline,
-    className,
-    children,
-    ...props
-  }: CodeProps) => React.ReactElement;
-};
-
-// Define type for code component props explicitly for clarity
-// (react-markdown doesn't export its internal types easily)
-export type CodeProps = {
-   
-  node?: any; // The AST node for the code element
-  inline?: boolean; // True if it's an inline code span (`)
-  className?: string; // Class name (e.g., "language-js")
-  children?: React.ReactNode; // The content of the code element (optional)
-  // Include other potential props passed down by react-markdown/rehype-raw
-   
-  [key: string]: any;
+  codeRenderer?: (props: CodeComponentProps) => React.ReactElement;
 };
 
 export const BasicCodeRenderer = ({
@@ -52,7 +43,7 @@ export const BasicCodeRenderer = ({
   className,
   children,
   ...props
-}: CodeProps) => {
+}: CodeComponentProps) => {
   const match = /language-(\w+)/.exec(className || "");
   const language = match ? match[1] : undefined;
   const codeString = String(children).replace(/\n$/, "");
@@ -78,8 +69,8 @@ export const BasicCodeRenderer = ({
       // Update state to show feedback
       setIsCopied(true);
       showMessage("Code copied to clipboard!");
-      // Reset the "Copied!" state after 2 seconds
-      setTimeout(() => setIsCopied(false), 2000);
+      // Reset the "Copied!" state after delay
+      setTimeout(() => setIsCopied(false), COPY_FEEDBACK_DELAY_MS);
     } catch (err) {
       // Log error and show error message
       console.error("Failed to copy code: ", err);
@@ -89,32 +80,17 @@ export const BasicCodeRenderer = ({
   };
 
   return !inline && match ? (
-    <div style={{ position: "relative", marginBottom: "1em" }}>
-      <StyledSpace
-        style={{
-          position: "absolute",
-          top: 8, // Pixels from top
-          right: 8,
-          zIndex: 1, // Ensure button is above highlighter background
-        }}
-      >
+    <div className="code-block-container">
+      <div className="copy-button-wrapper">
         <Button
-          size="small" // Use a small button
+          size="small"
           leftIcon={<Icon name={IconName.COPY} />}
-          onClick={handleCopy} // Attach the copy handler
-          style={{
-            opacity: 0.7, // Slightly transparent until hover
-            transition: "opacity 0.2s ease-in-out", // Smooth opacity transition
-          }}
-          // Increase opacity on hover using inline event handlers
-          // (Could also be done with CSS and parent hover state)
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.7")}
-          aria-label="Copy code to clipboard" // Accessibility label
+          onClick={handleCopy}
+          aria-label="Copy code to clipboard"
         >
-          {isCopied ? "Copied!" : "Copy"} {/* Conditional button text */}
+          {isCopied ? "Copied!" : "Copy"}
         </Button>
-      </StyledSpace>
+      </div>
 
       {/* Using type assertion to avoid TypeScript errors */}
       {React.createElement(

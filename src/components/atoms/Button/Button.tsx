@@ -97,7 +97,14 @@ const getPadding = (size: ButtonSize, noPadding?: boolean) => {
   }
 };
 
-const StyledButton = styled.button<ButtonProps>`
+interface StyledButtonProps {
+  $noPadding?: boolean;
+  $fullWidth?: boolean;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+}
+
+const StyledButton = styled.button<StyledButtonProps>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -109,8 +116,8 @@ const StyledButton = styled.button<ButtonProps>`
   transition: all 0.2s;
   font-size: 14px;
   min-height: 20px;
-  width: ${(props) => (props.fullWidth ? "100%" : "auto")};
-  padding: ${(props) => getPadding(props.size || "medium", props.noPadding)};
+  width: ${(props) => (props.$fullWidth ? "100%" : "auto")};
+  padding: ${(props) => getPadding(props.size || "medium", props.$noPadding)};
   user-select: none;
 
   ${(props) => heightStyles[props.size || "medium"]}
@@ -150,8 +157,8 @@ export const Button = ({
       ref={ref}
       variant={variant}
       size={size}
-      noPadding={noPadding}
-      fullWidth={fullWidth}
+      $noPadding={noPadding}
+      $fullWidth={fullWidth}
       disabled={disabled || loading}
       {...rest}
     >

@@ -1,24 +1,26 @@
-import {StoryFn} from "@storybook/react";
-import React from "react";
+import MarkdownDisplay from "./MarkdownDisplay";
 
-import MarkdownDisplay from "./MarkdownDisplay"; // Adjust the path if needed
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-export default {
-	title: "Atoms/MarkdownDisplay",
-	component: MarkdownDisplay,
-	argTypes: {
-		markdown: {
-			control: "text",
-			description: "The Markdown string to display.",
-		},
-	},
+
+const meta: Meta<typeof MarkdownDisplay> = {
+  title: "Atoms/MarkdownDisplay",
+  component: MarkdownDisplay,
+  argTypes: {
+    markdown: {
+      control: "text",
+      description: "The Markdown string to display.",
+    },
+  },
 };
 
-const Template: StoryFn<React.ComponentProps<typeof MarkdownDisplay>> = (args) => <MarkdownDisplay {...args} />;
+export default meta;
+type Story = StoryObj<typeof MarkdownDisplay>;
 
-export const Default = Template.bind({});
-Default.args = {
-	markdown: `
+export const Default: Story = {
+  name: "Default",
+  args: {
+    markdown: `
 # Welcome to Markdown Display
 
 This is a component for rendering Markdown with Ant Design styling.
@@ -65,11 +67,16 @@ This is a component for rendering Markdown with Ant Design styling.
         * Unordered List Item 1
         * Unordered List Item 2
 `,
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T811" },
+  },
 };
 
-export const WithCustomMarkdown = Template.bind({});
-WithCustomMarkdown.args = {
-	markdown: `
+export const WithCustomMarkdown: Story = {
+  name: "With Custom Markdown",
+  args: {
+    markdown: `
 ## Custom Markdown Example
 
 You can pass in any Markdown string you want.
@@ -95,4 +102,8 @@ def hello():
     print("Hello, world!")
 \`\`\`
 `,
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T812" },
+  },
 };

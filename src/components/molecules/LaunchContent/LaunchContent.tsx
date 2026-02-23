@@ -1,10 +1,15 @@
-import React, { useState } from "react";
-import styled from "styled-components";
 import { Button } from "@atoms/Button";
 import { CodeEditor } from "@atoms/CodeEditor";
 import { Dropdown } from "@atoms/Dropdown";
 import { Toast } from "@atoms/Toast";
 import { Toggle } from "@atoms/Toggle";
+import React, { useState } from "react";
+import styled from "styled-components";
+
+/** Toast display duration in milliseconds */
+const TOAST_DISPLAY_MS = 5000;
+/** Deploy simulation delay in milliseconds */
+const DEPLOY_DELAY_MS = 3000;
 
 export interface LaunchContentProps {
   initialCode?: string;
@@ -118,8 +123,8 @@ const LaunchContent: React.FC<LaunchContentProps> = ({
       setTimeout(() => {
         setSuccessToast(false);
         setErrorToast(false);
-      }, 5000);
-    }, 3000);
+      }, TOAST_DISPLAY_MS);
+    }, DEPLOY_DELAY_MS);
   };
 
   return (

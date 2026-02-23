@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from "react";
 import { COLORS } from "@utils/colors";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useRef, useMemo } from "react";
 import "./PieChart.scss";
 
 interface PieDataSeries {
@@ -30,6 +30,15 @@ type PieChartProps = {
   rotation?: number;
 };
 
+const DEFAULT_COLORS = [
+  COLORS.BLUE,
+  COLORS.GREEN,
+  COLORS.ORANGE,
+  COLORS.RED,
+  COLORS.YELLOW,
+  COLORS.PURPLE,
+];
+
 const PieChart: React.FC<PieChartProps> = ({
   dataSeries,
   width = 400,
@@ -41,16 +50,7 @@ const PieChart: React.FC<PieChartProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
 
-  const defaultColors = [
-    COLORS.BLUE,
-    COLORS.GREEN,
-    COLORS.ORANGE,
-    COLORS.RED,
-    COLORS.YELLOW,
-    COLORS.PURPLE,
-  ];
-
-  const getColors = () => {
+  const colors = useMemo(() => {
     if (
       dataSeries.colors &&
       dataSeries.colors.length >= dataSeries.labels.length
@@ -58,17 +58,17 @@ const PieChart: React.FC<PieChartProps> = ({
       return dataSeries.colors;
     }
 
-    const colors = dataSeries.colors || [];
-    const missingColors = dataSeries.labels.length - colors.length;
+    const result = [...(dataSeries.colors || [])];
+    const missingColors = dataSeries.labels.length - result.length;
 
-    if (missingColors <= 0) return colors;
+    if (missingColors <= 0) return result;
 
     for (let i = 0; i < missingColors; i++) {
-      colors.push(defaultColors[i % defaultColors.length]);
+      result.push(DEFAULT_COLORS[i % DEFAULT_COLORS.length]);
     }
 
-    return colors;
-  };
+    return result;
+  }, [dataSeries.colors, dataSeries.labels.length]);
 
   useEffect(() => {
     if (!plotRef.current) return;
@@ -80,7 +80,7 @@ const PieChart: React.FC<PieChartProps> = ({
         values: dataSeries.values,
         name: dataSeries.name,
         marker: {
-          colors: getColors(),
+          colors: colors,
         },
         textinfo: textInfo,
         hoverinfo: "label+text+value" as const,
@@ -112,12 +112,15 @@ const PieChart: React.FC<PieChartProps> = ({
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
 
+    // Capture ref value for cleanup
+    const plotElement = plotRef.current;
+
     return () => {
-      if (plotRef.current) {
-        Plotly.purge(plotRef.current);
+      if (plotElement) {
+        Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, textInfo, hole, rotation]);
+  }, [colors, dataSeries.labels, dataSeries.name, dataSeries.values, width, height, textInfo, hole, rotation]);
 
   const PieChartLegend: React.FC<{ labels: string[]; colors: string[] }> = ({
     labels,
@@ -161,7 +164,7 @@ const PieChart: React.FC<PieChartProps> = ({
             margin: "0",
           }}
         />
-        <PieChartLegend labels={dataSeries.labels} colors={getColors()} />
+        <PieChartLegend labels={dataSeries.labels} colors={colors} />
       </div>
     </div>
   );

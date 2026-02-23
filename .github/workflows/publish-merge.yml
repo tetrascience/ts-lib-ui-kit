@@ -1,0 +1,19 @@
+name: Publish Package Internal
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  publish-internal:
+    uses: tetrascience/ts-ci-cd-lib/.github/workflows/publish-npm-package.yml@main
+    with:
+      prerelease_tag: beta
+    secrets:
+      AUTH_TOKEN: '${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_AUTH }}'
+      REGISTRY: 'https://registry.npmjs.org'
+      PUBLISH_REGISTRY: '${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_URL }}'
+

@@ -10,9 +10,18 @@
 
 # Built artifacts
 dist
+*.tgz
+storybook-static
 
 # Coverage reports
 coverage
+
+# Test results
+test-results
+
+# Storybook build output
+storybook-static
+debug-storybook.log
 
 # Dependency directory
 node_modules

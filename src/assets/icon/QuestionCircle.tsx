@@ -1,5 +1,6 @@
-import { IconProps } from "@atoms/Icon";
 import React from "react";
+
+import type { IconProps } from "@atoms/Icon";
 
 const QuestionCircle: React.FC<IconProps> = ({
   fill = "currentColor",

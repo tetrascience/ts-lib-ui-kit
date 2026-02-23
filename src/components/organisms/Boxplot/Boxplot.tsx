@@ -1,7 +1,10 @@
-import React, { useEffect, useRef } from "react";
 import { COLORS } from "@utils/colors";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useRef, useMemo } from "react";
 import "./Boxplot.scss";
+
+/** Default point position offset from the box edge */
+const DEFAULT_POINT_POSITION = -1.8;
 
 interface BoxDataSeries {
   y: number[];
@@ -38,7 +41,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
 
-  const calculateDataRanges = () => {
+  const { yMin, yMax } = useMemo(() => {
     let minY = Number.MAX_VALUE;
     let maxY = Number.MIN_VALUE;
 
@@ -55,12 +58,14 @@ const Boxplot: React.FC<BoxplotProps> = ({
       yMin: minY - yPadding,
       yMax: maxY + yPadding,
     };
-  };
+  }, [dataSeries]);
 
-  const { yMin, yMax } = calculateDataRanges();
-  const effectiveYRange = yRange || [yMin, yMax];
+  const effectiveYRange = useMemo(
+    () => yRange || [yMin, yMax],
+    [yRange, yMin, yMax],
+  );
 
-  const generateYTicks = () => {
+  const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
     let step = Math.pow(10, Math.floor(Math.log10(range)));
 
@@ -74,42 +79,46 @@ const Boxplot: React.FC<BoxplotProps> = ({
       current += step;
     }
     return ticks;
-  };
+  }, [effectiveYRange]);
 
-  const yTicks = generateYTicks();
+  const tickOptions = useMemo(
+    () => ({
+      tickcolor: COLORS.GREY_200,
+      ticklen: 12,
+      tickwidth: 1,
+      ticks: "outside" as const,
+      tickfont: {
+        size: 16,
+        color: COLORS.BLACK_900,
+        family: "Inter, sans-serif",
+        weight: 400,
+      },
+      linecolor: COLORS.BLACK_900,
+      linewidth: 1,
+      position: 0,
+      zeroline: false,
+    }),
+    [],
+  );
 
-  const tickOptions = {
-    tickcolor: COLORS.GREY_200,
-    ticklen: 12,
-    tickwidth: 1,
-    ticks: "outside" as const,
-    tickfont: {
-      size: 16,
-      color: COLORS.BLACK_900,
-      family: "Inter, sans-serif",
-      weight: 400,
-    },
-    linecolor: COLORS.BLACK_900,
-    linewidth: 1,
-    position: 0,
-    zeroline: false,
-  };
-
-  const titleOptions = {
-    text: title,
-    x: 0.5,
-    y: 0.95,
-    xanchor: "center" as const,
-    yanchor: "top" as const,
-    font: {
-      size: 32,
-      weight: 600,
-      family: "Inter, sans-serif",
-      color: COLORS.BLACK_900,
-      lineheight: 1.2,
-      standoff: 30,
-    },
-  };
+  const titleOptions = useMemo(
+    () => ({
+      text: title,
+      x: 0.5,
+      y: 0.95,
+      xanchor: "center" as const,
+      yanchor: "top" as const,
+      font: {
+        size: 32,
+        weight: 600,
+        family: "Inter, sans-serif",
+        color: COLORS.BLACK_900,
+        lineheight: 1.2,
+        standoff: 30,
+      },
+    }),
+    [title],
+  );
 
   useEffect(() => {
     if (!plotRef.current) return;
@@ -128,7 +137,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
       fillcolor: series.color + "40", // Add transparency
       boxpoints: showPoints ? series.boxpoints || "outliers" : (false as const),
       jitter: series.jitter || 0.3,
-      pointpos: series.pointpos || -1.8,
+      pointpos: series.pointpos || DEFAULT_POINT_POSITION,
     }));
 
     const layout = {
@@ -203,23 +212,16 @@ const Boxplot: React.FC<BoxplotProps> = ({
 
     Plotly.newPlot(plotRef.current, data, layout, config);
 
+    // Capture ref value for cleanup
+    const plotElement = plotRef.current;
+
     // Cleanup function
     return () => {
-      if (plotRef.current) {
-        Plotly.purge(plotRef.current);
+      if (plotElement) {
+        Plotly.purge(plotElement);
       }
     };
-  }, [
-    dataSeries,
-    width,
-    height,
-    xRange,
-    yRange,
-    xTitle,
-    yTitle,
-    title,
-    showPoints,
-  ]);
+  }, [dataSeries, width, height, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks]);
 
   return (
     <div className="boxplot-container">

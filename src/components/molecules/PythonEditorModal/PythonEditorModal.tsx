@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import styled from "styled-components";
 import { CodeEditor } from "@atoms/CodeEditor";
 import { Modal } from "@atoms/Modal";
+import React, { useState } from "react";
+import styled from "styled-components";
 
 export interface PythonEditorModalProps {
   open: boolean;

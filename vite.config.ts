@@ -1,4 +1,5 @@
 import path from "path";
+
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
@@ -12,6 +13,7 @@ export default defineConfig({
       "@organisms": path.resolve(__dirname, "./src/components/organisms"),
       "@styles": path.resolve(__dirname, "./src/styles"),
       "@utils": path.resolve(__dirname, "./src/utils"),
+      "@server": path.resolve(__dirname, "./src/server"),
       "@assets": path.resolve(__dirname, "./src/assets"),
     },
   },

@@ -1,7 +1,12 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
-import styled, { createGlobalStyle, keyframes } from "styled-components";
 import { Button } from "@atoms/Button";
 import { Icon, IconName } from "@atoms/Icon";
+import { useEffect, useRef, useState } from "react";
+import styled, { createGlobalStyle, keyframes } from "styled-components";
+
+import type { ReactNode} from "react";
+
+/** Animation duration for modal fade in/out in milliseconds */
+const ANIMATION_DURATION_MS = 300;
 
 export interface ModalProps {
   isOpen: boolean;
@@ -61,21 +66,21 @@ const backdropFadeOut = keyframes`
 `;
 
 // Styled Components
-const ModalRoot = styled.div<{ isFadeOut: boolean }>`
+const ModalRoot = styled.div<{ $isFadeOut: boolean }>`
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
   z-index: 10000;
-  animation: ${(props) => (props.isFadeOut ? modalFadeOut : modalFadeIn)} 0.3s
+  animation: ${(props) => (props.$isFadeOut ? modalFadeOut : modalFadeIn)} 0.3s
     ease forwards;
   display: flex;
   align-items: center;
   justify-content: center;
 `;
 
-const Backdrop = styled.button<{ isFadeOut: boolean }>`
+const Backdrop = styled.button<{ $isFadeOut: boolean }>`
   background-color: var(--black-500);
   position: absolute;
   top: 0;
@@ -86,11 +91,11 @@ const Backdrop = styled.button<{ isFadeOut: boolean }>`
   box-shadow: none;
   border: none;
   height: 100%;
-  animation: ${(props) => (props.isFadeOut ? backdropFadeOut : backdropFadeIn)}
+  animation: ${(props) => (props.$isFadeOut ? backdropFadeOut : backdropFadeIn)}
     0.3s ease forwards;
 `;
 
-const ModalContainer = styled.div<{ isFadeOut: boolean; width?: string }>`
+const ModalContainer = styled.div<{ $isFadeOut: boolean; width?: string }>`
   position: relative;
   background: var(--theme-background, var(--white-900));
   border-radius: var(--theme-radius-large, 16px);
@@ -100,8 +105,8 @@ const ModalContainer = styled.div<{ isFadeOut: boolean; width?: string }>`
   box-shadow: 0px 4px 12px 0px var(--black-100),
     0px 2px 4px -2px var(--black-100);
   z-index: 1;
-  transform: ${(props) => (props.isFadeOut ? "scale(0.95)" : "scale(1)")};
-  opacity: ${(props) => (props.isFadeOut ? 0 : 1)};
+  transform: ${(props) => (props.$isFadeOut ? "scale(0.95)" : "scale(1)")};
+  opacity: ${(props) => (props.$isFadeOut ? 0 : 1)};
   transition: transform 0.3s ease-out, opacity 0.3s ease-out;
   max-height: 90vh;
   display: flex;
@@ -131,7 +136,7 @@ const ModalTitle = styled.h3`
   color: var(--black-900);
 `;
 
-const CloseButton = styled.button`
+const CloseButton = styled.button<{ $absolute?: boolean }>`
   background: none;
   border: none;
   cursor: pointer;
@@ -142,6 +147,13 @@ const CloseButton = styled.button`
   color: var(--black-900);
   width: 24px;
   height: 24px;
+  ${(props) =>
+    props.$absolute &&
+    `
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  `}
 
   &:hover {
     color: var(--black-900);
@@ -213,7 +225,7 @@ const Modal = ({
       // Wait for animation to complete before hiding
       animationTimeout.current = setTimeout(() => {
         setIsVisible(false);
-      }, 300); // Animation duration
+      }, ANIMATION_DURATION_MS);
     }
 
     // Cleanup on unmount
@@ -251,17 +263,17 @@ const Modal = ({
     // Wait for animation to complete before calling onClose
     animationTimeout.current = setTimeout(() => {
       onClose();
-    }, 300); // Animation duration
+    }, ANIMATION_DURATION_MS);
   };
 
   return (
     isVisible && (
       <>
         <GlobalStyle />
-        <ModalRoot isFadeOut={isFadeOut} className={className}>
-          <Backdrop isFadeOut={isFadeOut} onClick={handleClose} />
+        <ModalRoot $isFadeOut={isFadeOut} className={className}>
+          <Backdrop $isFadeOut={isFadeOut} onClick={handleClose} />
 
-          <ModalContainer isFadeOut={isFadeOut} width={width}>
+          <ModalContainer $isFadeOut={isFadeOut} width={width}>
             {title && (
               <HeaderWrapper>
                 <ModalTitle>{title}</ModalTitle>
@@ -272,10 +284,7 @@ const Modal = ({
             )}
 
             {!title && (
-              <CloseButton
-                onClick={handleClose}
-                style={{ position: "absolute", top: "16px", right: "16px" }}
-              >
+              <CloseButton $absolute onClick={handleClose}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"

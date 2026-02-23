@@ -1,6 +1,8 @@
+import { ButtonControl } from "@atoms/ButtonControl";
 import React from "react";
 import styled from "styled-components";
-import { ButtonControl, ButtonControlProps } from "@atoms/ButtonControl";
+
+import type { ButtonControlProps } from "@atoms/ButtonControl";
 
 export interface ButtonControlItem extends ButtonControlProps {
   id: string;
@@ -14,32 +16,32 @@ export interface ButtonControlGroupProps {
   disabled?: boolean;
 }
 
-const GroupContainer = styled.div<{ vertical?: boolean }>`
+const GroupContainer = styled.div<{ $vertical?: boolean }>`
   display: flex;
-  flex-direction: ${(props) => (props.vertical ? "column" : "row")};
+  flex-direction: ${(props) => (props.$vertical ? "column" : "row")};
   border-radius: 6px;
   overflow: hidden;
   border: 1px solid var(--grey-200);
 
   & > *:not(:last-child) {
     ${(props) =>
-      props.vertical
+      props.$vertical
         ? "border-bottom: 1px solid var(--grey-200);"
         : "border-right: 1px solid var(--grey-200);"}
   }
 
   ${(props) =>
-    props.vertical &&
+    props.$vertical &&
     `
     width: 40px;
   `}
 `;
 
-const ButtonWrapper = styled.div<{ vertical?: boolean }>`
+const ButtonWrapper = styled.div<{ $vertical?: boolean }>`
   &:first-child {
     button {
       ${(props) =>
-        props.vertical
+        props.$vertical
           ? "border-top-right-radius: 6px;border-top-left-radius: 6px;"
           : "border-top-left-radius: 6px;border-bottom-left-radius: 6px;"}
     }
@@ -48,7 +50,7 @@ const ButtonWrapper = styled.div<{ vertical?: boolean }>`
   &:last-child {
     button {
       ${(props) =>
-        props.vertical
+        props.$vertical
           ? "border-bottom-right-radius: 6px;border-bottom-left-radius: 6px;"
           : "border-top-right-radius: 6px;border-bottom-right-radius: 6px;"}
     }
@@ -68,9 +70,9 @@ export const ButtonControlGroup: React.FC<ButtonControlGroupProps> = ({
   };
 
   return (
-    <GroupContainer vertical={vertical}>
+    <GroupContainer $vertical={vertical}>
       {controls.map((control) => (
-        <ButtonWrapper key={control.id} vertical={vertical}>
+        <ButtonWrapper key={control.id} $vertical={vertical}>
           <ButtonControl
             icon={control.icon}
             selected={selectedId === control.id}

@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from "react";
 import { COLORS } from "@utils/colors";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useRef, useMemo } from "react";
 import "./AreaGraph.scss";
 
 interface AreaDataSeries {
@@ -38,7 +38,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
 
-  const calculateDataRanges = () => {
+  const { xMin, xMax, yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
     let maxX = Number.MIN_VALUE;
     let minY = Number.MAX_VALUE;
@@ -64,13 +64,18 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
       yMin: variant === "stacked" ? 0 : minY - yPadding,
       yMax: maxY + yPadding,
     };
-  };
+  }, [dataSeries, variant]);
 
-  const { xMin, xMax, yMin, yMax } = calculateDataRanges();
-  const effectiveXRange = xRange || [xMin, xMax];
-  const effectiveYRange = yRange || [yMin, yMax];
+  const effectiveXRange = useMemo(
+    () => xRange || [xMin, xMax],
+    [xRange, xMin, xMax],
+  );
+  const effectiveYRange = useMemo(
+    () => yRange || [yMin, yMax],
+    [yRange, yMin, yMax],
+  );
 
-  const generateXTicks = () => {
+  const xTicks = useMemo(() => {
     const range = effectiveXRange[1] - effectiveXRange[0];
     let step = Math.pow(10, Math.floor(Math.log10(range)));
 
@@ -84,9 +89,9 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
       current += step;
     }
     return ticks;
-  };
+  }, [effectiveXRange]);
 
-  const generateYTicks = () => {
+  const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
     let step = Math.pow(10, Math.floor(Math.log10(range)));
 
@@ -100,43 +105,46 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
       current += step;
     }
     return ticks;
-  };
+  }, [effectiveYRange]);
 
-  const xTicks = generateXTicks();
-  const yTicks = generateYTicks();
+  const tickOptions = useMemo(
+    () => ({
+      tickcolor: COLORS.GREY_200,
+      ticklen: 12,
+      tickwidth: 1,
+      ticks: "outside" as const,
+      tickfont: {
+        size: 16,
+        color: COLORS.BLACK_900,
+        family: "Inter, sans-serif",
+        weight: 400,
+      },
+      linecolor: COLORS.BLACK_900,
+      linewidth: 1,
+      position: 0,
+      zeroline: false,
+    }),
+    [],
+  );
 
-  const tickOptions = {
-    tickcolor: COLORS.GREY_200,
-    ticklen: 12,
-    tickwidth: 1,
-    ticks: "outside" as const,
-    tickfont: {
-      size: 16,
-      color: COLORS.BLACK_900,
-      family: "Inter, sans-serif",
-      weight: 400,
-    },
-    linecolor: COLORS.BLACK_900,
-    linewidth: 1,
-    position: 0,
-    zeroline: false,
-  };
-
-  const titleOptions = {
-    text: title,
-    x: 0.5,
-    y: 0.95,
-    xanchor: "center" as const,
-    yanchor: "top" as const,
-    font: {
-      size: 32,
-      weight: 600,
-      family: "Inter, sans-serif",
-      color: COLORS.BLACK_900,
-      lineheight: 1.2,
-      standoff: 30,
-    },
-  };
+  const titleOptions = useMemo(
+    () => ({
+      text: title,
+      x: 0.5,
+      y: 0.95,
+      xanchor: "center" as const,
+      yanchor: "top" as const,
+      font: {
+        size: 32,
+        weight: 600,
+        family: "Inter, sans-serif",
+        color: COLORS.BLACK_900,
+        lineheight: 1.2,
+        standoff: 30,
+      },
+    }),
+    [title],
+  );
 
   useEffect(() => {
     if (!plotRef.current) return;
@@ -260,23 +268,16 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
 
     Plotly.newPlot(plotRef.current, data, layout, config);
 
+    // Capture ref value for cleanup
+    const plotElement = plotRef.current;
+
     // Cleanup function
     return () => {
-      if (plotRef.current) {
-        Plotly.purge(plotRef.current);
+      if (plotElement) {
+        Plotly.purge(plotElement);
       }
     };
-  }, [
-    dataSeries,
-    width,
-    height,
-    xRange,
-    yRange,
-    variant,
-    xTitle,
-    yTitle,
-    title,
-  ]);
+  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks]);
 
   return (
     <div className="area-graph-container">

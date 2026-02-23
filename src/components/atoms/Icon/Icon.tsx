@@ -1,4 +1,3 @@
-import { ReactElement } from "react";
 import Bars3BottomLeft from "@assets/icon/Bars3BottomLeft";
 import Building from "@assets/icon/Building";
 import BulkCheck from "@assets/icon/BulkCheck";
@@ -41,6 +40,8 @@ import Text from "@assets/icon/Text";
 import Trash from "@assets/icon/Trash";
 import ViewfinderCircle from "@assets/icon/ViewfinderCircle";
 
+import type { ReactElement } from "react";
+
 export interface IconsProps {
   fill?: string;
   width?: string;
@@ -54,7 +55,6 @@ export interface IconProps {
   height?: string;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export enum IconName {
   BARS_3_BOTTOM_LEFT = "bars-3-bottom-left",
   BUILDING = "building",

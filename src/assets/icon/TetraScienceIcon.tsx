@@ -1,5 +1,6 @@
 import React from "react";
-import { IconProps } from "@atoms/Icon";
+
+import type { IconProps } from "@atoms/Icon";
 
 const TetraScienceIcon: React.FC<IconProps> = ({
   fill = "currentColor",

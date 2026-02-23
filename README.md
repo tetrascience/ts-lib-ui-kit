@@ -78,6 +78,133 @@ const customTheme = {
 
 See [THEMING.md](./THEMING.md) for the complete theming guide.
 
+## Server Utilities
+
+Beyond UI components, this library includes server-side helper functions for building TetraScience applications. These are available via the `/server` subpath to avoid pulling Node.js dependencies into browser bundles.
+
+### Authentication (`server/auth`)
+
+**JWT Token Manager** - Manages JWT token retrieval for data apps:
+
+```typescript
+import { jwtManager } from '@tetrascience-npm/tetrascience-react-ui/server';
+
+// In Express middleware
+app.use(async (req, res, next) => {
+  const token = await jwtManager.getTokenFromExpressRequest(req);
+  req.tdpAuth = { token, orgSlug: process.env.ORG_SLUG };
+  next();
+});
+
+// Or with raw cookies
+const token = await jwtManager.getUserToken(req.cookies);
+```
+
+**Environment Variables:**
+
+- `ORG_SLUG` - Organization slug (required)
+- `CONNECTOR_ID` - Connector ID for ts-token-ref flow
+- `TDP_ENDPOINT` - API base URL
+- `TS_AUTH_TOKEN` - Service account token (fallback for local dev)
+
+> **Note:** The singleton `jwtManager` reads environment variables when the module is imported. Ensure these are set before importing the module.
+
+### Data App Providers (`server/providers`)
+
+TypeScript equivalents of the Python helpers from `ts-lib-ui-kit-streamlit` for connecting to database providers (Snowflake, Databricks, Athena).
+
+**Getting Provider Configurations:**
+
+```typescript
+import { TDPClient } from '@tetrascience-npm/ts-connectors-sdk';
+import {
+  getProviderConfigurations,
+  buildProvider,
+  jwtManager,
+} from '@tetrascience-npm/tetrascience-react-ui/server';
+
+// Get user's auth token from request (e.g., in Express middleware)
+const userToken = await jwtManager.getTokenFromExpressRequest(req);
+
+// Create TDPClient with the user's auth token
+const client = new TDPClient({
+  authToken: userToken,
+  artifactType: 'data-app',
+  orgSlug: process.env.ORG_SLUG,
+});
+await client.init();
+
+// Get all configured providers for this data app
+const providers = await getProviderConfigurations(client);
+
+for (const config of providers) {
+  console.log(`Provider: ${config.name} (${config.type})`);
+
+  // Build a database connection from the config
+  const provider = await buildProvider(config);
+  const results = await provider.query('SELECT * FROM my_table LIMIT 10');
+  await provider.close();
+}
+```
+
+**Using Specific Providers:**
+
+```typescript
+import {
+  buildSnowflakeProvider,
+  buildDatabricksProvider,
+  getTdpAthenaProvider,
+  type ProviderConfiguration,
+} from '@tetrascience-npm/tetrascience-react-ui/server';
+
+// Snowflake
+const snowflakeProvider = await buildSnowflakeProvider(config);
+const data = await snowflakeProvider.query('SELECT * FROM users');
+await snowflakeProvider.close();
+
+// Databricks
+const databricksProvider = await buildDatabricksProvider(config);
+const data = await databricksProvider.query('SELECT * FROM events');
+await databricksProvider.close();
+
+// TDP Athena (uses environment configuration)
+const athenaProvider = await getTdpAthenaProvider();
+const data = await athenaProvider.query('SELECT * FROM files');
+await athenaProvider.close();
+```
+
+**Exception Handling:**
+
+```typescript
+import {
+  QueryError,
+  MissingTableError,
+  ProviderConnectionError,
+  InvalidProviderConfigurationError,
+} from '@tetrascience-npm/tetrascience-react-ui/server';
+
+try {
+  const results = await provider.query('SELECT * FROM missing_table');
+} catch (error) {
+  if (error instanceof MissingTableError) {
+    console.error('Table not found:', error.message);
+  } else if (error instanceof QueryError) {
+    console.error('Query failed:', error.message);
+  }
+}
+```
+
+**Environment Variables:**
+
+- `DATA_APP_PROVIDER_CONFIG` - JSON override for local development only
+- `CONNECTOR_ID` - Connector ID for fetching providers from TDP
+- `TDP_ENDPOINT` - TDP API base URL
+- `ORG_SLUG` - Organization slug
+- `ATHENA_S3_OUTPUT_LOCATION` - S3 bucket for Athena query results
+- `AWS_REGION` - AWS region for Athena
+
+> **Note:** Authentication tokens are obtained from the user's JWT via `jwtManager`. The `TS_AUTH_TOKEN` environment variable is only for local development fallback.
+
 ## TypeScript Support
 
 Full TypeScript support with exported types:
@@ -93,8 +220,8 @@ The repository includes example applications in the `examples/` directory:
 
 ```bash
 # Clone the repository
-git clone https://github.com/tetrascience/ts-lib-ui-kit-react.git
-cd ts-lib-ui-kit-react
+git clone https://github.com/tetrascience/ts-lib-ui-kit.git
+cd ts-lib-ui-kit
 
 # Install dependencies
 yarn
@@ -103,13 +230,13 @@ yarn
 yarn workspace vite-themed-app dev
 ```
 
-Visit http://localhost:5173 to see the example app with custom theming.
+Visit <http://localhost:5173> to see the example app with custom theming.
 
 ## Documentation
 
-- [Getting Started Guide](https://github.com/tetrascience/ts-lib-ui-kit-react/blob/main/get_started_1.md) - Step-by-step tutorial
-- [Theming Guide](https://github.com/tetrascience/ts-lib-ui-kit-react/blob/main/THEMING.md) - Customise the design system
-- [Storybook](https://github.com/tetrascience/ts-lib-ui-kit-react/blob/main/DEVELOPERS.md#development-setup) - Clone the repo and run `yarn storybook`
+- [Getting Started Guide](./get_started_1.md) - Step-by-step tutorial
+- [Theming Guide](./THEMING.md) - Customise the design system
+- [Contributing](./CONTRIBUTING.md#development-setup) - Clone the repo and run `yarn storybook`
 
 ## Tech Stack
 

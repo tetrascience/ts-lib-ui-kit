@@ -1,8 +1,10 @@
-import React from "react";
-import styled from "styled-components";
-import { Input, InputProps } from "@atoms/Input";
+import { Input } from "@atoms/Input";
 import { Label } from "@atoms/Label";
 import { SupportiveText } from "@atoms/SupportiveText";
+import React from "react";
+import styled from "styled-components";
+
+import type { InputProps } from "@atoms/Input";
 
 export interface FormFieldProps extends Omit<InputProps, "className"> {
   label: string;

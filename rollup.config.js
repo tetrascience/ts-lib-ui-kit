@@ -26,7 +26,7 @@ const banner = `/*
  */`;
 
 export default [
-  // JS build (swallow any component .scss imports)
+  // React components (swallow any component .scss imports)
   {
     input: "src/index.ts",
     output: [
@@ -49,7 +49,7 @@ export default [
       "react",
       "react-dom",
       ...Object.keys(pkg.peerDependencies || {}),
-      ...Object.keys(pkg.dependencies   || {}),
+      ...Object.keys(pkg.dependencies || {}),
     ],
     plugins: [
       peerDepsExternal(),
@@ -57,19 +57,106 @@ export default [
       commonjs(),
       json(),
       typescript({
-        tsconfig:        "./tsconfig.app.json",
-        tsconfigOverride:{ compilerOptions: { declaration: false } },
-        clean:           true,
+        tsconfig: "./tsconfig.app.json",
+        tsconfigOverride: { compilerOptions: { declaration: false } },
+        clean: true,
       }),
       postcss({
         extensions: [".css", ".scss"],
-        extract:    false,
-        inject:     false,
-        minimize:   true,
-        use:        ["sass"],
+        extract: false,
+        inject: false,
+        minimize: true,
+        use: ["sass"],
         autoModules: false,
       }),
-      terser({ output: { comments: false }, compress: { drop_console: false } }),
+      terser({
+        output: { comments: false },
+        compress: { drop_console: false },
+      }),
+    ],
+  },
+
+  // Server JS build (main entry - includes all providers)
+  {
+    input: "src/server.ts",
+    output: [
+      {
+        file: "dist/cjs/server.js",
+        format: "cjs",
+        sourcemap: true,
+        exports: "named",
+        banner,
+      },
+      {
+        file: "dist/esm/server.js",
+        format: "esm",
+        sourcemap: true,
+        exports: "named",
+        banner,
+      },
+    ],
+    external: [
+      ...Object.keys(pkg.dependencies || {}),
+      ...Object.keys(pkg.peerDependencies || {}),
+    ],
+    plugins: [
+      resolve({ extensions: [".js", ".jsx", ".ts", ".tsx", ".json"] }),
+      commonjs(),
+      json(),
+      typescript({
+        tsconfig: "./tsconfig.app.json",
+        tsconfigOverride: { compilerOptions: { declaration: false } },
+        clean: true,
+      }),
+      terser({
+        output: { comments: false },
+        compress: { drop_console: false },
+      }),
+    ],
+  },
+
+  // Individual provider builds for tree-shaking
+  {
+    input: {
+      athena: "src/server/providers/entries/athena.ts",
+      snowflake: "src/server/providers/entries/snowflake.ts",
+      databricks: "src/server/providers/entries/databricks.ts",
+    },
+    output: [
+      {
+        dir: "dist/cjs/providers",
+        format: "cjs",
+        sourcemap: true,
+        exports: "named",
+        entryFileNames: "[name].js",
+        banner,
+      },
+      {
+        dir: "dist/esm/providers",
+        format: "esm",
+        sourcemap: true,
+        exports: "named",
+        entryFileNames: "[name].js",
+        banner,
+      },
+    ],
+    external: [
+      ...Object.keys(pkg.dependencies || {}),
+      ...Object.keys(pkg.peerDependencies || {}),
+    ],
+    plugins: [
+      resolve({ extensions: [".js", ".jsx", ".ts", ".tsx", ".json"] }),
+      commonjs(),
+      json(),
+      typescript({
+        tsconfig: "./tsconfig.app.json",
+        tsconfigOverride: { compilerOptions: { declaration: false } },
+        clean: true,
+      }),
+      terser({
+        output: { comments: false },
+        compress: { drop_console: false },
+      }),
     ],
   },
 
@@ -77,24 +164,46 @@ export default [
   {
     input: "src/index.css",
     output: {
-      dir:            "dist",
-      assetFileNames: "[name][extname]"
+      dir: "dist",
+      assetFileNames: "[name][extname]",
     },
     plugins: [
       postcss({
         extensions: [".css", ".scss"],
-        extract:    "index.css",
-        minimize:   true,
-        use:        ["sass"],
+        extract: "index.css",
+        minimize: true,
+        use: ["sass"],
       }),
     ],
   },
 
-  // Bundle type declarations
+  // Bundle type declarations for main entry
   {
-    input:  "src/index.ts",
+    input: "src/index.ts",
     output: { file: "dist/index.d.ts", format: "es" },
-    external:[ /\.scss$/ ],
-    plugins:[ dts() ],
+    external: [/\.scss$/],
+    plugins: [dts({ tsconfig: "./tsconfig.app.json" })],
+  },
+
+  // Bundle type declarations for server entry
+  {
+    input: "src/server.ts",
+    output: { file: "dist/server.d.ts", format: "es" },
+    plugins: [dts({ tsconfig: "./tsconfig.app.json" })],
+  },
+
+  // Bundle type declarations for individual providers
+  {
+    input: {
+      athena: "src/server/providers/entries/athena.ts",
+      snowflake: "src/server/providers/entries/snowflake.ts",
+      databricks: "src/server/providers/entries/databricks.ts",
+    },
+    output: {
+      dir: "dist/providers",
+      format: "es",
+      entryFileNames: "[name].d.ts",
+    },
+    plugins: [dts()],
   },
 ];

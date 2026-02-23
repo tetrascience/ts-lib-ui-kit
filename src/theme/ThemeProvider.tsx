@@ -1,18 +1,29 @@
-import React, { useEffect, useMemo } from "react";
-import { ThemeProvider as StyledThemeProvider } from "styled-components";
-import { Theme, defaultTheme } from "./types";
+import React, { useMemo } from "react";
+import styled, { ThemeProvider as StyledThemeProvider } from "styled-components";
+
+import { defaultTheme } from "./types";
+
+import type { Theme} from "./types";
 
 export interface ThemeProviderProps {
   theme?: Theme;
   children: React.ReactNode;
 }
 
+// Styled wrapper that applies CSS custom properties locally
+const ThemeWrapper = styled.div<{ $themeStyles: Record<string, string> }>`
+  ${(props) =>
+    Object.entries(props.$themeStyles)
+      .map(([key, value]) => `${key}: ${value};`)
+      .join("\n")}
+`;
+
 /**
  * ThemeProvider component that sets CSS custom properties for theming
  *
  * This provider merges the provided theme with the default theme and
- * sets CSS variables on the root element, making them available to both
- * styled-components and SCSS styles.
+ * sets CSS variables on a wrapper element, making them available to both
+ * styled-components and SCSS styles within the provider's scope.
  *
  * @example
  * ```tsx
@@ -45,15 +56,15 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     };
   }, [theme]);
 
-  // Set CSS custom properties on mount and when theme changes
-  useEffect(() => {
-    const root = document.documentElement;
+  // Build CSS custom properties object for the wrapper
+  const themeStyles = useMemo(() => {
+    const styles: Record<string, string> = {};
 
     // Set color variables
     if (mergedTheme.colors) {
       Object.entries(mergedTheme.colors).forEach(([key, value]) => {
         if (value) {
-          root.style.setProperty(`--theme-${key}`, value);
+          styles[`--theme-${key}`] = value;
         }
       });
     }
@@ -62,7 +73,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     if (mergedTheme.radius) {
       Object.entries(mergedTheme.radius).forEach(([key, value]) => {
         if (value) {
-          root.style.setProperty(`--theme-radius-${key}`, value);
+          styles[`--theme-radius-${key}`] = value;
         }
       });
     }
@@ -71,35 +82,18 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     if (mergedTheme.spacing) {
       Object.entries(mergedTheme.spacing).forEach(([key, value]) => {
         if (value) {
-          root.style.setProperty(`--theme-spacing-${key}`, value);
+          styles[`--theme-spacing-${key}`] = value;
         }
       });
     }
 
-    // Cleanup function to remove custom properties when theme changes
-    return () => {
-      if (mergedTheme.colors) {
-        Object.keys(mergedTheme.colors).forEach((key) => {
-          root.style.removeProperty(`--theme-${key}`);
-        });
-      }
-      if (mergedTheme.radius) {
-        Object.keys(mergedTheme.radius).forEach((key) => {
-          root.style.removeProperty(`--theme-radius-${key}`);
-        });
-      }
-      if (mergedTheme.spacing) {
-        Object.keys(mergedTheme.spacing).forEach((key) => {
-          root.style.removeProperty(`--theme-spacing-${key}`);
-        });
-      }
-    };
+    return styles;
   }, [mergedTheme]);
 
   // Also provide theme to styled-components (cast to any to avoid type conflicts)
   return (
     <StyledThemeProvider theme={mergedTheme as any}>
-      {children}
+      <ThemeWrapper $themeStyles={themeStyles}>{children}</ThemeWrapper>
     </StyledThemeProvider>
   );
 };

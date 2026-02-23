@@ -1,6 +1,8 @@
+import { Icon } from "@atoms/Icon";
 import React from "react";
 import styled from "styled-components";
-import { Icon, IconName } from "@atoms/Icon";
+
+import type { IconName } from "@atoms/Icon";
 
 interface SidebarItemProps {
   icon: IconName;
@@ -25,7 +27,7 @@ const SidebarContainer = styled.div`
   padding: 0;
 `;
 
-const SidebarItemContainer = styled.div<{ active?: boolean }>`
+const SidebarItemContainer = styled.div<{ $active?: boolean }>`
   width: 100%;
   display: inline-flex;
   flex-direction: column;
@@ -34,7 +36,7 @@ const SidebarItemContainer = styled.div<{ active?: boolean }>`
   cursor: pointer;
   transition: background-color 0.2s ease;
   background-color: ${(props) =>
-    props.active ? "var(--white-100)" : "transparent"};
+    props.$active ? "var(--white-100)" : "transparent"};
 
   &:hover {
     background-color: var(--white-50);
@@ -68,7 +70,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   onClick,
 }) => {
   return (
-    <SidebarItemContainer active={active} onClick={onClick}>
+    <SidebarItemContainer $active={active} onClick={onClick}>
       <IconWrapper>
         <Icon name={icon} fill="var(--white-900)" width="20" height="20" />
       </IconWrapper>

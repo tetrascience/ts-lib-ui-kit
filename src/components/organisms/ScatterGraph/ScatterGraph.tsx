@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from "react";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useRef, useMemo } from "react";
+
 import "./ScatterGraph.scss";
 import { COLORS } from "../../../utils/colors";
 
@@ -39,7 +40,7 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
 
-  const calculateDataRanges = () => {
+  const { xMin, xMax, yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
     let maxX = Number.MIN_VALUE;
     let minY = Number.MAX_VALUE;
@@ -65,13 +66,19 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
       yMin: minY - yPadding,
       yMax: maxY + yPadding,
     };
-  };
+  }, [dataSeries]);
 
-  const { xMin, xMax, yMin, yMax } = calculateDataRanges();
-  const effectiveXRange = xRange || [xMin, xMax];
-  const effectiveYRange = yRange || [yMin, yMax];
+  const effectiveXRange = useMemo(
+    () => xRange || [xMin, xMax],
+    [xRange, xMin, xMax],
+  );
 
-  const generateXTicks = () => {
+  const effectiveYRange = useMemo(
+    () => yRange || [yMin, yMax],
+    [yRange, yMin, yMax],
+  );
+
+  const xTicks = useMemo(() => {
     const range = effectiveXRange[1] - effectiveXRange[0];
     let step = Math.pow(10, Math.floor(Math.log10(range)));
 
@@ -85,9 +92,9 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
       current += step;
     }
     return ticks;
-  };
+  }, [effectiveXRange]);
 
-  const generateYTicks = () => {
+  const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
     let step = Math.pow(10, Math.floor(Math.log10(range)));
 
@@ -101,35 +108,38 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
       current += step;
     }
     return ticks;
-  };
+  }, [effectiveYRange]);
 
-  const xTicks = generateXTicks();
-  const yTicks = generateYTicks();
+  const tickOptions = useMemo(
+    () => ({
+      tickcolor: COLORS.GREY_200,
+      ticklen: 12,
+      tickwidth: 1,
+      ticks: "outside" as const,
+      tickfont: {
+        size: 16,
+        color: COLORS.BLACK_900,
+        family: "Inter, sans-serif",
+        weight: 400,
+      },
+      linecolor: COLORS.BLACK_900,
+      linewidth: 1,
+      position: 0,
+      zeroline: false,
+    }),
+    [],
+  );
 
-  const tickOptions = {
-    tickcolor: COLORS.GREY_200,
-    ticklen: 12,
-    tickwidth: 1,
-    ticks: "outside" as const,
-    tickfont: {
-      size: 16,
-      color: COLORS.BLACK_900,
-      family: "Inter, sans-serif",
-      weight: 400,
-    },
-    linecolor: COLORS.BLACK_900,
-    linewidth: 1,
-    position: 0,
-    zeroline: false,
-  };
-
-  const spikeOptions = {
-    showspikes: true,
-    spikemode: "across" as const,
-    spikedash: "solid" as const,
-    spikecolor: COLORS.BLACK_OPACITY_20,
-    spikethickness: 2,
-  };
+  const spikeOptions = useMemo(
+    () => ({
+      showspikes: true,
+      spikemode: "across" as const,
+      spikedash: "solid" as const,
+      spikecolor: COLORS.BLACK_OPACITY_20,
+      spikethickness: 2,
+    }),
+    [],
+  );
 
   useEffect(() => {
     if (!plotRef.current) return;
@@ -232,12 +242,15 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
 
+    // Capture ref value for cleanup
+    const plotElement = plotRef.current;
+
     return () => {
-      if (plotRef.current) {
-        Plotly.purge(plotRef.current);
+      if (plotElement) {
+        Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, effectiveXRange, effectiveYRange, xTicks, yTicks, tickOptions, spikeOptions]);
 
   return (
     <div className="chart-container">

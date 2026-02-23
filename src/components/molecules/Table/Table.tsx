@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useEffect } from "react";
-import styled from "styled-components";
+import { Checkbox } from "@atoms/Checkbox";
 import { TableCell } from "@atoms/TableCell";
 import { TableHeaderCell } from "@atoms/TableHeaderCell";
-import { Checkbox } from "@atoms/Checkbox";
-import { DropdownOption } from "@atoms/Dropdown";
+import React, { useState, useMemo, useEffect } from "react";
+import styled from "styled-components";
+
+import type { DropdownOption } from "@atoms/Dropdown";
 
 export interface TableColumn<T = any> {
   key: string;
@@ -49,12 +50,12 @@ const StyledTable = styled.table`
 
 const TableBody = styled.tbody``;
 
-const TableRow = styled.tr<{ selectable?: boolean }>`
-  cursor: ${(props) => (props.selectable ? "pointer" : "default")};
+const TableRow = styled.tr<{ $selectable?: boolean }>`
+  cursor: ${(props) => (props.$selectable ? "pointer" : "default")};
 
   &:hover {
     background-color: ${(props) =>
-      props.selectable ? "var(--grey-50)" : "transparent"};
+      props.$selectable ? "var(--grey-50)" : "transparent"};
   }
 `;
 
@@ -108,7 +109,7 @@ const PageNumbers = styled.div`
   gap: 0;
 `;
 
-const PageNumber = styled.button<{ active?: boolean }>`
+const PageNumber = styled.button<{ $active?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -118,7 +119,7 @@ const PageNumber = styled.button<{ active?: boolean }>`
   border: none;
   border-radius: 6px;
   background-color: ${(props) =>
-    props.active ? "var(--grey-100)" : "transparent"};
+    props.$active ? "var(--grey-100)" : "transparent"};
   font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 13px;
   font-weight: 500;
@@ -200,11 +201,7 @@ export function Table<T extends Record<string, any>>({
       if (aValue === bValue) return 0;
 
       let comparison = 0;
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        comparison = aValue - bValue;
-      } else {
-        comparison = String(aValue).localeCompare(String(bValue));
-      }
+      comparison = typeof aValue === "number" && typeof bValue === "number" ? aValue - bValue : String(aValue).localeCompare(String(bValue));
 
       return sortDirection === "asc" ? comparison : -comparison;
     });
@@ -275,12 +272,7 @@ export function Table<T extends Record<string, any>>({
   };
 
   const handleRowSelect = (row: T, checked: boolean) => {
-    let newSelection: T[];
-    if (checked) {
-      newSelection = [...selectedRows, row];
-    } else {
-      newSelection = selectedRows.filter((r) => r !== row);
-    }
+    const newSelection: T[] = checked ? [...selectedRows, row] : selectedRows.filter((r) => r !== row);
 
     if (isControlledSelection && onRowSelect) {
       onRowSelect(newSelection);
@@ -378,7 +370,7 @@ export function Table<T extends Record<string, any>>({
           {paginatedData.map((row, rowIndex) => (
             <TableRow
               key={getRowKey(row, rowIndex)}
-              selectable={selectable}
+              $selectable={selectable}
               onClick={
                 selectable
                   ? () => handleRowSelect(row, !isRowSelected(row))
@@ -438,7 +430,7 @@ export function Table<T extends Record<string, any>>({
             {getPageNumbers().map((page, index) => (
               <PageNumber
                 key={index}
-                active={page === currentPage}
+                $active={page === currentPage}
                 onClick={typeof page === "number" ? () => handlePageChange(page) : undefined}
                 disabled={typeof page !== "number"}
               >

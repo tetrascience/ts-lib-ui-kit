@@ -1,4 +1,4 @@
-import type { Preview } from "@storybook/react";
+import type { Preview } from "@storybook/react-vite";
 import "../src/colors.css";
 import "./font.css";
 
@@ -10,6 +10,8 @@ const preview: Preview = {
         date: /Date$/,
       },
     },
+    // Use fullscreen layout for video recording - removes padding
+    layout: "fullscreen",
   },
 };
 

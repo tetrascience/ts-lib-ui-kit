@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from "react";
 import { COLORS } from "@utils/colors";
 import Plotly from "plotly.js-dist";
+import React, { useEffect, useRef, useMemo } from "react";
 import "./BarGraph.scss";
 
 interface BarDataSeries {
@@ -44,7 +44,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
 
-  const calculateDataRanges = () => {
+  const { yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
     let maxX = Number.MIN_VALUE;
     let minY = Number.MAX_VALUE;
@@ -70,29 +70,19 @@ const BarGraph: React.FC<BarGraphProps> = ({
       yMin: variant === "stack" ? 0 : minY - yPadding,
       yMax: maxY + yPadding,
     };
-  };
+  }, [dataSeries, variant]);
 
-  const { yMin, yMax } = calculateDataRanges();
-  // const effectiveXRange = xRange || [xMin, xMax];
-  const effectiveYRange = yRange || [yMin, yMax];
+  const effectiveYRange = useMemo(
+    () => yRange || [yMin, yMax],
+    [yRange, yMin, yMax],
+  );
 
-  // const generateXTicks = () => {
-  //   const range = effectiveXRange[1] - effectiveXRange[0];
-  //   let step = Math.pow(10, Math.floor(Math.log10(range)));
+  const xTicks = useMemo(
+    () => [...new Set(dataSeries.flatMap((s) => s.x))],
+    [dataSeries],
+  );
 
-  //   if (range / step > 10) step = step * 2;
-  //   if (range / step < 4) step = step / 2;
-
-  //   const ticks = [];
-  //   let current = Math.ceil(effectiveXRange[0] / step) * step;
-  //   while (current <= effectiveXRange[1]) {
-  //     ticks.push(current);
-  //     current += step;
-  //   }
-  //   return ticks;
-  // };
-
-  const generateYTicks = () => {
+  const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
     let step = Math.pow(10, Math.floor(Math.log10(range)));
 
@@ -106,12 +96,9 @@ const BarGraph: React.FC<BarGraphProps> = ({
       current += step;
     }
     return ticks;
-  };
+  }, [effectiveYRange]);
 
-  const xTicks = Array.from(new Set(dataSeries.flatMap((s) => s.x)));
-  const yTicks = generateYTicks();
-
-  const getBarMode = (): "group" | "stack" | "overlay" => {
+  const barMode = useMemo((): "group" | "stack" | "overlay" => {
     switch (variant) {
       case "stack":
         return "stack";
@@ -121,24 +108,27 @@ const BarGraph: React.FC<BarGraphProps> = ({
       default:
         return "group";
     }
-  };
+  }, [variant]);
 
-  const tickOptions = {
-    tickcolor: COLORS.GREY_200,
-    ticklen: 12,
-    tickwidth: 1,
-    ticks: "outside" as const,
-    tickfont: {
-      size: 16,
-      color: COLORS.BLACK_900,
-      family: "Inter, sans-serif",
-      weight: 400,
-    },
-    linecolor: COLORS.BLACK_900,
-    linewidth: 1,
-    position: 0,
-    zeroline: false,
-  };
+  const tickOptions = useMemo(
+    () => ({
+      tickcolor: COLORS.GREY_200,
+      ticklen: 12,
+      tickwidth: 1,
+      ticks: "outside" as const,
+      tickfont: {
+        size: 16,
+        color: COLORS.BLACK_900,
+        family: "Inter, sans-serif",
+        weight: 400,
+      },
+      linecolor: COLORS.BLACK_900,
+      linewidth: 1,
+      position: 0,
+      zeroline: false,
+    }),
+    [],
+  );
 
   useEffect(() => {
     if (!plotRef.current) return;
@@ -172,7 +162,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
       font: {
         family: "Inter, sans-serif",
       },
-      barmode: getBarMode(),
+      barmode: barMode,
       bargap: 0.15,
       dragmode: false as const,
       xaxis: {
@@ -237,24 +227,16 @@ const BarGraph: React.FC<BarGraphProps> = ({
 
     Plotly.newPlot(plotRef.current, data, layout, config);
 
+    // Capture ref value for cleanup
+    const plotElement = plotRef.current;
+
     // Cleanup function
     return () => {
-      if (plotRef.current) {
-        Plotly.purge(plotRef.current);
+      if (plotElement) {
+        Plotly.purge(plotElement);
       }
     };
-  }, [
-    dataSeries,
-    width,
-    height,
-    xRange,
-    yRange,
-    variant,
-    xTitle,
-    yTitle,
-    title,
-    barWidth,
-  ]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks]);
 
   return (
     <div className="bar-graph-container">

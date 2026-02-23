@@ -1,6 +1,8 @@
-import React, { ChangeEvent } from "react";
-import styled from "styled-components";
 import { Icon, IconName } from "@atoms/Icon";
+import React from "react";
+import styled from "styled-components";
+
+import type { ChangeEvent } from "react";
 
 export interface CheckboxProps {
   checked?: boolean;
@@ -15,13 +17,13 @@ export interface CheckboxProps {
 
 const CheckboxContainer = styled.label<{
   disabled?: boolean;
-  noPadding?: boolean;
+  $noPadding?: boolean;
 }>`
   display: inline-flex;
   align-items: center;
   cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   opacity: ${(props) => (props.disabled ? 0.6 : 1)};
-  padding: ${(props) => (props.noPadding ? "0" : "12px 16px")};
+  padding: ${(props) => (props.$noPadding ? "0" : "12px 16px")};
   width: 100%;
 `;
 
@@ -93,7 +95,7 @@ export const Checkbox = ({
     <CheckboxContainer
       className={className}
       disabled={disabled}
-      noPadding={noPadding}
+      $noPadding={noPadding}
       onClick={handleClick}
     >
       <HiddenCheckbox

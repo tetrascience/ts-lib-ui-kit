@@ -1,6 +1,6 @@
+import { Icon, IconName } from "@atoms/Icon";
 import React from "react";
 import styled from "styled-components";
-import { Icon, IconName } from "@atoms/Icon";
 
 export interface SupportiveTextProps {
   children: React.ReactNode;

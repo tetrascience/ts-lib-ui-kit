@@ -1,0 +1,21 @@
+name: Publish PR
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  publish:
+    # Skip for forked PRs since secrets are not available
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    uses: tetrascience/ts-ci-cd-lib/.github/workflows/publish-npm-package.yml@main
+    with:
+      prerelease_tag: alpha
+    secrets:
+      AUTH_TOKEN: '${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_AUTH }}'
+      REGISTRY: 'https://registry.npmjs.org'
+      PUBLISH_REGISTRY: '${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_URL }}'
+

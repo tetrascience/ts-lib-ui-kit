@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { AxiosError } from "axios";
 import styled from "styled-components";
+
+import type { AxiosError } from "axios";
 
 interface ErrorObject {
   isAxiosError?: boolean;
@@ -72,13 +73,13 @@ const Paragraph = styled.p`
   line-height: 1.5;
 `;
 
-const Text = styled.span<{ strong?: boolean; type?: "secondary" | "primary" }>`
-  font-weight: ${(props) => (props.strong ? "600" : "400")};
+const Text = styled.span<{ $strong?: boolean; $type?: "secondary" | "primary" }>`
+  font-weight: ${(props) => (props.$strong ? "600" : "400")};
   color: ${(props) =>
-    props.type === "secondary" ? "rgba(0, 0, 0, 0.45)" : "inherit"};
+    props.$type === "secondary" ? "rgba(0, 0, 0, 0.45)" : "inherit"};
 `;
 
-const SecondaryText = styled(Text).attrs({ type: "secondary" })``;
+const SecondaryText = styled(Text).attrs({ $type: "secondary" })``;
 
 const CollapseContainer = styled.div`
   margin-left: -15px;
@@ -86,7 +87,7 @@ const CollapseContainer = styled.div`
   margin-bottom: -5px;
 `;
 
-const CollapseHeader = styled.div<{ isActive: boolean }>`
+const CollapseHeader = styled.div<{ $isActive: boolean }>`
   padding: 12px 16px;
   cursor: pointer;
   display: flex;
@@ -98,15 +99,15 @@ const CollapseHeader = styled.div<{ isActive: boolean }>`
   }
 
   &::after {
-    content: "${(props) => (props.isActive ? "▼" : "▶")}";
+    content: "${(props) => (props.$isActive ? "▼" : "▶")}";
     font-size: 12px;
     margin-left: 8px;
   }
 `;
 
-const CollapseContent = styled.div<{ isVisible: boolean }>`
-  padding: ${(props) => (props.isVisible ? "0 16px 12px" : "0 16px")};
-  max-height: ${(props) => (props.isVisible ? "300px" : "0")};
+const CollapseContent = styled.div<{ $isVisible: boolean }>`
+  padding: ${(props) => (props.$isVisible ? "0 16px 12px" : "0 16px")};
+  max-height: ${(props) => (props.$isVisible ? "300px" : "0")};
   overflow: hidden;
   transition: max-height 0.3s ease;
 `;
@@ -133,6 +134,113 @@ function isAxiosError(error: unknown): error is AxiosError {
     "isAxiosError" in error &&
     (error as ErrorObject).isAxiosError === true
   );
+}
+
+/** Parsed error result used for rendering */
+interface ParsedError {
+  message: React.ReactNode;
+  description: React.ReactNode | null;
+  details: string | null;
+  errorType: string;
+}
+
+/** Parses Axios error response data to extract description and details */
+function parseAxiosResponseData(
+  responseData: unknown
+): { description: React.ReactNode; details: string | null } {
+  if (typeof responseData === "string") {
+    return { description: responseData, details: null };
+  }
+  if (responseData && typeof responseData === "object") {
+    const detail =
+      (responseData as ErrorObject).detail ||
+      (responseData as ErrorObject).message ||
+      (responseData as ErrorObject).error;
+    if (typeof detail === "string") {
+      return { description: detail, details: null };
+    }
+    return {
+      description: "Check details for response data.",
+      details: JSON.stringify(responseData, null, 2),
+    };
+  }
+  return { description: null, details: null };
+}
+
+/** Parses an Axios error into a ParsedError object */
+function parseAxiosError(error: AxiosError): ParsedError {
+  let errorType = "Network/API Error";
+  let message: React.ReactNode = error.message;
+  let description: React.ReactNode | null = null;
+  let details: string | null = null;
+
+  if (error.response) {
+    const { status, statusText, data: responseData } = error.response;
+    message = `API Error: ${status} ${statusText}`;
+    const parsed = parseAxiosResponseData(responseData);
+    description = parsed.description ?? `Request failed with status code ${status}.`;
+    details = `URL: ${error.config?.method?.toUpperCase()} ${error.config?.url}\nStatus: ${status} ${statusText}\nResponse Data:\n${parsed.details ?? JSON.stringify(responseData, null, 2)}`;
+  } else if (error.request) {
+    errorType = "Network Error";
+    message = "Network Error: Could not reach the server.";
+    description = "Please check your internet connection or contact support if the problem persists.";
+    details = `URL: ${error.config?.method?.toUpperCase()} ${error.config?.url}\nError Message: ${error.message}`;
+  } else {
+    message = `Request Setup Error: ${error.message}`;
+  }
+
+  if (error.code) {
+    errorType += ` (Code: ${error.code})`;
+  }
+
+  return { message, description, details, errorType };
+}
+
+/** Parses a standard Error object into a ParsedError object */
+function parseStandardError(error: Error): ParsedError {
+  return {
+    message: error.message,
+    description: null,
+    details: error.stack ?? "No stack trace available.",
+    errorType: error.name || "Error",
+  };
+}
+
+/** Parses an object error into a ParsedError object */
+function parseObjectError(error: object): ParsedError {
+  const message =
+    (error as ErrorObject).message ||
+    (error as ErrorObject).error ||
+    "An object was thrown as an error.";
+  let details: string | null;
+  try {
+    details = JSON.stringify(error, null, 2);
+  } catch {
+    details = "Could not stringify the error object.";
+  }
+  return { message, description: null, details, errorType: "Object Error" };
+}
+
+/** Parses any error type into a structured ParsedError object */
+function parseError(error: unknown): ParsedError {
+  if (isAxiosError(error)) {
+    return parseAxiosError(error);
+  }
+  if (error instanceof Error) {
+    return parseStandardError(error);
+  }
+  if (typeof error === "string") {
+    return { message: error, description: null, details: null, errorType: "Message" };
+  }
+  if (typeof error === "object" && error !== null) {
+    return parseObjectError(error);
+  }
+  return {
+    message: "An unexpected error occurred.",
+    description: null,
+    details: null,
+    errorType: "Unknown Error",
+  };
 }
 
 export interface ErrorAlertProps {
@@ -163,12 +271,12 @@ const Collapse = ({
   return (
     <div>
       <CollapseHeader
-        isActive={isExpanded}
+        $isActive={isExpanded}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {header}
       </CollapseHeader>
-      <CollapseContent isVisible={isExpanded}>{children}</CollapseContent>
+      <CollapseContent $isVisible={isExpanded}>{children}</CollapseContent>
     </div>
   );
 };
@@ -184,88 +292,7 @@ const ErrorAlert: React.FC<ErrorAlertProps> = ({
     return <></>;
   }
 
-  let message: React.ReactNode = "An unexpected error occurred.";
-  let description: React.ReactNode | null = null;
-  let details: string | null = null;
-  let errorType: string = "Unknown Error";
-
-  if (isAxiosError(error)) {
-    errorType = "Network/API Error";
-    message = error.message; // Default Axios message
-
-    if (error.response) {
-      // Error response received from server (4xx, 5xx)
-      const status = error.response.status;
-      const statusText = error.response.statusText;
-      message = `API Error: ${status} ${statusText}`;
-
-      // Try to extract a more specific message from the response body
-      const responseData = error.response.data;
-      if (typeof responseData === "string") {
-        description = responseData;
-      } else if (responseData && typeof responseData === "object") {
-        // Common patterns for error messages in JSON responses
-
-        const detail =
-          (responseData as ErrorObject).detail ||
-          (responseData as ErrorObject).message ||
-          (responseData as ErrorObject).error;
-        if (typeof detail === "string") {
-          description = detail;
-        } else {
-          // Fallback: Show stringified data in description or details
-          description = "Check details for response data.";
-          details = JSON.stringify(responseData, null, 2);
-        }
-      } else {
-        description = `Request failed with status code ${status}.`;
-      }
-      // Prepare details section
-      details = `URL: ${error.config?.method?.toUpperCase()} ${
-        error.config?.url
-      }\nStatus: ${status} ${statusText}\nResponse Data:\n${
-        details ?? JSON.stringify(responseData, null, 2)
-      }`;
-    } else if (error.request) {
-      // Request was made but no response received (network error, CORS issue, etc.)
-      errorType = "Network Error";
-      message = "Network Error: Could not reach the server.";
-      description =
-        "Please check your internet connection or contact support if the problem persists.";
-      details = `URL: ${error.config?.method?.toUpperCase()} ${
-        error.config?.url
-      }\nError Message: ${error.message}`;
-    } else {
-      // Something else happened setting up the request
-      message = `Request Setup Error: ${error.message}`;
-    }
-
-    // Include Axios error code if available
-    if (error.code) {
-      errorType += ` (Code: ${error.code})`;
-    }
-  } else if (error instanceof Error) {
-    errorType = error.name || "Error"; // e.g., 'TypeError', 'ReferenceError'
-    message = error.message;
-    details = error.stack ?? "No stack trace available.";
-  } else if (typeof error === "string") {
-    errorType = "Message";
-    message = error;
-  } else if (typeof error === "object" && error !== null) {
-    // Handle generic objects potentially used as errors
-    errorType = "Object Error";
-
-    message =
-      (error as ErrorObject).message ||
-      (error as ErrorObject).error ||
-      "An object was thrown as an error.";
-    try {
-      details = JSON.stringify(error, null, 2);
-    } catch {
-      details = "Could not stringify the error object.";
-    }
-  }
-  // else: message remains 'An unexpected error occurred.'
+  const { message, description, details, errorType } = parseError(error);
 
   return (
     <AlertContainer type="error">
@@ -278,7 +305,7 @@ const ErrorAlert: React.FC<ErrorAlertProps> = ({
       </AlertHeader>
       <StyledSpace>
         <Paragraph>
-          <Text strong>{errorType}:</Text> {message}
+          <Text $strong>{errorType}:</Text> {message}
         </Paragraph>
         {description && (
           <Paragraph>

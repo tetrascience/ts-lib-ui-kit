@@ -111,8 +111,8 @@ export interface MyComponentProps extends React.HTMLAttributes<HTMLDivElement> {
   ref?: React.Ref<HTMLDivElement>;
 }
 
-const StyledDiv = styled.div`
-  /* styles */
+const StyledDiv = styled.div<{ $variant: 'primary' | 'secondary' }>`
+  color: ${(props) => (props.$variant === 'primary' ? 'blue' : 'grey')};
 `;
 
 export const MyComponent = ({
@@ -122,12 +122,14 @@ export const MyComponent = ({
   ...rest
 }: MyComponentProps) => {
   return (
-    <StyledDiv ref={ref} {...rest}>
+    <StyledDiv ref={ref} $variant={variant} {...rest}>
       {children}
     </StyledDiv>
   );
 };
 ```
+
+> **Transient props:** When passing custom props to styled-components, prefix them with `$` (e.g. `$variant`) to prevent them leaking to the DOM as HTML attributes. See [styled-components docs](https://styled-components.com/docs/api#transient-props).
 
 **Note:** `React.forwardRef` is deprecated in React 19. All components in this library use the ref-as-prop pattern instead. New components should follow this pattern.
 

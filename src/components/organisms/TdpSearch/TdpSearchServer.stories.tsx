@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 
+import { DemoSearchBar } from "./components/DemoSearchBar";
 import { TdpSearch } from "./TdpSearch";
 import { mockSearchResponse } from "./TdpSearch.mocks";
 
@@ -178,6 +179,16 @@ export const CustomRendering: Story = {
     columns,
     defaultQuery: "experiment",
     defaultSort: { field: "createdAt", order: "desc" },
+    pageSize: 10,
+  },
+};
+
+/** Custom search bar via renderSearchBar — TdpSearch manages all state; only the input UI is swapped. */
+export const CustomSearchBar: Story = {
+  render: (args) => <TdpSearch {...args} renderSearchBar={(props) => <DemoSearchBar {...props} />} />,
+  args: {
+    columns,
+    defaultQuery: "sample",
     pageSize: 10,
   },
 };

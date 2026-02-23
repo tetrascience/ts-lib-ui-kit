@@ -1,11 +1,10 @@
 import Search from "@assets/icon/Search";
-import { Button } from "@atoms/Button";
-import { Dropdown } from "@atoms/Dropdown";
 import { ErrorAlert } from "@atoms/ErrorAlert";
-import { Input } from "@atoms/Input";
-import { Table } from "@molecules/Table";
 import React, { useState } from "react";
 
+import { DefaultFilters } from "./components/DefaultFilters";
+import { DefaultResults } from "./components/DefaultResults";
+import { DefaultSearchBar } from "./components/DefaultSearchBar";
 import { useServerSideSearch } from "./hooks/useServerSideSearch";
 import { useStandaloneSearch } from "./hooks/useStandaloneSearch";
 import { useTdpCredentials } from "./hooks/useTdpCredentials";
@@ -43,6 +42,9 @@ export const TdpSearch: React.FC<TdpSearchProps> = ({
   searchPlaceholder = "Enter search term...",
   className,
   onSearch,
+  renderSearchBar,
+  renderFilters,
+  renderResults,
   ...props
 }) => {
   const isStandalone = !!props.standalone;
@@ -126,13 +128,6 @@ export const TdpSearch: React.FC<TdpSearchProps> = ({
     handleExecuteSearch(1);
   };
 
-  // Handle Enter key in search input
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
-
   // Handle filter change
   const handleFilterChange = (filterKey: string, value: string) => {
     setFilterValues((prev) => ({
@@ -153,107 +148,60 @@ export const TdpSearch: React.FC<TdpSearchProps> = ({
     handleExecuteSearch(1, { sortKey: key, sortDirection: direction });
   };
 
-  const SearchBarComponent = () => {
-    return (
-      <div className="tdp-search__search-bar">
-        <div className="tdp-search__search-input-wrapper">
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={searchPlaceholder}
-            iconLeft={<Search />}
-            size="small"
-          />
-        </div>
-        <Button variant="primary" onClick={handleSearch} disabled={!query.trim() || isLoading}>
-          {isLoading ? "Searching..." : "Search"}
-        </Button>
+  const emptyState = (
+    <div className="tdp-search__empty-state">
+      <div className="tdp-search__empty-state-icon">
+        <Search />
       </div>
-    );
-  };
+      <div className="tdp-search__empty-state-text">No results found. Try adjusting your search query or filters.</div>
+    </div>
+  );
 
-  const FiltersComponent = () => {
-    return (
-      <div className="tdp-search__filters-row">
-        {filters.map((filter) => (
-          <div key={filter.key} className="tdp-search__filter-wrapper">
-            <label className="tdp-search__filter-label">{filter.label}</label>
-            <Dropdown
-              options={filter.options}
-              value={filterValues[filter.key] || ""}
-              onChange={(value) => handleFilterChange(filter.key, value)}
-            />
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const NoResultsComponent = () => {
-    return (
-      <div className="tdp-search__empty-state">
-        <div className="tdp-search__empty-state-icon">
-          <Search />
-        </div>
-        <div className="tdp-search__empty-state-text">
-          No results found. Try adjusting your search query or filters.
-        </div>
-      </div>
-    );
-  };
-
-  const PlaceholderComponent = () => {
-    return (
-      <div className="tdp-search__empty-state">
-        <div className="tdp-search__empty-state-icon">
-          <Search />
-        </div>
-        <div className="tdp-search__empty-state-text">Enter a search query and click Search to get started.</div>
-      </div>
-    );
+  const searchBarProps = { query, setQuery, onSearch: handleSearch, isLoading, placeholder: searchPlaceholder };
+  const filtersProps = { filters, filterValues, onFilterChange: handleFilterChange };
+  const resultsProps = {
+    results,
+    total,
+    currentPage,
+    pageSize,
+    columns,
+    onPageChange: handlePageChange,
+    sortKey,
+    sortDirection,
+    onSort: handleSort,
   };
 
   return (
     <div className={`tdp-search ${className || ""}`}>
-      <SearchBarComponent />
+      {renderSearchBar ? renderSearchBar(searchBarProps) : <DefaultSearchBar {...searchBarProps} />}
 
-      {filters.length > 0 && <FiltersComponent />}
+      {filters.length > 0 && (renderFilters ? renderFilters(filtersProps) : <DefaultFilters {...filtersProps} />)}
 
       {error && (
         <>
           <ErrorAlert error={error} onClose={() => {}} />
-          <NoResultsComponent />
+          {emptyState}
         </>
       )}
 
       {isLoading && <div className="tdp-search__loading-overlay">Loading results...</div>}
 
-      {!isLoading && !hasSearched && <PlaceholderComponent />}
-
-      {!isLoading && !error && hasSearched && results.length > 0 && (
-        <>
-          <div className="tdp-search__results-header">
-            <div className="tdp-search__results-count">
-              Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, total)} of {total} results
-            </div>
+      {!isLoading && !hasSearched && (
+        <div className="tdp-search__empty-state">
+          <div className="tdp-search__empty-state-icon">
+            <Search />
           </div>
-          <Table
-            columns={columns}
-            data={results}
-            pageSize={pageSize}
-            currentPage={currentPage}
-            totalItems={total}
-            onPageChange={handlePageChange}
-            sortKey={sortKey || undefined}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            rowKey={(row) => row.id || Math.random().toString()}
-          />
-        </>
+          <div className="tdp-search__empty-state-text">Enter a search query and click Search to get started.</div>
+        </div>
       )}
 
-      {!isLoading && !error && hasSearched && results.length === 0 && <NoResultsComponent />}
+      {!isLoading &&
+        !error &&
+        hasSearched &&
+        results.length > 0 &&
+        (renderResults ? renderResults(resultsProps) : <DefaultResults {...resultsProps} />)}
+
+      {!isLoading && !error && hasSearched && results.length === 0 && emptyState}
     </div>
   );
 };

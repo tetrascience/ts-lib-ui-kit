@@ -1,5 +1,6 @@
 import type { DropdownOption } from "@atoms/Dropdown";
 import type { SearchEqlRequest } from "@tetrascience-npm/ts-connectors-sdk";
+import type React from "react";
 
 /** Transformed search result (flattened from Elasticsearch hit format) */
 interface SearchResult {
@@ -41,6 +42,35 @@ interface TdpSearchColumn {
 interface TdpSearchSort {
   field: string;
   order: "asc" | "desc";
+}
+
+/** Props passed to the renderSearchBar render prop */
+interface TdpSearchBarRenderProps {
+  query: string;
+  setQuery: (query: string) => void;
+  onSearch: () => void;
+  isLoading: boolean;
+  placeholder: string;
+}
+
+/** Props passed to the renderFilters render prop */
+interface TdpFiltersRenderProps {
+  filters: TdpSearchFilter[];
+  filterValues: Record<string, string>;
+  onFilterChange: (key: string, value: string) => void;
+}
+
+/** Props passed to the renderResults render prop */
+interface TdpResultsRenderProps {
+  results: SearchResult[];
+  total: number;
+  currentPage: number;
+  pageSize: number;
+  columns: TdpSearchColumn[];
+  onPageChange: (page: number) => void;
+  sortKey: string | null;
+  sortDirection: "asc" | "desc";
+  onSort: (key: string, direction: "asc" | "desc") => void;
 }
 
 /** Standalone search configuration (calls TDP API directly from the browser; no backend) */
@@ -95,6 +125,14 @@ interface CommonTdpSearchProps {
 
   /** Callback fired when search is executed with the query and results */
   onSearch?: (query: SearchEqlRequest, results: SearchResult[]) => void;
+
+  // Render props — override the primary UI slots; all are optional and fall back to built-in defaults
+  /** Replace the entire search bar (input + button) */
+  renderSearchBar?: (props: TdpSearchBarRenderProps) => React.ReactNode;
+  /** Replace the filters row */
+  renderFilters?: (props: TdpFiltersRenderProps) => React.ReactNode;
+  /** Replace the results table (and pagination) */
+  renderResults?: (props: TdpResultsRenderProps) => React.ReactNode;
 }
 
 /**
@@ -112,4 +150,7 @@ export type {
     SearchResult,
     SearchEqlExpression,
     TdpSearchProps,
+    TdpSearchBarRenderProps,
+    TdpFiltersRenderProps,
+    TdpResultsRenderProps,
 }

@@ -12,11 +12,9 @@
  * import { TDPClient } from '@tetrascience-npm/ts-connectors-sdk';
  * import { getProviderConfigurations } from '@tetrascience-npm/tetrascience-react-ui/server';
  *
+ * // Other fields (tdpEndpoint, connectorId, orgSlug) are read from environment variables
  * const client = new TDPClient({
  *   authToken: userJwt,
- *   tdpEndpoint: process.env.TDP_ENDPOINT,
- *   connectorId: process.env.CONNECTOR_ID,
- *   orgSlug: process.env.ORG_SLUG,
  *   artifactType: "data-app",
  * });
  * await client.init();

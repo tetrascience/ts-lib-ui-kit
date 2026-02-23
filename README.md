@@ -127,10 +127,10 @@ import {
 const userToken = await jwtManager.getTokenFromExpressRequest(req);
 
 // Create TDPClient with the user's auth token
+// Other fields (tdpEndpoint, connectorId, orgSlug) are read from environment variables
 const client = new TDPClient({
   authToken: userToken,
   artifactType: 'data-app',
-  orgSlug: process.env.ORG_SLUG,
 });
 await client.init();
 

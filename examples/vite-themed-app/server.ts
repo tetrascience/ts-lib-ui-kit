@@ -67,11 +67,9 @@ app.get("/api/providers", async (req, res) => {
     }
 
     // Create TDPClient with user's auth token
+    // Other fields (tdpEndpoint, connectorId, orgSlug) are read from environment variables
     const client = new TDPClient({
       authToken: userToken,
-      tdpEndpoint: process.env.TDP_ENDPOINT,
-      connectorId: process.env.CONNECTOR_ID,
-      orgSlug: process.env.ORG_SLUG,
       artifactType: "data-app",
     });
     await client.init();
@@ -140,11 +138,9 @@ app.get("/api/tables/:tableName", async (req, res) => {
     }
 
     // Create TDPClient with user's auth token
+    // Other fields (tdpEndpoint, connectorId, orgSlug) are read from environment variables
     const client = new TDPClient({
       authToken: userToken,
-      tdpEndpoint: process.env.TDP_ENDPOINT,
-      connectorId: process.env.CONNECTOR_ID,
-      orgSlug: process.env.ORG_SLUG,
       artifactType: "data-app",
     });
     await client.init();

@@ -114,11 +114,9 @@ function parseProviderConfigOverride(
  * import { getProviderConfigurations } from '@tetrascience-npm/tetrascience-react-ui/server';
  *
  * // Initialize TDPClient with user's JWT token
+ * // Other fields (tdpEndpoint, connectorId, orgSlug) are read from environment variables
  * const client = new TDPClient({
  *   authToken: userJwtToken, // from jwtManager.getTokenFromExpressRequest(req)
- *   tdpEndpoint: process.env.TDP_ENDPOINT,
- *   connectorId: process.env.CONNECTOR_ID,
- *   orgSlug: process.env.ORG_SLUG,
  *   artifactType: "data-app",
  * });
  * await client.init();

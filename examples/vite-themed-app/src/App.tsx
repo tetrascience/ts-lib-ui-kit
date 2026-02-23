@@ -7,6 +7,7 @@ interface Provider {
   name: string;
   type: string;
   iconUrl: string | null;
+  availableFields: string[];
 }
 
 interface QueryResult {
@@ -213,19 +214,40 @@ function App() {
                   backgroundColor: '#F3F4F6',
                   borderRadius: '8px',
                   display: 'flex',
-                  alignItems: 'center',
+                  flexDirection: 'column',
                   gap: '8px',
+                  minWidth: '200px',
                 }}
               >
-                <span style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: provider.type === 'snowflake' ? COLORS.blue :
-                    provider.type === 'databricks' ? COLORS.orange : COLORS.purple,
-                }} />
-                <span style={{ fontWeight: '500' }}>{provider.name}</span>
-                <span style={{ fontSize: '12px', color: '#9CA3AF' }}>({provider.type})</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: provider.type === 'snowflake' ? COLORS.blue :
+                      provider.type === 'databricks' ? COLORS.orange : COLORS.purple,
+                  }} />
+                  <span style={{ fontWeight: '500' }}>{provider.name}</span>
+                  <span style={{ fontSize: '12px', color: '#9CA3AF' }}>({provider.type})</span>
+                </div>
+                {provider.availableFields.length > 0 && (
+                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', paddingLeft: '16px' }}>
+                    {provider.availableFields.map((field) => (
+                      <span
+                        key={field}
+                        style={{
+                          fontSize: '11px',
+                          padding: '2px 6px',
+                          backgroundColor: '#E5E7EB',
+                          borderRadius: '4px',
+                          color: '#6B7280',
+                        }}
+                      >
+                        {field}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             {providers.length === 0 && (

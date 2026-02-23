@@ -118,7 +118,9 @@ export interface GetProviderConfigurationsOptions {
  * Display-friendly provider information for UI components.
  *
  * A simplified subset of ProviderConfiguration containing only the
- * fields needed for displaying provider information in the UI.
+ * fields needed for displaying provider information in the UI,
+ * including the names of available connection fields without their
+ * secret values.
  */
 export interface ProviderInfo {
   /** Human-readable name of the provider */
@@ -127,6 +129,8 @@ export interface ProviderInfo {
   type: string;
   /** Optional URL to the provider's icon */
   iconUrl?: string | null;
+  /** Names of available connection fields (without secret values) */
+  availableFields: string[];
 }
 
 /**

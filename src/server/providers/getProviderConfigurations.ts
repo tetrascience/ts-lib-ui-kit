@@ -116,8 +116,10 @@ function parseProviderConfigOverride(
  * // Initialize TDPClient with user's JWT token
  * const client = new TDPClient({
  *   authToken: userJwtToken, // from jwtManager.getTokenFromExpressRequest(req)
- *   orgSlug: process.env.ORG_SLUG,
  *   tdpEndpoint: process.env.TDP_ENDPOINT,
+ *   connectorId: process.env.CONNECTOR_ID,
+ *   orgSlug: process.env.ORG_SLUG,
+ *   artifactType: "data-app",
  * });
  * await client.init();
  *

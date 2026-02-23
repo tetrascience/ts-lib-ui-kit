@@ -19,6 +19,7 @@ import cookieParser from "cookie-parser";
 import { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
 import {
   getProviderConfigurations,
+  getProviderInfoList,
   buildProvider,
   jwtManager,
   QueryError,
@@ -55,8 +56,8 @@ app.get("/api/providers", async (req, res) => {
     if (!userToken) {
       // Return mock data when not authenticated (for demo purposes)
       const mockProviders: ProviderInfo[] = [
-        { name: "Demo Snowflake", type: "snowflake", iconUrl: null },
-        { name: "Demo Databricks", type: "databricks", iconUrl: null },
+        { name: "Demo Snowflake", type: "snowflake", iconUrl: null, availableFields: ["user", "password", "account", "warehouse", "database"] },
+        { name: "Demo Databricks", type: "databricks", iconUrl: null, availableFields: ["server_hostname", "http_path", "access_token"] },
       ];
       return res.json({
         providers: mockProviders,
@@ -68,17 +69,17 @@ app.get("/api/providers", async (req, res) => {
     // Create TDPClient with user's auth token
     const client = new TDPClient({
       authToken: userToken,
-      artifactType: "data-app",
+      tdpEndpoint: process.env.TDP_ENDPOINT,
+      connectorId: process.env.CONNECTOR_ID,
       orgSlug: process.env.ORG_SLUG,
+      artifactType: "data-app",
     });
     await client.init();
 
     const configs = await getProviderConfigurations(client);
-    const providers: ProviderInfo[] = configs.map((p) => ({
-      name: p.name,
-      type: p.type,
-      iconUrl: p.iconUrl,
-    }));
+    // Use getProviderInfoList to extract display-friendly provider info
+    // This strips secret values and includes only field names
+    const providers = getProviderInfoList(configs);
     return res.json({
       providers,
       configured: true,
@@ -141,8 +142,10 @@ app.get("/api/tables/:tableName", async (req, res) => {
     // Create TDPClient with user's auth token
     const client = new TDPClient({
       authToken: userToken,
-      artifactType: "data-app",
+      tdpEndpoint: process.env.TDP_ENDPOINT,
+      connectorId: process.env.CONNECTOR_ID,
       orgSlug: process.env.ORG_SLUG,
+      artifactType: "data-app",
     });
     await client.init();
 

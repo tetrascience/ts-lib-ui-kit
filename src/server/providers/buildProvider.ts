@@ -44,7 +44,13 @@ export type DataProvider =
  * import { TDPClient } from '@tetrascience-npm/ts-connectors-sdk';
  * import { buildProvider, getProviderConfigurations } from '@tetrascience-npm/tetrascience-react-ui/server';
  *
- * const client = new TDPClient({ authToken: userJwt });
+ * const client = new TDPClient({
+ *   authToken: userJwt,
+ *   tdpEndpoint: process.env.TDP_ENDPOINT,
+ *   connectorId: process.env.CONNECTOR_ID,
+ *   orgSlug: process.env.ORG_SLUG,
+ *   artifactType: "data-app",
+ * });
  * await client.init();
  * const configs = await getProviderConfigurations(client);
  *

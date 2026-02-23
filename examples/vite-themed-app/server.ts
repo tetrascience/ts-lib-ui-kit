@@ -20,6 +20,7 @@ import { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
 import {
   getProviderConfigurations,
   getProviderInfoList,
+  getProviderByName,
   buildProvider,
   jwtManager,
   QueryError,
@@ -145,12 +146,21 @@ app.get("/api/tables/:tableName", async (req, res) => {
     });
     await client.init();
 
-    // Get provider configurations
+    // Get provider configurations and find the selected provider
     const configs = await getProviderConfigurations(client);
-    const config = configs[0];
+    const providerName = req.query.provider as string | undefined;
+
+    // Use getProviderByName if a provider is specified, otherwise fall back to first
+    const config = providerName
+      ? getProviderByName(configs, providerName)
+      : configs[0];
 
     if (!config) {
-      return res.status(404).json({ error: "No providers configured" });
+      return res.status(404).json({
+        error: providerName
+          ? `Provider "${providerName}" not found`
+          : "No providers configured",
+      });
     }
 
     // Build and use the provider

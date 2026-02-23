@@ -75,6 +75,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTable, setSelectedTable] = useState<string>(ALLOWED_TABLES[0]);
+  const [selectedProvider, setSelectedProvider] = useState<string>('');
 
   // Fetch providers on mount
   useEffect(() => {
@@ -89,7 +90,11 @@ function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/tables/${selectedTable}?limit=10`);
+      const params = new URLSearchParams({ limit: '10' });
+      if (selectedProvider) {
+        params.set('provider', selectedProvider);
+      }
+      const res = await fetch(`/api/tables/${selectedTable}?${params}`);
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Query failed');
@@ -204,61 +209,30 @@ function App() {
             Connect to Snowflake, Databricks, or Athena using the provider helpers.
           </p>
 
-          {/* Provider List */}
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
-            {providers.map((provider) => (
-              <div
-                key={provider.name}
-                style={{
-                  padding: '12px 16px',
-                  backgroundColor: '#F3F4F6',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                  minWidth: '200px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: provider.type === 'snowflake' ? COLORS.blue :
-                      provider.type === 'databricks' ? COLORS.orange : COLORS.purple,
-                  }} />
-                  <span style={{ fontWeight: '500' }}>{provider.name}</span>
-                  <span style={{ fontSize: '12px', color: '#9CA3AF' }}>({provider.type})</span>
-                </div>
-                {provider.availableFields.length > 0 && (
-                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', paddingLeft: '16px' }}>
-                    {provider.availableFields.map((field) => (
-                      <span
-                        key={field}
-                        style={{
-                          fontSize: '11px',
-                          padding: '2px 6px',
-                          backgroundColor: '#E5E7EB',
-                          borderRadius: '4px',
-                          color: '#6B7280',
-                        }}
-                      >
-                        {field}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-            {providers.length === 0 && (
-              <span style={{ color: '#9CA3AF', fontStyle: 'italic' }}>
-                Loading providers...
-              </span>
-            )}
-          </div>
+          {/* Provider and Table Selectors */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <label style={{ fontWeight: '500', color: '#374151' }}>Provider:</label>
+            <select
+              value={selectedProvider}
+              onChange={(e) => setSelectedProvider(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #D1D5DB',
+                backgroundColor: '#FFFFFF',
+                fontSize: '14px',
+                cursor: 'pointer',
+                minWidth: '200px',
+              }}
+            >
+              <option value="">Select a provider...</option>
+              {providers.map((provider) => (
+                <option key={provider.name} value={provider.name}>
+                  {provider.name} ({provider.type})
+                </option>
+              ))}
+            </select>
 
-          {/* Table Selector and Fetch Button */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
             <label style={{ fontWeight: '500', color: '#374151' }}>Table:</label>
             <select
               value={selectedTable}
@@ -278,15 +252,51 @@ function App() {
                 </option>
               ))}
             </select>
+
             <Button
               variant="primary"
               size="medium"
               onClick={fetchTableData}
-              disabled={isLoading || providers.length === 0}
+              disabled={isLoading || !selectedProvider}
             >
               {isLoading ? 'Fetching...' : 'Fetch Data'}
             </Button>
           </div>
+
+          {/* Selected Provider Details */}
+          {selectedProvider && (() => {
+            const provider = providers.find((p) => p.name === selectedProvider);
+            return provider && provider.availableFields.length > 0 ? (
+              <div style={{
+                padding: '12px 16px',
+                backgroundColor: '#F3F4F6',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                flexWrap: 'wrap',
+              }}>
+                <span style={{ fontSize: '13px', color: '#374151', fontWeight: '500' }}>
+                  Fields:
+                </span>
+                {provider.availableFields.map((field) => (
+                  <span
+                    key={field}
+                    style={{
+                      fontSize: '11px',
+                      padding: '2px 6px',
+                      backgroundColor: '#E5E7EB',
+                      borderRadius: '4px',
+                      color: '#6B7280',
+                    }}
+                  >
+                    {field}
+                  </span>
+                ))}
+              </div>
+            ) : null;
+          })()}
 
           {/* Error Display */}
           {error && (

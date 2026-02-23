@@ -65,4 +65,7 @@ export const Default: Story = {
     defaultQuery: "experiment",
     pageSize: 10,
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1125" },
+  },
 };

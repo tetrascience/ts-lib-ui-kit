@@ -148,6 +148,9 @@ export const BasicUsage: Story = {
     defaultQuery: "sample-data",
     searchPlaceholder: "Search files...",
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1120" },
+  },
 };
 
 export const FullFeatured: Story = {
@@ -158,6 +161,9 @@ export const FullFeatured: Story = {
     defaultSort: { field: "createdAt", order: "desc" },
     pageSize: 15,
     onSearch: () => {},
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1121" },
   },
 };
 
@@ -172,6 +178,9 @@ export const WithFilters: Story = {
     filters,
     pageSize: 10,
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1122" },
+  },
 };
 
 export const CustomRendering: Story = {
@@ -180,6 +189,9 @@ export const CustomRendering: Story = {
     defaultQuery: "experiment",
     defaultSort: { field: "createdAt", order: "desc" },
     pageSize: 10,
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1123" },
   },
 };
 
@@ -190,5 +202,8 @@ export const CustomSearchBar: Story = {
     columns,
     defaultQuery: "sample",
     pageSize: 10,
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1124" },
   },
 };

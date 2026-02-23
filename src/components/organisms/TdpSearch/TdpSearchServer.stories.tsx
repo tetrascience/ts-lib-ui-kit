@@ -15,7 +15,31 @@ const withMockFetch = (Story: React.ComponentType) => {
         const urlString = url.toString();
         if (urlString.includes("/api/search")) {
           await new Promise((resolve) => setTimeout(resolve, 400));
-          return new Response(JSON.stringify(mockSearchResponse), {
+
+          let hits = mockSearchResponse.hits.hits;
+
+          try {
+            const body = JSON.parse((options?.body as string) ?? "{}");
+            const expressions: Array<{ field?: string; operator?: string; value?: any }> = body.expression?.e ?? [];
+            const fieldFilters = expressions.filter((e) => e.field && e.operator === "eq");
+
+            if (fieldFilters.length > 0) {
+              hits = hits.filter((hit) => fieldFilters.every((f) => hit._source?.[f.field!] === f.value));
+            }
+          } catch {
+            // malformed body — return all hits
+          }
+
+          const filtered = {
+            ...mockSearchResponse,
+            hits: {
+              ...mockSearchResponse.hits,
+              total: { value: hits.length, relation: "eq" as const },
+              hits,
+            },
+          };
+
+          return new Response(JSON.stringify(filtered), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });

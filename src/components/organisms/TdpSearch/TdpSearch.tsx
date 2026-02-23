@@ -10,7 +10,7 @@ import { useServerSideSearch } from "./hooks/useServerSideSearch";
 import { useStandaloneSearch } from "./hooks/useStandaloneSearch";
 import { useTdpCredentials } from "./hooks/useTdpCredentials";
 
-import type { TdpSearchProps } from "./types";
+import type { TdpSearchProps, SearchEqlExpression } from "./types";
 import type { SearchEqlRequest } from "@tetrascience-npm/ts-connectors-sdk";
 
 import "./TdpSearch.scss";
@@ -90,11 +90,27 @@ export const TdpSearch: React.FC<TdpSearchProps> = ({
           : (defaultSort?.order ?? sortDirection)
         : sortOverride.sortDirection;
 
+    const filterExpressions = Object.entries(filterValues)
+      .filter(([, value]) => value !== "")
+      .map(([key, value]) => ({ field: key, operator: "eq", value }));
+
+    let expression: SearchEqlExpression | undefined = advancedSearchParams?.expression as
+      | SearchEqlExpression
+      | undefined;
+
+    if (filterExpressions.length > 0) {
+      expression = {
+        g: "AND",
+        e: expression ? [...filterExpressions, expression] : filterExpressions,
+      };
+    }
+
     const searchRequest: Omit<SearchEqlRequest, "from" | "size"> = {
       searchTerm: query.trim(),
       sort: effectiveSortKey ?? undefined,
       order: effectiveOrder,
-      ...advancedSearchParams, // Spread any additional SDK parameters
+      ...advancedSearchParams,
+      ...(expression !== undefined && { expression }),
     };
 
     const newResults = await executeSearch(searchRequest, page);

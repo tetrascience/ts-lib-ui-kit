@@ -1,5 +1,5 @@
 import { Button } from "@atoms/Button";
-import { forwardRef } from "react";
+import React from "react";
 import styled, { css } from "styled-components";
 
 export type CardSidebarStatus = "default" | "active" | "hover" | "disabled";
@@ -13,6 +13,7 @@ export interface CardSidebarProps {
   onButtonClick?: () => void;
   onLinkClick?: () => void;
   className?: string;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
 interface CardContainerProps {
@@ -123,84 +124,78 @@ const Link = styled.a<{ status: CardSidebarStatus }>`
   }
 `;
 
-export const CardSidebar = forwardRef<HTMLDivElement, CardSidebarProps>(
-  (
-    {
-      title,
-      description,
-      buttonText,
-      linkText,
-      status = "default",
-      onButtonClick,
-      onLinkClick,
-      className,
-    },
-    ref
-  ) => {
-    const handleButtonClick = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (status !== "disabled" && onButtonClick) {
-        onButtonClick();
-      }
-    };
+export const CardSidebar = ({
+  title,
+  description,
+  buttonText,
+  linkText,
+  status = "default",
+  onButtonClick,
+  onLinkClick,
+  className,
+  ref,
+}: CardSidebarProps) => {
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (status !== "disabled" && onButtonClick) {
+      onButtonClick();
+    }
+  };
 
-    const handleLinkClick = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (status !== "disabled" && onLinkClick) {
-        onLinkClick();
-      }
-    };
+  const handleLinkClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (status !== "disabled" && onLinkClick) {
+      onLinkClick();
+    }
+  };
 
-    return (
-      <CardContainer ref={ref} status={status} className={className}>
-        <Title status={status}>{title}</Title>
-        {description && (
-          <Description status={status}>{description}</Description>
+  return (
+    <CardContainer ref={ref} status={status} className={className}>
+      <Title status={status}>{title}</Title>
+      {description && (
+        <Description status={status}>{description}</Description>
+      )}
+      <ActionContainer>
+        {buttonText && (
+          <StyledButton
+            variant="secondary"
+            size="small"
+            disabled={status === "disabled"}
+            onClick={handleButtonClick}
+            leftIcon={
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  x="3"
+                  y="3"
+                  width="10"
+                  height="10"
+                  rx="2"
+                  fill="currentColor"
+                />
+              </svg>
+            }
+          >
+            {buttonText}
+          </StyledButton>
         )}
-        <ActionContainer>
-          {buttonText && (
-            <StyledButton
-              variant="secondary"
-              size="small"
-              disabled={status === "disabled"}
-              onClick={handleButtonClick}
-              leftIcon={
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="3"
-                    y="3"
-                    width="10"
-                    height="10"
-                    rx="2"
-                    fill="currentColor"
-                  />
-                </svg>
-              }
-            >
-              {buttonText}
-            </StyledButton>
-          )}
-          {linkText && (
-            <Link
-              status={status}
-              onClick={handleLinkClick}
-              href={status === "disabled" ? undefined : "#"}
-            >
-              {linkText}
-            </Link>
-          )}
-        </ActionContainer>
-      </CardContainer>
-    );
-  }
-);
-
-CardSidebar.displayName = "CardSidebar";
+        {linkText && (
+          <Link
+            status={status}
+            onClick={handleLinkClick}
+            href={status === "disabled" ? undefined : "#"}
+          >
+            {linkText}
+          </Link>
+        )}
+      </ActionContainer>
+    </CardContainer>
+  );
+};
 
 export default CardSidebar;

@@ -14,6 +14,7 @@ export interface ButtonProps
   rightIcon?: React.ReactNode;
   noPadding?: boolean;
   fullWidth?: boolean;
+  ref?: React.Ref<HTMLButtonElement>;
 }
 
 const heightStyles = {
@@ -138,40 +139,34 @@ const StyledButton = styled.button<StyledButtonProps>`
   }
 `;
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      children,
-      variant = "primary",
-      size = "medium",
-      loading = false,
-      leftIcon,
-      rightIcon,
-      noPadding = false,
-      fullWidth = false,
-      disabled,
-      ...rest
-    },
-    ref
-  ) => {
-    return (
-      <StyledButton
-        ref={ref}
-        variant={variant}
-        size={size}
-        $noPadding={noPadding}
-        $fullWidth={fullWidth}
-        disabled={disabled || loading}
-        {...rest}
-      >
-        {leftIcon && leftIcon}
-        {children}
-        {rightIcon && rightIcon}
-      </StyledButton>
-    );
-  }
-);
-
-Button.displayName = "Button";
+export const Button = ({
+  children,
+  variant = "primary",
+  size = "medium",
+  loading = false,
+  leftIcon,
+  rightIcon,
+  noPadding = false,
+  fullWidth = false,
+  disabled,
+  ref,
+  ...rest
+}: ButtonProps) => {
+  return (
+    <StyledButton
+      ref={ref}
+      variant={variant}
+      size={size}
+      $noPadding={noPadding}
+      $fullWidth={fullWidth}
+      disabled={disabled || loading}
+      {...rest}
+    >
+      {leftIcon}
+      {children}
+      {rightIcon}
+    </StyledButton>
+  );
+};
 
 export default Button;

@@ -1,5 +1,5 @@
 import { Checkbox } from "@atoms/Checkbox";
-import { forwardRef } from "react";
+import React from "react";
 import styled from "styled-components";
 
 export interface MenuItemProps {
@@ -10,6 +10,7 @@ export interface MenuItemProps {
   onCheckChange?: (checked: boolean) => void;
   active?: boolean;
   className?: string;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
 const StyledMenuItem = styled.div<{ $active?: boolean; $showCheckbox?: boolean }>`
@@ -52,65 +53,59 @@ const CheckboxContainer = styled.div`
   width: 100%;
 `;
 
-export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
-  (
-    {
-      label,
-      checked = false,
-      showCheckbox = false,
-      onClick,
-      onCheckChange,
-      active = false,
-      className,
-    },
-    ref
-  ) => {
-    const handleClick = () => {
-      console.log("MenuItem clicked!");
-      if (onClick) {
-        onClick();
-      }
-    };
+export const MenuItem = ({
+  label,
+  checked = false,
+  showCheckbox = false,
+  onClick,
+  onCheckChange,
+  active = false,
+  className,
+  ref,
+}: MenuItemProps) => {
+  const handleClick = () => {
+    console.log("MenuItem clicked!");
+    if (onClick) {
+      onClick();
+    }
+  };
 
-    const handleCheckboxChange = (isChecked: boolean) => {
-      console.log("Checkbox changed:", isChecked);
-      if (onCheckChange) {
-        onCheckChange(isChecked);
-      }
-    };
+  const handleCheckboxChange = (isChecked: boolean) => {
+    console.log("Checkbox changed:", isChecked);
+    if (onCheckChange) {
+      onCheckChange(isChecked);
+    }
+  };
 
-    // This stops the event from propagating to the parent (StyledMenuItem)
-    const handleCheckboxClick = (e: React.MouseEvent) => {
-      console.log("Checkbox clicked!");
-      e.stopPropagation();
-    };
+  // This stops the event from propagating to the parent (StyledMenuItem)
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    console.log("Checkbox clicked!");
+    e.stopPropagation();
+  };
 
-    return (
-      <StyledMenuItem
-        ref={ref}
-        $active={active}
-        $showCheckbox={showCheckbox}
-        className={className}
-        onClick={handleClick}
-        role="button"
-        tabIndex={0}
-      >
-        {!showCheckbox && <ItemContent>{label}</ItemContent>}
-        {showCheckbox && (
-          <CheckboxContainer onClick={handleCheckboxClick}>
-            <Checkbox
-              checked={checked}
-              onChange={handleCheckboxChange}
-              onClick={handleCheckboxClick}
-              label={label}
-            />
-          </CheckboxContainer>
-        )}
-      </StyledMenuItem>
-    );
-  }
-);
-
-MenuItem.displayName = "MenuItem";
+  return (
+    <StyledMenuItem
+      ref={ref}
+      $active={active}
+      $showCheckbox={showCheckbox}
+      className={className}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+    >
+      {!showCheckbox && <ItemContent>{label}</ItemContent>}
+      {showCheckbox && (
+        <CheckboxContainer onClick={handleCheckboxClick}>
+          <Checkbox
+            checked={checked}
+            onChange={handleCheckboxChange}
+            onClick={handleCheckboxClick}
+            label={label}
+          />
+        </CheckboxContainer>
+      )}
+    </StyledMenuItem>
+  );
+};
 
 export default MenuItem;

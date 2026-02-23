@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react";
+import React from "react";
 import styled, { css } from "styled-components";
 
 export type TextareaSize = "xsmall" | "small";
@@ -10,6 +10,7 @@ export interface TextareaProps
   disabled?: boolean;
   fullWidth?: boolean;
   rows?: number;
+  ref?: React.Ref<HTMLTextAreaElement>;
 }
 
 interface StyleProps {
@@ -97,33 +98,27 @@ const StyledTextarea = styled.textarea<StyledTextareaProps>`
   }
 `;
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  (
-    {
-      size = "small",
-      error = false,
-      disabled = false,
-      fullWidth = false,
-      rows,
-      ...rest
-    },
-    ref
-  ) => {
-    return (
-      <TextareaContainer $fullWidth={fullWidth}>
-        <StyledTextarea
-          ref={ref}
-          size={size}
-          $error={error}
-          disabled={disabled}
-          rows={rows}
-          {...rest}
-        />
-      </TextareaContainer>
-    );
-  }
-);
-
-Textarea.displayName = "Textarea";
+export const Textarea = ({
+  size = "small",
+  error = false,
+  disabled = false,
+  fullWidth = false,
+  rows,
+  ref,
+  ...rest
+}: TextareaProps) => {
+  return (
+    <TextareaContainer $fullWidth={fullWidth}>
+      <StyledTextarea
+        ref={ref}
+        size={size}
+        $error={error}
+        disabled={disabled}
+        rows={rows}
+        {...rest}
+      />
+    </TextareaContainer>
+  );
+};
 
 export default Textarea;

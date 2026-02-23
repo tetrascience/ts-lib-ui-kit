@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react";
+import React from "react";
 import styled from "styled-components";
 
 export interface TableCellProps
@@ -7,6 +7,7 @@ export interface TableCellProps
   align?: "left" | "center" | "right";
   width?: string;
   className?: string;
+  ref?: React.Ref<HTMLTableCellElement>;
 }
 
 const StyledTableCell = styled.td<TableCellProps>`
@@ -30,22 +31,25 @@ const StyledTableCell = styled.td<TableCellProps>`
   }
 `;
 
-export const TableCell = forwardRef<HTMLTableCellElement, TableCellProps>(
-  ({ children, align = "left", width, className, ...props }, ref) => {
-    return (
-      <StyledTableCell
-        ref={ref}
-        align={align}
-        width={width}
-        className={className}
-        {...props}
-      >
-        {children}
-      </StyledTableCell>
-    );
-  }
-);
-
-TableCell.displayName = "TableCell";
+export const TableCell = ({
+  children,
+  align = "left",
+  width,
+  className,
+  ref,
+  ...props
+}: TableCellProps) => {
+  return (
+    <StyledTableCell
+      ref={ref}
+      align={align}
+      width={width}
+      className={className}
+      {...props}
+    >
+      {children}
+    </StyledTableCell>
+  );
+};
 
 export default TableCell;

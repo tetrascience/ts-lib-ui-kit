@@ -1,5 +1,5 @@
 import { Dropdown } from "@atoms/Dropdown";
-import React, { forwardRef } from "react";
+import React from "react";
 import styled from "styled-components";
 
 import type { DropdownOption } from "@atoms/Dropdown";
@@ -16,6 +16,7 @@ export interface TableHeaderCellProps
   onFilterChange?: (value: string) => void;
   width?: string;
   className?: string;
+  ref?: React.Ref<HTMLTableCellElement>;
 }
 
 const StyledTableHeaderCell = styled.th<{ width?: string }>`
@@ -73,56 +74,28 @@ const DropdownContainer = styled.div`
   }
 `;
 
-export const TableHeaderCell = forwardRef<
-  HTMLTableCellElement,
-  TableHeaderCellProps
->(
-  (
-    {
-      children,
-      sortable = false,
-      sortDirection = null,
-      onSort,
-      filterable = false,
-      filterOptions = [],
-      filterValue,
-      onFilterChange,
-      width,
-      className,
-      ...props
-    },
-    ref
-  ) => {
-    const handleSort = () => {
-      if (sortable && onSort) {
-        onSort();
-      }
-    };
-
-    // If filterable, render dropdown instead of text
-    if (filterable) {
-      return (
-        <StyledTableHeaderCell
-          ref={ref}
-          width={width}
-          className={className}
-          {...props}
-        >
-          <DropdownContainer>
-            <Dropdown
-              options={filterOptions}
-              value={filterValue}
-              onChange={onFilterChange}
-              placeholder="Placeholder"
-              size="small"
-              width="100%"
-            />
-          </DropdownContainer>
-        </StyledTableHeaderCell>
-      );
+export const TableHeaderCell = ({
+  children,
+  sortable = false,
+  sortDirection = null,
+  onSort,
+  filterable = false,
+  filterOptions = [],
+  filterValue,
+  onFilterChange,
+  width,
+  className,
+  ref,
+  ...props
+}: TableHeaderCellProps) => {
+  const handleSort = () => {
+    if (sortable && onSort) {
+      onSort();
     }
+  };
 
-    // Otherwise render normal header with optional sort
+  // If filterable, render dropdown instead of text
+  if (filterable) {
     return (
       <StyledTableHeaderCell
         ref={ref}
@@ -130,30 +103,49 @@ export const TableHeaderCell = forwardRef<
         className={className}
         {...props}
       >
-        <HeaderContent $clickable={sortable} onClick={handleSort}>
-          <HeaderText>{children}</HeaderText>
-          {sortable && (
-            <SortIcon
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M8 3.33337L10.6667 6.00004H5.33333L8 3.33337Z"
-                fill={sortDirection === "asc" ? "var(--grey-900)" : "var(--grey-400)"}
-              />
-              <path
-                d="M8 12.6667L5.33333 10H10.6667L8 12.6667Z"
-                fill={sortDirection === "desc" ? "var(--grey-900)" : "var(--grey-400)"}
-              />
-            </SortIcon>
-          )}
-        </HeaderContent>
+        <DropdownContainer>
+          <Dropdown
+            options={filterOptions}
+            value={filterValue}
+            onChange={onFilterChange}
+            placeholder="Placeholder"
+            size="small"
+            width="100%"
+          />
+        </DropdownContainer>
       </StyledTableHeaderCell>
     );
   }
-);
 
-TableHeaderCell.displayName = "TableHeaderCell";
+  // Otherwise render normal header with optional sort
+  return (
+    <StyledTableHeaderCell
+      ref={ref}
+      width={width}
+      className={className}
+      {...props}
+    >
+      <HeaderContent $clickable={sortable} onClick={handleSort}>
+        <HeaderText>{children}</HeaderText>
+        {sortable && (
+          <SortIcon
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M8 3.33337L10.6667 6.00004H5.33333L8 3.33337Z"
+              fill={sortDirection === "asc" ? "var(--grey-900)" : "var(--grey-400)"}
+            />
+            <path
+              d="M8 12.6667L5.33333 10H10.6667L8 12.6667Z"
+              fill={sortDirection === "desc" ? "var(--grey-900)" : "var(--grey-400)"}
+            />
+          </SortIcon>
+        )}
+      </HeaderContent>
+    </StyledTableHeaderCell>
+  );
+};
 
 export default TableHeaderCell;

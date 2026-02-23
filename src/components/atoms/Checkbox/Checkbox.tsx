@@ -1,8 +1,8 @@
 import { Icon, IconName } from "@atoms/Icon";
-import React, { forwardRef } from "react";
+import React from "react";
 import styled from "styled-components";
 
-import type { ChangeEvent} from "react";
+import type { ChangeEvent } from "react";
 
 export interface CheckboxProps {
   checked?: boolean;
@@ -12,6 +12,7 @@ export interface CheckboxProps {
   onClick?: (e: React.MouseEvent) => void;
   label?: React.ReactNode;
   noPadding?: boolean;
+  ref?: React.Ref<HTMLInputElement>;
 }
 
 const CheckboxContainer = styled.label<{
@@ -68,53 +69,47 @@ const StyledLabel = styled.span`
   line-height: 20px;
 `;
 
-export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
-  (
-    {
-      checked = false,
-      onChange,
-      disabled = false,
-      className,
-      onClick,
-      label,
-      noPadding = false,
-    },
-    ref
-  ) => {
-    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-      if (!disabled && onChange) {
-        onChange(e.target.checked);
-      }
-    };
+export const Checkbox = ({
+  checked = false,
+  onChange,
+  disabled = false,
+  className,
+  onClick,
+  label,
+  noPadding = false,
+  ref,
+}: CheckboxProps) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!disabled && onChange) {
+      onChange(e.target.checked);
+    }
+  };
 
-    const handleClick = (e: React.MouseEvent) => {
-      if (onClick) {
-        onClick(e);
-      }
-    };
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      onClick(e);
+    }
+  };
 
-    return (
-      <CheckboxContainer
-        className={className}
+  return (
+    <CheckboxContainer
+      className={className}
+      disabled={disabled}
+      $noPadding={noPadding}
+      onClick={handleClick}
+    >
+      <HiddenCheckbox
+        ref={ref}
+        checked={checked}
+        onChange={handleChange}
         disabled={disabled}
-        $noPadding={noPadding}
-        onClick={handleClick}
-      >
-        <HiddenCheckbox
-          ref={ref}
-          checked={checked}
-          onChange={handleChange}
-          disabled={disabled}
-        />
-        <StyledCheckbox checked={checked} disabled={disabled}>
-          {checked && <CheckIcon />}
-        </StyledCheckbox>
-        {label && <StyledLabel>{label}</StyledLabel>}
-      </CheckboxContainer>
-    );
-  }
-);
-
-Checkbox.displayName = "Checkbox";
+      />
+      <StyledCheckbox checked={checked} disabled={disabled}>
+        {checked && <CheckIcon />}
+      </StyledCheckbox>
+      {label && <StyledLabel>{label}</StyledLabel>}
+    </CheckboxContainer>
+  );
+};
 
 export default Checkbox;

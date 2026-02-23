@@ -92,16 +92,51 @@ Every component follows this pattern:
 
 ```
 ComponentName/
-├── ComponentName.tsx       # Main component with forwardRef
+├── ComponentName.tsx       # Main component (React 19 ref-as-prop pattern)
 ├── ComponentName.scss      # Optional SCSS styles
 ├── ComponentName.stories.tsx # Storybook documentation
 └── index.ts               # Exports component + types
 ```
 
+### Component Template (React 19)
+
+When creating components that need ref support, use the ref-as-prop pattern:
+
+```tsx
+import React from 'react';
+import styled from 'styled-components';
+
+export interface MyComponentProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'primary' | 'secondary';
+  ref?: React.Ref<HTMLDivElement>;
+}
+
+const StyledDiv = styled.div<{ $variant: 'primary' | 'secondary' }>`
+  color: ${(props) => (props.$variant === 'primary' ? 'blue' : 'grey')};
+`;
+
+export const MyComponent = ({
+  variant = 'primary',
+  ref,
+  children,
+  ...rest
+}: MyComponentProps) => {
+  return (
+    <StyledDiv ref={ref} $variant={variant} {...rest}>
+      {children}
+    </StyledDiv>
+  );
+};
+```
+
+> **Transient props:** When passing custom props to styled-components, prefix them with `$` (e.g. `$variant`) to prevent them leaking to the DOM as HTML attributes. See [styled-components docs](https://styled-components.com/docs/api#transient-props).
+
+**Note:** `React.forwardRef` is deprecated in React 19. All components in this library use the ref-as-prop pattern instead. New components should follow this pattern.
+
 ### Adding a New Component
 
 1. Create a directory under the appropriate category (`atoms/`, `molecules/`, or `organisms/`)
-2. Implement the component following existing patterns
+2. Implement the component following the React 19 ref-as-prop pattern shown above
 3. Add a Storybook story for documentation
 4. Export from `src/index.ts`
 

@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { AUTH_TOKEN_HEADER, ORG_SLUG_HEADER } from "../constants";
+
 import type { SearchResult } from "../types";
 import type { SearchEqlRequest } from "@tetrascience-npm/ts-connectors-sdk";
 
@@ -43,8 +45,8 @@ export function useServerSideSearch({
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (authToken && orgSlug) {
-      headers["ts-auth-token"] = authToken;
-      headers["x-org-slug"] = orgSlug;
+      headers[AUTH_TOKEN_HEADER] = authToken;
+      headers[ORG_SLUG_HEADER] = orgSlug;
     }
 
     try {

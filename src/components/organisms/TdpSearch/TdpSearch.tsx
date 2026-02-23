@@ -8,6 +8,7 @@ import React, { useState } from "react";
 
 import { useServerSideSearch } from "./hooks/useServerSideSearch";
 import { useStandaloneSearch } from "./hooks/useStandaloneSearch";
+import { useTdpCredentials } from "./hooks/useTdpCredentials";
 
 import type { TdpSearchProps } from "./types";
 import type { SearchEqlRequest } from "@tetrascience-npm/ts-connectors-sdk";
@@ -44,33 +45,20 @@ export const TdpSearch: React.FC<TdpSearchProps> = ({
   onSearch,
   ...props
 }) => {
-  const isStandalone = "standalone" in props && props.standalone === true;
+  const isStandalone = !!props.standalone;
 
-  const standaloneConfig =
-    isStandalone && "baseUrl" in props && "authToken" in props && "orgSlug" in props
-      ? {
-          baseUrl: props.baseUrl,
-          authToken: props.authToken,
-          orgSlug: props.orgSlug,
-          pageSize,
-        }
-      : {
-          baseUrl: "",
-          authToken: "",
-          orgSlug: "",
-          pageSize,
-        };
+  const { authToken, orgSlug } = useTdpCredentials(props.authToken, props.orgSlug);
 
-  const serverSideConfig = {
-    apiEndpoint: !isStandalone && "apiEndpoint" in props ? (props.apiEndpoint ?? "/api/search") : "/api/search",
+  const searchConfig = {
+    baseUrl: isStandalone ? props.baseUrl : "",
+    apiEndpoint: isStandalone ? "/api/search" : (props.apiEndpoint ?? "/api/search"),
+    authToken: authToken ?? "",
+    orgSlug: orgSlug ?? "",
     pageSize,
-    ...(!isStandalone && "authToken" in props && "orgSlug" in props
-      ? { authToken: props.authToken, orgSlug: props.orgSlug }
-      : {}),
   };
 
-  const standaloneResults = useStandaloneSearch(standaloneConfig);
-  const serverSideResults = useServerSideSearch(serverSideConfig);
+  const standaloneResults = useStandaloneSearch(searchConfig);
+  const serverSideResults = useServerSideSearch(searchConfig);
 
   const { results, total, currentPage, isLoading, error, executeSearch } = isStandalone
     ? standaloneResults

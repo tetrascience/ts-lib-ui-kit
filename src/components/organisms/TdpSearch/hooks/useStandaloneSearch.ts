@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { AUTH_TOKEN_HEADER, ORG_SLUG_HEADER } from "../constants";
+
 import type { SearchResult } from "../types";
 import type { SearchEqlRequest } from "@tetrascience-npm/ts-connectors-sdk";
 
@@ -81,8 +83,8 @@ export function useStandaloneSearch({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "ts-auth-token": authToken,
-          "x-org-slug": orgSlug,
+          [AUTH_TOKEN_HEADER]: authToken,
+          [ORG_SLUG_HEADER]: orgSlug,
         },
         body: JSON.stringify(body),
       });

@@ -110,6 +110,7 @@ export class TdpSearchManager {
       tdpEndpoint: this.getBaseUrl(),
       orgSlug: this.getOrgSlug(),
       authToken: token,
+      artifactType: "data-app",
     });
 
     await client.init();

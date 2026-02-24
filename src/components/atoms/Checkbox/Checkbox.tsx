@@ -4,6 +4,7 @@ import styled from "styled-components";
 
 import type { ChangeEvent } from "react";
 
+/** Props for the Checkbox component */
 export interface CheckboxProps {
   checked?: boolean;
   onChange?: (checked: boolean) => void;
@@ -56,6 +57,7 @@ const StyledCheckbox = styled.div<{ checked?: boolean; disabled?: boolean }>`
 	`}
 `;
 
+/** Check icon displayed inside the checkbox when checked */
 const CheckIcon = () => (
   <Icon name={IconName.CHECK_SQUARE} fill="var(--blue-600)" />
 );
@@ -69,6 +71,7 @@ const StyledLabel = styled.span`
   line-height: 20px;
 `;
 
+/** A checkbox input with an optional label and custom change handler */
 export const Checkbox = ({
   checked = false,
   onChange,

@@ -4,12 +4,14 @@ import styled from "styled-components";
 
 export type DropdownSize = "xsmall" | "small";
 
+/** An option item for the Dropdown component */
 export interface DropdownOption {
   value: string;
   label: string;
   disabled?: boolean;
 }
 
+/** Props for the Dropdown component */
 export interface DropdownProps {
   options: DropdownOption[];
   value?: string;
@@ -181,6 +183,7 @@ const DropdownItem = styled.li<{ selected: boolean; disabled?: boolean }>`
   }
 `;
 
+/** A styled dropdown select with keyboard navigation and optional error state */
 export const Dropdown: React.FC<DropdownProps> = ({
   options = [],
   value,

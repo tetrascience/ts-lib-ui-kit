@@ -3,7 +3,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 import "./BarGraph.scss";
 
-interface BarDataSeries {
+export interface BarDataSeries {
   x: number[];
   y: number[];
   name: string;
@@ -15,9 +15,10 @@ interface BarDataSeries {
   };
 }
 
-type BarGraphVariant = "group" | "stack" | "overlay";
+export type BarGraphVariant = "group" | "stack" | "overlay";
 
-interface BarGraphProps {
+/** Props for the BarGraph component */
+export interface BarGraphProps {
   dataSeries: BarDataSeries[];
   width?: number;
   height?: number;
@@ -30,7 +31,8 @@ interface BarGraphProps {
   barWidth?: number;
 }
 
-const BarGraph: React.FC<BarGraphProps> = ({
+/** A bar chart using Plotly with support for grouped, stacked, and overlay variants */
+export const BarGraph: React.FC<BarGraphProps> = ({
   dataSeries,
   width = 1000,
   height = 600,
@@ -245,5 +247,4 @@ const BarGraph: React.FC<BarGraphProps> = ({
   );
 };
 
-export { BarGraph };
-export type { BarDataSeries, BarGraphVariant, BarGraphProps };
+export default BarGraph;

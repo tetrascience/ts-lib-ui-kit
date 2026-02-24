@@ -3,6 +3,7 @@ import { Tooltip } from "@atoms/Tooltip";
 import React from "react";
 import styled from "styled-components";
 
+/** Props for the Label component */
 export interface LabelProps {
   children: React.ReactNode;
   infoText?: string;
@@ -28,6 +29,7 @@ const LabelHeader = styled.div`
   line-height: 18px;
 `;
 
+/** Info icon used inside Label to trigger a tooltip */
 const InfoIcon = () => (
   <Icon name={IconName.INFORMATION_CIRCLE_MICRO} fill="var(--grey-600)" />
 );
@@ -37,6 +39,7 @@ const InfoIconWrapper = styled.span`
   cursor: help;
 `;
 
+/** A form label with optional tooltip info icon */
 export const Label: React.FC<LabelProps> = ({
   children,
   infoText,

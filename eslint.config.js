@@ -6,6 +6,7 @@ import storybookPlugin from "eslint-plugin-storybook";
 import importPlugin from "eslint-plugin-import";
 import unicornPlugin from "eslint-plugin-unicorn";
 import sonarjsPlugin from "eslint-plugin-sonarjs";
+import jsdocPlugin from "eslint-plugin-jsdoc";
 import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
 import globals from "globals";
 
@@ -37,6 +38,7 @@ export default tseslint.config(
       unicorn: unicornPlugin,
       sonarjs: sonarjsPlugin,
       "jsx-a11y": jsxA11yPlugin,
+      jsdoc: jsdocPlugin,
     },
     rules: {
       // ==========================================================================
@@ -163,11 +165,73 @@ export default tseslint.config(
         },
       ],
       "import/no-duplicates": "warn",
+
+      // ==========================================================================
+      // JSDoc - Enforce documentation on component Props interfaces
+      // Ensures the auto-generated component catalog stays populated
+      // ==========================================================================
+      "jsdoc/require-jsdoc": [
+        "warn",
+        {
+          require: {
+            FunctionDeclaration: false,
+            MethodDefinition: false,
+            ClassDeclaration: false,
+          },
+          contexts: [
+            // Require JSDoc on interfaces ending in "Props"
+            "TSInterfaceDeclaration[id.name=/Props$/]",
+            // Require JSDoc on each property of Props interfaces
+            "TSInterfaceDeclaration[id.name=/Props$/] > TSPropertySignature",
+            // Require JSDoc on type aliases ending in "Props" (e.g. type FooProps = {...})
+            "TSTypeAliasDeclaration[id.name=/Props$/]",
+          ],
+        },
+      ],
     },
     settings: {
       react: {
         version: "detect",
       },
+    },
+  },
+  // Component-level JSDoc requirements
+  // Scoped to src/components to avoid noise from icon assets and server utilities.
+  // This block overrides the global jsdoc/require-jsdoc for component files, so it
+  // must repeat the Props contexts in addition to the new component-level contexts.
+  {
+    files: ["src/components/**/*.tsx"],
+    ignores: ["src/components/**/*.stories.tsx"],
+    rules: {
+      "jsdoc/require-jsdoc": [
+        "warn",
+        {
+          require: {
+            FunctionDeclaration: false,
+            MethodDefinition: false,
+            ClassDeclaration: false,
+          },
+          contexts: [
+            // Require JSDoc on interfaces ending in "Props"
+            "TSInterfaceDeclaration[id.name=/Props$/]",
+            // Require JSDoc on each property of Props interfaces
+            "TSInterfaceDeclaration[id.name=/Props$/] > TSPropertySignature",
+            // Require JSDoc on type aliases ending in "Props" (e.g. type FooProps = {...})
+            "TSTypeAliasDeclaration[id.name=/Props$/]",
+            // Require JSDoc on exported arrow function components: export const Foo = () => {}
+            // The JSDoc before `export` attaches to ExportNamedDeclaration in the AST,
+            // so we must target that node (not VariableDeclarator) for the plugin to find it.
+            // [init.type='ArrowFunctionExpression'] excludes styled-components
+            // (TaggedTemplateExpression) and story exports (ObjectExpression).
+            "ExportNamedDeclaration:has(VariableDeclarator[id.name=/^[A-Z]/][init.type='ArrowFunctionExpression'])",
+            // Require JSDoc on non-exported arrow function components: const Foo = () => {}
+            // Must exclude VariableDeclarations inside ExportNamedDeclaration to avoid double-matching.
+            "VariableDeclaration:not(ExportNamedDeclaration > VariableDeclaration):has(VariableDeclarator[id.name=/^[A-Z]/][init.type='ArrowFunctionExpression'])",
+            // Require JSDoc on exported generic function components (e.g. export function Table<T>() {})
+            "ExportNamedDeclaration > FunctionDeclaration[id.name=/^[A-Z]/]",
+          ],
+        },
+      ],
     },
   },
   // Storybook-specific configuration
@@ -181,6 +245,8 @@ export default tseslint.config(
       "no-magic-numbers": "off",
       // Story names are generated from export names and used for Zephyr sync
       "storybook/no-redundant-story-name": "off",
+      // Story files are tests/demos, not library components — no JSDoc required
+      "jsdoc/require-jsdoc": "off",
     },
   },
   // Test files - more lenient rules
@@ -206,6 +272,37 @@ export default tseslint.config(
       // Zephyr sync scripts are particularly complex due to AST parsing
       "sonarjs/cognitive-complexity": ["warn", 75],
       "no-magic-numbers": "off",
+    },
+  },
+  // Barrel files (index.ts) must use `export *` for re-exports.
+  // Named re-exports like `export { Foo } from "./bar"` or
+  // `export type { Foo } from "./bar"` are redundant when `export *` is used.
+  {
+    files: ["src/**/index.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ExportNamedDeclaration[source]",
+          message: "Use `export * from \"...\"` instead of named re-exports in barrel files.",
+        },
+      ],
+    },
+  },
+  // Component source files must use inline exports (`export const`, `export interface`, etc.)
+  // instead of bottom-of-file `export { Foo }` / `export type { Foo }` / `export default`.
+  {
+    files: ["src/components/**/*.ts", "src/components/**/*.tsx"],
+    ignores: ["src/components/**/index.ts", "src/components/**/*.stories.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ExportNamedDeclaration:not([source]):not([declaration])",
+          message:
+            "Use inline exports (`export const`, `export interface`, `export type`) instead of `export { ... }` at the bottom of the file.",
+        },
+      ],
     },
   },
 );

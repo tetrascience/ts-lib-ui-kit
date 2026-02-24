@@ -8,7 +8,7 @@ import type { ColorScale, WellData } from "../PlateMap";
  * Props for the Heatmap component
  * @deprecated Use PlateMap component instead. Heatmap is now a wrapper around PlateMap for backward compatibility.
  */
-interface HeatmapProps {
+export interface HeatmapProps {
   /** 2D array of numeric values */
   data?: number[][];
   /** Custom x-axis labels (column labels) */
@@ -72,7 +72,8 @@ function normalizeData(data: number[][]): number[][] {
   });
 }
 
-const Heatmap: React.FC<HeatmapProps> = ({
+/** A heatmap component wrapping PlateMap for backward compatibility */
+export const Heatmap: React.FC<HeatmapProps> = ({
   data,
   xLabels,
   yLabels,
@@ -139,5 +140,4 @@ const Heatmap: React.FC<HeatmapProps> = ({
   );
 };
 
-export { Heatmap };
-export type { HeatmapProps };
+export default Heatmap;

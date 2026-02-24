@@ -4,15 +4,23 @@ import styled, { css } from "styled-components";
 export type ButtonSize = "small" | "medium";
 export type ButtonVariant = "primary" | "secondary" | "tertiary";
 
+/** Props for the Button component */
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
+  /** Visual style variant */
   variant?: ButtonVariant;
+  /** Button size */
   size?: ButtonSize;
+  /** Whether the button is in a loading state */
   loading?: boolean;
+  /** Icon rendered to the left of the button text */
   leftIcon?: React.ReactNode;
+  /** Icon rendered to the right of the button text */
   rightIcon?: React.ReactNode;
+  /** Whether to remove default padding */
   noPadding?: boolean;
+  /** Whether the button should stretch to fill its container width */
   fullWidth?: boolean;
   ref?: React.Ref<HTMLButtonElement>;
 }
@@ -97,6 +105,7 @@ const getPadding = (size: ButtonSize, noPadding?: boolean) => {
   }
 };
 
+/** Internal styled-component props for the Button component */
 interface StyledButtonProps {
   $noPadding?: boolean;
   $fullWidth?: boolean;
@@ -139,6 +148,7 @@ const StyledButton = styled.button<StyledButtonProps>`
   }
 `;
 
+/** A clickable button element with multiple style variants and sizes */
 export const Button = ({
   children,
   variant = "primary",

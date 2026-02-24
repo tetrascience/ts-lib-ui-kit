@@ -4,6 +4,7 @@ import { Toggle } from "@atoms/Toggle";
 import React, { useState } from "react";
 import styled from "styled-components";
 
+/** Props for the ProtocolConfiguration component */
 export interface ProtocolConfigurationProps {
   className?: string;
 }
@@ -77,7 +78,8 @@ const EmptyStateText = styled.div`
   font-weight: 500;
 `;
 
-const ProtocolConfiguration: React.FC<ProtocolConfigurationProps> = ({
+/** A panel for viewing and editing protocol YAML configuration */
+export const ProtocolConfiguration: React.FC<ProtocolConfigurationProps> = ({
   className,
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);

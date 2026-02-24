@@ -3,6 +3,7 @@ import styled, { css } from "styled-components";
 
 export type InputSize = "xsmall" | "small";
 
+/** Props for the Input component */
 export interface InputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
   size?: InputSize;
@@ -13,6 +14,7 @@ export interface InputProps
   ref?: React.Ref<HTMLInputElement>;
 }
 
+/** Internal style props for the Input styled components */
 interface StyleProps {
   $hasIconLeft?: boolean;
   $hasIconRight?: boolean;
@@ -56,6 +58,7 @@ const InputContainer = styled.div<{
   gap: 8px;
 `;
 
+/** Internal style props for the styled input element */
 interface StyledInputProps extends StyleProps {
   $error?: boolean;
 }
@@ -128,6 +131,7 @@ const IconWrapper = styled.div<{ position: "left" | "right"; size: InputSize }>`
       : "width: 20px; height: 20px;"}
 `;
 
+/** A text input field with optional icon slots and error state */
 export const Input = ({
   size = "small",
   iconLeft,

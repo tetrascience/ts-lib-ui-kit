@@ -243,6 +243,7 @@ function parseError(error: unknown): ParsedError {
   };
 }
 
+/** Props for the ErrorAlert component */
 export interface ErrorAlertProps {
   /** The error object to display. Can be Error, AxiosError, string, or any other type. */
   error: unknown;
@@ -256,7 +257,7 @@ export interface ErrorAlertProps {
   noErrorContent?: React.ReactNode;
 }
 
-// Simple Collapse component implementation
+/** Simple collapsible section used internally for showing error details */
 const Collapse = ({
   children,
   header,
@@ -281,7 +282,8 @@ const Collapse = ({
   );
 };
 
-const ErrorAlert: React.FC<ErrorAlertProps> = ({
+/** Displays a formatted error alert with optional title, description, and collapsible technical details */
+export const ErrorAlert: React.FC<ErrorAlertProps> = ({
   error,
   title = "An Error Occurred",
   onClose,

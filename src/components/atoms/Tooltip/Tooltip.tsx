@@ -5,6 +5,7 @@ import type { ReactNode} from "react";
 
 export type TooltipPlacement = "top" | "right" | "bottom" | "left";
 
+/** Props for the Tooltip component */
 export interface TooltipProps {
   content: ReactNode;
   children: ReactNode;
@@ -13,6 +14,7 @@ export interface TooltipProps {
   delay?: number;
 }
 
+/** Internal style props for the tooltip content styled component */
 interface TooltipContentProps {
   placement: TooltipPlacement;
   $isVisible: boolean;
@@ -129,6 +131,7 @@ const TooltipContent = styled.div<TooltipContentProps>`
   }}
 `;
 
+/** A tooltip that appears on hover with configurable placement and delay */
 export const Tooltip: React.FC<TooltipProps> = ({
   content,
   children,

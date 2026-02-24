@@ -2,20 +2,30 @@ import { Button } from "@atoms/Button";
 import React from "react";
 import styled, { css } from "styled-components";
 
+/** Visual state of the CardSidebar component */
 export type CardSidebarStatus = "default" | "active" | "hover" | "disabled";
 
+/** Props for the CardSidebar component */
 export interface CardSidebarProps {
+  /** Title text displayed at the top of the card */
   title: string;
+  /** Optional description text displayed below the title */
   description?: string;
+  /** Text for the action button */
   buttonText?: string;
+  /** Text for the link action */
   linkText?: string;
+  /** Visual state of the card */
   status?: CardSidebarStatus;
+  /** Callback fired when the action button is clicked */
   onButtonClick?: () => void;
+  /** Callback fired when the link is clicked */
   onLinkClick?: () => void;
   className?: string;
   ref?: React.Ref<HTMLDivElement>;
 }
 
+/** Internal style props for the card container styled component */
 interface CardContainerProps {
   status: CardSidebarStatus;
 }
@@ -124,6 +134,7 @@ const Link = styled.a<{ status: CardSidebarStatus }>`
   }
 `;
 
+/** A sidebar card with status-based styling, optional action button, and link */
 export const CardSidebar = ({
   title,
   description,

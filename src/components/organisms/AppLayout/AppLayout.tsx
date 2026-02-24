@@ -5,7 +5,8 @@ import { Navbar } from "@molecules/Navbar";
 import { Sidebar } from "@molecules/Sidebar";
 import React, { useState } from "react";
 
-interface AppLayoutProps {
+/** Props for the AppLayout component */
+export interface AppLayoutProps {
   userProfile: {
     name: string;
     avatar?: string;
@@ -19,7 +20,8 @@ interface AppLayoutProps {
   children?: React.ReactNode;
 }
 
-const AppLayout: React.FC<AppLayoutProps> = ({
+/** Full application layout with navbar, sidebar, header, and main content area */
+export const AppLayout: React.FC<AppLayoutProps> = ({
   userProfile,
   hostname,
   organization,
@@ -87,5 +89,4 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   );
 };
 
-export { AppLayout };
-export type { AppLayoutProps };
+export default AppLayout;

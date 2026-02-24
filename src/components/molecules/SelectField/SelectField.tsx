@@ -6,6 +6,7 @@ import styled from "styled-components";
 
 import type { DropdownProps } from "@atoms/Dropdown";
 
+/** Props for the SelectField component */
 export interface SelectFieldProps extends Omit<DropdownProps, "className"> {
   label: string;
   infoText?: string;
@@ -26,6 +27,7 @@ const StyledLabel = styled(Label)`
   margin-bottom: 2px;
 `;
 
+/** A labeled dropdown field with optional info tooltip and supportive text */
 export const SelectField = ({
   label,
   infoText,

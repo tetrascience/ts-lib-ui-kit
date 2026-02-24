@@ -4,15 +4,23 @@ import styled from "styled-components";
 
 import type { ButtonControlProps } from "@atoms/ButtonControl";
 
+/** A single button control item within a ButtonControlGroup */
 export interface ButtonControlItem extends ButtonControlProps {
+  /** Unique identifier for this control item */
   id: string;
 }
 
+/** Props for the ButtonControlGroup component */
 export interface ButtonControlGroupProps {
+  /** Array of button control items to render */
   controls: ButtonControlItem[];
+  /** ID of the currently selected control */
   selectedId?: string;
+  /** Callback fired when a control is selected */
   onChange?: (id: string) => void;
+  /** Whether to stack controls vertically instead of horizontally */
   vertical?: boolean;
+  /** Whether the entire control group is disabled */
   disabled?: boolean;
 }
 
@@ -57,6 +65,7 @@ const ButtonWrapper = styled.div<{ $vertical?: boolean }>`
   }
 `;
 
+/** A group of toggle-style button controls where one is active at a time */
 export const ButtonControlGroup: React.FC<ButtonControlGroupProps> = ({
   controls,
   selectedId,

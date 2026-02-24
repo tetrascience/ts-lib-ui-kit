@@ -3,6 +3,7 @@ import { Modal } from "@atoms/Modal";
 import React, { useState } from "react";
 import styled from "styled-components";
 
+/** Props for the PythonEditorModal component */
 export interface PythonEditorModalProps {
   open: boolean;
   initialValue?: string;
@@ -16,7 +17,8 @@ const EditorWrapper = styled.div`
   flex: 1;
 `;
 
-const PythonEditorModal: React.FC<PythonEditorModalProps> = ({
+/** A modal dialog containing a Python code editor with save and cancel actions */
+export const PythonEditorModal: React.FC<PythonEditorModalProps> = ({
   open,
   initialValue = "",
   title = "",

@@ -4,11 +4,13 @@ import styled from "styled-components";
 
 import type { MenuItemProps } from "@atoms/MenuItem";
 
+/** Data shape for an individual item in the Menu component */
 export interface MenuItemData
   extends Omit<MenuItemProps, "onClick" | "onCheckChange"> {
   id: string;
 }
 
+/** Props for the Menu component */
 export interface MenuProps {
   title?: string;
   items: MenuItemData[];
@@ -44,6 +46,7 @@ const MenuItems = styled.div`
   flex-direction: column;
 `;
 
+/** A dropdown-style menu with optional title and selectable items */
 export const Menu: React.FC<MenuProps> = ({
   title,
   items,

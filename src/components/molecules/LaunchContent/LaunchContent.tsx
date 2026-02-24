@@ -11,6 +11,7 @@ const TOAST_DISPLAY_MS = 5000;
 /** Deploy simulation delay in milliseconds */
 const DEPLOY_DELAY_MS = 3000;
 
+/** Props for the LaunchContent component */
 export interface LaunchContentProps {
   initialCode?: string;
   onDeploy?: () => void;
@@ -69,7 +70,8 @@ const ToastWrapper = styled.div`
   margin-bottom: 16px;
 `;
 
-const LaunchContent: React.FC<LaunchContentProps> = ({
+/** Content panel for launching a protocol with code editing and version selection */
+export const LaunchContent: React.FC<LaunchContentProps> = ({
   initialCode = defaultInitialCode,
   onDeploy,
   versions = ["v0.0.7", "v0.0.6", "v0.0.5"],

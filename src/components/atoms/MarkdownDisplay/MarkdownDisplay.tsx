@@ -15,7 +15,7 @@ import type { SyntaxHighlighterProps } from "react-syntax-highlighter";
 /** Copy feedback reset delay in milliseconds */
 const COPY_FEEDBACK_DELAY_MS = 2000;
 
-// Type for code component props from react-markdown
+/** Props for the code component provided by react-markdown */
 type CodeComponentProps = ClassAttributes<HTMLElement> &
   HTMLAttributes<HTMLElement> &
   ExtraProps & {
@@ -30,14 +30,16 @@ const CodeText = styled.code`
   font-size: 85%;
 `;
 
-// Export CodeProps as an alias for backwards compatibility
+/** Alias for CodeComponentProps, exported for backwards compatibility */
 export type CodeProps = CodeComponentProps;
 
+/** Props for the MarkdownDisplay component */
 export type MarkdownDisplayProps = {
   markdown: string;
   codeRenderer?: (props: CodeComponentProps) => React.ReactElement;
 };
 
+/** Default code block renderer used in MarkdownDisplay for inline and block code */
 export const BasicCodeRenderer = ({
   inline,
   className,
@@ -108,7 +110,8 @@ export const BasicCodeRenderer = ({
   );
 };
 
-const MarkdownDisplay = ({ markdown, codeRenderer }: MarkdownDisplayProps) => {
+/** Renders a markdown string as formatted HTML with optional custom code block rendering */
+export const MarkdownDisplay = ({ markdown, codeRenderer }: MarkdownDisplayProps) => {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}

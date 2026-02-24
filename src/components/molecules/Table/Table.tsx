@@ -6,6 +6,7 @@ import styled from "styled-components";
 
 import type { DropdownOption } from "@atoms/Dropdown";
 
+/** Column definition for the Table component */
 export interface TableColumn<T = any> {
   key: string;
   header: string;
@@ -17,6 +18,7 @@ export interface TableColumn<T = any> {
   render?: (value: any, row: T, index: number) => React.ReactNode;
 }
 
+/** Props for the Table component */
 export interface TableProps<T = any> {
   columns: TableColumn<T>[];
   data: T[];
@@ -132,6 +134,7 @@ const PageNumber = styled.button<{ $active?: boolean }>`
   }
 `;
 
+/** A data table with sorting, filtering, selection, and pagination */
 export function Table<T extends Record<string, any>>({
   columns,
   data,

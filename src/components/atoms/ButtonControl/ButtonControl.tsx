@@ -1,10 +1,15 @@
 import React from "react";
 import styled from "styled-components";
 
+/** Props for the ButtonControl component */
 export interface ButtonControlProps {
+  /** Icon element to render inside the button */
   icon?: React.ReactNode;
+  /** Whether the button is in a selected/active state */
   selected?: boolean;
+  /** Whether the button is disabled */
   disabled?: boolean;
+  /** Callback fired when the button is clicked */
   onClick?: () => void;
 }
 
@@ -54,6 +59,7 @@ const ButtonContainer = styled.button<{
   }
 `;
 
+/** An icon-only button control used for toolbar or compact UI actions */
 export const ButtonControl: React.FC<ButtonControlProps> = ({
   icon,
   selected = false,

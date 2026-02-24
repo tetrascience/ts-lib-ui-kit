@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 
+/** Props for the TableCell component */
 export interface TableCellProps
   extends React.TdHTMLAttributes<HTMLTableCellElement> {
   children?: React.ReactNode;
@@ -31,6 +32,7 @@ const StyledTableCell = styled.td<TableCellProps>`
   }
 `;
 
+/** A styled table data cell with configurable alignment and width */
 export const TableCell = ({
   children,
   align = "left",

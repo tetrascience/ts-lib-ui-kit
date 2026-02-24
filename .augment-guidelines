@@ -14,8 +14,8 @@ yarn test:all    # Run all tests (unit + storybook)
 
 - Use `yarn test:all` to run both unit tests and Storybook component tests
 - Use `yarn test` for unit tests only (faster, but doesn't include Storybook tests)
-- Test files are located in `__tests__` directories alongside the code they test
-- Storybook tests are in `*.stories.tsx` files
+- **Frontend component tests must be written as Storybook stories (`*.stories.tsx`), NOT as tests in a `__tests__` folder**
+- Storybook stories serve as both documentation and tests for UI components
 
 ## Code Style
 

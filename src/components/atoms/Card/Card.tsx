@@ -4,13 +4,18 @@ import styled, { css } from "styled-components";
 export type CardSize = "small" | "medium" | "large";
 export type CardVariant = "default" | "outlined" | "elevated";
 
+/** Props for the Card component */
 export interface CardProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   children: React.ReactNode;
+  /** Optional title displayed in the card header */
   title?: React.ReactNode;
+  /** Card padding size */
   size?: CardSize;
+  /** Visual style variant */
   variant?: CardVariant;
   className?: string;
+  /** Whether the card should stretch to fill its container width */
   fullWidth?: boolean;
   ref?: React.Ref<HTMLDivElement>;
 }
@@ -74,6 +79,7 @@ const CardContent = styled.div<{
   ${(props) => sizeStyles[props.$size]}
 `;
 
+/** A container component for grouping related content with optional title and styling */
 export const Card = ({
   children,
   title,

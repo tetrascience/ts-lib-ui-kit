@@ -5,16 +5,27 @@ import { Input } from "@atoms/Input";
 import React, { useState } from "react";
 import styled from "styled-components";
 
+/** Props for the AssistantModal component */
 export interface AssistantModalProps {
+  /** Whether the modal is open */
   open: boolean;
+  /** Title displayed in the modal header */
   title: string;
+  /** Prompt text displayed above the query area */
   prompt: string;
+  /** Initial code to populate the code editor with */
   initialCode?: string;
+  /** The user's current query text */
   userQuery?: string;
+  /** Callback fired when the user query text changes */
   onUserQueryChange?: (value: string) => void;
+  /** Callback fired when the user copies code from the editor */
   onCopy: (code: string) => void;
+  /** Callback fired when the user launches the code */
   onLaunch: (code: string) => void;
+  /** Callback fired when the user sends a message */
   onSend: (input: string) => void;
+  /** Callback fired when the modal is cancelled or closed */
   onCancel: () => void;
 }
 
@@ -141,7 +152,8 @@ const SendButton = styled(Button)`
   gap: 6px;
 `;
 
-const AssistantModal: React.FC<AssistantModalProps> = ({
+/** A modal dialog providing an AI assistant interface with code editing and query support */
+export const AssistantModal: React.FC<AssistantModalProps> = ({
   open,
   title,
   prompt,

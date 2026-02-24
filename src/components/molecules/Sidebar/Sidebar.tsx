@@ -4,6 +4,7 @@ import styled from "styled-components";
 
 import type { IconName } from "@atoms/Icon";
 
+/** Internal props for a single sidebar navigation item */
 interface SidebarItemProps {
   icon: IconName;
   label: string;
@@ -11,6 +12,7 @@ interface SidebarItemProps {
   onClick?: () => void;
 }
 
+/** Props for the Sidebar component */
 export interface SidebarProps {
   items: SidebarItemProps[];
   activeItem?: string;
@@ -63,6 +65,7 @@ const Label = styled.div`
   padding: 0 8px;
 `;
 
+/** A single sidebar navigation item with icon and label */
 const SidebarItem: React.FC<SidebarItemProps> = ({
   icon,
   label,
@@ -79,7 +82,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   );
 };
 
-const Sidebar: React.FC<SidebarProps> = ({
+/** A vertical sidebar navigation with icon-based items */
+export const Sidebar: React.FC<SidebarProps> = ({
   items,
   activeItem,
   onItemClick,

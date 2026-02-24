@@ -21,6 +21,7 @@ export * from "@atoms/TableHeaderCell";
 export * from "@atoms/Textarea";
 export * from "@atoms/Toast";
 export * from "@atoms/Toggle";
+export * from "@atoms/TDPLink";
 export * from "@atoms/Tooltip";
 
 // molecules
@@ -157,6 +158,7 @@ export type {
 // utils
 export { COLORS, CHART_COLORS } from "./utils/colors";
 export type { ColorToken } from "./utils/colors";
+export * from "./utils/navigation";
 
 // theme
 export { ThemeProvider, defaultTheme } from "./theme";

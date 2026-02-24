@@ -5,8 +5,7 @@ import React, { useState } from "react";
 import { DefaultFilters } from "./components/DefaultFilters";
 import { DefaultResults } from "./components/DefaultResults";
 import { DefaultSearchBar } from "./components/DefaultSearchBar";
-import { useServerSideSearch } from "./hooks/useServerSideSearch";
-import { useStandaloneSearch } from "./hooks/useStandaloneSearch";
+import { useSearch } from "./hooks/useSearch";
 import { useTdpCredentials } from "./hooks/useTdpCredentials";
 
 import type { TdpSearchProps, SearchEqlExpression } from "./types";
@@ -47,24 +46,14 @@ export const TdpSearch: React.FC<TdpSearchProps> = ({
   renderResults,
   ...props
 }) => {
-  const isStandalone = !!props.standalone;
-
   const { authToken, orgSlug } = useTdpCredentials(props.authToken, props.orgSlug);
 
-  const searchConfig = {
-    baseUrl: isStandalone ? props.baseUrl : "",
-    apiEndpoint: isStandalone ? "/api/search" : (props.apiEndpoint ?? "/api/search"),
+  const { results, total, currentPage, isLoading, error, executeSearch } = useSearch({
+    ...props,
     authToken: authToken ?? "",
     orgSlug: orgSlug ?? "",
     pageSize,
-  };
-
-  const standaloneResults = useStandaloneSearch(searchConfig);
-  const serverSideResults = useServerSideSearch(searchConfig);
-
-  const { results, total, currentPage, isLoading, error, executeSearch } = isStandalone
-    ? standaloneResults
-    : serverSideResults;
+  });
 
   // UI state
   const [query, setQuery] = useState(defaultQuery);

@@ -140,17 +140,30 @@ interface CommonTdpSearchProps {
  */
 type TdpSearchProps = CommonTdpSearchProps & (StandaloneSearchConfig | ServerSideSearchConfig);
 
+type UseSearchConfig = { pageSize: number } & (StandaloneSearchConfig | ServerSideSearchConfig);
+
+interface UseSearchResult {
+  results: SearchResult[];
+  total: number;
+  currentPage: number;
+  isLoading: boolean;
+  error: string | null;
+  executeSearch: (searchRequest: Omit<SearchEqlRequest, "from" | "size">, page?: number) => Promise<SearchResult[]>;
+}
+
 export type {
-    StandaloneSearchConfig,
-    ServerSideSearchConfig,
-    CommonTdpSearchProps,
-    TdpSearchFilter,
-    TdpSearchColumn,
-    TdpSearchSort,
-    SearchResult,
-    SearchEqlExpression,
-    TdpSearchProps,
-    TdpSearchBarRenderProps,
-    TdpFiltersRenderProps,
-    TdpResultsRenderProps,
+  StandaloneSearchConfig,
+  ServerSideSearchConfig,
+  CommonTdpSearchProps,
+  TdpSearchFilter,
+  TdpSearchColumn,
+  TdpSearchSort,
+  SearchResult,
+  SearchEqlExpression,
+  TdpSearchProps,
+  TdpSearchBarRenderProps,
+  TdpFiltersRenderProps,
+  TdpResultsRenderProps,
+  UseSearchConfig,
+  UseSearchResult,
 }

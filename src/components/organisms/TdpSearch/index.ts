@@ -1,18 +1,15 @@
 export { TdpSearch, default } from "./TdpSearch";
-export { useServerSideSearch } from "./hooks/useServerSideSearch";
-export { useStandaloneSearch } from "./hooks/useStandaloneSearch";
+export { useSearch } from "./hooks/useSearch";
 
-export type { TdpSearchProps, TdpSearchColumn, TdpSearchFilter, TdpSearchSort, SearchResult } from "./types";
 export type {
+  TdpSearchProps,
+  TdpSearchColumn,
+  TdpSearchFilter,
+  TdpSearchSort,
+  SearchResult,
   TdpSearchBarRenderProps,
   TdpFiltersRenderProps,
   TdpResultsRenderProps,
+  UseSearchConfig,
+  UseSearchResult,
 } from "./types";
-export type {
-  ServerSideSearchConfig,
-  UseServerSideSearchResult,
-} from "./hooks/useServerSideSearch";
-export type {
-  StandaloneSearchConfig,
-  UseStandaloneSearchResult,
-} from "./hooks/useStandaloneSearch";

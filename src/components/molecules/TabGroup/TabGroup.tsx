@@ -4,10 +4,12 @@ import styled from "styled-components";
 
 import type { TabProps, TabSize } from "@atoms/Tab";
 
+/** A single tab item for use in TabGroup */
 export interface TabItem extends Omit<TabProps, "active" | "onClick"> {
   id: string;
 }
 
+/** Props for the TabGroup component */
 export interface TabGroupProps {
   tabs: TabItem[];
   activeTab?: string;
@@ -30,6 +32,7 @@ const TabGroupContainer = styled.div`
   scrollbar-width: none;
 `;
 
+/** A group of tabs with active state management */
 export const TabGroup: React.FC<TabGroupProps> = ({
   tabs,
   activeTab,

@@ -13,11 +13,13 @@ declare module "styled-components" {
 
 export type ToastPosition = "top" | "bottom";
 
+/** A single toast notification item managed by ToastManager */
 export interface ToastItem extends Omit<ToastProps, "className"> {
   id: string;
   duration?: number;
 }
 
+/** Internal style props for the toast container styled component */
 export interface ToastContainerProps {
   position: ToastPosition;
 }
@@ -177,10 +179,12 @@ export const useToasts = () => {
   return context;
 };
 
+/** Props for the ToastManager component */
 export interface ToastManagerProps {
   position?: ToastPosition;
 }
 
+/** Manages and renders active toast notifications at a fixed screen position */
 export const ToastManager: React.FC<ToastManagerProps> = ({
   position = "top",
 }) => {

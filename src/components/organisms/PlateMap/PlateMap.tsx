@@ -64,7 +64,7 @@ export { DEFAULT_CATEGORY_COLORS } from "./constants";
  * - **WellData array**: `[{ wellId: "A1", values: { RFU: 100 }, tooltipData: {...} }, ...]`
  *
  */
-const PlateMap: React.FC<PlateMapProps> = ({
+export const PlateMap: React.FC<PlateMapProps> = ({
   data,
   layerConfigs,
   initialLayerId,
@@ -764,4 +764,4 @@ const PlateMap: React.FC<PlateMapProps> = ({
   );
 };
 
-export { PlateMap };
+export default PlateMap;

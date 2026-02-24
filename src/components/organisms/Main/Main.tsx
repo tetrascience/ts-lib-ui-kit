@@ -12,6 +12,7 @@ import { TabGroup } from "@molecules/TabGroup";
 import React, { useState } from "react";
 import styled from "styled-components";
 
+/** Props for the Main component */
 export interface MainProps {
   userProfile: {
     name: string;
@@ -157,7 +158,8 @@ const PipelineWrapper = styled.div`
   overflow: hidden;
 `;
 
-const Main: React.FC<MainProps> = ({ userProfile, hostname, organization }) => {
+/** Full application layout demo component with navigation and content */
+export const Main: React.FC<MainProps> = ({ userProfile, hostname, organization }) => {
   // Define sidebar items
   const sidebarItems = [
     { icon: IconName.SEARCH_DOCUMENT, label: "Search" },

@@ -4,20 +4,21 @@ import React, { useEffect, useRef, useMemo } from "react";
 import "./ScatterGraph.scss";
 import { COLORS } from "../../../utils/colors";
 
-interface ScatterDataPoint {
+export interface ScatterDataPoint {
   x: number;
   y: number;
   additionalInfo?: Record<string, string | number>;
 }
 
-interface ScatterDataSeries {
+export interface ScatterDataSeries {
   x: number[];
   y: number[];
   name: string;
   color: string;
 }
 
-interface ScatterGraphProps {
+/** Props for the ScatterGraph component */
+export interface ScatterGraphProps {
   dataSeries: ScatterDataSeries[];
   width?: number;
   height?: number;
@@ -28,7 +29,8 @@ interface ScatterGraphProps {
   title?: string;
 }
 
-const ScatterGraph: React.FC<ScatterGraphProps> = ({
+/** A scatter plot chart using Plotly with multi-series support and configurable marker styles */
+export const ScatterGraph: React.FC<ScatterGraphProps> = ({
   dataSeries,
   width = 1000,
   height = 600,
@@ -259,5 +261,4 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
   );
 };
 
-export { ScatterGraph };
-export type { ScatterDataPoint, ScatterDataSeries, ScatterGraphProps };
+export default ScatterGraph;

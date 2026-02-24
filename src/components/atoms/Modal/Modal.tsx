@@ -8,6 +8,7 @@ import type { ReactNode} from "react";
 /** Animation duration for modal fade in/out in milliseconds */
 const ANIMATION_DURATION_MS = 300;
 
+/** Props for the Modal component */
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -194,7 +195,8 @@ const ModalContent = styled.div`
   max-height: calc(90vh - 140px); /* Account for header and footer */
 `;
 
-const Modal = ({
+/** A modal dialog with configurable confirm and cancel actions */
+export const Modal = ({
   isOpen,
   onClose,
   onCloseLabel,

@@ -3,7 +3,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 import "./DotPlot.scss";
 
-type MarkerSymbol =
+export type MarkerSymbol =
   | "circle"
   | "square"
   | "diamond"
@@ -11,7 +11,7 @@ type MarkerSymbol =
   | "triangle-down"
   | "star";
 
-interface DotPlotDataSeries {
+export interface DotPlotDataSeries {
   x: number[];
   y: number[];
   name: string;
@@ -20,9 +20,10 @@ interface DotPlotDataSeries {
   size?: number;
 }
 
-type DotPlotVariant = "default" | "stacked";
+export type DotPlotVariant = "default" | "stacked";
 
-type DotPlotProps = {
+/** Props for the DotPlot component */
+export type DotPlotProps = {
   dataSeries: DotPlotDataSeries | DotPlotDataSeries[];
   width?: number;
   height?: number;
@@ -33,7 +34,8 @@ type DotPlotProps = {
   markerSize?: number;
 };
 
-const DotPlot: React.FC<DotPlotProps> = ({
+/** A dot plot chart using Plotly with configurable marker symbols and single or multi-series support */
+export const DotPlot: React.FC<DotPlotProps> = ({
   dataSeries,
   width = 1000,
   height = 600,
@@ -249,5 +251,4 @@ const DotPlot: React.FC<DotPlotProps> = ({
   );
 };
 
-export { DotPlot };
-export type { DotPlotDataSeries, DotPlotProps, DotPlotVariant, MarkerSymbol };
+export default DotPlot;

@@ -7,7 +7,7 @@ const PLOT_HEIGHT_OFFSET = 75;
 /** Scale factor for y-axis range to add padding above max value */
 const Y_AXIS_PADDING_FACTOR = 1.05;
 
-interface PeakData {
+export interface PeakData {
   position: number;
   base?: string;
   peakA: number;
@@ -16,7 +16,8 @@ interface PeakData {
   peakC: number;
 }
 
-interface ChromatogramProps {
+/** Props for the Chromatogram component */
+export interface ChromatogramProps {
   data?: PeakData[];
   width?: number;
   height?: number;
@@ -55,7 +56,8 @@ const determineBase = (item: PeakData): string => {
   return highestBase;
 };
 
-const Chromatogram: React.FC<ChromatogramProps> = ({
+/** A DNA chromatogram visualization showing base peak intensities using Plotly */
+export const Chromatogram: React.FC<ChromatogramProps> = ({
   data = [],
   width = 900,
   height = 600,
@@ -284,5 +286,4 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
   );
 };
 
-export { Chromatogram };
-export type { PeakData, ChromatogramProps };
+export default Chromatogram;

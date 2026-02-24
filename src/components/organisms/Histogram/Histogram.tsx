@@ -6,7 +6,7 @@ import "./Histogram.scss";
 /** Exponent coefficient for normal distribution calculation */
 const NORMAL_DISTRIBUTION_EXPONENT_COEFF = -0.5;
 
-interface HistogramDataSeries {
+export interface HistogramDataSeries {
   x: number[];
   name: string;
   color?: string;
@@ -21,7 +21,8 @@ interface HistogramDataSeries {
   lineWidth?: number;
 }
 
-type HistogramProps = {
+/** Props for the Histogram component */
+export type HistogramProps = {
   dataSeries: HistogramDataSeries | HistogramDataSeries[];
   width?: number;
   height?: number;
@@ -91,7 +92,8 @@ const scaleDistributionCurve = (
   return yValues.map((y) => y * scaleFactor);
 };
 
-const Histogram: React.FC<HistogramProps> = ({
+/** A histogram chart using Plotly with optional normal distribution overlay and multi-series support */
+export const Histogram: React.FC<HistogramProps> = ({
   dataSeries,
   width = 480,
   height = 480,
@@ -293,6 +295,7 @@ const Histogram: React.FC<HistogramProps> = ({
     };
   }, [width, height, xTitle, yTitle, bargap, plotData, effectiveBarMode, gridColor]);
 
+  /** Internal legend component rendering color swatches and series names */
   const ChartLegend: React.FC<{
     series: Array<{ name: string; color: string }>;
   }> = ({ series }) => {
@@ -341,5 +344,4 @@ const Histogram: React.FC<HistogramProps> = ({
   );
 };
 
-export { Histogram };
-export type { HistogramDataSeries, HistogramProps };
+export default Histogram;

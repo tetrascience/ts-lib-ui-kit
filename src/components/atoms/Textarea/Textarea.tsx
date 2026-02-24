@@ -3,6 +3,7 @@ import styled, { css } from "styled-components";
 
 export type TextareaSize = "xsmall" | "small";
 
+/** Props for the Textarea component */
 export interface TextareaProps
   extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, "size"> {
   size?: TextareaSize;
@@ -13,6 +14,7 @@ export interface TextareaProps
   ref?: React.Ref<HTMLTextAreaElement>;
 }
 
+/** Internal style props for the Textarea styled components */
 interface StyleProps {
   size: TextareaSize;
   rows?: number;
@@ -39,6 +41,7 @@ const TextareaContainer = styled.div<{
   gap: 8px;
 `;
 
+/** Internal style props for the styled textarea element */
 interface StyledTextareaProps extends StyleProps {
   $error?: boolean;
 }
@@ -98,6 +101,7 @@ const StyledTextarea = styled.textarea<StyledTextareaProps>`
   }
 `;
 
+/** A multi-line text input with optional size and error state */
 export const Textarea = ({
   size = "small",
   error = false,

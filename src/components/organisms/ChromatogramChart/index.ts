@@ -1,10 +1,2 @@
-export { ChromatogramChart } from "./ChromatogramChart";
-export type {
-  ChromatogramSeries,
-  PeakAnnotation,
-  ChromatogramChartProps,
-  BaselineCorrectionMethod,
-  BoundaryMarkerStyle,
-  PeakDetectionOptions,
-} from "./types";
-
+export * from "./ChromatogramChart";
+export * from "./types";

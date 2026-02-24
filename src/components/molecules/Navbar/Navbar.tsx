@@ -9,6 +9,7 @@ interface OrganizationInfo {
   logo?: React.ReactNode;
 }
 
+/** Props for the Navbar component */
 export interface NavbarProps {
   organization: OrganizationInfo;
 }
@@ -102,7 +103,7 @@ const FirstColumn = styled.div`
   width: 320px;
 `;
 
-// Default logo component
+/** Default logo icon used in the Navbar when no custom logo is provided */
 const DefaultLogo = () => (
   <div
     style={{
@@ -121,12 +122,13 @@ const DefaultLogo = () => (
   </div>
 );
 
-// Default project icon
+/** Default project icon used in the Navbar when no custom project icon is provided */
 const DefaultProjectIcon = () => (
   <Icon name={IconName.LAMP} fill="var(--white-900)" width="20" height="20" />
 );
 
-const Navbar: React.FC<NavbarProps> = ({ organization }) => {
+/** Top navigation bar displaying organization and project info */
+export const Navbar: React.FC<NavbarProps> = ({ organization }) => {
   return (
     <NavbarContainer>
       <Section>

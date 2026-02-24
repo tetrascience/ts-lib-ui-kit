@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useMemo } from "react";
 import "./LineGraph.scss";
 import { COLORS } from "../../../utils/colors";
 
-type MarkerSymbol =
+export type MarkerSymbol =
   | "circle"
   | "circle-open"
   | "circle-dot"
@@ -152,7 +152,7 @@ type MarkerSymbol =
   | "arrow-wide"
   | "arrow-wide-open";
 
-interface LineDataSeries {
+export interface LineDataSeries {
   x: number[];
   y: number[];
   name: string;
@@ -165,9 +165,10 @@ interface LineDataSeries {
   };
 }
 
-type LineGraphVariant = "lines" | "lines+markers" | "lines+markers+error_bars";
+export type LineGraphVariant = "lines" | "lines+markers" | "lines+markers+error_bars";
 
-type LineGraphProps = {
+/** Props for the LineGraph component */
+export type LineGraphProps = {
   dataSeries: LineDataSeries[];
   width?: number;
   height?: number;
@@ -179,7 +180,8 @@ type LineGraphProps = {
   title?: string;
 };
 
-const LineGraph: React.FC<LineGraphProps> = ({
+/** A line graph chart using Plotly with support for lines, markers, and error bar variants */
+export const LineGraph: React.FC<LineGraphProps> = ({
   dataSeries,
   width = 1000,
   height = 600,
@@ -408,5 +410,4 @@ const LineGraph: React.FC<LineGraphProps> = ({
   );
 };
 
-export { LineGraph };
-export type { LineDataSeries, LineGraphVariant, LineGraphProps, MarkerSymbol };
+export default LineGraph;

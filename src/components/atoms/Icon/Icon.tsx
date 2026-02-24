@@ -42,6 +42,7 @@ import ViewfinderCircle from "@assets/icon/ViewfinderCircle";
 
 import type { ReactElement } from "react";
 
+/** Props for the Icon component including the icon name */
 export interface IconsProps {
   fill?: string;
   width?: string;
@@ -49,6 +50,7 @@ export interface IconsProps {
   name: IconName;
 }
 
+/** Shared base props for individual SVG icon components */
 export interface IconProps {
   fill?: string;
   width?: string;
@@ -99,7 +101,8 @@ export enum IconName {
   VIEWFINDER_CIRCLE = "viewfinder-circle",
 }
 
-const Icon = (props: IconsProps) => {
+/** Renders an SVG icon by name with optional size and fill color */
+export const Icon = (props: IconsProps) => {
   let svg: ReactElement | null = null;
   const { name } = props;
 

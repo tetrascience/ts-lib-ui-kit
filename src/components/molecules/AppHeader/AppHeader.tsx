@@ -3,11 +3,15 @@ import { Icon, IconName } from "@atoms/Icon";
 import React from "react";
 import styled from "styled-components";
 
+/** Props for the user profile displayed in the header */
 interface UserProfileProps {
+  /** Display name of the user */
   name: string;
+  /** URL of the user's avatar image */
   avatar?: string;
 }
 
+/** Props for the AppHeader component */
 export interface AppHeaderProps {
   hostname: string;
   userProfile: UserProfileProps;
@@ -96,7 +100,8 @@ const Separator = styled.div`
   margin: 0;
 `;
 
-const AppHeader: React.FC<AppHeaderProps> = ({
+/** Application header bar with hostname, user profile, and navigation actions */
+export const AppHeader: React.FC<AppHeaderProps> = ({
   hostname,
   userProfile,
   onHomeClick,

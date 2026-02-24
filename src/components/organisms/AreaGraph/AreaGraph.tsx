@@ -3,7 +3,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 import "./AreaGraph.scss";
 
-interface AreaDataSeries {
+export interface AreaDataSeries {
   x: number[];
   y: number[];
   name: string;
@@ -11,9 +11,10 @@ interface AreaDataSeries {
   fill?: "tozeroy" | "tonexty" | "toself";
 }
 
-type AreaGraphVariant = "normal" | "stacked";
+export type AreaGraphVariant = "normal" | "stacked";
 
-interface AreaGraphProps {
+/** Props for the AreaGraph component */
+export interface AreaGraphProps {
   dataSeries: AreaDataSeries[];
   width?: number;
   height?: number;
@@ -25,7 +26,8 @@ interface AreaGraphProps {
   title?: string;
 }
 
-const AreaGraph: React.FC<AreaGraphProps> = ({
+/** An area graph chart using Plotly with support for normal and stacked variants */
+export const AreaGraph: React.FC<AreaGraphProps> = ({
   dataSeries,
   width = 1000,
   height = 600,
@@ -286,5 +288,4 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   );
 };
 
-export { AreaGraph };
-export type { AreaDataSeries, AreaGraphVariant, AreaGraphProps };
+export default AreaGraph;

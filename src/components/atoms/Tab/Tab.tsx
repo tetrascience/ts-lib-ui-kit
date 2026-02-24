@@ -3,6 +3,7 @@ import styled, { css } from "styled-components";
 
 export type TabSize = "small" | "medium";
 
+/** Props for the Tab component */
 export interface TabProps {
   label: string;
   active?: boolean;
@@ -72,6 +73,7 @@ const TabContainer = styled.button<{
   }
 `;
 
+/** A single tab button with active, disabled, and size variants */
 export const Tab: React.FC<TabProps> = ({
   label,
   active = false,

@@ -19,30 +19,14 @@ import {
 import { detectPeaks } from "./peakDetection";
 
 import type {
-  ChromatogramSeries,
   PeakAnnotation,
-  BaselineCorrectionMethod,
-  BoundaryMarkerStyle,
-  BoundaryMarkerType,
-  PeakDetectionOptions,
   ChromatogramChartProps,
   PeakWithMeta,
 } from "./types";
 import "./ChromatogramChart.scss";
 
-// Re-export types for external use
-export type {
-  ChromatogramSeries,
-  PeakAnnotation,
-  BaselineCorrectionMethod,
-  BoundaryMarkerStyle,
-  BoundaryMarkerType,
-  PeakDetectionOptions,
-  ChromatogramChartProps,
-};
-
-
-const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
+/** An advanced chromatogram chart with peak detection, baseline correction, and boundary marker support */
+export const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   series,
   width = 900,
   height = 500,
@@ -289,5 +273,4 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   );
 };
 
-export { ChromatogramChart };
-
+export default ChromatogramChart;

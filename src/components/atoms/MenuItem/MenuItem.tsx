@@ -2,6 +2,7 @@ import { Checkbox } from "@atoms/Checkbox";
 import React from "react";
 import styled from "styled-components";
 
+/** Props for the MenuItem component */
 export interface MenuItemProps {
   label: string;
   checked?: boolean;
@@ -53,6 +54,7 @@ const CheckboxContainer = styled.div`
   width: 100%;
 `;
 
+/** A clickable menu item with optional checkbox and active state */
 export const MenuItem = ({
   label,
   checked = false,

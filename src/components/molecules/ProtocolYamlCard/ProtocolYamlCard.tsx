@@ -7,6 +7,7 @@ import styled from "styled-components";
 
 import type { DropdownOption } from "@atoms/Dropdown";
 
+/** Props for the ProtocolYamlCard component */
 export interface ProtocolYamlCardProps {
   title: string;
   newVersionMode: boolean;
@@ -70,7 +71,8 @@ const StyledToggle = styled(Toggle)`
 
 const StyledDropdown = styled(Dropdown)``;
 
-const ProtocolYamlCard: React.FC<ProtocolYamlCardProps> = ({
+/** A card displaying a protocol's YAML with version selection and deploy controls */
+export const ProtocolYamlCard: React.FC<ProtocolYamlCardProps> = ({
   title,
   newVersionMode,
   onToggleNewVersionMode,

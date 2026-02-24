@@ -18,6 +18,7 @@ export type PopConfirmPlacement =
   | "rightTop"
   | "rightBottom";
 
+/** Props for the PopConfirm component */
 export interface PopConfirmProps {
   title?: ReactNode;
   description?: ReactNode;
@@ -32,6 +33,7 @@ export interface PopConfirmProps {
   cancelButtonProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
 }
 
+/** Internal style props for the popover container styled component */
 interface PopoverContainerProps {
   placement: PopConfirmPlacement;
   $isVisible: boolean;
@@ -290,6 +292,7 @@ const PopConfirmWrapper = styled.div`
   display: inline-block;
 `;
 
+/** A confirmation popover triggered by a child element with configurable placement and actions */
 export const PopConfirm: React.FC<PopConfirmProps> = ({
   title,
   description,

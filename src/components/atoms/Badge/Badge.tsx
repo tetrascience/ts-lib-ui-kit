@@ -4,12 +4,18 @@ import styled, { css } from "styled-components";
 export type BadgeSize = "small" | "medium";
 export type BadgeVariant = "default" | "primary";
 
+/** Props for the Badge component */
 export interface BadgeProps {
   children: React.ReactNode;
+  /** Badge size */
   size?: BadgeSize;
+  /** Visual style variant */
   variant?: BadgeVariant;
+  /** Whether the badge is disabled */
   disabled?: boolean;
+  /** Icon rendered to the left of the badge text */
   iconLeft?: React.ReactNode;
+  /** Icon rendered to the right of the badge text */
   iconRight?: React.ReactNode;
   className?: string;
 }
@@ -73,6 +79,7 @@ const StyledBadge = styled.span<{
   }
 `;
 
+/** A small label component used to display status, category, or metadata */
 export const Badge: React.FC<BadgeProps> = ({
   children,
   size = "medium",

@@ -5,6 +5,7 @@ import { defaultTheme } from "./types";
 
 import type { Theme} from "./types";
 
+/** Props for the ThemeProvider component */
 export interface ThemeProviderProps {
   theme?: Theme;
   children: React.ReactNode;

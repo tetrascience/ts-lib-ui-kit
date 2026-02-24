@@ -1,2 +1,1 @@
-export { default as ButtonControl } from "./ButtonControl";
-export type { ButtonControlProps } from "./ButtonControl";
+export * from "./ButtonControl";

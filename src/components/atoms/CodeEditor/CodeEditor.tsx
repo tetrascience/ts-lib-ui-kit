@@ -15,6 +15,7 @@ const themeModules = typeof import.meta.glob === 'function'
   ? import.meta.glob("/node_modules/monaco-themes/themes/*.json")
   : {};
 
+/** Props for the CodeEditor component */
 export interface CodeEditorProps {
   value: string;
   onChange: OnChange;
@@ -70,7 +71,8 @@ const StyledButton = styled(Button)`
   height: 100%;
 `;
 
-const CodeEditor: React.FC<CodeEditorProps> = ({
+/** A Monaco-based code editor with syntax highlighting, copy, and launch actions */
+export const CodeEditor: React.FC<CodeEditorProps> = ({
   value,
   onChange,
   language = "python",

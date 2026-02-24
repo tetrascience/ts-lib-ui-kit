@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 export type ToastType = "info" | "success" | "warning" | "danger" | "default";
 
+/** Props for the Toast component */
 export interface ToastProps {
   type?: ToastType;
   heading: string;
@@ -13,6 +14,7 @@ export interface ToastProps {
   className?: string;
 }
 
+/** Internal style props for the toast container styled component */
 interface ToastContainerProps {
   type: ToastType;
 }
@@ -85,22 +87,27 @@ const Description = styled.p`
   line-height: 18px;
 `;
 
+/** Icon for informational toasts */
 const InfoIcon = ({ color }: { color: string }) => (
   <Icon name={IconName.INFORMATION_CIRCLE} fill={color} />
 );
 
+/** Icon for success toasts */
 const SuccessIcon = ({ color }: { color: string }) => (
   <Icon name={IconName.CHECK_CIRCLE} fill={color} />
 );
 
+/** Icon for warning toasts */
 const WarningIcon = ({ color }: { color: string }) => (
   <Icon name={IconName.EXCLAMATION_TRIANGLE} fill={color} />
 );
 
+/** Icon for error/danger toasts */
 const ErrorIcon = ({ color }: { color: string }) => (
   <Icon name={IconName.EXCLAMATION_CIRCLE} fill={color} />
 );
 
+/** Icon for neutral toasts */
 const NeutralIcon = ({ color }: { color: string }) => (
   <Icon name={IconName.EXCLAMATION_TRIANGLE} fill={color} />
 );
@@ -120,6 +127,7 @@ const getIcon = (type: ToastType, color: string): ReactNode => {
   }
 };
 
+/** A notification toast with type-based styling and an icon */
 export const Toast: React.FC<ToastProps> = ({
   type = "default",
   heading,

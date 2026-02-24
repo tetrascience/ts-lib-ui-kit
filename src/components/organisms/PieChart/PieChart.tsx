@@ -3,14 +3,14 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 import "./PieChart.scss";
 
-interface PieDataSeries {
+export interface PieDataSeries {
   labels: string[];
   values: number[];
   name: string;
   colors?: string[];
 }
 
-type PieTextInfo =
+export type PieTextInfo =
   | "none"
   | "label"
   | "percent"
@@ -20,7 +20,8 @@ type PieTextInfo =
   | "value+percent"
   | "label+value+percent";
 
-type PieChartProps = {
+/** Props for the PieChart component */
+export type PieChartProps = {
   dataSeries: PieDataSeries;
   width?: number;
   height?: number;
@@ -39,7 +40,8 @@ const DEFAULT_COLORS = [
   COLORS.PURPLE,
 ];
 
-const PieChart: React.FC<PieChartProps> = ({
+/** A pie or donut chart using Plotly with configurable labels, colors, and hole size */
+export const PieChart: React.FC<PieChartProps> = ({
   dataSeries,
   width = 400,
   height = 400,
@@ -122,6 +124,7 @@ const PieChart: React.FC<PieChartProps> = ({
     };
   }, [colors, dataSeries.labels, dataSeries.name, dataSeries.values, width, height, textInfo, hole, rotation]);
 
+  /** Internal legend component rendering color swatches for pie slices */
   const PieChartLegend: React.FC<{ labels: string[]; colors: string[] }> = ({
     labels,
     colors,
@@ -170,5 +173,4 @@ const PieChart: React.FC<PieChartProps> = ({
   );
 };
 
-export { PieChart };
-export type { PieDataSeries, PieTextInfo, PieChartProps };
+export default PieChart;

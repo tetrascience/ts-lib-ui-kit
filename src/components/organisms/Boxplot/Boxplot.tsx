@@ -6,7 +6,7 @@ import "./Boxplot.scss";
 /** Default point position offset from the box edge */
 const DEFAULT_POINT_POSITION = -1.8;
 
-interface BoxDataSeries {
+export interface BoxDataSeries {
   y: number[];
   name: string;
   color: string;
@@ -16,7 +16,8 @@ interface BoxDataSeries {
   pointpos?: number;
 }
 
-interface BoxplotProps {
+/** Props for the Boxplot component */
+export interface BoxplotProps {
   dataSeries: BoxDataSeries[];
   width?: number;
   height?: number;
@@ -28,7 +29,8 @@ interface BoxplotProps {
   showPoints?: boolean;
 }
 
-const Boxplot: React.FC<BoxplotProps> = ({
+/** A box plot chart using Plotly for visualizing data distribution with optional outlier points */
+export const Boxplot: React.FC<BoxplotProps> = ({
   dataSeries,
   width = 1000,
   height = 600,
@@ -230,5 +232,4 @@ const Boxplot: React.FC<BoxplotProps> = ({
   );
 };
 
-export { Boxplot };
-export type { BoxDataSeries, BoxplotProps };
+export default Boxplot;

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 
+/** Props for the Toggle component */
 export interface ToggleProps {
   checked?: boolean;
   onChange?: (checked: boolean) => void;
@@ -52,6 +53,7 @@ const LabelText = styled.span`
   color: var(--grey-500);
 `;
 
+/** A toggle switch with optional label and disabled state */
 export const Toggle: React.FC<ToggleProps> = ({
   checked = false,
   onChange,

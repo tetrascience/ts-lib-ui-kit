@@ -4,6 +4,7 @@ import styled from "styled-components";
 
 import type { DropdownOption } from "@atoms/Dropdown";
 
+/** Props for the TableHeaderCell component */
 export interface TableHeaderCellProps
   extends React.ThHTMLAttributes<HTMLTableCellElement> {
   children?: React.ReactNode;
@@ -74,6 +75,7 @@ const DropdownContainer = styled.div`
   }
 `;
 
+/** A table header cell with optional sort and filter controls */
 export const TableHeaderCell = ({
   children,
   sortable = false,

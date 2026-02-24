@@ -12,7 +12,11 @@
  * import { TDPClient } from '@tetrascience-npm/ts-connectors-sdk';
  * import { getProviderConfigurations } from '@tetrascience-npm/tetrascience-react-ui/server';
  *
- * const client = new TDPClient({ authToken: userJwt });
+ * // Other fields (tdpEndpoint, connectorId, orgSlug) are read from environment variables
+ * const client = new TDPClient({
+ *   authToken: userJwt,
+ *   artifactType: "data-app",
+ * });
  * await client.init();
  * const providers = await getProviderConfigurations(client);
  * ```
@@ -20,6 +24,15 @@
 
 // Configuration utilities
 export { getProviderConfigurations } from "./getProviderConfigurations";
+
+// Provider discovery helpers
+export {
+  getProviderInfoList,
+  getProviderByName,
+  getProvidersByType,
+  getProviderNames,
+  getProviderTypes,
+} from "./providerDiscovery";
 
 // Exception classes
 export {

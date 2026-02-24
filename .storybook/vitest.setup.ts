@@ -35,8 +35,14 @@ beforeEach(() => {
     // See: https://github.com/microsoft/monaco-editor/issues/2810
     if (args.length === 1 && args[0] === null) {
       // Check if this error is coming from Monaco by inspecting the stack trace
+      // Include broad patterns since the error can originate from workers, async
+      // callbacks, or bundled code where the original "monaco" name is mangled.
       const stack = new Error().stack || "";
-      const isFromMonaco = stack.includes("monaco") || stack.includes("MonacoEditor");
+      const isFromMonaco =
+        stack.includes("monaco") ||
+        stack.includes("MonacoEditor") ||
+        stack.includes("CodeEditor") ||
+        stack.includes("editor.main");
 
       if (isFromMonaco) {
         // Still log it to console, just don't fail the test

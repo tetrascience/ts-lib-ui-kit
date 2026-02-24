@@ -12,11 +12,13 @@
   },
   "dependencies": {
     "@tetrascience-npm/tetrascience-react-ui": "workspace:*",
+    "cookie-parser": "^1.4.7",
     "express": "^4.21.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.7",
     "@types/express": "^4.17.21",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

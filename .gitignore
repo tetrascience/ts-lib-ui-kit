@@ -39,3 +39,9 @@ release-punchlist.txt
 license-compliance.txt
 table-comparison-googledoc.md
 dependency-licenses.csv
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production

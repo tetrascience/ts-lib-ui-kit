@@ -226,6 +226,9 @@ cd ts-lib-ui-kit
 # Install dependencies
 yarn
 
+# Build the library (required — the example app uses the local workspace build)
+yarn build
+
 # Run the themed example app
 yarn workspace vite-themed-app dev
 ```
@@ -240,7 +243,7 @@ Visit <http://localhost:5173> to see the example app with custom theming.
 
 ## Tech Stack
 
-- React 18
+- React 19
 - TypeScript
 - styled-components
 - Plotly.js (charts)

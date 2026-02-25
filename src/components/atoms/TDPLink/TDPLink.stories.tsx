@@ -1,7 +1,6 @@
-import { TdpNavigationProvider } from "@utils/navigation/TdpNavigationContext";
 import { expect, fn, userEvent, within } from "storybook/test";
 
-import { TDPLink } from "./TDPLink";
+import { TDPLink, TdpNavigationProvider } from "./TDPLink";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 

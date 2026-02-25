@@ -186,16 +186,16 @@ export const HrefConstruction: Story = {
   name: "Href Construction",
   tags: ["!dev"],
   args: {
-    path: "/search?q=test",
-    children: "Search Link",
+    path: "/pipeline-details/pipeline-456",
+    children: "Pipeline Link",
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const link = canvas.getByRole("link", { name: /search link/i });
+    const link = canvas.getByRole("link", { name: /pipeline link/i });
 
     await expect(link).toHaveAttribute(
       "href",
-      `${MOCK_TDP_BASE_URL}/search?q=test`,
+      `${MOCK_TDP_BASE_URL}/pipeline-details/pipeline-456`,
     );
   },
 };

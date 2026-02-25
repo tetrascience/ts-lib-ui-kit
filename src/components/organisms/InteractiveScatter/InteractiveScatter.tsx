@@ -70,6 +70,13 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
   const isControlled = controlledSelectedIds !== undefined;
   const selectedIds = isControlled ? controlledSelectedIds : internalSelectedIds;
 
+  // Normalize to strings so numeric IDs passed by consumers always match the
+  // string IDs that Plotly stores (we always do String(p.id) when building the trace).
+  const normalizedSelectedIds = useMemo(
+    () => new Set([...selectedIds].map(String)),
+    [selectedIds],
+  );
+
   // Apply downsampling if configured
   const processedData = useMemo(() => {
     if (!downsampling) {
@@ -320,7 +327,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
 
             // Handle selection
             const mode = getSelectionMode(eventData.event as MouseEvent);
-            const newSelection = applySelection(selectedIds, new Set([clickedId]), mode);
+            const newSelection = applySelection(normalizedSelectedIds, new Set([clickedId]), mode);
 
             if (!isControlled) {
               setInternalSelectedIds(newSelection);
@@ -398,9 +405,9 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
 
     const plotElement = currentRef as unknown as Plotly.PlotlyHTMLElement;
 
-    // Find indices of selected points
+    // Find indices of selected points. Use the string-normalized set to match the string IDs Plotly stores
     const selectedIndices = processedData
-      .map((point, index) => (selectedIds.has(point.id) ? index : null))
+      .map((point, index) => (normalizedSelectedIds.has(String(point.id)) ? index : null))
       .filter((index): index is number => index !== null);
 
     // Update Plotly selection
@@ -421,7 +428,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
         [0],
       );
     }
-  }, [selectedIds, processedData]);
+  }, [normalizedSelectedIds, processedData]);
 
   const containerClassName = className ? `interactive-scatter ${className}` : "interactive-scatter";
 

@@ -396,6 +396,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     enableLassoSelection,
     selectedIds,
     isControlled,
+    normalizedSelectedIds,
   ]);
 
   // Apply selection state to Plotly

@@ -1,14 +1,9 @@
-import React, { createContext, useContext, useMemo } from "react";
-import styled from "styled-components";
+import React, { createContext, useContext, useMemo } from 'react';
+import styled from 'styled-components';
 
-import {
-  buildTdpUrl,
-  getTdpBaseUrlFromApiEndpoint,
-  getTdpBaseUrlFromReferrer,
-  navigateToTdpUrl,
-} from "./tdpUrl";
+import { buildTdpUrl, getTdpBaseUrlFromReferrer, navigateToTdpUrl } from './tdpUrl';
 
-import type { TdpNavigationOptions } from "./tdpUrl";
+import type { TdpNavigationOptions } from './tdpUrl';
 
 export interface TdpNavigationContextValue {
   /** The resolved TDP base URL (origin + org path prefix), or null if not resolved */
@@ -19,8 +14,7 @@ export interface TdpNavigationContextValue {
   navigateToTdp: (path: string, options?: TdpNavigationOptions) => void;
 }
 
-export const TdpNavigationContext =
-  createContext<TdpNavigationContextValue | null>(null);
+export const TdpNavigationContext = createContext<TdpNavigationContextValue | null>(null);
 
 /**
  * Access TDP navigation helpers from the nearest TdpNavigationProvider.
@@ -36,8 +30,8 @@ export function useTdpNavigationContext(): TdpNavigationContextValue {
   const context = useContext(TdpNavigationContext);
   if (!context) {
     throw new Error(
-      "useTdpNavigationContext must be used within a TdpNavigationProvider. " +
-        "Wrap your app with <TdpNavigationProvider> or use the standalone useTdpNavigation() hook instead.",
+      'useTdpNavigationContext must be used within a TdpNavigationProvider. ' +
+        'Wrap your app with <TdpNavigationProvider> or use the standalone useTdpNavigation() hook instead.',
     );
   }
   return context;
@@ -46,12 +40,7 @@ export function useTdpNavigationContext(): TdpNavigationContextValue {
 /** Props for the TdpNavigationProvider component */
 export interface TdpNavigationProviderProps {
   /**
-   * TDP API endpoint URL (e.g., from TDP_ENDPOINT env var).
-   * Used as a fallback when document.referrer is not available (local dev).
-   */
-  tdpApiUrl?: string;
-  /**
-   * Explicit TDP base URL override. Skips all auto-detection when provided.
+   * Explicit TDP base URL override. Skips auto-detection when provided.
    */
   tdpBaseUrl?: string;
   children: React.ReactNode;
@@ -63,33 +52,24 @@ export interface TdpNavigationProviderProps {
  * Resolution order:
  * 1. Explicit `tdpBaseUrl` prop (if provided)
  * 2. `document.referrer` parsing (production iframe)
- * 3. `tdpApiUrl` conversion (local development fallback)
  *
  * @example
  * ```tsx
- * <TdpNavigationProvider tdpApiUrl={config.tdpEndpoint}>
+ * <TdpNavigationProvider tdpBaseUrl="https://tetrascience.com/my-org">
  *   <App />
  * </TdpNavigationProvider>
  * ```
  */
 export const TdpNavigationProvider: React.FC<TdpNavigationProviderProps> = ({
-  tdpApiUrl,
   tdpBaseUrl: explicitBaseUrl,
   children,
 }) => {
   const tdpBaseUrl = useMemo(() => {
     if (explicitBaseUrl) {
-      return explicitBaseUrl.replace(/\/$/u, "");
+      return explicitBaseUrl.replace(/\/$/u, '');
     }
-    const fromReferrer = getTdpBaseUrlFromReferrer();
-    if (fromReferrer) {
-      return fromReferrer;
-    }
-    if (tdpApiUrl) {
-      return getTdpBaseUrlFromApiEndpoint(tdpApiUrl);
-    }
-    return null;
-  }, [explicitBaseUrl, tdpApiUrl]);
+    return getTdpBaseUrlFromReferrer();
+  }, [explicitBaseUrl]);
 
   const contextValue = useMemo<TdpNavigationContextValue>(
     () => ({
@@ -100,9 +80,7 @@ export const TdpNavigationProvider: React.FC<TdpNavigationProviderProps> = ({
       },
       navigateToTdp: (path: string, options?: TdpNavigationOptions) => {
         if (!tdpBaseUrl) {
-          console.warn(
-            "[TdpNavigation] Cannot navigate: TDP base URL not resolved",
-          );
+          console.warn('[TdpNavigation] Cannot navigate: TDP base URL not resolved');
           return;
         }
         const url = buildTdpUrl(tdpBaseUrl, path);
@@ -114,16 +92,10 @@ export const TdpNavigationProvider: React.FC<TdpNavigationProviderProps> = ({
     [tdpBaseUrl],
   );
 
-  return (
-    <TdpNavigationContext.Provider value={contextValue}>
-      {children}
-    </TdpNavigationContext.Provider>
-  );
+  return <TdpNavigationContext.Provider value={contextValue}>{children}</TdpNavigationContext.Provider>;
 };
 
 export interface UseTdpNavigationOptions {
-  /** TDP API endpoint URL (fallback for local dev) */
-  tdpApiUrl?: string;
   /** Explicit TDP base URL override */
   tdpBaseUrl?: string;
 }
@@ -147,7 +119,7 @@ export interface UseTdpNavigationReturn {
  * ```tsx
  * function MyComponent() {
  *   const { getTdpUrl, navigateToTdp } = useTdpNavigation({
- *     tdpApiUrl: "https://api.tetrascience.com/v1",
+ *     tdpBaseUrl: "https://tetrascience.com/my-org",
  *   });
  *
  *   return (
@@ -158,29 +130,21 @@ export interface UseTdpNavigationReturn {
  * }
  * ```
  */
-export function useTdpNavigation(
-  options: UseTdpNavigationOptions = {},
-): UseTdpNavigationReturn {
-  const { tdpApiUrl, tdpBaseUrl: explicitBaseUrl } = options;
+export function useTdpNavigation(options: UseTdpNavigationOptions = {}): UseTdpNavigationReturn {
+  const { tdpBaseUrl: explicitBaseUrl } = options;
 
   const tdpBaseUrl = useMemo(() => {
-    if (explicitBaseUrl) return explicitBaseUrl.replace(/\/$/u, "");
-    const fromReferrer = getTdpBaseUrlFromReferrer();
-    if (fromReferrer) return fromReferrer;
-    if (tdpApiUrl) return getTdpBaseUrlFromApiEndpoint(tdpApiUrl);
-    return null;
-  }, [explicitBaseUrl, tdpApiUrl]);
+    if (explicitBaseUrl) return explicitBaseUrl.replace(/\/$/u, '');
+    return getTdpBaseUrlFromReferrer();
+  }, [explicitBaseUrl]);
 
   return useMemo(
     () => ({
       tdpBaseUrl,
-      getTdpUrl: (path: string) =>
-        tdpBaseUrl ? buildTdpUrl(tdpBaseUrl, path) : null,
+      getTdpUrl: (path: string) => (tdpBaseUrl ? buildTdpUrl(tdpBaseUrl, path) : null),
       navigateToTdp: (path: string, opts?: TdpNavigationOptions) => {
         if (!tdpBaseUrl) {
-          console.warn(
-            "[useTdpNavigation] Cannot navigate: TDP base URL not resolved",
-          );
+          console.warn('[useTdpNavigation] Cannot navigate: TDP base URL not resolved');
           return;
         }
         const url = buildTdpUrl(tdpBaseUrl, path);
@@ -192,8 +156,7 @@ export function useTdpNavigation(
 }
 
 /** Props for the TDPLink component */
-export interface TDPLinkProps
-  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+export interface TDPLinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
   /** TDP page path (e.g., "/file/abc-123" or use tdpPaths helpers) */
   path: string;
   /** Navigation behavior. Default: { newTab: true } */
@@ -262,9 +225,9 @@ export const TDPLink: React.FC<TDPLinkProps> = ({
 
   return (
     <StyledLink
-      href={href ?? "#"}
-      target={navigationOptions.newTab ? "_blank" : undefined}
-      rel={navigationOptions.newTab ? "noopener noreferrer" : undefined}
+      href={href ?? '#'}
+      target={navigationOptions.newTab ? '_blank' : undefined}
+      rel={navigationOptions.newTab ? 'noopener noreferrer' : undefined}
       onClick={handleClick}
       {...rest}
     >

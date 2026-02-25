@@ -13,21 +13,21 @@
  * everything from the prefix onward is stripped to derive the TDP base URL.
  */
 const TDP_ROUTE_PREFIXES = [
-  "/data-workspace",
-  "/data-apps",
-  "/pipelines",
-  "/pipeline-edit/",
-  "/pipeline-details/",
-  "/pipeline-processing/",
-  "/file/",
-  "/file-details/",
-  "/files",
-  "/search",
-  "/search-classic",
-  "/artifacts/",
-  "/admin",
-  "/settings",
-  "/agent-studio",
+  '/data-workspace',
+  '/data-apps',
+  '/pipelines',
+  '/pipeline-edit/',
+  '/pipeline-details/',
+  '/pipeline-processing/',
+  '/file/',
+  '/file-details/',
+  '/files',
+  '/search',
+  '/search-classic',
+  '/artifacts/',
+  '/admin',
+  '/settings',
+  '/agent-studio',
 ];
 
 /**
@@ -45,7 +45,7 @@ const TDP_ROUTE_PREFIXES = [
  * @returns The TDP base URL, or null if detection fails
  */
 export function getTdpBaseUrlFromReferrer(): string | null {
-  if (typeof document === "undefined" || !document.referrer) {
+  if (typeof document === 'undefined' || !document.referrer) {
     return null;
   }
 
@@ -56,39 +56,13 @@ export function getTdpBaseUrlFromReferrer(): string | null {
     for (const prefix of TDP_ROUTE_PREFIXES) {
       const prefixIndex = pathname.indexOf(prefix);
       if (prefixIndex !== -1) {
-        const basePath = pathname.slice(0, prefixIndex).replace(/\/$/u, "");
+        const basePath = pathname.slice(0, prefixIndex).replace(/\/$/u, '');
         return `${referrerUrl.origin}${basePath}`;
       }
     }
 
     // No known route matched — return origin (handles TDP root pages)
     return referrerUrl.origin;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Convert a TDP API endpoint URL to the corresponding web platform URL.
- *
- * @example
- * getTdpBaseUrlFromApiEndpoint("https://api.tetrascience.com/v1")
- * // "https://tetrascience.com"
- *
- * @param apiUrl - The TDP API endpoint URL (e.g., TDP_ENDPOINT env var)
- * @returns The TDP web base URL, or null if conversion fails
- */
-export function getTdpBaseUrlFromApiEndpoint(apiUrl: string): string | null {
-  if (!apiUrl) {
-    return null;
-  }
-
-  try {
-    const url = new URL(apiUrl);
-    const webHostname = url.hostname.startsWith("api.")
-      ? url.hostname.slice(4)
-      : url.hostname;
-    return `${url.protocol}//${webHostname}`;
   } catch {
     return null;
   }
@@ -107,9 +81,9 @@ export function getTdpBaseUrlFromApiEndpoint(apiUrl: string): string | null {
  */
 export function buildTdpUrl(baseUrl: string, path: string): string | null {
   try {
-    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     const url = new URL(baseUrl);
-    url.pathname = `${url.pathname.replace(/\/$/u, "")}${normalizedPath}`;
+    url.pathname = `${url.pathname.replace(/\/$/u, '')}${normalizedPath}`;
     return url.href;
   } catch {
     return null;
@@ -131,12 +105,9 @@ export interface TdpNavigationOptions {
  * @param url - Full TDP URL to navigate to
  * @param options - Navigation options
  */
-export function navigateToTdpUrl(
-  url: string,
-  options: TdpNavigationOptions = {},
-): void {
+export function navigateToTdpUrl(url: string, options: TdpNavigationOptions = {}): void {
   if (options.newTab) {
-    window.open(url, "_blank", "noopener,noreferrer");
+    window.open(url, '_blank', 'noopener,noreferrer');
     return;
   }
 
@@ -145,7 +116,7 @@ export function navigateToTdpUrl(
     try {
       const tdpUrl = new URL(url);
       const relativePath = `${tdpUrl.pathname}${tdpUrl.search}${tdpUrl.hash}`;
-      window.parent.postMessage({ type: "navigate", path: relativePath }, "*");
+      window.parent.postMessage({ type: 'navigate', path: relativePath }, '*');
       return;
     } catch {
       // Fall through to direct navigation
@@ -161,18 +132,15 @@ export function navigateToTdpUrl(
  * Returns path strings for use with `getTdpUrl()` or `buildTdpUrl()`.
  *
  * @example
- * const { getTdpUrl } = useTdpNavigation({ tdpApiUrl });
+ * const { getTdpUrl } = useTdpNavigation();
  * const url = getTdpUrl(tdpPaths.fileDetails("abc-123"));
  */
 export const tdpPaths = {
   fileDetails: (fileId: string) => `/file/${fileId}`,
   pipelineEdit: (pipelineId: string) => `/pipeline-edit/${pipelineId}`,
-  pipelineDetails: (pipelineId: string) =>
-    `/pipeline-details/${pipelineId}`,
-  search: (query?: string) =>
-    query ? `/search?q=${encodeURIComponent(query)}` : "/search",
-  dataWorkspace: () => "/data-workspace",
-  dataApps: () => "/data-apps",
-  artifact: (type: string, namespace: string, slug: string) =>
-    `/artifacts/${type}/${namespace}/${slug}`,
+  pipelineDetails: (pipelineId: string) => `/pipeline-details/${pipelineId}`,
+  search: (query?: string) => (query ? `/search?q=${encodeURIComponent(query)}` : '/search'),
+  dataWorkspace: () => '/data-workspace',
+  dataApps: () => '/data-apps',
+  artifact: (type: string, namespace: string, slug: string) => `/artifacts/${type}/${namespace}/${slug}`,
 };

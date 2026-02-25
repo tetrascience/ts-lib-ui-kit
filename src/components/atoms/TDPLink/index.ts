@@ -1,1 +1,1 @@
-export * from "./TDPLink";
+export * from './TDPLink';

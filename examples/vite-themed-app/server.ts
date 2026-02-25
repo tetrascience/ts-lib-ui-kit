@@ -206,11 +206,6 @@ app.get("/api/tables/:tableName", async (req, res) => {
   }
 });
 
-// Environment config for client-side navigation helpers
-app.get("/api/env", (_req, res) => {
-  res.json({ tdpEndpoint: process.env.TDP_ENDPOINT || "" });
-});
-
 // Health check
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });

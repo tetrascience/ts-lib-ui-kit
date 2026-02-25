@@ -76,15 +76,9 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [selectedTable, setSelectedTable] = useState<string>(ALLOWED_TABLES[0]);
   const [selectedProvider, setSelectedProvider] = useState<string>('');
-  const [tdpEndpoint, setTdpEndpoint] = useState<string>('');
 
   // Fetch environment config and providers on mount
   useEffect(() => {
-    fetch('/api/env')
-      .then((res) => res.json())
-      .then((data) => setTdpEndpoint(data.tdpEndpoint || ''))
-      .catch((err) => console.error('Failed to fetch env config:', err));
-
     fetch('/api/providers')
       .then((res) => res.json())
       .then((data) => setProviders(data.providers || []))
@@ -116,7 +110,7 @@ function App() {
 
   return (
     <ThemeProvider theme={customTheme}>
-    <TdpNavigationProvider tdpApiUrl={tdpEndpoint || undefined}>
+    <TdpNavigationProvider>
       <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '32px' }}>
@@ -410,18 +404,6 @@ function App() {
               Edit Pipeline
             </TDPLink>
           </div>
-          {!tdpEndpoint && (
-            <div style={{
-              marginTop: '12px',
-              padding: '12px',
-              backgroundColor: '#FEF3C7',
-              borderRadius: '8px',
-              color: COLORS.brown,
-              fontSize: '13px',
-            }}>
-              TDP_ENDPOINT not set — links point to <code>#</code>. Set the environment variable to see real URLs.
-            </div>
-          )}
         </div>
 
         {/* Modal Example */}

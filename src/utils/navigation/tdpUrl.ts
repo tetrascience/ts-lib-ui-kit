@@ -28,7 +28,7 @@ const TDP_ROUTE_PREFIXES = [
   "/admin",
   "/settings",
   "/agent-studio",
-] as const;
+];
 
 /**
  * Extract the TDP base URL from `document.referrer`.
@@ -175,4 +175,4 @@ export const tdpPaths = {
   dataApps: () => "/data-apps",
   artifact: (type: string, namespace: string, slug: string) =>
     `/artifacts/${type}/${namespace}/${slug}`,
-} as const;
+};

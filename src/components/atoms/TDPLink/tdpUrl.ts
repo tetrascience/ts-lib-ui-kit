@@ -111,15 +111,22 @@ export function navigateToTdpUrl(url: string, options: TdpNavigationOptions = {}
     return;
   }
 
-  // In iframe context, use postMessage to navigate the parent TDP frame
+  // In a cross-origin iframe (TDP), use postMessage to navigate the parent frame.
+  // Same-origin iframes (e.g., Storybook) fall through to direct navigation.
   if (window.parent !== window) {
     try {
-      const tdpUrl = new URL(url);
-      const relativePath = `${tdpUrl.pathname}${tdpUrl.search}${tdpUrl.hash}`;
-      window.parent.postMessage({ type: 'navigate', path: relativePath }, '*');
-      return;
+      // Accessing window.parent.location.href throws SecurityError if cross-origin
+      void window.parent.location.href;
     } catch {
-      // Fall through to direct navigation
+      // Cross-origin iframe — use postMessage to navigate the parent TDP frame
+      try {
+        const tdpUrl = new URL(url);
+        const relativePath = `${tdpUrl.pathname}${tdpUrl.search}${tdpUrl.hash}`;
+        window.parent.postMessage({ type: 'navigate', path: relativePath }, '*');
+        return;
+      } catch {
+        // Fall through to direct navigation
+      }
     }
   }
 

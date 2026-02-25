@@ -150,7 +150,7 @@ export function mapSizes(data: ScatterPoint[], sizeMapping: SizeMapping | undefi
 
   if (sizeMapping.type === "continuous" && sizeMapping.field) {
     const range =
-      sizeMapping.min && sizeMapping.max
+      sizeMapping.min !== undefined && sizeMapping.max !== undefined
         ? { min: sizeMapping.min, max: sizeMapping.max }
         : calculateRange(data, sizeMapping.field);
 

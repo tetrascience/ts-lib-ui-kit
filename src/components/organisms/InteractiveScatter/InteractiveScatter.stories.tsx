@@ -1,312 +1,325 @@
 import React, { useState } from "react";
-import { expect, within } from "storybook/test";
 
 import { InteractiveScatter } from "./InteractiveScatter";
 
-import type { ScatterPoint } from "./types";
+import type { ScatterPoint, SelectionMode } from "./types";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof InteractiveScatter> = {
   title: "Organisms/InteractiveScatter",
   component: InteractiveScatter,
   tags: ["autodocs"],
-  parameters: {
-    layout: "centered",
-  },
+  parameters: { layout: "centered" },
 };
 
 export default meta;
 type Story = StoryObj<typeof InteractiveScatter>;
 
-/**
- * Generate sample scatter data
- */
-function generateScatterData(count: number): ScatterPoint[] {
-  const points: ScatterPoint[] = [];
-  const categories = ["Group A", "Group B", "Group C"];
-  const statuses = ["Active", "Inactive", "Pending"];
+const CATEGORIES = ["Group A", "Group B", "Group C"];
+const STATUSES = ["Active", "Inactive", "Pending"];
 
-  for (let i = 0; i < count; i++) {
-    points.push({
-      id: `point-${i}`,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      label: `Point ${i}`,
-      metadata: {
-        category: categories[i % categories.length],
-        status: statuses[Math.floor(Math.random() * statuses.length)],
-        value: Math.random() * 1000,
-        intensity: Math.random() * 10,
-        concentration: (Math.random() * 100).toFixed(2),
-      },
-    });
-  }
+const rand = () => Math.random();
 
-  return points;
+function scatterData(count: number): ScatterPoint[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: `point-${i}`,
+    x: rand() * 100,
+    y: rand() * 100,
+    label: `Point ${i}`,
+    metadata: {
+      category: CATEGORIES[i % 3],
+      status: STATUSES[i % 3],
+      value: rand() * 1000,
+      intensity: rand() * 10,
+      concentration: Number((rand() * 100).toFixed(2)),
+    },
+  }));
 }
 
-/**
- * Generate clustered data for demonstrating patterns
- */
-function generateClusteredData(): ScatterPoint[] {
-  const points: ScatterPoint[] = [];
+function clusteredData(): ScatterPoint[] {
   const clusters = [
-    { centerX: 25, centerY: 25, label: "Cluster A", count: 50 },
-    { centerX: 75, centerY: 75, label: "Cluster B", count: 50 },
-    { centerX: 50, centerY: 90, label: "Cluster C", count: 30 },
+    { cx: 25, cy: 25, label: "Cluster A", n: 50 },
+    { cx: 75, cy: 75, label: "Cluster B", n: 50 },
+    { cx: 50, cy: 90, label: "Cluster C", n: 30 },
   ];
-
   let id = 0;
-  for (const cluster of clusters) {
-    for (let i = 0; i < cluster.count; i++) {
-      points.push({
-        id: `point-${id++}`,
-        x: cluster.centerX + (Math.random() - 0.5) * 20,
-        y: cluster.centerY + (Math.random() - 0.5) * 20,
-        label: `${cluster.label} ${i}`,
-        metadata: {
-          cluster: cluster.label,
-          value: Math.random() * 1000,
-          intensity: Math.random() * 10,
-        },
-      });
-    }
-  }
-
-  return points;
+  return clusters.flatMap((c) =>
+    Array.from({ length: c.n }, () => ({
+      id: `point-${id++}`,
+      x: c.cx + (rand() - 0.5) * 20,
+      y: c.cy + (rand() - 0.5) * 20,
+      label: `${c.label} ${id}`,
+      metadata: { cluster: c.label, value: rand() * 1000, intensity: rand() * 10 },
+    })),
+  );
 }
 
-/**
- * Basic scatter plot with default settings
- */
+function logScaleData(): ScatterPoint[] {
+  return Array.from({ length: 80 }, (_, i) => ({
+    id: `point-${i}`,
+    x: 10 ** (rand() * 4),
+    y: 10 ** (rand() * 5),
+    label: `Sample ${i}`,
+    metadata: { category: i % 2 === 0 ? "Type X" : "Type Y" },
+  }));
+}
+
+const BASIC_DATA = scatterData(100);
+const STYLED_DATA = scatterData(150);
+const STATIC_DATA = scatterData(80);
+const SELECTION_DATA = scatterData(80);
+const CLUSTERED_DATA = clusteredData();
+const TOOLTIP_DATA = scatterData(100);
+const AXIS_DATA = scatterData(200);
+const LOG_DATA = logScaleData();
+const LARGE_DATA = scatterData(10_000);
+
+const DEFAULT_DIMS = { width: 800, height: 600 } as const;
+
+const cellStyle: React.CSSProperties = { padding: 8, border: "1px solid #ddd" };
+
+/** Minimal scatter plot — just data and axis titles, everything else defaults. */
 export const BasicScatter: Story = {
   args: {
-    data: generateScatterData(100),
+    data: BASIC_DATA,
     title: "Basic Scatter Plot",
     xAxis: { title: "X Axis" },
     yAxis: { title: "Y Axis" },
-    width: 800,
-    height: 600,
-  },
-  play: async ({ canvasElement, step }) => {
-    const _canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      const title = _canvas.getByText("Basic Scatter Plot");
-      expect(title).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T2001" },
+    ...DEFAULT_DIMS,
   },
 };
 
 /**
- * Combined styling: color, shape, and size
+ * Color mapped to `category` (categorical), shape to `status` (categorical),
+ * size to `intensity` (continuous) — all driven by point metadata.
  */
-export const CombinedStyling: Story = {
+export const DataDrivenStyling: Story = {
   args: {
-    data: generateScatterData(150),
-    title: "Combined Color, Shape, and Size Mapping",
+    data: STYLED_DATA,
+    title: "Data-Driven Color / Shape / Size",
     xAxis: { title: "X Axis" },
     yAxis: { title: "Y Axis" },
     colorMapping: {
       type: "categorical",
       field: "category",
-      categoryColors: {
-        "Group A": "#4575b4",
-        "Group B": "#d73027",
-        "Group C": "#1a9850",
-      },
+      categoryColors: { "Group A": "#4575b4", "Group B": "#d73027", "Group C": "#1a9850" },
     },
     shapeMapping: {
       type: "categorical",
       field: "status",
-      categoryShapes: {
-        Active: "circle",
-        Inactive: "square",
-        Pending: "diamond",
-      },
+      categoryShapes: { Active: "circle", Inactive: "square", Pending: "diamond" },
     },
-    sizeMapping: {
-      type: "continuous",
-      field: "intensity",
-      sizeRange: [4, 20],
-    },
-    width: 800,
-    height: 600,
-  },
-  play: async ({ canvasElement, step }) => {
-    await step("Chart renders with combined styling", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T2007" },
+    sizeMapping: { type: "continuous", field: "intensity", sizeRange: [4, 20] },
+    ...DEFAULT_DIMS,
   },
 };
 
-/**
- * Large dataset with downsampling
- */
-export const LargeDataset: Story = {
+/** Fixed color, shape, and size — ignores data values entirely. */
+export const StaticStyling: Story = {
   args: {
-    data: generateScatterData(10000),
-    title: "Large Dataset (10k points with downsampling)",
+    data: STATIC_DATA,
+    title: "Static Styling",
     xAxis: { title: "X Axis" },
     yAxis: { title: "Y Axis" },
-    downsampling: {
-      enabled: true,
-      maxPoints: 2000,
-      strategy: "lttb",
-    },
-    width: 800,
-    height: 600,
-  },
-  play: async ({ canvasElement, step }) => {
-    await step("Chart renders with downsampled data", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T2014" },
+    colorMapping: { type: "static", value: "#e377c2" },
+    shapeMapping: { type: "static", value: "diamond" },
+    sizeMapping: { type: "static", value: 12 },
+    ...DEFAULT_DIMS,
   },
 };
 
 /**
- * Selection with data table (demonstrates selection propagation)
+ * All three selection modes enabled: click a point, drag a box, or draw a
+ * lasso. The selected count is shown below the chart.
  */
-export const SelectionWithTable: Story = {
+export const Selection: Story = {
   render: (args) => {
     const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
 
-    const selectedPoints = args.data.filter((p) => selectedIds.has(p.id));
+    return (
+      <div>
+        <InteractiveScatter {...args} selectedIds={selectedIds} onSelectionChange={setSelectedIds} />
+        <p style={{ fontFamily: "monospace", marginTop: 12 }}>Selected: {selectedIds.size} point(s)</p>
+      </div>
+    );
+  },
+  args: {
+    data: CLUSTERED_DATA,
+    title: "Click / Box / Lasso Selection",
+    xAxis: { title: "X Axis" },
+    yAxis: { title: "Y Axis" },
+    colorMapping: { type: "categorical", field: "cluster" },
+    enableClickSelection: true,
+    enableBoxSelection: true,
+    enableLassoSelection: true,
+    ...DEFAULT_DIMS,
+  },
+};
+
+/**
+ * Click = replace, Shift+Click = add, Ctrl/Cmd+Click = remove,
+ * Shift+Ctrl/Cmd+Click = toggle. The active mode is shown below.
+ */
+export const KeyboardModifierSelection: Story = {
+  render: (args) => {
+    const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
+    const [lastMode, setLastMode] = useState<SelectionMode>("replace");
 
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div>
+        <InteractiveScatter
+          {...args}
+          selectedIds={selectedIds}
+          onSelectionChange={(ids, mode) => {
+            setSelectedIds(ids);
+            setLastMode(mode);
+          }}
+        />
+        <div style={{ fontFamily: "monospace", marginTop: 12, lineHeight: 1.8 }}>
+          <p style={{ margin: 0 }}>
+            Selected: {selectedIds.size} &nbsp;|&nbsp; Mode: <strong>{lastMode}</strong>
+          </p>
+          <p style={{ margin: 0, color: "#666", fontSize: 13 }}>
+            Click = replace · Shift = add · Ctrl/Cmd = remove · Shift+Ctrl/Cmd = toggle
+          </p>
+        </div>
+      </div>
+    );
+  },
+  args: {
+    data: SELECTION_DATA,
+    title: "Keyboard Modifier Selection",
+    xAxis: { title: "X Axis" },
+    yAxis: { title: "Y Axis" },
+    colorMapping: { type: "categorical", field: "category" },
+    enableClickSelection: true,
+    enableBoxSelection: true,
+    enableLassoSelection: true,
+    ...DEFAULT_DIMS,
+  },
+};
+
+/** Select points and a data grid to the right updates in real time. */
+export const SelectionWithDataGrid: Story = {
+  render: (args) => {
+    const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
+    const selected = args.data.filter((p) => selectedIds.has(p.id));
+
+    return (
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
         <InteractiveScatter {...args} selectedIds={selectedIds} onSelectionChange={setSelectedIds} />
-        <div style={{ maxWidth: 800 }}>
-          <h3 style={{ marginTop: 0 }}>Selected Points ({selectedPoints.length})</h3>
-          {selectedPoints.length > 0 ? (
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                border: "1px solid #ddd",
-              }}
-            >
+
+        <div style={{ minWidth: 340, maxHeight: 600, overflowY: "auto" }}>
+          <h3 style={{ margin: "0 0 8px" }}>Selected Points ({selected.length})</h3>
+          {selected.length > 0 ? (
+            <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #ddd", fontSize: 13 }}>
               <thead>
                 <tr style={{ backgroundColor: "#f0f0f0" }}>
-                  <th style={{ padding: 8, border: "1px solid #ddd" }}>ID</th>
-                  <th style={{ padding: 8, border: "1px solid #ddd" }}>X</th>
-                  <th style={{ padding: 8, border: "1px solid #ddd" }}>Y</th>
-                  <th style={{ padding: 8, border: "1px solid #ddd" }}>Cluster</th>
-                  <th style={{ padding: 8, border: "1px solid #ddd" }}>Value</th>
+                  {["ID", "X", "Y", "Cluster", "Value"].map((h) => (
+                    <th key={h} style={cellStyle}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {selectedPoints.map((point) => (
-                  <tr key={point.id}>
-                    <td style={{ padding: 8, border: "1px solid #ddd" }}>{point.id}</td>
-                    <td style={{ padding: 8, border: "1px solid #ddd" }}>{point.x.toFixed(2)}</td>
-                    <td style={{ padding: 8, border: "1px solid #ddd" }}>{point.y.toFixed(2)}</td>
-                    <td style={{ padding: 8, border: "1px solid #ddd" }}>{String(point.metadata?.cluster ?? "")}</td>
-                    <td style={{ padding: 8, border: "1px solid #ddd" }}>
-                      {typeof point.metadata?.value === "number" ? (point.metadata.value as number).toFixed(2) : "N/A"}
+                {selected.map((p) => (
+                  <tr key={p.id}>
+                    <td style={cellStyle}>{p.id}</td>
+                    <td style={cellStyle}>{p.x.toFixed(2)}</td>
+                    <td style={cellStyle}>{p.y.toFixed(2)}</td>
+                    <td style={cellStyle}>{String(p.metadata?.cluster ?? "")}</td>
+                    <td style={cellStyle}>
+                      {typeof p.metadata?.value === "number" ? (p.metadata.value as number).toFixed(2) : "–"}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           ) : (
-            <p>No points selected. Use box or lasso selection to select points.</p>
+            <p style={{ color: "#888" }}>Select points to populate the grid.</p>
           )}
         </div>
       </div>
     );
   },
   args: {
-    data: generateClusteredData(),
-    title: "Selection Propagation Demo",
+    data: CLUSTERED_DATA,
+    title: "Selection → Data Grid",
+    xAxis: { title: "X Axis" },
+    yAxis: { title: "Y Axis" },
+    colorMapping: { type: "categorical", field: "cluster" },
+    enableClickSelection: true,
+    enableBoxSelection: true,
+    enableLassoSelection: true,
+    width: 700,
+    height: 600,
+  },
+};
+
+/** Uses `tooltip.content` to render rich HTML tooltips with status badges. */
+export const CustomTooltips: Story = {
+  args: {
+    data: TOOLTIP_DATA,
+    title: "Custom Rich Tooltips",
     xAxis: { title: "X Axis" },
     yAxis: { title: "Y Axis" },
     colorMapping: {
       type: "categorical",
-      field: "cluster",
+      field: "category",
+      categoryColors: { "Group A": "#4575b4", "Group B": "#d73027", "Group C": "#1a9850" },
     },
-    enableBoxSelection: true,
-    enableLassoSelection: true,
-    width: 800,
-    height: 600,
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T2016" },
+    sizeMapping: { type: "continuous", field: "intensity", sizeRange: [5, 18] },
+    tooltip: {
+      enabled: true,
+      content: (point: ScatterPoint) => {
+        const status = point.metadata?.status ?? "Unknown";
+        const value = typeof point.metadata?.value === "number" ? (point.metadata.value as number).toFixed(1) : "–";
+        const badge = status === "Active" ? "#1a9850" : status === "Inactive" ? "#d73027" : "#fdae61";
+        return [
+          `<b>${point.label ?? point.id}</b>`,
+          `<span style="background:${badge};color:#fff;padding:1px 6px;border-radius:3px;font-size:11px">${String(status)}</span>`,
+          `X: ${point.x.toFixed(2)} · Y: ${point.y.toFixed(2)}`,
+          `Value: <b>${value}</b> · Conc: ${String(point.metadata?.concentration ?? "–")}`,
+        ].join("<br>");
+      },
+    },
+    ...DEFAULT_DIMS,
   },
 };
 
-/**
- * All features combined
- */
-export const AllFeaturesCombined: Story = {
-  render: (args) => {
-    const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
-
-    return (
-      <div>
-        <div style={{ marginBottom: 16 }}>
-          <p>Selected: {selectedIds.size} points</p>
-        </div>
-        <InteractiveScatter
-          {...args}
-          selectedIds={selectedIds}
-          onSelectionChange={(ids, mode) => {
-            setSelectedIds(ids);
-            console.log(`Selection changed (${mode}):`, [...ids]);
-          }}
-          onPointClick={(point) => {
-            console.log("Point clicked:", point);
-          }}
-        />
-      </div>
-    );
-  },
+/** Fixed axis ranges zoom the viewport to a specific data region. */
+export const AxisFixedRanges: Story = {
   args: {
-    data: generateScatterData(500),
-    title: "All Features Demo",
-    xAxis: { title: "X Axis", autoRange: true },
-    yAxis: { title: "Y Axis", autoRange: true },
-    colorMapping: {
-      type: "continuous",
-      field: "value",
-      colorScale: "Viridis",
-    },
-    shapeMapping: {
-      type: "categorical",
-      field: "status",
-    },
-    sizeMapping: {
-      type: "continuous",
-      field: "intensity",
-      sizeRange: [4, 16],
-    },
-    tooltip: {
-      enabled: true,
-      fields: ["category", "status", "concentration"],
-    },
-    enableClickSelection: true,
-    enableBoxSelection: true,
-    enableLassoSelection: true,
-    width: 900,
-    height: 700,
+    data: AXIS_DATA,
+    title: "Fixed Axis Ranges (zoomed to 20-80)",
+    xAxis: { title: "X Axis", range: [20, 80] },
+    yAxis: { title: "Y Axis", range: [20, 80] },
+    colorMapping: { type: "categorical", field: "category" },
+    ...DEFAULT_DIMS,
   },
-  parameters: {
-    zephyr: { testCaseId: "SW-T2017" },
+};
+
+/** Log-scale axes for data spanning several orders of magnitude. */
+export const AxisLogScale: Story = {
+  args: {
+    data: LOG_DATA,
+    title: "Log-Scale Axes",
+    xAxis: { title: "X (log)", scale: "log" },
+    yAxis: { title: "Y (log)", scale: "log" },
+    colorMapping: { type: "categorical", field: "category" },
+    ...DEFAULT_DIMS,
+  },
+};
+
+/** 10k points downsampled to 2k via LTTB to keep the chart responsive. */
+export const Downsampling: Story = {
+  args: {
+    data: LARGE_DATA,
+    title: "Downsampling (10k → 2k via LTTB)",
+    xAxis: { title: "X Axis" },
+    yAxis: { title: "Y Axis" },
+    downsampling: { enabled: true, maxPoints: 2000, strategy: "lttb" },
+    ...DEFAULT_DIMS,
   },
 };

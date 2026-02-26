@@ -73,26 +73,20 @@ interface TdpResultsRenderProps {
   onSort: (key: string, direction: "asc" | "desc") => void;
 }
 
-/** Standalone search configuration (calls TDP API directly from the browser; no backend) */
-interface StandaloneSearchConfig {
-  /** Use standalone search mode (calls baseUrl + /v1/datalake/searchEql with auth headers) */
-  standalone: true;
-  /** TDP API base URL */
-  baseUrl: string;
-  /** Authentication token */
-  authToken: string;
-  /** Organization slug */
-  orgSlug: string;
-}
-
-/** Server-side search configuration (API endpoint; backend uses TdpSearchManager or custom API) */
-interface ServerSideSearchConfig {
-  /** Use server-side search mode (default) */
-  standalone?: false;
-  /** API endpoint for search. Defaults to '/api/search' */
+/** Search connection configuration */
+interface TdpSearchConfig {
+  /**
+   * When true, calls the TDP API directly from the browser
+   * When false/omitted, proxies the request through your backend `apiEndpoint`
+   */
+  standalone?: boolean;
+  /** TDP API base URL (required when standalone is true) */
+  baseUrl?: string;
+  /** Backend API endpoint for search (used when standalone is false). Defaults to '/api/search' */
   apiEndpoint?: string;
-  /** Optional: send as ts-auth-token / x-org-slug headers (e.g. emulate creds from Storybook) */
+  /** Common | authentication token */
   authToken?: string;
+  /** Common | organization slug */
   orgSlug?: string;
 }
 
@@ -135,12 +129,9 @@ interface CommonTdpSearchProps {
   renderResults?: (props: TdpResultsRenderProps) => React.ReactNode;
 }
 
-/**
- * TdpSearch component props with conditional types (standalone or server-side).
- */
-type TdpSearchProps = CommonTdpSearchProps & (StandaloneSearchConfig | ServerSideSearchConfig);
+type TdpSearchProps = CommonTdpSearchProps & TdpSearchConfig;
 
-type UseSearchConfig = { pageSize: number } & (StandaloneSearchConfig | ServerSideSearchConfig);
+type UseSearchConfig = { pageSize: number } & TdpSearchConfig;
 
 interface UseSearchResult {
   results: SearchResult[];
@@ -152,8 +143,7 @@ interface UseSearchResult {
 }
 
 export type {
-  StandaloneSearchConfig,
-  ServerSideSearchConfig,
+  TdpSearchConfig,
   CommonTdpSearchProps,
   TdpSearchFilter,
   TdpSearchColumn,

@@ -1,11 +1,75 @@
 import React, { useEffect } from "react";
 
-import { DemoSearchBar } from "./components/DemoSearchBar";
 import { TdpSearch } from "./TdpSearch";
 import { mockSearchResponse } from "./TdpSearch.mocks";
 
-import type { TdpSearchColumn, TdpSearchFilter } from "./types";
+import type { TdpSearchBarRenderProps, TdpSearchColumn, TdpSearchFilter } from "./types";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+
+const DemoSearchBar: React.FC<TdpSearchBarRenderProps> = ({
+  query,
+  setQuery,
+  onSearch,
+  isLoading,
+  placeholder,
+}) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+    <div
+      style={{
+        display: "flex",
+        flex: 1,
+        alignItems: "center",
+        gap: 8,
+        padding: "6px 12px",
+        border: "1px solid var(--grey-300, #d1d5db)",
+        borderRadius: 20,
+        background: "var(--grey-50, #f9fafb)",
+      }}
+    >
+      <span style={{ color: "var(--grey-400, #9ca3af)", fontSize: 14 }}>🔍</span>
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && onSearch()}
+        placeholder={placeholder}
+        style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 14 }}
+      />
+      {query && (
+        <button
+          onClick={() => setQuery("")}
+          style={{
+            border: "none",
+            background: "none",
+            cursor: "pointer",
+            color: "var(--grey-400, #9ca3af)",
+            fontSize: 16,
+            lineHeight: 1,
+          }}
+        >
+          x
+        </button>
+      )}
+    </div>
+    <button
+      onClick={onSearch}
+      disabled={!query?.trim() || isLoading}
+      style={{
+        padding: "7px 18px",
+        borderRadius: 20,
+        border: "none",
+        background: "var(--blue-600, #4f46e5)",
+        color: "#fff",
+        fontSize: 14,
+        fontWeight: 600,
+        cursor: "pointer",
+        opacity: !query?.trim() || isLoading ? 0.5 : 1,
+      }}
+    >
+      {isLoading ? "…" : "Search"}
+    </button>
+  </div>
+);
+
 
 /** Mock /api/search so server-side stories work without a backend. */
 const withMockFetch = (Story: React.ComponentType) => {

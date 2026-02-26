@@ -3,6 +3,7 @@ export { useSearch } from "./hooks/useSearch";
 
 export type {
   TdpSearchProps,
+  TdpSearchConfig,
   TdpSearchColumn,
   TdpSearchFilter,
   TdpSearchSort,

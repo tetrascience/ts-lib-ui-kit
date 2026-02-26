@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 16px;
   width: 100%;
+  overflow-x: auto;
 
   &__search-bar {
     display: flex;

@@ -13,23 +13,19 @@ const meta: Meta<typeof TdpSearch> = {
   title: "Organisms/TdpSearch/Standalone",
   component: TdpSearch,
   argTypes: {
-    standalone: {
-      table: { disable: true },
-      control: false,
-    },
     baseUrl: {
       description: "TDP API base URL.",
-      table: { category: "Standalone" },
+      table: { category: "Connection" },
       control: "text",
     },
     authToken: {
       description: "JWT for TDP API.",
-      table: { category: "Standalone" },
+      table: { category: "Connection" },
       control: "text",
     },
     orgSlug: {
       description: "Organization slug.",
-      table: { category: "Standalone" },
+      table: { category: "Connection" },
       control: "text",
     },
   },

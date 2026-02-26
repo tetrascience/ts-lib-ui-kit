@@ -6,12 +6,6 @@ import { buildEsBody } from "../utils";
 import type { SearchResult, UseSearchConfig, UseSearchResult } from "../types";
 import type { SearchEqlRequest } from "@tetrascience-npm/ts-connectors-sdk";
 
-/**
- * TDP search hook
- *
- * Use `standalone: true` to call the TDP API directly from the browser
- * Omit `standalone` (or set it to `false`) to proxy the request through your own backend API endpoint
- */
 export function useSearch(config: UseSearchConfig): UseSearchResult {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [total, setTotal] = useState(0);
@@ -26,25 +20,25 @@ export function useSearch(config: UseSearchConfig): UseSearchResult {
     setIsLoading(true);
     setError(null);
 
-    const { pageSize } = config;
+    const { pageSize, standalone, baseUrl, apiEndpoint = "/api/search", authToken, orgSlug } = config;
     const from = (page - 1) * pageSize;
 
     let url: string;
     let fetchInit: RequestInit;
 
-    if (config.standalone) {
-      url = `${config.baseUrl.replace(/\/$/, "")}${STANDALONE_SEARCH_PATH}`;
+    if (standalone) {
+      if (!baseUrl) throw new Error("baseUrl is required when standalone is true");
+      url = `${baseUrl.replace(/\/$/, "")}${STANDALONE_SEARCH_PATH}`;
       fetchInit = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          [AUTH_TOKEN_HEADER]: config.authToken,
-          [ORG_SLUG_HEADER]: config.orgSlug,
+          ...(authToken && { [AUTH_TOKEN_HEADER]: authToken }),
+          ...(orgSlug && { [ORG_SLUG_HEADER]: orgSlug }),
         },
         body: JSON.stringify(buildEsBody(searchRequest, from, pageSize)),
       };
     } else {
-      const { apiEndpoint = "/api/search", authToken, orgSlug } = config;
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (authToken && orgSlug) {
         headers[AUTH_TOKEN_HEADER] = authToken;
@@ -64,7 +58,7 @@ export function useSearch(config: UseSearchConfig): UseSearchResult {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
-        const message = config.standalone ? errorData.error?.message || errorData.error : errorData.error;
+        const message = standalone ? errorData.error?.message || errorData.error : errorData.error;
         throw new Error(message || `HTTP ${response.status}: ${response.statusText}`);
       }
 

@@ -386,7 +386,8 @@ function App() {
             TDP Navigation
           </h2>
           <p style={{ fontSize: '14px', color: '#6B7280', marginBottom: '16px' }}>
-            Navigate to TDP pages using <code>TDPLink</code> and <code>tdpPaths</code> helpers.
+            Navigate to TDP pages using <code>TDPLink</code> and <code>tdpPaths</code> helpers,
+            or pass any custom path string directly.
             In production (iframe), URLs are resolved from <code>document.referrer</code>.
             Locally, they fall back to the <code>TDP_ENDPOINT</code> environment variable.
           </p>
@@ -402,6 +403,9 @@ function App() {
             </TDPLink>
             <TDPLink path={tdpPaths.pipelineEdit('example-pipeline-id')}>
               Edit Pipeline
+            </TDPLink>
+            <TDPLink path="/custom/page?foo=bar">
+              Custom Path
             </TDPLink>
           </div>
         </div>

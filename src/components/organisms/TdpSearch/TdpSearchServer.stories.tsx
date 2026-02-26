@@ -6,13 +6,7 @@ import { mockSearchResponse } from "./TdpSearch.mocks";
 import type { TdpSearchBarRenderProps, TdpSearchColumn, TdpSearchFilter } from "./types";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-const DemoSearchBar: React.FC<TdpSearchBarRenderProps> = ({
-  query,
-  setQuery,
-  onSearch,
-  isLoading,
-  placeholder,
-}) => (
+const DemoSearchBar: React.FC<TdpSearchBarRenderProps> = ({ query, setQuery, onSearch, isLoading, placeholder }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
     <div
       style={{
@@ -70,7 +64,6 @@ const DemoSearchBar: React.FC<TdpSearchBarRenderProps> = ({
   </div>
 );
 
-
 /** Mock /api/search so server-side stories work without a backend. */
 const withMockFetch = (Story: React.ComponentType) => {
   const MockWrapper = () => {
@@ -121,7 +114,7 @@ const withMockFetch = (Story: React.ComponentType) => {
 };
 
 const columns: TdpSearchColumn[] = [
-  { key: "id", header: "File ID", width: "200px" },
+  { key: "id", header: "ID", width: "120px" },
   { key: "filePath", header: "File Path", sortable: true },
   {
     key: "sourceType",
@@ -142,6 +135,7 @@ const columns: TdpSearchColumn[] = [
       </span>
     ),
   },
+  { key: "status", header: "Status", sortable: true },
   {
     key: "fileSize",
     header: "Size",
@@ -207,6 +201,8 @@ export const BasicUsage: Story = {
       { key: "id", header: "ID", width: "120px" },
       { key: "filePath", header: "File Path", sortable: true },
       { key: "sourceType", header: "Source Type", sortable: true },
+      { key: "status", header: "Status", sortable: true },
+      { key: "fileSize", header: "Size", sortable: true },
       { key: "createdAt", header: "Created", sortable: true },
     ],
     defaultQuery: "sample-data",
@@ -238,8 +234,11 @@ export const WithFilters: Story = {
       { key: "filePath", header: "File Path", sortable: true },
       { key: "sourceType", header: "Source Type", sortable: true },
       { key: "status", header: "Status", sortable: true },
+      { key: "fileSize", header: "Size", sortable: true },
+      { key: "createdAt", header: "Created", sortable: true },
     ],
     filters,
+    defaultQuery: "sample",
     pageSize: 10,
   },
   parameters: {
@@ -247,9 +246,156 @@ export const WithFilters: Story = {
   },
 };
 
+/** Demonstrates per-column custom renderers: colored status badges, source-type pills, monospace file paths, and human-readable sizes/dates. */
 export const CustomRendering: Story = {
   args: {
-    columns,
+    columns: [
+      {
+        key: "id",
+        header: "ID",
+        width: "100px",
+        render: (value) => (
+          <code style={{ fontSize: 12, color: "var(--grey-500, #6b7280)", letterSpacing: "0.02em" }}>{value}</code>
+        ),
+      },
+      {
+        key: "filePath",
+        header: "File Path",
+        sortable: true,
+        render: (value) => (
+          <span
+            style={{
+              fontFamily: "'Fira Code', 'Source Code Pro', monospace",
+              fontSize: 13,
+              color: "var(--blue-700, #1d4ed8)",
+              textDecoration: "underline",
+              textDecorationColor: "var(--blue-200, #bfdbfe)",
+              textUnderlineOffset: 2,
+              cursor: "pointer",
+            }}
+          >
+            {value}
+          </span>
+        ),
+      },
+      {
+        key: "sourceType",
+        header: "Source Type",
+        sortable: true,
+        render: (value) => {
+          const colorMap: Record<string, { bg: string; fg: string; border: string }> = {
+            "instrument-data": { bg: "#eff6ff", fg: "#1e40af", border: "#bfdbfe" },
+            "manual-upload": { bg: "#fefce8", fg: "#854d0e", border: "#fde68a" },
+            "pipeline-output": { bg: "#f0fdf4", fg: "#166534", border: "#bbf7d0" },
+          };
+          const colors = colorMap[value] ?? { bg: "#f3f4f6", fg: "#374151", border: "#d1d5db" };
+          return (
+            <span
+              style={{
+                display: "inline-block",
+                padding: "3px 10px",
+                borderRadius: 12,
+                fontSize: 12,
+                fontWeight: 600,
+                backgroundColor: colors.bg,
+                color: colors.fg,
+                border: `1px solid ${colors.border}`,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {(value ?? "unknown").replace(/-/g, " ")}
+            </span>
+          );
+        },
+      },
+      {
+        key: "status",
+        header: "Status",
+        sortable: true,
+        render: (value) => {
+          const statusMap: Record<string, { bg: string; fg: string; dot: string }> = {
+            processed: { bg: "#f0fdf4", fg: "#15803d", dot: "#22c55e" },
+            pending: { bg: "#fffbeb", fg: "#b45309", dot: "#f59e0b" },
+            failed: { bg: "#fef2f2", fg: "#b91c1c", dot: "#ef4444" },
+          };
+          const s = statusMap[value] ?? { bg: "#f3f4f6", fg: "#374151", dot: "#9ca3af" };
+          return (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "3px 10px",
+                borderRadius: 12,
+                fontSize: 12,
+                fontWeight: 600,
+                backgroundColor: s.bg,
+                color: s.fg,
+              }}
+            >
+              <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: s.dot, flexShrink: 0 }} />
+              {value}
+            </span>
+          );
+        },
+      },
+      {
+        key: "fileSize",
+        header: "Size",
+        align: "right" as const,
+        sortable: true,
+        render: (value) => {
+          if (!value) return <span style={{ color: "var(--grey-400, #9ca3af)" }}>—</span>;
+          const mb = value / 1024 / 1024;
+          const maxMb = 6;
+          const pct = Math.min((mb / maxMb) * 100, 100);
+          return (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, minWidth: 120 }}>
+              <span
+                style={{
+                  flex: 1,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: "var(--grey-100, #f3f4f6)",
+                  overflow: "hidden",
+                }}
+              >
+                <span
+                  style={{
+                    display: "block",
+                    height: "100%",
+                    width: `${pct}%`,
+                    borderRadius: 3,
+                    backgroundColor: pct > 75 ? "#f59e0b" : "var(--blue-500, #3b82f6)",
+                    transition: "width 0.3s ease",
+                  }}
+                />
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
+                {mb.toFixed(1)} MB
+              </span>
+            </span>
+          );
+        },
+      },
+      {
+        key: "createdAt",
+        header: "Created",
+        sortable: true,
+        render: (value) => {
+          if (!value) return "—";
+          const d = new Date(value);
+          return (
+            <span style={{ fontSize: 13, color: "var(--grey-600, #4b5563)" }}>
+              {d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              <span style={{ color: "var(--grey-400, #9ca3af)", marginLeft: 6, fontSize: 12 }}>
+                {d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </span>
+          );
+        },
+      },
+    ] as TdpSearchColumn[],
     defaultQuery: "experiment",
     defaultSort: { field: "createdAt", order: "desc" },
     pageSize: 10,

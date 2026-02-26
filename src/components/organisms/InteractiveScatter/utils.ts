@@ -3,9 +3,18 @@ import {
   // DEFAULT_COLOR_SCALE,
   DEFAULT_MARKER_SIZE,
   DEFAULT_SIZE_RANGE,
+  PLOT_CONSTANTS,
 } from "./constants";
 
-import type { ColorMapping, DownsamplingConfig, ScatterPoint, SelectionMode, ShapeMapping, SizeMapping } from "./types";
+import type {
+  AxisConfig,
+  ColorMapping,
+  DownsamplingConfig,
+  ScatterPoint,
+  SelectionMode,
+  ShapeMapping,
+  SizeMapping,
+} from "./types";
 
 const DEFAULT_MAX_POINTS_THRESHOLD = 5000;
 
@@ -390,3 +399,97 @@ export function applySelection(
       return result;
   }
 }
+
+export const getPlotlyLayoutConfig = ({
+  title,
+  xAxis,
+  yAxis,
+  width,
+  height,
+  xRange,
+  yRange,
+  enableLassoSelection,
+  enableBoxSelection,
+}: {
+  title: string | undefined;
+  xAxis: AxisConfig;
+  yAxis: AxisConfig;
+  width: number;
+  height: number;
+  xRange: [number, number] | undefined;
+  yRange: [number, number] | undefined;
+  enableLassoSelection: boolean;
+  enableBoxSelection: boolean;
+}): Partial<Plotly.Layout> => ({
+  autosize: false,
+  width,
+  height,
+  title: title
+    ? {
+        text: title,
+        font: {
+          family: PLOT_CONSTANTS.FONT_FAMILY,
+          size: PLOT_CONSTANTS.TITLE_FONT_SIZE,
+          color: "#333333",
+        },
+        x: 0.5,
+        xanchor: "center",
+      }
+    : undefined,
+  margin: {
+    l: PLOT_CONSTANTS.MARGIN_LEFT,
+    r: PLOT_CONSTANTS.MARGIN_RIGHT,
+    t: title ? PLOT_CONSTANTS.MARGIN_TOP : PLOT_CONSTANTS.MARGIN_TOP - PLOT_CONSTANTS.TITLE_FONT_SIZE,
+    b: PLOT_CONSTANTS.MARGIN_BOTTOM,
+  },
+  xaxis: {
+    title: {
+      text: xAxis.title || "",
+      font: {
+        family: PLOT_CONSTANTS.FONT_FAMILY,
+        size: PLOT_CONSTANTS.AXIS_TITLE_FONT_SIZE,
+        color: "#333333",
+      },
+    },
+    type: xAxis.scale === "log" ? "log" : "linear",
+    range: xRange,
+    autorange: !xRange,
+    gridcolor: "#e0e0e0",
+    linecolor: "#333333",
+    linewidth: PLOT_CONSTANTS.AXIS_LINE_WIDTH,
+    tickfont: {
+      family: PLOT_CONSTANTS.FONT_FAMILY,
+      size: PLOT_CONSTANTS.AXIS_TICK_FONT_SIZE,
+    },
+    zeroline: false,
+  },
+  yaxis: {
+    title: {
+      text: yAxis.title || "",
+      font: {
+        family: PLOT_CONSTANTS.FONT_FAMILY,
+        size: PLOT_CONSTANTS.AXIS_TITLE_FONT_SIZE,
+        color: "#333333",
+      },
+    },
+    type: yAxis.scale === "log" ? "log" : "linear",
+    range: yRange,
+    autorange: !yRange,
+    gridcolor: "#e0e0e0",
+    linecolor: "#333333",
+    linewidth: PLOT_CONSTANTS.AXIS_LINE_WIDTH,
+    tickfont: {
+      family: PLOT_CONSTANTS.FONT_FAMILY,
+      size: PLOT_CONSTANTS.AXIS_TICK_FONT_SIZE,
+    },
+    zeroline: false,
+  },
+  paper_bgcolor: "#ffffff",
+  plot_bgcolor: "#ffffff",
+  font: {
+    family: PLOT_CONSTANTS.FONT_FAMILY,
+    color: "#333333",
+  },
+  hovermode: "closest",
+  dragmode: enableLassoSelection ? "lasso" : enableBoxSelection ? "select" : false,
+});

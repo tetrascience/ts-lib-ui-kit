@@ -8,6 +8,7 @@ import {
   calculateRange,
   downsampleData,
   generateTooltipContent,
+  getPlotlyLayoutConfig,
   getSelectionMode,
   mapColors,
   mapShapes,
@@ -72,10 +73,11 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
 
   // Normalize to strings so numeric IDs passed by consumers always match the
   // string IDs that Plotly stores (we always do String(p.id) when building the trace).
-  const normalizedSelectedIds = useMemo(
-    () => new Set([...selectedIds].map(String)),
-    [selectedIds],
-  );
+  const normalizedSelectedIds = useMemo(() => new Set([...selectedIds].map(String)), [selectedIds]);
+
+  // Reverse-lookup: Plotly string ID → original (possibly numeric) ScatterPoint ID.
+  // Used to restore original ID types when echoing selections back to consumers.
+  const originalIdLookup = useMemo(() => new Map(data.map((p) => [String(p.id), p.id])), [data]);
 
   // Apply downsampling if configured
   const processedData = useMemo(() => {
@@ -218,79 +220,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     const plotData: Plotly.Data[] = [trace as Plotly.Data];
 
     // Configure layout
-    const layout: Partial<Plotly.Layout> = {
-      autosize: false,
-      width,
-      height,
-      title: title
-        ? {
-            text: title,
-            font: {
-              family: PLOT_CONSTANTS.FONT_FAMILY,
-              size: PLOT_CONSTANTS.TITLE_FONT_SIZE,
-              color: "#333333",
-            },
-            x: 0.5,
-            xanchor: "center",
-          }
-        : undefined,
-      margin: {
-        l: PLOT_CONSTANTS.MARGIN_LEFT,
-        r: PLOT_CONSTANTS.MARGIN_RIGHT,
-        t: title ? PLOT_CONSTANTS.MARGIN_TOP : PLOT_CONSTANTS.MARGIN_TOP - PLOT_CONSTANTS.TITLE_FONT_SIZE,
-        b: PLOT_CONSTANTS.MARGIN_BOTTOM,
-      },
-      xaxis: {
-        title: {
-          text: xAxis.title || "",
-          font: {
-            family: PLOT_CONSTANTS.FONT_FAMILY,
-            size: PLOT_CONSTANTS.AXIS_TITLE_FONT_SIZE,
-            color: "#333333",
-          },
-        },
-        type: xAxis.scale === "log" ? "log" : "linear",
-        range: xRange,
-        autorange: !xRange,
-        gridcolor: "#e0e0e0",
-        linecolor: "#333333",
-        linewidth: PLOT_CONSTANTS.AXIS_LINE_WIDTH,
-        tickfont: {
-          family: PLOT_CONSTANTS.FONT_FAMILY,
-          size: PLOT_CONSTANTS.AXIS_TICK_FONT_SIZE,
-        },
-        zeroline: false,
-      },
-      yaxis: {
-        title: {
-          text: yAxis.title || "",
-          font: {
-            family: PLOT_CONSTANTS.FONT_FAMILY,
-            size: PLOT_CONSTANTS.AXIS_TITLE_FONT_SIZE,
-            color: "#333333",
-          },
-        },
-        type: yAxis.scale === "log" ? "log" : "linear",
-        range: yRange,
-        autorange: !yRange,
-        gridcolor: "#e0e0e0",
-        linecolor: "#333333",
-        linewidth: PLOT_CONSTANTS.AXIS_LINE_WIDTH,
-        tickfont: {
-          family: PLOT_CONSTANTS.FONT_FAMILY,
-          size: PLOT_CONSTANTS.AXIS_TICK_FONT_SIZE,
-        },
-        zeroline: false,
-      },
-      paper_bgcolor: "#ffffff",
-      plot_bgcolor: "#ffffff",
-      font: {
-        family: PLOT_CONSTANTS.FONT_FAMILY,
-        color: "#333333",
-      },
-      hovermode: "closest",
-      dragmode: enableLassoSelection ? "lasso" : enableBoxSelection ? "select" : false,
-    };
+    const layout: Partial<Plotly.Layout> = getPlotlyLayoutConfig({ title, xAxis, yAxis, width, height, xRange, yRange, enableLassoSelection, enableBoxSelection });
 
     const config: Partial<Plotly.Config> = {
       responsive: true,
@@ -325,9 +255,10 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
             // Call point click handler if provided
             onPointClickRef.current?.(clickedPoint, eventData.event as MouseEvent);
 
-            // Handle selection
+            // Handle selection. Use the original-typed ID from the matched point so
+            // numeric IDs (e.g., 123) are preserved instead of being coerced to "123".
             const mode = getSelectionMode(eventData.event as MouseEvent);
-            const newSelection = applySelection(normalizedSelectedIds, new Set([clickedId]), mode);
+            const newSelection = applySelection(selectedIds, new Set([clickedPoint.id]), mode);
 
             if (!isControlled) {
               setInternalSelectedIds(newSelection);
@@ -345,7 +276,9 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
           const selectedPointIds = eventData.points
             .map((p): string | number | null => {
               if (p.data.ids && p.pointIndex !== undefined) {
-                return p.data.ids[p.pointIndex] as string | number;
+                const strId = p.data.ids[p.pointIndex] as string;
+                // Restore the original ID type (string or number) via the lookup.
+                return originalIdLookup.get(strId) ?? strId;
               }
               return null;
             })
@@ -396,13 +329,13 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     enableLassoSelection,
     selectedIds,
     isControlled,
-    normalizedSelectedIds,
+    originalIdLookup,
   ]);
 
   // Apply selection state to Plotly
   useEffect(() => {
     const currentRef = plotRef.current;
-    if (!currentRef) return;
+    if (!currentRef || processedData.length === 0) return;
 
     const plotElement = currentRef as unknown as Plotly.PlotlyHTMLElement;
 

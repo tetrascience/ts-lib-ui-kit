@@ -35,6 +35,9 @@ export const Default: Story = {
     path: '/file/abc-123',
     children: 'View File Details',
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1127" },
+  },
 };
 
 export const SameTab: Story = {
@@ -43,6 +46,9 @@ export const SameTab: Story = {
     path: '/file/abc-123',
     children: 'Open in Same Tab',
     navigationOptions: { newTab: false },
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1128" },
   },
 };
 
@@ -53,6 +59,9 @@ export const NewTab: Story = {
     children: 'Open in New Tab',
     navigationOptions: { newTab: true },
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1129" },
+  },
 };
 
 export const SearchLink: Story = {
@@ -60,6 +69,9 @@ export const SearchLink: Story = {
   args: {
     path: '/search?q=experiment',
     children: 'Search for experiments',
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1130" },
   },
 };
 
@@ -69,6 +81,9 @@ export const PipelineLink: Story = {
     path: '/pipeline-details/pipeline-456',
     children: 'View Pipeline',
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1131" },
+  },
 };
 
 export const DataWorkspaceLink: Story = {
@@ -76,6 +91,9 @@ export const DataWorkspaceLink: Story = {
   args: {
     path: '/data-workspace',
     children: 'Go to Data Workspace',
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1132" },
   },
 };
 
@@ -85,6 +103,9 @@ export const CustomClassName: Story = {
     path: '/file/abc-123',
     children: 'Styled Link',
     className: 'custom-link-class',
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1133" },
   },
 };
 
@@ -97,6 +118,9 @@ export const InlineWithText: Story = {
   ),
   args: {
     path: '/file/abc-123',
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1134" },
   },
 };
 
@@ -121,6 +145,9 @@ export const ClickInteraction: Story = {
     await userEvent.click(link);
     await expect(args.onClick).toHaveBeenCalledTimes(1);
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1135" },
+  },
 };
 
 export const NewTabAttributes: Story = {
@@ -138,6 +165,9 @@ export const NewTabAttributes: Story = {
     await expect(link).toHaveAttribute('target', '_blank');
     await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1136" },
+  },
 };
 
 export const SameTabAttributes: Story = {
@@ -154,6 +184,9 @@ export const SameTabAttributes: Story = {
 
     await expect(link).not.toHaveAttribute('target');
     await expect(link).not.toHaveAttribute('rel');
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1137" },
   },
 };
 
@@ -174,6 +207,9 @@ export const KeyboardInteraction: Story = {
     await userEvent.keyboard('{Enter}');
     await expect(args.onClick).toHaveBeenCalledTimes(1);
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1138" },
+  },
 };
 
 export const HrefConstruction: Story = {
@@ -188,5 +224,8 @@ export const HrefConstruction: Story = {
     const link = canvas.getByRole('link', { name: /pipeline link/i });
 
     await expect(link).toHaveAttribute('href', `${MOCK_TDP_BASE_URL}/pipeline-details/pipeline-456`);
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1139" },
   },
 };

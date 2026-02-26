@@ -21,6 +21,7 @@ export * from "@atoms/TableHeaderCell";
 export * from "@atoms/Textarea";
 export * from "@atoms/Toast";
 export * from "@atoms/Toggle";
+export * from "@atoms/TDPLink";
 export * from "@atoms/Tooltip";
 
 // molecules

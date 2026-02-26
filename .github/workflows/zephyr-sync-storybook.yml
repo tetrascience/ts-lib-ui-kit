@@ -2,6 +2,10 @@ name: Sync Storybook to Zephyr
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**/*.stories.tsx'
   pull_request:
     types: [labeled]
 
@@ -11,11 +15,12 @@ permissions:
 
 jobs:
   sync:
-    # Only run when zephyr_sync label is added or on manual trigger
+    # Run on: manual trigger, push to main with story changes, or zephyr_sync label on PR
     # Don't run on forked PRs to protect secrets
     if: |
-      (github.event_name == 'workflow_dispatch' || github.event.label.name == 'zephyr_sync') &&
-      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      (github.event.label.name == 'zephyr_sync' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

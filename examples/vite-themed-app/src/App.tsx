@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 // @ts-ignore
-import { ThemeProvider, Button, Card, Modal } from '@tetrascience-npm/tetrascience-react-ui';
+import { ThemeProvider, Button, Card, Modal, TdpNavigationProvider, TDPLink, tdpPaths } from '@tetrascience-npm/tetrascience-react-ui';
 
 // Types for provider data
 interface Provider {
@@ -77,7 +77,7 @@ function App() {
   const [selectedTable, setSelectedTable] = useState<string>(ALLOWED_TABLES[0]);
   const [selectedProvider, setSelectedProvider] = useState<string>('');
 
-  // Fetch providers on mount
+  // Fetch environment config and providers on mount
   useEffect(() => {
     fetch('/api/providers')
       .then((res) => res.json())
@@ -110,6 +110,7 @@ function App() {
 
   return (
     <ThemeProvider theme={customTheme}>
+    <TdpNavigationProvider>
       <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '32px' }}>
@@ -379,6 +380,36 @@ function App() {
           )}
         </div>
 
+        {/* TDP Navigation Demo */}
+        <div style={{ marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#1F2937' }}>
+            TDP Navigation
+          </h2>
+          <p style={{ fontSize: '14px', color: '#6B7280', marginBottom: '16px' }}>
+            Navigate to TDP pages using <code>TDPLink</code> and <code>tdpPaths</code> helpers,
+            or pass any custom path string directly.
+            In production (iframe), URLs are resolved from <code>document.referrer</code>.
+            Locally, they fall back to the <code>TDP_ENDPOINT</code> environment variable.
+          </p>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+            <TDPLink path={tdpPaths.fileDetails('example-file-id')}>
+              View File Details
+            </TDPLink>
+            <TDPLink path={tdpPaths.search('chromatography')}>
+              Search TDP
+            </TDPLink>
+            <TDPLink path={tdpPaths.dataWorkspace()}>
+              Open Data Workspace
+            </TDPLink>
+            <TDPLink path={tdpPaths.pipelineEdit('example-pipeline-id')}>
+              Edit Pipeline
+            </TDPLink>
+            <TDPLink path="/custom/page?foo=bar">
+              Custom Path
+            </TDPLink>
+          </div>
+        </div>
+
         {/* Modal Example */}
         <Modal
           isOpen={isModalOpen}
@@ -433,6 +464,7 @@ function App() {
           </p>
         </div>
       </div>
+    </TdpNavigationProvider>
     </ThemeProvider>
   );
 }

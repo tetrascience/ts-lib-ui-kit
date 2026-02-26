@@ -58,6 +58,7 @@ export * from "@organisms/PieChart";
 export * from "@organisms/PlateMap";
 export * from "@organisms/ScatterGraph";
 export * from "@organisms/TaskScripts";
+export * from "@organisms/TdpSearch";
 
 // common types
 export type { BadgeProps } from "@atoms/Badge";
@@ -146,6 +147,12 @@ export type {
   ScatterDataSeries,
   ScatterGraphProps,
 } from "@organisms/ScatterGraph";
+export type {
+  TdpSearchProps,
+  TdpSearchColumn,
+  TdpSearchFilter,
+  TdpSearchSort,
+} from "@organisms/TdpSearch";
 
 // utils
 export { COLORS, CHART_COLORS } from "./utils/colors";

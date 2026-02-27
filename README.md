@@ -2,6 +2,8 @@
 
 React component library for building TetraScience applications.
 
+[![npm version](https://img.shields.io/npm/v/@tetrascience-npm/tetrascience-react-ui)](https://www.npmjs.com/package/@tetrascience-npm/tetrascience-react-ui) [![CI](https://github.com/tetrascience/ts-lib-ui-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/tetrascience/ts-lib-ui-kit/actions/workflows/ci.yml) 📖 **[Storybook – Live Component Demos](https://ts-lib-ui-kit-storybook.vercel.app/)** | 🛠️ **[Contributing Guide](./CONTRIBUTING.md)**
+
 This library provides:
 
 - **UI Components**: Reusable React components following atomic design principles
@@ -255,6 +257,8 @@ Visit <http://localhost:5173> to see the example app with custom theming.
 
 ## Documentation
 
+- [Storybook – Live Component Demos](https://ts-lib-ui-kit-storybook.vercel.app/) - Browse all components with interactive examples
+- [NPM Package](https://www.npmjs.com/package/@tetrascience-npm/tetrascience-react-ui) - Installation and version info
 - [Getting Started Guide](./get_started_1.md) - Step-by-step tutorial
 - [Theming Guide](./THEMING.md) - Customise the design system
 - [Contributing](./CONTRIBUTING.md#development-setup) - Clone the repo and run `yarn storybook`

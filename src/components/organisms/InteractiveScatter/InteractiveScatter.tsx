@@ -344,6 +344,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     enableBoxSelection,
     enableLassoSelection,
     originalIdLookup,
+    tooltipEnabled,
   ]);
 
   // Apply selection state to Plotly

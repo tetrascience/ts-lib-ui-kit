@@ -325,18 +325,31 @@ export function getSelectionMode(event: { shiftKey: boolean; ctrlKey: boolean; m
 }
 
 /**
- * Calculate axis range with padding
+ * Calculate axis range with padding.
+ *
+ * When `scale` is `"log"`, the returned range is in log10 units (what Plotly
+ * expects for `type: "log"` axes), and padding is applied in log-space so that
+ * the visual margin is proportional on the logarithmic axis.
  */
-export function calculateAxisRange(data: ScatterPoint[], axis: "x" | "y", padding = 0.1): [number, number] {
+export function calculateAxisRange(
+  data: ScatterPoint[],
+  axis: "x" | "y",
+  padding = 0.1,
+  scale: "linear" | "log" = "linear",
+): [number, number] {
+  const isLog = scale === "log";
   let min = Infinity;
   let max = -Infinity;
 
   for (const point of data) {
     const v = point[axis];
-    if (Number.isFinite(v)) {
-      if (v < min) min = v;
-      if (v > max) max = v;
-    }
+    if (!Number.isFinite(v)) continue;
+    // log10 is undefined for non-positive values — skip them silently
+    if (isLog && v <= 0) continue;
+    // Plotly log axes expect range bounds in log10 units
+    const mapped = isLog ? Math.log10(v) : v;
+    if (mapped < min) min = mapped;
+    if (mapped > max) max = mapped;
   }
 
   if (!Number.isFinite(min)) {

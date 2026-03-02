@@ -106,13 +106,13 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
   const xRange = useMemo(() => {
     if (xAxis.range) return xAxis.range;
     if (xAxis.autoRange === false) return;
-    return calculateAxisRange(processedData, "x", xAxis.autoRangePadding ?? PLOT_CONSTANTS.AUTO_RANGE_PADDING);
+    return calculateAxisRange(processedData, "x", xAxis.autoRangePadding ?? PLOT_CONSTANTS.AUTO_RANGE_PADDING, xAxis.scale);
   }, [processedData, xAxis]);
 
   const yRange = useMemo(() => {
     if (yAxis.range) return yAxis.range;
     if (yAxis.autoRange === false) return;
-    return calculateAxisRange(processedData, "y", yAxis.autoRangePadding ?? PLOT_CONSTANTS.AUTO_RANGE_PADDING);
+    return calculateAxisRange(processedData, "y", yAxis.autoRangePadding ?? PLOT_CONSTANTS.AUTO_RANGE_PADDING, yAxis.scale);
   }, [processedData, yAxis]);
 
   const tooltipEnabled = tooltip.enabled !== false;

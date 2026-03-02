@@ -87,6 +87,9 @@ export const BasicScatter: Story = {
     yAxis: { title: "Y Axis" },
     ...DEFAULT_DIMS,
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1149" },
+  },
 };
 
 /**
@@ -112,6 +115,9 @@ export const DataDrivenStyling: Story = {
     sizeMapping: { type: "continuous", field: "intensity", sizeRange: [4, 20] },
     ...DEFAULT_DIMS,
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1150" },
+  },
 };
 
 /** Fixed color, shape, and size — ignores data values entirely. */
@@ -125,6 +131,9 @@ export const StaticStyling: Story = {
     shapeMapping: { type: "static", value: "diamond" },
     sizeMapping: { type: "static", value: 12 },
     ...DEFAULT_DIMS,
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1151" },
   },
 };
 
@@ -153,6 +162,9 @@ export const Selection: Story = {
     enableBoxSelection: true,
     enableLassoSelection: true,
     ...DEFAULT_DIMS,
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1152" },
   },
 };
 
@@ -198,6 +210,9 @@ export const KeyboardModifierSelection: Story = {
     enableBoxSelection: true,
     enableLassoSelection: true,
     ...DEFAULT_DIMS,
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1154" },
   },
 };
 
@@ -257,6 +272,9 @@ export const SelectionWithDataGrid: Story = {
     width: 700,
     height: 600,
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1156" },
+  },
 };
 
 /** Uses `tooltip.content` to render rich HTML tooltips with status badges. */
@@ -288,6 +306,9 @@ export const CustomTooltips: Story = {
     },
     ...DEFAULT_DIMS,
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1157" },
+  },
 };
 
 /** Fixed axis ranges zoom the viewport to a specific data region. */
@@ -300,6 +321,9 @@ export const AxisFixedRanges: Story = {
     colorMapping: { type: "categorical", field: "category" },
     ...DEFAULT_DIMS,
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1158" },
+  },
 };
 
 /** Log-scale axes for data spanning several orders of magnitude. */
@@ -311,6 +335,9 @@ export const AxisLogScale: Story = {
     yAxis: { title: "Y (log)", scale: "log" },
     colorMapping: { type: "categorical", field: "category" },
     ...DEFAULT_DIMS,
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1159" },
   },
 };
 
@@ -339,5 +366,8 @@ export const Downsampling: Story = {
     yAxis: { title: "Y Axis" },
     downsampling: { enabled: true, maxPoints: 1000, strategy: "lttb" },
     ...DEFAULT_DIMS,
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1161" },
   },
 };

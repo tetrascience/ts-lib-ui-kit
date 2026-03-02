@@ -107,10 +107,8 @@ export interface AxisConfig {
 export interface TooltipConfig {
   /** Enable/disable tooltips */
   enabled?: boolean;
-  /** Delay before showing tooltip in milliseconds */
-  delay?: number;
   /** Custom tooltip content function */
-  content?: (point: ScatterPoint) => string | HTMLElement;
+  content?: (point: ScatterPoint) => string;
   /** Fields to display in default tooltip */
   fields?: string[];
 }
@@ -231,10 +229,11 @@ export interface InteractiveScatterProps {
   height?: number;
 
   /**
-   * Show legend
+   * Show the continuous color-scale bar when using a continuous `colorMapping`.
+   * Has no effect for categorical or static mappings.
    * @default true
    */
-  showLegend?: boolean;
+  showColorBar?: boolean;
 
   /**
    * Custom CSS class name

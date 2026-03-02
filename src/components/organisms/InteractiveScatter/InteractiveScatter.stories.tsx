@@ -157,8 +157,10 @@ export const Selection: Story = {
 };
 
 /**
+ * Keyboard modifiers apply to click selection only.
  * Click = replace, Shift+Click = add, Ctrl/Cmd+Click = remove,
- * Shift+Ctrl/Cmd+Click = toggle. The active mode is shown below.
+ * Shift+Ctrl/Cmd+Click = toggle. Box/lasso selection always replaces.
+ * The active mode is shown below.
  */
 export const KeyboardModifierSelection: Story = {
   render: (args) => {
@@ -180,7 +182,7 @@ export const KeyboardModifierSelection: Story = {
             Selected: {selectedIds.size} &nbsp;|&nbsp; Mode: <strong>{lastMode}</strong>
           </p>
           <p style={{ margin: 0, color: "#666", fontSize: 13 }}>
-            Click = replace · Shift = add · Ctrl/Cmd = remove · Shift+Ctrl/Cmd = toggle
+            Click: replace · Shift+Click: add · Ctrl/Cmd+Click: remove · Shift+Ctrl/Cmd+Click: toggle · Box/Lasso: always replace
           </p>
         </div>
       </div>

@@ -45,11 +45,6 @@ export const DEFAULT_MARKER_SIZE = 8;
 export const DEFAULT_SIZE_RANGE: [number, number] = [4, 20];
 
 /**
- * Default tooltip delay in milliseconds
- */
-export const DEFAULT_TOOLTIP_DELAY = 300;
-
-/**
  * Default downsampling configuration
  */
 export const DEFAULT_MAX_POINTS = 5000;

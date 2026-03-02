@@ -1,6 +1,6 @@
 import {
   DEFAULT_CATEGORY_COLORS,
-  // DEFAULT_COLOR_SCALE,
+  DEFAULT_MAX_POINTS,
   DEFAULT_MARKER_SIZE,
   DEFAULT_SIZE_RANGE,
   PLOT_CONSTANTS,
@@ -15,8 +15,6 @@ import type {
   ShapeMapping,
   SizeMapping,
 } from "./types";
-
-const DEFAULT_MAX_POINTS_THRESHOLD = 5000;
 
 /**
  * Calculate min and max values for a numeric field in the data
@@ -52,7 +50,7 @@ export function calculateRange(data: ScatterPoint[], field: string): { min: numb
 export function getUniqueCategories(data: ScatterPoint[], field: string): string[] {
   const uniqueCategories = data
     .map((point) => point.metadata?.[field])
-    .filter((value): value is string => value !== undefined && value !== null);
+    .filter((value): value is string => typeof value === "string");
 
   return [...new Set(uniqueCategories)].sort();
 }
@@ -80,23 +78,6 @@ export function mapColors(data: ScatterPoint[], colorMapping: ColorMapping | und
     return data.map((point) => {
       const value = point.metadata?.[colorMapping.field!];
       return categoryColorMap[String(value)] || DEFAULT_CATEGORY_COLORS[0];
-    });
-  }
-
-  if (colorMapping.type === "continuous" && colorMapping.field) {
-    const range =
-      colorMapping.min !== undefined && colorMapping.max !== undefined
-        ? { min: colorMapping.min, max: colorMapping.max }
-        : calculateRange(data, colorMapping.field);
-
-    return data.map((point) => {
-      const value = point.metadata?.[colorMapping.field!];
-      if (typeof value === "number" && Number.isFinite(value)) {
-        // Normalize to 0-1 range
-        const normalized = (value - range.min) / (range.max - range.min);
-        return String(normalized);
-      }
-      return "0";
     });
   }
 
@@ -184,11 +165,11 @@ export function mapSizes(data: ScatterPoint[], sizeMapping: SizeMapping | undefi
  * Downsample data using specified strategy
  */
 export function downsampleData(data: ScatterPoint[], config: DownsamplingConfig): ScatterPoint[] {
-  if (!config.enabled || data.length <= (config.maxPoints || DEFAULT_MAX_POINTS_THRESHOLD)) {
+  if (!config.enabled || data.length <= (config.maxPoints || DEFAULT_MAX_POINTS)) {
     return data;
   }
 
-  const maxPoints = config.maxPoints || DEFAULT_MAX_POINTS_THRESHOLD;
+  const maxPoints = config.maxPoints || DEFAULT_MAX_POINTS;
   const strategy = config.strategy || "lttb";
 
   if (strategy === "lttb") {
@@ -220,7 +201,7 @@ function bucketCentroid(
     }
     return { x: sumX / length, y: sumY / length };
   }
-  const fallbackIdx = Math.min(start, dataLength - 1);
+  const fallbackIdx = Math.max(0, Math.min(start, dataLength - 1));
   return { x: data[fallbackIdx].x, y: data[fallbackIdx].y };
 }
 
@@ -347,9 +328,20 @@ export function getSelectionMode(event: { shiftKey: boolean; ctrlKey: boolean; m
  * Calculate axis range with padding
  */
 export function calculateAxisRange(data: ScatterPoint[], axis: "x" | "y", padding = 0.1): [number, number] {
-  const values = data.map((p) => p[axis]);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  let min = Infinity;
+  let max = -Infinity;
+
+  for (const point of data) {
+    const v = point[axis];
+    if (Number.isFinite(v)) {
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+  }
+
+  if (!Number.isFinite(min)) {
+    return [0, 1];
+  }
 
   if (min === max) {
     return [min - 1, max + 1];

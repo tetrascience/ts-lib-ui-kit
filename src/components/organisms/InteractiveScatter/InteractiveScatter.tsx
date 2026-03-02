@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { DEFAULT_COLOR_SCALE, PLOT_CONSTANTS } from "./constants";
+import "./InteractiveScatter.scss";
 import {
   applySelection,
   calculateAxisRange,
@@ -23,17 +24,20 @@ import type { InteractiveScatterProps, SelectionMode } from "./types";
  * **Features:**
  * - Data-driven and static styling (color, shape, size)
  * - Interactive selection (click, box, lasso)
- * - Keyboard modifiers for selection modes (Shift/Ctrl)
+ * - Keyboard modifiers for click-selection modes (Shift/Ctrl)
  * - Customizable tooltips with rich content support
  * - Axis customization (ranges, log/linear scales)
  * - Performance optimizations for large datasets
  * - Selection propagation via callbacks
  *
- * **Selection Modes:**
- * - Default click/drag: Replace selection
- * - Shift + click/drag: Add to selection
- * - Ctrl/Cmd + click/drag: Remove from selection
- * - Shift + Ctrl + click/drag: Toggle selection
+ * **Selection Modes (click selection only):**
+ * - Default click: Replace selection
+ * - Shift + click: Add to selection
+ * - Ctrl/Cmd + click: Remove from selection
+ * - Shift + Ctrl + click: Toggle selection
+ *
+ * Box/lasso selection always replaces the current selection because
+ * Plotly does not expose the original keyboard event for drag operations.
  */
 const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
   data,
@@ -53,12 +57,14 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
   downsampling,
   width = 800,
   height = 600,
-  showLegend = true,
+  showColorBar = true,
   className,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const onSelectionChangeRef = useRef(onSelectionChange);
   const onPointClickRef = useRef(onPointClick);
+  const selectedIdsRef = useRef<Set<string | number>>(new Set());
+  const isControlledRef = useRef(false);
 
   // Keep refs updated
   onSelectionChangeRef.current = onSelectionChange;
@@ -70,6 +76,8 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
   // Use controlled or uncontrolled selection
   const isControlled = controlledSelectedIds !== undefined;
   const selectedIds = isControlled ? controlledSelectedIds : internalSelectedIds;
+  selectedIdsRef.current = selectedIds;
+  isControlledRef.current = isControlled;
 
   // Normalize to strings so numeric IDs passed by consumers always match the
   // string IDs that Plotly stores (we always do String(p.id) when building the trace).
@@ -107,18 +115,16 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     return calculateAxisRange(processedData, "y", yAxis.autoRangePadding ?? PLOT_CONSTANTS.AUTO_RANGE_PADDING);
   }, [processedData, yAxis]);
 
+  const tooltipEnabled = tooltip.enabled !== false;
+
   // Build tooltip text
   const tooltipText = useMemo(() => {
-    if (!tooltip.enabled) return [];
+    if (!tooltipEnabled) return [];
 
-    return processedData.map((point) => {
-      if (tooltip.content) {
-        const content = tooltip.content(point);
-        return typeof content === "string" ? content : "";
-      }
-      return generateTooltipContent(point, tooltip.fields);
-    });
-  }, [processedData, tooltip]);
+    return processedData.map((point) =>
+      tooltip.content ? tooltip.content(point) : generateTooltipContent(point, tooltip.fields),
+    );
+  }, [processedData, tooltip, tooltipEnabled]);
 
   // Prepare Plotly-compatible color data
   const plotlyColors = useMemo(() => {
@@ -155,7 +161,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     if (colorMapping?.type === "continuous" && plotlyColorscale) {
       config.color = plotlyColors as number[];
       config.colorscale = plotlyColorscale;
-      config.showscale = showLegend;
+      config.showscale = showColorBar;
 
       if (colorMapping.field) {
         const range =
@@ -175,7 +181,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     }
 
     return config;
-  }, [sizes, shapes, colorMapping, plotlyColorscale, plotlyColors, showLegend, processedData, colors]);
+  }, [sizes, shapes, colorMapping, plotlyColorscale, plotlyColors, showColorBar, processedData, colors]);
 
   // Create Plotly plot
   useEffect(() => {
@@ -197,9 +203,9 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
       mode: "markers",
       type: "scatter",
       marker: markerConfig,
-      hoverinfo: tooltip.enabled ? "text" : "skip",
+      hoverinfo: tooltipEnabled ? "text" : "skip",
       text: tooltipText,
-      hovertemplate: tooltip.enabled ? "%{text}<extra></extra>" : undefined,
+      hovertemplate: tooltipEnabled ? "%{text}<extra></extra>" : undefined,
       showlegend: false,
       unselected: {
         marker: {
@@ -220,7 +226,17 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     const plotData: Plotly.Data[] = [trace as Plotly.Data];
 
     // Configure layout
-    const layout: Partial<Plotly.Layout> = getPlotlyLayoutConfig({ title, xAxis, yAxis, width, height, xRange, yRange, enableLassoSelection, enableBoxSelection });
+    const layout: Partial<Plotly.Layout> = getPlotlyLayoutConfig({
+      title,
+      xAxis,
+      yAxis,
+      width,
+      height,
+      xRange,
+      yRange,
+      enableLassoSelection,
+      enableBoxSelection,
+    });
 
     const config: Partial<Plotly.Config> = {
       responsive: true,
@@ -258,9 +274,9 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
             // Handle selection. Use the original-typed ID from the matched point so
             // numeric IDs (e.g., 123) are preserved instead of being coerced to "123".
             const mode = getSelectionMode(eventData.event as MouseEvent);
-            const newSelection = applySelection(selectedIds, new Set([clickedPoint.id]), mode);
+            const newSelection = applySelection(selectedIdsRef.current, new Set([clickedPoint.id]), mode);
 
-            if (!isControlled) {
+            if (!isControlledRef.current) {
               setInternalSelectedIds(newSelection);
             }
             onSelectionChangeRef.current?.(newSelection, mode);
@@ -290,7 +306,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
           const mode: SelectionMode = "replace";
           const newSelection = new Set<string | number>(selectedPointIds);
 
-          if (!isControlled) {
+          if (!isControlledRef.current) {
             setInternalSelectedIds(newSelection);
           }
           onSelectionChangeRef.current?.(newSelection, mode);
@@ -300,7 +316,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
       // Handle deselect (clicking on background)
       plotElement.on("plotly_deselect", () => {
         const newSelection = new Set<string | number>();
-        if (!isControlled) {
+        if (!isControlledRef.current) {
           setInternalSelectedIds(newSelection);
         }
         onSelectionChangeRef.current?.(newSelection, "replace");
@@ -327,8 +343,6 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     enableClickSelection,
     enableBoxSelection,
     enableLassoSelection,
-    selectedIds,
-    isControlled,
     originalIdLookup,
   ]);
 

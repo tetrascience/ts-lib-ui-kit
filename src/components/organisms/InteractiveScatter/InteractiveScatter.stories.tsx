@@ -314,7 +314,7 @@ export const AxisLogScale: Story = {
   },
 };
 
-/** 10k points downsampled to 2k via LTTB to keep the chart responsive. */
+/** 10k points downsampled to 1k via LTTB to keep the chart responsive. */
 export const Downsampling: Story = {
   render: (args) => {
     const [data, setData] = useState<ScatterPoint[]>([]);
@@ -334,10 +334,10 @@ export const Downsampling: Story = {
   },
   args: {
     data: [],
-    title: "Downsampling (10k → 2k via LTTB)",
+    title: "Downsampling (10k → 1k via LTTB)",
     xAxis: { title: "X Axis" },
     yAxis: { title: "Y Axis" },
-    downsampling: { enabled: true, maxPoints: 2000, strategy: "lttb" },
+    downsampling: { enabled: true, maxPoints: 1000, strategy: "lttb" },
     ...DEFAULT_DIMS,
   },
 };

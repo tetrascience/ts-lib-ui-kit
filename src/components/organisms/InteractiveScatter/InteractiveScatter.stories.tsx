@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { InteractiveScatter } from "./InteractiveScatter";
 
@@ -72,7 +72,7 @@ const CLUSTERED_DATA = clusteredData();
 const TOOLTIP_DATA = scatterData(100);
 const AXIS_DATA = scatterData(200);
 const LOG_DATA = logScaleData();
-const LARGE_DATA = scatterData(10_000);
+const LARGE_DATA_COUNT = 10_000;
 
 const DEFAULT_DIMS = { width: 800, height: 600 } as const;
 
@@ -316,8 +316,24 @@ export const AxisLogScale: Story = {
 
 /** 10k points downsampled to 2k via LTTB to keep the chart responsive. */
 export const Downsampling: Story = {
+  render: (args) => {
+    const [data, setData] = useState<ScatterPoint[]>([]);
+
+    useEffect(() => {
+      const handle = requestAnimationFrame(() => {
+        setData(scatterData(LARGE_DATA_COUNT));
+      });
+      return () => cancelAnimationFrame(handle);
+    }, []);
+
+    if (data.length === 0) {
+      return <div style={{ width: args.width, height: args.height, display: "grid", placeItems: "center", color: "#888" }}>Generating {LARGE_DATA_COUNT.toLocaleString()} points…</div>;
+    }
+
+    return <InteractiveScatter {...args} data={data} />;
+  },
   args: {
-    data: LARGE_DATA,
+    data: [],
     title: "Downsampling (10k → 2k via LTTB)",
     xAxis: { title: "X Axis" },
     yAxis: { title: "Y Axis" },

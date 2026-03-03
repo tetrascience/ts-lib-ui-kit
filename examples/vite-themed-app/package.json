@@ -11,7 +11,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@tetrascience-npm/tetrascience-react-ui": "workspace:*",
     "express": "^4.21.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

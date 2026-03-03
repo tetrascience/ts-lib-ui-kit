@@ -206,6 +206,158 @@ app.get("/api/tables/:tableName", async (req, res) => {
   }
 });
 
+
+/**
+ * Helper: create a TDPClient authenticated with the requesting user's JWT.
+ * Returns null when the user is not authenticated (no token in cookies).
+ */
+async function getUserTdpClient(req: express.Request): Promise<TDPClient | null> {
+  const userToken = await jwtManager.getTokenFromExpressRequest(req);
+  if (!userToken) return null;
+
+  const client = new TDPClient({
+    authToken: userToken,
+    artifactType: "data-app",
+  });
+  await client.init();
+  return client;
+}
+
+/**
+ * GET /api/kv/:key
+ * Read a single value from the connector key/value store
+ *
+ * The value is returned as-is
+ * Returns 404 when the key does not exist or the value is null (e.g. a
+ * protected/secure key that the user token cannot read)
+ */
+app.get("/api/kv/:key", async (req, res) => {
+  try {
+    const client = await getUserTdpClient(req);
+    if (!client) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const { key } = req.params;
+    const value = await client.getValue(key);
+
+    if (value === undefined || value === null) {
+      return res.status(404).json({ error: "Key not found", key });
+    }
+
+    return res.json({ key, value });
+  } catch (error) {
+    console.error("KV get error:", error);
+    return res.status(500).json({ error: "Failed to read value" });
+  }
+});
+
+/**
+ * GET /api/kv
+ * Read multiple values at once
+ *
+ * Pass keys as a comma-separated query parameter:
+ *   GET /api/kv?keys=theme,locale,last-run
+ *
+ * Returns an object mapping each key to its value (null for missing/protected keys)
+ */
+app.get("/api/kv", async (req, res) => {
+  try {
+    const client = await getUserTdpClient(req);
+    if (!client) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const keysParam = req.query.keys;
+    if (!keysParam || typeof keysParam !== "string") {
+      return res.status(400).json({ error: "Missing 'keys' query parameter (comma-separated)" });
+    }
+
+    const keys = keysParam.split(",").map((k) => k.trim()).filter(Boolean);
+    if (keys.length === 0) {
+      return res.status(400).json({ error: "No valid keys provided" });
+    }
+
+    const values = await client.getValues(keys);
+
+    // Zip keys with returned values into a record
+    const result: Record<string, unknown> = {};
+    for (const [i, key] of keys.entries()) {
+      result[key] = values[i] ?? null;
+    }
+
+    return res.json({ values: result });
+  } catch (error) {
+    console.error("KV getValues error:", error);
+    return res.status(500).json({ error: "Failed to read values" });
+  }
+});
+
+/**
+ * PUT /api/kv/:key
+ * Write a value to the connector key/value store
+ *
+ * Request body: { "value": <any JSON value> }
+ *
+ * The value can be any JSON-serialisable type (string, number, object, array)
+ * By default values are stored as non-protected (readable by user tokens)
+ */
+app.put("/api/kv/:key", async (req, res) => {
+  try {
+    const client = await getUserTdpClient(req);
+    if (!client) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const { key } = req.params;
+    const { value } = req.body;
+
+    if (value === undefined) {
+      return res.status(400).json({ error: "Missing 'value' in request body" });
+    }
+
+    await client.saveValue(key, value, { secure: false });
+
+    return res.json({ key, saved: true });
+  } catch (error) {
+    console.error("KV save error:", error);
+    return res.status(500).json({ error: "Failed to save value" });
+  }
+});
+
+/**
+ * DELETE /api/kv/:key
+ * Delete a value from the connector key/value store.
+ *
+ * Uses the underlying connector data API to remove the key.
+ */
+app.delete("/api/kv/:key", async (req, res) => {
+  try {
+    const client = await getUserTdpClient(req);
+    if (!client) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const { key } = req.params;
+    const connectorId = process.env.CONNECTOR_ID;
+    if (!connectorId) {
+      return res.status(500).json({ error: "CONNECTOR_ID not configured" });
+    }
+
+    const api = client.api;
+    if (!api) {
+      return res.status(500).json({ error: "TDPClient not initialised" });
+    }
+
+    await api.v1.deleteConnectorData(connectorId, { keys: [key] });
+
+    return res.json({ key, deleted: true });
+  } catch (error) {
+    console.error("KV delete error:", error);
+    return res.status(500).json({ error: "Failed to delete value" });
+  }
+});
+
 // Health check
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });

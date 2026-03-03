@@ -10,6 +10,7 @@ on:
 
 jobs:
   check:
+    # Skip for forked PRs
     if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: read

@@ -1,0 +1,16 @@
+{
+  "LABEL": {
+    "name": "title-check",
+    "color": "EEEEEE"
+  },
+  "CHECKS": {
+    "regexp": "^[A-Z]+-[1-9][0-9]*: ",
+    "regexpFlags": "u"
+  },
+  "MESSAGES": {
+    "success": "All OK",
+    "failure": "PR title does not match naming convention",
+    "notice": ""
+  }
+}
+

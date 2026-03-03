@@ -194,7 +194,8 @@ export const KeyboardModifierSelection: Story = {
             Selected: {selectedIds.size} &nbsp;|&nbsp; Mode: <strong>{lastMode}</strong>
           </p>
           <p style={{ margin: 0, color: "#666", fontSize: 13 }}>
-            Click: replace · Shift+Click: add · Ctrl/Cmd+Click: remove · Shift+Ctrl/Cmd+Click: toggle · Box/Lasso: always replace
+            Click: replace · Shift+Click: add · Ctrl+Click (Win) / Cmd+Click (Mac): remove · Shift+Ctrl+Click (Win) /
+            Shift+Cmd+Click (Mac): toggle · Box/Lasso: always replace
           </p>
         </div>
       </div>
@@ -354,7 +355,11 @@ export const Downsampling: Story = {
     }, []);
 
     if (data.length === 0) {
-      return <div style={{ width: args.width, height: args.height, display: "grid", placeItems: "center", color: "#888" }}>Generating {LARGE_DATA_COUNT.toLocaleString()} points…</div>;
+      return (
+        <div style={{ width: args.width, height: args.height, display: "grid", placeItems: "center", color: "#888" }}>
+          Generating {LARGE_DATA_COUNT.toLocaleString()} points…
+        </div>
+      );
     }
 
     return <InteractiveScatter {...args} data={data} />;
@@ -369,5 +374,47 @@ export const Downsampling: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1161" },
+    docs: {
+      source: {
+        code: `
+function scatterData(count: number): ScatterPoint[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: \`point-\${i}\`,
+    x: rand() * 100,
+    y: rand() * 100,
+    label: \`Point \${i}\`,
+    metadata: {
+      category: CATEGORIES[\${i} % 3],
+      status: STATUSES[\${i} % 3],
+      value: rand() * 1000,
+      intensity: rand() * 10,
+      concentration: Number((\${rand()} * 100).toFixed(2)),
+    },
+  }));
+}
+
+const [data, setData] = useState<ScatterPoint[]>([]);
+
+useEffect(() => {
+  const handle = requestAnimationFrame(() => {
+    setData(scatterData(10_000));
+  });
+  return () => cancelAnimationFrame(handle);
+}, []);
+
+return (
+  <InteractiveScatter
+    data={data}
+    title="Downsampling (10k → 1k via LTTB)"
+    xAxis={{ title: "X Axis" }}
+    yAxis={{ title: "Y Axis" }}
+    downsampling={{ enabled: true, maxPoints: 1000, strategy: "lttb" }}
+    width={800}
+    height={600}
+  />
+);`.trim(),
+        language: "tsx",
+      },
+    },
   },
 };

@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { Button } from "@atoms/Button";
+import React, { useEffect, useRef, useState } from "react";
+
 
 import { InteractiveScatter } from "./InteractiveScatter";
 
@@ -73,6 +75,62 @@ const TOOLTIP_DATA = scatterData(100);
 const AXIS_DATA = scatterData(200);
 const LOG_DATA = logScaleData();
 const LARGE_DATA_COUNT = 10_000;
+
+function parseCsvToPoints(text: string): ScatterPoint[] {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+  const xIdx = headers.indexOf("x");
+  const yIdx = headers.indexOf("y");
+  if (xIdx === -1 || yIdx === -1) return [];
+
+  const idIdx = headers.indexOf("id");
+  const labelIdx = headers.indexOf("label");
+  const metaHeaders = headers.filter((_, i) => ![xIdx, yIdx, idIdx, labelIdx].includes(i));
+
+  return lines.slice(1).flatMap((line, i) => {
+    const cols = line.split(",").map((c) => c.trim());
+    const x = Number(cols[xIdx]);
+    const y = Number(cols[yIdx]);
+    if (Number.isNaN(x) || Number.isNaN(y)) return [];
+
+    const metadata: Record<string, unknown> = {};
+    for (const key of metaHeaders) {
+      const val = cols[headers.indexOf(key)];
+      metadata[key] = Number.isNaN(Number(val)) ? val : Number(val);
+    }
+
+    return {
+      id: idIdx === -1 ? `row-${i}` : cols[idIdx],
+      x,
+      y,
+      label: labelIdx === -1 ? undefined : cols[labelIdx],
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+    };
+  });
+}
+
+function parseJsonToPoints(text: string): ScatterPoint[] {
+  const raw = JSON.parse(text);
+  const arr: unknown[] = Array.isArray(raw) ? raw : [];
+  return arr.flatMap((item, i) => {
+    if (typeof item !== "object" || item === null) return [];
+    const obj = item as Record<string, unknown>;
+    const x = Number(obj.x);
+    const y = Number(obj.y);
+    if (Number.isNaN(x) || Number.isNaN(y)) return [];
+
+    const { id, x: _, y: __, label, ...rest } = obj;
+    return {
+      id: id == null ? `row-${i}` : String(id),
+      x,
+      y,
+      label: label == null ? undefined : String(label),
+      metadata: Object.keys(rest).length > 0 ? (rest as Record<string, unknown>) : undefined,
+    };
+  });
+}
 
 const DEFAULT_DIMS = { width: 800, height: 600 } as const;
 
@@ -342,10 +400,26 @@ export const AxisLogScale: Story = {
   },
 };
 
-/** 10k points downsampled to 1k via LTTB to keep the chart responsive. */
+/**
+ * 10k points downsampled to 1k via LTTB to keep the chart responsive.
+ *
+ * You can upload your own data file to test downsampling:
+ * - **CSV** — must have `x` and `y` columns. Optional: `id`, `label`. Any extra columns become `metadata`.
+ *   ```
+ *   id,x,y,label,category,value
+ *   p-0,2.3,4.1,Alpha,Group A,120.5
+ *   ```
+ * - **JSON** — array of objects with at least `x` and `y` fields.
+ *   ```
+ *   [{ "id": "p-0", "x": 2.3, "y": 4.1, "label": "Alpha", "category": "Group A" }]
+ *   ```
+ */
 export const Downsampling: Story = {
   render: (args) => {
     const [data, setData] = useState<ScatterPoint[]>([]);
+    const [source, setSource] = useState<"generated" | string>("generated");
+    const [error, setError] = useState<string | null>(null);
+    const fileRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
       const handle = requestAnimationFrame(() => {
@@ -353,6 +427,36 @@ export const Downsampling: Story = {
       });
       return () => cancelAnimationFrame(handle);
     }, []);
+
+    const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setError(null);
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const text = ev.target?.result as string;
+          const points = file.name.endsWith(".json") ? parseJsonToPoints(text) : parseCsvToPoints(text);
+          if (points.length === 0) {
+            setError("No valid points found. CSV needs x,y columns; JSON needs [{x, y}, …].");
+            return;
+          }
+          setData(points);
+          setSource(file.name);
+        } catch {
+          setError("Failed to parse file. Check that it is valid CSV or JSON.");
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    const resetToGenerated = () => {
+      setData(scatterData(LARGE_DATA_COUNT));
+      setSource("generated");
+      setError(null);
+      if (fileRef.current) fileRef.current.value = "";
+    };
 
     if (data.length === 0) {
       return (
@@ -362,7 +466,28 @@ export const Downsampling: Story = {
       );
     }
 
-    return <InteractiveScatter {...args} data={data} />;
+    return (
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, fontSize: 13 }}>
+          <Button variant="secondary" size="small" onClick={() => fileRef.current?.click()}>
+            Upload CSV / JSON
+          </Button>
+          <input ref={fileRef} type="file" accept=".csv,.json" onChange={handleFile} style={{ display: "none" }} />
+          {source !== "generated" && (
+            <Button variant="tertiary" size="small" onClick={resetToGenerated}>
+              Reset to random data
+            </Button>
+          )}
+          <span style={{ color: "#666" }}>
+            {source === "generated"
+              ? `${data.length.toLocaleString()} random points`
+              : `${data.length.toLocaleString()} points from ${source}`}
+          </span>
+          {error && <span style={{ color: "#d73027" }}>{error}</span>}
+        </div>
+        <InteractiveScatter {...args} data={data} />
+      </div>
+    );
   },
   args: {
     data: [],

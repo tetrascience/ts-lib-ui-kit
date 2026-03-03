@@ -5,8 +5,8 @@
   "type": "module",
   "author": "TetraScience",
   "license": "Apache-2.0",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
@@ -17,51 +17,51 @@
     ".": {
       "import": {
         "types": "./dist/index.d.ts",
-        "default": "./dist/esm/index.js"
+        "default": "./dist/index.js"
       },
       "require": {
         "types": "./dist/index.d.ts",
-        "default": "./dist/cjs/index.js"
+        "default": "./dist/index.cjs"
       }
     },
     "./server": {
       "import": {
         "types": "./dist/server.d.ts",
-        "default": "./dist/esm/server.js"
+        "default": "./dist/server.js"
       },
       "require": {
         "types": "./dist/server.d.ts",
-        "default": "./dist/cjs/server.js"
+        "default": "./dist/server.cjs"
       }
     },
     "./server/providers/athena": {
       "import": {
         "types": "./dist/providers/athena.d.ts",
-        "default": "./dist/esm/providers/athena.js"
+        "default": "./dist/providers/athena.js"
       },
       "require": {
         "types": "./dist/providers/athena.d.ts",
-        "default": "./dist/cjs/providers/athena.js"
+        "default": "./dist/providers/athena.cjs"
       }
     },
     "./server/providers/snowflake": {
       "import": {
         "types": "./dist/providers/snowflake.d.ts",
-        "default": "./dist/esm/providers/snowflake.js"
+        "default": "./dist/providers/snowflake.js"
       },
       "require": {
         "types": "./dist/providers/snowflake.d.ts",
-        "default": "./dist/cjs/providers/snowflake.js"
+        "default": "./dist/providers/snowflake.cjs"
       }
     },
     "./server/providers/databricks": {
       "import": {
         "types": "./dist/providers/databricks.d.ts",
-        "default": "./dist/esm/providers/databricks.js"
+        "default": "./dist/providers/databricks.js"
       },
       "require": {
         "types": "./dist/providers/databricks.d.ts",
-        "default": "./dist/cjs/providers/databricks.js"
+        "default": "./dist/providers/databricks.cjs"
       }
     },
     "./index.css": "./dist/index.css",
@@ -77,11 +77,12 @@
     "test:storybook:ci": "vitest run --project=storybook --reporter=junit --outputFile=test-results/storybook-junit.xml",
     "test:all": "vitest run",
     "test:all:coverage": "vitest run --coverage",
-    "build": "rm -rf dist && rollup -c --bundleConfigAsCjs",
-    "storybook": "pms build && storybook dev -p 6006",
-    "build-storybook": "pms build && storybook build",
+    "build": "vite build",
+    "dev": "yarn storybook",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
     "prepare": "husky",
-    "prepublishOnly": "pms run build",
+    "prepublishOnly": "yarn run build",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix --max-warnings 0",
     "typecheck": "tsc --noEmit",
@@ -99,10 +100,7 @@
     "@types/plotly.js": "^3.0.0",
     "@types/react-plotly.js": "^2.6.3",
     "@xyflow/react": "^12.6.4",
-    "apache-arrow": "^21.1.0",
     "axios": "^1.9.0",
-    "elkjs": "^0.10.0",
-    "immer": "^10.1.1",
     "monaco-editor": "^0.52.2",
     "monaco-themes": "0.4.7",
     "plotly.js": "^3.0.1",
@@ -112,8 +110,7 @@
     "react-syntax-highlighter": "^15.6.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
-    "styled-components": "^6.1.18",
-    "use-immer": "^0.11.0"
+    "styled-components": "^6.1.18"
   },
   "peerDependencies": {
     "@aws-sdk/client-athena": "^3.0.0",
@@ -139,21 +136,16 @@
     "@aws-sdk/s3-request-presigner": "^3.985.0",
     "@databricks/sql": "^1.12.0",
     "@eslint/js": "^9.9.0",
-    "@rollup/plugin-commonjs": "^28.0.3",
-    "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@storybook/addon-docs": "^10.2.10",
-    "@storybook/addon-links": "^10.2.10",
-    "@storybook/addon-vitest": "^10.2.10",
-    "@storybook/react": "^10.2.10",
-    "@storybook/react-vite": "^10.2.10",
-    "@types/cookie-parser": "^1",
+    "@storybook/addon-a11y": "^10.2.15",
+    "@storybook/addon-docs": "^10.2.15",
+    "@storybook/addon-links": "^10.2.15",
+    "@storybook/addon-vitest": "^10.2.15",
+    "@storybook/react-vite": "^10.2.15",
     "@types/eslint-plugin-jsx-a11y": "^6",
     "@types/jsdom": "^27",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/react-syntax-highlighter": "^15",
-    "@types/rollup-plugin-peer-deps-external": "^2",
     "@vitejs/plugin-react": "^4.3.1",
     "@vitest/browser": "^3",
     "@vitest/coverage-v8": "^3",
@@ -165,32 +157,25 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "eslint-plugin-sonarjs": "^3.0.7",
-    "eslint-plugin-storybook": "^10.2.8",
+    "eslint-plugin-storybook": "^10.2.15",
     "eslint-plugin-unicorn": "^63.0.0",
     "fast-xml-parser": "^5.3.4",
     "globals": "^15.9.0",
     "husky": "^9.1.7",
-    "jsdom": "^27.4.0",
+    "jsdom": "^28.1.0",
     "lint-staged": "^15.2.0",
-    "playwright": "^1.58.1",
-    "pmswitch": "^1.0.8",
+    "playwright": "^1.58.2",
     "prettier": "^3.8.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "rollup": "^4.41.0",
-    "rollup-plugin-dts": "^6.2.1",
-    "rollup-plugin-peer-deps-external": "^2.2.4",
-    "rollup-plugin-postcss": "^4.0.2",
-    "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-typescript2": "^0.36.0",
     "sass": "^1.89.0",
     "snowflake-sdk": "^2.3.3",
-    "storybook": "^10.2.10",
+    "storybook": "^10.2.15",
     "ts-morph": "^27.0.2",
-    "tsx": "^4.21.0",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1",
+    "vite": "^7.3.1",
+    "vite-plugin-dts": "^4.5.4",
     "vitest": "^3"
   },
   "resolutions": {
@@ -206,12 +191,6 @@
     "*.{js,jsx,ts,tsx}": "eslint --fix"
   },
   "packageManager": "yarn@4.12.0",
-  "workspaces": [
-    "examples/*"
-  ],
-  "directories": {
-    "example": "examples"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tetrascience/ts-lib-ui-kit.git"

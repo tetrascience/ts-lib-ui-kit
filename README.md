@@ -293,7 +293,7 @@ import type { ButtonProps, BarGraphProps, BarDataSeries } from '@tetrascience-np
 
 ## Examples
 
-The repository includes example applications in the `examples/` directory:
+This repository uses component driven development with storybook.js. To see the examples run the following.
 
 ```bash
 # Clone the repository
@@ -303,8 +303,8 @@ cd ts-lib-ui-kit
 # Install dependencies
 yarn
 
-# Run the themed example app
-yarn workspace vite-themed-app dev
+# Run the storybook
+yarn dev
 ```
 
 Visit <http://localhost:5173> to see the example app with custom theming.

@@ -72,14 +72,6 @@ When environment variables are not configured, the server returns mock data for 
 
 The key/value store lets data apps persist small pieces of state without an external database. The example endpoints in `server.ts` show how to use the `TDPClient` from `@tetrascience-npm/ts-connectors-sdk` to read, write, and delete values.
 
-### User Token vs Connector Token
-
-These examples authenticate with the **user's JWT** (from request cookies), not the connector's own service token. This means:
-
-- Users can read and write regular (non-protected) keys
-- Keys saved with `secure: true` are **protected** — they cannot be read with a user token (the TDP API omits their values)
-- Protected keys are typically used by the connector itself (e.g. refresh tokens, internal state)
-
 ### Example Usage
 
 ```bash

@@ -310,15 +310,15 @@ app.put("/api/kv/:key", async (req, res) => {
     }
 
     const { key } = req.params;
-    const { value } = req.body;
+    const { value, secure } = req.body;
 
     if (value === undefined) {
       return res.status(400).json({ error: "Missing 'value' in request body" });
     }
 
-    await client.saveValue(key, value, { secure: false });
+    await client.saveValue(key, value, { secure: Boolean(secure) });
 
-    return res.json({ key, saved: true });
+    return res.json({ key, saved: true, secure: Boolean(secure) });
   } catch (error) {
     console.error("KV save error:", error);
     return res.status(500).json({ error: "Failed to save value" });

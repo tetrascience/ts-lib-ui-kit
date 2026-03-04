@@ -259,12 +259,6 @@ const values = await client.getValues(['theme', 'locale', 'last-run']);
 // values[0] → theme, values[1] → locale, values[2] → last-run
 ```
 
-**User token vs connector token — protected keys:**
-
-- User JWT tokens can read and write **regular** (non-protected) keys.
-- Keys saved with `secure: true` are **protected**. The TDP API will omit their values when accessed with a user token. Protected keys are typically used by the connector itself (e.g. OAuth refresh tokens).
-- If your data app needs to read protected keys, use the connector's service token instead (see `JwtTokenManager` for that pattern).
-
 > See the [example app](./examples/vite-themed-app/) for a complete working server with KV store endpoints.
 
 ### TDP Search (`server`)

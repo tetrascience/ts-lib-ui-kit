@@ -53,6 +53,7 @@ export * from "@organisms/ChromatogramChart";
 export * from "@organisms/DotPlot";
 export * from "@organisms/Heatmap";
 export * from "@organisms/Histogram";
+export * from "@organisms/InteractiveScatter";
 export * from "@organisms/LineGraph";
 export * from "@organisms/Main";
 export * from "@organisms/PieChart";
@@ -126,6 +127,17 @@ export type {
 export type { DotPlotProps } from "@organisms/DotPlot";
 export type { HeatmapProps } from "@organisms/Heatmap";
 export type { HistogramProps, HistogramDataSeries } from "@organisms/Histogram";
+export type {
+  InteractiveScatterProps,
+  ScatterPoint,
+  SelectionMode,
+  ColorMapping,
+  ShapeMapping,
+  SizeMapping,
+  AxisConfig,
+  TooltipConfig,
+  DownsamplingConfig,
+} from "@organisms/InteractiveScatter";
 export type {
   PlateMapProps,
   WellData,

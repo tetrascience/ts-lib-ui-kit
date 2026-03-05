@@ -57,16 +57,6 @@ const external: (string | RegExp)[] = [
   /monaco-themes/,
 ];
 
-export const alias = {
-  "@atoms": path.resolve(__dirname, "./src/components/atoms"),
-  "@molecules": path.resolve(__dirname, "./src/components/molecules"),
-  "@organisms": path.resolve(__dirname, "./src/components/organisms"),
-  "@styles": path.resolve(__dirname, "./src/styles"),
-  "@utils": path.resolve(__dirname, "./src/utils"),
-  "@server": path.resolve(__dirname, "./src/server"),
-  "@assets": path.resolve(__dirname, "./src/assets"),
-};
-
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [

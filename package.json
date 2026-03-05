@@ -5,9 +5,9 @@
   "type": "module",
   "author": "TetraScience",
   "license": "Apache-2.0",
-  "main": "dist/index.cjs",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.cjs",
+  "module": "index.js",
+  "types": "index.d.ts",
   "files": [
     "dist",
     "LICENSE",
@@ -16,55 +16,55 @@
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
+        "types": "./index.d.ts",
+        "default": "./index.js"
       },
       "require": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.cjs"
+        "types": "./index.d.ts",
+        "default": "./index.cjs"
       }
     },
     "./server": {
       "import": {
-        "types": "./dist/server.d.ts",
-        "default": "./dist/server.js"
+        "types": "./server.d.ts",
+        "default": "./server.js"
       },
       "require": {
-        "types": "./dist/server.d.ts",
-        "default": "./dist/server.cjs"
+        "types": "./server.d.ts",
+        "default": "./server.cjs"
       }
     },
     "./server/providers/athena": {
       "import": {
-        "types": "./dist/providers/athena.d.ts",
-        "default": "./dist/providers/athena.js"
+        "types": "./providers/athena.d.ts",
+        "default": "./providers/athena.js"
       },
       "require": {
-        "types": "./dist/providers/athena.d.ts",
-        "default": "./dist/providers/athena.cjs"
+        "types": "./providers/athena.d.ts",
+        "default": "./providers/athena.cjs"
       }
     },
     "./server/providers/snowflake": {
       "import": {
-        "types": "./dist/providers/snowflake.d.ts",
-        "default": "./dist/providers/snowflake.js"
+        "types": "./providers/snowflake.d.ts",
+        "default": "./providers/snowflake.js"
       },
       "require": {
-        "types": "./dist/providers/snowflake.d.ts",
-        "default": "./dist/providers/snowflake.cjs"
+        "types": "./providers/snowflake.d.ts",
+        "default": "./providers/snowflake.cjs"
       }
     },
     "./server/providers/databricks": {
       "import": {
-        "types": "./dist/providers/databricks.d.ts",
-        "default": "./dist/providers/databricks.js"
+        "types": "./providers/databricks.d.ts",
+        "default": "./providers/databricks.js"
       },
       "require": {
-        "types": "./dist/providers/databricks.d.ts",
-        "default": "./dist/providers/databricks.cjs"
+        "types": "./providers/databricks.d.ts",
+        "default": "./providers/databricks.cjs"
       }
     },
-    "./index.css": "./dist/index.css",
+    "./index.css": "./index.css",
     "./package.json": "./package.json"
   },
   "scripts": {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 // @ts-ignore
-import { ThemeProvider, Button, Card, Modal, TdpNavigationProvider, TDPLink, tdpPaths } from '@tetrascience-npm/tetrascience-react-ui';
+import { ThemeProvider, Button, Card, Modal, TdpNavigationProvider, TDPLink, tdpPaths, Input } from '@tetrascience-npm/tetrascience-react-ui';
+import { useKvStore } from './useKvStore';
 
 // Types for provider data
 interface Provider {
@@ -76,6 +77,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [selectedTable, setSelectedTable] = useState<string>(ALLOWED_TABLES[0]);
   const [selectedProvider, setSelectedProvider] = useState<string>('');
+  const kvStore = useKvStore();
 
   // Fetch environment config and providers on mount
   useEffect(() => {
@@ -407,6 +409,36 @@ function App() {
             <TDPLink path="/custom/page?foo=bar">
               Custom Path
             </TDPLink>
+          </div>
+        </div>
+
+        {/* Connector Key/Value Store Demo */}
+        <div style={{ marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#1F2937' }}>
+            Connector Key/Value Store
+          </h2>
+          <p style={{ fontSize: '14px', color: '#6B7280', marginBottom: '16px' }}>
+            Read, write, and delete values using the connector key/value store.
+          </p>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+            <div style={{ width: '100%', display: 'flex', gap: '16px', flexWrap: 'nowrap', alignItems: 'center' }}>
+              <label style={{ fontWeight: '500', color: '#374151' }}>Key:</label>
+              <Input value={kvStore.key} onChange={(e: React.ChangeEvent<HTMLInputElement>) => kvStore.setKey(e.target.value)} placeholder="Enter a key" required />
+              <label style={{ fontWeight: '500', color: '#374151' }}>Value:</label>
+              <Input value={kvStore.value} onChange={(e: React.ChangeEvent<HTMLInputElement>) => kvStore.setValue(e.target.value)} placeholder="Enter a value" />
+              <Button variant="primary" size="medium" disabled={kvStore.isLoading || !kvStore.key || !kvStore.value} onClick={kvStore.writeValue}>
+                Write
+              </Button>
+              <Button variant="primary" size="medium" disabled={kvStore.isLoading || !kvStore.key} onClick={kvStore.readValue}>
+                Read
+              </Button>
+              <Button variant="danger" size="medium" disabled={kvStore.isLoading || !kvStore.key} onClick={kvStore.deleteValue}>
+                Delete
+              </Button>
+            </div>
+            <pre style={{ width: '100%', padding: '12px', backgroundColor: '#F3F4F6', borderRadius: '8px', fontSize: '13px', color: '#1F2937', overflow: 'auto', margin: 0, minHeight: '100px' }}>
+              {kvStore.isLoading ? 'Loading…' : (kvStore.response || 'No data available')}
+            </pre>
           </div>
         </div>
 

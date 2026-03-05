@@ -207,6 +207,60 @@ try {
 
 > **Note:** Authentication tokens are obtained from the user's JWT via `jwtManager`. The `TS_AUTH_TOKEN` environment variable is only for local development fallback.
 
+### Connector Key/Value Store
+
+The TDP connector key/value store lets data apps persist small pieces of state (user preferences, cached results, last-run timestamps, etc.) without an external database. The `TDPClient` from `@tetrascience-npm/ts-connectors-sdk` provides `getValue`, `getValues`, `saveValue`, and `saveValues` methods.
+
+**Reading and writing values with the user's JWT token:**
+
+```typescript
+import { TDPClient } from '@tetrascience-npm/ts-connectors-sdk';
+import { jwtManager } from '@tetrascience-npm/tetrascience-react-ui/server';
+
+// In an Express route handler:
+app.get('/api/kv/:key', async (req, res) => {
+  // 1. Get the user's JWT from request cookies
+  const userToken = await jwtManager.getTokenFromExpressRequest(req);
+  if (!userToken) return res.status(401).json({ error: 'Not authenticated' });
+
+  // 2. Create a TDPClient authenticated as the user
+  //    (CONNECTOR_ID, TDP_ENDPOINT, ORG_SLUG are read from env vars)
+  const client = new TDPClient({
+    authToken: userToken,
+    artifactType: 'data-app',
+  });
+  await client.init();
+
+  // 3. Read a value
+  const value = await client.getValue(req.params.key);
+  res.json({ key: req.params.key, value });
+});
+
+app.put('/api/kv/:key', async (req, res) => {
+  const userToken = await jwtManager.getTokenFromExpressRequest(req);
+  if (!userToken) return res.status(401).json({ error: 'Not authenticated' });
+
+  const client = new TDPClient({
+    authToken: userToken,
+    artifactType: 'data-app',
+  });
+  await client.init();
+
+  // Write a value (any JSON-serialisable type)
+  await client.saveValue(req.params.key, req.body.value, { secure: false });
+  res.json({ key: req.params.key, saved: true });
+});
+```
+
+**Reading multiple values at once:**
+
+```typescript
+const values = await client.getValues(['theme', 'locale', 'last-run']);
+// values[0] → theme, values[1] → locale, values[2] → last-run
+```
+
+> See the [example app](./examples/vite-themed-app/) for a complete working server with KV store endpoints.
+
 ### TDP Search (`server`)
 
 **TdpSearchManager** - Server-side handler for the TdpSearch component. Resolves auth from request cookies (via `jwtManager`), calls TDP `searchEql`, and returns the response so the frontend hook works with minimal wiring.

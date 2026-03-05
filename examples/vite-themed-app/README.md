@@ -72,41 +72,49 @@ When environment variables are not configured, the server returns mock data for 
 
 The key/value store lets data apps persist small pieces of state without an external database. The example endpoints in `server.ts` show how to use the `TDPClient` from `@tetrascience-npm/ts-connectors-sdk` to read, write, and delete values.
 
-### Example Usage
+### Frontend Usage
 
-```bash
-# Write a value
-curl -X PUT http://localhost:3001/api/kv/user-preference \
-  -H "Content-Type: application/json" \
-  -d '{"value": {"theme": "dark", "locale": "en-US"}}'
+The KV store endpoints are standard REST, so you can call them with `fetch` from any React component:
 
-# Read a single value
-curl http://localhost:3001/api/kv/user-preference
+```tsx
+// Write a value
+await fetch("/api/kv/user-preference", {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ value: { theme: "dark", locale: "en-US" } }),
+});
 
-# Read multiple values
-curl "http://localhost:3001/api/kv?keys=user-preference,last-run"
+// Read a single value
+const res = await fetch("/api/kv/user-preference");
+const data = await res.json(); // { key, value, ... }
 
-# Delete a value
-curl -X DELETE http://localhost:3001/api/kv/user-preference
+// Read multiple values
+const multi = await fetch("/api/kv?keys=user-preference,last-run");
+const values = await multi.json(); // [{ key, value }, ...]
+
+// Delete a value
+await fetch("/api/kv/user-preference", { method: "DELETE" });
 ```
 
-### How It Works
+See `src/App.tsx` and `src/useKvStore.ts` for a complete working example with loading state and error handling.
+
+### Server Side
 
 ```typescript
 import { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
 import { jwtManager } from "@tetrascience-npm/tetrascience-react-ui/server";
 
-// 1. Get user's JWT from request cookies
+// Get user's JWT from request cookies
 const userToken = await jwtManager.getTokenFromExpressRequest(req);
 
-// 2. Create a TDPClient with the user's token
+// Create a TDPClient with the user's token
 const client = new TDPClient({
   authToken: userToken,
   artifactType: "data-app",
 });
 await client.init();
 
-// 3. Read / write / delete values
+// Read / write / delete values
 const value = await client.getValue("my-key");
 await client.saveValue("my-key", { foo: "bar" }, { secure: false });
 ```

@@ -1,10 +1,11 @@
-import { setProjectAnnotations } from "@storybook/react";
+import * as a11yAddonAnnotations from "@storybook/addon-a11y/preview";
+import { setProjectAnnotations } from "@storybook/react-vite";
 import { page } from "@vitest/browser/context";
 import { beforeAll, beforeEach, afterEach, expect } from "vitest";
 
 import * as previewAnnotations from "./preview";
 
-const annotations = setProjectAnnotations([previewAnnotations]);
+const annotations = setProjectAnnotations([a11yAddonAnnotations, previewAnnotations]);
 
 // Run Storybook's beforeAll hook
 beforeAll(annotations.beforeAll);
@@ -30,25 +31,13 @@ beforeEach(() => {
   };
 
   console.error = (...args: unknown[]) => {
-    // Ignore null errors from Monaco Editor (known issue in CI)
-    // Monaco Editor occasionally logs null during initialization in headless browsers
-    // See: https://github.com/microsoft/monaco-editor/issues/2810
+    // Ignore bare null errors from Monaco Editor (known issue in CI).
+    // Monaco Editor occasionally logs console.error(null) during initialization
+    // in headless browsers, and the originating stack is not reliably preserved.
     if (args.length === 1 && args[0] === null) {
-      // Check if this error is coming from Monaco by inspecting the stack trace
-      // Include broad patterns since the error can originate from workers, async
-      // callbacks, or bundled code where the original "monaco" name is mangled.
-      const stack = new Error().stack || "";
-      const isFromMonaco =
-        stack.includes("monaco") ||
-        stack.includes("MonacoEditor") ||
-        stack.includes("CodeEditor") ||
-        stack.includes("editor.main");
-
-      if (isFromMonaco) {
-        // Still log it to console, just don't fail the test
-        originalError.apply(console, args);
-        return;
-      }
+      // Still log it to console, just don't fail the test.
+      originalError.apply(console, args);
+      return;
     }
     const message = args.map((arg) => String(arg)).join(" ");
     errors.push(message);

@@ -83,7 +83,7 @@ jobs:
 
       - name: 📤 Upload Test Screenshots to S3
         if: always()
-        run: yarn tsx scripts/upload-test-screenshots.ts
+        run: npx tsx scripts/upload-test-screenshots.ts
         env:
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
           GITHUB_REPOSITORY: ${{ github.repository }}

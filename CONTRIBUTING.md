@@ -62,7 +62,7 @@ Visit http://localhost:6006 to view the component library in Storybook.
 
 ## Path Aliases
 
-The project uses path aliases for cleaner imports (configured in `tsconfig.app.json` and `vite.config.ts`):
+The project uses path aliases for cleaner imports (configured in `tsconfig.json` and `vite.config.ts`):
 
 | Alias | Path |
 |-------|------|

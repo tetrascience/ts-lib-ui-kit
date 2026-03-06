@@ -4288,7 +4288,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/builder-vite@npm:^10.2.16":
+"@storybook/builder-vite@npm:^10.2.15":
   version: 10.2.16
   resolution: "@storybook/builder-vite@npm:10.2.16"
   dependencies:
@@ -4489,7 +4489,7 @@ __metadata:
     "@storybook/addon-docs": "npm:^10.2.15"
     "@storybook/addon-links": "npm:^10.2.15"
     "@storybook/addon-vitest": "npm:^10.2.15"
-    "@storybook/builder-vite": "npm:^10.2.16"
+    "@storybook/builder-vite": "npm:^10.2.15"
     "@storybook/react-vite": "npm:^10.2.15"
     "@tetrascience-npm/ts-connectors-sdk": "npm:^3.2.0"
     "@types/eslint-plugin-jsx-a11y": "npm:^6"

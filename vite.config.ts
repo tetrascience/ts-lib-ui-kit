@@ -1,3 +1,4 @@
+import fs from "fs";
 import path from "path";
 
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
@@ -6,6 +7,7 @@ import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 
 import pkg from "./package.json" with { type: "json" };
+import { generateZephyrMapping } from "./scripts/zephyr/storybook-zephyr-mapping";
 
 const banner = `/*
  * tetrascience-react-ui
@@ -56,6 +58,11 @@ const external: (string | RegExp)[] = [
   // to catch them and prevent the theme JSON files from being bundled.
   /monaco-themes/,
 ];
+
+const SCREENSHOT_DIR = path.resolve(process.cwd(), "test-results/screenshots");
+const storybookZephyrMapping = generateZephyrMapping();
+
+fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -145,6 +152,9 @@ export default defineConfig({
               },
             ],
             viewport: { width: 1920, height: 1080 },
+          },
+          provide: {
+            storybookZephyrMapping,
           },
           setupFiles: [".storybook/vitest.setup.ts"],
         },

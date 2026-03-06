@@ -307,7 +307,7 @@ yarn
 yarn dev
 ```
 
-Visit <http://localhost:5173> to see the example app with custom theming.
+Visit <http://localhost:6006>.
 
 ## Documentation
 

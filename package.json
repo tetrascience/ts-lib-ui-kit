@@ -140,7 +140,7 @@
     "@storybook/addon-docs": "^10.2.15",
     "@storybook/addon-links": "^10.2.15",
     "@storybook/addon-vitest": "^10.2.15",
-    "@storybook/builder-vite": "^10.2.16",
+    "@storybook/builder-vite": "^10.2.15",
     "@storybook/react-vite": "^10.2.15",
     "@types/eslint-plugin-jsx-a11y": "^6",
     "@types/jsdom": "^27",

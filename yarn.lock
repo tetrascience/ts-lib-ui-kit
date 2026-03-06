@@ -4288,6 +4288,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@storybook/builder-vite@npm:^10.2.16":
+  version: 10.2.16
+  resolution: "@storybook/builder-vite@npm:10.2.16"
+  dependencies:
+    "@storybook/csf-plugin": "npm:10.2.16"
+    ts-dedent: "npm:^2.0.0"
+  peerDependencies:
+    storybook: ^10.2.16
+    vite: ^5.0.0 || ^6.0.0 || ^7.0.0
+  checksum: 10c0/60e9b135a0b527f374de90fef51f597f06adda0b579942ea2ea5597298fa4ee45a5f8ab45e091e6b7a9bfdf456b38990960c34456bbba990af3090086552696f
+  languageName: node
+  linkType: hard
+
 "@storybook/csf-plugin@npm:10.2.15":
   version: 10.2.15
   resolution: "@storybook/csf-plugin@npm:10.2.15"
@@ -4309,6 +4322,30 @@ __metadata:
     webpack:
       optional: true
   checksum: 10c0/301ebda3a0a282f8e1ed485aecd96576b7319f5e76125e31091c0fb2b984bc30bb520faf4569e2c9b13a58dbf350acff166f2afd26f145578d96e6c0bcc2274f
+  languageName: node
+  linkType: hard
+
+"@storybook/csf-plugin@npm:10.2.16":
+  version: 10.2.16
+  resolution: "@storybook/csf-plugin@npm:10.2.16"
+  dependencies:
+    unplugin: "npm:^2.3.5"
+  peerDependencies:
+    esbuild: "*"
+    rollup: "*"
+    storybook: ^10.2.16
+    vite: "*"
+    webpack: "*"
+  peerDependenciesMeta:
+    esbuild:
+      optional: true
+    rollup:
+      optional: true
+    vite:
+      optional: true
+    webpack:
+      optional: true
+  checksum: 10c0/f4171215322bc33688755ae8acbac6f7ab4939f93e939039f4b5b01fc074a2f9ec39ec0212f57e52b90473d6d8da42ef1187ec89d25305cf09870d0c2a96eb50
   languageName: node
   linkType: hard
 
@@ -4452,6 +4489,7 @@ __metadata:
     "@storybook/addon-docs": "npm:^10.2.15"
     "@storybook/addon-links": "npm:^10.2.15"
     "@storybook/addon-vitest": "npm:^10.2.15"
+    "@storybook/builder-vite": "npm:^10.2.16"
     "@storybook/react-vite": "npm:^10.2.15"
     "@tetrascience-npm/ts-connectors-sdk": "npm:^3.2.0"
     "@types/eslint-plugin-jsx-a11y": "npm:^6"

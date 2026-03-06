@@ -5,9 +5,9 @@
   "type": "module",
   "author": "TetraScience",
   "license": "Apache-2.0",
-  "main": "index.cjs",
-  "module": "index.js",
-  "types": "index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "LICENSE",
@@ -16,55 +16,55 @@
   "exports": {
     ".": {
       "import": {
-        "types": "./index.d.ts",
-        "default": "./index.js"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       },
       "require": {
-        "types": "./index.d.ts",
-        "default": "./index.cjs"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs"
       }
     },
     "./server": {
       "import": {
-        "types": "./server.d.ts",
-        "default": "./server.js"
+        "types": "./dist/server.d.ts",
+        "default": "./dist/server.js"
       },
       "require": {
-        "types": "./server.d.ts",
-        "default": "./server.cjs"
+        "types": "./dist/server.d.ts",
+        "default": "./dist/server.cjs"
       }
     },
     "./server/providers/athena": {
       "import": {
-        "types": "./providers/athena.d.ts",
-        "default": "./providers/athena.js"
+        "types": "./dist/providers/athena.d.ts",
+        "default": "./dist/providers/athena.js"
       },
       "require": {
-        "types": "./providers/athena.d.ts",
-        "default": "./providers/athena.cjs"
+        "types": "./dist/providers/athena.d.ts",
+        "default": "./dist/providers/athena.cjs"
       }
     },
     "./server/providers/snowflake": {
       "import": {
-        "types": "./providers/snowflake.d.ts",
-        "default": "./providers/snowflake.js"
+        "types": "./dist/providers/snowflake.d.ts",
+        "default": "./dist/providers/snowflake.js"
       },
       "require": {
-        "types": "./providers/snowflake.d.ts",
-        "default": "./providers/snowflake.cjs"
+        "types": "./dist/providers/snowflake.d.ts",
+        "default": "./dist/providers/snowflake.cjs"
       }
     },
     "./server/providers/databricks": {
       "import": {
-        "types": "./providers/databricks.d.ts",
-        "default": "./providers/databricks.js"
+        "types": "./dist/providers/databricks.d.ts",
+        "default": "./dist/providers/databricks.js"
       },
       "require": {
-        "types": "./providers/databricks.d.ts",
-        "default": "./providers/databricks.cjs"
+        "types": "./dist/providers/databricks.d.ts",
+        "default": "./dist/providers/databricks.cjs"
       }
     },
-    "./index.css": "./index.css",
+    "./index.css": "./dist/index.css",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -140,6 +140,7 @@
     "@storybook/addon-docs": "^10.2.15",
     "@storybook/addon-links": "^10.2.15",
     "@storybook/addon-vitest": "^10.2.15",
+    "@storybook/builder-vite": "^10.2.16",
     "@storybook/react-vite": "^10.2.15",
     "@types/eslint-plugin-jsx-a11y": "^6",
     "@types/jsdom": "^27",

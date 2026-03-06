@@ -1,11 +1,13 @@
 import * as a11yAddonAnnotations from "@storybook/addon-a11y/preview";
 import { setProjectAnnotations } from "@storybook/react-vite";
-import { page } from "@vitest/browser/context";
-import { beforeAll, beforeEach, afterEach, expect } from "vitest";
+import { commands, page } from "@vitest/browser/context";
+import { afterEach, beforeAll, beforeEach, expect, inject } from "vitest";
 
 import * as previewAnnotations from "./preview";
 
 const annotations = setProjectAnnotations([a11yAddonAnnotations, previewAnnotations]);
+
+type ZephyrMapping = Record<string, string[]>;
 
 // Run Storybook's beforeAll hook
 beforeAll(annotations.beforeAll);
@@ -19,6 +21,42 @@ let errors: string[] = [];
 
 // Pattern to extract Zephyr IDs from test names: [SW-T123] or [SW-T100,SW-T101]
 const ZEPHYR_ID_PATTERN = /\[([A-Z]+-T\d+(?:,[A-Z]+-T\d+)*)\]/;
+const SCREENSHOT_DIR = "test-results/screenshots";
+
+function extractLegacyZephyrIds(testName: string): string[] {
+  const match = testName.match(ZEPHYR_ID_PATTERN);
+  return match ? match[1].split(",").map((id) => id.trim()) : [];
+}
+
+function normalizeStoryFilePath(filePath: string): string {
+  const normalizedPath = filePath.replaceAll("\\", "/");
+  const srcPathIndex = normalizedPath.lastIndexOf("/src/");
+
+  if (srcPathIndex >= 0) {
+    return normalizedPath.slice(srcPathIndex + 1);
+  }
+
+  return normalizedPath.replace(/^\.\//, "");
+}
+
+function toStoryKey(filePath: string, testName: string): string {
+  return `${normalizeStoryFilePath(filePath)}::${testName}`;
+}
+
+function getZephyrMapping(): ZephyrMapping {
+  return (inject("storybookZephyrMapping" as never) as ZephyrMapping | undefined) ?? {};
+}
+
+function getZephyrIdsForTask(task: { name: string; file?: { filepath?: string } }): string[] {
+  const legacyIds = extractLegacyZephyrIds(task.name);
+  const filepath = task.file?.filepath;
+  if (!filepath) return legacyIds;
+
+  const storyKey = toStoryKey(filepath, task.name);
+  const mappedIds = getZephyrMapping()[storyKey] || [];
+
+  return [...new Set([...mappedIds, ...legacyIds])];
+}
 
 beforeEach(() => {
   warnings = [];
@@ -64,21 +102,20 @@ afterEach(async ({ task }) => {
   console.error = originalError;
 
   // Capture screenshot with Zephyr ID in filename
-  const testName = task.name;
-  const match = testName.match(ZEPHYR_ID_PATTERN);
+  let zephyrIds: string[] = [];
 
-  if (match) {
-    // Extract all Zephyr IDs (handles comma-separated IDs like [SW-T100,SW-T101])
-    const zephyrIds = match[1].split(",").map((id) => id.trim());
+  try {
+    zephyrIds = getZephyrIdsForTask(task);
+  } catch {
+    zephyrIds = extractLegacyZephyrIds(task.name);
+  }
 
+  if (zephyrIds.length > 0) {
     // Take screenshot for each Zephyr ID
     for (const zephyrId of zephyrIds) {
       try {
-        // page.screenshot() path is relative to the test file location
-        // Stories are at src/components/*/*/*.stories.tsx (4 levels deep from root)
-        await page.screenshot({
-          path: `../../../../test-results/screenshots/${zephyrId}.png`,
-        });
+        const screenshot = await page.screenshot({ save: false });
+        await commands.writeFile(`${SCREENSHOT_DIR}/${zephyrId}.png`, screenshot, "base64");
       } catch {
         // Don't fail the test if screenshot fails - silently continue
         // Screenshots may fail in some environments

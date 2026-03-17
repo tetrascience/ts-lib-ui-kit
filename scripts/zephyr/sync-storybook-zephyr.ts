@@ -4,13 +4,13 @@
  *
  * This script scans src/components for story files and creates corresponding
  * test cases in Zephyr Scale. Folder mapping is auto-generated from the
- * directory structure (e.g., atoms/ -> "UI Kit - Atoms").
+ * directory structure (e.g., atoms/ -> subfolder "Atoms" under root "React UI Kit").
  *
  * Environment Variables:
  *   ZEPHYR_TOKEN - Zephyr Scale API token (required)
  *   ZEPHYR_PROJECT_KEY - Jira project key (default: 'SW')
  *   ZEPHYR_LABELS - Comma-separated labels (default: 'storybook,vitest,automated')
- *   ZEPHYR_FOLDER_PREFIX - Prefix for Zephyr folder names (default: 'UI Kit')
+ *   ZEPHYR_FOLDER_PREFIX - Root folder name in Zephyr (default: 'React UI Kit')
  */
 
 import fs from 'fs';
@@ -45,6 +45,7 @@ export interface StoryCase {
 interface ZephyrFolder {
   id: string;
   name: string;
+  parentId?: string;
 }
 interface FolderCache {
   [key: string]: string | null;
@@ -70,7 +71,7 @@ const ZEPHYR_LABELS = process.env.ZEPHYR_LABELS?.split(',')
   .filter(Boolean) || ['storybook', 'vitest', 'automated'];
 
 // Folder prefix for Zephyr - can be customized via env var
-const FOLDER_PREFIX = process.env.ZEPHYR_FOLDER_PREFIX || 'UI Kit';
+const FOLDER_PREFIX = process.env.ZEPHYR_FOLDER_PREFIX || 'React UI Kit';
 
 // Dynamically generate folder mapping from src/components directory structure
 function generateFolderMapping(): { [key: string]: string } {
@@ -87,8 +88,7 @@ function generateFolderMapping(): { [key: string]: string } {
     if (entry.isDirectory()) {
       // Convert directory name to title case for Zephyr folder name
       // e.g., "atoms" -> "Atoms", "molecules" -> "Molecules"
-      const titleCase = entry.name.charAt(0).toUpperCase() + entry.name.slice(1);
-      mapping[entry.name] = `${FOLDER_PREFIX} - ${titleCase}`;
+      mapping[entry.name] = entry.name.charAt(0).toUpperCase() + entry.name.slice(1);
     }
   }
 
@@ -384,18 +384,32 @@ async function getFolders(): Promise<FolderCache> {
     return {};
   }
   const data = await response.json();
-  const folders = data.values || [];
+  const folders: ZephyrFolder[] = data.values || [];
+
+  // Find or create the root folder
+  let rootFolder = folders.find((f) => f.name === FOLDER_PREFIX && !f.parentId);
+  if (!rootFolder) {
+    try {
+      rootFolder = await createFolder(FOLDER_PREFIX);
+      console.log(`[INFO] Created root folder: ${FOLDER_PREFIX}`);
+    } catch (e: unknown) {
+      console.warn(`[WARN] Could not create root folder ${FOLDER_PREFIX}:`, e instanceof Error ? e.message : String(e));
+      return {};
+    }
+  }
+  const rootFolderId = rootFolder.id;
+
   for (const [compType, folderName] of Object.entries(FOLDER_MAPPING)) {
-    const existing = folders.find((f: ZephyrFolder) => f.name === folderName);
+    const existing = folders.find((f) => f.name === folderName && f.parentId === rootFolderId);
     if (existing) {
       folderIdCache[compType] = existing.id;
     } else {
       try {
-        const newF = await createFolder(folderName);
+        const newF = await createFolder(folderName, rootFolderId);
         folderIdCache[compType] = newF.id;
-        console.log(`[INFO] Created folder: ${folderName}`);
+        console.log(`[INFO] Created subfolder: ${FOLDER_PREFIX}/${folderName}`);
       } catch (e: unknown) {
-        console.warn(`[WARN] Could not create folder ${folderName}:`, e instanceof Error ? e.message : String(e));
+        console.warn(`[WARN] Could not create subfolder ${folderName}:`, e instanceof Error ? e.message : String(e));
         folderIdCache[compType] = null;
       }
     }
@@ -403,12 +417,18 @@ async function getFolders(): Promise<FolderCache> {
   return folderIdCache;
 }
 
-async function createFolder(folderName: string): Promise<ZephyrFolder> {
+async function createFolder(folderName: string, parentId?: string): Promise<ZephyrFolder> {
   const url = `${ZEPHYR_BASE_URL}/folders`;
+  const body: { projectKey: string; name: string; folderType: string; parentId?: string } = {
+    projectKey: PROJECT_KEY,
+    name: folderName,
+    folderType: 'TEST_CASE',
+  };
+  if (parentId) body.parentId = parentId;
   const response = await fetch(url, {
     method: 'POST',
     headers: { Authorization: `Bearer ${getZephyrToken()}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ projectKey: PROJECT_KEY, name: folderName, folderType: 'TEST_CASE' }),
+    body: JSON.stringify(body),
   });
   if (!response.ok) {
     const errorText = await response.text();

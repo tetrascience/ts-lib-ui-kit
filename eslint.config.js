@@ -198,6 +198,13 @@ export default tseslint.config(
       "no-magic-numbers": "off",
     },
   },
+  // UI components - allow inline styles and magic numbers for layout
+  {
+    files: ["src/components/**/*.tsx"],
+    rules: {
+      "react/forbid-component-props": "off",
+    },
+  },
   // Script files - more lenient cognitive complexity for build/automation scripts
   {
     files: ["scripts/**/*.ts", "scripts/**/*.tsx"],

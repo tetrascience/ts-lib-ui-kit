@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
+import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
@@ -36,13 +37,7 @@ const appAlias = {
 // Shared short-path aliases — used in both app and lib modes
 export const alias = {
   ...appAlias,
-  "@atoms": path.resolve(__dirname, "./src/components/atoms"),
-  "@molecules": path.resolve(__dirname, "./src/components/molecules"),
-  "@organisms": path.resolve(__dirname, "./src/components/organisms"),
-  "@styles": path.resolve(__dirname, "./src/styles"),
-  "@utils": path.resolve(__dirname, "./src/utils"),
-  "@server": path.resolve(__dirname, "./src/server"),
-  "@assets": path.resolve(__dirname, "./src/assets"),
+  "@": path.resolve(__dirname, "./src"),
 };
 
 const external: (string | RegExp)[] = [
@@ -68,6 +63,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 export default defineConfig({
   plugins: [
     react(),
+    tailwindcss(),
     dts({
       rollupTypes: true,
     }),
@@ -112,21 +108,6 @@ export default defineConfig({
           ],
           exclude: ["node_modules", "dist", "examples"],
           environmentMatchGlobs: [["src/server/**/*.test.ts", "node"]],
-          coverage: {
-            provider: "v8",
-            reporter: ["text", "json", "html"],
-            include: ["src/**/*.ts", "src/**/*.tsx"],
-            exclude: [
-              "**/*.test.ts",
-              "**/*.test.tsx",
-              "**/*.spec.ts",
-              "**/*.spec.tsx",
-              "**/*.stories.ts",
-              "**/*.stories.tsx",
-              "**/index.ts",
-              "**/index.tsx",
-            ],
-          },
           mockReset: true,
           restoreMocks: true,
         },
@@ -158,7 +139,23 @@ export default defineConfig({
           },
           setupFiles: [".storybook/vitest.setup.ts"],
         },
-      },
+      }
     ],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      include: ["src/**/*.ts", "src/**/*.tsx"],
+      exclude: [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "**/*.stories.ts",
+        "**/*.stories.tsx",
+        "**/index.ts",
+        "**/index.tsx",
+        
+      ],
+    },
   },
 });

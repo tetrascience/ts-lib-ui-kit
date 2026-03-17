@@ -1,0 +1,51 @@
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.content-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.container-with-tabs {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.main-tabs-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.main-layout {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+
+  // When there are no children, show a placeholder
+  &:empty::before {
+    content: "Main content area";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 16px;
+    font-weight: 500;
+  }
+}

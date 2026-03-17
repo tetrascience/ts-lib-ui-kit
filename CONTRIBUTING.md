@@ -67,14 +67,11 @@ The project uses path aliases for cleaner imports (configured in `tsconfig.json`
 | Alias | Path |
 |-------|------|
 | `@/*` | `src/*` |
-| `@assets/*` | `src/assets/*` |
-| `@atoms/*` | `src/components/atoms/*` |
-| `@molecules/*` | `src/components/molecules/*` |
-| `@organisms/*` | `src/components/organisms/*` |
-| `@styles/*` | `src/styles/*` |
-| `@utils/*` | `src/utils/*` |
-| `@server/*` | `src/server/*` |
-
+| `components/*` | `src/components/*` |
+| `utils/*` | `src/utils/*` |
+| `ui/*` | `src/ui/*` |
+| `lib/*` | `src/lib/*` |
+| `hooks/*` | `src/hooks/*` |
 ## Build System
 
 The library uses Rollup to produce:

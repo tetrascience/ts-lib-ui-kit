@@ -9,7 +9,9 @@ export default {
   plugins: [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
-    ["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }],
+    ...(isStable
+      ? [["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }]]
+      : []),
     [
       "@semantic-release/npm",
       { npmPublish: false }, // versioning only — publishing handled by existing workflows
@@ -17,7 +19,7 @@ export default {
     [
       "@semantic-release/git",
       {
-        assets: ["CHANGELOG.md", "package.json"],
+        assets: isStable ? ["CHANGELOG.md", "package.json"] : ["package.json"],
         message: "chore(release): ${nextRelease.version} [skip ci]",
       },
     ],

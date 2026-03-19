@@ -59,6 +59,7 @@ Visit http://localhost:6006 to view the component library in Storybook.
 | `yarn typecheck` | Run TypeScript type checking |
 | `yarn prepare` | Set up Husky git hooks |
 | `yarn prepublishOnly` | Build the package before publishing |
+| `yarn release` | Run semantic-release (CI only — use `--dry-run --no-ci` locally) |
 
 ## Path Aliases
 
@@ -148,7 +149,66 @@ export const MyComponent = ({
 
 ### Pre-commit Hooks
 
-The project uses Husky with lint-staged to run checks before commits.
+The project uses [Husky](https://typicode.github.io/husky/) to run two git hooks automatically:
+
+| Hook | Trigger | What it does |
+|------|---------|--------------|
+| `pre-commit` | Before every commit | Runs `lint-staged` — auto-fixes ESLint issues on staged `*.{js,jsx,ts,tsx}` files |
+| `commit-msg` | After you type a commit message | Runs `commitlint` — rejects messages that don't follow [Conventional Commits](#commit-message-format) |
+
+If a hook fails, the commit is aborted. Fix the reported issue and try again.
+
+### Commit Message Format
+
+All commit messages must follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. This is enforced locally by the `commit-msg` hook and drives automated versioning on CI.
+
+**Structure:**
+
+```
+<type>(<optional scope>): <short description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Types and their effect on the release version:**
+
+| Type | Description | Version bump |
+|------|-------------|--------------|
+| `feat` | A new feature | `minor` (0.x.0) |
+| `fix` | A bug fix | `patch` (0.0.x) |
+| `feat!` or `fix!` | Breaking change (via `!`) | `major` (x.0.0) |
+| `docs` | Documentation only | none |
+| `style` | Formatting, whitespace | none |
+| `refactor` | Code restructuring, no behaviour change | none |
+| `test` | Adding or fixing tests | none |
+| `chore` | Build process, tooling, dependencies | none |
+| `ci` | CI/CD configuration | none |
+| `perf` | Performance improvement | `patch` (0.0.x) |
+
+**Breaking changes** can be declared in two ways:
+
+```bash
+# 1. Append ! after the type
+feat!: remove deprecated `size` prop from Button
+
+# 2. Add a BREAKING CHANGE footer
+feat: redesign Table component API
+
+BREAKING CHANGE: The `variant` prop has been renamed to `intent`.
+Replace all usages of `variant="primary"` with `intent="primary"`.
+```
+
+**Examples:**
+
+```bash
+git commit -m "feat(button): add loading state prop"
+git commit -m "fix(tooltip): correct positioning on scroll"
+git commit -m "chore: upgrade vitest to v3"
+git commit -m "docs: add usage examples to THEMING.md"
+git commit -m "feat!: drop support for Node 18"
+```
 
 ### Linting
 
@@ -217,11 +277,38 @@ export const MyStory: Story = {
    };
    ```
 
-## Publishing
+## Release Process
 
-The library is published to npm. Before publishing:
+Releases are fully automated via [semantic-release](https://semantic-release.gitbook.io/) — **do not manually edit `package.json` version or create git tags**.
 
-1. Ensure all changes are committed
-2. Update the version in `package.json`
-3. Run `yarn build` to verify the build succeeds
-4. The `prepublishOnly` script will automatically build before publish
+### How it works
+
+Every push to `main` triggers the `Release` GitHub Action (`.github/workflows/release.yml`), which:
+
+1. Analyses all commits since the last release using their [Conventional Commit](#commit-message-format) types
+2. Determines the next version number (or skips if no releasable commits are found)
+3. Generates or updates `CHANGELOG.md`
+4. Bumps the version in `package.json`
+5. Creates a git tag (e.g. `v1.2.0`) and a GitHub Release with auto-generated release notes
+6. Commits the updated `CHANGELOG.md` and `package.json` back to `main` with the message `chore(release): <version> [skip ci]`
+
+Separate publish workflows then handle distributing the built package to npm and the internal JFrog registry.
+
+### Version bump rules
+
+| Commits since last release | Next version |
+|---------------------------|--------------|
+| Only `fix`, `perf`, `refactor` | Patch — `1.0.0` → `1.0.1` |
+| At least one `feat` | Minor — `1.0.0` → `1.1.0` |
+| Any commit with `!` or `BREAKING CHANGE` footer | Major — `1.0.0` → `2.0.0` |
+| Only `chore`, `docs`, `style`, `test`, `ci` | No release |
+
+### Dry-run locally
+
+To preview what the next release would be without publishing anything:
+
+```bash
+npx semantic-release --dry-run --no-ci
+```
+
+This requires a `GITHUB_TOKEN` environment variable with repo read access.

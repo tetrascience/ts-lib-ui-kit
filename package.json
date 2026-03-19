@@ -84,6 +84,7 @@
     "prepare": "husky",
     "prepublishOnly": "yarn run build",
     "release": "semantic-release",
+    "release:dry-run": "semantic-release --dry-run --no-ci",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix --max-warnings 0",
     "typecheck": "tsc --noEmit",

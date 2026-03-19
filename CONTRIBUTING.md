@@ -59,7 +59,8 @@ Visit http://localhost:6006 to view the component library in Storybook.
 | `yarn typecheck` | Run TypeScript type checking |
 | `yarn prepare` | Set up Husky git hooks |
 | `yarn prepublishOnly` | Build the package before publishing |
-| `yarn release` | Run semantic-release (CI only — use `--dry-run --no-ci` locally) |
+| `yarn release` | Run semantic-release (CI use only) |
+| `yarn release:dry-run` | Preview the next release locally without publishing anything |
 
 ## Path Aliases
 
@@ -308,7 +309,7 @@ Separate publish workflows then handle distributing the built package to npm and
 To preview what the next release would be without publishing anything:
 
 ```bash
-npx semantic-release --dry-run --no-ci
+yarn release:dry-run
 ```
 
 This requires a `GITHUB_TOKEN` environment variable with repo read access.

@@ -1,5 +1,11 @@
+const isStable = process.env.RELEASE_TYPE === "stable";
+
 export default {
-  branches: ["main"],
+  branches: [
+    isStable
+      ? "main"
+      : { name: "main", prerelease: "beta", channel: "beta" },
+  ],
   plugins: [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",

@@ -7,6 +7,15 @@ on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Release type"
+        required: false
+        default: "stable"
+        type: choice
+        options:
+          - stable
+          - beta
 
 permissions:
   contents: write
@@ -35,4 +44,5 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || 'beta' }}
         run: yarn release

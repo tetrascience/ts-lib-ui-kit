@@ -46,12 +46,6 @@ const external: (string | RegExp)[] = [
   "react-dom",
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
-  // import.meta.glob("/node_modules/monaco-themes/themes/*.json") generates
-  // file-path-based dynamic imports at build time. Those resolved paths
-  // (e.g. ../../node_modules/monaco-themes/themes/Dracula.json) don't match
-  // the string "monaco-themes" in the external list above, so we need a regex
-  // to catch them and prevent the theme JSON files from being bundled.
-  /monaco-themes/,
 ];
 
 const SCREENSHOT_DIR = path.resolve(process.cwd(), "test-results/screenshots");

@@ -6592,7 +6592,6 @@ __metadata:
     lint-staged: "npm:^15.2.0"
     lucide-react: "npm:^0.577.0"
     monaco-editor: "npm:^0.52.2"
-    monaco-themes: "npm:0.4.7"
     playwright: "npm:^1.58.2"
     plotly.js: "npm:^3.0.1"
     plotly.js-dist: "npm:^2.35.2"
@@ -11045,13 +11044,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-plist@npm:^0.1.3":
-  version: 0.1.3
-  resolution: "fast-plist@npm:0.1.3"
-  checksum: 10c0/440421e09ef94497a94fa3babdd49d17ad968728823e62b7e055e79a38b38e3b84d7561e893ef2414c99572e107a41ae393b78fb9db1908a65e21432829d8289
-  languageName: node
-  linkType: hard
-
 "fast-uri@npm:^3.0.1":
   version: 3.1.0
   resolution: "fast-uri@npm:3.1.0"
@@ -14908,15 +14900,6 @@ __metadata:
   version: 0.52.2
   resolution: "monaco-editor@npm:0.52.2"
   checksum: 10c0/5a92da64f1e2ab375c0ce99364137f794d057c97bed10ecc65a08d6e6846804b8ecbd377eacf01e498f7dfbe1b21e8be64f728256681448f0484df90e767b435
-  languageName: node
-  linkType: hard
-
-"monaco-themes@npm:0.4.7":
-  version: 0.4.7
-  resolution: "monaco-themes@npm:0.4.7"
-  dependencies:
-    fast-plist: "npm:^0.1.3"
-  checksum: 10c0/872bb90826bc737bb6647978d7c0783207e0fc9dc42fdbe760c2d6b56ec75a207b882ee5c401a3c9830d3663e9e0cfaeac9d7bf58a5dc52842d81414ec8351c1
   languageName: node
   linkType: hard
 

@@ -90,7 +90,7 @@
     {
       "name": "code-editor",
       "type": "registry:ui",
-      "dependencies": ["@monaco-editor/react", "monaco-editor", "monaco-themes", "styled-components", "lucide-react"],
+      "dependencies": ["@monaco-editor/react", "monaco-editor", "styled-components", "lucide-react"],
       "registryDependencies": ["button", "tooltip"],
       "files": [
         { "path": "src/components/ui/code-editor.tsx", "type": "registry:ui" }

@@ -1,19 +1,7 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
-    inputs:
-      release_type:
-        description: "Release type"
-        required: false
-        default: "stable"
-        type: choice
-        options:
-          - stable
-          - beta
 
 permissions:
   contents: write
@@ -33,14 +21,10 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Enable Corepack
-        run: corepack enable
-
       - name: Install
         run: yarn install --immutable
 
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || 'beta' }}
         run: yarn release

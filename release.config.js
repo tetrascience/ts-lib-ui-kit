@@ -1,25 +1,18 @@
-const isStable = process.env.RELEASE_TYPE === "stable";
 
 export default {
-  branches: [
-    isStable
-      ? "main"
-      : { name: "main", prerelease: "beta", channel: "beta" },
-  ],
+  branches: ["main"],
   plugins: [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
-    ...(isStable
-      ? [["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }]]
-      : []),
+    ["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }],
     [
       "@semantic-release/npm",
-      { npmPublish: false }, // versioning only — publishing handled by existing workflows
+      { npmPublish: false },
     ],
     [
       "@semantic-release/git",
       {
-        assets: isStable ? ["CHANGELOG.md", "package.json"] : ["package.json"],
+        assets: ["CHANGELOG.md", "package.json"],
         message: "chore(release): ${nextRelease.version} [skip ci]",
       },
     ],

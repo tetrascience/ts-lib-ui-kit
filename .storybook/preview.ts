@@ -26,6 +26,9 @@ const preview: Preview = {
       ),
   ],
   parameters: {
+    a11y: {
+      test: 'todo',
+    },
     backgrounds: {
       disable: true,
     },

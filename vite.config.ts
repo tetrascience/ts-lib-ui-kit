@@ -113,6 +113,8 @@ export default defineConfig({
           storybookTest({
             configDir: ".storybook",
             storybookScript: "yarn storybook --ci",
+            // 👇 Use the environment variable you passed
+            storybookUrl: process.env.SB_URL,
           }),
         ],
         test: {
@@ -147,8 +149,7 @@ export default defineConfig({
         "**/*.stories.ts",
         "**/*.stories.tsx",
         "**/index.ts",
-        "**/index.tsx",
-        
+        "**/index.tsx",     
       ],
     },
   },

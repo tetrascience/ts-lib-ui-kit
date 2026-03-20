@@ -1,12 +1,7 @@
 name: Storybook Tests
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  deployment_status:
   workflow_dispatch:
     inputs:
       test_cases:
@@ -22,9 +17,11 @@ permissions:
 jobs:
   storybook-tests:
     name: Storybook E2E Tests
-    # Don't run on forked PRs to protect secrets
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Only run on non-forked repos, on successful deployments or manual triggers
+    if: github.event.repository.fork == false && (github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success'))
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
     timeout-minutes: 30
 
     steps:
@@ -37,9 +34,6 @@ jobs:
           node-version: '20'
           cache: 'yarn'
 
-      - name: 🧶 Enable Corepack
-        run: corepack enable
-
       - name: 📦 Install dependencies
         run: yarn install --immutable
 
@@ -50,14 +44,14 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
 
-      - name: 🎭 Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
       - name: 🧪 Run Storybook tests (all)
         if: ${{ !inputs.test_cases }}
         run: yarn test:storybook:ci
         continue-on-error: true
         id: test
+        # 👇 Pass the Storybook URL as an environment variable
+        env:
+          SB_URL: '${{ github.event.deployment_status.environment_url }}'
 
       - name: 🧪 Run Storybook tests (filtered)
         if: ${{ inputs.test_cases }}

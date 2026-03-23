@@ -2,6 +2,8 @@
 
 This is a React 19 + TypeScript UI component library published as `@tetrascience-npm/tetrascience-react-ui`. It uses Vite 7 (library mode), Tailwind CSS 4, shadcn/ui, Storybook 10, Vitest, and Yarn 4.
 
+> **Note:** Import ordering, accessibility, cognitive complexity, array method preferences, and other code-style rules are already enforced by ESLint (`yarn lint --max-warnings 0`). Copilot should focus on the architectural and design concerns below that automated linting cannot catch.
+
 ## Architecture & Structure
 
 - Components are organised under `src/components/` in three categories:
@@ -19,11 +21,9 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
 - **Do NOT use `React.forwardRef`** — it is deprecated. Use the **ref-as-prop pattern** instead: accept `ref?: React.Ref<HTMLElement>` as a regular prop.
 - Prefer **function components** with destructured props.
 - Use `useMemo` and `useCallback` for computed values and stable callbacks.
-- Follow React hooks rules strictly (`react-hooks/rules-of-hooks`, `react-hooks/exhaustive-deps`).
 
 ## TypeScript
 
-- Use `type` keyword for type-only imports: `import type { FC } from 'react'`.
 - Prefer `interface` for object shapes (extendable), `type` for unions/intersections.
 - All component props should extend appropriate HTML element attributes via `React.ComponentProps<"element">`.
 - **Flag all uses of `any`** — both new and existing. The ESLint rule is currently off, but we are incrementally eliminating `any` to enable it. Suggest `unknown` or proper generics as replacements.
@@ -37,15 +37,6 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
 - A `ThemeProvider` component supports programmatic theme overrides (see `THEMING.md`).
 - Do NOT hardcode colors, spacing, or font sizes — use Tailwind semantic classes (`bg-primary`, `text-muted-foreground`, etc.).
 - Icons come from `lucide-react`.
-- Flag any hardcoded magic numbers — extract them to named constants.
-
-## Accessibility
-
-- Ensure proper ARIA labels and roles on interactive elements.
-- All images must have `alt` text.
-- Interactive elements must be keyboard-navigable.
-- Anchors must have content and valid `href`.
-- Flag missing `aria-*` attributes on custom interactive components.
 
 ## Testing
 
@@ -54,19 +45,8 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
 - Storybook tests use `play` functions with `storybook/test` utilities (`within`, `expect`, `userEvent`).
 - Storybook tests may include Zephyr Scale test case IDs in `parameters.zephyr.testCaseId` — do not remove or modify these.
 
-## Import Organization
-
-- Imports must be ordered: builtin → external → internal → parent → sibling → index → type.
-- Separate groups with blank lines.
-- Alphabetize within groups.
-- No duplicate imports.
-
 ## Code Quality
 
-- Flag functions with high cognitive complexity (threshold: 15 for src, 75 for scripts).
-- Flag duplicated logic or identical functions — suggest extraction.
-- Prefer `array.find()` over `filter()[0]`, `flatMap` over `map().flat()`, `includes` over `indexOf !== -1`.
-- Prefer ternary for single-line conditionals.
 - Do NOT use `eslint-disable` comments — refactor the code instead. `@ts-ignore` is allowed only with a description.
 
 ## PR & Commit Conventions

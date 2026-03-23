@@ -24,7 +24,7 @@ Before committing, always run:
 yarn lint && yarn typecheck && yarn test:all
 ```
 
-Husky + lint-staged auto-runs ESLint on staged `.ts`/`.tsx` files.
+Husky + lint-staged auto-runs ESLint on staged `*.{js,jsx,ts,tsx}` files.
 
 ## Project Structure
 

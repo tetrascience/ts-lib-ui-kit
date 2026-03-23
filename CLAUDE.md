@@ -67,6 +67,7 @@ src/
 - ESLint 9 flat config (`eslint.config.js`) + Prettier (`.prettierrc`)
 - Do not use `eslint-disable` comments — refactor instead
 - `@ts-ignore` allowed only with a description
+- Flag all `any` usage (new and existing) — incrementally eliminating to enable `no-explicit-any`
 - Import order: builtin → external → internal → parent → sibling → index → type
 - Use `type` keyword for type-only imports
 

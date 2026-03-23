@@ -26,7 +26,7 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
 - Use `type` keyword for type-only imports: `import type { FC } from 'react'`.
 - Prefer `interface` for object shapes (extendable), `type` for unions/intersections.
 - All component props should extend appropriate HTML element attributes via `React.ComponentProps<"element">`.
-- `@typescript-eslint/no-explicit-any` is currently off — do not flag existing `any` usage, but prefer `unknown` or proper generics in new code.
+- **Flag all uses of `any`** — both new and existing. The ESLint rule is currently off, but we are incrementally eliminating `any` to enable it. Suggest `unknown` or proper generics as replacements.
 
 ## Styling
 
@@ -82,7 +82,6 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
 
 ## What NOT to Flag
 
-- Existing uses of `any` in the codebase (`no-explicit-any` is off).
 - `React.forwardRef` in existing code (migration is in progress).
 - SCSS in legacy chart components.
 - Magic numbers in test files, story files, constants files, config files, or script files.

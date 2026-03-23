@@ -159,7 +159,7 @@ function MyComponent({
 export { MyComponent, myComponentVariants }
 ```
 
-**Note:** `React.forwardRef` is deprecated in React 19. All components in this library use the ref-as-prop pattern instead. New components should follow this pattern.
+**Note:** This library prefers the ref-as-prop pattern. Avoid `React.forwardRef` in new components — existing usages are being migrated.
 
 ### Adding a New Component
 

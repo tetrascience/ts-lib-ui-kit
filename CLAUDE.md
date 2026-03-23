@@ -54,7 +54,6 @@ src/
 - CVA (`class-variance-authority`) for variant definitions
 - Design tokens as CSS custom properties in `src/index.css` (oklch)
 - Icons from `lucide-react`
-- No styled-components — use Tailwind + CVA exclusively
 
 ## Testing
 
@@ -68,8 +67,6 @@ src/
 - Do not use `eslint-disable` comments — refactor instead
 - `@ts-ignore` allowed only with a description
 - Flag all `any` usage (new and existing) — incrementally eliminating to enable `no-explicit-any`
-- Import order: builtin → external → internal → parent → sibling → index → type
-- Use `type` keyword for type-only imports
 
 ## Zephyr Integration
 

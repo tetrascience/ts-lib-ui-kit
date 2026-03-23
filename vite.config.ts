@@ -137,7 +137,7 @@ export default defineConfig({
     ],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html"],
+      reporter: ["text", "json", "json-summary", "html"],
       include: ["src/**/*.ts", "src/**/*.tsx"],
       exclude: [
         "**/*.test.ts",
@@ -148,8 +148,13 @@ export default defineConfig({
         "**/*.stories.tsx",
         "**/index.ts",
         "**/index.tsx",
-        
       ],
+      thresholds: {
+        lines: 83,
+        branches: 81,
+        functions: 74,
+        statements: 83,
+      },
     },
   },
 });

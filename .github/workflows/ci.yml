@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   build:
@@ -24,6 +25,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "yarn"
+
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install
         run: yarn install --immutable
 
@@ -33,5 +39,30 @@ jobs:
       - name: Type Check
         run: yarn typecheck
 
-      - name: Run Tests
-        run: yarn run test:coverage
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Tests with Coverage
+        run: yarn run test:all:coverage
+
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 30
+
+      - name: Report coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          json-summary-path: coverage/coverage-summary.json
+          json-final-path: coverage/coverage-final.json

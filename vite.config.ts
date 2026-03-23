@@ -149,6 +149,7 @@ export default defineConfig({
         "**/index.ts",
         "**/index.tsx",
       ],
+      // TODO: Increase all thresholds to 90% (SW-1492)
       thresholds: {
         lines: 83,
         branches: 81,

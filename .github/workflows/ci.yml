@@ -12,7 +12,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   build:
@@ -59,8 +58,21 @@ jobs:
           path: coverage/
           retention-days: 30
 
+  coverage-report:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+
       - name: Report coverage on PR
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         uses: davelosert/vitest-coverage-report-action@2500dafcee7dd64f85ab689c0b83798a8359770e # v2
         with:
           json-summary-path: coverage/coverage-summary.json

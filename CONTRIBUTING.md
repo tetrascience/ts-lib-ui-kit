@@ -13,7 +13,7 @@ ts-lib-ui-kit/
 │   │   └── charts/      # Plotly-based data visualizations (AreaGraph, Heatmap, etc.)
 │   ├── hooks/           # Custom React hooks
 │   ├── lib/             # Utilities (cn() helper via clsx + tailwind-merge)
-│   ├── server/          # Server-side utilities (multiple subpath exports)
+│   ├── server/          # Server-side utilities (being migrated out)
 │   └── utils/           # Pure utility functions (colors, formatters)
 ├── .storybook/          # Storybook configuration
 ├── examples/            # Example applications
@@ -193,9 +193,9 @@ yarn lint
 
 ## Testing
 
-### Storybook Component Tests
+### Storybook Component Tests (Preferred for React Components)
 
-This library uses Storybook's `play` functions for interactive component testing. These tests run in a real browser environment via `@storybook/addon-vitest` and Vitest with Playwright.
+**Prefer Storybook play function tests** for React components. They run in a real browser environment via `@storybook/addon-vitest` and Vitest with Playwright, providing more realistic coverage than jsdom unit tests. Reserve unit tests (`*.test.ts`) for pure utility functions, hooks, and non-visual logic.
 
 #### How It Works
 

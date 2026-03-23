@@ -10,7 +10,7 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
   - **`charts/`** — Plotly-based data visualizations (AreaGraph, Heatmap, Histogram, etc.). Same PascalCase directory pattern as `composed/`.
 - `src/hooks/` — Custom React hooks.
 - `src/lib/utils.ts` — `cn()` utility (clsx + tailwind-merge) used by all UI components.
-- `src/server/` — Server-side utilities exported via multiple subpaths: `/server`, `/server/providers/athena`, `/server/providers/snowflake`, `/server/providers/databricks`.
+- `src/server/` — Server-side utilities exported via multiple subpaths: `/server`, `/server/providers/athena`, `/server/providers/snowflake`, `/server/providers/databricks`. (Being migrated out — avoid adding new server-side functionality here.)
 - All client components are exported from `src/index.ts`.
 - Design tokens live in `src/index.css` (Tailwind CSS custom properties using oklch values).
 
@@ -49,10 +49,10 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
 
 ## Testing
 
-- Unit tests use **Vitest** (jsdom environment). Server tests run in node environment.
-- Storybook component tests use `play` functions with `storybook/test` utilities (`within`, `expect`, `userEvent`), executed in a real browser via `@storybook/addon-vitest` and Playwright.
+- **Prefer Storybook play function tests** for React components — they run in a real browser via `@storybook/addon-vitest` and Playwright, providing more realistic coverage than jsdom.
+- Unit tests (`*.test.ts` / `*.test.tsx`) are appropriate for pure utility functions, hooks, and non-visual logic.
+- Storybook tests use `play` functions with `storybook/test` utilities (`within`, `expect`, `userEvent`).
 - Storybook tests may include Zephyr Scale test case IDs in `parameters.zephyr.testCaseId` — do not remove or modify these.
-- Test files go in `__tests__/` directories or as `*.test.tsx` / `*.test.ts` alongside the code.
 
 ## Import Organization
 

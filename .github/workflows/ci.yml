@@ -54,5 +54,3 @@ jobs:
       # TODO: change back to @main after ts-ci-cd-lib PR #15 is merged
       - name: Coverage
         uses: tetrascience/ts-ci-cd-lib/coverage-check@feat/coverage-report-workflow-v2
-        with:
-          caller-workflow: ci.yml

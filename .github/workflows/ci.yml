@@ -70,7 +70,7 @@ jobs:
   coverage-report:
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     needs: build
-    # TODO: change back to @main after ts-ci-cd-lib PR #14 is merged
-    uses: tetrascience/ts-ci-cd-lib/.github/workflows/coverage-report.yml@feat/coverage-report-workflow
+    # TODO: change back to @main after ts-ci-cd-lib PR #15 is merged
+    uses: tetrascience/ts-ci-cd-lib/.github/workflows/coverage-report.yml@feat/coverage-report-workflow-v2
     with:
       caller-workflow: ci.yml

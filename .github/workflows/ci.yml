@@ -59,7 +59,7 @@ jobs:
           retention-days: 30
 
       - name: Upload base coverage for PR comparison
-        # TODO: restore condition before merge: if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: base-coverage
@@ -82,13 +82,12 @@ jobs:
           name: coverage
           path: coverage/
 
-      # TODO: restore cross-run download before merge:
-      #   uses: dawidd6/action-download-artifact@bf251b5aa9c2f7eeb574a96ee720e24f801b7c11 # v6
-      #   with: { name: base-coverage, branch: main, workflow: ci.yml, path: base-coverage/ }
       - name: Download base coverage from main
-        uses: actions/download-artifact@v4
+        uses: dawidd6/action-download-artifact@bf251b5aa9c2f7eeb574a96ee720e24f801b7c11 # v6
         with:
           name: base-coverage
+          branch: main
+          workflow: ci.yml
           path: base-coverage/
         continue-on-error: true
         id: base-download

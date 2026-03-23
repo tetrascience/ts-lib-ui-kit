@@ -62,6 +62,5 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
 
 ## What NOT to Flag
 
-- `React.forwardRef` in existing code (migration is in progress).
 - SCSS in legacy chart components.
 - Magic numbers in test files, story files, constants files, config files, or script files.

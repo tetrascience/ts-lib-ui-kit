@@ -1,13 +1,18 @@
 # Copilot Code Review Instructions — ts-lib-ui-kit
 
-This is a React 19 + TypeScript UI component library published as `@tetrascience-npm/tetrascience-react-ui`. It uses Yarn 4, Rollup, Storybook, Vitest, and styled-components/SCSS.
+This is a React 19 + TypeScript UI component library published as `@tetrascience-npm/tetrascience-react-ui`. It uses Vite 7 (library mode), Tailwind CSS 4, shadcn/ui, Storybook 10, Vitest, and Yarn 4.
 
 ## Architecture & Structure
 
-- Components follow **Atomic Design**: `atoms/` → `molecules/` → `organisms/` under `src/components/`.
-- Every component must have: `ComponentName.tsx`, `ComponentName.stories.tsx`, `index.ts`. SCSS file is optional.
-- New components must be exported from `src/index.ts`.
-- Server-side utilities live in `src/server/` and are exported via a separate `/server` subpath.
+- Components are organised under `src/components/` in three categories:
+  - **`ui/`** — shadcn/ui primitives (Button, Card, Dialog, etc.). Single `kebab-case.tsx` files wrapping radix-ui / `@base-ui/react` with CVA variants and Tailwind classes.
+  - **`composed/`** — Multi-component compositions (AppHeader, Sidebar, Navbar, etc.). PascalCase directories with `ComponentName.tsx`, `ComponentName.stories.tsx`, and `index.ts`.
+  - **`charts/`** — Plotly-based data visualizations (AreaGraph, Heatmap, Histogram, etc.). Same PascalCase directory pattern as `composed/`.
+- `src/hooks/` — Custom React hooks.
+- `src/lib/utils.ts` — `cn()` utility (clsx + tailwind-merge) used by all UI components.
+- `src/server/` — Server-side utilities exported via multiple subpaths: `/server`, `/server/providers/athena`, `/server/providers/snowflake`, `/server/providers/databricks`.
+- All client components are exported from `src/index.ts`.
+- Design tokens live in `src/index.css` (Tailwind CSS custom properties using oklch values).
 
 ## React 19 Patterns
 
@@ -20,16 +25,18 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
 
 - Use `type` keyword for type-only imports: `import type { FC } from 'react'`.
 - Prefer `interface` for object shapes (extendable), `type` for unions/intersections.
-- Avoid `any` — use `unknown` or proper generics. Flag new uses of `any`.
-- All component props interfaces should extend appropriate HTML element attributes when possible.
+- All component props should extend appropriate HTML element attributes via `React.ComponentProps<"element">`.
+- `@typescript-eslint/no-explicit-any` is currently off — do not flag existing `any` usage, but prefer `unknown` or proper generics in new code.
 
 ## Styling
 
-- Use **styled-components** for dynamic, component-scoped styles.
-- Use **SCSS** for static utility styles.
-- Use **CSS variables** from `src/colors.css` for design tokens — do NOT hardcode colors, spacing, or font sizes.
-- Prefix custom props passed to styled-components with `$` (transient props) to prevent DOM leakage.
-- **Avoid inline `style` props** — use CSS classes instead. Inline styles are only acceptable for truly dynamic values that depend on props/state.
+- Use **Tailwind CSS 4** utility classes composed via the `cn()` helper from `src/lib/utils.ts`.
+- Use **CVA** (`class-variance-authority`) for defining component variant styles.
+- Design tokens are defined as CSS custom properties in `src/index.css` using oklch values, mapped to Tailwind semantic colors via `@theme inline`.
+- Light/dark theme support via `.dark` class on the root element.
+- A `ThemeProvider` component supports programmatic theme overrides (see `THEMING.md`).
+- Do NOT hardcode colors, spacing, or font sizes — use Tailwind semantic classes (`bg-primary`, `text-muted-foreground`, etc.).
+- Icons come from `lucide-react`.
 - Flag any hardcoded magic numbers — extract them to named constants.
 
 ## Accessibility
@@ -42,10 +49,10 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
 
 ## Testing
 
-- Unit tests use **Vitest** + **React Testing Library** (`@testing-library/react`).
-- Storybook tests use `play` functions with `storybook/test` utilities (`within`, `expect`, `userEvent`).
+- Unit tests use **Vitest** (jsdom environment). Server tests run in node environment.
+- Storybook component tests use `play` functions with `storybook/test` utilities (`within`, `expect`, `userEvent`), executed in a real browser via `@storybook/addon-vitest` and Playwright.
 - Storybook tests may include Zephyr Scale test case IDs in `parameters.zephyr.testCaseId` — do not remove or modify these.
-- Test files go in `__tests__/` directories or as `*.test.tsx` alongside the component.
+- Test files go in `__tests__/` directories or as `*.test.tsx` / `*.test.ts` alongside the code.
 
 ## Import Organization
 
@@ -56,11 +63,11 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
 
 ## Code Quality
 
-- Flag functions with high cognitive complexity (threshold: 15).
+- Flag functions with high cognitive complexity (threshold: 15 for src, 75 for scripts).
 - Flag duplicated logic or identical functions — suggest extraction.
 - Prefer `array.find()` over `filter()[0]`, `flatMap` over `map().flat()`, `includes` over `indexOf !== -1`.
 - Prefer ternary for single-line conditionals.
-- Do NOT use `eslint-disable` comments — refactor the code instead.
+- Do NOT use `eslint-disable` comments — refactor the code instead. `@ts-ignore` is allowed only with a description.
 
 ## PR & Commit Conventions
 
@@ -75,7 +82,7 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
 
 ## What NOT to Flag
 
-- Existing uses of `any` in the codebase (tracked separately).
+- Existing uses of `any` in the codebase (`no-explicit-any` is off).
 - `React.forwardRef` in existing code (migration is in progress).
-- Magic numbers in test files, story files, constants files, or script files.
-
+- SCSS in legacy chart components.
+- Magic numbers in test files, story files, constants files, config files, or script files.

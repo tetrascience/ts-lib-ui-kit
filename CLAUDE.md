@@ -6,7 +6,7 @@ Built with Vite 7, Tailwind CSS 4, shadcn/ui, Storybook 10, Vitest, Yarn 4.
 ## Quick Commands
 
 ```bash
-yarn storybook         # Dev server (port 6006)
+yarn dev               # Dev server (port 6006, alias for yarn storybook)
 yarn build             # Production build (Vite library mode)
 yarn lint              # ESLint (flat config, zero warnings)
 yarn typecheck         # TypeScript type checking

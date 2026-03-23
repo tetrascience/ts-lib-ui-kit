@@ -2,7 +2,7 @@
 
 This is a React 19 + TypeScript UI component library published as `@tetrascience-npm/tetrascience-react-ui`. It uses Vite 7 (library mode), Tailwind CSS 4, shadcn/ui, Storybook 10, Vitest, and Yarn 4.
 
-> **Note:** Import ordering, accessibility, cognitive complexity, array method preferences, and other code-style rules are already enforced by ESLint (`yarn lint --max-warnings 0`). Copilot should focus on the architectural and design concerns below that automated linting cannot catch.
+> **Note:** Many code-style rules (import ordering, accessibility, cognitive complexity, etc.) are already enforced by ESLint (`yarn lint --max-warnings 0`). Focus on the architectural and design concerns below that linting cannot catch. When flagging a recurring issue, consider whether a new ESLint rule should be added to `eslint.config.js` to catch it automatically.
 
 ## Architecture & Structure
 

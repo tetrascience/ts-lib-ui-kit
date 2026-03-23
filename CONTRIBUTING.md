@@ -93,8 +93,8 @@ src/components/ui/
 └── ...
 ```
 
-**`composed/` and `charts/` components:**
-PascalCase directories with separate files for implementation, stories, and barrel export.
+**`composed/` and `charts/` components (preferred for new components):**
+PascalCase directories with separate files for implementation, stories, and barrel export. Some legacy `composed/` components exist as single `kebab-case.tsx` files (e.g. `tdp-link.tsx`); use the directory pattern for new work.
 
 ```
 ComponentName/

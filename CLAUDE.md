@@ -46,7 +46,7 @@ src/
 
 **`ui/` components**: Single `kebab-case.tsx` file. shadcn/ui pattern — wraps radix-ui or @base-ui/react with CVA variants and Tailwind classes via `cn()`.
 
-**`composed/` and `charts/` components**: PascalCase directory with `ComponentName.tsx`, `ComponentName.stories.tsx`, and `index.ts`.
+**`composed/` and `charts/` components**: Prefer a PascalCase directory with `ComponentName.tsx`, `ComponentName.stories.tsx`, and `index.ts` for new components. Some legacy composed components exist as single `kebab-case.tsx` files (e.g. `tdp-link.tsx`).
 
 ## Styling
 

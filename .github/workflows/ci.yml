@@ -41,7 +41,6 @@ jobs:
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
-        id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
@@ -61,8 +60,8 @@ jobs:
           retention-days: 30
 
       - name: Report coverage on PR
-        if: github.event_name == 'pull_request'
-        uses: davelosert/vitest-coverage-report-action@v2
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: davelosert/vitest-coverage-report-action@2500dafcee7dd64f85ab689c0b83798a8359770e # v2
         with:
           json-summary-path: coverage/coverage-summary.json
           json-final-path: coverage/coverage-final.json

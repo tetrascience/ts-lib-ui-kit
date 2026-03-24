@@ -7,19 +7,17 @@ This document contains development setup and contribution guidelines for the Tet
 ```
 ts-lib-ui-kit/
 ├── src/
-│   ├── assets/          # Icons and other static assets
-│   ├── components/      # UI components organised by atomic design
-│   │   ├── atoms/       # Basic building blocks (Button, Input, etc.)
-│   │   ├── molecules/   # Combinations of atoms (Forms, Menus, etc.)
-│   │   └── organisms/   # Complex UI sections (Charts, Graphs, etc.)
-│   ├── server/          # Server-side utilities (imported via /server subpath)
-│   │   └── auth/        # Authentication utilities (JWT Token Manager)
-│   ├── styles/          # Global styles and SCSS variables
-│   ├── theme/           # ThemeProvider and theme utilities
-│   ├── types/           # TypeScript type definitions
+│   ├── components/      # UI components
+│   │   ├── ui/          # shadcn/ui primitives (Button, Card, Dialog, etc.)
+│   │   ├── composed/    # Multi-component compositions (AppHeader, Sidebar, etc.)
+│   │   └── charts/      # Plotly-based data visualizations (AreaGraph, Heatmap, etc.)
+│   ├── hooks/           # Custom React hooks
+│   ├── lib/             # Utilities (cn() helper via clsx + tailwind-merge)
+│   ├── server/          # Server-side utilities (being migrated out)
 │   └── utils/           # Pure utility functions (colors, formatters)
 ├── .storybook/          # Storybook configuration
 ├── examples/            # Example applications
+├── scripts/             # Build and automation scripts (Zephyr sync, etc.)
 └── dist/                # Built library output (generated)
 ```
 
@@ -51,7 +49,7 @@ Visit http://localhost:6006 to view the component library in Storybook.
 | Command | Description |
 |---------|-------------|
 | `yarn storybook` | Run Storybook development server on port 6006 |
-| `yarn build` | Build the library for production (using Rollup) |
+| `yarn build` | Build the library for production (using Vite) |
 | `yarn build-storybook` | Build Storybook for deployment |
 | `yarn test` | Run unit tests only |
 | `yarn test:all` | Run unit tests + Storybook component tests |
@@ -67,82 +65,117 @@ The project uses path aliases for cleaner imports (configured in `tsconfig.json`
 | Alias | Path |
 |-------|------|
 | `@/*` | `src/*` |
-| `components/*` | `src/components/*` |
-| `utils/*` | `src/utils/*` |
-| `ui/*` | `src/ui/*` |
-| `lib/*` | `src/lib/*` |
-| `hooks/*` | `src/hooks/*` |
+
 ## Build System
 
-The library uses Rollup to produce:
+The library uses Vite 7 in library mode to produce:
 
-- **CommonJS bundle**: `dist/cjs/index.js`
-- **ES Module bundle**: `dist/esm/index.js`
+- **ES Module bundle**: `dist/index.js`
+- **CommonJS bundle**: `dist/index.cjs`
 - **Type declarations**: `dist/index.d.ts`
 - **Compiled CSS**: `dist/index.css`
+- **Server subpath exports**: `dist/server.js`, `dist/providers/athena.js`, `dist/providers/snowflake.js`, `dist/providers/databricks.js` (with corresponding `.cjs` and `.d.ts`)
 
 ## Component Development
 
-### Component Structure
+### Component Patterns
 
-Every component follows this pattern:
+The library has two component patterns:
+
+**`ui/` components (shadcn/ui pattern):**
+Single `kebab-case.tsx` files in `src/components/ui/`. These wrap radix-ui or `@base-ui/react` primitives with CVA variants and Tailwind classes.
+
+```
+src/components/ui/
+├── button.tsx
+├── card.tsx
+├── dialog.tsx
+└── ...
+```
+
+**`composed/` and `charts/` components (preferred for new components):**
+PascalCase directories with separate files for implementation, stories, and barrel export. Some legacy `composed/` components exist as single `kebab-case.tsx` files (e.g. `tdp-link.tsx`); use the directory pattern for new work.
 
 ```
 ComponentName/
-├── ComponentName.tsx       # Main component (React 19 ref-as-prop pattern)
-├── ComponentName.scss      # Optional SCSS styles
+├── ComponentName.tsx        # Main component
 ├── ComponentName.stories.tsx # Storybook documentation
-└── index.ts               # Exports component + types
+└── index.ts                 # Exports component + types
 ```
 
 ### Component Template (React 19)
 
-When creating components that need ref support, use the ref-as-prop pattern:
+New `ui/` components follow the shadcn/ui pattern with Tailwind CSS and CVA:
 
 ```tsx
-import React from 'react';
-import styled from 'styled-components';
+import { cva, type VariantProps } from "class-variance-authority"
+import { Slot } from "radix-ui"
+import * as React from "react"
 
-export interface MyComponentProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'primary' | 'secondary';
-  ref?: React.Ref<HTMLDivElement>;
+import { cn } from "@/lib/utils"
+
+const myComponentVariants = cva(
+  "inline-flex items-center rounded-lg text-sm font-medium transition-all",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground",
+        outline: "border-border bg-background hover:bg-muted",
+      },
+      size: {
+        default: "h-8 px-2.5",
+        sm: "h-7 px-2 text-xs",
+        lg: "h-9 px-3",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+function MyComponent({
+  className,
+  variant,
+  size,
+  asChild = false,
+  ...props
+}: React.ComponentProps<"div"> &
+  VariantProps<typeof myComponentVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot.Root : "div"
+
+  return (
+    <Comp
+      data-slot="my-component"
+      className={cn(myComponentVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
 }
 
-const StyledDiv = styled.div<{ $variant: 'primary' | 'secondary' }>`
-  color: ${(props) => (props.$variant === 'primary' ? 'blue' : 'grey')};
-`;
-
-export const MyComponent = ({
-  variant = 'primary',
-  ref,
-  children,
-  ...rest
-}: MyComponentProps) => {
-  return (
-    <StyledDiv ref={ref} $variant={variant} {...rest}>
-      {children}
-    </StyledDiv>
-  );
-};
+export { MyComponent, myComponentVariants }
 ```
 
-> **Transient props:** When passing custom props to styled-components, prefix them with `$` (e.g. `$variant`) to prevent them leaking to the DOM as HTML attributes. See [styled-components docs](https://styled-components.com/docs/api#transient-props).
-
-**Note:** `React.forwardRef` is deprecated in React 19. All components in this library use the ref-as-prop pattern instead. New components should follow this pattern.
+**Note:** This library prefers the ref-as-prop pattern. Avoid `React.forwardRef` in new components — existing usages are being migrated.
 
 ### Adding a New Component
 
-1. Create a directory under the appropriate category (`atoms/`, `molecules/`, or `organisms/`)
-2. Implement the component following the React 19 ref-as-prop pattern shown above
-3. Add a Storybook story for documentation
-4. Export from `src/index.ts`
+1. For `ui/` primitives: create a `kebab-case.tsx` file in `src/components/ui/`
+2. For composed/chart components: create a PascalCase directory under the appropriate category (`composed/` or `charts/`)
+3. Implement the component following the patterns above
+4. Add a Storybook story for documentation
+5. Export from `src/index.ts`
 
 ### Styling Guidelines
 
-- Use **styled-components** for component-scoped dynamic styles
-- Use **SCSS** for static utility styles
-- Leverage **CSS variables** from `src/colors.css` for design tokens
-- Support theming via the `ThemeProvider`
+- Use **Tailwind CSS 4** utility classes via the `cn()` helper from `src/lib/utils.ts`
+- Use **CVA** (`class-variance-authority`) for component variant definitions
+- Design tokens are CSS custom properties in `src/index.css` (oklch values), mapped to Tailwind via `@theme inline`
+- Icons come from **lucide-react**
+- Support theming via the `ThemeProvider` (see `THEMING.md`)
 
 ## Code Quality
 
@@ -152,17 +185,17 @@ The project uses Husky with lint-staged to run checks before commits.
 
 ### Linting
 
-ESLint is configured with React and TypeScript plugins. Run manually with:
+ESLint 9 with flat config format (`eslint.config.js`). Run manually with:
 
 ```bash
-yarn eslint src/
+yarn lint
 ```
 
 ## Testing
 
-### Storybook Component Tests
+### Storybook Component Tests (Preferred for React Components)
 
-This library uses Storybook's `play` functions for interactive component testing. These tests run in a real browser environment via `@storybook/experimental-addon-test` and Vitest.
+**Prefer Storybook play function tests** for React components. They run in a real browser environment via `@storybook/addon-vitest` and Vitest with Playwright, providing more realistic coverage than jsdom unit tests. Reserve unit tests (`*.test.ts`) for pure utility functions, hooks, and non-visual logic.
 
 #### How It Works
 

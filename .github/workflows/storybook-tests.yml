@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       test_cases:
-        description: 'Comma-separated Zephyr test case IDs (e.g., SW-T1,SW-T2,SW-T3). Leave empty to run all tests.'
+        description: "Comma-separated Zephyr test case IDs (e.g., SW-T1,SW-T2,SW-T3). Leave empty to run all tests."
         required: false
         type: string
 
@@ -18,7 +18,7 @@ jobs:
   storybook-tests:
     name: Storybook E2E Tests
     # Only run on non-forked repos, on successful Storybook-related deployments or manual triggers
-    if: github.event.repository.fork == false && (github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && contains(github.event.deployment.environment, 'storybook')))
+    if: github.event.repository.fork == false && (github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && contains(fromJSON('["Preview", "Production"]'), github.event.deployment.environment)))
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.58.2-noble
@@ -31,8 +31,8 @@ jobs:
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'yarn'
+          node-version: "20"
+          cache: "yarn"
 
       - name: 🧶 Enable Corepack
         run: corepack enable
@@ -54,7 +54,7 @@ jobs:
         id: test
         # 👇 Pass the Storybook URL as an environment variable
         env:
-          SB_URL: '${{ github.event.deployment_status.environment_url }}'
+          SB_URL: "${{ github.event.deployment_status.environment_url }}"
 
       - name: 🧪 Run Storybook tests (filtered)
         if: ${{ inputs.test_cases }}

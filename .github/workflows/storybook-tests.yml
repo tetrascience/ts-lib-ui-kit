@@ -17,8 +17,8 @@ permissions:
 jobs:
   storybook-tests:
     name: Storybook E2E Tests
-    # Only run on non-forked repos, on successful deployments or manual triggers
-    if: github.event.repository.fork == false && (github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success'))
+    # Only run on non-forked repos, on successful Storybook-related deployments or manual triggers
+    if: github.event.repository.fork == false && (github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && contains(github.event.deployment.environment, 'storybook')))
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.58.2-noble

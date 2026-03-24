@@ -149,7 +149,7 @@ export default defineConfig({
         "**/*.stories.ts",
         "**/*.stories.tsx",
         "**/index.ts",
-        "**/index.tsx",     
+        "**/index.tsx",
       ],
     },
   },

@@ -51,6 +51,5 @@ jobs:
       - name: Run Tests with Coverage
         run: yarn run test:all:coverage
 
-      # TODO: change back to @main after ts-ci-cd-lib PR #15 is merged
       - name: Coverage
-        uses: tetrascience/ts-ci-cd-lib/coverage-check@feat/coverage-report-workflow-v2
+        uses: tetrascience/ts-ci-cd-lib/coverage-check@main

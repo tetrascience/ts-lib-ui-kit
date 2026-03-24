@@ -30,7 +30,7 @@ jobs:
       - name: Lint
         run: yarn lint
 
-      - name: Lint
+      - name: Build
         run: yarn build
 
       - name: Type Check

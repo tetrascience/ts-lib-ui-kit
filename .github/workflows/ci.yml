@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   build:
@@ -24,6 +25,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "yarn"
+
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install
         run: yarn install --immutable
 
@@ -33,5 +39,17 @@ jobs:
       - name: Type Check
         run: yarn typecheck
 
-      - name: Run Tests
-        run: yarn run test:coverage
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Tests with Coverage
+        run: yarn run test:all:coverage
+
+      - name: Coverage
+        uses: tetrascience/ts-ci-cd-lib/coverage-check@main

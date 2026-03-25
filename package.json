@@ -207,7 +207,8 @@
     ]
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": "eslint --fix"
+    "*.{js,jsx,ts,tsx}": "eslint --fix",
+    "*.{js,jsx,ts,tsx,json,css,md,yml,yaml}": "prettier --write"
   },
   "packageManager": "yarn@4.12.0",
   "repository": {

@@ -1,10 +1,14 @@
+import {
+  AUTH_TOKEN_HEADER,
+  ORG_SLUG_HEADER,
+} from "../components/composed/TdpSearch/constants";
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 export const REQUEST_ID_HEADER = "ts-request-id";
-export const ORG_SLUG_HEADER = "x-org-slug";
-export const AUTH_TOKEN_HEADER = "ts-auth-token";
+export { AUTH_TOKEN_HEADER, ORG_SLUG_HEADER };
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,14 +37,15 @@ export interface RequestTrackingMiddlewareOptions {
 /**
  * Middleware compatible with openapi-fetch's client.use().
  * Locally defined to avoid a runtime dependency on openapi-fetch.
+ * Fields are readonly to stay compatible with openapi-fetch's Middleware type.
  */
 export interface OpenApiFetchMiddleware {
   onRequest?: (options: {
-    request: Request;
-    schemaPath: string;
-    params: Record<string, unknown>;
-    id: string;
-    options: Record<string, unknown>;
+    readonly request: Request;
+    readonly schemaPath: string;
+    readonly params: Record<string, unknown>;
+    readonly id: string;
+    readonly options: Record<string, unknown>;
   }) =>
     | void
     | Request
@@ -49,21 +54,21 @@ export interface OpenApiFetchMiddleware {
     | Promise<Request | Response | undefined | void>;
 
   onResponse?: (options: {
-    request: Request;
-    response: Response;
-    schemaPath: string;
-    params: Record<string, unknown>;
-    id: string;
-    options: Record<string, unknown>;
+    readonly request: Request;
+    readonly response: Response;
+    readonly schemaPath: string;
+    readonly params: Record<string, unknown>;
+    readonly id: string;
+    readonly options: Record<string, unknown>;
   }) => void | Response | undefined | Promise<Response | undefined | void>;
 
   onError?: (options: {
-    request: Request;
-    error: unknown;
-    schemaPath: string;
-    params: Record<string, unknown>;
-    id: string;
-    options: Record<string, unknown>;
+    readonly request: Request;
+    readonly error: unknown;
+    readonly schemaPath: string;
+    readonly params: Record<string, unknown>;
+    readonly id: string;
+    readonly options: Record<string, unknown>;
   }) => void | Response | Error | Promise<void | Response | Error>;
 }
 
@@ -125,28 +130,45 @@ export function createConsoleLogger(
 
   const shouldLog = (level: LogLevel): boolean => LOG_LEVELS[level] >= minLevel;
 
+  const log = (
+    method: "debug" | "info" | "warn" | "error",
+    message: string,
+    meta?: Record<string, unknown>,
+  ) => {
+    if (meta !== undefined) {
+      console[method](formatMessage(message), meta);
+    } else {
+      console[method](formatMessage(message));
+    }
+  };
+
   return {
-    debug(message: string, meta?: Record<string, unknown>) {
-      if (shouldLog("debug")) {
-        console.debug(formatMessage(message), meta ?? "");
-      }
+    debug(message, meta) {
+      if (shouldLog("debug")) log("debug", message, meta);
     },
-    info(message: string, meta?: Record<string, unknown>) {
-      if (shouldLog("info")) {
-        console.info(formatMessage(message), meta ?? "");
-      }
+    info(message, meta) {
+      if (shouldLog("info")) log("info", message, meta);
     },
-    warn(message: string, meta?: Record<string, unknown>) {
-      if (shouldLog("warn")) {
-        console.warn(formatMessage(message), meta ?? "");
-      }
+    warn(message, meta) {
+      if (shouldLog("warn")) log("warn", message, meta);
     },
-    error(message: string, meta?: Record<string, unknown>) {
-      if (shouldLog("error")) {
-        console.error(formatMessage(message), meta ?? "");
-      }
+    error(message, meta) {
+      if (shouldLog("error")) log("error", message, meta);
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Extract pathname from a URL, stripping query string and hash. */
+function sanitizeUrl(url: string): string {
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return url;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -197,7 +219,7 @@ export function createRequestTrackingMiddleware(
       logger?.debug("Outgoing request", {
         requestId,
         method: request.method,
-        url: request.url,
+        path: sanitizeUrl(request.url),
         schemaPath,
       });
 
@@ -210,7 +232,7 @@ export function createRequestTrackingMiddleware(
       logger?.debug("Response received", {
         requestId,
         method: request.method,
-        url: request.url,
+        path: sanitizeUrl(request.url),
         schemaPath,
         status: response.status,
       });
@@ -222,7 +244,7 @@ export function createRequestTrackingMiddleware(
       logger?.error("Request failed", {
         requestId,
         method: request.method,
-        url: request.url,
+        path: sanitizeUrl(request.url),
         schemaPath,
         error: error instanceof Error ? error.message : String(error),
       });

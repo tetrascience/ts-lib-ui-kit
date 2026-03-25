@@ -5,6 +5,8 @@ import {
   createConsoleLogger,
   generateRequestId,
   REQUEST_ID_HEADER,
+  ORG_SLUG_HEADER,
+  AUTH_TOKEN_HEADER,
 } from "./request-tracking";
 
 const UUID_REGEX =
@@ -63,7 +65,7 @@ describe("createConsoleLogger", () => {
     logger.info("visible");
 
     expect(debugSpy).not.toHaveBeenCalled();
-    expect(infoSpy).toHaveBeenCalledWith("visible", "");
+    expect(infoSpy).toHaveBeenCalledWith("visible");
   });
 
   it("prepends prefix", () => {
@@ -72,7 +74,7 @@ describe("createConsoleLogger", () => {
 
     logger.info("msg");
 
-    expect(infoSpy).toHaveBeenCalledWith("[app] msg", "");
+    expect(infoSpy).toHaveBeenCalledWith("[app] msg");
   });
 
   it("respects custom log level", () => {
@@ -84,10 +86,10 @@ describe("createConsoleLogger", () => {
     logger.warn("visible");
 
     expect(infoSpy).not.toHaveBeenCalled();
-    expect(warnSpy).toHaveBeenCalledWith("visible", "");
+    expect(warnSpy).toHaveBeenCalledWith("visible");
   });
 
-  it("passes metadata", () => {
+  it("passes metadata as second argument", () => {
     const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
     const meta = { requestId: "abc" };
     createConsoleLogger().info("msg", meta);
@@ -136,13 +138,17 @@ describe("createRequestTrackingMiddleware", () => {
 
     it("injects static extra headers", () => {
       const mw = createRequestTrackingMiddleware({
-        extraHeaders: { "x-org-slug": "my-org" },
+        extraHeaders: {
+          [ORG_SLUG_HEADER]: "my-org",
+          [AUTH_TOKEN_HEADER]: "tok_123",
+        },
       });
       const request = makeRequest();
 
       mw.onRequest!({ request, ...baseCallOptions });
 
-      expect(request.headers.get("x-org-slug")).toBe("my-org");
+      expect(request.headers.get(ORG_SLUG_HEADER)).toBe("my-org");
+      expect(request.headers.get(AUTH_TOKEN_HEADER)).toBe("tok_123");
     });
 
     it("injects dynamic extra headers", () => {
@@ -169,7 +175,7 @@ describe("createRequestTrackingMiddleware", () => {
       expect(result).toBe(request);
     });
 
-    it("logs when logger provided", () => {
+    it("logs with sanitized URL (no query string)", () => {
       const logger = {
         debug: vi.fn(),
         info: vi.fn(),
@@ -181,12 +187,20 @@ describe("createRequestTrackingMiddleware", () => {
         generateRequestId: () => "log-id",
       });
 
-      mw.onRequest!({ request: makeRequest(), ...baseCallOptions });
+      mw.onRequest!({
+        request: makeRequest("https://example.com/api/test?token=secret"),
+        ...baseCallOptions,
+      });
 
       expect(logger.debug).toHaveBeenCalledWith(
         "Outgoing request",
-        expect.objectContaining({ requestId: "log-id" }),
+        expect.objectContaining({
+          requestId: "log-id",
+          path: "/api/test",
+        }),
       );
+      // Ensure query string is not logged
+      expect(logger.debug.mock.calls[0][1]).not.toHaveProperty("url");
     });
   });
 

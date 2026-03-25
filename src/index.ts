@@ -34,6 +34,9 @@ export * from "@/components/charts/PieChart";
 export * from "@/components/charts/PlateMap";
 export * from "@/components/charts/ScatterGraph";
 
+// Middleware
+export * from "@/middleware";
+
 // ui
 export * from "@/components/ui/accordion";
 export * from "@/components/ui/alert";

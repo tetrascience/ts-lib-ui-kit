@@ -1,14 +1,14 @@
 import {
   AUTH_TOKEN_HEADER,
   ORG_SLUG_HEADER,
-} from "../components/composed/TdpSearch/constants";
+  REQUEST_ID_HEADER,
+} from "@/lib/constants";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-export const REQUEST_ID_HEADER = "ts-request-id";
-export { AUTH_TOKEN_HEADER, ORG_SLUG_HEADER };
+export { REQUEST_ID_HEADER, AUTH_TOKEN_HEADER, ORG_SLUG_HEADER };
 
 // ---------------------------------------------------------------------------
 // Types

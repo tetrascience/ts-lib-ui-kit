@@ -135,10 +135,10 @@ export function createConsoleLogger(
     message: string,
     meta?: Record<string, unknown>,
   ) => {
-    if (meta !== undefined) {
-      console[method](formatMessage(message), meta);
-    } else {
+    if (meta === undefined) {
       console[method](formatMessage(message));
+    } else {
+      console[method](formatMessage(message), meta);
     }
   };
 

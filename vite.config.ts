@@ -113,6 +113,8 @@ export default defineConfig({
           storybookTest({
             configDir: ".storybook",
             storybookScript: "yarn storybook --ci",
+            // 👇 Use the environment variable you passed
+            storybookUrl: process.env.SB_URL || "http://localhost:6006",
           }),
         ],
         test: {

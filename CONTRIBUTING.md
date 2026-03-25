@@ -284,7 +284,7 @@ Releases are fully automated via [semantic-release](https://semantic-release.git
 
 ### How it works
 
-Every push to `main` triggers the `Release` GitHub Action (`.github/workflows/release.yml`), which:
+The `Release` GitHub Action (`.github/workflows/release.yml`) is triggered manually (via `workflow_dispatch` from the GitHub Actions tab), and it:
 
 1. Analyses all commits since the last release using their [Conventional Commit](#commit-message-format) types
 2. Determines the next version number (or skips if no releasable commits are found)

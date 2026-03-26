@@ -7,9 +7,6 @@ export {
   AUTH_TOKEN_HEADER,
 } from "./request-tracking";
 
-export type {
-  RequestTrackingMiddlewareOptions,
-  RequestTrackingLogger,
-  OpenApiFetchMiddleware,
-  ConsoleLoggerOptions,
-} from "./request-tracking";
+export type { RequestTrackingMiddlewareOptions, RequestTrackingLogger, ConsoleLoggerOptions } from "./request-tracking";
+
+export type { Middleware } from "openapi-fetch";

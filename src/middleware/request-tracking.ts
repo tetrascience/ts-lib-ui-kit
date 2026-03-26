@@ -1,8 +1,6 @@
-import {
-  AUTH_TOKEN_HEADER,
-  ORG_SLUG_HEADER,
-  REQUEST_ID_HEADER,
-} from "@/lib/constants";
+import type { Middleware } from "openapi-fetch";
+
+import { AUTH_TOKEN_HEADER, ORG_SLUG_HEADER, REQUEST_ID_HEADER } from "@/lib/constants";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -34,44 +32,6 @@ export interface RequestTrackingMiddlewareOptions {
   requestIdHeader?: string;
 }
 
-/**
- * Middleware compatible with openapi-fetch's client.use().
- * Locally defined to avoid a runtime dependency on openapi-fetch.
- * Fields are readonly to stay compatible with openapi-fetch's Middleware type.
- */
-export interface OpenApiFetchMiddleware {
-  onRequest?: (options: {
-    readonly request: Request;
-    readonly schemaPath: string;
-    readonly params: Record<string, unknown>;
-    readonly id: string;
-    readonly options: Record<string, unknown>;
-  }) =>
-    | void
-    | Request
-    | Response
-    | undefined
-    | Promise<Request | Response | undefined | void>;
-
-  onResponse?: (options: {
-    readonly request: Request;
-    readonly response: Response;
-    readonly schemaPath: string;
-    readonly params: Record<string, unknown>;
-    readonly id: string;
-    readonly options: Record<string, unknown>;
-  }) => void | Response | undefined | Promise<Response | undefined | void>;
-
-  onError?: (options: {
-    readonly request: Request;
-    readonly error: unknown;
-    readonly schemaPath: string;
-    readonly params: Record<string, unknown>;
-    readonly id: string;
-    readonly options: Record<string, unknown>;
-  }) => void | Response | Error | Promise<void | Response | Error>;
-}
-
 // ---------------------------------------------------------------------------
 // Request ID generation
 // ---------------------------------------------------------------------------
@@ -84,10 +44,7 @@ export interface OpenApiFetchMiddleware {
  * Falls back to a Math.random()-based implementation for insecure contexts (HTTP in dev).
  */
 export function generateRequestId(): string {
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
 
@@ -119,22 +76,15 @@ export interface ConsoleLoggerOptions {
  * console arguments, including the requestId from metadata for correlation
  * with backend logs.
  */
-export function createConsoleLogger(
-  options?: ConsoleLoggerOptions,
-): RequestTrackingLogger {
+export function createConsoleLogger(options?: ConsoleLoggerOptions): RequestTrackingLogger {
   const minLevel = LOG_LEVELS[options?.level ?? "info"];
   const prefix = options?.prefix;
 
-  const formatMessage = (message: string): string =>
-    prefix ? `[${prefix}] ${message}` : message;
+  const formatMessage = (message: string): string => (prefix ? `[${prefix}] ${message}` : message);
 
   const shouldLog = (level: LogLevel): boolean => LOG_LEVELS[level] >= minLevel;
 
-  const log = (
-    method: "debug" | "info" | "warn" | "error",
-    message: string,
-    meta?: Record<string, unknown>,
-  ) => {
+  const log = (method: "debug" | "info" | "warn" | "error", message: string, meta?: Record<string, unknown>) => {
     if (meta === undefined) {
       console[method](formatMessage(message));
     } else {
@@ -191,9 +141,7 @@ function sanitizeUrl(url: string): string {
  * client.use(createRequestTrackingMiddleware());
  * ```
  */
-export function createRequestTrackingMiddleware(
-  options?: RequestTrackingMiddlewareOptions,
-): OpenApiFetchMiddleware {
+export function createRequestTrackingMiddleware(options?: RequestTrackingMiddlewareOptions): Middleware {
   const {
     generateRequestId: genId = generateRequestId,
     logger,

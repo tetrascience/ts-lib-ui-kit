@@ -5,6 +5,9 @@
   "type": "module",
   "author": "TetraScience",
   "license": "Apache-2.0",
+  "sideEffects": [
+    "./dist/index.css"
+  ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

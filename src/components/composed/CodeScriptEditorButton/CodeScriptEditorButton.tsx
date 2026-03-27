@@ -20,7 +20,7 @@ export interface CodeScriptEditorButtonProps {
 /**
  * Renders an 'Edit code' button that opens a modal with a Monaco code editor.
  */
-export const CodeScriptEditorButton = ({
+const CodeScriptEditorButton = ({
   initialCode = "",
   onCodeSave,
   language = "python",

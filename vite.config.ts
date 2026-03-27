@@ -79,6 +79,8 @@ export default defineConfig({
       output: {
         banner,
         globals: { react: "React", "react-dom": "ReactDOM" },
+        preserveModules: true,
+        preserveModulesRoot: 'src',
       },
     },
     sourcemap: true,

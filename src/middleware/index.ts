@@ -1,4 +1,5 @@
 export {
+  installRequestTracking,
   createRequestTrackingMiddleware,
   createConsoleLogger,
   generateRequestId,

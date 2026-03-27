@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
 import {
+  installRequestTracking,
   createRequestTrackingMiddleware,
   createConsoleLogger,
   generateRequestId,
@@ -9,13 +10,9 @@ import {
   AUTH_TOKEN_HEADER,
 } from "./request-tracking";
 
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
-const makeRequest = (
-  url = "https://example.com/api/test",
-  method = "GET",
-) => new Request(url, { method });
+const makeRequest = (url = "https://example.com/api/test", method = "GET") => new Request(url, { method });
 
 const baseCallOptions = {
   schemaPath: "/test",
@@ -272,10 +269,98 @@ describe("createRequestTrackingMiddleware", () => {
 
       mw.onError!({ request, error: "string error", ...baseCallOptions });
 
-      expect(logger.error).toHaveBeenCalledWith(
-        "Request failed",
-        expect.objectContaining({ error: "string error" }),
-      );
+      expect(logger.error).toHaveBeenCalledWith("Request failed", expect.objectContaining({ error: "string error" }));
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// installRequestTracking
+// ---------------------------------------------------------------------------
+
+describe("installRequestTracking", () => {
+  let mockFetch: ReturnType<typeof vi.fn>;
+  let originalFetch: typeof globalThis.fetch;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+    mockFetch = vi.fn().mockResolvedValue(new Response("ok", { status: 200 }));
+    globalThis.fetch = mockFetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it("injects ts-request-id on fetch calls", async () => {
+    const uninstall = installRequestTracking({ generateRequestId: () => "global-id" });
+
+    await globalThis.fetch("https://example.com/api/test");
+
+    const [, init] = mockFetch.mock.calls[0];
+    const headers = new Headers(init?.headers);
+    expect(headers.get(REQUEST_ID_HEADER)).toBe("global-id");
+
+    uninstall();
+  });
+
+  it("returns an uninstall function that restores original fetch", () => {
+    const uninstall = installRequestTracking();
+
+    expect(globalThis.fetch).not.toBe(mockFetch);
+
+    uninstall();
+
+    expect(globalThis.fetch).toBe(mockFetch);
+  });
+
+  it("injects extra headers", async () => {
+    const uninstall = installRequestTracking({
+      extraHeaders: { [ORG_SLUG_HEADER]: "test-org" },
+    });
+
+    await globalThis.fetch("https://example.com/api");
+
+    const [, init] = mockFetch.mock.calls[0];
+    const headers = new Headers(init?.headers);
+    expect(headers.get(ORG_SLUG_HEADER)).toBe("test-org");
+
+    uninstall();
+  });
+
+  it("logs requests and responses", async () => {
+    const logger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+    const uninstall = installRequestTracking({ logger, generateRequestId: () => "log-id" });
+
+    await globalThis.fetch("https://example.com/api/data?secret=123");
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      "Outgoing request",
+      expect.objectContaining({ requestId: "log-id", path: "/api/data" }),
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      "Response received",
+      expect.objectContaining({ requestId: "log-id", status: 200 }),
+    );
+
+    uninstall();
+  });
+
+  it("logs errors on fetch failure", async () => {
+    globalThis.fetch = originalFetch; // reset so installRequestTracking captures a clean state
+    mockFetch = vi.fn().mockRejectedValue(new Error("network down"));
+    globalThis.fetch = mockFetch;
+
+    const logger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+    const uninstall = installRequestTracking({ logger, generateRequestId: () => "err-id" });
+
+    await expect(globalThis.fetch("https://example.com/fail")).rejects.toThrow("network down");
+
+    expect(logger.error).toHaveBeenCalledWith(
+      "Request failed",
+      expect.objectContaining({ requestId: "err-id", error: "network down" }),
+    );
+
+    uninstall();
   });
 });

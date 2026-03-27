@@ -141,6 +141,93 @@ function sanitizeUrl(url: string): string {
  * client.use(createRequestTrackingMiddleware());
  * ```
  */
+/**
+ * Install request tracking on the global `fetch` function.
+ *
+ * Every `fetch()` call will automatically get a `ts-request-id` header
+ * and optional logging. Returns an uninstall function to restore the
+ * original `fetch`.
+ *
+ * @example
+ * ```ts
+ * import { installRequestTracking, createConsoleLogger } from '@tetrascience-npm/tetrascience-react-ui';
+ *
+ * installRequestTracking({ logger: createConsoleLogger({ prefix: 'my-app' }) });
+ * // All fetch() calls now include ts-request-id
+ * ```
+ */
+export function installRequestTracking(options?: RequestTrackingMiddlewareOptions): () => void {
+  const {
+    generateRequestId: genId = generateRequestId,
+    logger,
+    extraHeaders,
+    requestIdHeader = REQUEST_ID_HEADER,
+  } = options ?? {};
+
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const requestId = genId();
+    const headers = new Headers(init?.headers);
+
+    headers.set(requestIdHeader, requestId);
+
+    if (extraHeaders) {
+      for (const [key, value] of Object.entries(extraHeaders)) {
+        const resolved = typeof value === "function" ? value() : value;
+        if (resolved) {
+          headers.set(key, resolved);
+        }
+      }
+    }
+
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    logger?.debug("Outgoing request", {
+      requestId,
+      path: sanitizeUrl(url),
+    });
+
+    return originalFetch(input, { ...init, headers }).then(
+      (response) => {
+        logger?.debug("Response received", {
+          requestId,
+          path: sanitizeUrl(url),
+          status: response.status,
+        });
+        return response;
+      },
+      (error: unknown) => {
+        logger?.error("Request failed", {
+          requestId,
+          path: sanitizeUrl(url),
+          error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+      },
+    );
+  };
+
+  return () => {
+    globalThis.fetch = originalFetch;
+  };
+}
+
+/**
+ * Create request tracking middleware for openapi-fetch clients.
+ *
+ * Injects a `ts-request-id` header on every outgoing request for end-to-end
+ * tracing from the browser through backend services. Optionally logs
+ * requests/responses with the correlated request ID.
+ *
+ * @example
+ * ```ts
+ * import createClient from 'openapi-fetch';
+ * import { createRequestTrackingMiddleware } from '@tetrascience-npm/tetrascience-react-ui';
+ *
+ * const client = createClient<paths>({ baseUrl: '/api' });
+ * client.use(createRequestTrackingMiddleware());
+ * ```
+ */
 export function createRequestTrackingMiddleware(options?: RequestTrackingMiddlewareOptions): Middleware {
   const {
     generateRequestId: genId = generateRequestId,

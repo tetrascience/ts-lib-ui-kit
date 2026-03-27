@@ -1,4 +1,4 @@
-import { CodeScriptEditorButton } from "./CodeScriptEditorButton";
+import CodeScriptEditorButton from "./CodeScriptEditorButton";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 

@@ -27,6 +27,12 @@ import type { VariableDeclaration} from 'ts-morph';
 /** Represents the type of story export pattern detected */
 export type StoryPattern = 'csf3-object' | 'csf2-template-bind' | 'arrow-function' | 'react-fc' | 'unknown';
 
+export interface TestStep {
+  description: string;
+  testData: string;
+  expectedResult: string;
+}
+
 export interface StoryCase {
   filePath: string;
   lineNumber: number;
@@ -40,6 +46,8 @@ export interface StoryCase {
   hasEmptyZephyrProperty: boolean;
   /** The detected story pattern for proper update handling */
   pattern: StoryPattern;
+  /** Test steps extracted from the play function's step() calls */
+  steps: TestStep[];
 }
 
 interface ZephyrFolder {
@@ -247,6 +255,33 @@ export function findStoryNameAssignment(declaration: VariableDeclaration): strin
   return undefined;
 }
 
+/** Extracts step names from a story's play function body using regex */
+export function parsePlayFunctionSteps(declaration: VariableDeclaration): TestStep[] {
+  const initializer = declaration.getInitializer();
+  if (!initializer || !Node.isObjectLiteralExpression(initializer)) return [];
+
+  const playProp = initializer.getProperty('play');
+  if (!playProp || !Node.isPropertyAssignment(playProp)) return [];
+
+  const playInit = playProp.getInitializer();
+  if (!playInit) return [];
+
+  const playText = playInit.getText();
+  const stepPattern = /await step\(\s*(['"])(.+?)\1/g;
+  const steps: TestStep[] = [];
+
+  let match: RegExpExecArray | null;
+  while ((match = stepPattern.exec(playText)) !== null) {
+    steps.push({
+      description: match[2],
+      testData: '',
+      expectedResult: 'Step executed successfully',
+    });
+  }
+
+  return steps;
+}
+
 /** Parses a story file using TypeScript AST to extract story exports */
 export function parseStoryFile(filePath: string, content: string): StoryCase[] {
   const stories: StoryCase[] = [];
@@ -354,6 +389,8 @@ export function parseStoryFile(filePath: string, content: string): StoryCase[] {
         }
       }
 
+      const steps = parsePlayFunctionSteps(decl);
+
       stories.push({
         filePath,
         lineNumber,
@@ -365,6 +402,7 @@ export function parseStoryFile(filePath: string, content: string): StoryCase[] {
         existingId,
         hasEmptyZephyrProperty,
         pattern,
+        steps,
       });
     }
   }
@@ -461,6 +499,34 @@ async function createTestCase(testName: string, objective: string, folderId: str
     throw new Error(`Failed to create test case: ${response.status} ${errorText}`);
   }
   return await response.json();
+}
+
+/** Uploads test steps to a Zephyr test case (overwrites existing steps) */
+async function uploadTestSteps(testCaseKey: string, steps: TestStep[]): Promise<void> {
+  if (steps.length === 0) return;
+
+  const url = `${ZEPHYR_BASE_URL}/testcases/${testCaseKey}/teststeps`;
+  const body = {
+    mode: 'OVERWRITE',
+    items: steps.map((step) => ({
+      inline: {
+        description: step.description,
+        testData: step.testData,
+        expectedResult: step.expectedResult,
+      },
+    })),
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${getZephyrToken()}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to upload test steps: ${response.status} ${errorText}`);
+  }
 }
 
 // ============================================================================
@@ -733,57 +799,108 @@ async function main(): Promise<void> {
   }
   console.log('');
 
-  if (storiesNeedingIds.length === 0) {
-    console.log('[INFO] All stories already have Zephyr IDs!\n');
-    return;
-  }
+  // ==================== Pass 1: Create test cases for stories without IDs ====================
 
   let successCount = 0;
   let failCount = 0;
   let updateFailCount = 0;
+  let stepSyncCount = 0;
+  let stepSyncFail = 0;
 
-  for (const story of storiesNeedingIds) {
-    const relativePath = path.relative(process.cwd(), story.filePath);
-    const updateType = story.hasEmptyZephyrProperty ? 'UPDATE' : 'CREATE';
-    console.log(`\n[PROCESS] ${relativePath} - ${story.exportName} (${updateType})`);
+  if (storiesNeedingIds.length === 0) {
+    console.log('[INFO] All stories already have Zephyr IDs!\n');
+  } else {
+    console.log(`[INFO] Creating ${storiesNeedingIds.length} test case(s) in Zephyr...\n`);
 
-    try {
-      const folderId = await getFolderId(story.componentType);
-      const objective = generateObjective(story);
-      const humanName = story.storyName.replace(/([A-Z])/g, ' $1').trim();
-      const testName = `${story.componentName} - ${humanName}`;
+    for (const story of storiesNeedingIds) {
+      const relativePath = path.relative(process.cwd(), story.filePath);
+      const updateType = story.hasEmptyZephyrProperty ? 'UPDATE' : 'CREATE';
+      console.log(`\n[PROCESS] ${relativePath} - ${story.exportName} (${updateType})`);
 
-      console.log(`  [API] Creating test case in Zephyr...`);
-      const result = await createTestCase(testName, objective, folderId);
-      console.log(`  [SUCCESS] Created ${result.key}`);
+      try {
+        const folderId = await getFolderId(story.componentType);
+        const objective = generateObjective(story);
+        const humanName = story.storyName.replace(/([A-Z])/g, ' $1').trim();
+        const testName = `${story.componentName} - ${humanName}`;
 
-      console.log(`  [UPDATE] Updating story file with ${result.key}`);
-      const updateSuccess = updateStoryFile(
-        story.filePath,
-        story.lineNumber,
-        story.exportName,
-        result.key,
-        story.pattern,
-        story.hasEmptyZephyrProperty,
-      );
+        console.log(`  [API] Creating test case in Zephyr...`);
+        const result = await createTestCase(testName, objective, folderId);
+        console.log(`  [SUCCESS] Created ${result.key}`);
 
-      if (updateSuccess) {
-        successCount++;
-      } else {
-        updateFailCount++;
-        console.log(`  [PARTIAL] Test case created but story file not updated - manual update required`);
+        if (story.steps.length > 0) {
+          try {
+            console.log(`  [STEPS] Uploading ${story.steps.length} step(s) to ${result.key}...`);
+            await uploadTestSteps(result.key, story.steps);
+            console.log(`  [STEPS] Uploaded successfully`);
+            stepSyncCount++;
+          } catch (error: unknown) {
+            console.error(`  [STEPS ERROR] ${error instanceof Error ? error.message : String(error)}`);
+            stepSyncFail++;
+          }
+        }
+
+        console.log(`  [UPDATE] Updating story file with ${result.key}`);
+        const updateSuccess = updateStoryFile(
+          story.filePath,
+          story.lineNumber,
+          story.exportName,
+          result.key,
+          story.pattern,
+          story.hasEmptyZephyrProperty,
+        );
+
+        if (updateSuccess) {
+          successCount++;
+        } else {
+          updateFailCount++;
+          console.log(`  [PARTIAL] Test case created but story file not updated - manual update required`);
+        }
+      } catch (error: unknown) {
+        console.error(`  [ERROR] ${error instanceof Error ? error.message : String(error)}`);
+        failCount++;
       }
-    } catch (error: unknown) {
-      console.error(`  [ERROR] ${error instanceof Error ? error.message : String(error)}`);
-      failCount++;
     }
   }
+
+  // ==================== Pass 2: Sync test steps for existing test cases ====================
+
+  const existingStoriesWithSteps = storiesWithIds.filter((s) => s.steps.length > 0 && s.existingId);
+
+  if (existingStoriesWithSteps.length > 0) {
+    console.log(`\n[INFO] Syncing test steps for ${existingStoriesWithSteps.length} existing test case(s)...\n`);
+
+    const syncedKeys = new Set<string>();
+
+    for (const story of existingStoriesWithSteps) {
+      const keys = story.existingId!.split(',').map((k) => k.trim());
+
+      for (const key of keys) {
+        if (syncedKeys.has(key)) continue;
+        syncedKeys.add(key);
+
+        try {
+          console.log(`  [STEPS] ${key}: ${story.steps.length} step(s)`);
+          await uploadTestSteps(key, story.steps);
+          stepSyncCount++;
+        } catch (error: unknown) {
+          console.error(`  [STEPS ERROR] ${key}: ${error instanceof Error ? error.message : String(error)}`);
+          stepSyncFail++;
+        }
+      }
+    }
+  }
+
+  // ==================== Summary ====================
 
   console.log('\n=====================================');
   console.log(`[INFO] Sync complete!`);
   console.log(`  Fully synced: ${successCount}`);
   console.log(`  Created but needs manual update: ${updateFailCount}`);
+  console.log(`  Test steps synced: ${stepSyncCount}`);
   console.log(`  Failed: ${failCount}`);
+  if (stepSyncFail > 0) {
+    console.log(`  Step sync failures: ${stepSyncFail}`);
+  }
   if (failCount > 0) process.exit(1);
   if (updateFailCount > 0) {
     console.log('\n[WARN] Some stories require manual Zephyr ID tagging. See warnings above.');

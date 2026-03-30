@@ -16,14 +16,11 @@ jobs:
       pull-requests: read
     runs-on: ubuntu-latest
     steps:
-      - name: Check PR title for Jira ticket
+      - uses: amannn/action-semantic-pull-request@0723387faaf9b38adef4775cd42cfd5155ed6017 # v5.5.3
         env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-        run: |
-          if [[ ! "$PR_TITLE" =~ ^[A-Z]+-[1-9][0-9]*:\ .+ ]]; then
-            echo "::error::PR title must start with a Jira ticket number (e.g., 'SW-1234: Add Button component')"
-            echo "Got: '$PR_TITLE'"
-            echo "Expected pattern: PROJ-123: Description"
-            exit 1
-          fi
-          echo "PR title is valid: '$PR_TITLE'"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          subjectPattern: '^[A-Z]+-[1-9][0-9]* .+'
+          subjectPatternError: |
+            The subject "{subject}" must start with a Jira ticket number.
+            Expected format: "type: PROJ-123 Description" (e.g., "feat: SW-1234 Add Button component")

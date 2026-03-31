@@ -1,4 +1,5 @@
 import { toast } from "sonner"
+import { expect, within } from "storybook/test"
 
 import { Button } from "./button"
 import { Toaster } from "./sonner"
@@ -77,5 +78,22 @@ export const Default: Story = {
   render: renderToaster,
   parameters: {
     zephyr: { testCaseId: "SW-T1301" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Toast trigger buttons render", async () => {
+      expect(canvas.getByRole("button", { name: "Default" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Success" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Error" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Warning" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Info" })).toBeInTheDocument()
+    })
+
+    await step("Instructions render", async () => {
+      expect(
+        canvas.getByText("Trigger each toast state to preview the local Sonner styling."),
+      ).toBeInTheDocument()
+    })
   },
 }

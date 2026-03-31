@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { expect, within } from "storybook/test";
 
 import { TdpSearch } from "./TdpSearch";
 import { mockSearchResponse } from "./TdpSearch.mocks";
@@ -210,6 +211,30 @@ export const BasicUsage: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1120" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Search input renders", async () => {
+      const searchInput = canvas.queryByRole("searchbox") ?? canvas.queryByRole("textbox");
+      expect(searchInput).toBeInTheDocument();
+    });
+
+    await step("Placeholder text is displayed", async () => {
+      expect(canvas.getByPlaceholderText("Search files...")).toBeInTheDocument();
+    });
+
+    await step("Search button is present", async () => {
+      expect(canvas.getByRole("button", { name: /search/i })).toBeInTheDocument();
+    });
+
+    await step("Search icon is visible in the bar", async () => {
+      expect(canvas.getByRole("textbox").closest(".tdp-search__search-bar")).toBeTruthy();
+    });
+
+    await step("Initial empty state prompts to search", async () => {
+      expect(canvas.getByText("Enter a search query and click Search to get started.")).toBeInTheDocument();
+    });
+  },
 };
 
 export const FullFeatured: Story = {
@@ -223,6 +248,35 @@ export const FullFeatured: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1121" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Search input renders", async () => {
+      const searchInput = canvas.queryByRole("searchbox") ?? canvas.queryByRole("textbox");
+      expect(searchInput).toBeInTheDocument();
+    });
+
+    await step("Default placeholder is displayed", async () => {
+      expect(canvas.getByPlaceholderText("Enter search term...")).toBeInTheDocument();
+    });
+
+    await step("Search button is present", async () => {
+      expect(canvas.getByRole("button", { name: /search/i })).toBeInTheDocument();
+    });
+
+    await step("Filter labels are displayed", async () => {
+      expect(canvas.getByText("Source Type")).toBeInTheDocument();
+      expect(canvas.getByText("Status")).toBeInTheDocument();
+    });
+
+    await step("Filter comboboxes render", async () => {
+      expect(canvas.getAllByRole("combobox").length).toBeGreaterThanOrEqual(2);
+    });
+
+    await step("Initial empty state prompts to search", async () => {
+      expect(canvas.getByText("Enter a search query and click Search to get started.")).toBeInTheDocument();
+    });
   },
 };
 
@@ -242,6 +296,35 @@ export const WithFilters: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1122" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Search input renders", async () => {
+      const searchInput = canvas.queryByRole("searchbox") ?? canvas.queryByRole("textbox");
+      expect(searchInput).toBeInTheDocument();
+    });
+
+    await step("Default placeholder is displayed", async () => {
+      expect(canvas.getByPlaceholderText("Enter search term...")).toBeInTheDocument();
+    });
+
+    await step("Search button is present", async () => {
+      expect(canvas.getByRole("button", { name: /search/i })).toBeInTheDocument();
+    });
+
+    await step("Filter labels are displayed", async () => {
+      expect(canvas.getByText("Source Type")).toBeInTheDocument();
+      expect(canvas.getByText("Status")).toBeInTheDocument();
+    });
+
+    await step("Filter comboboxes render", async () => {
+      expect(canvas.getAllByRole("combobox").length).toBe(2);
+    });
+
+    await step("Initial empty state prompts to search", async () => {
+      expect(canvas.getByText("Enter a search query and click Search to get started.")).toBeInTheDocument();
+    });
   },
 };
 
@@ -402,6 +485,30 @@ export const CustomRendering: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1123" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Search input renders", async () => {
+      const searchInput = canvas.queryByRole("searchbox") ?? canvas.queryByRole("textbox");
+      expect(searchInput).toBeInTheDocument();
+    });
+
+    await step("Default placeholder is displayed", async () => {
+      expect(canvas.getByPlaceholderText("Enter search term...")).toBeInTheDocument();
+    });
+
+    await step("Search button is present", async () => {
+      expect(canvas.getByRole("button", { name: /search/i })).toBeInTheDocument();
+    });
+
+    await step("Search icon is visible in the bar", async () => {
+      expect(canvas.getByRole("textbox").closest(".tdp-search__search-bar")).toBeTruthy();
+    });
+
+    await step("Initial empty state prompts to search", async () => {
+      expect(canvas.getByText("Enter a search query and click Search to get started.")).toBeInTheDocument();
+    });
+  },
 };
 
 /** Custom search bar via renderSearchBar — TdpSearch manages all state; only the input UI is swapped. */
@@ -414,5 +521,29 @@ export const CustomSearchBar: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1124" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Custom search input renders", async () => {
+      const searchInput = canvas.queryByRole("searchbox") ?? canvas.queryByRole("textbox");
+      expect(searchInput).toBeInTheDocument();
+    });
+
+    await step("Default placeholder is displayed", async () => {
+      expect(canvas.getByPlaceholderText("Enter search term...")).toBeInTheDocument();
+    });
+
+    await step("Search button is present", async () => {
+      expect(canvas.getByRole("button", { name: /search/i })).toBeInTheDocument();
+    });
+
+    await step("Custom magnifier icon is shown", async () => {
+      expect(canvas.getByText("🔍")).toBeInTheDocument();
+    });
+
+    await step("Initial empty state prompts to search", async () => {
+      expect(canvas.getByText("Enter a search query and click Search to get started.")).toBeInTheDocument();
+    });
   },
 };

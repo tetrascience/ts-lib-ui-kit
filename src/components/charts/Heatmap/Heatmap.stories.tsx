@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import { Heatmap } from "./Heatmap";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -132,6 +134,23 @@ export const RealDataVisualization: Story = {
     xTitle: "Columns",
     yTitle: "Rows",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Heatmap scatter trace renders", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+  },
 };
 
 export const WellPlateMockup: Story = {
@@ -150,6 +169,23 @@ export const WellPlateMockup: Story = {
     xTitle: "Columns",
     yTitle: "Rows",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Heatmap scatter trace renders", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+  },
 };
 
 export const DefaultPlate: Story = {
@@ -167,6 +203,23 @@ export const DefaultPlate: Story = {
     zmax: 50000,
     precision: 0,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Heatmap scatter trace renders", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+  },
 };
 
 export const SmallPlate: Story = {
@@ -183,6 +236,16 @@ export const SmallPlate: Story = {
     zmax: 50000,
     precision: 0,
     showScale: true,
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Heatmap scatter trace renders", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(1);
+    });
   },
 };
 
@@ -207,5 +270,26 @@ export const CustomLabels: Story = {
     height: 500,
     zmin: 5000,
     zmax: 50000,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Custom Labels Sample")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Heatmap scatter trace renders", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+
+    await step("Custom axis labels are displayed", async () => {
+      expect(canvas.getByText("X1")).toBeInTheDocument();
+      expect(canvas.getByText("Y1")).toBeInTheDocument();
+    });
   },
 };

@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import { COLORS } from "../../../utils/colors";
 
 import { Histogram } from "./Histogram";
@@ -47,6 +49,22 @@ export const Default: Story = {
     width: 480,
     height: 480,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Histogram")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("One histogram trace is rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".barlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+  },
 };
 
 export const WithCustomColor: Story = {
@@ -66,6 +84,22 @@ export const WithCustomColor: Story = {
     yTitle: "Frequency",
     width: 480,
     height: 480,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Histogram with Custom Color")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("One histogram trace is rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".barlayer .trace");
+      expect(traces.length).toBe(1);
+    });
   },
 };
 
@@ -91,6 +125,27 @@ export const WithCustomBins: Story = {
     yTitle: "Frequency",
     width: 480,
     height: 480,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Histogram with Custom Bins")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("One histogram trace is rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".barlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+
+    await step("Custom bins render visible bars", async () => {
+      const barPoints = canvasElement.querySelectorAll(".barlayer .bars .point");
+      expect(barPoints.length).toBeGreaterThan(0);
+    });
   },
 };
 
@@ -118,6 +173,27 @@ export const StackedHistogram: Story = {
     yTitle: "Frequency",
     width: 480,
     height: 480,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Group of Histogram")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Two histogram traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".barlayer .trace");
+      expect(traces.length).toBe(2);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Series A")).toBeInTheDocument();
+      expect(canvas.getByText("Series B")).toBeInTheDocument();
+    });
   },
 };
 
@@ -156,6 +232,29 @@ export const MultipleSeries: Story = {
     width: 600,
     height: 480,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Multiple Series Histogram")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Four histogram traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".barlayer .trace");
+      expect(traces.length).toBe(4);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Series A")).toBeInTheDocument();
+      expect(canvas.getByText("Series B")).toBeInTheDocument();
+      expect(canvas.getByText("Series C")).toBeInTheDocument();
+      expect(canvas.getByText("Series D")).toBeInTheDocument();
+    });
+  },
 };
 
 export const WithDistributionLine: Story = {
@@ -176,6 +275,22 @@ export const WithDistributionLine: Story = {
     width: 480,
     height: 480,
     showDistributionLine: true,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Histogram with Fitted Distribution Line")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Histogram and distribution line traces render", async () => {
+      expect(canvasElement.querySelectorAll(".barlayer .trace").length).toBe(1);
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
   },
 };
 
@@ -204,6 +319,27 @@ export const WithCustomBinsAndDistributionLine: Story = {
     height: 480,
     showDistributionLine: true,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Histogram with Fitted Distribution Line")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Histogram and distribution line traces render", async () => {
+      expect(canvasElement.querySelectorAll(".barlayer .trace").length).toBe(1);
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
+
+    await step("Custom bins render visible bars", async () => {
+      const barPoints = canvasElement.querySelectorAll(".barlayer .bars .point");
+      expect(barPoints.length).toBeGreaterThan(0);
+    });
+  },
 };
 
 export const MultipleSeriesWithDistributionLines: Story = {
@@ -231,5 +367,26 @@ export const MultipleSeriesWithDistributionLines: Story = {
     width: 600,
     height: 500,
     showDistributionLine: true,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Group of Histogram with Fitted Distribution Line")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Two histogram and two distribution line traces render", async () => {
+      expect(canvasElement.querySelectorAll(".barlayer .trace").length).toBe(2);
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(2);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Series A")).toBeInTheDocument();
+      expect(canvas.getByText("Series B")).toBeInTheDocument();
+    });
   },
 };

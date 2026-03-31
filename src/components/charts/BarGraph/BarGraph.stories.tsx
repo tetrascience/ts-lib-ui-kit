@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import { COLORS } from "./../../../utils/colors";
 import { BarGraph } from "./BarGraph";
 
@@ -85,6 +87,22 @@ export const Basic: Story = {
     width: 1000,
     height: 600,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Bar Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("One trace is rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".barlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+  },
 };
 
 export const GroupedBars: Story = {
@@ -100,6 +118,28 @@ export const GroupedBars: Story = {
     width: 1000,
     height: 600,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Cluster Bar Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Three traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".barlayer .trace");
+      expect(traces.length).toBe(3);
+    });
+
+    await step("Legend shows all series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data B")).toBeInTheDocument();
+      expect(canvas.getByText("Data C")).toBeInTheDocument();
+    });
+  },
 };
 
 export const StackedBars: Story = {
@@ -114,6 +154,27 @@ export const StackedBars: Story = {
     title: "Stacked Bar Graph",
     width: 1000,
     height: 600,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Stacked Bar Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Two traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".barlayer .trace");
+      expect(traces.length).toBe(2);
+    });
+
+    await step("Legend shows all series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data B")).toBeInTheDocument();
+    });
   },
 };
 
@@ -131,5 +192,32 @@ export const CustomStyling: Story = {
     width: 1000,
     height: 600,
     barWidth: 16,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Custom Bar Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("X-Axis Label")).toBeInTheDocument();
+      expect(canvas.getByText("Y-Axis Label")).toBeInTheDocument();
+    });
+
+    await step("Three traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".barlayer .trace");
+      expect(traces.length).toBe(3);
+    });
+
+    await step("Legend shows all series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data B")).toBeInTheDocument();
+      expect(canvas.getByText("Data C")).toBeInTheDocument();
+    });
   },
 };

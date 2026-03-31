@@ -1,3 +1,4 @@
+import { expect, within } from "storybook/test"
 
 import { Button } from "./button"
 import {
@@ -51,6 +52,19 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1237" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Menu trigger renders", async () => {
+      expect(canvas.getByText("Open menu")).toBeInTheDocument()
+    })
+
+    await step("Menu items render", async () => {
+      expect(body.getByRole("menuitem", { name: "Rename" })).toBeInTheDocument()
+      expect(body.getByRole("menuitem", { name: "Duplicate" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const Destructive: Story = {
@@ -61,5 +75,18 @@ export const Destructive: Story = {
   render: renderMenu,
   parameters: {
     zephyr: { testCaseId: "SW-T1238" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Menu trigger renders", async () => {
+      expect(canvas.getByText("Open menu")).toBeInTheDocument()
+    })
+
+    await step("Menu items render", async () => {
+      expect(body.getByRole("menuitem", { name: "Rename" })).toBeInTheDocument()
+      expect(body.getByRole("menuitem", { name: "Duplicate" })).toBeInTheDocument()
+    })
   },
 }

@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import {
   Table,
   TableBody,
@@ -71,11 +73,40 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1308" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders with caption and headers", async () => {
+      expect(canvas.getByRole("table")).toBeInTheDocument()
+      expect(
+        canvas.getByText("Recent workspaces and their current execution totals."),
+      ).toBeInTheDocument()
+      expect(canvas.getByRole("columnheader", { name: "Workspace" })).toBeInTheDocument()
+      expect(canvas.getByRole("columnheader", { name: "Owner" })).toBeInTheDocument()
+      expect(canvas.getByRole("columnheader", { name: "Status" })).toBeInTheDocument()
+      expect(canvas.getByRole("columnheader", { name: "Runs" })).toBeInTheDocument()
+    })
+
+    await step("Data rows and cells render", async () => {
+      expect(canvas.getByRole("row", { name: /Clinical exports/ })).toBeInTheDocument()
+      expect(canvas.getByText("QC dashboard")).toBeInTheDocument()
+      expect(canvas.getByText("Audit trail")).toBeInTheDocument()
+    })
+  },
 }
 
 export const WithFooter: Story = {
   render: () => renderTable(true),
   parameters: {
     zephyr: { testCaseId: "SW-T1309" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders with footer row", async () => {
+      expect(canvas.getByRole("table")).toBeInTheDocument()
+      expect(canvas.getByRole("cell", { name: "Total runs" })).toBeInTheDocument()
+      expect(canvas.getByRole("cell", { name: "274" })).toBeInTheDocument()
+    })
   },
 }

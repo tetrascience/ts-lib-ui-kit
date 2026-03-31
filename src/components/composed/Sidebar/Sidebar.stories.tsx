@@ -12,6 +12,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { useState } from "react";
+import { expect, within } from "storybook/test";
 
 import AppSidebar from "./Sidebar";
 
@@ -99,6 +100,20 @@ export const Default: Story = {
     items: sidebarItems,
     activeItem: "Pipelines",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Primary navigation labels render", async () => {
+      expect(canvas.getByText("Search")).toBeInTheDocument();
+      expect(canvas.getByText("Pipelines")).toBeInTheDocument();
+      expect(canvas.getByText("Administration")).toBeInTheDocument();
+    });
+
+    await step("Additional menu items render", async () => {
+      expect(canvas.getByText("SQL Search")).toBeInTheDocument();
+      expect(canvas.getByText("Data Sources")).toBeInTheDocument();
+    });
+  },
 };
 
 // Interactive sidebar with state
@@ -109,4 +124,18 @@ export const Interactive: Story = {
     zephyr: { testCaseId: "SW-T943" },
   },
   render: () => <InteractiveComponent />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Primary navigation labels render", async () => {
+      expect(canvas.getByText("Search")).toBeInTheDocument();
+      expect(canvas.getAllByText("Pipelines").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getByText("Administration")).toBeInTheDocument();
+    });
+
+    await step("Main panel shows selected navigation", async () => {
+      expect(canvas.getByText("Selected navigation:")).toBeInTheDocument();
+      expect(canvas.getByText("Click on sidebar items to navigate")).toBeInTheDocument();
+    });
+  },
 };

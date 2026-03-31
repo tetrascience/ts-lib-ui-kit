@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import {
   ResizableHandle,
   ResizablePanel,
@@ -56,6 +58,18 @@ export const Horizontal: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1276" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Panel content renders", async () => {
+      expect(canvas.getByText("Summary panel")).toBeInTheDocument()
+      expect(canvas.getByText("Detailed analytics")).toBeInTheDocument()
+    })
+
+    await step("Resize handle is present", async () => {
+      expect(canvas.getByRole("separator")).toBeInTheDocument()
+    })
+  },
 }
 
 export const VerticalWithHandle: Story = {
@@ -65,5 +79,17 @@ export const VerticalWithHandle: Story = {
   render: (args) => renderResizable(args, true),
   parameters: {
     zephyr: { testCaseId: "SW-T1277" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Panel content renders", async () => {
+      expect(canvas.getByText("Summary panel")).toBeInTheDocument()
+      expect(canvas.getByText("Detailed analytics")).toBeInTheDocument()
+    })
+
+    await step("Resize handle is present", async () => {
+      expect(canvas.getByRole("separator")).toBeInTheDocument()
+    })
   },
 }

@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { Kbd, KbdGroup } from "./kbd"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
@@ -21,6 +23,13 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1266" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Keyboard shortcut text renders", async () => {
+      expect(canvas.getByText("⌘K")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Grouped: Story = {
@@ -35,5 +44,14 @@ export const Grouped: Story = {
   ),
   parameters: {
     zephyr: { testCaseId: "SW-T1267" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Label and grouped shortcut keys render", async () => {
+      expect(canvas.getByText("Open command menu")).toBeInTheDocument()
+      expect(canvas.getByText("⌘")).toBeInTheDocument()
+      expect(canvas.getByText("K", { selector: "kbd" })).toBeInTheDocument()
+    })
   },
 }

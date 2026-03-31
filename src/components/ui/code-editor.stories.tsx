@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import CodeEditor from "./code-editor";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -62,6 +64,17 @@ export const Default: Story = {
     label: "Description",
     ...defaultHandlers,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Editor container renders", async () => {
+      expect(canvasElement.querySelector(".rounded-2xl")).toBeInTheDocument();
+    });
+
+    await step("Copy and launch controls render", async () => {
+      expect(canvas.getAllByRole("button").length).toBeGreaterThanOrEqual(2);
+    });
+  },
 };
 
 export const LightMode: Story = {
@@ -78,6 +91,17 @@ export const LightMode: Story = {
     label: "Description",
     theme: "light",
     ...defaultHandlers,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Editor renders in light theme", async () => {
+      expect(canvasElement.querySelector(".monaco-editor")).toBeInTheDocument();
+    });
+
+    await step("Toolbar actions present", async () => {
+      expect(canvas.getAllByRole("button").length).toBeGreaterThanOrEqual(2);
+    });
   },
 };
 
@@ -115,6 +139,17 @@ export default Counter;`,
     theme: "dark",
     ...defaultHandlers,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Editor renders for larger snippet", async () => {
+      expect(canvasElement.querySelector(".monaco-editor")).toBeInTheDocument();
+    });
+
+    await step("Copy and launch controls render", async () => {
+      expect(canvas.getAllByRole("button")).toHaveLength(2);
+    });
+  },
 };
 
 export const Interactive: Story = {
@@ -129,5 +164,10 @@ export const Interactive: Story = {
     height: 400,
     width: "400px",
     label: "Description",
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Editor container renders", async () => {
+      expect(canvasElement.querySelector(".rounded-2xl")).toBeInTheDocument();
+    });
   },
 };

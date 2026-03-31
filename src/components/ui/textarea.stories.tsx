@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { Textarea } from "./textarea"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
@@ -29,6 +31,19 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1314" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Textarea renders", async () => {
+      expect(canvas.getByRole("textbox")).toBeInTheDocument()
+    })
+
+    await step("Placeholder is shown", async () => {
+      expect(
+        canvas.getByPlaceholderText("Add any notes for reviewers"),
+      ).toBeInTheDocument()
+    })
+  },
 }
 
 export const Disabled: Story = {
@@ -39,5 +54,14 @@ export const Disabled: Story = {
   render: renderTextarea,
   parameters: {
     zephyr: { testCaseId: "SW-T1315" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Disabled textarea renders with value", async () => {
+      const field = canvas.getByRole("textbox")
+      expect(field).toBeDisabled()
+      expect(field).toHaveValue("Review complete. Changes approved.")
+    })
   },
 }

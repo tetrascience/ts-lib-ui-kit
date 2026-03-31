@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import {
   Accordion,
   AccordionContent,
@@ -51,11 +53,55 @@ export const Single: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1180" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Accordion triggers and section headings render", async () => {
+      expect(
+        canvas.getByRole("button", { name: "Can I use these components in Storybook?" }),
+      ).toBeInTheDocument()
+      expect(
+        canvas.getByRole("button", { name: "Do they support multiple open sections?" }),
+      ).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Can content include links?" })).toBeInTheDocument()
+    })
+
+    await step("Expanded section content is visible", async () => {
+      expect(
+        canvas.getByText(
+          "Yes. Each component can be composed into focused stories for docs and testing.",
+        ),
+      ).toBeInTheDocument()
+    })
+  },
 }
 
 export const Multiple: Story = {
   render: () => <AccordionExample type="multiple" defaultValue={["item-1", "item-2"]} />,
   parameters: {
     zephyr: { testCaseId: "SW-T1181" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Accordion triggers render", async () => {
+      expect(
+        canvas.getByRole("button", { name: "Can I use these components in Storybook?" }),
+      ).toBeInTheDocument()
+      expect(
+        canvas.getByRole("button", { name: "Do they support multiple open sections?" }),
+      ).toBeInTheDocument()
+    })
+
+    await step("Multiple expanded sections show content", async () => {
+      expect(
+        canvas.getByText(
+          "Yes. Each component can be composed into focused stories for docs and testing.",
+        ),
+      ).toBeInTheDocument()
+      expect(
+        canvas.getByText("The accordion root supports both single and multiple expansion modes."),
+      ).toBeInTheDocument()
+    })
   },
 }

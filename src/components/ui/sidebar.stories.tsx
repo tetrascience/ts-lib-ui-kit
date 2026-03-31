@@ -5,6 +5,7 @@ import {
   SettingsIcon,
   UsersIcon,
 } from "lucide-react"
+import { expect, within } from "storybook/test"
 
 import {
   Sidebar,
@@ -158,11 +159,29 @@ function renderSidebar(
   )
 }
 
+const playSidebar: Story["play"] = async ({ canvasElement, step }) => {
+  const canvas = within(canvasElement)
+
+  await step("Layout renders", async () => {
+    expect(canvas.getByText("Dashboard")).toBeInTheDocument()
+    expect(canvas.getByRole("button", { name: /toggle sidebar/i })).toBeInTheDocument()
+  })
+
+  await step("Sidebar navigation", async () => {
+    expect(canvas.getByPlaceholderText("Search navigation")).toBeInTheDocument()
+    expect(canvas.getByText("Workspace")).toBeInTheDocument()
+    expect(canvas.getByText("Overview")).toBeInTheDocument()
+    expect(canvas.getByText("Projects")).toBeInTheDocument()
+    expect(canvas.getByText("Settings")).toBeInTheDocument()
+  })
+}
+
 export const Default: Story = {
   render: renderSidebar,
   parameters: {
     zephyr: { testCaseId: "SW-T1288" },
   },
+  play: playSidebar,
 }
 
 export const Floating: Story = {
@@ -173,6 +192,7 @@ export const Floating: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1289" },
   },
+  play: playSidebar,
 }
 
 export const Inset: Story = {
@@ -183,6 +203,7 @@ export const Inset: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1290" },
   },
+  play: playSidebar,
 }
 
 export const RightSide: Story = {
@@ -193,6 +214,7 @@ export const RightSide: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1291" },
   },
+  play: playSidebar,
 }
 
 export const CollapsedIcon: Story = {
@@ -202,6 +224,19 @@ export const CollapsedIcon: Story = {
   render: (args) => renderSidebar(args, { open: false }),
   parameters: {
     zephyr: { testCaseId: "SW-T1292" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Layout renders", async () => {
+      expect(canvas.getByText("Dashboard")).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: /toggle sidebar/i })).toBeInTheDocument()
+    })
+
+    await step("Collapsed sidebar shell", async () => {
+      expect(canvasElement.querySelector('[data-sidebar="sidebar"]')).toBeTruthy()
+      expect(canvas.getByPlaceholderText("Search navigation")).toBeInTheDocument()
+    })
   },
 }
 
@@ -213,6 +248,7 @@ export const NonCollapsible: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1293" },
   },
+  play: playSidebar,
 }
 
 export const OutlineMenuButtons: Story = {
@@ -220,6 +256,7 @@ export const OutlineMenuButtons: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1294" },
   },
+  play: playSidebar,
 }
 
 export const LargeMenuButtons: Story = {
@@ -227,4 +264,5 @@ export const LargeMenuButtons: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1295" },
   },
+  play: playSidebar,
 }

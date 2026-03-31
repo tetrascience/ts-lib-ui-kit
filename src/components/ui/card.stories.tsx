@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import {
   Card,
   CardContent,
@@ -54,6 +56,21 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1212" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Card renders", async () => {
+      expect(canvas.getByText("Storage usage")).toBeInTheDocument()
+    })
+
+    await step("Header, body, and footer sections are visible", async () => {
+      expect(canvas.getByText("Current workspace allocation")).toBeInTheDocument()
+      expect(
+        canvas.getByText("72% of your available storage is currently in use.")
+      ).toBeInTheDocument()
+      expect(canvas.getByText("Last updated 5 minutes ago")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Small: Story = {
@@ -63,5 +80,20 @@ export const Small: Story = {
   render: renderCard,
   parameters: {
     zephyr: { testCaseId: "SW-T1213" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Small card renders", async () => {
+      expect(canvas.getByText("Storage usage")).toBeInTheDocument()
+    })
+
+    await step("Header, body, and footer sections are visible", async () => {
+      expect(canvas.getByText("Current workspace allocation")).toBeInTheDocument()
+      expect(
+        canvas.getByText("72% of your available storage is currently in use.")
+      ).toBeInTheDocument()
+      expect(canvas.getByText("Last updated 5 minutes ago")).toBeInTheDocument()
+    })
   },
 }

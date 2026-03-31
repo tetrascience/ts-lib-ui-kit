@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { Separator } from "./separator"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
@@ -36,6 +38,20 @@ export const Horizontal: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1282" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Component renders", async () => {
+      expect(canvas.getByText("Overview")).toBeInTheDocument()
+      expect(
+        canvas.getByText("Separate sections without adding visual weight."),
+      ).toBeInTheDocument()
+    })
+
+    await step("Separator is present", async () => {
+      expect(canvasElement.querySelector('[data-slot="separator"]')).toBeInTheDocument()
+    })
+  },
 }
 
 export const Vertical: Story = {
@@ -48,5 +64,17 @@ export const Vertical: Story = {
   ),
   parameters: {
     zephyr: { testCaseId: "SW-T1283" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Component renders", async () => {
+      expect(canvas.getByText("Activity")).toBeInTheDocument()
+      expect(canvas.getByText("Deployments")).toBeInTheDocument()
+    })
+
+    await step("Separator is present", async () => {
+      expect(canvasElement.querySelector('[data-slot="separator"]')).toBeInTheDocument()
+    })
   },
 }

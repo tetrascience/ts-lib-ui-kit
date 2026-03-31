@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { Button } from "./button"
 import {
   Dialog,
@@ -59,12 +61,42 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1230" },
   },
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Dialog portal content renders", async () => {
+      expect(body.getByRole("dialog")).toBeInTheDocument()
+      expect(body.getByText("Share workspace")).toBeInTheDocument()
+    })
+
+    await step("Description, body, and save action render", async () => {
+      expect(
+        body.getByText(
+          "Invite teammates, manage permissions, and choose the default access level for new collaborators.",
+        ),
+      ).toBeInTheDocument()
+      expect(body.getByText("Members: 12 active users")).toBeInTheDocument()
+      expect(body.getByRole("button", { name: "Save changes" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const FooterCloseButton: Story = {
   render: (args) => renderDialog(args, true),
   parameters: {
     zephyr: { testCaseId: "SW-T1231" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Dialog portal content renders", async () => {
+      expect(body.getByRole("dialog")).toBeInTheDocument()
+      expect(body.getByText("Share workspace")).toBeInTheDocument()
+    })
+
+    await step("Footer save button renders", async () => {
+      expect(body.getByRole("button", { name: "Save changes" })).toBeInTheDocument()
+    })
   },
 }
 
@@ -75,5 +107,17 @@ export const WithoutCloseButton: Story = {
   render: renderDialog,
   parameters: {
     zephyr: { testCaseId: "SW-T1232" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Dialog portal content renders", async () => {
+      expect(body.getByRole("dialog")).toBeInTheDocument()
+      expect(body.getByText("Share workspace")).toBeInTheDocument()
+    })
+
+    await step("Header close control is not shown", async () => {
+      expect(body.queryByRole("button", { name: "Close" })).not.toBeInTheDocument()
+    })
   },
 }

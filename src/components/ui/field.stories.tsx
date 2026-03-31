@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import {
   Field,
   FieldContent,
@@ -77,6 +79,19 @@ export const Vertical: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1239" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Label and input render", async () => {
+      expect(canvas.getByText("Project name")).toBeInTheDocument()
+      expect(canvas.getByRole("textbox")).toBeInTheDocument()
+      expect(canvas.getByPlaceholderText("Enter a project name")).toBeInTheDocument()
+    })
+
+    await step("Helper text renders", async () => {
+      expect(canvas.getByText("Used in dashboards and reports.")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Horizontal: Story = {
@@ -86,6 +101,19 @@ export const Horizontal: Story = {
   render: renderField,
   parameters: {
     zephyr: { testCaseId: "SW-T1240" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Label and input render", async () => {
+      expect(canvas.getByText("Project name")).toBeInTheDocument()
+      expect(canvas.getByRole("textbox")).toBeInTheDocument()
+      expect(canvas.getByPlaceholderText("Enter a project name")).toBeInTheDocument()
+    })
+
+    await step("Helper text renders", async () => {
+      expect(canvas.getByText("Used in dashboards and reports.")).toBeInTheDocument()
+    })
   },
 }
 
@@ -97,6 +125,19 @@ export const Responsive: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1241" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Label and input render", async () => {
+      expect(canvas.getByText("Project name")).toBeInTheDocument()
+      expect(canvas.getByRole("textbox")).toBeInTheDocument()
+      expect(canvas.getByPlaceholderText("Enter a project name")).toBeInTheDocument()
+    })
+
+    await step("Helper text renders", async () => {
+      expect(canvas.getByText("Used in dashboards and reports.")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Legend: Story = {
@@ -104,11 +145,39 @@ export const Legend: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1242" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Legend and field render", async () => {
+      expect(canvas.getByText("Workspace details")).toBeInTheDocument()
+      expect(canvas.getByText("Name")).toBeInTheDocument()
+      expect(canvas.getByRole("textbox")).toBeInTheDocument()
+      expect(canvas.getByPlaceholderText("My workspace")).toBeInTheDocument()
+    })
+
+    await step("Field description renders", async () => {
+      expect(canvas.getByText("Visible to all collaborators.")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Label: Story = {
   render: () => renderLegend("label"),
   parameters: {
     zephyr: { testCaseId: "SW-T1243" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Legend label and field render", async () => {
+      expect(canvas.getByText("Workspace details")).toBeInTheDocument()
+      expect(canvas.getByText("Name")).toBeInTheDocument()
+      expect(canvas.getByRole("textbox")).toBeInTheDocument()
+      expect(canvas.getByPlaceholderText("My workspace")).toBeInTheDocument()
+    })
+
+    await step("Field description renders", async () => {
+      expect(canvas.getByText("Visible to all collaborators.")).toBeInTheDocument()
+    })
   },
 }

@@ -1,4 +1,5 @@
 import React from "react";
+import { expect, within } from "storybook/test";
 
 import AppHeader from "./AppHeader";
 
@@ -16,6 +17,23 @@ const meta: Meta<typeof AppHeader> = {
 export default meta;
 type Story = StoryObj<typeof AppHeader>;
 
+const defaultAppHeaderPlay: Story["play"] = async ({ canvasElement, step }) => {
+  const canvas = within(canvasElement);
+
+  await step("Hostname displays", async () => {
+    expect(canvas.getByText("localhost:3000")).toBeInTheDocument();
+  });
+
+  await step("Home and settings actions render", async () => {
+    expect(canvas.getByRole("button", { name: "Home" })).toBeInTheDocument();
+    expect(canvas.getByRole("button", { name: "Settings" })).toBeInTheDocument();
+  });
+
+  await step("User profile name is shown", async () => {
+    expect(canvas.getByText("Chris Calo")).toBeInTheDocument();
+  });
+};
+
 // Default example
 export const Default: Story = {
   name: "Default",
@@ -29,6 +47,7 @@ export const Default: Story = {
       name: "Chris Calo",
     },
   },
+  play: defaultAppHeaderPlay,
 };
 
 // With avatar
@@ -45,6 +64,7 @@ export const WithAvatar: Story = {
       avatar: "https://i.pravatar.cc/300",
     },
   },
+  play: defaultAppHeaderPlay,
 };
 
 // Interactive example with action logging
@@ -117,4 +137,26 @@ export const Interactive: Story = {
     zephyr: { testCaseId: "SW-T873" },
   },
   render: () => <InteractiveDemo />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Hostname displays", async () => {
+      expect(canvas.getByText("app.example.com")).toBeInTheDocument();
+    });
+
+    await step("Home and settings actions render", async () => {
+      expect(canvas.getByRole("button", { name: "Home" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Settings" })).toBeInTheDocument();
+    });
+
+    await step("User profile name is shown", async () => {
+      expect(canvas.getByText("Chris Calo")).toBeInTheDocument();
+    });
+
+    await step("Interaction hint is visible", async () => {
+      expect(
+        canvas.getByText("Click on any of the buttons above to see the interactions."),
+      ).toBeInTheDocument();
+    });
+  },
 };

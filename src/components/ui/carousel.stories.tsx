@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import {
   Carousel,
   CarouselContent,
@@ -58,6 +60,22 @@ export const Horizontal: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1214" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Carousel region renders", async () => {
+      expect(canvas.getAllByRole("region").length).toBeGreaterThanOrEqual(1)
+    })
+
+    await step("Slide content is visible", async () => {
+      expect(canvas.getByText("Analytics")).toBeInTheDocument()
+    })
+
+    await step("Previous and next controls are present", async () => {
+      expect(canvas.getByRole("button", { name: "Previous slide" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Next slide" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const Vertical: Story = {
@@ -67,5 +85,21 @@ export const Vertical: Story = {
   render: renderCarousel,
   parameters: {
     zephyr: { testCaseId: "SW-T1215" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Vertical carousel region renders", async () => {
+      expect(canvas.getAllByRole("region").length).toBeGreaterThanOrEqual(1)
+    })
+
+    await step("Slide content is visible", async () => {
+      expect(canvas.getByText("Analytics")).toBeInTheDocument()
+    })
+
+    await step("Previous and next controls are present", async () => {
+      expect(canvas.getByRole("button", { name: "Previous slide" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Next slide" })).toBeInTheDocument()
+    })
   },
 }

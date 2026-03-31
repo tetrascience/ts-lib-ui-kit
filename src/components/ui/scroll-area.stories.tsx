@@ -1,4 +1,5 @@
 import { ScrollArea as ScrollAreaPrimitive } from "radix-ui"
+import { expect, within } from "storybook/test"
 
 import { ScrollArea, ScrollBar } from "./scroll-area"
 
@@ -66,6 +67,14 @@ export const Vertical: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1278" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Scrollable content renders", async () => {
+      expect(canvas.getByText("Activity event #1")).toBeInTheDocument()
+      expect(canvas.getByText("Activity event #12")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Horizontal: Story = {
@@ -75,5 +84,13 @@ export const Horizontal: Story = {
   render: renderHorizontal,
   parameters: {
     zephyr: { testCaseId: "SW-T1279" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Scrollable panel content renders", async () => {
+      expect(canvas.getByText("Panel 1")).toBeInTheDocument()
+      expect(canvas.getByText("Panel 8")).toBeInTheDocument()
+    })
   },
 }

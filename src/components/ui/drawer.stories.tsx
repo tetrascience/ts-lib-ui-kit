@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { Button } from "./button"
 import {
   Drawer,
@@ -64,6 +66,23 @@ export const Bottom: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1233" },
   },
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Drawer portaled content renders", async () => {
+      expect(body.getByText("Filter results")).toBeInTheDocument()
+      expect(
+        body.getByText(
+          "Narrow the dataset by source, status, and reporting range before exporting.",
+        ),
+      ).toBeInTheDocument()
+    })
+
+    await step("Footer actions render", async () => {
+      expect(body.getByRole("button", { name: "Apply filters" })).toBeInTheDocument()
+      expect(body.getByRole("button", { name: "Reset" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const Right: Story = {
@@ -73,6 +92,23 @@ export const Right: Story = {
   render: renderDrawer,
   parameters: {
     zephyr: { testCaseId: "SW-T1234" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Drawer portaled content renders", async () => {
+      expect(body.getByText("Filter results")).toBeInTheDocument()
+      expect(
+        body.getByText(
+          "Narrow the dataset by source, status, and reporting range before exporting.",
+        ),
+      ).toBeInTheDocument()
+    })
+
+    await step("Footer actions render", async () => {
+      expect(body.getByRole("button", { name: "Apply filters" })).toBeInTheDocument()
+      expect(body.getByRole("button", { name: "Reset" })).toBeInTheDocument()
+    })
   },
 }
 
@@ -84,6 +120,23 @@ export const Left: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1235" },
   },
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Drawer portaled content renders", async () => {
+      expect(body.getByText("Filter results")).toBeInTheDocument()
+      expect(
+        body.getByText(
+          "Narrow the dataset by source, status, and reporting range before exporting.",
+        ),
+      ).toBeInTheDocument()
+    })
+
+    await step("Footer actions render", async () => {
+      expect(body.getByRole("button", { name: "Apply filters" })).toBeInTheDocument()
+      expect(body.getByRole("button", { name: "Reset" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const Top: Story = {
@@ -93,5 +146,22 @@ export const Top: Story = {
   render: renderDrawer,
   parameters: {
     zephyr: { testCaseId: "SW-T1236" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Drawer portaled content renders", async () => {
+      expect(body.getByText("Filter results")).toBeInTheDocument()
+      expect(
+        body.getByText(
+          "Narrow the dataset by source, status, and reporting range before exporting.",
+        ),
+      ).toBeInTheDocument()
+    })
+
+    await step("Footer actions render", async () => {
+      expect(body.getByRole("button", { name: "Apply filters" })).toBeInTheDocument()
+      expect(body.getByRole("button", { name: "Reset" })).toBeInTheDocument()
+    })
   },
 }

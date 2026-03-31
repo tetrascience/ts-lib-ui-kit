@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -87,6 +89,18 @@ export const WithViewport: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1272" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Navigation menu renders", async () => {
+      expect(canvas.getByText("Platform")).toBeInTheDocument()
+      expect(canvas.getByText("Documentation")).toBeInTheDocument()
+    })
+
+    await step("Platform trigger is a menu button", async () => {
+      expect(canvas.getByRole("button", { name: "Platform" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const InlineContent: Story = {
@@ -96,5 +110,17 @@ export const InlineContent: Story = {
   render: renderNavigationMenu,
   parameters: {
     zephyr: { testCaseId: "SW-T1273" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Navigation menu renders", async () => {
+      expect(canvas.getByText("Platform")).toBeInTheDocument()
+      expect(canvas.getByText("Documentation")).toBeInTheDocument()
+    })
+
+    await step("Platform trigger is a menu button", async () => {
+      expect(canvas.getByRole("button", { name: "Platform" })).toBeInTheDocument()
+    })
   },
 }

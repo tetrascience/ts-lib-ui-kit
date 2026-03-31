@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import { COLORS } from "../../../utils/colors";
 
 import { PieChart } from "./index";
@@ -35,6 +37,31 @@ export const Default: Story = {
     hole: 0,
     rotation: 0,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Bioreactor")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Pie layer and slices render", async () => {
+      expect(canvasElement.querySelector(".pielayer")).toBeInTheDocument();
+      const slices = canvasElement.querySelectorAll(".pielayer .slice");
+      expect(slices.length).toBe(5);
+    });
+
+    await step("Legend shows parameter labels", async () => {
+      const legendRoot = canvasElement.querySelector(".legend-container");
+      expect(legendRoot).toBeTruthy();
+      const legend = within(legendRoot as HTMLElement);
+      expect(legend.getByText("pH")).toBeInTheDocument();
+      expect(legend.getByText("Temperature")).toBeInTheDocument();
+    });
+  },
 };
 
 export const WithCustomColors: Story = {
@@ -57,6 +84,31 @@ export const WithCustomColors: Story = {
     hole: 0,
     rotation: 0,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Bioreactor Parameter Distribution")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Pie layer and slices render", async () => {
+      expect(canvasElement.querySelector(".pielayer")).toBeInTheDocument();
+      const slices = canvasElement.querySelectorAll(".pielayer .slice");
+      expect(slices.length).toBe(5);
+    });
+
+    await step("Legend shows parameter labels", async () => {
+      const legendRoot = canvasElement.querySelector(".legend-container");
+      expect(legendRoot).toBeTruthy();
+      const legend = within(legendRoot as HTMLElement);
+      expect(legend.getByText("pH")).toBeInTheDocument();
+      expect(legend.getByText("Dissolved Oxygen")).toBeInTheDocument();
+    });
+  },
 };
 
 export const DonutChart: Story = {
@@ -77,6 +129,33 @@ export const DonutChart: Story = {
     textInfo: "label+percent",
     hole: 0.5,
     rotation: 0,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(
+        canvas.getByText("Bioreactor Parameter Distribution (Donut)"),
+      ).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Pie layer and slices render", async () => {
+      expect(canvasElement.querySelector(".pielayer")).toBeInTheDocument();
+      const slices = canvasElement.querySelectorAll(".pielayer .slice");
+      expect(slices.length).toBe(5);
+    });
+
+    await step("Legend shows parameter labels", async () => {
+      const legendRoot = canvasElement.querySelector(".legend-container");
+      expect(legendRoot).toBeTruthy();
+      const legend = within(legendRoot as HTMLElement);
+      expect(legend.getByText("Viability")).toBeInTheDocument();
+      expect(legend.getByText("Cell Density")).toBeInTheDocument();
+    });
   },
 };
 
@@ -99,6 +178,31 @@ export const WithLabelAndValues: Story = {
     hole: 0,
     rotation: 0,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Bioreactor Parameter Distribution")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Pie layer and slices render", async () => {
+      expect(canvasElement.querySelector(".pielayer")).toBeInTheDocument();
+      const slices = canvasElement.querySelectorAll(".pielayer .slice");
+      expect(slices.length).toBe(5);
+    });
+
+    await step("Legend shows parameter labels", async () => {
+      const legendRoot = canvasElement.querySelector(".legend-container");
+      expect(legendRoot).toBeTruthy();
+      const legend = within(legendRoot as HTMLElement);
+      expect(legend.getByText("pH")).toBeInTheDocument();
+      expect(legend.getByText("Temperature")).toBeInTheDocument();
+    });
+  },
 };
 
 export const WithRotation: Story = {
@@ -119,5 +223,32 @@ export const WithRotation: Story = {
     textInfo: "percent",
     hole: 0,
     rotation: 45,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(
+        canvas.getByText("Bioreactor Parameter Distribution (Rotated)"),
+      ).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Pie layer and slices render", async () => {
+      expect(canvasElement.querySelector(".pielayer")).toBeInTheDocument();
+      const slices = canvasElement.querySelectorAll(".pielayer .slice");
+      expect(slices.length).toBe(5);
+    });
+
+    await step("Legend shows parameter labels", async () => {
+      const legendRoot = canvasElement.querySelector(".legend-container");
+      expect(legendRoot).toBeTruthy();
+      const legend = within(legendRoot as HTMLElement);
+      expect(legend.getByText("Dissolved Oxygen")).toBeInTheDocument();
+      expect(legend.getByText("Cell Density")).toBeInTheDocument();
+    });
   },
 };

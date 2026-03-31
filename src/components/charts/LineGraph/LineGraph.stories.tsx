@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import { COLORS } from "../../../utils/colors";
 
 import { LineGraph } from "./LineGraph";
@@ -299,6 +301,26 @@ export const Basic: Story = {
     dataSeries: generateBasicDemoData(),
     title: "Basic Line Graph",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Basic Line Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("6 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data F")).toBeInTheDocument();
+    });
+  },
 };
 
 export const WithMarkers: Story = {
@@ -311,6 +333,26 @@ export const WithMarkers: Story = {
     dataSeries: generateDataStartingFromZero(),
     variant: "lines+markers",
     title: "Line Graph with Markers",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Line Graph with Markers")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("6 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data F")).toBeInTheDocument();
+    });
   },
 };
 
@@ -325,6 +367,26 @@ export const WithErrorBars: Story = {
     variant: "lines+markers+error_bars",
     title: "Line Graph with Error Bars",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Line Graph with Error Bars")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("6 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data F")).toBeInTheDocument();
+    });
+  },
 };
 
 export const WideRange: Story = {
@@ -338,6 +400,27 @@ export const WideRange: Story = {
     variant: "lines+markers",
     title: "Wide Range Data Graph",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Wide Range Data Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("3 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(3);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data B")).toBeInTheDocument();
+      expect(canvas.getByText("Data C")).toBeInTheDocument();
+    });
+  },
 };
 
 export const NarrowRange: Story = {
@@ -350,6 +433,27 @@ export const NarrowRange: Story = {
     dataSeries: generateNarrowRangeData(),
     variant: "lines+markers",
     title: "Narrow Range Data Graph",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Narrow Range Data Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("3 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(3);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data B")).toBeInTheDocument();
+      expect(canvas.getByText("Data C")).toBeInTheDocument();
+    });
   },
 };
 
@@ -365,6 +469,31 @@ export const CustomAxes: Story = {
     yTitle: "Temperature (°C)",
     title: "Temperature Over Time",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Temperature Over Time")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("6 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Time (s)")).toBeInTheDocument();
+      expect(canvas.getByText("Temperature (°C)")).toBeInTheDocument();
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data F")).toBeInTheDocument();
+    });
+  },
 };
 
 export const CustomRange: Story = {
@@ -379,6 +508,26 @@ export const CustomRange: Story = {
     yRange: [100, 300],
     title: "Custom Range Graph",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Custom Range Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("6 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data F")).toBeInTheDocument();
+    });
+  },
 };
 
 export const AutoRangeLineGraph: Story = {
@@ -390,6 +539,31 @@ export const AutoRangeLineGraph: Story = {
     variant: "lines+markers",
     xTitle: "Columns",
     yTitle: "Rows",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Line Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("6 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data F")).toBeInTheDocument();
+    });
   },
   parameters: {
     // Auto-generated by sync-storybook-zephyr - do not add manually
@@ -413,6 +587,31 @@ export const WideRangeAutoScaled: Story = {
     xTitle: "Columns",
     yTitle: "Rows",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Line Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("3 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(3);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data C")).toBeInTheDocument();
+    });
+  },
   parameters: {
     // Auto-generated by sync-storybook-zephyr - do not add manually
     zephyr: { testCaseId: "SW-T1006" },
@@ -433,6 +632,31 @@ export const NarrowRangeAutoScaled: Story = {
     variant: "lines+markers",
     xTitle: "Columns",
     yTitle: "Rows",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Line Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("3 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(3);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data C")).toBeInTheDocument();
+    });
   },
   parameters: {
     // Auto-generated by sync-storybook-zephyr - do not add manually
@@ -466,6 +690,31 @@ export const OnlyXRangeProvided: Story = {
     xTitle: "Columns",
     yTitle: "Rows",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Line Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("6 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data F")).toBeInTheDocument();
+    });
+  },
 };
 
 export const OnlyYRangeProvided: Story = {
@@ -489,6 +738,31 @@ export const OnlyYRangeProvided: Story = {
     xTitle: "Columns",
     yTitle: "Rows",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Line Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("6 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data F")).toBeInTheDocument();
+    });
+  },
 };
 
 export const LineGraphStartingFromZero: Story = {
@@ -500,6 +774,31 @@ export const LineGraphStartingFromZero: Story = {
     variant: "lines+markers",
     xTitle: "Columns",
     yTitle: "Rows",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Line Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("6 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data F")).toBeInTheDocument();
+    });
   },
   parameters: {
     // Auto-generated by sync-storybook-zephyr - do not add manually

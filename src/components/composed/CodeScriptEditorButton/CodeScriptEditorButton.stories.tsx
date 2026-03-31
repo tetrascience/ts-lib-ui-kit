@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import CodeScriptEditorButton from "./CodeScriptEditorButton";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -38,6 +40,17 @@ export const Default: Story = {
 hello_world()`,
     language: "python",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Edit Code button renders for default Python snippet", async () => {
+      expect(canvas.getByRole("button", { name: /edit code/i })).toBeInTheDocument();
+    });
+
+    await step("Line and character stats reflect initial code", async () => {
+      expect(canvas.getByText(/\d+ lines \/ \d+ chars/)).toBeInTheDocument();
+    });
+  },
 };
 
 export const Empty: Story = {
@@ -49,6 +62,17 @@ export const Empty: Story = {
   args: {
     initialCode: "",
     language: "python",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Edit Code button renders with empty initial code", async () => {
+      expect(canvas.getByRole("button", { name: /edit code/i })).toBeInTheDocument();
+    });
+
+    await step("Empty code shows zero lines and characters", async () => {
+      expect(canvas.getByText("0 lines / 0 chars")).toBeInTheDocument();
+    });
   },
 };
 
@@ -66,6 +90,17 @@ export const JavaScript: Story = {
 
 helloWorld();`,
     language: "javascript",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Edit Code button renders for JavaScript language", async () => {
+      expect(canvas.getByRole("button", { name: /edit code/i })).toBeInTheDocument();
+    });
+
+    await step("Stats row shows line and character counts", async () => {
+      expect(canvas.getByText(/\d+ lines \/ \d+ chars/)).toBeInTheDocument();
+    });
   },
 };
 
@@ -86,6 +121,17 @@ WHERE active = true
 ORDER BY created_at DESC
 LIMIT 10;`,
     language: "sql",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Edit Code button renders for SQL snippet", async () => {
+      expect(canvas.getByRole("button", { name: /edit code/i })).toBeInTheDocument();
+    });
+
+    await step("Line and character stats are displayed", async () => {
+      expect(canvas.getByText(/\d+ lines \/ \d+ chars/)).toBeInTheDocument();
+    });
   },
 };
 
@@ -108,6 +154,17 @@ export const JSON: Story = {
 }`,
     language: "json",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Edit Code button renders for JSON snippet", async () => {
+      expect(canvas.getByRole("button", { name: /edit code/i })).toBeInTheDocument();
+    });
+
+    await step("Line and character stats are displayed", async () => {
+      expect(canvas.getByText(/\d+ lines \/ \d+ chars/)).toBeInTheDocument();
+    });
+  },
 };
 
 // State examples
@@ -122,6 +179,17 @@ export const Disabled: Story = {
     return "This editor is disabled"`,
     language: "python",
     disabled: true,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Edit Code button is disabled", async () => {
+      expect(canvas.getByRole("button", { name: /edit code/i })).toBeDisabled();
+    });
+
+    await step("Stats remain visible when disabled", async () => {
+      expect(canvas.getByText(/\d+ lines \/ \d+ chars/)).toBeInTheDocument();
+    });
   },
 };
 
@@ -143,6 +211,17 @@ config = {
     buttonText: "Configure Script",
     modalTitle: "Script Configuration",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Custom button label Configure Script is shown", async () => {
+      expect(canvas.getByRole("button", { name: /configure script/i })).toBeInTheDocument();
+    });
+
+    await step("Line and character stats are displayed", async () => {
+      expect(canvas.getByText(/\d+ lines \/ \d+ chars/)).toBeInTheDocument();
+    });
+  },
 };
 
 // With callback
@@ -159,6 +238,17 @@ export const WithCallback: Story = {
       console.log("Code saved:", code);
       alert(`Code saved! Length: ${code.length} characters`);
     },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Edit Code button renders with onCodeSave callback wired", async () => {
+      expect(canvas.getByRole("button", { name: /edit code/i })).toBeInTheDocument();
+    });
+
+    await step("Initial code length is reflected in stats", async () => {
+      expect(canvas.getByText(/\d+ lines \/ \d+ chars/)).toBeInTheDocument();
+    });
   },
 };
 
@@ -237,6 +327,19 @@ if __name__ == "__main__":
     print("Model training completed!")`,
     language: "python",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Edit Code button renders for long Python script", async () => {
+      expect(canvas.getByRole("button", { name: /edit code/i })).toBeInTheDocument();
+    });
+
+    await step("Stats show large line and character counts", async () => {
+      const stats = canvas.getByText(/\d+ lines \/ \d+ chars/);
+      expect(stats).toBeInTheDocument();
+      expect(stats.textContent).toMatch(/\d{2,} lines/);
+    });
+  },
 };
 
 // Different button variants
@@ -253,6 +356,17 @@ export const SmallButton: Story = {
       size: "small",
     },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Edit Code button renders with small size", async () => {
+      expect(canvas.getByRole("button", { name: /edit code/i })).toBeInTheDocument();
+    });
+
+    await step("Line and character stats are displayed", async () => {
+      expect(canvas.getByText(/\d+ lines \/ \d+ chars/)).toBeInTheDocument();
+    });
+  },
 };
 
 export const PrimaryButton: Story = {
@@ -268,6 +382,17 @@ export const PrimaryButton: Story = {
       variant: "primary",
     },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Edit Code button renders with primary variant", async () => {
+      expect(canvas.getByRole("button", { name: /edit code/i })).toBeInTheDocument();
+    });
+
+    await step("Line and character stats are displayed", async () => {
+      expect(canvas.getByText(/\d+ lines \/ \d+ chars/)).toBeInTheDocument();
+    });
+  },
 };
 
 export const SecondaryButton: Story = {
@@ -282,5 +407,16 @@ export const SecondaryButton: Story = {
     buttonProps: {
       variant: "secondary",
     },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Edit Code button renders with secondary variant", async () => {
+      expect(canvas.getByRole("button", { name: /edit code/i })).toBeInTheDocument();
+    });
+
+    await step("Line and character stats are displayed", async () => {
+      expect(canvas.getByText(/\d+ lines \/ \d+ chars/)).toBeInTheDocument();
+    });
   },
 };

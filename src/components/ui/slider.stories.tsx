@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { Slider } from "./slider"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
@@ -39,11 +41,24 @@ function renderSlider(args: Story["args"]) {
   )
 }
 
+const playSliderSingleThumb: Story["play"] = async ({ canvasElement, step }) => {
+  const canvas = within(canvasElement)
+
+  await step("Slider renders", async () => {
+    expect(canvas.getByRole("slider")).toBeInTheDocument()
+  })
+
+  await step("Slider root present", async () => {
+    expect(canvasElement.querySelector('[data-slot="slider"]')).toBeTruthy()
+  })
+}
+
 export const Default: Story = {
   render: renderSlider,
   parameters: {
     zephyr: { testCaseId: "SW-T1298" },
   },
+  play: playSliderSingleThumb,
 }
 
 export const Range: Story = {
@@ -53,6 +68,17 @@ export const Range: Story = {
   render: renderSlider,
   parameters: {
     zephyr: { testCaseId: "SW-T1299" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Range slider renders", async () => {
+      expect(canvas.getAllByRole("slider")).toHaveLength(2)
+    })
+
+    await step("Slider root present", async () => {
+      expect(canvasElement.querySelector('[data-slot="slider"]')).toBeTruthy()
+    })
   },
 }
 
@@ -65,4 +91,5 @@ export const Vertical: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1300" },
   },
+  play: playSliderSingleThumb,
 }

@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { Skeleton } from "./skeleton"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
@@ -21,6 +23,21 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1296" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Skeleton renders", async () => {
+      const skeleton = canvas
+        .getAllByRole("generic")
+        .find((el) => el.getAttribute("data-slot") === "skeleton")
+      expect(skeleton).toBeTruthy()
+    })
+
+    await step("Skeleton uses pulse placeholder", async () => {
+      const el = canvasElement.querySelector('[data-slot="skeleton"]')
+      expect(el?.className).toMatch(/animate-pulse/)
+    })
+  },
 }
 
 export const ProfileCard: Story = {
@@ -35,5 +52,19 @@ export const ProfileCard: Story = {
   ),
   parameters: {
     zephyr: { testCaseId: "SW-T1297" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Skeleton placeholders render", async () => {
+      const slots = canvas
+        .getAllByRole("generic")
+        .filter((el) => el.getAttribute("data-slot") === "skeleton")
+      expect(slots).toHaveLength(3)
+    })
+
+    await step("Profile card container", async () => {
+      expect(canvasElement.querySelector(".rounded-xl.border")).toBeTruthy()
+    })
   },
 }

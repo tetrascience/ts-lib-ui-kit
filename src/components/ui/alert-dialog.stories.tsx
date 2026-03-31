@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +61,22 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1182" },
   },
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Alert dialog portal content renders", async () => {
+      expect(body.getByRole("alertdialog")).toBeInTheDocument()
+      expect(body.getByText("Delete workspace?")).toBeInTheDocument()
+      expect(
+        body.getByText("This action permanently removes the workspace and its saved settings."),
+      ).toBeInTheDocument()
+    })
+
+    await step("Footer action buttons render", async () => {
+      expect(body.getByRole("button", { name: "Cancel" })).toBeInTheDocument()
+      expect(body.getByRole("button", { name: "Delete" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const Small: Story = {
@@ -68,5 +86,21 @@ export const Small: Story = {
   render: renderDialog,
   parameters: {
     zephyr: { testCaseId: "SW-T1183" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Small alert dialog shows title and description", async () => {
+      expect(body.getByRole("alertdialog")).toBeInTheDocument()
+      expect(body.getByText("Delete workspace?")).toBeInTheDocument()
+      expect(
+        body.getByText("This action permanently removes the workspace and its saved settings."),
+      ).toBeInTheDocument()
+    })
+
+    await step("Footer action buttons render", async () => {
+      expect(body.getByRole("button", { name: "Cancel" })).toBeInTheDocument()
+      expect(body.getByRole("button", { name: "Delete" })).toBeInTheDocument()
+    })
   },
 }

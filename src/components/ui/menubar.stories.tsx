@@ -1,4 +1,5 @@
 import { CopyIcon, PencilIcon, Trash2Icon } from "lucide-react"
+import { expect, within } from "storybook/test"
 
 import {
   Menubar,
@@ -75,6 +76,14 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1270" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Menubar triggers render", async () => {
+      expect(canvas.getByText("File")).toBeInTheDocument()
+      expect(canvas.getByText("Edit")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Destructive: Story = {
@@ -84,5 +93,13 @@ export const Destructive: Story = {
   render: renderMenubar,
   parameters: {
     zephyr: { testCaseId: "SW-T1271" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Menubar triggers render", async () => {
+      expect(canvas.getByText("File")).toBeInTheDocument()
+      expect(canvas.getByText("Edit")).toBeInTheDocument()
+    })
   },
 }

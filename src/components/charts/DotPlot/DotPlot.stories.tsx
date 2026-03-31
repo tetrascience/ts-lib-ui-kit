@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import { COLORS } from "../../../utils/colors";
 
 import { DotPlot, type MarkerSymbol } from "./DotPlot";
@@ -75,6 +77,22 @@ export const Default: Story = {
     variant: "default",
     markerSize: 8,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Dotplot")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single trace is rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+  },
 };
 
 export const Stacked: Story = {
@@ -96,6 +114,26 @@ export const Stacked: Story = {
     height: 600,
     variant: "stacked",
     markerSize: 8,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Dotplot Stacked")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Multiple traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(4);
+    });
+
+    await step("Legend shows series labels", async () => {
+      expect(canvas.getAllByText("Label").length).toBe(4);
+    });
   },
 };
 
@@ -130,6 +168,27 @@ export const WithCustomColors: Story = {
     variant: "stacked",
     markerSize: 10,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Custom Colors Dotplot")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Multiple traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(2);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Series A")).toBeInTheDocument();
+      expect(canvas.getByText("Series B")).toBeInTheDocument();
+    });
+  },
 };
 
 export const LargeMarkers: Story = {
@@ -152,6 +211,22 @@ export const LargeMarkers: Story = {
     height: 600,
     variant: "default",
     markerSize: 15,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Large Marker Dotplot")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single trace is rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(1);
+    });
   },
 };
 
@@ -200,6 +275,29 @@ export const MultipleSeriesColors: Story = {
     variant: "stacked",
     markerSize: 12,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Multiple Series Colors")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Multiple traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(4);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Series A")).toBeInTheDocument();
+      expect(canvas.getByText("Series B")).toBeInTheDocument();
+      expect(canvas.getByText("Series C")).toBeInTheDocument();
+      expect(canvas.getByText("Series D")).toBeInTheDocument();
+    });
+  },
 };
 
 export const SmallScale: Story = {
@@ -223,6 +321,22 @@ export const SmallScale: Story = {
     variant: "default",
     markerSize: 6,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Small Scale Dotplot")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single trace is rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+  },
 };
 
 export const HighDensity: Story = {
@@ -245,5 +359,21 @@ export const HighDensity: Story = {
     height: 600,
     variant: "default",
     markerSize: 6,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("High Density Dotplot")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single trace is rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(1);
+    });
   },
 };

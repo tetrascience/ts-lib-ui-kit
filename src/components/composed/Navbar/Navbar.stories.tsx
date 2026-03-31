@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import Navbar from "./Navbar";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -26,5 +28,19 @@ export const Default: Story = {
       name: "TetraScience",
       subtext: "tetrascience",
     },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Organization region renders", async () => {
+      expect(canvas.getByText("ORGANIZATION")).toBeInTheDocument();
+      expect(canvas.getByText("TetraScience")).toBeInTheDocument();
+      expect(canvas.getByText("tetrascience")).toBeInTheDocument();
+    });
+
+    await step("Project region renders", async () => {
+      expect(canvas.getByText("PROJECT")).toBeInTheDocument();
+      expect(canvas.getByText("Not Selected")).toBeInTheDocument();
+    });
   },
 };

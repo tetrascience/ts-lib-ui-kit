@@ -1,3 +1,4 @@
+import { expect, within } from "storybook/test"
 
 import { Input } from "./input"
 import { Label } from "./label"
@@ -27,6 +28,14 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1268" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Label and associated input render", async () => {
+      expect(canvas.getByText("Email address")).toBeInTheDocument()
+      expect(canvas.getByPlaceholderText("name@company.com")).toBeInTheDocument()
+    })
+  },
 }
 
 export const DisabledField: Story = {
@@ -38,5 +47,13 @@ export const DisabledField: Story = {
   ),
   parameters: {
     zephyr: { testCaseId: "SW-T1269" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Label and disabled input render", async () => {
+      expect(canvas.getByText("Workspace")).toBeInTheDocument()
+      expect(canvas.getByDisplayValue("Production")).toBeInTheDocument()
+    })
   },
 }

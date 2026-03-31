@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-
+import { expect, within } from "storybook/test";
 
 import { InteractiveScatter } from "./InteractiveScatter";
 
@@ -146,6 +146,26 @@ export const BasicScatter: Story = {
     yAxis: { title: "Y Axis" },
     ...DEFAULT_DIMS,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Basic Scatter Plot")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single scatter trace renders", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("X Axis")).toBeInTheDocument();
+      expect(canvas.getByText("Y Axis")).toBeInTheDocument();
+    });
+  },
   parameters: {
     zephyr: { testCaseId: "SW-T1149" },
   },
@@ -174,6 +194,26 @@ export const DataDrivenStyling: Story = {
     sizeMapping: { type: "continuous", field: "intensity", sizeRange: [4, 20] },
     ...DEFAULT_DIMS,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Data-Driven Color / Shape / Size")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single scatter trace renders", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("X Axis")).toBeInTheDocument();
+      expect(canvas.getByText("Y Axis")).toBeInTheDocument();
+    });
+  },
   parameters: {
     zephyr: { testCaseId: "SW-T1150" },
   },
@@ -190,6 +230,26 @@ export const StaticStyling: Story = {
     shapeMapping: { type: "static", value: "diamond" },
     sizeMapping: { type: "static", value: 12 },
     ...DEFAULT_DIMS,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Static Styling")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single scatter trace renders", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("X Axis")).toBeInTheDocument();
+      expect(canvas.getByText("Y Axis")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1151" },
@@ -221,6 +281,25 @@ export const Selection: Story = {
     enableBoxSelection: true,
     enableLassoSelection: true,
     ...DEFAULT_DIMS,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Click / Box / Lasso Selection")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single scatter trace renders", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
+
+    await step("Selection count is displayed", async () => {
+      expect(canvas.getByText(/Selected:\s*0\s+point\(s\)/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1152" },
@@ -270,6 +349,26 @@ export const KeyboardModifierSelection: Story = {
     enableBoxSelection: true,
     enableLassoSelection: true,
     ...DEFAULT_DIMS,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Keyboard Modifier Selection")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single scatter trace renders", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
+
+    await step("Selection status and mode are displayed", async () => {
+      expect(canvas.getByText(/Selected:\s*0/)).toBeInTheDocument();
+      expect(canvas.getByText("replace", { selector: "strong" })).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1154" },
@@ -332,6 +431,25 @@ export const SelectionWithDataGrid: Story = {
     width: 700,
     height: 600,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Selection → Data Grid")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single scatter trace renders", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
+
+    await step("Data grid heading is displayed", async () => {
+      expect(canvas.getByText("Selected Points (0)")).toBeInTheDocument();
+    });
+  },
   parameters: {
     zephyr: { testCaseId: "SW-T1156" },
   },
@@ -366,6 +484,26 @@ export const CustomTooltips: Story = {
     },
     ...DEFAULT_DIMS,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Custom Rich Tooltips")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single scatter trace renders", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("X Axis")).toBeInTheDocument();
+      expect(canvas.getByText("Y Axis")).toBeInTheDocument();
+    });
+  },
   parameters: {
     zephyr: { testCaseId: "SW-T1157" },
   },
@@ -381,6 +519,26 @@ export const AxisFixedRanges: Story = {
     colorMapping: { type: "categorical", field: "category" },
     ...DEFAULT_DIMS,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Fixed Axis Ranges (zoomed to 20-80)")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single scatter trace renders", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("X Axis")).toBeInTheDocument();
+      expect(canvas.getByText("Y Axis")).toBeInTheDocument();
+    });
+  },
   parameters: {
     zephyr: { testCaseId: "SW-T1158" },
   },
@@ -395,6 +553,26 @@ export const AxisLogScale: Story = {
     yAxis: { title: "Y (log)", scale: "log" },
     colorMapping: { type: "categorical", field: "category" },
     ...DEFAULT_DIMS,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Log-Scale Axes")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single scatter trace renders", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
+
+    await step("Log axis titles are displayed", async () => {
+      expect(canvas.getByText("X (log)")).toBeInTheDocument();
+      expect(canvas.getByText("Y (log)")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1159" },
@@ -497,6 +675,25 @@ export const Downsampling: Story = {
     yAxis: { title: "Y Axis" },
     downsampling: { enabled: true, maxPoints: 1000, strategy: "lttb" },
     ...DEFAULT_DIMS,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(await canvas.findByText("Downsampling (10k → 1k via LTTB)", {}, { timeout: 15000 })).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Single scatter trace renders", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
+
+    await step("Upload control is displayed", async () => {
+      expect(canvas.getByRole("button", { name: /upload csv \/ json/i })).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1161" },

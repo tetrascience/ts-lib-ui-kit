@@ -4,6 +4,7 @@ import {
   SettingsIcon,
   UserIcon,
 } from "lucide-react"
+import { expect, within } from "storybook/test"
 
 import {
   Command,
@@ -75,6 +76,20 @@ export const Inline: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1225" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Command input renders", async () => {
+      expect(canvas.getByPlaceholderText("Search commands...")).toBeInTheDocument()
+    })
+
+    await step("Group headings and items render", async () => {
+      expect(canvas.getByText("Quick actions")).toBeInTheDocument()
+      expect(canvas.getByText("Workspace")).toBeInTheDocument()
+      expect(canvas.getByText("Open calendar")).toBeInTheDocument()
+      expect(canvas.getByText("Account settings")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Dialog: Story = {
@@ -85,6 +100,19 @@ export const Dialog: Story = {
   ),
   parameters: {
     zephyr: { testCaseId: "SW-T1226" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Dialog command input in portal", async () => {
+      expect(body.getByPlaceholderText("Search commands...")).toBeInTheDocument()
+    })
+
+    await step("Palette groups and shortcuts render", async () => {
+      expect(body.getByText("Quick actions")).toBeInTheDocument()
+      expect(body.getByText("Open calendar")).toBeInTheDocument()
+      expect(body.getByText("⌘K")).toBeInTheDocument()
+    })
   },
 }
 
@@ -101,5 +129,17 @@ export const DialogWithCloseButton: Story = {
   ),
   parameters: {
     zephyr: { testCaseId: "SW-T1227" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Command palette content in document", async () => {
+      expect(body.getByPlaceholderText("Search commands...")).toBeInTheDocument()
+      expect(body.getByText("View reports")).toBeInTheDocument()
+    })
+
+    await step("Dialog close control renders", async () => {
+      expect(body.getByRole("button", { name: "Close" })).toBeInTheDocument()
+    })
   },
 }

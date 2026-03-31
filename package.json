@@ -84,7 +84,7 @@
     "test:all": "vitest run",
     "test:all:coverage": "vitest run --coverage",
     "build": "vite build && yarn run postbuild",
-    "postbuild": "yarn dlx @tailwindcss/cli -i ./src/index.tailwind.css -o ./dist/index.tailwind.css --minify",
+    "postbuild": "yarn dlx @tailwindcss/cli@4.0.0 -i ./src/index.tailwind.css -o ./dist/index.tailwind.css --minify",
     "dev": "yarn storybook",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",

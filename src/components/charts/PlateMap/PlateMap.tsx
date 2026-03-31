@@ -1,7 +1,7 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import "./PlateMap.scss";
+import "./PlateMap.scss?inline";
 import {
   PLATE_CONFIGS,
   DEFAULT_COLOR_SCALE,

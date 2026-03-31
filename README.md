@@ -2,13 +2,14 @@
 
 React component library for building TetraScience applications.
 
-[![npm version](https://img.shields.io/npm/v/@tetrascience-npm/tetrascience-react-ui)](https://www.npmjs.com/package/@tetrascience-npm/tetrascience-react-ui) [![CI](https://github.com/tetrascience/ts-lib-ui-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/tetrascience/ts-lib-ui-kit/actions/workflows/ci.yml) 📖 **[Storybook – Live Component Demos](https://ts-lib-ui-kit-storybook.vercel.app/)** | 🛠️ **[Contributing Guide](./CONTRIBUTING.md)**
+[![npm version](https://img.shields.io/npm/v/@tetrascience-npm/tetrascience-react-ui)](https://www.npmjs.com/package/@tetrascience-npm/tetrascience-react-ui) [![CI](https://github.com/tetrascience/ts-lib-ui-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/tetrascience/ts-lib-ui-kit/actions/workflows/ci.yml) **[Storybook](https://ts-lib-ui-kit-storybook.vercel.app/)** | **[Contributing Guide](./CONTRIBUTING.md)**
 
 This library provides:
 
-- **UI Components**: Reusable React components following atomic design principles
+- **UI Components**: shadcn/ui primitives (Radix UI) with Tailwind CSS
+- **Composed Components**: TetraScience-specific compositions (AppHeader, Sidebar, etc.)
 - **Data Visualisation**: Interactive charts powered by Plotly.js
-- **Theming**: Customisable design system with ThemeProvider
+- **Theming**: CSS custom properties (oklch) for light/dark mode
 - **TypeScript**: Full type support with exported prop types
 
 ## Requirements
@@ -26,59 +27,71 @@ yarn add @tetrascience-npm/tetrascience-react-ui
 ## Quick Start
 
 ```tsx
-// 1. Import the CSS (required)
+// 1. Import the CSS once at your app root (required)
 import '@tetrascience-npm/tetrascience-react-ui/index.css';
 
 // 2. Import components
-import { Button, Card, BarGraph } from '@tetrascience-npm/tetrascience-react-ui';
+import { Button, Card, CardHeader, CardContent } from '@tetrascience-npm/tetrascience-react-ui';
 
 function App() {
   return (
-    <Card title="Welcome">
-      <p>My first TetraScience app!</p>
-      <Button variant="primary">Get Started</Button>
+    <Card>
+      <CardHeader>Welcome</CardHeader>
+      <CardContent>
+        <p>My first TetraScience app!</p>
+        <Button variant="default">Get Started</Button>
+      </CardContent>
     </Card>
   );
 }
 ```
 
-## Components
+## Styling & CSS
 
-### Atoms (Basic Building Blocks)
+This library uses **Tailwind CSS 4** with design tokens defined as CSS custom properties (oklch color space). All CSS files are declared as [`sideEffects`](https://webpack.js.org/guides/tree-shaking/#mark-the-file-as-side-effect-free) in `package.json`, so bundlers will preserve them while still tree-shaking unused JavaScript.
 
-Badge, Button, ButtonControl, Card, Checkbox, CodeEditor, Dropdown, ErrorAlert, Icon, Input, Label, MarkdownDisplay, MenuItem, Modal, PopConfirm, SupportiveText, Tab, TableCell, TableHeaderCell, Textarea, Toast, Toggle, Tooltip
+### CSS Import Options
 
-### Molecules (Composed Components)
+| Import path | Use case |
+| --- | --- |
+| `@tetrascience-npm/tetrascience-react-ui/index.css` | **Pre-built CSS** — use this for most apps. Import once at your app root. |
+| `@tetrascience-npm/tetrascience-react-ui/tailwind.css` | **Tailwind source** — for apps that run their own Tailwind build and want to extend/override tokens. |
 
-AppHeader, AssistantModal, ButtonControlGroup, CardSidebar, CodeScriptEditorButton, FormField, LaunchContent, Menu, Navbar, ProtocolConfiguration, ProtocolYamlCard, PythonEditorModal, SelectField, Sidebar, TabGroup, Table, ToastManager
+Most consumers only need `index.css`:
 
-### Organisms (Data Visualisation)
+### Theming
 
-AppLayout, AreaGraph, BarGraph, Boxplot, Chromatogram, DotPlot, Heatmap, Histogram, LineGraph, Main, PieChart, ScatterGraph, TaskScripts
+The design system is controlled via CSS custom properties in `index.css`. Override them to customise colours, spacing, and radii:
 
-## Theming
-
-Customise colours, border radius, and spacing:
-
-```tsx
-import { ThemeProvider } from '@tetrascience-npm/tetrascience-react-ui';
-
-const customTheme = {
-  colors: {
-    primary: '#DC2626',
-    primaryHover: '#B91C1C',
-  },
-  radius: {
-    medium: '12px',
-  },
-};
-
-<ThemeProvider theme={customTheme}>
-  <App />
-</ThemeProvider>
+```css
+:root {
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --radius: 0.625rem;
+}
 ```
 
-See [THEMING.md](./THEMING.md) for the complete theming guide.
+Dark mode is supported via the `.dark` class on a parent element. See [THEMING.md](./THEMING.md) for details.
+
+## Components
+
+### UI Primitives (`ui/`)
+
+shadcn/ui components built on Radix UI with Tailwind CSS and CVA variants:
+
+Accordion, Alert, AlertDialog, AspectRatio, Avatar, Badge, Breadcrumb, Button, ButtonGroup, Calendar, Card, Carousel, Checkbox, CodeEditor, Collapsible, ComboBox, Command, ContextMenu, Dialog, Drawer, DropdownMenu, Field, HoverCard, Input, InputGroup, InputOTP, Item, KBD, Label, MenuBar, NavigationMenu, RadioGroup, ResizablePanel, ScrollArea, Select, Separator, Sheet, Sidebar, Skeleton, Slider, Sonner, Spinner, Switch, Table, Tabs, Textarea, TetraScience Icon, Toggle, ToggleGroup, Tooltip
+
+### Composed Components (`composed/`)
+
+TetraScience-specific compositions built from UI primitives:
+
+AppHeader, AppLayout, AssistantModal, CodeScriptEditorButton, LaunchContent, Main, Navbar, ProtocolConfiguration, ProtocolYamlCard, PythonEditorModal, Sidebar, TdpLink, TdpSearch, TdpUrl
+
+### Charts (`charts/`)
+
+Plotly.js-based data visualisations:
+
+AreaGraph, BarGraph, Boxplot, Chromatogram, ChromatogramChart, DotPlot, Heatmap, Histogram, LineGraph, PieChart, PlateMap, ScatterGraph
 
 ## Server Utilities
 
@@ -293,7 +306,7 @@ import type { ButtonProps, BarGraphProps, BarDataSeries } from '@tetrascience-np
 
 ## Examples
 
-This repository uses component driven development with storybook.js. To see the examples run the following.
+This repository uses component driven development with Storybook. To see the examples run the following.
 
 ```bash
 # Clone the repository
@@ -313,18 +326,19 @@ Visit <http://localhost:6006>.
 
 - [Storybook – Live Component Demos](https://ts-lib-ui-kit-storybook.vercel.app/) - Browse all components with interactive examples
 - [NPM Package](https://www.npmjs.com/package/@tetrascience-npm/tetrascience-react-ui) - Installation and version info
-- [Getting Started Guide](./get_started_1.md) - Step-by-step tutorial
+- [Migration Guide](./MIGRATION.md) - Migrating from the old atom/molecule/organism architecture
 - [Theming Guide](./THEMING.md) - Customise the design system
 - [Contributing](./CONTRIBUTING.md#development-setup) - Clone the repo and run `yarn storybook`
 
 ## Tech Stack
 
-- React 18
+- React 19
 - TypeScript
-- styled-components
+- Tailwind CSS 4
+- shadcn/ui (Radix UI)
+- Vite 7
 - Plotly.js (charts)
 - Monaco Editor (code editing)
-- React Flow (workflow diagrams)
 
 ## License
 

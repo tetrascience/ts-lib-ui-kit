@@ -6,7 +6,8 @@
   "author": "TetraScience",
   "license": "Apache-2.0",
   "sideEffects": [
-    "./dist/index.css"
+    "./dist/index.css",
+    "./dist/index.tailwind.css"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -68,6 +69,7 @@
       }
     },
     "./index.css": "./dist/index.css",
+    "./index.tailwind.css": "./dist/index.tailwind.css",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -81,7 +83,8 @@
     "test:storybook:ci:coverage": "vitest run --project=storybook --reporter=junit --outputFile=test-results/storybook-junit.xml --coverage",
     "test:all": "vitest run",
     "test:all:coverage": "vitest run --coverage",
-    "build": "vite build",
+    "build": "vite build && yarn run postbuild",
+    "postbuild": "yarn dlx @tailwindcss/cli -i ./src/index.tailwind.css -o ./dist/index.tailwind.css --minify",
     "dev": "yarn storybook",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",

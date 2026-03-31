@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { Input } from "./input"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
@@ -29,6 +31,14 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1257" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Text input renders", async () => {
+      expect(canvas.getByRole("textbox")).toBeInTheDocument()
+      expect(canvas.getByPlaceholderText("Enter a value")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Disabled: Story = {
@@ -40,6 +50,15 @@ export const Disabled: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1258" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Disabled input renders with value", async () => {
+      const input = canvas.getByRole("textbox")
+      expect(input).toBeDisabled()
+      expect(input).toHaveValue("Build completed")
+    })
+  },
 }
 
 export const File: Story = {
@@ -49,5 +68,11 @@ export const File: Story = {
   render: renderInput,
   parameters: {
     zephyr: { testCaseId: "SW-T1259" },
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("File input renders", async () => {
+      const fileInput = canvasElement.querySelector('input[type="file"]')
+      expect(fileInput).toBeInTheDocument()
+    })
   },
 }

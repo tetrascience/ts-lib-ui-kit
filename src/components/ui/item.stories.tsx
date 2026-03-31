@@ -1,4 +1,5 @@
 import { FileTextIcon, MoreHorizontalIcon, StarIcon } from "lucide-react"
+import { expect, within } from "storybook/test"
 
 import { Button } from "./button"
 import {
@@ -70,6 +71,19 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1260" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Item title, description, and actions render", async () => {
+      expect(canvas.getByText("Quarterly analytics summary")).toBeInTheDocument()
+      expect(
+        canvas.getByText(
+          "Review the latest dashboard exports and share them with the team.",
+        ),
+      ).toBeInTheDocument()
+      expect(canvas.getByText("More actions")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Outline: Story = {
@@ -79,6 +93,18 @@ export const Outline: Story = {
   render: renderItem,
   parameters: {
     zephyr: { testCaseId: "SW-T1261" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Item title and description render", async () => {
+      expect(canvas.getByText("Quarterly analytics summary")).toBeInTheDocument()
+      expect(
+        canvas.getByText(
+          "Review the latest dashboard exports and share them with the team.",
+        ),
+      ).toBeInTheDocument()
+    })
   },
 }
 
@@ -90,6 +116,18 @@ export const Muted: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1262" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Item title and description render", async () => {
+      expect(canvas.getByText("Quarterly analytics summary")).toBeInTheDocument()
+      expect(
+        canvas.getByText(
+          "Review the latest dashboard exports and share them with the team.",
+        ),
+      ).toBeInTheDocument()
+    })
+  },
 }
 
 export const Small: Story = {
@@ -100,6 +138,18 @@ export const Small: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1263" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Item title and description render", async () => {
+      expect(canvas.getByText("Quarterly analytics summary")).toBeInTheDocument()
+      expect(
+        canvas.getByText(
+          "Review the latest dashboard exports and share them with the team.",
+        ),
+      ).toBeInTheDocument()
+    })
+  },
 }
 
 export const ExtraSmall: Story = {
@@ -109,6 +159,18 @@ export const ExtraSmall: Story = {
   render: renderItem,
   parameters: {
     zephyr: { testCaseId: "SW-T1264" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Item title and description render", async () => {
+      expect(canvas.getByText("Quarterly analytics summary")).toBeInTheDocument()
+      expect(
+        canvas.getByText(
+          "Review the latest dashboard exports and share them with the team.",
+        ),
+      ).toBeInTheDocument()
+    })
   },
 }
 
@@ -131,5 +193,21 @@ export const ImageMedia: Story = {
   ),
   parameters: {
     zephyr: { testCaseId: "SW-T1265" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Image media item title and description render", async () => {
+      expect(canvas.getByText("Generated preview image")).toBeInTheDocument()
+      expect(
+        canvas.getByText(
+          "Item media can also render thumbnail images for richer list layouts.",
+        ),
+      ).toBeInTheDocument()
+    })
+
+    await step("Preview image is present", async () => {
+      expect(canvas.getByRole("img", { name: "Preview" })).toBeInTheDocument()
+    })
   },
 }

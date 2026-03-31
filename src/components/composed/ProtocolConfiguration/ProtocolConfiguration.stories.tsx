@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import ProtocolConfiguration from "./ProtocolConfiguration";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -19,6 +21,25 @@ const meta: Meta<typeof ProtocolConfiguration> = {
 export default meta;
 type Story = StoryObj<typeof ProtocolConfiguration>;
 
+const protocolConfigurationPlay: Story["play"] = async ({ canvasElement, step }) => {
+  const canvas = within(canvasElement);
+
+  await step("Heading renders", async () => {
+    expect(canvas.getByRole("heading", { name: "Protocol Configuration" })).toBeInTheDocument();
+  });
+
+  await step("Configuration card and empty state display", async () => {
+    expect(canvas.getByText("Configuration")).toBeInTheDocument();
+    expect(
+      canvas.getByText("No values, Use the 'edit' button to add values"),
+    ).toBeInTheDocument();
+  });
+
+  await step("Edit mode switch and label are visible", async () => {
+    expect(canvas.getByText("Edit Mode")).toBeInTheDocument();
+  });
+};
+
 // Basic examples
 export const Default: Story = {
   name: "Default",
@@ -27,6 +48,7 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T927" },
   },
   args: {},
+  play: protocolConfigurationPlay,
 };
 
 export const WithCustomClassName: Story = {
@@ -38,6 +60,7 @@ export const WithCustomClassName: Story = {
   args: {
     className: "custom-protocol-config",
   },
+  play: protocolConfigurationPlay,
 };
 
 // Interactive example showing both states
@@ -53,6 +76,7 @@ export const Interactive: Story = {
       },
     },
   },
+  play: protocolConfigurationPlay,
 };
 
 // Container example to show how it looks in a layout
@@ -70,4 +94,5 @@ export const InContainer: Story = {
       </div>
     ),
   ],
+  play: protocolConfigurationPlay,
 };

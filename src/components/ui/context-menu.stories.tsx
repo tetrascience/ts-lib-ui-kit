@@ -1,4 +1,5 @@
 import { CopyIcon, FolderIcon, PencilIcon, Trash2Icon } from "lucide-react"
+import { expect, within } from "storybook/test"
 
 import {
   ContextMenu,
@@ -67,6 +68,29 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1228" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Context menu trigger renders", async () => {
+      expect(canvas.getByText("Right click this area")).toBeInTheDocument()
+    })
+
+    await step("Open menu and verify items in portal", async () => {
+      const trigger = canvas.getByText("Right click this area")
+      trigger.dispatchEvent(
+        new MouseEvent("contextmenu", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 8,
+          clientY: 8,
+        }),
+      )
+      const body = within(canvasElement.ownerDocument.body)
+      expect(await body.findByText("Rename")).toBeInTheDocument()
+      expect(body.getByText("Duplicate")).toBeInTheDocument()
+      expect(body.getByText("Move to folder")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Destructive: Story = {
@@ -76,5 +100,26 @@ export const Destructive: Story = {
   render: renderMenu,
   parameters: {
     zephyr: { testCaseId: "SW-T1229" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Context menu trigger renders", async () => {
+      expect(canvas.getByText("Right click this area")).toBeInTheDocument()
+    })
+
+    await step("Open menu and verify destructive item in portal", async () => {
+      const trigger = canvas.getByText("Right click this area")
+      trigger.dispatchEvent(
+        new MouseEvent("contextmenu", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 8,
+          clientY: 8,
+        }),
+      )
+      const body = within(canvasElement.ownerDocument.body)
+      expect(await body.findByText("Delete")).toBeInTheDocument()
+    })
   },
 }

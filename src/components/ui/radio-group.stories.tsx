@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { RadioGroup, RadioGroupItem } from "./radio-group"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
@@ -60,11 +62,35 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1274" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Radio group renders", async () => {
+      expect(canvas.getAllByRole("radio")).toHaveLength(3)
+    })
+
+    await step("Plan labels render", async () => {
+      expect(canvas.getByText("Starter")).toBeInTheDocument()
+      expect(canvas.getByText("Team")).toBeInTheDocument()
+      expect(canvas.getByText("Enterprise")).toBeInTheDocument()
+    })
+  },
 }
 
 export const DisabledOption: Story = {
   render: () => renderRadioGroup("enterprise"),
   parameters: {
     zephyr: { testCaseId: "SW-T1275" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Radio group renders", async () => {
+      expect(canvas.getAllByRole("radio")).toHaveLength(3)
+    })
+
+    await step("Enterprise option is disabled", async () => {
+      expect(canvas.getByRole("radio", { name: /Enterprise/i })).toBeDisabled()
+    })
   },
 }

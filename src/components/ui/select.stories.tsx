@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import {
   Select,
   SelectContent,
@@ -51,6 +53,17 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1280" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Select trigger renders", async () => {
+      expect(canvas.getByRole("combobox")).toBeInTheDocument()
+    })
+
+    await step("Selected value is shown", async () => {
+      expect(canvas.getByText("Workspace")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Small: Story = {
@@ -60,5 +73,16 @@ export const Small: Story = {
   render: renderSelect,
   parameters: {
     zephyr: { testCaseId: "SW-T1281" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Select trigger renders", async () => {
+      expect(canvas.getByRole("combobox")).toBeInTheDocument()
+    })
+
+    await step("Selected value is shown", async () => {
+      expect(canvas.getByText("Workspace")).toBeInTheDocument()
+    })
   },
 }

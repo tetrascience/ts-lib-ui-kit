@@ -1,3 +1,4 @@
+import { expect, within } from "storybook/test"
 
 import { Button } from "./button"
 import {
@@ -59,11 +60,28 @@ function renderSheet(args: Story["args"]) {
   )
 }
 
+const playSheet: Story["play"] = async ({ canvasElement, step }) => {
+  const body = within(canvasElement.ownerDocument.body)
+
+  await step("Sheet content renders in portal", async () => {
+    expect(body.getByText("Workspace settings")).toBeInTheDocument()
+    expect(
+      body.getByText("Configure the workspace name, sharing options, and export defaults.")
+    ).toBeInTheDocument()
+  })
+
+  await step("Sheet actions", async () => {
+    expect(body.getByRole("button", { name: "Save changes" })).toBeInTheDocument()
+    expect(body.getByRole("button", { name: "Close" })).toBeInTheDocument()
+  })
+}
+
 export const Right: Story = {
   render: renderSheet,
   parameters: {
     zephyr: { testCaseId: "SW-T1284" },
   },
+  play: playSheet,
 }
 
 export const Left: Story = {
@@ -74,6 +92,7 @@ export const Left: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1285" },
   },
+  play: playSheet,
 }
 
 export const Top: Story = {
@@ -84,6 +103,7 @@ export const Top: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1286" },
   },
+  play: playSheet,
 }
 
 export const Bottom: Story = {
@@ -94,4 +114,5 @@ export const Bottom: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1287" },
   },
+  play: playSheet,
 }

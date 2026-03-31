@@ -1,4 +1,5 @@
 import { CheckIcon } from "lucide-react"
+import { expect, within } from "storybook/test"
 
 import {
   Avatar,
@@ -48,6 +49,13 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1188" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Avatar fallback initials render", async () => {
+      expect(canvas.getByText("OW")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Small: Story = {
@@ -58,6 +66,13 @@ export const Small: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1189" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Small avatar shows fallback initials", async () => {
+      expect(canvas.getByText("OW")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Large: Story = {
@@ -67,6 +82,13 @@ export const Large: Story = {
   render: renderAvatar,
   parameters: {
     zephyr: { testCaseId: "SW-T1190" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Large avatar shows fallback initials", async () => {
+      expect(canvas.getByText("OW")).toBeInTheDocument()
+    })
   },
 }
 
@@ -87,5 +109,15 @@ export const Group: Story = {
   ),
   parameters: {
     zephyr: { testCaseId: "SW-T1191" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Avatar group shows fallbacks and count", async () => {
+      expect(canvas.getByText("OW")).toBeInTheDocument()
+      expect(canvas.getByText("TS")).toBeInTheDocument()
+      expect(canvas.getByText("UI")).toBeInTheDocument()
+      expect(canvas.getByText("+2")).toBeInTheDocument()
+    })
   },
 }

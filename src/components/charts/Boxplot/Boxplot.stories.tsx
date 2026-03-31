@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import { COLORS } from "./../../../utils/colors";
 import { Boxplot } from "./Boxplot";
 
@@ -213,6 +215,26 @@ export const Basic: Story = {
     width: 1000,
     height: 600,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Boxplot")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("One box trace is rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".boxlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+
+    await step("Legend shows series name", async () => {
+      expect(canvas.getAllByText("Data A").length).toBeGreaterThanOrEqual(1);
+    });
+  },
 };
 
 export const MultipleBoxes: Story = {
@@ -226,6 +248,30 @@ export const MultipleBoxes: Story = {
     title: "Multiple Boxplots",
     width: 1000,
     height: 600,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Multiple Boxplots")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Five box traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".boxlayer .trace");
+      expect(traces.length).toBe(5);
+    });
+
+    await step("Legend shows all group names", async () => {
+      expect(canvas.getAllByText("Group 1").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Group 2").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Group 3").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Group 4").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Group 5").length).toBeGreaterThanOrEqual(1);
+    });
   },
 };
 
@@ -242,6 +288,35 @@ export const CategoricalData: Story = {
     yTitle: "Rows",
     width: 1000,
     height: 600,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Boxplot")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+
+    await step("Five box traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".boxlayer .trace");
+      expect(traces.length).toBe(5);
+    });
+
+    await step("Legend shows all category names", async () => {
+      expect(canvas.getAllByText("Category A").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Category B").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Category C").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Category D").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Category E").length).toBeGreaterThanOrEqual(1);
+    });
   },
 };
 
@@ -260,6 +335,40 @@ export const WithOutliers: Story = {
     width: 1000,
     height: 600,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Boxplot with Outliers")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+
+    await step("Five box traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".boxlayer .trace");
+      expect(traces.length).toBe(5);
+    });
+
+    await step("Points are rendered with box traces", async () => {
+      const traces = canvasElement.querySelectorAll(".boxlayer .trace");
+      expect(traces.length).toBe(5);
+    });
+
+    await step("Legend shows all category names", async () => {
+      expect(canvas.getAllByText("Category A").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Category B").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Category C").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Category D").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Category E").length).toBeGreaterThanOrEqual(1);
+    });
+  },
 };
 
 export const CustomStyling: Story = {
@@ -276,5 +385,34 @@ export const CustomStyling: Story = {
     width: 1000,
     height: 600,
     showPoints: true,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Custom Boxplot")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("X-Axis Label")).toBeInTheDocument();
+      expect(canvas.getByText("Y-Axis Label")).toBeInTheDocument();
+    });
+
+    await step("Five box traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".boxlayer .trace");
+      expect(traces.length).toBe(5);
+    });
+
+    await step("Legend shows all category names", async () => {
+      expect(canvas.getAllByText("Category A").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Category B").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Category C").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Category D").length).toBeGreaterThanOrEqual(1);
+      expect(canvas.getAllByText("Category E").length).toBeGreaterThanOrEqual(1);
+    });
   },
 };

@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import { COLORS } from "../../../utils/colors";
 
 import { ScatterGraph } from "./ScatterGraph";
@@ -54,6 +56,28 @@ export const Default: Story = {
     xTitle: "Columns",
     yTitle: "Rows",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Scatter Plot")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Three traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(3);
+    });
+
+    await step("Legend shows all series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data B")).toBeInTheDocument();
+      expect(canvas.getByText("Data C")).toBeInTheDocument();
+    });
+  },
 };
 
 export const CustomRanges: Story = {
@@ -66,5 +90,27 @@ export const CustomRanges: Story = {
     ...Default.args,
     xRange: [300, 700],
     yRange: [0, 200],
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Scatter Plot")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Three traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(3);
+    });
+
+    await step("Legend shows all series names", async () => {
+      expect(canvas.getByText("Data A")).toBeInTheDocument();
+      expect(canvas.getByText("Data B")).toBeInTheDocument();
+      expect(canvas.getByText("Data C")).toBeInTheDocument();
+    });
   },
 };

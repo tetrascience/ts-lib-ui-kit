@@ -1,4 +1,5 @@
 import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon } from "lucide-react"
+import { expect, within } from "storybook/test"
 
 import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
 
@@ -61,6 +62,19 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1316" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Toggle group container renders", async () => {
+      expect(canvas.getByRole("group")).toBeInTheDocument()
+    })
+
+    await step("Alignment toggle buttons render", async () => {
+      expect(canvas.getByRole("button", { name: "Align left" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Align center" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Align right" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const Outline: Story = {
@@ -70,6 +84,14 @@ export const Outline: Story = {
   render: renderToggleGroup,
   parameters: {
     zephyr: { testCaseId: "SW-T1317" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Outline toggle group renders", async () => {
+      expect(canvas.getByRole("group")).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Align left" })).toBeInTheDocument()
+    })
   },
 }
 
@@ -81,6 +103,14 @@ export const Small: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1318" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Small toggle group renders", async () => {
+      expect(canvas.getByRole("group")).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Align center" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const Large: Story = {
@@ -90,6 +120,14 @@ export const Large: Story = {
   render: renderToggleGroup,
   parameters: {
     zephyr: { testCaseId: "SW-T1319" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Large toggle group renders", async () => {
+      expect(canvas.getByRole("group")).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Align right" })).toBeInTheDocument()
+    })
   },
 }
 
@@ -101,6 +139,15 @@ export const Vertical: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1320" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Vertical toggle group renders", async () => {
+      expect(canvas.getByRole("group")).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Align left" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Align right" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const Spaced: Story = {
@@ -110,5 +157,13 @@ export const Spaced: Story = {
   render: renderToggleGroup,
   parameters: {
     zephyr: { testCaseId: "SW-T1321" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Spaced toggle group renders", async () => {
+      expect(canvas.getByRole("group")).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Align center" })).toBeInTheDocument()
+    })
   },
 }

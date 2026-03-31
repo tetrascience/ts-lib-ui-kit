@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { Calendar } from "./calendar"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
@@ -36,6 +38,24 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1208" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Calendar grid renders", async () => {
+      expect(canvas.getByRole("grid")).toBeInTheDocument()
+    })
+
+    await step("Month and year caption is visible", async () => {
+      expect(canvas.getByText("March 2026")).toBeInTheDocument()
+    })
+
+    await step("Month navigation buttons are present", async () => {
+      expect(
+        canvas.getByRole("button", { name: "Go to the Previous Month" })
+      ).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Go to the Next Month" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const Range: Story = {
@@ -47,6 +67,25 @@ export const Range: Story = {
     }),
   parameters: {
     zephyr: { testCaseId: "SW-T1209" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Range calendar grids render", async () => {
+      expect(canvas.getAllByRole("grid").length).toBe(2)
+    })
+
+    await step("Month captions are visible", async () => {
+      expect(canvas.getByText("March 2026")).toBeInTheDocument()
+      expect(canvas.getByText("April 2026")).toBeInTheDocument()
+    })
+
+    await step("Month navigation buttons are present", async () => {
+      expect(
+        canvas.getByRole("button", { name: "Go to the Previous Month" })
+      ).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Go to the Next Month" })).toBeInTheDocument()
+    })
   },
 }
 
@@ -62,6 +101,25 @@ export const DropdownCaption: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1210" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Calendar grid renders", async () => {
+      expect(canvas.getByRole("grid")).toBeInTheDocument()
+    })
+
+    await step("Dropdown caption shows month and year", async () => {
+      expect(canvas.getAllByText("Mar").length).toBeGreaterThanOrEqual(1)
+      expect(canvas.getAllByText("2026").length).toBeGreaterThanOrEqual(1)
+    })
+
+    await step("Month navigation buttons are present", async () => {
+      expect(
+        canvas.getByRole("button", { name: "Go to the Previous Month" })
+      ).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Go to the Next Month" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const WeekNumbers: Story = {
@@ -73,5 +131,24 @@ export const WeekNumbers: Story = {
     }),
   parameters: {
     zephyr: { testCaseId: "SW-T1211" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Calendar grid with week numbers renders", async () => {
+      expect(canvas.getByRole("grid")).toBeInTheDocument()
+    })
+
+    await step("Week number column header is exposed", async () => {
+      expect(canvas.getByLabelText("Week Number")).toBeInTheDocument()
+    })
+
+    await step("Month caption and navigation are present", async () => {
+      expect(canvas.getByText("March 2026")).toBeInTheDocument()
+      expect(
+        canvas.getByRole("button", { name: "Go to the Previous Month" })
+      ).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Go to the Next Month" })).toBeInTheDocument()
+    })
   },
 }

@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { Button } from "./button"
 import {
   Tooltip,
@@ -51,6 +53,20 @@ export const Top: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1326" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Tooltip trigger renders", async () => {
+      expect(canvas.getByRole("button", { name: "Export status" })).toBeInTheDocument()
+    })
+
+    await step("Tooltip content is visible in portal", async () => {
+      const nodes = body.getAllByText("Last synced 3 minutes ago")
+      expect(nodes.length).toBeGreaterThan(0)
+      expect(nodes[0]).toBeInTheDocument()
+    })
+  },
 }
 
 export const Right: Story = {
@@ -60,6 +76,20 @@ export const Right: Story = {
   render: renderTooltip,
   parameters: {
     zephyr: { testCaseId: "SW-T1327" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Tooltip trigger renders", async () => {
+      expect(canvas.getByRole("button", { name: "Export status" })).toBeInTheDocument()
+    })
+
+    await step("Tooltip content is visible in portal", async () => {
+      const nodes = body.getAllByText("Last synced 3 minutes ago")
+      expect(nodes.length).toBeGreaterThan(0)
+      expect(nodes[0]).toBeInTheDocument()
+    })
   },
 }
 
@@ -71,6 +101,20 @@ export const Bottom: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1328" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Tooltip trigger renders", async () => {
+      expect(canvas.getByRole("button", { name: "Export status" })).toBeInTheDocument()
+    })
+
+    await step("Tooltip content is visible in portal", async () => {
+      const nodes = body.getAllByText("Last synced 3 minutes ago")
+      expect(nodes.length).toBeGreaterThan(0)
+      expect(nodes[0]).toBeInTheDocument()
+    })
+  },
 }
 
 export const Left: Story = {
@@ -80,5 +124,19 @@ export const Left: Story = {
   render: renderTooltip,
   parameters: {
     zephyr: { testCaseId: "SW-T1329" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Tooltip trigger renders", async () => {
+      expect(canvas.getByRole("button", { name: "Export status" })).toBeInTheDocument()
+    })
+
+    await step("Tooltip content is visible in portal", async () => {
+      const nodes = body.getAllByText("Last synced 3 minutes ago")
+      expect(nodes.length).toBeGreaterThan(0)
+      expect(nodes[0]).toBeInTheDocument()
+    })
   },
 }

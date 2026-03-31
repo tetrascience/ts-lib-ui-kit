@@ -1,4 +1,5 @@
 import React from "react";
+import { expect, within } from "storybook/test";
 
 import { LineGraph } from "../../charts/LineGraph";
 
@@ -77,5 +78,27 @@ export const Default: Story = {
         ]}
       />
     ),
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("App header shows hostname and user", async () => {
+      expect(canvas.getByText("demo.tetrascience.com")).toBeInTheDocument();
+      expect(canvas.getByText("John Doe")).toBeInTheDocument();
+    });
+
+    await step("Navbar shows organization", async () => {
+      expect(canvas.getByText("TetraScience")).toBeInTheDocument();
+      expect(canvas.getByText("Demo Organization")).toBeInTheDocument();
+    });
+
+    await step("Sidebar navigation renders", async () => {
+      expect(canvas.getByText("Pipelines")).toBeInTheDocument();
+      expect(canvas.getByText("Search")).toBeInTheDocument();
+    });
+
+    await step("Main content area includes chart", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
   },
 };

@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import { Chromatogram } from "./Chromatogram";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -71,6 +73,23 @@ export const MockupMatch: Story = {
   args: {
     data: dnaSequenceData,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Four traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(4);
+    });
+
+    await step("Position labels are displayed", async () => {
+      expect(canvas.getByText("270")).toBeInTheDocument();
+      expect(canvas.getByText("280")).toBeInTheDocument();
+    });
+  },
 };
 
 export const WithExplicitBases: Story = {
@@ -81,6 +100,24 @@ export const WithExplicitBases: Story = {
   },
   args: {
     data: dnaWithExplicitBases,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Four traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(4);
+    });
+
+    await step("Sequence letters are displayed", async () => {
+      expect(canvas.getByText("A")).toBeInTheDocument();
+      expect(canvas.getByText("G")).toBeInTheDocument();
+      expect(canvas.getByText("T")).toBeInTheDocument();
+    });
   },
 };
 
@@ -96,5 +133,21 @@ export const CustomColors: Story = {
     colorT: "#EF4444",
     colorG: "#F97316",
     colorC: "#3B82F6",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Four traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(4);
+    });
+
+    await step("Position labels are displayed", async () => {
+      expect(canvas.getByText("290")).toBeInTheDocument();
+    });
   },
 };

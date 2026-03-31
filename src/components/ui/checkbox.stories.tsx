@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { Checkbox } from "./checkbox"
 import { Label } from "./label"
 
@@ -31,6 +33,14 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1216" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Checkbox renders with label", async () => {
+      expect(canvas.getByRole("checkbox")).toBeInTheDocument()
+      expect(canvas.getByText("Email me when the build completes")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Checked: Story = {
@@ -38,11 +48,33 @@ export const Checked: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1217" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Checkbox renders checked", async () => {
+      expect(canvas.getByRole("checkbox")).toBeChecked()
+    })
+
+    await step("Label remains associated", async () => {
+      expect(canvas.getByText("Email me when the build completes")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Disabled: Story = {
   render: () => <CheckboxExample disabled />,
   parameters: {
     zephyr: { testCaseId: "SW-T1218" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Checkbox renders disabled", async () => {
+      expect(canvas.getByRole("checkbox")).toBeDisabled()
+    })
+
+    await step("Label still visible", async () => {
+      expect(canvas.getByText("Email me when the build completes")).toBeInTheDocument()
+    })
   },
 }

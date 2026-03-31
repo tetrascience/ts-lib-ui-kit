@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import Main from "./Main";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -30,5 +32,23 @@ export const Default: Story = {
       name: "TetraScience",
       subtext: "tetrascience",
     },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Header shows hostname and user", async () => {
+      expect(canvas.getByText("localhost:3000")).toBeInTheDocument();
+      expect(canvas.getByText("Chris Calo")).toBeInTheDocument();
+    });
+
+    await step("Navbar shows organization", async () => {
+      expect(canvas.getByText("TetraScience")).toBeInTheDocument();
+      expect(canvas.getByText("tetrascience")).toBeInTheDocument();
+    });
+
+    await step("Sidebar and main panels render", async () => {
+      expect(canvas.getByText("Pipelines")).toBeInTheDocument();
+      expect(canvas.getByRole("heading", { name: "Templates", level: 2 })).toBeInTheDocument();
+    });
   },
 };

@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import { COLORS } from "./../../../utils/colors";
 import { AreaGraph } from "./AreaGraph";
 
@@ -63,6 +65,28 @@ export const Default: Story = {
     height: 600,
     variant: "normal",
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Area Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Three traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(3);
+    });
+
+    await step("Legend shows all series names", async () => {
+      expect(canvas.getByText("Series 1")).toBeInTheDocument();
+      expect(canvas.getByText("Series 2")).toBeInTheDocument();
+      expect(canvas.getByText("Series 3")).toBeInTheDocument();
+    });
+  },
 };
 
 export const Stacked: Story = {
@@ -79,6 +103,28 @@ export const Stacked: Story = {
     width: 1000,
     height: 600,
     variant: "stacked",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Stacked Area Graph")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Three traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(3);
+    });
+
+    await step("Legend shows all series names", async () => {
+      expect(canvas.getByText("Series 1")).toBeInTheDocument();
+      expect(canvas.getByText("Series 2")).toBeInTheDocument();
+      expect(canvas.getByText("Series 3")).toBeInTheDocument();
+    });
   },
 };
 
@@ -98,5 +144,27 @@ export const CustomRange: Story = {
     variant: "normal",
     xRange: [300, 900],
     yRange: [0, 200],
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Area Graph with Custom Range")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Three traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(3);
+    });
+
+    await step("Legend shows all series names", async () => {
+      expect(canvas.getByText("Series 1")).toBeInTheDocument();
+      expect(canvas.getByText("Series 2")).toBeInTheDocument();
+      expect(canvas.getByText("Series 3")).toBeInTheDocument();
+    });
   },
 };

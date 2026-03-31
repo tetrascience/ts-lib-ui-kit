@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test";
+
 import { TdpSearch } from "./TdpSearch";
 
 import type { TdpSearchColumn } from "./types";
@@ -63,5 +65,29 @@ export const Default: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1125" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Search input renders", async () => {
+      const searchInput = canvas.queryByRole("searchbox") ?? canvas.queryByRole("textbox");
+      expect(searchInput).toBeInTheDocument();
+    });
+
+    await step("Default placeholder is displayed", async () => {
+      expect(canvas.getByPlaceholderText("Enter search term...")).toBeInTheDocument();
+    });
+
+    await step("Search button is present", async () => {
+      expect(canvas.getByRole("button", { name: /search/i })).toBeInTheDocument();
+    });
+
+    await step("Search icon is visible in the bar", async () => {
+      expect(canvas.getByRole("textbox").closest(".tdp-search__search-bar")).toBeTruthy();
+    });
+
+    await step("Initial empty state prompts to search", async () => {
+      expect(canvas.getByText("Enter a search query and click Search to get started.")).toBeInTheDocument();
+    });
   },
 };

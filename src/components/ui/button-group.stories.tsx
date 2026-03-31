@@ -1,4 +1,5 @@
 import { CalendarIcon, ChevronDownIcon } from "lucide-react"
+import { expect, within } from "storybook/test"
 
 import { Button } from "./button"
 import {
@@ -54,6 +55,19 @@ export const Horizontal: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1200" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Button group renders", async () => {
+      expect(canvas.getByRole("group")).toBeInTheDocument()
+    })
+
+    await step("Multiple segment buttons are visible", async () => {
+      expect(canvas.getByRole("button", { name: "Today" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "This week" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "This month" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const Vertical: Story = {
@@ -63,5 +77,18 @@ export const Vertical: Story = {
   render: renderGroup,
   parameters: {
     zephyr: { testCaseId: "SW-T1201" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Vertical button group renders", async () => {
+      expect(canvas.getByRole("group")).toBeInTheDocument()
+    })
+
+    await step("Multiple segment buttons are visible", async () => {
+      expect(canvas.getByRole("button", { name: "Today" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "This week" })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "This month" })).toBeInTheDocument()
+    })
   },
 }

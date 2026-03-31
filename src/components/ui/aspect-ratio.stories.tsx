@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import { AspectRatio } from "./aspect-ratio"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
@@ -41,6 +43,13 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1186" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Aspect ratio container and preview content render", async () => {
+      expect(canvas.getByText("16:9 Preview")).toBeInTheDocument()
+    })
+  },
 }
 
 export const Square: Story = {
@@ -50,5 +59,12 @@ export const Square: Story = {
   render: renderAspectRatio,
   parameters: {
     zephyr: { testCaseId: "SW-T1187" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Square aspect ratio shows 1:1 preview", async () => {
+      expect(canvas.getByText("1:1 Preview")).toBeInTheDocument()
+    })
   },
 }

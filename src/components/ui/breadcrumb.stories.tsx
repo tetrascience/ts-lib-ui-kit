@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -45,6 +47,19 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1198" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Breadcrumb navigation renders", async () => {
+      expect(canvas.getByRole("navigation", { name: "breadcrumb" })).toBeInTheDocument()
+    })
+
+    await step("Trail links and current page are visible", async () => {
+      expect(canvas.getByRole("link", { name: "Workspace" })).toBeInTheDocument()
+      expect(canvas.getByRole("link", { name: "UI Kit" })).toBeInTheDocument()
+      expect(canvas.getByRole("link", { name: "Storybook" })).toBeInTheDocument()
+    })
+  },
 }
 
 export const Collapsed: Story = {
@@ -71,5 +86,19 @@ export const Collapsed: Story = {
   ),
   parameters: {
     zephyr: { testCaseId: "SW-T1199" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Breadcrumb with ellipsis renders", async () => {
+      expect(canvas.getByRole("navigation", { name: "breadcrumb" })).toBeInTheDocument()
+    })
+
+    await step("Collapsed trail shows links, ellipsis, and current page", async () => {
+      expect(canvas.getByRole("link", { name: "Workspace" })).toBeInTheDocument()
+      expect(canvas.getByText("More")).toBeInTheDocument()
+      expect(canvas.getByRole("link", { name: "Components" })).toBeInTheDocument()
+      expect(canvas.getByRole("link", { name: "Hover Card" })).toBeInTheDocument()
+    })
   },
 }

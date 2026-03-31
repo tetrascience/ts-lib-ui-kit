@@ -1,3 +1,5 @@
+import { expect, within } from "storybook/test"
+
 import {
   Combobox,
   ComboboxContent,
@@ -65,6 +67,18 @@ export const Default: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1221" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Combobox input and placeholder render", async () => {
+      expect(canvas.getByPlaceholderText("Choose a framework")).toBeInTheDocument()
+      expect(canvas.getByRole("combobox")).toBeInTheDocument()
+    })
+
+    await step("Combobox role is accessible", async () => {
+      expect(canvas.getByRole("combobox")).toBeInTheDocument()
+    })
+  },
 }
 
 export const WithClearButton: Story = {
@@ -74,6 +88,17 @@ export const WithClearButton: Story = {
   render: (args) => renderCombobox(args),
   parameters: {
     zephyr: { testCaseId: "SW-T1222" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Combobox renders with placeholder", async () => {
+      expect(canvas.getByPlaceholderText("Choose a framework")).toBeInTheDocument()
+    })
+
+    await step("Combobox role is accessible", async () => {
+      expect(canvas.getByRole("combobox")).toBeInTheDocument()
+    })
   },
 }
 
@@ -85,6 +110,18 @@ export const WithoutTrigger: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1223" },
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Combobox input renders", async () => {
+      expect(canvas.getByPlaceholderText("Choose a framework")).toBeInTheDocument()
+      expect(canvas.getByRole("combobox")).toBeInTheDocument()
+    })
+
+    await step("Dropdown trigger hidden", async () => {
+      expect(canvasElement.querySelector('[data-slot="combobox-trigger"]')).not.toBeInTheDocument()
+    })
+  },
 }
 
 export const TopAlignedEnd: Story = {
@@ -95,5 +132,13 @@ export const TopAlignedEnd: Story = {
     }),
   parameters: {
     zephyr: { testCaseId: "SW-T1224" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Combobox renders for top alignment", async () => {
+      expect(canvas.getByPlaceholderText("Choose a framework")).toBeInTheDocument()
+      expect(canvas.getByRole("combobox")).toBeInTheDocument()
+    })
   },
 }

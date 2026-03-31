@@ -23,10 +23,10 @@ All imports still come from the package root — no deep imports needed:
 
 ```ts
 // Before
-import { Button, Badge, Card } from "ts-lib-ui-kit";
+import { Button, Badge, Card } from "@tetrascience-npm/tetrascience-react-ui";
 
 // After (same — re-exported from package root)
-import { Button, Badge, Card } from "ts-lib-ui-kit";
+import { Button, Badge, Card } from "@tetrascience-npm/tetrascience-react-ui";
 ```
 
 **Internal path aliases changed (repo contributors only)**  
@@ -219,7 +219,7 @@ The following exports no longer exist:
 ## Quick Start
 
 ```tsx
-import { Button, Card, CardHeader, CardContent, Input, Label } from "ts-lib-ui-kit";
+import { Button, Card, CardHeader, CardContent, Input, Label } from "@tetrascience-npm/tetrascience-react-ui";
 
 function MyForm() {
   return (

@@ -29,14 +29,10 @@ import { Button, Badge, Card } from "ts-lib-ui-kit";
 import { Button, Badge, Card } from "ts-lib-ui-kit";
 ```
 
-**Internal path aliases changed** (only relevant if you imported directly):
+**Internal path aliases changed (repo contributors only)**  
+If you are working *inside this repository* and were using the old `@atoms/@molecules/@organisms` aliases, use the new `@/components/...` aliases instead.  
+**Note:** These `@/` aliases are **not** available to consuming applications; external apps should continue to import only from the package root (as in the example above), not via deep paths.
 
-```ts
-// Before
-import { Button } from "@atoms/Button";
-import { Table } from "@molecules/Table";
-
-// After
 import { Button } from "@/components/ui/button";
 import { Table } from "@/components/ui/table";
 ```

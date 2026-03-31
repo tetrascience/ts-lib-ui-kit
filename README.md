@@ -55,7 +55,7 @@ This library uses **Tailwind CSS 4** with design tokens defined as CSS custom pr
 | Import path | Use case |
 | --- | --- |
 | `@tetrascience-npm/tetrascience-react-ui/index.css` | **Pre-built CSS** — use this for most apps. Import once at your app root. |
-| `@tetrascience-npm/tetrascience-react-ui/tailwind.css` | **Tailwind source** — for apps that run their own Tailwind build and want to extend/override tokens. |
+| `@tetrascience-npm/tetrascience-react-ui/index.tailwind.css` | **Tailwind source** — for apps that run their own Tailwind build and want to extend/override tokens. |
 
 Most consumers only need `index.css`:
 

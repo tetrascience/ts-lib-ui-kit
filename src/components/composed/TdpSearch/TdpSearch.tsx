@@ -12,7 +12,7 @@ import type { SearchEqlRequest } from "@tetrascience-npm/ts-connectors-sdk";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-import "./TdpSearch.scss?inline";
+import "./TdpSearch.scss";
 
 /**
  * TdpSearch Component

@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { COLORS } from "@/utils/colors";
-import "./Histogram.scss?inline";
+import "./Histogram.scss";
 
 /** Exponent coefficient for normal distribution calculation */
 const NORMAL_DISTRIBUTION_EXPONENT_COEFF = -0.5;

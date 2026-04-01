@@ -1,4 +1,4 @@
-import "./AppLayout.scss?inline";
+import "./AppLayout.scss";
 import {
   Box,
   CheckCheck,

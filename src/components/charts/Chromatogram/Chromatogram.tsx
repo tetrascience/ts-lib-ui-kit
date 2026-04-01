@@ -2,7 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import "./Chromatogram.scss?inline";
+import "./Chromatogram.scss";
 
 /** Height offset for the plot area in pixels */
 const PLOT_HEIGHT_OFFSET = 75;

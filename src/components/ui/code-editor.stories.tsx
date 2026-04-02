@@ -1,4 +1,4 @@
-import { expect, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 
 import CodeEditor from "./code-editor";
 
@@ -96,7 +96,9 @@ export const LightMode: Story = {
     const canvas = within(canvasElement);
 
     await step("Editor renders in light theme", async () => {
-      expect(canvasElement.querySelector(".monaco-editor")).toBeInTheDocument();
+      await waitFor(() =>
+        expect(canvasElement.querySelector(".monaco-editor")).toBeInTheDocument()
+      );
     });
 
     await step("Toolbar actions present", async () => {
@@ -143,7 +145,9 @@ export default Counter;`,
     const canvas = within(canvasElement);
 
     await step("Editor renders for larger snippet", async () => {
-      expect(canvasElement.querySelector(".monaco-editor")).toBeInTheDocument();
+      await waitFor(() =>
+        expect(canvasElement.querySelector(".monaco-editor")).toBeInTheDocument()
+      );
     });
 
     await step("Copy and launch controls render", async () => {

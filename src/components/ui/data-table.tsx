@@ -667,7 +667,7 @@ function FilterConditionRow<T>({
   const values = uniqueValues.get(rule.key) ?? []
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5 min-w-0">
       <select
         value={rule.key}
         onChange={(e) => {
@@ -676,7 +676,7 @@ function FilterConditionRow<T>({
           const newOps = getOpsForType(newCol?.type ?? "string")
           onUpdate(rule.id, { key: newKey, op: newOps[0], value: "" })
         }}
-        className="text-xs border border-input rounded px-1.5 py-1 bg-background text-foreground focus:outline-none focus:border-ring"
+        className="w-24 shrink-0 text-xs border border-input rounded px-1.5 py-1.5 bg-background text-foreground focus:outline-none focus:border-ring"
       >
         {filterableCols.map((c) => (
           <option key={c.key} value={c.key}>{c.label}</option>
@@ -685,7 +685,7 @@ function FilterConditionRow<T>({
       <select
         value={rule.op}
         onChange={(e) => onUpdate(rule.id, { op: e.target.value as DataTableFilterOp })}
-        className="text-xs border border-input rounded px-1.5 py-1 bg-background text-foreground focus:outline-none focus:border-ring"
+        className="w-24 shrink-0 text-xs border border-input rounded px-1.5 py-1.5 bg-background text-foreground focus:outline-none focus:border-ring"
       >
         {ops.map((op) => (
           <option key={op} value={op}>{OP_LABELS[op]}</option>
@@ -696,7 +696,7 @@ function FilterConditionRow<T>({
           <select
             value={rule.value}
             onChange={(e) => onUpdate(rule.id, { value: e.target.value })}
-            className="text-xs border border-input rounded px-1.5 py-1 bg-background text-foreground focus:outline-none focus:border-ring min-w-16"
+            className="w-28 shrink-0 text-xs border border-input rounded px-1.5 py-1.5 bg-background text-foreground focus:outline-none focus:border-ring"
           >
             <option value="">Select&hellip;</option>
             {values.map((v) => (
@@ -708,8 +708,8 @@ function FilterConditionRow<T>({
             type={colType === "number" ? "number" : "text"}
             value={rule.value}
             onChange={(e) => onUpdate(rule.id, { value: e.target.value })}
-            placeholder={colType === "number" ? "Enter a number" : "Enter a value"}
-            className="w-24 text-xs border border-input rounded px-1.5 py-1 text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-ring"
+            placeholder={colType === "number" ? "Number" : "Value"}
+            className="w-20 shrink-0 text-xs border border-input rounded px-1.5 py-1.5 text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-ring"
           />
         )
       )}
@@ -780,7 +780,7 @@ function FilterPanel<T>({
   return (
     <PanelContainer>
       <p className="text-xs text-muted-foreground mb-2">In this view, show records</p>
-      <div className="w-96">
+      <div>
         {isEmpty && (
           <p className="text-xs text-muted-foreground mb-2">
             No filters applied

@@ -1927,11 +1927,11 @@ function DataTable<T>({
   )
   const toggleSort = useCallback((key: string) => {
     setSortRules((prev) => {
+      const others = prev.filter((r) => r.key !== key)
       const existing = prev.find((r) => r.key === key)
-      if (!existing) return [{ key, dir: "asc" as DataTableSortDirection }]
-      return existing.dir === "asc"
-        ? [{ key, dir: "desc" as DataTableSortDirection }]
-        : []
+      if (!existing) return [{ key, dir: "asc" as DataTableSortDirection }, ...others]
+      if (existing.dir === "asc") return [{ key, dir: "desc" as DataTableSortDirection }, ...others]
+      return others
     })
   }, [])
 

@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils"
 // ── Public types ─────────────────────────────────────────────────────────────
 
 /** Supported column data types — drives which filter operators are offered. */
-export type DataTableColumnType = "string" | "number" | "custom"
+export type DataTableColumnType = "string" | "number" | "list" | "custom"
 
 /** A column group renders a spanning header row above its member columns. */
 export interface DataTableColumnGroup {
@@ -58,13 +58,20 @@ export interface DataTableSortRule {
 }
 
 export type DataTableFilterOp =
-  | ">"
-  | "<"
-  | ">="
-  | "<="
   | "="
   | "!="
+  | "<"
+  | ">"
+  | "<="
+  | ">="
   | "contains"
+  | "does not contain"
+  | "is"
+  | "is not"
+  | "is any of"
+  | "is none of"
+  | "is empty"
+  | "is not empty"
 
 export interface DataTableFilterRule {
   /** Internal unique id for this filter rule. */
@@ -75,6 +82,17 @@ export interface DataTableFilterRule {
   op: DataTableFilterOp
   /** User-entered comparison value (always stored as string). */
   value: string
+}
+
+export type DataTableFilterGroupLogic = "and" | "or"
+
+export interface DataTableFilterGroup {
+  /** Internal unique id for this group. */
+  id: string
+  /** Logic connector between conditions in this group. */
+  logic: DataTableFilterGroupLogic
+  /** Conditions within this group. */
+  rules: DataTableFilterRule[]
 }
 
 /** Row density controlling vertical cell padding. */
@@ -147,12 +165,46 @@ export interface DataTableProps<T> {
   // ── Density ───────────────────────────────────────────────────────────
   /** Row density affecting vertical padding (default: "default"). */
   density?: DataTableDensity
+
+  // ── Column reordering ─────────────────────────────────────────────────
+  /** Enable drag-to-reorder column headers. */
+  reorderable?: boolean
+  /** Callback fired when the user reorders columns via drag. */
+  onColumnOrderChange?: (order: string[]) => void
 }
 
 // ── Filter operator sets ─────────────────────────────────────────────────────
 
-const NUMBER_OPS: DataTableFilterOp[] = [">", "<", ">=", "<=", "=", "!="]
-const STRING_OPS: DataTableFilterOp[] = ["contains", "=", "!="]
+const NUMBER_OPS: DataTableFilterOp[] = ["=", "!=", "<", ">", "<=", ">=", "is empty", "is not empty"]
+const STRING_OPS: DataTableFilterOp[] = ["contains", "does not contain", "is", "is not", "is empty", "is not empty"]
+const LIST_OPS: DataTableFilterOp[] = ["is", "is not", "is any of", "is none of", "is empty", "is not empty"]
+
+const OP_LABELS: Record<DataTableFilterOp, string> = {
+  "=": "=",
+  "!=": "\u2260",
+  "<": "<",
+  ">": ">",
+  "<=": "\u2264",
+  ">=": "\u2265",
+  "contains": "contains\u2026",
+  "does not contain": "does not contain\u2026",
+  "is": "is\u2026",
+  "is not": "is not\u2026",
+  "is any of": "is any of\u2026",
+  "is none of": "is none of\u2026",
+  "is empty": "is empty",
+  "is not empty": "is not empty",
+}
+
+const EMPTY_OPS = new Set<DataTableFilterOp>(["is empty", "is not empty"])
+
+function getOpsForType(type: DataTableColumnType): DataTableFilterOp[] {
+  switch (type) {
+    case "number": return NUMBER_OPS
+    case "list": return LIST_OPS
+    default: return STRING_OPS
+  }
+}
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 
@@ -190,15 +242,16 @@ function HideFieldsIcon() {
     <svg
       className="size-3.5"
       fill="none"
-      viewBox="0 0 16 16"
+      viewBox="0 0 24 24"
       stroke="currentColor"
-      strokeWidth={1.5}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M2 4h12M2 8h8M2 12h5"
-      />
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+      <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
     </svg>
   )
 }
@@ -369,6 +422,35 @@ const PortalDropdown = forwardRef<
   )
 })
 
+// ── Toggle switch ────────────────────────────────────────────────────────────
+
+function ToggleSwitch({
+  checked,
+  onChange,
+}: {
+  checked: boolean
+  onChange: () => void
+}) {
+  return (
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      className={cn(
+        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors",
+        checked ? "bg-[#2F45B5]" : "bg-[#d0d5dd]",
+      )}
+    >
+      <span
+        className={cn(
+          "pointer-events-none inline-block size-4 rounded-full bg-white shadow-sm transition-transform mt-0.5",
+          checked ? "translate-x-[18px]" : "translate-x-0.5",
+        )}
+      />
+    </button>
+  )
+}
+
 // ── Hide Fields panel ────────────────────────────────────────────────────────
 
 function HidePanel<T>({
@@ -410,17 +492,15 @@ function HidePanel<T>({
           {groups.ungrouped.map((col) => (
             <label
               key={col.key}
-              className="flex items-center gap-2 py-0.5 cursor-pointer group"
+              className="flex items-center justify-between gap-3 py-1.5 cursor-pointer group"
             >
-              <input
-                type="checkbox"
-                checked={!hiddenCols.has(col.key)}
-                onChange={() => onToggle(col.key)}
-                className="rounded accent-primary cursor-pointer"
-              />
               <span className="text-xs text-foreground/70 group-hover:text-foreground">
                 {col.label}
               </span>
+              <ToggleSwitch
+                checked={!hiddenCols.has(col.key)}
+                onChange={() => onToggle(col.key)}
+              />
             </label>
           ))}
         </div>
@@ -436,17 +516,15 @@ function HidePanel<T>({
             {cols.map((col) => (
               <label
                 key={col.key}
-                className="flex items-center gap-2 py-0.5 cursor-pointer group"
+                className="flex items-center justify-between gap-3 py-1.5 cursor-pointer group"
               >
-                <input
-                  type="checkbox"
-                  checked={!hiddenCols.has(col.key)}
-                  onChange={() => onToggle(col.key)}
-                  className="rounded accent-primary cursor-pointer"
-                />
                 <span className="text-xs text-foreground/70 group-hover:text-foreground">
                   {col.label}
                 </span>
+                <ToggleSwitch
+                  checked={!hiddenCols.has(col.key)}
+                  onChange={() => onToggle(col.key)}
+                />
               </label>
             ))}
           </div>
@@ -464,30 +542,57 @@ function SortPanel<T>({
   onAdd,
   onUpdate,
   onRemove,
+  onReorder,
 }: {
   columns: DataTableColumnDef<T>[]
   sortRules: DataTableSortRule[]
   onAdd: () => void
   onUpdate: (i: number, changes: Partial<DataTableSortRule>) => void
   onRemove: (i: number) => void
+  onReorder: (fromIdx: number, toIdx: number) => void
 }) {
   const sortableCols = columns.filter(
     (c) => c.sortable !== false && c.type !== "custom",
   )
+  const dragRef = useRef<number | null>(null)
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
+
   return (
     <PanelContainer>
       <PanelLabel>Sort by</PanelLabel>
-      <div className="w-64">
+      <div className="w-80">
         {sortRules.length === 0 && (
           <p className="text-xs text-muted-foreground mb-2">No sort applied</p>
         )}
         <div className="flex flex-col gap-1.5">
           {sortRules.map((rule, idx) => (
-            <div key={idx} className="flex items-center gap-1.5">
+            <div
+              key={idx}
+              draggable
+              onDragStart={() => { dragRef.current = idx }}
+              onDragOver={(e) => {
+                e.preventDefault()
+                if (dragRef.current !== idx) setDragOverIdx(idx)
+              }}
+              onDragLeave={() => setDragOverIdx(null)}
+              onDrop={(e) => {
+                e.preventDefault()
+                setDragOverIdx(null)
+                if (dragRef.current != null && dragRef.current !== idx) {
+                  onReorder(dragRef.current, idx)
+                }
+                dragRef.current = null
+              }}
+              onDragEnd={() => { dragRef.current = null; setDragOverIdx(null) }}
+              className={cn(
+                "flex items-center gap-1.5",
+                dragOverIdx === idx && "border-t-2 border-primary",
+              )}
+            >
               <select
                 value={rule.key}
                 onChange={(e) => onUpdate(idx, { key: e.target.value })}
-                className="flex-1 text-xs border border-input rounded px-1.5 py-1 bg-background text-foreground focus:outline-none focus:border-primary"
+                className="flex-1 text-xs border border-input rounded px-2 py-1.5 bg-background text-foreground focus:outline-none focus:border-primary"
               >
                 {sortableCols.map((c) => (
                   <option key={c.key} value={c.key}>
@@ -502,29 +607,120 @@ function SortPanel<T>({
                     dir: e.target.value as DataTableSortDirection,
                   })
                 }
-                className="text-xs border border-input rounded px-1.5 py-1 bg-background text-foreground focus:outline-none focus:border-primary"
+                className="text-xs border border-input rounded px-2 py-1.5 bg-background text-foreground focus:outline-none focus:border-primary"
               >
-                <option value="asc">Asc ↑</option>
-                <option value="desc">Desc ↓</option>
+                <option value="asc">A &rarr; Z</option>
+                <option value="desc">Z &rarr; A</option>
               </select>
               <button
                 onClick={() => onRemove(idx)}
-                className="text-muted-foreground/30 hover:text-destructive transition-colors"
+                title="Remove sort"
+                className="text-muted-foreground/40 hover:text-destructive transition-colors flex-shrink-0"
               >
                 <XIcon />
               </button>
+              <span
+                className="text-muted-foreground/30 cursor-grab active:cursor-grabbing flex-shrink-0"
+                title="Drag to reorder"
+              >
+                <svg className="size-3.5" fill="currentColor" viewBox="0 0 16 16">
+                  <circle cx="5" cy="3" r="1.2" /><circle cx="11" cy="3" r="1.2" />
+                  <circle cx="5" cy="8" r="1.2" /><circle cx="11" cy="8" r="1.2" />
+                  <circle cx="5" cy="13" r="1.2" /><circle cx="11" cy="13" r="1.2" />
+                </svg>
+              </span>
             </div>
           ))}
         </div>
         <button
           onClick={onAdd}
-          className="mt-2 text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+          className="mt-2 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
         >
           <PlusIcon />
-          Add sort
+          Add another sort
         </button>
       </div>
     </PanelContainer>
+  )
+}
+
+// ── Filter condition row ─────────────────────────────────────────────────────
+
+function FilterConditionRow<T>({
+  rule,
+  filterableCols,
+  uniqueValues,
+  onUpdate,
+  onRemove,
+}: {
+  rule: DataTableFilterRule
+  filterableCols: DataTableColumnDef<T>[]
+  uniqueValues: Map<string, string[]>
+  onUpdate: (id: string, changes: Partial<DataTableFilterRule>) => void
+  onRemove: (id: string) => void
+}) {
+  const colDef = filterableCols.find((c) => c.key === rule.key)
+  const colType = colDef?.type ?? "string"
+  const ops = getOpsForType(colType)
+  const isEmptyOp = EMPTY_OPS.has(rule.op)
+  const isList = colType === "list"
+  const values = uniqueValues.get(rule.key) ?? []
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <select
+        value={rule.key}
+        onChange={(e) => {
+          const newKey = e.target.value
+          const newCol = filterableCols.find((c) => c.key === newKey)
+          const newOps = getOpsForType(newCol?.type ?? "string")
+          onUpdate(rule.id, { key: newKey, op: newOps[0], value: "" })
+        }}
+        className="text-xs border border-input rounded px-1.5 py-1 bg-background text-foreground focus:outline-none focus:border-ring"
+      >
+        {filterableCols.map((c) => (
+          <option key={c.key} value={c.key}>{c.label}</option>
+        ))}
+      </select>
+      <select
+        value={rule.op}
+        onChange={(e) => onUpdate(rule.id, { op: e.target.value as DataTableFilterOp })}
+        className="text-xs border border-input rounded px-1.5 py-1 bg-background text-foreground focus:outline-none focus:border-ring"
+      >
+        {ops.map((op) => (
+          <option key={op} value={op}>{OP_LABELS[op]}</option>
+        ))}
+      </select>
+      {!isEmptyOp && (
+        isList ? (
+          <select
+            value={rule.value}
+            onChange={(e) => onUpdate(rule.id, { value: e.target.value })}
+            className="text-xs border border-input rounded px-1.5 py-1 bg-background text-foreground focus:outline-none focus:border-ring min-w-16"
+          >
+            <option value="">Select&hellip;</option>
+            {values.map((v) => (
+              <option key={v} value={v}>{v}</option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type={colType === "number" ? "number" : "text"}
+            value={rule.value}
+            onChange={(e) => onUpdate(rule.id, { value: e.target.value })}
+            placeholder={colType === "number" ? "Enter a number" : "Enter a value"}
+            className="w-24 text-xs border border-input rounded px-1.5 py-1 text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-ring"
+          />
+        )
+      )}
+      <button
+        onClick={() => onRemove(rule.id)}
+        title="Remove condition"
+        className="text-muted-foreground/30 hover:text-destructive transition-colors flex-shrink-0"
+      >
+        <XIcon />
+      </button>
+    </div>
   )
 }
 
@@ -532,97 +728,183 @@ function SortPanel<T>({
 
 function FilterPanel<T>({
   columns,
+  data,
   filterRules,
+  filterGroups,
   onAdd,
   onUpdate,
   onRemove,
+  onAddGroup,
+  onAddToGroup,
+  onRemoveFromGroup,
+  onUpdateInGroup,
+  onUpdateGroupLogic,
+  onRemoveGroup,
+  onReorder,
 }: {
   columns: DataTableColumnDef<T>[]
+  data: T[]
   filterRules: DataTableFilterRule[]
+  filterGroups: DataTableFilterGroup[]
   onAdd: () => void
   onUpdate: (id: string, changes: Partial<DataTableFilterRule>) => void
   onRemove: (id: string) => void
+  onAddGroup: () => void
+  onAddToGroup: (groupId: string) => void
+  onRemoveFromGroup: (groupId: string, ruleId: string) => void
+  onUpdateInGroup: (groupId: string, ruleId: string, changes: Partial<DataTableFilterRule>) => void
+  onUpdateGroupLogic: (groupId: string, logic: DataTableFilterGroupLogic) => void
+  onRemoveGroup: (groupId: string) => void
+  onReorder: (fromIdx: number, toIdx: number) => void
 }) {
   const filterableCols = columns.filter((c) => c.type !== "custom")
+  const isEmpty = filterRules.length === 0 && filterGroups.length === 0
+
+  const uniqueValues = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const col of filterableCols) {
+      if (col.type !== "list") continue
+      const vals = new Set<string>()
+      for (const row of data) {
+        const v = getCellValue(row, col)
+        if (v != null) vals.add(String(v))
+      }
+      map.set(col.key, [...vals].sort())
+    }
+    return map
+  }, [data, filterableCols])
+
+  const dragRef = useRef<number | null>(null)
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
+
   return (
     <PanelContainer>
-      <PanelLabel>Filter where</PanelLabel>
-      <div className="w-80">
-        {filterRules.length === 0 && (
+      <p className="text-xs text-muted-foreground mb-2">In this view, show records</p>
+      <div className="w-96">
+        {isEmpty && (
           <p className="text-xs text-muted-foreground mb-2">
             No filters applied
           </p>
         )}
-        <div className="flex flex-col gap-1.5">
-          {filterRules.map((rule) => {
-            const colDef = filterableCols.find((c) => c.key === rule.key)
-            const ops = colDef?.type === "number" ? NUMBER_OPS : STRING_OPS
-            return (
-              <div key={rule.id} className="flex items-center gap-1.5">
+        {/* Top-level conditions */}
+        <div className="flex flex-col gap-1">
+          {filterRules.map((rule, idx) => (
+            <div
+              key={rule.id}
+              draggable
+              onDragStart={() => { dragRef.current = idx }}
+              onDragOver={(e) => {
+                e.preventDefault()
+                if (dragRef.current !== idx) setDragOverIdx(idx)
+              }}
+              onDragLeave={() => setDragOverIdx(null)}
+              onDrop={(e) => {
+                e.preventDefault()
+                setDragOverIdx(null)
+                if (dragRef.current != null && dragRef.current !== idx) {
+                  onReorder(dragRef.current, idx)
+                }
+                dragRef.current = null
+              }}
+              onDragEnd={() => { dragRef.current = null; setDragOverIdx(null) }}
+              className={cn(
+                "flex items-center gap-1.5",
+                dragOverIdx === idx && "border-t-2 border-primary",
+              )}
+            >
+              <span className="text-[10px] text-muted-foreground font-medium w-10 shrink-0 text-right mr-0.5">
+                {idx === 0 ? "Where" : "and"}
+              </span>
+              <FilterConditionRow
+                rule={rule}
+                filterableCols={filterableCols}
+                uniqueValues={uniqueValues}
+                onUpdate={onUpdate}
+                onRemove={onRemove}
+              />
+              <span
+                className="text-muted-foreground/30 cursor-grab active:cursor-grabbing flex-shrink-0"
+                title="Drag to reorder"
+              >
+                <svg className="size-3.5" fill="currentColor" viewBox="0 0 16 16">
+                  <circle cx="5" cy="3" r="1.2" /><circle cx="11" cy="3" r="1.2" />
+                  <circle cx="5" cy="8" r="1.2" /><circle cx="11" cy="8" r="1.2" />
+                  <circle cx="5" cy="13" r="1.2" /><circle cx="11" cy="13" r="1.2" />
+                </svg>
+              </span>
+            </div>
+          ))}
+        </div>
+        {/* Condition groups */}
+        {filterGroups.map((group) => (
+          <div
+            key={group.id}
+            className="mt-2 border border-input rounded-md p-2 bg-muted/20"
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-muted-foreground font-medium uppercase">Where</span>
                 <select
-                  value={rule.key}
-                  onChange={(e) => {
-                    const newKey = e.target.value
-                    const newCol = filterableCols.find(
-                      (c) => c.key === newKey,
-                    )
-                    const newOps =
-                      newCol?.type === "number" ? NUMBER_OPS : STRING_OPS
-                    onUpdate(rule.id, {
-                      key: newKey,
-                      op: newOps[0],
-                      value: "",
-                    })
-                  }}
-                  className="text-xs border border-input rounded px-1.5 py-1 bg-background text-foreground focus:outline-none focus:border-ring"
+                  value={group.logic}
+                  onChange={(e) => onUpdateGroupLogic(group.id, e.target.value as DataTableFilterGroupLogic)}
+                  className="text-[10px] border border-input rounded px-1 py-0.5 bg-background text-foreground focus:outline-none"
                 >
-                  {filterableCols.map((c) => (
-                    <option key={c.key} value={c.key}>
-                      {c.label}
-                    </option>
-                  ))}
+                  <option value="and">AND</option>
+                  <option value="or">OR</option>
                 </select>
-                <select
-                  value={rule.op}
-                  onChange={(e) =>
-                    onUpdate(rule.id, {
-                      op: e.target.value as DataTableFilterOp,
-                    })
-                  }
-                  className="text-xs border border-input rounded px-1.5 py-1 bg-background text-foreground focus:outline-none focus:border-ring"
-                >
-                  {ops.map((op) => (
-                    <option key={op} value={op}>
-                      {op}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  value={rule.value}
-                  onChange={(e) =>
-                    onUpdate(rule.id, { value: e.target.value })
-                  }
-                  placeholder="value"
-                  className="w-16 text-xs border border-input rounded px-1.5 py-1 text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-ring"
-                />
+              </div>
+              <div className="flex items-center gap-1">
                 <button
-                  onClick={() => onRemove(rule.id)}
-                  className="text-muted-foreground/30 hover:text-destructive transition-colors flex-shrink-0"
+                  onClick={() => onAddToGroup(group.id)}
+                  className="text-muted-foreground/50 hover:text-foreground transition-colors"
+                  title="Add condition to group"
+                >
+                  <PlusIcon />
+                </button>
+                <button
+                  onClick={() => onRemoveGroup(group.id)}
+                  className="text-muted-foreground/50 hover:text-destructive transition-colors"
+                  title="Remove group"
                 >
                   <XIcon />
                 </button>
               </div>
-            )
-          })}
+            </div>
+            {group.rules.length === 0 && (
+              <p className="text-[10px] text-muted-foreground py-1">
+                Drag conditions here to add them to this group
+              </p>
+            )}
+            <div className="flex flex-col gap-1.5">
+              {group.rules.map((rule) => (
+                <FilterConditionRow
+                  key={rule.id}
+                  rule={rule}
+                  filterableCols={filterableCols}
+                  uniqueValues={uniqueValues}
+                  onUpdate={(id, changes) => onUpdateInGroup(group.id, id, changes)}
+                  onRemove={(id) => onRemoveFromGroup(group.id, id)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+        <div className="mt-2 flex items-center gap-4">
+          <button
+            onClick={onAdd}
+            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+          >
+            <PlusIcon />
+            Add condition
+          </button>
+          <button
+            onClick={onAddGroup}
+            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+          >
+            <PlusIcon />
+            Add condition group
+          </button>
         </div>
-        <button
-          onClick={onAdd}
-          className="mt-2 text-xs text-ring hover:text-ring/80 flex items-center gap-1 transition-colors"
-        >
-          <PlusIcon />
-          Add filter
-        </button>
       </div>
     </PanelContainer>
   )
@@ -633,28 +915,17 @@ function FilterPanel<T>({
 function DataTableSortHeader<T>({
   col,
   sortRules,
-  align,
 }: {
   col: DataTableColumnDef<T>
   sortRules: DataTableSortRule[]
-  align?: "left" | "right"
 }) {
   const rule = sortRules.find((r) => r.key === col.key)
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-0.5 select-none",
-        align === "right" && "ml-auto",
-      )}
-    >
+    <span className="select-none">
       {col.label}
-      {rule ? (
-        <span className="text-primary ml-0.5">
+      {rule && (
+        <span className="text-primary ml-1">
           {rule.dir === "asc" ? "↑" : "↓"}
-        </span>
-      ) : (
-        <span className="text-muted-foreground/30 opacity-0 group-hover:opacity-100 ml-0.5">
-          ↕
         </span>
       )}
     </span>
@@ -780,43 +1051,52 @@ function matchesFilterRule<T>(
   rule: DataTableFilterRule,
   filterableCols: DataTableColumnDef<T>[],
 ): boolean {
-  const val = rule.value.trim()
-  if (!val) return true
   const colDef = filterableCols.find((c) => c.key === rule.key)
   if (!colDef) return true
   const raw = getCellValue(row, colDef)
+
+  // Empty/not-empty operators don't need a value
+  if (rule.op === "is empty") return raw == null || String(raw).trim() === ""
+  if (rule.op === "is not empty") return raw != null && String(raw).trim() !== ""
+
+  const val = rule.value.trim()
+  if (!val) return true
+
   if (colDef.type === "number") {
     const n = typeof raw === "number" ? raw : parseFloat(String(raw))
     const rv = parseFloat(val)
     if (isNaN(rv)) return true
-    switch (rule.op) {
-      case ">":
-        return n > rv
-      case "<":
-        return n < rv
-      case ">=":
-        return n >= rv
-      case "<=":
-        return n <= rv
-      case "=":
-        return n === rv
-      case "!=":
-        return n !== rv
-      default:
-        return true
-    }
+    return matchNumericOp(n, rv, rule.op)
   }
+
   const s = String(raw ?? "").toLowerCase()
   const rv = val.toLowerCase()
-  switch (rule.op) {
-    case "contains":
-      return s.includes(rv)
-    case "=":
-      return s === rv
-    case "!=":
-      return s !== rv
-    default:
-      return true
+  return matchStringOp(s, rv, rule.op)
+}
+
+function matchNumericOp(n: number, rv: number, op: DataTableFilterOp): boolean {
+  switch (op) {
+    case "=": return n === rv
+    case "!=": return n !== rv
+    case "<": return n < rv
+    case ">": return n > rv
+    case "<=": return n <= rv
+    case ">=": return n >= rv
+    default: return true
+  }
+}
+
+function matchStringOp(s: string, rv: string, op: DataTableFilterOp): boolean {
+  switch (op) {
+    case "contains": return s.includes(rv)
+    case "does not contain": return !s.includes(rv)
+    case "is": return s === rv
+    case "is not": return s !== rv
+    case "is any of": return rv.split(",").some((v) => s === v.trim())
+    case "is none of": return !rv.split(",").some((v) => s === v.trim())
+    case "=": return s === rv
+    case "!=": return s !== rv
+    default: return true
   }
 }
 
@@ -878,6 +1158,7 @@ function useDataPipeline<T>({
   searchQuery,
   searchKeys,
   filterRules,
+  filterGroups,
   sortRules,
   pagination,
   page,
@@ -888,6 +1169,7 @@ function useDataPipeline<T>({
   searchQuery: string
   searchKeys: string[] | undefined
   filterRules: DataTableFilterRule[]
+  filterGroups: DataTableFilterGroup[]
   sortRules: DataTableSortRule[]
   pagination: boolean
   page: number
@@ -917,10 +1199,20 @@ function useDataPipeline<T>({
   )
 
   const filtered = useMemo(() => {
-    return searched.filter((row) =>
-      filterRules.every((rule) => matchesFilterRule(row, rule, filterableCols)),
-    )
-  }, [searched, filterRules, filterableCols])
+    return searched.filter((row) => {
+      const topLevelPass = filterRules.every((rule) =>
+        matchesFilterRule(row, rule, filterableCols),
+      )
+      if (!topLevelPass) return false
+      return filterGroups.every((group) => {
+        const method = group.logic === "or" ? "some" : "every"
+        if (group.rules.length === 0) return true
+        return group.rules[method]((rule) =>
+          matchesFilterRule(row, rule, filterableCols),
+        )
+      })
+    })
+  }, [searched, filterRules, filterGroups, filterableCols])
 
   const sorted = useMemo(
     () => applySort(filtered, sortRules, columns),
@@ -981,6 +1273,50 @@ function useGroupSpans<T>(
   }, [visibleCols, groupMap])
 }
 
+// ── Drag helpers ─────────────────────────────────────────────────────────────
+
+function useDragReorder(
+  enabled: boolean,
+  onDrop: (sourceKey: string, targetKey: string) => void,
+) {
+  const sourceRef = useRef<string | null>(null)
+  const [overKey, setOverKey] = useState<string | null>(null)
+
+  const makeDragProps = useCallback(
+    (colKey: string) => {
+      if (!enabled) return {}
+      return {
+        draggable: true as const,
+        onDragStart: (e: React.DragEvent) => {
+          sourceRef.current = colKey
+          e.dataTransfer.effectAllowed = "move" as const
+        },
+        onDragOver: (e: React.DragEvent) => {
+          e.preventDefault()
+          e.dataTransfer.dropEffect = "move" as const
+          if (sourceRef.current !== colKey) setOverKey(colKey)
+        },
+        onDragLeave: () => setOverKey(null),
+        onDrop: (e: React.DragEvent) => {
+          e.preventDefault()
+          setOverKey(null)
+          if (sourceRef.current && sourceRef.current !== colKey) {
+            onDrop(sourceRef.current, colKey)
+          }
+          sourceRef.current = null
+        },
+        onDragEnd: () => {
+          sourceRef.current = null
+          setOverKey(null)
+        },
+      }
+    },
+    [enabled, onDrop],
+  )
+
+  return { overKey, makeDragProps }
+}
+
 // ── Table header component ───────────────────────────────────────────────────
 
 function DataTableHeader<T>({
@@ -993,6 +1329,8 @@ function DataTableHeader<T>({
   groupedVisibleCols,
   sortRules,
   onSort,
+  reorderable,
+  onColumnDrag,
   renderActions,
   thClass,
   allChecked,
@@ -1010,6 +1348,8 @@ function DataTableHeader<T>({
   groupedVisibleCols: Map<string, DataTableColumnDef<T>[]>
   sortRules: DataTableSortRule[]
   onSort: (key: string) => void
+  reorderable: boolean
+  onColumnDrag: (sourceKey: string, targetKey: string) => void
   renderActions: boolean
   thClass: string
   allChecked: boolean
@@ -1019,6 +1359,7 @@ function DataTableHeader<T>({
   toggleAllExpanded: () => void
 }) {
   const rowSpan = hasGroups ? 2 : 1
+  const { overKey: dragOverKey, makeDragProps } = useDragReorder(reorderable, onColumnDrag)
   return (
     <thead
       data-slot="data-table-header"
@@ -1041,6 +1382,7 @@ function DataTableHeader<T>({
                 if (el) el.indeterminate = someChecked
               }}
               onChange={toggleAllChecked}
+              title="Select all"
               className="size-4 accent-primary cursor-pointer"
             />
           </th>
@@ -1057,6 +1399,7 @@ function DataTableHeader<T>({
             {batchExpandable && (
               <button
                 onClick={toggleAllExpanded}
+                title={allExpanded ? "Collapse all" : "Expand all"}
                 className={cn(
                   "inline-flex items-center justify-center size-7 rounded-md transition-all",
                   allExpanded ? "rotate-90 bg-primary/10" : "hover:bg-muted",
@@ -1069,21 +1412,26 @@ function DataTableHeader<T>({
         )}
         {groupSpans.map((gs, i) => {
           const isSortable = gs.type === "single" && gs.col.sortable !== false && gs.col.type !== "custom"
+          const colKey = gs.type === "single" ? gs.col.key : gs.groupKey
+          const isDragOver = dragOverKey === colKey
           return gs.type === "single" ? (
             <th
               key={i}
               data-slot="data-table-head"
               rowSpan={rowSpan}
               onClick={isSortable ? () => onSort(gs.col.key) : undefined}
+              {...makeDragProps(colKey)}
               className={cn(
                 thClass,
                 "align-middle font-medium text-xs whitespace-nowrap text-[#465364] border-b-2 border-[#2F45B5] bg-[#F2F4F7]",
                 gs.col.type === "number" ? "text-right" : "text-left",
                 isSortable && "cursor-pointer select-none",
+                reorderable && "cursor-grab active:cursor-grabbing",
+                isDragOver && "border-l-2 border-l-primary",
               )}
             >
               {isSortable ? (
-                <DataTableSortHeader col={gs.col} sortRules={sortRules} align={gs.col.type === "number" ? "right" : "left"} />
+                <DataTableSortHeader col={gs.col} sortRules={sortRules} />
               ) : (
                 <span className="inline-flex items-center gap-0.5">
                   {gs.col.label}
@@ -1136,7 +1484,7 @@ function DataTableHeader<T>({
                   )}
                 >
                   {colSortable ? (
-                    <DataTableSortHeader col={col} sortRules={sortRules} align={col.type === "number" ? "right" : "left"} />
+                    <DataTableSortHeader col={col} sortRules={sortRules} />
                   ) : (
                     <span className="inline-flex items-center gap-0.5">
                       {col.label}
@@ -1215,6 +1563,7 @@ function DataTableRow<T>({
               type="checkbox"
               checked={isChecked}
               onChange={() => onToggleChecked(rowId)}
+              title="Select row"
               className="size-4 accent-primary cursor-pointer"
             />
           </td>
@@ -1227,6 +1576,7 @@ function DataTableRow<T>({
           >
             <button
               onClick={() => onToggleExpanded(rowId)}
+              title={isExpanded ? "Collapse row" : "Expand row"}
               className={cn(
                 "inline-flex items-center justify-center size-7 rounded-md transition-all",
                 isExpanded ? "rotate-90 bg-primary/10" : "hover:bg-muted",
@@ -1288,6 +1638,87 @@ function DataTableRow<T>({
   )
 }
 
+// ── Row height menu ──────────────────────────────────────────────────────────
+
+const ROW_HEIGHT_OPTIONS: { label: string; value: DataTableDensity; icon: React.ReactNode }[] = [
+  {
+    label: "Short",
+    value: "compact",
+    icon: <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"><path d="M3 6h18M3 10h18M3 14h18M3 18h18" /></svg>,
+  },
+  {
+    label: "Medium",
+    value: "default",
+    icon: <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"><path d="M3 5h18M3 12h18M3 19h18" /></svg>,
+  },
+  {
+    label: "Tall",
+    value: "relaxed",
+    icon: <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"><path d="M3 4h18M3 20h18" /></svg>,
+  },
+]
+
+function RowHeightMenu({
+  value,
+  onChange,
+}: {
+  value: DataTableDensity
+  onChange: (v: DataTableDensity) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [open])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        title="Row height"
+        className={cn(
+          "flex items-center gap-1.5 px-3 py-[5px] rounded-md text-xs font-medium border transition-colors select-none",
+          open
+            ? "bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]"
+            : "text-muted-foreground border-transparent hover:bg-muted/50",
+        )}
+      >
+        <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+          <path d="M3 5h18M3 12h18M3 19h18" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute top-full right-0 mt-1 w-44 bg-white border border-[#F2F4F7] rounded-lg shadow-xl z-50 py-1">
+          <p className="px-3 py-1.5 text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">
+            Select a row height
+          </p>
+          {ROW_HEIGHT_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => { onChange(opt.value); setOpen(false) }}
+              className={cn(
+                "w-full flex items-center gap-2.5 px-3 py-1.5 text-xs transition-colors",
+                opt.value === value
+                  ? "text-[#1d4ed8] font-medium"
+                  : "text-foreground hover:bg-muted/50",
+              )}
+            >
+              {opt.icon}
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main component ───────────────────────────────────────────────────────────
 
 type ActivePanel = "hide" | "sort" | "filter" | null
@@ -1317,6 +1748,8 @@ function DataTable<T>({
   renderExpandedRow,
   batchExpandable = false,
   density = "default",
+  reorderable = false,
+  onColumnOrderChange,
 }: DataTableProps<T>) {
   const [hiddenCols, setHiddenCols] = useState<Set<string>>(
     () => new Set(defaultHiddenColumns ?? []),
@@ -1325,7 +1758,11 @@ function DataTable<T>({
     defaultSortRules ?? [],
   )
   const [filterRules, setFilterRules] = useState<DataTableFilterRule[]>([])
+  const [filterGroups, setFilterGroups] = useState<DataTableFilterGroup[]>([])
   const [activePanel, setActivePanel] = useState<ActivePanel>(null)
+  const [columnOrder, setColumnOrder] = useState<string[]>(
+    () => columns.map((c) => c.key),
+  )
   const [searchQuery, setSearchQuery] = useState("")
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(defaultPerPage)
@@ -1369,6 +1806,7 @@ function DataTable<T>({
     searchQuery,
     searchKeys,
     filterRules,
+    filterGroups,
     sortRules,
     pagination,
     page,
@@ -1378,13 +1816,16 @@ function DataTable<T>({
   // Reset page when filters/search change
   useEffect(() => {
     setPage(1)
-  }, [searchQuery, filterRules])
+  }, [searchQuery, filterRules, filterGroups])
 
   // ── Visible columns ─────────────────────────────────────────────────
-  const visibleCols = useMemo(
-    () => columns.filter((c) => !hiddenCols.has(c.key)),
-    [columns, hiddenCols],
-  )
+  const visibleCols = useMemo(() => {
+    const visible = columns.filter((c) => !hiddenCols.has(c.key))
+    if (!reorderable) return visible
+    return [...visible].sort(
+      (a, b) => columnOrder.indexOf(a.key) - columnOrder.indexOf(b.key),
+    )
+  }, [columns, hiddenCols, reorderable, columnOrder])
 
   // ── Group spans for header row ──────────────────────────────────────
   const { groupSpans, hasGroups, groupedVisibleCols } = useGroupSpans(
@@ -1433,6 +1874,22 @@ function DataTable<T>({
     [],
   )
 
+  const handleColumnDrag = useCallback(
+    (sourceKey: string, targetKey: string) => {
+      setColumnOrder((prev) => {
+        const next = [...prev]
+        const fromIdx = next.indexOf(sourceKey)
+        const toIdx = next.indexOf(targetKey)
+        if (fromIdx === -1 || toIdx === -1) return prev
+        next.splice(fromIdx, 1)
+        next.splice(toIdx, 0, sourceKey)
+        onColumnOrderChange?.(next)
+        return next
+      })
+    },
+    [onColumnOrderChange],
+  )
+
   const sortableCols = useMemo(
     () => columns.filter((c) => c.sortable !== false && c.type !== "custom"),
     [columns],
@@ -1455,6 +1912,17 @@ function DataTable<T>({
   const removeSort = useCallback(
     (idx: number) =>
       setSortRules((prev) => prev.filter((_, i) => i !== idx)),
+    [],
+  )
+  const reorderSort = useCallback(
+    (fromIdx: number, toIdx: number) => {
+      setSortRules((prev) => {
+        const next = [...prev]
+        const [moved] = next.splice(fromIdx, 1)
+        next.splice(toIdx, 0, moved)
+        return next
+      })
+    },
     [],
   )
   const toggleSort = useCallback((key: string) => {
@@ -1492,11 +1960,92 @@ function DataTable<T>({
     (id: string) => setFilterRules((prev) => prev.filter((r) => r.id !== id)),
     [],
   )
+  const reorderFilter = useCallback(
+    (fromIdx: number, toIdx: number) => {
+      setFilterRules((prev) => {
+        const next = [...prev]
+        const [moved] = next.splice(fromIdx, 1)
+        next.splice(toIdx, 0, moved)
+        return next
+      })
+    },
+    [],
+  )
+
+  const addFilterGroup = useCallback(() => {
+    setFilterGroups((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), logic: "and", rules: [] },
+    ])
+  }, [])
+  const addToFilterGroup = useCallback(
+    (groupId: string) => {
+      const firstFilterable = filterableCols[0]
+      if (!firstFilterable) return
+      setFilterGroups((prev) =>
+        prev.map((g) =>
+          g.id === groupId
+            ? {
+                ...g,
+                rules: [
+                  ...g.rules,
+                  {
+                    id: crypto.randomUUID(),
+                    key: firstFilterable.key,
+                    op: firstFilterable.type === "number" ? ">" : ("contains" as DataTableFilterOp),
+                    value: "",
+                  },
+                ],
+              }
+            : g,
+        ),
+      )
+    },
+    [filterableCols],
+  )
+  const removeFromFilterGroup = useCallback(
+    (groupId: string, ruleId: string) => {
+      setFilterGroups((prev) =>
+        prev.map((g) =>
+          g.id === groupId ? { ...g, rules: g.rules.filter((r) => r.id !== ruleId) } : g,
+        ),
+      )
+    },
+    [],
+  )
+  const updateInFilterGroup = useCallback(
+    (groupId: string, ruleId: string, changes: Partial<DataTableFilterRule>) => {
+      setFilterGroups((prev) =>
+        prev.map((g) =>
+          g.id === groupId
+            ? { ...g, rules: g.rules.map((r) => (r.id === ruleId ? { ...r, ...changes } : r)) }
+            : g,
+        ),
+      )
+    },
+    [],
+  )
+  const updateFilterGroupLogic = useCallback(
+    (groupId: string, logic: DataTableFilterGroupLogic) => {
+      setFilterGroups((prev) =>
+        prev.map((g) => (g.id === groupId ? { ...g, logic } : g)),
+      )
+    },
+    [],
+  )
+  const removeFilterGroup = useCallback(
+    (groupId: string) => {
+      setFilterGroups((prev) => prev.filter((g) => g.id !== groupId))
+    },
+    [],
+  )
 
   const activeHide = hiddenCols.size > 0
   const activeSort = sortRules.length > 0
-  const activeFilterRules = filterRules.filter((r) => r.value.trim())
-  const activeFilter = activeFilterRules.length > 0
+  const activeFilterCount =
+    filterRules.filter((r) => r.value.trim()).length +
+    filterGroups.reduce((sum, g) => sum + g.rules.filter((r) => r.value.trim()).length, 0)
+  const activeFilter = activeFilterCount > 0
 
   const subtitleText = subtitle ?? buildSubtitle(sorted.length, data.length)
 
@@ -1506,7 +2055,7 @@ function DataTable<T>({
     ? <Pill count={hiddenCols.size} className="bg-[#1d4ed8] text-white" />
     : undefined
   const filterBadge = activeFilter
-    ? <Pill count={activeFilterRules.length} className="bg-[#1d4ed8] text-white" />
+    ? <Pill count={activeFilterCount} className="bg-[#1d4ed8] text-white" />
     : undefined
   const sortBadge = activeSort
     ? <Pill count={sortRules.length} className="bg-[#1d4ed8] text-white" />
@@ -1517,14 +2066,15 @@ function DataTable<T>({
   const extraColsAfter = renderActions ? 1 : 0
   const totalColSpan = visibleCols.length + extraColsBefore + extraColsAfter
 
-  const cellClass = DENSITY_CLASSES[density]
-  const thClass = DENSITY_TH_CLASSES[density]
+  const [activeDensity, setActiveDensity] = useState<DataTableDensity>(density)
+  const cellClass = DENSITY_CLASSES[activeDensity]
+  const thClass = DENSITY_TH_CLASSES[activeDensity]
 
   return (
     <div
       data-slot="data-table"
       className={cn(
-        "flex flex-col h-full bg-white rounded-lg border border-[#F2F4F7] overflow-hidden",
+        "flex flex-col bg-white rounded-lg border border-[#F2F4F7] overflow-hidden",
         className,
       )}
     >
@@ -1548,6 +2098,7 @@ function DataTable<T>({
           ))}
           <button
             onClick={() => setCheckedIds(new Set())}
+            title="Clear selection"
             className="px-2 py-1 text-white/80 hover:text-white text-base"
           >
             ✕
@@ -1624,10 +2175,19 @@ function DataTable<T>({
                 >
                   <FilterPanel
                     columns={columns}
+                    data={data}
                     filterRules={filterRules}
+                    filterGroups={filterGroups}
                     onAdd={addFilter}
                     onUpdate={updateFilter}
                     onRemove={removeFilter}
+                    onAddGroup={addFilterGroup}
+                    onAddToGroup={addToFilterGroup}
+                    onRemoveFromGroup={removeFromFilterGroup}
+                    onUpdateInGroup={updateInFilterGroup}
+                    onUpdateGroupLogic={updateFilterGroupLogic}
+                    onRemoveGroup={removeFilterGroup}
+                    onReorder={reorderFilter}
                   />
                 </PortalDropdown>
               )}
@@ -1654,10 +2214,13 @@ function DataTable<T>({
                     onAdd={addSort}
                     onUpdate={updateSort}
                     onRemove={removeSort}
+                    onReorder={reorderSort}
                   />
                 </PortalDropdown>
               )}
             </div>
+            {/* Row Height */}
+            <RowHeightMenu value={activeDensity} onChange={setActiveDensity} />
           </div>
         </div>
       )}
@@ -1665,7 +2228,7 @@ function DataTable<T>({
       {/* Table */}
       <div
         data-slot="data-table-container"
-        className="relative w-full overflow-auto flex-1"
+        className="relative w-full overflow-auto"
       >
         <table
           data-slot="data-table-element"
@@ -1681,6 +2244,8 @@ function DataTable<T>({
             groupedVisibleCols={groupedVisibleCols}
             sortRules={sortRules}
             onSort={toggleSort}
+            reorderable={reorderable}
+            onColumnDrag={handleColumnDrag}
             renderActions={!!renderActions}
             thClass={thClass}
             allChecked={allChecked}

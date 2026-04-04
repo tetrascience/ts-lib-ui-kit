@@ -59,7 +59,7 @@ const compoundColumns: DataTableColumnDef<Compound>[] = [
     type: "number",
     description: "Molecular weight in grams per mole",
   },
-  { key: "category", label: "Category", type: "string", description: "Therapeutic category" },
+  { key: "category", label: "Category", type: "list", description: "Therapeutic category" },
   {
     key: "purity",
     label: "Purity (%)",
@@ -74,7 +74,7 @@ const compoundColumns: DataTableColumnDef<Compound>[] = [
   {
     key: "status",
     label: "Status",
-    type: "string",
+    type: "list",
     description: "Compound status",
     renderCell: (_row, value) => {
       const active = value === "Active"
@@ -223,7 +223,7 @@ type Story = StoryObj<typeof DataTable>
 /** Basic table with sorting and pagination — no batch actions or expansion. */
 export const Basic: Story = {
   render: () => (
-    <div style={{ height: 540 }}>
+    <div>
       <DataTable<Compound>
         data={compounds}
         columns={compoundColumns}
@@ -286,7 +286,7 @@ export const BatchActions: Story = {
     ]
 
     return (
-      <div style={{ height: 540 }}>
+      <div>
         <DataTable<Compound>
           data={compounds}
           columns={compoundColumns}
@@ -383,7 +383,7 @@ export const Dynamic: Story = {
       }))
 
     return (
-      <div style={{ height: 540 }}>
+      <div>
         <DataTable<Compound>
           data={rows}
           columns={editColumns}
@@ -508,7 +508,7 @@ export const Dynamic: Story = {
 /** Expandable rows with a detail panel — click the chevron to expand. */
 export const Expansion: Story = {
   render: () => (
-    <div style={{ height: 600 }}>
+    <div>
       <DataTable<Compound>
         data={compounds}
         columns={compoundColumns}
@@ -551,7 +551,7 @@ export const Expansion: Story = {
 /** Batch expansion — expand all rows at once with the header chevron toggle. */
 export const BatchExpansion: Story = {
   render: () => (
-    <div style={{ height: 600 }}>
+    <div>
       <DataTable<Compound>
         data={compounds}
         columns={compoundColumns}
@@ -587,7 +587,7 @@ export const BatchExpansion: Story = {
 /** Full-featured filtering table with search, column hiding, filters, sort, and pagination. */
 export const Filtering: Story = {
   render: () => (
-    <div style={{ height: 560 }}>
+    <div>
       <DataTable<Compound>
         data={compounds}
         columns={compoundColumns}
@@ -632,7 +632,7 @@ export const ScientificData: Story = {
   render: () => {
     const [selected, setSelected] = useState<string | null>(null)
     return (
-      <div style={{ height: 560 }}>
+      <div>
         <DataTable<Molecule>
           data={molecules}
           columns={molColumns}
@@ -719,7 +719,7 @@ export const WithActionsAndCustomCells: Story = {
     ]
 
     return (
-      <div style={{ height: 480 }}>
+      <div>
         <DataTable<Molecule>
           data={molecules}
           columns={columnsWithRenderer}
@@ -776,12 +776,12 @@ export const WithActionsAndCustomCells: Story = {
 /** Compact density for data-dense views. */
 export const CompactDensity: Story = {
   render: () => (
-    <div style={{ height: 480 }}>
+    <div>
       <DataTable<Compound>
         data={compounds}
         columns={compoundColumns}
         title="Compound Library"
-        subtitle="Compact row density"
+        subtitle={`${compounds.length} compounds`}
         getRowId={(r) => r.id}
         defaultSortRules={[{ key: "name", dir: "asc" }]}
         density="compact"
@@ -796,12 +796,12 @@ export const CompactDensity: Story = {
 /** Relaxed density for improved readability. */
 export const RelaxedDensity: Story = {
   render: () => (
-    <div style={{ height: 600 }}>
+    <div>
       <DataTable<Compound>
         data={compounds}
         columns={compoundColumns}
         title="Compound Library"
-        subtitle="Relaxed row density"
+        subtitle={`${compounds.length} compounds`}
         getRowId={(r) => r.id}
         defaultSortRules={[{ key: "name", dir: "asc" }]}
         density="relaxed"
@@ -813,10 +813,32 @@ export const RelaxedDensity: Story = {
   },
 }
 
+/** Drag column headers to reorder columns. */
+export const Reorderable: Story = {
+  render: () => (
+    <div>
+      <DataTable<Compound>
+        data={compounds}
+        columns={compoundColumns}
+        title="Compound Library"
+        subtitle="Drag column headers to reorder"
+        getRowId={(r) => r.id}
+        defaultSortRules={[{ key: "name", dir: "asc" }]}
+        reorderable
+        pagination
+        defaultPerPage={5}
+      />
+    </div>
+  ),
+  parameters: {
+    zephyr: { testCaseId: "SW-T1573-12" },
+  },
+}
+
 /** Empty state when no data is provided. */
 export const EmptyState: Story = {
   render: () => (
-    <div style={{ height: 300 }}>
+    <div>
       <DataTable<User>
         data={emptyUsers}
         columns={userColumns}

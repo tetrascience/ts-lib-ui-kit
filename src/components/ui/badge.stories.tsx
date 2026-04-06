@@ -71,6 +71,9 @@ export const Info: Story = {
       expect(canvas.getByText("Info Badge")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1397" },
+  },
 }
 
 export const Destructive: Story = {
@@ -102,6 +105,9 @@ export const Positive: Story = {
       expect(canvas.getByText("Positive Badge")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1398" },
+  },
 }
 
 export const Warning: Story = {
@@ -115,6 +121,9 @@ export const Warning: Story = {
     await step("Warning badge text renders", async () => {
       expect(canvas.getByText("Warning Badge")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1399" },
   },
 }
 

@@ -21,7 +21,7 @@ jobs:
     if: github.event.repository.fork == false && (github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && contains(fromJSON('["Preview", "Production"]'), github.event.deployment.environment)))
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:1.59.0-noble
+      image: mcr.microsoft.com/playwright:v1.59.0-noble
     timeout-minutes: 30
 
     steps:

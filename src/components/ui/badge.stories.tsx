@@ -15,7 +15,7 @@ const meta: Meta<typeof Badge> = {
   argTypes: {
     variant: {
       control: { type: "select" },
-      options: ["default", "secondary", "destructive", "outline", "ghost", "link"],
+      options: ["default", "secondary", "info", "destructive", "positive", "warning", "outline", "ghost", "link"],
     },
   },
   args: {
@@ -59,6 +59,23 @@ export const Secondary: Story = {
   },
 }
 
+export const Info: Story = {
+  args: {
+    children: "Info Badge",
+    variant: "info",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Info badge text renders", async () => {
+      expect(canvas.getByText("Info Badge")).toBeInTheDocument()
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1397" },
+  },
+}
+
 export const Destructive: Story = {
   args: {
     children: "Destructive Badge",
@@ -73,6 +90,40 @@ export const Destructive: Story = {
     await step("Destructive badge text renders", async () => {
       expect(canvas.getByText("Destructive Badge")).toBeInTheDocument()
     })
+  },
+}
+
+export const Positive: Story = {
+  args: {
+    children: "Positive Badge",
+    variant: "positive",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Positive badge text renders", async () => {
+      expect(canvas.getByText("Positive Badge")).toBeInTheDocument()
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1398" },
+  },
+}
+
+export const Warning: Story = {
+  args: {
+    children: "Warning Badge",
+    variant: "warning",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Warning badge text renders", async () => {
+      expect(canvas.getByText("Warning Badge")).toBeInTheDocument()
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1399" },
   },
 }
 

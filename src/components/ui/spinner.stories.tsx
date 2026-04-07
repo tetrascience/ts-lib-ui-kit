@@ -57,11 +57,17 @@ export const Large: Story = {
 export const Small: Story = {
   args: { size: "sm" },
   play: playSpinner,
+  parameters: {
+    zephyr: { testCaseId: "SW-T1405" },
+  },
 }
 
 export const Medium: Story = {
   args: { size: "md" },
   play: playSpinner,
+  parameters: {
+    zephyr: { testCaseId: "SW-T1406" },
+  },
 }
 
 export const InlineWithText: Story = {
@@ -79,6 +85,9 @@ export const InlineWithText: Story = {
       expect(canvas.getByText("Loading results...")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1407" },
+  },
 }
 
 export const FullPageLoader: Story = {
@@ -95,6 +104,9 @@ export const FullPageLoader: Story = {
       expect(canvas.getByRole("status")).toBeInTheDocument()
       expect(canvas.getByText("Loading...")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1408" },
   },
 }
 
@@ -124,6 +136,9 @@ export const InsideButton: Story = {
       buttons.forEach((btn) => expect(btn).toBeDisabled())
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1409" },
+  },
 }
 
 export const CustomColor: Story = {
@@ -142,5 +157,8 @@ export const CustomColor: Story = {
       const spinners = canvas.getAllByRole("status")
       expect(spinners).toHaveLength(3)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1410" },
   },
 }

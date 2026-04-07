@@ -67,6 +67,9 @@ export const Text: Story = {
       expect(skeletons).toHaveLength(4)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1403" },
+  },
 }
 
 export const ProfileCard: Story = {
@@ -142,5 +145,8 @@ export const TableSkeleton: Story = {
       )
       expect(skeletons).toHaveLength(20)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1404" },
   },
 }

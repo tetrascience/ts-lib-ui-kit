@@ -86,6 +86,9 @@ export const Default: Story = {
       expect(canvas.getByText(/px/)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1414" },
+  },
 }
 
 /**
@@ -141,6 +144,7 @@ export const AllIcons: Story = {
         </div>
       </div>
     )
+    zephyr: { testCaseId: "SW-T1415" },
   },
   play: async ({ canvasElement, step }) => {
     await step("Search input and icon grid render", async () => {

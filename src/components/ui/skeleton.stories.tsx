@@ -1,6 +1,14 @@
 import { expect, within } from "storybook/test"
 
 import { Skeleton } from "./skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./table"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
@@ -35,7 +43,28 @@ export const Default: Story = {
 
     await step("Skeleton uses pulse placeholder", async () => {
       const el = canvasElement.querySelector('[data-slot="skeleton"]')
-      expect(el?.className).toMatch(/animate-pulse/)
+      expect(el?.className).toMatch(/shimmer/)
+    })
+  },
+}
+
+export const Text: Story = {
+  render: () => (
+    <div className="grid w-[320px] gap-2">
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-4/5" />
+      <Skeleton className="h-4 w-3/5" />
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Text skeleton lines render", async () => {
+      const skeletons = canvas
+        .getAllByRole("generic")
+        .filter((el) => el.getAttribute("data-slot") === "skeleton")
+      expect(skeletons).toHaveLength(4)
     })
   },
 }
@@ -65,6 +94,53 @@ export const ProfileCard: Story = {
 
     await step("Profile card container", async () => {
       expect(canvasElement.querySelector(".rounded-xl.border")).toBeTruthy()
+    })
+  },
+}
+
+export const TableSkeleton: Story = {
+  render: () => {
+    const columns = ["Name", "Status", "Created", "Actions"]
+    const rows = 5
+
+    return (
+      <div className="w-[600px]">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map((col) => (
+                <TableHead key={col}>{col}</TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: rows }, (_, rowIdx) => (
+              <TableRow key={rowIdx}>
+                {columns.map((col, colIdx) => (
+                  <TableCell key={col}>
+                    <Skeleton
+                      className={`h-4 ${colIdx === 0 ? "w-32" : colIdx === 3 ? "w-16" : "w-24"}`}
+                    />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Table header renders", async () => {
+      const headers = canvasElement.querySelectorAll('[data-slot="table-head"]')
+      expect(headers).toHaveLength(4)
+    })
+
+    await step("Skeleton cells render in table body", async () => {
+      const skeletons = canvasElement.querySelectorAll(
+        '[data-slot="table-body"] [data-slot="skeleton"]'
+      )
+      expect(skeletons).toHaveLength(20)
     })
   },
 }

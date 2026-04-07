@@ -41,7 +41,7 @@ export const Default: Story = {
       expect(skeleton).toBeTruthy()
     })
 
-    await step("Skeleton uses pulse placeholder", async () => {
+    await step("Skeleton uses shimmer placeholder", async () => {
       const el = canvasElement.querySelector('[data-slot="skeleton"]')
       expect(el?.className).toMatch(/shimmer/)
     })

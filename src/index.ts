@@ -11,6 +11,7 @@ export * from "@/components/composed/ProtocolConfiguration";
 export * from "@/components/composed/ProtocolYamlCard";
 export * from "@/components/composed/PythonEditorModal";
 export * from "@/components/composed/Sidebar";
+export * from "@/components/composed/DataAppShell";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";
@@ -52,6 +53,7 @@ export * from "@/components/ui/collapsible";
 export * from "@/components/ui/combobox";
 export * from "@/components/ui/command";
 export * from "@/components/ui/context-menu";
+export * from "@/components/ui/data-table";
 export * from "@/components/ui/dialog";
 export * from "@/components/ui/drawer";
 export * from "@/components/ui/dropdown-menu";

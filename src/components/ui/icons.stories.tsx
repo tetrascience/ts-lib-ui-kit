@@ -98,7 +98,10 @@ export const Default: Story = {
  * > In production code, always import individual icons to enable tree-shaking.
  */
 export const AllIcons: Story = {
-  parameters: { layout: "padded" },
+  parameters: {
+    layout: "padded", 
+    zephyr: { testCaseId: "SW-T1415" },
+  },
   render: function AllIconsRender() {
     const [search, setSearch] = useState("")
     const MAX_VISIBLE = 120
@@ -144,7 +147,6 @@ export const AllIcons: Story = {
         </div>
       </div>
     )
-    zephyr: { testCaseId: "SW-T1415" },
   },
   play: async ({ canvasElement, step }) => {
     await step("Search input and icon grid render", async () => {

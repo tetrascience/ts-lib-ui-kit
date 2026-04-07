@@ -21,7 +21,7 @@ jobs:
     if: github.event.repository.fork == false && (github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && contains(fromJSON('["Preview", "Production"]'), github.event.deployment.environment)))
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      image: mcr.microsoft.com/playwright:1.59.0-noble
     timeout-minutes: 30
 
     steps:
@@ -39,13 +39,6 @@ jobs:
 
       - name: 📦 Install dependencies
         run: yarn install --immutable
-
-      - name: 📦 Cache Playwright browsers
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
 
       - name: 🧪 Run Storybook tests (all)
         if: ${{ !inputs.test_cases }}

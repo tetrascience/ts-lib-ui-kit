@@ -91,6 +91,9 @@ export const Default: Story = {
   },
 }
 
+const ALL_ICON_ENTRIES = Object.entries(icons)
+const MAX_VISIBLE = 120
+
 /**
  * Search through all 1500+ Lucide icons. Type a name to filter.
  *
@@ -99,22 +102,20 @@ export const Default: Story = {
  */
 export const AllIcons: Story = {
   parameters: {
-    layout: "padded", 
+    layout: "padded",
     zephyr: { testCaseId: "SW-T1415" },
   },
   render: function AllIconsRender() {
     const [search, setSearch] = useState("")
-    const MAX_VISIBLE = 120
-
-    const allEntries = useMemo(() => Object.entries(icons), [])
 
     const filtered = useMemo(() => {
-      if (!search) return allEntries.slice(0, MAX_VISIBLE)
+      if (!search) return ALL_ICON_ENTRIES.slice(0, MAX_VISIBLE)
       const lower = search.toLowerCase()
-      return allEntries
-        .filter(([name]) => name.toLowerCase().includes(lower))
-        .slice(0, MAX_VISIBLE)
-    }, [search, allEntries])
+      return ALL_ICON_ENTRIES.filter(([name]) => name.toLowerCase().includes(lower)).slice(
+        0,
+        MAX_VISIBLE,
+      )
+    }, [search])
 
     return (
       <div className="flex flex-col gap-4 p-4">
@@ -130,7 +131,7 @@ export const AllIcons: Story = {
           <span className="text-muted-foreground text-xs">
             {filtered.length}
             {filtered.length >= MAX_VISIBLE ? "+" : ""} of{" "}
-            {allEntries.length} icons
+            {ALL_ICON_ENTRIES.length} icons
           </span>
         </div>
         <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 lg:grid-cols-12">

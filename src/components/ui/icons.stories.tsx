@@ -42,7 +42,7 @@ function IconShowcase({
 }
 
 const meta: Meta<typeof IconShowcase> = {
-  title: "Patterns/Icons",
+  title: "Foundations/Icons",
   component: IconShowcase,
   parameters: {
     layout: "centered",

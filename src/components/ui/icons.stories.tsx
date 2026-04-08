@@ -47,7 +47,7 @@ const meta: Meta<typeof IconShowcase> = {
   parameters: {
     layout: "centered",
   },
-  tags: ["autodocs"],
+  tags: ["!autodocs"],
   argTypes: {
     size: {
       control: { type: "select" },
@@ -105,7 +105,7 @@ export const AllIcons: Story = {
     layout: "padded",
     zephyr: { testCaseId: "SW-T1415" },
   },
-  render: function AllIconsRender() {
+  render: function AllIconsRender({ size, strokeWidth, color }) {
     const [search, setSearch] = useState("")
 
     const filtered = useMemo(() => {
@@ -140,7 +140,7 @@ export const AllIcons: Story = {
               key={name}
               className="hover:bg-muted flex flex-col items-center gap-1.5 rounded-md p-2 transition-colors"
             >
-              <Icon className="size-5" />
+              <Icon size={size} strokeWidth={strokeWidth} color={color} />
               <span className="text-muted-foreground max-w-full truncate text-[10px]">
                 {name}
               </span>

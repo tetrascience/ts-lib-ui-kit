@@ -106,14 +106,15 @@ export const AllIcons: Story = {
     const [search, setSearch] = useState("")
     const MAX_VISIBLE = 120
 
+    const allEntries = useMemo(() => Object.entries(icons), [])
+
     const filtered = useMemo(() => {
-      const entries = Object.entries(icons)
-      if (!search) return entries.slice(0, MAX_VISIBLE)
+      if (!search) return allEntries.slice(0, MAX_VISIBLE)
       const lower = search.toLowerCase()
-      return entries
+      return allEntries
         .filter(([name]) => name.toLowerCase().includes(lower))
         .slice(0, MAX_VISIBLE)
-    }, [search])
+    }, [search, allEntries])
 
     return (
       <div className="flex flex-col gap-4 p-4">
@@ -129,7 +130,7 @@ export const AllIcons: Story = {
           <span className="text-muted-foreground text-xs">
             {filtered.length}
             {filtered.length >= MAX_VISIBLE ? "+" : ""} of{" "}
-            {Object.keys(icons).length} icons
+            {allEntries.length} icons
           </span>
         </div>
         <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 lg:grid-cols-12">

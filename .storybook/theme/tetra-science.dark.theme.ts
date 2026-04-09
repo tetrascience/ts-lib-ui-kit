@@ -7,25 +7,43 @@ export const tetrascienceDark = create({
 
   brandTitle: 'TetraScience UI',
   brandImage,
-  
+
   fontBase: '"Inter", sans-serif',
   fontCode: 'SFMono-Regular, Menlo, Monaco, Consolas, monospace',
 
-  colorPrimary: '#549DFF',
-  colorSecondary: '#549DFF',
+  // Primary Brand Colors
+  colorPrimary: '#94C2FF',       // Primary (dark)
+  colorSecondary: '#94C2FF',     // Primary (dark)
 
-  appBg: 'oklch(0.1909 0.0567 271.01)',         // Off Black
-  appContentBg: '#0B112D',
-  appPreviewBg: '#212948',
+  // UI Background
+  appBg: '#0B112D',              // Surface
+  appContentBg: '#0B112D',       // Surface
+  appPreviewBg: '#0B112D',       // Surface
+  appBorderColor: '#3E4250',     // Outline Variant
+  appBorderRadius: 8,
 
-  textColor: '#FFFFFF',
-  textInverseColor: '#0B112D',
+  // Text
+  textColor: '#E2E8EF',          // On Surface
+  textInverseColor: '#0B112D',   // Surface
+  textMutedColor: '#8A9AB0',     // Neutral 70
 
-  barBg: '#0B112D',
-  barTextColor: '#FFFFFF',
-  barSelectedColor: '#549DFF',
+  // Toolbar
+  barBg: '#1E2440',              // Surface Container
+  barTextColor: '#E2E8EF',       // On Surface
+  barSelectedColor: '#94C2FF',   // Primary
+  barHoverColor: '#B2D3FF',      // Primary 90
 
-  inputBg: '#11183D',
-  inputBorder: '#2F45B5',
-  inputTextColor: '#FFFFFF',
+  // Form
+  inputBg: '#1E2440',            // Surface Container
+  inputBorder: '#8890A5',        // Outline
+  inputTextColor: '#E2E8EF',     // On Surface
+  inputBorderRadius: 6,
+
+  // Buttons
+  buttonBg: '#283DA5',           // Primary Container
+  buttonBorder: '#8890A5',       // Outline
+
+  // Boolean / Toggle
+  booleanBg: '#1E2440',          // Surface Container
+  booleanSelectedBg: '#283DA5',  // Primary Container
 })

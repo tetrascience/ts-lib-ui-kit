@@ -38,19 +38,38 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-background: var(--primary-background);
+  --color-primary-background-foreground: var(--primary-background-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-background: var(--secondary-background);
+  --color-secondary-background-foreground: var(--secondary-background-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-background: var(--accent-background);
+  --color-accent-background-foreground: var(--accent-background-foreground);
   --color-info: var(--info);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-background: var(--destructive-background);
+  --color-destructive-background-foreground: var(--destructive-background-foreground);
   --color-positive: var(--positive);
   --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-surface-tint: var(--surface-tint);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-shadow: var(--shadow);
+  --color-scrim: var(--scrim);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -67,79 +86,165 @@
   --font-sans: "Inter Variable", sans-serif;
 }
 
+/* ==========================================================================
+   Light Theme (default)
+   Source: Figma material-theme / Light mode
+   ========================================================================== */
+
 :root {
   --radius: 0.625rem;
-  --card: oklch(1 0 0);
-  --card-foreground: rgba(11, 17, 45, 1);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.6945 0.1622 256.49);
-  --primary-foreground: oklch(0.1909 0.0567 271.01);
-  --secondary: oklch(0.4465 0.1784 269.18);
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.5187 0.182 305.25);
-  --accent-foreground: oklch(1 0 0);
+
+  /* Primary */
+  --primary: #2F45B5;
+  --primary-foreground: #FFFFFF;
+  --primary-background: #B2D3FF;
+  --primary-background-foreground: #0B112D;
+
+  /* Secondary */
+  --secondary: #465364;
+  --secondary-foreground: #FFFFFF;
+  --secondary-background: #B0BCC9;
+  --secondary-background-foreground: #0B112D;
+
+  /* Accent (MD3 Tertiary) */
+  --accent: #4E79A7;
+  --accent-foreground: #FFFFFF;
+  --accent-background: #E4EDF5;
+  --accent-background-foreground: #152A3F;
+
+  /* Destructive (MD3 Error) */
+  --destructive: #D44445;
+  --destructive-foreground: #FFFFFF;
+  --destructive-background: #FADEDE;
+  --destructive-background-foreground: #3B0D0E;
+
+  /* Background (MD3 Surface) & Foreground (MD3 On Surface) */
+  --background: #F2F4F7;
+  --foreground: #0B112D;
+  --surface: #F2F4F7;
+  --surface-foreground: #0B112D;
+  --surface-tint: #2F45B5;
+  --surface-dim: #C6D0DE;
+  --surface-bright: #F2F4F7;
+  --surface-container-low: #F8F9FB;
+  --surface-container-high: #C6D0DE;
+  --surface-container-highest: #A8B5C7;
+
+  /* Muted (MD3 Outline Variant region) */
+  --muted: #DDE1E8;
+  --muted-foreground: #526175;
+
+  /* Card (MD3 Surface Container) */
+  --card: #E2E8EF;
+  --card-foreground: #0B112D;
+
+  /* Popover (lightest surface) */
+  --popover: #FFFFFF;
+  --popover-foreground: #0B112D;
+
+  /* Border & Input (MD3 Outline / Outline Variant) */
+  --border: #B9C0CF;
+  --input: #DDE1E8;
+  --ring: #B2D3FF;
+
+  /* Sidebar (MD3 Inverse Surface) */
+  --sidebar: #313752;
+  --sidebar-foreground: #E2E8EF;
+  --sidebar-primary: #B2D3FF;
+  --sidebar-primary-foreground: #2F45B5;
+  --sidebar-accent: #526175;
+  --sidebar-accent-foreground: #E2E8EF;
+  --sidebar-border: #465364;
+  --sidebar-ring: #B2D3FF;
+
+  /* Shadow & Scrim */
+  --shadow: #000000;
+  --scrim: #000000;
+
+  /* Status colors (no Figma equivalent — preserved) */
   --info: oklch(0.5645 0.0863 251.12);
-  --destructive: oklch(0.685 0.203959 23.6393);
   --positive: oklch(0.7 0.2787 145.59);
   --warning: oklch(0.7676 0.1635 60.41);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.6945 0.1622 256.49);
+
+  /* Chart colors (preserved) */
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --background: oklch(0.9665 0.0045 258.32);
-  --foreground: oklch(0.145 0 0);
 }
 
+/* ==========================================================================
+   Dark Theme
+   Source: Figma material-theme / Dark mode
+   ========================================================================== */
+
 .dark {
-  --background: oklch(0.1909 0.0567 271.01);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.2909 0.0567 271.01);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.3909 0.0567 271.01);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.6945 0.1622 256.49);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.5645 0.0863 251.12);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.0909 0.0567 271.01);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.5187 0.182 305.25);
-  --accent-foreground: oklch(0.985 0 0);
+  --primary: #94C2FF;
+  --primary-foreground: #1A2670;
+  --primary-background: #283DA5;
+  --primary-background-foreground: #B2D3FF;
+
+  --secondary: #8A9AB0;
+  --secondary-foreground: #1C2440;
+  --secondary-background: #2D3753;
+  --secondary-background-foreground: #B0BCC9;
+
+  --accent: #D0DFF0;
+  --accent-foreground: #2A4B68;
+  --accent-background: #3A5B80;
+  --accent-background-foreground: #E4EDF5;
+
+  --destructive: #F5BEBE;
+  --destructive-foreground: #731F20;
+  --destructive-background: #AA3132;
+  --destructive-background-foreground: #FADEDE;
+
+  --background: #0B112D;
+  --foreground: #E2E8EF;
+  --surface: #0B112D;
+  --surface-foreground: #E2E8EF;
+  --surface-tint: #94C2FF;
+  --surface-dim: #0B112D;
+  --surface-bright: #313752;
+  --surface-container-low: #0B112D;
+  --surface-container-high: #313752;
+  --surface-container-highest: #465364;
+
+  --muted: #3E4250;
+  --muted-foreground: #8A9AB0;
+
+  --card: #1E2440;
+  --card-foreground: #E2E8EF;
+
+  --popover: #060A1C;
+  --popover-foreground: #E2E8EF;
+
+  --border: #8890A5;
+  --input: #3E4250;
+  --ring: #2F45B5;
+
+  --sidebar: #E2E8EF;
+  --sidebar-foreground: #313752;
+  --sidebar-primary: #2F45B5;
+  --sidebar-primary-foreground: #B2D3FF;
+  --sidebar-accent: #8A9AB0;
+  --sidebar-accent-foreground: #E2E8EF;
+  --sidebar-border: #8890A5;
+  --sidebar-ring: #2F45B5;
+
+  --shadow: #000000;
+  --scrim: #000000;
+
   --info: oklch(0.5645 0.0863 251.12);
-  --destructive: oklch(0.704 0.191 22.216);
   --positive: oklch(0.7 0.2787 145.59);
   --warning: oklch(0.7676 0.1635 60.41);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.6945 0.1622 256.49);
+
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @layer base {

@@ -1,16 +1,7 @@
 // Main styles export
 import "@/index.css";
 
-// Compposed
-export * from "@/components/composed/AppHeader";
-export * from "@/components/composed/AssistantModal";
-export * from "@/components/composed/CodeScriptEditorButton";
-export * from "@/components/composed/LaunchContent";
-export * from "@/components/composed/Navbar";
-export * from "@/components/composed/ProtocolConfiguration";
-export * from "@/components/composed/ProtocolYamlCard";
-export * from "@/components/composed/PythonEditorModal";
-export * from "@/components/composed/Sidebar";
+// Composed
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";
@@ -19,7 +10,6 @@ export * from "@/components/composed/tdp-url";
 
 
 // Charts
-export * from "@/components/composed/AppLayout";
 export * from "@/components/charts/AreaGraph";
 export * from "@/components/charts/BarGraph";
 export * from "@/components/charts/Boxplot";
@@ -29,7 +19,6 @@ export * from "@/components/charts/DotPlot";
 export * from "@/components/charts/Heatmap";
 export * from "@/components/charts/Histogram";
 export * from "@/components/charts/LineGraph";
-export * from "@/components/composed/Main";
 export * from "@/components/charts/PieChart";
 export * from "@/components/charts/PlateMap";
 export * from "@/components/charts/ScatterGraph";

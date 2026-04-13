@@ -44,7 +44,7 @@ function renderTabs(variant: "default" | "line", orientation: "horizontal" | "ve
 }
 
 export const HorizontalDefault: Story = {
-  render: () => renderTabs("default", "horizontal"),
+  render: (args) => renderTabs("default", "horizontal"),
   parameters: {
     zephyr: { testCaseId: "SW-T1310" },
   },
@@ -71,7 +71,7 @@ export const HorizontalDefault: Story = {
 }
 
 export const HorizontalLine: Story = {
-  render: () => renderTabs("line", "horizontal"),
+  render: (args) => renderTabs("line", "horizontal"),
   parameters: {
     zephyr: { testCaseId: "SW-T1311" },
   },
@@ -92,7 +92,7 @@ export const HorizontalLine: Story = {
 }
 
 export const VerticalDefault: Story = {
-  render: () => renderTabs("default", "vertical"),
+  render: (args) => renderTabs("default", "vertical"),
   parameters: {
     zephyr: { testCaseId: "SW-T1312" },
   },
@@ -113,7 +113,7 @@ export const VerticalDefault: Story = {
 }
 
 export const VerticalLine: Story = {
-  render: () => renderTabs("line", "vertical"),
+  render: (args) => renderTabs("line", "vertical"),
   parameters: {
     zephyr: { testCaseId: "SW-T1313" },
   },

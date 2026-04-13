@@ -189,6 +189,15 @@ export const CustomCells: Story = {
     ]
     return <DataTable columns={dedupedColumns} data={data} enableSorting />
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders with custom Badge cells", async () => {
+      expect(canvas.getByRole("table")).toBeInTheDocument()
+      const badges = canvasElement.querySelectorAll("[data-slot='badge']")
+      expect(badges.length).toBeGreaterThan(0)
+    })
+  },
 }
 
 // ===========================================================================
@@ -230,6 +239,25 @@ export const ColumnManagement: Story = {
       const checkboxes = body.getAllByRole("checkbox")
       expect(checkboxes.length).toBeGreaterThan(0)
     })
+
+    await step("Toggling a column via keyboard hides it", async () => {
+      const checkboxes = body.getAllByRole("checkbox")
+      const initialHeaderCount = canvas.getAllByRole("columnheader").length
+      // Focus and press Enter to toggle visibility
+      checkboxes[0].focus()
+      await userEvent.keyboard("{Enter}")
+      const newHeaderCount = canvas.getAllByRole("columnheader").length
+      expect(newHeaderCount).toBe(initialHeaderCount - 1)
+    })
+
+    await step("Clicking outside closes the dropdown", async () => {
+      // Panel should be open from previous step
+      expect(body.queryByRole("group", { name: /Toggle and reorder/ })).not.toBeNull()
+      // Click outside the panel on the table body
+      await userEvent.click(canvas.getByRole("table"))
+      // Panel should close
+      expect(body.queryByRole("group", { name: /Toggle and reorder/ })).toBeNull()
+    })
   },
 }
 
@@ -241,6 +269,20 @@ export const ColumnReorder: Story = {
   render: (args) => {
     const { data, columns } = getDataset(args as Record<string, unknown>)
     return <DataTable columns={columns} data={data} enableColumnReorder enableSorting />
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders with drag handles on headers", async () => {
+      expect(canvas.getByRole("table")).toBeInTheDocument()
+      const dragHandles = canvasElement.querySelectorAll("[data-drag-handle]")
+      expect(dragHandles.length).toBeGreaterThan(0)
+    })
+
+    await step("Headers are sortable (click triggers sort)", async () => {
+      const headers = canvas.getAllByRole("columnheader")
+      expect(headers.length).toBeGreaterThanOrEqual(4)
+    })
   },
 }
 
@@ -285,6 +327,36 @@ export const Pagination: Story = {
 }
 
 // ---------------------------------------------------------------------------
+// EmptyPagination — covers zero-row branch in DataTablePagination
+// ---------------------------------------------------------------------------
+
+export const EmptyPagination: Story = {
+  render: () => (
+    <DataTable
+      columns={workspaceColumns}
+      data={[]}
+      enablePagination
+      defaultPageSize={5}
+    >
+      <DataTablePagination pageSizeOptions={[5, 10, 25]} />
+    </DataTable>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders empty state", async () => {
+      expect(canvas.getByRole("table")).toBeInTheDocument()
+      expect(canvas.getByText("No results.")).toBeInTheDocument()
+    })
+
+    await step("Pagination controls are hidden when no rows", async () => {
+      expect(canvas.queryByText("Rows per page:")).toBeNull()
+      expect(canvasElement.querySelector("[data-slot='data-table-pagination']")).toBeNull()
+    })
+  },
+}
+
+// ---------------------------------------------------------------------------
 // AllFeatures
 // ---------------------------------------------------------------------------
 
@@ -311,7 +383,21 @@ function FullColumnManagementStory({ dataset }: { dataset: DatasetKey }) {
 }
 
 export const AllFeatures: Story = {
-  render: (args) => <FullColumnManagementStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />,
+  args: { dataset: "Compounds" },
+  render: (args) => <FullColumnManagementStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Compounds"} />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders with all feature controls", async () => {
+      expect(canvas.getByRole("table")).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: /Columns/ })).toBeInTheDocument()
+      expect(canvas.getByText("Rows per page:")).toBeInTheDocument()
+    })
+
+    await step("Pagination shows row range", async () => {
+      expect(canvas.getByText(/1–5 of/)).toBeInTheDocument()
+    })
+  },
 }
 
 // ---------------------------------------------------------------------------

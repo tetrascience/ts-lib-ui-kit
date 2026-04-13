@@ -275,6 +275,19 @@ export const WithFooter: Story = {
 export const Striped: Story = {
   args: { dataset: "Compounds", striped: true },
   render: Default.render,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table has data-striped attribute", async () => {
+      const table = canvas.getByRole("table")
+      expect(table.closest("[data-striped]")).not.toBeNull()
+    })
+
+    await step("Data rows render", async () => {
+      const rows = canvas.getAllByRole("row")
+      expect(rows.length).toBeGreaterThan(1)
+    })
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -284,6 +297,19 @@ export const Striped: Story = {
 export const CompactDensity: Story = {
   args: { density: "compact" },
   render: Default.render,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table has compact density attribute", async () => {
+      const table = canvas.getByRole("table")
+      expect(table.closest("[data-density='compact']")).not.toBeNull()
+    })
+
+    await step("Headers and rows render", async () => {
+      expect(canvas.getAllByRole("columnheader").length).toBeGreaterThanOrEqual(4)
+      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
+    })
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -293,6 +319,19 @@ export const CompactDensity: Story = {
 export const RelaxedDensity: Story = {
   args: { density: "relaxed" },
   render: Default.render,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table has relaxed density attribute", async () => {
+      const table = canvas.getByRole("table")
+      expect(table.closest("[data-density='relaxed']")).not.toBeNull()
+    })
+
+    await step("Headers and rows render", async () => {
+      expect(canvas.getAllByRole("columnheader").length).toBeGreaterThanOrEqual(4)
+      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
+    })
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -307,6 +346,25 @@ const statusVariant: Record<string, "positive" | "warning" | "secondary"> = {
 }
 
 export const CustomCells: Story = {
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders with headers", async () => {
+      expect(canvas.getByRole("table")).toBeInTheDocument()
+      expect(canvas.getByRole("columnheader", { name: "Status" })).toBeInTheDocument()
+    })
+
+    await step("Status column renders Badge components", async () => {
+      const badges = canvasElement.querySelectorAll("[data-slot='badge']")
+      expect(badges.length).toBeGreaterThan(0)
+    })
+
+    await step("Badge text matches expected status values", async () => {
+      const activeBadges = canvas.getAllByText("Active")
+      expect(activeBadges.length).toBeGreaterThan(0)
+      expect(activeBadges[0].closest("[data-slot='badge']")).not.toBeNull()
+    })
+  },
   render: (args) => {
     const a = args as Record<string, unknown>
     const { data, columns } = getDataset(a)

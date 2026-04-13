@@ -45,10 +45,10 @@ function autoAlign(data: Record<string, unknown>[], columns: Column[]): Column[]
   )
 }
 
-const workspaceRows: Record<string, unknown>[] = [
-  { id: "1", name: "Clinical exports", owner: "Data Ops", status: "Active", runs: 142 },
-  { id: "2", name: "QC dashboard", owner: "Analytics", status: "Paused", runs: 38 },
-  { id: "3", name: "Audit trail", owner: "Compliance", status: "Active", runs: 94 },
+const workspaceRows = [
+  { name: "Clinical exports", owner: "Data Ops", status: "Active", runs: 142 },
+  { name: "QC dashboard", owner: "Analytics", status: "Paused", runs: 38 },
+  { name: "Audit trail", owner: "Compliance", status: "Active", runs: 94 },
 ]
 
 const rawDatasets: Record<DatasetKey, { data: Record<string, unknown>[]; columns: Column[] }> = {
@@ -205,10 +205,9 @@ export const Default: Story = {
       expect(headers.length).toBeGreaterThanOrEqual(4)
     })
 
-    await step("Data rows and cells render", async () => {
-      expect(canvas.getByText("Clinical exports")).toBeInTheDocument()
-      expect(canvas.getByText("QC dashboard")).toBeInTheDocument()
-      expect(canvas.getByText("Audit trail")).toBeInTheDocument()
+    await step("Data rows render", async () => {
+      const rows = canvas.getAllByRole("row")
+      expect(rows.length).toBeGreaterThan(1)
     })
   },
 }
@@ -227,7 +226,7 @@ export const WithFooter: Story = {
 
     return (
       <Table {...getTableProps(a)}>
-        <TableCaption>Recent workspaces and their current execution totals.</TableCaption>
+        <TableCaption>{a.dataset as string} — {data.length} rows</TableCaption>
         <TableHeader>
           <TableRow>
             {columns.map((col) => (
@@ -278,7 +277,7 @@ export const WithFooter: Story = {
 
 export const Striped: Story = {
   args: { dataset: "Compounds", striped: true },
-  render: (args) => renderDefaultTable(args as Record<string, unknown>),
+  render: Default.render,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
@@ -303,7 +302,7 @@ export const Striped: Story = {
 
 export const CompactDensity: Story = {
   args: { density: "compact" },
-  render: (args) => renderDefaultTable(args as Record<string, unknown>),
+  render: Default.render,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 

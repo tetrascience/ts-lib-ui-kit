@@ -19,7 +19,7 @@ export default meta
 type Story = StoryObj<typeof Kbd>
 
 export const Default: Story = {
-  render: () => <Kbd>⌘K</Kbd>,
+  render: (args) => <Kbd>⌘K</Kbd>,
   parameters: {
     zephyr: { testCaseId: "SW-T1266" },
   },
@@ -33,7 +33,7 @@ export const Default: Story = {
 }
 
 export const Grouped: Story = {
-  render: () => (
+  render: (args) => (
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
       Open command menu
       <KbdGroup>

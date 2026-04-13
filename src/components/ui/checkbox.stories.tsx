@@ -29,7 +29,7 @@ function CheckboxExample(props: React.ComponentProps<typeof Checkbox>) {
 }
 
 export const Default: Story = {
-  render: () => <CheckboxExample />,
+  render: (args) => <CheckboxExample />,
   parameters: {
     zephyr: { testCaseId: "SW-T1216" },
   },
@@ -44,7 +44,7 @@ export const Default: Story = {
 }
 
 export const Checked: Story = {
-  render: () => <CheckboxExample defaultChecked />,
+  render: (args) => <CheckboxExample defaultChecked />,
   parameters: {
     zephyr: { testCaseId: "SW-T1217" },
   },
@@ -62,7 +62,7 @@ export const Checked: Story = {
 }
 
 export const Disabled: Story = {
-  render: () => <CheckboxExample disabled />,
+  render: (args) => <CheckboxExample disabled />,
   parameters: {
     zephyr: { testCaseId: "SW-T1218" },
   },

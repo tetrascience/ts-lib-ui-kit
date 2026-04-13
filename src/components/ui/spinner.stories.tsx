@@ -71,7 +71,7 @@ export const Medium: Story = {
 }
 
 export const InlineWithText: Story = {
-  render: () => (
+  render: (args) => (
     <div className="flex items-center gap-2 text-sm">
       <Spinner size="sm" />
       <span>Loading results...</span>
@@ -91,7 +91,7 @@ export const InlineWithText: Story = {
 }
 
 export const FullPageLoader: Story = {
-  render: () => (
+  render: (args) => (
     <div className="flex min-h-[200px] w-[400px] flex-col items-center justify-center gap-3">
       <Spinner size="lg" />
       <p className="text-muted-foreground text-sm">Loading...</p>
@@ -111,7 +111,7 @@ export const FullPageLoader: Story = {
 }
 
 export const InsideButton: Story = {
-  render: () => (
+  render: (args) => (
     <div className="flex gap-4">
       <Button disabled>
         <Spinner size="sm" />

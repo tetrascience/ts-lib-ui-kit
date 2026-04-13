@@ -63,7 +63,7 @@ function renderHorizontal(args: Story["args"]) {
 }
 
 export const Vertical: Story = {
-  render: () => renderVertical(),
+  render: (args) => renderVertical(),
   parameters: {
     zephyr: { testCaseId: "SW-T1278" },
   },

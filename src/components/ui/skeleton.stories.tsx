@@ -27,7 +27,7 @@ export default meta
 type Story = StoryObj<typeof Skeleton>
 
 export const Default: Story = {
-  render: () => <Skeleton className="h-8 w-[260px]" />,
+  render: (args) => <Skeleton className="h-8 w-[260px]" />,
   parameters: {
     zephyr: { testCaseId: "SW-T1296" },
   },
@@ -49,7 +49,7 @@ export const Default: Story = {
 }
 
 export const Text: Story = {
-  render: () => (
+  render: (args) => (
     <div className="grid w-[320px] gap-2">
       <Skeleton className="h-4 w-full" />
       <Skeleton className="h-4 w-full" />
@@ -73,7 +73,7 @@ export const Text: Story = {
 }
 
 export const ProfileCard: Story = {
-  render: () => (
+  render: (args) => (
     <div className="flex w-[320px] items-center gap-4 rounded-xl border p-4">
       <Skeleton className="size-12 rounded-full" />
       <div className="grid flex-1 gap-2">
@@ -102,7 +102,7 @@ export const ProfileCard: Story = {
 }
 
 export const TableSkeleton: Story = {
-  render: () => {
+  render: (args) => {
     const columns = ["Name", "Status", "Created", "Actions"]
     const rows = 5
 

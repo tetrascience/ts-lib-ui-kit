@@ -175,7 +175,7 @@ export const ExtraSmall: Story = {
 }
 
 export const ImageMedia: Story = {
-  render: () => (
+  render: (args) => (
     <Item variant="outline" className="w-[440px]">
       <ItemMedia variant="image">
         <img

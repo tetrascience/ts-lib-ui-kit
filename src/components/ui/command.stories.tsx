@@ -68,7 +68,7 @@ function CommandContent() {
 }
 
 export const Inline: Story = {
-  render: () => (
+  render: (args) => (
     <div className="w-[360px] overflow-hidden rounded-xl border bg-background">
       <CommandContent />
     </div>
@@ -93,7 +93,7 @@ export const Inline: Story = {
 }
 
 export const Dialog: Story = {
-  render: () => (
+  render: (args) => (
     <CommandDialog description="Search for a destination or command." open title="Command Palette">
       <CommandContent />
     </CommandDialog>
@@ -117,7 +117,7 @@ export const Dialog: Story = {
 }
 
 export const DialogWithCloseButton: Story = {
-  render: () => (
+  render: (args) => (
     <CommandDialog
       description="Search for a destination or command."
       open

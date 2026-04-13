@@ -42,7 +42,7 @@ function renderCollapsible(defaultOpen = false) {
 }
 
 export const Closed: Story = {
-  render: () => renderCollapsible(false),
+  render: (args) => renderCollapsible(false),
   parameters: {
     zephyr: { testCaseId: "SW-T1219" },
   },
@@ -63,7 +63,7 @@ export const Closed: Story = {
 }
 
 export const Open: Story = {
-  render: () => renderCollapsible(true),
+  render: (args) => renderCollapsible(true),
   parameters: {
     zephyr: { testCaseId: "SW-T1220" },
   },

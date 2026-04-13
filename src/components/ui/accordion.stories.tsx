@@ -49,7 +49,7 @@ function AccordionExample(props: React.ComponentProps<typeof Accordion>) {
 }
 
 export const Single: Story = {
-  render: () => <AccordionExample type="single" collapsible defaultValue="item-1" />,
+  render: (args) => <AccordionExample type="single" collapsible defaultValue="item-1" />,
   parameters: {
     zephyr: { testCaseId: "SW-T1180" },
   },
@@ -77,7 +77,7 @@ export const Single: Story = {
 }
 
 export const Multiple: Story = {
-  render: () => <AccordionExample type="multiple" defaultValue={["item-1", "item-2"]} />,
+  render: (args) => <AccordionExample type="multiple" defaultValue={["item-1", "item-2"]} />,
   parameters: {
     zephyr: { testCaseId: "SW-T1181" },
   },

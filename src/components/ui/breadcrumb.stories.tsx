@@ -27,7 +27,7 @@ export default meta
 type Story = StoryObj<typeof Breadcrumb>
 
 export const Default: Story = {
-  render: () => (
+  render: (args) => (
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
@@ -63,7 +63,7 @@ export const Default: Story = {
 }
 
 export const Collapsed: Story = {
-  render: () => (
+  render: (args) => (
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>

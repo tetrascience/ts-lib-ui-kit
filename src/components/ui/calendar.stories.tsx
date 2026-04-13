@@ -34,7 +34,7 @@ function renderCalendar(props: ComponentProps<typeof Calendar>) {
 }
 
 export const Default: Story = {
-  render: () => renderCalendar({ mode: "single", selected: selectedDate }),
+  render: (args) => renderCalendar({ mode: "single", selected: selectedDate }),
   parameters: {
     zephyr: { testCaseId: "SW-T1208" },
   },
@@ -59,7 +59,7 @@ export const Default: Story = {
 }
 
 export const Range: Story = {
-  render: () =>
+  render: (args) =>
     renderCalendar({
       mode: "range",
       selected: selectedRange,
@@ -90,7 +90,7 @@ export const Range: Story = {
 }
 
 export const DropdownCaption: Story = {
-  render: () =>
+  render: (args) =>
     renderCalendar({
       mode: "single",
       selected: selectedDate,
@@ -123,7 +123,7 @@ export const DropdownCaption: Story = {
 }
 
 export const WeekNumbers: Story = {
-  render: () =>
+  render: (args) =>
     renderCalendar({
       mode: "single",
       selected: selectedDate,

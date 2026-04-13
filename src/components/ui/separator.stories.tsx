@@ -28,7 +28,7 @@ export default meta
 type Story = StoryObj<typeof Separator>
 
 export const Horizontal: Story = {
-  render: () => (
+  render: (args) => (
     <div className="w-[320px] space-y-3">
       <div className="text-sm font-medium">Overview</div>
       <Separator />
@@ -55,7 +55,7 @@ export const Horizontal: Story = {
 }
 
 export const Vertical: Story = {
-  render: () => (
+  render: (args) => (
     <div className="flex h-12 items-center gap-4">
       <span className="text-sm">Activity</span>
       <Separator orientation="vertical" />

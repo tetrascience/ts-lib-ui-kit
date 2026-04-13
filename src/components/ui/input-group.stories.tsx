@@ -61,7 +61,7 @@ function renderButton(size: "xs" | "sm" | "icon-xs" | "icon-sm") {
 }
 
 export const InlineStart: Story = {
-  render: () => renderAddon("inline-start"),
+  render: (args) => renderAddon("inline-start"),
   parameters: {
     zephyr: { testCaseId: "SW-T1247" },
   },
@@ -76,7 +76,7 @@ export const InlineStart: Story = {
 }
 
 export const InlineEnd: Story = {
-  render: () => renderAddon("inline-end"),
+  render: (args) => renderAddon("inline-end"),
   parameters: {
     zephyr: { testCaseId: "SW-T1248" },
   },
@@ -91,7 +91,7 @@ export const InlineEnd: Story = {
 }
 
 export const BlockStart: Story = {
-  render: () => renderAddon("block-start"),
+  render: (args) => renderAddon("block-start"),
   parameters: {
     zephyr: { testCaseId: "SW-T1249" },
   },
@@ -106,7 +106,7 @@ export const BlockStart: Story = {
 }
 
 export const BlockEnd: Story = {
-  render: () => renderAddon("block-end"),
+  render: (args) => renderAddon("block-end"),
   parameters: {
     zephyr: { testCaseId: "SW-T1250" },
   },
@@ -121,7 +121,7 @@ export const BlockEnd: Story = {
 }
 
 export const ButtonXs: Story = {
-  render: () => renderButton("xs"),
+  render: (args) => renderButton("xs"),
   parameters: {
     zephyr: { testCaseId: "SW-T1251" },
   },
@@ -136,7 +136,7 @@ export const ButtonXs: Story = {
 }
 
 export const ButtonSm: Story = {
-  render: () => renderButton("sm"),
+  render: (args) => renderButton("sm"),
   parameters: {
     zephyr: { testCaseId: "SW-T1252" },
   },
@@ -151,7 +151,7 @@ export const ButtonSm: Story = {
 }
 
 export const ButtonIconXs: Story = {
-  render: () => renderButton("icon-xs"),
+  render: (args) => renderButton("icon-xs"),
   parameters: {
     zephyr: { testCaseId: "SW-T1253" },
   },
@@ -166,7 +166,7 @@ export const ButtonIconXs: Story = {
 }
 
 export const ButtonIconSm: Story = {
-  render: () => renderButton("icon-sm"),
+  render: (args) => renderButton("icon-sm"),
   parameters: {
     zephyr: { testCaseId: "SW-T1254" },
   },

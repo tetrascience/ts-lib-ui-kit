@@ -93,7 +93,7 @@ export const Large: Story = {
 }
 
 export const Group: Story = {
-  render: () => (
+  render: (args) => (
     <AvatarGroup>
       <Avatar size="sm">
         <AvatarFallback>OW</AvatarFallback>

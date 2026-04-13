@@ -141,7 +141,7 @@ export const Responsive: Story = {
 }
 
 export const Legend: Story = {
-  render: () => renderLegend("legend"),
+  render: (args) => renderLegend("legend"),
   parameters: {
     zephyr: { testCaseId: "SW-T1242" },
   },
@@ -162,7 +162,7 @@ export const Legend: Story = {
 }
 
 export const Label: Story = {
-  render: () => renderLegend("label"),
+  render: (args) => renderLegend("label"),
   parameters: {
     zephyr: { testCaseId: "SW-T1243" },
   },

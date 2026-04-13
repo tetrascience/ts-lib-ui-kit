@@ -58,7 +58,7 @@ function renderRadioGroup(disabledValue?: string) {
 }
 
 export const Default: Story = {
-  render: () => renderRadioGroup(),
+  render: (args) => renderRadioGroup(),
   parameters: {
     zephyr: { testCaseId: "SW-T1274" },
   },
@@ -78,7 +78,7 @@ export const Default: Story = {
 }
 
 export const DisabledOption: Story = {
-  render: () => renderRadioGroup("enterprise"),
+  render: (args) => renderRadioGroup("enterprise"),
   parameters: {
     zephyr: { testCaseId: "SW-T1275" },
   },

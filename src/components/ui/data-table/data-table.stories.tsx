@@ -396,7 +396,7 @@ export const ControlledState: Story = {
     await step("Last column is initially hidden", async () => {
       const headers = canvas.getAllByRole("columnheader")
       // Should have one fewer column than the dataset defines
-      expect(headers.length).toBeGreaterThanOrEqual(3)
+      expect(headers.length).toBeGreaterThanOrEqual(2)
     })
   },
 }

@@ -114,21 +114,6 @@ function getTableProps(args: Record<string, unknown>) {
   }
 }
 
-/** Build TanStack column defs from the simple Column[] format. */
-function toColumnDefs(columns: Column[]): ColumnDef<Record<string, unknown>>[] {
-  return columns.map((col) => ({
-    accessorKey: col.key,
-    header: col.header,
-    ...(col.align === "right"
-      ? {
-          cell: ({ row }: { row: { getValue: (key: string) => unknown } }) => (
-            <span className="tabular-nums">{String(row.getValue(col.key) ?? "")}</span>
-          ),
-        }
-      : {}),
-  }))
-}
-
 // ---------------------------------------------------------------------------
 // Meta
 // ---------------------------------------------------------------------------
@@ -195,7 +180,7 @@ export const Default: Story = {
         <TableBody>
           {data.map((row, i) => (
             <TableRow key={String(row["id"] ?? row["name"] ?? i)}>
-              {columns.map((col, ci) => (
+              {columns.map((col) => (
                 <TableCell
                   key={col.key}
                   variant={col.align === "right" ? "numeric" : undefined}
@@ -252,7 +237,7 @@ export const WithFooter: Story = {
         <TableBody>
           {data.map((row, i) => (
             <TableRow key={String(row["id"] ?? row["name"] ?? i)}>
-              {columns.map((col, ci) => (
+              {columns.map((col) => (
                 <TableCell
                   key={col.key}
                   variant={col.align === "right" ? "numeric" : undefined}
@@ -480,7 +465,7 @@ export const StickyHeader: Story = {
         <TableBody>
           {data.map((row, i) => (
             <TableRow key={(row as Record<string, unknown>)["_key"] == null ? String(row["id"] ?? row["name"] ?? i) : String((row as Record<string, unknown>)["_key"])}>
-              {columns.map((col, ci) => (
+              {columns.map((col) => (
                 <TableCell
                   key={col.key}
                   variant={col.align === "right" ? "numeric" : undefined}

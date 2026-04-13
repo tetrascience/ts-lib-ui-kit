@@ -59,6 +59,11 @@ function SortableColumnItem({ id, label, visible, onToggle }: SortableColumnItem
       role="option"
       aria-selected={visible}
       onClick={onToggle}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          onToggle();
+        }
+      }}
       className={cn(
         "group/col-item flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm select-none hover:bg-accent hover:text-accent-foreground",
         isDragging && "z-50 bg-accent text-accent-foreground shadow-sm",
@@ -177,7 +182,7 @@ function DataTableColumnToggle({ className }: DataTableColumnToggleProps) {
                       id={colId}
                       label={getLabel(colId)}
                       visible={isVisible}
-                      onToggle={isLastVisible ? () => {} : () => col.toggleVisibility()}
+                      onToggle={isLastVisible ? () => { } : () => col.toggleVisibility()}
                     />
                   )
                 })

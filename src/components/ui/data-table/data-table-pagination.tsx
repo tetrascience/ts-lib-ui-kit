@@ -19,8 +19,12 @@ interface DataTablePaginationProps {
   className?: string
 }
 
+const DEFAULT_PAGE_SIZE_SMALL = 5
+const DEFAULT_PAGE_SIZE_MEDIUM = 10
+const DEFAULT_PAGE_SIZE_LARGE = 25
+
 function DataTablePagination({
-  pageSizeOptions = [5, 10, 25],
+  pageSizeOptions = [DEFAULT_PAGE_SIZE_SMALL, DEFAULT_PAGE_SIZE_MEDIUM, DEFAULT_PAGE_SIZE_LARGE],
   className,
 }: DataTablePaginationProps) {
   const { table } = useDataTable()

@@ -4,7 +4,6 @@ import {
   closestCenter,
   DndContext,
   type DragEndEvent,
-  type DragOverEvent,
   DragOverlay,
   type DragStartEvent,
   KeyboardSensor,
@@ -222,24 +221,24 @@ function DataTable<TData, TValue>({
     onPaginationChange: enablePagination
       ? onPaginationChange
         ? (updater) => {
-            const next =
-              typeof updater === "function"
-                ? updater(controlledPagination!)
-                : updater
-            onPaginationChange(next)
-          }
+          const next =
+            typeof updater === "function"
+              ? updater(controlledPagination!)
+              : updater
+          onPaginationChange(next)
+        }
         : setInternalPagination
       : undefined,
     onColumnVisibilityChange: enableColumnVisibility
       ? (updater) => {
-          const next =
-            typeof updater === "function" ? updater(columnVisibility) : updater
-          if (onColumnVisibilityChange) {
-            onColumnVisibilityChange(next)
-          } else {
-            setInternalColumnVisibility(next)
-          }
+        const next =
+          typeof updater === "function" ? updater(columnVisibility) : updater
+        if (onColumnVisibilityChange) {
+          onColumnVisibilityChange(next)
+        } else {
+          setInternalColumnVisibility(next)
         }
+      }
       : undefined,
     onColumnOrderChange: (updater) => {
       const next =
@@ -272,7 +271,6 @@ function DataTable<TData, TValue>({
   )
 
   const [draggingColumnId, setDraggingColumnId] = React.useState<string | null>(null)
-  const [overColumnId, setOverColumnId] = React.useState<string | null>(null)
 
   const handleColumnDragStart = React.useCallback(
     (event: DragStartEvent) => {
@@ -281,17 +279,9 @@ function DataTable<TData, TValue>({
     [],
   )
 
-  const handleColumnDragOver = React.useCallback(
-    (event: DragOverEvent) => {
-      setOverColumnId(event.over ? String(event.over.id) : null)
-    },
-    [],
-  )
-
   const handleColumnDragEnd = React.useCallback(
     (event: DragEndEvent) => {
       setDraggingColumnId(null)
-      setOverColumnId(null)
       const { active, over } = event
       if (!over || active.id === over.id) return
       const currentOrder =
@@ -354,7 +344,6 @@ function DataTable<TData, TValue>({
             collisionDetection={closestCenter}
             modifiers={[restrictToHorizontalAxis]}
             onDragStart={handleColumnDragStart}
-            onDragOver={handleColumnDragOver}
             onDragEnd={handleColumnDragEnd}
           >
             <SortableContext
@@ -362,76 +351,74 @@ function DataTable<TData, TValue>({
               strategy={horizontalListSortingStrategy}
             >
               <Table data-density={density} variant={variant} containerClassName={containerClassName}>
-                  <TableHeader>
-                    {table.getHeaderGroups().map((headerGroup) => {
-                      const headerContent = headerGroup.headers.map((header, headerIdx) => {
-                        const canSort = enableSorting && header.column.getCanSort()
-                        const sorted = header.column.getIsSorted()
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => {
+                    const headerContent = headerGroup.headers.map((header, headerIdx) => {
+                      const canSort = enableSorting && header.column.getCanSort()
+                      const sorted = header.column.getIsSorted()
 
-                        const isNumeric = numericColumns.has(header.column.id)
-                        const inner = header.isPlaceholder ? null : (
-                          <div
-                            className={cn("flex items-center gap-1", canSort && "group/sort cursor-pointer select-none", isNumeric && "flex-row-reverse")}
-                            onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                          >
-                            {columnLabels[header.column.id] ??
-                              flexRender(header.column.columnDef.header, header.getContext())}
-                            {canSort && (
-                              <span className={cn(!sorted && "opacity-0 group-hover/sort:opacity-100 transition-opacity")}>
-                                {sorted === "asc" ? (
-                                  <ArrowUpIcon className="size-3.5 text-foreground" />
-                                ) : sorted === "desc" ? (
-                                  <ArrowDownIcon className="size-3.5 text-foreground" />
-                                ) : (
-                                  <ArrowUpDownIcon className="size-3.5 text-muted-foreground" />
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        )
+                      const isNumeric = numericColumns.has(header.column.id)
+                      const inner = header.isPlaceholder ? null : (
+                        <div
+                          className={cn("flex items-center gap-1", canSort && "group/sort cursor-pointer select-none", isNumeric && "flex-row-reverse")}
+                          onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                          onKeyDown={(e) => {
+                            if ((e.key === "Enter" || e.key === " ") && canSort) {
+                              header.column.getToggleSortingHandler()
+                            }
+                          }}
+                        >
+                          {columnLabels[header.column.id] ??
+                            flexRender(header.column.columnDef.header, header.getContext())}
+                          {canSort && (
+                            <span className={cn(!sorted && "opacity-0 group-hover/sort:opacity-100 transition-opacity")}>
+                              {sorted === "asc" ? (
+                                <ArrowUpIcon className="size-3.5 text-foreground" />
+                              ) : sorted === "desc" ? (
+                                <ArrowDownIcon className="size-3.5 text-foreground" />
+                              ) : (
+                                <ArrowUpDownIcon className="size-3.5 text-muted-foreground" />
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      )
 
-                        const isTarget = overColumnId === header.column.id && draggingColumnId !== header.column.id
-                        let dropSide: "left" | "right" | undefined
-                        if (isTarget && draggingColumnId) {
-                          const dragIdx = headerGroup.headers.findIndex((h) => h.column.id === draggingColumnId)
-                          dropSide = dragIdx < headerIdx ? "right" : "left"
-                        }
+                      return (
+                        <DraggableHeader
+                          key={header.id}
+                          header={header}
+                          position={headerIdx === 0 ? "first" : headerIdx === headerGroup.headers.length - 1 ? "last" : "middle"}
+                          numeric={numericColumns.has(header.column.id)}
+                        >
+                          {inner}
+                        </DraggableHeader>
+                      )
+                    })
 
-                        return (
-                          <DraggableHeader
-                            key={header.id}
-                            header={header}
-                            position={headerIdx === 0 ? "first" : headerIdx === headerGroup.headers.length - 1 ? "last" : "middle"}
-                            numeric={numericColumns.has(header.column.id)}
-                          >
-                            {inner}
-                          </DraggableHeader>
-                        )
-                      })
-
-                      return <TableRow key={headerGroup.id}>{headerContent}</TableRow>
-                    })}
-                  </TableHeader>
-                  <TableBody>
-                    {table.getRowModel().rows.length ? (
-                      table.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id} variant={numericColumns.has(cell.column.id) ? "numeric" : undefined}>
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                          No results.
-                        </TableCell>
+                    return <TableRow key={headerGroup.id}>{headerContent}</TableRow>
+                  })}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id} variant={numericColumns.has(cell.column.id) ? "numeric" : undefined}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </SortableContext>
             <DragOverlay dropAnimation={null}>
               {draggingHeader && (
@@ -445,64 +432,69 @@ function DataTable<TData, TValue>({
             </DragOverlay>
           </DndContext>
         ) : (
-        <div className="rounded-lg border bg-card">
-          <Table data-density={density}>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    const canSort = enableSorting && header.column.getCanSort()
-                    const sorted = header.column.getIsSorted()
+          <div className="rounded-lg border bg-card">
+            <Table data-density={density}>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      const canSort = enableSorting && header.column.getCanSort()
+                      const sorted = header.column.getIsSorted()
 
-                    return (
-                      <TableHead key={header.id} variant={numericColumns.has(header.column.id) ? "numeric" : undefined}>
-                        {header.isPlaceholder ? null : (
-                          <div
-                            className={cn("flex items-center gap-1", canSort && "group/sort cursor-pointer select-none", numericColumns.has(header.column.id) && "flex-row-reverse")}
-                            onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                          >
-                            {columnLabels[header.column.id] ??
-                              flexRender(header.column.columnDef.header, header.getContext())}
-                            {canSort && (
-                              <span className={cn(!sorted && "opacity-0 group-hover/sort:opacity-100 transition-opacity")}>
-                                {sorted === "asc" ? (
-                                  <ArrowUpIcon className="size-3.5 text-foreground" />
-                                ) : sorted === "desc" ? (
-                                  <ArrowDownIcon className="size-3.5 text-foreground" />
-                                ) : (
-                                  <ArrowUpDownIcon className="size-3.5 text-muted-foreground" />
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </TableHead>
-                    )
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} variant={numericColumns.has(cell.column.id) ? "numeric" : undefined}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
+                      return (
+                        <TableHead key={header.id} variant={numericColumns.has(header.column.id) ? "numeric" : undefined}>
+                          {header.isPlaceholder ? null : (
+                            <div
+                              className={cn("flex items-center gap-1", canSort && "group/sort cursor-pointer select-none", numericColumns.has(header.column.id) && "flex-row-reverse")}
+                              onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                              onKeyDown={(e) => {
+                                if ((e.key === "Enter" || e.key === " ") && canSort) {
+                                  header.column.getToggleSortingHandler()
+                                }
+                              }}
+                            >
+                              {columnLabels[header.column.id] ??
+                                flexRender(header.column.columnDef.header, header.getContext())}
+                              {canSort && (
+                                <span className={cn(!sorted && "opacity-0 group-hover/sort:opacity-100 transition-opacity")}>
+                                  {sorted === "asc" ? (
+                                    <ArrowUpIcon className="size-3.5 text-foreground" />
+                                  ) : sorted === "desc" ? (
+                                    <ArrowDownIcon className="size-3.5 text-foreground" />
+                                  ) : (
+                                    <ArrowUpDownIcon className="size-3.5 text-muted-foreground" />
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </TableHead>
+                      )
+                    })}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} variant={numericColumns.has(cell.column.id) ? "numeric" : undefined}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         )}
         {paginationSlots}
         {restSlots}

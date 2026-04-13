@@ -45,10 +45,10 @@ function autoAlign(data: Record<string, unknown>[], columns: Column[]): Column[]
   )
 }
 
-const workspaceRows = [
-  { name: "Clinical exports", owner: "Data Ops", status: "Active", runs: 142 },
-  { name: "QC dashboard", owner: "Analytics", status: "Paused", runs: 38 },
-  { name: "Audit trail", owner: "Compliance", status: "Active", runs: 94 },
+const workspaceRows: Record<string, unknown>[] = [
+  { id: "1", name: "Clinical exports", owner: "Data Ops", status: "Active", runs: 142 },
+  { id: "2", name: "QC dashboard", owner: "Analytics", status: "Paused", runs: 38 },
+  { id: "3", name: "Audit trail", owner: "Compliance", status: "Active", runs: 94 },
 ]
 
 const rawDatasets: Record<DatasetKey, { data: Record<string, unknown>[]; columns: Column[] }> = {
@@ -195,6 +195,7 @@ export const Default: Story = {
       </Table>
     )
   },
+  render: (args) => renderDefaultTable(args as Record<string, unknown>),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
@@ -204,9 +205,10 @@ export const Default: Story = {
       expect(headers.length).toBeGreaterThanOrEqual(4)
     })
 
-    await step("Data rows render", async () => {
-      const rows = canvas.getAllByRole("row")
-      expect(rows.length).toBeGreaterThan(1)
+    await step("Data rows and cells render", async () => {
+      expect(canvas.getByText("Clinical exports")).toBeInTheDocument()
+      expect(canvas.getByText("QC dashboard")).toBeInTheDocument()
+      expect(canvas.getByText("Audit trail")).toBeInTheDocument()
     })
   },
 }
@@ -225,7 +227,7 @@ export const WithFooter: Story = {
 
     return (
       <Table {...getTableProps(a)}>
-        <TableCaption>{a.dataset as string} — {data.length} rows</TableCaption>
+        <TableCaption>Recent workspaces and their current execution totals.</TableCaption>
         <TableHeader>
           <TableRow>
             {columns.map((col) => (
@@ -276,7 +278,7 @@ export const WithFooter: Story = {
 
 export const Striped: Story = {
   args: { dataset: "Compounds", striped: true },
-  render: Default.render,
+  render: (args) => renderDefaultTable(args as Record<string, unknown>),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
@@ -301,7 +303,7 @@ export const Striped: Story = {
 
 export const CompactDensity: Story = {
   args: { density: "compact" },
-  render: Default.render,
+  render: (args) => renderDefaultTable(args as Record<string, unknown>),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
@@ -709,7 +711,7 @@ export const TableHeaderFilter: Story = {
     await step("All data rows render initially", async () => {
       expect(canvas.getByText("Clinical exports")).toBeInTheDocument()
       expect(canvas.getByText("QC dashboard")).toBeInTheDocument()
-      expect(canvas.getByText("Batch ingest")).toBeInTheDocument()
+      expect(canvas.getByText("Audit trail")).toBeInTheDocument()
     })
   },
 }

@@ -200,7 +200,7 @@ export const TopAlignedEnd: Story = {
 // New stories
 // ---------------------------------------------------------------------------
 
-function MultipleSelectionExample({ args }: { args: Story["args"] }) {
+function MultipleSelectionExample() {
   const anchorRef = useComboboxAnchor()
   const [value, setValue] = useState<string[]>([])
 
@@ -214,7 +214,7 @@ function MultipleSelectionExample({ args }: { args: Story["args"] }) {
             ))
           }
         </ComboboxValue>
-        <ComboboxChipsInput {...args} placeholder="Select frameworks..." />
+        <ComboboxChipsInput placeholder="Select frameworks..." />
       </ComboboxChips>
       <ComboboxContent anchor={anchorRef}>
         <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
@@ -231,7 +231,7 @@ function MultipleSelectionExample({ args }: { args: Story["args"] }) {
 }
 
 export const MultipleSelection: Story = {
-  render: (args) => <MultipleSelectionExample args={args} />,
+  render: () => <MultipleSelectionExample />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 

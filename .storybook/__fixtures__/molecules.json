@@ -1,0 +1,14 @@
+[
+  { "id": "MOL-001", "simA": 0.702, "simB": 0.646, "mpoScore": 0.7, "saScore": 3.8, "lipE": 3.69, "mw": 435.2, "psa": 108, "clogp": 1.93, "hba": 4, "hbd": 2, "heavyAtoms": 33, "rotatableBonds": 7 },
+  { "id": "MOL-002", "simA": 0.328, "simB": 0.228, "mpoScore": 0.58, "saScore": 2.5, "lipE": -1.39, "mw": 307.5, "psa": 71, "clogp": 4.01, "hba": 3, "hbd": 1, "heavyAtoms": 24, "rotatableBonds": 5 },
+  { "id": "MOL-003", "simA": 0.875, "simB": 0.825, "mpoScore": 0.58, "saScore": 3.5, "lipE": 4.24, "mw": 488, "psa": 17, "clogp": 2.76, "hba": 1, "hbd": 0, "heavyAtoms": 38, "rotatableBonds": 8 },
+  { "id": "MOL-004", "simA": 0.522, "simB": 0.454, "mpoScore": 0.94, "saScore": 4.4, "lipE": 0.07, "mw": 535.9, "psa": 216, "clogp": 4.11, "hba": 8, "hbd": 4, "heavyAtoms": 41, "rotatableBonds": 8 },
+  { "id": "MOL-005", "simA": 0.933, "simB": 0.901, "mpoScore": 0.56, "saScore": 2.3, "lipE": 4.91, "mw": 322.3, "psa": 108, "clogp": 2.55, "hba": 4, "hbd": 2, "heavyAtoms": 25, "rotatableBonds": 5 },
+  { "id": "MOL-006", "simA": 0.529, "simB": 0.45, "mpoScore": 0.75, "saScore": 1.7, "lipE": 0.56, "mw": 198.5, "psa": 216, "clogp": 3.67, "hba": 8, "hbd": 4, "heavyAtoms": 15, "rotatableBonds": 3 },
+  { "id": "MOL-007", "simA": 0.64, "simB": 0.567, "mpoScore": 0.67, "saScore": 2.8, "lipE": 2.69, "mw": 355.9, "psa": 162, "clogp": 2.43, "hba": 6, "hbd": 3, "heavyAtoms": 27, "rotatableBonds": 6 },
+  { "id": "MOL-008", "simA": 0.56, "simB": 0.496, "mpoScore": 0.5, "saScore": 3.6, "lipE": 0.83, "mw": 426.9, "psa": 71, "clogp": 3.65, "hba": 3, "hbd": 1, "heavyAtoms": 33, "rotatableBonds": 6 },
+  { "id": "MOL-009", "simA": 0.698, "simB": 0.642, "mpoScore": 0.94, "saScore": 4.5, "lipE": 0.68, "mw": 190.6, "psa": 216, "clogp": 4.9, "hba": 8, "hbd": 4, "heavyAtoms": 15, "rotatableBonds": 3 },
+  { "id": "MOL-010", "simA": 0.903, "simB": 0.856, "mpoScore": 0.55, "saScore": 2.7, "lipE": 5.82, "mw": 297, "psa": 108, "clogp": 1.4, "hba": 4, "hbd": 2, "heavyAtoms": 23, "rotatableBonds": 4 },
+  { "id": "MOL-011", "simA": 0.682, "simB": 0.618, "mpoScore": 0.81, "saScore": 1.5, "lipE": 3.61, "mw": 507, "psa": 54, "clogp": 1.85, "hba": 2, "hbd": 1, "heavyAtoms": 39, "rotatableBonds": 8 },
+  { "id": "MOL-012", "simA": 0.855, "simB": 0.816, "mpoScore": 0.57, "saScore": 2.2, "lipE": 5.36, "mw": 264.3, "psa": 162, "clogp": 1.48, "hba": 6, "hbd": 3, "heavyAtoms": 20, "rotatableBonds": 3 }
+]

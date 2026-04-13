@@ -7,6 +7,8 @@ import usersData from "../../../.storybook/__fixtures__/users"
 
 import { Badge } from "./badge"
 import { Button } from "./button"
+
+import { Combobox, ComboboxChip, ComboboxChips, ComboboxChipsInput, ComboboxContent, ComboboxEmpty, ComboboxItem, ComboboxList, ComboboxValue, useComboboxAnchor } from "./combobox"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -570,5 +572,144 @@ export const StickyHeader: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1453" },
+}
+
+
+// ---------------------------------------------------------------------------
+// Table header filter integration
+// ---------------------------------------------------------------------------
+
+function TableHeaderFilterExample(args) {
+  const a = args as Record<string, unknown>
+  const { data: pipelineData, columns } = getDataset(a)
+  
+  const owners = [...new Set(pipelineData.map((row) => String(row.owner)))]
+  const statuses = [...new Set(pipelineData.map((row) => String(row.status)))]
+
+  const [selectedOwners, setSelectedOwners] = useState<string[]>([])
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
+
+  const ownerAnchor = useComboboxAnchor()
+  const statusAnchor = useComboboxAnchor()
+
+  const filteredRows = pipelineData.filter((row) => {
+    const ownerMatch = selectedOwners.length === 0 || selectedOwners.includes(row.owner as string)
+    const statusMatch = selectedStatuses.length === 0 || selectedStatuses.includes(row.status as string)
+    return ownerMatch && statusMatch
+  })
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Workspace</TableHead>
+          <TableHead className="min-w-[180px]">Owner</TableHead>
+          <TableHead className="min-w-[180px]">Status</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead className="text-right">Runs</TableHead>
+        </TableRow>
+        <TableRow>
+          <TableHead />
+          <TableHead className="p-1 align-top">
+            <Combobox multiple items={owners} value={selectedOwners} onValueChange={setSelectedOwners}>
+              <ComboboxChips ref={ownerAnchor} className="max-w-[200px]">
+                <ComboboxValue>
+                  {(items: string[]) =>
+                    items.map((item) => (
+                      <ComboboxChip key={item}>
+                        {item}
+                      </ComboboxChip>
+                    ))
+                  }
+                </ComboboxValue>
+                <ComboboxChipsInput placeholder="Filter owner..." className="text-xs" />
+              </ComboboxChips>
+              <ComboboxContent anchor={ownerAnchor}>
+                <ComboboxEmpty>No matches.</ComboboxEmpty>
+                <ComboboxList>
+                  {(item) => (
+                    <ComboboxItem key={item} value={item}>
+                      {item}
+                    </ComboboxItem>
+                  )}
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
+          </TableHead>
+          <TableHead className="p-1 align-top">
+            <Combobox multiple items={statuses} value={selectedStatuses} onValueChange={setSelectedStatuses}>
+              <ComboboxChips ref={statusAnchor} className="max-w-[200px]">
+                <ComboboxValue>
+                  {(items: string[]) =>
+                    items.map((item) => (
+                      <ComboboxChip key={item}>
+                        {item}
+                      </ComboboxChip>
+                    ))
+                  }
+                </ComboboxValue>
+                <ComboboxChipsInput placeholder="Filter status..." className="text-xs" />
+              </ComboboxChips>
+              <ComboboxContent anchor={statusAnchor}>
+                <ComboboxEmpty>No matches.</ComboboxEmpty>
+                <ComboboxList>
+                  {(item) => (
+                    <ComboboxItem key={item} value={item}>
+                      {item}
+                    </ComboboxItem>
+                  )}
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
+          </TableHead>
+          <TableHead />
+          <TableHead />
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {filteredRows.map((row) => (
+          <TableRow key={String(row["id"] ?? row["name"])}>
+            {columns.map((col) => {
+                const value = String(row[col.key] ?? "")
+
+                return (
+                  <TableCell
+                    key={col.key}
+                  >
+                    {value}
+                  </TableCell>
+                )
+              })}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
+
+export const TableHeaderFilter: Story = {
+  render: (args) => TableHeaderFilterExample(args),
+  parameters: {
+    layout: "fullscreen",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders with column headers", async () => {
+      expect(canvas.getByRole("table")).toBeInTheDocument()
+      expect(canvas.getByRole("columnheader", { name: "Workspace" })).toBeInTheDocument()
+      expect(canvas.getByRole("columnheader", { name: "Runs" })).toBeInTheDocument()
+    })
+
+    await step("Filter inputs are accessible", async () => {
+      expect(canvas.getByPlaceholderText("Filter owner...")).toBeInTheDocument()
+      expect(canvas.getByPlaceholderText("Filter status...")).toBeInTheDocument()
+    })
+
+    await step("All data rows render initially", async () => {
+      expect(canvas.getByText("Clinical exports")).toBeInTheDocument()
+      expect(canvas.getByText("QC dashboard")).toBeInTheDocument()
+      expect(canvas.getByText("Batch ingest")).toBeInTheDocument()
+    })
   },
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { buildEsBody } from "../utils";
+import { buildEsBody } from "./utils";
 
 describe("buildEsBody", () => {
   it("builds basic body with from/size", () => {

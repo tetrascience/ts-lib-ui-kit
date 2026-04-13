@@ -278,6 +278,114 @@ export const ColumnManagement: Story = {
 }
 
 // ---------------------------------------------------------------------------
+// LastVisibleColumn — covers the isLastVisible guard (line 186 of column-toggle)
+// ---------------------------------------------------------------------------
+
+function SingleVisibleColumnStory({ dataset }: { dataset: DatasetKey }) {
+  const { data, columns } = datasetConfigs[dataset]
+  // Start with only the first column visible
+  const initialVisibility: Record<string, boolean> = {}
+  for (const col of columns) {
+    const key = "accessorKey" in col ? String(col.accessorKey) : ""
+    initialVisibility[key] = false
+  }
+  const firstKey = "accessorKey" in columns[0] ? String(columns[0].accessorKey) : ""
+  initialVisibility[firstKey] = true
+
+  return (
+    <DataTable
+      columns={columns}
+      data={data}
+      enableColumnVisibility
+      columnVisibility={initialVisibility}
+    >
+      <TableToolbar>
+        <div className="flex-1" />
+        <DataTableColumnToggle />
+      </TableToolbar>
+    </DataTable>
+  )
+}
+
+export const LastVisibleColumn: Story = {
+  render: (args) => <SingleVisibleColumnStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Only one column header is visible", async () => {
+      expect(canvas.getAllByRole("columnheader").length).toBe(1)
+    })
+
+    await step("Clicking the last visible column checkbox does not hide it", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }))
+      const checkboxes = body.getAllByRole("checkbox")
+      // Find the one that is checked (the only visible column)
+      const checked = checkboxes.find((cb) => cb.getAttribute("aria-checked") === "true")
+      expect(checked).toBeDefined()
+      // Click it — should be a no-op since it's the last visible column
+      await userEvent.click(checked!)
+      // Column should still be visible
+      expect(canvas.getAllByRole("columnheader").length).toBe(1)
+    })
+  },
+}
+
+// ---------------------------------------------------------------------------
+// ColumnToggleCustomLabels — covers the columnLabels branch in getLabel()
+// ---------------------------------------------------------------------------
+
+// Columns using meta.label (for getLabel fallback coverage) and a non-string header
+const metaLabelColumns: ColumnDef<Row>[] = [
+  { accessorKey: "name", meta: { label: "Meta Name" }, header: () => "Name" },
+  { accessorKey: "owner", header: "Owner" },
+  { accessorKey: "status", header: "Status" },
+  // No meta.label AND non-string header → falls through to col.id ("runs")
+  { accessorKey: "runs", header: () => "Runs" },
+]
+
+function ColumnToggleCustomLabelsStory({ dataset }: { dataset: DatasetKey }) {
+  const { data } = datasetConfigs[dataset]
+  // First column: has columnLabels override (highest priority)
+  // Second column: falls through to header string
+  // Use metaLabelColumns for meta.label + non-string header branches
+  return (
+    <DataTable
+      columns={metaLabelColumns}
+      data={data}
+      enableColumnVisibility
+      columnLabels={{ owner: "Custom Owner" }}
+    >
+      <TableToolbar>
+        <div className="flex-1" />
+        <DataTableColumnToggle />
+      </TableToolbar>
+    </DataTable>
+  )
+}
+
+export const ColumnToggleCustomLabels: Story = {
+  render: (args) => <ColumnToggleCustomLabelsStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Column toggle panel shows labels from all fallback paths", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }))
+      const panel = body.getByRole("group", { name: /Toggle and reorder/ })
+      // "owner" column uses columnLabels prop (highest priority)
+      expect(within(panel).getByText("Custom Owner")).toBeInTheDocument()
+      // "name" column uses meta.label since header is a function (not a string)
+      expect(within(panel).getByText("Meta Name")).toBeInTheDocument()
+      // "status" column uses header string (normal path)
+      expect(within(panel).getByText("Status")).toBeInTheDocument()
+      // "runs" column has non-string header and no meta.label → falls back to col.id
+      expect(within(panel).getByText("runs")).toBeInTheDocument()
+    })
+  },
+}
+
+// ---------------------------------------------------------------------------
 // ColumnToggleReorder — exercises the drag handler in DataTableColumnToggle
 // ---------------------------------------------------------------------------
 
@@ -310,11 +418,30 @@ export const ColumnToggleReorder: Story = {
       expect(panel).toBeInTheDocument()
     })
 
+    await step("No-op drag: pick up and drop in place preserves order", async () => {
+      const panel = body.getByRole("group", { name: /Toggle and reorder/ })
+      const grabHandles = [...panel.querySelectorAll("button")]
+        .filter((btn) => btn.querySelector("svg"))
+        .filter((btn) => btn.closest("[role='checkbox']"))
+
+      if (grabHandles.length >= 1) {
+        const headersBefore = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+
+        // Pick up with Space and immediately drop with Space (no arrow key)
+        grabHandles[0].focus()
+        await userEvent.keyboard(" ")
+        await userEvent.keyboard(" ")
+
+        // Order should be unchanged
+        const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+        expect(headersAfter).toEqual(headersBefore)
+      }
+    })
+
     await step("Keyboard drag reorders columns in the toggle panel", async () => {
       const panel = body.getByRole("group", { name: /Toggle and reorder/ })
-      // Get the grab handle buttons inside the panel (each column item has one)
       const grabHandles = [...panel.querySelectorAll("button")]
-        .filter((btn) => btn.querySelector("[data-lucide='grip-vertical']") ?? btn.querySelector("svg"))
+        .filter((btn) => btn.querySelector("svg"))
         .filter((btn) => btn.closest("[role='checkbox']"))
 
       if (grabHandles.length >= 2) {

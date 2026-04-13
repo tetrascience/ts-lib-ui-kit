@@ -21,8 +21,6 @@ import {
 import { useDataTable } from "./data-table"
 import { DataTableColumnEditorRow } from "./data-table-column-editor-row"
 
-import type { ManagedColumn } from "./types"
-
 import {
   Dialog,
   DialogContent,

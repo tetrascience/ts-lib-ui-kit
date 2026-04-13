@@ -12,5 +12,3 @@ export type { DataTableColumnEditorRowProps } from "./data-table-column-editor-r
 
 export { DataTablePagination } from "./data-table-pagination"
 export type { DataTablePaginationProps } from "./data-table-pagination"
-
-export type { TableColumnMeta, ManagedColumn } from "./types"

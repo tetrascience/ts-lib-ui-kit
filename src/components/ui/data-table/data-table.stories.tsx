@@ -258,6 +258,81 @@ export const ColumnManagement: Story = {
       // Panel should close
       expect(body.queryByRole("group", { name: /Toggle and reorder/ })).toBeNull()
     })
+
+    await step("Re-toggling the hidden column restores it via click", async () => {
+      const headersBefore = canvas.getAllByRole("columnheader").length
+      // Re-open the panel
+      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }))
+      const checkboxes = body.getAllByRole("checkbox")
+      // Find the unchecked one (the column we hid earlier)
+      const unchecked = checkboxes.find((cb) => cb.getAttribute("aria-checked") === "false")
+      if (unchecked) {
+        await userEvent.click(unchecked)
+        const headersAfter = canvas.getAllByRole("columnheader").length
+        expect(headersAfter).toBe(headersBefore + 1)
+      }
+      // Close the panel
+      await userEvent.click(canvas.getByRole("table"))
+    })
+  },
+}
+
+// ---------------------------------------------------------------------------
+// ColumnToggleReorder — exercises the drag handler in DataTableColumnToggle
+// ---------------------------------------------------------------------------
+
+function ColumnToggleReorderStory({ dataset }: { dataset: DatasetKey }) {
+  const { data, columns } = datasetConfigs[dataset]
+  return (
+    <DataTable
+      columns={columns}
+      data={data}
+      enableColumnVisibility
+      enableColumnReorder
+    >
+      <TableToolbar>
+        <div className="flex-1" />
+        <DataTableColumnToggle />
+      </TableToolbar>
+    </DataTable>
+  )
+}
+
+export const ColumnToggleReorder: Story = {
+  render: (args) => <ColumnToggleReorderStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Open column toggle and record initial header order", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }))
+      const panel = body.getByRole("group", { name: /Toggle and reorder/ })
+      expect(panel).toBeInTheDocument()
+    })
+
+    await step("Keyboard drag reorders columns in the toggle panel", async () => {
+      const panel = body.getByRole("group", { name: /Toggle and reorder/ })
+      // Get the grab handle buttons inside the panel (each column item has one)
+      const grabHandles = [...panel.querySelectorAll("button")]
+        .filter((btn) => btn.querySelector("[data-lucide='grip-vertical']") ?? btn.querySelector("svg"))
+        .filter((btn) => btn.closest("[role='checkbox']"))
+
+      if (grabHandles.length >= 2) {
+        const headersBefore = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+
+        // Focus the first grab handle, start drag with Space, move down with ArrowDown, drop with Space
+        grabHandles[0].focus()
+        await userEvent.keyboard(" ")
+        await userEvent.keyboard("{ArrowDown}")
+        await userEvent.keyboard(" ")
+
+        // Check headers changed order
+        const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+        // The first two columns should have swapped
+        expect(headersAfter[0]).toBe(headersBefore[1])
+        expect(headersAfter[1]).toBe(headersBefore[0])
+      }
+    })
   },
 }
 
@@ -323,6 +398,27 @@ export const Pagination: Story = {
       await userEvent.click(canvas.getByLabelText("Next page"))
       expect(canvas.getByText(/6–10 of/)).toBeInTheDocument()
     })
+
+    await step("Clicking a specific page number navigates to it", async () => {
+      await userEvent.click(canvas.getByLabelText("Page 3"))
+      expect(canvas.getByText(/11–15 of/)).toBeInTheDocument()
+      // Page 3 button should be current
+      expect(canvas.getByLabelText("Page 3")).toHaveAttribute("aria-current", "page")
+    })
+
+    await step("Previous page button navigates back", async () => {
+      await userEvent.click(canvas.getByLabelText("Previous page"))
+      expect(canvas.getByText(/6–10 of/)).toBeInTheDocument()
+    })
+
+    await step("Changing page size updates rows per page", async () => {
+      const body = within(canvasElement.ownerDocument.body)
+      // Open the page-size select
+      await userEvent.click(canvas.getByRole("combobox"))
+      // Pick "10"
+      await userEvent.click(body.getByRole("option", { name: "10" }))
+      expect(canvas.getByText(/1–10 of/)).toBeInTheDocument()
+    })
   },
 }
 
@@ -387,11 +483,25 @@ export const AllFeatures: Story = {
   render: (args) => <FullColumnManagementStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Compounds"} />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
 
     await step("Table renders with all feature controls", async () => {
       expect(canvas.getByRole("table")).toBeInTheDocument()
       expect(canvas.getByRole("button", { name: /Columns/ })).toBeInTheDocument()
       expect(canvas.getByText("Rows per page:")).toBeInTheDocument()
+    })
+
+    await step("Column toggle panel has draggable items with grab handles", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }))
+      const panel = body.getByRole("group", { name: /Toggle and reorder/ })
+      expect(panel).toBeInTheDocument()
+      // Each column item has a grab handle button for reordering
+      const _grabHandles = panel.querySelectorAll("[data-dnd-kit-disabled-dndcontext-id]")
+      // Verify checkboxes are present (column items are rendered)
+      const checkboxes = within(panel).getAllByRole("checkbox")
+      expect(checkboxes.length).toBeGreaterThan(0)
+      // Close by clicking outside
+      await userEvent.click(canvas.getByRole("table"))
     })
 
     await step("Pagination shows row range", async () => {

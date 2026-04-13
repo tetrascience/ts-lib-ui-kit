@@ -134,6 +134,113 @@ function DraggableHeader<TData>({
 }
 
 // ---------------------------------------------------------------------------
+// Shared header / body renderers (extracted to reduce cognitive complexity)
+// ---------------------------------------------------------------------------
+
+interface SortableHeaderContentProps {
+  header: Header<unknown, unknown>
+  enableSorting: boolean
+  numericColumns: Set<string>
+  columnLabels: Record<string, string>
+}
+
+function SortableHeaderContent({
+  header,
+  enableSorting,
+  numericColumns,
+  columnLabels,
+}: SortableHeaderContentProps) {
+  if (header.isPlaceholder) return null
+  const canSort = enableSorting && header.column.getCanSort()
+  const sorted = header.column.getIsSorted()
+  const isNumeric = numericColumns.has(header.column.id)
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-1",
+        canSort && "group/sort cursor-pointer select-none",
+        isNumeric && "flex-row-reverse",
+      )}
+      onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+      onKeyDown={(e) => {
+        if ((e.key === "Enter" || e.key === " ") && canSort) {
+          header.column.getToggleSortingHandler()
+        }
+      }}
+    >
+      {columnLabels[header.column.id] ??
+        flexRender(header.column.columnDef.header, header.getContext())}
+      {canSort && (
+        <span
+          className={cn(
+            !sorted && "opacity-0 group-hover/sort:opacity-100 transition-opacity",
+          )}
+        >
+          {sorted === "asc" ? (
+            <ArrowUpIcon className="size-3.5 text-foreground" />
+          ) : sorted === "desc" ? (
+            <ArrowDownIcon className="size-3.5 text-foreground" />
+          ) : (
+            <ArrowUpDownIcon className="size-3.5 text-muted-foreground" />
+          )}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function DataTableRows<TData>({
+  table,
+  columns,
+  numericColumns,
+}: {
+  table: TanStackTable<TData>
+  columns: ColumnDef<TData, unknown>[]
+  numericColumns: Set<string>
+}) {
+  if (table.getRowModel().rows.length === 0) {
+    return (
+      <TableRow>
+        <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+          No results.
+        </TableCell>
+      </TableRow>
+    )
+  }
+
+  return table.getRowModel().rows.map((row) => (
+    <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
+      {row.getVisibleCells().map((cell) => (
+        <TableCell key={cell.id} variant={numericColumns.has(cell.column.id) ? "numeric" : undefined}>
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
+  ))
+}
+
+// ---------------------------------------------------------------------------
+// Slot categorization
+// ---------------------------------------------------------------------------
+
+function categorizeSlots(children: React.ReactNode) {
+  const toolbarSlots: React.ReactNode[] = []
+  const paginationSlots: React.ReactNode[] = []
+  const restSlots: React.ReactNode[] = []
+  React.Children.forEach(children, (child) => {
+    if (React.isValidElement(child) && child.type === TableToolbar) {
+      toolbarSlots.push(child)
+    } else if (React.isValidElement(child) && child.type === DataTablePagination) {
+      paginationSlots.push(child)
+    } else {
+      restSlots.push(child)
+    }
+  })
+  return { toolbarSlots, paginationSlots, restSlots }
+}
+
+// ---------------------------------------------------------------------------
 // DataTable
 // ---------------------------------------------------------------------------
 
@@ -208,6 +315,33 @@ function DataTable<TData, TValue>({
   const columnOrder = controlledColumnOrder ?? internalColumnOrder
   const columnLabels = controlledColumnLabels ?? internalColumnLabels
 
+  const handlePaginationChange = React.useMemo(() => {
+    if (!enablePagination) return
+    if (onPaginationChange) {
+      return (updater: PaginationState | ((prev: PaginationState) => PaginationState)) => {
+        const next = typeof updater === "function" ? updater(controlledPagination!) : updater
+        onPaginationChange(next)
+      }
+    }
+    return setInternalPagination
+  }, [enablePagination, onPaginationChange, controlledPagination])
+
+  const handleVisibilityChange = React.useMemo(() => {
+    if (!enableColumnVisibility) return
+    return (updater: VisibilityState | ((prev: VisibilityState) => VisibilityState)) => {
+      const next = typeof updater === "function" ? updater(columnVisibility) : updater
+      ;(onColumnVisibilityChange ?? setInternalColumnVisibility)(next)
+    }
+  }, [enableColumnVisibility, columnVisibility, onColumnVisibilityChange])
+
+  const handleColumnOrderChange = React.useCallback(
+    (updater: ColumnOrderState | ((prev: ColumnOrderState) => ColumnOrderState)) => {
+      const next = typeof updater === "function" ? updater(columnOrder) : updater
+      ;(onColumnOrderChange ?? setInternalColumnOrder)(next)
+    },
+    [columnOrder, onColumnOrderChange],
+  )
+
   const table = useReactTable({
     data,
     columns,
@@ -218,37 +352,9 @@ function DataTable<TData, TValue>({
       ...(enablePagination ? { pagination } : {}),
     },
     onSortingChange: enableSorting ? setSorting : undefined,
-    onPaginationChange: enablePagination
-      ? onPaginationChange
-        ? (updater) => {
-          const next =
-            typeof updater === "function"
-              ? updater(controlledPagination!)
-              : updater
-          onPaginationChange(next)
-        }
-        : setInternalPagination
-      : undefined,
-    onColumnVisibilityChange: enableColumnVisibility
-      ? (updater) => {
-        const next =
-          typeof updater === "function" ? updater(columnVisibility) : updater
-        if (onColumnVisibilityChange) {
-          onColumnVisibilityChange(next)
-        } else {
-          setInternalColumnVisibility(next)
-        }
-      }
-      : undefined,
-    onColumnOrderChange: (updater) => {
-      const next =
-        typeof updater === "function" ? updater(columnOrder) : updater
-      if (onColumnOrderChange) {
-        onColumnOrderChange(next)
-      } else {
-        setInternalColumnOrder(next)
-      }
-    },
+    onPaginationChange: handlePaginationChange,
+    onColumnVisibilityChange: handleVisibilityChange,
+    onColumnOrderChange: handleColumnOrderChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
     getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
@@ -256,13 +362,9 @@ function DataTable<TData, TValue>({
 
   const setColumnLabel = React.useCallback(
     (columnId: string, label: string) => {
-      if (onColumnLabelChange) {
-        onColumnLabelChange(columnId, label)
-      } else {
-        setInternalColumnLabels((prev) => ({ ...prev, [columnId]: label }))
-      }
+      ;(onColumnLabelChange ?? ((id: string, l: string) => setInternalColumnLabels((prev) => ({ ...prev, [id]: l }))))(columnId, label)
     },
-    [onColumnLabelChange]
+    [onColumnLabelChange],
   )
 
   const reorderSensors = useSensors(
@@ -319,19 +421,7 @@ function DataTable<TData, TValue>({
     setColumnLabel,
   } as TableContextValue<unknown>
 
-  // Slot children: TableToolbar above the table, DataTablePagination below, rest after
-  const toolbarSlots: React.ReactNode[] = []
-  const paginationSlots: React.ReactNode[] = []
-  const restSlots: React.ReactNode[] = []
-  React.Children.forEach(children, (child) => {
-    if (React.isValidElement(child) && child.type === TableToolbar) {
-      toolbarSlots.push(child)
-    } else if (React.isValidElement(child) && child.type === DataTablePagination) {
-      paginationSlots.push(child)
-    } else {
-      restSlots.push(child)
-    }
-  })
+  const { toolbarSlots, paginationSlots, restSlots } = categorizeSlots(children)
 
   return (
     <TableContext.Provider value={ctx}>
@@ -352,71 +442,28 @@ function DataTable<TData, TValue>({
             >
               <Table data-density={density} variant={variant} containerClassName={containerClassName}>
                 <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => {
-                    const headerContent = headerGroup.headers.map((header, headerIdx) => {
-                      const canSort = enableSorting && header.column.getCanSort()
-                      const sorted = header.column.getIsSorted()
-
-                      const isNumeric = numericColumns.has(header.column.id)
-                      const inner = header.isPlaceholder ? null : (
-                        <div
-                          className={cn("flex items-center gap-1", canSort && "group/sort cursor-pointer select-none", isNumeric && "flex-row-reverse")}
-                          onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                          onKeyDown={(e) => {
-                            if ((e.key === "Enter" || e.key === " ") && canSort) {
-                              header.column.getToggleSortingHandler()
-                            }
-                          }}
-                        >
-                          {columnLabels[header.column.id] ??
-                            flexRender(header.column.columnDef.header, header.getContext())}
-                          {canSort && (
-                            <span className={cn(!sorted && "opacity-0 group-hover/sort:opacity-100 transition-opacity")}>
-                              {sorted === "asc" ? (
-                                <ArrowUpIcon className="size-3.5 text-foreground" />
-                              ) : sorted === "desc" ? (
-                                <ArrowDownIcon className="size-3.5 text-foreground" />
-                              ) : (
-                                <ArrowUpDownIcon className="size-3.5 text-muted-foreground" />
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      )
-
-                      return (
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header, headerIdx) => (
                         <DraggableHeader
                           key={header.id}
                           header={header}
                           position={headerIdx === 0 ? "first" : headerIdx === headerGroup.headers.length - 1 ? "last" : "middle"}
                           numeric={numericColumns.has(header.column.id)}
                         >
-                          {inner}
+                          <SortableHeaderContent
+                            header={header as Header<unknown, unknown>}
+                            enableSorting={enableSorting}
+                            numericColumns={numericColumns}
+                            columnLabels={columnLabels}
+                          />
                         </DraggableHeader>
-                      )
-                    })
-
-                    return <TableRow key={headerGroup.id}>{headerContent}</TableRow>
-                  })}
+                      ))}
+                    </TableRow>
+                  ))}
                 </TableHeader>
                 <TableBody>
-                  {table.getRowModel().rows.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id} variant={numericColumns.has(cell.column.id) ? "numeric" : undefined}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                        No results.
-                      </TableCell>
-                    </TableRow>
-                  )}
+                  <DataTableRows table={table} columns={columns} numericColumns={numericColumns} />
                 </TableBody>
               </Table>
             </SortableContext>
@@ -437,61 +484,21 @@ function DataTable<TData, TValue>({
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      const canSort = enableSorting && header.column.getCanSort()
-                      const sorted = header.column.getIsSorted()
-
-                      return (
-                        <TableHead key={header.id} variant={numericColumns.has(header.column.id) ? "numeric" : undefined}>
-                          {header.isPlaceholder ? null : (
-                            <div
-                              className={cn("flex items-center gap-1", canSort && "group/sort cursor-pointer select-none", numericColumns.has(header.column.id) && "flex-row-reverse")}
-                              onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                              onKeyDown={(e) => {
-                                if ((e.key === "Enter" || e.key === " ") && canSort) {
-                                  header.column.getToggleSortingHandler()
-                                }
-                              }}
-                            >
-                              {columnLabels[header.column.id] ??
-                                flexRender(header.column.columnDef.header, header.getContext())}
-                              {canSort && (
-                                <span className={cn(!sorted && "opacity-0 group-hover/sort:opacity-100 transition-opacity")}>
-                                  {sorted === "asc" ? (
-                                    <ArrowUpIcon className="size-3.5 text-foreground" />
-                                  ) : sorted === "desc" ? (
-                                    <ArrowDownIcon className="size-3.5 text-foreground" />
-                                  ) : (
-                                    <ArrowUpDownIcon className="size-3.5 text-muted-foreground" />
-                                  )}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </TableHead>
-                      )
-                    })}
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} variant={numericColumns.has(header.column.id) ? "numeric" : undefined}>
+                        <SortableHeaderContent
+                          header={header as Header<unknown, unknown>}
+                          enableSorting={enableSorting}
+                          numericColumns={numericColumns}
+                          columnLabels={columnLabels}
+                        />
+                      </TableHead>
+                    ))}
                   </TableRow>
                 ))}
               </TableHeader>
               <TableBody>
-                {table.getRowModel().rows.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} variant={numericColumns.has(cell.column.id) ? "numeric" : undefined}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
+                <DataTableRows table={table} columns={columns} numericColumns={numericColumns} />
               </TableBody>
             </Table>
           </div>

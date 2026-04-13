@@ -227,7 +227,7 @@ export const ColumnManagement: Story = {
 
     await step("Clicking opens dropdown with column checkboxes", async () => {
       await userEvent.click(canvas.getByRole("button", { name: /Columns/ }))
-      const checkboxes = body.getAllByRole("option")
+      const checkboxes = body.getAllByRole("checkbox")
       expect(checkboxes.length).toBeGreaterThan(0)
     })
   },

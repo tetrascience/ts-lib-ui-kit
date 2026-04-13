@@ -25,7 +25,6 @@ import {
 } from "./table"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import type { ColumnDef } from "@tanstack/react-table"
 
 // ---------------------------------------------------------------------------
 // Dataset definitions

@@ -56,8 +56,9 @@ function SortableColumnItem({ id, label, visible, onToggle }: SortableColumnItem
     <div
       ref={setNodeRef}
       style={style}
-      role="option"
-      aria-selected={visible}
+      role="checkbox"
+      aria-checked={visible}
+      tabIndex={0}
       onClick={onToggle}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -159,7 +160,7 @@ function DataTableColumnToggle({ className }: DataTableColumnToggleProps) {
       {open && (
         <div
           className="absolute right-0 top-full z-50 mt-1 w-56 rounded-lg border bg-popover p-1 shadow-md"
-          role="listbox"
+          role="group"
           aria-label="Toggle and reorder columns"
         >
           <DndContext

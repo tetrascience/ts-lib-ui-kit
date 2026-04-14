@@ -384,14 +384,14 @@ function DataTable<TData, TValue>({
       const { active, over } = event
       if (!over || active.id === over.id) return
       const currentOrder =
-        columnOrder.length > 0 ? columnOrder : columns.map((c) => ("accessorKey" in c ? String(c.accessorKey) : ""))
+        columnOrder.length > 0 ? columnOrder : table.getAllLeafColumns().map((column) => column.id)
       const oldIdx = currentOrder.indexOf(String(active.id))
       const newIdx = currentOrder.indexOf(String(over.id))
       if (oldIdx === -1 || newIdx === -1) return
       const newOrder = arrayMove(currentOrder, oldIdx, newIdx)
       table.setColumnOrder(newOrder)
     },
-    [columnOrder, columns, table],
+    [columnOrder, table],
   )
 
   const draggingHeader = draggingColumnId

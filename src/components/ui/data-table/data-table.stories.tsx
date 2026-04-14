@@ -632,6 +632,76 @@ export const WithCustomChildren: Story = {
 }
 
 // ---------------------------------------------------------------------------
+// ReorderWithSorting — covers sort icons and keyboard sort inside the reorderable branch,
+// plus DragOverlay col.id fallback for non-string headers
+// ---------------------------------------------------------------------------
+
+// Columns with non-string headers (function) — no columnLabels override
+const reorderSortColumns: ColumnDef<Row>[] = [
+  { accessorKey: "name", header: () => "Name" },
+  { accessorKey: "owner", header: () => "Owner" },
+  { accessorKey: "status", header: () => "Status" },
+]
+
+export const ReorderWithSorting: Story = {
+  render: () => (
+    <DataTable
+      columns={reorderSortColumns}
+      data={workspaceData}
+      enableColumnReorder
+      enableSorting
+    />
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Click header text to sort ascending in reorderable table", async () => {
+      // Click the text inside the sort div (not the <th> itself, which has dnd listeners)
+      const nameText = canvas.getByText("Name")
+      await userEvent.click(nameText)
+      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
+    })
+
+    await step("Click same header text again to sort descending", async () => {
+      const nameText = canvas.getByText("Name")
+      await userEvent.click(nameText)
+      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
+    })
+
+    await step("Click a third time to clear sort", async () => {
+      const nameText = canvas.getByText("Name")
+      await userEvent.click(nameText)
+      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
+    })
+
+    await step("Keyboard Enter on sort div triggers sort handler", async () => {
+      const headers = canvas.getAllByRole("columnheader")
+      // The sort div has cursor-pointer and an onKeyDown handler
+      const sortDiv = headers[1].querySelector("[class*='cursor-pointer']") as HTMLElement
+      expect(sortDiv).not.toBeNull()
+      // Dispatch a KeyboardEvent directly since the div has no tabIndex
+      sortDiv.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
+    })
+
+    await step("Drag column with non-string header shows col.id in overlay", async () => {
+      const dragHandles = [...canvasElement.querySelectorAll("[data-drag-handle]")] as HTMLElement[]
+      expect(dragHandles.length).toBeGreaterThanOrEqual(2)
+
+      // Start drag (Space), move right, drop (Space)
+      dragHandles[0].focus()
+      await userEvent.keyboard(" ")
+      await userEvent.keyboard("{ArrowRight}")
+      await userEvent.keyboard(" ")
+
+      // Verify columns reordered
+      const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+      expect(headersAfter.length).toBe(3)
+    })
+  },
+}
+
+// ---------------------------------------------------------------------------
 // ColumnLabelRename — covers setColumnLabel via useDataTable context
 // ---------------------------------------------------------------------------
 

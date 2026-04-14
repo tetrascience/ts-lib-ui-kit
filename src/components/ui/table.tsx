@@ -123,7 +123,7 @@ function TableCell({
         "in-data-[density=compact]:py-2 in-data-[density=relaxed]:py-5",
         variant === "numeric" && "text-right tabular-nums",
         variant === "action" &&
-          "opacity-0 group-hover/row:opacity-100 transition-opacity",
+          "opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 focus-within:opacity-100 transition-opacity",
         className,
       )}
       {...props}

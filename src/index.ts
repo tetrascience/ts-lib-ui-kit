@@ -12,6 +12,7 @@ export * from "@/components/composed/ProtocolYamlCard";
 export * from "@/components/composed/PythonEditorModal";
 export * from "@/components/composed/Sidebar";
 export * from "@/components/composed/DataAppTopNav";
+export * from "@/components/composed/DataAppSidebar";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";

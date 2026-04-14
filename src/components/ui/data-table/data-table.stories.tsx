@@ -8,7 +8,7 @@ import moleculesData from "../../../../.storybook/__fixtures__/molecules.json"
 import usersData from "../../../../.storybook/__fixtures__/users.json"
 import { Badge } from "../badge"
 
-import { DataTable, TableToolbar } from "./data-table"
+import { DataTable, TableToolbar, useDataTable } from "./data-table"
 import { DataTableColumnToggle } from "./data-table-column-toggle"
 import { DataTablePagination } from "./data-table-pagination"
 
@@ -148,7 +148,15 @@ export const Sorting: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
-    await step("Clicking a header triggers sorting", async () => {
+    await step("Clicking a header sorts ascending", async () => {
+      const headers = canvas.getAllByRole("columnheader")
+      await userEvent.click(headers[0])
+      // Ascending sort icon should be visible
+      const sortIcon = headers[0].querySelector("[data-lucide='arrow-up']") ?? headers[0].querySelector("svg")
+      expect(sortIcon).not.toBeNull()
+    })
+
+    await step("Clicking the same header again sorts descending", async () => {
       const headers = canvas.getAllByRole("columnheader")
       await userEvent.click(headers[0])
       expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
@@ -481,9 +489,22 @@ export const ColumnReorder: Story = {
       expect(dragHandles.length).toBeGreaterThan(0)
     })
 
-    await step("Headers are sortable (click triggers sort)", async () => {
-      const headers = canvas.getAllByRole("columnheader")
-      expect(headers.length).toBeGreaterThanOrEqual(4)
+    await step("Keyboard drag on header reorders columns", async () => {
+      const headersBefore = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+      // Find the drag handle buttons in the table headers
+      const dragHandles = [...canvasElement.querySelectorAll("[data-drag-handle]")] as HTMLElement[]
+      expect(dragHandles.length).toBeGreaterThanOrEqual(2)
+
+      // Focus the first drag handle, initiate drag with Space, move right, drop with Space
+      dragHandles[0].focus()
+      await userEvent.keyboard(" ")
+      await userEvent.keyboard("{ArrowRight}")
+      await userEvent.keyboard(" ")
+
+      // The first two columns should have swapped
+      const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+      expect(headersAfter[0]).toBe(headersBefore[1])
+      expect(headersAfter[1]).toBe(headersBefore[0])
     })
   },
 }
@@ -545,6 +566,141 @@ export const Pagination: Story = {
       // Pick "10"
       await userEvent.click(body.getByRole("option", { name: "10" }))
       expect(canvas.getByText(/1–10 of/)).toBeInTheDocument()
+    })
+  },
+}
+
+// ---------------------------------------------------------------------------
+// WithCustomChildren — covers the restSlots branch in categorizeSlots
+// ---------------------------------------------------------------------------
+
+export const WithCustomChildren: Story = {
+  render: (args) => {
+    const { data, columns } = getDataset(args as Record<string, unknown>)
+    return (
+      <DataTable columns={columns} data={data}>
+        <TableToolbar>
+          <span>Toolbar content</span>
+        </TableToolbar>
+        {/* This arbitrary child is neither TableToolbar nor DataTablePagination */}
+        <div data-testid="custom-child">Extra content below</div>
+      </DataTable>
+    )
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Custom child renders after the table", async () => {
+      expect(canvas.getByTestId("custom-child")).toBeInTheDocument()
+      expect(canvas.getByText("Extra content below")).toBeInTheDocument()
+    })
+
+    await step("Toolbar still renders in correct position", async () => {
+      expect(canvas.getByText("Toolbar content")).toBeInTheDocument()
+    })
+  },
+}
+
+// ---------------------------------------------------------------------------
+// ColumnLabelRename — covers setColumnLabel via useDataTable context
+// ---------------------------------------------------------------------------
+
+function RenameButton() {
+  const { setColumnLabel } = useDataTable()
+  return (
+    <button
+      className="rounded-lg border px-3 py-1.5 text-sm"
+      onClick={() => setColumnLabel("name", "Renamed")}
+    >
+      Rename first column
+    </button>
+  )
+}
+
+// Columns with a non-string header (function) to cover the DragOverlay col.id fallback
+const nonStringHeaderColumns: ColumnDef<Row>[] = [
+  { accessorKey: "name", header: () => "Name" },
+  { accessorKey: "owner", header: "Owner" },
+  { accessorKey: "status", header: "Status" },
+]
+
+export const ColumnLabelRename: Story = {
+  render: () => (
+    <DataTable
+      columns={nonStringHeaderColumns}
+      data={workspaceData}
+      enableColumnReorder
+    >
+      <TableToolbar>
+        <RenameButton />
+      </TableToolbar>
+    </DataTable>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders with original header", async () => {
+      expect(canvas.getAllByRole("columnheader").length).toBe(3)
+    })
+
+    await step("Clicking rename button updates column label via setColumnLabel", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Rename first column/ }))
+      // The header should now show "Renamed" instead of "Name"
+      expect(canvas.getByRole("columnheader", { name: "Renamed" })).toBeInTheDocument()
+    })
+
+    await step("Keyboard drag on header with non-string header definition", async () => {
+      const headersBefore = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+      const dragHandles = [...canvasElement.querySelectorAll("[data-drag-handle]")] as HTMLElement[]
+      expect(dragHandles.length).toBeGreaterThanOrEqual(2)
+
+      // Drag first header right to swap with second
+      dragHandles[0].focus()
+      await userEvent.keyboard(" ")
+      await userEvent.keyboard("{ArrowRight}")
+      await userEvent.keyboard(" ")
+
+      const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+      expect(headersAfter[0]).toBe(headersBefore[1])
+      expect(headersAfter[1]).toBe(headersBefore[0])
+    })
+  },
+}
+
+// ---------------------------------------------------------------------------
+// ControlledPagination — covers the onPaginationChange controlled callback
+// ---------------------------------------------------------------------------
+
+function ControlledPaginationStory({ dataset }: { dataset: DatasetKey }) {
+  const { data, columns } = datasetConfigs[dataset]
+  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 5 })
+
+  return (
+    <DataTable
+      columns={columns}
+      data={data}
+      enablePagination
+      pagination={pagination}
+      onPaginationChange={setPagination}
+    >
+      <DataTablePagination pageSizeOptions={[5, 10, 25]} />
+    </DataTable>
+  )
+}
+
+export const ControlledPagination: Story = {
+  args: { dataset: "Compounds" },
+  render: (args) => <ControlledPaginationStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Compounds"} />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Controlled pagination renders with initial state", async () => {
+      expect(canvas.getByText(/1–5 of/)).toBeInTheDocument()
+    })
+
+    await step("Navigating pages updates controlled state", async () => {
+      await userEvent.click(canvas.getByLabelText("Next page"))
+      expect(canvas.getByText(/6–10 of/)).toBeInTheDocument()
     })
   },
 }

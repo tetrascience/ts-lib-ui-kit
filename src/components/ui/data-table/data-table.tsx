@@ -476,29 +476,27 @@ function DataTable<TData, TValue>({
             </DragOverlay>
           </DndContext>
         ) : (
-          <div className="rounded-lg border bg-card">
-            <Table data-density={density}>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} variant={numericColumns.has(header.column.id) ? "numeric" : undefined}>
-                        <SortableHeaderContent
-                          header={header as Header<unknown, unknown>}
-                          enableSorting={enableSorting}
-                          numericColumns={numericColumns}
-                          columnLabels={columnLabels}
-                        />
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                <DataTableRows table={table} columns={columns} numericColumns={numericColumns} />
-              </TableBody>
-            </Table>
-          </div>
+          <Table data-density={density} variant={variant} containerClassName={containerClassName}>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} variant={numericColumns.has(header.column.id) ? "numeric" : undefined}>
+                      <SortableHeaderContent
+                        header={header as Header<unknown, unknown>}
+                        enableSorting={enableSorting}
+                        numericColumns={numericColumns}
+                        columnLabels={columnLabels}
+                      />
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              <DataTableRows table={table} columns={columns} numericColumns={numericColumns} />
+            </TableBody>
+          </Table>
         )}
         {paginationSlots}
         {restSlots}

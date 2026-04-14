@@ -134,6 +134,9 @@ export const Default: Story = {
       expect(rows.length).toBeGreaterThan(1)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1433" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -161,6 +164,9 @@ export const Sorting: Story = {
       await userEvent.click(headers[0])
       expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1434" },
   },
 }
 
@@ -205,6 +211,9 @@ export const CustomCells: Story = {
       const badges = canvasElement.querySelectorAll("[data-slot='badge']")
       expect(badges.length).toBeGreaterThan(0)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1435" },
   },
 }
 
@@ -283,6 +292,9 @@ export const ColumnManagement: Story = {
       await userEvent.click(canvas.getByRole("table"))
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1436" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -337,6 +349,9 @@ export const LastVisibleColumn: Story = {
       expect(canvas.getAllByRole("columnheader").length).toBe(1)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1437" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -390,6 +405,9 @@ export const ColumnToggleCustomLabels: Story = {
       // "runs" column has non-string header and no meta.label → falls back to col.id
       expect(within(panel).getByText("runs")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1438" },
   },
 }
 
@@ -469,6 +487,9 @@ export const ColumnToggleReorder: Story = {
       }
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1439" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -506,6 +527,9 @@ export const ColumnReorder: Story = {
       expect(headersAfter[0]).toBe(headersBefore[1])
       expect(headersAfter[1]).toBe(headersBefore[0])
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1440" },
   },
 }
 
@@ -568,6 +592,9 @@ export const Pagination: Story = {
       expect(canvas.getByText(/1–10 of/)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1441" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -598,6 +625,9 @@ export const WithCustomChildren: Story = {
     await step("Toolbar still renders in correct position", async () => {
       expect(canvas.getByText("Toolbar content")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1442" },
   },
 }
 
@@ -665,6 +695,9 @@ export const ColumnLabelRename: Story = {
       expect(headersAfter[1]).toBe(headersBefore[0])
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1443" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -703,6 +736,9 @@ export const ControlledPagination: Story = {
       expect(canvas.getByText(/6–10 of/)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1444" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -732,6 +768,9 @@ export const EmptyPagination: Story = {
       expect(canvas.queryByText("Rows per page:")).toBeNull()
       expect(canvasElement.querySelector("[data-slot='data-table-pagination']")).toBeNull()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1445" },
   },
 }
 
@@ -790,6 +829,9 @@ export const AllFeatures: Story = {
     await step("Pagination shows row range", async () => {
       expect(canvas.getByText(/1–5 of/)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1446" },
   },
 }
 
@@ -877,5 +919,8 @@ export const ControlledState: Story = {
       // Should have one fewer column than the dataset defines
       expect(headers.length).toBeGreaterThanOrEqual(2)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1447" },
   },
 }

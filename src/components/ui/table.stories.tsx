@@ -288,6 +288,9 @@ export const Striped: Story = {
       expect(rows.length).toBeGreaterThan(1)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1448" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -310,6 +313,9 @@ export const CompactDensity: Story = {
       expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1449" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -331,6 +337,9 @@ export const RelaxedDensity: Story = {
       expect(canvas.getAllByRole("columnheader").length).toBeGreaterThanOrEqual(4)
       expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1450" },
   },
 }
 
@@ -408,6 +417,9 @@ export const CustomCells: Story = {
         </TableBody>
       </Table>
     )
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1451" },
   },
 }
 
@@ -492,6 +504,9 @@ export const RowActions: Story = {
       expect(buttons.length).toBeGreaterThan(0)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1452" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -552,5 +567,8 @@ export const StickyHeader: Story = {
       }
       expect(canvas.getAllByRole("columnheader").length).toBeGreaterThan(0)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1453" },
   },
 }

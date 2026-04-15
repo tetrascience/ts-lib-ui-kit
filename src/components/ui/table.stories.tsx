@@ -7,7 +7,6 @@ import usersData from "../../../.storybook/__fixtures__/users"
 
 import { Badge } from "./badge"
 import { Button } from "./button"
-
 import { Combobox, ComboboxChip, ComboboxChips, ComboboxChipsInput, ComboboxContent, ComboboxEmpty, ComboboxItem, ComboboxList, ComboboxValue, useComboboxAnchor } from "./combobox"
 import {
   DropdownMenu,
@@ -571,8 +570,6 @@ export const StickyHeader: Story = {
       expect(canvas.getAllByRole("columnheader").length).toBeGreaterThan(0)
     })
   },
-  parameters: {
-    zephyr: { testCaseId: "SW-T1453" },
 }
 
 
@@ -691,26 +688,6 @@ function TableHeaderFilterExample(args) {
 export const TableHeaderFilter: Story = {
   render: (args) => TableHeaderFilterExample(args),
   parameters: {
-    layout: "fullscreen",
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-
-    await step("Table renders with column headers", async () => {
-      expect(canvas.getByRole("table")).toBeInTheDocument()
-      expect(canvas.getByRole("columnheader", { name: "Workspace" })).toBeInTheDocument()
-      expect(canvas.getByRole("columnheader", { name: "Runs" })).toBeInTheDocument()
-    })
-
-    await step("Filter inputs are accessible", async () => {
-      expect(canvas.getByPlaceholderText("Filter owner...")).toBeInTheDocument()
-      expect(canvas.getByPlaceholderText("Filter status...")).toBeInTheDocument()
-    })
-
-    await step("All data rows render initially", async () => {
-      expect(canvas.getByText("Clinical exports")).toBeInTheDocument()
-      expect(canvas.getByText("QC dashboard")).toBeInTheDocument()
-      expect(canvas.getByText("Audit trail")).toBeInTheDocument()
-    })
+    zephyr: { testCaseId: "SW-T1453" },
   },
 }

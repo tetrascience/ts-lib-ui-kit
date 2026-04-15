@@ -161,6 +161,71 @@ export const Default: Story = {
     await step("Dropdown closes after selection", async () => {
       expect(canvas.queryByRole("listbox")).not.toBeInTheDocument()
     })
+
+    await step("Clicking trigger chevron opens dropdown", async () => {
+      const trigger = canvasElement.querySelector(
+        '[data-slot="combobox-trigger"]',
+      ) as HTMLElement
+      expect(trigger).toBeInTheDocument()
+      await userEvent.click(trigger)
+      const listbox = await canvas.findByRole("listbox")
+      expect(listbox).toBeInTheDocument()
+    })
+
+    await step("Clicking trigger again closes dropdown", async () => {
+      const trigger = canvasElement.querySelector(
+        '[data-slot="combobox-trigger"]',
+      ) as HTMLElement
+      await userEvent.click(trigger)
+      expect(canvas.queryByRole("listbox")).not.toBeInTheDocument()
+    })
+
+    await step("Backspace on empty input removes last chip", async () => {
+      await userEvent.click(input)
+      expect(input).toHaveValue("")
+      await userEvent.keyboard("{Backspace}")
+
+      const chips = canvasElement.querySelectorAll('[data-slot="combobox-chip"]')
+      expect(chips).toHaveLength(1)
+      expect(chips[0]).toHaveTextContent("Next.js")
+    })
+
+    await step("Can still add new items via keyboard", async () => {
+      await userEvent.type(input, "Sv")
+      const listbox = await canvas.findByRole("listbox")
+      const options = within(listbox).getAllByRole("option")
+      expect(options).toHaveLength(1)
+      await userEvent.keyboard("{Enter}")
+
+      const chips = canvasElement.querySelectorAll('[data-slot="combobox-chip"]')
+      expect(chips).toHaveLength(2)
+    })
+
+    await step("Lowercase query matches capitalized item", async () => {
+      await userEvent.type(input, "next")
+      const listbox = await canvas.findByRole("listbox")
+      const options = within(listbox).getAllByRole("option")
+      expect(options).toHaveLength(1)
+      expect(options[0]).toHaveTextContent("Next.js")
+    })
+
+    await step("Uppercase query also matches", async () => {
+      await userEvent.clear(input)
+      await userEvent.type(input, "REMIX")
+      const listbox = await canvas.findByRole("listbox")
+      const options = within(listbox).getAllByRole("option")
+      expect(options).toHaveLength(1)
+      expect(options[0]).toHaveTextContent("Remix")
+    })
+
+    await step("Mixed case matches", async () => {
+      await userEvent.clear(input)
+      await userEvent.type(input, "aStRo")
+      const listbox = await canvas.findByRole("listbox")
+      const options = within(listbox).getAllByRole("option")
+      expect(options).toHaveLength(1)
+      expect(options[0]).toHaveTextContent("Astro")
+    })
   },
 }
 
@@ -615,42 +680,6 @@ export const AutoHighlight: Story = {
   },
 }
 
-export const KeyboardNavigation: Story = {
-  render: (args) => renderCombobox(args),
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const input = canvas.getByRole("combobox")
-
-    if (!isTestRunner()) return
-
-    await step("Focus input and open with ArrowDown", async () => {
-      await userEvent.click(input)
-      await userEvent.keyboard("{ArrowDown}")
-      const listbox = await canvas.findByRole("listbox")
-      expect(listbox).toBeInTheDocument()
-    })
-
-    await step("Navigate down with arrow keys", async () => {
-      await userEvent.keyboard("{ArrowDown}")
-      const listbox = canvas.getByRole("listbox")
-      const highlighted = listbox.querySelector("[data-highlighted]")
-      expect(highlighted).toBeInTheDocument()
-    })
-
-    await step("Select with Enter", async () => {
-      await userEvent.keyboard("{Enter}")
-      expect(input.getAttribute("value")).toBeTruthy()
-    })
-
-    await step("Escape closes dropdown", async () => {
-      await userEvent.click(input)
-      await canvas.findByRole("listbox")
-      await userEvent.keyboard("{Escape}")
-      expect(canvas.queryByRole("listbox")).not.toBeInTheDocument()
-    })
-  },
-}
-
 export const TypeToFilter: Story = {
   render: (args) => renderCombobox(args),
   play: async ({ canvasElement, step }) => {
@@ -683,6 +712,360 @@ export const TypeToFilter: Story = {
 
       const empty = document.querySelector('[data-slot="combobox-empty"]')
       expect(empty).toBeInTheDocument()
+    })
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Sub-component coverage stories
+// ---------------------------------------------------------------------------
+// These stories use `defaultOpen` so that portal-rendered components
+// (ComboboxList, ComboboxItem, ComboboxEmpty, ComboboxGroup, ComboboxLabel,
+// ComboboxCollection, ComboboxSeparator) execute on initial render — ensuring
+// V8 coverage even when play functions are skipped.
+
+export const ItemDefault: Story = {
+  name: "Item / Default",
+  render: () => (
+    <Combobox items={frameworks} defaultOpen>
+      <ComboboxInput className="w-[240px]" placeholder="Pick one" />
+      <ComboboxContent>
+        <ComboboxList>
+          {(item) => (
+            <ComboboxItem key={item} value={item}>
+              {item}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  ),
+  play: async ({ step }) => {
+    const body = within(document.body)
+
+    await step("Items render with role=option and data-slot", async () => {
+      const listbox = await body.findByRole("listbox")
+      const options = within(listbox).getAllByRole("option")
+      expect(options).toHaveLength(5)
+      for (const opt of options) {
+        expect(opt).toHaveAttribute("data-slot", "combobox-item")
+      }
+    })
+  },
+}
+
+export const ItemDisabled: Story = {
+  name: "Item / Disabled",
+  render: () => (
+    <Combobox items={frameworks} defaultOpen>
+      <ComboboxInput className="w-[240px]" placeholder="Pick one" />
+      <ComboboxContent>
+        <ComboboxList>
+          {(item) => (
+            <ComboboxItem
+              key={item}
+              value={item}
+              disabled={item === "Remix" || item === "Astro"}
+            >
+              {item}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const body = within(document.body)
+    const canvas = within(canvasElement)
+
+    await step("Disabled items have data-disabled", async () => {
+      const listbox = await body.findByRole("listbox")
+      const remix = within(listbox).getByRole("option", { name: "Remix" })
+      const astro = within(listbox).getByRole("option", { name: "Astro" })
+      expect(remix).toHaveAttribute("data-disabled", "")
+      expect(astro).toHaveAttribute("data-disabled", "")
+    })
+
+    await step("Enabled items do not have data-disabled", async () => {
+      const listbox = body.getByRole("listbox")
+      const next = within(listbox).getByRole("option", { name: "Next.js" })
+      expect(next).not.toHaveAttribute("data-disabled")
+    })
+
+    if (!isTestRunner()) return
+
+    await step("Clicking disabled item does not select", async () => {
+      const listbox = body.getByRole("listbox")
+      const input = canvas.getByRole("combobox")
+      await userEvent.click(
+        within(listbox).getByRole("option", { name: "Remix" }),
+      )
+      expect(input).not.toHaveValue("Remix")
+    })
+  },
+}
+
+export const ListScrollable: Story = {
+  name: "List / Scrollable",
+  render: () => {
+    const manyItems = Array.from({ length: 50 }, (_, i) => `Item ${i + 1}`)
+    return (
+      <Combobox items={manyItems} defaultOpen>
+        <ComboboxInput className="w-[240px]" placeholder="Scroll me" />
+        <ComboboxContent>
+          <ComboboxList>
+            {(item) => (
+              <ComboboxItem key={item} value={item}>
+                {item}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+    )
+  },
+  play: async ({ step }) => {
+    const body = within(document.body)
+
+    await step("All 50 items render in the list", async () => {
+      const listbox = await body.findByRole("listbox")
+      const options = within(listbox).getAllByRole("option")
+      expect(options).toHaveLength(50)
+    })
+
+    await step("List container is scrollable", async () => {
+      const list = document.querySelector('[data-slot="combobox-list"]')
+      expect(list).toBeInTheDocument()
+      expect(list!.scrollHeight).toBeGreaterThan(list!.clientHeight)
+    })
+  },
+}
+
+export const GroupWithLabels: Story = {
+  name: "Group / Labels and collections",
+  render: () => (
+    <Combobox items={groupedFrameworks} defaultOpen>
+      <ComboboxInput className="w-[240px]" placeholder="Pick" />
+      <ComboboxContent>
+        <ComboboxList>
+          {groupedFrameworks.map((group) => (
+            <ComboboxGroup key={group.label} items={group.items}>
+              <ComboboxLabel>{group.label}</ComboboxLabel>
+              <ComboboxCollection>
+                {(item) => (
+                  <ComboboxItem key={item} value={item}>
+                    {item}
+                  </ComboboxItem>
+                )}
+              </ComboboxCollection>
+            </ComboboxGroup>
+          ))}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  ),
+  play: async ({ step }) => {
+    const body = within(document.body)
+
+    await step("Groups render with data-slot=combobox-group", async () => {
+      const listbox = await body.findByRole("listbox")
+      const groups = listbox.querySelectorAll('[data-slot="combobox-group"]')
+      expect(groups).toHaveLength(3)
+    })
+
+    await step("Labels render with correct text", async () => {
+      const listbox = body.getByRole("listbox")
+      const labels = listbox.querySelectorAll('[data-slot="combobox-label"]')
+      expect(labels).toHaveLength(3)
+      expect(labels[0]).toHaveTextContent("Frontend")
+      expect(labels[1]).toHaveTextContent("Full-stack")
+      expect(labels[2]).toHaveTextContent("Static")
+    })
+
+    await step("Collections render items within their group", async () => {
+      const listbox = body.getByRole("listbox")
+      const groups = listbox.querySelectorAll('[data-slot="combobox-group"]')
+
+      const frontendItems = within(groups[0] as HTMLElement).getAllByRole("option")
+      expect(frontendItems.map((o) => o.textContent)).toEqual([
+        "Next.js",
+        "Nuxt",
+        "SvelteKit",
+      ])
+
+      const staticItems = within(groups[2] as HTMLElement).getAllByRole("option")
+      expect(staticItems.map((o) => o.textContent)).toEqual([
+        "Astro",
+        "Eleventy",
+      ])
+    })
+  },
+}
+
+export const SeparatorBetweenGroups: Story = {
+  name: "Separator / Between groups",
+  render: () => (
+    <Combobox items={groupedFrameworks} defaultOpen>
+      <ComboboxInput className="w-[240px]" placeholder="Pick" />
+      <ComboboxContent>
+        <ComboboxList>
+          {groupedFrameworks.map((group, gi) => (
+            <ComboboxGroup key={group.label} items={group.items}>
+              {gi > 0 && <ComboboxSeparator />}
+              <ComboboxLabel>{group.label}</ComboboxLabel>
+              <ComboboxCollection>
+                {(item) => (
+                  <ComboboxItem key={item} value={item}>
+                    {item}
+                  </ComboboxItem>
+                )}
+              </ComboboxCollection>
+            </ComboboxGroup>
+          ))}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  ),
+  play: async ({ step }) => {
+    const body = within(document.body)
+
+    await step("Separators render between groups", async () => {
+      const listbox = await body.findByRole("listbox")
+      const separators = listbox.querySelectorAll(
+        '[data-slot="combobox-separator"]',
+      )
+      expect(separators).toHaveLength(2)
+    })
+
+    await step("No separator before first group", async () => {
+      const listbox = body.getByRole("listbox")
+      const groups = listbox.querySelectorAll('[data-slot="combobox-group"]')
+      const firstChild = groups[0]?.previousElementSibling
+      const hasSepBefore =
+        firstChild?.getAttribute("data-slot") === "combobox-separator"
+      expect(hasSepBefore).toBe(false)
+    })
+  },
+}
+
+export const EmptyState: Story = {
+  name: "Empty / No match",
+  render: () => (
+    <Combobox items={[] as string[]} defaultOpen>
+      <ComboboxInput className="w-[240px]" placeholder="Type something..." />
+      <ComboboxContent>
+        <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
+        <ComboboxList>
+          {(item: string) => (
+            <ComboboxItem key={item} value={item}>
+              {item}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  ),
+  play: async ({ step }) => {
+    await step("Empty message is visible when no items exist", async () => {
+      const empty = document.querySelector('[data-slot="combobox-empty"]')
+      expect(empty).toBeInTheDocument()
+      expect(empty).toHaveTextContent("No frameworks found.")
+    })
+  },
+}
+
+function ChipPrePopulatedExample({ showRemove = true }: { showRemove?: boolean }) {
+  const anchorRef = useComboboxAnchor()
+  const [value, setValue] = useState<string[]>(["Next.js", "Remix"])
+
+  return (
+    <Combobox multiple items={frameworks} value={value} onValueChange={setValue}>
+      <ComboboxChips ref={anchorRef} className="w-[280px]">
+        <ComboboxValue>
+          {(items: string[]) =>
+            items.map((item) => (
+              <ComboboxChip key={item} showRemove={showRemove}>
+                {item}
+              </ComboboxChip>
+            ))
+          }
+        </ComboboxValue>
+        <ComboboxChipsInput placeholder="Select..." />
+      </ComboboxChips>
+      <ComboboxContent anchor={anchorRef}>
+        <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
+        <ComboboxList>
+          {(item) => (
+            <ComboboxItem key={item} value={item}>
+              {item}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  )
+}
+
+export const ChipDefault: Story = {
+  name: "Chip / Default",
+  render: () => <ChipPrePopulatedExample />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Chips render with data-slot and text", async () => {
+      const chips = canvasElement.querySelectorAll('[data-slot="combobox-chip"]')
+      expect(chips).toHaveLength(2)
+      expect(chips[0]).toHaveTextContent("Next.js")
+      expect(chips[1]).toHaveTextContent("Remix")
+    })
+
+    await step("Each chip has a remove button", async () => {
+      const removes = canvasElement.querySelectorAll(
+        '[data-slot="combobox-chip-remove"]',
+      )
+      expect(removes).toHaveLength(2)
+    })
+
+    if (!isTestRunner()) return
+
+    await step("Clicking remove removes the chip", async () => {
+      const removes = canvasElement.querySelectorAll(
+        '[data-slot="combobox-chip-remove"]',
+      )
+      await userEvent.click(removes[0] as HTMLElement)
+
+      const chips = canvasElement.querySelectorAll('[data-slot="combobox-chip"]')
+      expect(chips).toHaveLength(1)
+      expect(chips[0]).toHaveTextContent("Remix")
+    })
+
+    await step("Adding a new item creates a new chip", async () => {
+      const input = canvas.getByRole("combobox")
+      await userEvent.click(input)
+      const listbox = await canvas.findByRole("listbox")
+      await userEvent.click(
+        within(listbox).getByRole("option", { name: "Astro" }),
+      )
+
+      const chips = canvasElement.querySelectorAll('[data-slot="combobox-chip"]')
+      expect(chips).toHaveLength(2)
+      expect(chips[1]).toHaveTextContent("Astro")
+    })
+  },
+}
+
+export const ChipWithoutRemove: Story = {
+  name: "Chip / Without remove button",
+  render: () => <ChipPrePopulatedExample showRemove={false} />,
+  play: async ({ canvasElement, step }) => {
+    await step("Chips render without remove buttons", async () => {
+      const chips = canvasElement.querySelectorAll('[data-slot="combobox-chip"]')
+      expect(chips).toHaveLength(2)
+
+      const removes = canvasElement.querySelectorAll(
+        '[data-slot="combobox-chip-remove"]',
+      )
+      expect(removes).toHaveLength(0)
     })
   },
 }

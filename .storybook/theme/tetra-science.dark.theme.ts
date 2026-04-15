@@ -12,38 +12,38 @@ export const tetrascienceDark = create({
   fontCode: 'SFMono-Regular, Menlo, Monaco, Consolas, monospace',
 
   // Primary Brand Colors
-  colorPrimary: '#94C2FF',       // Primary (dark)
-  colorSecondary: '#94C2FF',     // Primary (dark)
+  colorPrimary: '#B5C4FF',       // --primary
+  colorSecondary: '#B5C4FF',     // --primary
 
   // UI Background
-  appBg: '#0B112D',              // Surface
-  appContentBg: '#0B112D',       // Surface
-  appPreviewBg: '#0B112D',       // Surface
-  appBorderColor: '#3E4250',     // Outline Variant
+  appBg: '#1C1B21',              // --background
+  appContentBg: '#1C1B21',       // --background
+  appPreviewBg: '#1C1B21',       // --background
+  appBorderColor: '#454650',     // --border / --outline-variant
   appBorderRadius: 8,
 
   // Text
-  textColor: '#E2E8EF',          // On Surface
-  textInverseColor: '#0B112D',   // Surface
-  textMutedColor: '#8A9AB0',     // Neutral 70
+  textColor: '#E5E1E9',          // --foreground / --on-surface
+  textInverseColor: '#102F72',   // --primary-foreground
+  textMutedColor: '#90909B',     // --muted-foreground / --outline
 
   // Toolbar
-  barBg: '#1E2440',              // Surface Container
-  barTextColor: '#E2E8EF',       // On Surface
-  barSelectedColor: '#94C2FF',   // Primary
-  barHoverColor: '#B2D3FF',      // Primary 90
+  barBg: '#26252B',              // --card / --surface-container
+  barTextColor: '#E5E1E9',       // --foreground
+  barSelectedColor: '#B5C4FF',   // --primary
+  barHoverColor: '#4FDAEB',      // --tertiary
 
   // Form
-  inputBg: '#1E2440',            // Surface Container
-  inputBorder: '#8890A5',        // Outline
-  inputTextColor: '#E2E8EF',     // On Surface
+  inputBg: '#26252B',            // --card / --surface-container
+  inputBorder: '#454650',        // --border
+  inputTextColor: '#E5E1E9',     // --foreground
   inputBorderRadius: 6,
 
   // Buttons
-  buttonBg: '#283DA5',           // Primary Container
-  buttonBorder: '#8890A5',       // Outline
+  buttonBg: '#264DA0',           // --secondary
+  buttonBorder: '#454650',       // --border
 
   // Boolean / Toggle
-  booleanBg: '#1E2440',          // Surface Container
-  booleanSelectedBg: '#283DA5',  // Primary Container
+  booleanBg: '#26252B',          // --surface-container / --card
+  booleanSelectedBg: '#264DA0',  // --secondary
 })

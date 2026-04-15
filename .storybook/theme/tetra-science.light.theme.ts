@@ -13,38 +13,38 @@ export const tetrascienceLight = create({
   fontCode: 'SFMono-Regular, Menlo, Monaco, Consolas, monospace',
 
   // Primary Brand Colors
-  colorPrimary: '#2F45B5',       // Primary
-  colorSecondary: '#2F45B5',     // Primary
+  colorPrimary: '#4285F4',       // --primary
+  colorSecondary: '#4285F4',     // --primary
 
   // UI Background
-  appBg: '#FFFFFF',
-  appContentBg: '#FFFFFF',
-  appPreviewBg: '#F2F4F7',       // Surface
-  appBorderColor: '#DDE1E8',     // Outline Variant
+  appBg: '#FFFFFF',              // --card
+  appContentBg: '#FFFFFF',       // --card
+  appPreviewBg: '#EEF1F6',      // --surface / --background
+  appBorderColor: '#E2E8F0',    // --border / --outline-variant
   appBorderRadius: 8,
 
   // Text
-  textColor: '#0B112D',          // On Surface
-  textInverseColor: '#FFFFFF',
-  textMutedColor: '#526175',     // Neutral 40
+  textColor: '#0D1B3E',         // --foreground / --on-surface
+  textInverseColor: '#FFFFFF',   // --primary-foreground
+  textMutedColor: '#64748B',    // --muted-foreground / --outline
 
   // Toolbar
-  barBg: '#FFFFFF',
-  barTextColor: '#0B112D',       // On Surface
-  barSelectedColor: '#2F45B5',   // Primary
-  barHoverColor: '#4E79A7',      // Tertiary
+  barBg: '#FFFFFF',              // --card
+  barTextColor: '#0D1B3E',      // --foreground
+  barSelectedColor: '#4285F4',  // --primary
+  barHoverColor: '#006A73',     // --tertiary
 
   // Form
-  inputBg: '#FFFFFF',
-  inputBorder: '#B9C0CF',        // Outline
-  inputTextColor: '#0B112D',     // On Surface
+  inputBg: '#FFFFFF',            // --card
+  inputBorder: '#E2E8F0',       // --border
+  inputTextColor: '#0D1B3E',    // --foreground
   inputBorderRadius: 6,
 
   // Buttons
-  buttonBg: '#F2F4F7',           // Surface
-  buttonBorder: '#B9C0CF',       // Outline
+  buttonBg: '#EEF1F6',          // --surface
+  buttonBorder: '#E2E8F0',      // --border
 
   // Boolean / Toggle
-  booleanBg: '#F2F4F7',          // Surface
-  booleanSelectedBg: '#B2D3FF',  // Primary Container
+  booleanBg: '#EEF1F6',         // --surface
+  booleanSelectedBg: '#EEF2FF', // --secondary
 })

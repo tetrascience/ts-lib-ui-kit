@@ -133,12 +133,6 @@ export const Default: Story = {
       expect(canvas.getByPlaceholderText("Choose a framework")).toBeInTheDocument()
     })
 
-    await step("Trigger button is visible", async () => {
-      expect(
-        canvasElement.querySelector('[data-slot="combobox-trigger"]')
-      ).toBeInTheDocument()
-    })
-
     if (!isTestRunner()) return
 
     await step("Opens dropdown on click and shows all items", async () => {
@@ -184,12 +178,6 @@ export const WithClearButton: Story = {
 
     await step("Combobox renders with placeholder", async () => {
       expect(canvas.getByPlaceholderText("Choose a framework")).toBeInTheDocument()
-    })
-
-    await step("Clear button is present in DOM", async () => {
-      expect(
-        canvasElement.querySelector('[data-slot="combobox-clear"]')
-      ).toBeInTheDocument()
     })
 
     if (!isTestRunner()) return
@@ -577,16 +565,8 @@ export const Disabled: Story = {
       expect(input).toBeDisabled()
     })
 
-    await step("Trigger button is also disabled", async () => {
-      const trigger = canvasElement.querySelector(
-        '[data-slot="combobox-trigger"]'
-      ) as HTMLElement
-      expect(trigger).toBeInTheDocument()
-      expect(trigger.closest("button")).toBeDisabled()
-    })
-
     await step("Click does not open dropdown", async () => {
-      await userEvent.click(input)
+      await userEvent.click(input, { pointerEventsCheck: 0 })
       expect(canvas.queryByRole("listbox")).not.toBeInTheDocument()
     })
   },

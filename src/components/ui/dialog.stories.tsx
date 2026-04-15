@@ -37,8 +37,8 @@ export default meta
 
 type Story = StoryObj<typeof DialogContent>
 
-function renderDialog(args: Story["args"] & { footerCloseButton?: boolean }) {
-  const { footerCloseButton = false, ...contentArgs } = args ?? {}
+function renderDialog(args: Story["args"]) {
+  const { ...contentArgs } = args ?? {}
   return (
     <Dialog open>
       <DialogContent {...contentArgs}>

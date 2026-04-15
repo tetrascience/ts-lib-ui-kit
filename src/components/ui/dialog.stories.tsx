@@ -4,6 +4,7 @@ import { Button } from "./button"
 import {
   Dialog,
   DialogClose,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -47,11 +48,11 @@ function renderDialog(args: Story["args"] & { footerCloseButton?: boolean }) {
             Invite teammates, manage permissions, and choose the default access level for new collaborators.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3 text-sm text-muted-foreground">
+        <DialogBody className="grid gap-3 text-sm text-muted-foreground">
           <div className="rounded-lg border p-3">Members: 12 active users</div>
           <div className="rounded-lg border p-3">Default role: Viewer</div>
-        </div>
-        <DialogFooter showCloseButton={footerCloseButton}>
+        </DialogBody>
+        <DialogFooter showCloseButton={args?.showCloseButton}>
           <Button>Save changes</Button>
         </DialogFooter>
       </DialogContent>

@@ -39,44 +39,62 @@ function t(
 
 // Pairs are kept adjacent; foreground tokens carry a reference to their bg pair
 const CORE_TOKENS: TokenDef[] = [
-  t("background",           "oklch(0.9665 0.0045 258.32)", "oklch(0.1909 0.0567 271.01)"),
-  t("foreground",           "oklch(0.145 0 0)",            "oklch(0.985 0 0)",            "bg", "background"),
-  t("card",                 "oklch(1 0 0)",                "oklch(0.2909 0.0567 271.01)"),
-  t("card-foreground",      "rgba(11, 17, 45, 1)",         "oklch(0.985 0 0)",            "bg", "card"),
-  t("popover",              "oklch(1 0 0)",                "oklch(0.3909 0.0567 271.01)"),
-  t("popover-foreground",   "oklch(0.145 0 0)",            "oklch(0.985 0 0)",            "bg", "popover"),
-  t("primary",              "oklch(0.6945 0.1622 256.49)", "oklch(0.6945 0.1622 256.49)"),
-  t("primary-foreground",   "oklch(0.1909 0.0567 271.01)", "oklch(0.205 0 0)",            "bg", "primary"),
-  t("secondary",            "oklch(0.4465 0.1784 269.18)", "oklch(0.5645 0.0863 251.12)"),
-  t("secondary-foreground", "oklch(1 0 0)",                "oklch(0.985 0 0)",            "bg", "secondary"),
-  t("muted",                "oklch(0.97 0 0)",             "oklch(0.0909 0.0567 271.01)"),
-  t("muted-foreground",     "oklch(0.556 0 0)",            "oklch(0.708 0 0)",            "bg", "muted"),
-  t("accent",               "oklch(0.5187 0.182 305.25)",  "oklch(0.5187 0.182 305.25)"),
-  t("accent-foreground",    "oklch(1 0 0)",                "oklch(0.985 0 0)",            "bg", "accent"),
-  t("info",                 "oklch(0.5645 0.0863 251.12)", "oklch(0.5645 0.0863 251.12)"),
-  t("destructive",          "oklch(0.685 0.203959 23.6393)","oklch(0.704 0.191 22.216)"),
-  t("positive",             "oklch(0.7 0.2787 145.59)",    "oklch(0.7 0.2787 145.59)"),
-  t("warning",              "oklch(0.7676 0.1635 60.41)",  "oklch(0.7676 0.1635 60.41)"),
-  t("border",               "oklch(0.922 0 0)",            "oklch(1 0 0 / 10%)"),
-  t("input",                "oklch(0.922 0 0)",            "oklch(1 0 0 / 15%)"),
-  t("ring",                 "oklch(0.6945 0.1622 256.49)", "oklch(0.6945 0.1622 256.49)"),
+  t("background",           "oklch(0.9849 0.0106 316.49)", "oklch(0.2259 0.0116 293.09)"),
+  t("foreground",           "oklch(0.2259 0.0116 293.09)", "oklch(0.9152 0.0115 308.32)", "bg", "background"),
+  t("card",                 "oklch(1 0 0)",                "oklch(0.2680 0.0111 293.28)"),
+  t("card-foreground",      "oklch(0.2259 0.0116 293.09)", "oklch(0.9152 0.0115 308.32)", "bg", "card"),
+  t("popover",              "oklch(1 0 0)",                "oklch(0.3126 0.0107 293.42)"),
+  t("popover-foreground",   "oklch(0.2259 0.0116 293.09)", "oklch(0.9152 0.0115 308.32)", "bg", "popover"),
+  t("primary",              "oklch(0.4079 0.1104 267.16)", "oklch(0.8296 0.0847 273.37)"),
+  t("primary-foreground",   "oklch(1 0 0)",                "oklch(0.3284 0.1216 262.85)", "bg", "primary"),
+  t("secondary",            "oklch(0.9072 0.0425 279.69)", "oklch(0.4412 0.1421 262.97)"),
+  t("secondary-foreground", "oklch(0.2435 0.0867 257.07)", "oklch(0.9072 0.0425 279.69)", "bg", "secondary"),
+  t("muted",                "oklch(0.9571 0.0093 286.22)", "oklch(0.1800 0.0102 285.33)"),
+  t("muted-foreground",     "oklch(0.5695 0.0168 285.86)", "oklch(0.6569 0.0162 285.95)", "bg", "muted"),
+  t("accent",               "oklch(0.4784 0.0817 205.03)", "oklch(0.8207 0.1194 206.68)"),
+  t("accent-foreground",    "oklch(1 0 0)",                "oklch(0.3047 0.0525 208.75)", "bg", "accent"),
+  t("info",                 "oklch(0.5330 0.1472 268.35)", "oklch(0.8384 0.0801 273.65)"),
+  t("destructive",          "oklch(0.5060 0.1927 27.70)",  "oklch(0.8383 0.0891 26.76)"),
+  t("positive",             "oklch(0.4810 0.1238 153.01)", "oklch(0.7432 0.1661 152.81)"),
+  t("warning",              "oklch(0.5154 0.1202 60.55)",  "oklch(0.7856 0.1606 64.14)"),
+  t("border",               "oklch(0.8299 0.0152 286.06)", "oklch(0.3970 0.0168 281.07)"),
+  t("input",                "oklch(0.8299 0.0152 286.06)", "oklch(0.3970 0.0168 281.07)"),
+  t("ring",                 "oklch(0.4079 0.1104 267.16)", "oklch(0.8296 0.0847 273.37)"),
+]
+
+// MD3 color role aliases — these reference existing tokens via var() but
+// expose the Material Design 3 naming convention for consumers.
+const MD3_ROLE_TOKENS: TokenDef[] = [
+  t("outline",                "oklch(0.5695 0.0168 285.86)", "oklch(0.6569 0.0162 285.95)"),
+  t("outline-variant",        "oklch(0.8299 0.0152 286.06)", "oklch(0.3970 0.0168 281.07)"),
+  t("on-primary",             "oklch(1 0 0)",                "oklch(0.3284 0.1216 262.85)",   "text"),
+  t("on-secondary",           "oklch(0.2435 0.0867 257.07)", "oklch(0.9072 0.0425 279.69)",   "text"),
+  t("on-surface",             "oklch(0.2259 0.0116 293.09)", "oklch(0.9152 0.0115 308.32)",   "text"),
+  t("on-error",               "oklch(1 0 0)",                "oklch(0.2680 0.0111 293.28)",   "text"),
+  t("surface",                "oklch(0.9849 0.0106 316.49)", "oklch(0.2259 0.0116 293.09)"),
+  t("surface-dim",            "oklch(0.9152 0.0115 308.32)", "oklch(0.2259 0.0116 293.09)"),
+  t("surface-bright",         "oklch(0.9849 0.0106 316.49)", "oklch(0.3126 0.0107 293.42)"),
+  t("surface-container",      "oklch(0.9571 0.0093 286.22)", "oklch(0.2680 0.0111 293.28)"),
+  t("surface-container-low",  "oklch(0.9594 0.0098 305.40)", "oklch(0.2259 0.0116 293.09)"),
+  t("surface-container-high", "oklch(0.9137 0.0149 290.29)", "oklch(0.3126 0.0107 293.42)"),
+  t("surface-container-highest","oklch(0.8757 0.0152 286.06)","oklch(0.3970 0.0168 281.07)"),
 ]
 
 const CHART_TOKENS: TokenDef[] = [
-  t("chart-1", "oklch(0.809 0.105 251.813)", "oklch(0.809 0.105 251.813)"),
-  t("chart-2", "oklch(0.623 0.214 259.815)", "oklch(0.623 0.214 259.815)"),
-  t("chart-3", "oklch(0.546 0.245 262.881)", "oklch(0.546 0.245 262.881)"),
-  t("chart-4", "oklch(0.488 0.243 264.376)", "oklch(0.488 0.243 264.376)"),
-  t("chart-5", "oklch(0.424 0.199 265.638)", "oklch(0.424 0.199 265.638)"),
+  t("chart-1", "oklch(0.8296 0.0847 273.37)", "oklch(0.8296 0.0847 273.37)"),
+  t("chart-2", "oklch(0.6746 0.1379 272.92)", "oklch(0.6746 0.1379 272.92)"),
+  t("chart-3", "oklch(0.5886 0.1395 271.64)", "oklch(0.5886 0.1395 271.64)"),
+  t("chart-4", "oklch(0.5044 0.1409 270.54)", "oklch(0.5044 0.1409 270.54)"),
+  t("chart-5", "oklch(0.4137 0.1319 267.46)", "oklch(0.4137 0.1319 267.46)"),
 ]
 
 const SIDEBAR_TOKENS: TokenDef[] = [
-  t("sidebar",                      "oklch(0.985 0 0)",            "oklch(0.205 0 0)"),
-  t("sidebar-foreground",           "oklch(0.145 0 0)",            "oklch(0.985 0 0)",            "bg", "sidebar"),
-  t("sidebar-accent",               "oklch(0.97 0 0)",             "oklch(0.269 0 0)"),
-  t("sidebar-accent-foreground",    "oklch(0.205 0 0)",            "oklch(0.985 0 0)",            "bg", "sidebar-accent"),
-  t("sidebar-border",               "oklch(0.922 0 0)",            "oklch(1 0 0 / 10%)"),
-  t("sidebar-ring",                 "oklch(0.708 0 0)",            "oklch(0.556 0 0)"),
+  t("sidebar",                      "oklch(0.9594 0.0098 305.40)", "oklch(0.1800 0.0102 285.33)"),
+  t("sidebar-foreground",           "oklch(0.2259 0.0116 293.09)", "oklch(0.9152 0.0115 308.32)", "bg", "sidebar"),
+  t("sidebar-accent",               "oklch(0.9137 0.0149 290.29)", "oklch(0.3126 0.0107 293.42)"),
+  t("sidebar-accent-foreground",    "oklch(0.2259 0.0116 293.09)", "oklch(0.9152 0.0115 308.32)", "bg", "sidebar-accent"),
+  t("sidebar-border",               "oklch(0.8299 0.0152 286.06)", "oklch(0.3970 0.0168 281.07)"),
+  t("sidebar-ring",                 "oklch(0.5695 0.0168 285.86)", "oklch(0.6569 0.0162 285.95)"),
 ]
 
 // ---------------------------------------------------------------------------
@@ -288,7 +306,7 @@ function DesignTokensPage() {
   >(new Map())
   const [, setTick] = useState(0)
   const allTokens = useMemo(
-    () => [...CORE_TOKENS, ...CHART_TOKENS, ...SIDEBAR_TOKENS],
+    () => [...CORE_TOKENS, ...MD3_ROLE_TOKENS, ...CHART_TOKENS, ...SIDEBAR_TOKENS],
     [],
   )
   const rafRef = useRef(0)
@@ -352,6 +370,12 @@ function DesignTokensPage() {
       <TokenTable
         title="Core Colors"
         tokens={CORE_TOKENS}
+        resolvedValues={resolvedValues}
+        allTokens={allTokens}
+      />
+      <TokenTable
+        title="MD3 Color Role Aliases"
+        tokens={MD3_ROLE_TOKENS}
         resolvedValues={resolvedValues}
         allTokens={allTokens}
       />

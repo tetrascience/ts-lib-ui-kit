@@ -1,16 +1,7 @@
-import * as a11yAddonAnnotations from "@storybook/addon-a11y/preview";
-import { setProjectAnnotations } from "@storybook/react-vite";
 import { commands, page } from "@vitest/browser/context";
-import { afterEach, beforeAll, beforeEach, expect, inject } from "vitest";
-
-import * as previewAnnotations from "./preview";
-
-const annotations = setProjectAnnotations([a11yAddonAnnotations, previewAnnotations]);
+import { afterEach, beforeEach, expect, inject } from "vitest";
 
 type ZephyrMapping = Record<string, string[]>;
-
-// Run Storybook's beforeAll hook
-beforeAll(annotations.beforeAll);
 
 // Fail tests on ALL console warnings and errors
 const originalWarn = console.warn;

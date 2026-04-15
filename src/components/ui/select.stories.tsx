@@ -13,6 +13,9 @@ import {
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
+/** Returns true when running inside the Vitest test runner (not the Storybook UI). */
+const isTestRunner = () =>
+  typeof import.meta !== "undefined" && !!(import.meta as Record<string, any>).env?.VITEST
 
 const meta: Meta<typeof SelectTrigger> = {
   title: "Components/Select",
@@ -51,6 +54,10 @@ function renderSelect(args: Story["args"]) {
   )
 }
 
+// ---------------------------------------------------------------------------
+// Default
+// ---------------------------------------------------------------------------
+
 export const Default: Story = {
   render: renderSelect,
   parameters: {
@@ -58,16 +65,61 @@ export const Default: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const trigger = canvas.getByRole("combobox")
 
-    await step("Select trigger renders", async () => {
-      expect(canvas.getByRole("combobox")).toBeInTheDocument()
+    await step("Select trigger renders with default value", async () => {
+      expect(trigger).toBeInTheDocument()
+      expect(canvas.getByText("Workspace")).toBeInTheDocument()
     })
 
-    await step("Selected value is shown", async () => {
-      expect(canvas.getByText("Workspace")).toBeInTheDocument()
+    await step("Trigger has chevron icon", async () => {
+      const svg = trigger.querySelector("svg")
+      expect(svg).toBeInTheDocument()
+    })
+
+    if (!isTestRunner()) return
+
+    await step("Opens dropdown on click", async () => {
+      await userEvent.click(trigger)
+      const listbox = await within(document.body).findByRole("listbox")
+      expect(listbox).toBeInTheDocument()
+
+      const options = within(listbox).getAllByRole("option")
+      expect(options).toHaveLength(3)
+      expect(options.map((o) => o.textContent?.replace(/\s+/g, ""))).toEqual([
+        "Workspace",
+        "Report",
+        "Archive",
+      ])
+    })
+
+    await step("Current value has check indicator", async () => {
+      const listbox = within(document.body).getByRole("listbox")
+      const selected = within(listbox).getByRole("option", {
+        name: "Workspace",
+      })
+      expect(selected).toHaveAttribute("data-state", "checked")
+    })
+
+    await step("Select a different item", async () => {
+      const listbox = within(document.body).getByRole("listbox")
+      await userEvent.click(
+        within(listbox).getByRole("option", { name: "Report" })
+      )
+      expect(canvas.getByText("Report")).toBeInTheDocument()
+    })
+
+    await step("Dropdown closes after selection", async () => {
+      expect(
+        within(document.body).queryByRole("listbox")
+      ).not.toBeInTheDocument()
     })
   },
 }
+
+// ---------------------------------------------------------------------------
+// Small
+// ---------------------------------------------------------------------------
 
 export const Small: Story = {
   args: {
@@ -79,13 +131,26 @@ export const Small: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const trigger = canvas.getByRole("combobox")
 
-    await step("Select trigger renders", async () => {
-      expect(canvas.getByRole("combobox")).toBeInTheDocument()
+    await step("Select trigger renders with sm size attribute", async () => {
+      expect(trigger).toBeInTheDocument()
+      expect(trigger).toHaveAttribute("data-size", "sm")
     })
 
     await step("Selected value is shown", async () => {
       expect(canvas.getByText("Workspace")).toBeInTheDocument()
+    })
+
+    if (!isTestRunner()) return
+
+    await step("Opens and selects correctly at small size", async () => {
+      await userEvent.click(trigger)
+      const listbox = await within(document.body).findByRole("listbox")
+      await userEvent.click(
+        within(listbox).getByRole("option", { name: "Archive" })
+      )
+      expect(canvas.getByText("Archive")).toBeInTheDocument()
     })
   },
 }

@@ -1,9 +1,9 @@
 import { MoreHorizontalIcon } from "lucide-react"
 import { expect, within } from "storybook/test"
 
-import compoundsData from "../../../.storybook/__fixtures__/compounds.json"
-import moleculesData from "../../../.storybook/__fixtures__/molecules.json"
-import usersData from "../../../.storybook/__fixtures__/users.json"
+import compoundsData from "../../../.storybook/__fixtures__/compounds"
+import moleculesData from "../../../.storybook/__fixtures__/molecules"
+import usersData from "../../../.storybook/__fixtures__/users"
 
 import { Badge } from "./badge"
 import { Button } from "./button"

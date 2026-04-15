@@ -3,9 +3,9 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { expect, userEvent, within } from "storybook/test"
 
-import compoundsData from "../../../../.storybook/__fixtures__/compounds.json"
-import moleculesData from "../../../../.storybook/__fixtures__/molecules.json"
-import usersData from "../../../../.storybook/__fixtures__/users.json"
+import compoundsData from "../../../../.storybook/__fixtures__/compounds"
+import moleculesData from "../../../../.storybook/__fixtures__/molecules"
+import usersData from "../../../../.storybook/__fixtures__/users"
 import { Badge } from "../badge"
 
 import { DataTable, TableToolbar, useDataTable } from "./data-table"

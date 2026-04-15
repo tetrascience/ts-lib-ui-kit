@@ -52,7 +52,7 @@ function renderDialog(args: Story["args"]) {
           <div className="rounded-lg border p-3">Members: 12 active users</div>
           <div className="rounded-lg border p-3">Default role: Viewer</div>
         </DialogBody>
-        <DialogFooter showCloseButton={args?.showCloseButton}>
+        <DialogFooter>
           <Button>Save changes</Button>
         </DialogFooter>
       </DialogContent>
@@ -95,7 +95,28 @@ export const Default: Story = {
 }
 
 export const FooterCloseButton: Story = {
-  render: (args) => renderDialog({ ...args, footerCloseButton: true }),
+  render: (args) => {
+    const { ...contentArgs } = args ?? {}
+    return (
+      <Dialog open>
+        <DialogContent {...contentArgs}>
+          <DialogHeader>
+            <DialogTitle>Share workspace</DialogTitle>
+            <DialogDescription>
+              Invite teammates, manage permissions, and choose the default access level for new collaborators.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogBody className="grid gap-3 text-sm text-muted-foreground">
+            <div className="rounded-lg border p-3">Members: 12 active users</div>
+            <div className="rounded-lg border p-3">Default role: Viewer</div>
+          </DialogBody>
+          <DialogFooter showCloseButton>
+            <Button>Save changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  },
   parameters: {
     zephyr: { testCaseId: "SW-T1231" },
   },

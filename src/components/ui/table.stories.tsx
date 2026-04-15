@@ -1,4 +1,5 @@
 import { MoreHorizontalIcon } from "lucide-react"
+import { useState } from "react"
 import { expect, within } from "storybook/test"
 
 import compoundsData from "../../../.storybook/__fixtures__/compounds"
@@ -194,7 +195,6 @@ export const Default: Story = {
       </Table>
     )
   },
-  render: (args) => renderDefaultTable(args as Record<string, unknown>),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 

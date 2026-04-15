@@ -13,13 +13,13 @@ const badgeVariants = cva(
         secondary:
           "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
         info:
-          "bg-info focus-visible:ring-info/20 dark:bg-info/20 dark:text-info dark:focus-visible:ring-info/40 [a]:hover:bg-info/20",
+          "bg-info/15 text-info focus-visible:ring-info/20 dark:bg-info/20 dark:text-info dark:focus-visible:ring-info/40 [a]:hover:bg-info/25",
         destructive:
-          "bg-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
+          "bg-destructive/15 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:text-destructive dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/25",
         positive:
-          "bg-positive focus-visible:ring-positive/20 dark:bg-positive/20 dark:text-positive dark:focus-visible:ring-positive/40 [a]:hover:bg-positive/20",
+          "bg-positive/15 text-positive focus-visible:ring-positive/20 dark:bg-positive/20 dark:text-positive dark:focus-visible:ring-positive/40 [a]:hover:bg-positive/25",
         warning:
-          "bg-warning focus-visible:ring-warning/20 dark:bg-warning/20 dark:text-warning dark:focus-visible:ring-warning/40 [a]:hover:bg-warning/20",
+          "bg-warning/15 text-warning focus-visible:ring-warning/20 dark:bg-warning/20 dark:text-warning dark:focus-visible:ring-warning/40 [a]:hover:bg-warning/25",
         outline:
           "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
         ghost:

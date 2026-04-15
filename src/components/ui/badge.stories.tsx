@@ -35,9 +35,19 @@ export const Default: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const badge = canvas.getByText("Badge")
 
     await step("Badge text renders", async () => {
-      expect(canvas.getByText("Badge")).toBeInTheDocument()
+      expect(badge).toBeInTheDocument()
+    })
+
+    await step("Badge has correct data attributes", async () => {
+      expect(badge).toHaveAttribute("data-slot", "badge")
+      expect(badge).toHaveAttribute("data-variant", "default")
+    })
+
+    await step("Badge renders as a span element", async () => {
+      expect(badge.tagName).toBe("SPAN")
     })
   },
 }
@@ -52,9 +62,14 @@ export const Secondary: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const badge = canvas.getByText("Secondary Badge")
 
     await step("Secondary badge text renders", async () => {
-      expect(canvas.getByText("Secondary Badge")).toBeInTheDocument()
+      expect(badge).toBeInTheDocument()
+    })
+
+    await step("Badge has secondary variant attribute", async () => {
+      expect(badge).toHaveAttribute("data-variant", "secondary")
     })
   },
 }
@@ -66,9 +81,14 @@ export const Info: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const badge = canvas.getByText("Info Badge")
 
     await step("Info badge text renders", async () => {
-      expect(canvas.getByText("Info Badge")).toBeInTheDocument()
+      expect(badge).toBeInTheDocument()
+    })
+
+    await step("Badge has info variant attribute", async () => {
+      expect(badge).toHaveAttribute("data-variant", "info")
     })
   },
   parameters: {
@@ -86,9 +106,14 @@ export const Destructive: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const badge = canvas.getByText("Destructive Badge")
 
     await step("Destructive badge text renders", async () => {
-      expect(canvas.getByText("Destructive Badge")).toBeInTheDocument()
+      expect(badge).toBeInTheDocument()
+    })
+
+    await step("Badge has destructive variant attribute", async () => {
+      expect(badge).toHaveAttribute("data-variant", "destructive")
     })
   },
 }
@@ -100,9 +125,14 @@ export const Positive: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const badge = canvas.getByText("Positive Badge")
 
     await step("Positive badge text renders", async () => {
-      expect(canvas.getByText("Positive Badge")).toBeInTheDocument()
+      expect(badge).toBeInTheDocument()
+    })
+
+    await step("Badge has positive variant attribute", async () => {
+      expect(badge).toHaveAttribute("data-variant", "positive")
     })
   },
   parameters: {
@@ -117,9 +147,14 @@ export const Warning: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const badge = canvas.getByText("Warning Badge")
 
     await step("Warning badge text renders", async () => {
-      expect(canvas.getByText("Warning Badge")).toBeInTheDocument()
+      expect(badge).toBeInTheDocument()
+    })
+
+    await step("Badge has warning variant attribute", async () => {
+      expect(badge).toHaveAttribute("data-variant", "warning")
     })
   },
   parameters: {
@@ -137,9 +172,14 @@ export const Outline: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const badge = canvas.getByText("Outline Badge")
 
     await step("Outline badge text renders", async () => {
-      expect(canvas.getByText("Outline Badge")).toBeInTheDocument()
+      expect(badge).toBeInTheDocument()
+    })
+
+    await step("Badge has outline variant attribute", async () => {
+      expect(badge).toHaveAttribute("data-variant", "outline")
     })
   },
 }
@@ -154,9 +194,14 @@ export const Ghost: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const badge = canvas.getByText("Ghost Badge")
 
     await step("Ghost badge text renders", async () => {
-      expect(canvas.getByText("Ghost Badge")).toBeInTheDocument()
+      expect(badge).toBeInTheDocument()
+    })
+
+    await step("Badge has ghost variant attribute", async () => {
+      expect(badge).toHaveAttribute("data-variant", "ghost")
     })
   },
 }
@@ -171,9 +216,58 @@ export const Link: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const badge = canvas.getByText("Link Badge")
 
     await step("Link badge text renders", async () => {
-      expect(canvas.getByText("Link Badge")).toBeInTheDocument()
+      expect(badge).toBeInTheDocument()
+    })
+
+    await step("Badge has link variant attribute", async () => {
+      expect(badge).toHaveAttribute("data-variant", "link")
+    })
+  },
+}
+
+export const AsChild: Story = {
+  args: {
+    asChild: true,
+  },
+  render: (args) => (
+    <Badge {...args}>
+      <a href="#test">Link as Badge</a>
+    </Badge>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const link = canvas.getByText("Link as Badge")
+
+    await step("Renders as child element (anchor) instead of span", async () => {
+      expect(link.tagName).toBe("A")
+      expect(link).toHaveAttribute("href", "#test")
+    })
+
+    await step("Data attributes are forwarded to the child element", async () => {
+      expect(link).toHaveAttribute("data-slot", "badge")
+      expect(link).toHaveAttribute("data-variant", "default")
+    })
+  },
+}
+
+export const CustomClassName: Story = {
+  args: {
+    children: "Custom Badge",
+    className: "my-custom-class",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const badge = canvas.getByText("Custom Badge")
+
+    await step("Badge renders with custom className merged", async () => {
+      expect(badge).toHaveClass("my-custom-class")
+    })
+
+    await step("Badge retains data-slot attribute", async () => {
+      expect(badge).toHaveAttribute("data-slot", "badge")
     })
   },
 }

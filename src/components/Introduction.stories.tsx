@@ -75,6 +75,26 @@ function useDarkMode() {
  *  Off Black 500  #0B112D
  */
 
+/** Shared canvas resize handler — wires canvas dimensions to a mutable w/h pair */
+function makeResizer(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  dpr: number,
+  setDims: (w: number, h: number) => void
+): () => void {
+  return function () {
+    const parent = canvas.parentElement
+    if (!parent) return
+    const w = parent.clientWidth
+    const h = parent.clientHeight
+    if (w === 0 || h === 0) return
+    canvas.width = w * dpr
+    canvas.height = h * dpr
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    setDims(w, h)
+  }
+}
+
 /** Bokeh Wave canvas — light mode hero background */
 function BokehWaveCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -90,16 +110,7 @@ function BokehWaveCanvas() {
     let h = 0
     let raf = 0
 
-    function resize() {
-      const parent = canvas!.parentElement
-      if (!parent) return
-      w = parent.clientWidth
-      h = parent.clientHeight
-      if (w === 0 || h === 0) return
-      canvas!.width = w * dpr
-      canvas!.height = h * dpr
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
-    }
+    const resize = makeResizer(canvas, ctx, dpr, (nw, nh) => { w = nw; h = nh })
 
     // Watch for visibility changes (hidden → visible on theme toggle)
     const ro = new ResizeObserver(() => resize())
@@ -259,16 +270,7 @@ function NeonHelixCanvas() {
     let h = 0
     let raf = 0
 
-    function resize() {
-      const parent = canvas!.parentElement
-      if (!parent) return
-      w = parent.clientWidth
-      h = parent.clientHeight
-      if (w === 0 || h === 0) return
-      canvas!.width = w * dpr
-      canvas!.height = h * dpr
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
-    }
+    const resize = makeResizer(canvas, ctx, dpr, (nw, nh) => { w = nw; h = nh })
 
     // Watch for visibility changes (hidden → visible on theme toggle)
     const ro = new ResizeObserver(() => resize())
@@ -306,6 +308,43 @@ function NeonHelixCanvas() {
       color: [[84, 157, 255], [12, 199, 228], [178, 211, 255]][Math.floor(Math.random() * 3)],
       alpha: 0.1 + Math.random() * 0.2,
     }))
+
+    type DrawItem = { x: number; y: number; z: number; size: number; alpha: number; type: string }
+
+    function renderItem(d: DrawItem) {
+      if (d.alpha < 0.02) return
+      const depthNorm = (d.z + 120) / 240
+      const r = Math.round(30 + depthNorm * 60)
+      const g = Math.round(100 + depthNorm * 100)
+      const b = Math.round(200 + depthNorm * 55)
+      if (d.type === "glow") {
+        const gr = ctx!.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.size * 3)
+        gr.addColorStop(0, `rgba(${r},${g},${b},${d.alpha * 0.3})`)
+        gr.addColorStop(1, `rgba(${r},${g},${b},0)`)
+        ctx!.fillStyle = gr
+        ctx!.beginPath()
+        ctx!.arc(d.x, d.y, d.size * 3, 0, Math.PI * 2)
+        ctx!.fill()
+      } else {
+        const gr = ctx!.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.size * 4)
+        gr.addColorStop(0, `rgba(${r},${g},${b},${d.alpha * 0.2})`)
+        gr.addColorStop(1, `rgba(${r},${g},${b},0)`)
+        ctx!.fillStyle = gr
+        ctx!.beginPath()
+        ctx!.arc(d.x, d.y, d.size * 4, 0, Math.PI * 2)
+        ctx!.fill()
+        ctx!.beginPath()
+        ctx!.arc(d.x, d.y, d.size, 0, Math.PI * 2)
+        ctx!.fillStyle = `rgba(${r},${g},${b},${d.alpha})`
+        ctx!.fill()
+        if (d.alpha > 0.5) {
+          ctx!.beginPath()
+          ctx!.arc(d.x, d.y, d.size * 0.35, 0, Math.PI * 2)
+          ctx!.fillStyle = `rgba(255,255,255,${(d.alpha - 0.5) * 0.8})`
+          ctx!.fill()
+        }
+      }
+    }
 
     function getHelixPoint(t: number, time: number) {
       const x = t * w * 1.4 - w * 0.2
@@ -359,7 +398,7 @@ function NeonHelixCanvas() {
       }
 
       // Collect draw list with depth
-      const drawList: { x: number; y: number; z: number; size: number; alpha: number; type: string }[] = []
+      const drawList: DrawItem[] = []
 
       for (const gp of glowParticles) {
         gp.pulse += gp.pulseSpeed
@@ -399,40 +438,7 @@ function NeonHelixCanvas() {
 
       drawList.sort((a, b) => a.z - b.z)
 
-      for (const d of drawList) {
-        if (d.alpha < 0.02) continue
-        const depthNorm = (d.z + 120) / 240
-        const r = Math.round(30 + depthNorm * 60)
-        const g = Math.round(100 + depthNorm * 100)
-        const b = Math.round(200 + depthNorm * 55)
-        if (d.type === "glow") {
-          const gr = ctx!.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.size * 3)
-          gr.addColorStop(0, `rgba(${r},${g},${b},${d.alpha * 0.3})`)
-          gr.addColorStop(1, `rgba(${r},${g},${b},0)`)
-          ctx!.fillStyle = gr
-          ctx!.beginPath()
-          ctx!.arc(d.x, d.y, d.size * 3, 0, Math.PI * 2)
-          ctx!.fill()
-        } else {
-          const gr = ctx!.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.size * 4)
-          gr.addColorStop(0, `rgba(${r},${g},${b},${d.alpha * 0.2})`)
-          gr.addColorStop(1, `rgba(${r},${g},${b},0)`)
-          ctx!.fillStyle = gr
-          ctx!.beginPath()
-          ctx!.arc(d.x, d.y, d.size * 4, 0, Math.PI * 2)
-          ctx!.fill()
-          ctx!.beginPath()
-          ctx!.arc(d.x, d.y, d.size, 0, Math.PI * 2)
-          ctx!.fillStyle = `rgba(${r},${g},${b},${d.alpha})`
-          ctx!.fill()
-          if (d.alpha > 0.5) {
-            ctx!.beginPath()
-            ctx!.arc(d.x, d.y, d.size * 0.35, 0, Math.PI * 2)
-            ctx!.fillStyle = `rgba(255,255,255,${(d.alpha - 0.5) * 0.8})`
-            ctx!.fill()
-          }
-        }
-      }
+      for (const d of drawList) renderItem(d)
 
       ctx!.globalCompositeOperation = "source-over"
       raf = requestAnimationFrame(draw)
@@ -461,10 +467,10 @@ function CodeBlock({ children }: { children: string }) {
 
 const features = [
   {
-    icon: Accessibility,
-    title: "Accessible",
+    icon: Puzzle,
+    title: "Composable",
     description:
-      "WCAG 2.1 compliant components built on Radix UI primitives with keyboard navigation and screen reader support.",
+      "Built on the shadcn/ui pattern. Components are yours to copy, paste, and customize.",
   },
   {
     icon: Moon,
@@ -473,10 +479,10 @@ const features = [
       "Light and dark mode out of the box with oklch design tokens and CSS custom properties.",
   },
   {
-    icon: Puzzle,
-    title: "Composable",
+    icon: Accessibility,
+    title: "Accessible",
     description:
-      "Built on the shadcn/ui pattern. Components are yours to copy, paste, and customize.",
+      "WCAG 2.1 compliant components built on Radix UI primitives with keyboard navigation and screen reader support.",
   },
 ] as const
 
@@ -546,8 +552,8 @@ function IntroductionPage() {
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
-                <Sparkles className="size-4.5 text-accent" />
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-tertiary/10">
+                <Sparkles className="size-4.5 text-tertiary" />
               </div>
               <div>
                 <p className="font-medium">
@@ -613,7 +619,7 @@ import '${PKG_NAME}/dist/index.css'`}
           <p className="text-xs text-muted-foreground">
             Made with ❤️ by the Scientific Workspace Team
           </p>
-          <Button variant="outline" size="icon" asChild>
+          <Button variant="outline" size="icon" className="bg-foreground text-background border-foreground hover:bg-foreground/90 hover:text-background" asChild>
             <a
               href={GITHUB_URL}
               target="_blank"
@@ -650,5 +656,5 @@ export default meta
 type Story = StoryObj
 
 export const Overview: Story = {
-  render: (args) => <IntroductionPage />,
+  render: () => <IntroductionPage />,
 }

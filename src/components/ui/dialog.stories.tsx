@@ -3,6 +3,7 @@ import { expect, within } from "storybook/test"
 import { Button } from "./button"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -44,11 +45,11 @@ function renderDialog(args: Story["args"]) {
             Invite teammates, manage permissions, and choose the default access level for new collaborators.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3 text-sm text-muted-foreground">
+        <DialogBody className="grid gap-3 text-sm text-muted-foreground">
           <div className="rounded-lg border p-3">Members: 12 active users</div>
           <div className="rounded-lg border p-3">Default role: Viewer</div>
-        </div>
-          <DialogFooter showCloseButton={args?.showCloseButton}>
+        </DialogBody>
+        <DialogFooter showCloseButton={args?.showCloseButton}>
           <Button>Save changes</Button>
         </DialogFooter>
       </DialogContent>

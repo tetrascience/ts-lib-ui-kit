@@ -207,6 +207,9 @@ export const WithTrigger: Story = {
       })
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1478" },
+  },
 }
 
 export const CloseViaHeaderButton: Story = {
@@ -240,5 +243,8 @@ export const CloseViaHeaderButton: Story = {
         expect(body.queryByRole("dialog")).not.toBeInTheDocument()
       })
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1479" },
   },
 }

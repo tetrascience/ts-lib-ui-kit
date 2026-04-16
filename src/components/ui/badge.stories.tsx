@@ -251,6 +251,9 @@ export const AsChild: Story = {
       expect(link).toHaveAttribute("data-variant", "default")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1475" },
+  },
 }
 
 export const CustomClassName: Story = {
@@ -269,5 +272,8 @@ export const CustomClassName: Story = {
     await step("Badge retains data-slot attribute", async () => {
       expect(badge).toHaveAttribute("data-slot", "badge")
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1476" },
   },
 }

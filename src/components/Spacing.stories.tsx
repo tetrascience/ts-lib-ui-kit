@@ -193,4 +193,7 @@ type Story = StoryObj
 
 export const Overview: Story = {
   render: () => <SpacingPage />,
+  parameters: {
+    zephyr: { testCaseId: "SW-T1470" },
+  },
 }

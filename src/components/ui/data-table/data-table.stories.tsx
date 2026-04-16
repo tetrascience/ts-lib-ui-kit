@@ -699,6 +699,9 @@ export const ReorderWithSorting: Story = {
       expect(headersAfter.length).toBe(3)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1477" },
+  },
 }
 
 // ---------------------------------------------------------------------------

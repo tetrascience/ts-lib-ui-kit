@@ -657,4 +657,7 @@ type Story = StoryObj
 
 export const Overview: Story = {
   render: () => <IntroductionPage />,
+  parameters: {
+    zephyr: { testCaseId: "SW-T1469" },
+  },
 }

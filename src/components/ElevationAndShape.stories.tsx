@@ -165,4 +165,7 @@ type Story = StoryObj
 
 export const Overview: Story = {
   render: () => <ElevationAndShapePage />,
+  parameters: {
+    zephyr: { testCaseId: "SW-T1468" },
+  },
 }

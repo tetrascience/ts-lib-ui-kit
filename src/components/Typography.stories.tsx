@@ -160,4 +160,7 @@ type Story = StoryObj
 
 export const Overview: Story = {
   render: () => <TypographyPage />,
+  parameters: {
+    zephyr: { testCaseId: "SW-T1471" },
+  },
 }

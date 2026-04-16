@@ -34,7 +34,7 @@ const preview: Preview = {
     },
     options: {
       storySort: {
-        order: ["Patterns", "Components", "*", "Legacy"],
+        order: ["Introduction", "Foundations", "Patterns", "Components", "*", "Legacy"],
       },
     },
     // Use fullscreen layout for video recording - removes padding

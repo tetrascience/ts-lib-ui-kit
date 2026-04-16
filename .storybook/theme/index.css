@@ -3,6 +3,11 @@ body {
   background-color: var(--background);
 }
 
+/* ============================================================
+   Docs page overrides — uses CSS custom properties from the
+   component library's theme so docs follow light/dark mode.
+   ============================================================ */
+
 .sbdocs.sbdocs-wrapper :where(p:not(.sb-anchor, .sb-unstyled, .sb-unstyled p)),
 .sbdocs.sbdocs-wrapper :where(li:not(.sb-anchor, .sb-unstyled, .sb-unstyled li)) {
   color: var(--foreground);

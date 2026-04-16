@@ -44,6 +44,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-foreground: var(--tertiary-foreground);
   --color-info: var(--info);
   --color-destructive: var(--destructive);
   --color-positive: var(--positive);
@@ -64,82 +66,393 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  /* MD3 surface variants */
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-surface-tint: var(--surface-tint);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-on-primary: var(--on-primary);
+  --color-on-secondary: var(--on-secondary);
+  --color-on-surface: var(--on-surface);
+  --color-on-error: var(--on-error);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  --color-shadow: var(--shadow);
+  --color-scrim: var(--scrim);
   --font-sans: "Inter Variable", sans-serif;
+  /* ------------------------------------------------------------------ */
+  /* MD3 Elevation — shadow tokens                                      */
+  /* ------------------------------------------------------------------ */
+  --shadow-elevation-0: var(--elevation-0);
+  --shadow-elevation-1: var(--elevation-1);
+  --shadow-elevation-2: var(--elevation-2);
+  --shadow-elevation-3: var(--elevation-3);
+  --shadow-elevation-4: var(--elevation-4);
+  --shadow-elevation-5: var(--elevation-5);
+  /* ------------------------------------------------------------------ */
+  /* MD3 Shape — border-radius tokens                                   */
+  /* ------------------------------------------------------------------ */
+  --radius-shape-xs: var(--shape-xs);
+  --radius-shape-sm: var(--shape-sm);
+  --radius-shape-md: var(--shape-md);
+  --radius-shape-lg: var(--shape-lg);
+  --radius-shape-xl: var(--shape-xl);
+  --radius-shape-full: var(--shape-full);
+  /* ------------------------------------------------------------------ */
+  /* MD3 Spacing — semantic spacing scale                               */
+  /* Uses unique names to avoid overriding Tailwind's built-in named    */
+  /* sizes (sm, md, lg, xl) used by max-w-*, w-*, h-*, etc.            */
+  /* Usage: p-sp-lg, gap-sp-md, m-sp-xs, etc.                          */
+  /* ------------------------------------------------------------------ */
+  --spacing-sp-none: var(--sp-none);
+  --spacing-sp-xxs: var(--sp-xxs);
+  --spacing-sp-xs: var(--sp-xs);
+  --spacing-sp-sm: var(--sp-sm);
+  --spacing-sp-md: var(--sp-md);
+  --spacing-sp-lg: var(--sp-lg);
+  --spacing-sp-xl: var(--sp-xl);
+  --spacing-sp-2xl: var(--sp-2xl);
+  --spacing-sp-3xl: var(--sp-3xl);
 }
 
 :root {
   --radius: 0.625rem;
-  --card: oklch(1 0 0);
-  --card-foreground: rgba(11, 17, 45, 1);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.6945 0.1622 256.49);
-  --primary-foreground: oklch(0.1909 0.0567 271.01);
-  --secondary: oklch(0.4465 0.1784 269.18);
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.5187 0.182 305.25);
-  --accent-foreground: oklch(1 0 0);
-  --info: oklch(0.5645 0.0863 251.12);
-  --destructive: oklch(0.685 0.203959 23.6393);
-  --positive: oklch(0.7 0.2787 145.59);
-  --warning: oklch(0.7676 0.1635 60.41);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.6945 0.1622 256.49);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --background: oklch(0.9665 0.0045 258.32);
-  --foreground: oklch(0.145 0 0);
+  /* Background — DEL cool blue-gray */
+  --background: oklch(0.9573 0.0074 260.73); /* #EEF1F6 */
+  --foreground: oklch(0.2330 0.0698 265.03); /* #0D1B3E */
+  --card: oklch(1 0 0); /* #FFFFFF */
+  --card-foreground: oklch(0.2330 0.0698 265.03); /* #0D1B3E */
+  --popover: oklch(1 0 0); /* #FFFFFF */
+  --popover-foreground: oklch(0.2330 0.0698 265.03); /* #0D1B3E */
+  /* Primary — TetraScience blue #4285F4 */
+  --primary: oklch(0.6304 0.1800 259.96); /* #4285F4 */
+  --primary-foreground: oklch(1 0 0); /* #FFFFFF */
+  /* Secondary — light indigo tint container */
+  --secondary: oklch(0.9619 0.0179 272.31); /* #EEF2FF */
+  --secondary-foreground: oklch(0.2330 0.0698 265.03); /* #0D1B3E */
+  /* Muted — visibly darker than background for hover/selected states */
+  --muted: oklch(0.9100 0.0150 258.00); /* ~#D8DFE9 */
+  --muted-foreground: oklch(0.5544 0.0407 257.42); /* #64748B */
+  /* Accent — subtle primary tint for hover/focus backgrounds */
+  --accent: oklch(0.9619 0.0179 272.31); /* #EEF2FF — matches secondary */
+  --accent-foreground: oklch(0.2330 0.0698 265.03); /* #0D1B3E */
+  /* Tertiary — teal (Material Design 3 tertiary role) */
+  --tertiary: oklch(0.4784 0.0817 205.03); /* #006A73 */
+  --tertiary-foreground: oklch(1 0 0); /* #FFFFFF */
+  /* Semantic status colors */
+  --info: oklch(0.6304 0.1800 259.96); /* #4285F4 */
+  --destructive: oklch(0.5060 0.1927 27.70); /* #BA1A1A */
+  --positive: oklch(0.4810 0.1238 153.01); /* #00713A */
+  --warning: oklch(0.5154 0.1202 60.55); /* #985400 */
+  /* Borders — DEL cool gray */
+  --border: oklch(0.9288 0.0126 255.51); /* #E2E8F0 */
+  --input: oklch(0.9288 0.0126 255.51); /* #E2E8F0 */
+  --ring: oklch(0.6304 0.1800 259.96); /* #4285F4 */
+  /* Charts — Primary tonal palette */
+  --chart-1: oklch(0.8296 0.0847 273.37); /* #B5C4FF — tone 80 */
+  --chart-2: oklch(0.6746 0.1379 272.92); /* #7B8FEB — tone 60 */
+  --chart-3: oklch(0.5886 0.1395 271.64); /* #6075CF — tone 50 */
+  --chart-4: oklch(0.5044 0.1409 270.54); /* #475CB4 — tone 40 */
+  --chart-5: oklch(0.4137 0.1319 267.46); /* #2C4492 — tone 30 */
+  /* Sidebar — white with cool border (DEL style) */
+  --sidebar: oklch(1 0 0); /* #FFFFFF */
+  --sidebar-foreground: oklch(0.2330 0.0698 265.03); /* #0D1B3E */
+  --sidebar-primary: oklch(0.6304 0.1800 259.96); /* #4285F4 */
+  --sidebar-primary-foreground: oklch(1 0 0); /* #FFFFFF */
+  --sidebar-accent: oklch(0.9619 0.0179 272.31); /* #EEF2FF */
+  --sidebar-accent-foreground: oklch(0.6304 0.1800 259.96); /* #4285F4 */
+  --sidebar-border: oklch(0.9288 0.0126 255.51); /* #E2E8F0 */
+  --sidebar-ring: oklch(0.7827 0.0298 268.30); /* #B0B8CC */
+
+  /* MD3 Surface variants — DEL palette */
+  --surface: oklch(0.9573 0.0074 260.73); /* #EEF1F6 */
+  --surface-foreground: oklch(0.2330 0.0698 265.03); /* #0D1B3E */
+  --surface-tint: oklch(0.6304 0.1800 259.96); /* #4285F4 — primary */
+  --surface-dim: oklch(0.9288 0.0126 255.51); /* #E2E8F0 */
+  --surface-bright: oklch(1 0 0); /* #FFFFFF */
+  --surface-container: oklch(0.9619 0.0179 272.31); /* #EEF2FF */
+  --surface-container-low: oklch(0.9573 0.0074 260.73); /* #EEF1F6 */
+  --surface-container-high: oklch(0.9288 0.0126 255.51); /* #E2E8F0 */
+  --surface-container-highest: oklch(0.8945 0.0198 257.42); /* #D1D9E8 */
+  --on-primary: oklch(1 0 0); /* #FFFFFF */
+  --on-secondary: oklch(0.2330 0.0698 265.03); /* #0D1B3E */
+  --on-surface: oklch(0.2330 0.0698 265.03); /* #0D1B3E */
+  --on-error: oklch(1 0 0); /* #FFFFFF */
+  --outline: oklch(0.5544 0.0407 257.42); /* #64748B */
+  --outline-variant: oklch(0.9288 0.0126 255.51); /* #E2E8F0 */
+  --shadow: #000000;
+  --scrim: #000000;
+
+  /* MD3 Elevation (box-shadow) */
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px 0 rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+  --elevation-2: 0 1px 2px 0 rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15);
+  --elevation-3: 0 1px 3px 0 rgba(0,0,0,0.3), 0 4px 8px 3px rgba(0,0,0,0.15);
+  --elevation-4: 0 2px 3px 0 rgba(0,0,0,0.3), 0 6px 10px 4px rgba(0,0,0,0.15);
+  --elevation-5: 0 4px 4px 0 rgba(0,0,0,0.3), 0 8px 12px 6px rgba(0,0,0,0.15);
+
+  /* MD3 Shape (border-radius) */
+  --shape-xs: 4px;
+  --shape-sm: 8px;
+  --shape-md: 12px;
+  --shape-lg: 16px;
+  --shape-xl: 28px;
+  --shape-full: 9999px;
+
+  /* MD3 Spacing (4px grid) */
+  --sp-none: 0px;
+  --sp-xxs: 4px;
+  --sp-xs: 8px;
+  --sp-sm: 12px;
+  --sp-md: 16px;
+  --sp-lg: 24px;
+  --sp-xl: 32px;
+  --sp-2xl: 48px;
+  --sp-3xl: 64px;
+
+  /* Component-level spacing */
+  --spacing-button-x: 24px;
+  --spacing-button-y: 10px;
+  --spacing-button-gap: 8px;
+  --spacing-card-padding: 16px;
+  --spacing-card-gap: 16px;
+  --spacing-input-x: 16px;
+  --spacing-input-y: 8px;
+  --spacing-dialog-padding: 24px;
+  --spacing-list-item-y: 12px;
+  --spacing-list-item-x: 16px;
+
+
+  /* MD3 State layer opacities */
+  --state-hover-opacity: 0.08;
+  --state-focus-opacity: 0.10;
+  --state-pressed-opacity: 0.10;
+  --state-dragged-opacity: 0.16;
 }
 
 .dark {
-  --background: oklch(0.1909 0.0567 271.01);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.2909 0.0567 271.01);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.3909 0.0567 271.01);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.6945 0.1622 256.49);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.5645 0.0863 251.12);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.0909 0.0567 271.01);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.5187 0.182 305.25);
-  --accent-foreground: oklch(0.985 0 0);
-  --info: oklch(0.5645 0.0863 251.12);
-  --destructive: oklch(0.704 0.191 22.216);
-  --positive: oklch(0.7 0.2787 145.59);
-  --warning: oklch(0.7676 0.1635 60.41);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.6945 0.1622 256.49);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Surface / Background — Material Neutral palette (dark) */
+  --background: oklch(0.2259 0.0116 293.09); /* #1C1B21 */
+  --foreground: oklch(0.9152 0.0115 308.32); /* #E5E1E9 */
+  --card: oklch(0.2680 0.0111 293.28); /* #26252B */
+  --card-foreground: oklch(0.9152 0.0115 308.32); /* #E5E1E9 */
+  --popover: oklch(0.3126 0.0107 293.42); /* #313036 */
+  --popover-foreground: oklch(0.9152 0.0115 308.32); /* #E5E1E9 */
+  /* Primary — TS Blue tone 80 for dark */
+  --primary: oklch(0.8296 0.0847 273.37); /* #B5C4FF */
+  --primary-foreground: oklch(0.3284 0.1216 262.85); /* #102F72 */
+  /* Secondary — Light Blue container (dark) */
+  --secondary: oklch(0.4412 0.1421 262.97); /* #264DA0 */
+  --secondary-foreground: oklch(0.9072 0.0425 279.69); /* #DADEFD */
+  /* Muted — Neutral tone 5 */
+  --muted: oklch(0.1800 0.0102 285.33); /* #111116 */
+  --muted-foreground: oklch(0.6569 0.0162 285.95); /* #90909B */
+  /* Accent — subtle primary tint for hover/focus (dark) */
+  --accent: oklch(0.3126 0.0307 270.54); /* Dark primary tint */
+  --accent-foreground: oklch(0.9152 0.0115 308.32); /* #E5E1E9 */
+  /* Tertiary — teal tone 70 for dark */
+  --tertiary: oklch(0.8207 0.1194 206.68); /* #4FDAEB */
+  --tertiary-foreground: oklch(0.3047 0.0525 208.75); /* #00363D */
+  /* Semantic status colors (lighter tones for dark bg) */
+  --info: oklch(0.8384 0.0801 273.65); /* #B9C7FF */
+  --destructive: oklch(0.8383 0.0891 26.76); /* #FFB4AB */
+  --positive: oklch(0.7432 0.1661 152.81); /* #41C977 */
+  --warning: oklch(0.7856 0.1606 64.14); /* #FFA033 */
+  /* Borders & inputs — Neutral-variant outline (dark) */
+  --border: oklch(0.3970 0.0168 281.07); /* #454650 */
+  --input: oklch(0.3970 0.0168 281.07); /* #454650 */
+  --ring: oklch(0.8296 0.0847 273.37); /* #B5C4FF */
+  /* Charts — Primary tonal palette (same in both modes) */
+  --chart-1: oklch(0.8296 0.0847 273.37); /* #B5C4FF — tone 80 */
+  --chart-2: oklch(0.6746 0.1379 272.92); /* #7B8FEB — tone 60 */
+  --chart-3: oklch(0.5886 0.1395 271.64); /* #6075CF — tone 50 */
+  --chart-4: oklch(0.5044 0.1409 270.54); /* #475CB4 — tone 40 */
+  --chart-5: oklch(0.4137 0.1319 267.46); /* #2C4492 — tone 30 */
+  /* Sidebar — Neutral palette (dark) */
+  --sidebar: oklch(0.1800 0.0102 285.33); /* #111116 */
+  --sidebar-foreground: oklch(0.9152 0.0115 308.32); /* #E5E1E9 */
+  --sidebar-primary: oklch(0.8296 0.0847 273.37); /* #B5C4FF */
+  --sidebar-primary-foreground: oklch(0.3284 0.1216 262.85); /* #102F72 */
+  --sidebar-accent: oklch(0.3126 0.0107 293.42); /* #313036 */
+  --sidebar-accent-foreground: oklch(0.9152 0.0115 308.32); /* #E5E1E9 */
+  --sidebar-border: oklch(0.3970 0.0168 281.07); /* #454650 */
+  --sidebar-ring: oklch(0.6569 0.0162 285.95); /* #90909B */
+
+  /* MD3 Surface variants (dark) */
+  --surface: oklch(0.2259 0.0116 293.09); /* #1C1B21 */
+  --surface-foreground: oklch(0.9152 0.0115 308.32); /* #E5E1E9 */
+  --surface-tint: oklch(0.8296 0.0847 273.37); /* #B5C4FF — primary dark */
+  --surface-dim: oklch(0.2259 0.0116 293.09); /* #1C1B21 */
+  --surface-bright: oklch(0.3126 0.0107 293.42); /* #313036 */
+  --surface-container: oklch(0.2680 0.0111 293.28); /* #26252B */
+  --surface-container-low: oklch(0.2259 0.0116 293.09); /* #1C1B21 */
+  --surface-container-high: oklch(0.3126 0.0107 293.42); /* #313036 */
+  --surface-container-highest: oklch(0.3970 0.0168 281.07); /* #454650 */
+  --on-primary: oklch(0.3284 0.1216 262.85); /* #102F72 */
+  --on-secondary: oklch(0.9072 0.0425 279.69); /* #DADEFD */
+  --on-surface: oklch(0.9152 0.0115 308.32); /* #E5E1E9 */
+  --on-error: oklch(0.2680 0.0111 293.28); /* dark on-error */
+  --outline: oklch(0.6569 0.0162 285.95); /* #90909B */
+  --outline-variant: oklch(0.3970 0.0168 281.07); /* #454650 */
+  --shadow: #000000;
+  --scrim: #000000;
+
+  /* Dark mode elevation — slightly stronger shadows */
+  --elevation-0: none;
+  --elevation-1: 0 1px 3px 1px rgba(0,0,0,0.4), 0 1px 2px 0 rgba(0,0,0,0.3);
+  --elevation-2: 0 2px 6px 2px rgba(0,0,0,0.4), 0 1px 2px 0 rgba(0,0,0,0.3);
+  --elevation-3: 0 4px 8px 3px rgba(0,0,0,0.4), 0 1px 3px 0 rgba(0,0,0,0.3);
+  --elevation-4: 0 6px 10px 4px rgba(0,0,0,0.4), 0 2px 3px 0 rgba(0,0,0,0.3);
+  --elevation-5: 0 8px 12px 6px rgba(0,0,0,0.4), 0 4px 4px 0 rgba(0,0,0,0.3);
+}
+
+/* ==========================================================================
+   MD3 Typography Utilities
+   Material Design 3 typescale — 15 levels across 5 roles.
+   Each sets font-size, line-height, font-weight, and letter-spacing.
+   ========================================================================== */
+
+@utility text-display-lg {
+  font-size: 57px;
+  line-height: 64px;
+  font-weight: 400;
+  letter-spacing: -0.25px;
+}
+
+@utility text-display-md {
+  font-size: 45px;
+  line-height: 52px;
+  font-weight: 400;
+  letter-spacing: 0px;
+}
+
+@utility text-display-sm {
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 400;
+  letter-spacing: 0px;
+}
+
+@utility text-headline-lg {
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 400;
+  letter-spacing: 0px;
+}
+
+@utility text-headline-md {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 400;
+  letter-spacing: 0px;
+}
+
+@utility text-headline-sm {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 400;
+  letter-spacing: 0px;
+}
+
+@utility text-title-lg {
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: 0px;
+}
+
+@utility text-title-md {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  letter-spacing: 0.15px;
+}
+
+@utility text-title-sm {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+@utility text-body-lg {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+@utility text-body-md {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  letter-spacing: 0.25px;
+}
+
+@utility text-body-sm {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  letter-spacing: 0.4px;
+}
+
+@utility text-label-lg {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+@utility text-label-md {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+@utility text-label-sm {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   MD3 State Layer
+   Adds a ::before pseudo-element for hover/focus/press overlays using
+   currentColor at MD3-specified opacities.
+   ========================================================================== */
+
+@utility state-layer {
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 100ms cubic-bezier(0.2, 0, 0, 1);
+    pointer-events: none;
+  }
+
+  &:hover::before {
+    opacity: var(--state-hover-opacity);
+  }
+
+  &:focus-visible::before {
+    opacity: var(--state-focus-opacity);
+  }
+
+  &:active::before {
+    opacity: var(--state-pressed-opacity);
+  }
 }
 
 @layer base {

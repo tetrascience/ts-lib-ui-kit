@@ -13,28 +13,38 @@ export const tetrascienceLight = create({
   fontCode: 'SFMono-Regular, Menlo, Monaco, Consolas, monospace',
 
   // Primary Brand Colors
-  colorPrimary: '#2F45B5',      // TetraScience Blue 500
-  colorSecondary: '#549DFF',    // Light Blue 300
+  colorPrimary: '#4285F4',       // --primary
+  colorSecondary: '#4285F4',     // --primary
 
   // UI Background
-  appBg: '#FFFFFF',
-  appContentBg: '#FFFFFF',
-  appPreviewBg: '#F2F4F7',      // Light Gray
-  appBorderColor: '#E5E7EB',
+  appBg: '#FFFFFF',              // --card
+  appContentBg: '#FFFFFF',       // --card
+  appPreviewBg: '#EEF1F6',      // --surface / --background
+  appBorderColor: '#E2E8F0',    // --border / --outline-variant
   appBorderRadius: 8,
 
   // Text
-  textColor: '#0B112D',         // Off Black 500
-  textInverseColor: '#FFFFFF',
+  textColor: '#0D1B3E',         // --foreground / --on-surface
+  textInverseColor: '#FFFFFF',   // --primary-foreground
+  textMutedColor: '#64748B',    // --muted-foreground / --outline
 
   // Toolbar
-  barBg: '#FFFFFF',
-  barTextColor: '#0B112D',
-  barSelectedColor: '#2F45B5',
+  barBg: '#FFFFFF',              // --card
+  barTextColor: '#0D1B3E',      // --foreground
+  barSelectedColor: '#4285F4',  // --primary
+  barHoverColor: '#006A73',     // --tertiary
 
   // Form
-  inputBg: '#FFFFFF',
-  inputBorder: '#E5E7EB',
-  inputTextColor: '#0B112D',
+  inputBg: '#FFFFFF',            // --card
+  inputBorder: '#E2E8F0',       // --border
+  inputTextColor: '#0D1B3E',    // --foreground
   inputBorderRadius: 6,
+
+  // Buttons
+  buttonBg: '#EEF1F6',          // --surface
+  buttonBorder: '#E2E8F0',      // --border
+
+  // Boolean / Toggle
+  booleanBg: '#EEF1F6',         // --surface
+  booleanSelectedBg: '#EEF2FF', // --secondary
 })

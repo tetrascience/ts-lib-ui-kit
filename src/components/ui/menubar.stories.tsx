@@ -210,6 +210,9 @@ export const WithCheckboxItems: Story = {
       expect(sidebarItem).toHaveAttribute("data-state", "checked")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1480" },
+  },
 }
 
 export const WithRadioGroup: Story = {
@@ -260,6 +263,9 @@ export const WithRadioGroup: Story = {
       expect(systemItem).toHaveAttribute("data-state", "unchecked")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1481" },
+  },
 }
 
 export const WithSubMenu: Story = {
@@ -306,6 +312,9 @@ export const WithSubMenu: Story = {
       expect(body.getByText("Copy Link")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1482" },
+  },
 }
 
 export const WithDisabledItems: Story = {
@@ -347,6 +356,9 @@ export const WithDisabledItems: Story = {
       const cutItem = body.getByText("Cut").closest("[data-slot='menubar-item']")!
       expect(cutItem).not.toHaveAttribute("data-disabled")
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1483" },
   },
 }
 
@@ -398,5 +410,8 @@ export const WithGroupsAndLabels: Story = {
         .closest("[data-slot='menubar-item']")!
       expect(deleteItem).toHaveAttribute("data-variant", "destructive")
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1484" },
   },
 }

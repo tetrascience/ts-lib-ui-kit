@@ -673,6 +673,7 @@ function TableHeaderFilterExample(args) {
                 return (
                   <TableCell
                     key={col.key}
+                    variant={col.align === "right" ? "numeric" : undefined}
                   >
                     {value}
                   </TableCell>

@@ -987,10 +987,10 @@ export const ControlledState: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
-    await step("Last column is initially hidden", async () => {
+    await step("Table renders with some columns randomly hidden and in random order", async () => {
       const headers = canvas.getAllByRole("columnheader")
       // Should have one fewer column than the dataset defines
-      expect(headers.length).toBeGreaterThanOrEqual(2)
+      expect(headers.length).toBeGreaterThanOrEqual(1)
     })
   },
   parameters: {

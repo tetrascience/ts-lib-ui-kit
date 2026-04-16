@@ -49,4 +49,4 @@ jobs:
         run: yarn run test:all:coverage
 
       - name: Coverage
-        uses: tetrascience/ts-ci-cd-lib/coverage-check@claude/debug-coverage-check-action-6YA5r
+        uses: tetrascience/ts-ci-cd-lib/coverage-check@main

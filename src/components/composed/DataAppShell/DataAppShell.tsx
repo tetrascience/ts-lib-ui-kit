@@ -243,7 +243,7 @@ function IconRailSidebar({
             <DropdownMenuContent side="right" align="start" className="min-w-[220px]">
               {/* Current app header */}
               <div
-                className="flex items-center gap-3 px-3 py-2.5 bg-muted/50 cursor-pointer"
+                className="flex items-center gap-3 px-3 py-2.5 cursor-pointer"
                 onClick={onLogoClick}
                 role="button"
                 tabIndex={0}

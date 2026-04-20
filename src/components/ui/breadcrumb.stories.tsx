@@ -62,6 +62,50 @@ export const Default: Story = {
   },
 }
 
+export const SlashSeparator: Story = {
+  render: () => (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink href="#">All Projects</BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator>/</BreadcrumbSeparator>
+        <BreadcrumbItem>
+          <BreadcrumbLink href="#">DUX4</BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator>/</BreadcrumbSeparator>
+        <BreadcrumbItem>
+          <BreadcrumbLink href="#">Primary Screening</BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator>/</BreadcrumbSeparator>
+        <BreadcrumbItem>
+          <BreadcrumbPage>Data Overview</BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Breadcrumb renders with slash separators", async () => {
+      expect(canvas.getByRole("navigation", { name: "breadcrumb" })).toBeInTheDocument()
+    })
+
+    await step("Slash separators are present", async () => {
+      const separators = canvasElement.querySelectorAll("[data-slot='breadcrumb-separator']")
+      expect(separators.length).toBe(3)
+      separators.forEach((s) => expect(s.textContent).toBe("/"))
+    })
+
+    await step("Trail links and current page are visible", async () => {
+      expect(canvas.getByRole("link", { name: "All Projects" })).toBeInTheDocument()
+      expect(canvas.getByRole("link", { name: "DUX4" })).toBeInTheDocument()
+      expect(canvas.getByRole("link", { name: "Primary Screening" })).toBeInTheDocument()
+      expect(canvas.getByRole("link", { name: "Data Overview" })).toBeInTheDocument()
+    })
+  },
+}
+
 export const Collapsed: Story = {
   render: () => (
     <Breadcrumb>

@@ -223,7 +223,7 @@ function IconRailSidebar({
       <nav
         data-slot="data-app-sidebar-rail"
         aria-label="Application navigation"
-        className="flex w-[60px] flex-col items-center shrink-0 bg-background border-r border-border h-full z-50"
+        className="flex w-[60px] flex-col items-center shrink-0 bg-sidebar border-r border-sidebar-border h-full z-50"
       >
         {/* Logo with app dropdown */}
         <div className="relative flex items-center justify-center py-2 shrink-0">
@@ -234,7 +234,7 @@ function IconRailSidebar({
                 className="flex items-center justify-center cursor-pointer bg-transparent border-none p-0"
               >
                 {logo ?? (
-                  <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-card border border-border text-[11px] font-bold text-foreground">
+                  <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-sidebar-accent border border-sidebar-border text-[11px] font-bold text-foreground">
                     {appName}
                   </span>
                 )}
@@ -249,7 +249,7 @@ function IconRailSidebar({
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === "Enter") onLogoClick?.(); }}
               >
-                <div className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-sidebar-accent border border-sidebar-border flex items-center justify-center shrink-0">
                   {logo ? (
                     <span className="scale-75">{logo}</span>
                   ) : (
@@ -324,7 +324,7 @@ function IconRailSidebar({
 
         {/* User avatar with dropdown */}
         {user && (
-          <div className="w-full flex justify-center py-3 border-t border-border shrink-0">
+          <div className="w-full flex justify-center py-3 border-t border-sidebar-border shrink-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -375,8 +375,8 @@ const stepItemVariants = cva(
   {
     variants: {
       active: {
-        true: "border-l-primary bg-background font-semibold text-foreground shadow-sm",
-        false: "border-l-border bg-transparent text-muted-foreground hover:bg-muted",
+        true: "border-l-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-foreground shadow-sm",
+        false: "border-l-sidebar-border bg-transparent text-muted-foreground hover:bg-sidebar-accent/50",
       },
     },
     defaultVariants: { active: false },
@@ -396,9 +396,9 @@ function WorkflowPanel({
     return (
       <div
         data-slot="data-app-panel-collapsed"
-        className="flex flex-col shrink-0 w-[46px] bg-background border-r border-border"
+        className="flex flex-col shrink-0 w-[46px] bg-sidebar border-r border-sidebar-border"
       >
-        <div className="flex justify-center items-center h-10 border-b border-border">
+        <div className="flex justify-center items-center h-10 border-b border-sidebar-border">
           <Button
             variant="outline"
             size="icon"
@@ -457,9 +457,9 @@ function WorkflowPanel({
     <nav
       data-slot="data-app-panel-expanded"
       aria-label="Workflow steps"
-      className="flex flex-col shrink-0 w-[180px] bg-background border-r border-border overflow-hidden"
+      className="flex flex-col shrink-0 w-[180px] bg-sidebar border-r border-sidebar-border overflow-hidden"
     >
-      <div className="flex items-center gap-1.5 h-10 px-2.5 pl-4 text-xs font-medium text-muted-foreground whitespace-nowrap border-b border-border">
+      <div className="flex items-center gap-1.5 h-10 px-2.5 pl-4 text-xs font-medium text-muted-foreground whitespace-nowrap border-b border-sidebar-border">
         <span className="flex-1">Workflow</span>
         <Button
           variant="outline"
@@ -563,7 +563,7 @@ function TopNav({
   return (
     <div
       data-slot="data-app-top-nav"
-      className="flex items-center justify-between h-10 px-4 bg-background border-b border-border sticky top-0 z-40 w-full"
+      className="flex items-center justify-between h-10 px-4 bg-sidebar border-b border-sidebar-border sticky top-0 z-40 w-full"
     >
       {/* Left: Breadcrumbs */}
       <Breadcrumb>

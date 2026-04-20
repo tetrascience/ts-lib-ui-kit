@@ -399,15 +399,21 @@ function WorkflowPanel({
         className="flex flex-col shrink-0 w-[46px] bg-sidebar border-r border-sidebar-border"
       >
         <div className="flex justify-center items-center h-10 border-b border-sidebar-border">
-          <Button
-            variant="outline"
-            size="icon"
-            className="w-5 h-5"
-            onClick={() => onCollapseChange(false)}
-            title="Expand workflow panel"
-          >
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-5 h-5"
+                  onClick={() => onCollapseChange(false)}
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Expand workflow panel</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <TooltipProvider>
           {steps.map((step) => {
@@ -461,15 +467,21 @@ function WorkflowPanel({
     >
       <div className="flex items-center gap-1.5 h-10 px-2.5 pl-4 text-xs font-medium text-muted-foreground whitespace-nowrap border-b border-sidebar-border">
         <span className="flex-1">Workflow</span>
-        <Button
-          variant="outline"
-          size="icon"
-          className="w-5 h-5"
-          onClick={() => onCollapseChange(true)}
-          title="Collapse workflow panel"
-        >
-          <ChevronLeft className="w-3.5 h-3.5" />
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="w-5 h-5"
+                onClick={() => onCollapseChange(true)}
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Collapse workflow panel</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       <div className="flex flex-col">

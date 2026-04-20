@@ -222,6 +222,7 @@ function IconRailSidebar({
     <TooltipProvider>
       <nav
         data-slot="data-app-sidebar-rail"
+        aria-label="Application navigation"
         className="flex w-[60px] flex-col items-center shrink-0 bg-background border-r border-border h-full z-50"
       >
         {/* Logo with app dropdown */}
@@ -455,6 +456,7 @@ function WorkflowPanel({
   return (
     <nav
       data-slot="data-app-panel-expanded"
+      aria-label="Workflow steps"
       className="flex flex-col shrink-0 w-[180px] bg-background border-r border-border overflow-hidden"
     >
       <div className="flex items-center gap-1.5 h-10 px-2.5 pl-4 text-xs font-medium text-muted-foreground whitespace-nowrap border-b border-border">

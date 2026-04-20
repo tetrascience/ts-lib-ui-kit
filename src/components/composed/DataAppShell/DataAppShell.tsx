@@ -28,6 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { TDPLink } from "@/components/composed/tdp-link";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -120,7 +121,9 @@ export interface DataAppShellProps {
   userMenuItems?: UserMenuItem[];
   /** Callback when logo/app name is clicked */
   onLogoClick?: () => void;
-  /** Callback when "Back to TDP Platform" is clicked */
+  /** TDP path to navigate to when "Back to TDP Platform" is clicked (uses TDPLink — requires TdpNavigationProvider) */
+  backToPlatformPath?: string;
+  /** Fallback callback when "Back to TDP Platform" is clicked and no backToPlatformPath is set */
   onBackToPlatform?: () => void;
 
   // -- Workflow panel --
@@ -201,6 +204,7 @@ function IconRailSidebar({
   user,
   userMenuItems,
   onLogoClick,
+  backToPlatformPath,
   onBackToPlatform,
 }: Pick<
   DataAppShellProps,
@@ -211,6 +215,7 @@ function IconRailSidebar({
   | "user"
   | "userMenuItems"
   | "onLogoClick"
+  | "backToPlatformPath"
   | "onBackToPlatform"
 >) {
   return (
@@ -255,12 +260,26 @@ function IconRailSidebar({
                 </span>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="gap-2.5 cursor-pointer"
-                onClick={onBackToPlatform}
-              >
-                <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-                Back to TDP Platform
+              <DropdownMenuItem className="gap-2.5 p-0" asChild>
+                {backToPlatformPath ? (
+                  <TDPLink
+                    path={backToPlatformPath}
+                    navigationOptions={{ newTab: false }}
+                    className="flex items-center gap-2.5 w-full px-2 py-1.5 no-underline! hover:no-underline!"
+                  >
+                    <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+                    Back to TDP Platform
+                  </TDPLink>
+                ) : (
+                  <button
+                    type="button"
+                    className="flex items-center gap-2.5 w-full px-2 py-1.5 bg-transparent border-none cursor-pointer"
+                    onClick={onBackToPlatform}
+                  >
+                    <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+                    Back to TDP Platform
+                  </button>
+                )}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -631,6 +650,7 @@ function DataAppShell({
   user,
   userMenuItems,
   onLogoClick,
+  backToPlatformPath,
   onBackToPlatform,
   showWorkflow = false,
   workflowSteps = [],
@@ -663,6 +683,7 @@ function DataAppShell({
           user={user}
           userMenuItems={userMenuItems}
           onLogoClick={onLogoClick}
+          backToPlatformPath={backToPlatformPath}
           onBackToPlatform={onBackToPlatform}
         />
       )}

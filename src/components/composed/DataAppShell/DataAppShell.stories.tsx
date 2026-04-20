@@ -9,9 +9,13 @@ import {
 import { useState } from "react";
 import { expect, within } from "storybook/test";
 
-import { DataAppShell } from "./DataAppShell";
 
+import { DataAppShell, DataCountPills, WorkflowPanel } from "./DataAppShell";
+
+import type { DataCount, NavGroup, WorkflowStep } from "./DataAppShell";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+
+import { Button } from "@/components/ui/button";
 
 const meta: Meta<typeof DataAppShell> = {
   title: "Patterns/DataAppShell",
@@ -29,17 +33,21 @@ type Story = StoryObj<typeof DataAppShell>;
 // Sample data (HTS Hit Finder scenario)
 // =============================================================================
 
-const htsPages = [
-  { id: "project", label: "Project", icon: ClipboardList, active: true },
-  { id: "explorer", label: "Explorer", icon: Search },
+const htsNavGroups: NavGroup[] = [
+  {
+    pages: [
+      { id: "project", label: "Project", icon: ClipboardList, isActive: true },
+      { id: "explorer", label: "Explorer", icon: Search },
+    ],
+  },
 ];
 
-const htsWorkflowSteps = [
+const htsWorkflowSteps: WorkflowStep[] = [
   {
     id: "data-overview",
     label: "Data Overview",
     icon: LayoutGrid,
-    active: true,
+    isActive: true,
     inputCount: 649568,
     outputCount: 645396,
   },
@@ -73,10 +81,10 @@ const htsWorkflowSteps = [
 ];
 
 const htsBreadcrumbs = [
-  { label: "All Projects", isClickable: true },
-  { label: "DUX4", isClickable: true },
-  { label: "Primary Screening", isClickable: true },
-  { label: "Data Overview", isClickable: false },
+  { label: "All Projects", onClick: () => console.log("All Projects") },
+  { label: "DUX4", onClick: () => console.log("DUX4") },
+  { label: "Primary Screening", onClick: () => console.log("Primary Screening") },
+  { label: "Data Overview" },
 ];
 
 const sampleUser = { name: "Emily Liu", role: "ADMIN" };
@@ -94,49 +102,60 @@ const sampleMenuItems = [
 
 const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean }) => {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
-  const [activeStep, setActiveStep] = useState("data-overview");
+  const [activeStepId, setActiveStepId] = useState("data-overview");
 
   const steps = htsWorkflowSteps.map((s) => ({
     ...s,
-    active: s.id === activeStep,
-    onClick: () => setActiveStep(s.id),
+    isActive: s.id === activeStepId,
+    onClick: () => setActiveStepId(s.id),
   }));
 
-  const activeStepData = steps.find((s) => s.active);
-  const activeStepIndex = steps.findIndex((s) => s.active);
+  const activeStep = steps.find((s) => s.isActive);
+  const activeStepIndex = steps.findIndex((s) => s.isActive);
   const isLastStep = activeStepIndex === steps.length - 1;
 
-  const dataCounts =
-    activeStepData?.inputCount == null || activeStepData?.outputCount == null
+  const dataCounts: DataCount[] =
+    activeStep?.inputCount == null || activeStep?.outputCount == null
       ? []
       : [
-          { label: "INPUT", count: activeStepData.inputCount, variant: "outline" as const },
-          { label: "Output", count: activeStepData.outputCount, variant: "primary" as const },
+          { label: "INPUT", count: activeStep.inputCount, variant: "outline" },
+          { label: "Output", count: activeStep.outputCount, variant: "primary" },
         ];
 
   const handleNext = () => {
-    if (!isLastStep) {
-      setActiveStep(htsWorkflowSteps[activeStepIndex + 1].id);
-    }
+    if (!isLastStep) setActiveStepId(htsWorkflowSteps[activeStepIndex + 1].id);
   };
 
   return (
     <DataAppShell
       appName="HTS"
       appFullName="HTS Hit Finder"
-      pages={htsPages}
+      navGroups={htsNavGroups}
       user={sampleUser}
       userMenuItems={sampleMenuItems}
       onBackToPlatform={() => console.log("Back to TDP Platform")}
-      showWorkflow
-      workflowSteps={steps}
-      workflowCollapsed={collapsed}
-      onWorkflowCollapseChange={setCollapsed}
+      onHelpClick={() => console.log("Help")}
       breadcrumbs={htsBreadcrumbs}
-      dataCounts={dataCounts}
-      showNextButton
-      nextButtonLabel={isLastStep ? "Push to Downstream" : "Next"}
-      onNextClick={handleNext}
+      headerActions={
+        <>
+          <DataCountPills dataCounts={dataCounts} />
+          <Button
+            size="sm"
+            disabled={isLastStep}
+            onClick={handleNext}
+            className="gap-1"
+          >
+            {isLastStep ? "Push to Downstream" : "Next"}
+          </Button>
+        </>
+      }
+      sidebarPanel={
+        <WorkflowPanel
+          steps={steps}
+          collapsed={collapsed}
+          onCollapseChange={setCollapsed}
+        />
+      }
     >
       <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground text-sm">Main content area</p>
@@ -175,10 +194,9 @@ export const CollapsedWorkflow: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
-    await step("Workflow panel is collapsed — icon rail and step labels hidden", async () => {
-      expect(canvas.queryByText("HTS")).not.toBeInTheDocument();
-      expect(canvas.queryByText("Project")).not.toBeInTheDocument();
+    await step("Collapsed workflow — step labels hidden", async () => {
       expect(canvas.queryByText("Data Overview")).not.toBeInTheDocument();
+      expect(canvas.queryByText("Workflow")).not.toBeInTheDocument();
     });
   },
 };
@@ -189,21 +207,22 @@ export const CollapsedWorkflow: Story = {
 
 export const NonWorkflowPage: Story = {
   name: "Non-Workflow Page",
-  args: {
-    appName: "HTS",
-    appFullName: "HTS Hit Finder",
-    pages: htsPages,
-    user: sampleUser,
-    userMenuItems: sampleMenuItems,
-    showWorkflow: false,
-    breadcrumbs: [{ label: "All Projects", isClickable: false }],
-    children: (
+  render: () => (
+    <DataAppShell
+      appName="HTS"
+      appFullName="HTS Hit Finder"
+      navGroups={htsNavGroups}
+      user={sampleUser}
+      userMenuItems={sampleMenuItems}
+      breadcrumbs={[{ label: "All Projects" }]}
+      version="v2.4.1"
+    >
       <div className="p-8">
         <h1 className="text-2xl font-semibold mb-4">All Projects</h1>
         <p className="text-muted-foreground">Select a project to start a workflow.</p>
       </div>
-    ),
-  },
+    </DataAppShell>
+  ),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
@@ -211,6 +230,10 @@ export const NonWorkflowPage: Story = {
       expect(canvas.queryByText("Workflow")).not.toBeInTheDocument();
       expect(canvas.queryByText("Next")).not.toBeInTheDocument();
       expect(canvas.getByText("All Projects")).toBeInTheDocument();
+    });
+
+    await step("Version is shown in sidebar", async () => {
+      expect(canvas.getByText("v2.4.1")).toBeInTheDocument();
     });
   },
 };
@@ -221,60 +244,78 @@ export const NonWorkflowPage: Story = {
 
 const InteractiveShell = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const [activeStep, setActiveStep] = useState("data-overview");
-  const [activePage, setActivePage] = useState("project");
+  const [activeStepId, setActiveStepId] = useState("data-overview");
+  const [activePageId, setActivePageId] = useState("project");
 
-  const pages = htsPages.map((p) => ({
-    ...p,
-    active: p.id === activePage,
-    onClick: () => setActivePage(p.id),
-  }));
+  const navGroups: NavGroup[] = [
+    {
+      pages: htsNavGroups[0].pages.map((p) => ({
+        ...p,
+        isActive: p.id === activePageId,
+        onClick: () => setActivePageId(p.id),
+      })),
+    },
+  ];
 
   const steps = htsWorkflowSteps.map((s) => ({
     ...s,
-    active: s.id === activeStep,
-    onClick: () => setActiveStep(s.id),
+    isActive: s.id === activeStepId,
+    onClick: () => setActiveStepId(s.id),
   }));
 
-  const activeStepData = steps.find((s) => s.active);
+  const activeStep = steps.find((s) => s.isActive);
+  const isProjectPage = activePageId === "project";
+
+  const dataCounts: DataCount[] = activeStep?.inputCount == null
+    ? []
+    : [
+        { label: "INPUT", count: activeStep.inputCount, variant: "outline" },
+        ...(activeStep.outputCount == null
+          ? []
+          : [{ label: "Output", count: activeStep.outputCount, variant: "primary" as const }]),
+      ];
 
   return (
     <DataAppShell
       appName="HTS"
       appFullName="HTS Hit Finder"
-      pages={pages}
+      navGroups={navGroups}
       user={sampleUser}
       userMenuItems={sampleMenuItems}
-      showWorkflow={activePage === "project"}
-      workflowSteps={steps}
-      workflowCollapsed={collapsed}
-      onWorkflowCollapseChange={setCollapsed}
+      onHelpClick={() => console.log("Help")}
       breadcrumbs={[
-        { label: "All Projects", isClickable: true, onClick: () => setActivePage("project") },
-        { label: "DUX4", isClickable: true },
-        { label: "Primary Screening", isClickable: true },
-        { label: activeStepData?.label ?? "Data Overview", isClickable: false },
+        { label: "All Projects", onClick: () => setActivePageId("explorer") },
+        { label: "DUX4" },
+        { label: "Primary Screening" },
+        { label: activeStep?.label ?? "Data Overview" },
       ]}
-      dataCounts={
-        activeStepData?.inputCount == null
-          ? []
-          : [
-              { label: "INPUT", count: activeStepData.inputCount, variant: "outline" },
-              ...(activeStepData.outputCount == null
-                ? []
-                : [{ label: "Output", count: activeStepData.outputCount, variant: "primary" as const }]),
-            ]
+      headerActions={
+        isProjectPage && (
+          <>
+            <DataCountPills dataCounts={dataCounts} />
+            <Button size="sm" className="gap-1">
+              Next
+            </Button>
+          </>
+        )
       }
-      showNextButton={activePage === "project"}
-      nextButtonLabel="Next"
+      sidebarPanel={
+        isProjectPage ? (
+          <WorkflowPanel
+            steps={steps}
+            collapsed={collapsed}
+            onCollapseChange={setCollapsed}
+          />
+        ) : undefined
+      }
     >
       <div className="p-8">
         <h1 className="text-2xl font-semibold mb-2">
-          {activeStepData?.label ?? "Select a step"}
+          {activeStep?.label ?? "Select a step"}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Active page: <strong>{activePage}</strong> | Active step:{" "}
-          <strong>{activeStep}</strong> | Collapsed:{" "}
+          Active page: <strong>{activePageId}</strong> | Active step:{" "}
+          <strong>{activeStepId}</strong> | Collapsed:{" "}
           <strong>{collapsed ? "yes" : "no"}</strong>
         </p>
       </div>

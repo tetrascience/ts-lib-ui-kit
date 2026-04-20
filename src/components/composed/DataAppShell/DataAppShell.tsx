@@ -1,7 +1,8 @@
 import { cva } from "class-variance-authority";
-import { ArrowLeft, ChevronLeft, ChevronRight, type LucideIcon } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, type LucideIcon } from "lucide-react";
 import * as React from "react";
 
+import { TDPLink } from "@/components/composed/tdp-link";
 import {
   Avatar,
   AvatarFallback,
@@ -9,6 +10,7 @@ import {
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -28,7 +30,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { TDPLink } from "@/components/composed/tdp-link";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -40,12 +41,19 @@ export interface NavPage {
   id: string;
   /** Display label */
   label: string;
-  /** Lucide icon or custom React element */
-  icon: LucideIcon | React.FC<React.SVGProps<SVGSVGElement>>;
-  /** Whether this entry is currently active */
-  active?: boolean;
+  /** Lucide icon or custom React SVG component */
+  icon?: LucideIcon | React.FC<React.SVGProps<SVGSVGElement>>;
+  /** Whether this page is currently active */
+  isActive?: boolean;
   /** Click handler */
   onClick?: () => void;
+}
+
+export interface NavGroup {
+  /** Optional group label shown as a separator in the nav */
+  label?: string;
+  /** Page entries in this group */
+  pages: NavPage[];
 }
 
 export interface WorkflowStep {
@@ -56,7 +64,7 @@ export interface WorkflowStep {
   /** Optional icon */
   icon?: LucideIcon | React.FC<React.SVGProps<SVGSVGElement>>;
   /** Whether this step is currently active */
-  active?: boolean;
+  isActive?: boolean;
   /** Whether this step is disabled */
   disabled?: boolean;
   /** Tooltip shown when disabled */
@@ -88,9 +96,9 @@ export interface UserMenuItem {
 export interface BreadcrumbItemConfig {
   /** Display label */
   label: string;
-  /** Whether this item is clickable */
-  isClickable?: boolean;
-  /** Click handler */
+  /** If provided, renders as a link */
+  href?: string;
+  /** Click handler (used when no href is provided) */
   onClick?: () => void;
 }
 
@@ -111,50 +119,36 @@ export interface DataAppShellProps {
   appName: string;
   /** Full application name shown in the app dropdown */
   appFullName?: string;
-  /** Custom logo element (replaces appName text) */
-  logo?: React.ReactNode;
-  /** Main page entries (e.g. Project, Explorer) */
-  pages: NavPage[];
+  /** Custom icon element shown in the logo area */
+  appIcon?: React.ReactNode;
+  /** Navigation groups; each group contains one or more pages */
+  navGroups: NavGroup[];
   /** User profile for the avatar section */
   user?: UserProfile;
   /** Menu items for the user dropdown */
   userMenuItems?: UserMenuItem[];
-  /** Callback when logo/app name is clicked */
-  onLogoClick?: () => void;
+  /** Callback when the app name / icon is clicked in the dropdown */
+  onAppNameClick?: () => void;
   /** TDP path to navigate to when "Back to TDP Platform" is clicked (uses TDPLink — requires TdpNavigationProvider) */
   backToPlatformPath?: string;
   /** Fallback callback when "Back to TDP Platform" is clicked and no backToPlatformPath is set */
   onBackToPlatform?: () => void;
-
-  // -- Workflow panel --
-  /** Whether the workflow panel is visible */
-  showWorkflow?: boolean;
-  /** Workflow steps to display in the collapsible panel */
-  workflowSteps?: WorkflowStep[];
-  /** Whether the workflow panel is collapsed */
-  workflowCollapsed?: boolean;
-  /** Called when the workflow panel collapse/expand is toggled */
-  onWorkflowCollapseChange?: (collapsed: boolean) => void;
+  /** App version string shown at the bottom of the icon rail */
+  version?: string;
 
   // -- Top nav --
   /** Breadcrumb items from root to current page */
   breadcrumbs?: BreadcrumbItemConfig[];
-  /** Data counts shown on the right side (e.g. Input, Output) */
-  dataCounts?: DataCount[];
-  /** Whether to show the "Next" navigation button */
-  showNextButton?: boolean;
-  /** Label for the next button */
-  nextButtonLabel?: string;
-  /** Whether the next button is disabled */
-  nextButtonDisabled?: boolean;
-  /** Click handler for the next button */
-  onNextClick?: () => void;
-  /** Additional action buttons for the top nav */
-  topNavActions?: React.ReactNode;
+  /** Callback when the help button is clicked; omit to hide the button */
+  onHelpClick?: () => void;
+  /** Slot for right-side actions in the top nav (e.g. data count pills, next button) */
+  headerActions?: React.ReactNode;
 
   // -- Shell --
+  /** Slot rendered between the icon rail and the content (e.g. WorkflowPanel) */
+  sidebarPanel?: React.ReactNode;
   /** Main content area */
-  children?: React.ReactNode;
+  children: React.ReactNode;
   /** Additional className for the root container */
   className?: string;
 }
@@ -199,24 +193,26 @@ const pageItemVariants = cva(
 function IconRailSidebar({
   appName,
   appFullName,
-  logo,
-  pages,
+  appIcon,
+  navGroups,
   user,
   userMenuItems,
-  onLogoClick,
+  onAppNameClick,
   backToPlatformPath,
   onBackToPlatform,
+  version,
 }: Pick<
   DataAppShellProps,
   | "appName"
   | "appFullName"
-  | "logo"
-  | "pages"
+  | "appIcon"
+  | "navGroups"
   | "user"
   | "userMenuItems"
-  | "onLogoClick"
+  | "onAppNameClick"
   | "backToPlatformPath"
   | "onBackToPlatform"
+  | "version"
 >) {
   return (
     <TooltipProvider>
@@ -233,7 +229,7 @@ function IconRailSidebar({
                 type="button"
                 className="flex items-center justify-center cursor-pointer bg-transparent border-none p-0"
               >
-                {logo ?? (
+                {appIcon ?? (
                   <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-sidebar-accent border border-sidebar-border text-[11px] font-bold text-foreground">
                     {appName}
                   </span>
@@ -244,14 +240,14 @@ function IconRailSidebar({
               {/* Current app header */}
               <div
                 className="flex items-center gap-3 px-3 py-2.5 cursor-pointer"
-                onClick={onLogoClick}
+                onClick={onAppNameClick}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => { if (e.key === "Enter") onLogoClick?.(); }}
+                onKeyDown={(e) => { if (e.key === "Enter") onAppNameClick?.(); }}
               >
                 <div className="w-8 h-8 rounded-lg bg-sidebar-accent border border-sidebar-border flex items-center justify-center shrink-0">
-                  {logo ? (
-                    <span className="scale-75">{logo}</span>
+                  {appIcon ? (
+                    <span className="scale-75">{appIcon}</span>
                   ) : (
                     <span className="text-[10px] font-bold text-foreground">{appName}</span>
                   )}
@@ -286,88 +282,113 @@ function IconRailSidebar({
           </DropdownMenu>
         </div>
 
-        {/* Page entries */}
-        <div className="flex flex-col items-center gap-4 px-2 pt-2 flex-1">
-          {pages.map((page) => {
-            const Icon = page.icon;
-            return (
-              <Tooltip key={page.id}>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex flex-col items-center gap-0.5 cursor-pointer bg-transparent border-none p-0"
-                    onClick={page.onClick}
-                  >
-                    <div className={cn(pageItemVariants({ active: page.active ?? false }))}>
-                      <Icon
-                        className={cn(
-                          "w-5 h-5",
-                          page.active ? "text-primary" : "text-muted-foreground"
-                        )}
-                      />
-                    </div>
-                    <span
-                      className={cn(
-                        "text-[10px] font-medium leading-tight text-center",
-                        page.active ? "text-foreground font-semibold" : "text-muted-foreground"
-                      )}
-                    >
-                      {page.label}
-                    </span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">{page.label}</TooltipContent>
-              </Tooltip>
-            );
-          })}
+        {/* Nav groups */}
+        <div className="flex flex-col items-center gap-1 px-2 pt-2 flex-1 w-full">
+          {navGroups.map((group, groupIndex) => (
+            <React.Fragment key={group.label ?? groupIndex}>
+              {groupIndex > 0 && (
+                <div className="w-8 border-t border-sidebar-border my-1" />
+              )}
+              <div className="flex flex-col items-center gap-4 w-full">
+                {group.pages.map((page) => {
+                  const Icon = page.icon;
+                  return (
+                    <Tooltip key={page.id}>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex flex-col items-center gap-0.5 cursor-pointer bg-transparent border-none p-0 w-full"
+                          onClick={page.onClick}
+                        >
+                          <div className={cn(pageItemVariants({ active: page.isActive ?? false }))}>
+                            {Icon ? (
+                              <Icon
+                                className={cn(
+                                  "w-5 h-5",
+                                  page.isActive ? "text-primary" : "text-muted-foreground"
+                                )}
+                              />
+                            ) : (
+                              <div
+                                className={cn(
+                                  "w-2 h-2 rounded-full",
+                                  page.isActive ? "bg-primary" : "bg-muted-foreground/40"
+                                )}
+                              />
+                            )}
+                          </div>
+                          <span
+                            className={cn(
+                              "text-[10px] font-medium leading-tight text-center",
+                              page.isActive ? "text-foreground font-semibold" : "text-muted-foreground"
+                            )}
+                          >
+                            {page.label}
+                          </span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">{page.label}</TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </React.Fragment>
+          ))}
         </div>
 
-        {/* User avatar with dropdown */}
-        {user && (
-          <div className="w-full flex justify-center py-3 border-t border-sidebar-border shrink-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="cursor-pointer bg-transparent border-none p-0"
-                >
-                  {user.avatar ?? (
-                    <Avatar size="sm" className="bg-primary cursor-pointer hover:opacity-85 transition-opacity">
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-                        {getInitials(user.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </button>
-              </DropdownMenuTrigger>
-              {userMenuItems && userMenuItems.length > 0 && (
-                <DropdownMenuContent side="right" align="end" className="min-w-[180px]">
-                  {user.role && (
-                    <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                      {user.role}
-                    </DropdownMenuLabel>
-                  )}
-                  {userMenuItems.map((item) => (
-                    <DropdownMenuItem
-                      key={item.label}
-                      className="cursor-pointer"
-                      onClick={item.onClick}
-                    >
-                      {item.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              )}
-            </DropdownMenu>
-          </div>
-        )}
+        {/* Bottom: version + user avatar */}
+        <div className="flex flex-col items-center w-full shrink-0 border-t border-sidebar-border">
+          {version && (
+            <span className="text-[9px] text-muted-foreground/60 font-mono pt-1.5 pb-0.5 tracking-wide">
+              {version}
+            </span>
+          )}
+          {user && (
+            <div className="flex justify-center py-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="cursor-pointer bg-transparent border-none p-0"
+                  >
+                    {user.avatar ?? (
+                      <Avatar size="sm" className="bg-primary cursor-pointer hover:opacity-85 transition-opacity">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                          {getInitials(user.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                {userMenuItems && userMenuItems.length > 0 && (
+                  <DropdownMenuContent side="right" align="end" className="min-w-[180px]">
+                    {user.role && (
+                      <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                        {user.role}
+                      </DropdownMenuLabel>
+                    )}
+                    {userMenuItems.map((item) => (
+                      <DropdownMenuItem
+                        key={item.label}
+                        className="cursor-pointer"
+                        onClick={item.onClick}
+                      >
+                        {item.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                )}
+              </DropdownMenu>
+            </div>
+          )}
+        </div>
       </nav>
     </TooltipProvider>
   );
 }
 
 // =============================================================================
-// Workflow panel
+// Workflow panel (exported for story composition)
 // =============================================================================
 
 const stepItemVariants = cva(
@@ -383,15 +404,13 @@ const stepItemVariants = cva(
   }
 );
 
-function WorkflowPanel({
-  steps,
-  collapsed,
-  onCollapseChange,
-}: {
+export interface WorkflowPanelProps {
   steps: WorkflowStep[];
   collapsed: boolean;
   onCollapseChange: (collapsed: boolean) => void;
-}) {
+}
+
+export function WorkflowPanel({ steps, collapsed, onCollapseChange }: WorkflowPanelProps) {
   if (collapsed) {
     return (
       <div
@@ -425,7 +444,7 @@ function WorkflowPanel({
                     type="button"
                     className={cn(
                       "flex justify-center items-center py-3.5 border-l-[5px] cursor-pointer bg-transparent border-r-0 border-t-0 border-b-0 w-full",
-                      step.active ? "border-l-primary" : "border-l-border",
+                      step.isActive ? "border-l-primary" : "border-l-border",
                       step.disabled && "opacity-45 cursor-not-allowed"
                     )}
                     onClick={() => !step.disabled && step.onClick?.()}
@@ -435,14 +454,14 @@ function WorkflowPanel({
                       <Icon
                         className={cn(
                           "w-5 h-5",
-                          step.active ? "text-primary" : "text-muted-foreground"
+                          step.isActive ? "text-primary" : "text-muted-foreground"
                         )}
                       />
                     ) : (
                       <div
                         className={cn(
                           "w-2.5 h-2.5 rounded-full",
-                          step.active ? "bg-primary" : "bg-muted-foreground/40"
+                          step.isActive ? "bg-primary" : "bg-muted-foreground/40"
                         )}
                       />
                     )}
@@ -492,7 +511,7 @@ function WorkflowPanel({
               type="button"
               key={step.id}
               className={cn(
-                stepItemVariants({ active: step.active ?? false }),
+                stepItemVariants({ active: step.isActive ?? false }),
                 step.disabled && "opacity-45 cursor-not-allowed"
               )}
               onClick={() => !step.disabled && step.onClick?.()}
@@ -503,7 +522,7 @@ function WorkflowPanel({
                 <span
                   className={cn(
                     "flex items-center justify-center w-6 h-6 shrink-0",
-                    step.active ? "text-primary" : "text-muted-foreground"
+                    step.isActive ? "text-primary" : "text-muted-foreground"
                   )}
                 >
                   <Icon className="w-5 h-5" />
@@ -534,7 +553,7 @@ function WorkflowPanel({
 }
 
 // =============================================================================
-// Top nav
+// Data count pills (exported for story / consumer composition)
 // =============================================================================
 
 const countPillVariants = cva(
@@ -555,22 +574,58 @@ const countPillVariants = cva(
   }
 );
 
+export interface DataCountPillsProps {
+  dataCounts: DataCount[];
+  className?: string;
+}
+
+export function DataCountPills({ dataCounts, className }: DataCountPillsProps) {
+  if (dataCounts.length === 0) return null;
+
+  return (
+    <div className={cn("flex items-center gap-1.5", className)}>
+      {dataCounts.map((dc, i) => (
+        <React.Fragment key={`${dc.label}-${i}`}>
+          {i > 0 && (
+            <span className="text-muted-foreground/50 text-xs">{"\u2192"}</span>
+          )}
+          <div
+            className={cn(
+              countPillVariants({
+                variant: dc.variant ?? "outline",
+                clickable: !!dc.onClick,
+              })
+            )}
+            onClick={dc.onClick}
+            role={dc.onClick ? "button" : undefined}
+            tabIndex={dc.onClick ? 0 : undefined}
+            onKeyDown={(e) => {
+              if (dc.onClick && (e.key === "Enter" || e.key === " ")) dc.onClick();
+            }}
+          >
+            <span className="text-muted-foreground text-[10px] uppercase tracking-wide font-medium">
+              {dc.label}
+            </span>
+            <span className="font-semibold text-sm">{dc.count.toLocaleString()}</span>
+          </div>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+// =============================================================================
+// Top nav
+// =============================================================================
+
 function TopNav({
   breadcrumbs = [],
-  dataCounts = [],
-  showNextButton = false,
-  nextButtonLabel = "Next",
-  nextButtonDisabled = false,
-  onNextClick,
-  actions,
+  onHelpClick,
+  headerActions,
 }: {
   breadcrumbs?: BreadcrumbItemConfig[];
-  dataCounts?: DataCount[];
-  showNextButton?: boolean;
-  nextButtonLabel?: string;
-  nextButtonDisabled?: boolean;
-  onNextClick?: () => void;
-  actions?: React.ReactNode;
+  onHelpClick?: () => void;
+  headerActions?: React.ReactNode;
 }) {
   return (
     <div
@@ -582,13 +637,16 @@ function TopNav({
         <BreadcrumbList>
           {breadcrumbs.map((item, index) => {
             const isLast = index === breadcrumbs.length - 1;
+            const isClickable = !isLast && (!!item.href || !!item.onClick);
             return (
               <React.Fragment key={`${item.label}-${index}`}>
                 {index > 0 && <BreadcrumbSeparator>/</BreadcrumbSeparator>}
                 <BreadcrumbItem>
                   {isLast ? (
                     <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                  ) : item.isClickable ? (
+                  ) : isClickable && item.href ? (
+                    <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
+                  ) : isClickable && item.onClick ? (
                     <button
                       type="button"
                       className="text-[13px] text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal"
@@ -606,46 +664,26 @@ function TopNav({
         </BreadcrumbList>
       </Breadcrumb>
 
-      {/* Right: data counts + actions + next button */}
+      {/* Right: header actions + help */}
       <div className="flex items-center gap-2 ml-auto shrink-0">
-        {dataCounts.length > 0 && (
-          <div className="flex items-center gap-1.5">
-            {dataCounts.map((dc, i) => (
-              <React.Fragment key={`${dc.label}-${i}`}>
-                {i > 0 && (
-                  <span className="text-muted-foreground/50 text-xs">{"\u2192"}</span>
-                )}
-                <div
-                  className={cn(
-                    countPillVariants({
-                      variant: dc.variant ?? "outline",
-                      clickable: !!dc.onClick,
-                    })
-                  )}
-                  onClick={dc.onClick}
-                  role={dc.onClick ? "button" : undefined}
-                  tabIndex={dc.onClick ? 0 : undefined}
-                  onKeyDown={(e) => {
-                    if (dc.onClick && (e.key === "Enter" || e.key === " ")) dc.onClick();
-                  }}
+        {headerActions}
+
+        {onHelpClick && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-7 h-7 text-muted-foreground"
+                  onClick={onHelpClick}
                 >
-                  <span className="text-muted-foreground text-[10px] uppercase tracking-wide font-medium">
-                    {dc.label}
-                  </span>
-                  <span className="font-semibold text-sm">{dc.count.toLocaleString()}</span>
-                </div>
-              </React.Fragment>
-            ))}
-          </div>
-        )}
-
-        {actions}
-
-        {showNextButton && (
-          <Button size="sm" disabled={nextButtonDisabled} onClick={onNextClick} className="gap-1">
-            {nextButtonLabel}
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+                  <HelpCircle className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Help</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </div>
     </div>
@@ -659,70 +697,53 @@ function TopNav({
 function DataAppShell({
   appName,
   appFullName,
-  logo,
-  pages,
+  appIcon,
+  navGroups,
   user,
   userMenuItems,
-  onLogoClick,
+  onAppNameClick,
   backToPlatformPath,
   onBackToPlatform,
-  showWorkflow = false,
-  workflowSteps = [],
-  workflowCollapsed = false,
-  onWorkflowCollapseChange,
+  version,
   breadcrumbs = [],
-  dataCounts = [],
-  showNextButton = false,
-  nextButtonLabel,
-  nextButtonDisabled,
-  onNextClick,
-  topNavActions,
+  onHelpClick,
+  headerActions,
+  sidebarPanel,
   children,
   className,
 }: DataAppShellProps) {
-  const showWorkflowPanel = showWorkflow && workflowSteps.length > 0;
-
   return (
     <div
       data-slot="data-app-shell"
       className={cn("flex flex-row w-full h-screen overflow-hidden", className)}
     >
-      {/* Icon rail (hidden when workflow is collapsed) */}
-      {!(showWorkflow && workflowCollapsed) && (
-        <IconRailSidebar
-          appName={appName}
-          appFullName={appFullName}
-          logo={logo}
-          pages={pages}
-          user={user}
-          userMenuItems={userMenuItems}
-          onLogoClick={onLogoClick}
-          backToPlatformPath={backToPlatformPath}
-          onBackToPlatform={onBackToPlatform}
-        />
-      )}
+      {/* Icon rail */}
+      <IconRailSidebar
+        appName={appName}
+        appFullName={appFullName}
+        appIcon={appIcon}
+        navGroups={navGroups}
+        user={user}
+        userMenuItems={userMenuItems}
+        onAppNameClick={onAppNameClick}
+        backToPlatformPath={backToPlatformPath}
+        onBackToPlatform={onBackToPlatform}
+        version={version}
+      />
 
-      {/* Right of icon rail: top nav + workflow panel + content */}
+      {/* Right of icon rail: top nav + sidebar panel + content */}
       <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
         <TopNav
           breadcrumbs={breadcrumbs}
-          dataCounts={dataCounts}
-          showNextButton={showNextButton}
-          nextButtonLabel={nextButtonLabel}
-          nextButtonDisabled={nextButtonDisabled}
-          onNextClick={onNextClick}
-          actions={topNavActions}
+          onHelpClick={onHelpClick}
+          headerActions={headerActions}
         />
 
         <div className="flex flex-1 min-h-0 overflow-hidden">
-          {showWorkflowPanel && (
-            <WorkflowPanel
-              steps={workflowSteps}
-              collapsed={workflowCollapsed}
-              onCollapseChange={onWorkflowCollapseChange ?? (() => { /* noop */ })}
-            />
-          )}
+          {/* Sidebar panel slot (e.g. WorkflowPanel) */}
+          {sidebarPanel}
 
+          {/* Content area */}
           <main
             data-slot="data-app-shell-content"
             className="flex-1 overflow-auto bg-background"

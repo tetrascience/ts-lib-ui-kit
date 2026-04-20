@@ -233,7 +233,7 @@ function IconRailSidebar({
                 className="flex items-center justify-center cursor-pointer bg-transparent border-none p-0"
               >
                 {logo ?? (
-                  <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-white border border-border text-[11px] font-bold text-foreground">
+                  <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-card border border-border text-[11px] font-bold text-foreground">
                     {appName}
                   </span>
                 )}
@@ -248,7 +248,7 @@ function IconRailSidebar({
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === "Enter") onLogoClick?.(); }}
               >
-                <div className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center shrink-0">
                   {logo ? (
                     <span className="scale-75">{logo}</span>
                   ) : (
@@ -711,7 +711,7 @@ function DataAppShell({
 
           <main
             data-slot="data-app-shell-content"
-            className="flex-1 overflow-auto bg-[#F4F5F7]"
+            className="flex-1 overflow-auto bg-background"
           >
             {children}
           </main>

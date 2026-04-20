@@ -572,7 +572,7 @@ function TopNav({
             const isLast = index === breadcrumbs.length - 1;
             return (
               <React.Fragment key={`${item.label}-${index}`}>
-                {index > 0 && <BreadcrumbSeparator />}
+                {index > 0 && <BreadcrumbSeparator>/</BreadcrumbSeparator>}
                 <BreadcrumbItem>
                   {isLast ? (
                     <BreadcrumbPage>{item.label}</BreadcrumbPage>

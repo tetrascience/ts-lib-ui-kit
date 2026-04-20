@@ -2,6 +2,9 @@ export { DataAppShell } from "./DataAppShell";
 export type {
   DataAppShellProps,
   NavPage,
-  NavGroup,
+  WorkflowStep,
+  UserProfile,
+  UserMenuItem,
   BreadcrumbItemConfig,
+  DataCount,
 } from "./DataAppShell";

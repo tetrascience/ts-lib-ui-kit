@@ -153,7 +153,7 @@ function DataAppShell({
           {/* Content area */}
           <main
             data-slot="data-app-shell-content"
-            className="flex-1 overflow-auto bg-[#F4F5F7]"
+            className="flex-1 overflow-auto bg-background"
           >
             {children}
           </main>

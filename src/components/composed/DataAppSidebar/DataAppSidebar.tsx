@@ -188,7 +188,7 @@ function MainSidebar({
           onClick={() => setShowAppMenu(!showAppMenu)}
         >
           {logo ?? (
-            <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-white border border-border text-[11px] font-bold text-foreground">
+            <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-card border border-border text-[11px] font-bold text-foreground">
               {appName}
             </span>
           )}
@@ -208,7 +208,7 @@ function MainSidebar({
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter") { setShowAppMenu(false); onLogoClick?.(); } }}
             >
-              <div className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center shrink-0">
                 {logo ? (
                   <span className="scale-75">{logo}</span>
                 ) : (

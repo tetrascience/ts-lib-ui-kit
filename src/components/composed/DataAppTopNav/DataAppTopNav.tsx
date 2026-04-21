@@ -152,7 +152,7 @@ function DataAppTopNav({
       <div className="flex items-center gap-2 ml-auto shrink-0">
         {/* Data counts */}
         {dataCounts.length > 0 && (
-          <div className="flex items-center gap-1.5">
+          <div className="hidden sm:flex items-center gap-1.5">
             {dataCounts.map((dc, i) => (
               <React.Fragment key={`${dc.label}-${i}`}>
                 {i > 0 && (

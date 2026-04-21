@@ -1,8 +1,6 @@
 import { cva } from "class-variance-authority";
 import {
   ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
   HelpCircle,
   Menu,
   type LucideIcon,
@@ -10,10 +8,6 @@ import {
 import * as React from "react";
 
 import { TDPLink } from "@/components/composed/tdp-link";
-import {
-  Avatar,
-  AvatarFallback,
-} from "@/components/ui/avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -27,7 +21,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -68,60 +61,12 @@ export interface NavGroup {
   pages: NavPage[];
 }
 
-export interface WorkflowStep {
-  /** Unique identifier */
-  id: string;
-  /** Display label */
-  label: string;
-  /** Optional icon */
-  icon?: LucideIcon | React.FC<React.SVGProps<SVGSVGElement>>;
-  /** Whether this step is currently active */
-  isActive?: boolean;
-  /** Whether this step is disabled */
-  disabled?: boolean;
-  /** Tooltip shown when disabled */
-  disabledReason?: string;
-  /** Input data count (displayed before →) */
-  inputCount?: number;
-  /** Output data count (displayed after →) */
-  outputCount?: number;
-  /** Click handler */
-  onClick?: () => void;
-}
-
-export interface UserProfile {
-  /** Display name */
-  name: string;
-  /** Role label (e.g. "ADMIN", "USER") */
-  role?: string;
-  /** Custom avatar element; defaults to initials circle */
-  avatar?: React.ReactNode;
-}
-
-export interface UserMenuItem {
-  /** Label text */
-  label: string;
-  /** Click handler */
-  onClick: () => void;
-}
-
 export interface BreadcrumbItemConfig {
   /** Display label */
   label: string;
   /** If provided, renders as a link */
   href?: string;
   /** Click handler (used when no href is provided) */
-  onClick?: () => void;
-}
-
-export interface DataCount {
-  /** Label (e.g. "INPUT", "OUTPUT") */
-  label: string;
-  /** Numeric count */
-  count: number;
-  /** Visual variant */
-  variant?: "default" | "outline" | "primary";
-  /** Click handler */
   onClick?: () => void;
 }
 
@@ -133,20 +78,18 @@ export interface DataAppShellProps {
   appFullName?: string;
   /** Custom icon element shown in the logo area */
   appIcon?: React.ReactNode;
+  /** Optional version string shown below the app name/icon in the sidebar header */
+  version?: string;
   /** Navigation groups; each group contains one or more pages */
   navGroups: NavGroup[];
-  /** User profile for the avatar section */
-  user?: UserProfile;
-  /** Menu items for the user dropdown */
-  userMenuItems?: UserMenuItem[];
   /** Callback when the app name / icon is clicked in the dropdown */
   onAppNameClick?: () => void;
   /** TDP path to navigate to when "Back to TDP Platform" is clicked (uses TDPLink — requires TdpNavigationProvider) */
   backToPlatformPath?: string;
   /** Fallback callback when "Back to TDP Platform" is clicked and no backToPlatformPath is set */
   onBackToPlatform?: () => void;
-  /** App version string shown at the bottom of the icon rail */
-  version?: string;
+  /** Slot rendered at the bottom of the sidebar (e.g. user avatar + menu) */
+  userMenu?: React.ReactNode;
 
   // -- Top nav --
   /** Breadcrumb items from root to current page */
@@ -166,26 +109,6 @@ export interface DataAppShellProps {
 }
 
 // =============================================================================
-// Helpers
-// =============================================================================
-
-function getInitials(name?: string | null): string {
-  if (!name) return "U";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.substring(0, 2).toUpperCase();
-}
-
-const MILLION = 1_000_000;
-const THOUSAND = 1_000;
-
-function formatCount(n: number): string {
-  if (n >= MILLION) return `${(n / MILLION).toFixed(n % MILLION === 0 ? 0 : 1)}M`;
-  if (n >= THOUSAND) return `${(n / THOUSAND).toFixed(n % THOUSAND === 0 ? 0 : 1)}K`;
-  return n.toLocaleString();
-}
-
-// =============================================================================
 // Sidebar shared body (used by desktop rail + mobile Sheet)
 // =============================================================================
 
@@ -195,13 +118,12 @@ interface SidebarBodyProps
     | "appName"
     | "appFullName"
     | "appIcon"
+    | "version"
     | "navGroups"
-    | "user"
-    | "userMenuItems"
     | "onAppNameClick"
     | "backToPlatformPath"
     | "onBackToPlatform"
-    | "version"
+    | "userMenu"
   > {
   /**
    * compact=true  → narrow icon rail (60px): icons + tiny labels stacked, tooltips on hover
@@ -233,23 +155,22 @@ function SidebarBody({
   appName,
   appFullName,
   appIcon,
+  version,
   navGroups,
-  user,
-  userMenuItems,
   onAppNameClick,
   backToPlatformPath,
   onBackToPlatform,
-  version,
+  userMenu,
   compact,
   onAfterNavClick,
 }: SidebarBodyProps) {
   return (
     <TooltipProvider>
-      {/* ── Logo / app dropdown ─────────────────────────────────────────────── */}
+      {/* ── Header: app icon / name + version ──────────────────────────────── */}
       <div
         className={cn(
           "shrink-0 border-b border-sidebar-border",
-          compact ? "flex justify-center py-2" : "flex px-3 py-2.5"
+          compact ? "flex flex-col items-center pt-2 pb-1.5 gap-0.5" : "flex px-3 py-2.5"
         )}
       >
         <DropdownMenu>
@@ -258,9 +179,10 @@ function SidebarBody({
               type="button"
               className={cn(
                 "cursor-pointer bg-transparent border-none p-0",
-                !compact && "flex items-center gap-3 w-full"
+                !compact && "flex items-start gap-3 w-full text-left"
               )}
             >
+              {/* Icon */}
               <span
                 className={cn(
                   "flex items-center justify-center rounded-lg bg-sidebar-accent border border-sidebar-border font-bold text-foreground shrink-0",
@@ -269,10 +191,19 @@ function SidebarBody({
               >
                 {appIcon ?? appName}
               </span>
+
+              {/* Name + version (expanded only) */}
               {!compact && (
-                <span className="text-sm font-semibold text-foreground truncate">
-                  {appFullName ?? appName}
-                </span>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold text-foreground truncate leading-snug">
+                    {appFullName ?? appName}
+                  </span>
+                  {version && (
+                    <span className="text-[10px] text-muted-foreground/70 font-mono leading-none mt-0.5">
+                      {version}
+                    </span>
+                  )}
+                </div>
               )}
             </button>
           </DropdownMenuTrigger>
@@ -319,14 +250,21 @@ function SidebarBody({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Version below icon (compact only) */}
+        {compact && version && (
+          <span className="text-[9px] text-muted-foreground/60 font-mono tracking-wide leading-none">
+            {version}
+          </span>
+        )}
       </div>
 
       {/* ── Nav groups ──────────────────────────────────────────────────────── */}
       <div
         className={cn(
-          "flex-1",
+          "flex-1 min-h-0",
           compact
-            ? "flex flex-col items-center gap-1 px-2 pt-3"
+            ? "flex flex-col items-center gap-1 px-2 pt-3 overflow-y-auto"
             : "flex flex-col py-2 overflow-y-auto"
         )}
       >
@@ -383,11 +321,7 @@ function SidebarBody({
                           className="flex flex-col items-center gap-0.5 cursor-pointer bg-transparent border-none p-0 w-full"
                           onClick={handleClick}
                         >
-                          <div
-                            className={cn(
-                              pageIconVariants({ active: page.isActive ?? false, compact: true })
-                            )}
-                          >
+                          <div className={cn(pageIconVariants({ active: page.isActive ?? false, compact: true }))}>
                             {iconEl}
                           </div>
                           <span
@@ -407,7 +341,7 @@ function SidebarBody({
                   );
                 }
 
-                // Expanded (mobile) layout
+                // Expanded (mobile) row
                 return (
                   <button
                     key={page.id}
@@ -420,11 +354,7 @@ function SidebarBody({
                     )}
                     onClick={handleClick}
                   >
-                    <div
-                      className={cn(
-                        pageIconVariants({ active: page.isActive ?? false, compact: false })
-                      )}
-                    >
+                    <div className={cn(pageIconVariants({ active: page.isActive ?? false, compact: false }))}>
                       {iconEl}
                     </div>
                     <span>{page.label}</span>
@@ -436,93 +366,17 @@ function SidebarBody({
         ))}
       </div>
 
-      {/* ── Bottom: version + user avatar ───────────────────────────────────── */}
-      <div
-        className={cn(
-          "shrink-0 border-t border-sidebar-border",
-          compact ? "flex flex-col items-center" : "flex flex-col"
-        )}
-      >
-        {version && (
-          <span
-            className={cn(
-              "text-[9px] text-muted-foreground/60 font-mono tracking-wide",
-              compact ? "pt-1.5 pb-0.5 text-center" : "px-3 pt-2 pb-0.5"
-            )}
-          >
-            {version}
-          </span>
-        )}
-        {user && (
-          <div className={cn("py-2", compact ? "flex justify-center" : "px-2")}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                {compact ? (
-                  <button
-                    type="button"
-                    className="cursor-pointer bg-transparent border-none p-0"
-                  >
-                    {user.avatar ?? (
-                      <Avatar
-                        size="sm"
-                        className="bg-primary cursor-pointer hover:opacity-85 transition-opacity"
-                      >
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-                          {getInitials(user.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="flex items-center gap-3 w-full px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground transition-colors cursor-pointer bg-transparent border-none text-left"
-                  >
-                    {user.avatar ?? (
-                      <Avatar
-                        size="sm"
-                        className="bg-primary shrink-0"
-                      >
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-                          {getInitials(user.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div className="flex flex-col items-start min-w-0">
-                      <span className="text-xs font-medium text-foreground truncate">
-                        {user.name}
-                      </span>
-                      {user.role && (
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                          {user.role}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                )}
-              </DropdownMenuTrigger>
-              {userMenuItems && userMenuItems.length > 0 && (
-                <DropdownMenuContent side="right" align="end" className="min-w-[180px]">
-                  {user.role && compact && (
-                    <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                      {user.role}
-                    </DropdownMenuLabel>
-                  )}
-                  {userMenuItems.map((item) => (
-                    <DropdownMenuItem
-                      key={item.label}
-                      className="cursor-pointer"
-                      onClick={item.onClick}
-                    >
-                      {item.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              )}
-            </DropdownMenu>
-          </div>
-        )}
-      </div>
+      {/* ── Bottom: user menu slot ──────────────────────────────────────────── */}
+      {userMenu && (
+        <div
+          className={cn(
+            "shrink-0 border-t border-sidebar-border",
+            compact ? "flex flex-col items-center py-2" : "p-2"
+          )}
+        >
+          {userMenu}
+        </div>
+      )}
     </TooltipProvider>
   );
 }
@@ -531,9 +385,7 @@ function SidebarBody({
 // Icon rail sidebar (desktop only — hidden on mobile)
 // =============================================================================
 
-function IconRailSidebar(
-  props: Omit<SidebarBodyProps, "compact" | "onAfterNavClick">
-) {
+function IconRailSidebar(props: Omit<SidebarBodyProps, "compact" | "onAfterNavClick">) {
   return (
     <nav
       data-slot="data-app-sidebar-rail"
@@ -542,233 +394,6 @@ function IconRailSidebar(
     >
       <SidebarBody compact {...props} />
     </nav>
-  );
-}
-
-// =============================================================================
-// Workflow panel (exported for story composition)
-// =============================================================================
-
-const stepItemVariants = cva(
-  "flex items-center gap-2 py-3.5 px-2.5 text-xs font-normal transition-colors duration-150 whitespace-nowrap leading-tight cursor-pointer border-l-[5px] w-full bg-transparent border-r-0 border-t-0 border-b-0",
-  {
-    variants: {
-      active: {
-        true: "border-l-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-foreground shadow-sm",
-        false: "border-l-sidebar-border bg-transparent text-muted-foreground hover:bg-sidebar-accent/50",
-      },
-    },
-    defaultVariants: { active: false },
-  }
-);
-
-export interface WorkflowPanelProps {
-  steps: WorkflowStep[];
-  collapsed: boolean;
-  onCollapseChange: (collapsed: boolean) => void;
-}
-
-export function WorkflowPanel({ steps, collapsed, onCollapseChange }: WorkflowPanelProps) {
-  if (collapsed) {
-    return (
-      <div
-        data-slot="data-app-panel-collapsed"
-        className="flex flex-col shrink-0 w-[46px] bg-sidebar border-r border-sidebar-border"
-      >
-        <div className="flex justify-center items-center h-10 border-b border-sidebar-border">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="w-5 h-5"
-                  onClick={() => onCollapseChange(false)}
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Expand workflow panel</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        <TooltipProvider>
-          {steps.map((step) => {
-            const Icon = step.icon;
-            return (
-              <Tooltip key={step.id}>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      "flex justify-center items-center py-3.5 border-l-[5px] cursor-pointer bg-transparent border-r-0 border-t-0 border-b-0 w-full",
-                      step.isActive ? "border-l-primary" : "border-l-border",
-                      step.disabled && "opacity-45 cursor-not-allowed"
-                    )}
-                    onClick={() => !step.disabled && step.onClick?.()}
-                    disabled={step.disabled}
-                  >
-                    {Icon ? (
-                      <Icon
-                        className={cn(
-                          "w-5 h-5",
-                          step.isActive ? "text-primary" : "text-muted-foreground"
-                        )}
-                      />
-                    ) : (
-                      <div
-                        className={cn(
-                          "w-2.5 h-2.5 rounded-full",
-                          step.isActive ? "bg-primary" : "bg-muted-foreground/40"
-                        )}
-                      />
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {step.disabled ? (step.disabledReason ?? step.label) : step.label}
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </TooltipProvider>
-      </div>
-    );
-  }
-
-  return (
-    <nav
-      data-slot="data-app-panel-expanded"
-      aria-label="Workflow steps"
-      className="flex flex-col shrink-0 w-[180px] bg-sidebar border-r border-sidebar-border overflow-hidden"
-    >
-      <div className="flex items-center gap-1.5 h-10 px-2.5 pl-4 text-xs font-medium text-muted-foreground whitespace-nowrap border-b border-sidebar-border">
-        <span className="flex-1">Workflow</span>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="w-5 h-5"
-                onClick={() => onCollapseChange(true)}
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">Collapse workflow panel</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-
-      <div className="flex flex-col">
-        {steps.map((step) => {
-          const Icon = step.icon;
-          return (
-            <button
-              type="button"
-              key={step.id}
-              className={cn(
-                stepItemVariants({ active: step.isActive ?? false }),
-                step.disabled && "opacity-45 cursor-not-allowed"
-              )}
-              onClick={() => !step.disabled && step.onClick?.()}
-              disabled={step.disabled}
-              title={step.disabled ? (step.disabledReason ?? step.label) : step.label}
-            >
-              {Icon && (
-                <span
-                  className={cn(
-                    "flex items-center justify-center w-6 h-6 shrink-0",
-                    step.isActive ? "text-primary" : "text-muted-foreground"
-                  )}
-                >
-                  <Icon className="w-5 h-5" />
-                </span>
-              )}
-              <span className="flex flex-col items-start gap-0.5 min-w-0">
-                <span className="truncate">{step.label}</span>
-                {(step.inputCount != null || step.outputCount != null) && (
-                  <span className="text-[10px] text-muted-foreground font-normal tabular-nums">
-                    {step.inputCount != null && (
-                      <span>{formatCount(step.inputCount)}</span>
-                    )}
-                    {step.inputCount != null && step.outputCount != null && (
-                      <span className="mx-0.5">{"\u2192"}</span>
-                    )}
-                    {step.outputCount != null && (
-                      <span>{formatCount(step.outputCount)}</span>
-                    )}
-                  </span>
-                )}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
-
-// =============================================================================
-// Data count pills (exported for story / consumer composition)
-// =============================================================================
-
-const countPillVariants = cva(
-  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium tabular-nums transition-colors",
-  {
-    variants: {
-      variant: {
-        default: "bg-muted text-muted-foreground",
-        outline: "bg-transparent border border-border text-foreground",
-        primary: "bg-primary/10 border border-primary/30 text-primary",
-      },
-      clickable: {
-        true: "cursor-pointer hover:bg-primary/15",
-        false: "cursor-default",
-      },
-    },
-    defaultVariants: { variant: "default", clickable: false },
-  }
-);
-
-export interface DataCountPillsProps {
-  dataCounts: DataCount[];
-  className?: string;
-}
-
-export function DataCountPills({ dataCounts, className }: DataCountPillsProps) {
-  if (dataCounts.length === 0) return null;
-
-  return (
-    <div className={cn("flex items-center gap-1.5", className)}>
-      {dataCounts.map((dc, i) => (
-        <React.Fragment key={`${dc.label}-${i}`}>
-          {i > 0 && (
-            <span className="text-muted-foreground/50 text-xs">{"\u2192"}</span>
-          )}
-          <div
-            className={cn(
-              countPillVariants({
-                variant: dc.variant ?? "outline",
-                clickable: !!dc.onClick,
-              })
-            )}
-            onClick={dc.onClick}
-            role={dc.onClick ? "button" : undefined}
-            tabIndex={dc.onClick ? 0 : undefined}
-            onKeyDown={(e) => {
-              if (dc.onClick && (e.key === "Enter" || e.key === " ")) dc.onClick();
-            }}
-          >
-            <span className="text-muted-foreground text-[10px] uppercase tracking-wide font-medium">
-              {dc.label}
-            </span>
-            <span className="font-semibold text-sm">{dc.count.toLocaleString()}</span>
-          </div>
-        </React.Fragment>
-      ))}
-    </div>
   );
 }
 
@@ -861,13 +486,12 @@ function DataAppShell({
   appName,
   appFullName,
   appIcon,
+  version,
   navGroups,
-  user,
-  userMenuItems,
   onAppNameClick,
   backToPlatformPath,
   onBackToPlatform,
-  version,
+  userMenu,
   breadcrumbs = [],
   onHelpClick,
   headerActions,
@@ -881,13 +505,12 @@ function DataAppShell({
     appName,
     appFullName,
     appIcon,
+    version,
     navGroups,
-    user,
-    userMenuItems,
     onAppNameClick,
     backToPlatformPath,
     onBackToPlatform,
-    version,
+    userMenu,
   };
 
   return (

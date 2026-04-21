@@ -456,8 +456,11 @@ export const Default: Story = {
       expect(canvas.getByText("EL")).toBeInTheDocument();
     });
 
-    await step("Version is shown in sidebar header", async () => {
-      expect(canvas.getByText("v2.4.1")).toBeInTheDocument();
+    await step("Version is shown inside the app dropdown under the title", async () => {
+      await userEvent.click(canvas.getAllByText("HTS")[0]);
+      const body = within(document.body);
+      await waitFor(() => expect(body.getByText("v2.4.1")).toBeInTheDocument());
+      await userEvent.keyboard("{Escape}");
     });
   },
 };
@@ -505,8 +508,11 @@ export const NonWorkflowPage: Story = {
       expect(canvas.getByText("All Projects")).toBeInTheDocument();
     });
 
-    await step("Version shown in sidebar header", async () => {
-      expect(canvas.getByText("v2.4.1")).toBeInTheDocument();
+    await step("Version shown inside the app dropdown under the title", async () => {
+      await userEvent.click(canvas.getByText("HTS"));
+      const body = within(document.body);
+      await waitFor(() => expect(body.getByText("v2.4.1")).toBeInTheDocument());
+      await userEvent.keyboard("{Escape}");
     });
   },
 };

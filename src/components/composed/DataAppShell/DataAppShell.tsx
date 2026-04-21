@@ -170,7 +170,7 @@ function SidebarBody({
       <div
         className={cn(
           "shrink-0 border-b border-sidebar-border",
-          compact ? "flex flex-col items-center pt-2 pb-1.5 gap-0.5" : "flex px-3 py-2.5"
+          compact ? "flex justify-center py-2" : "flex px-3 py-2.5"
         )}
       >
         <DropdownMenu>
@@ -179,7 +179,7 @@ function SidebarBody({
               type="button"
               className={cn(
                 "cursor-pointer bg-transparent border-none p-0",
-                !compact && "flex items-start gap-3 w-full text-left"
+                !compact && "flex items-center gap-3 w-full text-left"
               )}
             >
               {/* Icon */}
@@ -192,18 +192,11 @@ function SidebarBody({
                 {appIcon ?? appName}
               </span>
 
-              {/* Name + version (expanded only) */}
+              {/* Name (expanded only — no version here) */}
               {!compact && (
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-semibold text-foreground truncate leading-snug">
-                    {appFullName ?? appName}
-                  </span>
-                  {version && (
-                    <span className="text-[10px] text-muted-foreground/70 font-mono leading-none mt-0.5">
-                      {version}
-                    </span>
-                  )}
-                </div>
+                <span className="text-sm font-semibold text-foreground truncate leading-snug">
+                  {appFullName ?? appName}
+                </span>
               )}
             </button>
           </DropdownMenuTrigger>
@@ -222,9 +215,16 @@ function SidebarBody({
                   {appIcon ?? appName}
                 </span>
               </div>
-              <span className="text-sm font-semibold text-foreground truncate">
-                {appFullName ?? appName}
-              </span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-semibold text-foreground truncate">
+                  {appFullName ?? appName}
+                </span>
+                {version && (
+                  <span className="text-[10px] text-muted-foreground/70 font-mono leading-none mt-0.5">
+                    {version}
+                  </span>
+                )}
+              </div>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2.5 p-0" asChild>
@@ -250,13 +250,6 @@ function SidebarBody({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Version below icon (compact only) */}
-        {compact && version && (
-          <span className="text-[9px] text-muted-foreground/60 font-mono tracking-wide leading-none">
-            {version}
-          </span>
-        )}
       </div>
 
       {/* ── Nav groups ──────────────────────────────────────────────────────── */}

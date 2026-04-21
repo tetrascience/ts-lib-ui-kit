@@ -13,6 +13,7 @@ export * from "@/components/composed/PythonEditorModal";
 export * from "@/components/composed/Sidebar";
 export * from "@/components/composed/DataAppTopNav";
 export * from "@/components/composed/DataAppSidebar";
+export * from "@/components/composed/DataAppShell";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";

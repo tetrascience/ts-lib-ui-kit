@@ -8,6 +8,14 @@ export * from "@/components/composed/TdpSearch";
 export * from "@/components/composed/tdp-link";
 export * from "@/components/composed/tdp-url";
 
+// AI agent surface
+export * from "@/components/ai";
+export * from "@/components/ai-elements";
+export * from "@/components/composed/AIAgent";
+export * from "@/components/composed/ChatbotExample";
+export { useChat } from "@/hooks/useChat";
+export type { UseChatOptions, UseChatReturn } from "@/hooks/useChat";
+
 
 // Charts
 export * from "@/components/charts/AreaGraph";

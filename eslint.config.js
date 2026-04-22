@@ -13,7 +13,13 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ["dist/**/*", "node_modules/**/*", "examples/**/*", "storybook-static/**/*"],
+    ignores: [
+      "dist/**/*",
+      "node_modules/**/*",
+      "examples/**/*",
+      "storybook-static/**/*",
+      ".claude/**/*",
+    ],
   },
   // Main TypeScript/React configuration
   {
@@ -203,6 +209,20 @@ export default tseslint.config(
     files: ["src/components/**/*.tsx"],
     rules: {
       "react/forbid-component-props": "off",
+    },
+  },
+  // Vendored AI SDK Elements — relax upstream style rules so we stay close to
+  // the original source (easier to pull future updates from the registry).
+  {
+    files: ["src/components/ai-elements/**/*.{ts,tsx}"],
+    rules: {
+      "import/order": "off",
+      "unicorn/prefer-spread": "off",
+      "sonarjs/no-identical-functions": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "jsx-a11y/heading-has-content": "off",
+      "no-magic-numbers": "off",
     },
   },
   // Script files - more lenient cognitive complexity for build/automation scripts

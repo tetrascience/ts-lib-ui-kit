@@ -31,38 +31,73 @@ export interface QueueTodo {
   status?: "pending" | "completed";
 }
 
+// ---------------------------------------------------------------------------
+// QueueItem
+// ---------------------------------------------------------------------------
+
 export type QueueItemProps = ComponentProps<"li">;
 
 export const QueueItem = ({ className, ...props }: QueueItemProps) => (
   <li
     className={cn(
-      "group flex flex-col gap-1 rounded-md px-3 py-1 text-sm transition-colors hover:bg-muted",
+      "group flex flex-row items-center gap-2 rounded-md px-3 py-1 text-sm transition-colors hover:bg-muted",
       className
     )}
     {...props}
   />
 );
 
+// ---------------------------------------------------------------------------
+// QueueItemIndicator
+// ---------------------------------------------------------------------------
+
+export type QueueItemStatus = "pending" | "loading" | "done" | "error";
+
 export type QueueItemIndicatorProps = ComponentProps<"span"> & {
+  /**
+   * Visual state of the indicator dot.
+   * - `pending`  — unfilled muted ring
+   * - `loading`  — spinning ring (primary accent)
+   * - `done`     — filled muted dot (task complete)
+   * - `error`    — filled destructive dot
+   */
+  status?: QueueItemStatus;
+  /** @deprecated Use `status="done"` instead. */
   completed?: boolean;
 };
 
+const INDICATOR_STATUS: Record<QueueItemStatus, string> = {
+  pending: "border border-muted-foreground/40",
+  loading:
+    "border-2 border-muted-foreground/20 border-t-primary animate-spin",
+  done: "border border-muted-foreground/20 bg-muted-foreground/30",
+  error: "border border-destructive/30 bg-destructive/70",
+};
+
 export const QueueItemIndicator = ({
+  status,
   completed = false,
   className,
   ...props
-}: QueueItemIndicatorProps) => (
-  <span
-    className={cn(
-      "mt-0.5 inline-block size-2.5 rounded-full border",
-      completed
-        ? "border-muted-foreground/20 bg-muted-foreground/10"
-        : "border-muted-foreground/50",
-      className
-    )}
-    {...props}
-  />
-);
+}: QueueItemIndicatorProps) => {
+  const resolvedStatus: QueueItemStatus =
+    status ?? (completed ? "done" : "pending");
+
+  return (
+    <span
+      className={cn(
+        "inline-block size-2.5 shrink-0 rounded-full",
+        INDICATOR_STATUS[resolvedStatus],
+        className
+      )}
+      {...props}
+    />
+  );
+};
+
+// ---------------------------------------------------------------------------
+// QueueItemContent
+// ---------------------------------------------------------------------------
 
 export type QueueItemContentProps = ComponentProps<"span"> & {
   completed?: boolean;
@@ -75,7 +110,7 @@ export const QueueItemContent = ({
 }: QueueItemContentProps) => (
   <span
     className={cn(
-      "line-clamp-1 grow break-words",
+      "min-w-0 flex-1 truncate",
       completed
         ? "text-muted-foreground/50 line-through"
         : "text-muted-foreground",
@@ -84,6 +119,12 @@ export const QueueItemContent = ({
     {...props}
   />
 );
+
+// ---------------------------------------------------------------------------
+// QueueItemDescription
+// For items with a description, wrap QueueItemContent + QueueItemDescription
+// in a <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+// ---------------------------------------------------------------------------
 
 export type QueueItemDescriptionProps = ComponentProps<"div"> & {
   completed?: boolean;
@@ -96,15 +137,19 @@ export const QueueItemDescription = ({
 }: QueueItemDescriptionProps) => (
   <div
     className={cn(
-      "ml-6 text-xs",
+      "text-xs",
       completed
         ? "text-muted-foreground/40 line-through"
-        : "text-muted-foreground",
+        : "text-muted-foreground/70",
       className
     )}
     {...props}
   />
 );
+
+// ---------------------------------------------------------------------------
+// QueueItemActions / QueueItemAction
+// ---------------------------------------------------------------------------
 
 export type QueueItemActionsProps = ComponentProps<"div">;
 
@@ -112,7 +157,7 @@ export const QueueItemActions = ({
   className,
   ...props
 }: QueueItemActionsProps) => (
-  <div className={cn("flex gap-1", className)} {...props} />
+  <div className={cn("ml-auto flex shrink-0 gap-1", className)} {...props} />
 );
 
 export type QueueItemActionProps = Omit<
@@ -136,13 +181,17 @@ export const QueueItemAction = ({
   />
 );
 
+// ---------------------------------------------------------------------------
+// QueueItemAttachment / QueueItemImage / QueueItemFile
+// ---------------------------------------------------------------------------
+
 export type QueueItemAttachmentProps = ComponentProps<"div">;
 
 export const QueueItemAttachment = ({
   className,
   ...props
 }: QueueItemAttachmentProps) => (
-  <div className={cn("mt-1 flex flex-wrap gap-2", className)} {...props} />
+  <div className={cn("flex flex-wrap gap-2", className)} {...props} />
 );
 
 export type QueueItemImageProps = ComponentProps<"img">;
@@ -153,7 +202,7 @@ export const QueueItemImage = ({
 }: QueueItemImageProps) => (
   <img
     alt=""
-    className={cn("h-8 w-8 rounded border object-cover", className)}
+    className={cn("size-8 rounded border object-cover", className)}
     height={32}
     width={32}
     {...props}
@@ -179,6 +228,10 @@ export const QueueItemFile = ({
   </span>
 );
 
+// ---------------------------------------------------------------------------
+// QueueList
+// ---------------------------------------------------------------------------
+
 export type QueueListProps = ComponentProps<typeof ScrollArea>;
 
 export const QueueList = ({
@@ -186,14 +239,17 @@ export const QueueList = ({
   className,
   ...props
 }: QueueListProps) => (
-  <ScrollArea className={cn("mt-2 -mb-1", className)} {...props}>
+  <ScrollArea className={cn("-mb-1 mt-2", className)} {...props}>
     <div className="max-h-40 pr-4">
-      <ul>{children}</ul>
+      <ul className="flex flex-col gap-0.5">{children}</ul>
     </div>
   </ScrollArea>
 );
 
-// QueueSection - collapsible section container
+// ---------------------------------------------------------------------------
+// QueueSection / QueueSectionTrigger / QueueSectionLabel / QueueSectionContent
+// ---------------------------------------------------------------------------
+
 export type QueueSectionProps = ComponentProps<typeof Collapsible>;
 
 export const QueueSection = ({
@@ -204,7 +260,6 @@ export const QueueSection = ({
   <Collapsible className={cn(className)} defaultOpen={defaultOpen} {...props} />
 );
 
-// QueueSectionTrigger - section header/trigger
 export type QueueSectionTriggerProps = ComponentProps<"button">;
 
 export const QueueSectionTrigger = ({
@@ -226,33 +281,29 @@ export const QueueSectionTrigger = ({
   </CollapsibleTrigger>
 );
 
-// QueueSectionLabel - label content with icon and count
 export type QueueSectionLabelProps = ComponentProps<"span"> & {
   count?: number;
-  label: string;
   icon?: React.ReactNode;
 };
 
 export const QueueSectionLabel = ({
   count,
-  label,
   icon,
   className,
+  children,
   ...props
 }: QueueSectionLabelProps) => (
   <span className={cn("flex items-center gap-2", className)} {...props}>
     <ChevronDownIcon className="size-4 transition-transform group-data-[state=closed]:-rotate-90" />
     {icon}
     <span>
-      {count} {label}
+      {count === undefined ? "" : `${count} `}
+      {children}
     </span>
   </span>
 );
 
-// QueueSectionContent - collapsible content area
-export type QueueSectionContentProps = ComponentProps<
-  typeof CollapsibleContent
->;
+export type QueueSectionContentProps = ComponentProps<typeof CollapsibleContent>;
 
 export const QueueSectionContent = ({
   className,
@@ -261,12 +312,16 @@ export const QueueSectionContent = ({
   <CollapsibleContent className={cn(className)} {...props} />
 );
 
+// ---------------------------------------------------------------------------
+// Queue (root)
+// ---------------------------------------------------------------------------
+
 export type QueueProps = ComponentProps<"div">;
 
 export const Queue = ({ className, ...props }: QueueProps) => (
   <div
     className={cn(
-      "flex flex-col gap-2 rounded-xl border border-border bg-background px-3 pt-2 pb-2 shadow-xs",
+      "flex flex-col gap-2 rounded-xl border border-border bg-background px-3 pb-2 pt-2 shadow-xs",
       className
     )}
     {...props}

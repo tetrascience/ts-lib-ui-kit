@@ -24,12 +24,22 @@ const getMotionComponent = (element: keyof JSX.IntrinsicElements) => {
   return component;
 };
 
+/** TetraScience brand gradient — Light Blue 300 → Purple 500 → Violet Marble */
+export const TS_SHIMMER_GRADIENT =
+  "linear-gradient(90deg, #549DFF, #8243BA, #9665F4)";
+
 export interface TextShimmerProps {
   children: string;
   as?: ElementType;
   className?: string;
   duration?: number;
   spread?: number;
+  /**
+   * CSS gradient used as the base text colour. Defaults to `muted-foreground`.
+   * Pass `TS_SHIMMER_GRADIENT` (or any custom gradient) to colour the text
+   * with the brand blue→purple sweep.
+   */
+  gradient?: string;
 }
 
 const ShimmerComponent = ({
@@ -38,6 +48,7 @@ const ShimmerComponent = ({
   className,
   duration = 2,
   spread = 2,
+  gradient,
 }: TextShimmerProps) => {
   const MotionComponent = getMotionComponent(
     Component as keyof JSX.IntrinsicElements
@@ -47,6 +58,10 @@ const ShimmerComponent = ({
     () => (children?.length ?? 0) * spread,
     [children, spread]
   );
+
+  const baseGradient = gradient
+    ? gradient
+    : "linear-gradient(var(--color-muted-foreground), var(--color-muted-foreground))";
 
   return (
     <MotionComponent
@@ -60,8 +75,7 @@ const ShimmerComponent = ({
       style={
         {
           "--spread": `${dynamicSpread}px`,
-          backgroundImage:
-            "var(--bg), linear-gradient(var(--color-muted-foreground), var(--color-muted-foreground))",
+          backgroundImage: `var(--bg), ${baseGradient}`,
         } as CSSProperties
       }
       transition={{

@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo } from "react";
 
 import type { ToolUIPart } from "ai";
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, PropsWithChildren, ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -67,16 +67,19 @@ export const Confirmation = ({
 // ConfirmationTitle
 // ---------------------------------------------------------------------------
 
-export type ConfirmationTitleProps = ComponentProps<"h3">;
+export type ConfirmationTitleProps = PropsWithChildren<ComponentProps<"h3">>;
 
 export const ConfirmationTitle = ({
   className,
+  children,
   ...props
 }: ConfirmationTitleProps) => (
   <h3
     className={cn("font-semibold text-base text-foreground", className)}
     {...props}
-  />
+  >
+    {children}
+  </h3>
 );
 
 // ---------------------------------------------------------------------------

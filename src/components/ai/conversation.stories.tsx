@@ -28,7 +28,7 @@ type Story = StoryObj
 
 export const Empty: Story = {
   render: () => (
-    <div className="h-[400px] w-full max-w-2xl rounded-lg border">
+    <div className="h-full w-full max-w-2xl">
       <Conversation>
         <ConversationContent>
           <ConversationEmptyState

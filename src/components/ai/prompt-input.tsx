@@ -913,7 +913,7 @@ export const PromptInput = ({
         ref={formRef}
         {...props}
       >
-        <InputGroup className="overflow-hidden">{children}</InputGroup>
+        <InputGroup className="border-border overflow-hidden has-[[data-slot=input-group-control]:focus-visible]:ring-0">{children}</InputGroup>
       </form>
     </>
   );
@@ -1334,6 +1334,50 @@ export const PromptInputHoverCardContent = ({
   ...props
 }: PromptInputHoverCardContentProps) => (
   <HoverCardContent align={align} {...props} />
+);
+
+// ============================================================================
+// PromptInputSlotSwap
+// ============================================================================
+
+export type PromptInputSlotSwapProps = {
+  /** Shown when show=false (e.g. mic button). */
+  a: ReactNode;
+  /** Shown when show=true (e.g. submit button). */
+  b: ReactNode;
+  /** When true, b is visible; when false, a is visible. */
+  show: boolean;
+  className?: string;
+};
+
+export const PromptInputSlotSwap = ({
+  a,
+  b,
+  show,
+  className,
+}: PromptInputSlotSwapProps) => (
+  <div
+    className={cn("relative inline-flex items-center justify-center", className)}
+  >
+    <div
+      aria-hidden={show}
+      className={cn(
+        "transition-all duration-200 ease-out",
+        show ? "pointer-events-none scale-75 opacity-0" : "scale-100 opacity-100"
+      )}
+    >
+      {a}
+    </div>
+    <div
+      aria-hidden={!show}
+      className={cn(
+        "absolute transition-all duration-200 ease-out",
+        show ? "scale-100 opacity-100" : "pointer-events-none scale-75 opacity-0"
+      )}
+    >
+      {b}
+    </div>
+  </div>
 );
 
 export type PromptInputTabsListProps = HTMLAttributes<HTMLDivElement>;

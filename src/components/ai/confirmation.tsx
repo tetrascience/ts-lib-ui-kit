@@ -3,37 +3,15 @@ import { createContext, useContext, useMemo } from "react";
 import type { ToolUIPart } from "ai";
 import type { ComponentProps, ReactNode } from "react";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 
 type ToolUIPartApproval =
-  | {
-      id: string;
-      approved?: never;
-      reason?: never;
-    }
-  | {
-      id: string;
-      approved: boolean;
-      reason?: string;
-    }
-  | {
-      id: string;
-      approved: true;
-      reason?: string;
-    }
-  | {
-      id: string;
-      approved: true;
-      reason?: string;
-    }
-  | {
-      id: string;
-      approved: false;
-      reason?: string;
-    }
+  | { id: string; approved?: never; reason?: never }
+  | { id: string; approved: boolean; reason?: string }
+  | { id: string; approved: true; reason?: string }
+  | { id: string; approved: false; reason?: string }
   | undefined;
 
 interface ConfirmationContextValue {
@@ -41,21 +19,21 @@ interface ConfirmationContextValue {
   state: ToolUIPart["state"];
 }
 
-const ConfirmationContext = createContext<ConfirmationContextValue | null>(
-  null
-);
+const ConfirmationContext = createContext<ConfirmationContextValue | null>(null);
 
 const useConfirmation = () => {
   const context = useContext(ConfirmationContext);
-
   if (!context) {
     throw new Error("Confirmation components must be used within Confirmation");
   }
-
   return context;
 };
 
-export type ConfirmationProps = ComponentProps<typeof Alert> & {
+// ---------------------------------------------------------------------------
+// Confirmation (root)
+// ---------------------------------------------------------------------------
+
+export type ConfirmationProps = ComponentProps<"div"> & {
   approval?: ToolUIPartApproval;
   state: ToolUIPart["state"];
 };
@@ -74,45 +52,64 @@ export const Confirmation = ({
 
   return (
     <ConfirmationContext.Provider value={contextValue}>
-      <Alert className={cn("flex flex-col gap-2", className)} {...props} />
+      <div
+        className={cn(
+          "flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-sm",
+          className
+        )}
+        {...props}
+      />
     </ConfirmationContext.Provider>
   );
 };
 
-export type ConfirmationTitleProps = ComponentProps<typeof AlertDescription>;
+// ---------------------------------------------------------------------------
+// ConfirmationTitle
+// ---------------------------------------------------------------------------
+
+export type ConfirmationTitleProps = ComponentProps<"h3">;
 
 export const ConfirmationTitle = ({
   className,
   ...props
 }: ConfirmationTitleProps) => (
-  <AlertDescription className={cn("inline", className)} {...props} />
+  <h3
+    className={cn("font-semibold text-base text-foreground", className)}
+    {...props}
+  />
 );
 
-export interface ConfirmationRequestProps {
-  children?: ReactNode;
-}
+// ---------------------------------------------------------------------------
+// ConfirmationCode — monospace command/code block
+// ---------------------------------------------------------------------------
 
-export const ConfirmationRequest = ({ children }: ConfirmationRequestProps) => {
+export type ConfirmationCodeProps = ComponentProps<"pre">;
+
+export const ConfirmationCode = ({
+  className,
+  ...props
+}: ConfirmationCodeProps) => (
+  <pre
+    className={cn(
+      "overflow-x-auto whitespace-pre-wrap break-words rounded-lg bg-muted px-4 py-3 font-mono text-sm leading-relaxed text-foreground/80",
+      className
+    )}
+    {...props}
+  />
+);
+
+// ---------------------------------------------------------------------------
+// ConfirmationRequest / Accepted / Rejected — conditional renderers
+// ---------------------------------------------------------------------------
+
+export const ConfirmationRequest = ({ children }: { children?: ReactNode }) => {
   const { state } = useConfirmation();
-
-  // Only show when approval is requested
-  if (state !== "approval-requested") {
-    return null;
-  }
-
-  return children;
+  if (state !== "approval-requested") return null;
+  return <>{children}</>;
 };
 
-export interface ConfirmationAcceptedProps {
-  children?: ReactNode;
-}
-
-export const ConfirmationAccepted = ({
-  children,
-}: ConfirmationAcceptedProps) => {
+export const ConfirmationAccepted = ({ children }: { children?: ReactNode }) => {
   const { approval, state } = useConfirmation();
-
-  // Only show when approved and in response states
   if (
     !approval?.approved ||
     (state !== "approval-responded" &&
@@ -121,20 +118,11 @@ export const ConfirmationAccepted = ({
   ) {
     return null;
   }
-
-  return children;
+  return <>{children}</>;
 };
 
-export interface ConfirmationRejectedProps {
-  children?: ReactNode;
-}
-
-export const ConfirmationRejected = ({
-  children,
-}: ConfirmationRejectedProps) => {
+export const ConfirmationRejected = ({ children }: { children?: ReactNode }) => {
   const { approval, state } = useConfirmation();
-
-  // Only show when rejected and in response states
   if (
     approval?.approved !== false ||
     (state !== "approval-responded" &&
@@ -143,9 +131,12 @@ export const ConfirmationRejected = ({
   ) {
     return null;
   }
-
-  return children;
+  return <>{children}</>;
 };
+
+// ---------------------------------------------------------------------------
+// ConfirmationActions — deny left, allow buttons right
+// ---------------------------------------------------------------------------
 
 export type ConfirmationActionsProps = ComponentProps<"div">;
 
@@ -154,22 +145,49 @@ export const ConfirmationActions = ({
   ...props
 }: ConfirmationActionsProps) => {
   const { state } = useConfirmation();
-
-  // Only show when approval is requested
-  if (state !== "approval-requested") {
-    return null;
-  }
-
+  if (state !== "approval-requested") return null;
   return (
     <div
-      className={cn("flex items-center justify-end gap-2 self-end", className)}
+      className={cn("flex items-center justify-between gap-2", className)}
       {...props}
     />
   );
 };
 
+// ---------------------------------------------------------------------------
+// ConfirmationAction — individual button
+// ---------------------------------------------------------------------------
+
 export type ConfirmationActionProps = ComponentProps<typeof Button>;
 
-export const ConfirmationAction = (props: ConfirmationActionProps) => (
-  <Button className="h-8 px-3 text-sm" type="button" {...props} />
+export const ConfirmationAction = ({
+  className,
+  size = "sm",
+  ...props
+}: ConfirmationActionProps) => (
+  <Button
+    className={cn("gap-1.5", className)}
+    size={size}
+    type="button"
+    {...props}
+  />
+);
+
+// ---------------------------------------------------------------------------
+// ConfirmationShortcut — keyboard shortcut label inside a button
+// ---------------------------------------------------------------------------
+
+export type ConfirmationShortcutProps = ComponentProps<"kbd">;
+
+export const ConfirmationShortcut = ({
+  className,
+  ...props
+}: ConfirmationShortcutProps) => (
+  <kbd
+    className={cn(
+      "ml-0.5 rounded px-1 py-0.5 font-sans text-[10px] opacity-60",
+      className
+    )}
+    {...props}
+  />
 );

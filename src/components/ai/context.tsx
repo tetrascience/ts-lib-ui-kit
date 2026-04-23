@@ -19,6 +19,28 @@ const ICON_RADIUS = 10;
 const ICON_VIEWBOX = 24;
 const ICON_CENTER = 12;
 const ICON_STROKE_WIDTH = 2;
+const WARN_THRESHOLD = 0.75;
+const DANGER_THRESHOLD = 0.9;
+
+type UsageStatus = "normal" | "warning" | "danger";
+
+const getUsageStatus = (pct: number): UsageStatus => {
+  if (pct >= DANGER_THRESHOLD) return "danger";
+  if (pct >= WARN_THRESHOLD) return "warning";
+  return "normal";
+};
+
+const STATUS_TEXT: Record<UsageStatus, string> = {
+  normal: "text-muted-foreground",
+  warning: "text-amber-500",
+  danger: "text-destructive",
+};
+
+const STATUS_PROGRESS: Record<UsageStatus, string> = {
+  normal: "",
+  warning: "[&_[data-slot=progress-indicator]]:bg-amber-500",
+  danger: "[&_[data-slot=progress-indicator]]:bg-destructive",
+};
 
 type ModelId = string;
 
@@ -108,6 +130,7 @@ export type ContextTriggerProps = ComponentProps<typeof Button>;
 export const ContextTrigger = ({ children, ...props }: ContextTriggerProps) => {
   const { usedTokens, maxTokens } = useContextValue();
   const usedPercent = usedTokens / maxTokens;
+  const status = getUsageStatus(usedPercent);
   const renderedPercent = new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 1,
     style: "percent",
@@ -117,10 +140,12 @@ export const ContextTrigger = ({ children, ...props }: ContextTriggerProps) => {
     <HoverCardTrigger asChild>
       {children ?? (
         <Button type="button" variant="ghost" {...props}>
-          <span className="font-medium text-muted-foreground">
+          <span className={cn("font-medium", STATUS_TEXT[status])}>
             {renderedPercent}
           </span>
-          <ContextIcon />
+          <span className={STATUS_TEXT[status]}>
+            <ContextIcon />
+          </span>
         </Button>
       )}
     </HoverCardTrigger>
@@ -148,6 +173,7 @@ export const ContextContentHeader = ({
 }: ContextContentHeaderProps) => {
   const { usedTokens, maxTokens } = useContextValue();
   const usedPercent = usedTokens / maxTokens;
+  const status = getUsageStatus(usedPercent);
   const displayPct = new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 1,
     style: "percent",
@@ -164,13 +190,16 @@ export const ContextContentHeader = ({
       {children ?? (
         <>
           <div className="flex items-center justify-between gap-3 text-xs">
-            <p>{displayPct}</p>
+            <p className={cn(STATUS_TEXT[status])}>{displayPct}</p>
             <p className="font-mono text-muted-foreground">
               {used} / {total}
             </p>
           </div>
           <div className="space-y-2">
-            <Progress className="bg-muted" value={usedPercent * PERCENT_MAX} />
+            <Progress
+              className={cn("bg-muted", STATUS_PROGRESS[status])}
+              value={usedPercent * PERCENT_MAX}
+            />
           </div>
         </>
       )}
@@ -215,7 +244,7 @@ export const ContextContentFooter = ({
   return (
     <div
       className={cn(
-        "flex w-full items-center justify-between gap-3 bg-secondary p-3 text-xs",
+        "flex w-full items-center justify-between gap-3 bg-muted/50 p-3 text-xs",
         className
       )}
       {...props}

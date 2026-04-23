@@ -3,25 +3,20 @@ import { useCallback } from "react";
 import type { ComponentProps } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  ScrollArea,
-  ScrollBar,
-} from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-export type SuggestionsProps = ComponentProps<typeof ScrollArea>;
+export type SuggestionsProps = ComponentProps<"div">;
 
 export const Suggestions = ({
   className,
   children,
   ...props
 }: SuggestionsProps) => (
-  <ScrollArea className="w-full overflow-x-auto whitespace-nowrap" {...props}>
-    <div className={cn("flex w-max flex-nowrap items-center gap-2", className)}>
+  <div className="w-full overflow-x-auto py-1" {...props}>
+    <div className={cn("flex w-max flex-nowrap items-center gap-2 px-4", className)}>
       {children}
     </div>
-    <ScrollBar className="hidden" orientation="horizontal" />
-  </ScrollArea>
+  </div>
 );
 
 export type SuggestionProps = Omit<ComponentProps<typeof Button>, "onClick"> & {

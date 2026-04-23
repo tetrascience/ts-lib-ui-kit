@@ -455,6 +455,151 @@
   }
 }
 
+/* ==========================================================================
+   TetraScience AI — Brand border effects
+   Based on TetraScience Style Guide v1.0 (May 2024).
+
+   TWO families:
+
+   box-shadow family — apply directly to any component, never disturbs
+   background or border-radius already set on the element:
+     ts-border-glow      Static TS Blue glow  (prompt input, queue)
+     ts-border-accent    Light-blue chip ring  (suggestion selected state)
+     ts-border-pulse     Breathing glow        (reasoning "thinking" state)
+
+   background-clip family — apply to a WRAPPER div whose background colour
+   must be known. Override --ts-border-bg if the wrapper sits on --card:
+     ts-border-gradient  Static Blue-Vision → purple gradient ring
+     ts-border-shimmer   Animated sweeping gradient ring   (shimmer component)
+
+   Usage with card background:
+     <div class="ts-border-gradient [--ts-border-bg:var(--card)]">…</div>
+   ========================================================================== */
+
+/* Keyframes */
+@keyframes ts-border-sweep {
+  from { background-position: 0% center; }
+  to   { background-position: 200% center; }
+}
+
+/*
+  Pulse cycles between TS Blue 500 and Light Blue 300, with a purple mid-glow
+  matching the "thinking" card aesthetic (screenshot ref).
+*/
+@keyframes ts-border-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1.5px #549DFF,
+      0 0 10px 2px rgba(84,157,255,0.20),
+      0 0 32px 4px rgba(130,67,186,0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1.5px #8243BA,
+      0 0 16px 4px rgba(130,67,186,0.30),
+      0 0 40px 8px rgba(84,157,255,0.12);
+  }
+}
+
+/* --- box-shadow family -------------------------------------------------- */
+
+@utility ts-border-glow {
+  box-shadow:
+    0 0 0 1.5px #2F45B5,
+    0 0 16px 2px rgba(47,69,181,0.18);
+}
+
+@utility ts-border-accent {
+  box-shadow:
+    0 0 0 1.5px #549DFF,
+    0 0 8px 1px rgba(84,157,255,0.22);
+}
+
+@utility ts-border-pulse {
+  animation: ts-border-breathe 2.8s ease-in-out infinite;
+}
+
+/* --- background-clip family -------------------------------------------- */
+
+/*
+  Vivid blue (#549DFF) → purple (#9665F4) gradient — matches the "thinking
+  card" screenshot. Works on both light and dark surfaces via --ts-border-bg.
+*/
+@utility ts-border-gradient {
+  --ts-border-bg: var(--background);
+  border: 1.5px solid transparent;
+  background-image:
+    linear-gradient(var(--ts-border-bg), var(--ts-border-bg)),
+    linear-gradient(135deg, #549DFF 0%, #8243BA 50%, #9665F4 100%);
+  background-clip: padding-box, border-box;
+  background-origin: padding-box, border-box;
+}
+
+/*
+  ts-reasoning-accent — gradient left-bar accent for reasoning / thinking panels.
+  Draws a 2px blue→purple bar on the left edge without touching the border ring.
+  Apply directly to the Reasoning component or any collapsible thinking panel.
+*/
+@utility ts-reasoning-accent {
+  position: relative;
+  padding-left: 0.875rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    border-radius: 1px;
+    background: linear-gradient(to bottom, #549DFF, #9665F4);
+    pointer-events: none;
+  }
+}
+
+@utility ts-border-shimmer {
+  --ts-border-bg: var(--background);
+  border: 1.5px solid transparent;
+  background-image:
+    linear-gradient(var(--ts-border-bg), var(--ts-border-bg)),
+    linear-gradient(90deg, #549DFF, #8243BA, #9665F4, #8243BA, #549DFF);
+  background-clip: padding-box, border-box;
+  background-origin: padding-box, border-box;
+  background-size: 100%, 300% 100%;
+  animation: ts-border-sweep 3s linear infinite;
+}
+
+/*
+  ts-spin-pulse — for animated loading / thinking icons.
+  Continuously rotates and occasionally surges in scale to signal active work.
+  Apply to a wrapper span around any Lucide icon.
+*/
+@keyframes ts-spin-pulse {
+  0%   { transform: rotate(0deg)   scale(1);    }
+  72%  { transform: rotate(259deg) scale(1);    }
+  84%  { transform: rotate(302deg) scale(1.3);  }
+  92%  { transform: rotate(331deg) scale(1.1);  }
+  100% { transform: rotate(360deg) scale(1);    }
+}
+
+@utility ts-spin-pulse {
+  animation: ts-spin-pulse 2.5s ease-in-out infinite;
+}
+
+/*
+  ts-bubble-confirm — single-shot ripple for confirmation moments.
+  Apply to an absolutely-positioned overlay element (e.g. a rounded-full span)
+  that is mounted on a transition and removed once the animation ends.
+*/
+@keyframes ts-bubble-confirm {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(3);   opacity: 0;   }
+}
+
+@utility ts-bubble-confirm {
+  animation: ts-bubble-confirm 0.6s ease-out forwards;
+}
+
 @layer base {
   *, ::before, ::after {
     border-color: var(--border);

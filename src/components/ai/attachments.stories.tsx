@@ -76,15 +76,15 @@ type Story = StoryObj
 export const Grid: Story = {
   render: () => (
     <Attachments variant="grid">
-      <Attachment data={mockImageFile}>
+      <Attachment data={mockImageFile} onRemove={() => {}}>
         <AttachmentPreview />
         <AttachmentRemove />
       </Attachment>
-      <Attachment data={mockDocFile}>
+      <Attachment data={mockDocFile} onRemove={() => {}}>
         <AttachmentPreview />
         <AttachmentRemove />
       </Attachment>
-      <Attachment data={mockAudioFile}>
+      <Attachment data={mockAudioFile} onRemove={() => {}}>
         <AttachmentPreview />
         <AttachmentRemove />
       </Attachment>
@@ -93,7 +93,8 @@ export const Grid: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     await step("Grid attachments render", async () => {
-      await expect(canvas.getByRole("button", { name: /remove/i })).toBeInTheDocument()
+      const removeButtons = canvas.getAllByRole("button", { name: /remove/i })
+      await expect(removeButtons.length).toBeGreaterThan(0)
     })
   },
 }

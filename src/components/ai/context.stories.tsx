@@ -1,4 +1,4 @@
-import { expect, within } from "storybook/test"
+import { expect, screen, within } from "storybook/test"
 
 import {
   Context,
@@ -115,6 +115,152 @@ export const WithCaching: Story = {
     const canvas = within(canvasElement)
     await step("Context with cache usage renders", async () => {
       await expect(canvas.getByRole("button")).toBeInTheDocument()
+    })
+  },
+}
+
+export const OpenPopover: Story = {
+  render: () => (
+    <Context
+      open
+      usedTokens={1650}
+      maxTokens={128000}
+      modelId="gpt-4o"
+      usage={{
+        inputTokens: 1200,
+        outputTokens: 450,
+        reasoningTokens: 300,
+        cachedInputTokens: 150,
+      }}
+    >
+      <ContextTrigger />
+      <ContextContent>
+        <ContextContentHeader />
+        <ContextContentBody>
+          <ContextInputUsage />
+          <ContextOutputUsage />
+          <ContextReasoningUsage />
+          <ContextCacheUsage />
+        </ContextContentBody>
+        <ContextContentFooter />
+      </ContextContent>
+    </Context>
+  ),
+  play: async ({ step }) => {
+    await step("Popover contents visible", async () => {
+      await expect(await screen.findByText("Input")).toBeInTheDocument()
+      await expect(screen.getByText("Output")).toBeInTheDocument()
+      await expect(screen.getByText("Reasoning")).toBeInTheDocument()
+      await expect(screen.getByText("Cache")).toBeInTheDocument()
+      await expect(screen.getByText("Total cost")).toBeInTheDocument()
+    })
+  },
+}
+
+export const WarningThreshold: Story = {
+  render: () => (
+    <Context
+      open
+      usedTokens={100000}
+      maxTokens={128000}
+      modelId="gpt-4o"
+      usage={{ inputTokens: 90000, outputTokens: 10000 }}
+    >
+      <ContextTrigger />
+      <ContextContent>
+        <ContextContentHeader />
+        <ContextContentBody>
+          <ContextInputUsage />
+          <ContextOutputUsage />
+        </ContextContentBody>
+        <ContextContentFooter />
+      </ContextContent>
+    </Context>
+  ),
+  play: async ({ step }) => {
+    await step("Warning threshold renders progress bar", async () => {
+      await expect(await screen.findByText("Input")).toBeInTheDocument()
+    })
+  },
+}
+
+export const CustomChildrenOverride: Story = {
+  render: () => (
+    <Context
+      open
+      usedTokens={500}
+      maxTokens={1000}
+      usage={{
+        inputTokens: 200,
+        outputTokens: 100,
+        reasoningTokens: 50,
+        cachedInputTokens: 25,
+      }}
+    >
+      <ContextTrigger>
+        <button type="button">Custom Trigger</button>
+      </ContextTrigger>
+      <ContextContent>
+        <ContextContentHeader>
+          <div>Custom header</div>
+        </ContextContentHeader>
+        <ContextContentBody>
+          <ContextInputUsage>
+            <div>Custom input row</div>
+          </ContextInputUsage>
+          <ContextOutputUsage>
+            <div>Custom output row</div>
+          </ContextOutputUsage>
+          <ContextReasoningUsage>
+            <div>Custom reasoning row</div>
+          </ContextReasoningUsage>
+          <ContextCacheUsage>
+            <div>Custom cache row</div>
+          </ContextCacheUsage>
+        </ContextContentBody>
+        <ContextContentFooter>
+          <div>Custom footer</div>
+        </ContextContentFooter>
+      </ContextContent>
+    </Context>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Custom trigger renders", async () => {
+      await expect(canvas.getByText("Custom Trigger")).toBeInTheDocument()
+    })
+    await step("All custom content slots render", async () => {
+      await expect(await screen.findByText("Custom header")).toBeInTheDocument()
+      await expect(screen.getByText("Custom input row")).toBeInTheDocument()
+      await expect(screen.getByText("Custom output row")).toBeInTheDocument()
+      await expect(screen.getByText("Custom reasoning row")).toBeInTheDocument()
+      await expect(screen.getByText("Custom cache row")).toBeInTheDocument()
+      await expect(screen.getByText("Custom footer")).toBeInTheDocument()
+    })
+  },
+}
+
+export const ZeroUsageHidesRows: Story = {
+  render: () => (
+    <Context open usedTokens={0} maxTokens={1000} usage={{ inputTokens: 0, outputTokens: 0 }}>
+      <ContextTrigger />
+      <ContextContent>
+        <ContextContentHeader />
+        <ContextContentBody>
+          <ContextInputUsage />
+          <ContextOutputUsage />
+          <ContextReasoningUsage />
+          <ContextCacheUsage />
+        </ContextContentBody>
+        <ContextContentFooter />
+      </ContextContent>
+    </Context>
+  ),
+  play: async ({ step }) => {
+    await step("Zero-token rows are hidden but footer still renders", async () => {
+      await expect(await screen.findByText("Total cost")).toBeInTheDocument()
+      await expect(screen.queryByText("Input")).not.toBeInTheDocument()
+      await expect(screen.queryByText("Output")).not.toBeInTheDocument()
     })
   },
 }

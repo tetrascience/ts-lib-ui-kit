@@ -159,7 +159,7 @@ This is a fundamental constant of nature and forms the basis of Einstein's theor
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     await step("Full conversation renders", async () => {
-      await expect(canvas.getByText(/speed of light/)).toBeInTheDocument()
+      await expect(canvas.getAllByText(/speed of light/i).length).toBeGreaterThan(0)
       await expect(canvas.getByText(/8 minutes and 20 seconds/)).toBeInTheDocument()
     })
   },
@@ -168,12 +168,29 @@ This is a fundamental constant of nature and forms the basis of Einstein's theor
 export const WithBranching: Story = {
   render: () => (
     <div className="w-full max-w-2xl space-y-1">
-      <MessageBranch branches={["branch-1", "branch-2", "branch-3"]} currentIndex={1}>
+      <MessageBranch defaultBranch={1}>
         <MessageBranchContent>
-          <Message from="assistant">
+          <Message from="assistant" key="branch-1">
+            <MessageContent>
+              <MessageResponse>
+                Recursion is when a function calls itself to solve a smaller
+                piece of the problem, building up the answer as the call stack
+                unwinds.
+              </MessageResponse>
+            </MessageContent>
+          </Message>
+          <Message from="assistant" key="branch-2">
             <MessageContent>
               <MessageResponse>
                 Here is one way to explain recursion: a function that calls itself with a smaller version of the problem.
+              </MessageResponse>
+            </MessageContent>
+          </Message>
+          <Message from="assistant" key="branch-3">
+            <MessageContent>
+              <MessageResponse>
+                Think of recursion like nesting dolls — each doll contains a
+                smaller version of itself until you reach the smallest one.
               </MessageResponse>
             </MessageContent>
           </Message>
@@ -191,8 +208,8 @@ export const WithBranching: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     await step("Branched message with navigation renders", async () => {
-      await expect(canvas.getByText(/recursion/)).toBeInTheDocument()
-      await expect(canvas.getByText("2 / 3")).toBeInTheDocument()
+      await expect(canvas.getAllByText(/recursion/).length).toBeGreaterThan(0)
+      await expect(canvas.getByText(/2 of 3/)).toBeInTheDocument()
     })
   },
 }

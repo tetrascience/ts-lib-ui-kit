@@ -64,7 +64,7 @@ export const WithDuration: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     await step("Reasoning with duration renders", async () => {
-      await expect(canvas.getByText(/4\.2s/)).toBeInTheDocument()
+      await expect(canvas.getByText(/4\.2 seconds/)).toBeInTheDocument()
     })
   },
 }

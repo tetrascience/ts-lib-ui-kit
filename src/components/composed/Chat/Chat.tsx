@@ -106,7 +106,7 @@ const nextId = () => {
   return `chat-msg-${_idCounter}`
 }
 
-const STREAM_STATUS_LINGER_MS = 800
+const STREAM_STATUS_LINGER_MS = 3000
 
 // ---------------------------------------------------------------------------
 // Chat component

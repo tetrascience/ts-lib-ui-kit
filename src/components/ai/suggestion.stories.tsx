@@ -65,7 +65,9 @@ export const Interactive: Story = {
     await step("Clicking a suggestion selects it", async () => {
       const btn = canvas.getByText("Write a haiku about autumn")
       await userEvent.click(btn)
-      await expect(canvas.getByText(/Write a haiku about autumn/)).toBeInTheDocument()
+      await expect(canvas.getByText(/^Selected:/)).toHaveTextContent(
+        "Write a haiku about autumn"
+      )
     })
   },
 }

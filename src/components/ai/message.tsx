@@ -314,7 +314,7 @@ export const MessageBranchPage = ({
       )}
       {...props}
     >
-      {currentBranch + 1} of {totalBranches}
+      {`${currentBranch + 1} of ${totalBranches}`}
     </ButtonGroupText>
   );
 };

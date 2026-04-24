@@ -1,18 +1,21 @@
 import { MessageSquareIcon } from "lucide-react"
 import { useEffect, useState } from "react"
-import { expect, within } from "storybook/test"
+import { expect, userEvent, within } from "storybook/test"
 
 
 import {
   Conversation,
   ConversationContent,
+  ConversationDownload,
   ConversationEmptyState,
   ConversationScrollButton,
+  messagesToMarkdown,
 } from "./conversation"
 import { Message, MessageContent, MessageResponse } from "./message"
 import { StreamStatus } from "./stream-status"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { UIMessage } from "ai"
 
 const meta: Meta = {
   title: "AI Elements/Conversation",
@@ -156,6 +159,90 @@ export const StreamingInProgress: Story = {
     const canvas = within(canvasElement)
     await step("Streaming status renders with elapsed time", async () => {
       await expect(canvas.getByText(/tokens/i)).toBeInTheDocument()
+    })
+  },
+}
+
+const sampleMessages: UIMessage[] = [
+  {
+    id: "m1",
+    role: "user",
+    parts: [{ type: "text", text: "Summarise TypeScript generics." }],
+  },
+  {
+    id: "m2",
+    role: "assistant",
+    parts: [
+      { type: "text", text: "Generics let you parameterise types for reuse." },
+    ],
+  },
+]
+
+export const WithDownload: Story = {
+  render: () => (
+    <div className="relative h-[300px] w-full max-w-2xl rounded-lg border">
+      <Conversation>
+        <ConversationContent>
+          {sampleMessages.map((m) => (
+            <Message from={m.role} key={m.id}>
+              <MessageContent>
+                <MessageResponse>
+                  {m.parts.map((p) => (p.type === "text" ? p.text : "")).join("")}
+                </MessageResponse>
+              </MessageContent>
+            </Message>
+          ))}
+        </ConversationContent>
+        <ConversationDownload aria-label="Download conversation" messages={sampleMessages} />
+      </Conversation>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Clicking download button triggers handler", async () => {
+      const button = canvas.getByRole("button", { name: "Download conversation" })
+      const originalCreateURL = URL.createObjectURL
+      const originalRevokeURL = URL.revokeObjectURL
+      URL.createObjectURL = () => "blob:mock"
+      URL.revokeObjectURL = () => {}
+      await userEvent.click(button)
+      URL.createObjectURL = originalCreateURL
+      URL.revokeObjectURL = originalRevokeURL
+    })
+  },
+}
+
+export const MarkdownSerialisation: Story = {
+  render: () => <div>Exercises messagesToMarkdown utility</div>,
+  play: async ({ step }) => {
+    await step("Default formatter produces role-prefixed markdown", async () => {
+      const md = messagesToMarkdown(sampleMessages)
+      await expect(md).toContain("**User:**")
+      await expect(md).toContain("**Assistant:**")
+    })
+    await step("Custom formatter is respected", async () => {
+      const md = messagesToMarkdown(sampleMessages, (m, i) => `${i}: ${m.role}`)
+      await expect(md).toBe("0: user\n\n1: assistant")
+    })
+  },
+}
+
+export const CustomEmptyStateChildren: Story = {
+  render: () => (
+    <div className="h-[200px] w-full max-w-2xl rounded-lg border">
+      <Conversation>
+        <ConversationContent>
+          <ConversationEmptyState>
+            <div>Totally custom empty</div>
+          </ConversationEmptyState>
+        </ConversationContent>
+      </Conversation>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Custom children replace default empty state", async () => {
+      await expect(canvas.getByText("Totally custom empty")).toBeInTheDocument()
     })
   },
 }

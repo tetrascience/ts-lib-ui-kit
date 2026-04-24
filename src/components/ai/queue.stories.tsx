@@ -1,9 +1,16 @@
-import { expect, within } from "storybook/test"
+import { ListChecksIcon, XIcon } from "lucide-react"
+import { expect, userEvent, within } from "storybook/test"
 
 import {
   Queue,
   QueueItem,
+  QueueItemAction,
+  QueueItemActions,
+  QueueItemAttachment,
   QueueItemContent,
+  QueueItemDescription,
+  QueueItemFile,
+  QueueItemImage,
   QueueItemIndicator,
   QueueList,
   QueueSection,
@@ -102,6 +109,98 @@ export const WithCompletedItems: Story = {
     await step("Multiple sections render", async () => {
       await expect(canvas.getByText("Fetch raw data")).toBeInTheDocument()
       await expect(canvas.getByText("Train model")).toBeInTheDocument()
+    })
+  },
+}
+
+export const WithActionsAndDescription: Story = {
+  render: () => {
+    let removed = false
+    return (
+      <Queue className="w-full max-w-md">
+        <QueueSection defaultOpen>
+          <QueueSectionTrigger>
+            <QueueSectionLabel icon={<ListChecksIcon className="size-4" />}>
+              Tasks
+            </QueueSectionLabel>
+          </QueueSectionTrigger>
+          <QueueSectionContent>
+            <QueueList>
+              <QueueItem>
+                <QueueItemIndicator completed />
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <QueueItemContent>Upload documents</QueueItemContent>
+                  <QueueItemDescription completed>Done yesterday</QueueItemDescription>
+                </div>
+                <QueueItemActions>
+                  <QueueItemAction
+                    aria-label="Remove"
+                    onClick={() => {
+                      removed = true
+                    }}
+                  >
+                    <XIcon className="size-3" />
+                  </QueueItemAction>
+                </QueueItemActions>
+              </QueueItem>
+              <QueueItem>
+                <QueueItemIndicator />
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <QueueItemContent>Follow-up review</QueueItemContent>
+                  <QueueItemDescription>Scheduled for Monday</QueueItemDescription>
+                </div>
+              </QueueItem>
+            </QueueList>
+          </QueueSectionContent>
+        </QueueSection>
+      </Queue>
+    )
+    void removed
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Description and action render", async () => {
+      await expect(canvas.getByText("Done yesterday")).toBeInTheDocument()
+      const remove = canvas.getByRole("button", { name: "Remove" })
+      await userEvent.click(remove)
+    })
+  },
+}
+
+export const WithAttachments: Story = {
+  render: () => (
+    <Queue className="w-full max-w-md">
+      <QueueSection defaultOpen>
+        <QueueSectionTrigger>
+          <QueueSectionLabel count={1}>Messages</QueueSectionLabel>
+        </QueueSectionTrigger>
+        <QueueSectionContent>
+          <QueueList>
+            <QueueItem>
+              <QueueItemIndicator status="done" />
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <QueueItemContent>Shared assets</QueueItemContent>
+                <QueueItemAttachment>
+                  <QueueItemImage
+                    alt="thumbnail"
+                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2 2'%3E%3Crect width='2' height='2' fill='%236b7280'/%3E%3C/svg%3E"
+                  />
+                  <QueueItemFile>spec.pdf</QueueItemFile>
+                  <QueueItemFile>notes.txt</QueueItemFile>
+                </QueueItemAttachment>
+              </div>
+            </QueueItem>
+          </QueueList>
+        </QueueSectionContent>
+      </QueueSection>
+    </Queue>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Attachments render", async () => {
+      await expect(canvas.getByText("spec.pdf")).toBeInTheDocument()
+      await expect(canvas.getByText("notes.txt")).toBeInTheDocument()
+      await expect(canvas.getByAltText("thumbnail")).toBeInTheDocument()
     })
   },
 }

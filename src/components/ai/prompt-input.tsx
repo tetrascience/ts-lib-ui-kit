@@ -1168,14 +1168,31 @@ export type PromptInputActionMenuTriggerProps = PromptInputButtonProps;
 export const PromptInputActionMenuTrigger = ({
   className,
   children,
+  tooltip,
+  "aria-label": ariaLabel,
   ...props
-}: PromptInputActionMenuTriggerProps) => (
-  <DropdownMenuTrigger asChild>
-    <PromptInputButton className={className} {...props}>
-      {children ?? <PlusIcon className="size-4" />}
-    </PromptInputButton>
-  </DropdownMenuTrigger>
-);
+}: PromptInputActionMenuTriggerProps) => {
+  const derivedLabel =
+    ariaLabel ??
+    (typeof tooltip === "string"
+      ? tooltip
+      : typeof tooltip?.content === "string"
+        ? tooltip.content
+        : undefined);
+
+  return (
+    <DropdownMenuTrigger asChild>
+      <PromptInputButton
+        aria-label={derivedLabel}
+        className={className}
+        tooltip={tooltip}
+        {...props}
+      >
+        {children ?? <PlusIcon className="size-4" />}
+      </PromptInputButton>
+    </DropdownMenuTrigger>
+  );
+};
 
 export type PromptInputActionMenuContentProps = ComponentProps<
   typeof DropdownMenuContent

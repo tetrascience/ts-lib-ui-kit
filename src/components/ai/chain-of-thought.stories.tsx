@@ -53,7 +53,7 @@ export const Default: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     await step("Chain of thought renders with steps and sources", async () => {
-      await expect(canvas.getByText(/photosynthesis/)).toBeInTheDocument()
+      await expect(canvas.getAllByText(/photosynthesis/).length).toBeGreaterThan(0)
       await expect(canvas.getByText("Wikipedia")).toBeInTheDocument()
     })
   },
@@ -104,7 +104,7 @@ export const WithSearch: Story = {
     const canvas = within(canvasElement)
     await step("Search steps and image render", async () => {
       await expect(canvas.getByText(/Searching for profiles/)).toBeInTheDocument()
-      await expect(canvas.getByText("www.github.com")).toBeInTheDocument()
+      await expect(canvas.getAllByText("www.github.com").length).toBeGreaterThan(0)
     })
   },
 }

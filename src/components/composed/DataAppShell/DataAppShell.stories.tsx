@@ -877,3 +877,93 @@ export const MultipleNavGroups: Story = {
     });
   },
 };
+
+// =============================================================================
+// Compact property (icon rail vs expanded sheet)
+// =============================================================================
+
+export const CompactProperty: Story = {
+  name: "Compact Property",
+  tags: ['!dev'], // Hides from sidebar, remains testable
+  render: () => (
+    <DataAppShell
+      appName="HTS"
+      appFullName="HTS Hit Finder"
+      version="v2.4.1"
+      navGroups={[
+        {
+          label: "Main",
+          pages: [
+            { id: "project",  label: "Project",  icon: ClipboardList, isActive: true },
+            { id: "explorer", label: "Explorer", icon: Search },
+          ],
+        },
+        {
+          label: "Tools",
+          pages: [
+            { id: "filter", label: "Filters", icon: Filter },
+          ],
+        },
+      ]}
+      breadcrumbs={[{ label: "Project" }]}
+      userMenu={<UserMenuButton name="Test User" userRole="ADMIN" />}
+    >
+      <div className="p-6"><p>Content area</p></div>
+    </DataAppShell>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Compact icon rail renders on desktop (hidden on mobile)", async () => {
+      const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
+      expect(rail).toBeInTheDocument();
+      // Icon rail should have width of 60px
+      expect(rail).toHaveClass("w-[60px]");
+    });
+
+    await step("Icon rail displays icons and labels stacked vertically", async () => {
+      const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
+      // Labels should be present
+      expect(within(rail!).getByText("Project")).toBeInTheDocument();
+      expect(within(rail!).getByText("Explorer")).toBeInTheDocument();
+      expect(within(rail!).getByText("Filters")).toBeInTheDocument();
+    });
+
+    await step("Group labels are hidden in compact icon rail", async () => {
+      const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
+      // Group labels like "Main" and "Tools" should not appear in compact icon rail
+      expect(within(rail!).queryByText("Main")).not.toBeInTheDocument();
+      expect(within(rail!).queryByText("Tools")).not.toBeInTheDocument();
+    });
+
+    await step("Active page has primary background highlight in compact mode", async () => {
+      const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
+      const projectBtn = within(rail!).getByText("Project").closest("button");
+      const iconDiv = projectBtn?.querySelector(".bg-primary\\/10");
+      expect(iconDiv).toBeInTheDocument();
+    });
+
+    await step("Mobile hamburger menu button is hidden on desktop", async () => {
+      // The button has md:hidden class, so it should be hidden on desktop
+      const mobileMenuBtn = canvasElement.querySelector("button.md\\:hidden");
+      expect(mobileMenuBtn).toBeInTheDocument();
+      const styles = window.getComputedStyle(mobileMenuBtn!);
+      // On desktop, md:hidden should apply display: none
+      expect(styles.display).toBe("none");
+    });
+
+    await step("Icon rail has compact width and hidden on small screens", async () => {
+      const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
+      // Icon rail has md:flex which means it's hidden on mobile
+      expect(rail).toHaveClass("hidden", "md:flex");
+      const railStyles = window.getComputedStyle(rail!);
+      expect(railStyles.width).toBe("60px");
+    });
+
+    await step("User menu is visible at bottom of icon rail", async () => {
+      const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
+      // User avatar (initials TU) should be present in the rail
+      expect(within(rail!).getByText("TU")).toBeInTheDocument();
+    });
+  },
+};

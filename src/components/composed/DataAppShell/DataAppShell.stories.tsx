@@ -724,7 +724,6 @@ export const HelpButtonPresent: Story = {
     </DataAppShell>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
 
     await step("Help button renders when onHelpClick is provided", async () => {
       // Help button should be present in the top nav when onHelpClick is provided

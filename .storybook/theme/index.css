@@ -1,7 +1,9 @@
-/* Ensure fonts are available in the preview */
+
 body {
-  background-color: var(--background);
+  background-color: var(--card);
 }
+
+
 
 /* ============================================================
    Docs page overrides — uses CSS custom properties from the

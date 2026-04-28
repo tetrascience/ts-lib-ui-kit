@@ -1,6 +1,6 @@
 import { SparklesIcon } from "lucide-react"
-import { useState } from "react"
-import { expect, screen, userEvent, within } from "storybook/test"
+import React, { useState } from "react"
+import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test"
 
 import {
   Attachment,
@@ -16,8 +16,10 @@ import {
   PromptInputActionMenuContent,
   PromptInputActionMenuTrigger,
   PromptInputBody,
+  PromptInputButton,
   PromptInputFooter,
   PromptInputHeader,
+  PromptInputProvider,
   PromptInputSelect,
   PromptInputSelectContent,
   PromptInputSelectItem,
@@ -416,6 +418,498 @@ export const Streaming: Story = {
     const canvas = within(canvasElement)
     await step("Streaming state shows stop button", async () => {
       await expect(canvas.getByRole("button", { name: /stop/i })).toBeInTheDocument()
+    })
+  },
+}
+
+/** Enter key submits form with correct text payload. */
+export const EnterKeySubmit: Story = {
+  args: {
+    onSubmit: fn(),
+  },
+  render: (args) => {
+    const [text, setText] = useState("")
+    return (
+      <PromptCard className="max-w-2xl">
+        <PromptInput onSubmit={args.onSubmit as (msg: PromptInputMessage, e: React.FormEvent<HTMLFormElement>) => void}>
+          <PromptInputBody>
+            <PromptInputTextarea
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Ask anything..."
+              value={text}
+            />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputTools />
+            <PromptInputSubmit />
+          </PromptInputFooter>
+        </PromptInput>
+      </PromptCard>
+    )
+  },
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Enter key submits with correct text payload", async () => {
+      await userEvent.type(canvas.getByPlaceholderText("Ask anything..."), "Hello world")
+      await userEvent.keyboard("{Enter}")
+      await waitFor(() => expect(args.onSubmit).toHaveBeenCalledOnce())
+      await expect(args.onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ text: "Hello world", files: [] }),
+        expect.anything()
+      )
+    })
+  },
+}
+
+/** Shift+Enter inserts a newline without submitting. */
+export const ShiftEnterNewline: Story = {
+  args: {
+    onSubmit: fn(),
+  },
+  render: (args) => {
+    const [text, setText] = useState("")
+    return (
+      <PromptCard className="max-w-2xl">
+        <PromptInput onSubmit={args.onSubmit as (msg: PromptInputMessage, e: React.FormEvent<HTMLFormElement>) => void}>
+          <PromptInputBody>
+            <PromptInputTextarea
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Ask anything..."
+              value={text}
+            />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputTools />
+            <PromptInputSubmit />
+          </PromptInputFooter>
+        </PromptInput>
+      </PromptCard>
+    )
+  },
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const textarea = canvas.getByPlaceholderText("Ask anything...")
+    await step("Shift+Enter does not submit the form", async () => {
+      await userEvent.type(textarea, "Line one")
+      await userEvent.keyboard("{Shift>}{Enter}{/Shift}")
+      await expect(args.onSubmit).not.toHaveBeenCalled()
+    })
+    await step("Textarea still has focus after Shift+Enter", async () => {
+      await expect(textarea).toHaveFocus()
+    })
+  },
+}
+
+/** Stop button calls onStop instead of submitting when streaming. */
+export const StreamingStopCallback: Story = {
+  args: {
+    onStop: fn(),
+  },
+  render: (args) => (
+    <PromptCard className="max-w-2xl">
+      <PromptInput onSubmit={fn() as unknown as (msg: PromptInputMessage, e: React.FormEvent<HTMLFormElement>) => void}>
+        <PromptInputBody>
+          <PromptInputTextarea
+            onChange={() => {}}
+            placeholder="Ask anything..."
+            value="Computing..."
+          />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools />
+          <PromptInputSubmit onStop={args.onStop as () => void} status="streaming" />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptCard>
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Clicking stop button calls onStop callback", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /stop/i }))
+      await expect(args.onStop).toHaveBeenCalledOnce()
+    })
+  },
+}
+
+/** Submitted status — spinner shown while waiting for response. */
+export const SubmittedStatus: Story = {
+  render: () => (
+    <PromptCard className="max-w-2xl">
+      <PromptInput onSubmit={() => {}}>
+        <PromptInputBody>
+          <PromptInputTextarea
+            onChange={() => {}}
+            placeholder="Ask anything..."
+            value="What is the airspeed velocity of an unladen swallow?"
+          />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools />
+          <PromptInputSubmit status="submitted" />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptCard>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Submitted status renders stop button (aria)", async () => {
+      await expect(canvas.getByRole("button", { name: /stop/i })).toBeInTheDocument()
+    })
+  },
+}
+
+/** File validation — onError fires when file exceeds maxFileSize. */
+export const FileValidationMaxSize: Story = {
+  args: {
+    onError: fn(),
+  },
+  render: (args) => (
+    <PromptCard className="max-w-2xl">
+      <PromptInput
+        maxFileSize={100}
+        onError={args.onError as (err: { code: string; message: string }) => void}
+        onSubmit={() => {}}
+      >
+        <PromptInputBody>
+          <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools />
+          <PromptInputSubmit />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptCard>
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    await step("Dropping an oversized file fires onError with max_file_size code", async () => {
+      const oversizedFile = new File(["x".repeat(200)], "big.png", { type: "image/png" })
+      const fileInput = canvasElement.querySelector<HTMLInputElement>('input[type="file"]')!
+      await userEvent.upload(fileInput, oversizedFile)
+      await waitFor(() => expect(args.onError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: "max_file_size" })
+      ))
+    })
+  },
+}
+
+/** File type validation — onError fires when the uploaded MIME type is rejected by accept. */
+export const FileAcceptTypeValidation: Story = {
+  args: {
+    onError: fn(),
+  },
+  render: (args) => (
+    <PromptCard className="max-w-2xl">
+      <PromptInput
+        accept="image/*"
+        onError={args.onError as (err: { code: string; message: string }) => void}
+        onSubmit={() => {}}
+      >
+        <PromptInputBody>
+          <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools />
+          <PromptInputSubmit />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptCard>
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    await step("Dragging a non-image file fires onError with accept code", async () => {
+      const dataTransfer = new DataTransfer()
+      dataTransfer.items.add(new File(["hello"], "notes.txt", { type: "text/plain" }))
+      const form = canvasElement.querySelector("form")!
+      form.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer }))
+      await waitFor(() => expect(args.onError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: "accept" })
+      ))
+    })
+  },
+}
+
+/** Max files validation — onError fires and the over-limit files are dropped. */
+export const MaxFilesValidation: Story = {
+  args: {
+    onError: fn(),
+  },
+  render: (args) => (
+    <PromptCard className="max-w-2xl">
+      <PromptInput
+        maxFiles={2}
+        multiple
+        onError={args.onError as (err: { code: string; message: string }) => void}
+        onSubmit={() => {}}
+      >
+        <PromptInputBody>
+          <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools />
+          <PromptInputSubmit />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptCard>
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    await step("Uploading more files than maxFiles fires onError with max_files code", async () => {
+      const files = [
+        new File(["a"], "a.png", { type: "image/png" }),
+        new File(["b"], "b.png", { type: "image/png" }),
+        new File(["c"], "c.png", { type: "image/png" }),
+      ]
+      const fileInput = canvasElement.querySelector<HTMLInputElement>('input[type="file"]')!
+      await userEvent.upload(fileInput, files)
+      await waitFor(() => expect(args.onError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: "max_files" })
+      ))
+    })
+  },
+}
+
+/** Backspace on an empty textarea removes the last attached file. */
+export const BackspaceRemovesAttachment: Story = {
+  args: {
+    onSubmit: fn(),
+  },
+  render: (args) => {
+    const AttachmentCount = () => {
+      const { files } = usePromptInputAttachments()
+      return <span data-testid="attachment-count">{files.length}</span>
+    }
+    return (
+      <PromptCard className="max-w-2xl">
+        <PromptInput
+          onSubmit={args.onSubmit as (msg: PromptInputMessage, e: React.FormEvent<HTMLFormElement>) => void}
+        >
+          <PromptInputHeader>
+            <AttachmentCount />
+          </PromptInputHeader>
+          <PromptInputBody>
+            <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputTools />
+            <PromptInputSubmit />
+          </PromptInputFooter>
+        </PromptInput>
+      </PromptCard>
+    )
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Upload a file so there is one attachment", async () => {
+      const fileInput = canvasElement.querySelector<HTMLInputElement>('input[type="file"]')!
+      await userEvent.upload(fileInput, new File(["x"], "photo.png", { type: "image/png" }))
+      await waitFor(() => expect(canvas.getByTestId("attachment-count")).toHaveTextContent("1"))
+    })
+    await step("Backspace on empty textarea removes the attachment", async () => {
+      await userEvent.click(canvas.getByPlaceholderText("Ask anything..."))
+      await userEvent.keyboard("{Backspace}")
+      await waitFor(() => expect(canvas.getByTestId("attachment-count")).toHaveTextContent("0"))
+    })
+  },
+}
+
+/** Pasting an image file into the textarea adds it as an attachment. */
+export const PasteFileIntoTextarea: Story = {
+  args: {
+    onSubmit: fn(),
+  },
+  render: (args) => {
+    const AttachmentCount = () => {
+      const { files } = usePromptInputAttachments()
+      return <span data-testid="attachment-count">{files.length}</span>
+    }
+    return (
+      <PromptCard className="max-w-2xl">
+        <PromptInput
+          onSubmit={args.onSubmit as (msg: PromptInputMessage, e: React.FormEvent<HTMLFormElement>) => void}
+        >
+          <PromptInputHeader>
+            <AttachmentCount />
+          </PromptInputHeader>
+          <PromptInputBody>
+            <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputTools />
+            <PromptInputSubmit />
+          </PromptInputFooter>
+        </PromptInput>
+      </PromptCard>
+    )
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Pasting an image file adds it as an attachment", async () => {
+      const file = new File(["png-data"], "screenshot.png", { type: "image/png" })
+      const dataTransfer = new DataTransfer()
+      dataTransfer.items.add(file)
+
+      const textarea = canvas.getByPlaceholderText("Ask anything...")
+      textarea.focus()
+
+      textarea.dispatchEvent(
+        new ClipboardEvent("paste", {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: dataTransfer,
+        })
+      )
+
+      await waitFor(() => expect(canvas.getByTestId("attachment-count")).toHaveTextContent("1"))
+    })
+  },
+}
+
+/** PromptInputProvider: textarea is controlled externally and cleared after submit. */
+export const ProviderClearsAfterSubmit: Story = {
+  render: () => (
+    <PromptInputProvider>
+      <PromptCard className="max-w-2xl">
+        <PromptInput onSubmit={() => {}}>
+          <PromptInputBody>
+            <PromptInputTextarea placeholder="Type here..." />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputTools />
+            <PromptInputSubmit />
+          </PromptInputFooter>
+        </PromptInput>
+      </PromptCard>
+    </PromptInputProvider>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const textarea = canvas.getByPlaceholderText("Type here...")
+    await step("Type text using provider-controlled textarea", async () => {
+      await userEvent.type(textarea, "Hello provider")
+      await expect(textarea).toHaveValue("Hello provider")
+    })
+    await step("Successful submit clears the textarea via provider", async () => {
+      await userEvent.keyboard("{Enter}")
+      await waitFor(() => expect(textarea).toHaveValue(""))
+    })
+  },
+}
+
+/** PromptInputProvider: text is retained when onSubmit rejects (user can retry). */
+export const ProviderRetainsTextOnError: Story = {
+  render: () => {
+    const failingSubmit = async () => { throw new Error("Server error") }
+    return (
+      <PromptInputProvider>
+        <PromptCard className="max-w-2xl">
+          <PromptInput onSubmit={failingSubmit}>
+            <PromptInputBody>
+              <PromptInputTextarea placeholder="Type here..." />
+            </PromptInputBody>
+            <PromptInputFooter>
+              <PromptInputTools />
+              <PromptInputSubmit />
+            </PromptInputFooter>
+          </PromptInput>
+        </PromptCard>
+      </PromptInputProvider>
+    )
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const textarea = canvas.getByPlaceholderText("Type here...")
+    await step("Type a message", async () => {
+      await userEvent.type(textarea, "My message")
+      await expect(textarea).toHaveValue("My message")
+    })
+    await step("After a failing async submit, text is retained for retry", async () => {
+      await userEvent.keyboard("{Enter}")
+      // Give the rejected promise time to settle
+      await new Promise((r) => setTimeout(r, 100))
+      await expect(textarea).toHaveValue("My message")
+    })
+  },
+}
+
+/** PromptInputProvider: file accept + size validation goes through addWithProviderValidation. */
+export const ProviderFileValidation: Story = {
+  args: {
+    onError: fn(),
+  },
+  render: (args) => (
+    <PromptInputProvider>
+      <PromptCard className="max-w-2xl">
+        <PromptInput
+          accept="image/*"
+          maxFileSize={50}
+          onError={args.onError as (err: { code: string; message: string }) => void}
+          onSubmit={() => {}}
+        >
+          <PromptInputBody>
+            <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputTools />
+            <PromptInputSubmit />
+          </PromptInputFooter>
+        </PromptInput>
+      </PromptCard>
+    </PromptInputProvider>
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    await step("Dragging a wrong-type file fires accept error through provider validation", async () => {
+      const dataTransfer = new DataTransfer()
+      dataTransfer.items.add(new File(["text"], "doc.txt", { type: "text/plain" }))
+      const form = canvasElement.querySelector("form")!
+      form.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer }))
+      await waitFor(() => expect(args.onError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: "accept" })
+      ))
+    })
+    await step("Uploading an oversized image fires max_file_size error through provider validation", async () => {
+      const fileInput = canvasElement.querySelector<HTMLInputElement>('input[type="file"]')!
+      await userEvent.upload(fileInput, new File(["x".repeat(100)], "big.png", { type: "image/png" }))
+      await waitFor(() => expect(args.onError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: "max_file_size" })
+      ))
+    })
+  },
+}
+
+/** PromptInputButton string tooltip — tooltip content and optional shortcut render. */
+export const ButtonStringTooltip: Story = {
+  render: () => (
+    <PromptCard className="max-w-2xl">
+      <PromptInput onSubmit={() => {}}>
+        <PromptInputBody>
+          <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools>
+            <PromptInputButton tooltip="Format text">Aa</PromptInputButton>
+            <PromptInputButton tooltip={{ content: "Attach", shortcut: "⌘K" }}>+</PromptInputButton>
+          </PromptInputTools>
+          <PromptInputSubmit />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptCard>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("String tooltip button renders", async () => {
+      await expect(canvas.getByRole("button", { name: "Aa" })).toBeInTheDocument()
+    })
+    await step("Object tooltip button with shortcut renders", async () => {
+      await expect(canvas.getByRole("button", { name: "+" })).toBeInTheDocument()
+    })
+    await step("Hovering string tooltip button shows Format text tooltip", async () => {
+      await userEvent.hover(canvas.getByRole("button", { name: "Aa" }))
+      // findByRole waits for the element to appear (Radix adds role="tooltip" to TooltipContent)
+      await expect(await screen.findByRole("tooltip")).toHaveTextContent("Format text")
+    })
+    await step("Hovering object tooltip button shows shortcut ⌘K", async () => {
+      // Unhover first button so its tooltip closes before the next one opens
+      await userEvent.unhover(canvas.getByRole("button", { name: "Aa" }))
+      await userEvent.hover(canvas.getByRole("button", { name: "+" }))
+      await waitFor(() => expect(screen.getByRole("tooltip")).toHaveTextContent("⌘K"))
     })
   },
 }

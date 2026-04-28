@@ -1,3 +1,4 @@
+import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import {
   CheckCircleIcon,
   ChevronDownIcon,
@@ -6,7 +7,7 @@ import {
   WrenchIcon,
   XCircleIcon,
 } from "lucide-react";
-import { isValidElement } from "react";
+import { isValidElement, useCallback, useEffect, useRef, useState } from "react";
 
 import { CodeBlock } from "./code-block";
 
@@ -24,14 +25,57 @@ import { cn } from "@/lib/utils";
 
 
 
-export type ToolProps = ComponentProps<typeof Collapsible>;
+const AUTO_CLOSE_DELAY = 1000;
 
-export const Tool = ({ className, ...props }: ToolProps) => (
-  <Collapsible
-    className={cn("group not-prose mb-4 w-full rounded-md border bg-background", className)}
-    {...props}
-  />
-);
+export type ToolProps = ComponentProps<typeof Collapsible> & {
+  isStreaming?: boolean;
+};
+
+export const Tool = ({
+  className,
+  isStreaming = false,
+  open,
+  onOpenChange,
+  defaultOpen,
+  ...props
+}: ToolProps) => {
+  const [isOpen, setIsOpen] = useControllableState<boolean>({
+    defaultProp: defaultOpen ?? true,
+    onChange: onOpenChange,
+    prop: open,
+  });
+
+  const hasEverStreamedRef = useRef(isStreaming);
+  const [hasAutoClosed, setHasAutoClosed] = useState(false);
+
+  useEffect(() => {
+    if (isStreaming) hasEverStreamedRef.current = true;
+  }, [isStreaming]);
+
+  useEffect(() => {
+    if (hasEverStreamedRef.current && !isStreaming && isOpen && !hasAutoClosed) {
+      const timer = setTimeout(() => {
+        setIsOpen(false);
+        setHasAutoClosed(true);
+      }, AUTO_CLOSE_DELAY);
+      return () => clearTimeout(timer);
+    }
+  }, [isStreaming, isOpen, setIsOpen, hasAutoClosed]);
+
+  const handleOpenChange = useCallback(
+    (newOpen: boolean) => setIsOpen(newOpen),
+    [setIsOpen]
+  );
+
+  return (
+    <Collapsible
+      className={cn("group not-prose mb-4 w-full rounded-md border bg-background", className)}
+      onOpenChange={handleOpenChange}
+      open={isOpen}
+      {...props}
+    />
+  );
+};
 
 export type ToolPart = ToolUIPart | DynamicToolUIPart;
 

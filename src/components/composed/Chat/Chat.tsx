@@ -173,7 +173,7 @@ export const Chat = ({
   }, [])
 
   return (
-    <div className={cn("flex h-full flex-col", className)}>
+    <div className={cn("flex h-full flex-col max-w-[980px]", className)}>
       {/* Conversation */}
       <Conversation className="flex-1">
         <ConversationContent>
@@ -333,6 +333,12 @@ const AssistantMessage = ({
       </Reasoning>
     )}
 
+    <Message from="assistant">
+      <MessageContent>
+        <MessageResponse>{content}</MessageResponse>
+      </MessageContent>
+    </Message>
+
     {sources && sources.length > 0 && (
       <Sources>
         <SourcesTrigger count={sources.length} />
@@ -343,12 +349,6 @@ const AssistantMessage = ({
         </SourcesContent>
       </Sources>
     )}
-
-    <Message from="assistant">
-      <MessageContent>
-        <MessageResponse>{content}</MessageResponse>
-      </MessageContent>
-    </Message>
 
     <MessageActions>
       <MessageAction label="Copy" onClick={() => onCopy(content)}>

@@ -20,6 +20,7 @@ import { DataAppShell } from "./DataAppShell";
 import type { NavGroup } from "./DataAppShell";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { TdpNavigationProvider } from "@/components/composed/tdp-link";
 import {
   Avatar,
   AvatarFallback,
@@ -879,6 +880,243 @@ export const MultipleNavGroups: Story = {
 };
 
 // =============================================================================
+// Back to TDP Platform navigation (callback)
+// =============================================================================
+
+export const BackToPlatformCallback: Story = {
+  name: "Back to TDP Platform Callback",
+  tags: ['!dev'],
+  render: () => {
+    const [callbackCount, setCallbackCount] = React.useState(0);
+    const handleBackClick = () => {
+      setCallbackCount((prev) => prev + 1);
+      console.log("Back to platform callback triggered");
+    };
+
+    return (
+      <div>
+        <DataAppShell
+          appName="HTS"
+          appFullName="HTS Hit Finder"
+          version="v2.4.1"
+          navGroups={htsNavGroups}
+          onBackToPlatform={handleBackClick}
+          breadcrumbs={[{ label: "Project" }]}
+        >
+          <div className="p-6">
+            <p>Main content</p>
+            <p data-testid="callback-count">Callbacks: {callbackCount}</p>
+          </div>
+        </DataAppShell>
+      </div>
+    );
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+
+    await step("Initial callback count is 0", async () => {
+      expect(canvas.getByTestId("callback-count").textContent).toBe("Callbacks: 0");
+    });
+
+    await step("Clicking app icon opens dropdown menu", async () => {
+      const appIcon = canvas.getAllByText("HTS")[0];
+      await userEvent.click(appIcon);
+
+      await waitFor(() => {
+        expect(body.getByText("Back to TDP Platform")).toBeInTheDocument();
+      });
+    });
+
+    await step("Back to TDP Platform text is visible in dropdown", async () => {
+      expect(body.getByText("Back to TDP Platform")).toBeInTheDocument();
+    });
+
+    await step("Clicking Back to TDP Platform triggers the callback", async () => {
+      // Find the button by looking for one that contains the arrow icon and text
+      const dropdownItems = body.getAllByRole("menuitem");
+      const backBtn = dropdownItems.find((item) => item.textContent?.includes("Back to TDP Platform"));
+      expect(backBtn).toBeInTheDocument();
+
+      await userEvent.click(backBtn!);
+
+      await waitFor(() => {
+        expect(canvas.getByTestId("callback-count").textContent).toBe("Callbacks: 1");
+      });
+    });
+
+    await step("Clicking app icon again and Back to TDP Platform increments callback count", async () => {
+      const appIcon = canvas.getAllByText("HTS")[0];
+      await userEvent.click(appIcon);
+
+      await waitFor(() => {
+        expect(body.getByText("Back to TDP Platform")).toBeInTheDocument();
+      });
+
+      const dropdownItems = body.getAllByRole("menuitem");
+      const backBtn = dropdownItems.find((item) => item.textContent?.includes("Back to TDP Platform"));
+      await userEvent.click(backBtn!);
+
+      await waitFor(() => {
+        expect(canvas.getByTestId("callback-count").textContent).toBe("Callbacks: 2");
+      });
+    });
+  },
+};
+
+// =============================================================================
+// Back to TDP Platform navigation (path-based TDPLink)
+// =============================================================================
+
+export const BackToPlatformPath: Story = {
+  name: "Back to TDP Platform Path",
+  tags: ['!dev'],
+  render: () => (
+    <TdpNavigationProvider tdpBaseUrl="https://tetrascience.com/my-org">
+      <DataAppShell
+        appName="HTS"
+        appFullName="HTS Hit Finder"
+        version="v2.4.1"
+        navGroups={htsNavGroups}
+        backToPlatformPath="/data-workspace"
+        breadcrumbs={[{ label: "Project" }]}
+      >
+        <div className="p-6"><p>Main content</p></div>
+      </DataAppShell>
+    </TdpNavigationProvider>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+
+    await step("Clicking app icon opens dropdown menu", async () => {
+      await userEvent.click(canvas.getAllByText("HTS")[0]);
+      await waitFor(() => {
+        expect(body.getByText("Back to TDP Platform")).toBeInTheDocument();
+      });
+    });
+
+    await step("Back to TDP Platform renders as a link (not a button)", async () => {
+      const menuItem = body.getByRole("menuitem");
+      expect(menuItem.tagName.toLowerCase()).toBe("a");
+    });
+
+    await step("Link href contains the backToPlatformPath", async () => {
+      const menuItem = body.getByRole("menuitem");
+      expect(menuItem).toHaveAttribute("href", expect.stringContaining("/data-workspace"));
+    });
+
+    await step("Link href is fully resolved with the TDP base URL", async () => {
+      const menuItem = body.getByRole("menuitem");
+      expect(menuItem).toHaveAttribute("href", "https://tetrascience.com/my-org/data-workspace");
+    });
+
+    await step("Dropdown closes after pressing Escape", async () => {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => {
+        expect(body.queryByText("Back to TDP Platform")).not.toBeInTheDocument();
+      });
+    });
+  },
+};
+
+// =============================================================================
+// Mobile navigation (setMobileNavOpen)
+// =============================================================================
+
+export const MobileNavigation: Story = {
+  name: "Mobile Navigation",
+  tags: ['!dev'],
+  parameters: { viewport: { defaultViewport: 'mobile1' } },
+  render: () => (
+    <DataAppShell
+      appName="HTS"
+      appFullName="HTS Hit Finder"
+      version="v2.4.1"
+      navGroups={[
+        {
+          label: "Main",
+          pages: [
+            { id: "project", label: "Project", icon: ClipboardList, isActive: true },
+            { id: "explorer", label: "Explorer", icon: Search },
+          ],
+        },
+      ]}
+      breadcrumbs={[{ label: "Project" }]}
+      userMenu={<UserMenuButton name="Test User" userRole="ADMIN" />}
+    >
+      <div className="p-6"><p>Main content</p></div>
+    </DataAppShell>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+
+    await step("Mobile nav sheet is initially closed", async () => {
+      // Sheet should not be visible initially
+      const sheetContent = body.queryByRole("dialog");
+      expect(sheetContent).not.toBeInTheDocument();
+    });
+
+    await step("Clicking hamburger menu opens mobile nav sheet", async () => {
+      // Find the hamburger button by aria-label
+      const hamburgerBtn = canvas.getByLabelText("Open navigation menu");
+      expect(hamburgerBtn).toBeInTheDocument();
+
+      await userEvent.click(hamburgerBtn);
+
+      await waitFor(() => {
+        // Sheet renders in a portal, check document
+        const sheetContent = document.querySelector("[data-slot='sheet-content']");
+        expect(sheetContent).toBeInTheDocument();
+        // Navigation items should be visible
+        expect(within(sheetContent!).getByText("Project")).toBeInTheDocument();
+        expect(within(sheetContent!).getByText("Explorer")).toBeInTheDocument();
+      });
+    });
+
+    await step("Mobile nav shows all navigation pages with labels", async () => {
+      // In expanded mobile view, labels should be visible
+      const sheetContent = document.querySelector("[data-slot='sheet-content']");
+      expect(within(sheetContent!).getByText("Project")).toBeInTheDocument();
+      expect(within(sheetContent!).getByText("Explorer")).toBeInTheDocument();
+    });
+
+    await step("Clicking a nav item closes the mobile nav sheet", async () => {
+      // Click Explorer to trigger close
+      const sheetContent = document.querySelector("[data-slot='sheet-content']")!;
+      const explorerBtn = within(sheetContent).getByRole("button", { name: "Explorer" });
+      await userEvent.click(explorerBtn);
+
+      await waitFor(() => {
+        // Sheet should close
+        const closedSheet = document.querySelector("[data-slot='sheet-content']");
+        expect(closedSheet).not.toBeInTheDocument();
+      });
+    });
+
+    await step("Hamburger menu can reopen the nav after closing", async () => {
+      const hamburgerBtn = canvas.getByLabelText("Open navigation menu");
+      await userEvent.click(hamburgerBtn);
+
+      await waitFor(() => {
+        const sheetContent = document.querySelector("[data-slot='sheet-content']");
+        expect(within(sheetContent!).getByText("Project")).toBeInTheDocument();
+      });
+    });
+
+    await step("Pressing Escape closes the mobile nav sheet", async () => {
+      await userEvent.keyboard("{Escape}");
+
+      await waitFor(() => {
+        const closedSheet = document.querySelector("[data-slot='sheet-content']");
+        expect(closedSheet).not.toBeInTheDocument();
+      });
+    });
+  },
+};
+
+// =============================================================================
 // Compact property (icon rail vs expanded sheet)
 // =============================================================================
 
@@ -912,7 +1150,6 @@ export const CompactProperty: Story = {
     </DataAppShell>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
 
     await step("Compact icon rail renders on desktop (hidden on mobile)", async () => {
       const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");

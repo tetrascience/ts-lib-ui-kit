@@ -989,7 +989,7 @@ interface LiveUsage {
   reasoningTokens: number
 }
 
-const InteractiveFullDemo = (args) => {
+const InteractiveFullDemo = () => {
   const [turns, setTurns] = useState<FullTurn[]>([])
   const [text, setText] = useState("")
   const [model, setModel] = useState(INTERACTIVE_MODELS[0].id)
@@ -1639,7 +1639,7 @@ export const Interactive: Story = {
   parameters: {
     layout: "fullscreen",
   },
-  render: (args) => InteractiveFullDemo(args),
+  render: () => InteractiveFullDemo(),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     await step("Prompt input is present", async () => {

@@ -22,7 +22,7 @@ import {
   Snippet,
   SnippetCopyButton,
   SnippetInput,
-} from "@/components/ai-elements/snippet"
+} from "@/components/ui/snippet"
 
 
 const meta: Meta = {

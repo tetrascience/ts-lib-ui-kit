@@ -1,4 +1,6 @@
 import { ChevronDownIcon, PaperclipIcon } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
 import type { ComponentProps } from "react";
 
@@ -316,14 +318,54 @@ export const QueueSectionContent = ({
 // Queue (root)
 // ---------------------------------------------------------------------------
 
-export type QueueProps = ComponentProps<"div">;
+const AUTO_HIDE_DELAY = 1000;
 
-export const Queue = ({ className, ...props }: QueueProps) => (
-  <div
-    className={cn(
-      "flex flex-col gap-2 rounded-xl border border-border bg-background px-3 pb-2 pt-2 shadow-xs",
-      className
-    )}
-    {...props}
-  />
-);
+export type QueueProps = ComponentProps<"div"> & {
+  isStreaming?: boolean;
+};
+
+export const Queue = ({ className, isStreaming = false, children, style, id, ...props }: QueueProps) => {
+  const [visible, setVisible] = useState(true);
+  const hasEverStreamedRef = useRef(isStreaming);
+  const [hasAutoHidden, setHasAutoHidden] = useState(false);
+
+  useEffect(() => {
+    if (isStreaming) hasEverStreamedRef.current = true;
+  }, [isStreaming]);
+
+  useEffect(() => {
+    if (hasEverStreamedRef.current && !isStreaming && visible && !hasAutoHidden) {
+      const timer = setTimeout(() => {
+        setVisible(false);
+        setHasAutoHidden(true);
+      }, AUTO_HIDE_DELAY);
+      return () => clearTimeout(timer);
+    }
+  }, [isStreaming, visible, hasAutoHidden]);
+
+  // Spread data-* and aria-* attributes through; drop event handlers to avoid
+  // onDrag type conflict between React and framer-motion.
+  const passthroughProps = Object.fromEntries(
+    Object.entries(props).filter(([k]) => k.startsWith("data-") || k.startsWith("aria-"))
+  );
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          {...passthroughProps}
+          className={cn(
+            "flex flex-col gap-2 rounded-xl border border-border bg-background px-3 pb-2 pt-2 shadow-xs",
+            className
+          )}
+          exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0, overflow: "hidden" }}
+          id={id}
+          style={style}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};

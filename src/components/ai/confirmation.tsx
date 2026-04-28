@@ -1,4 +1,5 @@
-import { createContext, useContext, useMemo } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 import type { ToolUIPart } from "ai";
 import type { ComponentProps, PropsWithChildren, ReactNode } from "react";
@@ -38,27 +39,60 @@ export type ConfirmationProps = ComponentProps<"div"> & {
   state: ToolUIPart["state"];
 };
 
+const ACCEPTED_HIDE_DELAY = 1500;
+
 export const Confirmation = ({
   className,
   approval,
   state,
+  children,
   ...props
 }: ConfirmationProps) => {
   const contextValue = useMemo(() => ({ approval, state }), [approval, state]);
+  const [visible, setVisible] = useState(true);
+
+  const isAccepted =
+    approval?.approved === true &&
+    (state === "approval-responded" ||
+      state === "output-available" ||
+      state === "output-denied");
+
+  useEffect(() => {
+    if (isAccepted) {
+      const timer = setTimeout(() => setVisible(false), ACCEPTED_HIDE_DELAY);
+      return () => clearTimeout(timer);
+    }
+  }, [isAccepted]);
 
   if (!approval || state === "input-streaming" || state === "input-available") {
     return null;
   }
 
+  // Pass through data-* and aria-* only; drop event handlers to avoid
+  // onDrag type conflict between React and framer-motion.
+  const passthroughProps = Object.fromEntries(
+    Object.entries(props).filter(([k]) => k.startsWith("data-") || k.startsWith("aria-"))
+  );
+
   return (
     <ConfirmationContext.Provider value={contextValue}>
-      <div
-        className={cn(
-          "flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-sm",
-          className
+      <AnimatePresence>
+        {visible && (
+          <motion.div
+            {...passthroughProps}
+            className={cn(
+              "flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-sm",
+              className
+            )}
+            exit={{ opacity: 0, scale: 0.96 }}
+            id={props.id}
+            style={props.style}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            {children}
+          </motion.div>
         )}
-        {...props}
-      />
+      </AnimatePresence>
     </ConfirmationContext.Provider>
   );
 };

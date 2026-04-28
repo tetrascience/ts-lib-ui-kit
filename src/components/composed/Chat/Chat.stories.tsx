@@ -447,7 +447,7 @@ const ReasoningCitationsQueueDemo = () => {
         </Reasoning>
 
         {phase !== "thinking" && (
-          <Queue>
+          <Queue isStreaming={phase === "queue"}>
             <QueueList>
               {QUEUE_STEPS[queueStep].map((item) => (
                 <QueueItem key={item.id}>
@@ -471,15 +471,6 @@ const ReasoningCitationsQueueDemo = () => {
 
         {phase === "done" && (
           <>
-            <Sources>
-              <SourcesTrigger count={sources.length} />
-              <SourcesContent>
-                {sources.map((href) => (
-                  <Source href={href} key={href} title={new URL(href).hostname} />
-                ))}
-              </SourcesContent>
-            </Sources>
-
             <Message from="assistant">
               <MessageContent>
                 <div className="text-sm leading-relaxed">
@@ -525,6 +516,15 @@ const ReasoningCitationsQueueDemo = () => {
                 </MessageAction>
               </MessageActions>
             </Message>
+
+            <Sources>
+              <SourcesTrigger count={sources.length} />
+              <SourcesContent>
+                {sources.map((href) => (
+                  <Source href={href} key={href} title={new URL(href).hostname} />
+                ))}
+              </SourcesContent>
+            </Sources>
           </>
         )}
 
@@ -591,7 +591,7 @@ const TaskAndToolsDemo = () => {
 
         {phase !== "thinking" && (
           <>
-            <Task defaultOpen>
+            <Task defaultOpen isStreaming={phase === "running"}>
               <TaskTrigger title="Plan and execute weather lookup" />
               <TaskContent>
                 <TaskItem>
@@ -602,7 +602,7 @@ const TaskAndToolsDemo = () => {
               </TaskContent>
             </Task>
 
-            <Tool defaultOpen>
+            <Tool defaultOpen isStreaming={toolState !== "output-available"}>
               <ToolHeader state={toolState} type="tool-get_weather" />
               <ToolContent>
                 <ToolInput input={{ location: "San Francisco, CA", unit: "fahrenheit" }} />
@@ -791,7 +791,7 @@ const HumanInTheLoopDemo = () => {
             </Reasoning>
 
             {phase !== "thinking" && (
-              <Tool defaultOpen>
+              <Tool defaultOpen isStreaming={toolState !== "output-available"}>
                 <ToolHeader state={toolState} type="tool-run_shell" />
                 <ToolContent>
                   <ToolInput
@@ -989,7 +989,7 @@ interface LiveUsage {
   reasoningTokens: number
 }
 
-const InteractiveFullDemo = () => {
+const InteractiveFullDemo = (args) => {
   const [turns, setTurns] = useState<FullTurn[]>([])
   const [text, setText] = useState("")
   const [model, setModel] = useState(INTERACTIVE_MODELS[0].id)
@@ -1189,7 +1189,7 @@ const InteractiveFullDemo = () => {
     new Intl.NumberFormat("en-US", { notation: "compact" }).format(n)
 
   return (
-    <div className="flex h-[720px] w-full max-w-2xl flex-col rounded-lg border">
+    <div className="flex flex-col">
       <Conversation className="flex-1">
         <ConversationContent>
           {turns.length === 0 && (
@@ -1236,9 +1236,7 @@ const InteractiveFullDemo = () => {
 
               {/* Reasoning — always rendered; streaming state drives the gradient */}
               <Reasoning defaultOpen isStreaming={turn.phase === "thinking"}>
-                <ReasoningTrigger>
-                  <GradientReasoningTrigger />
-                </ReasoningTrigger>
+                <ReasoningTrigger />
                 <ReasoningContent>
                   {turn.phase === "thinking"
                     ? FULL_THOUGHT_TEXT.slice(0, turn.thoughtChars)
@@ -1253,7 +1251,7 @@ const InteractiveFullDemo = () => {
                   active={turn.phase === "planning"}
                   radius="rounded-xl"
                 >
-                <Queue>
+                <Queue isStreaming={turn.phase === "planning"}>
                   <QueueList>
                     {FULL_QUEUE_BASE.map((item, i) => {
                       const statuses = getQueueStatuses(turn.queueStep)
@@ -1293,7 +1291,7 @@ const InteractiveFullDemo = () => {
                 turn.phase === "done" ||
                 turn.phase === "denied") && (
                 <>
-                  <Task defaultOpen>
+                  <Task defaultOpen isStreaming={turn.phase !== "done" && turn.phase !== "denied"}>
                     <TaskTrigger title="Plan and execute lookup" />
                     <TaskContent>
                       <TaskItem>
@@ -1313,7 +1311,7 @@ const InteractiveFullDemo = () => {
                       turn.toolState === "input-available"
                     }
                   >
-                    <Tool defaultOpen>
+                    <Tool defaultOpen isStreaming={turn.toolState !== "output-available"}>
                       <ToolHeader
                         state={turn.toolState}
                         type="tool-search_knowledge_base"
@@ -1419,22 +1417,6 @@ const InteractiveFullDemo = () => {
                 </Message>
               )}
 
-              {/* Sources — revealed once streaming is complete */}
-              {turn.phase === "done" && (
-                <Sources>
-                  <SourcesTrigger count={FULL_SOURCES.length} />
-                  <SourcesContent>
-                    {FULL_SOURCES.map((href) => (
-                      <Source
-                        href={href}
-                        key={href}
-                        title={new URL(href).hostname}
-                      />
-                    ))}
-                  </SourcesContent>
-                </Sources>
-              )}
-
               {/* Final answer — text streams in during `writing`, then the
                   inline citation + period snap in on `done`. */}
               {(turn.phase === "writing" || turn.phase === "done") && (
@@ -1495,6 +1477,22 @@ const InteractiveFullDemo = () => {
                   )}
                 </Message>
               )}
+
+              {/* Sources — revealed once streaming is complete */}
+              {turn.phase === "done" && (
+                <Sources>
+                  <SourcesTrigger count={FULL_SOURCES.length} />
+                  <SourcesContent>
+                    {FULL_SOURCES.map((href) => (
+                      <Source
+                        href={href}
+                        key={href}
+                        title={new URL(href).hostname}
+                      />
+                    ))}
+                  </SourcesContent>
+                </Sources>
+              )}
             </div>
           ))}
         </ConversationContent>
@@ -1504,7 +1502,7 @@ const InteractiveFullDemo = () => {
           the right. Together they tell the full story: what the assistant is
           doing *now* and how much of the context window it has consumed. */}
       {(activeTurn || totalUsed > 0) && (
-        <div className="flex items-center justify-between gap-3 border-t px-4 py-2">
+        <div className="flex items-center justify-between gap-3 px-4">
           {activeTurn ? (
             <div
               className={cn(
@@ -1585,13 +1583,7 @@ const InteractiveFullDemo = () => {
 
       {/* Prompt input — TS blue glow ring before the first submission to
           draw the eye, plain border once the convo starts. */}
-      <div className="border-t px-4 pt-3 pb-4">
-        <div
-          className={cn(
-            "rounded-xl",
-            turns.length === 0 && "ts-border-glow"
-          )}
-        >
+      <div className="p-4 pt-0">
         <PromptInput
           accept="image/*,application/pdf,text/*"
           multiple
@@ -1637,7 +1629,6 @@ const InteractiveFullDemo = () => {
             />
           </PromptInputFooter>
         </PromptInput>
-        </div>
       </div>
     </div>
   )
@@ -1645,7 +1636,10 @@ const InteractiveFullDemo = () => {
 
 export const Interactive: Story = {
   name: "Interactive — Full demo",
-  render: () => <InteractiveFullDemo />,
+  parameters: {
+    layout: "fullscreen",
+  },
+  render: (args) => InteractiveFullDemo(args),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     await step("Prompt input is present", async () => {

@@ -1,4 +1,6 @@
+import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import { ChevronDownIcon, SearchIcon } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ComponentProps } from "react";
 
@@ -35,15 +37,57 @@ export const TaskItem = ({ children, className, ...props }: TaskItemProps) => (
   </div>
 );
 
-export type TaskProps = ComponentProps<typeof Collapsible>;
+const AUTO_CLOSE_DELAY = 1000;
+
+export type TaskProps = ComponentProps<typeof Collapsible> & {
+  isStreaming?: boolean;
+};
 
 export const Task = ({
   defaultOpen = true,
+  isStreaming = false,
+  open,
+  onOpenChange,
   className,
   ...props
-}: TaskProps) => (
-  <Collapsible className={cn(className)} defaultOpen={defaultOpen} {...props} />
-);
+}: TaskProps) => {
+  const [isOpen, setIsOpen] = useControllableState<boolean>({
+    defaultProp: defaultOpen,
+    onChange: onOpenChange,
+    prop: open,
+  });
+
+  const hasEverStreamedRef = useRef(isStreaming);
+  const [hasAutoClosed, setHasAutoClosed] = useState(false);
+
+  useEffect(() => {
+    if (isStreaming) hasEverStreamedRef.current = true;
+  }, [isStreaming]);
+
+  useEffect(() => {
+    if (hasEverStreamedRef.current && !isStreaming && isOpen && !hasAutoClosed) {
+      const timer = setTimeout(() => {
+        setIsOpen(false);
+        setHasAutoClosed(true);
+      }, AUTO_CLOSE_DELAY);
+      return () => clearTimeout(timer);
+    }
+  }, [isStreaming, isOpen, setIsOpen, hasAutoClosed]);
+
+  const handleOpenChange = useCallback(
+    (newOpen: boolean) => setIsOpen(newOpen),
+    [setIsOpen]
+  );
+
+  return (
+    <Collapsible
+      className={cn(className)}
+      onOpenChange={handleOpenChange}
+      open={isOpen}
+      {...props}
+    />
+  );
+};
 
 export type TaskTriggerProps = ComponentProps<typeof CollapsibleTrigger> & {
   title: string;

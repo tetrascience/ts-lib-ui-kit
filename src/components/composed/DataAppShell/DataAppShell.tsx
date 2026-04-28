@@ -27,6 +27,8 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
@@ -521,6 +523,10 @@ function DataAppShell({
           showCloseButton={false}
           className="p-0 bg-sidebar border-r border-sidebar-border data-[side=left]:w-[220px] data-[side=left]:sm:w-[220px] data-[side=left]:sm:max-w-[220px] flex flex-col"
         >
+          <SheetTitle className="sr-only">Navigation</SheetTitle>
+          <SheetDescription className="sr-only">
+            Application navigation menu
+          </SheetDescription>
           <nav aria-label="Application navigation" className="flex flex-col h-full">
             <SidebarBody
               compact={false}

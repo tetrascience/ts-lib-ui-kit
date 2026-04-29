@@ -128,11 +128,16 @@ function colorToParts(color: string): { rgba: string; hex: string } {
   return { rgba, hex }
 }
 
-/** Read the current computed value of a CSS custom property. */
-function getTokenValue(name: string): string {
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue(`--${name}`)
-    .trim()
+/**
+ * Read the current computed value of a CSS custom property.
+ *
+ * Reads from a descendant element rather than `document.documentElement`
+ * because the dark-mode variant is `&:is(.dark *)` — it only applies to
+ * descendants of `.dark`, not the element carrying the class itself.
+ * Reading from `<html>` would always return the light-mode value.
+ */
+function getTokenValue(el: Element, name: string): string {
+  return getComputedStyle(el).getPropertyValue(`--${name}`).trim()
 }
 
 // ---------------------------------------------------------------------------
@@ -306,6 +311,7 @@ function DesignTokensPage() {
   const [resolvedValues, setResolvedValues] = useState<Map<string, ResolvedToken>>(
     new Map(),
   )
+  const probeRef = useRef<HTMLDivElement>(null)
   const allTokens = useMemo(
     () => [...CORE_TOKENS, ...MD3_ROLE_TOKENS, ...CHART_TOKENS, ...SIDEBAR_TOKENS],
     [],
@@ -313,9 +319,11 @@ function DesignTokensPage() {
   const rafRef = useRef(0)
 
   const resolve = useCallback(() => {
+    const probe = probeRef.current
+    if (!probe) return
     const map = new Map<string, ResolvedToken>()
     for (const token of allTokens) {
-      const oklch = getTokenValue(token.name)
+      const oklch = getTokenValue(probe, token.name)
       if (!oklch) {
         map.set(token.name, { oklch: "", rgba: "—", hex: "" })
         continue
@@ -346,6 +354,9 @@ function DesignTokensPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 p-12">
+      {/* Hidden probe element used to read computed CSS variable values.
+          Must be a descendant of `.dark` for dark-mode values to resolve. */}
+      <div ref={probeRef} className="hidden" aria-hidden="true" />
       <div className="space-y-2">
         <h1 className="text-2xl font-bold text-foreground">Design Tokens</h1>
         <p className="text-sm text-muted-foreground max-w-2xl">

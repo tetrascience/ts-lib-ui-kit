@@ -1562,11 +1562,12 @@ export const ScreenshotActionAddsAttachment: Story = {
       await userEvent.click(canvas.getByRole("button", { hidden: true, name: "Capture tools" }))
       await userEvent.click(await screen.findByText("Prevent screenshot"))
       await expect(canvas.getByTestId("attachment-count")).toHaveTextContent("0")
+      await waitFor(() => expect(screen.queryByText("Take screenshot")).not.toBeInTheDocument())
     })
 
     await step("Screenshot action captures media, stops the track, and adds attachment", async () => {
       await userEvent.click(canvas.getByRole("button", { hidden: true, name: "Capture tools" }))
-      await userEvent.click(await screen.findByText("Take screenshot"))
+      await userEvent.click(await screen.findByRole("menuitem", { name: "Take screenshot" }))
       await waitFor(() => expect(canvas.getByTestId("attachment-count")).toHaveTextContent("1"))
       await expect(drawImage).toHaveBeenCalled()
       await expect(stopTrack).toHaveBeenCalledOnce()

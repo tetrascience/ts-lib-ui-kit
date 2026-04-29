@@ -1,6 +1,6 @@
 import { CheckIcon, XIcon } from "lucide-react"
 import { useState } from "react"
-import { expect, userEvent, within } from "storybook/test"
+import { expect, userEvent, waitFor, within } from "storybook/test"
 
 import {
   Confirmation,
@@ -193,9 +193,14 @@ export const Interactive: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     await step("Clicking Always allow shows accepted state", async () => {
-      await expect(canvas.getByText(/yarn tsc/)).toBeInTheDocument()
-      await userEvent.click(canvas.getByText("Always allow"))
-      await expect(canvas.getByText(/Allowed/)).toBeInTheDocument()
+      await expect(canvasElement).toHaveTextContent("yarn tsc --noEmit && yarn lint")
+      await userEvent.click(canvas.getByRole("button", { name: /always allow/i }))
+      await waitFor(() => {
+        expect(canvas.getByText(/Allowed/)).toBeInTheDocument()
+      })
+      await waitFor(() => expect(canvas.queryByText(/Allowed/)).not.toBeInTheDocument(), {
+        timeout: 2500,
+      })
     })
   },
 }

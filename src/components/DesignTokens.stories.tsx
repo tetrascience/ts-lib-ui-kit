@@ -9,111 +9,123 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 // ---------------------------------------------------------------------------
-// Token definitions — sourced from src/index.tailwind.css
+// Token definitions — names only; all colour values are read live from
+// src/index.tailwind.css via getComputedStyle so the table can never drift
+// from the source of truth.
 // ---------------------------------------------------------------------------
 
 interface TokenDef {
   name: string
   cssVar: string
   tailwind: string
-  oklch: { light: string; dark: string }
   /** Name of the paired background token (for foreground tokens) */
   bgPair?: string
 }
 
-function t(
-  name: string,
-  lightOklch: string,
-  darkOklch: string,
-  tailwindPrefix = "bg",
-  bgPair?: string,
-): TokenDef {
+function t(name: string, tailwindPrefix = "bg", bgPair?: string): TokenDef {
   return {
     name,
     cssVar: `var(--${name})`,
     tailwind: `${tailwindPrefix}-${name}`,
-    oklch: { light: lightOklch, dark: darkOklch },
     bgPair,
   }
 }
 
 // Pairs are kept adjacent; foreground tokens carry a reference to their bg pair
 const CORE_TOKENS: TokenDef[] = [
-  t("background",           "oklch(0.9849 0.0106 316.49)", "oklch(0.2259 0.0116 293.09)"),
-  t("foreground",           "oklch(0.2259 0.0116 293.09)", "oklch(0.9152 0.0115 308.32)", "bg", "background"),
-  t("card",                 "oklch(1 0 0)",                "oklch(0.2680 0.0111 293.28)"),
-  t("card-foreground",      "oklch(0.2259 0.0116 293.09)", "oklch(0.9152 0.0115 308.32)", "bg", "card"),
-  t("popover",              "oklch(1 0 0)",                "oklch(0.3126 0.0107 293.42)"),
-  t("popover-foreground",   "oklch(0.2259 0.0116 293.09)", "oklch(0.9152 0.0115 308.32)", "bg", "popover"),
-  t("primary",              "oklch(0.4079 0.1104 267.16)", "oklch(0.8296 0.0847 273.37)"),
-  t("primary-foreground",   "oklch(1 0 0)",                "oklch(0.3284 0.1216 262.85)", "bg", "primary"),
-  t("secondary",            "oklch(0.9072 0.0425 279.69)", "oklch(0.4412 0.1421 262.97)"),
-  t("secondary-foreground", "oklch(0.2435 0.0867 257.07)", "oklch(0.9072 0.0425 279.69)", "bg", "secondary"),
-  t("muted",                "oklch(0.9571 0.0093 286.22)", "oklch(0.1800 0.0102 285.33)"),
-  t("muted-foreground",     "oklch(0.5695 0.0168 285.86)", "oklch(0.6569 0.0162 285.95)", "bg", "muted"),
-  t("accent",               "oklch(0.4784 0.0817 205.03)", "oklch(0.8207 0.1194 206.68)"),
-  t("accent-foreground",    "oklch(1 0 0)",                "oklch(0.3047 0.0525 208.75)", "bg", "accent"),
-  t("info",                 "oklch(0.5330 0.1472 268.35)", "oklch(0.8384 0.0801 273.65)"),
-  t("destructive",          "oklch(0.5060 0.1927 27.70)",  "oklch(0.8383 0.0891 26.76)"),
-  t("positive",             "oklch(0.4810 0.1238 153.01)", "oklch(0.7432 0.1661 152.81)"),
-  t("warning",              "oklch(0.5154 0.1202 60.55)",  "oklch(0.7856 0.1606 64.14)"),
-  t("border",               "oklch(0.8299 0.0152 286.06)", "oklch(0.3970 0.0168 281.07)"),
-  t("input",                "oklch(0.8299 0.0152 286.06)", "oklch(0.3970 0.0168 281.07)"),
-  t("ring",                 "oklch(0.4079 0.1104 267.16)", "oklch(0.8296 0.0847 273.37)"),
+  t("background"),
+  t("foreground",           "bg", "background"),
+  t("card"),
+  t("card-foreground",      "bg", "card"),
+  t("popover"),
+  t("popover-foreground",   "bg", "popover"),
+  t("primary"),
+  t("primary-foreground",   "bg", "primary"),
+  t("secondary"),
+  t("secondary-foreground", "bg", "secondary"),
+  t("muted"),
+  t("muted-foreground",     "bg", "muted"),
+  t("accent"),
+  t("accent-foreground",    "bg", "accent"),
+  t("tertiary"),
+  t("tertiary-foreground",  "bg", "tertiary"),
+  t("info"),
+  t("destructive"),
+  t("positive"),
+  t("warning"),
+  t("border"),
+  t("input"),
+  t("ring"),
 ]
 
 // MD3 color role aliases — these reference existing tokens via var() but
 // expose the Material Design 3 naming convention for consumers.
 const MD3_ROLE_TOKENS: TokenDef[] = [
-  t("outline",                "oklch(0.5695 0.0168 285.86)", "oklch(0.6569 0.0162 285.95)"),
-  t("outline-variant",        "oklch(0.8299 0.0152 286.06)", "oklch(0.3970 0.0168 281.07)"),
-  t("on-primary",             "oklch(1 0 0)",                "oklch(0.3284 0.1216 262.85)",   "text"),
-  t("on-secondary",           "oklch(0.2435 0.0867 257.07)", "oklch(0.9072 0.0425 279.69)",   "text"),
-  t("on-surface",             "oklch(0.2259 0.0116 293.09)", "oklch(0.9152 0.0115 308.32)",   "text"),
-  t("on-error",               "oklch(1 0 0)",                "oklch(0.2680 0.0111 293.28)",   "text"),
-  t("surface",                "oklch(0.9849 0.0106 316.49)", "oklch(0.2259 0.0116 293.09)"),
-  t("surface-dim",            "oklch(0.9152 0.0115 308.32)", "oklch(0.2259 0.0116 293.09)"),
-  t("surface-bright",         "oklch(0.9849 0.0106 316.49)", "oklch(0.3126 0.0107 293.42)"),
-  t("surface-container",      "oklch(0.9571 0.0093 286.22)", "oklch(0.2680 0.0111 293.28)"),
-  t("surface-container-low",  "oklch(0.9594 0.0098 305.40)", "oklch(0.2259 0.0116 293.09)"),
-  t("surface-container-high", "oklch(0.9137 0.0149 290.29)", "oklch(0.3126 0.0107 293.42)"),
-  t("surface-container-highest","oklch(0.8757 0.0152 286.06)","oklch(0.3970 0.0168 281.07)"),
+  t("outline"),
+  t("outline-variant"),
+  t("on-primary",                "text"),
+  t("on-secondary",              "text"),
+  t("on-surface",                "text"),
+  t("on-error",                  "text"),
+  t("surface"),
+  t("surface-foreground",        "bg", "surface"),
+  t("surface-tint"),
+  t("surface-dim"),
+  t("surface-bright"),
+  t("surface-container"),
+  t("surface-container-low"),
+  t("surface-container-high"),
+  t("surface-container-highest"),
 ]
 
 const CHART_TOKENS: TokenDef[] = [
-  t("chart-1", "oklch(0.8296 0.0847 273.37)", "oklch(0.8296 0.0847 273.37)"),
-  t("chart-2", "oklch(0.6746 0.1379 272.92)", "oklch(0.6746 0.1379 272.92)"),
-  t("chart-3", "oklch(0.5886 0.1395 271.64)", "oklch(0.5886 0.1395 271.64)"),
-  t("chart-4", "oklch(0.5044 0.1409 270.54)", "oklch(0.5044 0.1409 270.54)"),
-  t("chart-5", "oklch(0.4137 0.1319 267.46)", "oklch(0.4137 0.1319 267.46)"),
+  t("chart-1"),
+  t("chart-2"),
+  t("chart-3"),
+  t("chart-4"),
+  t("chart-5"),
 ]
 
 const SIDEBAR_TOKENS: TokenDef[] = [
-  t("sidebar",                      "oklch(0.9594 0.0098 305.40)", "oklch(0.1800 0.0102 285.33)"),
-  t("sidebar-foreground",           "oklch(0.2259 0.0116 293.09)", "oklch(0.9152 0.0115 308.32)", "bg", "sidebar"),
-  t("sidebar-accent",               "oklch(0.9137 0.0149 290.29)", "oklch(0.3126 0.0107 293.42)"),
-  t("sidebar-accent-foreground",    "oklch(0.2259 0.0116 293.09)", "oklch(0.9152 0.0115 308.32)", "bg", "sidebar-accent"),
-  t("sidebar-border",               "oklch(0.8299 0.0152 286.06)", "oklch(0.3970 0.0168 281.07)"),
-  t("sidebar-ring",                 "oklch(0.5695 0.0168 285.86)", "oklch(0.6569 0.0162 285.95)"),
+  t("sidebar"),
+  t("sidebar-foreground",        "bg", "sidebar"),
+  t("sidebar-primary"),
+  t("sidebar-primary-foreground","bg", "sidebar-primary"),
+  t("sidebar-accent"),
+  t("sidebar-accent-foreground", "bg", "sidebar-accent"),
+  t("sidebar-border"),
+  t("sidebar-ring"),
 ]
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Resolve a CSS color string to an rgba() string via an off-screen canvas. */
-function colorToRgba(color: string): string {
+interface ResolvedToken {
+  /** Raw computed value of the CSS custom property (e.g. `oklch(...)`) */
+  oklch: string
+  rgba: string
+  hex: string
+}
+
+/** Resolve a CSS color string to rgba + hex via an off-screen canvas. */
+function colorToParts(color: string): { rgba: string; hex: string } {
   const canvas = document.createElement("canvas")
   canvas.width = 1
   canvas.height = 1
   const ctx = canvas.getContext("2d")
-  if (!ctx) return color
+  if (!ctx) return { rgba: color, hex: color }
   ctx.fillStyle = color
   ctx.fillRect(0, 0, 1, 1)
   const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
-  return a === 255
+  const rgba = a === 255
     ? `rgb(${r}, ${g}, ${b})`
     : `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(2)})`
+  const hex = `#${[r, g, b]
+    .map((n) => n.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase()}`
+  return { rgba, hex }
 }
 
 /** Read the current computed value of a CSS custom property. */
@@ -163,31 +175,18 @@ function CopyButton({ text }: { text: string }) {
  * Swatch cell.
  * - Foreground tokens: "Aa" text in fg color on the paired bg color.
  * - All others: solid color block.
+ *
+ * Uses `var(--token)` directly so the swatch never lags behind theme changes.
  */
-function Swatch({
-  token,
-  resolvedValues,
-  isDark,
-  allTokens,
-}: {
-  token: TokenDef
-  resolvedValues: Map<string, { computed: string; rgba: string }>
-  isDark: boolean
-  allTokens: TokenDef[]
-}) {
-  const fgComputed = resolvedValues.get(token.name)?.computed
-  const fgColor = fgComputed ?? (isDark ? token.oklch.dark : token.oklch.light)
-
+function Swatch({ token }: { token: TokenDef }) {
   if (token.bgPair) {
-    const bgToken = allTokens.find((t) => t.name === token.bgPair)
-    const bgComputed = resolvedValues.get(token.bgPair)?.computed
-    const bgColor =
-      bgComputed ?? (bgToken ? (isDark ? bgToken.oklch.dark : bgToken.oklch.light) : "transparent")
-
     return (
       <div
         className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border shadow-sm text-xs font-bold"
-        style={{ backgroundColor: bgColor, color: fgColor }}
+        style={{
+          backgroundColor: `var(--${token.bgPair})`,
+          color: `var(--${token.name})`,
+        }}
       >
         Aa
       </div>
@@ -197,7 +196,7 @@ function Swatch({
   return (
     <div
       className="size-8 shrink-0 rounded-md border border-border shadow-sm"
-      style={{ backgroundColor: fgColor }}
+      style={{ backgroundColor: `var(--${token.name})` }}
     />
   )
 }
@@ -206,15 +205,11 @@ function TokenTable({
   title,
   tokens,
   resolvedValues,
-  allTokens,
 }: {
   title: string
   tokens: TokenDef[]
-  resolvedValues: Map<string, { computed: string; rgba: string }>
-  allTokens: TokenDef[]
+  resolvedValues: Map<string, ResolvedToken>
 }) {
-  const isDark = document.documentElement.classList.contains("dark")
-
   // Determine which tokens start a new visual group (bg token followed by fg pair)
   const groupStarters = new Set<string>()
   tokens.forEach((token, i) => {
@@ -235,13 +230,13 @@ function TokenTable({
               <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">CSS Variable</th>
               <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Tailwind Class</th>
               <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">oklch</th>
+              <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Hex</th>
               <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">RGBA</th>
             </tr>
           </thead>
           <tbody>
             {tokens.map((token, i) => {
               const resolved = resolvedValues.get(token.name)
-              const oklchValue = isDark ? token.oklch.dark : token.oklch.light
 
               // Foreground tokens get a slightly indented, muted background to visually nest under their pair
               const isFgRow = !!token.bgPair && i > 0 && tokens[i - 1].name === token.bgPair
@@ -261,12 +256,7 @@ function TokenTable({
                 >
                   {/* Swatch */}
                   <td className="px-4 py-2.5">
-                    <Swatch
-                      token={token}
-                      resolvedValues={resolvedValues}
-                      isDark={isDark}
-                      allTokens={allTokens}
-                    />
+                    <Swatch token={token} />
                   </td>
                   {/* Token Name */}
                   <td className={cn("px-4 py-2.5 font-medium", isFgRow ? "text-muted-foreground" : "text-foreground")}>
@@ -280,9 +270,21 @@ function TokenTable({
                   <td className="px-4 py-2.5">
                     <CopyButton text={token.tailwind} />
                   </td>
-                  {/* oklch */}
+                  {/* oklch (live from getComputedStyle) */}
                   <td className="px-4 py-2.5">
-                    <CopyButton text={oklchValue} />
+                    {resolved?.oklch ? (
+                      <CopyButton text={resolved.oklch} />
+                    ) : (
+                      <span className="font-mono text-xs text-muted-foreground">—</span>
+                    )}
+                  </td>
+                  {/* Hex */}
+                  <td className="px-4 py-2.5">
+                    {resolved?.hex ? (
+                      <CopyButton text={resolved.hex} />
+                    ) : (
+                      <span className="font-mono text-xs text-muted-foreground">—</span>
+                    )}
                   </td>
                   {/* RGBA */}
                   <td className="px-4 py-2.5">
@@ -301,10 +303,9 @@ function TokenTable({
 }
 
 function DesignTokensPage() {
-  const [resolvedValues, setResolvedValues] = useState<
-    Map<string, { computed: string; rgba: string }>
-  >(new Map())
-  const [, setTick] = useState(0)
+  const [resolvedValues, setResolvedValues] = useState<Map<string, ResolvedToken>>(
+    new Map(),
+  )
   const allTokens = useMemo(
     () => [...CORE_TOKENS, ...MD3_ROLE_TOKENS, ...CHART_TOKENS, ...SIDEBAR_TOKENS],
     [],
@@ -312,11 +313,15 @@ function DesignTokensPage() {
   const rafRef = useRef(0)
 
   const resolve = useCallback(() => {
-    const map = new Map<string, { computed: string; rgba: string }>()
+    const map = new Map<string, ResolvedToken>()
     for (const token of allTokens) {
-      const computed = getTokenValue(token.name)
-      const rgba = computed ? colorToRgba(computed) : "—"
-      map.set(token.name, { computed, rgba })
+      const oklch = getTokenValue(token.name)
+      if (!oklch) {
+        map.set(token.name, { oklch: "", rgba: "—", hex: "" })
+        continue
+      }
+      const { rgba, hex } = colorToParts(oklch)
+      map.set(token.name, { oklch, rgba, hex })
     }
     setResolvedValues(map)
   }, [allTokens])
@@ -326,10 +331,7 @@ function DesignTokensPage() {
 
     const mo = new MutationObserver(() => {
       cancelAnimationFrame(rafRef.current)
-      rafRef.current = requestAnimationFrame(() => {
-        resolve()
-        setTick((n) => n + 1)
-      })
+      rafRef.current = requestAnimationFrame(resolve)
     })
     mo.observe(document.documentElement, {
       attributes: true,
@@ -371,25 +373,21 @@ function DesignTokensPage() {
         title="Core Colors"
         tokens={CORE_TOKENS}
         resolvedValues={resolvedValues}
-        allTokens={allTokens}
       />
       <TokenTable
         title="MD3 Color Role Aliases"
         tokens={MD3_ROLE_TOKENS}
         resolvedValues={resolvedValues}
-        allTokens={allTokens}
       />
       <TokenTable
         title="Chart Colors"
         tokens={CHART_TOKENS}
         resolvedValues={resolvedValues}
-        allTokens={allTokens}
       />
       <TokenTable
         title="Sidebar Colors"
         tokens={SIDEBAR_TOKENS}
         resolvedValues={resolvedValues}
-        allTokens={allTokens}
       />
     </div>
   )

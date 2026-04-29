@@ -1,6 +1,6 @@
 import { MessageSquareIcon } from "lucide-react"
-import { useEffect, useState } from "react"
-import { expect, userEvent, within } from "storybook/test"
+import { useEffect, useMemo, useState } from "react"
+import { expect, fn, userEvent, within } from "storybook/test"
 
 
 import {
@@ -16,6 +16,7 @@ import { StreamStatus } from "./stream-status"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import type { UIMessage } from "ai"
+import type { ComponentProps } from "react"
 
 const meta: Meta = {
   title: "AI Elements/Conversation",
@@ -28,6 +29,61 @@ const meta: Meta = {
 export default meta
 
 type Story = StoryObj
+
+type StickToBottomInstance = NonNullable<ComponentProps<typeof Conversation>["instance"]>
+
+const createStickRef = (): StickToBottomInstance["scrollRef"] => {
+  const ref = ((element: HTMLElement | null) => {
+    ref.current = element
+  }) as StickToBottomInstance["scrollRef"]
+  ref.current = null
+  return ref
+}
+
+const ScrollButtonHarness = ({ onScrollToBottom }: { onScrollToBottom: () => void }) => {
+  const instance = useMemo<StickToBottomInstance>(
+    () => ({
+      contentRef: createStickRef(),
+      escapedFromLock: false,
+      isAtBottom: false,
+      isNearBottom: false,
+      scrollRef: createStickRef(),
+      scrollToBottom: () => {
+        onScrollToBottom()
+        return true
+      },
+      state: {
+        accumulated: 0,
+        calculatedTargetScrollTop: 120,
+        escapedFromLock: false,
+        isAtBottom: false,
+        isNearBottom: false,
+        resizeDifference: 0,
+        scrollDifference: 120,
+        scrollTop: 0,
+        targetScrollTop: 120,
+        velocity: 0,
+      },
+      stopScroll: () => {},
+    }),
+    [onScrollToBottom]
+  )
+
+  return (
+    <div className="h-[180px] w-full max-w-2xl rounded-lg border">
+      <Conversation instance={instance}>
+        <ConversationContent>
+          <Message from="assistant">
+            <MessageContent>
+              <MessageResponse>Older answer above the fold</MessageResponse>
+            </MessageContent>
+          </Message>
+        </ConversationContent>
+        <ConversationScrollButton aria-label="Scroll to latest message" />
+      </Conversation>
+    </div>
+  )
+}
 
 export const Empty: Story = {
   render: () => (
@@ -97,6 +153,29 @@ export const WithMessages: Story = {
     const canvas = within(canvasElement)
     await step("Conversation messages render", async () => {
       await expect(canvas.getByText(/SOLID is an acronym/)).toBeInTheDocument()
+    })
+  },
+}
+
+export const ScrollButtonVisible: Story = {
+  args: {
+    onScrollToBottom: fn(),
+  },
+  render: (args) => (
+    <ScrollButtonHarness onScrollToBottom={args.onScrollToBottom as () => void} />
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Scroll button renders when conversation is not at bottom", async () => {
+      await expect(
+        canvas.getByRole("button", { name: "Scroll to latest message" })
+      ).toBeInTheDocument()
+    })
+
+    await step("Clicking scroll button delegates to scrollToBottom", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Scroll to latest message" }))
+      await expect(args.onScrollToBottom).toHaveBeenCalledOnce()
     })
   },
 }

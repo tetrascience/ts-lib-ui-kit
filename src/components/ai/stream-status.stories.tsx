@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { expect, within } from "storybook/test"
+import { expect, userEvent, waitFor, within } from "storybook/test"
 
 import { StreamStatus } from "./stream-status"
 
@@ -18,6 +18,27 @@ const meta: Meta<typeof StreamStatus> = {
 export default meta
 
 type Story = StoryObj<typeof StreamStatus>
+
+const StreamingTransitionDemo = () => {
+  const [isStreaming, setIsStreaming] = useState(true)
+  const [startTime] = useState(() => Date.now() - 65 * 1000)
+
+  return (
+    <div className="flex flex-col gap-3 p-4 min-w-72">
+      <button type="button" onClick={() => setIsStreaming(false)}>
+        Finish stream
+      </button>
+      <StreamStatus
+        icon={<span data-testid="custom-stream-icon">Custom icon</span>}
+        isStreaming={isStreaming}
+        showIndicator
+        startTime={startTime}
+        tokenCount={1_200_000}
+        tokenLabel={null}
+      />
+    </div>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Default — time + tokens, no icon, no indicator
@@ -233,6 +254,48 @@ export const TimeOnly: Story = {
     const canvas = within(canvasElement)
     await step("Time-only variant renders", async () => {
       await expect(canvas.getByText(/s$/)).toBeInTheDocument()
+    })
+  },
+}
+
+export const CustomIconAndFinishRipple: Story = {
+  render: () => <StreamingTransitionDemo />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Custom icon, numeric start time, and million-token formatting render", async () => {
+      await expect(canvas.getByTestId("custom-stream-icon")).toBeInTheDocument()
+      await expect(canvas.getByText("1.2m tokens")).toBeInTheDocument()
+      await expect(canvas.getByText(/\d+m \d{2}s/)).toBeInTheDocument()
+    })
+
+    await step("Stopping the stream shows and clears the confirm ripple", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Finish stream" }))
+      await waitFor(() =>
+        expect(canvasElement.querySelector(".ts-bubble-confirm")).toBeInTheDocument()
+      )
+      await waitFor(
+        () => expect(canvasElement.querySelector(".ts-bubble-confirm")).not.toBeInTheDocument(),
+        { timeout: 1200 }
+      )
+    })
+  },
+}
+
+export const IdleWithoutStartTime: Story = {
+  render: () => (
+    <StreamStatus
+      isStreaming={false}
+      showIndicator
+      tokenCount={42}
+      tokenLabel={null}
+    />
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Idle status can render tokens without elapsed time", async () => {
+      await expect(canvas.getByText("42 tokens")).toBeInTheDocument()
     })
   },
 }

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { expect, userEvent, within } from "storybook/test"
+import { expect, fn, userEvent, within } from "storybook/test"
 
 import { Suggestion, Suggestions } from "./suggestion"
 
@@ -83,6 +83,35 @@ export const Few: Story = {
     const canvas = within(canvasElement)
     await step("Two suggestions render", async () => {
       await expect(canvas.getByText("Tell me a joke")).toBeInTheDocument()
+    })
+  },
+}
+
+export const CustomChildren: Story = {
+  args: {
+    onSelect: fn(),
+  },
+  render: (args) => (
+    <Suggestions className="px-0">
+      <Suggestion suggestion="Run protocol" onClick={args.onSelect as (suggestion: string) => void}>
+        <span>Protocol</span>
+        <span>run</span>
+      </Suggestion>
+      <Suggestion suggestion="No callback">No callback</Suggestion>
+    </Suggestions>
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Custom children render instead of suggestion text", async () => {
+      await expect(canvas.getByRole("button", { name: "Protocol run" })).toBeInTheDocument()
+    })
+    await step("Clicking custom suggestion passes original suggestion value", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Protocol run" }))
+      await expect(args.onSelect).toHaveBeenCalledWith("Run protocol")
+    })
+    await step("Suggestion without callback remains clickable without throwing", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "No callback" }))
+      await expect(args.onSelect).toHaveBeenCalledOnce()
     })
   },
 }

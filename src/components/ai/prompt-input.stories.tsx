@@ -12,13 +12,25 @@ import {
 import {
   PromptInput,
   PromptInputActionAddAttachments,
+  PromptInputActionAddScreenshot,
   PromptInputActionMenu,
   PromptInputActionMenuContent,
+  PromptInputActionMenuItem,
   PromptInputActionMenuTrigger,
   PromptInputBody,
   PromptInputButton,
+  PromptInputCommand,
+  PromptInputCommandEmpty,
+  PromptInputCommandGroup,
+  PromptInputCommandInput,
+  PromptInputCommandItem,
+  PromptInputCommandList,
+  PromptInputCommandSeparator,
   PromptInputFooter,
   PromptInputHeader,
+  PromptInputHoverCard,
+  PromptInputHoverCardContent,
+  PromptInputHoverCardTrigger,
   PromptInputProvider,
   PromptInputSelect,
   PromptInputSelectContent,
@@ -27,9 +39,17 @@ import {
   PromptInputSelectValue,
   PromptInputSlotSwap,
   PromptInputSubmit,
+  PromptInputTab,
+  PromptInputTabBody,
+  PromptInputTabItem,
+  PromptInputTabLabel,
+  PromptInputTabsList,
   PromptInputTextarea,
   PromptInputTools,
+  useProviderAttachments,
+  usePromptInputController,
   usePromptInputAttachments,
+  usePromptInputReferencedSources,
   type PromptInputMessage,
 } from "./prompt-input"
 import { SpeechInput } from "./speech-input"
@@ -74,6 +94,96 @@ const AttachmentsHeader = () => {
         </Attachment>
       ))}
     </Attachments>
+  )
+}
+
+const AttachmentCount = ({ testId = "attachment-count" }: { testId?: string }) => {
+  const { files } = usePromptInputAttachments()
+  return <span data-testid={testId}>{files.length}</span>
+}
+
+const ProviderControlPanel = ({ onUnmount }: { onUnmount: () => void }) => {
+  const controller = usePromptInputController()
+  const attachments = useProviderAttachments()
+  const firstFile = attachments.files[0]
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span data-testid="provider-text">{controller.textInput.value}</span>
+      <span data-testid="provider-attachment-count">{attachments.files.length}</span>
+      <button type="button" onClick={() => controller.textInput.setInput("Provider text")}>
+        Set provider text
+      </button>
+      <button type="button" onClick={() => attachments.add([])}>
+        Add empty provider files
+      </button>
+      <button type="button" onClick={() => attachments.add([new File(["provider"], "provider.txt", { type: "text/plain" })])}>
+        Add provider file
+      </button>
+      <button disabled={!firstFile} type="button" onClick={() => firstFile && attachments.remove(firstFile.id)}>
+        Remove provider file
+      </button>
+      <button type="button" onClick={() => attachments.clear()}>
+        Clear provider files
+      </button>
+      <button type="button" onClick={() => attachments.openFileDialog()}>
+        Open provider file dialog
+      </button>
+      <button type="button" onClick={onUnmount}>
+        Unmount provider
+      </button>
+    </div>
+  )
+}
+
+const ReferencedSourcesPanel = () => {
+  const referencedSources = usePromptInputReferencedSources()
+  const firstSource = referencedSources.sources[0]
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span data-testid="source-count">{referencedSources.sources.length}</span>
+      <button
+        type="button"
+        onClick={() =>
+          referencedSources.add({
+            sourceId: "doc-1",
+            title: "Protocol",
+            type: "source-document",
+            url: "https://example.test/protocol",
+          } as Parameters<typeof referencedSources.add>[0])
+        }
+      >
+        Add source
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          referencedSources.add([
+            {
+              sourceId: "doc-2",
+              title: "Batch",
+              type: "source-document",
+              url: "https://example.test/batch",
+            },
+            {
+              sourceId: "doc-3",
+              title: "Result",
+              type: "source-document",
+              url: "https://example.test/result",
+            },
+          ] as Parameters<typeof referencedSources.add>[0])
+        }
+      >
+        Add source list
+      </button>
+      <button disabled={!firstSource} type="button" onClick={() => firstSource && referencedSources.remove(firstSource.id)}>
+        Remove source
+      </button>
+      <button type="button" onClick={() => referencedSources.clear()}>
+        Clear sources
+      </button>
+    </div>
   )
 }
 
@@ -390,7 +500,7 @@ export const WithAttachmentsAndSpeech: Story = {
     })
     await step("Opening attachment menu shows add files option", async () => {
       await userEvent.click(canvas.getByRole("button", { name: /add attachments/i }))
-      await expect(await screen.findByText(/Add photos or files/i)).toBeInTheDocument()
+      await userEvent.click(await screen.findByText(/Add photos or files/i))
     })
   },
 }
@@ -767,7 +877,7 @@ export const ProviderClearsAfterSubmit: Story = {
   render: () => (
     <PromptInputProvider>
       <PromptCard className="max-w-2xl">
-        <PromptInput onSubmit={() => {}}>
+        <PromptInput onSubmit={async () => {}}>
           <PromptInputBody>
             <PromptInputTextarea placeholder="Type here..." />
           </PromptInputBody>
@@ -840,9 +950,14 @@ export const ProviderFileValidation: Story = {
         <PromptInput
           accept="image/*"
           maxFileSize={50}
+          maxFiles={1}
+          multiple
           onError={args.onError as (err: { code: string; message: string }) => void}
           onSubmit={() => {}}
         >
+          <PromptInputHeader>
+            <AttachmentCount />
+          </PromptInputHeader>
           <PromptInputBody>
             <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
           </PromptInputBody>
@@ -870,6 +985,17 @@ export const ProviderFileValidation: Story = {
       await waitFor(() => expect(args.onError).toHaveBeenCalledWith(
         expect.objectContaining({ code: "max_file_size" })
       ))
+    })
+    await step("Uploading too many valid files fires max_files through provider validation", async () => {
+      const fileInput = canvasElement.querySelector<HTMLInputElement>('input[type="file"]')!
+      await userEvent.upload(fileInput, [
+        new File(["a"], "a.png", { type: "image/png" }),
+        new File(["b"], "b.png", { type: "image/png" }),
+      ])
+      await waitFor(() => expect(args.onError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: "max_files" })
+      ))
+      await waitFor(() => expect(within(canvasElement).getByTestId("attachment-count")).toHaveTextContent("1"))
     })
   },
 }
@@ -911,5 +1037,569 @@ export const ButtonStringTooltip: Story = {
       await userEvent.hover(canvas.getByRole("button", { name: "+" }))
       await waitFor(() => expect(screen.getByRole("tooltip")).toHaveTextContent("⌘K"))
     })
+  },
+}
+
+/** Local attachments are converted from blob URLs to data URLs before submit. */
+export const BlobAttachmentSubmitConversion: Story = {
+  args: {
+    onSubmit: fn(),
+  },
+  render: (args) => (
+    <PromptCard className="max-w-2xl">
+      <PromptInput
+        accept="text/plain"
+        onSubmit={args.onSubmit as (msg: PromptInputMessage, e: React.FormEvent<HTMLFormElement>) => void}
+        syncHiddenInput
+      >
+        <PromptInputHeader>
+          <AttachmentCount />
+        </PromptInputHeader>
+        <PromptInputBody>
+          <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools />
+          <PromptInputSubmit />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptCard>
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Uploading an accepted exact MIME type adds one attachment", async () => {
+      const fileInput = canvasElement.querySelector<HTMLInputElement>('input[type="file"]')!
+      await userEvent.upload(fileInput, new File(["hello"], "note.txt", { type: "text/plain" }))
+      await waitFor(() => expect(canvas.getByTestId("attachment-count")).toHaveTextContent("1"))
+    })
+
+    await step("Submitting converts the blob URL attachment to a data URL", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /submit/i }))
+      await waitFor(() =>
+        expect(args.onSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            files: expect.arrayContaining([
+              expect.objectContaining({
+                filename: "note.txt",
+                url: expect.stringMatching(/^data:text\/plain/),
+              }),
+            ]),
+            text: "",
+          }),
+          expect.anything()
+        )
+      )
+      await waitFor(() => expect(canvas.getByTestId("attachment-count")).toHaveTextContent("0"))
+    })
+  },
+}
+
+/** Provider hooks can update text, add/remove/clear files, and clean up on unmount. */
+export const ProviderAttachmentControls: Story = {
+  render: () => {
+    const [mounted, setMounted] = useState(true)
+
+    if (!mounted) {
+      return <span>Provider unmounted</span>
+    }
+
+    return (
+      <PromptInputProvider>
+        <PromptCard className="max-w-2xl">
+          <PromptInput onSubmit={() => {}}>
+            <PromptInputHeader>
+              <ProviderControlPanel onUnmount={() => setMounted(false)} />
+            </PromptInputHeader>
+            <PromptInputBody>
+              <PromptInputTextarea placeholder="Provider prompt..." />
+            </PromptInputBody>
+            <PromptInputFooter>
+              <PromptInputTools />
+              <PromptInputSubmit />
+            </PromptInputFooter>
+          </PromptInput>
+        </PromptCard>
+      </PromptInputProvider>
+    )
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Provider controller updates textarea text", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Set provider text" }))
+      await expect(canvas.getByPlaceholderText("Provider prompt...")).toHaveValue("Provider text")
+      await expect(canvas.getByTestId("provider-text")).toHaveTextContent("Provider text")
+    })
+
+    await step("Provider add ignores empty lists and adds real files", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Add empty provider files" }))
+      await expect(canvas.getByTestId("provider-attachment-count")).toHaveTextContent("0")
+      await userEvent.click(canvas.getByRole("button", { name: "Add provider file" }))
+      await waitFor(() => expect(canvas.getByTestId("provider-attachment-count")).toHaveTextContent("1"))
+    })
+
+    await step("Provider remove and clear update attachment state", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Remove provider file" }))
+      await waitFor(() => expect(canvas.getByTestId("provider-attachment-count")).toHaveTextContent("0"))
+      await userEvent.click(canvas.getByRole("button", { name: "Add provider file" }))
+      await userEvent.click(canvas.getByRole("button", { name: "Add provider file" }))
+      await waitFor(() => expect(canvas.getByTestId("provider-attachment-count")).toHaveTextContent("2"))
+      await userEvent.click(canvas.getByRole("button", { name: "Clear provider files" }))
+      await waitFor(() => expect(canvas.getByTestId("provider-attachment-count")).toHaveTextContent("0"))
+    })
+
+    await step("Provider openFileDialog and unmount cleanup paths run", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Open provider file dialog" }))
+      await userEvent.click(canvas.getByRole("button", { name: "Add provider file" }))
+      await waitFor(() => expect(canvas.getByTestId("provider-attachment-count")).toHaveTextContent("1"))
+      await userEvent.click(canvas.getByRole("button", { name: "Unmount provider" }))
+      await expect(canvas.getByText("Provider unmounted")).toBeInTheDocument()
+    })
+  },
+}
+
+/** Referenced source helpers add, remove, and clear local PromptInput sources. */
+export const ReferencedSourcesControls: Story = {
+  render: () => (
+    <PromptCard className="max-w-2xl">
+      <PromptInput onSubmit={() => {}}>
+        <PromptInputHeader>
+          <ReferencedSourcesPanel />
+        </PromptInputHeader>
+        <PromptInputBody>
+          <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools />
+          <PromptInputSubmit />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptCard>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Referenced sources can be added one at a time and in arrays", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Add source" }))
+      await waitFor(() => expect(canvas.getByTestId("source-count")).toHaveTextContent("1"))
+      await userEvent.click(canvas.getByRole("button", { name: "Add source list" }))
+      await waitFor(() => expect(canvas.getByTestId("source-count")).toHaveTextContent("3"))
+    })
+
+    await step("Referenced sources can be removed and cleared", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Remove source" }))
+      await waitFor(() => expect(canvas.getByTestId("source-count")).toHaveTextContent("2"))
+      await userEvent.click(canvas.getByRole("button", { name: "Clear sources" }))
+      await waitFor(() => expect(canvas.getByTestId("source-count")).toHaveTextContent("0"))
+    })
+  },
+}
+
+/** Global drag/drop attaches files from document-level handlers. */
+export const GlobalDropAttachments: Story = {
+  render: () => (
+    <PromptCard className="max-w-2xl">
+      <PromptInput globalDrop onSubmit={() => {}}>
+        <PromptInputHeader>
+          <AttachmentCount />
+        </PromptInputHeader>
+        <PromptInputBody>
+          <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools />
+          <PromptInputSubmit />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptCard>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Document dragover prevents default for files", async () => {
+      const dataTransfer = new DataTransfer()
+      dataTransfer.items.add(new File(["dropped"], "dropped.txt", { type: "text/plain" }))
+      const dragOver = new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer })
+      document.dispatchEvent(dragOver)
+      await expect(dragOver.defaultPrevented).toBe(true)
+    })
+
+    await step("Document drop adds file attachment", async () => {
+      const dataTransfer = new DataTransfer()
+      dataTransfer.items.add(new File(["dropped"], "dropped.txt", { type: "text/plain" }))
+      document.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer }))
+      await waitFor(() => expect(canvas.getByTestId("attachment-count")).toHaveTextContent("1"))
+    })
+  },
+}
+
+/** Keyboard guard paths skip submit when handlers prevent or composition/disabled states apply. */
+export const KeyboardSubmitGuards: Story = {
+  args: {
+    onSubmit: fn(),
+    onKeyDown: fn((event: React.KeyboardEvent<HTMLTextAreaElement>) => event.preventDefault()),
+  },
+  render: (args) => {
+    const [text, setText] = useState("")
+    return (
+      <PromptCard className="max-w-2xl">
+        <PromptInput onSubmit={args.onSubmit as (msg: PromptInputMessage, e: React.FormEvent<HTMLFormElement>) => void}>
+          <PromptInputBody>
+            <PromptInputTextarea
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={args.onKeyDown as React.KeyboardEventHandler<HTMLTextAreaElement>}
+              placeholder="Guarded prompt..."
+              value={text}
+            />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputTools />
+            <PromptInputSubmit disabled />
+          </PromptInputFooter>
+        </PromptInput>
+      </PromptCard>
+    )
+  },
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const textarea = canvas.getByPlaceholderText("Guarded prompt...")
+
+    await step("External onKeyDown can prevent internal submit handling", async () => {
+      await userEvent.type(textarea, "Blocked")
+      await userEvent.keyboard("{Enter}")
+      await expect(args.onKeyDown).toHaveBeenCalled()
+      await expect(args.onSubmit).not.toHaveBeenCalled()
+    })
+  },
+}
+
+/** Composition Enter and disabled submit buttons do not submit the prompt. */
+export const CompositionAndDisabledSubmitGuards: Story = {
+  args: {
+    onSubmit: fn(),
+  },
+  render: (args) => {
+    const [text, setText] = useState("")
+    return (
+      <PromptCard className="max-w-2xl">
+        <PromptInput onSubmit={args.onSubmit as (msg: PromptInputMessage, e: React.FormEvent<HTMLFormElement>) => void}>
+          <PromptInputBody>
+            <PromptInputTextarea
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Composing prompt..."
+              value={text}
+            />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputTools />
+            <PromptInputSubmit disabled />
+          </PromptInputFooter>
+        </PromptInput>
+      </PromptCard>
+    )
+  },
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const textarea = canvas.getByPlaceholderText("Composing prompt...")
+
+    await step("Enter during composition does not submit", async () => {
+      await userEvent.type(textarea, "Draft")
+      textarea.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true }))
+      await userEvent.keyboard("{Enter}")
+      textarea.dispatchEvent(new CompositionEvent("compositionend", { bubbles: true }))
+      await expect(args.onSubmit).not.toHaveBeenCalled()
+    })
+
+    await step("Enter with a disabled submit button does not submit", async () => {
+      await userEvent.keyboard("{Enter}")
+      await expect(args.onSubmit).not.toHaveBeenCalled()
+    })
+  },
+}
+
+/** Paste events with no clipboard items are ignored. */
+export const PasteWithoutClipboardItems: Story = {
+  render: () => (
+    <PromptCard className="max-w-2xl">
+      <PromptInput onSubmit={() => {}}>
+        <PromptInputHeader>
+          <AttachmentCount />
+        </PromptInputHeader>
+        <PromptInputBody>
+          <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools />
+          <PromptInputSubmit />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptCard>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Pasting without clipboardData items does not add attachments", async () => {
+      const textarea = canvas.getByPlaceholderText("Ask anything...")
+      textarea.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, cancelable: true }))
+      await expect(canvas.getByTestId("attachment-count")).toHaveTextContent("0")
+    })
+  },
+}
+
+/** Error-state submit button renders and delegates regular clicks to onClick. */
+export const ErrorSubmitClick: Story = {
+  args: {
+    onClick: fn(),
+  },
+  render: (args) => (
+    <PromptCard className="max-w-2xl">
+      <PromptInput onSubmit={() => {}}>
+        <PromptInputBody>
+          <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="Retry this" />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools />
+          <PromptInputSubmit onClick={args.onClick as React.MouseEventHandler<HTMLButtonElement>} status="error" />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptCard>
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Clicking an error-status submit calls onClick", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /submit/i }))
+      await expect(args.onClick).toHaveBeenCalledOnce()
+    })
+  },
+}
+
+/** PromptInput wrapper primitives render hover cards, tabs, commands, and custom menu items. */
+export const WrapperPrimitives: Story = {
+  args: {
+    onCustomAction: fn(),
+  },
+  render: (args) => (
+    <div className="flex max-w-2xl flex-col gap-4">
+      <PromptCard>
+        <PromptInput onSubmit={() => {}}>
+          <PromptInputBody>
+            <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputTools>
+              <PromptInputButton>Plain</PromptInputButton>
+              <PromptInputButton>
+                <span>A</span>
+                <span>B</span>
+              </PromptInputButton>
+              <PromptInputActionMenu>
+                <PromptInputActionMenuTrigger tooltip="More actions" />
+                <PromptInputActionMenuContent>
+                  <PromptInputActionMenuItem onSelect={args.onCustomAction as () => void}>
+                    Custom action
+                  </PromptInputActionMenuItem>
+                </PromptInputActionMenuContent>
+              </PromptInputActionMenu>
+            </PromptInputTools>
+            <PromptInputSubmit />
+          </PromptInputFooter>
+        </PromptInput>
+      </PromptCard>
+
+      <PromptInputHoverCard>
+        <PromptInputHoverCardTrigger asChild>
+          <button type="button">Hover details</button>
+        </PromptInputHoverCardTrigger>
+        <PromptInputHoverCardContent>Helpful hover content</PromptInputHoverCardContent>
+      </PromptInputHoverCard>
+
+      <PromptInputTabsList>
+        <PromptInputTab>
+          <PromptInputTabLabel>Recent tools</PromptInputTabLabel>
+          <PromptInputTabBody>
+            <PromptInputTabItem>Search docs</PromptInputTabItem>
+          </PromptInputTabBody>
+        </PromptInputTab>
+      </PromptInputTabsList>
+
+      <PromptInputCommand>
+        <PromptInputCommandInput placeholder="Search commands" />
+        <PromptInputCommandList>
+          <PromptInputCommandEmpty>No command found</PromptInputCommandEmpty>
+          <PromptInputCommandGroup heading="Actions">
+            <PromptInputCommandItem value="summarize">Summarize</PromptInputCommandItem>
+            <PromptInputCommandSeparator />
+          </PromptInputCommandGroup>
+        </PromptInputCommandList>
+      </PromptInputCommand>
+    </div>
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Custom prompt buttons and menu item render and run", async () => {
+      await expect(canvas.getByRole("button", { name: "Plain" })).toBeInTheDocument()
+      await expect(canvas.getByRole("button", { name: "A B" })).toBeInTheDocument()
+      await userEvent.click(canvas.getByRole("button", { name: "More actions" }))
+      await userEvent.click(await screen.findByText("Custom action"))
+      await expect(args.onCustomAction).toHaveBeenCalledOnce()
+    })
+
+    await step("Hover card content appears on hover", async () => {
+      await userEvent.hover(canvas.getByRole("button", { hidden: true, name: "Hover details" }))
+      await expect(await screen.findByText("Helpful hover content")).toBeInTheDocument()
+    })
+
+    await step("Tabs and command wrappers render content", async () => {
+      await expect(canvas.getByText("Recent tools")).toBeInTheDocument()
+      await expect(canvas.getByText("Search docs")).toBeInTheDocument()
+      await expect(canvas.getByPlaceholderText("Search commands")).toBeInTheDocument()
+      await expect(canvas.getByText("Summarize")).toBeInTheDocument()
+    })
+  },
+}
+
+/** Screenshot action captures screen media and adds it as an attachment. */
+export const ScreenshotActionAddsAttachment: Story = {
+  args: {
+    onCustomAction: fn(),
+  },
+  render: (args) => (
+    <PromptCard className="max-w-2xl">
+      <PromptInput onSubmit={() => {}}>
+        <PromptInputHeader>
+          <AttachmentCount />
+        </PromptInputHeader>
+        <PromptInputBody>
+          <PromptInputTextarea onChange={() => {}} placeholder="Ask anything..." value="" />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools>
+            <PromptInputActionMenu>
+              <PromptInputActionMenuTrigger tooltip="Capture tools" />
+              <PromptInputActionMenuContent>
+                <PromptInputActionMenuItem onSelect={args.onCustomAction as () => void}>
+                  Custom action
+                </PromptInputActionMenuItem>
+                <PromptInputActionAddScreenshot
+                  label="Prevent screenshot"
+                  onSelect={(event) => event.preventDefault()}
+                />
+                <PromptInputActionAddScreenshot />
+              </PromptInputActionMenuContent>
+            </PromptInputActionMenu>
+          </PromptInputTools>
+          <PromptInputSubmit />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptCard>
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const stopTrack = fn()
+    const drawImage = fn()
+    const originalMediaDevices = navigator.mediaDevices
+    const originalPlay = HTMLMediaElement.prototype.play
+    const originalPause = HTMLMediaElement.prototype.pause
+    const originalGetContext = HTMLCanvasElement.prototype.getContext
+    const originalToBlob = HTMLCanvasElement.prototype.toBlob
+    const originalSrcObjectDescriptor = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, "srcObject")
+    const originalVideoWidthDescriptor = Object.getOwnPropertyDescriptor(HTMLVideoElement.prototype, "videoWidth")
+    const originalVideoHeightDescriptor = Object.getOwnPropertyDescriptor(HTMLVideoElement.prototype, "videoHeight")
+
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        ...originalMediaDevices,
+        getDisplayMedia: fn(async () => ({
+          getTracks: () => [{ stop: stopTrack }],
+        })),
+      },
+    })
+    Object.defineProperty(HTMLMediaElement.prototype, "srcObject", {
+      configurable: true,
+      get() {
+        return (this as HTMLMediaElement & { __srcObject?: MediaStream | null }).__srcObject ?? null
+      },
+      set(value) {
+        ;(this as HTMLMediaElement & { __srcObject?: MediaStream | null }).__srcObject = value as MediaStream | null
+        if (value) {
+          queueMicrotask(() => this.onloadedmetadata?.(new Event("loadedmetadata")))
+        }
+      },
+    })
+    Object.defineProperty(HTMLVideoElement.prototype, "videoWidth", {
+      configurable: true,
+      get: () => 16,
+    })
+    Object.defineProperty(HTMLVideoElement.prototype, "videoHeight", {
+      configurable: true,
+      get: () => 9,
+    })
+    Object.defineProperty(HTMLMediaElement.prototype, "play", {
+      configurable: true,
+      value: fn(async () => {}),
+    })
+    Object.defineProperty(HTMLMediaElement.prototype, "pause", {
+      configurable: true,
+      value: fn(),
+    })
+    Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+      configurable: true,
+      value: fn(() => ({ drawImage })),
+    })
+    Object.defineProperty(HTMLCanvasElement.prototype, "toBlob", {
+      configurable: true,
+      value: (callback: BlobCallback) => callback(new Blob(["png"], { type: "image/png" })),
+    })
+
+    await step("Custom menu item can prevent the screenshot action machinery", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Capture tools" }))
+      await userEvent.click(await screen.findByText("Custom action"))
+      await expect(args.onCustomAction).toHaveBeenCalledOnce()
+      await userEvent.click(canvas.getByRole("button", { hidden: true, name: "Capture tools" }))
+      await userEvent.click(await screen.findByText("Prevent screenshot"))
+      await expect(canvas.getByTestId("attachment-count")).toHaveTextContent("0")
+    })
+
+    await step("Screenshot action captures media, stops the track, and adds attachment", async () => {
+      await userEvent.click(canvas.getByRole("button", { hidden: true, name: "Capture tools" }))
+      await userEvent.click(await screen.findByText("Take screenshot"))
+      await waitFor(() => expect(canvas.getByTestId("attachment-count")).toHaveTextContent("1"))
+      await expect(drawImage).toHaveBeenCalled()
+      await expect(stopTrack).toHaveBeenCalledOnce()
+    })
+
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: originalMediaDevices,
+    })
+    Object.defineProperty(HTMLMediaElement.prototype, "play", {
+      configurable: true,
+      value: originalPlay,
+    })
+    Object.defineProperty(HTMLMediaElement.prototype, "pause", {
+      configurable: true,
+      value: originalPause,
+    })
+    Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+      configurable: true,
+      value: originalGetContext,
+    })
+    Object.defineProperty(HTMLCanvasElement.prototype, "toBlob", {
+      configurable: true,
+      value: originalToBlob,
+    })
+    if (originalSrcObjectDescriptor) {
+      Object.defineProperty(HTMLMediaElement.prototype, "srcObject", originalSrcObjectDescriptor)
+    }
+    if (originalVideoWidthDescriptor) {
+      Object.defineProperty(HTMLVideoElement.prototype, "videoWidth", originalVideoWidthDescriptor)
+    }
+    if (originalVideoHeightDescriptor) {
+      Object.defineProperty(HTMLVideoElement.prototype, "videoHeight", originalVideoHeightDescriptor)
+    }
   },
 }

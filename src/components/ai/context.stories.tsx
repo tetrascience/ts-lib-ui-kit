@@ -294,3 +294,40 @@ export const NearLimit: Story = {
     })
   },
 }
+
+export const UsageWithoutModelPricing: Story = {
+  render: () => (
+    <Context
+      open
+      maxTokens={8000}
+      usedTokens={4200}
+      usage={{
+        cachedInputTokens: 100,
+        inputTokens: 1200,
+        outputTokens: 300,
+        reasoningTokens: 200,
+      }}
+    >
+      <ContextTrigger />
+      <ContextContent>
+        <ContextContentHeader />
+        <ContextContentBody>
+          <ContextInputUsage />
+          <ContextOutputUsage />
+          <ContextReasoningUsage />
+          <ContextCacheUsage />
+        </ContextContentBody>
+        <ContextContentFooter />
+      </ContextContent>
+    </Context>
+  ),
+  play: async ({ step }) => {
+    await step("Usage rows render zero-dollar costs without a model id", async () => {
+      await expect(await screen.findByText("Input")).toBeInTheDocument()
+      await expect(screen.getByText("Output")).toBeInTheDocument()
+      await expect(screen.getByText("Reasoning")).toBeInTheDocument()
+      await expect(screen.getByText("Cache")).toBeInTheDocument()
+      await expect(screen.getAllByText(/\$0\.00/).length).toBeGreaterThanOrEqual(5)
+    })
+  },
+}

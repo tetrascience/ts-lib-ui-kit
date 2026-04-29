@@ -1,4 +1,5 @@
-import { expect, within } from "storybook/test"
+import { useState } from "react"
+import { expect, userEvent, waitFor, within } from "storybook/test"
 
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "./tool"
 
@@ -16,6 +17,28 @@ const meta: Meta = {
 export default meta
 
 type Story = StoryObj
+
+const StreamingToolDemo = () => {
+  const [isStreaming, setIsStreaming] = useState(true)
+
+  return (
+    <div className="w-full max-w-lg space-y-2">
+      <button type="button" onClick={() => setIsStreaming(false)}>
+        Finish tool
+      </button>
+      <Tool defaultOpen isStreaming={isStreaming}>
+        <ToolHeader
+          state={isStreaming ? "input-available" : "output-available"}
+          type="tool-search_web"
+        />
+        <ToolContent>
+          <ToolInput input={{ query: "lab notebook entries" }} />
+          {!isStreaming && <ToolOutput errorText={undefined} output={{ matches: 3 }} />}
+        </ToolContent>
+      </Tool>
+    </div>
+  )
+}
 
 export const InputStreaming: Story = {
   render: () => (
@@ -122,6 +145,72 @@ export const CustomTitle: Story = {
     const canvas = within(canvasElement)
     await step("Custom title tool renders", async () => {
       await expect(canvas.getByText("Run Python Script")).toBeInTheDocument()
+    })
+  },
+}
+
+export const StreamingAutoClose: Story = {
+  render: () => <StreamingToolDemo />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const toolTrigger = canvas.getByText("search_web").closest("button")
+
+    if (!toolTrigger) {
+      throw new Error("Expected tool trigger button to render")
+    }
+
+    await step("Streaming tool starts open", async () => {
+      await expect(toolTrigger).toHaveAttribute("aria-expanded", "true")
+      await expect(canvas.getByText("Running")).toBeInTheDocument()
+    })
+
+    await step("Stopping streaming auto-closes the tool", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Finish tool" }))
+      await waitFor(() => expect(toolTrigger).toHaveAttribute("aria-expanded", "false"), {
+        timeout: 1800,
+      })
+    })
+  },
+}
+
+export const OutputEdgeCases: Story = {
+  render: () => (
+    <div className="w-full max-w-lg space-y-2">
+      <Tool defaultOpen>
+        <ToolHeader state="approval-requested" toolName="customLookup" type="dynamic-tool" />
+        <ToolContent>
+          <ToolInput input={{ id: "sample-42" }} />
+          <ToolOutput errorText={undefined} output={undefined} />
+        </ToolContent>
+      </Tool>
+      <Tool defaultOpen>
+        <ToolHeader state="approval-responded" toolName="customLookup" type="dynamic-tool" />
+        <ToolContent>
+          <ToolOutput errorText="Denied by policy" output={undefined} />
+        </ToolContent>
+      </Tool>
+      <Tool defaultOpen>
+        <ToolHeader state="output-denied" type="tool-delete_file" />
+        <ToolContent>
+          <ToolOutput errorText={undefined} output={<span>Manual review required</span>} />
+        </ToolContent>
+      </Tool>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Dynamic tool names and approval states render", async () => {
+      await expect(canvas.getAllByText("customLookup")).toHaveLength(2)
+      await expect(canvas.getByText("Awaiting Approval")).toBeInTheDocument()
+      await expect(canvas.getByText("Responded")).toBeInTheDocument()
+    })
+
+    await step("Denied and element outputs render with expected labels", async () => {
+      await expect(canvas.getByText("Error")).toBeInTheDocument()
+      await expect(canvas.getByText("Denied by policy")).toBeInTheDocument()
+      await expect(canvas.getByText("Denied")).toBeInTheDocument()
+      await expect(canvas.getByText("Manual review required")).toBeInTheDocument()
     })
   },
 }

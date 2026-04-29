@@ -1,10 +1,10 @@
 import { BrainIcon, ChevronDownIcon, CopyIcon, RefreshCcwIcon } from "lucide-react"
 import { useEffect, useState } from "react"
-import { expect, userEvent, within } from "storybook/test"
+import { expect, fn, userEvent, waitFor, within } from "storybook/test"
 
 import { Chat } from "./Chat"
 
-import type { ChatMessage } from "./Chat"
+import type { ChatMessage, ChatProps } from "./Chat"
 import type { AttachmentData } from "@/components/ai/attachments"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
@@ -256,6 +256,48 @@ export const SingleModel: Story = {
     const canvas = within(canvasElement)
     await step("Model selector hidden with single model", async () => {
       await expect(canvas.queryByRole("combobox")).not.toBeInTheDocument()
+    })
+  },
+}
+
+export const SubmitAndStreamLifecycle: Story = {
+  args: {
+    models: MOCK_MODELS,
+    defaultModel: "gpt-4o",
+    suggestions: [],
+    onSend: fn(async (message: string, model: string) => {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      return `Assistant heard "${message}" using ${model}.`
+    }),
+  },
+  render: (args) => (
+    <div className="h-[600px] w-full max-w-2xl rounded-lg border">
+      <Chat {...args} onSend={args.onSend as ChatProps["onSend"]} />
+    </div>
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Submitting prompt calls onSend with selected model", async () => {
+      await userEvent.type(canvas.getByPlaceholderText("Ask anything..."), "Trace streamStart")
+      await userEvent.click(canvas.getByRole("button", { name: "Submit" }))
+      await waitFor(() =>
+        expect(args.onSend).toHaveBeenCalledWith("Trace streamStart", "gpt-4o")
+      )
+    })
+
+    await step("streamStart renders status while reply is pending", async () => {
+      await expect(canvas.getByText("Trace streamStart")).toBeInTheDocument()
+      await expect(canvas.getByText(/^\d+s$/)).toBeInTheDocument()
+    })
+
+    await step("Assistant reply renders and streamStart clears after linger", async () => {
+      await expect(
+        await canvas.findByText('Assistant heard "Trace streamStart" using gpt-4o.')
+      ).toBeInTheDocument()
+      await waitFor(() => expect(canvas.queryByText(/^\d+s$/)).not.toBeInTheDocument(), {
+        timeout: 3600,
+      })
     })
   },
 }

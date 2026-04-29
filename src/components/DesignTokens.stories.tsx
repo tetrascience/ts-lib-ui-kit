@@ -90,7 +90,7 @@ const SIDEBAR_TOKENS: TokenDef[] = [
   t("sidebar"),
   t("sidebar-foreground",        "bg", "sidebar"),
   t("sidebar-primary"),
-  t("sidebar-primary-foreground","bg", "sidebar-primary"),
+  t("sidebar-primary-foreground", "bg", "sidebar-primary"),
   t("sidebar-accent"),
   t("sidebar-accent-foreground", "bg", "sidebar-accent"),
   t("sidebar-border"),
@@ -114,7 +114,7 @@ function colorToParts(color: string): { rgba: string; hex: string } {
   canvas.width = 1
   canvas.height = 1
   const ctx = canvas.getContext("2d")
-  if (!ctx) return { rgba: color, hex: color }
+  if (!ctx) return { rgba: color, hex: "" }
   ctx.fillStyle = color
   ctx.fillRect(0, 0, 1, 1)
   const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
@@ -131,10 +131,10 @@ function colorToParts(color: string): { rgba: string; hex: string } {
 /**
  * Read the current computed value of a CSS custom property.
  *
- * Reads from a descendant element rather than `document.documentElement`
- * because the dark-mode variant is `&:is(.dark *)` — it only applies to
- * descendants of `.dark`, not the element carrying the class itself.
- * Reading from `<html>` would always return the light-mode value.
+ * Reads from a probe element rather than assuming the theme class is applied
+ * to `document.documentElement`. This ensures the lookup happens inside
+ * whatever element receives `.dark`, so the computed custom properties
+ * reflect the active theme via normal inheritance.
  */
 function getTokenValue(el: Element, name: string): string {
   return getComputedStyle(el).getPropertyValue(`--${name}`).trim()

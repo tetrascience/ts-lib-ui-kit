@@ -173,7 +173,7 @@ export const Chat = ({
   }, [])
 
   return (
-    <div className={cn("flex h-full flex-col max-w-[980px]", className)}>
+    <div className={cn("mx-auto flex h-full w-full max-w-[980px] flex-col", className)}>
       {/* Conversation */}
       <Conversation className="flex-1">
         <ConversationContent>

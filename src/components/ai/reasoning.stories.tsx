@@ -1,4 +1,5 @@
-import { expect, within } from "storybook/test"
+import { useState } from "react"
+import { expect, userEvent, waitFor, within } from "storybook/test"
 
 import { Reasoning, ReasoningContent, ReasoningTrigger } from "./reasoning"
 
@@ -34,6 +35,27 @@ const meta: Meta = {
 export default meta
 
 type Story = StoryObj
+
+const ReasoningLifecycleDemo = () => {
+  const [isStreaming, setIsStreaming] = useState(false)
+
+  return (
+    <div className="w-full max-w-2xl space-y-3">
+      <div className="flex gap-2">
+        <button type="button" onClick={() => setIsStreaming(true)}>
+          Start reasoning
+        </button>
+        <button type="button" onClick={() => setIsStreaming(false)}>
+          Finish reasoning
+        </button>
+      </div>
+      <Reasoning isStreaming={isStreaming}>
+        <ReasoningTrigger />
+        <ReasoningContent>Auto opened reasoning content</ReasoningContent>
+      </Reasoning>
+    </div>
+  )
+}
 
 export const Default: Story = {
   render: () => (
@@ -101,6 +123,33 @@ export const Collapsed: Story = {
     const canvas = within(canvasElement)
     await step("Collapsed reasoning shows trigger only", async () => {
       await expect(canvas.getByRole("button")).toBeInTheDocument()
+    })
+  },
+}
+
+export const StreamingLifecycle: Story = {
+  render: () => <ReasoningLifecycleDemo />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const reasoningTrigger = canvas.getByRole("button", {
+      name: /thought for a few seconds/i,
+    })
+
+    await step("Streaming start auto-opens reasoning", async () => {
+      await expect(reasoningTrigger).toHaveAttribute("aria-expanded", "false")
+      await userEvent.click(canvas.getByRole("button", { name: "Start reasoning" }))
+      await waitFor(() => expect(reasoningTrigger).toHaveAttribute("aria-expanded", "true"))
+      await expect(canvas.getByText("Auto opened reasoning content")).toBeInTheDocument()
+    })
+
+    await step("Streaming finish records duration and auto-closes", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Finish reasoning" }))
+      await waitFor(() => expect(reasoningTrigger).toHaveTextContent(/Thought for \d+ seconds/), {
+        timeout: 1500,
+      })
+      await waitFor(() => expect(reasoningTrigger).toHaveAttribute("aria-expanded", "false"), {
+        timeout: 1800,
+      })
     })
   },
 }

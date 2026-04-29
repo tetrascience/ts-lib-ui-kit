@@ -1,4 +1,5 @@
-import { expect, within } from "storybook/test"
+import { useState } from "react"
+import { expect, userEvent, waitFor, within } from "storybook/test"
 
 import { Task, TaskContent, TaskItem, TaskItemFile, TaskTrigger } from "./task"
 
@@ -16,6 +17,24 @@ const meta: Meta = {
 export default meta
 
 type Story = StoryObj
+
+const StreamingTaskDemo = () => {
+  const [isStreaming, setIsStreaming] = useState(true)
+
+  return (
+    <div className="w-full max-w-lg space-y-2">
+      <button type="button" onClick={() => setIsStreaming(false)}>
+        Finish task
+      </button>
+      <Task defaultOpen isStreaming={isStreaming}>
+        <TaskTrigger title="Search knowledge base" />
+        <TaskContent>
+          <TaskItem>Reading indexed results</TaskItem>
+        </TaskContent>
+      </Task>
+    </div>
+  )
+}
 
 export const Default: Story = {
   render: () => (
@@ -137,6 +156,30 @@ export const Collapsed: Story = {
     await step("Collapsed task shows only title", async () => {
       await expect(canvas.getByText("Completed: Scaffold project")).toBeInTheDocument()
       await expect(canvas.getByText("Building authentication flow")).toBeInTheDocument()
+    })
+  },
+}
+
+export const StreamingAutoClose: Story = {
+  render: () => <StreamingTaskDemo />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const taskTrigger = canvas.getByText("Search knowledge base").closest("[aria-expanded]")
+
+    if (!taskTrigger) {
+      throw new Error("Expected task trigger to render")
+    }
+
+    await step("Streaming task starts open", async () => {
+      await expect(taskTrigger).toHaveAttribute("aria-expanded", "true")
+      await expect(canvas.getByText("Reading indexed results")).toBeInTheDocument()
+    })
+
+    await step("Stopping streaming auto-closes the task", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Finish task" }))
+      await waitFor(() => expect(taskTrigger).toHaveAttribute("aria-expanded", "false"), {
+        timeout: 1800,
+      })
     })
   },
 }

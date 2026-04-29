@@ -1,8 +1,9 @@
-import { expect, within } from "storybook/test"
+import { expect, fn, screen, userEvent, within } from "storybook/test"
 import { css } from "storybook/theming"
 
 import {
   Attachment,
+  AttachmentEmpty,
   AttachmentHoverCard,
   AttachmentHoverCardContent,
   AttachmentHoverCardTrigger,
@@ -38,6 +39,27 @@ const mockAudioFile: AttachmentData = {
   name: "recording.mp3",
   filename: "recording.mp3",
   mediaType: "audio/mpeg",
+}
+
+const mockVideoFile: AttachmentData = {
+  type: "file",
+  id: "video-1",
+  name: "clip.mp4",
+  filename: "clip.mp4",
+  mediaType: "video/mp4",
+  url: "./sample-video.mp4",
+}
+
+const mockImageWithoutName: AttachmentData = {
+  type: "file",
+  id: "img-2",
+  mediaType: "image/png",
+  url: "./sample_image2.png",
+}
+
+const mockUnknownFile: AttachmentData = {
+  type: "file",
+  id: "unknown-1",
 }
 
 const mockSource: AttachmentData = {
@@ -181,6 +203,68 @@ export const WithHoverCard: Story = {
     const canvas = within(canvasElement)
     await step("Attachment with hover card renders", async () => {
       await expect(canvas.getByText("screenshot.png")).toBeInTheDocument()
+    })
+    await step("Hovering attachment opens preview content", async () => {
+      await userEvent.hover(canvas.getByText("screenshot.png"))
+      await expect(await screen.findAllByRole("img", { name: "screenshot.png" })).toHaveLength(2)
+    })
+  },
+}
+
+export const MediaFallbacksAndRemove: Story = {
+  args: {
+    onRemove: fn(),
+  },
+  render: (args) => (
+    <div className="flex flex-col gap-4">
+      <Attachments variant="inline">
+        <Attachment data={mockImageWithoutName}>
+          <AttachmentPreview />
+          <AttachmentInfo />
+          <AttachmentRemove />
+        </Attachment>
+        <Attachment data={mockUnknownFile} onRemove={args.onRemove as () => void}>
+          <AttachmentPreview fallbackIcon={<span>Fallback icon</span>} />
+          <AttachmentInfo />
+          <AttachmentRemove label="Discard attachment">Discard</AttachmentRemove>
+        </Attachment>
+      </Attachments>
+      <Attachments variant="list">
+        <Attachment data={mockVideoFile} onRemove={args.onRemove as () => void}>
+          <AttachmentPreview data-testid="video-preview" />
+          <AttachmentInfo showMediaType />
+          <AttachmentRemove />
+        </Attachment>
+      </Attachments>
+    </div>
+  ),
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Image and unknown attachments use fallback labels", async () => {
+      await expect(canvas.getByText("Image")).toBeInTheDocument()
+      await expect(canvas.getByText("Attachment")).toBeInTheDocument()
+      await expect(canvas.getByText("Fallback icon")).toBeInTheDocument()
+    })
+    await step("Video previews render and inline remove invokes callback", async () => {
+      await expect(canvas.getByTestId("video-preview").querySelector("video")).toBeInTheDocument()
+      await userEvent.click(canvas.getByRole("button", { name: "Discard attachment" }))
+      await expect(args.onRemove).toHaveBeenCalledOnce()
+    })
+  },
+}
+
+export const EmptyState: Story = {
+  render: () => (
+    <div className="flex flex-col gap-2">
+      <AttachmentEmpty />
+      <AttachmentEmpty>Nothing selected</AttachmentEmpty>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Default and custom empty states render", async () => {
+      await expect(canvas.getByText("No attachments")).toBeInTheDocument()
+      await expect(canvas.getByText("Nothing selected")).toBeInTheDocument()
     })
   },
 }

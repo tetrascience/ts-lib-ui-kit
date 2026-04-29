@@ -37,10 +37,7 @@ import {
   ContextReasoningUsage,
   ContextTrigger,
 } from "@/components/ai/context"
-import {
-  Conversation,
-  ConversationContent,
-} from "@/components/ai/conversation"
+import { Conversation, ConversationContent } from "@/components/ai/conversation"
 import {
   InlineCitation,
   InlineCitationCard,
@@ -57,13 +54,7 @@ import {
   InlineCitationSource,
   InlineCitationText,
 } from "@/components/ai/inline-citation"
-import {
-  Message,
-  MessageAction,
-  MessageActions,
-  MessageContent,
-  MessageResponse,
-} from "@/components/ai/message"
+import { Message, MessageAction, MessageActions, MessageContent, MessageResponse } from "@/components/ai/message"
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -92,12 +83,7 @@ import {
   QueueList,
   type QueueItemStatus,
 } from "@/components/ai/queue"
-import {
-  Reasoning,
-  ReasoningContent,
-  ReasoningTrigger,
-  useReasoning,
-} from "@/components/ai/reasoning"
+import { Reasoning, ReasoningContent, ReasoningTrigger, useReasoning } from "@/components/ai/reasoning"
 import { Shimmer, TS_SHIMMER_GRADIENT } from "@/components/ai/shimmer"
 import { Source, Sources, SourcesContent, SourcesTrigger } from "@/components/ai/sources"
 import { StreamStatus } from "@/components/ai/stream-status"
@@ -105,14 +91,11 @@ import { Task, TaskContent, TaskItem, TaskItemFile, TaskTrigger } from "@/compon
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "@/components/ai/tool"
 import { cn } from "@/lib/utils"
 
-
-
-
 const meta: Meta<typeof Chat> = {
   title: "AI Elements/Chat",
   component: Chat,
   parameters: {
-    layout: "padded",
+    layout: "fullscreen",
   },
   tags: ["autodocs"],
 }
@@ -197,7 +180,7 @@ export const Empty: Story = {
     suggestions: MOCK_SUGGESTIONS,
   },
   render: (args) => (
-    <div className="h-[600px] w-full max-w-2xl rounded-lg border">
+    <div className="h-screen w-full">
       <Chat {...args} />
     </div>
   ),
@@ -209,9 +192,7 @@ export const Empty: Story = {
     })
     await step("Clicking a suggestion fills the textarea", async () => {
       await userEvent.click(canvas.getByText("Explain quantum entanglement"))
-      await expect(canvas.getByPlaceholderText("Ask anything...")).toHaveValue(
-        "Explain quantum entanglement"
-      )
+      await expect(canvas.getByPlaceholderText("Ask anything...")).toHaveValue("Explain quantum entanglement")
     })
   },
 }
@@ -223,7 +204,7 @@ export const WithMessages: Story = {
     suggestions: MOCK_SUGGESTIONS,
   },
   render: (args) => (
-    <div className="h-[600px] w-full max-w-2xl rounded-lg border">
+    <div className="h-screen w-full">
       <Chat {...args} />
     </div>
   ),
@@ -248,7 +229,7 @@ export const SingleModel: Story = {
     models: [{ id: "claude-sonnet-4-6", name: "Claude Sonnet" }],
   },
   render: (args) => (
-    <div className="h-[600px] w-full max-w-2xl rounded-lg border">
+    <div className="h-screen w-full">
       <Chat {...args} />
     </div>
   ),
@@ -271,7 +252,7 @@ export const SubmitAndStreamLifecycle: Story = {
     }),
   },
   render: (args) => (
-    <div className="h-[600px] w-full max-w-2xl rounded-lg border">
+    <div className="h-screen w-full">
       <Chat {...args} onSend={args.onSend as ChatProps["onSend"]} />
     </div>
   ),
@@ -281,9 +262,7 @@ export const SubmitAndStreamLifecycle: Story = {
     await step("Submitting prompt calls onSend with selected model", async () => {
       await userEvent.type(canvas.getByPlaceholderText("Ask anything..."), "Trace streamStart")
       await userEvent.click(canvas.getByRole("button", { name: "Submit" }))
-      await waitFor(() =>
-        expect(args.onSend).toHaveBeenCalledWith("Trace streamStart", "gpt-4o")
-      )
+      await waitFor(() => expect(args.onSend).toHaveBeenCalledWith("Trace streamStart", "gpt-4o"))
     })
 
     await step("streamStart renders status while reply is pending", async () => {
@@ -292,9 +271,7 @@ export const SubmitAndStreamLifecycle: Story = {
     })
 
     await step("Assistant reply renders and streamStart clears after linger", async () => {
-      await expect(
-        await canvas.findByText('Assistant heard "Trace streamStart" using gpt-4o.')
-      ).toBeInTheDocument()
+      await expect(await canvas.findByText('Assistant heard "Trace streamStart" using gpt-4o.')).toBeInTheDocument()
       await waitFor(() => expect(canvas.queryByText(/^\d+s$/)).not.toBeInTheDocument(), {
         timeout: 3600,
       })
@@ -323,10 +300,7 @@ const GradientReasoningTrigger = () => {
   return (
     <>
       <TsBrainGradientDef />
-      <BrainIcon
-        className="size-4"
-        stroke={isStreaming ? "url(#ts-chat-brain-gradient)" : "currentColor"}
-      />
+      <BrainIcon className="size-4" stroke={isStreaming ? "url(#ts-chat-brain-gradient)" : "currentColor"} />
       {isStreaming ? (
         <Shimmer duration={1.5} gradient={TS_SHIMMER_GRADIENT}>
           Thinking...
@@ -335,7 +309,10 @@ const GradientReasoningTrigger = () => {
         <span>Thought for {duration ?? "a few"} seconds</span>
       )}
       <ChevronDownIcon
-        className={`size-4 transition-transform ${isOpen ? "rotate-180" : "rotate-0"}`}
+        className={cn(
+          "size-4 opacity-0 transition-all group-focus-visible:opacity-100 group-hover:opacity-100",
+          isOpen ? "rotate-180 opacity-100" : "rotate-0",
+        )}
       />
     </>
   )
@@ -355,12 +332,7 @@ const AttachmentsHeader = () => {
   return (
     <Attachments variant="inline">
       {files.map((file) => (
-        <Attachment
-          data={file}
-          key={file.id}
-          onRemove={() => remove(file.id)}
-          variant="inline"
-        >
+        <Attachment data={file} key={file.id} onRemove={() => remove(file.id)} variant="inline">
           <AttachmentPreview />
           <AttachmentInfo />
           <AttachmentRemove />
@@ -391,7 +363,7 @@ const PulseWrapper = ({
       className={cn(
         "pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out",
         radius,
-        active ? "ts-border-pulse opacity-100" : "opacity-0"
+        active ? "ts-border-pulse opacity-100" : "opacity-0",
       )}
     />
     {children}
@@ -399,8 +371,8 @@ const PulseWrapper = ({
 )
 
 const ChatShell = ({ children }: { children: React.ReactNode }) => (
-  <div className="h-[600px] w-full max-w-2xl rounded-lg border">
-    <Conversation className="h-full">
+  <div className="mx-auto h-screen w-full">
+    <Conversation>
       <ConversationContent>{children}</ConversationContent>
     </Conversation>
   </div>
@@ -465,10 +437,7 @@ const ReasoningCitationsQueueDemo = () => {
     return () => clearInterval(interval)
   }, [phase])
 
-  const sources = [
-    "https://en.wikipedia.org/wiki/Photosynthesis",
-    "https://www.khanacademy.org/science/photosynthesis",
-  ]
+  const sources = ["https://en.wikipedia.org/wiki/Photosynthesis", "https://www.khanacademy.org/science/photosynthesis"]
 
   return (
     <ChatShell>
@@ -495,11 +464,7 @@ const ReasoningCitationsQueueDemo = () => {
                 <QueueItem key={item.id}>
                   <QueueItemIndicator status={item.status} />
                   <QueueItemContent
-                    className={
-                      item.status === "error"
-                        ? "text-destructive line-through"
-                        : undefined
-                    }
+                    className={item.status === "error" ? "text-destructive line-through" : undefined}
                     completed={item.status === "done"}
                   >
                     {item.title}
@@ -516,8 +481,8 @@ const ReasoningCitationsQueueDemo = () => {
             <Message from="assistant">
               <MessageContent>
                 <div className="text-sm leading-relaxed">
-                  Photosynthesis converts sunlight into chemical energy stored in glucose.
-                  Chlorophyll absorbs light, water is split, and CO₂ is fixed into sugars
+                  Photosynthesis converts sunlight into chemical energy stored in glucose. Chlorophyll absorbs light,
+                  water is split, and CO₂ is fixed into sugars
                   <InlineCitation>
                     <InlineCitationText> — see the overall equation</InlineCitationText>
                     <InlineCitationCard>
@@ -532,13 +497,8 @@ const ReasoningCitationsQueueDemo = () => {
                           <InlineCitationCarouselContent>
                             {sources.map((url) => (
                               <InlineCitationCarouselItem key={url}>
-                                <InlineCitationSource
-                                  title={new URL(url).hostname}
-                                  url={url}
-                                />
-                                <InlineCitationQuote>
-                                  6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂
-                                </InlineCitationQuote>
+                                <InlineCitationSource title={new URL(url).hostname} url={url} />
+                                <InlineCitationQuote>6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂</InlineCitationQuote>
                               </InlineCitationCarouselItem>
                             ))}
                           </InlineCitationCarouselContent>
@@ -571,12 +531,7 @@ const ReasoningCitationsQueueDemo = () => {
         )}
 
         {phase !== "done" && (
-          <StreamStatus
-            iconVariant="loader-circle"
-            isStreaming
-            showIndicator
-            startTime={new Date(Date.now() - 2000)}
-          />
+          <StreamStatus iconVariant="loader-circle" isStreaming showIndicator startTime={new Date(Date.now() - 2000)} />
         )}
       </div>
     </ChatShell>
@@ -594,9 +549,9 @@ export const WithReasoningCitationsAndQueue: Story = {
 
 const TaskAndToolsDemo = () => {
   const [phase, setPhase] = useState<"thinking" | "running" | "done">("thinking")
-  const [toolState, setToolState] = useState<
-    "input-streaming" | "input-available" | "output-available"
-  >("input-streaming")
+  const [toolState, setToolState] = useState<"input-streaming" | "input-available" | "output-available">(
+    "input-streaming",
+  )
 
   useEffect(() => {
     const t1 = setTimeout(() => {
@@ -626,8 +581,8 @@ const TaskAndToolsDemo = () => {
             <GradientReasoningTrigger />
           </ReasoningTrigger>
           <ReasoningContent>
-            I need current weather data. I&apos;ll break this into subtasks, then call
-            the `get_weather` tool with a location parameter.
+            I need current weather data. I&apos;ll break this into subtasks, then call the `get_weather` tool with a
+            location parameter.
           </ReasoningContent>
         </Reasoning>
 
@@ -637,9 +592,12 @@ const TaskAndToolsDemo = () => {
               <TaskTrigger title="Plan and execute weather lookup" />
               <TaskContent>
                 <TaskItem>
-                  <>Resolved location to </><TaskItemFile>San Francisco, CA</TaskItemFile>
+                  <>Resolved location to </>
+                  <TaskItemFile>San Francisco, CA</TaskItemFile>
                 </TaskItem>
-                <TaskItem>Selected tool: <TaskItemFile>get_weather</TaskItemFile></TaskItem>
+                <TaskItem>
+                  Selected tool: <TaskItemFile>get_weather</TaskItemFile>
+                </TaskItem>
                 <TaskItem>Calling tool with derived parameters…</TaskItem>
               </TaskContent>
             </Task>
@@ -666,9 +624,7 @@ const TaskAndToolsDemo = () => {
         {phase === "done" && (
           <Message from="assistant">
             <MessageContent>
-              <MessageResponse>
-                It&apos;s 68°F and partly cloudy in San Francisco, with 72% humidity.
-              </MessageResponse>
+              <MessageResponse>It&apos;s 68°F and partly cloudy in San Francisco, with 72% humidity.</MessageResponse>
             </MessageContent>
           </Message>
         )}
@@ -721,18 +677,15 @@ export const WithAttachments: Story = {
               </Attachment>
             ))}
           </Attachments>
-          <MessageResponse>
-            Can you summarize these Q1 materials and flag anything unusual?
-          </MessageResponse>
+          <MessageResponse>Can you summarize these Q1 materials and flag anything unusual?</MessageResponse>
         </MessageContent>
       </Message>
 
       <Message from="assistant">
         <MessageContent>
           <MessageResponse>
-            I&apos;ve reviewed the chart, earnings report, and notes. Revenue is up 12%
-            QoQ. One line item — &quot;Other operating expenses&quot; — jumped 40% and is
-            worth a closer look.
+            I&apos;ve reviewed the chart, earnings report, and notes. Revenue is up 12% QoQ. One line item — &quot;Other
+            operating expenses&quot; — jumped 40% and is worth a closer look.
           </MessageResponse>
           <Attachments variant="inline">
             {MOCK_ATTACHMENTS.slice(0, 2).map((data) => (
@@ -754,13 +707,7 @@ export const WithAttachments: Story = {
 // tool-input and tool-output phases.
 // ---------------------------------------------------------------------------
 
-type HumanInLoopPhase =
-  | "thinking"
-  | "awaiting-approval"
-  | "approved"
-  | "running"
-  | "done"
-  | "denied"
+type HumanInLoopPhase = "thinking" | "awaiting-approval" | "approved" | "running" | "done" | "denied"
 
 const HUMAN_IN_LOOP_PHASE_TRANSITIONS: Partial<Record<HumanInLoopPhase, { next: HumanInLoopPhase; delay: number }>> = {
   thinking: { next: "awaiting-approval", delay: 1800 },
@@ -784,9 +731,7 @@ function getHumanInLoopConfirmationState(
   return "approval-responded"
 }
 
-function getHumanInLoopToolState(
-  phase: HumanInLoopPhase,
-): "input-streaming" | "input-available" | "output-available" {
+function getHumanInLoopToolState(phase: HumanInLoopPhase): "input-streaming" | "input-available" | "output-available" {
   if (phase === "thinking") return "input-streaming"
   if (phase === "done") return "output-available"
   return "input-available"
@@ -802,22 +747,19 @@ const HumanInTheLoopDemo = () => {
     return () => clearTimeout(t)
   }, [phase])
 
-  const isStreaming =
-    phase !== "done" && phase !== "denied" && phase !== "awaiting-approval"
+  const isStreaming = phase !== "done" && phase !== "denied" && phase !== "awaiting-approval"
 
   const approval = getHumanInLoopApproval(phase)
   const confirmationState = getHumanInLoopConfirmationState(phase)
   const toolState = getHumanInLoopToolState(phase)
 
   return (
-    <div className="flex h-[680px] w-full max-w-2xl flex-col rounded-lg border">
+    <div className="flex h-screen w-full flex-col">
       <Conversation className="flex-1">
         <ConversationContent>
           <Message from="user">
             <MessageContent>
-              <MessageResponse>
-                Can you delete the stale build-cache folder?
-              </MessageResponse>
+              <MessageResponse>Can you delete the stale build-cache folder?</MessageResponse>
             </MessageContent>
           </Message>
 
@@ -827,8 +769,8 @@ const HumanInTheLoopDemo = () => {
                 <GradientReasoningTrigger />
               </ReasoningTrigger>
               <ReasoningContent>
-                Deleting files is destructive — I&apos;ll prepare the command and
-                ask for explicit approval before running it.
+                Deleting files is destructive — I&apos;ll prepare the command and ask for explicit approval before
+                running it.
               </ReasoningContent>
             </Reasoning>
 
@@ -836,14 +778,9 @@ const HumanInTheLoopDemo = () => {
               <Tool defaultOpen isStreaming={toolState !== "output-available"}>
                 <ToolHeader state={toolState} type="tool-run_shell" />
                 <ToolContent>
-                  <ToolInput
-                    input={{ command: "rm -rf /tmp/build-cache", cwd: "/" }}
-                  />
+                  <ToolInput input={{ command: "rm -rf /tmp/build-cache", cwd: "/" }} />
                   {phase === "done" && (
-                    <ToolOutput
-                      errorText={undefined}
-                      output={{ status: "ok", bytesFreed: 248_193_024 }}
-                    />
+                    <ToolOutput errorText={undefined} output={{ status: "ok", bytesFreed: 248_193_024 }} />
                   )}
                 </ToolContent>
               </Tool>
@@ -851,44 +788,29 @@ const HumanInTheLoopDemo = () => {
 
             {approval && phase !== "thinking" && (
               <Confirmation approval={approval} state={confirmationState}>
-                <ConfirmationTitle>
-                  Allow assistant to run this command?
-                </ConfirmationTitle>
+                <ConfirmationTitle>Allow assistant to run this command?</ConfirmationTitle>
                 <ConfirmationRequest>
                   <ConfirmationCode>rm -rf /tmp/build-cache</ConfirmationCode>
                 </ConfirmationRequest>
                 <ConfirmationActions>
-                  <ConfirmationAction
-                    onClick={() => setPhase("denied")}
-                    variant="outline"
-                  >
+                  <ConfirmationAction onClick={() => setPhase("denied")} variant="outline">
                     Deny <ConfirmationShortcut>esc</ConfirmationShortcut>
                   </ConfirmationAction>
                   <div className="flex gap-2">
-                    <ConfirmationAction
-                      onClick={() => setPhase("approved")}
-                      variant="outline"
-                    >
-                      Allow once{" "}
-                      <ConfirmationShortcut>⌘⇧↩</ConfirmationShortcut>
+                    <ConfirmationAction onClick={() => setPhase("approved")} variant="outline">
+                      Allow once <ConfirmationShortcut>⌘⇧↩</ConfirmationShortcut>
                     </ConfirmationAction>
-                    <ConfirmationAction
-                      onClick={() => setPhase("approved")}
-                      variant="default"
-                    >
+                    <ConfirmationAction onClick={() => setPhase("approved")} variant="default">
                       Always allow <ConfirmationShortcut>⌘↩</ConfirmationShortcut>
                     </ConfirmationAction>
                   </div>
                 </ConfirmationActions>
                 <ConfirmationAccepted>
-                  <div className="text-muted-foreground text-sm">
-                    Allowed — command executed successfully.
-                  </div>
+                  <div className="text-muted-foreground text-sm">Allowed — command executed successfully.</div>
                 </ConfirmationAccepted>
                 <ConfirmationRejected>
                   <div className="text-muted-foreground text-sm">
-                    Denied — I won&apos;t run the command. Let me know how
-                    you&apos;d like to proceed.
+                    Denied — I won&apos;t run the command. Let me know how you&apos;d like to proceed.
                   </div>
                 </ConfirmationRejected>
               </Confirmation>
@@ -897,9 +819,7 @@ const HumanInTheLoopDemo = () => {
             {phase === "done" && (
               <Message from="assistant">
                 <MessageContent>
-                  <MessageResponse>
-                    Done — freed about 237 MB from `/tmp/build-cache`.
-                  </MessageResponse>
+                  <MessageResponse>Done — freed about 237 MB from `/tmp/build-cache`.</MessageResponse>
                 </MessageContent>
               </Message>
             )}
@@ -908,8 +828,7 @@ const HumanInTheLoopDemo = () => {
               <Message from="assistant">
                 <MessageContent>
                   <MessageResponse>
-                    No problem — I&apos;ll leave the cache alone. Want me to
-                    suggest a safer cleanup instead?
+                    No problem — I&apos;ll leave the cache alone. Want me to suggest a safer cleanup instead?
                   </MessageResponse>
                 </MessageContent>
               </Message>
@@ -918,7 +837,7 @@ const HumanInTheLoopDemo = () => {
         </ConversationContent>
       </Conversation>
 
-      <div className="border-t px-4 py-2">
+      <div className="px-4 py-2">
         <StreamStatus
           iconVariant="loader-circle"
           isStreaming={isStreaming}
@@ -952,15 +871,7 @@ export const WithHumanInTheLoop: Story = {
 // output), stream status, sources, and an inline citation in the reply.
 // ---------------------------------------------------------------------------
 
-type FullPhase =
-  | "idle"
-  | "thinking"
-  | "planning"
-  | "awaiting-approval"
-  | "denied"
-  | "tooling"
-  | "writing"
-  | "done"
+type FullPhase = "idle" | "thinking" | "planning" | "awaiting-approval" | "denied" | "tooling" | "writing" | "done"
 
 const FULL_QUEUE_BASE = [
   { id: "1", title: "Parse user question" },
@@ -1091,9 +1002,7 @@ const InteractiveFullDemo = () => {
     if (!activeTurn || activeTurn.phase === "done") return
 
     const setTurn = (patch: Partial<FullTurn>) =>
-      setTurns((prev) =>
-        prev.map((t) => (t.id === activeTurn.id ? { ...t, ...patch } : t))
-      )
+      setTurns((prev) => prev.map((t) => (t.id === activeTurn.id ? { ...t, ...patch } : t)))
 
     if (activeTurn.phase === "thinking") {
       if (activeTurn.thoughtChars >= FULL_THOUGHT_TEXT.length) {
@@ -1103,12 +1012,9 @@ const InteractiveFullDemo = () => {
       const t = setTimeout(
         () =>
           setTurn({
-            thoughtChars: Math.min(
-              activeTurn.thoughtChars + THINKING_CHARS_PER_TICK,
-              FULL_THOUGHT_TEXT.length
-            ),
+            thoughtChars: Math.min(activeTurn.thoughtChars + THINKING_CHARS_PER_TICK, FULL_THOUGHT_TEXT.length),
           }),
-        THINKING_TICK_MS
+        THINKING_TICK_MS,
       )
       return () => clearTimeout(t)
     }
@@ -1123,14 +1029,11 @@ const InteractiveFullDemo = () => {
               toolState: "input-streaming", // "Pending" until approved
               approval: { id: `appr-${activeTurn.id}` },
             }),
-          700
+          700,
         )
         return () => clearTimeout(t)
       }
-      const t = setTimeout(
-        () => setTurn({ queueStep: activeTurn.queueStep + 1 }),
-        1100
-      )
+      const t = setTimeout(() => setTurn({ queueStep: activeTurn.queueStep + 1 }), 1100)
       return () => clearTimeout(t)
     }
 
@@ -1151,12 +1054,9 @@ const InteractiveFullDemo = () => {
       const t = setTimeout(
         () =>
           setTurn({
-            writtenChars: Math.min(
-              activeTurn.writtenChars + WRITING_CHARS_PER_TICK,
-              FULL_ANSWER_TEXT.length
-            ),
+            writtenChars: Math.min(activeTurn.writtenChars + WRITING_CHARS_PER_TICK, FULL_ANSWER_TEXT.length),
           }),
-        WRITING_TICK_MS
+        WRITING_TICK_MS,
       )
       return () => clearTimeout(t)
     }
@@ -1172,8 +1072,8 @@ const InteractiveFullDemo = () => {
               phase: approved ? "tooling" : "denied",
               toolState: approved ? "input-available" : t.toolState,
             }
-          : t
-      )
+          : t,
+      ),
     )
   }
 
@@ -1208,8 +1108,7 @@ const InteractiveFullDemo = () => {
     setText("")
   }
 
-  const totalUsed =
-    usage.inputTokens + usage.outputTokens + usage.reasoningTokens
+  const totalUsed = usage.inputTokens + usage.outputTokens + usage.reasoningTokens
 
   // Fake per-phase pricing so the footer shows a meaningful cost instead of $0.
   // Roughly mirrors Claude Sonnet 4.5 pricing ($3 / $15 per 1M tok).
@@ -1227,401 +1126,297 @@ const InteractiveFullDemo = () => {
   const outputCost = usage.outputTokens * OUTPUT_COST_PER_TOKEN
   const reasoningCost = usage.reasoningTokens * REASONING_COST_PER_TOKEN
   const totalCost = inputCost + outputCost + reasoningCost
-  const formatTokens = (n: number) =>
-    new Intl.NumberFormat("en-US", { notation: "compact" }).format(n)
+  const formatTokens = (n: number) => new Intl.NumberFormat("en-US", { notation: "compact" }).format(n)
 
   return (
-    <div className="flex flex-col">
-      <Conversation className="flex-1">
+    <div className="h-screen w-full mx-auto flex w-full max-w-[980px] flex-col">
+      <Conversation>
         <ConversationContent>
           {turns.length === 0 && (
             <div className="flex h-full flex-col items-center justify-center gap-2 py-16 text-center">
               <h3 className="font-medium text-foreground">Try the full demo</h3>
               <p className="max-w-sm text-muted-foreground text-sm">
-                Send any message — the assistant will walk through reasoning,
-                a live queue, tool calls, and a cited answer.
+                Send any message — the assistant will walk through reasoning, a live queue, tool calls, and a cited
+                answer.
               </p>
               <div className="mt-4 flex flex-wrap justify-center gap-2">
-                {["How does photosynthesis work?", "Summarize these notes"].map(
-                  (s) => (
-                    <button
-                      className="rounded-full border bg-background px-3 py-1 text-sm hover:bg-muted"
-                      key={s}
-                      onClick={() => setText(s)}
-                      type="button"
-                    >
-                      {s}
-                    </button>
-                  )
-                )}
+                {["How does photosynthesis work?", "Summarize these notes"].map((s) => (
+                  <button
+                    className="rounded-full border bg-background px-3 py-1 text-sm hover:bg-muted"
+                    key={s}
+                    onClick={() => setText(s)}
+                    type="button"
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
-          {turns.map((turn) => (
-            <div className="space-y-3" key={turn.id}>
-              {/* User message */}
-              <Message from="user">
-                <MessageContent>
-                  {turn.userAttachments && (
-                    <Attachments variant="grid">
-                      {turn.userAttachments.map((a) => (
-                        <Attachment data={a} key={a.id}>
-                          <AttachmentPreview />
-                        </Attachment>
-                      ))}
-                    </Attachments>
-                  )}
-                  <MessageResponse>{turn.userText}</MessageResponse>
-                </MessageContent>
-              </Message>
+          {turns.map((turn) => {
+            const isActiveTurn = turn.id === activeTurn?.id
 
-              {/* Reasoning — always rendered; streaming state drives the gradient */}
-              <Reasoning defaultOpen isStreaming={turn.phase === "thinking"}>
-                <ReasoningTrigger />
-                <ReasoningContent>
-                  {turn.phase === "thinking"
-                    ? FULL_THOUGHT_TEXT.slice(0, turn.thoughtChars)
-                    : FULL_THOUGHT_TEXT}
-                </ReasoningContent>
-              </Reasoning>
+            return (
+              <div className="space-y-3" key={turn.id}>
+                {/* User message */}
+                <Message from="user">
+                  <MessageContent>
+                    {turn.userAttachments && (
+                      <Attachments variant="grid">
+                        {turn.userAttachments.map((a) => (
+                          <Attachment data={a} key={a.id}>
+                            <AttachmentPreview />
+                          </Attachment>
+                        ))}
+                      </Attachments>
+                    )}
+                    <MessageResponse>{turn.userText}</MessageResponse>
+                  </MessageContent>
+                </Message>
 
-              {/* Queue — appears once thinking is done. Pulses only while
+                {/* Reasoning — always rendered; streaming state drives the gradient */}
+                <Reasoning defaultOpen isStreaming={turn.phase === "thinking"}>
+                  <ReasoningTrigger />
+                  <ReasoningContent>
+                    {turn.phase === "thinking" ? FULL_THOUGHT_TEXT.slice(0, turn.thoughtChars) : FULL_THOUGHT_TEXT}
+                  </ReasoningContent>
+                </Reasoning>
+
+                {/* Queue — appears once thinking is done. Pulses only while
                   items are still moving (planning); fades once complete. */}
-              {turn.phase !== "thinking" && (
-                <PulseWrapper
-                  active={turn.phase === "planning"}
-                  radius="rounded-xl"
-                >
-                <Queue isStreaming={turn.phase === "planning"}>
-                  <QueueList>
-                    {FULL_QUEUE_BASE.map((item, i) => {
-                      const statuses = getQueueStatuses(turn.queueStep)
-                      const status =
-                        turn.phase === "planning"
-                          ? statuses[i]
-                          : statuses[i] === "loading"
-                            ? "done"
-                            : statuses[i]
-                      return (
-                        <QueueItem key={item.id}>
-                          <QueueItemIndicator status={status} />
-                          <QueueItemContent
-                            className={
-                              status === "error"
-                                ? "text-destructive line-through"
-                                : undefined
-                            }
-                            completed={status === "done"}
-                          >
-                            {item.title}
-                            {status === "error" && " — skipped"}
-                          </QueueItemContent>
-                        </QueueItem>
-                      )
-                    })}
-                  </QueueList>
-                </Queue>
-                </PulseWrapper>
-              )}
+                {turn.phase !== "thinking" && (
+                  <PulseWrapper active={turn.phase === "planning"} radius="rounded-xl">
+                    <Queue isStreaming={turn.phase === "planning"}>
+                      <QueueList>
+                        {FULL_QUEUE_BASE.map((item, i) => {
+                          const statuses = getQueueStatuses(turn.queueStep)
+                          const status =
+                            turn.phase === "planning" ? statuses[i] : statuses[i] === "loading" ? "done" : statuses[i]
+                          return (
+                            <QueueItem key={item.id}>
+                              <QueueItemIndicator status={status} />
+                              <QueueItemContent
+                                className={status === "error" ? "text-destructive line-through" : undefined}
+                                completed={status === "done"}
+                              >
+                                {item.title}
+                                {status === "error" && " — skipped"}
+                              </QueueItemContent>
+                            </QueueItem>
+                          )
+                        })}
+                      </QueueList>
+                    </Queue>
+                  </PulseWrapper>
+                )}
 
-              {/* Task + Tool — appears once queue finishes; pulses while the
+                {/* Task + Tool — appears once queue finishes; pulses while the
                   tool is awaiting approval or actively running. */}
-              {(turn.phase === "awaiting-approval" ||
-                turn.phase === "tooling" ||
-                turn.phase === "writing" ||
-                turn.phase === "done" ||
-                turn.phase === "denied") && (
-                <>
-                  <Task defaultOpen isStreaming={turn.phase !== "done" && turn.phase !== "denied"}>
-                    <TaskTrigger title="Plan and execute lookup" />
-                    <TaskContent>
-                      <TaskItem>
-                        <>Resolved topic to </>
-                        <TaskItemFile>photosynthesis</TaskItemFile>
-                      </TaskItem>
-                      <TaskItem>
-                        Selected tool: <TaskItemFile>search_knowledge_base</TaskItemFile>
-                      </TaskItem>
-                      <TaskItem>Calling tool with derived parameters…</TaskItem>
-                    </TaskContent>
-                  </Task>
+                {(turn.phase === "awaiting-approval" ||
+                  turn.phase === "tooling" ||
+                  turn.phase === "writing" ||
+                  turn.phase === "done" ||
+                  turn.phase === "denied") && (
+                  <>
+                    <Task defaultOpen isStreaming={turn.phase !== "done" && turn.phase !== "denied"}>
+                      <TaskTrigger title="Plan and execute lookup" />
+                      <TaskContent>
+                        <TaskItem>
+                          <>Resolved topic to </>
+                          <TaskItemFile>photosynthesis</TaskItemFile>
+                        </TaskItem>
+                        <TaskItem>
+                          Selected tool: <TaskItemFile>search_knowledge_base</TaskItemFile>
+                        </TaskItem>
+                        <TaskItem>Calling tool with derived parameters…</TaskItem>
+                      </TaskContent>
+                    </Task>
 
-                  <PulseWrapper
-                    active={
-                      turn.phase === "tooling" &&
-                      turn.toolState === "input-available"
-                    }
-                  >
-                    <Tool defaultOpen isStreaming={turn.toolState !== "output-available"}>
-                      <ToolHeader
-                        state={turn.toolState}
-                        type="tool-search_knowledge_base"
-                      />
-                      <ToolContent>
-                        <ToolInput
-                          input={{ query: turn.userText, topK: 3, useCache: true }}
-                        />
-                        {turn.toolState === "output-available" && (
-                          <ToolOutput
-                            errorText={undefined}
-                            output={{
-                              hits: [
-                                { title: "Photosynthesis — Wikipedia", score: 0.94 },
-                                { title: "Photosynthesis — Khan Academy", score: 0.89 },
-                              ],
-                              latencyMs: 142,
+                    <PulseWrapper active={turn.phase === "tooling" && turn.toolState === "input-available"}>
+                      <Tool defaultOpen isStreaming={turn.toolState !== "output-available"}>
+                        <ToolHeader state={turn.toolState} type="tool-search_knowledge_base" />
+                        <ToolContent>
+                          <ToolInput
+                            input={{
+                              query: turn.userText,
+                              topK: 3,
+                              useCache: true,
                             }}
                           />
-                        )}
-                      </ToolContent>
-                    </Tool>
-                  </PulseWrapper>
+                          {turn.toolState === "output-available" && (
+                            <ToolOutput
+                              errorText={undefined}
+                              output={{
+                                hits: [
+                                  {
+                                    title: "Photosynthesis — Wikipedia",
+                                    score: 0.94,
+                                  },
+                                  {
+                                    title: "Photosynthesis — Khan Academy",
+                                    score: 0.89,
+                                  },
+                                ],
+                                latencyMs: 142,
+                              }}
+                            />
+                          )}
+                        </ToolContent>
+                      </Tool>
+                    </PulseWrapper>
 
-                  {/* Human-in-the-loop approval gate */}
-                  {(turn.phase === "awaiting-approval" ||
-                    turn.phase === "denied" ||
-                    (turn.phase === "done" && turn.approval?.approved)) &&
-                    turn.approval !== undefined && (
-                      <Confirmation
-                        approval={
-                          turn.approval.approved === undefined
-                            ? { id: turn.approval.id }
-                            : {
-                                id: turn.approval.id,
-                                approved: turn.approval.approved,
-                              }
-                        }
-                        state={
-                          turn.phase === "awaiting-approval"
-                            ? "approval-requested"
-                            : turn.phase === "denied"
-                              ? "output-denied"
-                              : "output-available"
-                        }
-                      >
-                        <ConfirmationTitle>
-                          Allow assistant to call{" "}
-                          <span className="font-mono">search_knowledge_base</span>?
-                        </ConfirmationTitle>
-                        <ConfirmationRequest>
-                          <ConfirmationCode>
-                            {`search_knowledge_base({\n  query: ${JSON.stringify(turn.userText)},\n  topK: 3,\n  useCache: true\n})`}
-                          </ConfirmationCode>
-                        </ConfirmationRequest>
-                        <ConfirmationActions>
-                          <ConfirmationAction
-                            onClick={() => respondApproval(turn.id, false)}
-                            variant="outline"
-                          >
-                            Deny <ConfirmationShortcut>esc</ConfirmationShortcut>
-                          </ConfirmationAction>
-                          <div className="flex gap-2">
-                            <ConfirmationAction
-                              onClick={() => respondApproval(turn.id, true)}
-                              variant="outline"
-                            >
-                              Allow once{" "}
-                              <ConfirmationShortcut>⌘⇧↩</ConfirmationShortcut>
+                    {/* Human-in-the-loop approval gate */}
+                    {(turn.phase === "awaiting-approval" ||
+                      turn.phase === "denied" ||
+                      (turn.phase === "done" && turn.approval?.approved)) &&
+                      turn.approval !== undefined && (
+                        <Confirmation
+                          approval={
+                            turn.approval.approved === undefined
+                              ? { id: turn.approval.id }
+                              : {
+                                  id: turn.approval.id,
+                                  approved: turn.approval.approved,
+                                }
+                          }
+                          state={
+                            turn.phase === "awaiting-approval"
+                              ? "approval-requested"
+                              : turn.phase === "denied"
+                                ? "output-denied"
+                                : "output-available"
+                          }
+                        >
+                          <ConfirmationTitle>
+                            Allow assistant to call <span className="font-mono">search_knowledge_base</span>?
+                          </ConfirmationTitle>
+                          <ConfirmationRequest>
+                            <ConfirmationCode>
+                              {`search_knowledge_base({\n  query: ${JSON.stringify(turn.userText)},\n  topK: 3,\n  useCache: true\n})`}
+                            </ConfirmationCode>
+                          </ConfirmationRequest>
+                          <ConfirmationActions>
+                            <ConfirmationAction onClick={() => respondApproval(turn.id, false)} variant="outline">
+                              Deny <ConfirmationShortcut>esc</ConfirmationShortcut>
                             </ConfirmationAction>
-                            <ConfirmationAction
-                              onClick={() => respondApproval(turn.id, true)}
-                              variant="default"
-                            >
-                              Always allow{" "}
-                              <ConfirmationShortcut>⌘↩</ConfirmationShortcut>
-                            </ConfirmationAction>
-                          </div>
-                        </ConfirmationActions>
-                        <ConfirmationAccepted>
-                          <div className="text-muted-foreground text-sm">
-                            Allowed — tool call executed successfully.
-                          </div>
-                        </ConfirmationAccepted>
-                        <ConfirmationRejected>
-                          <div className="text-muted-foreground text-sm">
-                            Denied — tool call was not executed.
-                          </div>
-                        </ConfirmationRejected>
-                      </Confirmation>
-                    )}
-                </>
-              )}
-
-              {turn.phase === "denied" && (
-                <Message from="assistant">
-                  <MessageContent>
-                    <MessageResponse>
-                      Understood — I won&apos;t run the tool. Let me know how
-                      you&apos;d like to proceed.
-                    </MessageResponse>
-                  </MessageContent>
-                </Message>
-              )}
-
-              {/* Final answer — text streams in during `writing`, then the
-                  inline citation + period snap in on `done`. */}
-              {(turn.phase === "writing" || turn.phase === "done") && (
-                <Message from="assistant">
-                  <MessageContent>
-                    <div className="text-sm leading-relaxed">
-                      <MessageResponse>
-                        {turn.phase === "writing"
-                          ? FULL_ANSWER_TEXT.slice(0, turn.writtenChars)
-                          : FULL_ANSWER_TEXT}
-                      </MessageResponse>
-                      {turn.phase === "done" && (
-                        <>
-                          <InlineCitation>
-                            <InlineCitationText>
-                              {" "}— see the overall equation
-                            </InlineCitationText>
-                            <InlineCitationCard>
-                              <InlineCitationCardTrigger sources={FULL_SOURCES} />
-                              <InlineCitationCardBody>
-                                <InlineCitationCarousel>
-                                  <InlineCitationCarouselHeader>
-                                    <InlineCitationCarouselPrev />
-                                    <InlineCitationCarouselIndex />
-                                    <InlineCitationCarouselNext />
-                                  </InlineCitationCarouselHeader>
-                                  <InlineCitationCarouselContent>
-                                    {FULL_SOURCES.map((url) => (
-                                      <InlineCitationCarouselItem key={url}>
-                                        <InlineCitationSource
-                                          title={new URL(url).hostname}
-                                          url={url}
-                                        />
-                                        <InlineCitationQuote>
-                                          6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂
-                                        </InlineCitationQuote>
-                                      </InlineCitationCarouselItem>
-                                    ))}
-                                  </InlineCitationCarouselContent>
-                                </InlineCitationCarousel>
-                              </InlineCitationCardBody>
-                            </InlineCitationCard>
-                          </InlineCitation>
-                          .
-                        </>
+                            <div className="flex gap-2">
+                              <ConfirmationAction onClick={() => respondApproval(turn.id, true)} variant="outline">
+                                Allow once <ConfirmationShortcut>⌘⇧↩</ConfirmationShortcut>
+                              </ConfirmationAction>
+                              <ConfirmationAction onClick={() => respondApproval(turn.id, true)} variant="default">
+                                Always allow <ConfirmationShortcut>⌘↩</ConfirmationShortcut>
+                              </ConfirmationAction>
+                            </div>
+                          </ConfirmationActions>
+                          <ConfirmationAccepted>
+                            <div className="text-muted-foreground text-sm">
+                              Allowed — tool call executed successfully.
+                            </div>
+                          </ConfirmationAccepted>
+                          <ConfirmationRejected>
+                            <div className="text-muted-foreground text-sm">Denied — tool call was not executed.</div>
+                          </ConfirmationRejected>
+                        </Confirmation>
                       )}
-                    </div>
-                  </MessageContent>
-                  {turn.phase === "done" && (
-                    <MessageActions>
-                      <MessageAction label="Copy">
-                        <CopyIcon className="size-3" />
-                      </MessageAction>
-                      <MessageAction label="Retry">
-                        <RefreshCcwIcon className="size-3" />
-                      </MessageAction>
-                    </MessageActions>
-                  )}
-                </Message>
-              )}
+                  </>
+                )}
 
-              {/* Sources — revealed once streaming is complete */}
-              {turn.phase === "done" && (
-                <Sources>
-                  <SourcesTrigger count={FULL_SOURCES.length} />
-                  <SourcesContent>
-                    {FULL_SOURCES.map((href) => (
-                      <Source
-                        href={href}
-                        key={href}
-                        title={new URL(href).hostname}
-                      />
-                    ))}
-                  </SourcesContent>
-                </Sources>
-              )}
-            </div>
-          ))}
+                {turn.phase === "denied" && (
+                  <Message from="assistant">
+                    <MessageContent>
+                      <MessageResponse>
+                        Understood — I won&apos;t run the tool. Let me know how you&apos;d like to proceed.
+                      </MessageResponse>
+                    </MessageContent>
+                  </Message>
+                )}
+
+                {/* Final answer — text streams in during `writing`, then the
+                  inline citation + period snap in on `done`. */}
+                {(turn.phase === "writing" || turn.phase === "done") && (
+                  <Message from="assistant">
+                    <MessageContent>
+                      <div className="text-sm leading-relaxed">
+                        <MessageResponse>
+                          {turn.phase === "writing" ? FULL_ANSWER_TEXT.slice(0, turn.writtenChars) : FULL_ANSWER_TEXT}
+                        </MessageResponse>
+                        {turn.phase === "done" && (
+                          <>
+                            <InlineCitation>
+                              <InlineCitationText> — see the overall equation</InlineCitationText>
+                              <InlineCitationCard>
+                                <InlineCitationCardTrigger sources={FULL_SOURCES} />
+                                <InlineCitationCardBody>
+                                  <InlineCitationCarousel>
+                                    <InlineCitationCarouselHeader>
+                                      <InlineCitationCarouselPrev />
+                                      <InlineCitationCarouselIndex />
+                                      <InlineCitationCarouselNext />
+                                    </InlineCitationCarouselHeader>
+                                    <InlineCitationCarouselContent>
+                                      {FULL_SOURCES.map((url) => (
+                                        <InlineCitationCarouselItem key={url}>
+                                          <InlineCitationSource title={new URL(url).hostname} url={url} />
+                                          <InlineCitationQuote>6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂</InlineCitationQuote>
+                                        </InlineCitationCarouselItem>
+                                      ))}
+                                    </InlineCitationCarouselContent>
+                                  </InlineCitationCarousel>
+                                </InlineCitationCardBody>
+                              </InlineCitationCard>
+                            </InlineCitation>
+                            .
+                          </>
+                        )}
+                      </div>
+                    </MessageContent>
+                    {turn.phase === "done" && (
+                      <MessageActions>
+                        <MessageAction label="Copy">
+                          <CopyIcon className="size-3" />
+                        </MessageAction>
+                        <MessageAction label="Retry">
+                          <RefreshCcwIcon className="size-3" />
+                        </MessageAction>
+                      </MessageActions>
+                    )}
+                  </Message>
+                )}
+
+                {/* Sources — revealed once streaming is complete */}
+                {turn.phase === "done" && (
+                  <Sources>
+                    <SourcesTrigger count={FULL_SOURCES.length} />
+                    <SourcesContent>
+                      {FULL_SOURCES.map((href) => (
+                        <Source href={href} key={href} title={new URL(href).hostname} />
+                      ))}
+                    </SourcesContent>
+                  </Sources>
+                )}
+
+                {isActiveTurn && (
+                  <div
+                    className={cn(
+                      "mt-3 transition-opacity duration-700",
+                      showStreamStatus ? "opacity-100" : "pointer-events-none opacity-0",
+                    )}
+                  >
+                    <StreamStatus
+                      iconVariant="loader-circle"
+                      isStreaming={isStreaming}
+                      showIndicator
+                      startTime={turn.streamStart}
+                      state={turn.phase === "done" ? "done" : isStreaming ? "streaming" : "idle"}
+                    />
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </ConversationContent>
       </Conversation>
-
-      {/* Footer bar — StreamStatus (activity) on the left, Context (budget) on
-          the right. Together they tell the full story: what the assistant is
-          doing *now* and how much of the context window it has consumed. */}
-      {(activeTurn || totalUsed > 0) && (
-        <div className="flex items-center justify-between gap-3 px-4">
-          {activeTurn ? (
-            <div
-              className={cn(
-                "transition-opacity duration-700",
-                showStreamStatus ? "opacity-100" : "pointer-events-none opacity-0"
-              )}
-            >
-              <StreamStatus
-                iconVariant="loader-circle"
-                isStreaming={isStreaming}
-                showIndicator
-                startTime={activeTurn.streamStart}
-                state={
-                  activeTurn.phase === "done"
-                    ? "done"
-                    : isStreaming
-                      ? "streaming"
-                      : "idle"
-                }
-              />
-            </div>
-          ) : (
-            <span />
-          )}
-
-          <Context
-            maxTokens={MAX_CONTEXT_TOKENS}
-            modelId="anthropic:claude-sonnet-4-5"
-            usage={usage}
-            usedTokens={totalUsed}
-          >
-            <ContextTrigger />
-            <ContextContent>
-              <ContextContentHeader />
-              <ContextContentBody>
-                <ContextInputUsage>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Input</span>
-                    <span>
-                      {formatTokens(usage.inputTokens)}
-                      <span className="ml-2 text-muted-foreground">
-                        • {formatCost(inputCost)}
-                      </span>
-                    </span>
-                  </div>
-                </ContextInputUsage>
-                <ContextReasoningUsage>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Reasoning</span>
-                    <span>
-                      {formatTokens(usage.reasoningTokens)}
-                      <span className="ml-2 text-muted-foreground">
-                        • {formatCost(reasoningCost)}
-                      </span>
-                    </span>
-                  </div>
-                </ContextReasoningUsage>
-                <ContextOutputUsage>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Output</span>
-                    <span>
-                      {formatTokens(usage.outputTokens)}
-                      <span className="ml-2 text-muted-foreground">
-                        • {formatCost(outputCost)}
-                      </span>
-                    </span>
-                  </div>
-                </ContextOutputUsage>
-              </ContextContentBody>
-              <ContextContentFooter>
-                <span className="text-muted-foreground">Total cost</span>
-                <span>{formatCost(totalCost)}</span>
-              </ContextContentFooter>
-            </ContextContent>
-          </Context>
-        </div>
-      )}
 
       {/* Prompt input — TS blue glow ring before the first submission to
           draw the eye, plain border once the convo starts. */}
@@ -1638,11 +1433,7 @@ const InteractiveFullDemo = () => {
             <AttachmentsHeader />
           </PromptInputHeader>
           <PromptInputBody>
-            <PromptInputTextarea
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Ask anything..."
-              value={text}
-            />
+            <PromptInputTextarea onChange={(e) => setText(e.target.value)} placeholder="Ask anything..." value={text} />
           </PromptInputBody>
           <PromptInputFooter>
             <PromptInputTools>
@@ -1665,10 +1456,53 @@ const InteractiveFullDemo = () => {
                 </PromptInputSelectContent>
               </PromptInputSelect>
             </PromptInputTools>
-            <PromptInputSubmit
-              disabled={false}
-              status={isStreaming ? "streaming" : "ready"}
-            />
+            <div className="flex items-center gap-1">
+              <Context
+                maxTokens={MAX_CONTEXT_TOKENS}
+                modelId="anthropic:claude-sonnet-4-5"
+                usage={usage}
+                usedTokens={totalUsed}
+              >
+                <ContextTrigger />
+                <ContextContent>
+                  <ContextContentHeader />
+                  <ContextContentBody>
+                    <ContextInputUsage>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Input</span>
+                        <span>
+                          {formatTokens(usage.inputTokens)}
+                          <span className="ml-2 text-muted-foreground">• {formatCost(inputCost)}</span>
+                        </span>
+                      </div>
+                    </ContextInputUsage>
+                    <ContextReasoningUsage>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Reasoning</span>
+                        <span>
+                          {formatTokens(usage.reasoningTokens)}
+                          <span className="ml-2 text-muted-foreground">• {formatCost(reasoningCost)}</span>
+                        </span>
+                      </div>
+                    </ContextReasoningUsage>
+                    <ContextOutputUsage>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Output</span>
+                        <span>
+                          {formatTokens(usage.outputTokens)}
+                          <span className="ml-2 text-muted-foreground">• {formatCost(outputCost)}</span>
+                        </span>
+                      </div>
+                    </ContextOutputUsage>
+                  </ContextContentBody>
+                  <ContextContentFooter>
+                    <span className="text-muted-foreground">Total cost</span>
+                    <span>{formatCost(totalCost)}</span>
+                  </ContextContentFooter>
+                </ContextContent>
+              </Context>
+              <PromptInputSubmit disabled={false} status={isStreaming ? "streaming" : "ready"} />
+            </div>
           </PromptInputFooter>
         </PromptInput>
       </div>
@@ -1678,20 +1512,25 @@ const InteractiveFullDemo = () => {
 
 export const Interactive: Story = {
   name: "Interactive — Full demo",
-  parameters: {
-    layout: "fullscreen",
-  },
   render: () => InteractiveFullDemo(),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     await step("Prompt input is present", async () => {
       await expect(canvas.getByPlaceholderText("Ask anything...")).toBeInTheDocument()
     })
+    await step("Context trigger sits before submit in the prompt footer", async () => {
+      const contextTrigger = canvas.getByRole("img", { name: "Model context usage" }).closest("button")
+      const submitButton = canvas.getByRole("button", {
+        name: /send|submit/i,
+      })
+      const buttons = canvas.getAllByRole("button")
+
+      await expect(contextTrigger).toBeInTheDocument()
+      await expect(buttons.indexOf(contextTrigger as HTMLButtonElement)).toBeLessThan(buttons.indexOf(submitButton))
+    })
     await step("Typing enables the submit button", async () => {
       await userEvent.type(canvas.getByPlaceholderText("Ask anything..."), "Hello")
-      await expect(
-        canvas.getByRole("button", { name: /send|submit/i })
-      ).not.toBeDisabled()
+      await expect(canvas.getByRole("button", { name: /send|submit/i })).not.toBeDisabled()
     })
   },
 }

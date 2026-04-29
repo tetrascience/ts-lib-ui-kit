@@ -36,6 +36,21 @@ export default meta
 
 type Story = StoryObj
 
+const expectCollapsedChevronConfiguredForHoverReveal = async (
+  trigger: HTMLElement
+) => {
+  const chevron = trigger.querySelector<SVGElement>(
+    '[data-slot="collapsible-chevron"]'
+  )
+
+  if (!chevron) {
+    throw new Error("Expected collapsible chevron to render")
+  }
+
+  await expect(chevron).toHaveClass("opacity-0")
+  await expect(chevron).toHaveClass("group-hover:opacity-100")
+}
+
 const ReasoningLifecycleDemo = () => {
   const [isStreaming, setIsStreaming] = useState(false)
 
@@ -123,6 +138,9 @@ export const Collapsed: Story = {
     const canvas = within(canvasElement)
     await step("Collapsed reasoning shows trigger only", async () => {
       await expect(canvas.getByRole("button")).toBeInTheDocument()
+    })
+    await step("Collapsed chevron appears on hover", async () => {
+      await expectCollapsedChevronConfiguredForHoverReveal(canvas.getByRole("button"))
     })
   },
 }

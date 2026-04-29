@@ -53,6 +53,8 @@ import { Suggestion } from "./suggestion"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
+import { cn } from "@/lib/utils"
+
 // ---------------------------------------------------------------------------
 // Shared gradient definition for SVG icon stroke
 // ---------------------------------------------------------------------------
@@ -84,7 +86,10 @@ const GradientBrainTrigger = () => {
         <span>Thought for {duration ?? "a few"} seconds</span>
       )}
       <ChevronDownIcon
-        className={`size-4 transition-transform ${isOpen ? "rotate-180" : "rotate-0"}`}
+        className={cn(
+          "size-4 opacity-0 transition-all group-focus-visible:opacity-100 group-hover:opacity-100",
+          isOpen ? "rotate-180 opacity-100" : "rotate-0"
+        )}
       />
     </>
   )

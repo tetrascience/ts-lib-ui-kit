@@ -18,6 +18,21 @@ export default meta
 
 type Story = StoryObj
 
+const expectCollapsedChevronConfiguredForHoverReveal = async (
+  trigger: HTMLElement
+) => {
+  const chevron = trigger.querySelector<SVGElement>(
+    '[data-slot="collapsible-chevron"]'
+  )
+
+  if (!chevron) {
+    throw new Error("Expected collapsible chevron to render")
+  }
+
+  await expect(chevron).toHaveClass("opacity-0")
+  await expect(chevron).toHaveClass("group-hover:opacity-100")
+}
+
 const StreamingTaskDemo = () => {
   const [isStreaming, setIsStreaming] = useState(true)
 
@@ -136,7 +151,7 @@ export const WithFileReferences: Story = {
 export const Collapsed: Story = {
   render: () => (
     <div className="w-full max-w-lg space-y-2">
-      <Task>
+      <Task defaultOpen={false}>
         <TaskTrigger title="Completed: Scaffold project" />
         <TaskContent>
           <TaskItem>Created all files</TaskItem>
@@ -156,6 +171,17 @@ export const Collapsed: Story = {
     await step("Collapsed task shows only title", async () => {
       await expect(canvas.getByText("Completed: Scaffold project")).toBeInTheDocument()
       await expect(canvas.getByText("Building authentication flow")).toBeInTheDocument()
+    })
+    await step("Collapsed chevron appears on hover", async () => {
+      const trigger = canvas
+        .getByText("Completed: Scaffold project")
+        .closest("[aria-expanded]")
+
+      if (!trigger) {
+        throw new Error("Expected task trigger to render")
+      }
+
+      await expectCollapsedChevronConfiguredForHoverReveal(trigger as HTMLElement)
     })
   },
 }

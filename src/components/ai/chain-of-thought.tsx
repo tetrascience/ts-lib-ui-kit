@@ -48,7 +48,7 @@ export const ChainOfThoughtTrigger = ({
 }: ChainOfThoughtTriggerProps) => (
   <CollapsibleTrigger
     className={cn(
-      "flex w-full items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground",
+      "group flex w-full items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground",
       className
     )}
     {...props}
@@ -62,7 +62,10 @@ export const ChainOfThoughtTrigger = ({
             <span className="size-1.5 animate-pulse rounded-full bg-primary" />
           )}
         </span>
-        <ChevronUpIcon className="size-4 text-muted-foreground transition-transform group-data-[state=closed]:rotate-180" />
+        <ChevronUpIcon
+          className="size-4 text-muted-foreground opacity-0 transition-all group-focus-visible:opacity-100 group-hover:opacity-100 group-data-[state=open]:opacity-100 group-data-[state=closed]:rotate-180"
+          data-slot="collapsible-chevron"
+        />
       </>
     )}
   </CollapsibleTrigger>

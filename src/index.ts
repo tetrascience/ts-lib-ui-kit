@@ -1,13 +1,15 @@
 // Main styles export
 import "@/index.css";
 
+// Visualization metadata
+export * from "@/lib/visualization";
+
 // Composed
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";
 export * from "@/components/composed/tdp-link";
 export * from "@/components/composed/tdp-url";
-
 
 // Charts
 export * from "@/components/charts/AreaGraph";

@@ -10,10 +10,7 @@ import {
   PLATEMAP_CONSTANTS,
   NAMED_COLORSCALES,
 } from "./constants";
-import {
-  PLATE_FORMAT_96,
-  PLATE_FORMAT_CUSTOM,
-} from "./types";
+import { PLATE_FORMAT_96, PLATE_FORMAT_CUSTOM } from "./types";
 import {
   generateRowLabels,
   generateColumnLabels,
@@ -31,11 +28,7 @@ import {
   calculateMarkerSize,
 } from "./utils";
 
-import type {
-  PlateMapProps,
-  LayerConfig,
-  WellData,
-} from "./types";
+import type { PlateMapProps, LayerConfig, WellData } from "./types";
 
 // Re-export types and constants for external consumers
 export * from "./types";
@@ -43,6 +36,7 @@ export { DEFAULT_CATEGORY_COLORS } from "./constants";
 
 import { Button } from "@/components/ui/button";
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { withVisualization } from "@/lib/visualization";
 
 /**
  * PlateMap component for visualizing well plate data as a heatmap or categorical display.
@@ -151,7 +145,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   // Merge custom category colors with defaults, including layer-specific colors
   const categoryColors = useMemo(
     () => ({ ...DEFAULT_CATEGORY_COLORS, ...customCategoryColors, ...activeLayer?.categoryColors }),
-    [customCategoryColors, activeLayer?.categoryColors]
+    [customCategoryColors, activeLayer?.categoryColors],
   );
 
   // Convert data to grid format - memoize to prevent re-render issues
@@ -159,9 +153,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   const activeLayerId_ = activeLayer?.id;
   const { grid, categoriesGrid, allValuesMap, tooltipDataMap } = useMemo(() => {
     let resultGrid: (number | null)[][];
-    let resultCategories: (string | null)[][] = Array.from({ length: rows }, () =>
-      Array(columns).fill(null)
-    );
+    let resultCategories: (string | null)[][] = Array.from({ length: rows }, () => Array(columns).fill(null));
     let resultAllValues = new Map<string, Record<string, string | number | null>>();
     let resultTooltipData = new Map<string, Record<string, unknown>>();
 
@@ -175,11 +167,16 @@ const PlateMap: React.FC<PlateMapProps> = ({
     } else {
       // Generate random data for demonstration when no data provided
       resultGrid = Array.from({ length: rows }, () =>
-        Array.from({ length: columns }, () => Math.random() * PLATEMAP_CONSTANTS.MAX_RANDOM_VALUE)
+        Array.from({ length: columns }, () => Math.random() * PLATEMAP_CONSTANTS.MAX_RANDOM_VALUE),
       );
     }
 
-    return { grid: resultGrid, categoriesGrid: resultCategories, allValuesMap: resultAllValues, tooltipDataMap: resultTooltipData };
+    return {
+      grid: resultGrid,
+      categoriesGrid: resultCategories,
+      allValuesMap: resultAllValues,
+      tooltipDataMap: resultTooltipData,
+    };
   }, [data, rows, columns, activeLayerId_]);
 
   // Generate labels - use custom labels if provided, otherwise auto-generate
@@ -192,16 +189,14 @@ const PlateMap: React.FC<PlateMapProps> = ({
   const zMax = valueMax ?? range.max;
 
   // Check if grid has any null values
-  const hasNullValues = grid.some(row => row.includes(null));
+  const hasNullValues = grid.some((row) => row.includes(null));
 
   // Create sentinel value for empty wells (below the data range)
   // This allows us to show emptyWellColor for null cells
   const sentinelValue = zMin - (zMax - zMin) * PLATEMAP_CONSTANTS.SENTINEL_RATIO - 1;
 
   // Replace null values with sentinel for Plotly rendering
-  const displayGrid = hasNullValues
-    ? grid.map(row => row.map(val => val === null ? sentinelValue : val))
-    : grid;
+  const displayGrid = hasNullValues ? grid.map((row) => row.map((val) => (val === null ? sentinelValue : val))) : grid;
 
   // Extend colorscale to include emptyWellColor at the bottom for null values
   const effectiveColorScale = useMemo(() => {
@@ -272,7 +267,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
         precision,
         valueUnit,
       });
-    })
+    }),
   );
 
   // Build categorical data for categorical mode
@@ -309,7 +304,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
           return typeToIndex.get("empty") ?? 0;
         }
         return typeToIndex.get(category) ?? typeToIndex.get("empty") ?? 0;
-      })
+      }),
     );
 
     // Build discrete colorscale for categories
@@ -366,8 +361,8 @@ const PlateMap: React.FC<PlateMapProps> = ({
       // Use 0.49 inset to place boundary just inside cell edge,
       // avoiding line doubling when adjacent regions share a border
       const inset = 0.49;
-      const x0 = (bounds.minCol + 1) - inset;
-      const x1 = (bounds.maxCol + 1) + inset;
+      const x0 = bounds.minCol + 1 - inset;
+      const x1 = bounds.maxCol + 1 + inset;
       const y0 = bounds.minRow - inset;
       const y1 = bounds.maxRow + inset;
 
@@ -400,29 +395,14 @@ const PlateMap: React.FC<PlateMapProps> = ({
     const plotZ = isCategorical && categoricalGrid ? categoricalGrid : displayGrid;
     const plotColorScale = isCategorical && categoricalColorScale ? categoricalColorScale : effectiveColorScale;
     const plotZMin = isCategorical ? 0 : effectiveZMin;
-    const plotZMax = isCategorical ? (catMax || 1) : zMax;
+    const plotZMax = isCategorical ? catMax || 1 : zMax;
     const plotShowScale = isCategorical ? false : showColorBar;
 
     // Flatten 2D grid data into arrays for scatter plot
-    const { xData, yData, colorData, textData } = flattenGridData(
-      plotZ,
-      rowLabels,
-      hoverText,
-      rows,
-      columns,
-      plotZMin
-    );
+    const { xData, yData, colorData, textData } = flattenGridData(plotZ, rowLabels, hoverText, rows, columns, plotZMin);
 
     // Calculate marker size based on plot dimensions
-    const markerSize = calculateMarkerSize(
-      width,
-      height,
-      rows,
-      columns,
-      markerShape,
-      !!title,
-      !!yTitle
-    );
+    const markerSize = calculateMarkerSize(width, height, rows, columns, markerShape, !!title, !!yTitle);
 
     // Create scatter plot with markers
     const plotData: Plotly.Data[] = [
@@ -439,11 +419,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
           cmin: plotZMin,
           cmax: plotZMax,
           showscale: plotShowScale,
-          colorbar: buildColorbarConfig(
-            legendConfig?.position ?? "right",
-            valueUnit,
-            legendConfig?.title
-          ),
+          colorbar: buildColorbarConfig(legendConfig?.position ?? "right", valueUnit, legendConfig?.title),
           line: {
             color: theme.gridColor,
             width: 1,
@@ -711,10 +687,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
                   border: `${region.borderWidth || 2}px solid ${region.borderColor || COLORS.regionBorder}`,
                 }}
               />
-              <span
-                className="platemap-legend__label"
-                style={{ fontSize: `${legendFontSize}px` }}
-              >
+              <span className="platemap-legend__label" style={{ fontSize: `${legendFontSize}px` }}>
                 {region.name}
               </span>
             </div>
@@ -769,4 +742,53 @@ const PlateMap: React.FC<PlateMapProps> = ({
   );
 };
 
-export { PlateMap };
+const PlateMapWithMeta = withVisualization(PlateMap, {
+  id: "plate-map",
+  inputKind: "plate_map",
+  description:
+    "Heatmap of multi-well plate data with selectable layers. Renders 96, 384, 1536, or custom-format plates.",
+  tunableProps: [
+    {
+      name: "colorScale",
+      type: "select",
+      description: "Color scale used to render well values in heatmap mode.",
+      default: "Viridis",
+      options: ["Viridis", "Blues", "RdBu", "Greens", "Reds", "Greys", "Hot", "YlGnBu", "YlOrRd", "Plasma"],
+    },
+    {
+      name: "precision",
+      type: "number",
+      description: "Decimal places shown for numeric well values.",
+      default: 0,
+      validation: { min: 0, max: 8 },
+    },
+    {
+      name: "showColorBar",
+      type: "boolean",
+      description: "Show the heatmap color bar.",
+      default: true,
+    },
+    {
+      name: "showLegend",
+      type: "boolean",
+      description: "Show the categorical legend.",
+      default: true,
+    },
+    {
+      name: "markerShape",
+      type: "select",
+      description: "Marker shape for wells.",
+      default: "circle",
+      options: ["circle", "square"],
+    },
+    {
+      name: "visualizationMode",
+      type: "select",
+      description: "Heatmap (continuous) or categorical (discrete) rendering.",
+      default: "heatmap",
+      options: ["heatmap", "categorical"],
+    },
+  ],
+});
+
+export { PlateMapWithMeta as PlateMap };

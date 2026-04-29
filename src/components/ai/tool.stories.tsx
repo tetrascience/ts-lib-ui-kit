@@ -18,6 +18,21 @@ export default meta
 
 type Story = StoryObj
 
+const expectCollapsedChevronConfiguredForHoverReveal = async (
+  trigger: HTMLElement
+) => {
+  const chevron = trigger.querySelector<SVGElement>(
+    '[data-slot="collapsible-chevron"]'
+  )
+
+  if (!chevron) {
+    throw new Error("Expected collapsible chevron to render")
+  }
+
+  await expect(chevron).toHaveClass("opacity-0")
+  await expect(chevron).toHaveClass("group-hover:opacity-100")
+}
+
 const StreamingToolDemo = () => {
   const [isStreaming, setIsStreaming] = useState(true)
 
@@ -145,6 +160,32 @@ export const CustomTitle: Story = {
     const canvas = within(canvasElement)
     await step("Custom title tool renders", async () => {
       await expect(canvas.getByText("Run Python Script")).toBeInTheDocument()
+    })
+  },
+}
+
+export const Collapsed: Story = {
+  render: () => (
+    <div className="w-full max-w-lg">
+      <Tool defaultOpen={false}>
+        <ToolHeader type="tool-search_web" state="output-available" />
+        <ToolContent>
+          <ToolInput input={{ query: "lab notebook entries" }} />
+          <ToolOutput errorText={undefined} output={{ matches: 3 }} />
+        </ToolContent>
+      </Tool>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByText("search_web").closest("button")
+
+    if (!trigger) {
+      throw new Error("Expected tool trigger button to render")
+    }
+
+    await step("Collapsed chevron appears on hover", async () => {
+      await expectCollapsedChevronConfiguredForHoverReveal(trigger)
     })
   },
 }

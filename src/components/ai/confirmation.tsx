@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from "motion/react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+import { CodeBlock } from "./code-block";
+
 import type { ToolUIPart } from "ai";
 import type { ComponentProps, PropsWithChildren, ReactNode } from "react";
 
@@ -120,19 +122,14 @@ export const ConfirmationTitle = ({
 // ConfirmationCode — monospace command/code block
 // ---------------------------------------------------------------------------
 
-export type ConfirmationCodeProps = ComponentProps<"pre">;
+export type ConfirmationCodeProps = ComponentProps<typeof CodeBlock>;
 
 export const ConfirmationCode = ({
   className,
+  children,
   ...props
 }: ConfirmationCodeProps) => (
-  <pre
-    className={cn(
-      "overflow-x-auto whitespace-pre-wrap break-words rounded-lg bg-muted px-4 py-3 font-mono text-sm leading-relaxed text-foreground/80",
-      className
-    )}
-    {...props}
-  />
+  <CodeBlock className={cn(className)} {...props} language="bash" code={children?.toString() ?? ''} />
 );
 
 // ---------------------------------------------------------------------------

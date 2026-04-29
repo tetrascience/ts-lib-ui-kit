@@ -34,6 +34,21 @@ export default meta
 
 type Story = StoryObj
 
+const expectCollapsedChevronConfiguredForHoverReveal = async (
+  trigger: HTMLElement
+) => {
+  const chevron = trigger.querySelector<SVGElement>(
+    '[data-slot="collapsible-chevron"]'
+  )
+
+  if (!chevron) {
+    throw new Error("Expected collapsible chevron to render")
+  }
+
+  await expect(chevron).toHaveClass("opacity-0")
+  await expect(chevron).toHaveClass("group-hover:opacity-100")
+}
+
 export const Default: Story = {
   render: () => (
     <Queue className="w-full max-w-sm">
@@ -65,6 +80,38 @@ export const Default: Story = {
     await step("Queue items render", async () => {
       await expect(canvas.getByText("Analyzing dataset structure")).toBeInTheDocument()
       await expect(canvas.getByText("Running statistical analysis")).toBeInTheDocument()
+    })
+  },
+}
+
+export const Collapsed: Story = {
+  render: () => (
+    <Queue className="w-full max-w-sm">
+      <QueueSection defaultOpen={false}>
+        <QueueSectionTrigger>
+          <QueueSectionLabel count={3}>In Progress</QueueSectionLabel>
+        </QueueSectionTrigger>
+        <QueueSectionContent>
+          <QueueList>
+            <QueueItem>
+              <QueueItemIndicator status="pending" />
+              <QueueItemContent>Waiting for analysis</QueueItemContent>
+            </QueueItem>
+          </QueueList>
+        </QueueSectionContent>
+      </QueueSection>
+    </Queue>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByText(/In Progress/).closest("button")
+
+    if (!trigger) {
+      throw new Error("Expected queue section trigger to render")
+    }
+
+    await step("Collapsed chevron appears on hover", async () => {
+      await expectCollapsedChevronConfiguredForHoverReveal(trigger)
     })
   },
 }

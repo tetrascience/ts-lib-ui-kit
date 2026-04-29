@@ -133,7 +133,11 @@ export const Chat = ({
       const trimmed = text.trim()
       if (!trimmed || status === "streaming") return
 
-      const userMsg: ChatMessage = { id: nextId(), role: "user", content: trimmed }
+      const userMsg: ChatMessage = {
+        id: nextId(),
+        role: "user",
+        content: trimmed,
+      }
       setMessages((prev) => [...prev, userMsg])
       setText("")
       setStatus("streaming")
@@ -153,7 +157,7 @@ export const Chat = ({
         setTimeout(() => setStreamStart(undefined), STREAM_STATUS_LINGER_MS)
       }
     },
-    [text, status, model, onSend]
+    [text, status, model, onSend],
   )
 
   const handleSuggestion = useCallback((suggestion: string) => {
@@ -184,7 +188,7 @@ export const Chat = ({
             />
           ) : null}
 
-          {messages.map((msg) => (
+          {messages.map((msg, index) => (
             <div className="space-y-1" key={msg.id}>
               {/* Branch wrapper — renders alt responses side-by-side when branches exist */}
               {msg.role === "assistant" && msg.branches && msg.branches.length > 1 ? (
@@ -228,6 +232,16 @@ export const Chat = ({
                   </MessageContent>
                 </Message>
               )}
+
+              {index === messages.length - 1 && streamStart && (
+                <div className="mt-3">
+                  <StreamStatus
+                    iconVariant="loader-circle"
+                    isStreaming={status === "streaming"}
+                    startTime={streamStart}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </ConversationContent>
@@ -245,19 +259,8 @@ export const Chat = ({
         </div>
       )}
 
-      {/* Stream status — visible while generating (and briefly after for the confirm ripple) */}
-      {streamStart && (
-        <div className="px-4 pb-1">
-          <StreamStatus
-            iconVariant="loader-circle"
-            isStreaming={status === "streaming"}
-            startTime={streamStart}
-          />
-        </div>
-      )}
-
       {/* Prompt input */}
-      <div className="border-t px-4 pt-3 pb-4">
+      <div className="px-4 pt-3 pb-4">
         <PromptInput onSubmit={handleSubmit}>
           <PromptInputBody>
             <PromptInputTextarea
@@ -317,14 +320,7 @@ interface AssistantMessageProps {
   onRetry: (id: string) => void
 }
 
-const AssistantMessage = ({
-  id,
-  content,
-  reasoning,
-  sources,
-  onCopy,
-  onRetry,
-}: AssistantMessageProps) => (
+const AssistantMessage = ({ id, content, reasoning, sources, onCopy, onRetry }: AssistantMessageProps) => (
   <div className="space-y-2">
     {reasoning && (
       <Reasoning>

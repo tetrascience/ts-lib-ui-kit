@@ -142,7 +142,10 @@ export const ToolHeader = ({
         <span className="font-medium text-sm">{title ?? derivedName}</span>
         {getStatusBadge(state)}
       </div>
-      <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+      <ChevronDownIcon
+        className="size-4 text-muted-foreground opacity-0 transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-data-[state=open]:rotate-180 group-data-[state=open]:opacity-100"
+        data-slot="collapsible-chevron"
+      />
     </CollapsibleTrigger>
   );
 };

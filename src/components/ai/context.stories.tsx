@@ -52,6 +52,33 @@ export const Default: Story = {
     await step("Context trigger renders", async () => {
       await expect(canvas.getByRole("button")).toBeInTheDocument()
     })
+    await step("Overall percentage is hidden by default", async () => {
+      await expect(canvas.queryByText("1.3%")).not.toBeInTheDocument()
+      await expect(canvas.getByRole("img", { name: "Model context usage" })).toBeInTheDocument()
+    })
+  },
+}
+
+export const WithVisiblePercentage: Story = {
+  render: () => (
+    <Context usedTokens={1650} maxTokens={128000} modelId="gpt-4o" usage={baseUsage}>
+      <ContextTrigger showPercentage />
+      <ContextContent>
+        <ContextContentHeader />
+        <ContextContentBody>
+          <ContextInputUsage />
+          <ContextOutputUsage />
+        </ContextContentBody>
+        <ContextContentFooter />
+      </ContextContent>
+    </Context>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Overall percentage can be shown", async () => {
+      await expect(canvas.getByText("1.3%")).toBeInTheDocument()
+      await expect(canvas.getByRole("img", { name: "Model context usage" })).toBeInTheDocument()
+    })
   },
 }
 

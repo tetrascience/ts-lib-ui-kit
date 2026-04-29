@@ -68,7 +68,7 @@ const PlotlyVisualization: React.FC<PlotlyVisualizationProps> = ({
 };
 
 const PlotlyVisualizationWithMeta = withVisualization(PlotlyVisualization, {
-  id: "viz-plotly",
+  id: "plotly",
   inputKind: "plot",
   description: "General-purpose Plotly visualization driven by Plotly data and layout payloads.",
   tunableProps: [

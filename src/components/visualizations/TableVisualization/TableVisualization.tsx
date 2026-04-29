@@ -70,7 +70,7 @@ function formatCell(value: TableCellValue): string {
 }
 
 const TableVisualizationWithMeta = withVisualization(TableVisualization, {
-  id: "viz-table",
+  id: "table",
   inputKind: "table",
   description: "Tabular visualization for columnar calculation outputs.",
   tunableProps: [

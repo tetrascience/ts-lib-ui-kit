@@ -52,7 +52,7 @@ function readScalar(
 }
 
 const ScalarVisualizationWithMeta = withVisualization(ScalarVisualization, {
-  id: "viz-scalar",
+  id: "scalar",
   inputKind: "number",
   description: "Single scalar value with optional unit, rendered as a labeled badge.",
   tunableProps: [],

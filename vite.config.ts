@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
-import tailwindcss from "@tailwindcss/vite"
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
@@ -40,13 +40,16 @@ export const alias = {
   "@": path.resolve(__dirname, "./src"),
 };
 
-const external: (string | RegExp)[] = [
+const externalPackages: (string | RegExp)[] = [
   "react",
   "react/jsx-runtime",
+  "react/jsx-dev-runtime",
   "react-dom",
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
 ];
+
+const external = (id: string) => externalPackages.some((pkgName) => id === pkgName || id.startsWith(`${pkgName}/`));
 
 const SCREENSHOT_DIR = path.resolve(process.cwd(), "test-results/screenshots");
 const storybookZephyrMapping = generateZephyrMapping();
@@ -80,7 +83,7 @@ export default defineConfig({
         banner,
         globals: { react: "React", "react-dom": "ReactDOM" },
         preserveModules: true,
-        preserveModulesRoot: 'src',
+        preserveModulesRoot: "src",
       },
     },
     sourcemap: true,
@@ -137,7 +140,7 @@ export default defineConfig({
           },
           setupFiles: [".storybook/vitest.setup.ts"],
         },
-      }
+      },
     ],
     coverage: {
       provider: "v8",

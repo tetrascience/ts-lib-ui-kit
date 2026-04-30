@@ -265,6 +265,10 @@ export function IconButton({ icon, label, ...props }: IconButtonProps) {
 ```tsx
 import {
   Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+  FieldTitle,
   Input,
   Select,
   SelectTrigger,
@@ -285,20 +289,32 @@ export function ProtocolForm() {
         <CardTitle>New Protocol</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Field label="Protocol Name" required>
-          <Input placeholder="e.g. HPLC Analysis v2" />
+        <Field>
+          <FieldLabel htmlFor="protocol-name">
+            <FieldTitle>
+              Protocol Name <span aria-hidden="true">*</span>
+            </FieldTitle>
+          </FieldLabel>
+          <FieldContent>
+            <Input id="protocol-name" placeholder="e.g. HPLC Analysis v2" required />
+          </FieldContent>
         </Field>
 
-        <Field label="Instrument Type">
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Select instrument" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="hplc">HPLC</SelectItem>
-              <SelectItem value="ms">Mass Spectrometer</SelectItem>
-            </SelectContent>
-          </Select>
+        <Field>
+          <FieldLabel htmlFor="instrument-type">
+            <FieldTitle>Instrument Type</FieldTitle>
+          </FieldLabel>
+          <FieldContent>
+            <Select>
+              <SelectTrigger id="instrument-type">
+                <SelectValue placeholder="Select instrument" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="hplc">HPLC</SelectItem>
+                <SelectItem value="ms">Mass Spectrometer</SelectItem>
+              </SelectContent>
+            </Select>
+          </FieldContent>
         </Field>
 
         <div className="flex gap-2 justify-end">
@@ -310,8 +326,6 @@ export function ProtocolForm() {
   );
 }
 ```
-
-> **Server utilities** are documented in [`CLAUDE.md`](./CLAUDE.md#server-utilities-server-sub-export) — they are a development concern, not a design concern.
 
 ---
 
@@ -336,11 +350,3 @@ export function ProtocolForm() {
 - **Separate server entry points** — Cloud SDK dependencies (AWS, Snowflake, Databricks) are large and Node-only. Splitting them into `./server/providers/*` sub-exports ensures zero client bundle impact when consumers only import UI components.
 
 - **CVA for all variant logic** — `class-variance-authority` centralizes variant definitions in a single object, making it easy to audit all visual states, add new variants without touching JSX, and generate typed prop interfaces automatically.
-
----
-
-## 8. Open Questions
-
-- **Component versioning granularity** — Should the `AssistantModal` (currently Beta) gate behind a feature flag or a separate export path to prevent breaking changes from reaching stable consumers prematurely?
-- **Chart theming API** — `usePlotlyTheme` currently reads CSS variables at render time. For SSR contexts this may produce hydration mismatches. Needs a defined strategy before any SSR adoption.
-- **Design token source of truth** — Tokens are currently hand-authored in `src/index.css`. As the system grows, consider whether a Figma → Style Dictionary pipeline should become the single source of truth.

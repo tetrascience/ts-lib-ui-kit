@@ -58,11 +58,9 @@ src/server/
 │   ├── getProviderConfigurations.ts   # Fetch available provider configs via TDPClient
 │   ├── AthenaProvider.ts / SnowflakeProvider.ts / DatabricksProvider.ts
 │   └── exceptions.ts                  # QueryError, MissingTableError, ProviderConnectionError, etc.
-└── search/
-    └── TdpSearchManager.ts  # Express-mountable TDP search handler
 ```
 
-Key exports: `jwtManager`, `buildProvider`, `getProviderConfigurations`, `buildSnowflakeProvider`, `buildDatabricksProvider`, `getTdpAthenaProvider`, `TdpSearchManager`, typed exception classes.
+Key exports: `jwtManager`, `buildProvider`, `getProviderConfigurations`, `buildSnowflakeProvider`, `buildDatabricksProvider`, `getTdpAthenaProvider`, typed exception classes.
 
 > **Migration note:** This module is being extracted out of this package. Do not add new server functionality here — new server utilities belong in the consuming application or a dedicated server package.
 

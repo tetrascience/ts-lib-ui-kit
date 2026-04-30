@@ -264,7 +264,7 @@ function SidebarBody({
         )}
       >
         {navGroups.map((group, groupIndex) => (
-          <React.Fragment key={group.label ?? groupIndex}>
+          <React.Fragment key={`${groupIndex}-${group.label ?? ""}`}>
             {groupIndex > 0 && (
               <div
                 className={cn(
@@ -460,6 +460,7 @@ function TopNav({
                   size="icon"
                   className="w-7 h-7 text-muted-foreground"
                   onClick={onHelpClick}
+                  aria-label="Help"
                 >
                   <HelpCircle className="w-4 h-4" />
                 </Button>

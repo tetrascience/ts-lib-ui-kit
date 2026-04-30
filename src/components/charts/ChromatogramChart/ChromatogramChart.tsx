@@ -3,11 +3,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 
 import { CHART_COLORS } from "../../../utils/colors";
 
-
-import {
-  groupOverlappingPeaks,
-  createGroupAnnotations,
-} from "./annotations";
+import { groupOverlappingPeaks, createGroupAnnotations } from "./annotations";
 import { createBoundaryMarkerTraces } from "./boundaryMarkers";
 import { CHROMATOGRAM_LAYOUT } from "./constants";
 import {
@@ -31,6 +27,7 @@ import type {
 } from "./types";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { withVisualization } from "@/lib/visualization";
 
 // Re-export types for external use
 export type {
@@ -42,7 +39,6 @@ export type {
   PeakDetectionOptions,
   ChromatogramChartProps,
 };
-
 
 const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   series,
@@ -122,7 +118,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
         x: s.x,
         y: s.y,
         type: "scatter" as const,
-        mode: showMarkers ? "lines+markers" as const : "lines" as const,
+        mode: showMarkers ? ("lines+markers" as const) : ("lines" as const),
         name: s.name,
         line: {
           color: traceColor,
@@ -196,7 +192,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: { family: "Inter, sans-serif" },
-      hovermode: showCrosshairs ? "x" as const : "x unified" as const,
+      hovermode: showCrosshairs ? ("x" as const) : ("x unified" as const),
       dragmode: "zoom" as const,
       xaxis: {
         title: {
@@ -259,7 +255,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       modeBarButtonsToRemove: [
         "lasso2d",
         "select2d",
-        ...(showExportButton ? [] : ["toImage"] as Plotly.ModeBarDefaultButtons[]),
+        ...(showExportButton ? [] : (["toImage"] as Plotly.ModeBarDefaultButtons[])),
       ] as Plotly.ModeBarDefaultButtons[],
       ...(showExportButton && {
         toImageButtonOptions: {
@@ -279,10 +275,30 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       }
     };
   }, [
-    processedSeries, allDetectedPeaks, series.length, width, height, title, xAxisTitle, yAxisTitle,
-    processedAnnotations, xRange, yRange, showLegend, showGridX, showGridY, showMarkers, markerSize,
-    showCrosshairs, enablePeakDetection, peakDetectionOptions, showPeakAreas, boundaryMarkers,
-    annotationOverlapThreshold, showExportButton, theme,
+    processedSeries,
+    allDetectedPeaks,
+    series.length,
+    width,
+    height,
+    title,
+    xAxisTitle,
+    yAxisTitle,
+    processedAnnotations,
+    xRange,
+    yRange,
+    showLegend,
+    showGridX,
+    showGridY,
+    showMarkers,
+    markerSize,
+    showCrosshairs,
+    enablePeakDetection,
+    peakDetectionOptions,
+    showPeakAreas,
+    boundaryMarkers,
+    annotationOverlapThreshold,
+    showExportButton,
+    theme,
   ]);
 
   return (
@@ -292,5 +308,31 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   );
 };
 
-export { ChromatogramChart };
+const ChromatogramChartWithMeta = withVisualization(ChromatogramChart, {
+  id: "chromatogram-chart",
+  inputKind: "plot",
+  description: "Interactive chromatogram chart with peak detection, annotations, and boundary markers.",
+  tunableProps: [
+    {
+      name: "showLegend",
+      type: "boolean",
+      description: "Show the chart legend.",
+      default: true,
+    },
+    {
+      name: "showMarkers",
+      type: "boolean",
+      description: "Show markers on chromatogram traces.",
+      default: false,
+    },
+    {
+      name: "height",
+      type: "number",
+      description: "Chart height in pixels.",
+      default: 500,
+      validation: { min: 200, max: 1200 },
+    },
+  ],
+});
 
+export { ChromatogramChartWithMeta as ChromatogramChart };

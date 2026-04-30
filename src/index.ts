@@ -1,13 +1,15 @@
 // Main styles export
 import "@/index.css";
 
+// Visualization metadata
+export * from "@/lib/visualization";
+
 // Composed
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";
 export * from "@/components/composed/tdp-link";
 export * from "@/components/composed/tdp-url";
-
 
 // Charts
 export * from "@/components/charts/AreaGraph";
@@ -75,3 +77,24 @@ export * from "@/components/ui/toggle-group";
 export * from "@/components/ui/tooltip";
 export * from "@/components/ui/code-editor";
 export * from "@/components/ui/tetrascience-icon";
+
+// AI
+export * from "@/components/ai/attachments";
+export * from "@/components/ai/chain-of-thought";
+export * from "@/components/ai/code-block";
+export * from "@/components/ai/confirmation";
+export * from "@/components/ai/context";
+export * from "@/components/ai/conversation";
+export * from "@/components/ai/inline-citation";
+export * from "@/components/ai/message";
+export * from "@/components/ai/model-selector";
+export * from "@/components/ai/prompt-input";
+export * from "@/components/ai/queue";
+export * from "@/components/ai/reasoning";
+export * from "@/components/ai/shimmer";
+export * from "@/components/ai/sources";
+export * from "@/components/ai/speech-input";
+export * from "@/components/ai/stream-status";
+export * from "@/components/ai/suggestion";
+export * from "@/components/ai/task";
+export * from "@/components/ai/tool";

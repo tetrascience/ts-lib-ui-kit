@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { withVisualization } from "@/lib/visualization";
 
 interface ScatterDataPoint {
   x: number;
@@ -68,15 +69,9 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
     };
   }, [dataSeries]);
 
-  const effectiveXRange = useMemo(
-    () => xRange || [xMin, xMax],
-    [xRange, xMin, xMax],
-  );
+  const effectiveXRange = useMemo(() => xRange || [xMin, xMax], [xRange, xMin, xMax]);
 
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
+  const effectiveYRange = useMemo(() => yRange || [yMin, yMax], [yRange, yMin, yMax]);
 
   const xTicks = useMemo(() => {
     const range = effectiveXRange[1] - effectiveXRange[0];
@@ -250,7 +245,23 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, effectiveXRange, effectiveYRange, xTicks, yTicks, tickOptions, spikeOptions, theme]);
+  }, [
+    dataSeries,
+    width,
+    height,
+    xRange,
+    yRange,
+    xTitle,
+    yTitle,
+    title,
+    effectiveXRange,
+    effectiveYRange,
+    xTicks,
+    yTicks,
+    tickOptions,
+    spikeOptions,
+    theme,
+  ]);
 
   return (
     <div className="chart-container">
@@ -259,5 +270,20 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
   );
 };
 
-export { ScatterGraph };
+const ScatterGraphWithMeta = withVisualization(ScatterGraph, {
+  id: "scatter-graph",
+  inputKind: "plot",
+  description: "Scatter graph for one or more numeric X/Y point series.",
+  tunableProps: [
+    {
+      name: "height",
+      type: "number",
+      description: "Chart height in pixels.",
+      default: 600,
+      validation: { min: 200, max: 1200 },
+    },
+  ],
+});
+
+export { ScatterGraphWithMeta as ScatterGraph };
 export type { ScatterDataPoint, ScatterDataSeries, ScatterGraphProps };

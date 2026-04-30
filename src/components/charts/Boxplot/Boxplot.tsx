@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { withVisualization } from "@/lib/visualization";
 
 /** Default point position offset from the box edge */
 const DEFAULT_POINT_POSITION = -1.8;
@@ -61,10 +62,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
     };
   }, [dataSeries]);
 
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
+  const effectiveYRange = useMemo(() => yRange || [yMin, yMax], [yRange, yMin, yMax]);
 
   const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
@@ -222,7 +220,21 @@ const Boxplot: React.FC<BoxplotProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks, theme]);
+  }, [
+    dataSeries,
+    width,
+    height,
+    xRange,
+    yRange,
+    effectiveYRange,
+    xTitle,
+    yTitle,
+    showPoints,
+    titleOptions,
+    tickOptions,
+    yTicks,
+    theme,
+  ]);
 
   return (
     <div className="boxplot-container">
@@ -231,5 +243,26 @@ const Boxplot: React.FC<BoxplotProps> = ({
   );
 };
 
-export { Boxplot };
+const BoxplotWithMeta = withVisualization(Boxplot, {
+  id: "boxplot",
+  inputKind: "plot",
+  description: "Box plot for comparing numeric distributions across one or more series.",
+  tunableProps: [
+    {
+      name: "showPoints",
+      type: "boolean",
+      description: "Show individual sample points over each box.",
+      default: true,
+    },
+    {
+      name: "height",
+      type: "number",
+      description: "Chart height in pixels.",
+      default: 600,
+      validation: { min: 200, max: 1200 },
+    },
+  ],
+});
+
+export { BoxplotWithMeta as Boxplot };
 export type { BoxDataSeries, BoxplotProps };

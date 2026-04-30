@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   closestCenter,
@@ -10,16 +10,16 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-} from "@dnd-kit/core"
-import { restrictToHorizontalAxis } from "@dnd-kit/modifiers"
+} from "@dnd-kit/core";
+import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import {
   arrayMove,
   horizontalListSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   type ColumnDef,
   type ColumnOrderState,
@@ -33,40 +33,35 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, GripVerticalIcon } from "lucide-react"
-import * as React from "react"
+} from "@tanstack/react-table";
+import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, GripVerticalIcon } from "lucide-react";
+import * as React from "react";
 
-import { DataTablePagination } from "./data-table-pagination"
+import { DataTablePagination } from "./data-table-pagination";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+import type { VisualizationMeta } from "@/lib/visualization";
+
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Context
 // ---------------------------------------------------------------------------
 
 interface TableContextValue<TData> {
-  table: TanStackTable<TData>
-  columnLabels: Record<string, string>
-  setColumnLabel: (columnId: string, label: string) => void
+  table: TanStackTable<TData>;
+  columnLabels: Record<string, string>;
+  setColumnLabel: (columnId: string, label: string) => void;
 }
 
-const TableContext = React.createContext<TableContextValue<unknown> | null>(null)
+const TableContext = React.createContext<TableContextValue<unknown> | null>(null);
 
 function useDataTable<TData = unknown>() {
-  const ctx = React.useContext(TableContext) as TableContextValue<TData> | null
+  const ctx = React.useContext(TableContext) as TableContextValue<TData> | null;
   if (!ctx) {
-    throw new Error("useDataTable must be used within a <DataTable>")
+    throw new Error("useDataTable must be used within a <DataTable>");
   }
-  return ctx
+  return ctx;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,27 +74,20 @@ function DraggableHeader<TData>({
   position,
   numeric,
 }: {
-  header: Header<TData, unknown>
-  children: React.ReactNode
-  position?: "first" | "last" | "middle"
-  numeric?: boolean
+  header: Header<TData, unknown>;
+  children: React.ReactNode;
+  position?: "first" | "last" | "middle";
+  numeric?: boolean;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: header.column.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: header.column.id,
+  });
 
   const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(
-      transform ? { ...transform, scaleX: 1, scaleY: 1 } : null,
-    ),
+    transform: CSS.Transform.toString(transform ? { ...transform, scaleX: 1, scaleY: 1 } : null),
     transition,
     position: "relative",
-  }
+  };
 
   return (
     <TableHead
@@ -110,7 +98,9 @@ function DraggableHeader<TData>({
         "group/header transition-shadow duration-150",
         !isDragging && position === "first" && "hover:shadow-[inset_-1px_0_0_0_var(--color-border)]",
         !isDragging && position === "last" && "hover:shadow-[inset_1px_0_0_0_var(--color-border)]",
-        !isDragging && position === "middle" && "hover:shadow-[inset_1px_0_0_0_var(--color-border),inset_-1px_0_0_0_var(--color-border)]",
+        !isDragging &&
+          position === "middle" &&
+          "hover:shadow-[inset_1px_0_0_0_var(--color-border),inset_-1px_0_0_0_var(--color-border)]",
         isDragging && "opacity-40",
       )}
     >
@@ -127,7 +117,7 @@ function DraggableHeader<TData>({
         </button>
       </div>
     </TableHead>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -135,22 +125,17 @@ function DraggableHeader<TData>({
 // ---------------------------------------------------------------------------
 
 interface SortableHeaderContentProps {
-  header: Header<unknown, unknown>
-  enableSorting: boolean
-  numericColumns: Set<string>
-  columnLabels: Record<string, string>
+  header: Header<unknown, unknown>;
+  enableSorting: boolean;
+  numericColumns: Set<string>;
+  columnLabels: Record<string, string>;
 }
 
-function SortableHeaderContent({
-  header,
-  enableSorting,
-  numericColumns,
-  columnLabels,
-}: SortableHeaderContentProps) {
-  if (header.isPlaceholder) return null
-  const canSort = enableSorting && header.column.getCanSort()
-  const sorted = header.column.getIsSorted()
-  const isNumeric = numericColumns.has(header.column.id)
+function SortableHeaderContent({ header, enableSorting, numericColumns, columnLabels }: SortableHeaderContentProps) {
+  if (header.isPlaceholder) return null;
+  const canSort = enableSorting && header.column.getCanSort();
+  const sorted = header.column.getIsSorted();
+  const isNumeric = numericColumns.has(header.column.id);
 
   return (
     <div
@@ -162,18 +147,13 @@ function SortableHeaderContent({
       onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
       onKeyDown={(e) => {
         if ((e.key === "Enter" || e.key === " ") && canSort) {
-          header.column.getToggleSortingHandler()
+          header.column.getToggleSortingHandler();
         }
       }}
     >
-      {columnLabels[header.column.id] ??
-        flexRender(header.column.columnDef.header, header.getContext())}
+      {columnLabels[header.column.id] ?? flexRender(header.column.columnDef.header, header.getContext())}
       {canSort && (
-        <span
-          className={cn(
-            !sorted && "opacity-0 group-hover/sort:opacity-100 transition-opacity",
-          )}
-        >
+        <span className={cn(!sorted && "opacity-0 group-hover/sort:opacity-100 transition-opacity")}>
           {sorted === "asc" ? (
             <ArrowUpIcon className="size-3.5 text-foreground" />
           ) : sorted === "desc" ? (
@@ -184,7 +164,7 @@ function SortableHeaderContent({
         </span>
       )}
     </div>
-  )
+  );
 }
 
 function DataTableRows<TData>({
@@ -192,9 +172,9 @@ function DataTableRows<TData>({
   columns,
   numericColumns,
 }: {
-  table: TanStackTable<TData>
-  columns: ColumnDef<TData, unknown>[]
-  numericColumns: Set<string>
+  table: TanStackTable<TData>;
+  columns: ColumnDef<TData, unknown>[];
+  numericColumns: Set<string>;
 }) {
   if (table.getRowModel().rows.length === 0) {
     return (
@@ -203,7 +183,7 @@ function DataTableRows<TData>({
           No results.
         </TableCell>
       </TableRow>
-    )
+    );
   }
 
   return table.getRowModel().rows.map((row) => (
@@ -214,7 +194,7 @@ function DataTableRows<TData>({
         </TableCell>
       ))}
     </TableRow>
-  ))
+  ));
 }
 
 // ---------------------------------------------------------------------------
@@ -222,19 +202,19 @@ function DataTableRows<TData>({
 // ---------------------------------------------------------------------------
 
 function categorizeSlots(children: React.ReactNode) {
-  const toolbarSlots: React.ReactNode[] = []
-  const paginationSlots: React.ReactNode[] = []
-  const restSlots: React.ReactNode[] = []
+  const toolbarSlots: React.ReactNode[] = [];
+  const paginationSlots: React.ReactNode[] = [];
+  const restSlots: React.ReactNode[] = [];
   React.Children.forEach(children, (child) => {
     if (React.isValidElement(child) && child.type === TableToolbar) {
-      toolbarSlots.push(child)
+      toolbarSlots.push(child);
     } else if (React.isValidElement(child) && child.type === DataTablePagination) {
-      paginationSlots.push(child)
+      paginationSlots.push(child);
     } else {
-      restSlots.push(child)
+      restSlots.push(child);
     }
-  })
-  return { toolbarSlots, paginationSlots, restSlots }
+  });
+  return { toolbarSlots, paginationSlots, restSlots };
 }
 
 // ---------------------------------------------------------------------------
@@ -242,30 +222,30 @@ function categorizeSlots(children: React.ReactNode) {
 // ---------------------------------------------------------------------------
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
   /** @deprecated Use `<TableToolbar>` as a child instead */
-  toolbar?: React.ReactNode
-  enableSorting?: boolean
-  enableColumnVisibility?: boolean
-  columnOrder?: ColumnOrderState
-  onColumnOrderChange?: (order: ColumnOrderState) => void
-  columnVisibility?: VisibilityState
-  onColumnVisibilityChange?: (vis: VisibilityState) => void
-  columnLabels?: Record<string, string>
-  onColumnLabelChange?: (columnId: string, label: string) => void
-  enablePagination?: boolean
-  defaultPageSize?: number
-  pagination?: PaginationState
-  onPaginationChange?: (pagination: PaginationState) => void
-  enableColumnReorder?: boolean
-  density?: "compact" | "default" | "relaxed"
-  children?: React.ReactNode
-  className?: string
+  toolbar?: React.ReactNode;
+  enableSorting?: boolean;
+  enableColumnVisibility?: boolean;
+  columnOrder?: ColumnOrderState;
+  onColumnOrderChange?: (order: ColumnOrderState) => void;
+  columnVisibility?: VisibilityState;
+  onColumnVisibilityChange?: (vis: VisibilityState) => void;
+  columnLabels?: Record<string, string>;
+  onColumnLabelChange?: (columnId: string, label: string) => void;
+  enablePagination?: boolean;
+  defaultPageSize?: number;
+  pagination?: PaginationState;
+  onPaginationChange?: (pagination: PaginationState) => void;
+  enableColumnReorder?: boolean;
+  density?: "compact" | "default" | "relaxed";
+  children?: React.ReactNode;
+  className?: string;
   /** Variant passed to the base Table component */
-  variant?: React.ComponentProps<typeof Table>["variant"]
+  variant?: React.ComponentProps<typeof Table>["variant"];
   /** className passed to the base Table's container div */
-  containerClassName?: React.ComponentProps<typeof Table>["containerClassName"]
+  containerClassName?: React.ComponentProps<typeof Table>["containerClassName"];
 }
 
 function DataTable<TData, TValue>({
@@ -291,53 +271,47 @@ function DataTable<TData, TValue>({
   variant = "card",
   containerClassName,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [internalColumnVisibility, setInternalColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [internalColumnOrder, setInternalColumnOrder] =
-    React.useState<ColumnOrderState>([])
-  const [internalColumnLabels, setInternalColumnLabels] = React.useState<
-    Record<string, string>
-  >({})
-  const [internalPagination, setInternalPagination] =
-    React.useState<PaginationState>({
-      pageIndex: 0,
-      pageSize: defaultPageSize,
-    })
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [internalColumnVisibility, setInternalColumnVisibility] = React.useState<VisibilityState>({});
+  const [internalColumnOrder, setInternalColumnOrder] = React.useState<ColumnOrderState>([]);
+  const [internalColumnLabels, setInternalColumnLabels] = React.useState<Record<string, string>>({});
+  const [internalPagination, setInternalPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: defaultPageSize,
+  });
 
-  const pagination = controlledPagination ?? internalPagination
+  const pagination = controlledPagination ?? internalPagination;
 
-  const columnVisibility =
-    controlledColumnVisibility ?? internalColumnVisibility
-  const columnOrder = controlledColumnOrder ?? internalColumnOrder
-  const columnLabels = controlledColumnLabels ?? internalColumnLabels
+  const columnVisibility = controlledColumnVisibility ?? internalColumnVisibility;
+  const columnOrder = controlledColumnOrder ?? internalColumnOrder;
+  const columnLabels = controlledColumnLabels ?? internalColumnLabels;
 
   const handlePaginationChange = React.useMemo(() => {
-    if (!enablePagination) return
+    if (!enablePagination) return;
     if (onPaginationChange) {
       return (updater: PaginationState | ((prev: PaginationState) => PaginationState)) => {
-        const next = typeof updater === "function" ? updater(controlledPagination!) : updater
-        onPaginationChange(next)
-      }
+        const next = typeof updater === "function" ? updater(controlledPagination!) : updater;
+        onPaginationChange(next);
+      };
     }
-    return setInternalPagination
-  }, [enablePagination, onPaginationChange, controlledPagination])
+    return setInternalPagination;
+  }, [enablePagination, onPaginationChange, controlledPagination]);
 
   const handleVisibilityChange = React.useMemo(() => {
-    if (!enableColumnVisibility) return
+    if (!enableColumnVisibility) return;
     return (updater: VisibilityState | ((prev: VisibilityState) => VisibilityState)) => {
-      const next = typeof updater === "function" ? updater(columnVisibility) : updater
-      ;(onColumnVisibilityChange ?? setInternalColumnVisibility)(next)
-    }
-  }, [enableColumnVisibility, columnVisibility, onColumnVisibilityChange])
+      const next = typeof updater === "function" ? updater(columnVisibility) : updater;
+      (onColumnVisibilityChange ?? setInternalColumnVisibility)(next);
+    };
+  }, [enableColumnVisibility, columnVisibility, onColumnVisibilityChange]);
 
   const handleColumnOrderChange = React.useCallback(
     (updater: ColumnOrderState | ((prev: ColumnOrderState) => ColumnOrderState)) => {
-      const next = typeof updater === "function" ? updater(columnOrder) : updater
-      ;(onColumnOrderChange ?? setInternalColumnOrder)(next)
+      const next = typeof updater === "function" ? updater(columnOrder) : updater;
+      (onColumnOrderChange ?? setInternalColumnOrder)(next);
     },
     [columnOrder, onColumnOrderChange],
-  )
+  );
 
   const table = useReactTable({
     data,
@@ -355,60 +329,57 @@ function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
     getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
-  })
+  });
 
   const setColumnLabel = React.useCallback(
     (columnId: string, label: string) => {
-      ;(onColumnLabelChange ?? ((id: string, l: string) => setInternalColumnLabels((prev) => ({ ...prev, [id]: l }))))(columnId, label)
+      (onColumnLabelChange ?? ((id: string, l: string) => setInternalColumnLabels((prev) => ({ ...prev, [id]: l }))))(
+        columnId,
+        label,
+      );
     },
     [onColumnLabelChange],
-  )
+  );
 
   const reorderSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  )
+  );
 
-  const [draggingColumnId, setDraggingColumnId] = React.useState<string | null>(null)
+  const [draggingColumnId, setDraggingColumnId] = React.useState<string | null>(null);
 
-  const handleColumnDragStart = React.useCallback(
-    (event: DragStartEvent) => {
-      setDraggingColumnId(String(event.active.id))
-    },
-    [],
-  )
+  const handleColumnDragStart = React.useCallback((event: DragStartEvent) => {
+    setDraggingColumnId(String(event.active.id));
+  }, []);
 
   const handleColumnDragEnd = React.useCallback(
     (event: DragEndEvent) => {
-      setDraggingColumnId(null)
-      const { active, over } = event
-      if (!over || active.id === over.id) return
-      const currentOrder =
-        columnOrder.length > 0 ? columnOrder : table.getAllLeafColumns().map((column) => column.id)
-      const oldIdx = currentOrder.indexOf(String(active.id))
-      const newIdx = currentOrder.indexOf(String(over.id))
-      if (oldIdx === -1 || newIdx === -1) return
-      const newOrder = arrayMove(currentOrder, oldIdx, newIdx)
-      table.setColumnOrder(newOrder)
+      setDraggingColumnId(null);
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+      const currentOrder = columnOrder.length > 0 ? columnOrder : table.getAllLeafColumns().map((column) => column.id);
+      const oldIdx = currentOrder.indexOf(String(active.id));
+      const newIdx = currentOrder.indexOf(String(over.id));
+      if (oldIdx === -1 || newIdx === -1) return;
+      const newOrder = arrayMove(currentOrder, oldIdx, newIdx);
+      table.setColumnOrder(newOrder);
     },
     [columnOrder, table],
-  )
+  );
 
-  const draggingHeader = draggingColumnId
-    ? table.getFlatHeaders().find((h) => h.column.id === draggingColumnId)
-    : null
+  const draggingHeader = draggingColumnId ? table.getFlatHeaders().find((h) => h.column.id === draggingColumnId) : null;
 
   // Infer which columns are numeric from the first data row
   const numericColumns = React.useMemo(() => {
-    if (data.length === 0) return new Set<string>()
-    const first = data[0] as Record<string, unknown>
-    const ids = new Set<string>()
+    if (data.length === 0) return new Set<string>();
+    const first = data[0] as Record<string, unknown>;
+    const ids = new Set<string>();
     for (const col of columns) {
-      const key = "accessorKey" in col ? String(col.accessorKey) : ""
-      if (key && typeof first[key] === "number") ids.add(key)
+      const key = "accessorKey" in col ? String(col.accessorKey) : "";
+      if (key && typeof first[key] === "number") ids.add(key);
     }
-    return ids
-  }, [data, columns])
+    return ids;
+  }, [data, columns]);
 
   // Not memoized: TanStack's table instance is a stable reference that mutates
   // internally, so children reading table.getState() need fresh context on each render.
@@ -416,9 +387,9 @@ function DataTable<TData, TValue>({
     table,
     columnLabels,
     setColumnLabel,
-  } as TableContextValue<unknown>
+  } as TableContextValue<unknown>;
 
-  const { toolbarSlots, paginationSlots, restSlots } = categorizeSlots(children)
+  const { toolbarSlots, paginationSlots, restSlots } = categorizeSlots(children);
 
   return (
     <TableContext.Provider value={ctx}>
@@ -445,7 +416,9 @@ function DataTable<TData, TValue>({
                         <DraggableHeader
                           key={header.id}
                           header={header}
-                          position={headerIdx === 0 ? "first" : headerIdx === headerGroup.headers.length - 1 ? "last" : "middle"}
+                          position={
+                            headerIdx === 0 ? "first" : headerIdx === headerGroup.headers.length - 1 ? "last" : "middle"
+                          }
                           numeric={numericColumns.has(header.column.id)}
                         >
                           <SortableHeaderContent
@@ -502,28 +475,56 @@ function DataTable<TData, TValue>({
         {restSlots}
       </div>
     </TableContext.Provider>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
 // TableToolbar
 // ---------------------------------------------------------------------------
 
-function TableToolbar({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"div">) {
+function TableToolbar({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      data-slot="table-toolbar"
-      className={cn("flex items-center gap-2", className)}
-      {...props}
-    >
+    <div data-slot="table-toolbar" className={cn("flex items-center gap-2", className)} {...props}>
       {children}
     </div>
-  )
+  );
 }
 
-export { DataTable, TableToolbar, useDataTable }
-export type { DataTableProps }
+Object.assign(DataTable, {
+  visualization: {
+    id: "data-table",
+    inputKind: "table",
+    description: "Interactive table for structured row and column data.",
+    tunableProps: [
+      {
+        name: "enableSorting",
+        type: "boolean",
+        description: "Enable column sorting.",
+        default: false,
+      },
+      {
+        name: "enablePagination",
+        type: "boolean",
+        description: "Enable table pagination.",
+        default: false,
+      },
+      {
+        name: "density",
+        type: "select",
+        description: "Table row density.",
+        default: "default",
+        options: ["compact", "default", "relaxed"],
+      },
+      {
+        name: "defaultPageSize",
+        type: "number",
+        description: "Default number of rows per page.",
+        default: 10,
+        validation: { min: 1, max: 100 },
+      },
+    ],
+  } satisfies VisualizationMeta,
+});
+
+export { DataTable, TableToolbar, useDataTable };
+export type { DataTableProps };

@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { withVisualization } from "@/lib/visualization";
 
 interface BarDataSeries {
   x: number[];
@@ -73,15 +74,9 @@ const BarGraph: React.FC<BarGraphProps> = ({
     };
   }, [dataSeries, variant]);
 
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
+  const effectiveYRange = useMemo(() => yRange || [yMin, yMax], [yRange, yMin, yMax]);
 
-  const xTicks = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))],
-    [dataSeries],
-  );
+  const xTicks = useMemo(() => [...new Set(dataSeries.flatMap((s) => s.x))], [dataSeries]);
 
   const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
@@ -237,7 +232,22 @@ const BarGraph: React.FC<BarGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, theme]);
+  }, [
+    dataSeries,
+    width,
+    height,
+    xRange,
+    yRange,
+    xTitle,
+    yTitle,
+    title,
+    barWidth,
+    barMode,
+    tickOptions,
+    xTicks,
+    yTicks,
+    theme,
+  ]);
 
   return (
     <div className="bar-graph-container">
@@ -246,5 +256,34 @@ const BarGraph: React.FC<BarGraphProps> = ({
   );
 };
 
-export { BarGraph };
+const BarGraphWithMeta = withVisualization(BarGraph, {
+  id: "bar-graph",
+  inputKind: "plot",
+  description: "Bar graph for grouped, stacked, or overlaid numeric series.",
+  tunableProps: [
+    {
+      name: "variant",
+      type: "select",
+      description: "Bar grouping mode.",
+      default: "group",
+      options: ["group", "stack", "overlay"],
+    },
+    {
+      name: "barWidth",
+      type: "number",
+      description: "Bar width in pixels.",
+      default: 24,
+      validation: { min: 1, max: 100 },
+    },
+    {
+      name: "height",
+      type: "number",
+      description: "Chart height in pixels.",
+      default: 600,
+      validation: { min: 200, max: 1200 },
+    },
+  ],
+});
+
+export { BarGraphWithMeta as BarGraph };
 export type { BarDataSeries, BarGraphVariant, BarGraphProps };

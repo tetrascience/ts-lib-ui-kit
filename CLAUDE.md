@@ -33,14 +33,38 @@ src/
 ├── components/
 │   ├── ui/          # shadcn/ui primitives (radix-ui + CVA + Tailwind)
 │   ├── composed/    # Multi-component compositions (AppHeader, Sidebar, etc.)
-│   └── charts/      # Plotly-based visualizations (AreaGraph, Heatmap, etc.)
+│   └── charts/      # 12 Plotly.js scientific visualizations:
+│                    #   AreaGraph, BarGraph, LineGraph, ScatterGraph,
+│                    #   InteractiveScatter, Histogram, PieChart, DotPlot,
+│                    #   Heatmap, Boxplot, Chromatogram, PlateMap
 ├── hooks/           # Custom React hooks
 ├── lib/utils.ts     # cn() helper (clsx + tailwind-merge)
-├── server/          # Server-side utilities (being migrated out)
+├── server/          # Server-side utilities (being migrated out — see below)
 ├── utils/           # Pure utility functions
 ├── index.css        # Tailwind theme tokens (oklch CSS custom properties)
 └── index.ts         # All client-side exports
 ```
+
+## Server Utilities (`./server` sub-export)
+
+Import path for consumers: `@tetrascience-npm/tetrascience-react-ui/server`
+
+```
+src/server/
+├── auth/
+│   └── JwtTokenManager.ts   # jwtManager singleton — resolves JWT from cookies or env
+├── providers/
+│   ├── buildProvider.ts               # Factory: provider config → typed provider instance
+│   ├── getProviderConfigurations.ts   # Fetch available provider configs via TDPClient
+│   ├── AthenaProvider.ts / SnowflakeProvider.ts / DatabricksProvider.ts
+│   └── exceptions.ts                  # QueryError, MissingTableError, ProviderConnectionError, etc.
+└── search/
+    └── TdpSearchManager.ts  # Express-mountable TDP search handler
+```
+
+Key exports: `jwtManager`, `buildProvider`, `getProviderConfigurations`, `buildSnowflakeProvider`, `buildDatabricksProvider`, `getTdpAthenaProvider`, `TdpSearchManager`, typed exception classes.
+
+> **Migration note:** This module is being extracted out of this package. Do not add new server functionality here — new server utilities belong in the consuming application or a dedicated server package.
 
 ## Component Patterns
 
@@ -48,12 +72,30 @@ src/
 
 **`composed/` and `charts/` components**: Prefer a PascalCase directory with `ComponentName.tsx`, `ComponentName.stories.tsx`, and `index.ts` for new components. Some legacy composed components exist as single `kebab-case.tsx` files (e.g. `tdp-link.tsx`).
 
-## Styling
+## Design System
+
+See [`DESIGN.md`](./DESIGN.md) for the full design document — tokens, component inventory, API conventions, theming guide, and architectural decisions.
+
+### Styling
 
 - Tailwind CSS 4 utility classes via `cn()` from `src/lib/utils.ts`
 - CVA (`class-variance-authority`) for variant definitions
-- Design tokens as CSS custom properties in `src/index.css` (oklch)
+- Design tokens as CSS custom properties in `src/index.css` (oklch color space)
 - Icons from `lucide-react`
+- Dark mode via `.dark` class on `<html>` — all tokens redefined under `.dark { }` in `src/index.css`
+
+### Key Design Principles
+
+- **Data-dense by default** — sized for scientific dashboards, not marketing pages
+- **Consistent color semantics** — green = success, orange = caution, red = error, blue = action
+- **Dark mode is first-class** — every token defined for both `:root` and `.dark`, charts contrast-checked in both
+- **Accessibility is non-negotiable** — Radix primitives handle focus traps, ARIA, keyboard nav; WCAG AA contrast minimum
+
+### Component API Conventions
+
+- `variant` / `size` props via CVA; `asChild` via Radix slot; `className` for Tailwind overrides
+- Compound components re-export named sub-components alongside root (e.g. `Dialog`, `DialogTrigger`, `DialogContent`)
+- Chart components use `CHART_COLORS` from `src/utils/colors.ts` and `usePlotlyTheme` hook for theme sync
 
 ## Testing
 
@@ -67,6 +109,15 @@ src/
 - Do not use `eslint-disable` comments — refactor instead
 - `@ts-ignore` allowed only with a description
 - Flag all `any` usage (new and existing) — incrementally eliminating to enable `no-explicit-any`
+
+## Publishing
+
+```bash
+yarn release          # semantic-release: auto-determines version from commits, publishes to npm
+yarn release:dry-run  # Validate what would be published without actually publishing
+```
+
+Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) for versioning — `feat:` → minor bump, `fix:` → patch bump, `feat!:` / `BREAKING CHANGE:` → major bump.
 
 ## Zephyr Integration
 

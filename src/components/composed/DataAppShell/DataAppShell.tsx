@@ -234,7 +234,7 @@ function SidebarBody({
                 <TDPLink
                   path={backToPlatformPath}
                   navigationOptions={{ newTab: false }}
-                  className="flex items-center gap-2.5 w-full px-2 py-1.5 no-underline! hover:no-underline!"
+                  className="flex items-center gap-2.5 w-full px-2 py-1.5 !no-underline hover:!no-underline"
                 >
                   <ArrowLeft className="w-4 h-4 text-muted-foreground" />
                   Back to TDP Platform

@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { withVisualization } from "@/lib/visualization";
 import { COLORS } from "@/utils/colors";
 import "./Histogram.scss";
 
@@ -41,8 +42,7 @@ const calculateMean = (data: number[]): number => {
 
 const calculateStdDev = (data: number[], mean: number): number => {
   const squaredDiffs = data.map((value) => Math.pow(value - mean, 2));
-  const variance =
-    squaredDiffs.reduce((acc, val) => acc + val, 0) / data.length;
+  const variance = squaredDiffs.reduce((acc, val) => acc + val, 0) / data.length;
   return Math.sqrt(variance);
 };
 
@@ -51,7 +51,7 @@ const generateNormalDistributionPoints = (
   stdDev: number,
   start: number,
   end: number,
-  points = 100
+  points = 100,
 ): { x: number[]; y: number[] } => {
   const xValues: number[] = [];
   const yValues: number[] = [];
@@ -73,7 +73,7 @@ const generateNormalDistributionPoints = (
 const scaleDistributionCurve = (
   yValues: number[],
   histogramData: number[],
-  bins: { start: number; end: number; size: number }
+  bins: { start: number; end: number; size: number },
 ): number[] => {
   const binCount = Math.ceil((bins.end - bins.start) / bins.size);
   const binFrequencies = Array(binCount).fill(0);
@@ -105,32 +105,21 @@ const Histogram: React.FC<HistogramProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
-  const seriesArray = useMemo(
-    () => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]),
-    [dataSeries],
+  const seriesArray = useMemo(() => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]), [dataSeries]);
+  const effectiveBarMode = useMemo<"stack" | "group" | "overlay" | "relative" | undefined>(
+    () => (seriesArray.length > 1 ? "stack" : undefined),
+    [seriesArray.length],
   );
-  const effectiveBarMode = useMemo<
-    "stack" | "group" | "overlay" | "relative" | undefined
-  >(() => (seriesArray.length > 1 ? "stack" : undefined), [seriesArray.length]);
 
   const defaultColors = useMemo(
-    () => [
-      COLORS.ORANGE,
-      COLORS.RED,
-      COLORS.BLUE,
-      COLORS.GREEN,
-      COLORS.PURPLE,
-      COLORS.YELLOW,
-    ],
+    () => [COLORS.ORANGE, COLORS.RED, COLORS.BLUE, COLORS.GREEN, COLORS.PURPLE, COLORS.YELLOW],
     [],
   );
 
   const seriesWithColors = useMemo(() => {
     return seriesArray.map((series, index) => {
       const hasDistributionLine =
-        typeof series.showDistributionLine === "undefined"
-          ? showDistributionLine
-          : series.showDistributionLine;
+        typeof series.showDistributionLine === "undefined" ? showDistributionLine : series.showDistributionLine;
 
       return {
         ...series,
@@ -185,19 +174,9 @@ const Histogram: React.FC<HistogramProps> = ({
             size: range / 10,
           };
 
-          const curvePoints = generateNormalDistributionPoints(
-            mean,
-            stdDev,
-            start,
-            end,
-            100,
-          );
+          const curvePoints = generateNormalDistributionPoints(mean, stdDev, start, end, 100);
 
-          const scaledYValues = scaleDistributionCurve(
-            curvePoints.y,
-            series.x,
-            bins,
-          );
+          const scaledYValues = scaleDistributionCurve(curvePoints.y, series.x, bins);
 
           return {
             type: "scatter" as const,
@@ -215,10 +194,7 @@ const Histogram: React.FC<HistogramProps> = ({
     [seriesWithColors],
   );
 
-  const plotData = useMemo(
-    () => [...histogramData, ...distributionLines],
-    [histogramData, distributionLines],
-  );
+  const plotData = useMemo(() => [...histogramData, ...distributionLines], [histogramData, distributionLines]);
 
   useEffect(() => {
     if (!plotRef.current) return;
@@ -315,7 +291,7 @@ const Histogram: React.FC<HistogramProps> = ({
       rows.push(
         <div className="legend-row" key={i}>
           {items.slice(i, i + rowSize)}
-        </div>
+        </div>,
       );
     }
 
@@ -344,5 +320,20 @@ const Histogram: React.FC<HistogramProps> = ({
   );
 };
 
-export { Histogram };
+const HistogramWithMeta = withVisualization(Histogram, {
+  id: "histogram",
+  inputKind: "plot",
+  description: "Histogram for one or more numeric distributions.",
+  tunableProps: [
+    {
+      name: "height",
+      type: "number",
+      description: "Chart height in pixels.",
+      default: 600,
+      validation: { min: 200, max: 1200 },
+    },
+  ],
+});
+
+export { HistogramWithMeta as Histogram };
 export type { HistogramDataSeries, HistogramProps };

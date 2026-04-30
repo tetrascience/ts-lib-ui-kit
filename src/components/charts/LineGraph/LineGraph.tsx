@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { withVisualization } from "@/lib/visualization";
 
 type MarkerSymbol =
   | "circle"
@@ -220,10 +221,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
     };
   }, [dataSeries]);
 
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
+  const effectiveYRange = useMemo(() => yRange || [yMin, yMax], [yRange, yMin, yMax]);
 
   const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
@@ -241,10 +239,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
     return ticks;
   }, [effectiveYRange]);
 
-  const xTicks = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))],
-    [dataSeries],
-  );
+  const xTicks = useMemo(() => [...new Set(dataSeries.flatMap((s) => s.x))], [dataSeries]);
 
   const mode = useMemo((): "lines" | "lines+markers" => {
     switch (variant) {
@@ -399,7 +394,23 @@ const LineGraph: React.FC<LineGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, effectiveYRange, variant, theme]);
+  }, [
+    dataSeries,
+    width,
+    height,
+    xRange,
+    yRange,
+    xTitle,
+    yTitle,
+    title,
+    mode,
+    tickOptions,
+    xTicks,
+    yTicks,
+    effectiveYRange,
+    variant,
+    theme,
+  ]);
 
   return (
     <div className="chart-container">
@@ -408,5 +419,27 @@ const LineGraph: React.FC<LineGraphProps> = ({
   );
 };
 
-export { LineGraph };
+const LineGraphWithMeta = withVisualization(LineGraph, {
+  id: "line-graph",
+  inputKind: "plot",
+  description: "Line graph for one or more numeric X/Y series.",
+  tunableProps: [
+    {
+      name: "variant",
+      type: "select",
+      description: "Line rendering mode.",
+      default: "lines",
+      options: ["lines", "lines+markers", "lines+markers+error_bars"],
+    },
+    {
+      name: "height",
+      type: "number",
+      description: "Chart height in pixels.",
+      default: 600,
+      validation: { min: 200, max: 1200 },
+    },
+  ],
+});
+
+export { LineGraphWithMeta as LineGraph };
 export type { LineDataSeries, LineGraphVariant, LineGraphProps, MarkerSymbol };

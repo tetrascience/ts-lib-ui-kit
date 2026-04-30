@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { withVisualization } from "@/lib/visualization";
 import "./Chromatogram.scss";
 
 /** Height offset for the plot area in pixels */
@@ -125,10 +126,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
     [positions, peakC, colorC],
   );
 
-  const maxValue = useMemo(
-    () => Math.max(...peakA, ...peakT, ...peakG, ...peakC),
-    [peakA, peakT, peakG, peakC],
-  );
+  const maxValue = useMemo(() => Math.max(...peakA, ...peakT, ...peakG, ...peakC), [peakA, peakT, peakG, peakC]);
 
   useEffect(() => {
     if (!plotRef.current || data.length === 0) return;
@@ -200,15 +198,14 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
               base === "A"
                 ? colorA
                 : base === "T"
-                ? colorT
-                : base === "G"
-                ? colorG
-                : base === "C"
-                ? colorC
-                : theme.textColor;
+                  ? colorT
+                  : base === "G"
+                    ? colorG
+                    : base === "C"
+                      ? colorC
+                      : theme.textColor;
 
-            const percentage =
-              (position - minPosition) / (maxPosition - minPosition);
+            const percentage = (position - minPosition) / (maxPosition - minPosition);
             const leftPosition = percentage * chartWidth;
 
             return (
@@ -233,11 +230,9 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
       const maxPosition = Math.max(...positions);
       const chartWidth = width;
 
-      const startPos =
-        Math.ceil(minPosition / positionInterval) * positionInterval;
+      const startPos = Math.ceil(minPosition / positionInterval) * positionInterval;
 
-      const regularPositionLabels: Array<{ position: number; label: string }> =
-        [];
+      const regularPositionLabels: Array<{ position: number; label: string }> = [];
 
       for (let pos = startPos; pos <= maxPosition; pos += positionInterval) {
         regularPositionLabels.push({
@@ -249,8 +244,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
       return (
         <div className="position-numbers-container">
           {regularPositionLabels.map((label) => {
-            const percentage =
-              (label.position - minPosition) / (maxPosition - minPosition);
+            const percentage = (label.position - minPosition) / (maxPosition - minPosition);
             const leftPosition = percentage * chartWidth;
 
             return (
@@ -287,5 +281,20 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
   );
 };
 
-export { Chromatogram };
+const ChromatogramWithMeta = withVisualization(Chromatogram, {
+  id: "chromatogram",
+  inputKind: "plot",
+  description: "Chromatogram trace with peak annotations and sequence position context.",
+  tunableProps: [
+    {
+      name: "height",
+      type: "number",
+      description: "Chart height in pixels.",
+      default: 600,
+      validation: { min: 200, max: 1200 },
+    },
+  ],
+});
+
+export { ChromatogramWithMeta as Chromatogram };
 export type { PeakData, ChromatogramProps };

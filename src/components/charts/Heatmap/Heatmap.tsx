@@ -4,6 +4,8 @@ import { PlateMap } from "../PlateMap";
 
 import type { ColorScale, WellData } from "../PlateMap";
 
+import { withVisualization } from "@/lib/visualization";
+
 /**
  * Props for the Heatmap component
  * @deprecated Use PlateMap component instead. Heatmap is now a wrapper around PlateMap for backward compatibility.
@@ -92,8 +94,8 @@ const Heatmap: React.FC<HeatmapProps> = ({
   const normalizedData = data ? normalizeData(data) : undefined;
 
   // Determine rows and columns from normalized data or labels
-  const rows = normalizedData?.length ?? (yLabels?.length ?? 16);
-  const columns = normalizedData?.[0]?.length ?? (xLabels?.length ?? 24);
+  const rows = normalizedData?.length ?? yLabels?.length ?? 16;
+  const columns = normalizedData?.[0]?.length ?? xLabels?.length ?? 24;
 
   // Convert 2D array to WellData format for PlateMap
   const wellData: WellData[] | undefined = useMemo(() => {
@@ -139,5 +141,27 @@ const Heatmap: React.FC<HeatmapProps> = ({
   );
 };
 
-export { Heatmap };
+const HeatmapWithMeta = withVisualization(Heatmap, {
+  id: "heatmap",
+  inputKind: "plate_map",
+  description: "Legacy heatmap wrapper around PlateMap for two-dimensional numeric matrices.",
+  tunableProps: [
+    {
+      name: "colorscale",
+      type: "select",
+      description: "Color scale used to render numeric values.",
+      default: "Viridis",
+      options: ["Viridis", "Blues", "RdBu", "Greens", "Reds", "Greys", "Hot", "YlGnBu", "YlOrRd", "Plasma"],
+    },
+    {
+      name: "precision",
+      type: "number",
+      description: "Decimal places shown for numeric values.",
+      default: 0,
+      validation: { min: 0, max: 8 },
+    },
+  ],
+});
+
+export { HeatmapWithMeta as Heatmap };
 export type { HeatmapProps };

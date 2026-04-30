@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { withVisualization } from "@/lib/visualization";
 import { COLORS } from "@/utils/colors";
 
 interface PieDataSeries {
@@ -31,14 +32,7 @@ type PieChartProps = {
   rotation?: number;
 };
 
-const DEFAULT_COLORS = [
-  COLORS.BLUE,
-  COLORS.GREEN,
-  COLORS.ORANGE,
-  COLORS.RED,
-  COLORS.YELLOW,
-  COLORS.PURPLE,
-];
+const DEFAULT_COLORS = [COLORS.BLUE, COLORS.GREEN, COLORS.ORANGE, COLORS.RED, COLORS.YELLOW, COLORS.PURPLE];
 
 const PieChart: React.FC<PieChartProps> = ({
   dataSeries,
@@ -53,10 +47,7 @@ const PieChart: React.FC<PieChartProps> = ({
   const theme = usePlotlyTheme();
 
   const colors = useMemo(() => {
-    if (
-      dataSeries.colors &&
-      dataSeries.colors.length >= dataSeries.labels.length
-    ) {
+    if (dataSeries.colors && dataSeries.colors.length >= dataSeries.labels.length) {
       return dataSeries.colors;
     }
 
@@ -127,10 +118,7 @@ const PieChart: React.FC<PieChartProps> = ({
     };
   }, [colors, dataSeries.labels, dataSeries.name, dataSeries.values, width, height, textInfo, hole, rotation, theme]);
 
-  const PieChartLegend: React.FC<{ labels: string[]; colors: string[] }> = ({
-    labels,
-    colors,
-  }) => {
+  const PieChartLegend: React.FC<{ labels: string[]; colors: string[] }> = ({ labels, colors }) => {
     const items = labels.map((label, i) => (
       <React.Fragment key={label}>
         <div className="legend-item">
@@ -147,7 +135,7 @@ const PieChart: React.FC<PieChartProps> = ({
       rows.push(
         <div className="legend-row" key={i}>
           {items.slice(i, i + rowSize)}
-        </div>
+        </div>,
       );
     }
     return <div className="legend-container">{rows}</div>;
@@ -175,5 +163,20 @@ const PieChart: React.FC<PieChartProps> = ({
   );
 };
 
-export { PieChart };
+const PieChartWithMeta = withVisualization(PieChart, {
+  id: "pie-chart",
+  inputKind: "plot",
+  description: "Pie chart for proportional category values.",
+  tunableProps: [
+    {
+      name: "height",
+      type: "number",
+      description: "Chart height in pixels.",
+      default: 600,
+      validation: { min: 200, max: 1200 },
+    },
+  ],
+});
+
+export { PieChartWithMeta as PieChart };
 export type { PieDataSeries, PieTextInfo, PieChartProps };

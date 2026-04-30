@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { withVisualization } from "@/lib/visualization";
 
 interface AreaDataSeries {
   x: number[];
@@ -67,14 +68,8 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
     };
   }, [dataSeries, variant]);
 
-  const effectiveXRange = useMemo(
-    () => xRange || [xMin, xMax],
-    [xRange, xMin, xMax],
-  );
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
+  const effectiveXRange = useMemo(() => xRange || [xMin, xMax], [xRange, xMin, xMax]);
+  const effectiveYRange = useMemo(() => yRange || [yMin, yMax], [yRange, yMin, yMax]);
 
   const xTicks = useMemo(() => {
     const range = effectiveXRange[1] - effectiveXRange[0];
@@ -278,7 +273,23 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks, theme]);
+  }, [
+    dataSeries,
+    width,
+    height,
+    xRange,
+    yRange,
+    effectiveXRange,
+    effectiveYRange,
+    variant,
+    xTitle,
+    yTitle,
+    titleOptions,
+    tickOptions,
+    xTicks,
+    yTicks,
+    theme,
+  ]);
 
   return (
     <div className="area-graph-container">
@@ -287,5 +298,27 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   );
 };
 
-export { AreaGraph };
+const AreaGraphWithMeta = withVisualization(AreaGraph, {
+  id: "area-graph",
+  inputKind: "plot",
+  description: "Area graph for one or more numeric X/Y series, including stacked area plots.",
+  tunableProps: [
+    {
+      name: "variant",
+      type: "select",
+      description: "Area rendering mode.",
+      default: "normal",
+      options: ["normal", "stacked"],
+    },
+    {
+      name: "height",
+      type: "number",
+      description: "Chart height in pixels.",
+      default: 600,
+      validation: { min: 200, max: 1200 },
+    },
+  ],
+});
+
+export { AreaGraphWithMeta as AreaGraph };
 export type { AreaDataSeries, AreaGraphVariant, AreaGraphProps };

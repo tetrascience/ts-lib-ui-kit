@@ -2,15 +2,10 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { withVisualization } from "@/lib/visualization";
 import { COLORS } from "@/utils/colors";
 
-type MarkerSymbol =
-  | "circle"
-  | "square"
-  | "diamond"
-  | "triangle-up"
-  | "triangle-down"
-  | "star";
+type MarkerSymbol = "circle" | "square" | "diamond" | "triangle-up" | "triangle-down" | "star";
 
 interface DotPlotDataSeries {
   x: number[];
@@ -46,32 +41,15 @@ const DotPlot: React.FC<DotPlotProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
-  const seriesArray = useMemo(
-    () => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]),
-    [dataSeries],
-  );
+  const seriesArray = useMemo(() => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]), [dataSeries]);
 
   const defaultColors = useMemo(
-    () => [
-      COLORS.ORANGE,
-      COLORS.RED,
-      COLORS.GREEN,
-      COLORS.BLUE,
-      COLORS.YELLOW,
-      COLORS.PURPLE,
-    ],
+    () => [COLORS.ORANGE, COLORS.RED, COLORS.GREEN, COLORS.BLUE, COLORS.YELLOW, COLORS.PURPLE],
     [],
   );
 
   const defaultSymbols: MarkerSymbol[] = useMemo(
-    () => [
-      "circle",
-      "square",
-      "diamond",
-      "triangle-up",
-      "triangle-down",
-      "star",
-    ],
+    () => ["circle", "square", "diamond", "triangle-up", "triangle-down", "star"],
     [],
   );
 
@@ -90,8 +68,7 @@ const DotPlot: React.FC<DotPlotProps> = ({
         return {
           ...series,
           color: series.color || defaultColors[index % defaultColors.length],
-          symbol:
-            series.symbol || defaultSymbols[index % defaultSymbols.length],
+          symbol: series.symbol || defaultSymbols[index % defaultSymbols.length],
           size: series.size || markerSize,
         };
       }
@@ -251,5 +228,27 @@ const DotPlot: React.FC<DotPlotProps> = ({
   );
 };
 
-export { DotPlot };
+const DotPlotWithMeta = withVisualization(DotPlot, {
+  id: "dot-plot",
+  inputKind: "plot",
+  description: "Dot plot for categorical or numeric grouped observations.",
+  tunableProps: [
+    {
+      name: "variant",
+      type: "select",
+      description: "Dot plot rendering mode.",
+      default: "default",
+      options: ["default", "stacked"],
+    },
+    {
+      name: "height",
+      type: "number",
+      description: "Chart height in pixels.",
+      default: 600,
+      validation: { min: 200, max: 1200 },
+    },
+  ],
+});
+
+export { DotPlotWithMeta as DotPlot };
 export type { DotPlotDataSeries, DotPlotProps, DotPlotVariant, MarkerSymbol };

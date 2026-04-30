@@ -17,6 +17,8 @@ import {
 
 import type { InteractiveScatterProps, SelectionMode } from "./types";
 
+import { withVisualization } from "@/lib/visualization";
+
 /**
  * InteractiveScatter component for visualizing scatter plot data with advanced interactions.
  *
@@ -105,13 +107,23 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
   const xRange = useMemo(() => {
     if (xAxis.range) return xAxis.range;
     if (xAxis.autoRange === false) return;
-    return calculateAxisRange(processedData, "x", xAxis.autoRangePadding ?? PLOT_CONSTANTS.AUTO_RANGE_PADDING, xAxis.scale);
+    return calculateAxisRange(
+      processedData,
+      "x",
+      xAxis.autoRangePadding ?? PLOT_CONSTANTS.AUTO_RANGE_PADDING,
+      xAxis.scale,
+    );
   }, [processedData, xAxis]);
 
   const yRange = useMemo(() => {
     if (yAxis.range) return yAxis.range;
     if (yAxis.autoRange === false) return;
-    return calculateAxisRange(processedData, "y", yAxis.autoRangePadding ?? PLOT_CONSTANTS.AUTO_RANGE_PADDING, yAxis.scale);
+    return calculateAxisRange(
+      processedData,
+      "y",
+      yAxis.autoRangePadding ?? PLOT_CONSTANTS.AUTO_RANGE_PADDING,
+      yAxis.scale,
+    );
   }, [processedData, yAxis]);
 
   const tooltipEnabled = tooltip.enabled !== false;
@@ -387,4 +399,37 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
   );
 };
 
-export { InteractiveScatter };
+const InteractiveScatterWithMeta = withVisualization(InteractiveScatter, {
+  id: "interactive-scatter",
+  inputKind: "plot",
+  description: "Interactive scatter plot with selection, mapping, tooltip, and downsampling controls.",
+  tunableProps: [
+    {
+      name: "enableClickSelection",
+      type: "boolean",
+      description: "Enable click selection.",
+      default: true,
+    },
+    {
+      name: "enableBoxSelection",
+      type: "boolean",
+      description: "Enable box selection.",
+      default: true,
+    },
+    {
+      name: "enableLassoSelection",
+      type: "boolean",
+      description: "Enable lasso selection.",
+      default: true,
+    },
+    {
+      name: "height",
+      type: "number",
+      description: "Chart height in pixels.",
+      default: 600,
+      validation: { min: 200, max: 1200 },
+    },
+  ],
+});
+
+export { InteractiveScatterWithMeta as InteractiveScatter };

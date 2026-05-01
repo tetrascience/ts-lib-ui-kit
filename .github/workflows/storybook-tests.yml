@@ -8,6 +8,10 @@ on:
         description: "Comma-separated Zephyr test case IDs (e.g., SW-T1,SW-T2,SW-T3). Leave empty to run all tests."
         required: false
         type: string
+      storybook_url:
+        description: "Storybook URL to test for manual runs. Leave empty to run local Storybook."
+        required: false
+        type: string
 
 # Required for AWS OIDC authentication
 permissions:
@@ -17,12 +21,14 @@ permissions:
 jobs:
   storybook-tests:
     name: Storybook E2E Tests
-    # Only run on non-forked repos, on successful Storybook-related deployments or manual triggers
-    if: github.event.repository.fork == false && (github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && contains(fromJSON('["Preview", "Production"]'), github.event.deployment.environment)))
+    # Only run on non-forked repos, on successful GitHub Pages deployments or manual triggers
+    if: github.event.repository.fork == false && (github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'github-pages'))
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.59.0-noble
     timeout-minutes: 30
+    env:
+      SB_URL: ${{ github.event.deployment_status.environment_url || inputs.storybook_url }}
 
     steps:
       - name: 📥 Checkout repository
@@ -45,9 +51,6 @@ jobs:
         run: yarn test:storybook:ci
         continue-on-error: true
         id: test
-        # 👇 Pass the Storybook URL as an environment variable
-        env:
-          SB_URL: "${{ github.event.deployment_status.environment_url }}"
 
       - name: 🧪 Run Storybook tests (filtered)
         if: ${{ inputs.test_cases }}

@@ -19,4 +19,6 @@ exclude = [
   "^http://127\\.0\\.0\\.1",
   "^https?://example\\.com",
   "^https://www\\.npmjs\\.com",
+  # The Storybook GitHub Pages site is provisioned by this repo's deploy workflow.
+  "^https://tetrascience\\.github\\.io/ts-lib-ui-kit/?$",
 ]

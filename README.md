@@ -2,7 +2,7 @@
 
 React component library for building TetraScience applications.
 
-[![npm version](https://img.shields.io/npm/v/@tetrascience-npm/tetrascience-react-ui)](https://www.npmjs.com/package/@tetrascience-npm/tetrascience-react-ui) [![CI](https://github.com/tetrascience/ts-lib-ui-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/tetrascience/ts-lib-ui-kit/actions/workflows/ci.yml) **[Storybook](https://ts-lib-ui-kit-storybook.vercel.app/)** | **[Contributing Guide](./CONTRIBUTING.md)**
+[![npm version](https://img.shields.io/npm/v/@tetrascience-npm/tetrascience-react-ui)](https://www.npmjs.com/package/@tetrascience-npm/tetrascience-react-ui) [![CI](https://github.com/tetrascience/ts-lib-ui-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/tetrascience/ts-lib-ui-kit/actions/workflows/ci.yml) **[Storybook](https://tetrascience.github.io/ts-lib-ui-kit/)** | **[Contributing Guide](./CONTRIBUTING.md)**
 
 This library provides:
 
@@ -324,7 +324,7 @@ Visit <http://localhost:6006>.
 
 ## Documentation
 
-- [Storybook – Live Component Demos](https://ts-lib-ui-kit-storybook.vercel.app/) - Browse all components with interactive examples
+- [Storybook – Live Component Demos](https://tetrascience.github.io/ts-lib-ui-kit/) - Browse all components with interactive examples
 - [NPM Package](https://www.npmjs.com/package/@tetrascience-npm/tetrascience-react-ui) - Installation and version info
 - [Migration Guide](./MIGRATION.md) - Migrating from the old atom/molecule/organism architecture
 - [Theming Guide](./THEMING.md) - Customise the design system

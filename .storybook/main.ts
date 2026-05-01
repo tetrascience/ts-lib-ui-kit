@@ -23,7 +23,11 @@ const config: StorybookConfig = {
     disableTelemetry: true,
   },
   async viteFinal(config) {
-    // To prevent vercel from failing to build storybook omit the 'vite:dts' plugin
+    if (process.env.STORYBOOK_BASE_PATH) {
+      config.base = process.env.STORYBOOK_BASE_PATH;
+    }
+
+    // Static Storybook builds do not need library-mode declaration generation.
     config.plugins = await withoutVitePlugins(config.plugins, [
       "vite:dts", // Omit the 'vite:dts' plugin
     ]);

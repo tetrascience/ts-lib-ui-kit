@@ -1,7 +1,11 @@
 name: Storybook Tests
 
 on:
-  deployment_status:
+  workflow_run:
+    workflows:
+      - Deploy Storybook to GitHub Pages
+    types:
+      - completed
   workflow_dispatch:
     inputs:
       test_cases:
@@ -21,14 +25,13 @@ permissions:
 jobs:
   storybook-tests:
     name: Storybook E2E Tests
-    # Only run on non-forked repos, on successful GitHub Pages deployments or manual triggers
-    if: github.event.repository.fork == false && (github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'github-pages'))
+    if: github.event.repository.fork == false && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.59.0-noble
     timeout-minutes: 30
     env:
-      SB_URL: ${{ github.event.deployment_status.environment_url || inputs.storybook_url }}
+      SB_URL: ${{ github.event_name == 'workflow_run' && format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) || github.event.inputs.storybook_url }}
 
     steps:
       - name: 📥 Checkout repository

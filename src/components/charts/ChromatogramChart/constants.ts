@@ -32,3 +32,23 @@ export const CHROMATOGRAM_ANNOTATION = {
   AUTO_ANNOTATION_FONT_SIZE: 10,
 } as const;
 
+/**
+ * Constants for range (fraction/region) annotations
+ */
+export const RANGE_ANNOTATION = {
+  /** Default fill opacity for the colored bar */
+  DEFAULT_OPACITY: 0.5,
+  /** Default label font size */
+  DEFAULT_FONT_SIZE: 11,
+  /** Bar height in paper coordinates (fraction of plot height) for "top" anchor */
+  BAR_HEIGHT_PAPER: 0.04,
+  /** Gap between stacked lanes in paper coordinates */
+  LANE_GAP_PAPER: 0.01,
+  /** Multiplier on barHeight to compute the per-lane vertical stride in data coords */
+  LANE_DATA_STRIDE_FACTOR: 1.5,
+  /** Fraction above local peak maximum for "auto" baseline placement */
+  AUTO_Y_CLEARANCE_FACTOR: 1.05,
+  /** Default bar height as a fraction of the global data maximum for "auto" mode */
+  AUTO_BAR_HEIGHT_FACTOR: 0.04,
+} as const;
+

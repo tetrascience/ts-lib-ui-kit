@@ -18,6 +18,7 @@ import {
   processUserAnnotations,
 } from "./dataProcessing";
 import { detectPeaks } from "./peakDetection";
+import { buildRangeAnnotationElements } from "./rangeAnnotations";
 
 import type {
   ChromatogramSeries,
@@ -28,6 +29,7 @@ import type {
   PeakDetectionOptions,
   ChromatogramChartProps,
   PeakWithMeta,
+  RangeAnnotation,
 } from "./types";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
@@ -36,6 +38,7 @@ import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 export type {
   ChromatogramSeries,
   PeakAnnotation,
+  RangeAnnotation,
   BaselineCorrectionMethod,
   BoundaryMarkerStyle,
   BoundaryMarkerType,
@@ -67,6 +70,8 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   boundaryMarkers = "none",
   annotationOverlapThreshold = 0.4,
   showExportButton = true,
+  rangeAnnotations = [],
+  rangeAnnotationOverlapThreshold = 0,
 }) => {
   // Derive peak detection state from options
   const enablePeakDetection = peakDetectionOptions !== undefined;
@@ -173,6 +178,16 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       plotlyAnnotations.push(...createGroupAnnotations(group));
     }
 
+    // Build range annotation shapes and labels
+    const { shapes: rangeShapes, annotations: rangeAnnotationLabels } =
+      rangeAnnotations.length > 0
+        ? buildRangeAnnotationElements(
+            rangeAnnotations,
+            rangeAnnotationOverlapThreshold,
+            processedSeries
+          )
+        : { shapes: [], annotations: [] };
+
     const layout: Partial<Plotly.Layout> = {
       title: title
         ? {
@@ -249,7 +264,8 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
         font: { size: 12, color: theme.textColor, family: "Inter, sans-serif" },
       },
       showlegend: showLegend && series.length > 1,
-      annotations: plotlyAnnotations,
+      annotations: [...plotlyAnnotations, ...rangeAnnotationLabels],
+      shapes: rangeShapes,
     };
 
     const config: Partial<Plotly.Config> = {
@@ -282,7 +298,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     processedSeries, allDetectedPeaks, series.length, width, height, title, xAxisTitle, yAxisTitle,
     processedAnnotations, xRange, yRange, showLegend, showGridX, showGridY, showMarkers, markerSize,
     showCrosshairs, enablePeakDetection, peakDetectionOptions, showPeakAreas, boundaryMarkers,
-    annotationOverlapThreshold, showExportButton, theme,
+    annotationOverlapThreshold, showExportButton, theme, rangeAnnotations, rangeAnnotationOverlapThreshold,
   ]);
 
   return (

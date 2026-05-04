@@ -11,15 +11,24 @@ export function StackedChromatogramChart({
   stackingMode = "overlay",
   stackOffset = 0,
   annotations,
+  rangeAnnotations,
   ...restProps
 }: StackedChromatogramChartProps) {
   const {
     series: transformedSeries,
     annotations: transformedAnnotations,
+    rangeAnnotations: transformedRangeAnnotations,
     yRange,
   } = useMemo(
-    () => applyStackingTransform(series, annotations, stackingMode, stackOffset),
-    [series, annotations, stackingMode, stackOffset]
+    () =>
+      applyStackingTransform(
+        series,
+        annotations,
+        rangeAnnotations,
+        stackingMode,
+        stackOffset
+      ),
+    [series, annotations, rangeAnnotations, stackingMode, stackOffset]
   );
 
   return (
@@ -27,6 +36,7 @@ export function StackedChromatogramChart({
       {...restProps}
       series={transformedSeries}
       annotations={transformedAnnotations}
+      rangeAnnotations={transformedRangeAnnotations}
       yRange={yRange}
     />
   );

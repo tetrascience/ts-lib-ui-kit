@@ -1,15 +1,21 @@
-import type { ChromatogramSeries, PeakAnnotation } from "../ChromatogramChart";
+import type {
+  ChromatogramSeries,
+  PeakAnnotation,
+  RangeAnnotation,
+} from "../ChromatogramChart";
 import type { StackingMode } from "./types";
 
 interface TransformResult {
   series: ChromatogramSeries[];
   annotations: PeakAnnotation[];
+  rangeAnnotations: RangeAnnotation[];
   yRange: [number, number];
 }
 
 export function applyStackingTransform(
   inputSeries: ChromatogramSeries[],
   inputAnnotations: PeakAnnotation[][] | undefined,
+  inputRangeAnnotations: RangeAnnotation[][] | undefined,
   mode: StackingMode,
   stackOffset: number
 ): TransformResult {
@@ -22,6 +28,7 @@ export function applyStackingTransform(
     return {
       series: inputSeries,
       annotations: inputAnnotations ? inputAnnotations.flat() : [],
+      rangeAnnotations: inputRangeAnnotations ? inputRangeAnnotations.flat() : [],
       yRange: consistentYRange,
     };
   }
@@ -44,6 +51,24 @@ export function applyStackingTransform(
     });
   }
 
+  // Shift numeric yAnchor values; "top" and "auto" anchors are unaffected
+  // because they derive position from paper-space or the already-shifted data.
+  const offsetRangeAnnotations: RangeAnnotation[] = [];
+  if (inputRangeAnnotations) {
+    inputRangeAnnotations.forEach((seriesRangeAnnotations, seriesIndex) => {
+      const yShift = seriesIndex * stackOffset;
+      seriesRangeAnnotations.forEach((ann) => {
+        offsetRangeAnnotations.push({
+          ...ann,
+          yAnchor:
+            typeof ann.yAnchor === "number"
+              ? ann.yAnchor + yShift
+              : ann.yAnchor,
+        });
+      });
+    });
+  }
+
   const allYValues = offsetSeries.flatMap((s) => s.y);
   const annotationYValues = offsetAnnotations.map((a) => a.y);
   const stackedYMin = Math.min(...allYValues, ...annotationYValues, 0);
@@ -52,6 +77,7 @@ export function applyStackingTransform(
   return {
     series: offsetSeries,
     annotations: offsetAnnotations,
+    rangeAnnotations: offsetRangeAnnotations,
     yRange: [stackedYMin, stackedYMax],
   };
 }

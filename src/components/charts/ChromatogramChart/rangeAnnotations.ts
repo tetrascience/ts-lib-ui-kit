@@ -175,6 +175,7 @@ export function buildRangeAnnotationElements(
       },
       xanchor: "center",
       yanchor: "middle",
+      cliponaxis: false,
     });
   });
 

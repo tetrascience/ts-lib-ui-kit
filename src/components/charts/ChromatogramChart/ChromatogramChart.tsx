@@ -77,6 +77,9 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   const enablePeakDetection = peakDetectionOptions !== undefined;
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  // Prevents the plotly_relayout fired by our own annotation update from
+  // being treated as a user-initiated zoom and triggering another update cycle.
+  const isAnnotationRelayout = useRef(false);
 
   // Memoize processed series with baseline correction
   const processedSeries = useMemo(() => {
@@ -291,7 +294,98 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
 
     Plotly.newPlot(currentRef, plotData, layout, config);
 
+    // Keep range annotation labels centred within the visible portion of their bars
+    // when the user zooms or pans. Without repositioning, labels whose original x
+    // (bar centre) is outside the current viewport float off-screen while the coloured
+    // bar remains visible.
+    //
+    // We defer the relayout to requestAnimationFrame so it fires *after* Plotly has
+    // finished its own RAF-based rendering pass. Calling Plotly.relayout synchronously
+    // inside plotly_relayout re-enters Plotly's pipeline and blanks the chart.
+    // isAnnotationRelayout guards against the annotation relayout itself firing another
+    // round-trip through this handler.
+    let pendingLabelUpdate: ReturnType<typeof requestAnimationFrame> | null = null;
+
+    if (rangeAnnotations.length > 0) {
+      (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
+        "plotly_relayout",
+        (eventData: Plotly.PlotRelayoutEvent) => {
+          const ed = eventData as Record<string, unknown>;
+
+          // Skip events caused by our own annotation update to prevent feedback loops.
+          if (isAnnotationRelayout.current) return;
+
+          // Ignore relayout events that aren't x-axis range changes
+          // (e.g. y-axis-only changes from the zoom-in/out buttons).
+          const isXAxisChange =
+            "xaxis.range[0]" in ed ||
+            ("xaxis.range" in ed && Array.isArray(ed["xaxis.range"])) ||
+            ed["xaxis.autorange"] === true;
+          if (!isXAxisChange) return;
+
+          // Capture values synchronously before the RAF fires.
+          const isAutorange = ed["xaxis.autorange"] === true;
+          const xMin = isAutorange
+            ? null
+            : "xaxis.range[0]" in ed
+              ? (ed["xaxis.range[0]"] as number)
+              : (ed["xaxis.range"] as [number, number])[0];
+          const xMax = isAutorange
+            ? null
+            : "xaxis.range[0]" in ed
+              ? (ed["xaxis.range[1]"] as number)
+              : (ed["xaxis.range"] as [number, number])[1];
+
+          if (pendingLabelUpdate !== null) cancelAnimationFrame(pendingLabelUpdate);
+
+          pendingLabelUpdate = requestAnimationFrame(() => {
+            pendingLabelUpdate = null;
+            const el = currentRef;
+            if (!el) return;
+
+            const nextAnnotations = (() => {
+              if (isAutorange || xMin === null || xMax === null) {
+                return [...plotlyAnnotations, ...rangeAnnotationLabels];
+              }
+
+              const updatedLabels = rangeAnnotationLabels.map((labelAnn, i) => {
+                const rangeAnn = rangeAnnotations[i];
+                if (!rangeAnn) return labelAnn;
+
+                const visibleStart = Math.max(rangeAnn.startX, xMin);
+                const visibleEnd = Math.min(rangeAnn.endX, xMax);
+
+                if (visibleStart >= visibleEnd) {
+                  // Bar is fully outside the viewport — hide the label but keep x
+                  // within the current range so Plotly cannot use it to expand the axis.
+                  return { ...labelAnn, visible: false, x: (xMin + xMax) / 2 };
+                }
+
+                return {
+                  ...labelAnn,
+                  x: (visibleStart + visibleEnd) / 2,
+                  visible: true,
+                };
+              });
+
+              return [...plotlyAnnotations, ...updatedLabels];
+            })();
+
+            isAnnotationRelayout.current = true;
+            (Plotly.relayout(el, {
+              annotations: nextAnnotations,
+            } as unknown as Partial<Plotly.Layout>) as unknown as Promise<unknown>)
+              .finally(() => {
+                isAnnotationRelayout.current = false;
+              });
+          });
+        }
+      );
+    }
+
     return () => {
+      if (pendingLabelUpdate !== null) cancelAnimationFrame(pendingLabelUpdate);
+      isAnnotationRelayout.current = false;
       if (currentRef) {
         Plotly.purge(currentRef);
       }

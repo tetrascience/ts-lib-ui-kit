@@ -61,6 +61,11 @@ export function assignRangeLanes(
 
 /**
  * Build Plotly shapes (colored bars) and annotations (labels) for all range annotations.
+ *
+ * Also returns `yDomainMax`: the fraction of the plot height that the y-axis should
+ * occupy. When "top" bars are present the y-axis is shrunk so that the reserved zone
+ * above it (paper-y from yDomainMax to 1.0) is always blank, preventing the bars from
+ * visually overlapping with the signal no matter how tall the data is.
  */
 export function buildRangeAnnotationElements(
   rangeAnnotations: RangeAnnotation[],
@@ -69,12 +74,28 @@ export function buildRangeAnnotationElements(
 ): {
   shapes: Partial<Plotly.Shape>[];
   annotations: Partial<Plotly.Annotations>[];
+  yDomainMax: number;
 } {
   const lanes = assignRangeLanes(rangeAnnotations, overlapThreshold);
   const shapes: Partial<Plotly.Shape>[] = [];
   const annotations: Partial<Plotly.Annotations>[] = [];
-
   const globalMaxY = computeGlobalMaxY(seriesData);
+
+  // Determine how many "top" lanes are used and shrink the y-axis domain accordingly.
+  // Each lane needs BAR_HEIGHT_PAPER + LANE_GAP_PAPER of vertical space.
+  let maxTopLane = -1;
+  rangeAnnotations.forEach((ann, i) => {
+    if ((ann.yAnchor ?? "top") === "top") {
+      maxTopLane = Math.max(maxTopLane, lanes[i]);
+    }
+  });
+  const topLaneCount = maxTopLane + 1;
+  const defaultStride = RANGE_ANNOTATION.BAR_HEIGHT_PAPER + RANGE_ANNOTATION.LANE_GAP_PAPER;
+  // Add one extra gap below the lowest bar so it doesn't sit flush against the data.
+  const yDomainMax =
+    topLaneCount > 0
+      ? Math.max(1.0 - topLaneCount * defaultStride - RANGE_ANNOTATION.LANE_GAP_PAPER, 0.5)
+      : 1.0;
 
   rangeAnnotations.forEach((ann, i) => {
     const lane = lanes[i];
@@ -92,21 +113,35 @@ export function buildRangeAnnotationElements(
     if (yAnchor === "top") {
       const barHeight = ann.barHeight ?? RANGE_ANNOTATION.BAR_HEIGHT_PAPER;
       const stride = barHeight + RANGE_ANNOTATION.LANE_GAP_PAPER;
-      // Lane 0 is flush with the top of the plot; higher lanes step downward.
+      // Lane 0 sits flush with paper-y 1.0; higher lanes step downward.
+      // Because the y-axis domain ends at yDomainMax, these bars render in the
+      // reserved blank zone above the axes — always clear of the signal.
       shapeY1 = 1.0 - lane * stride;
       shapeY0 = shapeY1 - barHeight;
       yref = "paper";
+    } else if (yAnchor === "auto") {
+      // Estimate where the local peak sits in paper-space, scaled to yDomainMax so the
+      // estimate is accurate after domain adjustment.
+      const localMaxY = computeLocalMaxY(ann.startX, ann.endX, seriesData);
+      const barHeight = ann.barHeight ?? RANGE_ANNOTATION.BAR_HEIGHT_PAPER;
+      const stride = barHeight + RANGE_ANNOTATION.LANE_GAP_PAPER;
+      const estimatedPeakPaperY =
+        globalMaxY > 0
+          ? (localMaxY / (globalMaxY * RANGE_ANNOTATION.AUTO_YRANGE_MARGIN)) * yDomainMax
+          : yDomainMax * 0.5;
+      const baseY = Math.min(
+        estimatedPeakPaperY + RANGE_ANNOTATION.AUTO_PAPER_CLEARANCE,
+        yDomainMax - barHeight
+      );
+      // Lane 0 = closest to the peak; higher lanes stack upward (away from data).
+      shapeY1 = Math.min(baseY + lane * stride + barHeight, yDomainMax);
+      shapeY0 = shapeY1 - barHeight;
+      yref = "paper";
     } else {
-      const baseY =
-        yAnchor === "auto"
-          ? computeLocalPeakY(ann.startX, ann.endX, seriesData)
-          : (yAnchor as number);
-      const barHeight =
-        ann.barHeight ?? globalMaxY * RANGE_ANNOTATION.AUTO_BAR_HEIGHT_FACTOR;
-      const laneOffset =
-        lane * barHeight * RANGE_ANNOTATION.LANE_DATA_STRIDE_FACTOR;
-      // Lane 0 sits closest to the data; higher lanes stack away from the signal.
-      shapeY0 = baseY + laneOffset;
+      // Explicit data-coordinate placement.
+      const barHeight = ann.barHeight ?? globalMaxY * RANGE_ANNOTATION.DATA_BAR_HEIGHT_FACTOR;
+      const laneOffset = lane * barHeight * RANGE_ANNOTATION.LANE_DATA_STRIDE_FACTOR;
+      shapeY0 = (yAnchor as number) + laneOffset;
       shapeY1 = shapeY0 + barHeight;
       yref = "y";
     }
@@ -143,10 +178,10 @@ export function buildRangeAnnotationElements(
     });
   });
 
-  return { shapes, annotations };
+  return { shapes, annotations, yDomainMax };
 }
 
-function computeLocalPeakY(
+function computeLocalMaxY(
   startX: number,
   endX: number,
   seriesData: { x: number[]; y: number[] }[]
@@ -159,7 +194,7 @@ function computeLocalPeakY(
       }
     }
   }
-  return maxY * RANGE_ANNOTATION.AUTO_Y_CLEARANCE_FACTOR;
+  return maxY;
 }
 
 function computeGlobalMaxY(seriesData: { x: number[]; y: number[] }[]): number {

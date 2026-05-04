@@ -114,17 +114,19 @@ export interface RangeAnnotation {
   opacity?: number;
   /**
    * Vertical placement of the bar:
-   * - "top" (default) — fixed near the top of the plot area in paper-space; always
-   *   visible regardless of data scale
-   * - "auto" — floats just above the tallest data point in [startX, endX]; placed
-   *   in y data-coordinates so it tracks with zoom
-   * - number — exact y data-coordinate for the bottom edge of the bar
+   * - "top" (default) — fixed at the top of the plot area in paper-space; all bars
+   *   line up at the same height regardless of the underlying signal
+   * - "auto" — paper-space position estimated proportionally from the local peak height
+   *   relative to the global maximum; bars float visibly above each individual peak
+   *   without overlapping the signal
+   * - number — exact y data-coordinate for the bottom edge of the bar; use when you
+   *   need pixel-precise placement and control the yRange yourself
    */
   yAnchor?: "auto" | "top" | number;
   /**
    * Height of the colored bar.
-   * - When yAnchor is "top": fraction of plot height in paper-space (default: 0.04)
-   * - When yAnchor is "auto" or a number: y data units (default: 4% of data max)
+   * - When yAnchor is "top" or "auto": fraction of plot height in paper-space (default: 0.04)
+   * - When yAnchor is a number: y data units (default: 4% of global data max)
    */
   barHeight?: number;
   /** Font size of the label (default: 11) */

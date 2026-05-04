@@ -40,15 +40,21 @@ export const RANGE_ANNOTATION = {
   DEFAULT_OPACITY: 0.5,
   /** Default label font size */
   DEFAULT_FONT_SIZE: 11,
-  /** Bar height in paper coordinates (fraction of plot height) for "top" anchor */
+  /** Bar height in paper coordinates (fraction of plot height) for "top" and "auto" anchors */
   BAR_HEIGHT_PAPER: 0.04,
   /** Gap between stacked lanes in paper coordinates */
   LANE_GAP_PAPER: 0.01,
-  /** Multiplier on barHeight to compute the per-lane vertical stride in data coords */
+  /** Multiplier on barHeight to compute the per-lane vertical stride in data coordinates */
   LANE_DATA_STRIDE_FACTOR: 1.5,
-  /** Fraction above local peak maximum for "auto" baseline placement */
-  AUTO_Y_CLEARANCE_FACTOR: 1.05,
-  /** Default bar height as a fraction of the global data maximum for "auto" mode */
-  AUTO_BAR_HEIGHT_FACTOR: 0.04,
+  /**
+   * Plotly's typical autorange extension factor (Plotly renders data up to ~1/margin_factor
+   * of the plot height). Used to convert a data-y value to an approximate paper-y position
+   * when yAnchor is "auto".
+   */
+  AUTO_YRANGE_MARGIN: 1.1,
+  /** Paper-space clearance added above the estimated peak paper-y for "auto" bars */
+  AUTO_PAPER_CLEARANCE: 0.06,
+  /** Default bar height as a fraction of the global data max for number yAnchor */
+  DATA_BAR_HEIGHT_FACTOR: 0.04,
 } as const;
 

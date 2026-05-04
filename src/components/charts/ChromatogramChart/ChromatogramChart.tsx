@@ -178,15 +178,16 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       plotlyAnnotations.push(...createGroupAnnotations(group));
     }
 
-    // Build range annotation shapes and labels
-    const { shapes: rangeShapes, annotations: rangeAnnotationLabels } =
+    // Build range annotation shapes and labels.
+    // yDomainMax shrinks the y-axis domain so "top" bars live in the blank zone above it.
+    const { shapes: rangeShapes, annotations: rangeAnnotationLabels, yDomainMax } =
       rangeAnnotations.length > 0
         ? buildRangeAnnotationElements(
             rangeAnnotations,
             rangeAnnotationOverlapThreshold,
             processedSeries
           )
-        : { shapes: [], annotations: [] };
+        : { shapes: [], annotations: [], yDomainMax: 1.0 };
 
     const layout: Partial<Plotly.Layout> = {
       title: title
@@ -246,6 +247,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
         linewidth: 1,
         range: yRange,
         autorange: !yRange,
+        domain: [0, yDomainMax] as [number, number],
         zeroline: false,
         tickfont: { size: 12, color: theme.textColor, family: "Inter, sans-serif" },
         showspikes: showCrosshairs,

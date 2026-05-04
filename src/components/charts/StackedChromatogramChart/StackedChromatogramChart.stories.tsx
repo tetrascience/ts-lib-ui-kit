@@ -310,6 +310,78 @@ export const OverlayWithPeakDetection: Story = {
   },
 };
 
+// Per-series fraction windows for the charge-variant stack stories.
+// Each series has three adjacent fractions; yAnchor is set just above the
+// local peak maximum so bars stay pinned to their trace when the offset changes.
+const fractionAnnotationsPerSeries = [
+  // Day 1 — unshifted; peaks at ~135 (Acidic), ~450 (Main), ~200 (Basic)
+  [
+    { label: "Acidic", startX: 4.8, endX: 5.45, color: "#8E8E93", yAnchor: 145, barHeight: 30 },
+    { label: "Main",   startX: 5.45, endX: 6.25, color: "#007AFF", yAnchor: 460, barHeight: 30 },
+    { label: "Basic",  startX: 6.25, endX: 7.0,  color: "#34C759", yAnchor: 210, barHeight: 30 },
+  ],
+  // Day 2 — same yAnchor values; in stack mode these are shifted up by stackOffset
+  [
+    { label: "Acidic", startX: 4.8, endX: 5.45, color: "#8E8E93", yAnchor: 145, barHeight: 30 },
+    { label: "Main",   startX: 5.45, endX: 6.25, color: "#007AFF", yAnchor: 460, barHeight: 30 },
+    { label: "Basic",  startX: 6.25, endX: 7.0,  color: "#34C759", yAnchor: 210, barHeight: 30 },
+  ],
+  // Day 3
+  [
+    { label: "Acidic", startX: 4.8, endX: 5.45, color: "#8E8E93", yAnchor: 145, barHeight: 30 },
+    { label: "Main",   startX: 5.45, endX: 6.25, color: "#007AFF", yAnchor: 460, barHeight: 30 },
+    { label: "Basic",  startX: 6.25, endX: 7.0,  color: "#34C759", yAnchor: 210, barHeight: 30 },
+  ],
+];
+
+/**
+ * Three stacked runs each labelled with Acidic / Main / Basic fraction windows.
+ * The bars are positioned with numeric yAnchor so they are pinned just above their
+ * respective trace — they shift upward by stackOffset × seriesIndex automatically.
+ */
+export const StackWithRangeAnnotations: Story = {
+  args: {
+    series: stackSeriesData,
+    title: "Charge Variant Fractions — Stacked",
+    stackingMode: "stack",
+    stackOffset: 500,
+    rangeAnnotations: fractionAnnotationsPerSeries,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(
+        canvas.getByText("Charge Variant Fractions — Stacked")
+      ).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Three data traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(3);
+    });
+
+    await step("Range annotation labels are rendered (3 fractions × 3 series)", async () => {
+      const labels = canvasElement.querySelectorAll(".annotation-text");
+      // 3 fractions × 3 series = 9 range annotation labels
+      expect(labels.length).toBeGreaterThanOrEqual(9);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Each series carries its own set of fraction windows (Acidic / Main / Basic) defined with numeric `yAnchor` values relative to the unshifted data. In stack mode the component adds `seriesIndex × stackOffset` to each numeric `yAnchor`, so the bars stay anchored just above their own trace regardless of the offset.",
+      },
+    },
+    zephyr: { testCaseId: "SW-T1125" },
+  },
+};
+
 /**
  * Drag the "Stack Offset" slider in the Controls panel to adjust the vertical
  * separation between traces in real time. stackingMode is locked to 'stack'.
@@ -336,5 +408,56 @@ export const InteractiveOffset: Story = {
       },
     },
     zephyr: { testCaseId: "SW-T1124" },
+  },
+};
+
+// Fraction windows for the interactive story.
+// yAnchor = peak_height - barHeight so each bar's top sits at the peak apex —
+// bars are always inside the stacked y-axis range and move with their trace.
+const fractionAnnotationsInteractive = [
+  [
+    { label: "Acidic", startX: 4.8,  endX: 5.45, color: "#8E8E93", yAnchor: 90,  barHeight: 25 },
+    { label: "Main",   startX: 5.45, endX: 6.25, color: "#007AFF", yAnchor: 390, barHeight: 25 },
+    { label: "Basic",  startX: 6.25, endX: 7.0,  color: "#34C759", yAnchor: 150, barHeight: 25 },
+  ],
+  [
+    { label: "Acidic", startX: 4.8,  endX: 5.2,  color: "#FF9500", yAnchor: 65,  barHeight: 25 },
+    { label: "Main",      startX: 5.5,  endX: 6.3,  color: "#007AFF", yAnchor: 362, barHeight: 25 },
+    { label: "Basic",     startX: 6.3,  endX: 7.0,  color: "#34C759", yAnchor: 130, barHeight: 25 },
+  ],
+  [
+    { label: "Acidic", startX: 4.7,  endX: 5.4,  color: "#8E8E93", yAnchor: 108, barHeight: 25 },
+    { label: "Main",   startX: 5.4,  endX: 6.15, color: "#007AFF", yAnchor: 420, barHeight: 25 },
+    { label: "Basic",  startX: 6.15, endX: 6.8,  color: "#34C759", yAnchor: 170, barHeight: 25 },
+  ],
+];
+
+/**
+ * Combine the offset slider with per-series fraction windows positioned just above
+ * each trace. Dragging the slider moves both traces and their bars together.
+ */
+export const InteractiveOffsetWithRangeAnnotations: Story = {
+  argTypes: {
+    stackOffset: {
+      control: { type: "range", min: 0, max: 700, step: 10 },
+      description: "Vertical separation between stacked traces (data units)",
+    },
+  },
+  args: {
+    series: stackSeriesData,
+    title: "Stacked Fractions — Interactive Offset",
+    stackingMode: "stack",
+    stackOffset: 500,
+    rangeAnnotations: fractionAnnotationsInteractive,
+    showCrosshairs: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Drag the **Stack Offset** slider to spread or collapse the traces. Each run's fraction bars use a numeric `yAnchor` set just above the local peak, so bars move with their trace. Day 2 splits the acidic region into Acidic-01 / Acidic-02; Day 3 uses slightly shifted boundaries.",
+      },
+    },
+    zephyr: { testCaseId: "SW-T1126" },
   },
 };

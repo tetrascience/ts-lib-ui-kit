@@ -4,6 +4,7 @@ import {
   ChromatogramChart,
   type ChromatogramSeries,
   type PeakAnnotation,
+  type RangeAnnotation,
 } from "./ChromatogramChart";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -474,6 +475,38 @@ export const UserDefinedPeakBoundaries: Story = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Range annotation data
+// ---------------------------------------------------------------------------
+
+// IgG charge-variant chromatogram — three fractions across a single peak cluster.
+const chargeVariantData = generateChromatogramData([
+  { rt: 5.2, height: 120, width: 0.25 },
+  { rt: 5.8, height: 420, width: 0.3 },
+  { rt: 6.4, height: 180, width: 0.25 },
+  { rt: 7.1, height: 80,  width: 0.2  },
+]);
+
+// Three adjacent fractions matching the screenshot layout
+const adjacentRangeAnnotations: RangeAnnotation[] = [
+  { label: "Acidic-01", startX: 4.5, endX: 5.5,  color: "#8E8E93" },
+  { label: "Acidic-02", startX: 5.5, endX: 6.7,  color: "#FF3B30" },
+  { label: "Main",      startX: 6.7, endX: 7.8,  color: "#34C759" },
+];
+
+// Two annotations covering exactly the same range — forces auto lane stacking
+const sameRangeAnnotations: RangeAnnotation[] = [
+  { label: "IgG Fraction",   startX: 5.0, endX: 7.2, color: "#007AFF" },
+  { label: "Caffeine Window", startX: 5.0, endX: 7.2, color: "#FF9500" },
+];
+
+// Nested ranges: one broad outer bracket + two narrower inner sub-regions
+const nestedRangeAnnotations: RangeAnnotation[] = [
+  { label: "Acidic Region",  startX: 4.5, endX: 7.5, color: "#8E8E93" },
+  { label: "Acidic-01",      startX: 4.5, endX: 5.5, color: "#FF6B6B" },
+  { label: "Acidic-02",      startX: 5.6, endX: 6.8, color: "#FF3B30" },
+];
+
 /**
  * Combining automatic peak detection with user-defined annotations. Auto-detected peaks
  * show computed areas while user annotations provide custom labels. Both can have
@@ -541,5 +574,187 @@ export const CombinedAutoAndUserPeaks: Story = {
       },
     },
     zephyr: { testCaseId: "SW-T1115" },
+  },
+};
+
+/**
+ * Three adjacent, non-overlapping fraction windows rendered at the top of the plot
+ * area — replicating the charge-variant labeling style shown in the design screenshot.
+ * All bars share lane 0 and sit flush with the top of the plot in paper-space.
+ */
+export const RangeAnnotationsBasic: Story = {
+  args: {
+    series: [{ ...chargeVariantData, name: "IgG Sample" }],
+    title: "Charge Variant Fractions",
+    rangeAnnotations: adjacentRangeAnnotations,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Charge Variant Fractions")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Range annotation labels are rendered", async () => {
+      const labels = canvasElement.querySelectorAll(".annotation-text");
+      expect(labels.length).toBeGreaterThanOrEqual(3);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Adjacent fraction windows with no overlap. All three fit in lane 0 and are rendered as paper-space bars flush with the top of the plot. Colors are supplied per-annotation.",
+      },
+    },
+    zephyr: { testCaseId: "SW-T1116" },
+  },
+};
+
+/**
+ * Two annotations sharing exactly the same x-range. The auto lane-assignment algorithm
+ * detects the overlap and places them in separate lanes (lane 0 on top, lane 1 below).
+ */
+export const RangeAnnotationsSameRange: Story = {
+  args: {
+    series: [{ ...chargeVariantData, name: "IgG Sample" }],
+    title: "Same-Range Annotations (Auto-Stacked)",
+    rangeAnnotations: sameRangeAnnotations,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(
+        canvas.getByText("Same-Range Annotations (Auto-Stacked)")
+      ).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Both overlapping labels are rendered in separate lanes", async () => {
+      const labels = canvasElement.querySelectorAll(".annotation-text");
+      expect(labels.length).toBeGreaterThanOrEqual(2);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "When two range annotations share the same startX/endX the lane auto-assignment stacks them vertically. No `lane` prop is required — overlap is detected automatically.",
+      },
+    },
+    zephyr: { testCaseId: "SW-T1117" },
+  },
+};
+
+/**
+ * A broad outer bracket contains two narrower inner sub-regions. The auto lane-assignment
+ * puts the outer region in lane 0 (top) and the two inner bars in lane 1 (below),
+ * creating a two-level hierarchy without any explicit `lane` props.
+ */
+export const RangeAnnotationsNested: Story = {
+  args: {
+    series: [{ ...chargeVariantData, name: "IgG Sample" }],
+    title: "Nested Range Annotations (Auto-Stacked)",
+    rangeAnnotations: nestedRangeAnnotations,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(
+        canvas.getByText("Nested Range Annotations (Auto-Stacked)")
+      ).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("All three annotation labels are rendered", async () => {
+      const labels = canvasElement.querySelectorAll(".annotation-text");
+      expect(labels.length).toBeGreaterThanOrEqual(3);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A broad outer annotation overlaps two narrower inner annotations. The greedy lane algorithm places the outer bar in lane 0 and both inner bars in lane 1, producing a two-row hierarchy automatically.",
+      },
+    },
+    zephyr: { testCaseId: "SW-T1118" },
+  },
+};
+
+/**
+ * Explicit `lane` props override auto-assignment. Here the outer bracket is forced to
+ * lane 1 (visually below the inner bars at lane 0) to demonstrate manual control.
+ * Also shows `yAnchor: "auto"` which floats the bars just above the local signal peak.
+ */
+export const RangeAnnotationsExplicitLanes: Story = {
+  args: {
+    series: [{ ...chargeVariantData, name: "IgG Sample" }],
+    title: "Explicit Lane Override + Auto Y-Anchor",
+    rangeAnnotations: [
+      {
+        label: "Acidic-01",
+        startX: 4.5,
+        endX: 5.5,
+        color: "#FF6B6B",
+        yAnchor: "auto",
+        lane: 0,
+      },
+      {
+        label: "Acidic-02",
+        startX: 5.6,
+        endX: 6.8,
+        color: "#FF3B30",
+        yAnchor: "auto",
+        lane: 0,
+      },
+      {
+        label: "Acidic Region",
+        startX: 4.5,
+        endX: 7.5,
+        color: "#8E8E93",
+        yAnchor: "auto",
+        lane: 1,
+      },
+    ],
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(
+        canvas.getByText("Explicit Lane Override + Auto Y-Anchor")
+      ).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("All annotation labels are rendered", async () => {
+      const labels = canvasElement.querySelectorAll(".annotation-text");
+      expect(labels.length).toBeGreaterThanOrEqual(3);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Explicit `lane` values override auto-assignment. The two narrow sub-regions are pinned to lane 0 and the broad outer bracket to lane 1, so it renders below them. `yAnchor: \"auto\"` places all bars in data-space just above the local signal maximum rather than in fixed paper-space.",
+      },
+    },
+    zephyr: { testCaseId: "SW-T1119" },
   },
 };

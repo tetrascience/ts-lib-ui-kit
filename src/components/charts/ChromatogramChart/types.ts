@@ -98,6 +98,48 @@ export interface PeakDetectionOptions {
 }
 
 /**
+ * A horizontal colored bar spanning [startX, endX] with a centered label.
+ * Used to annotate chromatographic fractions, compound windows, or regions of interest.
+ */
+export interface RangeAnnotation {
+  /** Label text displayed centered within the bar */
+  label: string;
+  /** Left edge of the range (x-axis units, same as series data) */
+  startX: number;
+  /** Right edge of the range (x-axis units, same as series data) */
+  endX: number;
+  /** CSS color for the bar fill (defaults to next CHART_COLOR in sequence) */
+  color?: string;
+  /** Fill opacity for the bar (0–1, default: 0.5) */
+  opacity?: number;
+  /**
+   * Vertical placement of the bar:
+   * - "top" (default) — fixed near the top of the plot area in paper-space; always
+   *   visible regardless of data scale
+   * - "auto" — floats just above the tallest data point in [startX, endX]; placed
+   *   in y data-coordinates so it tracks with zoom
+   * - number — exact y data-coordinate for the bottom edge of the bar
+   */
+  yAnchor?: "auto" | "top" | number;
+  /**
+   * Height of the colored bar.
+   * - When yAnchor is "top": fraction of plot height in paper-space (default: 0.04)
+   * - When yAnchor is "auto" or a number: y data units (default: 4% of data max)
+   */
+  barHeight?: number;
+  /** Font size of the label (default: 11) */
+  fontSize?: number;
+  /** Label text color (defaults to the bar color) */
+  labelColor?: string;
+  /**
+   * Vertical stacking lane (0 = closest to data, higher = further away for "auto"/number;
+   * 0 = topmost, higher = lower for "top").
+   * When omitted, lane is auto-assigned to avoid overlapping bars.
+   */
+  lane?: number;
+}
+
+/**
  * Props for ChromatogramChart component
  */
 export interface ChromatogramChartProps {
@@ -154,6 +196,17 @@ export interface ChromatogramChartProps {
   annotationOverlapThreshold?: number;
   /** Show export button in modebar (default: true) */
   showExportButton?: boolean;
+  /**
+   * Horizontal range annotations displayed as colored bars with centered labels.
+   * Rendered as Plotly shapes; independent of the peak annotation system.
+   */
+  rangeAnnotations?: RangeAnnotation[];
+  /**
+   * x-axis overlap threshold for auto lane assignment (same units as series x data).
+   * Two range annotations whose ranges overlap by more than this amount are placed in
+   * separate lanes. Default: 0 (only exact overlaps trigger stacking).
+   */
+  rangeAnnotationOverlapThreshold?: number;
 }
 
 /**

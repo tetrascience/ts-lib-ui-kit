@@ -665,7 +665,7 @@ export const BreadcrumbVariants: Story = {
       appName="APP"
       navGroups={[{ pages: [{ id: "home", label: "Home", icon: ClipboardList }] }]}
       breadcrumbs={[
-        { label: "Linked",    href: "/projects" },          // renders as <a>
+        { label: "Linked",    href: "#" },                   // renders as <a>
         { label: "Clickable", onClick: () => console.log("clicked") }, // renders as <button>
         { label: "Static" },                                // no action → <span>
         { label: "Current Page" },                          // last item → BreadcrumbPage
@@ -680,7 +680,7 @@ export const BreadcrumbVariants: Story = {
     await step("Breadcrumb with href renders as a link", async () => {
       const link = canvas.getByRole("link", { name: "Linked" });
       expect(link).toBeInTheDocument();
-      expect(link).toHaveAttribute("href", "/projects");
+      expect(link).toHaveAttribute("href", "#");
     });
 
     await step("Breadcrumb with onClick renders as a button", async () => {

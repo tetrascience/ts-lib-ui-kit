@@ -2,6 +2,7 @@
 import "@/index.css";
 
 // Composed
+export * from "@/components/composed/WorkflowPanel";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";
@@ -78,3 +79,4 @@ export * from "@/components/ui/tetrascience-icon";
 
 // Utils
 export * from "@/utils/colors";
+export * from "@/utils/numbers";

@@ -6,8 +6,51 @@ import { seriesColor } from "../../../utils/colors";
 
 import { CHROMATOGRAM_ANNOTATION } from "./constants";
 
-import type { PeakAnnotation, PeakWithMeta } from "./types";
+import type { PeakAnnotation, PeakSelectionAppearance, PeakWithMeta } from "./types";
 import type Plotly from "plotly.js-dist";
+
+// ── Selection appearance helpers ─────────────────────────────────────────────
+
+export interface ResolvedSelectionAppearance {
+  selected: {
+    borderColor: string;
+    backgroundColor: string;
+    bold: boolean;
+  };
+  unselected: {
+    opacity: number;
+  };
+  hoverLineWidthMultiplier: number;
+}
+
+const DEFAULT_RESOLVED_APPEARANCE: ResolvedSelectionAppearance = {
+  selected: {
+    borderColor: "#3b82f6",
+    backgroundColor: "#dbeafe",
+    bold: true,
+  },
+  unselected: { opacity: 0.4 },
+  hoverLineWidthMultiplier: 5 / 3,
+};
+
+export function resolveSelectionAppearance(
+  appearance?: PeakSelectionAppearance
+): ResolvedSelectionAppearance {
+  if (!appearance) return DEFAULT_RESOLVED_APPEARANCE;
+  const d = DEFAULT_RESOLVED_APPEARANCE;
+  return {
+    selected: {
+      borderColor: appearance.selected?.borderColor ?? d.selected.borderColor,
+      backgroundColor: appearance.selected?.backgroundColor ?? d.selected.backgroundColor,
+      bold: appearance.selected?.bold ?? d.selected.bold,
+    },
+    unselected: {
+      opacity: appearance.unselected?.opacity ?? d.unselected.opacity,
+    },
+    hoverLineWidthMultiplier:
+      appearance.hoverLineWidthMultiplier ?? d.hoverLineWidthMultiplier,
+  };
+}
 
 /**
  * Annotation slot positions for peak labels
@@ -60,6 +103,40 @@ export function groupOverlappingPeaks(
   return groups;
 }
 
+interface PeakAnnotationOptions {
+  selectedPeakIds?: string[];
+  anySelected?: boolean;
+  appearance?: ResolvedSelectionAppearance;
+}
+
+interface AnnotationBorderStyle {
+  bgcolor: string;
+  bordercolor: string | undefined;
+  borderwidth: number;
+  opacity?: number;
+}
+
+/** Derives border/background/opacity from selection state — extracted to keep
+ *  createPeakAnnotation within the allowed cognitive complexity budget. */
+function resolveAnnotationBorderStyle(
+  isSelected: boolean,
+  isDimmed: boolean,
+  isUserDefined: boolean,
+  seriesColor: string,
+  appearance: ResolvedSelectionAppearance
+): AnnotationBorderStyle {
+  const bgcolor = isSelected ? appearance.selected.backgroundColor : COLORS.WHITE;
+  let bordercolor: string | undefined;
+  if (isSelected) {
+    bordercolor = appearance.selected.borderColor;
+  } else {
+    bordercolor = isUserDefined ? undefined : seriesColor;
+  }
+  const borderwidth = isSelected ? 2 : isUserDefined ? 0 : 1;
+  const opacity = isDimmed ? appearance.unselected.opacity : undefined;
+  return { bgcolor, bordercolor, borderwidth, ...(opacity === undefined ? {} : { opacity }) };
+}
+
 /**
  * Create a Plotly annotation for a peak.
  * seriesIndex of -1 indicates a user-defined annotation (uses grey/black styling).
@@ -67,8 +144,15 @@ export function groupOverlappingPeaks(
 export function createPeakAnnotation(
   peak: PeakAnnotation,
   seriesIndex: number,
-  slot: { ax: number; ay: number }
+  slot: { ax: number; ay: number },
+  options: PeakAnnotationOptions = {}
 ): Partial<Plotly.Annotations> {
+  const {
+    selectedPeakIds = [],
+    anySelected = false,
+    appearance = DEFAULT_RESOLVED_APPEARANCE,
+  } = options;
+
   const isUserDefined = seriesIndex === -1;
   const color = isUserDefined
     ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_COLOR
@@ -77,12 +161,20 @@ export function createPeakAnnotation(
     ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_TEXT_COLOR
     : color;
 
-  // Use provided text or auto-generate from computed area
-  const text = peak.text ?? (peak._computed?.area === undefined ? "" : `Area: ${peak._computed.area.toFixed(2)}`);
+  const rawText = peak.text ?? (peak._computed?.area === undefined ? "" : `Area: ${peak._computed.area.toFixed(2)}`);
+
+  const isSelected = peak.id !== undefined && selectedPeakIds.includes(peak.id);
+  const isDimmed = !isSelected && anySelected;
+
+  const text = isSelected && appearance.selected.bold ? `<b>${rawText}</b>` : rawText;
 
   // For user-defined annotations, respect their ax/ay if provided
   const ax = isUserDefined && peak.ax !== undefined ? peak.ax : slot.ax;
   const ay = isUserDefined && peak.ay !== undefined ? peak.ay : slot.ay;
+
+  const borderStyle = resolveAnnotationBorderStyle(
+    isSelected, isDimmed, isUserDefined, color, appearance
+  );
 
   return {
     x: peak.x,
@@ -104,8 +196,7 @@ export function createPeakAnnotation(
     },
     bgcolor: CHROMATOGRAM_ANNOTATION.BACKGROUND_COLOR,
     borderpad: 2,
-    bordercolor: isUserDefined ? undefined : color,
-    borderwidth: isUserDefined ? 0 : 1,
+    ...borderStyle,
   };
 }
 
@@ -113,11 +204,12 @@ export function createPeakAnnotation(
  * Create annotations for a group of peaks, handling overlap positioning
  */
 export function createGroupAnnotations(
-  group: PeakWithMeta[]
+  group: PeakWithMeta[],
+  options: PeakAnnotationOptions = {}
 ): Partial<Plotly.Annotations>[] {
   if (group.length === 1) {
     const { peak, seriesIndex } = group[0];
-    return [createPeakAnnotation(peak, seriesIndex, ANNOTATION_SLOTS.default)];
+    return [createPeakAnnotation(peak, seriesIndex, ANNOTATION_SLOTS.default, options)];
   }
 
   // Sort by intensity (y, lowest first) so lower peaks get closer annotations
@@ -126,7 +218,7 @@ export function createGroupAnnotations(
   return sortedGroup.map(({ peak, seriesIndex }, slotIndex) => {
     const slot =
       ANNOTATION_SLOTS.overlap[slotIndex % ANNOTATION_SLOTS.overlap.length];
-    return createPeakAnnotation(peak, seriesIndex, slot);
+    return createPeakAnnotation(peak, seriesIndex, slot, options);
   });
 }
 

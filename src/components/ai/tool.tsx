@@ -9,12 +9,12 @@ import {
 } from "lucide-react";
 import { isValidElement, useCallback, useEffect, useRef, useState } from "react";
 
-import { CodeBlock } from "./code-block";
 
 import type { DynamicToolUIPart, ToolUIPart } from "ai";
 import type { ComponentProps, ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { CodeBlock } from "@/components/ui/code-block";
 import {
   Collapsible,
   CollapsibleContent,

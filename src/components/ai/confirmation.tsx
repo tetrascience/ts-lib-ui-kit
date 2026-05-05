@@ -1,12 +1,12 @@
 import { AnimatePresence, motion } from "motion/react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import { CodeBlock } from "./code-block";
 
 import type { ToolUIPart } from "ai";
 import type { ComponentProps, PropsWithChildren, ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import { CodeBlock } from "@/components/ui/code-block";
 import { cn } from "@/lib/utils";
 
 

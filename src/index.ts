@@ -3,6 +3,7 @@ import "@/index.css";
 
 // Composed
 export * from "@/components/composed/DataAppShell";
+export * from "@/components/composed/Chat";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";
@@ -80,7 +81,7 @@ export * from "@/components/ui/tetrascience-icon";
 // AI
 export * from "@/components/ai/attachments";
 export * from "@/components/ai/chain-of-thought";
-export * from "@/components/ai/code-block";
+export * from "@/components/ui/code-block";
 export * from "@/components/ai/confirmation";
 export * from "@/components/ai/context";
 export * from "@/components/ai/conversation";

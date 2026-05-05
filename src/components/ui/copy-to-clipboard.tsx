@@ -21,9 +21,13 @@ function CopyToClipboard({
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), COPY_CONFIRMATION_MS);
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), COPY_CONFIRMATION_MS);
+    } catch {
+      // clipboard unavailable (non-secure context or permission denied)
+    }
   };
 
   return (

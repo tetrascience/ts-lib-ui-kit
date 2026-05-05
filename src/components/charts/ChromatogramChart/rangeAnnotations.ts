@@ -175,6 +175,7 @@ export function buildRangeAnnotationElements(
       },
       xanchor: "center",
       yanchor: "middle",
+      // @ts-ignore cliponaxis is a valid Plotly annotation property missing from the type definitions
       cliponaxis: false,
     });
   });

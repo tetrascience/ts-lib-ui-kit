@@ -33,6 +33,14 @@ export const CHROMATOGRAM_ANNOTATION = {
 } as const;
 
 /**
+ * Trace rendering constants
+ */
+export const CHROMATOGRAM_TRACE = {
+  /** Base line width in pixels for all series traces */
+  BASE_LINE_WIDTH: 1.5,
+} as const;
+
+/**
  * Constants for range (fraction/region) annotations
  */
 export const RANGE_ANNOTATION = {

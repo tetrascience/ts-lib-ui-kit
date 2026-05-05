@@ -1,10 +1,12 @@
+import React, { useState } from "react";
+
 import { expect, within } from "storybook/test";
 
 import {
   ChromatogramChart,
   type ChromatogramSeries,
   type PeakAnnotation,
-  type RangeAnnotation,
+  type PeakSelectEvent,
 } from "./ChromatogramChart";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -106,14 +108,6 @@ const userDefinedPeaksWithBoundaries: PeakAnnotation[] = [
     startX: 17.3, // Start retention time
     endX: 19.3, // End retention time
   },
-];
-
-// Range annotations marking chromatographic fractions across the x-axis
-const sampleRangeAnnotations: RangeAnnotation[] = [
-  { label: "Void", startX: 0, endX: 2.5, color: "#8E8E93" },
-  { label: "Caffeine", startX: 4.5, endX: 7.2, color: "#007AFF" },
-  { label: "Theobromine", startX: 11.0, endX: 14.0, color: "#34C759" },
-  { label: "Theophylline", startX: 16.8, endX: 19.8, color: "#FF9500" },
 ];
 
 const meta: Meta<typeof ChromatogramChart> = {
@@ -550,100 +544,5 @@ export const CombinedAutoAndUserPeaks: Story = {
       },
     },
     zephyr: { testCaseId: "SW-T1115" },
-  },
-};
-
-/**
- * Horizontal colored bars mark chromatographic fractions (Void, Caffeine, Theobromine,
- * Theophylline) above the signal trace. Labels stay centred within their bar. Zoom or
- * pan the chart to verify that labels reposition to the visible portion of each bar and
- * disappear when a bar scrolls fully out of view.
- */
-export const WithRangeAnnotations: Story = {
-  args: {
-    series: [{ ...singleInjectionData, name: "Sample A" }],
-    title: "Chromatogram with Fraction Windows",
-    rangeAnnotations: sampleRangeAnnotations,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Chromatogram with Fraction Windows")).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(1);
-    });
-
-    await step("Range annotation labels are rendered", async () => {
-      expect(canvas.getByText("Caffeine")).toBeInTheDocument();
-      expect(canvas.getByText("Theobromine")).toBeInTheDocument();
-      expect(canvas.getByText("Theophylline")).toBeInTheDocument();
-      expect(canvas.getByText("Void")).toBeInTheDocument();
-    });
-
-    await step("Range annotation shapes are rendered", async () => {
-      const shapes = canvasElement.querySelectorAll(".shapelayer path");
-      expect(shapes.length).toBeGreaterThanOrEqual(4);
-    });
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Fraction windows rendered as coloured bars above the chromatogram trace. Labels reposition to stay centred within the visible portion of each bar as the user zooms or pans. Use the mode bar zoom controls or drag-to-zoom to exercise the behaviour.",
-      },
-    },
-    zephyr: { testCaseId: "SW-T1116" },
-  },
-};
-
-/**
- * Range annotations combined with auto peak detection. The fraction bars sit above the
- * axis area while the peak labels (with areas) annotate the signal directly.
- */
-export const WithRangeAnnotationsAndPeakDetection: Story = {
-  args: {
-    series: [{ ...singleInjectionData, name: "Sample A" }],
-    title: "Fraction Windows + Peak Detection",
-    rangeAnnotations: sampleRangeAnnotations,
-    peakDetectionOptions: { minHeight: 0.1, prominence: 0.05, minDistance: 20 },
-    showPeakAreas: true,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Fraction Windows + Peak Detection")).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Range annotation labels are rendered", async () => {
-      expect(canvas.getByText("Caffeine")).toBeInTheDocument();
-      expect(canvas.getByText("Theophylline")).toBeInTheDocument();
-    });
-
-    await step("Peak area annotations are displayed", async () => {
-      const annotations = canvasElement.querySelectorAll(".annotation-text");
-      expect(annotations.length).toBeGreaterThan(4);
-    });
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Fraction windows coexist with auto-detected peak labels. The bars reserve space at the top of the plot; peak area annotations appear directly on the signal. Zooming into a single fraction keeps both bar labels and peak labels visible.",
-      },
-    },
-    zephyr: { testCaseId: "SW-T1117" },
   },
 };

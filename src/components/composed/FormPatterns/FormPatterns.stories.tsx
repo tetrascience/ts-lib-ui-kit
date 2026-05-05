@@ -220,52 +220,92 @@ export const SectionedForm: Story = {
 }
 
 export const WithValidation: Story = {
-  render: () => (
-    <form className="flex flex-col gap-8">
-      <FormSection title="Personal info">
-        <Field>
-          <FieldLabel htmlFor="wv-first">
-            <FieldTitle>First name</FieldTitle>
-          </FieldLabel>
-          <FieldContent>
-            <Input
-              id="wv-first"
-              placeholder="First name"
-              aria-invalid="true"
-              className="border-destructive focus-visible:ring-destructive"
-            />
-            <FieldError>First name is required.</FieldError>
-          </FieldContent>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="wv-email">
-            <FieldTitle>Email address</FieldTitle>
-          </FieldLabel>
-          <FieldContent>
-            <Input
-              id="wv-email"
-              type="email"
-              placeholder="Email address"
-              defaultValue="not-an-email"
-              aria-invalid="true"
-              className="border-destructive focus-visible:ring-destructive"
-            />
-            <FieldError>Enter a valid email address.</FieldError>
-          </FieldContent>
-        </Field>
-      </FormSection>
-      <Button type="submit" className="self-end">
-        Save changes
-      </Button>
-    </form>
-  ),
+  render: () => {
+    const [submitted, setSubmitted] = useState(false)
+    const [firstName, setFirstName] = useState("")
+    const [email, setEmail] = useState("")
+
+    const firstNameError = submitted && !firstName.trim()
+    const emailError = submitted && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+
+    return (
+      <form
+        className="flex flex-col gap-8"
+        onSubmit={(e) => {
+          e.preventDefault()
+          setSubmitted(true)
+        }}
+      >
+        <FormSection title="Personal info">
+          <Field>
+            <FieldLabel htmlFor="wv-first">
+              <FieldTitle>First name</FieldTitle>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                id="wv-first"
+                placeholder="First name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                aria-invalid={firstNameError || undefined}
+                className={
+                  firstNameError
+                    ? "border-destructive focus-visible:ring-destructive"
+                    : undefined
+                }
+              />
+              {firstNameError && (
+                <FieldError>First name is required.</FieldError>
+              )}
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="wv-email">
+              <FieldTitle>Email address</FieldTitle>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                id="wv-email"
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-invalid={emailError || undefined}
+                className={
+                  emailError
+                    ? "border-destructive focus-visible:ring-destructive"
+                    : undefined
+                }
+              />
+              {emailError && (
+                <FieldError>Enter a valid email address.</FieldError>
+              )}
+            </FieldContent>
+          </Field>
+        </FormSection>
+        <Button type="submit" className="self-end">
+          Save changes
+        </Button>
+      </form>
+    )
+  },
   parameters: {
     zephyr: { testCaseId: "SW-T1528" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
-    await step("Validation errors render below fields", async () => {
+    await step("No errors shown before submit", async () => {
+      expect(
+        canvas.queryByText("First name is required.")
+      ).not.toBeInTheDocument()
+      expect(
+        canvas.queryByText("Enter a valid email address.")
+      ).not.toBeInTheDocument()
+    })
+
+    await step("Submitting empty form shows validation errors", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Save changes" }))
       expect(canvas.getByText("First name is required.")).toBeInTheDocument()
       expect(
         canvas.getByText("Enter a valid email address.")

@@ -9,7 +9,6 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-  CommandShortcut,
 } from "@/components/ui/command";
 import {
   Dialog,
@@ -17,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Kbd } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
 
 export type ModelSelectorProps = ComponentProps<typeof Dialog>;
@@ -95,10 +95,13 @@ export const ModelSelectorItem = (props: ModelSelectorItemProps) => (
   <CommandItem {...props} />
 );
 
-export type ModelSelectorShortcutProps = ComponentProps<typeof CommandShortcut>;
+export type ModelSelectorShortcutProps = ComponentProps<typeof Kbd>;
 
-export const ModelSelectorShortcut = (props: ModelSelectorShortcutProps) => (
-  <CommandShortcut {...props} />
+export const ModelSelectorShortcut = ({
+  className,
+  ...props
+}: ModelSelectorShortcutProps) => (
+  <Kbd className={cn("ml-auto", className)} {...props} />
 );
 
 export type ModelSelectorSeparatorProps = ComponentProps<

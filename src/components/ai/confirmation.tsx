@@ -7,6 +7,7 @@ import type { ComponentProps, PropsWithChildren, ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/ui/code-block";
+import { Kbd } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
 
 
@@ -211,17 +212,11 @@ export const ConfirmationAction = ({
 // ConfirmationShortcut — keyboard shortcut label inside a button
 // ---------------------------------------------------------------------------
 
-export type ConfirmationShortcutProps = ComponentProps<"kbd">;
+export type ConfirmationShortcutProps = ComponentProps<typeof Kbd>;
 
 export const ConfirmationShortcut = ({
   className,
   ...props
 }: ConfirmationShortcutProps) => (
-  <kbd
-    className={cn(
-      "ml-0.5 rounded px-1 py-0.5 font-sans text-[10px] opacity-60",
-      className
-    )}
-    {...props}
-  />
+  <Kbd className={cn("ml-0.5", className)} {...props} />
 );

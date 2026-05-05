@@ -6,7 +6,7 @@ import type { FilterBarValue, FilterConfig } from "./FilterBar";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof FilterBar> = {
-  title: "Composed/FilterBar",
+  title: "Design Patterns/FilterBar",
   component: FilterBar,
   parameters: {
     layout: "centered",

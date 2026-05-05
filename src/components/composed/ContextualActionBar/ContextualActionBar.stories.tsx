@@ -9,7 +9,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const meta: Meta<typeof ContextualActionBar> = {
-  title: "Composed/ContextualActionBar",
+  title: "Design Patterns/ContextualActionBar",
   component: ContextualActionBar,
   parameters: {
     layout: "centered",

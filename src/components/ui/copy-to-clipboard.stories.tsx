@@ -3,7 +3,7 @@ import { CopyToClipboard } from "./copy-to-clipboard";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof CopyToClipboard> = {
-  title: "UI/CopyToClipboard",
+  title: "Design Patterns/CopyToClipboard",
   component: CopyToClipboard,
   parameters: {
     layout: "centered",

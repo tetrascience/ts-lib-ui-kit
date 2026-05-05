@@ -85,6 +85,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   onPeakClick,
   onPeakHover,
   selectionAppearance,
+  annotationStyle = "arrow",
 }) => {
   const enablePeakDetection = peakDetectionOptions !== undefined;
   const plotRef = useRef<HTMLDivElement>(null);
@@ -209,6 +210,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       selectedPeakIds: selectedPeakIds ?? [],
       anySelected,
       appearance: resolvedAppearance,
+      annotationStyle,
     };
 
     const allPeaksWithMeta: PeakWithMeta[] = [];
@@ -245,6 +247,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     annotationOverlapThreshold,
     selectedPeakIds,
     resolvedAppearance,
+    annotationStyle,
   ]);
 
   // Keep the ref in sync every render so that closures in effects always read

@@ -36,6 +36,8 @@ export const CHROMATOGRAM_ANNOTATION = {
   USER_ANNOTATION_TEXT_COLOR: "rgba(26, 26, 26, 1)",
   /** Background color behind annotation text */
   BACKGROUND_COLOR: "#ffffff",
+  /** Pixel offset above the data point for inline-style annotations (no arrow) */
+  INLINE_YSHIFT: 4,
 } as const;
 
 /**

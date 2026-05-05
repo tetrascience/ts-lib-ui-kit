@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { expect, within } from "storybook/test";
 
 import {
   ChromatogramChart,
   type ChromatogramSeries,
   type PeakAnnotation,
+  type PeakSelectEvent,
+  type RangeAnnotation,
 } from "./ChromatogramChart";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -105,6 +108,21 @@ const userDefinedPeaksWithBoundaries: PeakAnnotation[] = [
     startX: 17.3, // Start retention time
     endX: 19.3, // End retention time
   },
+];
+
+// Range annotations marking chromatographic fractions across the x-axis
+const sampleRangeAnnotations: RangeAnnotation[] = [
+  { label: "Void", startX: 0, endX: 2.5, color: "#8E8E93" },
+  { label: "Caffeine", startX: 4.5, endX: 7.2, color: "#007AFF" },
+  { label: "Theobromine", startX: 11.0, endX: 14.0, color: "#34C759" },
+  { label: "Theophylline", startX: 16.8, endX: 19.8, color: "#FF9500" },
+];
+
+// Annotations with stable IDs for selection stories
+const selectableAnnotations: PeakAnnotation[] = [
+  { id: "caffeine", x: 5.8, y: 420, text: "Caffeine" },
+  { id: "theobromine", x: 12.5, y: 180, text: "Theobromine" },
+  { id: "theophylline", x: 18.3, y: 350, text: "Theophylline" },
 ];
 
 const meta: Meta<typeof ChromatogramChart> = {
@@ -541,5 +559,194 @@ export const CombinedAutoAndUserPeaks: Story = {
       },
     },
     zephyr: { testCaseId: "SW-T1115" },
+  },
+};
+
+/**
+ * Horizontal colored bars mark chromatographic fractions (Void, Caffeine, Theobromine,
+ * Theophylline) above the signal trace. Labels stay centred within their bar. Zoom or
+ * pan the chart to verify that labels reposition to the visible portion of each bar and
+ * disappear when a bar scrolls fully out of view.
+ */
+export const WithRangeAnnotations: Story = {
+  args: {
+    series: [{ ...singleInjectionData, name: "Sample A" }],
+    title: "Chromatogram with Fraction Windows",
+    rangeAnnotations: sampleRangeAnnotations,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Chromatogram with Fraction Windows")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Trace is rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+
+    await step("Range annotation labels are rendered", async () => {
+      expect(canvas.getByText("Caffeine")).toBeInTheDocument();
+      expect(canvas.getByText("Theobromine")).toBeInTheDocument();
+      expect(canvas.getByText("Theophylline")).toBeInTheDocument();
+      expect(canvas.getByText("Void")).toBeInTheDocument();
+    });
+
+    await step("Range annotation shapes are rendered", async () => {
+      const shapes = canvasElement.querySelectorAll(".shapelayer path");
+      expect(shapes.length).toBeGreaterThanOrEqual(4);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Fraction windows rendered as coloured bars above the chromatogram trace. Labels reposition to stay centred within the visible portion of each bar as the user zooms or pans.",
+      },
+    },
+    zephyr: { testCaseId: "SW-T1116" },
+  },
+};
+
+/**
+ * Range annotations combined with auto peak detection. The fraction bars sit above the
+ * axis area while the peak labels (with areas) annotate the signal directly.
+ */
+export const WithRangeAnnotationsAndPeakDetection: Story = {
+  args: {
+    series: [{ ...singleInjectionData, name: "Sample A" }],
+    title: "Fraction Windows + Peak Detection",
+    rangeAnnotations: sampleRangeAnnotations,
+    peakDetectionOptions: { minHeight: 0.1, prominence: 0.05, minDistance: 20 },
+    showPeakAreas: true,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Fraction Windows + Peak Detection")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Range annotation labels are rendered", async () => {
+      expect(canvas.getByText("Theophylline")).toBeInTheDocument();
+      expect(canvas.getByText("Void")).toBeInTheDocument();
+    });
+
+    await step("Peak area annotations are displayed", async () => {
+      const annotations = canvasElement.querySelectorAll(".annotation-text");
+      expect(annotations.length).toBeGreaterThan(4);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Fraction windows coexist with auto-detected peak labels. The bars reserve space at the top of the plot; peak area annotations appear directly on the signal.",
+      },
+    },
+    zephyr: { testCaseId: "SW-T1117" },
+  },
+};
+
+/**
+ * Demonstrates click-to-select and hover feedback on individual peaks.
+ * Click any peak label or its invisible hit target to toggle selection (blue highlight).
+ * Unselected peaks dim when another is selected. Hover thickens the trace line.
+ */
+export const PeakHoverAndSelection: StoryObj<typeof ChromatogramChart> = {
+  render: (args) => {
+    const [selectedPeakIds, setSelectedPeakIds] = useState<string[]>([]);
+    const [hoveredPeak, setHoveredPeak] = useState<PeakSelectEvent | null>(null);
+
+    const handlePeakClick = (event: PeakSelectEvent) => {
+      setSelectedPeakIds((prev) =>
+        prev.includes(event.id) ? prev.filter((id) => id !== event.id) : [...prev, event.id]
+      );
+    };
+
+    return (
+      <div style={{ fontFamily: "Inter, sans-serif" }}>
+        <ChromatogramChart
+          {...args}
+          selectedPeakIds={selectedPeakIds}
+          onPeakClick={handlePeakClick}
+          onPeakHover={setHoveredPeak}
+        />
+        <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280", minHeight: 36 }}>
+          {hoveredPeak && (
+            <div>Hovering: <strong>{hoveredPeak.peak.text ?? hoveredPeak.id}</strong></div>
+          )}
+          {selectedPeakIds.length > 0 && (
+            <div>
+              Selected: <strong>{selectedPeakIds.join(", ")}</strong>
+              {" "}
+              <button onClick={() => setSelectedPeakIds([])}>Clear</button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  },
+  args: {
+    series: [{ ...singleInjectionData, name: "Sample A" }],
+    title: "Peak Hover and Selection",
+    annotations: selectableAnnotations,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Click a peak to select it (blue border, bold label). Click again to deselect. Other peaks dim while one is selected. Hover over the trace to thicken the line.",
+      },
+    },
+    zephyr: { testCaseId: "SW-T1118" },
+  },
+};
+
+/**
+ * Inline annotation style: labels float directly above the trace at the peak Y value
+ * with no arrow. Cleaner for dense chromatograms where arrows create visual noise.
+ */
+export const InlineAnnotationStyle: Story = {
+  args: {
+    series: [{ ...singleInjectionData, name: "Sample A" }],
+    title: "Inline Annotation Style",
+    annotations: selectableAnnotations,
+    annotationStyle: "inline",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Inline Annotation Style")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Inline annotation labels are displayed", async () => {
+      expect(canvas.getByText("Caffeine")).toBeInTheDocument();
+      expect(canvas.getByText("Theobromine")).toBeInTheDocument();
+      expect(canvas.getByText("Theophylline")).toBeInTheDocument();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'With annotationStyle="inline" labels sit 4 px above the actual trace Y value with no arrow. Useful for dense chromatograms where arrowheads clutter the signal.',
+      },
+    },
+    zephyr: { testCaseId: "SW-T1119" },
   },
 };

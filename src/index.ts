@@ -15,6 +15,7 @@ export * from "@/components/charts/BarGraph";
 export * from "@/components/charts/Boxplot";
 export * from "@/components/charts/Chromatogram";
 export * from "@/components/charts/ChromatogramChart";
+export * from "@/components/charts/StackedChromatogramChart";
 export * from "@/components/charts/DotPlot";
 export * from "@/components/charts/Heatmap";
 export * from "@/components/charts/Histogram";

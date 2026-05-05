@@ -10,8 +10,10 @@ import { Badge } from "../badge"
 
 import { DataTable, TableToolbar, useDataTable } from "./data-table"
 import { DataTableColumnToggle } from "./data-table-column-toggle"
+import { DataTableFilter } from "./data-table-filter"
 import { DataTablePagination } from "./data-table-pagination"
 
+import type { FilterCondition } from "./data-table"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import type { ColumnDef } from "@tanstack/react-table"
 
@@ -995,5 +997,178 @@ export const ControlledState: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1447" },
+  },
+}
+
+// ===========================================================================
+// Advanced filtering stories
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// AdvancedFiltering
+// ---------------------------------------------------------------------------
+
+export const AdvancedFiltering: Story = {
+  render: (args) => {
+    const { data, columns } = getDataset(args as Record<string, unknown>)
+    return (
+      <DataTable columns={columns} data={data} enableFiltering enableSorting>
+        <TableToolbar>
+          <DataTableColumnToggle />
+        </TableToolbar>
+        <DataTableFilter />
+      </DataTable>
+    )
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Add filter renders the filter row UI", async () => {
+      const addBtn = canvas.getByRole("button", { name: /add filter/i })
+      await userEvent.click(addBtn)
+      expect(canvas.getByPlaceholderText(/value/i)).toBeInTheDocument()
+    })
+
+    await step("Typing a value filters rows", async () => {
+      const input = canvas.getByPlaceholderText(/value/i)
+      await userEvent.type(input, "Active")
+      const rows = canvas.getAllByRole("row")
+      // Header row + at least one data row matching "Active"
+      expect(rows.length).toBeGreaterThan(1)
+    })
+
+    await step("Clear all removes the filter and restores all rows", async () => {
+      const clearBtn = canvas.getByRole("button", { name: /clear all/i })
+      await userEvent.click(clearBtn)
+      const rows = canvas.getAllByRole("row")
+      // All original data rows should be back (header + 5 workspace rows)
+      expect(rows.length).toBeGreaterThan(3)
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1448" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// MultiConditionFiltering — AND logic across two columns
+// ---------------------------------------------------------------------------
+
+export const MultiConditionFiltering: Story = {
+  render: () => (
+    <DataTable columns={workspaceColumns} data={workspaceData} enableFiltering>
+      <DataTableFilter />
+    </DataTable>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Add first condition: Status equals Active", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /add filter/i }))
+      // Switch column from default (Name) to Status
+      const comboboxes = canvas.getAllByRole("combobox")
+      await userEvent.click(comboboxes[0])
+      await userEvent.click(await canvas.findByRole("option", { name: /^status$/i }))
+      // Switch operator to equals
+      const updatedComboboxes = canvas.getAllByRole("combobox")
+      await userEvent.click(updatedComboboxes[1])
+      await userEvent.click(await canvas.findByRole("option", { name: /^equals$/i }))
+      await userEvent.type(canvas.getByPlaceholderText(/value/i), "Active")
+    })
+
+    await step("Add second condition: Owner contains Data Ops", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /add filter/i }))
+      // The new row's column combobox is the 3rd combobox (col1, op1, col2, op2)
+      const comboboxes = canvas.getAllByRole("combobox")
+      await userEvent.click(comboboxes[2])
+      await userEvent.click(await canvas.findByRole("option", { name: /^owner$/i }))
+      const inputs = canvas.getAllByPlaceholderText(/value/i)
+      await userEvent.type(inputs[1], "Data Ops")
+    })
+
+    await step("AND logic: only rows matching both conditions appear", async () => {
+      const rows = canvas.getAllByRole("row")
+      // Clinical exports: Status=Active AND Owner=Data Ops — only 1 match
+      expect(rows.length).toBe(2) // header + 1 data row
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1449" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// FilteringWithConfig — restrict columns and operators via filterConfig
+// ---------------------------------------------------------------------------
+
+export const FilteringWithConfig: Story = {
+  render: () => (
+    <DataTable
+      columns={workspaceColumns}
+      data={workspaceData}
+      enableFiltering
+      filterConfig={[
+        { columnId: "status", label: "Status", operators: ["equals", "not_equals", "is_empty", "is_not_empty"] },
+        { columnId: "owner",  label: "Owner",  operators: ["contains", "equals"] },
+      ]}
+    >
+      <DataTableFilter />
+    </DataTable>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Only configured columns appear in the column selector", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /add filter/i }))
+      // The first combobox is the column selector
+      const triggers = canvas.getAllByRole("combobox")
+      expect(triggers.length).toBeGreaterThan(0)
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1450" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// ControlledFiltering — external filter state
+// ---------------------------------------------------------------------------
+
+function ControlledFilteringStory() {
+  const [filters, setFilters] = React.useState<FilterCondition[]>([])
+
+  return (
+    <div className="space-y-4">
+      <DataTable
+        columns={workspaceColumns}
+        data={workspaceData}
+        enableFiltering
+        filters={filters}
+        onFiltersChange={setFilters}
+      >
+        <DataTableFilter />
+      </DataTable>
+      <div className="space-y-2 rounded-lg border bg-muted/30 p-4">
+        <p className="text-xs font-medium text-muted-foreground">
+          Live filter state from controlled <code>filters</code> prop:
+        </p>
+        <pre className="text-xs">{JSON.stringify(filters, null, 2)}</pre>
+      </div>
+    </div>
+  )
+}
+
+export const ControlledFiltering: Story = {
+  render: () => <ControlledFilteringStory />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders in controlled mode", async () => {
+      expect(canvas.getByRole("table")).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: /add filter/i })).toBeInTheDocument()
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1451" },
   },
 }

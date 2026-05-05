@@ -289,6 +289,13 @@ export interface ChromatogramChartProps {
    * Only has a visual effect when selectedPeakIds or onPeakClick/onPeakHover are used.
    */
   selectionAppearance?: PeakSelectionAppearance;
+
+  /**
+   * Annotation label style (default: "arrow").
+   * - "arrow" — arrowhead pointing to the peak with a floating label box
+   * - "inline" — no arrow; label sits 4 px above the actual trace Y value
+   */
+  annotationStyle?: "arrow" | "inline";
 }
 
 /**

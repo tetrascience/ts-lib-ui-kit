@@ -30,6 +30,8 @@ export const CHROMATOGRAM_ANNOTATION = {
   USER_ANNOTATION_FONT_SIZE: 11,
   /** Font size for auto-detected peak annotations */
   AUTO_ANNOTATION_FONT_SIZE: 10,
+  /** Pixel offset above the data point for inline-style annotations (no arrow) */
+  INLINE_YSHIFT: 4,
 } as const;
 
 /**

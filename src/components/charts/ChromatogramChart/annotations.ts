@@ -107,6 +107,7 @@ interface PeakAnnotationOptions {
   selectedPeakIds?: string[];
   anySelected?: boolean;
   appearance?: ResolvedSelectionAppearance;
+  annotationStyle?: "arrow" | "inline";
 }
 
 interface AnnotationBorderStyle {
@@ -137,6 +138,34 @@ function resolveAnnotationBorderStyle(
   return { bgcolor, bordercolor, borderwidth, ...(opacity === undefined ? {} : { opacity }) };
 }
 
+/** Builds an inline-style (no-arrow) annotation that floats above the trace point. */
+function createInlineAnnotation(
+  peak: PeakAnnotation,
+  text: string,
+  fontSize: number,
+  textColor: string,
+  isSelected: boolean,
+  isDimmed: boolean,
+  appearance: ResolvedSelectionAppearance
+): Partial<Plotly.Annotations> {
+  const opacity = isDimmed ? appearance.unselected.opacity : undefined;
+  return {
+    x: peak.x,
+    y: peak.y,
+    text,
+    showarrow: false,
+    yshift: CHROMATOGRAM_ANNOTATION.INLINE_YSHIFT,
+    yanchor: "bottom" as const,
+    xanchor: "center" as const,
+    font: {
+      size: fontSize,
+      color: isSelected ? appearance.selected.borderColor : textColor,
+      family: "Inter, sans-serif",
+    },
+    ...(opacity === undefined ? {} : { opacity }),
+  };
+}
+
 /**
  * Create a Plotly annotation for a peak.
  * seriesIndex of -1 indicates a user-defined annotation (uses grey/black styling).
@@ -151,6 +180,7 @@ export function createPeakAnnotation(
     selectedPeakIds = [],
     anySelected = false,
     appearance = DEFAULT_RESOLVED_APPEARANCE,
+    annotationStyle = "arrow",
   } = options;
 
   const isUserDefined = seriesIndex === -1;
@@ -165,6 +195,14 @@ export function createPeakAnnotation(
   const isDimmed = !isSelected && anySelected;
 
   const text = isSelected && appearance.selected.bold ? `<b>${rawText}</b>` : rawText;
+
+  const fontSize = isUserDefined
+    ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_FONT_SIZE
+    : CHROMATOGRAM_ANNOTATION.AUTO_ANNOTATION_FONT_SIZE;
+
+  if (annotationStyle === "inline") {
+    return createInlineAnnotation(peak, text, fontSize, textColor, isSelected, isDimmed, appearance);
+  }
 
   // For user-defined annotations, respect their ax/ay if provided
   const ax = isUserDefined && peak.ax !== undefined ? peak.ax : slot.ax;
@@ -186,9 +224,7 @@ export function createPeakAnnotation(
     ax,
     ay,
     font: {
-      size: isUserDefined
-        ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_FONT_SIZE
-        : CHROMATOGRAM_ANNOTATION.AUTO_ANNOTATION_FONT_SIZE,
+      size: fontSize,
       color: textColor,
       family: "Inter, sans-serif",
     },

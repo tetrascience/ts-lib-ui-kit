@@ -47,9 +47,8 @@ function ContextualActionBar({
       {...props}
     >
       <Checkbox
-        checked={isAllSelected}
-        data-state={isIndeterminate ? "indeterminate" : undefined}
-        onCheckedChange={onSelectAll}
+        checked={isIndeterminate ? "indeterminate" : isAllSelected}
+        onCheckedChange={(checked) => onSelectAll(checked === true)}
         aria-label="Select all rows"
       />
       {hasSelection ? (
@@ -58,11 +57,11 @@ function ContextualActionBar({
             {selectionCount} selected
           </Badge>
           <div className="flex items-center gap-1.5">
-            {actions.map((action) => {
+            {actions.map((action, i) => {
               const Icon = action.icon;
               return (
                 <Button
-                  key={action.label}
+                  key={`${action.label}-${i}`}
                   variant={action.variant === "destructive" ? "destructive" : "outline"}
                   size="sm"
                   onClick={action.onClick}

@@ -127,7 +127,7 @@ export const Interactive: Story = {
             tabIndex={0}
             className={`flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-muted/50 ${selected.has(row.id) ? "bg-primary/5" : ""}`}
             onClick={() => toggleRow(row.id)}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") toggleRow(row.id); }}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleRow(row.id); } }}
           >
             <Checkbox
               checked={selected.has(row.id)}

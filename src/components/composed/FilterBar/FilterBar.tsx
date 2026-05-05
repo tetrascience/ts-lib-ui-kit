@@ -85,7 +85,7 @@ function FilterBar({
         {filters.map((filter) => (
           <Select
             key={filter.key}
-            value={value.filters[filter.key] ?? ""}
+            value={value.filters[filter.key] || undefined}
             onValueChange={(v) => handleFilterChange(filter.key, v)}
           >
             <SelectTrigger className="w-auto min-w-32">
@@ -119,7 +119,7 @@ function FilterBar({
                 {config?.label}: {label}
                 <button
                   type="button"
-                  aria-label={`Remove ${config?.label} filter`}
+                  aria-label={`Remove ${config?.label ?? key} filter`}
                   className="ml-0.5 rounded-full hover:text-foreground transition-colors"
                   onClick={() => removeFilter(key)}
                 >

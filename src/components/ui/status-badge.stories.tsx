@@ -4,7 +4,7 @@ import type { JobStatus } from "./status-badge";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof StatusBadge> = {
-  title: "UI/StatusBadge",
+  title: "Design Patterns/StatusBadge",
   component: StatusBadge,
   parameters: {
     layout: "centered",

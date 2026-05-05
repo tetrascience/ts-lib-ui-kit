@@ -5,7 +5,7 @@ import { LinearProgress } from "./linear-progress";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof LinearProgress> = {
-  title: "UI/LinearProgress",
+  title: "Design Patterns/LinearProgress",
   component: LinearProgress,
   parameters: {
     layout: "centered",

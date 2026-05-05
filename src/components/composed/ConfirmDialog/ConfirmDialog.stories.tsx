@@ -91,8 +91,7 @@ export const Destructive: Story = {
       expect(body.getByRole("dialog")).toBeInTheDocument()
     })
 
-    await step("Warning alert renders in dialog body", async () => {
-      expect(body.getByRole("alert")).toBeInTheDocument()
+    await step("Warning callout renders in dialog body", async () => {
       expect(
         body.getByText("This action cannot be undone.")
       ).toBeInTheDocument()

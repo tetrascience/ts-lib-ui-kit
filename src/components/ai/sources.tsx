@@ -61,7 +61,7 @@ export const SourcesContent = ({
 export type SourceProps = ComponentProps<"a">;
 
 export const Source = ({ href, title, className, children, ...props }: SourceProps) => (
-  <Button asChild variant="link" className={cn("h-auto gap-1.5 px-0 text-xs font-medium", className)}>
+  <Button asChild variant="link" className={cn("h-auto gap-1.5 px-0 text-xs font-medium justify-start", className)}>
     <a href={href} rel="noreferrer" target="_blank" {...props}>
       {children ?? (
         <>

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const meta: Meta<typeof RichListItem> = {
-  title: "Composed/RichListItem",
+  title: "Design Patterns/RichListItem",
   component: RichListItem,
   parameters: {
     layout: "centered",

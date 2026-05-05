@@ -21,7 +21,7 @@ import type { ComponentProps } from "react"
 const meta: Meta = {
   title: "AI Elements/Conversation",
   parameters: {
-    layout: "padded",
+    layout: "fullscreen",
   },
   tags: ["autodocs"],
 }
@@ -70,7 +70,7 @@ const ScrollButtonHarness = ({ onScrollToBottom }: { onScrollToBottom: () => voi
   )
 
   return (
-    <div className="h-[180px] w-full max-w-2xl rounded-lg border">
+    <div className="h-[180px] w-full max-w-2xl">
       <Conversation instance={instance}>
         <ConversationContent>
           <Message from="assistant">
@@ -87,7 +87,7 @@ const ScrollButtonHarness = ({ onScrollToBottom }: { onScrollToBottom: () => voi
 
 export const Empty: Story = {
   render: () => (
-    <div className="h-full w-full max-w-2xl">
+    <div className="h-svh w-full max-w-2xl mx-auto">
       <Conversation>
         <ConversationContent>
           <ConversationEmptyState
@@ -111,7 +111,7 @@ export const Empty: Story = {
 
 export const WithMessages: Story = {
   render: () => (
-    <div className="h-[400px] w-full max-w-2xl rounded-lg border">
+    <div className="h-svh w-full max-w-2xl mx-auto">
       <Conversation>
         <ConversationContent>
           <Message from="user">
@@ -206,7 +206,7 @@ export const StreamingInProgress: Story = {
     const isStreaming = response.length < fullResponse.length
 
     return (
-      <div className="h-[400px] w-full max-w-2xl rounded-lg border">
+      <div className="h-svh w-full max-w-2xl mx-auto">
         <Conversation>
           <ConversationContent>
             <Message from="user">
@@ -259,7 +259,7 @@ const sampleMessages: UIMessage[] = [
 
 export const WithDownload: Story = {
   render: () => (
-    <div className="relative h-[300px] w-full max-w-2xl rounded-lg border">
+    <div className="relative h-svh w-full max-w-2xl mx-auto">
       <Conversation>
         <ConversationContent>
           {sampleMessages.map((m) => (
@@ -308,7 +308,7 @@ export const MarkdownSerialisation: Story = {
 
 export const CustomEmptyStateChildren: Story = {
   render: () => (
-    <div className="h-[200px] w-full max-w-2xl rounded-lg border">
+    <div className="h-svh w-full max-w-2xl mx-auto">
       <Conversation>
         <ConversationContent>
           <ConversationEmptyState>
@@ -328,7 +328,7 @@ export const CustomEmptyStateChildren: Story = {
 
 export const CustomEmptyState: Story = {
   render: () => (
-    <div className="h-[400px] w-full max-w-2xl rounded-lg border">
+    <div className="h-svh w-full max-w-2xl mx-auto">
       <Conversation>
         <ConversationContent>
           <ConversationEmptyState

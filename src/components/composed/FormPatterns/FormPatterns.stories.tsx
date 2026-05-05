@@ -63,7 +63,6 @@ export const SingleSection: Story = {
         </FieldLabel>
         <FieldContent>
           <Input id="single-name" placeholder="Enter project name" />
-          <FieldDescription>Used in dashboards and exports.</FieldDescription>
         </FieldContent>
       </Field>
       <Field>

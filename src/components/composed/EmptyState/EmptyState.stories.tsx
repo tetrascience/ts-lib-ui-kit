@@ -8,7 +8,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "@/components/ui/button";
 
 const meta: Meta<typeof EmptyState> = {
-  title: "Composed/EmptyState",
+  title: "Design Patterns/EmptyState",
   component: EmptyState,
   parameters: {
     layout: "centered",

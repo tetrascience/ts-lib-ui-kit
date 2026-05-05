@@ -2,6 +2,7 @@ import { BookIcon, ChevronDownIcon } from "lucide-react";
 
 import type { ComponentProps } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -59,19 +60,15 @@ export const SourcesContent = ({
 
 export type SourceProps = ComponentProps<"a">;
 
-export const Source = ({ href, title, children, ...props }: SourceProps) => (
-  <a
-    className="flex items-center gap-2"
-    href={href}
-    rel="noreferrer"
-    target="_blank"
-    {...props}
-  >
-    {children ?? (
-      <>
-        <BookIcon className="h-4 w-4" />
-        <span className="block font-medium">{title}</span>
-      </>
-    )}
-  </a>
+export const Source = ({ href, title, className, children, ...props }: SourceProps) => (
+  <Button asChild variant="link" className={cn("h-auto gap-1.5 px-0 text-xs font-medium", className)}>
+    <a href={href} rel="noreferrer" target="_blank" {...props}>
+      {children ?? (
+        <>
+          <BookIcon />
+          {title}
+        </>
+      )}
+    </a>
+  </Button>
 );

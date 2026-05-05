@@ -4,7 +4,7 @@ import type { ActivityFeedItem } from "./ActivityFeed";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof ActivityFeed> = {
-  title: "Composed/ActivityFeed",
+  title: "Design Patterns/ActivityFeed",
   component: ActivityFeed,
   parameters: {
     layout: "centered",

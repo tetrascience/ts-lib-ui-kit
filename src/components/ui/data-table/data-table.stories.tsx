@@ -982,6 +982,80 @@ function ControlledStateStory({ dataset }: { dataset: DatasetKey }) {
   )
 }
 
+// ---------------------------------------------------------------------------
+// SizedColumnsWithLongContent
+// ---------------------------------------------------------------------------
+
+const longContentData: Row[] = [
+  {
+    id: "3f8a2b1c-d4e5-6f7a-8b9c-0d1e2f3a4b5c",
+    name: "Compound Analysis Pipeline Run",
+    path: "/tetrascience/pipelines/compound-analysis/2025-05-06/run-001/output/results-normalized.json",
+    status: "Active",
+  },
+  {
+    id: "a9b8c7d6-e5f4-3a2b-1c0d-ef1234567890",
+    name: "QC Dashboard Automated Run",
+    path: "/tetrascience/pipelines/qc-dashboard/2025-04-30/run-042/intermediate/preprocessed-compounds.parquet",
+    status: "Paused",
+  },
+  {
+    id: "f1e2d3c4-b5a6-9780-dcba-fedcba987654",
+    name: "Proteomics ETL Workflow",
+    path: "/tetrascience/data-lake/proteomics/raw-uploads/2025-03-15T14:22:08Z/MS-data-batch-20250315.mzML",
+    status: "Archived",
+  },
+]
+
+const sizedColumns: ColumnDef<Row>[] = [
+  { accessorKey: "id", header: "ID", size: 100 },
+  { accessorKey: "name", header: "Name", size: 180 },
+  { accessorKey: "path", header: "File Path", size: 260 },
+  {
+    accessorKey: "status",
+    header: "Status",
+    size: 100,
+    meta: { truncate: false },
+    cell: ({ row }) => {
+      const value = String(row.getValue("status"))
+      return <Badge variant={statusVariant[value] ?? "secondary"}>{value}</Badge>
+    },
+  },
+]
+
+export const SizedColumnsWithLongContent: Story = {
+  render: () => (
+    <DataTable columns={sizedColumns} data={longContentData} />
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders with fixed layout class", async () => {
+      const table = canvas.getByRole("table")
+      expect(table).toHaveClass("table-fixed")
+    })
+
+    await step("All data rows render", async () => {
+      const rows = canvas.getAllByRole("row")
+      expect(rows.length).toBe(longContentData.length + 1)
+    })
+
+    await step("Data cells have truncate class (default truncate=true)", async () => {
+      const truncatedCells = canvasElement.querySelectorAll("[data-slot='table-cell'].truncate")
+      expect(truncatedCells.length).toBeGreaterThan(0)
+    })
+
+    await step("Status column Badge renders without being clipped (meta.truncate: false)", async () => {
+      const badges = canvasElement.querySelectorAll("[data-slot='badge']")
+      expect(badges.length).toBe(longContentData.length)
+      // The status cells must NOT have the truncate class
+      const statusCells = [...canvasElement.querySelectorAll("[data-slot='table-cell']")]
+        .filter((el) => el.querySelector("[data-slot='badge']"))
+      expect(statusCells.every((el) => !el.classList.contains("truncate"))).toBe(true)
+    })
+  },
+}
+
 export const ControlledState: Story = {
   render: (args) => <ControlledStateStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />,
   play: async ({ canvasElement, step }) => {

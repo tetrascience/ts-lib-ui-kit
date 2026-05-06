@@ -25,6 +25,7 @@ import {
   type ColumnOrderState,
   type Header,
   type PaginationState,
+  type RowData,
   type SortingState,
   type Table as TanStackTable,
   type VisibilityState,
@@ -48,6 +49,17 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
+
+// ---------------------------------------------------------------------------
+// Module augmentation — column meta
+// ---------------------------------------------------------------------------
+
+declare module "@tanstack/react-table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    truncate?: boolean
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Context
@@ -78,11 +90,13 @@ function DraggableHeader<TData>({
   children,
   position,
   numeric,
+  truncate,
 }: {
   header: Header<TData, unknown>
   children: React.ReactNode
   position?: "first" | "last" | "middle"
   numeric?: boolean
+  truncate?: boolean
 }) {
   const {
     attributes,
@@ -106,6 +120,7 @@ function DraggableHeader<TData>({
       ref={setNodeRef}
       style={style}
       variant={numeric ? "numeric" : undefined}
+      truncate={truncate}
       className={cn(
         "group/header transition-shadow duration-150",
         !isDragging && position === "first" && "hover:shadow-[inset_-1px_0_0_0_var(--color-border)]",
@@ -191,10 +206,12 @@ function DataTableRows<TData>({
   table,
   columns,
   numericColumns,
+  truncate,
 }: {
   table: TanStackTable<TData>
   columns: ColumnDef<TData, unknown>[]
   numericColumns: Set<string>
+  truncate?: boolean
 }) {
   if (table.getRowModel().rows.length === 0) {
     return (
@@ -209,7 +226,11 @@ function DataTableRows<TData>({
   return table.getRowModel().rows.map((row) => (
     <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
       {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id} variant={numericColumns.has(cell.column.id) ? "numeric" : undefined}>
+        <TableCell
+          key={cell.id}
+          variant={numericColumns.has(cell.column.id) ? "numeric" : undefined}
+          truncate={truncate && (cell.column.columnDef.meta?.truncate ?? true)}
+        >
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
         </TableCell>
       ))}
@@ -266,6 +287,7 @@ interface DataTableProps<TData, TValue> {
   variant?: React.ComponentProps<typeof Table>["variant"]
   /** className passed to the base Table's container div */
   containerClassName?: React.ComponentProps<typeof Table>["containerClassName"]
+  truncate?: boolean
 }
 
 function DataTable<TData, TValue>({
@@ -290,6 +312,7 @@ function DataTable<TData, TValue>({
   className,
   variant = "card",
   containerClassName,
+  truncate = true,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [internalColumnVisibility, setInternalColumnVisibility] =
@@ -410,6 +433,8 @@ function DataTable<TData, TValue>({
     return ids
   }, [data, columns])
 
+  const hasExplicitSize = columns.some((c) => c.size != null)
+
   // Not memoized: TanStack's table instance is a stable reference that mutates
   // internally, so children reading table.getState() need fresh context on each render.
   const ctx = {
@@ -437,7 +462,22 @@ function DataTable<TData, TValue>({
               items={table.getFlatHeaders().map((h) => h.column.id)}
               strategy={horizontalListSortingStrategy}
             >
-              <Table data-density={density} variant={variant} containerClassName={containerClassName}>
+              <Table
+                data-density={density}
+                variant={variant}
+                containerClassName={containerClassName}
+                layout={hasExplicitSize ? "fixed" : undefined}
+              >
+                {hasExplicitSize && (
+                  <colgroup>
+                    {table.getHeaderGroups()[0]?.headers.map((header) => (
+                      <col
+                        key={header.id}
+                        style={header.column.columnDef.size == null ? undefined : { width: header.column.columnDef.size }}
+                      />
+                    ))}
+                  </colgroup>
+                )}
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
@@ -447,6 +487,7 @@ function DataTable<TData, TValue>({
                           header={header}
                           position={headerIdx === 0 ? "first" : headerIdx === headerGroup.headers.length - 1 ? "last" : "middle"}
                           numeric={numericColumns.has(header.column.id)}
+                          truncate={truncate && (header.column.columnDef.meta?.truncate ?? true)}
                         >
                           <SortableHeaderContent
                             header={header as Header<unknown, unknown>}
@@ -460,7 +501,7 @@ function DataTable<TData, TValue>({
                   ))}
                 </TableHeader>
                 <TableBody>
-                  <DataTableRows table={table} columns={columns} numericColumns={numericColumns} />
+                  <DataTableRows table={table} columns={columns} numericColumns={numericColumns} truncate={truncate} />
                 </TableBody>
               </Table>
             </SortableContext>
@@ -476,12 +517,31 @@ function DataTable<TData, TValue>({
             </DragOverlay>
           </DndContext>
         ) : (
-          <Table data-density={density} variant={variant} containerClassName={containerClassName}>
+          <Table
+            data-density={density}
+            variant={variant}
+            containerClassName={containerClassName}
+            layout={hasExplicitSize ? "fixed" : undefined}
+          >
+            {hasExplicitSize && (
+              <colgroup>
+                {table.getHeaderGroups()[0]?.headers.map((header) => (
+                  <col
+                    key={header.id}
+                    style={header.column.columnDef.size == null ? undefined : { width: header.column.columnDef.size }}
+                  />
+                ))}
+              </colgroup>
+            )}
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} variant={numericColumns.has(header.column.id) ? "numeric" : undefined}>
+                    <TableHead
+                      key={header.id}
+                      variant={numericColumns.has(header.column.id) ? "numeric" : undefined}
+                      truncate={truncate && (header.column.columnDef.meta?.truncate ?? true)}
+                    >
                       <SortableHeaderContent
                         header={header as Header<unknown, unknown>}
                         enableSorting={enableSorting}
@@ -494,7 +554,7 @@ function DataTable<TData, TValue>({
               ))}
             </TableHeader>
             <TableBody>
-              <DataTableRows table={table} columns={columns} numericColumns={numericColumns} />
+              <DataTableRows table={table} columns={columns} numericColumns={numericColumns} truncate={truncate} />
             </TableBody>
           </Table>
         )}

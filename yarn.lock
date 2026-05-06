@@ -6927,7 +6927,6 @@ __metadata:
     lucide-react: "npm:^1.9.0"
     monaco-editor: "npm:^0.52.2"
     motion: "npm:^12.38.0"
-    nanoid: "npm:^5.1.9"
     playwright: "npm:^1.58.2"
     plotly.js: "npm:^3.0.1"
     plotly.js-dist: "npm:^2.35.2"
@@ -17209,15 +17208,6 @@ __metadata:
   bin:
     nanoid: bin/nanoid.cjs
   checksum: 10c0/40e7f70b3d15f725ca072dfc4f74e81fcf1fbb02e491cf58ac0c79093adc9b0a73b152bcde57df4b79cd097e13023d7504acb38404a4da7bc1cd8e887b82fe0b
-  languageName: node
-  linkType: hard
-
-"nanoid@npm:^5.1.9":
-  version: 5.1.9
-  resolution: "nanoid@npm:5.1.9"
-  bin:
-    nanoid: bin/nanoid.js
-  checksum: 10c0/02cb4e48d30469eee3959795e2af6c113342e7f492906e43bd1e3c264d2dcee6c8236b0e441d4a9895b58c4ddb1c7c02170f63a2ca854a229cc4c7a544699cc1
   languageName: node
   linkType: hard
 

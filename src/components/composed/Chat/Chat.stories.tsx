@@ -1459,7 +1459,6 @@ const InteractiveFullDemo = () => {
             <div className="flex items-center gap-1">
               <Context
                 maxTokens={MAX_CONTEXT_TOKENS}
-                modelId="anthropic:claude-sonnet-4-5"
                 usage={usage}
                 usedTokens={totalUsed}
               >

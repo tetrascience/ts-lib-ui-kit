@@ -129,7 +129,6 @@
     "lucide-react": "^1.9.0",
     "monaco-editor": "^0.52.2",
     "motion": "^12.38.0",
-    "nanoid": "^5.1.9",
     "plotly.js": "^3.0.1",
     "plotly.js-dist": "^2.35.2",
     "radix-ui": "^1.4.3",

@@ -6,7 +6,6 @@ import {
   SquareIcon,
   XIcon,
 } from "lucide-react";
-import { nanoid } from "nanoid";
 import {
   Children,
   createContext,
@@ -273,7 +272,7 @@ export const PromptInputProvider = ({
       ...prev,
       ...incoming.map((file) => ({
         filename: file.name,
-        id: nanoid(),
+        id: c,
         mediaType: file.type,
         type: "file" as const,
         url: URL.createObjectURL(file),
@@ -616,7 +615,7 @@ export const PromptInput = ({
         for (const file of capped) {
           next.push({
             filename: file.name,
-            id: nanoid(),
+            id: `${file.name}-${file.size}-${file.lastModified}`,
             mediaType: file.type,
             type: "file",
             url: URL.createObjectURL(file),
@@ -821,7 +820,7 @@ export const PromptInput = ({
         const array = Array.isArray(incoming) ? incoming : [incoming];
         setReferencedSources((prev) => [
           ...prev,
-          ...array.map((s) => ({ ...s, id: nanoid() })),
+          ...array.map((s) => ({ ...s, id: `${s.title}-${s.sourceId}` })),
         ]);
       },
       clear: clearReferencedSources,

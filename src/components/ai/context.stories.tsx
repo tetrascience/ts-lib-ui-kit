@@ -35,7 +35,7 @@ const baseUsage = {
 
 export const Default: Story = {
   render: () => (
-    <Context usedTokens={1650} maxTokens={128000} modelId="gpt-4o" usage={baseUsage}>
+    <Context usedTokens={1650} maxTokens={128000} usage={baseUsage}>
       <ContextTrigger />
       <ContextContent>
         <ContextContentHeader />
@@ -61,7 +61,7 @@ export const Default: Story = {
 
 export const WithVisiblePercentage: Story = {
   render: () => (
-    <Context usedTokens={1650} maxTokens={128000} modelId="gpt-4o" usage={baseUsage}>
+    <Context usedTokens={1650} maxTokens={128000} usage={baseUsage}>
       <ContextTrigger showPercentage />
       <ContextContent>
         <ContextContentHeader />
@@ -87,7 +87,6 @@ export const WithReasoning: Story = {
     <Context
       usedTokens={8500}
       maxTokens={32000}
-      modelId="claude-sonnet-4-6"
       usage={{
         inputTokens: 5000,
         outputTokens: 2000,
@@ -119,7 +118,6 @@ export const WithCaching: Story = {
     <Context
       usedTokens={3200}
       maxTokens={200000}
-      modelId="claude-opus-4-7"
       usage={{
         inputTokens: 2000,
         outputTokens: 1200,
@@ -152,7 +150,6 @@ export const OpenPopover: Story = {
       open
       usedTokens={1650}
       maxTokens={128000}
-      modelId="gpt-4o"
       usage={{
         inputTokens: 1200,
         outputTokens: 450,
@@ -190,7 +187,6 @@ export const WarningThreshold: Story = {
       open
       usedTokens={100000}
       maxTokens={128000}
-      modelId="gpt-4o"
       usage={{ inputTokens: 90000, outputTokens: 10000 }}
     >
       <ContextTrigger />
@@ -297,7 +293,6 @@ export const NearLimit: Story = {
     <Context
       usedTokens={122000}
       maxTokens={128000}
-      modelId="gpt-4o"
       usage={{
         inputTokens: 110000,
         outputTokens: 12000,
@@ -322,7 +317,7 @@ export const NearLimit: Story = {
   },
 }
 
-export const UsageWithoutModelPricing: Story = {
+export const UsageWithoutCost: Story = {
   render: () => (
     <Context
       open
@@ -349,12 +344,53 @@ export const UsageWithoutModelPricing: Story = {
     </Context>
   ),
   play: async ({ step }) => {
-    await step("Usage rows render zero-dollar costs without a model id", async () => {
+    await step("Usage rows render without cost text when no cost is provided", async () => {
       await expect(await screen.findByText("Input")).toBeInTheDocument()
       await expect(screen.getByText("Output")).toBeInTheDocument()
       await expect(screen.getByText("Reasoning")).toBeInTheDocument()
       await expect(screen.getByText("Cache")).toBeInTheDocument()
-      await expect(screen.getAllByText(/\$0\.00/).length).toBeGreaterThanOrEqual(5)
+      await expect(screen.queryByText(/\$\d/)).not.toBeInTheDocument()
+      await expect(screen.getByText("—")).toBeInTheDocument()
+    })
+  },
+}
+
+export const WithCostBreakdown: Story = {
+  render: () => (
+    <Context
+      open
+      maxTokens={200000}
+      usedTokens={12000}
+      usage={{
+        cachedInputTokens: 800,
+        inputTokens: 8000,
+        outputTokens: 3200,
+      }}
+      cost={{
+        cache: 0.0008,
+        input: 0.024,
+        output: 0.048,
+        total: 0.0728,
+      }}
+    >
+      <ContextTrigger />
+      <ContextContent>
+        <ContextContentHeader />
+        <ContextContentBody>
+          <ContextInputUsage />
+          <ContextOutputUsage />
+          <ContextCacheUsage />
+        </ContextContentBody>
+        <ContextContentFooter />
+      </ContextContent>
+    </Context>
+  ),
+  play: async ({ step }) => {
+    await step("Cost breakdown renders with pre-computed values", async () => {
+      await expect(await screen.findByText("Input")).toBeInTheDocument()
+      await expect(screen.getByText("Output")).toBeInTheDocument()
+      await expect(screen.getByText("Cache")).toBeInTheDocument()
+      await expect(screen.getByText("$0.07")).toBeInTheDocument()
     })
   },
 }

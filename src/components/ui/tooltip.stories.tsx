@@ -173,7 +173,6 @@ const tableRows = [
 export const InTableCells: Story = {
   parameters: {
     layout: "padded",
-    zephyr: { testCaseId: "SW-T1474" },
     docs: {
       description: {
         story:

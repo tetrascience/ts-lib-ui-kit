@@ -623,7 +623,7 @@ function TableToolbar({
   return (
     <div
       data-slot="table-toolbar"
-      className={cn("flex items-center gap-2", className)}
+      className={cn("flex items-center justify-end gap-2", className)}
       {...props}
     >
       {children}

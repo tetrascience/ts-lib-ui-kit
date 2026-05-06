@@ -864,10 +864,11 @@ function FullColumnManagementStory({ dataset }: { dataset: DatasetKey }) {
       enableColumnVisibility
       enableColumnReorder
       enablePagination
+      enableFiltering
       defaultPageSize={5}
     >
       <TableToolbar>
-        <div className="flex-1" />
+        <DataTableFilter />
         <DataTableColumnToggle />
       </TableToolbar>
       <DataTablePagination pageSizeOptions={[5, 10, 25]} />
@@ -1015,31 +1016,30 @@ export const AdvancedFiltering: Story = {
       <DataTable columns={columns} data={data} enableFiltering enableSorting>
         <TableToolbar>
           <DataTableColumnToggle />
+          <DataTableFilter />
         </TableToolbar>
-        <DataTableFilter />
       </DataTable>
     )
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
 
-    await step("Add filter renders the filter row UI", async () => {
-      const addBtn = canvas.getByRole("button", { name: /add filter/i })
-      await userEvent.click(addBtn)
-      expect(canvas.getByPlaceholderText(/value/i)).toBeInTheDocument()
+    await step("Opening the filter panel and adding a filter row", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /filter/i }))
+      await userEvent.click(body.getByRole("button", { name: /add filter/i }))
+      expect(body.getByPlaceholderText(/value/i)).toBeInTheDocument()
     })
 
     await step("Typing a value filters rows", async () => {
-      const input = canvas.getByPlaceholderText(/value/i)
-      await userEvent.type(input, "Active")
+      await userEvent.type(body.getByPlaceholderText(/value/i), "Active")
       const rows = canvas.getAllByRole("row")
       // Header row + at least one data row matching "Active"
       expect(rows.length).toBeGreaterThan(1)
     })
 
     await step("Clear all removes the filter and restores all rows", async () => {
-      const clearBtn = canvas.getByRole("button", { name: /clear all/i })
-      await userEvent.click(clearBtn)
+      await userEvent.click(body.getByRole("button", { name: /clear all/i }))
       const rows = canvas.getAllByRole("row")
       // All original data rows should be back (header + 5 workspace rows)
       expect(rows.length).toBeGreaterThan(3)
@@ -1057,33 +1057,36 @@ export const AdvancedFiltering: Story = {
 export const MultiConditionFiltering: Story = {
   render: () => (
     <DataTable columns={workspaceColumns} data={workspaceData} enableFiltering>
-      <DataTableFilter />
+      <TableToolbar>
+        <DataTableFilter />
+      </TableToolbar>
     </DataTable>
   ),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     const body = within(canvasElement.ownerDocument.body)
 
-    await step("Add first condition: Status equals Active", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /add filter/i }))
+    await step("Open filter panel and add first condition: Status equals Active", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /filter/i }))
+      await userEvent.click(body.getByRole("button", { name: /add filter/i }))
       // Switch column from default (Name) to Status
-      const comboboxes = canvas.getAllByRole("combobox")
+      const comboboxes = body.getAllByRole("combobox")
       await userEvent.click(comboboxes[0])
       await userEvent.click(await body.findByRole("option", { name: /^status$/i }))
       // Switch operator to equals
-      const updatedComboboxes = canvas.getAllByRole("combobox")
+      const updatedComboboxes = body.getAllByRole("combobox")
       await userEvent.click(updatedComboboxes[1])
       await userEvent.click(await body.findByRole("option", { name: /^equals$/i }))
-      await userEvent.type(canvas.getByPlaceholderText(/value/i), "Active")
+      await userEvent.type(body.getByPlaceholderText(/value/i), "Active")
     })
 
     await step("Add second condition: Owner contains Data Ops", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /add filter/i }))
+      await userEvent.click(body.getByRole("button", { name: /add filter/i }))
       // The new row's column combobox is the 3rd combobox (col1, op1, col2, op2)
-      const comboboxes = canvas.getAllByRole("combobox")
+      const comboboxes = body.getAllByRole("combobox")
       await userEvent.click(comboboxes[2])
       await userEvent.click(await body.findByRole("option", { name: /^owner$/i }))
-      const inputs = canvas.getAllByPlaceholderText(/value/i)
+      const inputs = body.getAllByPlaceholderText(/value/i)
       await userEvent.type(inputs[1], "Data Ops")
     })
 
@@ -1113,16 +1116,20 @@ export const FilteringWithConfig: Story = {
         { columnId: "owner",  label: "Owner",  operators: ["contains", "equals"] },
       ]}
     >
-      <DataTableFilter />
+      <TableToolbar>
+        <DataTableFilter />
+      </TableToolbar>
     </DataTable>
   ),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
 
     await step("Only configured columns appear in the column selector", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /add filter/i }))
+      await userEvent.click(canvas.getByRole("button", { name: /filter/i }))
+      await userEvent.click(body.getByRole("button", { name: /add filter/i }))
       // The first combobox is the column selector
-      const triggers = canvas.getAllByRole("combobox")
+      const triggers = body.getAllByRole("combobox")
       expect(triggers.length).toBeGreaterThan(0)
     })
   },
@@ -1147,13 +1154,19 @@ function ControlledFilteringStory() {
         filters={filters}
         onFiltersChange={setFilters}
       >
-        <DataTableFilter />
+        <TableToolbar>
+          <DataTableFilter />
+        </TableToolbar>
       </DataTable>
-      <div className="space-y-2 rounded-lg border bg-muted/30 p-4">
-        <p className="text-xs font-medium text-muted-foreground">
-          Live filter state from controlled <code>filters</code> prop:
-        </p>
-        <pre className="text-xs">{JSON.stringify(filters, null, 2)}</pre>
+      <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+        <p className="text-xs font-medium text-muted-foreground">Live state from controlled prop <code>filters</code>:</p>
+        <SyntaxHighlighter
+          language="json"
+          style={document.documentElement.classList.contains("dark") ? oneDark : oneLight}
+          customStyle={{ margin: 0, borderRadius: "0.5rem", fontSize: "0.75rem" }}
+        >
+          {JSON.stringify(filters, null, 2)}
+        </SyntaxHighlighter>
       </div>
     </div>
   )
@@ -1166,7 +1179,7 @@ export const ControlledFiltering: Story = {
 
     await step("Table renders in controlled mode", async () => {
       expect(canvas.getByRole("table")).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: /add filter/i })).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: /filter/i })).toBeInTheDocument()
     })
   },
   parameters: {

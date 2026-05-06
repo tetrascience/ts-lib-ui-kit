@@ -358,7 +358,7 @@ export const Queue = ({ className, isStreaming = false, children, style, id, ...
         <motion.div
           {...passthroughProps}
           className={cn(
-            "flex flex-col gap-2 rounded-xl border border-border bg-background px-3 pb-2 pt-2 shadow-xs",
+            "flex flex-col gap-2 rounded-xl border border-border bg-background px-2 pb-2 pt-2 shadow-xs",
             className
           )}
           exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0, overflow: "hidden" }}

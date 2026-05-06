@@ -1062,17 +1062,18 @@ export const MultiConditionFiltering: Story = {
   ),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
 
     await step("Add first condition: Status equals Active", async () => {
       await userEvent.click(canvas.getByRole("button", { name: /add filter/i }))
       // Switch column from default (Name) to Status
       const comboboxes = canvas.getAllByRole("combobox")
       await userEvent.click(comboboxes[0])
-      await userEvent.click(await canvas.findByRole("option", { name: /^status$/i }))
+      await userEvent.click(await body.findByRole("option", { name: /^status$/i }))
       // Switch operator to equals
       const updatedComboboxes = canvas.getAllByRole("combobox")
       await userEvent.click(updatedComboboxes[1])
-      await userEvent.click(await canvas.findByRole("option", { name: /^equals$/i }))
+      await userEvent.click(await body.findByRole("option", { name: /^equals$/i }))
       await userEvent.type(canvas.getByPlaceholderText(/value/i), "Active")
     })
 
@@ -1081,7 +1082,7 @@ export const MultiConditionFiltering: Story = {
       // The new row's column combobox is the 3rd combobox (col1, op1, col2, op2)
       const comboboxes = canvas.getAllByRole("combobox")
       await userEvent.click(comboboxes[2])
-      await userEvent.click(await canvas.findByRole("option", { name: /^owner$/i }))
+      await userEvent.click(await body.findByRole("option", { name: /^owner$/i }))
       const inputs = canvas.getAllByPlaceholderText(/value/i)
       await userEvent.type(inputs[1], "Data Ops")
     })

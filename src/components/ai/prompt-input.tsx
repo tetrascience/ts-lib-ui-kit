@@ -272,7 +272,7 @@ export const PromptInputProvider = ({
       ...prev,
       ...incoming.map((file) => ({
         filename: file.name,
-        id: c,
+        id: crypto.randomUUID(),
         mediaType: file.type,
         type: "file" as const,
         url: URL.createObjectURL(file),
@@ -615,7 +615,7 @@ export const PromptInput = ({
         for (const file of capped) {
           next.push({
             filename: file.name,
-            id: `${file.name}-${file.size}-${file.lastModified}`,
+            id: crypto.randomUUID(),
             mediaType: file.type,
             type: "file",
             url: URL.createObjectURL(file),
@@ -820,7 +820,7 @@ export const PromptInput = ({
         const array = Array.isArray(incoming) ? incoming : [incoming];
         setReferencedSources((prev) => [
           ...prev,
-          ...array.map((s) => ({ ...s, id: `${s.title}-${s.sourceId}` })),
+          ...array.map((s) => ({ ...s, id: crypto.randomUUID() })),
         ]);
       },
       clear: clearReferencedSources,

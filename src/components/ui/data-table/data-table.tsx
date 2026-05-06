@@ -34,6 +34,20 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, GripVerticalIcon } from "lucide-react"
+import * as React from "react"
+
+import { DataTablePagination } from "./data-table-pagination"
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { cn } from "@/lib/utils"
 
 // ---------------------------------------------------------------------------
 // Filter types
@@ -79,20 +93,6 @@ function applyFilterCondition(
     case "is_not_empty":  return cell !== ""
   }
 }
-import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, GripVerticalIcon } from "lucide-react"
-import * as React from "react"
-
-import { DataTablePagination } from "./data-table-pagination"
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { cn } from "@/lib/utils"
 
 // ---------------------------------------------------------------------------
 // Context

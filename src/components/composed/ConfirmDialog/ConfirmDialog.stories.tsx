@@ -48,8 +48,11 @@ export const Default: Story = {
       await userEvent.click(
         canvas.getByRole("button", { name: "Archive workspace" })
       )
-      expect(body.getByRole("dialog")).toBeInTheDocument()
-      expect(body.getByText("Archive workspace")).toBeInTheDocument()
+      const dialog = body.getByRole("dialog")
+      expect(dialog).toBeInTheDocument()
+      expect(
+        within(dialog).getByRole("heading", { name: "Archive workspace" })
+      ).toBeInTheDocument()
     })
 
     await step("Cancel and confirm buttons are present", async () => {

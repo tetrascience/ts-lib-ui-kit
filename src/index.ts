@@ -53,7 +53,6 @@ export * from "@/components/ui/input-otp";
 export * from "@/components/ui/item";
 export * from "@/components/ui/kbd";
 export * from "@/components/ui/label";
-export * from "@/components/ui/linear-progress";
 export * from "@/components/ui/menubar";
 export * from "@/components/ui/navigation-menu";
 export * from "@/components/ui/radio-group";

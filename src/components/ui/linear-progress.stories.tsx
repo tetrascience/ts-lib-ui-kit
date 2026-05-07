@@ -58,15 +58,16 @@ export const Determinate25: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const bar = canvas.getByRole("progressbar");
-    const inner = bar.querySelector("div");
-    expect(inner).not.toBeNull();
+    const innerEl = bar.querySelector("div");
+    expect(innerEl).not.toBeNull();
+    const inner = innerEl as HTMLElement;
 
     await step("Renders progressbar with aria-valuenow=25", async () => {
       expect(bar).toHaveAttribute("aria-valuenow", "25");
     });
 
     await step("Inner bar reflects 25% width", async () => {
-      expect((inner as HTMLElement).style.width).toBe("25%");
+      expect(inner.style.width).toBe("25%");
     });
   },
 };
@@ -79,15 +80,16 @@ export const Determinate50: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const bar = canvas.getByRole("progressbar");
-    const inner = bar.querySelector("div");
-    expect(inner).not.toBeNull();
+    const innerEl = bar.querySelector("div");
+    expect(innerEl).not.toBeNull();
+    const inner = innerEl as HTMLElement;
 
     await step("Renders progressbar with aria-valuenow=50", async () => {
       expect(bar).toHaveAttribute("aria-valuenow", "50");
     });
 
     await step("Inner bar reflects 50% width", async () => {
-      expect((inner as HTMLElement).style.width).toBe("50%");
+      expect(inner.style.width).toBe("50%");
     });
   },
 };
@@ -100,15 +102,16 @@ export const Determinate100: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const bar = canvas.getByRole("progressbar");
-    const inner = bar.querySelector("div");
-    expect(inner).not.toBeNull();
+    const innerEl = bar.querySelector("div");
+    expect(innerEl).not.toBeNull();
+    const inner = innerEl as HTMLElement;
 
     await step("Renders progressbar with aria-valuenow=100", async () => {
       expect(bar).toHaveAttribute("aria-valuenow", "100");
     });
 
     await step("Inner bar reflects 100% width", async () => {
-      expect((inner as HTMLElement).style.width).toBe("100%");
+      expect(inner.style.width).toBe("100%");
     });
   },
 };

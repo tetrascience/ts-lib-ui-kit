@@ -504,7 +504,8 @@ export const MultiStepForm: Story = {
     await step("Clicking Next advances to step 2", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Next" }))
       expect(canvas.getByText("Step 2 of 3")).toBeInTheDocument()
-      expect(canvas.getByText("Role & Access")).toBeInTheDocument()
+      expect(canvas.getByRole("combobox")).toBeInTheDocument()
+      expect(canvas.getAllByText("Role & Access").length).toBeGreaterThan(0)
     })
 
     await step("Clicking Back returns to step 1", async () => {

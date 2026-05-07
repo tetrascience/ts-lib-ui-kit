@@ -91,6 +91,11 @@ function applyFilterCondition(
     case "ends_with":     return cell.endsWith(filter)
     case "is_empty":      return cell === ""
     case "is_not_empty":  return cell !== ""
+    default: {
+      const _exhaustive: never = operator
+      void _exhaustive
+      return true
+    }
   }
 }
 

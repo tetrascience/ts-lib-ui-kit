@@ -62,8 +62,12 @@ function getColumnLabel(
   )
 }
 
-function makeCondition(columnId: string): FilterCondition {
-  return { id: crypto.randomUUID(), columnId, operator: "contains", value: "" }
+function makeCondition(
+  columnId: string,
+  allowedOperators?: FilterOperator[],
+): FilterCondition {
+  const operator = allowedOperators?.[0] ?? "contains"
+  return { id: crypto.randomUUID(), columnId, operator, value: "" }
 }
 
 // ---------------------------------------------------------------------------
@@ -89,10 +93,11 @@ function DataTableFilter({ className }: DataTableFilterProps) {
           .filter((col) => "accessorKey" in col.columnDef || "accessorFn" in col.columnDef)
           .map((col) => ({ columnId: col.id }))
 
-  const firstColumnId = resolvedColumns[0]?.columnId ?? ""
+  const firstColumn = resolvedColumns[0]
+  const firstColumnId = firstColumn?.columnId ?? ""
 
   function addFilter() {
-    setFilters([...filters, makeCondition(firstColumnId)])
+    setFilters([...filters, makeCondition(firstColumnId, firstColumn?.operators)])
   }
 
   function removeFilter(id: string) {
@@ -154,9 +159,18 @@ function DataTableFilter({ className }: DataTableFilterProps) {
                   {/* Column selector */}
                   <Select
                     value={condition.columnId}
-                    onValueChange={(v) =>
-                      updateFilter(condition.id, { columnId: v, value: "" })
-                    }
+                    onValueChange={(v) => {
+                      const nextConfig = resolvedColumns.find((c) => c.columnId === v)
+                      const nextOperators = nextConfig?.operators ?? DEFAULT_OPERATORS
+                      const nextOperator = nextOperators.includes(condition.operator)
+                        ? condition.operator
+                        : (nextOperators[0] ?? "contains")
+                      updateFilter(condition.id, {
+                        columnId: v,
+                        operator: nextOperator,
+                        value: "",
+                      })
+                    }}
                   >
                     <SelectTrigger size="sm" className="w-36">
                       <SelectValue />

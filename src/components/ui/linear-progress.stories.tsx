@@ -67,8 +67,9 @@ export const Determinate25: Story = {
 
     await step("Inner bar reflects 25% width", async () => {
       const bar = canvas.getByRole("progressbar");
-      const inner = bar.querySelector("div") as HTMLElement;
-      expect(inner.style.width).toBe("25%");
+      const inner = bar.querySelector("div");
+      expect(inner).not.toBeNull();
+      expect((inner as HTMLElement).style.width).toBe("25%");
     });
   },
 };
@@ -88,8 +89,9 @@ export const Determinate50: Story = {
 
     await step("Inner bar reflects 50% width", async () => {
       const bar = canvas.getByRole("progressbar");
-      const inner = bar.querySelector("div") as HTMLElement;
-      expect(inner.style.width).toBe("50%");
+      const inner = bar.querySelector("div");
+      expect(inner).not.toBeNull();
+      expect((inner as HTMLElement).style.width).toBe("50%");
     });
   },
 };
@@ -109,8 +111,9 @@ export const Determinate100: Story = {
 
     await step("Inner bar reflects 100% width", async () => {
       const bar = canvas.getByRole("progressbar");
-      const inner = bar.querySelector("div") as HTMLElement;
-      expect(inner.style.width).toBe("100%");
+      const inner = bar.querySelector("div");
+      expect(inner).not.toBeNull();
+      expect((inner as HTMLElement).style.width).toBe("100%");
     });
   },
 };

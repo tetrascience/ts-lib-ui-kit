@@ -81,7 +81,7 @@ function StatusBadge({ status, pulse, className, ...props }: StatusBadgeProps) {
         className={cn(
           "h-1.5 w-1.5 shrink-0 rounded-full",
           config.dotClass,
-          shouldPulse && "animate-pulse"
+          shouldPulse && "animate-pulse motion-reduce:animate-none"
         )}
       />
       {config.label}

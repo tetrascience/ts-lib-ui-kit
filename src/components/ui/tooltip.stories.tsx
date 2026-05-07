@@ -160,7 +160,7 @@ const tableRows = [
     workspace: "QC dashboard",
     owner: "Analytics",
     lastRun: "2 hours ago",
-    detail: "Paused by jcurie@tetrascience.com pending schema review",
+    detail: "Paused by user@example.com pending schema review",
   },
   {
     workspace: "Audit trail",

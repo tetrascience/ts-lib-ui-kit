@@ -5,6 +5,12 @@ import { StatusBadge } from "./status-badge";
 import type { JobStatus } from "./status-badge";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+function getBadgeElement(canvasElement: HTMLElement): Element {
+  const el = canvasElement.querySelector('[data-slot="status-badge"]');
+  expect(el).not.toBeNull();
+  return el as Element;
+}
+
 const meta: Meta<typeof StatusBadge> = {
   title: "Design Patterns/StatusBadge",
   component: StatusBadge,
@@ -27,9 +33,7 @@ export const Running: Story = {
   args: { status: "running" },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const badgeEl = canvasElement.querySelector('[data-slot="status-badge"]');
-    expect(badgeEl).not.toBeNull();
-    const badge = badgeEl as Element;
+    const badge = getBadgeElement(canvasElement);
 
     await step("Renders 'Running' label", async () => {
       expect(canvas.getByText("Running")).toBeInTheDocument();
@@ -50,9 +54,7 @@ export const Queued: Story = {
   args: { status: "queued" },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const badgeEl = canvasElement.querySelector('[data-slot="status-badge"]');
-    expect(badgeEl).not.toBeNull();
-    const badge = badgeEl as Element;
+    const badge = getBadgeElement(canvasElement);
 
     await step("Renders 'Queued' label", async () => {
       expect(canvas.getByText("Queued")).toBeInTheDocument();
@@ -73,9 +75,7 @@ export const Completed: Story = {
   args: { status: "completed" },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const badgeEl = canvasElement.querySelector('[data-slot="status-badge"]');
-    expect(badgeEl).not.toBeNull();
-    const badge = badgeEl as Element;
+    const badge = getBadgeElement(canvasElement);
 
     await step("Renders 'Completed' label", async () => {
       expect(canvas.getByText("Completed")).toBeInTheDocument();
@@ -91,9 +91,7 @@ export const Failed: Story = {
   args: { status: "failed" },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const badgeEl = canvasElement.querySelector('[data-slot="status-badge"]');
-    expect(badgeEl).not.toBeNull();
-    const badge = badgeEl as Element;
+    const badge = getBadgeElement(canvasElement);
 
     await step("Renders 'Failed' label", async () => {
       expect(canvas.getByText("Failed")).toBeInTheDocument();
@@ -109,9 +107,7 @@ export const Paused: Story = {
   args: { status: "paused" },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const badgeEl = canvasElement.querySelector('[data-slot="status-badge"]');
-    expect(badgeEl).not.toBeNull();
-    const badge = badgeEl as Element;
+    const badge = getBadgeElement(canvasElement);
 
     await step("Renders 'Paused' label", async () => {
       expect(canvas.getByText("Paused")).toBeInTheDocument();
@@ -127,9 +123,7 @@ export const Cancelled: Story = {
   args: { status: "cancelled" },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const badgeEl = canvasElement.querySelector('[data-slot="status-badge"]');
-    expect(badgeEl).not.toBeNull();
-    const badge = badgeEl as Element;
+    const badge = getBadgeElement(canvasElement);
 
     await step("Renders 'Cancelled' label", async () => {
       expect(canvas.getByText("Cancelled")).toBeInTheDocument();
@@ -170,9 +164,7 @@ export const PulseOff: Story = {
   args: { status: "running", pulse: false },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const badgeEl = canvasElement.querySelector('[data-slot="status-badge"]');
-    expect(badgeEl).not.toBeNull();
-    const badge = badgeEl as Element;
+    const badge = getBadgeElement(canvasElement);
 
     await step("Renders 'Running' label", async () => {
       expect(canvas.getByText("Running")).toBeInTheDocument();

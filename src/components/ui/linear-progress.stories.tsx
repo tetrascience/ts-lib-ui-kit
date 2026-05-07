@@ -5,6 +5,12 @@ import { LinearProgress } from "./linear-progress";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+function getInnerBar(bar: HTMLElement): HTMLElement {
+  const el = bar.querySelector("div");
+  expect(el).not.toBeNull();
+  return el as HTMLElement;
+}
+
 const meta: Meta<typeof LinearProgress> = {
   title: "Design Patterns/LinearProgress",
   component: LinearProgress,
@@ -31,7 +37,7 @@ export const Indeterminate: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const bar = canvas.getByRole("progressbar");
-    const inner = bar.querySelector("div");
+    const inner = getInnerBar(bar);
 
     await step("Renders progressbar with correct ARIA attributes", async () => {
       expect(bar).toBeInTheDocument();
@@ -58,9 +64,7 @@ export const Determinate25: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const bar = canvas.getByRole("progressbar");
-    const innerEl = bar.querySelector("div");
-    expect(innerEl).not.toBeNull();
-    const inner = innerEl as HTMLElement;
+    const inner = getInnerBar(bar);
 
     await step("Renders progressbar with aria-valuenow=25", async () => {
       expect(bar).toHaveAttribute("aria-valuenow", "25");
@@ -80,9 +84,7 @@ export const Determinate50: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const bar = canvas.getByRole("progressbar");
-    const innerEl = bar.querySelector("div");
-    expect(innerEl).not.toBeNull();
-    const inner = innerEl as HTMLElement;
+    const inner = getInnerBar(bar);
 
     await step("Renders progressbar with aria-valuenow=50", async () => {
       expect(bar).toHaveAttribute("aria-valuenow", "50");
@@ -102,9 +104,7 @@ export const Determinate100: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const bar = canvas.getByRole("progressbar");
-    const innerEl = bar.querySelector("div");
-    expect(innerEl).not.toBeNull();
-    const inner = innerEl as HTMLElement;
+    const inner = getInnerBar(bar);
 
     await step("Renders progressbar with aria-valuenow=100", async () => {
       expect(bar).toHaveAttribute("aria-valuenow", "100");

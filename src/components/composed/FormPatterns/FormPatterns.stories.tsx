@@ -1,6 +1,10 @@
 import { useState } from "react"
 import { expect, userEvent, within } from "storybook/test"
 
+import { FormSection } from "./FormSection"
+
+import type { Meta, StoryObj } from "@storybook/react-vite"
+
 import {
   Alert,
   AlertDescription,
@@ -25,10 +29,6 @@ import {
 } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
-
-import { FormSection } from "./FormSection"
-
-import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof FormSection> = {
   title: "Design Patterns/FormPatterns",

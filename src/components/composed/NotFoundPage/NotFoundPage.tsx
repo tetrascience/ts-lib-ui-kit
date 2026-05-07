@@ -3,27 +3,36 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export type ErrorCode = 404 | 403 | 500 | 503
+const NOT_FOUND = 404
+const FORBIDDEN = 403
+const SERVER_ERROR = 500
+const SERVICE_UNAVAILABLE = 503
+
+export type ErrorCode =
+  | typeof NOT_FOUND
+  | typeof FORBIDDEN
+  | typeof SERVER_ERROR
+  | typeof SERVICE_UNAVAILABLE
 
 const CODE_DEFAULTS: Record<
   ErrorCode,
   { title: string; description: string }
 > = {
-  404: {
+  [NOT_FOUND]: {
     title: "Page not found",
     description:
       "The page you're looking for doesn't exist or has been moved.",
   },
-  403: {
+  [FORBIDDEN]: {
     title: "Access denied",
     description: "You don't have permission to view this resource.",
   },
-  500: {
+  [SERVER_ERROR]: {
     title: "Server error",
     description:
       "Something went wrong on our end. Try refreshing or contact support.",
   },
-  503: {
+  [SERVICE_UNAVAILABLE]: {
     title: "Service unavailable",
     description:
       "The service is temporarily offline for maintenance. Check back soon.",
@@ -45,7 +54,7 @@ export function NotFoundPage({
   className,
   ...props
 }: NotFoundPageProps) {
-  const defaults = code !== undefined ? CODE_DEFAULTS[code] : undefined
+  const defaults = code === undefined ? undefined : CODE_DEFAULTS[code]
   const resolvedTitle = title ?? defaults?.title
   const resolvedDescription = description ?? defaults?.description
 

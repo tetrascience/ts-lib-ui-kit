@@ -1,10 +1,10 @@
 import { expect, within } from "storybook/test"
 
-import { Button } from "@/components/ui/button"
-
 import { NotFoundPage } from "./NotFoundPage"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
+
+import { Button } from "@/components/ui/button"
 
 const meta: Meta<typeof NotFoundPage> = {
   title: "Design Patterns/NotFoundPage",

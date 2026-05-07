@@ -187,6 +187,11 @@
       "files": [{ "path": "src/components/ui/label.tsx", "type": "registry:ui" }]
     },
     {
+      "name": "linear-progress",
+      "type": "registry:ui",
+      "files": [{ "path": "src/components/ui/linear-progress.tsx", "type": "registry:ui" }]
+    },
+    {
       "name": "menubar",
       "type": "registry:ui",
       "dependencies": ["lucide-react"],
@@ -260,6 +265,11 @@
       "type": "registry:ui",
       "dependencies": ["lucide-react"],
       "files": [{ "path": "src/components/ui/spinner.tsx", "type": "registry:ui" }]
+    },
+    {
+      "name": "status-badge",
+      "type": "registry:ui",
+      "files": [{ "path": "src/components/ui/status-badge.tsx", "type": "registry:ui" }]
     },
     {
       "name": "switch",

@@ -13,7 +13,8 @@ function LinearProgress({
   className,
   ...props
 }: LinearProgressProps) {
-  const clamped = Math.min(100, Math.max(0, value ?? 0));
+  const safeValue = Number.isFinite(value) ? value : 0;
+  const clamped = Math.min(100, Math.max(0, safeValue));
 
   return (
     <div

@@ -238,6 +238,40 @@ describe("DataTable truncate prop", () => {
     const cells = container.querySelectorAll("td[data-slot='table-cell']")
     expect(cells[0].className).toContain("truncate")
   })
+
+  // Header ellipsis: text-overflow: ellipsis only renders on the element directly
+  // containing the overflowing text. SortableHeaderContent wraps the label in a span
+  // that gets the truncate class so ellipsis actually shows up in <th>s.
+  it("truncate=true — header label span has truncate class", () => {
+    render(<DataTable columns={personColumns} data={personData} truncate={true} />)
+    const heads = container.querySelectorAll("th[data-slot='table-head']")
+    heads.forEach((th) => {
+      const labelSpan = th.querySelector("span")
+      expect(labelSpan).toBeTruthy()
+      expect(labelSpan!.className).toContain("truncate")
+    })
+  })
+
+  it("truncate=false — header label span does NOT have truncate class", () => {
+    render(<DataTable columns={personColumns} data={personData} truncate={false} />)
+    const heads = container.querySelectorAll("th[data-slot='table-head']")
+    heads.forEach((th) => {
+      const labelSpan = th.querySelector("span")
+      expect(labelSpan).toBeTruthy()
+      expect(labelSpan!.className).not.toContain("truncate")
+    })
+  })
+
+  it("meta.truncate=false on a column — that header span has no truncate class", () => {
+    const columns: ColumnDef<Person, unknown>[] = [
+      { id: "name", accessorKey: "name", header: "Name" },
+      { id: "score", accessorKey: "score", header: "Score", meta: { truncate: false } },
+    ]
+    render(<DataTable columns={columns} data={[{ id: 1, name: "Alice", score: 42 }]} truncate={true} />)
+    const heads = container.querySelectorAll("th[data-slot='table-head']")
+    expect(heads[0].querySelector("span")!.className).toContain("truncate")
+    expect(heads[1].querySelector("span")!.className).not.toContain("truncate")
+  })
 })
 
 // ---------------------------------------------------------------------------

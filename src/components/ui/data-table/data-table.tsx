@@ -129,8 +129,8 @@ function DraggableHeader<TData>({
         isDragging && "opacity-40",
       )}
     >
-      <div className={cn("flex items-center gap-1", numeric && "flex-row-reverse")}>
-        <div className="flex-1">{children}</div>
+      <div className={cn("flex items-center gap-1 min-w-0", numeric && "flex-row-reverse")}>
+        <div className="flex-1 min-w-0">{children}</div>
         <button
           type="button"
           data-drag-handle=""
@@ -154,6 +154,7 @@ interface SortableHeaderContentProps {
   enableSorting: boolean
   numericColumns: Set<string>
   columnLabels: Record<string, string>
+  truncate?: boolean
 }
 
 function SortableHeaderContent({
@@ -161,6 +162,7 @@ function SortableHeaderContent({
   enableSorting,
   numericColumns,
   columnLabels,
+  truncate,
 }: SortableHeaderContentProps) {
   if (header.isPlaceholder) return null
   const canSort = enableSorting && header.column.getCanSort()
@@ -170,7 +172,7 @@ function SortableHeaderContent({
   return (
     <div
       className={cn(
-        "flex items-center gap-1",
+        "flex items-center gap-1 min-w-0",
         canSort && "group/sort cursor-pointer select-none",
         isNumeric && "flex-row-reverse",
       )}
@@ -181,8 +183,10 @@ function SortableHeaderContent({
         }
       }}
     >
-      {columnLabels[header.column.id] ??
-        flexRender(header.column.columnDef.header, header.getContext())}
+      <span className={cn("min-w-0", truncate && "truncate")}>
+        {columnLabels[header.column.id] ??
+          flexRender(header.column.columnDef.header, header.getContext())}
+      </span>
       {canSort && (
         <span
           className={cn(
@@ -473,7 +477,7 @@ function DataTable<TData, TValue>({
                     {table.getHeaderGroups()[0]?.headers.map((header) => (
                       <col
                         key={header.id}
-                        style={header.column.columnDef.size == null ? undefined : { width: header.column.columnDef.size }}
+                        style={{ width: header.column.getSize() }}
                       />
                     ))}
                   </colgroup>
@@ -494,6 +498,7 @@ function DataTable<TData, TValue>({
                             enableSorting={enableSorting}
                             numericColumns={numericColumns}
                             columnLabels={columnLabels}
+                            truncate={truncate && (header.column.columnDef.meta?.truncate ?? true)}
                           />
                         </DraggableHeader>
                       ))}
@@ -547,6 +552,7 @@ function DataTable<TData, TValue>({
                         enableSorting={enableSorting}
                         numericColumns={numericColumns}
                         columnLabels={columnLabels}
+                        truncate={truncate && (header.column.columnDef.meta?.truncate ?? true)}
                       />
                     </TableHead>
                   ))}

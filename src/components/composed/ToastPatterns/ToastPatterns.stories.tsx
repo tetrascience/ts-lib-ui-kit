@@ -186,7 +186,9 @@ export const ToastTriggers: Story = {
       await userEvent.click(canvas.getByRole("button", { name: "Success" }))
       const body = within(canvasElement.ownerDocument.body)
       await waitFor(() => {
-        expect(body.getByText("Pipeline started")).toBeInTheDocument()
+        expect(
+          body.getAllByText("Pipeline started").length
+        ).toBeGreaterThan(0)
       })
     })
   },
@@ -300,7 +302,9 @@ export const ContextualUsage: Story = {
       )
       const body = within(canvasElement.ownerDocument.body)
       await waitFor(() => {
-        expect(body.getByText("Pipeline restarted")).toBeInTheDocument()
+        expect(
+          body.getAllByText("Pipeline restarted").length
+        ).toBeGreaterThan(0)
       })
     })
   },

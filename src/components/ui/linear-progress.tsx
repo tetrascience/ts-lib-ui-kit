@@ -30,10 +30,10 @@ function LinearProgress({
       {...props}
     >
       {indeterminate ? (
-        <div className="absolute inset-y-0 left-0 w-[40%] animate-[indeterminate_1.4s_linear_infinite] rounded-full bg-primary" />
+        <div className="absolute inset-y-0 left-0 w-[40%] rounded-full bg-primary motion-safe:animate-[indeterminate_1.4s_linear_infinite]" />
       ) : (
         <div
-          className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+          className="h-full rounded-full bg-primary motion-safe:transition-all motion-safe:duration-500 motion-safe:ease-out"
           style={{ width: `${clamped}%` }}
         />
       )}

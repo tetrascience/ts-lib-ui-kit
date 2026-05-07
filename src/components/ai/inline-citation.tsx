@@ -50,6 +50,14 @@ export const InlineCitationText = ({
   />
 );
 
+const getHostname = (source: string) => {
+  try {
+    return new URL(source).hostname;
+  } catch {
+    return source;
+  }
+};
+
 export type InlineCitationCardProps = ComponentProps<typeof HoverCard>;
 
 export const InlineCitationCard = (props: InlineCitationCardProps) => (
@@ -73,7 +81,7 @@ export const InlineCitationCardTrigger = ({
     >
       {sources[0] ? (
         <>
-          {new URL(sources[0]).hostname}{" "}
+          {getHostname(sources[0])}{" "}
           {sources.length > 1 && `+${sources.length - 1}`}
         </>
       ) : (

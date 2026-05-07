@@ -5,13 +5,13 @@ import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
 export interface FormSectionProps extends React.ComponentProps<"div"> {
-  title: string
+  heading: string
   description?: string
   children: React.ReactNode
 }
 
 export function FormSection({
-  title,
+  heading,
   description,
   children,
   className,
@@ -24,7 +24,7 @@ export function FormSection({
       {...props}
     >
       <div className="space-y-0.5">
-        <p className="text-sm font-semibold">{title}</p>
+        <p className="text-sm font-semibold">{heading}</p>
         {description && (
           <p className="text-sm text-muted-foreground">{description}</p>
         )}

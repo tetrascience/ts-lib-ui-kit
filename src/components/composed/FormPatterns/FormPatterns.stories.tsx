@@ -52,7 +52,7 @@ type Story = StoryObj<typeof FormSection>
 
 export const SingleSection: Story = {
   args: {
-    title: "Project details",
+    heading: "Project details",
     description: "Basic information about this project.",
   },
   render: (args) => (
@@ -94,7 +94,7 @@ export const SingleSection: Story = {
 export const SectionedForm: Story = {
   render: () => (
     <form className="flex flex-col gap-8">
-      <FormSection title="Personal info">
+      <FormSection heading="Personal info">
         <Field>
           <FieldLabel htmlFor="sf-first">
             <FieldTitle>First name</FieldTitle>
@@ -121,7 +121,7 @@ export const SectionedForm: Story = {
         </Field>
       </FormSection>
 
-      <FormSection title="Role & Access">
+      <FormSection heading="Role & Access">
         <Field>
           <FieldLabel htmlFor="sf-role">
             <FieldTitle>Role</FieldTitle>
@@ -150,7 +150,7 @@ export const SectionedForm: Story = {
         </Field>
       </FormSection>
 
-      <FormSection title="Preferences">
+      <FormSection heading="Preferences">
         <Field>
           <FieldLabel htmlFor="sf-timezone">
             <FieldTitle>Timezone</FieldTitle>
@@ -235,7 +235,7 @@ export const WithValidation: Story = {
           setSubmitted(true)
         }}
       >
-        <FormSection title="Personal info">
+        <FormSection heading="Personal info">
           <Field>
             <FieldLabel htmlFor="wv-first">
               <FieldTitle>First name</FieldTitle>
@@ -400,7 +400,7 @@ export const MultiStepForm: Story = {
         </p>
 
         {step === 1 && (
-          <FormSection title="Personal info">
+          <FormSection heading="Personal info">
             <Field>
               <FieldLabel htmlFor="ms-first">
                 <FieldTitle>First name</FieldTitle>
@@ -429,7 +429,7 @@ export const MultiStepForm: Story = {
         )}
 
         {step === 2 && (
-          <FormSection title="Role & Access">
+          <FormSection heading="Role & Access">
             <Field>
               <FieldLabel htmlFor="ms-role">
                 <FieldTitle>Role</FieldTitle>

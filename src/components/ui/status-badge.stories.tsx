@@ -28,6 +28,7 @@ export const Running: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const badge = canvasElement.querySelector('[data-slot="status-badge"]');
+    expect(badge).not.toBeNull();
 
     await step("Renders 'Running' label", async () => {
       expect(canvas.getByText("Running")).toBeInTheDocument();
@@ -38,7 +39,7 @@ export const Running: Story = {
     });
 
     await step("Dot pulses by default for running status", async () => {
-      const dot = badge?.querySelector("span");
+      const dot = badge!.querySelector("span");
       expect(dot).toHaveClass("animate-pulse");
     });
   },
@@ -49,6 +50,7 @@ export const Queued: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const badge = canvasElement.querySelector('[data-slot="status-badge"]');
+    expect(badge).not.toBeNull();
 
     await step("Renders 'Queued' label", async () => {
       expect(canvas.getByText("Queued")).toBeInTheDocument();
@@ -59,7 +61,7 @@ export const Queued: Story = {
     });
 
     await step("Dot does not pulse for queued status", async () => {
-      const dot = badge?.querySelector("span");
+      const dot = badge!.querySelector("span");
       expect(dot).not.toHaveClass("animate-pulse");
     });
   },
@@ -70,6 +72,7 @@ export const Completed: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const badge = canvasElement.querySelector('[data-slot="status-badge"]');
+    expect(badge).not.toBeNull();
 
     await step("Renders 'Completed' label", async () => {
       expect(canvas.getByText("Completed")).toBeInTheDocument();
@@ -86,6 +89,7 @@ export const Failed: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const badge = canvasElement.querySelector('[data-slot="status-badge"]');
+    expect(badge).not.toBeNull();
 
     await step("Renders 'Failed' label", async () => {
       expect(canvas.getByText("Failed")).toBeInTheDocument();
@@ -102,6 +106,7 @@ export const Paused: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const badge = canvasElement.querySelector('[data-slot="status-badge"]');
+    expect(badge).not.toBeNull();
 
     await step("Renders 'Paused' label", async () => {
       expect(canvas.getByText("Paused")).toBeInTheDocument();
@@ -118,6 +123,7 @@ export const Cancelled: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const badge = canvasElement.querySelector('[data-slot="status-badge"]');
+    expect(badge).not.toBeNull();
 
     await step("Renders 'Cancelled' label", async () => {
       expect(canvas.getByText("Cancelled")).toBeInTheDocument();
@@ -159,13 +165,14 @@ export const PulseOff: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const badge = canvasElement.querySelector('[data-slot="status-badge"]');
+    expect(badge).not.toBeNull();
 
     await step("Renders 'Running' label", async () => {
       expect(canvas.getByText("Running")).toBeInTheDocument();
     });
 
     await step("Dot does not pulse when pulse=false", async () => {
-      const dot = badge?.querySelector("span");
+      const dot = badge!.querySelector("span");
       expect(dot).not.toHaveClass("animate-pulse");
     });
   },

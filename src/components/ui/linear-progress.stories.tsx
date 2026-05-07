@@ -30,9 +30,10 @@ export const Indeterminate: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
+    const bar = canvas.getByRole("progressbar");
+    const inner = bar.querySelector("div");
 
     await step("Renders progressbar with correct ARIA attributes", async () => {
-      const bar = canvas.getByRole("progressbar");
       expect(bar).toBeInTheDocument();
       expect(bar).toHaveAttribute("data-slot", "linear-progress");
       expect(bar).toHaveAttribute("aria-valuemin", "0");
@@ -40,13 +41,10 @@ export const Indeterminate: Story = {
     });
 
     await step("Does not set aria-valuenow in indeterminate mode", async () => {
-      const bar = canvas.getByRole("progressbar");
       expect(bar).not.toHaveAttribute("aria-valuenow");
     });
 
     await step("Renders the sliding inner bar element", async () => {
-      const bar = canvas.getByRole("progressbar");
-      const inner = bar.querySelector("div");
       expect(inner).toBeInTheDocument();
     });
   },
@@ -59,16 +57,15 @@ export const Determinate25: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
+    const bar = canvas.getByRole("progressbar");
+    const inner = bar.querySelector("div");
+    expect(inner).not.toBeNull();
 
     await step("Renders progressbar with aria-valuenow=25", async () => {
-      const bar = canvas.getByRole("progressbar");
       expect(bar).toHaveAttribute("aria-valuenow", "25");
     });
 
     await step("Inner bar reflects 25% width", async () => {
-      const bar = canvas.getByRole("progressbar");
-      const inner = bar.querySelector("div");
-      expect(inner).not.toBeNull();
       expect((inner as HTMLElement).style.width).toBe("25%");
     });
   },
@@ -81,16 +78,15 @@ export const Determinate50: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
+    const bar = canvas.getByRole("progressbar");
+    const inner = bar.querySelector("div");
+    expect(inner).not.toBeNull();
 
     await step("Renders progressbar with aria-valuenow=50", async () => {
-      const bar = canvas.getByRole("progressbar");
       expect(bar).toHaveAttribute("aria-valuenow", "50");
     });
 
     await step("Inner bar reflects 50% width", async () => {
-      const bar = canvas.getByRole("progressbar");
-      const inner = bar.querySelector("div");
-      expect(inner).not.toBeNull();
       expect((inner as HTMLElement).style.width).toBe("50%");
     });
   },
@@ -103,16 +99,15 @@ export const Determinate100: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
+    const bar = canvas.getByRole("progressbar");
+    const inner = bar.querySelector("div");
+    expect(inner).not.toBeNull();
 
     await step("Renders progressbar with aria-valuenow=100", async () => {
-      const bar = canvas.getByRole("progressbar");
       expect(bar).toHaveAttribute("aria-valuenow", "100");
     });
 
     await step("Inner bar reflects 100% width", async () => {
-      const bar = canvas.getByRole("progressbar");
-      const inner = bar.querySelector("div");
-      expect(inner).not.toBeNull();
       expect((inner as HTMLElement).style.width).toBe("100%");
     });
   },

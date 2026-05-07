@@ -22,8 +22,8 @@ const statusConfig: Record<
   running: {
     label: "Running",
     badgeClass:
-      "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300",
-    dotClass: "bg-blue-500",
+      "border-info/30 bg-info/10 text-info dark:border-info/30 dark:bg-info/20",
+    dotClass: "bg-info",
     defaultPulse: true,
   },
   queued: {

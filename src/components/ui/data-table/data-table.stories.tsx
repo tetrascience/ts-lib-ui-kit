@@ -1131,6 +1131,16 @@ export const FilteringWithConfig: Story = {
       // The first combobox is the column selector
       const triggers = body.getAllByRole("combobox")
       expect(triggers.length).toBeGreaterThan(0)
+
+      await userEvent.click(triggers[0])
+
+      const listbox = await within(document.body).findByRole("listbox")
+      const options = within(listbox).getAllByRole("option")
+      const optionLabels = options.map((option) => option.textContent?.trim()).filter(Boolean)
+
+      expect(optionLabels).toEqual(["Status", "Owner"])
+      expect(within(listbox).queryByRole("option", { name: "Status" })).toBeInTheDocument()
+      expect(within(listbox).queryByRole("option", { name: "Owner" })).toBeInTheDocument()
     })
   },
   parameters: {

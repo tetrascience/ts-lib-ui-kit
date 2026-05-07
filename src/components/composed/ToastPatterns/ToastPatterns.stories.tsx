@@ -7,6 +7,8 @@ import {
 import { toast } from "sonner"
 import { expect, userEvent, waitFor, within } from "storybook/test"
 
+import type { Meta, StoryObj } from "@storybook/react-vite"
+
 import {
   Alert,
   AlertAction,
@@ -22,9 +24,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Toaster } from "@/components/ui/sonner"
-
-import type { StoryObj } from "@storybook/react-vite"
-import type { Meta } from "@storybook/react-vite"
 
 const meta: Meta = {
   title: "Design Patterns/ToastPatterns",

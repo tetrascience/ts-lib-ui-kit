@@ -193,6 +193,40 @@ export const ToastTriggers: Story = {
         ).toBeGreaterThan(0)
       })
     })
+
+    await step("Clicking error shows toast", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Error" }))
+      const body = within(canvasElement.ownerDocument.body)
+      await waitFor(() => {
+        expect(body.getAllByText("Export failed").length).toBeGreaterThan(0)
+      })
+    })
+
+    await step("Clicking warning shows toast", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Warning" }))
+      const body = within(canvasElement.ownerDocument.body)
+      await waitFor(() => {
+        expect(body.getAllByText("Retry scheduled").length).toBeGreaterThan(0)
+      })
+    })
+
+    await step("Clicking info shows toast", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Info" }))
+      const body = within(canvasElement.ownerDocument.body)
+      await waitFor(() => {
+        expect(body.getAllByText("Sync in progress").length).toBeGreaterThan(0)
+      })
+    })
+
+    await step("Clicking default shows toast", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Default" }))
+      const body = within(canvasElement.ownerDocument.body)
+      await waitFor(() => {
+        expect(
+          body.getAllByText("Workspace settings saved.").length
+        ).toBeGreaterThan(0)
+      })
+    })
   },
 }
 

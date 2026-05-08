@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 
-export interface ConfirmDialogProps {
+interface ConfirmDialogBaseProps {
   title: string
   description?: string
   variant?: "default" | "destructive"
@@ -22,11 +22,23 @@ export interface ConfirmDialogProps {
   cancelLabel?: string
   onConfirm?: () => void
   onCancel?: () => void
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
   trigger?: React.ReactElement
   loading?: boolean
 }
+
+type ConfirmDialogControlledProps = ConfirmDialogBaseProps & {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+type ConfirmDialogUncontrolledProps = ConfirmDialogBaseProps & {
+  open?: never
+  onOpenChange?: never
+}
+
+export type ConfirmDialogProps =
+  | ConfirmDialogControlledProps
+  | ConfirmDialogUncontrolledProps
 
 export function ConfirmDialog({
   title,

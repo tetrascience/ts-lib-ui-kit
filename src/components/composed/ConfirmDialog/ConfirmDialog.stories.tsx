@@ -120,6 +120,7 @@ export const WithLoading: Story = {
     confirmLabel: "Submit",
     loading: true,
     open: true,
+    onOpenChange: () => {},
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1517" },
@@ -151,6 +152,7 @@ export const ControlledOpen: Story = {
     variant: "destructive",
     confirmLabel: "Remove",
     open: true,
+    onOpenChange: () => {},
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1518" },

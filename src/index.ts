@@ -2,7 +2,7 @@
 import "@/index.css";
 
 // Composed
-export * from "@/components/composed/NotFoundPage"
+export * from "@/components/composed/NotFoundPage";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";

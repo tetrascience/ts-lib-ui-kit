@@ -1,4 +1,4 @@
-import { ArrowDownToLine } from "lucide-react";
+import { ArrowDownToLine, Check } from "lucide-react";
 import * as React from "react";
 
 import type { WellColumn, WellField, WellId, WellRecord } from "./types";
@@ -275,7 +275,14 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
         >
           <TableHeader variant="sticky" className="bg-slate-100 [&_tr]:border-slate-300">
             <TableRow>
-              {onSelectionChange ? <TableHead variant="action" className="w-10" /> : null}
+              {onSelectionChange ? (
+                <TableHead variant="action" className="w-10 text-center">
+                  <span className="inline-flex items-center justify-center text-muted-foreground [&_svg]:size-3.5">
+                    <Check aria-hidden />
+                    <span className="sr-only">Selected</span>
+                  </span>
+                </TableHead>
+              ) : null}
               <TableHead style={{ minWidth: 60 }}>Well</TableHead>
               {columns.map((col) => (
                 <TableHead

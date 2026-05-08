@@ -40,6 +40,8 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   mergeOnApply?: (existing: T | undefined, staged: Partial<T>, wellId: WellId) => T;
   /** Filter for the manifest's "hide empty" mode. */
   isPopulated?: (row: T) => boolean;
+  /** Select field cycled when double-clicking a single well, e.g. role painting. */
+  cycleFieldOnWellDoubleClick?: keyof T & string;
 
   /** Optional header title (e.g. plate set name). */
   title?: string;
@@ -90,6 +92,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   emptyEntry,
   mergeOnApply,
   isPopulated,
+  cycleFieldOnWellDoubleClick,
   title,
   badges,
   banner,
@@ -129,8 +132,15 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   const dims = resolveDimensions(format, rows, columns);
   const [staged, setStaged] = React.useState<Partial<T>>({});
   const [hoverPos, setHoverPos] = React.useState<WellId | null>(null);
+  const [flashWell, setFlashWell] = React.useState<{ wellId: WellId; key: number }>();
 
   const merge = mergeOnApply ?? defaultMerge<T>;
+  const doubleClickCycleField = React.useMemo(() => {
+    if (!cycleFieldOnWellDoubleClick) return;
+    const field = fields.find((f) => f.key === cycleFieldOnWellDoubleClick);
+    if (field?.kind !== "select" || !field.options?.length) return;
+    return field;
+  }, [cycleFieldOnWellDoubleClick, fields]);
 
   const applyStagedToSelection = () => {
     if (selection.size === 0) return;
@@ -149,6 +159,25 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
     selection.forEach((wellId) => next.delete(wellId));
     onChange(next);
   };
+
+  const cycleWellField = React.useCallback(
+    (wellId: WellId) => {
+      if (!doubleClickCycleField?.options?.length) return;
+
+      const next = new Map(values);
+      const existing = next.get(wellId);
+      const currentValue = existing?.[doubleClickCycleField.key];
+      const currentIndex = doubleClickCycleField.options.findIndex((opt) => opt.value === currentValue);
+      const nextOption = doubleClickCycleField.options[(currentIndex + 1) % doubleClickCycleField.options.length];
+      if (!nextOption) return;
+
+      const base = existing ?? emptyEntry(wellId);
+      next.set(wellId, { ...base, [doubleClickCycleField.key]: nextOption.value } as T);
+      onChange(next);
+      setFlashWell((current) => ({ wellId, key: (current?.key ?? 0) + 1 }));
+    },
+    [doubleClickCycleField, emptyEntry, onChange, values],
+  );
 
   const selectAll = () => {
     onSelectionChange(new Set(allPositions(dims)));
@@ -267,6 +296,10 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
               onSelectionChange={onSelectionChange}
               colorForWell={colorForWell}
               onWellHover={setHoverPos}
+              onWellDoubleClick={doubleClickCycleField ? cycleWellField : undefined}
+              selectionFillMode={doubleClickCycleField ? "well" : "selection"}
+              flashWellId={flashWell?.wellId}
+              flashWellKey={flashWell?.key}
               cellSize={cellSize}
               autoScale={autoScaleGrid}
               minCellSize={minCellSize}

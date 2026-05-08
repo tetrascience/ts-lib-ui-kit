@@ -112,6 +112,7 @@ function DemoEditor() {
       colorForWell={colorForWell}
       emptyEntry={emptyEntry}
       isPopulated={isPopulated}
+      cycleFieldOnWellDoubleClick="role"
       title="Demo plate"
       groups={GROUPS}
       activeGroupId={activeGroupId}
@@ -159,10 +160,12 @@ function DemoEditor() {
       onExportTemplate={() => {}}
       footer={
         <>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="border-slate-400 bg-white text-slate-900 hover:bg-slate-100">
             Back
           </Button>
-          <Button size="sm">Save</Button>
+          <Button size="sm" className="bg-blue-700 text-white hover:bg-blue-800">
+            Save
+          </Button>
         </>
       }
     />
@@ -183,7 +186,7 @@ export const Default: Story = {
     });
 
     await step("Header badges show counts", async () => {
-      expect(canvas.getByText("96-well")).toBeInTheDocument();
+      expect(canvas.getByRole("combobox", { name: "Plate format" })).toHaveTextContent("96-well");
       expect(canvas.getByText("0 assigned")).toBeInTheDocument();
       expect(canvas.getByText("0 selected")).toBeInTheDocument();
     });
@@ -223,6 +226,7 @@ export const Plate384: Story = {
           colorForWell={colorForWell}
           emptyEntry={emptyEntry}
           isPopulated={isPopulated}
+          cycleFieldOnWellDoubleClick="role"
           title="384-well demo"
         />
       );

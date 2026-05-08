@@ -99,8 +99,8 @@ function ActivityFeed({
                   <span className="text-sm font-medium leading-tight">
                     {item.title}
                   </span>
-                  {item.badges?.map((badge) => (
-                    <Badge key={badge} variant="secondary">
+                  {item.badges?.map((badge, index) => (
+                    <Badge key={`${item.id}-${badge}-${index}`} variant="secondary">
                       {badge}
                     </Badge>
                   ))}

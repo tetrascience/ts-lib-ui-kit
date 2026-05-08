@@ -3,7 +3,9 @@ import {
   CircleCheckIcon,
   InfoIcon,
   TriangleAlertIcon,
+  XIcon,
 } from "lucide-react"
+import { useState } from "react"
 import { toast } from "sonner"
 import { expect, userEvent, waitFor, within } from "storybook/test"
 
@@ -232,6 +234,8 @@ export const AlertWithAction: Story = {
 
 export const ContextualUsage: Story = {
   render: () => {
+    const [showWarning, setShowWarning] = useState(true)
+
     return (
       <div className="w-[480px]">
         <Card>
@@ -239,14 +243,26 @@ export const ContextualUsage: Story = {
             <CardTitle>Pipeline JOB-9144</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <Alert variant="warning">
-              <TriangleAlertIcon />
-              <AlertTitle>Retry required</AlertTitle>
-              <AlertDescription>
-                One downstream connector reported a transient error. Retry to
-                resume.
-              </AlertDescription>
-            </Alert>
+            {showWarning ? (
+              <Alert variant="warning">
+                <TriangleAlertIcon />
+                <AlertTitle>Retry required</AlertTitle>
+                <AlertDescription>
+                  One downstream connector reported a transient error. Retry to
+                  resume.
+                </AlertDescription>
+                <AlertAction>
+                  <Button
+                    aria-label="Dismiss alert"
+                    size="icon-xs"
+                    variant="ghost"
+                    onClick={() => setShowWarning(false)}
+                  >
+                    <XIcon />
+                  </Button>
+                </AlertAction>
+              </Alert>
+            ) : null}
             <div className="rounded-lg border p-3 text-sm text-muted-foreground">
               Status: <span className="font-medium text-foreground">Paused</span>
             </div>
@@ -285,6 +301,16 @@ export const ContextualUsage: Story = {
       expect(canvas.getByText("Pipeline JOB-9144")).toBeInTheDocument()
       expect(canvas.getByRole("alert")).toBeInTheDocument()
       expect(canvas.getByText("Retry required")).toBeInTheDocument()
+      expect(
+        canvas.getByRole("button", { name: "Dismiss alert" })
+      ).toBeInTheDocument()
+    })
+
+    await step("Warning alert can be dismissed", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Dismiss alert" }))
+      await waitFor(() => {
+        expect(canvas.queryByRole("alert")).not.toBeInTheDocument()
+      })
     })
 
     await step("Action buttons are present", async () => {

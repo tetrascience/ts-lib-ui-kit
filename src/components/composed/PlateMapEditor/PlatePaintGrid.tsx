@@ -18,7 +18,7 @@ const WELL_INSET = 1;
 const STROKE_DEFAULT = 1;
 const STROKE_SELECTED = 3;
 const STROKE_FLASH = 5;
-const FLASH_DURATION_MS = 520;
+const FLASH_DURATION_MS = 650;
 
 export interface PlatePaintGridProps<T extends WellRecord = WellRecord> {
   format: PlateFormat;
@@ -46,7 +46,7 @@ export interface PlatePaintGridProps<T extends WellRecord = WellRecord> {
   selectedFillOpacity?: number;
   /** Whether selected wells use the selection fill or keep their assigned well color. */
   selectionFillMode?: "selection" | "well";
-  /** Well id that should briefly flash, usually after a click assignment. */
+  /** Well id that should briefly flash, usually after a double-click assignment. */
   flashWellId?: WellId;
   /** Changing this value restarts the flash animation for the same well. */
   flashWellKey?: number;
@@ -167,14 +167,16 @@ function buildWellCell<T extends WellRecord>(
           y={LABEL_PAD + row * cellSize + WELL_INSET}
           width={cellSize - WELL_INSET * 2}
           height={cellSize - WELL_INSET * 2}
-          fill={wellFill}
+          fill={selectedBorderColor}
+          fillOpacity={0.24}
           stroke={selectedBorderColor}
+          strokeOpacity={0.92}
           strokeWidth={STROKE_FLASH}
-          opacity={0.72}
           pointerEvents="none"
           data-well-flash={id}
         >
-          <animate attributeName="opacity" values="0.72;0.22;0" dur={`${FLASH_DURATION_MS}ms`} fill="freeze" />
+          <animate attributeName="fill-opacity" values="0.24;0.1;0" dur={`${FLASH_DURATION_MS}ms`} fill="freeze" />
+          <animate attributeName="stroke-opacity" values="0.92;0.42;0" dur={`${FLASH_DURATION_MS}ms`} fill="freeze" />
           <animate
             attributeName="stroke-width"
             values={`${STROKE_FLASH};${STROKE_SELECTED}`}

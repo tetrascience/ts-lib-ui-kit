@@ -1,6 +1,14 @@
-import { expect, within } from "storybook/test"
+import { expect, userEvent, within } from "storybook/test"
 
 import { Button } from "./button"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./table"
 import {
   Tooltip,
   TooltipContent,
@@ -137,6 +145,92 @@ export const Left: Story = {
       const nodes = body.getAllByText("Last synced 3 minutes ago")
       expect(nodes.length).toBeGreaterThan(0)
       expect(nodes[0]).toBeInTheDocument()
+    })
+  },
+}
+
+const tableRows = [
+  {
+    workspace: "Clinical exports",
+    owner: "Data Ops",
+    lastRun: "3 minutes ago",
+    detail: "Last sync completed at 14:32 UTC — 142 rows transferred",
+  },
+  {
+    workspace: "QC dashboard",
+    owner: "Analytics",
+    lastRun: "2 hours ago",
+    detail: "Paused by user@example.com pending schema review",
+  },
+  {
+    workspace: "Audit trail",
+    owner: "Compliance",
+    lastRun: "yesterday",
+    detail: "Scheduled daily at 03:00 UTC — next run in 11 hours",
+  },
+]
+
+export const InTableCells: Story = {
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        story:
+          "Regression coverage for SW-1474: tooltips inside table cells must render via portal, " +
+          "not as inline text that overlaps adjacent rows.",
+      },
+    },
+  },
+  render: () => (
+    <TooltipProvider>
+      <div className="w-[640px]">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Workspace</TableHead>
+              <TableHead>Owner</TableHead>
+              <TableHead>Last run</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tableRows.map((row) => (
+              <TableRow key={row.workspace}>
+                <TableCell>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-left underline decoration-dotted underline-offset-2"
+                      >
+                        {row.workspace}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>{row.detail}</TooltipContent>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>{row.owner}</TableCell>
+                <TableCell>{row.lastRun}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </TooltipProvider>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Tooltip content is not rendered inline before hover", async () => {
+      expect(canvas.queryByText(tableRows[0].detail)).not.toBeInTheDocument()
+    })
+
+    await step("Hovering trigger reveals tooltip in portal", async () => {
+      const trigger = canvas.getByRole("button", { name: tableRows[0].workspace })
+      await userEvent.hover(trigger)
+      const nodes = await body.findAllByText(tableRows[0].detail)
+      expect(nodes.length).toBeGreaterThan(0)
+      expect(nodes.every((node) => !canvasElement.contains(node))).toBe(true)
     })
   },
 }

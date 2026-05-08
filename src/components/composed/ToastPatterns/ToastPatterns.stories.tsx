@@ -169,10 +169,10 @@ export const ToastTriggers: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
 
     const testToastTrigger = async (buttonName: string, expectedText: string) => {
       await userEvent.click(canvas.getByRole("button", { name: buttonName }))
+      const body = within(canvasElement.ownerDocument.body)
       await waitFor(() => {
         expect(body.getAllByText(expectedText).length).toBeGreaterThan(0)
       })

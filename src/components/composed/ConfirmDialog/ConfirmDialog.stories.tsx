@@ -114,13 +114,19 @@ export const Destructive: Story = {
 }
 
 export const WithLoading: Story = {
-  args: {
-    title: "Submit pipeline run",
-    description: "JOB-9145 will be queued and start processing shortly.",
-    confirmLabel: "Submit",
-    loading: true,
-    open: true,
-    onOpenChange: () => {},
+  render: () => {
+    const [open, setOpen] = useState(true)
+
+    return (
+      <ConfirmDialog
+        title="Submit pipeline run"
+        description="JOB-9145 will be queued and start processing shortly."
+        confirmLabel="Submit"
+        loading={true}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    )
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1517" },
@@ -145,14 +151,19 @@ export const WithLoading: Story = {
 }
 
 export const ControlledOpen: Story = {
-  args: {
-    title: "Remove team member",
-    description:
-      "This user will lose access to all shared workspaces and pipelines.",
-    variant: "destructive",
-    confirmLabel: "Remove",
-    open: true,
-    onOpenChange: () => {},
+  render: () => {
+    const [open, setOpen] = useState(true)
+
+    return (
+      <ConfirmDialog
+        title="Remove team member"
+        description="This user will lose access to all shared workspaces and pipelines."
+        variant="destructive"
+        confirmLabel="Remove"
+        open={open}
+        onOpenChange={setOpen}
+      />
+    )
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1518" },

@@ -7,6 +7,7 @@ export * from "@/components/composed/StatCard";
 export * from "@/components/composed/DataAppShell";
 export * from "@/components/composed/Chat";
 export * from "@/components/composed/ConfirmDialog"
+export * from "@/components/composed/ConfirmDialog";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";

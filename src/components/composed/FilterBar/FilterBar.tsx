@@ -88,7 +88,7 @@ function FilterBar({
             value={value.filters[filter.key] || undefined}
             onValueChange={(v) => handleFilterChange(filter.key, v)}
           >
-            <SelectTrigger className="w-auto min-w-32">
+            <SelectTrigger aria-label={filter.label} className="w-auto min-w-32">
               <SelectValue placeholder={filter.label} />
             </SelectTrigger>
             <SelectContent>

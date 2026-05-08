@@ -9,12 +9,14 @@ export interface CopyToClipboardProps extends React.ComponentProps<"div"> {
   value: string;
   label?: string;
   language?: string;
+  copyValue?: (value: string) => Promise<void> | void;
 }
 
 function CopyToClipboard({
   value,
   label,
   language,
+  copyValue,
   className,
   ...props
 }: CopyToClipboardProps) {
@@ -22,7 +24,7 @@ function CopyToClipboard({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(value);
+      await (copyValue ? copyValue(value) : navigator.clipboard.writeText(value));
       setCopied(true);
       setTimeout(() => setCopied(false), COPY_CONFIRMATION_MS);
     } catch {

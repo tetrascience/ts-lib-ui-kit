@@ -2,11 +2,24 @@ import { expect, userEvent, within } from "storybook/test";
 
 import { CopyToClipboard } from "./copy-to-clipboard";
 
+import type { CopyToClipboardProps } from "./copy-to-clipboard";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+
+const noopCopy = async () => {};
+
+function renderCopyToClipboard(args: CopyToClipboardProps) {
+  return (
+    <CopyToClipboard
+      {...args}
+      copyValue={args.copyValue ?? noopCopy}
+    />
+  );
+}
 
 const meta: Meta<typeof CopyToClipboard> = {
   title: "Design Patterns/CopyToClipboard",
   component: CopyToClipboard,
+  render: renderCopyToClipboard,
   parameters: {
     layout: "centered",
   },
@@ -50,7 +63,7 @@ results = client.experiments.list(
 
     await step("Clicking copy button shows confirmation state", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Copy" }));
-      expect(canvas.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+      expect(await canvas.findByRole("button", { name: "Copied" })).toBeInTheDocument();
     });
   },
 };
@@ -76,7 +89,7 @@ export const CurlExample: Story = {
 
     await step("Clicking copy button shows confirmation state", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Copy" }));
-      expect(canvas.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+      expect(await canvas.findByRole("button", { name: "Copied" })).toBeInTheDocument();
     });
   },
 };
@@ -106,7 +119,7 @@ export const JsonPayload: Story = {
 
     await step("Clicking copy button shows confirmation state", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Copy" }));
-      expect(canvas.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+      expect(await canvas.findByRole("button", { name: "Copied" })).toBeInTheDocument();
     });
   },
 };
@@ -127,7 +140,7 @@ export const NoLabel: Story = {
 
     await step("Clicking copy button shows confirmation state", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Copy" }));
-      expect(canvas.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+      expect(await canvas.findByRole("button", { name: "Copied" })).toBeInTheDocument();
     });
   },
 };

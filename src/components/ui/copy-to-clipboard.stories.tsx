@@ -1,6 +1,6 @@
-import { CopyToClipboard } from "./copy-to-clipboard";
-
 import type { Meta, StoryObj } from "@storybook/react-vite";
+
+import { CopyToClipboard } from "./copy-to-clipboard";
 
 const meta: Meta<typeof CopyToClipboard> = {
   title: "Design Patterns/CopyToClipboard",

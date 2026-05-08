@@ -1,6 +1,6 @@
 import { Download, Tag, Trash2 } from "lucide-react";
 import * as React from "react";
-
+import { expect, userEvent, within } from "storybook/test";
 
 import { ContextualActionBar } from "./ContextualActionBar";
 
@@ -49,6 +49,19 @@ export const NoSelection: Story = {
       </div>
     ),
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1489" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Checkbox and column headers render", async () => {
+      expect(canvas.getByRole("checkbox", { name: "Select all rows" })).toBeInTheDocument();
+      expect(canvas.getByText("Experiment")).toBeInTheDocument();
+      expect(canvas.getByText("Assay")).toBeInTheDocument();
+      expect(canvas.getByText("Team")).toBeInTheDocument();
+    });
+  },
 };
 
 export const PartialSelection: Story = {
@@ -62,6 +75,23 @@ export const PartialSelection: Story = {
     ],
     onSelectAll: () => {},
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1490" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Selection count badge and action buttons render", async () => {
+      expect(canvas.getByText("2 selected")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Export" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Tag" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+    });
+
+    await step("Clear button appears when items are selected", async () => {
+      expect(canvas.getByRole("button", { name: "Clear" })).toBeInTheDocument();
+    });
+  },
 };
 
 export const AllSelected: Story = {
@@ -74,6 +104,21 @@ export const AllSelected: Story = {
       { label: "Delete", icon: Trash2, variant: "destructive", onClick: () => {} },
     ],
     onSelectAll: () => {},
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1491" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Selection count shows all items selected", async () => {
+      expect(canvas.getByText("5 selected")).toBeInTheDocument();
+    });
+
+    await step("Checkbox is checked when all items selected", async () => {
+      const checkbox = canvas.getByRole("checkbox", { name: "Select all rows" });
+      expect(checkbox).toBeChecked();
+    });
   },
 };
 
@@ -143,5 +188,23 @@ export const Interactive: Story = {
         ))}
       </div>
     );
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1492" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Interactive table with rows renders", async () => {
+      expect(canvas.getByText("Experiment Alpha")).toBeInTheDocument();
+      expect(canvas.getByText("Experiment Beta")).toBeInTheDocument();
+    });
+
+    await step("Selecting a row shows action bar", async () => {
+      const checkboxes = canvas.getAllByRole("checkbox");
+      // First checkbox after the select-all is the first row
+      await userEvent.click(checkboxes[1]);
+      expect(canvas.getByText("1 selected")).toBeInTheDocument();
+    });
   },
 };

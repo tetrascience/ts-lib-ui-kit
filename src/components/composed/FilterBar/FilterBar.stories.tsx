@@ -1,4 +1,5 @@
 import * as React from "react";
+import { expect, within } from "storybook/test";
 
 import { FilterBar } from "./FilterBar";
 
@@ -62,6 +63,19 @@ export const Default: Story = {
     const [value, setValue] = React.useState<FilterBarValue>(emptyValue);
     return <FilterBar filters={FILTERS} value={value} onChange={setValue} placeholder="Search experiments..." />;
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1493" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Search input and filter dropdowns render", async () => {
+      expect(canvas.getByPlaceholderText("Search experiments...")).toBeInTheDocument();
+      expect(canvas.getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+      expect(canvas.getByRole("combobox", { name: "Assay" })).toBeInTheDocument();
+      expect(canvas.getByRole("combobox", { name: "Team" })).toBeInTheDocument();
+    });
+  },
 };
 
 export const WithActiveFilters: Story = {
@@ -72,11 +86,43 @@ export const WithActiveFilters: Story = {
     });
     return <FilterBar filters={FILTERS} value={value} onChange={setValue} placeholder="Search experiments..." />;
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1494" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Search input shows search term", async () => {
+      const searchInput = canvas.getByPlaceholderText("Search experiments...") as HTMLInputElement;
+      expect(searchInput.value).toBe("protein");
+    });
+
+    await step("Active filter chips render", async () => {
+      expect(canvas.getByText("Status: Completed")).toBeInTheDocument();
+      expect(canvas.getByText("Team: Biology")).toBeInTheDocument();
+    });
+
+    await step("Clicking chip remove button removes filter", async () => {
+      const removeButtons = canvas.getAllByRole("button", { name: /Remove .* filter/ });
+      expect(removeButtons.length).toBeGreaterThan(0);
+    });
+  },
 };
 
 export const SearchOnly: Story = {
   render: () => {
     const [value, setValue] = React.useState<FilterBarValue>(emptyValue);
     return <FilterBar value={value} onChange={setValue} placeholder="Search datasets..." />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1495" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Search input renders without filter dropdowns", async () => {
+      expect(canvas.getByPlaceholderText("Search datasets...")).toBeInTheDocument();
+      expect(canvas.queryByRole("combobox")).not.toBeInTheDocument();
+    });
   },
 };

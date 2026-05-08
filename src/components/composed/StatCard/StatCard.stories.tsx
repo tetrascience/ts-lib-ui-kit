@@ -75,7 +75,7 @@ export const TrendDown: Story = {
       expect(canvas.getByText("23")).toBeInTheDocument()
     })
 
-    await step("Negative delta renders", async () => {
+    await step("Positive delta renders", async () => {
       expect(canvas.getByText("+8")).toBeInTheDocument()
     })
   },

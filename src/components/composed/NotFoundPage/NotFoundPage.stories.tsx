@@ -7,7 +7,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Button } from "@/components/ui/button"
 
 const meta: Meta<typeof NotFoundPage> = {
-  title: "Design Patterns/NotFoundPage",
+  title: "Patterns/NotFoundPage",
   component: NotFoundPage,
   parameters: {
     layout: "fullscreen",

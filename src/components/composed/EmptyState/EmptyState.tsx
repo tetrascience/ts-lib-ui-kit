@@ -7,10 +7,9 @@ import {
 } from "lucide-react";
 import * as React from "react";
 
-import { cn } from "@/lib/utils";
-
 import type { LucideIcon } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 
 export type EmptyStateVariant =
   | "no-data"
@@ -90,7 +89,7 @@ function EmptyState({
           <Icon className="h-7 w-7 text-muted-foreground" />
         </div>
       )}
-      {(resolvedTitle ?? resolvedDescription) && (
+      {(Boolean(resolvedTitle) || Boolean(resolvedDescription)) && (
         <div className="max-w-xs space-y-1">
           {resolvedTitle && (
             <p className="text-sm font-semibold">{resolvedTitle}</p>

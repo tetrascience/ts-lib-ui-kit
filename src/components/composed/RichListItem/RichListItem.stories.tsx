@@ -1,11 +1,11 @@
 import { MoreHorizontal } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-
 import { RichListItem, RichListItemAvatar } from "./RichListItem";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 const meta: Meta<typeof RichListItem> = {
   title: "Design Patterns/RichListItem",
@@ -27,6 +27,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  parameters: {
+    zephyr: { testCaseId: "SW-T1740" },
+  },
   args: {
     leading: <RichListItemAvatar initials="JS" />,
     primary: "Dr. Jane Smith",

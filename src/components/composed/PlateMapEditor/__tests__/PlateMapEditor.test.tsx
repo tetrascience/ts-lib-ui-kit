@@ -9,7 +9,7 @@ import { PlateMapEditor } from "../PlateMapEditor";
 import type { WellColumn, WellField, WellId, WellRecord } from "../types";
 
 interface SimpleWell extends WellRecord {
-  role?: "sample" | "control";
+  role?: "sample" | "control" | "blank";
   sampleId?: string;
 }
 
@@ -21,6 +21,7 @@ const FIELDS: WellField<SimpleWell>[] = [
     options: [
       { value: "sample", label: "Sample" },
       { value: "control", label: "Control" },
+      { value: "blank", label: "Blank" },
     ],
   },
   { key: "sampleId", label: "Sample ID", kind: "text" },
@@ -31,8 +32,14 @@ const COLUMNS: WellColumn<SimpleWell>[] = [
   { header: "Sample ID", field: "sampleId" },
 ];
 
-function colorForWell(): string {
-  return "#fafafa";
+const ROLE_COLOR: Record<NonNullable<SimpleWell["role"]>, string> = {
+  sample: "#bbdefb",
+  control: "#ffcdd2",
+  blank: "#eeeeee",
+};
+
+function colorForWell(well: SimpleWell | undefined): string {
+  return well?.role ? ROLE_COLOR[well.role] : "#fafafa";
 }
 function emptyEntry(): SimpleWell {
   return {};
@@ -62,6 +69,7 @@ function Harness({ handle }: { handle: HarnessHandle }) {
       tableColumns={COLUMNS}
       colorForWell={colorForWell}
       emptyEntry={emptyEntry}
+      cycleFieldOnWellDoubleClick="role"
       title="Test plate"
       onImportCsv={() => {}}
       onExportCsv={() => {}}
@@ -93,7 +101,7 @@ describe("PlateMapEditor", () => {
   });
 
   function render() {
-    flushSync(() => {
+    act(() => {
       root.render(<Harness handle={handle} />);
     });
   }
@@ -104,6 +112,9 @@ describe("PlateMapEditor", () => {
     expect(container.textContent).toContain("Plate");
     expect(container.textContent).toContain("Sample manifest");
     expect(container.textContent).toContain("Actions");
+    const selectionHeader = container.querySelector("thead th");
+    expect(selectionHeader?.textContent).toContain("Selected");
+    expect(selectionHeader?.querySelector("svg")).not.toBeNull();
     const wells = container.querySelectorAll("[data-well]");
     expect(wells.length).toBe(96);
   });
@@ -201,5 +212,49 @@ describe("PlateMapEditor", () => {
       deselect.click();
     });
     expect(handle.current.selection.size).toBe(0);
+  });
+
+  it("selects on single click and cycles the configured field on double click", () => {
+    render();
+    const plate = container.querySelector('svg[aria-label="8 row by 12 column plate map. Drag to select wells."]');
+    expect(plate).not.toBeNull();
+
+    const clickA01 = () => {
+      act(() => {
+        plate!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 30, clientY: 30 }));
+      });
+      flushSync(() => {});
+      act(() => {
+        plate!.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, clientX: 30, clientY: 30 }));
+      });
+    };
+
+    clickA01();
+    expect(handle.current.values.get("A01")?.role).toBeUndefined();
+    expect(handle.current.selection).toEqual(new Set(["A01"]));
+
+    const doubleClickA01 = () => {
+      clickA01();
+      clickA01();
+      act(() => {
+        plate!.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, clientX: 30, clientY: 30 }));
+      });
+    };
+
+    doubleClickA01();
+    expect(handle.current.values.get("A01")?.role).toBe("sample");
+    expect(container.querySelector('[data-well="A01"]')?.getAttribute("fill")).toBe(ROLE_COLOR.sample);
+    expect(container.querySelector('[data-well-flash="A01"]')).not.toBeNull();
+
+    doubleClickA01();
+    expect(handle.current.values.get("A01")?.role).toBe("control");
+    expect(container.querySelector('[data-well="A01"]')?.getAttribute("fill")).toBe(ROLE_COLOR.control);
+
+    doubleClickA01();
+    expect(handle.current.values.get("A01")?.role).toBe("blank");
+    expect(container.querySelector('[data-well="A01"]')?.getAttribute("fill")).toBe(ROLE_COLOR.blank);
+
+    doubleClickA01();
+    expect(handle.current.values.get("A01")?.role).toBe("sample");
   });
 });

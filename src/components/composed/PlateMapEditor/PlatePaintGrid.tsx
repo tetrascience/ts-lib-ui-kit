@@ -17,6 +17,8 @@ const LABEL_BASELINE_OFFSET = 3;
 const WELL_INSET = 1;
 const STROKE_DEFAULT = 1;
 const STROKE_SELECTED = 3;
+const STROKE_FLASH = 5;
+const FLASH_DURATION_MS = 520;
 
 export interface PlatePaintGridProps<T extends WellRecord = WellRecord> {
   format: PlateFormat;
@@ -42,7 +44,14 @@ export interface PlatePaintGridProps<T extends WellRecord = WellRecord> {
   selectedFillColor?: string;
   /** Selected fill opacity. */
   selectedFillOpacity?: number;
+  /** Whether selected wells use the selection fill or keep their assigned well color. */
+  selectionFillMode?: "selection" | "well";
+  /** Well id that should briefly flash, usually after a click assignment. */
+  flashWellId?: WellId;
+  /** Changing this value restarts the flash animation for the same well. */
+  flashWellKey?: number;
   onWellHover?: (wellId: WellId | null) => void;
+  onWellDoubleClick?: (wellId: WellId) => void;
   className?: string;
 }
 
@@ -103,6 +112,9 @@ interface BuildWellCellsArgs<T extends WellRecord> {
   selectedBorderColor: string;
   selectedFillColor: string;
   selectedFillOpacity: number;
+  selectionFillMode: "selection" | "well";
+  flashWellId?: WellId;
+  flashWellKey?: number;
 }
 
 function buildWellCell<T extends WellRecord>(
@@ -121,26 +133,57 @@ function buildWellCell<T extends WellRecord>(
     selectedBorderColor,
     selectedFillColor,
     selectedFillOpacity,
+    selectionFillMode,
+    flashWellId,
+    flashWellKey,
   } = args;
   const id = pos(row, column, dims.columns);
   const entry = values.get(id);
   const isSelected = selection.has(id) || dragPositions.has(id);
-  const fill = isSelected ? selectedFillColor : colorForWell(entry, id);
+  const wellFill = colorForWell(entry, id);
+  const usesWellFill = isSelected && selectionFillMode === "well" && entry !== undefined;
+  const usesSelectionFill = isSelected && !usesWellFill;
+  const fill = usesSelectionFill ? selectedFillColor : wellFill;
+  const isFlashing = flashWellId === id;
 
   return (
-    <rect
-      key={id}
-      x={LABEL_PAD + column * cellSize + WELL_INSET}
-      y={LABEL_PAD + row * cellSize + WELL_INSET}
-      width={cellSize - WELL_INSET * 2}
-      height={cellSize - WELL_INSET * 2}
-      fill={fill}
-      fillOpacity={isSelected ? selectedFillOpacity : undefined}
-      stroke={isSelected ? selectedBorderColor : borderColor}
-      strokeWidth={isSelected ? STROKE_SELECTED : STROKE_DEFAULT}
-      data-well={id}
-      data-selected={isSelected ? "true" : undefined}
-    />
+    <g key={id}>
+      <rect
+        x={LABEL_PAD + column * cellSize + WELL_INSET}
+        y={LABEL_PAD + row * cellSize + WELL_INSET}
+        width={cellSize - WELL_INSET * 2}
+        height={cellSize - WELL_INSET * 2}
+        fill={fill}
+        fillOpacity={usesSelectionFill ? selectedFillOpacity : undefined}
+        stroke={isSelected ? selectedBorderColor : borderColor}
+        strokeWidth={isSelected ? STROKE_SELECTED : STROKE_DEFAULT}
+        data-well={id}
+        data-selected={isSelected ? "true" : undefined}
+      />
+      {isFlashing ? (
+        <rect
+          key={`${id}-${flashWellKey}`}
+          x={LABEL_PAD + column * cellSize + WELL_INSET}
+          y={LABEL_PAD + row * cellSize + WELL_INSET}
+          width={cellSize - WELL_INSET * 2}
+          height={cellSize - WELL_INSET * 2}
+          fill={wellFill}
+          stroke={selectedBorderColor}
+          strokeWidth={STROKE_FLASH}
+          opacity={0.72}
+          pointerEvents="none"
+          data-well-flash={id}
+        >
+          <animate attributeName="opacity" values="0.72;0.22;0" dur={`${FLASH_DURATION_MS}ms`} fill="freeze" />
+          <animate
+            attributeName="stroke-width"
+            values={`${STROKE_FLASH};${STROKE_SELECTED}`}
+            dur={`${FLASH_DURATION_MS}ms`}
+            fill="freeze"
+          />
+        </rect>
+      ) : null}
+    </g>
   );
 }
 
@@ -176,7 +219,11 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   selectedBorderColor = "var(--color-primary, #1976d2)",
   selectedFillColor = "var(--color-primary, #1976d2)",
   selectedFillOpacity = 0.18,
+  selectionFillMode = "selection",
+  flashWellId,
+  flashWellKey,
   onWellHover,
+  onWellDoubleClick,
   className,
 }: PlatePaintGridProps<T>) {
   const dims = resolveDimensions(format, rows, columns);
@@ -261,6 +308,11 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
     commitDrag();
     onWellHover?.(null);
   };
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    const cell = cellAt(e);
+    if (!cell) return;
+    onWellDoubleClick?.(pos(cell.r, cell.c, dims.columns));
+  };
 
   const dragPositions = React.useMemo(() => {
     if (!drag) return new Set<WellId>();
@@ -283,6 +335,9 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
     selectedBorderColor,
     selectedFillColor,
     selectedFillOpacity,
+    selectionFillMode,
+    flashWellId,
+    flashWellKey,
   });
 
   return (
@@ -296,6 +351,7 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
         onMouseMove={handleMove}
         onMouseUp={handleUp}
         onMouseLeave={handleLeave}
+        onDoubleClick={handleDoubleClick}
         role="group"
         aria-label={`${dims.rows} row by ${dims.columns} column plate map. Drag to select wells.`}
       >

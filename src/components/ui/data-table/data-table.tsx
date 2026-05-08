@@ -50,6 +50,56 @@ import {
 import { cn } from "@/lib/utils"
 
 // ---------------------------------------------------------------------------
+// Filter types
+// ---------------------------------------------------------------------------
+
+type FilterOperator =
+  | "contains"
+  | "equals"
+  | "not_equals"
+  | "starts_with"
+  | "ends_with"
+  | "is_empty"
+  | "is_not_empty"
+
+interface FilterCondition {
+  /** Stable unique key for React reconciliation. */
+  id: string
+  columnId: string
+  operator: FilterOperator
+  value: string
+}
+
+interface FilterColumnConfig {
+  columnId: string
+  label?: string
+  operators?: FilterOperator[]
+}
+
+function applyFilterCondition(
+  cellValue: string,
+  operator: FilterOperator,
+  filterValue: string,
+): boolean {
+  const cell = cellValue.toLowerCase().trim()
+  const filter = filterValue.toLowerCase().trim()
+  switch (operator) {
+    case "contains":      return cell.includes(filter)
+    case "equals":        return cell === filter
+    case "not_equals":    return cell !== filter
+    case "starts_with":   return cell.startsWith(filter)
+    case "ends_with":     return cell.endsWith(filter)
+    case "is_empty":      return cell === ""
+    case "is_not_empty":  return cell !== ""
+    default: {
+      const _exhaustive: never = operator
+      void _exhaustive
+      return true
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Context
 // ---------------------------------------------------------------------------
 
@@ -57,6 +107,10 @@ interface TableContextValue<TData> {
   table: TanStackTable<TData>
   columnLabels: Record<string, string>
   setColumnLabel: (columnId: string, label: string) => void
+  filters: FilterCondition[]
+  setFilters: (filters: FilterCondition[]) => void
+  filterConfig: FilterColumnConfig[]
+  enableFiltering: boolean
 }
 
 const TableContext = React.createContext<TableContextValue<unknown> | null>(null)
@@ -223,18 +277,24 @@ function DataTableRows<TData>({
 
 function categorizeSlots(children: React.ReactNode) {
   const toolbarSlots: React.ReactNode[] = []
+  const filterSlots: React.ReactNode[] = []
   const paginationSlots: React.ReactNode[] = []
   const restSlots: React.ReactNode[] = []
   React.Children.forEach(children, (child) => {
     if (React.isValidElement(child) && child.type === TableToolbar) {
       toolbarSlots.push(child)
+    } else if (
+      React.isValidElement(child) &&
+      (child.type as React.ComponentType).displayName === "DataTableFilter"
+    ) {
+      filterSlots.push(child)
     } else if (React.isValidElement(child) && child.type === DataTablePagination) {
       paginationSlots.push(child)
     } else {
       restSlots.push(child)
     }
   })
-  return { toolbarSlots, paginationSlots, restSlots }
+  return { toolbarSlots, filterSlots, paginationSlots, restSlots }
 }
 
 // ---------------------------------------------------------------------------
@@ -259,6 +319,12 @@ interface DataTableProps<TData, TValue> {
   pagination?: PaginationState
   onPaginationChange?: (pagination: PaginationState) => void
   enableColumnReorder?: boolean
+  enableFiltering?: boolean
+  filters?: FilterCondition[]
+  onFiltersChange?: (filters: FilterCondition[]) => void
+  filterConfig?: FilterColumnConfig[]
+  /** When true, filtering is handled externally — onFiltersChange fires but rows are not filtered client-side. */
+  manualFiltering?: boolean
   density?: "compact" | "default" | "relaxed"
   children?: React.ReactNode
   className?: string
@@ -286,6 +352,11 @@ function DataTable<TData, TValue>({
   pagination: controlledPagination,
   onPaginationChange,
   enableColumnReorder = false,
+  enableFiltering = false,
+  filters: controlledFilters,
+  onFiltersChange,
+  filterConfig,
+  manualFiltering = false,
   density = "default",
   className,
   variant = "card",
@@ -304,8 +375,10 @@ function DataTable<TData, TValue>({
       pageIndex: 0,
       pageSize: defaultPageSize,
     })
+  const [internalFilters, setInternalFilters] = React.useState<FilterCondition[]>([])
 
   const pagination = controlledPagination ?? internalPagination
+  const filters = controlledFilters ?? internalFilters
 
   const columnVisibility =
     controlledColumnVisibility ?? internalColumnVisibility
@@ -331,6 +404,39 @@ function DataTable<TData, TValue>({
     }
   }, [enableColumnVisibility, columnVisibility, onColumnVisibilityChange])
 
+  const handleFiltersChange = React.useCallback(
+    (newFilters: FilterCondition[]) => {
+      ;(onFiltersChange ?? setInternalFilters)(newFilters)
+    },
+    [onFiltersChange],
+  )
+
+  const resolvedFilterConfig: FilterColumnConfig[] = React.useMemo(() => {
+    if (filterConfig) return filterConfig
+    return columns
+      .filter((col) => "accessorKey" in col)
+      .map((col) => ({ columnId: String((col as { accessorKey: unknown }).accessorKey) }))
+  }, [filterConfig, columns])
+
+  const filteredData = React.useMemo((): TData[] => {
+    if (!enableFiltering || manualFiltering) return data
+    const active = filters.filter(
+      (f) =>
+        f.columnId &&
+        f.operator &&
+        (f.value.trim() !== "" || f.operator === "is_empty" || f.operator === "is_not_empty"),
+    )
+    if (active.length === 0) return data
+    return data.filter((row) =>
+      active.every((condition) => {
+        const cellValue = String(
+          (row as Record<string, unknown>)[condition.columnId] ?? "",
+        )
+        return applyFilterCondition(cellValue, condition.operator, condition.value)
+      }),
+    )
+  }, [data, filters, enableFiltering, manualFiltering])
+
   const handleColumnOrderChange = React.useCallback(
     (updater: ColumnOrderState | ((prev: ColumnOrderState) => ColumnOrderState)) => {
       const next = typeof updater === "function" ? updater(columnOrder) : updater
@@ -340,7 +446,7 @@ function DataTable<TData, TValue>({
   )
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: {
       sorting: enableSorting ? sorting : undefined,
@@ -416,15 +522,20 @@ function DataTable<TData, TValue>({
     table,
     columnLabels,
     setColumnLabel,
+    filters,
+    setFilters: handleFiltersChange,
+    filterConfig: resolvedFilterConfig,
+    enableFiltering,
   } as TableContextValue<unknown>
 
-  const { toolbarSlots, paginationSlots, restSlots } = categorizeSlots(children)
+  const { toolbarSlots, filterSlots, paginationSlots, restSlots } = categorizeSlots(children)
 
   return (
     <TableContext.Provider value={ctx}>
       <div data-slot="data-table" className={cn("w-full space-y-2", className)}>
         {toolbar}
         {toolbarSlots}
+        {filterSlots}
         {enableColumnReorder ? (
           <DndContext
             sensors={reorderSensors}
@@ -517,7 +628,7 @@ function TableToolbar({
   return (
     <div
       data-slot="table-toolbar"
-      className={cn("flex items-center gap-2", className)}
+      className={cn("flex items-center justify-end gap-2", className)}
       {...props}
     >
       {children}
@@ -526,4 +637,4 @@ function TableToolbar({
 }
 
 export { DataTable, TableToolbar, useDataTable }
-export type { DataTableProps }
+export type { DataTableProps, FilterCondition, FilterOperator, FilterColumnConfig }

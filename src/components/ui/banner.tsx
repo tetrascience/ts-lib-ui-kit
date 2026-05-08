@@ -35,15 +35,17 @@ const BANNER_ICONS = {
   destructive: XCircle,
 } as const;
 
-export interface BannerProps
-  extends React.ComponentProps<"div">,
-    VariantProps<typeof bannerVariants> {
-  title?: string;
-  description?: string;
-  action?: React.ReactNode;
-  dismissible?: boolean;
-  onDismiss?: () => void;
-}
+type DismissibleProps =
+  | { dismissible: true; onDismiss: () => void }
+  | { dismissible?: false; onDismiss?: never };
+
+export type BannerProps = React.ComponentProps<"div"> &
+  VariantProps<typeof bannerVariants> &
+  DismissibleProps & {
+    title?: React.ReactNode;
+    description?: React.ReactNode;
+    action?: React.ReactNode;
+  };
 
 function Banner({
   variant = "info",

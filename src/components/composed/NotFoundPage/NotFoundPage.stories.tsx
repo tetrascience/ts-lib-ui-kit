@@ -47,9 +47,9 @@ export const NotFound: Story = {
       ).toBeInTheDocument()
     })
 
-    await step("Default action button renders", async () => {
+    await step("Default home link renders", async () => {
       expect(
-        canvas.getByRole("button", { name: "Go to home" })
+        canvas.getByRole("link", { name: "Go to home" })
       ).toBeInTheDocument()
     })
   },

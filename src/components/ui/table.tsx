@@ -6,10 +6,12 @@ function Table({
   className,
   containerClassName,
   variant,
+  layout = "auto",
   ...props
 }: React.ComponentProps<"table"> & {
   containerClassName?: string
   variant?: "default" | "card"
+  layout?: "auto" | "fixed"
 }) {
   return (
     <div
@@ -23,7 +25,7 @@ function Table({
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
+        className={cn("w-full caption-bottom text-sm", layout === "fixed" && "table-fixed", className)}
         {...props}
       />
     </div>
@@ -89,9 +91,11 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
 function TableHead({
   className,
   variant,
+  truncate,
   ...props
 }: React.ComponentProps<"th"> & {
   variant?: "default" | "numeric" | "action"
+  truncate?: boolean
 }) {
   return (
     <th
@@ -101,6 +105,7 @@ function TableHead({
         "in-data-[density=compact]:h-8 in-data-[density=relaxed]:h-14",
         variant === "numeric" && "text-right",
         variant === "action" && "w-10",
+        truncate && "truncate",
         className,
       )}
       {...props}
@@ -111,9 +116,11 @@ function TableHead({
 function TableCell({
   className,
   variant,
+  truncate,
   ...props
 }: React.ComponentProps<"td"> & {
   variant?: "default" | "numeric" | "action"
+  truncate?: boolean
 }) {
   return (
     <td
@@ -124,6 +131,7 @@ function TableCell({
         variant === "numeric" && "text-right tabular-nums",
         variant === "action" &&
           "opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 focus-within:opacity-100 transition-opacity",
+        truncate && "truncate",
         className,
       )}
       {...props}

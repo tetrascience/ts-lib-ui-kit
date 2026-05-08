@@ -30,7 +30,7 @@ export interface ActivityFeedItem {
   badges?: string[];
 }
 
-export interface ActivityFeedProps extends React.ComponentProps<"div"> {
+export interface ActivityFeedProps extends Omit<React.ComponentProps<"div">, "children"> {
   items: ActivityFeedItem[];
   onLoadMore?: () => void;
 }

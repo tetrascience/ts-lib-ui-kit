@@ -1,4 +1,5 @@
 import * as React from "react";
+import { expect, within } from "storybook/test";
 
 import { Banner } from "./banner";
 import { Button } from "./button";
@@ -6,7 +7,7 @@ import { Button } from "./button";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Banner> = {
-  title: "Design Patterns/Banner",
+  title: "Components/Banner",
   component: Banner,
   parameters: {
     layout: "fullscreen",
@@ -36,6 +37,27 @@ export const Info: Story = {
     title: "System maintenance scheduled",
     description: "The platform will be unavailable on Sunday from 2–4 AM UTC.",
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1189" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Banner has role and title", async () => {
+      expect(canvas.getByRole("status")).toBeInTheDocument();
+      expect(canvas.getByText("System maintenance scheduled")).toBeInTheDocument();
+    });
+
+    await step("Description renders", async () => {
+      expect(
+        canvas.getByText("The platform will be unavailable on Sunday from 2–4 AM UTC.")
+      ).toBeInTheDocument();
+    });
+
+    await step("Icon is present", async () => {
+      expect(canvas.getByRole("status").querySelector("svg")).toBeInTheDocument();
+    });
+  },
 };
 
 export const Positive: Story = {
@@ -43,6 +65,23 @@ export const Positive: Story = {
     variant: "positive",
     title: "Deployment successful",
     description: "Version 3.2.1 is now live in production.",
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1190" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Positive banner has role and title", async () => {
+      expect(canvas.getByRole("status")).toBeInTheDocument();
+      expect(canvas.getByText("Deployment successful")).toBeInTheDocument();
+    });
+
+    await step("Description renders", async () => {
+      expect(
+        canvas.getByText("Version 3.2.1 is now live in production.")
+      ).toBeInTheDocument();
+    });
   },
 };
 
@@ -53,6 +92,25 @@ export const Warning: Story = {
     description:
       "Your organization is at 87% storage capacity. Upgrade your plan to avoid interruptions.",
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1191" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Warning banner has alert role", async () => {
+      expect(canvas.getByRole("alert")).toBeInTheDocument();
+      expect(canvas.getByText("Storage nearing capacity")).toBeInTheDocument();
+    });
+
+    await step("Description renders", async () => {
+      expect(
+        canvas.getByText(
+          "Your organization is at 87% storage capacity. Upgrade your plan to avoid interruptions."
+        )
+      ).toBeInTheDocument();
+    });
+  },
 };
 
 export const Destructive: Story = {
@@ -61,6 +119,25 @@ export const Destructive: Story = {
     title: "Pipeline failed",
     description:
       "The ingestion pipeline stopped due to a schema mismatch. Review the error log.",
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1192" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Destructive banner has alert role", async () => {
+      expect(canvas.getByRole("alert")).toBeInTheDocument();
+      expect(canvas.getByText("Pipeline failed")).toBeInTheDocument();
+    });
+
+    await step("Description renders", async () => {
+      expect(
+        canvas.getByText(
+          "The ingestion pipeline stopped due to a schema mismatch. Review the error log."
+        )
+      ).toBeInTheDocument();
+    });
   },
 };
 
@@ -74,6 +151,23 @@ export const WithAction: Story = {
         Upgrade plan
       </Button>
     ),
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1193" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Banner with action renders", async () => {
+      expect(canvas.getByRole("alert")).toBeInTheDocument();
+      expect(canvas.getByText("Storage nearing capacity")).toBeInTheDocument();
+    });
+
+    await step("Action button renders", async () => {
+      expect(
+        canvas.getByRole("button", { name: "Upgrade plan" })
+      ).toBeInTheDocument();
+    });
   },
 };
 
@@ -91,6 +185,31 @@ export const Dismissible: Story = {
     ) : (
       <div className="p-4 text-sm text-muted-foreground">Banner dismissed.</div>
     );
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1194" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Dismissible banner renders with close button", async () => {
+      expect(canvas.getByRole("status")).toBeInTheDocument();
+      expect(canvas.getByText("New features available")).toBeInTheDocument();
+      expect(
+        canvas.getByRole("button", { name: "Dismiss" })
+      ).toBeInTheDocument();
+    });
+
+    await step("Clicking dismiss button hides banner", async () => {
+      const dismissButton = canvas.getByRole("button", { name: "Dismiss" });
+      dismissButton.click();
+      
+      // Wait for state update
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      
+      expect(canvas.queryByRole("status")).not.toBeInTheDocument();
+      expect(canvas.getByText("Banner dismissed.")).toBeInTheDocument();
+    });
   },
 };
 

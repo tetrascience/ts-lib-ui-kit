@@ -31,14 +31,14 @@ function RichListItem({
       {leading && <div className="shrink-0">{leading}</div>}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium text-foreground">
+          <div className="truncate text-sm font-medium text-foreground">
             {primary}
-          </span>
+          </div>
         </div>
         {secondary && (
-          <span className="truncate text-xs text-muted-foreground">
+          <div className="truncate text-xs text-muted-foreground">
             {secondary}
-          </span>
+          </div>
         )}
       </div>
       {trailing && (

@@ -1,6 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, within } from "storybook/test";
 
 import { CopyToClipboard } from "./copy-to-clipboard";
+
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof CopyToClipboard> = {
   title: "Design Patterns/CopyToClipboard",
@@ -35,6 +37,22 @@ results = client.experiments.list(
     limit=50,
 )`,
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1485" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Copy button and language label render", async () => {
+      expect(canvas.getByRole("button", { name: "Copy" })).toBeInTheDocument();
+      expect(canvas.getByText("Python")).toBeInTheDocument();
+    });
+
+    await step("Clicking copy button shows confirmation state", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Copy" }));
+      expect(canvas.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+    });
+  },
 };
 
 export const CurlExample: Story = {
@@ -44,6 +62,22 @@ export const CurlExample: Story = {
     value: `curl -X GET "https://api.tetrascience.com/v1/experiments" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json"`,
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1486" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Copy button and cURL label render", async () => {
+      expect(canvas.getByRole("button", { name: "Copy" })).toBeInTheDocument();
+      expect(canvas.getByText("cURL")).toBeInTheDocument();
+    });
+
+    await step("Clicking copy button shows confirmation state", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Copy" }));
+      expect(canvas.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+    });
   },
 };
 
@@ -59,10 +93,41 @@ export const JsonPayload: Story = {
   }
 }`,
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1487" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Copy button and JSON label render", async () => {
+      expect(canvas.getByRole("button", { name: "Copy" })).toBeInTheDocument();
+      expect(canvas.getByText("JSON")).toBeInTheDocument();
+    });
+
+    await step("Clicking copy button shows confirmation state", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Copy" }));
+      expect(canvas.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+    });
+  },
 };
 
 export const NoLabel: Story = {
   args: {
     value: "SELECT * FROM experiments WHERE status = 'completed';",
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T1488" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Copy button renders with no label", async () => {
+      expect(canvas.getByRole("button", { name: "Copy" })).toBeInTheDocument();
+    });
+
+    await step("Clicking copy button shows confirmation state", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Copy" }));
+      expect(canvas.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+    });
   },
 };

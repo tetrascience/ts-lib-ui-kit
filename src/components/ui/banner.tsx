@@ -54,15 +54,21 @@ function Banner({
   onDismiss,
   className,
   children,
+  role,
+  "aria-live": ariaLive,
   ...props
 }: BannerProps) {
   const Icon = BANNER_ICONS[variant ?? "info"];
+  const isUrgentBanner = variant === "warning" || variant === "destructive";
+  const resolvedRole = role ?? (isUrgentBanner ? "alert" : "status");
+  const resolvedAriaLive = ariaLive ?? (isUrgentBanner ? "assertive" : "polite");
 
   return (
     <div
       data-slot="banner"
       data-variant={variant}
-      role="status"
+      role={resolvedRole}
+      aria-live={resolvedAriaLive}
       className={cn(bannerVariants({ variant }), className)}
       {...props}
     >

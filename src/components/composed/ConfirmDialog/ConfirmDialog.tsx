@@ -24,7 +24,7 @@ export interface ConfirmDialogProps {
   onCancel?: () => void
   open?: boolean
   onOpenChange?: (open: boolean) => void
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   loading?: boolean
 }
 

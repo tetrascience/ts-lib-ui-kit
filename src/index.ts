@@ -3,6 +3,7 @@ import "@/index.css";
 
 // Composed
 export * from "@/components/composed/NotFoundPage";
+export * from "@/components/composed/DataAppShell";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";

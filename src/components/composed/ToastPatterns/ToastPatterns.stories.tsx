@@ -169,6 +169,14 @@ export const ToastTriggers: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    const testToastTrigger = async (buttonName: string, expectedText: string) => {
+      await userEvent.click(canvas.getByRole("button", { name: buttonName }))
+      await waitFor(() => {
+        expect(body.getAllByText(expectedText).length).toBeGreaterThan(0)
+      })
+    }
 
     await step("All trigger buttons render", async () => {
       expect(
@@ -185,47 +193,23 @@ export const ToastTriggers: Story = {
     })
 
     await step("Clicking success shows toast", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Success" }))
-      const body = within(canvasElement.ownerDocument.body)
-      await waitFor(() => {
-        expect(
-          body.getAllByText("Pipeline started").length
-        ).toBeGreaterThan(0)
-      })
+      await testToastTrigger("Success", "Pipeline started")
     })
 
     await step("Clicking error shows toast", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Error" }))
-      const body = within(canvasElement.ownerDocument.body)
-      await waitFor(() => {
-        expect(body.getAllByText("Export failed").length).toBeGreaterThan(0)
-      })
+      await testToastTrigger("Error", "Export failed")
     })
 
     await step("Clicking warning shows toast", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Warning" }))
-      const body = within(canvasElement.ownerDocument.body)
-      await waitFor(() => {
-        expect(body.getAllByText("Retry scheduled").length).toBeGreaterThan(0)
-      })
+      await testToastTrigger("Warning", "Retry scheduled")
     })
 
     await step("Clicking info shows toast", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Info" }))
-      const body = within(canvasElement.ownerDocument.body)
-      await waitFor(() => {
-        expect(body.getAllByText("Sync in progress").length).toBeGreaterThan(0)
-      })
+      await testToastTrigger("Info", "Sync in progress")
     })
 
     await step("Clicking default shows toast", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Default" }))
-      const body = within(canvasElement.ownerDocument.body)
-      await waitFor(() => {
-        expect(
-          body.getAllByText("Workspace settings saved.").length
-        ).toBeGreaterThan(0)
-      })
+      await testToastTrigger("Default", "Workspace settings saved.")
     })
   },
 }

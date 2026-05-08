@@ -81,7 +81,9 @@ export function NotFoundPage({
         )}
       </div>
       {action ?? (
-        <Button variant="outline">Go to home</Button>
+        <Button asChild variant="outline">
+          <a href="/">Go to home</a>
+        </Button>
       )}
     </div>
   )

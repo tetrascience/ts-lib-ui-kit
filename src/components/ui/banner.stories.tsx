@@ -1,5 +1,5 @@
 import * as React from "react";
-import { expect, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import { Banner } from "./banner";
 import { Button } from "./button";
@@ -202,12 +202,11 @@ export const Dismissible: Story = {
 
     await step("Clicking dismiss button hides banner", async () => {
       const dismissButton = canvas.getByRole("button", { name: "Dismiss" });
-      dismissButton.click();
+      await userEvent.click(dismissButton);
       
-      // Wait for state update
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      
-      expect(canvas.queryByRole("status")).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.queryByRole("status")).not.toBeInTheDocument();
+      });
       expect(canvas.getByText("Banner dismissed.")).toBeInTheDocument();
     });
   },

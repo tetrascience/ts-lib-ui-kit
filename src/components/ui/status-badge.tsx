@@ -1,62 +1,60 @@
 import * as React from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export type JobStatus =
-  | "running"
-  | "queued"
-  | "completed"
-  | "failed"
-  | "paused"
-  | "cancelled";
+export type JobStatus = "running" | "queued" | "completed" | "failed" | "paused" | "cancelled";
 
-export interface StatusBadgeProps extends React.ComponentProps<"span"> {
+type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>;
+
+export interface StatusBadgeProps
+  extends Omit<React.ComponentProps<typeof Badge>, "children" | "variant"> {
   status: JobStatus;
   pulse?: boolean;
 }
 
 const statusConfig: Record<
   JobStatus,
-  { label: string; badgeClass: string; dotClass: string; defaultPulse: boolean }
+  {
+    label: string;
+    badgeVariant: BadgeVariant;
+    dotClass: string;
+    defaultPulse: boolean;
+  }
 > = {
   running: {
     label: "Running",
-    badgeClass:
-      "border-info/30 bg-info/10 text-info dark:border-info/30 dark:bg-info/20",
+    badgeVariant: "info",
     dotClass: "bg-info",
     defaultPulse: true,
   },
   queued: {
     label: "Queued",
-    badgeClass:
-      "border-warning/30 bg-warning/10 text-warning dark:border-warning/30 dark:bg-warning/20",
+    badgeVariant: "warning",
     dotClass: "bg-warning",
     defaultPulse: false,
   },
   completed: {
     label: "Completed",
-    badgeClass:
-      "border-positive/30 bg-positive/10 text-positive dark:border-positive/30 dark:bg-positive/20",
+    badgeVariant: "positive",
     dotClass: "bg-positive",
     defaultPulse: false,
   },
   failed: {
     label: "Failed",
-    badgeClass:
-      "border-destructive/30 bg-destructive/10 text-destructive dark:border-destructive/30 dark:bg-destructive/20",
+    badgeVariant: "destructive",
     dotClass: "bg-destructive",
     defaultPulse: false,
   },
   paused: {
     label: "Paused",
-    badgeClass:
-      "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300",
-    dotClass: "bg-violet-500",
+    badgeVariant: "accent",
+    dotClass: "bg-accent",
     defaultPulse: false,
   },
   cancelled: {
     label: "Cancelled",
-    badgeClass: "border-border bg-muted text-muted-foreground",
+    badgeVariant: "muted",
     dotClass: "bg-muted-foreground/40",
     defaultPulse: false,
   },
@@ -67,25 +65,22 @@ function StatusBadge({ status, pulse, className, ...props }: StatusBadgeProps) {
   const shouldPulse = pulse ?? config.defaultPulse;
 
   return (
-    <span
+    <Badge
       data-slot="status-badge"
       data-status={status}
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium",
-        config.badgeClass,
-        className
-      )}
+      variant={config.badgeVariant}
+      className={cn("gap-1.5 px-2.5", className)}
       {...props}
     >
       <span
         className={cn(
           "h-1.5 w-1.5 shrink-0 rounded-full",
           config.dotClass,
-          shouldPulse && "animate-pulse motion-reduce:animate-none"
+          shouldPulse && "animate-pulse motion-reduce:animate-none",
         )}
       />
       {config.label}
-    </span>
+    </Badge>
   );
 }
 

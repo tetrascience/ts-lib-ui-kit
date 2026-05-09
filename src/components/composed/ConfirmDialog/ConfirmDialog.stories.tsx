@@ -21,99 +21,33 @@ export default meta
 
 type Story = StoryObj<typeof ConfirmDialog>
 
+const defaultArgs = {
+  title: "Archive workspace",
+  description:
+    "This workspace will be archived and hidden from your dashboard. You can restore it later.",
+  confirmLabel: "Archive",
+  cancelLabel: "Cancel",
+  trigger: <Button variant="outline">Archive workspace</Button>,
+} satisfies Story["args"]
+
+const destructiveArgs = {
+  title: "Delete experiment",
+  description: "JOB-9142 and all its associated data will be permanently removed.",
+  variant: "destructive",
+  confirmLabel: "Delete",
+  trigger: <Button variant="destructive">Delete experiment</Button>,
+} satisfies Story["args"]
+
 export const Default: Story = {
-  args: {
-    title: "Archive workspace",
-    description:
-      "This workspace will be archived and hidden from your dashboard. You can restore it later.",
-    confirmLabel: "Archive",
-    cancelLabel: "Cancel",
-    trigger: <Button variant="outline">Archive workspace</Button>,
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T1515" },
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
-
-    await step("Trigger button renders and dialog is initially closed", async () => {
-      expect(
-        canvas.getByRole("button", { name: "Archive workspace" })
-      ).toBeInTheDocument()
-      expect(body.queryByRole("dialog")).not.toBeInTheDocument()
-    })
-
-    await step("Clicking trigger opens the dialog", async () => {
-      await userEvent.click(
-        canvas.getByRole("button", { name: "Archive workspace" })
-      )
-      const dialog = body.getByRole("dialog")
-      expect(dialog).toBeInTheDocument()
-      expect(
-        within(dialog).getByRole("heading", { name: "Archive workspace" })
-      ).toBeInTheDocument()
-    })
-
-    await step("Cancel and confirm buttons are present", async () => {
-      expect(body.getByRole("button", { name: "Cancel" })).toBeInTheDocument()
-      expect(
-        body.getByRole("button", { name: "Archive" })
-      ).toBeInTheDocument()
-    })
-
-    await step("Clicking cancel closes the dialog", async () => {
-      await userEvent.click(body.getByRole("button", { name: "Cancel" }))
-      await waitFor(() => {
-        expect(body.queryByRole("dialog")).not.toBeInTheDocument()
-      })
-    })
-  },
+  args: defaultArgs,
 }
 
 export const Destructive: Story = {
-  args: {
-    title: "Delete experiment",
-    description:
-      "JOB-9142 and all its associated data will be permanently removed.",
-    variant: "destructive",
-    confirmLabel: "Delete",
-    trigger: <Button variant="destructive">Delete experiment</Button>,
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T1516" },
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
-
-    await step("Trigger opens destructive dialog", async () => {
-      await userEvent.click(
-        canvas.getByRole("button", { name: "Delete experiment" })
-      )
-      expect(body.getByRole("dialog")).toBeInTheDocument()
-    })
-
-    await step("Warning callout renders in dialog body", async () => {
-      expect(
-        body.getByText("This action cannot be undone.")
-      ).toBeInTheDocument()
-    })
-
-    await step("Destructive confirm button is present", async () => {
-      expect(body.getByRole("button", { name: "Delete" })).toBeInTheDocument()
-    })
-
-    await step("Close dialog for cleanup", async () => {
-      await userEvent.click(body.getByRole("button", { name: "Cancel" }))
-      await waitFor(() => {
-        expect(body.queryByRole("dialog")).not.toBeInTheDocument()
-      })
-    })
-  },
+  args: destructiveArgs,
 }
 
 export const WithLoading: Story = {
+  tags: ["!dev", "!autodocs"],
   render: () => {
     const [open, setOpen] = useState(true)
 
@@ -151,6 +85,7 @@ export const WithLoading: Story = {
 }
 
 export const ControlledOpen: Story = {
+  tags: ["!dev", "!autodocs"],
   render: () => {
     const [open, setOpen] = useState(true)
 
@@ -214,6 +149,93 @@ export const AsyncConfirm: Story = {
       </div>
     )
   },
+}
+
+// Keep interaction-only stories out of docs/sidebar so dialogs do not flash
+// during manual Storybook browsing, while still preserving play-test coverage.
+export const DefaultInteractionTest: Story = {
+  tags: ["!dev", "!autodocs"],
+  args: defaultArgs,
+  parameters: {
+    zephyr: { testCaseId: "SW-T1515" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Trigger button renders", async () => {
+      expect(
+        canvas.getByRole("button", { name: "Archive workspace" })
+      ).toBeInTheDocument()
+      expect(body.queryByRole("dialog")).not.toBeInTheDocument()
+    })
+
+    await step("Clicking trigger opens the dialog", async () => {
+      await userEvent.click(
+        canvas.getByRole("button", { name: "Archive workspace" })
+      )
+      const dialog = body.getByRole("dialog")
+      expect(dialog).toBeInTheDocument()
+      expect(
+        within(dialog).getByRole("heading", { name: "Archive workspace" })
+      ).toBeInTheDocument()
+    })
+
+    await step("Cancel and confirm buttons are present", async () => {
+      expect(body.getByRole("button", { name: "Cancel" })).toBeInTheDocument()
+      expect(
+        body.getByRole("button", { name: "Archive" })
+      ).toBeInTheDocument()
+    })
+
+    await step("Clicking cancel closes the dialog", async () => {
+      await userEvent.click(body.getByRole("button", { name: "Cancel" }))
+      await waitFor(() => {
+        expect(body.queryByRole("dialog")).not.toBeInTheDocument()
+      })
+    })
+  },
+}
+
+export const DestructiveInteractionTest: Story = {
+  tags: ["!dev", "!autodocs"],
+  args: destructiveArgs,
+  parameters: {
+    zephyr: { testCaseId: "SW-T1516" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Trigger opens destructive dialog", async () => {
+      await userEvent.click(
+        canvas.getByRole("button", { name: "Delete experiment" })
+      )
+      expect(body.getByRole("dialog")).toBeInTheDocument()
+    })
+
+    await step("Warning callout renders in dialog body", async () => {
+      expect(
+        body.getByText("This action cannot be undone.")
+      ).toBeInTheDocument()
+    })
+
+    await step("Destructive confirm button is present", async () => {
+      expect(body.getByRole("button", { name: "Delete" })).toBeInTheDocument()
+    })
+
+    await step("Close dialog for cleanup", async () => {
+      await userEvent.click(body.getByRole("button", { name: "Cancel" }))
+      await waitFor(() => {
+        expect(body.queryByRole("dialog")).not.toBeInTheDocument()
+      })
+    })
+  },
+}
+
+export const AsyncConfirmInteractionTest: Story = {
+  tags: ["!dev", "!autodocs"],
+  render: AsyncConfirm.render,
   parameters: {
     zephyr: { testCaseId: "SW-T1519" },
   },

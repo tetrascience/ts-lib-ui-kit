@@ -692,3 +692,81 @@ export const TableHeaderFilter: Story = {
     zephyr: { testCaseId: "SW-T1453" },
   },
 }
+
+// ---------------------------------------------------------------------------
+// FixedLayoutWithTruncation
+// ---------------------------------------------------------------------------
+
+const truncationRows = [
+  {
+    id: "3f8a2b1c-d4e5-6f7a-8b9c-0d1e2f3a4b5c",
+    name: "Compound Analysis Pipeline",
+    path: "/tetrascience/pipelines/compound-analysis/2025-05-06/run-001/output/results-normalized.json",
+    status: "Active",
+  },
+  {
+    id: "a9b8c7d6-e5f4-3a2b-1c0d-ef1234567890",
+    name: "QC Dashboard Run",
+    path: "/tetrascience/pipelines/qc-dashboard/2025-04-30/run-042/intermediate/preprocessed-compounds.parquet",
+    status: "Paused",
+  },
+  {
+    id: "f1e2d3c4-b5a6-9780-dcba-fedcba987654",
+    name: "Proteomics ETL Workflow",
+    path: "/tetrascience/data-lake/proteomics/raw-uploads/2025-03-15T14:22:08Z/MS-data-batch-20250315.mzML",
+    status: "Active",
+  },
+]
+
+export const FixedLayoutWithTruncation: Story = {
+  render: () => (
+    <Table layout="fixed">
+      <colgroup>
+        <col style={{ width: 100 }} />
+        <col style={{ width: 160 }} />
+        <col />
+        <col style={{ width: 80 }} />
+      </colgroup>
+      <TableHeader>
+        <TableRow>
+          <TableHead truncate>ID</TableHead>
+          <TableHead truncate>Name</TableHead>
+          <TableHead truncate>File Path</TableHead>
+          <TableHead>Status</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {truncationRows.map((row) => (
+          <TableRow key={row.id}>
+            <TableCell truncate>{row.id}</TableCell>
+            <TableCell truncate>{row.name}</TableCell>
+            <TableCell truncate>{row.path}</TableCell>
+            <TableCell>{row.status}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders with fixed layout class", async () => {
+      const table = canvas.getByRole("table")
+      expect(table).toHaveClass("table-fixed")
+    })
+
+    await step("All data rows render", async () => {
+      const rows = canvas.getAllByRole("row")
+      expect(rows.length).toBe(truncationRows.length + 1)
+    })
+
+    await step("UUID content is present in the DOM", async () => {
+      expect(canvas.getByText("3f8a2b1c-d4e5-6f7a-8b9c-0d1e2f3a4b5c")).toBeInTheDocument()
+    })
+
+    await step("Truncated cells have the truncate class", async () => {
+      const cells = canvasElement.querySelectorAll("[data-slot='table-cell'].truncate")
+      expect(cells.length).toBeGreaterThan(0)
+    })
+  },
+}

@@ -25,6 +25,7 @@ import {
   type ColumnOrderState,
   type Header,
   type PaginationState,
+  type RowData,
   type SortingState,
   type Table as TanStackTable,
   type VisibilityState,
@@ -50,6 +51,67 @@ import {
 import { cn } from "@/lib/utils"
 
 // ---------------------------------------------------------------------------
+// Module augmentation — column meta
+// ---------------------------------------------------------------------------
+
+declare module "@tanstack/react-table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    truncate?: boolean
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Filter types
+// ---------------------------------------------------------------------------
+
+type FilterOperator =
+  | "contains"
+  | "equals"
+  | "not_equals"
+  | "starts_with"
+  | "ends_with"
+  | "is_empty"
+  | "is_not_empty"
+
+interface FilterCondition {
+  /** Stable unique key for React reconciliation. */
+  id: string
+  columnId: string
+  operator: FilterOperator
+  value: string
+}
+
+interface FilterColumnConfig {
+  columnId: string
+  label?: string
+  operators?: FilterOperator[]
+}
+
+function applyFilterCondition(
+  cellValue: string,
+  operator: FilterOperator,
+  filterValue: string,
+): boolean {
+  const cell = cellValue.toLowerCase().trim()
+  const filter = filterValue.toLowerCase().trim()
+  switch (operator) {
+    case "contains":      return cell.includes(filter)
+    case "equals":        return cell === filter
+    case "not_equals":    return cell !== filter
+    case "starts_with":   return cell.startsWith(filter)
+    case "ends_with":     return cell.endsWith(filter)
+    case "is_empty":      return cell === ""
+    case "is_not_empty":  return cell !== ""
+    default: {
+      const _exhaustive: never = operator
+      void _exhaustive
+      return true
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Context
 // ---------------------------------------------------------------------------
 
@@ -57,6 +119,10 @@ interface TableContextValue<TData> {
   table: TanStackTable<TData>
   columnLabels: Record<string, string>
   setColumnLabel: (columnId: string, label: string) => void
+  filters: FilterCondition[]
+  setFilters: (filters: FilterCondition[]) => void
+  filterConfig: FilterColumnConfig[]
+  enableFiltering: boolean
 }
 
 const TableContext = React.createContext<TableContextValue<unknown> | null>(null)
@@ -78,11 +144,13 @@ function DraggableHeader<TData>({
   children,
   position,
   numeric,
+  truncate,
 }: {
   header: Header<TData, unknown>
   children: React.ReactNode
   position?: "first" | "last" | "middle"
   numeric?: boolean
+  truncate?: boolean
 }) {
   const {
     attributes,
@@ -106,6 +174,7 @@ function DraggableHeader<TData>({
       ref={setNodeRef}
       style={style}
       variant={numeric ? "numeric" : undefined}
+      truncate={truncate}
       className={cn(
         "group/header transition-shadow duration-150",
         !isDragging && position === "first" && "hover:shadow-[inset_-1px_0_0_0_var(--color-border)]",
@@ -114,8 +183,8 @@ function DraggableHeader<TData>({
         isDragging && "opacity-40",
       )}
     >
-      <div className={cn("flex items-center gap-1", numeric && "flex-row-reverse")}>
-        <div className="flex-1">{children}</div>
+      <div className={cn("flex items-center gap-1 min-w-0", numeric && "flex-row-reverse")}>
+        <div className="flex-1 min-w-0">{children}</div>
         <button
           type="button"
           data-drag-handle=""
@@ -139,6 +208,7 @@ interface SortableHeaderContentProps {
   enableSorting: boolean
   numericColumns: Set<string>
   columnLabels: Record<string, string>
+  truncate?: boolean
 }
 
 function SortableHeaderContent({
@@ -146,6 +216,7 @@ function SortableHeaderContent({
   enableSorting,
   numericColumns,
   columnLabels,
+  truncate,
 }: SortableHeaderContentProps) {
   if (header.isPlaceholder) return null
   const canSort = enableSorting && header.column.getCanSort()
@@ -155,7 +226,7 @@ function SortableHeaderContent({
   return (
     <div
       className={cn(
-        "flex items-center gap-1",
+        "flex items-center gap-1 min-w-0",
         canSort && "group/sort cursor-pointer select-none",
         isNumeric && "flex-row-reverse",
       )}
@@ -166,8 +237,10 @@ function SortableHeaderContent({
         }
       }}
     >
-      {columnLabels[header.column.id] ??
-        flexRender(header.column.columnDef.header, header.getContext())}
+      <span className={cn("min-w-0", truncate && "truncate")}>
+        {columnLabels[header.column.id] ??
+          flexRender(header.column.columnDef.header, header.getContext())}
+      </span>
       {canSort && (
         <span
           className={cn(
@@ -191,10 +264,12 @@ function DataTableRows<TData>({
   table,
   columns,
   numericColumns,
+  truncate,
 }: {
   table: TanStackTable<TData>
   columns: ColumnDef<TData, unknown>[]
   numericColumns: Set<string>
+  truncate?: boolean
 }) {
   if (table.getRowModel().rows.length === 0) {
     return (
@@ -209,7 +284,11 @@ function DataTableRows<TData>({
   return table.getRowModel().rows.map((row) => (
     <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
       {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id} variant={numericColumns.has(cell.column.id) ? "numeric" : undefined}>
+        <TableCell
+          key={cell.id}
+          variant={numericColumns.has(cell.column.id) ? "numeric" : undefined}
+          truncate={truncate && (cell.column.columnDef.meta?.truncate ?? true)}
+        >
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
         </TableCell>
       ))}
@@ -223,18 +302,24 @@ function DataTableRows<TData>({
 
 function categorizeSlots(children: React.ReactNode) {
   const toolbarSlots: React.ReactNode[] = []
+  const filterSlots: React.ReactNode[] = []
   const paginationSlots: React.ReactNode[] = []
   const restSlots: React.ReactNode[] = []
   React.Children.forEach(children, (child) => {
     if (React.isValidElement(child) && child.type === TableToolbar) {
       toolbarSlots.push(child)
+    } else if (
+      React.isValidElement(child) &&
+      (child.type as React.ComponentType).displayName === "DataTableFilter"
+    ) {
+      filterSlots.push(child)
     } else if (React.isValidElement(child) && child.type === DataTablePagination) {
       paginationSlots.push(child)
     } else {
       restSlots.push(child)
     }
   })
-  return { toolbarSlots, paginationSlots, restSlots }
+  return { toolbarSlots, filterSlots, paginationSlots, restSlots }
 }
 
 // ---------------------------------------------------------------------------
@@ -259,6 +344,12 @@ interface DataTableProps<TData, TValue> {
   pagination?: PaginationState
   onPaginationChange?: (pagination: PaginationState) => void
   enableColumnReorder?: boolean
+  enableFiltering?: boolean
+  filters?: FilterCondition[]
+  onFiltersChange?: (filters: FilterCondition[]) => void
+  filterConfig?: FilterColumnConfig[]
+  /** When true, filtering is handled externally — onFiltersChange fires but rows are not filtered client-side. */
+  manualFiltering?: boolean
   density?: "compact" | "default" | "relaxed"
   children?: React.ReactNode
   className?: string
@@ -266,6 +357,7 @@ interface DataTableProps<TData, TValue> {
   variant?: React.ComponentProps<typeof Table>["variant"]
   /** className passed to the base Table's container div */
   containerClassName?: React.ComponentProps<typeof Table>["containerClassName"]
+  truncate?: boolean
 }
 
 function DataTable<TData, TValue>({
@@ -286,10 +378,16 @@ function DataTable<TData, TValue>({
   pagination: controlledPagination,
   onPaginationChange,
   enableColumnReorder = false,
+  enableFiltering = false,
+  filters: controlledFilters,
+  onFiltersChange,
+  filterConfig,
+  manualFiltering = false,
   density = "default",
   className,
   variant = "card",
   containerClassName,
+  truncate = true,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [internalColumnVisibility, setInternalColumnVisibility] =
@@ -304,8 +402,10 @@ function DataTable<TData, TValue>({
       pageIndex: 0,
       pageSize: defaultPageSize,
     })
+  const [internalFilters, setInternalFilters] = React.useState<FilterCondition[]>([])
 
   const pagination = controlledPagination ?? internalPagination
+  const filters = controlledFilters ?? internalFilters
 
   const columnVisibility =
     controlledColumnVisibility ?? internalColumnVisibility
@@ -331,6 +431,39 @@ function DataTable<TData, TValue>({
     }
   }, [enableColumnVisibility, columnVisibility, onColumnVisibilityChange])
 
+  const handleFiltersChange = React.useCallback(
+    (newFilters: FilterCondition[]) => {
+      ;(onFiltersChange ?? setInternalFilters)(newFilters)
+    },
+    [onFiltersChange],
+  )
+
+  const resolvedFilterConfig: FilterColumnConfig[] = React.useMemo(() => {
+    if (filterConfig) return filterConfig
+    return columns
+      .filter((col) => "accessorKey" in col)
+      .map((col) => ({ columnId: String((col as { accessorKey: unknown }).accessorKey) }))
+  }, [filterConfig, columns])
+
+  const filteredData = React.useMemo((): TData[] => {
+    if (!enableFiltering || manualFiltering) return data
+    const active = filters.filter(
+      (f) =>
+        f.columnId &&
+        f.operator &&
+        (f.value.trim() !== "" || f.operator === "is_empty" || f.operator === "is_not_empty"),
+    )
+    if (active.length === 0) return data
+    return data.filter((row) =>
+      active.every((condition) => {
+        const cellValue = String(
+          (row as Record<string, unknown>)[condition.columnId] ?? "",
+        )
+        return applyFilterCondition(cellValue, condition.operator, condition.value)
+      }),
+    )
+  }, [data, filters, enableFiltering, manualFiltering])
+
   const handleColumnOrderChange = React.useCallback(
     (updater: ColumnOrderState | ((prev: ColumnOrderState) => ColumnOrderState)) => {
       const next = typeof updater === "function" ? updater(columnOrder) : updater
@@ -340,7 +473,7 @@ function DataTable<TData, TValue>({
   )
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: {
       sorting: enableSorting ? sorting : undefined,
@@ -410,21 +543,28 @@ function DataTable<TData, TValue>({
     return ids
   }, [data, columns])
 
+  const hasExplicitSize = columns.some((c) => c.size != null)
+
   // Not memoized: TanStack's table instance is a stable reference that mutates
   // internally, so children reading table.getState() need fresh context on each render.
   const ctx = {
     table,
     columnLabels,
     setColumnLabel,
+    filters,
+    setFilters: handleFiltersChange,
+    filterConfig: resolvedFilterConfig,
+    enableFiltering,
   } as TableContextValue<unknown>
 
-  const { toolbarSlots, paginationSlots, restSlots } = categorizeSlots(children)
+  const { toolbarSlots, filterSlots, paginationSlots, restSlots } = categorizeSlots(children)
 
   return (
     <TableContext.Provider value={ctx}>
       <div data-slot="data-table" className={cn("w-full space-y-2", className)}>
         {toolbar}
         {toolbarSlots}
+        {filterSlots}
         {enableColumnReorder ? (
           <DndContext
             sensors={reorderSensors}
@@ -437,7 +577,22 @@ function DataTable<TData, TValue>({
               items={table.getFlatHeaders().map((h) => h.column.id)}
               strategy={horizontalListSortingStrategy}
             >
-              <Table data-density={density} variant={variant} containerClassName={containerClassName}>
+              <Table
+                data-density={density}
+                variant={variant}
+                containerClassName={containerClassName}
+                layout={hasExplicitSize ? "fixed" : undefined}
+              >
+                {hasExplicitSize && (
+                  <colgroup>
+                    {table.getHeaderGroups()[0]?.headers.map((header) => (
+                      <col
+                        key={header.id}
+                        style={{ width: header.column.getSize() }}
+                      />
+                    ))}
+                  </colgroup>
+                )}
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
@@ -447,12 +602,14 @@ function DataTable<TData, TValue>({
                           header={header}
                           position={headerIdx === 0 ? "first" : headerIdx === headerGroup.headers.length - 1 ? "last" : "middle"}
                           numeric={numericColumns.has(header.column.id)}
+                          truncate={truncate && (header.column.columnDef.meta?.truncate ?? true)}
                         >
                           <SortableHeaderContent
                             header={header as Header<unknown, unknown>}
                             enableSorting={enableSorting}
                             numericColumns={numericColumns}
                             columnLabels={columnLabels}
+                            truncate={truncate && (header.column.columnDef.meta?.truncate ?? true)}
                           />
                         </DraggableHeader>
                       ))}
@@ -460,7 +617,7 @@ function DataTable<TData, TValue>({
                   ))}
                 </TableHeader>
                 <TableBody>
-                  <DataTableRows table={table} columns={columns} numericColumns={numericColumns} />
+                  <DataTableRows table={table} columns={columns} numericColumns={numericColumns} truncate={truncate} />
                 </TableBody>
               </Table>
             </SortableContext>
@@ -476,17 +633,37 @@ function DataTable<TData, TValue>({
             </DragOverlay>
           </DndContext>
         ) : (
-          <Table data-density={density} variant={variant} containerClassName={containerClassName}>
+          <Table
+            data-density={density}
+            variant={variant}
+            containerClassName={containerClassName}
+            layout={hasExplicitSize ? "fixed" : undefined}
+          >
+            {hasExplicitSize && (
+              <colgroup>
+                {table.getHeaderGroups()[0]?.headers.map((header) => (
+                  <col
+                    key={header.id}
+                    style={header.column.columnDef.size == null ? undefined : { width: header.column.columnDef.size }}
+                  />
+                ))}
+              </colgroup>
+            )}
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} variant={numericColumns.has(header.column.id) ? "numeric" : undefined}>
+                    <TableHead
+                      key={header.id}
+                      variant={numericColumns.has(header.column.id) ? "numeric" : undefined}
+                      truncate={truncate && (header.column.columnDef.meta?.truncate ?? true)}
+                    >
                       <SortableHeaderContent
                         header={header as Header<unknown, unknown>}
                         enableSorting={enableSorting}
                         numericColumns={numericColumns}
                         columnLabels={columnLabels}
+                        truncate={truncate && (header.column.columnDef.meta?.truncate ?? true)}
                       />
                     </TableHead>
                   ))}
@@ -494,7 +671,7 @@ function DataTable<TData, TValue>({
               ))}
             </TableHeader>
             <TableBody>
-              <DataTableRows table={table} columns={columns} numericColumns={numericColumns} />
+              <DataTableRows table={table} columns={columns} numericColumns={numericColumns} truncate={truncate} />
             </TableBody>
           </Table>
         )}
@@ -517,7 +694,7 @@ function TableToolbar({
   return (
     <div
       data-slot="table-toolbar"
-      className={cn("flex items-center gap-2", className)}
+      className={cn("flex items-center justify-end gap-2", className)}
       {...props}
     >
       {children}
@@ -526,4 +703,4 @@ function TableToolbar({
 }
 
 export { DataTable, TableToolbar, useDataTable }
-export type { DataTableProps }
+export type { DataTableProps, FilterCondition, FilterOperator, FilterColumnConfig }

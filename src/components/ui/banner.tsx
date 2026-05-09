@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const bannerVariants = cva(
@@ -84,14 +85,16 @@ function Banner({
         {action && <div className="mt-2">{action}</div>}
       </div>
       {dismissible && (
-        <button
+        <Button
           type="button"
-          aria-label="Dismiss"
-          className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          variant="ghost"
+          size="icon-xs"
+          className="ml-auto shrink-0 text-current/70 hover:bg-current/10 hover:text-current"
           onClick={onDismiss}
         >
-          <X className="h-4 w-4" />
-        </button>
+          <X />
+          <span className="sr-only">Dismiss</span>
+        </Button>
       )}
     </div>
   );

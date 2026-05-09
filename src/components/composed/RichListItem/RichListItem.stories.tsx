@@ -36,10 +36,10 @@ export const Default: Story = {
     secondary: "Principal Scientist · Biology Platform",
     trailing: (
       <>
-        <span className="text-xs leading-tight text-muted-foreground">Last active 2h ago</span>
         <Badge variant="positive" className="text-xs">
           Active
         </Badge>
+        <span className="text-xs leading-tight text-muted-foreground">Last active 2h ago</span>
       </>
     ),
     actions: (
@@ -105,8 +105,8 @@ export const TeamList: Story = {
             secondary={m.role}
             trailing={
               <>
-                <span className="text-xs leading-tight text-muted-foreground">{m.meta}</span>
                 <Badge variant={m.statusVariant}>{m.status}</Badge>
+                <span className="text-xs leading-tight text-muted-foreground">{m.meta}</span>
               </>
             }
             actions={

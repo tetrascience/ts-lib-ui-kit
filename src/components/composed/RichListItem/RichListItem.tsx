@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Item, ItemActions, ItemContent, ItemHeader, ItemMedia, ItemTitle } from "@/components/ui/item";
+import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
 import { cn } from "@/lib/utils";
 
 export interface RichListItemProps extends Omit<React.ComponentProps<typeof Item>, "asChild" | "children"> {
@@ -23,30 +23,47 @@ function RichListItem({
   size = "default",
   ...props
 }: RichListItemProps) {
+  const hasSecondary = Boolean(secondary);
+  const contentColumns =
+    trailing && actions
+      ? "grid-cols-[minmax(0,1fr)_auto_auto]"
+      : trailing || actions
+        ? "grid-cols-[minmax(0,1fr)_auto]"
+        : "grid-cols-[minmax(0,1fr)]";
+  const supplementalSpanClass = hasSecondary ? "row-span-2" : "row-span-1";
+
   return (
     <Item
       data-slot="rich-list-item"
       variant={variant}
       size={size}
-      className={cn("gap-3 rounded-none border-transparent px-4 py-3 hover:bg-muted/50", className)}
+      className={cn(
+        "flex-nowrap items-center gap-3 rounded-none border-transparent px-4 py-3 hover:bg-muted/50",
+        className,
+      )}
       {...props}
     >
       {leading && <ItemMedia className="self-center">{leading}</ItemMedia>}
-      <ItemContent className="min-w-0 gap-0.5">
-        <ItemHeader className="min-w-0 flex-nowrap items-start gap-3">
-          <ItemTitle className="min-w-0 flex-1 truncate">{primary}</ItemTitle>
-          {(trailing || actions) && (
-            <div className="flex shrink-0 items-start gap-3">
-              {trailing && <div className="flex flex-col items-end gap-1 text-right">{trailing}</div>}
-              {actions && <ItemActions className="shrink-0">{actions}</ItemActions>}
+      <ItemContent className="min-w-0">
+        <div className={cn("grid min-w-0 items-center gap-x-3 gap-y-1", contentColumns)}>
+          <ItemTitle className="min-w-0 max-w-full truncate">{primary}</ItemTitle>
+          {trailing && (
+            <div className={cn("flex flex-col items-end gap-1 whitespace-nowrap text-right", supplementalSpanClass)}>
+              {trailing}
             </div>
           )}
-        </ItemHeader>
-        {secondary && (
-          <div data-slot="rich-list-item-secondary" className="truncate text-xs text-muted-foreground">
-            {secondary}
-          </div>
-        )}
+          {actions && (
+            <ItemActions className={cn("shrink-0 self-center", supplementalSpanClass)}>{actions}</ItemActions>
+          )}
+          {secondary && (
+            <div
+              data-slot="rich-list-item-secondary"
+              className="min-w-0 truncate text-xs leading-tight text-muted-foreground"
+            >
+              {secondary}
+            </div>
+          )}
+        </div>
       </ItemContent>
     </Item>
   );

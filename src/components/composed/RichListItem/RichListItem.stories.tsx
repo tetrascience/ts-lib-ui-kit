@@ -64,7 +64,7 @@ export const TeamList: Story = {
         meta: "Last active 2h ago",
         status: "Active",
         statusVariant: "positive" as const,
-        color: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
+        fallbackClassName: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
       },
       {
         initials: "MT",
@@ -73,7 +73,7 @@ export const TeamList: Story = {
         meta: "Last active 5h ago",
         status: "Active",
         statusVariant: "positive" as const,
-        color: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+        fallbackClassName: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
       },
       {
         initials: "SC",
@@ -82,7 +82,7 @@ export const TeamList: Story = {
         meta: "Invited 3 days ago",
         status: "Invited",
         statusVariant: "warning" as const,
-        color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+        fallbackClassName: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
       },
       {
         initials: "RJ",
@@ -91,7 +91,7 @@ export const TeamList: Story = {
         meta: "Inactive since Jan 2024",
         status: "Inactive",
         statusVariant: "outline" as const,
-        color: "",
+        fallbackClassName: "",
       },
     ];
 
@@ -100,12 +100,7 @@ export const TeamList: Story = {
         {members.map((m, i) => (
           <RichListItem
             key={i}
-            leading={
-              <RichListItemAvatar
-                initials={m.initials}
-                className={m.color || undefined}
-              />
-            }
+            leading={<RichListItemAvatar initials={m.initials} fallbackClassName={m.fallbackClassName || undefined} />}
             primary={m.name}
             secondary={m.role}
             trailing={

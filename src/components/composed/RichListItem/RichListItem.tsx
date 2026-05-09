@@ -1,8 +1,10 @@
 import * as React from "react";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Item, ItemActions, ItemContent, ItemHeader, ItemMedia, ItemTitle } from "@/components/ui/item";
 import { cn } from "@/lib/utils";
 
-export interface RichListItemProps extends React.ComponentProps<"div"> {
+export interface RichListItemProps extends Omit<React.ComponentProps<typeof Item>, "asChild" | "children"> {
   leading?: React.ReactNode;
   primary: React.ReactNode;
   secondary?: React.ReactNode;
@@ -17,57 +19,57 @@ function RichListItem({
   trailing,
   actions,
   className,
+  variant = "default",
+  size = "default",
   ...props
 }: RichListItemProps) {
   return (
-    <div
+    <Item
       data-slot="rich-list-item"
-      className={cn(
-        "flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors",
-        className
-      )}
+      variant={variant}
+      size={size}
+      className={cn("gap-3 rounded-none border-transparent px-4 py-3 hover:bg-muted/50", className)}
       {...props}
     >
-      {leading && <div className="shrink-0">{leading}</div>}
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <div className="flex items-center gap-2">
-          <div className="truncate text-sm font-medium text-foreground">
-            {primary}
-          </div>
-        </div>
+      {leading && <ItemMedia className="self-center">{leading}</ItemMedia>}
+      <ItemContent className="min-w-0 gap-0.5">
+        <ItemHeader className="min-w-0 flex-nowrap items-start gap-3">
+          <ItemTitle className="min-w-0 flex-1 truncate">{primary}</ItemTitle>
+          {(trailing || actions) && (
+            <div className="flex shrink-0 items-start gap-3">
+              {trailing && <div className="flex flex-col items-end gap-1 text-right">{trailing}</div>}
+              {actions && <ItemActions className="shrink-0">{actions}</ItemActions>}
+            </div>
+          )}
+        </ItemHeader>
         {secondary && (
-          <div className="truncate text-xs text-muted-foreground">
+          <div data-slot="rich-list-item-secondary" className="truncate text-xs text-muted-foreground">
             {secondary}
           </div>
         )}
-      </div>
-      {trailing && (
-        <div className="flex shrink-0 flex-col items-end gap-1">{trailing}</div>
-      )}
-      {actions && <div className="shrink-0">{actions}</div>}
-    </div>
+      </ItemContent>
+    </Item>
   );
 }
 
-export interface RichListItemAvatarProps extends React.ComponentProps<"div"> {
+export interface RichListItemAvatarProps extends Omit<React.ComponentProps<typeof Avatar>, "children"> {
   initials: string;
+  fallbackClassName?: string;
 }
 
 function RichListItemAvatar({
   initials,
   className,
+  fallbackClassName,
+  size = "default",
   ...props
 }: RichListItemAvatarProps) {
   return (
-    <div
-      className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary",
-        className
-      )}
-      {...props}
-    >
-      {initials}
-    </div>
+    <Avatar className={className} size={size} {...props}>
+      <AvatarFallback className={cn("bg-primary/10 text-xs font-semibold text-primary", fallbackClassName)}>
+        {initials}
+      </AvatarFallback>
+    </Avatar>
   );
 }
 

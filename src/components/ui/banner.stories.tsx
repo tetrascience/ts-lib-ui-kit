@@ -31,6 +31,24 @@ const meta: Meta<typeof Banner> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function DismissibleBannerStory() {
+  const [visible, setVisible] = React.useState(true);
+
+  return visible ? (
+    <Banner
+      variant="info"
+      title="New features available"
+      description="Check out the redesigned workflow builder in the Data App Studio."
+      dismissible
+      onDismiss={() => setVisible(false)}
+    />
+  ) : (
+    <div className="p-4 text-sm text-muted-foreground">Banner dismissed.</div>
+  );
+}
+
 export const Info: Story = {
   args: {
     variant: "info",
@@ -172,20 +190,7 @@ export const WithAction: Story = {
 };
 
 export const Dismissible: Story = {
-  render: () => {
-    const [visible, setVisible] = React.useState(true);
-    return visible ? (
-      <Banner
-        variant="info"
-        title="New features available"
-        description="Check out the redesigned workflow builder in the Data App Studio."
-        dismissible
-        onDismiss={() => setVisible(false)}
-      />
-    ) : (
-      <div className="p-4 text-sm text-muted-foreground">Banner dismissed.</div>
-    );
-  },
+  render: () => <DismissibleBannerStory />,
   parameters: {
     zephyr: { testCaseId: "SW-T1194" },
   },
@@ -200,10 +205,29 @@ export const Dismissible: Story = {
       ).toBeInTheDocument();
     });
 
+  },
+};
+
+export const DismissibleInteraction: Story = {
+  name: "Dismissible Interaction",
+  tags: ["!dev"],
+  render: () => <DismissibleBannerStory />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Dismissible banner renders with close button", async () => {
+      expect(canvas.getByRole("status")).toBeInTheDocument();
+      expect(canvas.getByText("New features available")).toBeInTheDocument();
+      expect(
+        canvas.getByRole("button", { name: "Dismiss" })
+      ).toBeInTheDocument();
+    });
+
     await step("Clicking dismiss button hides banner", async () => {
       const dismissButton = canvas.getByRole("button", { name: "Dismiss" });
+      await sleep(1000);
       await userEvent.click(dismissButton);
-      
+
       await waitFor(() => {
         expect(canvas.queryByRole("status")).not.toBeInTheDocument();
       });

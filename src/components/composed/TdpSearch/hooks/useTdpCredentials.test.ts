@@ -3,15 +3,21 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useTdpCredentials } from "../hooks/useTdpCredentials";
 
 describe("useTdpCredentials", () => {
-  const originalGetItem = Storage.prototype.getItem;
+  const originalLocalStorage = globalThis.localStorage;
   const originalCookieDescriptor = Object.getOwnPropertyDescriptor(
     Document.prototype,
     "cookie",
   );
+  const getItemMock = vi.fn<(key: string) => string | null>(() => null);
 
   beforeEach(() => {
     // Clear localStorage and cookies between tests
-    Storage.prototype.getItem = vi.fn().mockReturnValue(null);
+    getItemMock.mockReset();
+    getItemMock.mockReturnValue(null);
+    Object.defineProperty(globalThis, "localStorage", {
+      value: { getItem: getItemMock } satisfies Pick<Storage, "getItem">,
+      configurable: true,
+    });
     Object.defineProperty(document, "cookie", {
       value: "",
       writable: true,
@@ -20,7 +26,10 @@ describe("useTdpCredentials", () => {
   });
 
   afterEach(() => {
-    Storage.prototype.getItem = originalGetItem;
+    Object.defineProperty(globalThis, "localStorage", {
+      value: originalLocalStorage,
+      configurable: true,
+    });
     if (originalCookieDescriptor) {
       Object.defineProperty(document, "cookie", originalCookieDescriptor);
     }
@@ -32,13 +41,11 @@ describe("useTdpCredentials", () => {
   });
 
   it("falls back to localStorage when explicit props are missing", () => {
-    (Storage.prototype.getItem as ReturnType<typeof vi.fn>).mockImplementation(
-      (key: string) => {
-        if (key === "ts-auth-token") return "ls-token";
-        if (key === "x-org-slug") return "ls-org";
-        return null;
-      },
-    );
+    getItemMock.mockImplementation((key: string) => {
+      if (key === "ts-auth-token") return "ls-token";
+      if (key === "x-org-slug") return "ls-org";
+      return null;
+    });
     const creds = useTdpCredentials();
     expect(creds).toEqual({ authToken: "ls-token", orgSlug: "ls-org" });
   });
@@ -59,13 +66,11 @@ describe("useTdpCredentials", () => {
   });
 
   it("prefers explicit props over localStorage", () => {
-    (Storage.prototype.getItem as ReturnType<typeof vi.fn>).mockImplementation(
-      (key: string) => {
-        if (key === "ts-auth-token") return "ls-token";
-        if (key === "x-org-slug") return "ls-org";
-        return null;
-      },
-    );
+    getItemMock.mockImplementation((key: string) => {
+      if (key === "ts-auth-token") return "ls-token";
+      if (key === "x-org-slug") return "ls-org";
+      return null;
+    });
     const creds = useTdpCredentials("explicit-token", "explicit-org");
     expect(creds).toEqual({ authToken: "explicit-token", orgSlug: "explicit-org" });
   });

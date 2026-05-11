@@ -62,7 +62,7 @@ export interface EmptyStateProps extends React.ComponentProps<"div"> {
 }
 
 function EmptyState({
-  variant,
+  variant = "no-data",
   title,
   description,
   icon,
@@ -70,10 +70,10 @@ function EmptyState({
   className,
   ...props
 }: EmptyStateProps) {
-  const defaults = variant ? VARIANT_DEFAULTS[variant] : undefined;
-  const Icon = icon ?? defaults?.icon;
-  const resolvedTitle = title ?? defaults?.title;
-  const resolvedDescription = description ?? defaults?.description;
+  const defaults = VARIANT_DEFAULTS[variant];
+  const Icon = icon ?? defaults.icon;
+  const resolvedTitle = title ?? defaults.title;
+  const resolvedDescription = description ?? defaults.description;
 
   return (
     <div

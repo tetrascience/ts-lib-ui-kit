@@ -61,7 +61,7 @@ function Banner({
   "aria-live": ariaLive,
   ...props
 }: BannerProps) {
-  const Icon = BANNER_ICONS[variant ?? "info"];
+  const Icon = BANNER_ICONS[variant];
   const isUrgentBanner = variant === "warning" || variant === "destructive";
   const resolvedRole = role ?? (isUrgentBanner ? "alert" : "status");
   const resolvedAriaLive = ariaLive ?? (isUrgentBanner ? "assertive" : "polite");

@@ -166,7 +166,7 @@
   --sidebar-primary-foreground: oklch(1 0 0); /* #FFFFFF */
   --sidebar-accent: oklch(0.9619 0.0179 272.31); /* #EEF2FF */
   --sidebar-accent-foreground: oklch(0.6304 0.1800 259.96); /* #4285F4 */
-  --sidebar-border: oklch(0.9288 0.0126 255.51); /* #E2E8F0 */
+  --sidebar-border: oklch(0.9475 0.0080 260.73); /* #EBEEF3 */
   --sidebar-ring: oklch(0.7827 0.0298 268.30); /* #B0B8CC */
 
   /* MD3 Surface variants — DEL palette */
@@ -280,7 +280,7 @@
   --sidebar-primary-foreground: oklch(0.3284 0.1216 262.85); /* #102F72 */
   --sidebar-accent: oklch(0.3126 0.0107 293.42); /* #313036 */
   --sidebar-accent-foreground: oklch(0.9152 0.0115 308.32); /* #E5E1E9 */
-  --sidebar-border: oklch(0.3970 0.0168 281.07); /* #454650 */
+  --sidebar-border: oklch(0.3400 0.0120 285.33); /* #37373E */
   --sidebar-ring: oklch(0.6569 0.0162 285.95); /* #90909B */
 
   /* MD3 Surface variants (dark) */

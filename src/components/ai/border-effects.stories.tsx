@@ -331,7 +331,10 @@ export const GradientShimmerOnReasoning: Story = {
 
 export const ThinkingCard: Story = {
   name: "Thinking Card — Dark surface",
-  parameters: { backgrounds: { default: "dark" } },
+  parameters: {
+    backgrounds: { default: "dark" },
+    zephyr: { testCaseId: "SW-T4520" },
+  },
   render: () => (
     <div className="flex items-center justify-center p-8" style={{ background: "#111827" }}>
       {/*
@@ -381,7 +384,6 @@ export const ThinkingCard: Story = {
       await expect(canvas.getByText(/dark mode/i)).toBeInTheDocument()
       await expect(canvas.getByText(/Thinking/i)).toBeInTheDocument()
     })
-    zephyr: { testCaseId: "SW-T4520" },
   },
 }
 

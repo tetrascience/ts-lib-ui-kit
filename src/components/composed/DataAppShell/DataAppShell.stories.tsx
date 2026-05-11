@@ -1060,7 +1060,10 @@ export const BackToPlatformPath: Story = {
 export const MobileNavigation: Story = {
   name: "Mobile Navigation",
   tags: ['!dev'],
-  parameters: { viewport: { defaultViewport: 'mobile1' } },
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    zephyr: { testCaseId: "SW-T4676" },
+  },
   render: () => (
     <DataAppShell
       appName="HTS"
@@ -1146,7 +1149,6 @@ export const MobileNavigation: Story = {
         expect(closedSheet).not.toBeInTheDocument();
       });
     });
-    zephyr: { testCaseId: "SW-T4676" },
   },
 };
 

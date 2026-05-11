@@ -1,5 +1,9 @@
+import fs from "fs";
+import os from "os";
+import path from "path";
+
 import { Project } from "ts-morph";
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect } from "vitest";
 
 import {
   parseStoryFile,
@@ -9,7 +13,26 @@ import {
   extractZephyrIdsFromParameters,
   findDuplicateZephyrIds,
   findStoryNameAssignment,
+  updateStoryFile,
 } from "../sync-storybook-zephyr";
+
+const tempDirs: string[] = [];
+
+function createTempStoryFile(content: string) {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "sync-storybook-zephyr-"));
+  tempDirs.push(cwd);
+
+  const filePath = path.join(cwd, "Component.stories.tsx");
+  fs.writeFileSync(filePath, content, "utf-8");
+
+  return filePath;
+}
+
+afterEach(() => {
+  while (tempDirs.length > 0) {
+    fs.rmSync(tempDirs.pop()!, { recursive: true, force: true });
+  }
+});
 
 // Helper to get a variable declaration from code
 function getDeclaration(code: string, name: string) {
@@ -325,6 +348,30 @@ export const Warning: Story = {
 
       const stories = parseStoryFile("src/components/ui/banner.stories.tsx", content);
       expect(findDuplicateZephyrIds(stories)).toEqual([]);
+    });
+  });
+
+  describe("updateStoryFile", () => {
+    it("should add zephyr inside an existing one-line parameters object", () => {
+      const filePath = createTempStoryFile(`import type { StoryObj } from "@storybook/react";
+type Story = StoryObj;
+
+export const MobileNavigation: Story = {
+  name: "Mobile Navigation",
+  parameters: { viewport: { defaultViewport: "mobile1" } },
+  play: async ({ step }) => {
+    await step("opens mobile navigation", async () => {});
+  },
+};`);
+
+      expect(updateStoryFile(filePath, 1, "MobileNavigation", "SW-T999", "csf3-object")).toBe(true);
+
+      const updated = fs.readFileSync(filePath, "utf-8");
+      const stories = parseStoryFile(filePath, updated);
+      expect(stories[0].existingId).toBe("SW-T999");
+
+      const playBlock = updated.slice(updated.indexOf("play:"));
+      expect(playBlock).not.toContain("zephyr:");
     });
   });
 

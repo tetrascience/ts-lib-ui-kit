@@ -574,7 +574,7 @@ async function uploadTestSteps(testCaseKey: string, steps: TestStep[]): Promise<
  * Updates a story file to add or update a Zephyr ID in parameters.zephyr.testCaseId
  * Uses line-by-line text processing for better formatting control
  */
-function updateStoryFile(
+export function updateStoryFile(
   filePath: string,
   _lineNumber: number,
   exportName: string,
@@ -594,6 +594,12 @@ function updateStoryFile(
   // If the story has an empty zephyr property, use simple string replacement
   if (hasEmptyZephyrProperty) {
     return updateEmptyZephyrId(filePath, content, exportName, zephyrKey);
+  }
+
+  // Existing parameters can be one-line or multi-line. Use AST updates here so
+  // zephyr is added inside the parameters object instead of a later story block.
+  if (storyHasParametersObject(content, exportName)) {
+    return updateStoryFileAST(filePath, exportName, zephyrKey);
   }
 
   const lines = content.split("\n");
@@ -683,6 +689,20 @@ function updateStoryFile(
 
   // Fallback: If line-by-line didn't work, try AST approach
   return updateStoryFileAST(filePath, exportName, zephyrKey);
+}
+
+function storyHasParametersObject(content: string, exportName: string): boolean {
+  const project = new Project({ useInMemoryFileSystem: true });
+  const sourceFile = project.createSourceFile("temp.tsx", content);
+  const declaration = sourceFile.getVariableDeclaration(exportName);
+
+  const initializer = declaration?.getInitializer();
+  if (!initializer || !Node.isObjectLiteralExpression(initializer)) return false;
+
+  const parametersProp = initializer.getProperty("parameters");
+  if (!parametersProp || !Node.isPropertyAssignment(parametersProp)) return false;
+
+  return Node.isObjectLiteralExpression(parametersProp.getInitializer());
 }
 
 /**

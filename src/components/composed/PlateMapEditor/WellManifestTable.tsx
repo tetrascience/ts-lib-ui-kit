@@ -3,9 +3,9 @@ import * as React from "react";
 
 import type { WellColumn, WellField, WellId, WellRecord } from "./types";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -16,8 +16,6 @@ const PAGE_SIZE_MEDIUM = 50;
 const PAGE_SIZE_LARGE = 100;
 const DEFAULT_PAGE_SIZE = PAGE_SIZE_SMALL;
 const DEFAULT_PAGE_SIZE_OPTIONS: number[] = [PAGE_SIZE_SMALL, PAGE_SIZE_MEDIUM, PAGE_SIZE_LARGE];
-const CELL_CONTROL_CLASS =
-  "border-transparent bg-transparent px-0 shadow-none hover:border-transparent focus-visible:border-transparent focus-visible:ring-0";
 
 function hasFillValue(value: unknown): boolean {
   return value !== undefined && value !== null && value !== "";
@@ -163,51 +161,30 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
     const value = row[col.field];
 
     if (field?.kind === "select") {
+      const option = (field.options ?? []).find((opt) => opt.value === value);
+      if (!option) {
+        return <span className="text-muted-foreground">—</span>;
+      }
+
       return (
-        <Select
-          value={(value as string | undefined) ?? ""}
-          onValueChange={(v) => updateRow(wellId, { [col.field!]: v } as Partial<T>)}
-        >
-          <SelectTrigger size="sm" className={cn("w-full", CELL_CONTROL_CLASS)}>
-            <SelectValue placeholder={field.placeholder ?? "—"} />
-          </SelectTrigger>
-          <SelectContent>
-            {(field.options ?? []).map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                <span className="inline-flex items-center gap-2">
-                  {opt.swatch ? (
-                    <span
-                      className="inline-block h-2.5 w-2.5 rounded-sm border border-foreground/20"
-                      style={{ backgroundColor: opt.swatch }}
-                      aria-hidden
-                    />
-                  ) : null}
-                  {opt.label}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Badge variant="secondary">
+          {option.swatch ? (
+            <span
+              className="size-2 rounded-sm border border-foreground/20"
+              style={{ backgroundColor: option.swatch }}
+              aria-hidden
+            />
+          ) : null}
+          {option.label}
+        </Badge>
       );
     }
 
-    return (
-      <Input
-        type={field?.kind === "number" ? "number" : "text"}
-        className={CELL_CONTROL_CLASS}
-        placeholder="—"
-        value={(value as string | number | undefined) ?? ""}
-        onChange={(e) => {
-          const raw = e.target.value;
-          let next: unknown = raw === "" ? undefined : raw;
-          if (field?.kind === "number") {
-            const num = parseFloat(raw);
-            next = raw === "" ? undefined : Number.isFinite(num) ? num : raw;
-          }
-          updateRow(wellId, { [col.field!]: next } as Partial<T>);
-        }}
-      />
-    );
+    if (!hasFillValue(value)) {
+      return <span className="text-muted-foreground">—</span>;
+    }
+
+    return String(value);
   };
 
   const renderColumnHeader = (col: WellColumn<T>) => {
@@ -267,16 +244,11 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
       </div>
 
       <TooltipProvider>
-        <Table
-          variant="card"
-          containerClassName="max-h-[500px] border-slate-300 bg-white"
-          className="[&_tbody]:bg-white [&_tbody_td]:bg-white [&_tbody_tr]:border-slate-300 [&_tbody_tr]:bg-white [&_tbody_tr:hover]:bg-slate-50 [&_tbody_tr[data-state=selected]]:bg-white"
-          data-density="compact"
-        >
-          <TableHeader variant="sticky" className="bg-slate-100 [&_tr]:border-slate-300">
+        <Table data-density="default">
+          <TableHeader>
             <TableRow>
               {onSelectionChange ? (
-                <TableHead variant="action" className="w-10 text-center">
+                <TableHead className="w-10 text-center">
                   <span className="inline-flex items-center justify-center text-muted-foreground [&_svg]:size-3.5">
                     <Check aria-hidden />
                     <span className="sr-only">Selected</span>
@@ -298,9 +270,9 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
             {pagedRows.map(({ id, row }) => {
               const isSelected = selection?.has(id);
               return (
-                <TableRow key={id} data-state={isSelected ? "selected" : undefined}>
+                <TableRow key={id}>
                   {onSelectionChange ? (
-                    <TableCell variant="action">
+                    <TableCell className="w-10">
                       <Checkbox
                         checked={!!isSelected}
                         onCheckedChange={() => toggleSelect(id)}
@@ -308,11 +280,10 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
                       />
                     </TableCell>
                   ) : null}
-                  <TableCell className="bg-white font-semibold">{id}</TableCell>
+                  <TableCell className="font-semibold">{id}</TableCell>
                   {columns.map((col) => (
                     <TableCell
                       key={col.id ?? col.field ?? col.header}
-                      className="border-l border-slate-300 bg-white focus-within:bg-primary/5 focus-within:ring-1 focus-within:ring-primary/30 focus-within:ring-inset"
                       style={col.minWidth ? { minWidth: col.minWidth } : undefined}
                     >
                       {renderCell(col, id, row)}

@@ -1,7 +1,10 @@
 import { Check, ChevronDown, Download, LayoutTemplate, SaveAll, Trash2, Upload } from "lucide-react";
 import * as React from "react";
 
-import type { ImportExportHandlers, TemplateOption } from "./types";
+import { triagePlateMapCsvFile } from "./csvPlateTriage";
+import { groupTemplateOptions } from "./helpers";
+
+import type { ImportExportHandlers, PlateMapCsvTriage, TemplateOption } from "./types";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,10 +42,12 @@ function HiddenFileInput({
   inputRef,
   accept,
   onPick,
+  triageCsv,
 }: {
   inputRef: React.RefObject<HTMLInputElement | null>;
   accept: string;
-  onPick?: (file: File) => void | Promise<void>;
+  onPick?: (file: File, triage?: PlateMapCsvTriage) => void | Promise<void>;
+  triageCsv?: boolean;
 }) {
   return (
     <input
@@ -51,23 +56,21 @@ function HiddenFileInput({
       accept={accept}
       hidden
       onChange={(event) => {
+        const input = event.currentTarget;
         const file = event.target.files?.[0];
-        if (file) void onPick?.(file);
-        event.target.value = "";
+        if (!file) {
+          input.value = "";
+          return;
+        }
+
+        void (async () => {
+          const triage = triageCsv ? await triagePlateMapCsvFile(file) : undefined;
+          await (triage ? onPick?.(file, triage) : onPick?.(file));
+          input.value = "";
+        })();
       }}
     />
   );
-}
-
-function groupedTemplates(templates: TemplateOption[] | undefined) {
-  const groups = new Map<string, TemplateOption[]>();
-  (templates ?? []).forEach((template) => {
-    const key = template.group ?? "";
-    const list = groups.get(key) ?? [];
-    list.push(template);
-    groups.set(key, list);
-  });
-  return [...groups.entries()];
 }
 
 export function PlateMapActionsMenu({
@@ -94,7 +97,7 @@ export function PlateMapActionsMenu({
 }: PlateMapActionsMenuProps) {
   const templateInputRef = React.useRef<HTMLInputElement>(null);
   const csvInputRef = React.useRef<HTMLInputElement>(null);
-  const templateGroups = React.useMemo(() => groupedTemplates(templates), [templates]);
+  const templateGroups = React.useMemo(() => groupTemplateOptions(templates), [templates]);
   const disableEntryExport = hasEntries === false;
 
   const hasMenuItems =
@@ -187,7 +190,7 @@ export function PlateMapActionsMenu({
         </DropdownMenuContent>
       </DropdownMenu>
       <HiddenFileInput inputRef={templateInputRef} accept={templateAccept} onPick={onImportTemplate} />
-      <HiddenFileInput inputRef={csvInputRef} accept={csvAccept} onPick={onImportCsv} />
+      <HiddenFileInput inputRef={csvInputRef} accept={csvAccept} onPick={onImportCsv} triageCsv />
     </>
   );
 }

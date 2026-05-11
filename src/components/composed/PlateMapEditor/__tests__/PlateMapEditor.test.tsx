@@ -4,8 +4,10 @@ import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { plateOptionsFromCsvTriage, triagePlateMapCsvByBarcode } from "../csvPlateTriage";
 import { PlateMapEditor } from "../PlateMapEditor";
-import { PlatePaintGrid } from "../PlatePaintGrid";
+import { PlateMapPlateSelector } from "../PlateMapPlateSelector";
+import { PlatePaintGrid, PLATE_MAP_CELL_BORDER, PLATE_MAP_EMPTY_WELL_FILL } from "../PlatePaintGrid";
 import { TemplateIOPanel } from "../TemplateIOPanel";
 import { WellManifestTable } from "../WellManifestTable";
 import { WellMetadataForm } from "../WellMetadataForm";
@@ -13,6 +15,7 @@ import { WellMetadataForm } from "../WellMetadataForm";
 import type { WellColumn, WellField, WellId, WellRecord } from "../types";
 
 interface SimpleWell extends WellRecord {
+  plateBarcode?: string;
   role?: "sample" | "control" | "blank";
   sampleId?: string;
   amount?: number | string;
@@ -69,6 +72,11 @@ function setFileInput(input: HTMLInputElement, file: File) {
     value: [file],
   });
   input.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+async function flushFilePick() {
+  await Promise.resolve();
+  await Promise.resolve();
 }
 
 interface HarnessHandle {
@@ -320,7 +328,231 @@ describe("PlateMapEditor", () => {
     expect(container.textContent).toContain("Role color legend");
   });
 
-  it("handles template panel imports, exports, and clearing", () => {
+  it("renders plate selector add and barcode selection states", () => {
+    const onAddPlate = vi.fn();
+    const onPlateChange = vi.fn();
+
+    renderElement(<PlateMapPlateSelector onAddPlate={onAddPlate} />);
+
+    act(() => {
+      findButton(container, "Add Plate")?.click();
+    });
+    expect(onAddPlate).toHaveBeenCalledTimes(1);
+
+    renderElement(
+      <PlateMapPlateSelector
+        plates={[
+          { id: "PLATE-001", barcode: "PLATE-001", count: 2 },
+          { id: "PLATE-002", barcode: "PLATE-002", count: 1 },
+        ]}
+        activePlateId="PLATE-002"
+        onPlateChange={onPlateChange}
+        onAddPlate={onAddPlate}
+      />,
+    );
+
+    expect(container.textContent).toContain("PLATE-002");
+
+    const trigger = container.querySelector('button[aria-label="Plate"]') as HTMLButtonElement;
+    act(() => {
+      trigger.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0 }));
+    });
+
+    const firstPlateItem = [
+      ...document.body.querySelectorAll('[role="menuitem"], [data-slot="dropdown-menu-item"]'),
+    ].find((item) => item.textContent?.includes("PLATE-001")) as HTMLElement | undefined;
+
+    expect(firstPlateItem).toBeDefined();
+
+    act(() => {
+      firstPlateItem?.click();
+    });
+
+    expect(onPlateChange).toHaveBeenCalledWith("PLATE-001");
+  });
+
+  it("scopes grid and manifest rows to the active plate barcode", () => {
+    const values = new Map<WellId, SimpleWell>([
+      ["PLATE-001::A01", { plateBarcode: "PLATE-001", role: "sample", sampleId: "S-1" }],
+      ["PLATE-002::A01", { plateBarcode: "PLATE-002", role: "control", sampleId: "S-2" }],
+    ]);
+    const onSelectionChange = vi.fn();
+
+    const renderScopedEditor = (activePlateId: string, selection = new Set<WellId>()) =>
+      renderElement(
+        <PlateMapEditor<SimpleWell>
+          format="96"
+          values={values}
+          onChange={() => {}}
+          selection={selection}
+          onSelectionChange={onSelectionChange}
+          fields={FIELDS}
+          tableColumns={COLUMNS}
+          colorForWell={colorForWell}
+          emptyEntry={emptyEntry}
+          plates={[
+            { id: "PLATE-001", barcode: "PLATE-001", count: 1 },
+            { id: "PLATE-002", barcode: "PLATE-002", count: 1 },
+          ]}
+          activePlateId={activePlateId}
+          onPlateChange={() => {}}
+        />,
+      );
+
+    renderScopedEditor("PLATE-001");
+    expect(container.textContent).toContain("Plate Barcode");
+    expect(container.textContent).toContain("PLATE-001");
+    expect(container.textContent).toContain("S-1");
+    expect(container.textContent).not.toContain("S-2");
+    expect(container.querySelector('[data-well="A01"]')?.getAttribute("fill")).toBe(ROLE_COLOR.sample);
+
+    renderScopedEditor("PLATE-002", new Set(["A01"]));
+    expect(container.textContent).toContain("PLATE-002");
+    expect(container.textContent).toContain("S-2");
+    expect(container.textContent).not.toContain("S-1");
+    expect(onSelectionChange).toHaveBeenCalledWith(new Set());
+
+    renderScopedEditor("PLATE-002");
+    expect(container.querySelector('[data-well="A01"]')?.getAttribute("fill")).toBe(ROLE_COLOR.control);
+  });
+
+  it("writes active plate edits under a plate-scoped key and stamps the barcode", () => {
+    const onChange = vi.fn();
+
+    renderElement(
+      <PlateMapEditor<SimpleWell>
+        format="96"
+        values={new Map<WellId, SimpleWell>([["PLATE-001::A01", { plateBarcode: "PLATE-001", sampleId: "S-1" }]])}
+        onChange={onChange}
+        selection={new Set(["A01"])}
+        onSelectionChange={() => {}}
+        fields={FIELDS}
+        tableColumns={COLUMNS}
+        colorForWell={colorForWell}
+        emptyEntry={emptyEntry}
+        plates={[
+          { id: "PLATE-001", barcode: "PLATE-001", count: 1 },
+          { id: "PLATE-002", barcode: "PLATE-002", count: 0 },
+        ]}
+        activePlateId="PLATE-002"
+        onPlateChange={() => {}}
+      />,
+    );
+
+    const sampleInput = container.querySelector('input[id="field-sampleId"]') as HTMLInputElement;
+    act(() => {
+      setInputValue(sampleInput, "S-2");
+    });
+    act(() => {
+      findButton(container, "Apply")?.click();
+    });
+
+    const next = onChange.mock.calls.at(-1)?.[0] as Map<WellId, SimpleWell>;
+    expect(next.has("A01")).toBe(false);
+    expect(next.get("PLATE-001::A01")?.sampleId).toBe("S-1");
+    expect(next.get("PLATE-002::A01")).toEqual({ plateBarcode: "PLATE-002", sampleId: "S-2" });
+  });
+
+  it("does not infer a barcode from activePlateId without a user or CSV plate option", () => {
+    const onChange = vi.fn();
+
+    renderElement(
+      <PlateMapEditor<SimpleWell>
+        format="96"
+        values={new Map<WellId, SimpleWell>()}
+        onChange={onChange}
+        selection={new Set(["A01"])}
+        onSelectionChange={() => {}}
+        fields={FIELDS}
+        tableColumns={COLUMNS}
+        colorForWell={colorForWell}
+        emptyEntry={emptyEntry}
+        activePlateId="PLATE-001"
+      />,
+    );
+
+    const sampleInput = container.querySelector('input[id="field-sampleId"]') as HTMLInputElement;
+    act(() => {
+      setInputValue(sampleInput, "S-1");
+    });
+    act(() => {
+      findButton(container, "Apply")?.click();
+    });
+
+    const next = onChange.mock.calls.at(-1)?.[0] as Map<WellId, SimpleWell>;
+    expect(next.get("A01")).toEqual({ sampleId: "S-1" });
+    expect(next.has("PLATE-001::A01")).toBe(false);
+    expect(container.textContent).not.toContain("Plate Barcode");
+  });
+
+  it("triages CSV rows by user-provided plate barcode", () => {
+    const triage = triagePlateMapCsvByBarcode(
+      "plate barcode,well,sample\nPLATE-001,A01,S-1\nPLATE-002,A01,S-2\nPLATE-001,A02,S-3\n,A03,S-4",
+    );
+
+    expect(triage.plateBarcodeColumn).toBe("plate barcode");
+    expect(triage.plates).toEqual([
+      expect.objectContaining({ id: "PLATE-001", barcode: "PLATE-001", rowCount: 2 }),
+      expect.objectContaining({ id: "PLATE-002", barcode: "PLATE-002", rowCount: 1 }),
+    ]);
+    expect(triage.missingBarcodeRows.map((row) => row.line)).toEqual([5]);
+    expect(plateOptionsFromCsvTriage(triage)).toEqual([
+      { id: "PLATE-001", barcode: "PLATE-001", count: 2 },
+      { id: "PLATE-002", barcode: "PLATE-002", count: 1 },
+    ]);
+  });
+
+  it("passes CSV plate triage through the editor import handler", async () => {
+    const onImportCsv = vi.fn();
+
+    renderElement(
+      <PlateMapEditor<SimpleWell>
+        format="96"
+        values={new Map()}
+        onChange={() => {}}
+        selection={new Set()}
+        onSelectionChange={() => {}}
+        fields={FIELDS}
+        tableColumns={COLUMNS}
+        colorForWell={colorForWell}
+        emptyEntry={emptyEntry}
+        onImportCsv={onImportCsv}
+      />,
+    );
+
+    const csvInput = container.querySelector('input[accept=".csv,text/csv"]') as HTMLInputElement;
+
+    await act(async () => {
+      setFileInput(
+        csvInput,
+        new File(["plate barcode,well\nPLATE-001,A01\nPLATE-002,A01"], "plates.csv", { type: "text/csv" }),
+      );
+      await flushFilePick();
+    });
+
+    expect(onImportCsv).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "plates.csv" }),
+      expect.objectContaining({
+        plateBarcodeColumn: "plate barcode",
+        plates: [
+          expect.objectContaining({ id: "PLATE-001", barcode: "PLATE-001" }),
+          expect.objectContaining({ id: "PLATE-002", barcode: "PLATE-002" }),
+        ],
+      }),
+    );
+    expect(container.textContent).toContain("PLATE-001");
+
+    const trigger = container.querySelector('button[aria-label="Plate"]') as HTMLButtonElement;
+    act(() => {
+      trigger.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0 }));
+    });
+    const secondPlateItem = [
+      ...document.body.querySelectorAll('[role="menuitem"], [data-slot="dropdown-menu-item"]'),
+    ].find((item) => item.textContent?.includes("PLATE-002"));
+    expect(secondPlateItem).toBeDefined();
+  });
+
+  it("handles template panel imports, exports, and clearing", async () => {
     const onTemplateChange = vi.fn();
     const onClearTemplate = vi.fn();
     const onImportCsv = vi.fn();
@@ -374,13 +606,17 @@ describe("PlateMapEditor", () => {
     const templateInput = container.querySelector('input[accept=".json"]') as HTMLInputElement;
     const csvInput = container.querySelector('input[accept=".csv"]') as HTMLInputElement;
 
-    act(() => {
+    await act(async () => {
       setFileInput(templateInput, new File(["{}"], "template.json", { type: "application/json" }));
       setFileInput(csvInput, new File(["well,sample"], "plate.csv", { type: "text/csv" }));
+      await flushFilePick();
     });
 
     expect(onImportTemplate).toHaveBeenCalledWith(expect.objectContaining({ name: "template.json" }));
-    expect(onImportCsv).toHaveBeenCalledWith(expect.objectContaining({ name: "plate.csv" }));
+    expect(onImportCsv).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "plate.csv" }),
+      expect.objectContaining({ headers: ["well", "sample"], plates: [] }),
+    );
   });
 
   it("renders disabled template panel actions when no entries exist", () => {
@@ -466,7 +702,7 @@ describe("PlateMapEditor", () => {
     expect(onClear).toHaveBeenCalledTimes(1);
   });
 
-  it("edits manifest rows, custom cells, and row selection", () => {
+  it("renders manifest custom cells and row selection", () => {
     const onChange = vi.fn();
     const onSelectionChange = vi.fn();
     const values = new Map<WellId, SimpleWell>([
@@ -506,18 +742,17 @@ describe("PlateMapEditor", () => {
 
     expect(container.textContent).toContain("3 rows · 2 selected");
     expect(container.textContent).toContain("A03");
+    expect(container.textContent).toContain("Sample");
+    expect(container.textContent).toContain("S-1");
+    expect(container.querySelector("[data-slot='badge']")?.textContent).toContain("Sample");
+    expect(container.querySelector("[data-slot='table-container']")?.getAttribute("data-variant")).toBeNull();
 
-    const amountInput = container.querySelector('input[type="number"]') as HTMLInputElement;
-    act(() => {
-      setInputValue(amountInput, "7");
-    });
-    let next = onChange.mock.calls.at(-1)?.[0] as Map<WellId, SimpleWell>;
-    expect(next.get("A01")).toEqual({ role: "sample", amount: 7, sampleId: "S-1" });
+    expect(container.querySelector('input[type="number"]')).toBeNull();
 
     act(() => {
       findButton(container, "Custom A01")?.click();
     });
-    next = onChange.mock.calls.at(-1)?.[0] as Map<WellId, SimpleWell>;
+    const next = onChange.mock.calls.at(-1)?.[0] as Map<WellId, SimpleWell>;
     expect(next.get("A01")).toEqual({ role: "sample", amount: 1, sampleId: "custom-A01" });
 
     const checkbox = container.querySelector('[aria-label="Select A01"]') as HTMLElement;
@@ -667,5 +902,39 @@ describe("PlateMapEditor", () => {
 
     expect(onWellHover).toHaveBeenLastCalledWith(null);
     expect(onSelectionChange).toHaveBeenLastCalledWith(new Set(["A01"]));
+  });
+
+  it("uses the plate cell backdrop for empty wells by default", () => {
+    const renderGrid = (emptyWellFillColor?: string | null) =>
+      renderElement(
+        <PlatePaintGrid<SimpleWell>
+          format="96"
+          values={new Map()}
+          selection={new Set()}
+          onSelectionChange={() => {}}
+          colorForWell={colorForWell}
+          emptyWellFillColor={emptyWellFillColor}
+        />,
+      );
+
+    renderGrid();
+    expect(container.querySelector('[data-well="A01"]')?.getAttribute("fill")).toBe(PLATE_MAP_EMPTY_WELL_FILL);
+    expect(container.querySelector('[data-well="A01"]')?.getAttribute("stroke")).toBe("none");
+    expect(container.querySelector('[data-plate-grid-line="column-0"]')?.getAttribute("stroke")).toBe(
+      PLATE_MAP_CELL_BORDER,
+    );
+    const svg = container.querySelector("svg") as SVGSVGElement;
+    const rightBorder = container.querySelector('[data-plate-grid-line="column-12"]') as SVGLineElement;
+    const bottomBorder = container.querySelector('[data-plate-grid-line="row-8"]') as SVGLineElement;
+    const strokeWidth = Number(rightBorder.getAttribute("stroke-width"));
+    expect(Number(svg.getAttribute("width")) - Number(rightBorder.getAttribute("x1"))).toBeGreaterThanOrEqual(
+      strokeWidth / 2,
+    );
+    expect(Number(svg.getAttribute("height")) - Number(bottomBorder.getAttribute("y1"))).toBeGreaterThanOrEqual(
+      strokeWidth / 2,
+    );
+
+    renderGrid(null);
+    expect(container.querySelector('[data-well="A01"]')?.getAttribute("fill")).toBe("#fafafa");
   });
 });

@@ -2,7 +2,8 @@ import { Barcode, FileText, Tag } from "lucide-react";
 import * as React from "react";
 import { expect, userEvent, within } from "storybook/test";
 
-import { PlateMapEditor } from "./PlateMapEditor";
+import { getPlateMapScopedWellId, PlateMapEditor } from "./PlateMapEditor";
+import { PLATE_MAP_EMPTY_WELL_FILL } from "./PlatePaintGrid";
 
 import type { PlateFormat, WellColumn, WellField, WellId, WellRecord } from "./types";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -12,15 +13,16 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DemoWell extends WellRecord {
+  plateBarcode?: string;
   role?: "sample" | "control" | "blank";
   sampleId?: string;
   notes?: string;
 }
 
 const ROLE_COLOR: Record<NonNullable<DemoWell["role"]>, string> = {
-  sample: "#bbdefb",
-  control: "#ffcdd2",
-  blank: "#eeeeee",
+  sample: "var(--color-chart-1)",
+  control: "var(--color-destructive)",
+  blank: "var(--color-muted)",
 };
 
 const FIELDS: WellField<DemoWell>[] = [
@@ -50,20 +52,27 @@ const GROUPS = [
     id: "g1",
     label: "Group A",
     wellIds: ["A01", "A02", "A03"],
-    color: "#dbeafe",
-    borderColor: "#60a5fa",
+    color: "var(--color-chart-1)",
+    borderColor: "var(--color-primary)",
   },
   {
     id: "g2",
     label: "Group B",
     wellIds: ["B01", "B02", "B03"],
-    color: "#dcfce7",
-    borderColor: "#4ade80",
+    color: "var(--color-positive)",
+    borderColor: "var(--color-positive)",
   },
 ];
 
+const DEMO_PLATES = ["DEMO-PLATE-001", "DEMO-PLATE-002"] as const;
+
+function countPlateEntries(values: Map<WellId, DemoWell>, plateId: string): number {
+  const prefix = getPlateMapScopedWellId(plateId, "");
+  return [...values.keys()].filter((key) => key.startsWith(prefix)).length;
+}
+
 function colorForWell(well: DemoWell | undefined): string {
-  if (!well?.role) return "#fafafa";
+  if (!well?.role) return PLATE_MAP_EMPTY_WELL_FILL;
   return ROLE_COLOR[well.role];
 }
 
@@ -92,10 +101,18 @@ function DemoEditor() {
   const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
   const [activeGroupId, setActiveGroupId] = React.useState<string>();
   const [format, setFormat] = React.useState<PlateFormat>("96");
+  const [activePlateId, setActivePlateId] = React.useState("DEMO-PLATE-001");
+  const activePlateAssigned = countPlateEntries(values, activePlateId);
 
   const handleFormatChange = (nextFormat: PlateFormat) => {
     setFormat(nextFormat);
     setValues(new Map());
+    setSelection(new Set());
+    setActiveGroupId(undefined);
+  };
+
+  const handlePlateChange = (plateId: string) => {
+    setActivePlateId(plateId);
     setSelection(new Set());
     setActiveGroupId(undefined);
   };
@@ -114,6 +131,16 @@ function DemoEditor() {
       isPopulated={isPopulated}
       cycleFieldOnWellDoubleClick="role"
       title="Demo plate"
+      plates={[
+        ...DEMO_PLATES.map((plateId) => ({
+          id: plateId,
+          barcode: plateId,
+          count: countPlateEntries(values, plateId),
+        })),
+      ]}
+      activePlateId={activePlateId}
+      onPlateChange={handlePlateChange}
+      onAddPlate={() => {}}
       groups={GROUPS}
       activeGroupId={activeGroupId}
       onGroupClick={(group) => {
@@ -134,7 +161,7 @@ function DemoEditor() {
       badges={
         <>
           <Badge variant="secondary">{format}-well</Badge>
-          <Badge variant="outline">{values.size} assigned</Badge>
+          <Badge variant="outline">{activePlateAssigned} assigned</Badge>
           <Badge variant={selection.size ? "info" : "outline"}>{selection.size} selected</Badge>
         </>
       }
@@ -160,12 +187,10 @@ function DemoEditor() {
       onExportTemplate={() => {}}
       footer={
         <>
-          <Button variant="outline" size="sm" className="border-slate-400 bg-white text-slate-900 hover:bg-slate-100">
+          <Button variant="outline" size="sm">
             Back
           </Button>
-          <Button size="sm" className="bg-blue-700 text-white hover:bg-blue-800">
-            Save
-          </Button>
+          <Button size="sm">Save</Button>
         </>
       }
     />
@@ -180,6 +205,7 @@ export const Default: Story = {
     await step("Editor renders core regions", async () => {
       expect(canvas.getByText("Demo plate")).toBeInTheDocument();
       expect(canvas.getByText("Plate")).toBeInTheDocument();
+      expect(canvas.getByText("DEMO-PLATE-001")).toBeInTheDocument();
       expect(canvas.getByText("Sample manifest")).toBeInTheDocument();
       expect(canvas.getByRole("button", { name: /Actions/i })).toBeInTheDocument();
       expect(canvas.getByRole("button", { name: /Group A/ })).toBeInTheDocument();

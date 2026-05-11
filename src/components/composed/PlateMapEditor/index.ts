@@ -1,8 +1,11 @@
-export { PlateMapEditor } from "./PlateMapEditor";
+export { PlateMapEditor, getPlateMapScopedWellId } from "./PlateMapEditor";
 export type { PlateMapEditorProps } from "./PlateMapEditor";
 
 export { PlateMapActionsMenu } from "./PlateMapActionsMenu";
 export type { PlateMapActionsMenuProps } from "./PlateMapActionsMenu";
+
+export { PlateMapPlateSelector } from "./PlateMapPlateSelector";
+export type { PlateMapPlateSelectorProps } from "./PlateMapPlateSelector";
 
 export { PlatePaintGrid } from "./PlatePaintGrid";
 export type { PlatePaintGridProps } from "./PlatePaintGrid";
@@ -16,8 +19,14 @@ export type { WellManifestTableProps } from "./WellManifestTable";
 export { TemplateIOPanel } from "./TemplateIOPanel";
 export type { TemplateIOPanelProps } from "./TemplateIOPanel";
 
+export { plateOptionsFromCsvTriage, triagePlateMapCsvByBarcode, triagePlateMapCsvFile } from "./csvPlateTriage";
+
 export type {
   PlateDimensions,
+  PlateMapCsvPlate,
+  PlateMapCsvRow,
+  PlateMapCsvTriage,
+  PlateMapCsvTriageOptions,
   WellId,
   WellRecord,
   WellField,
@@ -27,6 +36,7 @@ export type {
   TemplateOption,
   ImportExportHandlers,
   PlateMapGroupOption,
+  PlateMapPlateOption,
 } from "./types";
 
 export { resolveDimensions, rowLabel, parseRowLabel, pos, parsePos, rectPositions, allPositions } from "./wellGrid";

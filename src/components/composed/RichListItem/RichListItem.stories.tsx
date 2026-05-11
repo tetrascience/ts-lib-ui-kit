@@ -16,7 +16,7 @@ const meta: Meta<typeof RichListItem> = {
   tags: ["autodocs"],
   decorators: [
     (Story) => (
-      <div className="w-[480px] rounded-lg border bg-card">
+      <div className="w-full max-w-[30rem] rounded-lg border bg-card">
         <Story />
       </div>
     ),

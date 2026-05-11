@@ -5,11 +5,26 @@ import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "@/componen
 import { cn } from "@/lib/utils";
 
 export interface RichListItemProps extends Omit<React.ComponentProps<typeof Item>, "asChild" | "children"> {
+  /** Slot before the text content — typically an avatar or icon. */
   leading?: React.ReactNode;
+  /** Primary line of text. Truncates to a single line. */
   primary: React.ReactNode;
+  /** Secondary line of text shown beneath `primary`. Truncates to a single line. */
   secondary?: React.ReactNode;
+  /** Right-aligned supplemental content (badges, timestamps) shown above `actions`. */
   trailing?: React.ReactNode;
+  /** Right-aligned interactive controls (buttons, menus). */
   actions?: React.ReactNode;
+}
+
+const CONTENT_COLUMNS_BOTH = "grid-cols-[minmax(0,1fr)_auto_auto]";
+const CONTENT_COLUMNS_ONE = "grid-cols-[minmax(0,1fr)_auto]";
+const CONTENT_COLUMNS_NONE = "grid-cols-[minmax(0,1fr)]";
+
+function getContentColumns(hasTrailing: boolean, hasActions: boolean) {
+  if (hasTrailing && hasActions) return CONTENT_COLUMNS_BOTH;
+  if (hasTrailing || hasActions) return CONTENT_COLUMNS_ONE;
+  return CONTENT_COLUMNS_NONE;
 }
 
 function RichListItem({
@@ -24,12 +39,7 @@ function RichListItem({
   ...props
 }: RichListItemProps) {
   const hasSecondary = Boolean(secondary);
-  const contentColumns =
-    trailing && actions
-      ? "grid-cols-[minmax(0,1fr)_auto_auto]"
-      : trailing || actions
-        ? "grid-cols-[minmax(0,1fr)_auto]"
-        : "grid-cols-[minmax(0,1fr)]";
+  const contentColumns = getContentColumns(Boolean(trailing), Boolean(actions));
   const supplementalSpanClass = hasSecondary ? "row-span-2" : "row-span-1";
 
   return (

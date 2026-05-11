@@ -42,6 +42,9 @@ export const Default: Story = {
       await expect(canvas.getByText(/3 sources/i)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4613" },
+  },
 }
 
 export const Expanded: Story = {
@@ -64,6 +67,9 @@ export const Expanded: Story = {
       await expect(canvas.getByText("The role of chlorophyll — Nature")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4614" },
+  },
 }
 
 export const SingleSource: Story = {
@@ -85,5 +91,8 @@ export const SingleSource: Story = {
     await step("Single source renders", async () => {
       await expect(canvas.getByText(/1 source/i)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4615" },
   },
 }

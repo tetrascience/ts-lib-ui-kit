@@ -107,6 +107,9 @@ export const Empty: Story = {
       await expect(canvas.getByText("Ask anything to get started")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4543" },
+  },
 }
 
 export const WithMessages: Story = {
@@ -155,6 +158,9 @@ export const WithMessages: Story = {
       await expect(canvas.getByText(/SOLID is an acronym/)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4544" },
+  },
 }
 
 export const ScrollButtonVisible: Story = {
@@ -177,6 +183,9 @@ export const ScrollButtonVisible: Story = {
       await userEvent.click(canvas.getByRole("button", { name: "Scroll to latest message" }))
       await expect(args.onScrollToBottom).toHaveBeenCalledOnce()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4545" },
   },
 }
 
@@ -240,6 +249,9 @@ export const StreamingInProgress: Story = {
       await expect(canvas.getByText(/tokens/i)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4546" },
+  },
 }
 
 const sampleMessages: UIMessage[] = [
@@ -289,6 +301,9 @@ export const WithDownload: Story = {
       URL.revokeObjectURL = originalRevokeURL
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4547" },
+  },
 }
 
 export const MarkdownSerialisation: Story = {
@@ -303,6 +318,9 @@ export const MarkdownSerialisation: Story = {
       const md = messagesToMarkdown(sampleMessages, (m, i) => `${i}: ${m.role}`)
       await expect(md).toBe("0: user\n\n1: assistant")
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4548" },
   },
 }
 
@@ -323,6 +341,9 @@ export const CustomEmptyStateChildren: Story = {
     await step("Custom children replace default empty state", async () => {
       await expect(canvas.getByText("Totally custom empty")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4549" },
   },
 }
 
@@ -346,5 +367,8 @@ export const CustomEmptyState: Story = {
     await step("Custom empty state renders", async () => {
       await expect(canvas.getByText("Hello! How can I help?")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4550" },
   },
 }

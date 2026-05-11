@@ -285,7 +285,7 @@ export const ToggleSidebar: Story = {
   },
   render: (args) => renderSidebar(args),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4724" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -354,7 +354,7 @@ function renderRailSidebar(args: Story["args"]) {
 export const WithRail: Story = {
   render: renderRailSidebar,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4725" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -441,7 +441,7 @@ function renderSubMenuSidebar(args: Story["args"]) {
 export const WithSubMenu: Story = {
   render: renderSubMenuSidebar,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4726" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -516,7 +516,7 @@ function renderBadgesAndActionsSidebar(args: Story["args"]) {
 export const WithBadgesAndActions: Story = {
   render: renderBadgesAndActionsSidebar,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4727" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -578,7 +578,7 @@ function renderSkeletonSidebar(args: Story["args"]) {
 export const SkeletonLoading: Story = {
   render: renderSkeletonSidebar,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4728" },
   },
   play: async ({ canvasElement, step }) => {
     await step("Skeleton items render", async () => {
@@ -669,7 +669,7 @@ function renderMultiGroupSidebar(args: Story["args"]) {
 export const MultipleGroups: Story = {
   render: renderMultiGroupSidebar,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4729" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -715,7 +715,7 @@ export const MultipleGroups: Story = {
 export const SmallMenuButtons: Story = {
   render: (args) => renderSidebar(args, { menuButtonSize: "sm" }),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4730" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

@@ -56,7 +56,7 @@ export const Info: Story = {
     description: "The platform will be unavailable on Sunday from 2–4 AM UTC.",
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4681" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -85,7 +85,7 @@ export const Positive: Story = {
     description: "Version 3.2.1 is now live in production.",
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4682" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -111,7 +111,7 @@ export const Warning: Story = {
       "Your organization is at 87% storage capacity. Upgrade your plan to avoid interruptions.",
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4683" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -139,7 +139,7 @@ export const Destructive: Story = {
       "The ingestion pipeline stopped due to a schema mismatch. Review the error log.",
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4684" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -171,7 +171,7 @@ export const WithAction: Story = {
     ),
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4685" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -192,7 +192,7 @@ export const WithAction: Story = {
 export const Dismissible: Story = {
   render: () => <DismissibleBannerStory />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T4686" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -234,12 +234,18 @@ export const DismissibleInteraction: Story = {
       expect(canvas.getByText("Banner dismissed.")).toBeInTheDocument();
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4687" },
+  },
 };
 
 export const TitleOnly: Story = {
   args: {
     variant: "destructive",
     title: "Authentication error — please sign in again.",
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4688" },
   },
 };
 
@@ -268,4 +274,7 @@ export const AllVariants: Story = {
       />
     </div>
   ),
+  parameters: {
+    zephyr: { testCaseId: "SW-T4689" },
+  },
 };

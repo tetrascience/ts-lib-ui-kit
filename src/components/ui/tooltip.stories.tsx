@@ -180,6 +180,7 @@ export const InTableCells: Story = {
           "not as inline text that overlaps adjacent rows.",
       },
     },
+    zephyr: { testCaseId: "SW-T4737" },
   },
   render: () => (
     <TooltipProvider>

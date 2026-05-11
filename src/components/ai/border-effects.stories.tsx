@@ -144,6 +144,9 @@ export const GlowOnPromptInput: Story = {
       await expect(canvas.getByRole("button", { name: /submit/i })).not.toBeDisabled()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4514" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -182,6 +185,9 @@ export const GradientOnPromptInput: Story = {
       await expect(canvas.getByRole("button", { name: /submit/i })).not.toBeDisabled()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4515" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -218,6 +224,9 @@ export const PulseOnQueue: Story = {
       await expect(canvas.getByText("Searching web for context")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4516" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -242,6 +251,9 @@ export const AccentOnSuggestion: Story = {
     await step("Suggestion chips render with accent on selected", async () => {
       await expect(canvas.getByText("Code")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4517" },
   },
 }
 
@@ -270,6 +282,9 @@ export const BrandGradientShimmer: Story = {
     await step("Brand shimmer text renders", async () => {
       await expect(canvas.getByText("Generating response…")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4518" },
   },
 }
 
@@ -302,6 +317,9 @@ export const GradientShimmerOnReasoning: Story = {
       await expect(canvas.getByText("Thinking...")).toBeInTheDocument()
       await expect(canvas.getByText(/quantum entanglement/)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4519" },
   },
 }
 
@@ -363,6 +381,7 @@ export const ThinkingCard: Story = {
       await expect(canvas.getByText(/dark mode/i)).toBeInTheDocument()
       await expect(canvas.getByText(/Thinking/i)).toBeInTheDocument()
     })
+    zephyr: { testCaseId: "SW-T4520" },
   },
 }
 
@@ -400,6 +419,9 @@ export const GradientOnQueue: Story = {
       await expect(canvas.getByText("Fetching data from API")).toBeInTheDocument()
       await expect(canvas.getByText("Validating schema")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4521" },
   },
 }
 
@@ -469,5 +491,8 @@ export const AllEffects: Story = {
       await expect(canvas.getByText(/ts-border-glow/i)).toBeInTheDocument()
       await expect(canvas.getByText(/ts-border-shimmer/i)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4522" },
   },
 }

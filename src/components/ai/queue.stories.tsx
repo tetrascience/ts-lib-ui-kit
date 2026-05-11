@@ -82,6 +82,9 @@ export const Default: Story = {
       await expect(canvas.getByText("Running statistical analysis")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4596" },
+  },
 }
 
 export const Collapsed: Story = {
@@ -113,6 +116,9 @@ export const Collapsed: Story = {
     await step("Collapsed chevron appears on hover", async () => {
       await expectCollapsedChevronConfiguredForHoverReveal(trigger)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4597" },
   },
 }
 
@@ -157,6 +163,9 @@ export const WithCompletedItems: Story = {
       await expect(canvas.getByText("Fetch raw data")).toBeInTheDocument()
       await expect(canvas.getByText("Train model")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4598" },
   },
 }
 
@@ -212,6 +221,9 @@ export const WithActionsAndDescription: Story = {
       await userEvent.click(remove)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4599" },
+  },
 }
 
 export const WithAttachments: Story = {
@@ -250,6 +262,9 @@ export const WithAttachments: Story = {
       await expect(canvas.getByAltText("thumbnail")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4600" },
+  },
 }
 
 export const WithError: Story = {
@@ -283,5 +298,8 @@ export const WithError: Story = {
     await step("Error state renders", async () => {
       await expect(canvas.getByText("Connect to database")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4601" },
   },
 }

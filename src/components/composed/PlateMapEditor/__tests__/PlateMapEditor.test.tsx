@@ -5,6 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { plateOptionsFromCsvTriage, triagePlateMapCsvByBarcode } from "../csvPlateTriage";
+import { PlateMapActionsMenu } from "../PlateMapActionsMenu";
 import { PlateMapEditor } from "../PlateMapEditor";
 import { PlateMapPlateSelector } from "../PlateMapPlateSelector";
 import { PlatePaintGrid, PLATE_MAP_CELL_BORDER, PLATE_MAP_EMPTY_WELL_FILL } from "../PlatePaintGrid";
@@ -64,6 +65,12 @@ function findButton(container: HTMLElement, label: string) {
   return [...container.querySelectorAll("button")].find((b) => b.textContent?.trim() === label) as
     | HTMLButtonElement
     | undefined;
+}
+
+function findMenuItem(label: string) {
+  return [...document.body.querySelectorAll('[role="menuitem"], [data-slot="dropdown-menu-item"]')].find((item) =>
+    item.textContent?.includes(label),
+  ) as HTMLElement | undefined;
 }
 
 function setFileInput(input: HTMLInputElement, file: File) {
@@ -416,13 +423,54 @@ describe("PlateMapEditor", () => {
     expect(container.querySelector('[data-well="A01"]')?.getAttribute("fill")).toBe(ROLE_COLOR.control);
   });
 
+  it("updates uncontrolled plate selection from the editor selector", () => {
+    const onPlateChange = vi.fn();
+
+    renderElement(
+      <PlateMapEditor<SimpleWell>
+        format="96"
+        values={new Map()}
+        onChange={() => {}}
+        selection={new Set()}
+        onSelectionChange={() => {}}
+        fields={FIELDS}
+        tableColumns={COLUMNS}
+        colorForWell={colorForWell}
+        emptyEntry={emptyEntry}
+        plates={[
+          { id: "PLATE-001", barcode: "PLATE-001", count: 0 },
+          { id: "PLATE-002", barcode: "PLATE-002", count: 2 },
+        ]}
+        onPlateChange={onPlateChange}
+      />,
+    );
+
+    expect(container.textContent).toContain("PLATE-001");
+
+    const trigger = container.querySelector('button[aria-label="Plate"]') as HTMLButtonElement;
+    act(() => {
+      trigger.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0 }));
+    });
+    act(() => {
+      findMenuItem("PLATE-002")?.click();
+    });
+
+    expect(onPlateChange).toHaveBeenCalledWith("PLATE-002");
+    expect(container.textContent).toContain("PLATE-002");
+  });
+
   it("writes active plate edits under a plate-scoped key and stamps the barcode", () => {
     const onChange = vi.fn();
 
     renderElement(
       <PlateMapEditor<SimpleWell>
         format="96"
-        values={new Map<WellId, SimpleWell>([["PLATE-001::A01", { plateBarcode: "PLATE-001", sampleId: "S-1" }]])}
+        values={
+          new Map<WellId, SimpleWell>([
+            ["PLATE-001::A01", { plateBarcode: "PLATE-001", sampleId: "S-1" }],
+            ["PLATE-002::A02", { plateBarcode: "PLATE-002", sampleId: "S-existing" }],
+          ])
+        }
         onChange={onChange}
         selection={new Set(["A01"])}
         onSelectionChange={() => {}}
@@ -451,6 +499,43 @@ describe("PlateMapEditor", () => {
     expect(next.has("A01")).toBe(false);
     expect(next.get("PLATE-001::A01")?.sampleId).toBe("S-1");
     expect(next.get("PLATE-002::A01")).toEqual({ plateBarcode: "PLATE-002", sampleId: "S-2" });
+    expect(next.get("PLATE-002::A02")).toEqual({ plateBarcode: "PLATE-002", sampleId: "S-existing" });
+  });
+
+  it("renders group shortcuts with active, disabled, count, and click states", () => {
+    const onGroupClick = vi.fn();
+
+    renderElement(
+      <PlateMapEditor<SimpleWell>
+        format="96"
+        values={new Map()}
+        onChange={() => {}}
+        selection={new Set()}
+        onSelectionChange={() => {}}
+        fields={FIELDS}
+        tableColumns={COLUMNS}
+        colorForWell={colorForWell}
+        emptyEntry={emptyEntry}
+        groups={[
+          { id: "samples", label: "Samples", color: "#bbdefb", borderColor: "#1e88e5", count: 12 },
+          { id: "controls", label: "Controls", color: "#ffcdd2", disabled: true, wellIds: ["A01", "A02"] },
+        ]}
+        activeGroupId="samples"
+        onGroupClick={onGroupClick}
+      />,
+    );
+
+    expect(container.textContent).toContain("Samples");
+    expect(container.textContent).toContain("12 wells");
+    expect(container.textContent).toContain("Controls");
+    expect(container.textContent).toContain("2 wells");
+
+    act(() => {
+      findButton(container, "Samples12 wells")?.click();
+    });
+
+    expect(onGroupClick).toHaveBeenCalledWith(expect.objectContaining({ id: "samples" }));
+    expect(findButton(container, "Controls2 wells")?.disabled).toBe(true);
   });
 
   it("does not infer a barcode from activePlateId without a user or CSV plate option", () => {
@@ -502,6 +587,25 @@ describe("PlateMapEditor", () => {
     ]);
   });
 
+  it("triages quoted CSV fields and skips blank records", () => {
+    const triage = triagePlateMapCsvByBarcode(
+      '"plate barcode",well,sample\r\n"PLATE,001",A01,"S ""alpha"""\r\n,,\r\nPLATE-002,A02,S-2',
+    );
+
+    expect(triage.headers).toEqual(["plate barcode", "well", "sample"]);
+    expect(triage.rows).toHaveLength(2);
+    expect(triage.rows[0]).toEqual({
+      line: 2,
+      values: {
+        "plate barcode": "PLATE,001",
+        well: "A01",
+        sample: 'S "alpha"',
+      },
+    });
+    expect(triage.plates.map((plate) => plate.barcode)).toEqual(["PLATE,001", "PLATE-002"]);
+    expect(triage.missingBarcodeRows).toEqual([]);
+  });
+
   it("passes CSV plate triage through the editor import handler", async () => {
     const onImportCsv = vi.fn();
 
@@ -550,6 +654,104 @@ describe("PlateMapEditor", () => {
       ...document.body.querySelectorAll('[role="menuitem"], [data-slot="dropdown-menu-item"]'),
     ].find((item) => item.textContent?.includes("PLATE-002"));
     expect(secondPlateItem).toBeDefined();
+  });
+
+  it("renders the compact actions menu and invokes menu and file handlers", async () => {
+    const onTemplateChange = vi.fn();
+    const onClearTemplate = vi.fn();
+    const onImportCsv = vi.fn();
+    const onExportCsv = vi.fn();
+    const onImportTemplate = vi.fn();
+    const onExportTemplate = vi.fn();
+    const inputClick = vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(() => {});
+
+    renderElement(
+      <PlateMapActionsMenu
+        templates={[
+          { id: "standard", group: "Built-in", label: "Standard plate", description: "96 wells" },
+          { id: "custom", label: "Custom layout", disabled: true },
+        ]}
+        templateId="standard"
+        onTemplateChange={onTemplateChange}
+        onClearTemplate={onClearTemplate}
+        hasEntries
+        onImportCsv={onImportCsv}
+        onExportCsv={onExportCsv}
+        onImportTemplate={onImportTemplate}
+        onExportTemplate={onExportTemplate}
+        csvAccept=".csv"
+        templateAccept=".json"
+        className="test-actions-menu"
+      />,
+    );
+
+    const trigger = findButton(container, "Actions") as HTMLButtonElement;
+    expect(trigger.className).toContain("test-actions-menu");
+
+    const openActionsMenu = () => {
+      act(() => {
+        trigger.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0 }));
+      });
+    };
+
+    act(() => {
+      trigger.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0 }));
+    });
+
+    expect(document.body.textContent).toContain("Built-in");
+    expect(document.body.textContent).toContain("96 wells");
+
+    act(() => {
+      findMenuItem("Standard plate")?.click();
+    });
+    expect(onTemplateChange).toHaveBeenCalledWith("standard");
+
+    openActionsMenu();
+    act(() => {
+      findMenuItem("Save template")?.click();
+    });
+    openActionsMenu();
+    act(() => {
+      findMenuItem("Export plate map (CSV)")?.click();
+    });
+    openActionsMenu();
+    act(() => {
+      findMenuItem("Clear template")?.click();
+    });
+
+    expect(onExportTemplate).toHaveBeenCalledTimes(1);
+    expect(onExportCsv).toHaveBeenCalledTimes(1);
+    expect(onClearTemplate).toHaveBeenCalledTimes(1);
+
+    openActionsMenu();
+    act(() => {
+      findMenuItem("Import template (JSON)")?.click();
+    });
+    openActionsMenu();
+    act(() => {
+      findMenuItem("Import plate map (CSV)")?.click();
+    });
+
+    expect(inputClick).toHaveBeenCalledTimes(2);
+
+    const templateInput = container.querySelector('input[accept=".json"]') as HTMLInputElement;
+    const csvInput = container.querySelector('input[accept=".csv"]') as HTMLInputElement;
+
+    act(() => {
+      templateInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    await act(async () => {
+      setFileInput(templateInput, new File(["{}"], "template.json", { type: "application/json" }));
+      setFileInput(csvInput, new File(["plate barcode,well\nPLATE-001,A01"], "plates.csv", { type: "text/csv" }));
+      await flushFilePick();
+    });
+
+    expect(onImportTemplate).toHaveBeenCalledWith(expect.objectContaining({ name: "template.json" }));
+    expect(onImportCsv).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "plates.csv" }),
+      expect.objectContaining({ plateBarcodeColumn: "plate barcode" }),
+    );
   });
 
   it("handles template panel imports, exports, and clearing", async () => {
@@ -617,6 +819,38 @@ describe("PlateMapEditor", () => {
       expect.objectContaining({ name: "plate.csv" }),
       expect.objectContaining({ headers: ["well", "sample"], plates: [] }),
     );
+  });
+
+  it("handles optional template panel sections and empty file picks", () => {
+    const onImportTemplate = vi.fn();
+    const onImportCsv = vi.fn();
+
+    renderElement(
+      <TemplateIOPanel
+        templates={[{ id: "standard", label: "Standard plate" }]}
+        templateId="standard"
+        onTemplateChange={() => {}}
+        onImportTemplate={onImportTemplate}
+      />,
+    );
+
+    expect(container.textContent).toContain("Template & import / export");
+    expect(container.textContent).not.toContain("Clear template");
+    expect(container.textContent).not.toContain("Export template (JSON)");
+    expect(container.textContent).not.toContain("Plate map");
+
+    const templateInput = container.querySelector('input[accept="application/json"]') as HTMLInputElement;
+    act(() => {
+      templateInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(onImportTemplate).not.toHaveBeenCalled();
+
+    renderElement(<TemplateIOPanel onImportCsv={onImportCsv} />);
+
+    expect(container.textContent).not.toContain("Standard plate");
+    expect(container.textContent).not.toContain("Import template (JSON)");
+    expect(container.textContent).toContain("Plate map");
+    expect(container.textContent).not.toContain("Export plate map (CSV)");
   });
 
   it("renders disabled template panel actions when no entries exist", () => {

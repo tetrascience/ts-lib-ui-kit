@@ -61,18 +61,20 @@ function Banner({
   "aria-live": ariaLive,
   ...props
 }: BannerProps) {
-  const Icon = BANNER_ICONS[variant];
-  const isUrgentBanner = variant === "warning" || variant === "destructive";
+  const resolvedVariant = variant ?? "info";
+  const Icon = BANNER_ICONS[resolvedVariant];
+  const isUrgentBanner =
+    resolvedVariant === "warning" || resolvedVariant === "destructive";
   const resolvedRole = role ?? (isUrgentBanner ? "alert" : "status");
   const resolvedAriaLive = ariaLive ?? (isUrgentBanner ? "assertive" : "polite");
 
   return (
     <div
       data-slot="banner"
-      data-variant={variant}
+      data-variant={resolvedVariant}
       role={resolvedRole}
       aria-live={resolvedAriaLive}
-      className={cn(bannerVariants({ variant }), className)}
+      className={cn(bannerVariants({ variant: resolvedVariant }), className)}
       {...props}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />

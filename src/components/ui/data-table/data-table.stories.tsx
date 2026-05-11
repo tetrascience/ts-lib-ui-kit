@@ -1120,7 +1120,7 @@ export const AdvancedFiltering: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1448" },
+    zephyr: { testCaseId: "" },
   },
 }
 
@@ -1171,7 +1171,7 @@ export const MultiConditionFiltering: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1449" },
+    zephyr: { testCaseId: "" },
   },
 }
 
@@ -1218,7 +1218,7 @@ export const FilteringWithConfig: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1450" },
+    zephyr: { testCaseId: "" },
   },
 }
 
@@ -1267,6 +1267,6 @@ export const ControlledFiltering: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1451" },
+    zephyr: { testCaseId: "" },
   },
 }

@@ -31,14 +31,15 @@ const FIELDS: WellField<DemoWell>[] = [
     label: "Well Role",
     icon: <Tag />,
     kind: "select",
+    editableInTable: true,
     options: [
       { value: "sample", label: "Sample", swatch: ROLE_COLOR.sample },
       { value: "control", label: "Control", swatch: ROLE_COLOR.control },
       { value: "blank", label: "Blank", swatch: ROLE_COLOR.blank },
     ],
   },
-  { key: "sampleId", label: "Sample ID", icon: <Barcode />, kind: "text" },
-  { key: "notes", label: "Notes", icon: <FileText />, kind: "text" },
+  { key: "sampleId", label: "Sample ID", icon: <Barcode />, kind: "text", editableInTable: true },
+  { key: "notes", label: "Notes", icon: <FileText />, kind: "text", editableInTable: true },
 ];
 
 const COLUMNS: WellColumn<DemoWell>[] = [

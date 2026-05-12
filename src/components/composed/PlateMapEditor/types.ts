@@ -13,10 +13,20 @@ export type WellId = string;
 export type WellRecord = NonNullable<unknown>;
 
 /**
- * Field kinds rendered by `WellMetadataForm` and (in column mode) by
+ * Field kinds rendered by `WellMetadataForm` and (when `editableInTable`) by
  * `WellManifestTable`.
  */
-export type WellFieldKind = "text" | "number" | "select" | "custom";
+export type WellFieldKind =
+  | "text"
+  | "number"
+  | "integer"
+  | "boolean"
+  | "date"
+  | "datetime"
+  | "time"
+  | "select"
+  | "multiselect"
+  | "custom";
 
 export interface WellSelectOption {
   value: string;
@@ -33,8 +43,16 @@ export interface WellField<T extends WellRecord = WellRecord> {
   icon?: React.ReactNode;
   kind: WellFieldKind;
   placeholder?: string;
-  /** Required for `kind: "select"`. */
+  /** Required for `kind: "select"` and `kind: "multiselect"`. */
   options?: WellSelectOption[];
+  /** Visual style for `kind: "boolean"`. Defaults to `"checkbox"`. */
+  boolStyle?: "checkbox" | "switch";
+  /**
+   * When true, matching `WellManifestTable` cells render an inline editor of
+   * this field's `kind` (mirroring the form). Defaults to false — cells stay
+   * read-only unless the developer opts in or supplies `WellColumn.render`.
+   */
+  editableInTable?: boolean;
   /**
    * Custom renderer for the form input. Receives current value and a setter
    * that patches the field on the staged form record.

@@ -1,15 +1,73 @@
 import { ArrowDownToLine, Check } from "lucide-react";
 import * as React from "react";
 
-import type { WellColumn, WellField, WellId, WellRecord } from "./types";
+import type { WellColumn, WellField, WellId, WellRecord, WellSelectOption } from "./types";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from "@/components/ui/combobox";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+
+function MultiSelectCell({
+  ariaLabel,
+  value,
+  options,
+  placeholder,
+  onChange,
+}: {
+  ariaLabel: string;
+  value: string[];
+  options: WellSelectOption[];
+  placeholder?: string;
+  onChange: (next: string[]) => void;
+}) {
+  const anchorRef = useComboboxAnchor();
+  const labelByValue = React.useMemo(() => {
+    const m = new Map<string, string>();
+    options.forEach((o) => m.set(o.value, o.label));
+    return m;
+  }, [options]);
+
+  return (
+    <Combobox multiple items={options.map((o) => o.value)} value={value} onValueChange={onChange}>
+      <ComboboxChips ref={anchorRef} className="min-h-7 w-full py-0.5">
+        <ComboboxValue>
+          {(items: string[]) =>
+            items.map((item) => <ComboboxChip key={item}>{labelByValue.get(item) ?? item}</ComboboxChip>)
+          }
+        </ComboboxValue>
+        <ComboboxChipsInput aria-label={ariaLabel} placeholder={placeholder ?? "Select…"} />
+      </ComboboxChips>
+      <ComboboxContent anchor={anchorRef}>
+        <ComboboxEmpty>No options.</ComboboxEmpty>
+        <ComboboxList>
+          {(item: string) => (
+            <ComboboxItem key={item} value={item}>
+              {labelByValue.get(item) ?? item}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  );
+}
 
 const PAGE_SIZE_SMALL = 25;
 const PAGE_SIZE_MEDIUM = 50;
@@ -19,6 +77,31 @@ const DEFAULT_PAGE_SIZE_OPTIONS: number[] = [PAGE_SIZE_SMALL, PAGE_SIZE_MEDIUM, 
 
 function hasFillValue(value: unknown): boolean {
   return value !== undefined && value !== null && value !== "";
+}
+
+const INPUT_TYPE_BY_KIND: Record<string, string> = {
+  number: "number",
+  integer: "number",
+  date: "date",
+  datetime: "datetime-local",
+  time: "time",
+};
+
+function resolveInputType(kind: string): string {
+  return INPUT_TYPE_BY_KIND[kind] ?? "text";
+}
+
+function parseInputValue(kind: string, raw: string): unknown {
+  if (raw === "") return undefined;
+  if (kind === "number") {
+    const num = parseFloat(raw);
+    return Number.isFinite(num) ? num : raw;
+  }
+  if (kind === "integer") {
+    const num = parseInt(raw, 10);
+    return Number.isFinite(num) ? num : raw;
+  }
+  return raw;
 }
 
 export interface WellManifestTableProps<T extends WellRecord = WellRecord> {
@@ -147,19 +230,110 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
     onChange(next);
   };
 
-  const renderCell = (col: WellColumn<T>, wellId: WellId, row: T) => {
-    if (col.render) {
-      return col.render({
-        row,
-        wellId,
-        update: (patch) => updateRow(wellId, patch),
-      });
+  const renderSelectCellEditable = (
+    field: WellField<T>,
+    fieldKey: keyof T & string,
+    value: unknown,
+    wellId: WellId,
+    ariaLabel: string,
+  ) => (
+    <Select
+      value={(value as string | undefined) ?? ""}
+      onValueChange={(v) => updateRow(wellId, { [fieldKey]: v } as Partial<T>)}
+    >
+      <SelectTrigger size="sm" className="h-7 w-full" aria-label={ariaLabel}>
+        <SelectValue placeholder={field.placeholder ?? "Select…"} />
+      </SelectTrigger>
+      <SelectContent>
+        {(field.options ?? []).map((opt) => (
+          <SelectItem key={opt.value} value={opt.value}>
+            <span className="inline-flex items-center gap-2">
+              {opt.swatch ? (
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-sm border border-foreground/20"
+                  style={{ backgroundColor: opt.swatch }}
+                  aria-hidden
+                />
+              ) : null}
+              {opt.label}
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  const renderBooleanCellEditable = (
+    field: WellField<T>,
+    fieldKey: keyof T & string,
+    value: unknown,
+    wellId: WellId,
+    ariaLabel: string,
+  ) => {
+    const checked = !!value;
+    if (field.boolStyle === "switch") {
+      return (
+        <Switch
+          aria-label={ariaLabel}
+          checked={checked}
+          onCheckedChange={(c) => updateRow(wellId, { [fieldKey]: c } as Partial<T>)}
+        />
+      );
     }
-    if (!col.field) return null;
+    return (
+      <Checkbox
+        aria-label={ariaLabel}
+        checked={checked}
+        onCheckedChange={(c) => updateRow(wellId, { [fieldKey]: c === true } as Partial<T>)}
+      />
+    );
+  };
 
-    const field = fieldByKey.get(col.field);
-    const value = row[col.field];
+  const renderInputCellEditable = (
+    field: WellField<T>,
+    fieldKey: keyof T & string,
+    value: unknown,
+    wellId: WellId,
+    ariaLabel: string,
+  ) => (
+    <Input
+      type={resolveInputType(field.kind)}
+      step={field.kind === "integer" ? 1 : undefined}
+      placeholder={field.placeholder}
+      aria-label={ariaLabel}
+      className="h-7"
+      value={(value as string | number | undefined) ?? ""}
+      onChange={(e) =>
+        updateRow(wellId, { [fieldKey]: parseInputValue(field.kind, e.target.value) } as Partial<T>)
+      }
+    />
+  );
 
+  const renderEditableCell = (field: WellField<T>, col: WellColumn<T>, wellId: WellId, row: T) => {
+    const fieldKey = col.field!;
+    const value = row[fieldKey];
+    const ariaLabel = `${field.label} for ${wellId}`;
+
+    if (field.kind === "select") return renderSelectCellEditable(field, fieldKey, value, wellId, ariaLabel);
+    if (field.kind === "multiselect") {
+      const current = Array.isArray(value) ? (value as string[]) : [];
+      return (
+        <MultiSelectCell
+          ariaLabel={ariaLabel}
+          value={current}
+          options={field.options ?? []}
+          placeholder={field.placeholder}
+          onChange={(next) =>
+            updateRow(wellId, { [fieldKey]: next.length === 0 ? undefined : next } as Partial<T>)
+          }
+        />
+      );
+    }
+    if (field.kind === "boolean") return renderBooleanCellEditable(field, fieldKey, value, wellId, ariaLabel);
+    return renderInputCellEditable(field, fieldKey, value, wellId, ariaLabel);
+  };
+
+  const renderReadonlyCell = (field: WellField<T> | undefined, value: unknown) => {
     if (field?.kind === "select") {
       const option = (field.options ?? []).find((opt) => opt.value === value);
       if (!option) {
@@ -180,11 +354,65 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
       );
     }
 
+    if (field?.kind === "multiselect") {
+      const arr = Array.isArray(value) ? (value as string[]) : [];
+      if (arr.length === 0) {
+        return <span className="text-muted-foreground">—</span>;
+      }
+      return (
+        <div className="flex flex-wrap gap-1">
+          {arr.map((v) => {
+            const opt = (field.options ?? []).find((o) => o.value === v);
+            return (
+              <Badge key={v} variant="secondary">
+                {opt?.swatch ? (
+                  <span
+                    className="size-2 rounded-sm border border-foreground/20"
+                    style={{ backgroundColor: opt.swatch }}
+                    aria-hidden
+                  />
+                ) : null}
+                {opt?.label ?? v}
+              </Badge>
+            );
+          })}
+        </div>
+      );
+    }
+
+    if (field?.kind === "boolean") {
+      return value ? (
+        <Check aria-label="Yes" className="size-4 text-foreground" />
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      );
+    }
+
     if (!hasFillValue(value)) {
       return <span className="text-muted-foreground">—</span>;
     }
 
     return String(value);
+  };
+
+  const renderCell = (col: WellColumn<T>, wellId: WellId, row: T) => {
+    if (col.render) {
+      return col.render({
+        row,
+        wellId,
+        update: (patch) => updateRow(wellId, patch),
+      });
+    }
+    if (!col.field) return null;
+
+    const field = fieldByKey.get(col.field);
+    const value = row[col.field];
+
+    if (field?.editableInTable && field.kind !== "custom") {
+      return renderEditableCell(field, col, wellId, row);
+    }
+
+    return renderReadonlyCell(field, value);
   };
 
   const renderColumnHeader = (col: WellColumn<T>) => {

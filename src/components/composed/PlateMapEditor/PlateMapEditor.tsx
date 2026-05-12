@@ -415,6 +415,16 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
             const opt = (f.options ?? []).find((o) => o.value === v);
             return opt?.label ?? String(v);
           }
+          if (f.kind === "multiselect") {
+            const arr = Array.isArray(v) ? (v as string[]) : [];
+            if (arr.length === 0) return null;
+            return arr
+              .map((item) => (f.options ?? []).find((o) => o.value === item)?.label ?? item)
+              .join(", ");
+          }
+          if (f.kind === "boolean") {
+            return v ? f.label : null;
+          }
           return String(v);
         })
         .filter(Boolean) as string[])

@@ -21,6 +21,10 @@ interface SimpleWell extends WellRecord {
   sampleId?: string;
   amount?: number | string;
   custom?: string;
+  active?: boolean;
+  collectedAt?: string;
+  collectedTime?: string;
+  tags?: string[];
 }
 
 const FIELDS: WellField<SimpleWell>[] = [
@@ -994,6 +998,172 @@ describe("PlateMapEditor", () => {
       checkbox.click();
     });
     expect(onSelectionChange).toHaveBeenCalledWith(new Set(["A03"]));
+  });
+
+  it("renders inline text/number/date/integer inputs when field.editableInTable is set", () => {
+    const onChange = vi.fn();
+    const values = new Map<WellId, SimpleWell>([
+      ["A01", { sampleId: "S-1", amount: 4 }],
+    ]);
+
+    renderElement(
+      <WellManifestTable<SimpleWell>
+        values={values}
+        onChange={onChange}
+        columns={[
+          { header: "Sample ID", field: "sampleId" },
+          { header: "Amount", field: "amount" },
+        ]}
+        fields={[
+          { key: "sampleId", label: "Sample ID", kind: "text", editableInTable: true },
+          { key: "amount", label: "Amount", kind: "integer", editableInTable: true },
+        ]}
+        emptyEntry={emptyEntry}
+        pageSize={10}
+      />,
+    );
+
+    const sampleCell = container.querySelector(
+      'input[aria-label="Sample ID for A01"]',
+    ) as HTMLInputElement;
+    expect(sampleCell).not.toBeNull();
+    expect(sampleCell.type).toBe("text");
+    expect(sampleCell.value).toBe("S-1");
+
+    const amountCell = container.querySelector(
+      'input[aria-label="Amount for A01"]',
+    ) as HTMLInputElement;
+    expect(amountCell).not.toBeNull();
+    expect(amountCell.type).toBe("number");
+    expect(amountCell.getAttribute("step")).toBe("1");
+
+    act(() => {
+      setInputValue(sampleCell, "S-2");
+    });
+    let next = onChange.mock.calls.at(-1)?.[0] as Map<WellId, SimpleWell>;
+    expect(next.get("A01")?.sampleId).toBe("S-2");
+
+    act(() => {
+      setInputValue(amountCell, "7");
+    });
+    next = onChange.mock.calls.at(-1)?.[0] as Map<WellId, SimpleWell>;
+    expect(next.get("A01")?.amount).toBe(7);
+  });
+
+  it("renders datetime and time inputs with editableInTable", () => {
+    const onChange = vi.fn();
+    const values = new Map<WellId, SimpleWell>([["A01", {}]]);
+
+    renderElement(
+      <WellManifestTable<SimpleWell>
+        values={values}
+        onChange={onChange}
+        columns={[
+          { header: "Collected At", field: "collectedAt" },
+          { header: "Collected Time", field: "collectedTime" },
+        ]}
+        fields={[
+          { key: "collectedAt", label: "Collected At", kind: "datetime", editableInTable: true },
+          { key: "collectedTime", label: "Collected Time", kind: "time", editableInTable: true },
+        ]}
+        emptyEntry={emptyEntry}
+        pageSize={10}
+      />,
+    );
+
+    const dt = container.querySelector('input[aria-label="Collected At for A01"]') as HTMLInputElement;
+    expect(dt.type).toBe("datetime-local");
+    const time = container.querySelector('input[aria-label="Collected Time for A01"]') as HTMLInputElement;
+    expect(time.type).toBe("time");
+
+    act(() => {
+      setInputValue(time, "08:30");
+    });
+    const next = onChange.mock.calls.at(-1)?.[0] as Map<WellId, SimpleWell>;
+    expect(next.get("A01")?.collectedTime).toBe("08:30");
+  });
+
+  it("renders an editable boolean checkbox that toggles row state", () => {
+    const onChange = vi.fn();
+    const values = new Map<WellId, SimpleWell>([["A01", { active: false }]]);
+
+    renderElement(
+      <WellManifestTable<SimpleWell>
+        values={values}
+        onChange={onChange}
+        columns={[{ header: "Active", field: "active" }]}
+        fields={[{ key: "active", label: "Active", kind: "boolean", editableInTable: true }]}
+        emptyEntry={emptyEntry}
+        pageSize={10}
+      />,
+    );
+
+    const checkbox = container.querySelector('[aria-label="Active for A01"]') as HTMLElement;
+    expect(checkbox).not.toBeNull();
+    expect(checkbox.getAttribute("data-state")).toBe("unchecked");
+
+    act(() => {
+      checkbox.click();
+    });
+
+    const next = onChange.mock.calls.at(-1)?.[0] as Map<WellId, SimpleWell>;
+    expect(next.get("A01")?.active).toBe(true);
+  });
+
+  it("renders read-only multiselect badges and boolean check for non-editable fields", () => {
+    const values = new Map<WellId, SimpleWell>([
+      ["A01", { active: true, tags: ["red", "blue"] }],
+    ]);
+
+    renderElement(
+      <WellManifestTable<SimpleWell>
+        values={values}
+        onChange={() => {}}
+        columns={[
+          { header: "Active", field: "active" },
+          { header: "Tags", field: "tags" },
+        ]}
+        fields={[
+          { key: "active", label: "Active", kind: "boolean" },
+          {
+            key: "tags",
+            label: "Tags",
+            kind: "multiselect",
+            options: [
+              { value: "red", label: "Red" },
+              { value: "blue", label: "Blue" },
+              { value: "green", label: "Green" },
+            ],
+          },
+        ]}
+        emptyEntry={emptyEntry}
+        pageSize={10}
+      />,
+    );
+
+    const badges = [...container.querySelectorAll("[data-slot='badge']")].map((b) => b.textContent);
+    expect(badges).toEqual(expect.arrayContaining(["Red", "Blue"]));
+    expect(container.querySelector('svg[aria-label="Yes"]')).not.toBeNull();
+  });
+
+  it("renders a select trigger in the manifest when field.editableInTable is set", () => {
+    const values = new Map<WellId, SimpleWell>([["A01", { role: "sample" }]]);
+
+    renderElement(
+      <WellManifestTable<SimpleWell>
+        values={values}
+        onChange={() => {}}
+        columns={[{ header: "Role", field: "role" }]}
+        fields={[{ ...FIELDS[0], editableInTable: true }]}
+        emptyEntry={emptyEntry}
+        pageSize={10}
+      />,
+    );
+
+    const trigger = container.querySelector('button[aria-label="Role for A01"]') as HTMLButtonElement;
+    expect(trigger).not.toBeNull();
+    expect(trigger.getAttribute("role")).toBe("combobox");
+    expect(trigger.textContent).toContain("Sample");
   });
 
   it("fills visible manifest cells downward when no row selection is active", () => {

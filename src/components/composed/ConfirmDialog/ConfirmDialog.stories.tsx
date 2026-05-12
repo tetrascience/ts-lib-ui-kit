@@ -40,10 +40,16 @@ const destructiveArgs = {
 
 export const Default: Story = {
   args: defaultArgs,
+  parameters: {
+    zephyr: { testCaseId: "SW-T5156" },
+  },
 }
 
 export const Destructive: Story = {
   args: destructiveArgs,
+  parameters: {
+    zephyr: { testCaseId: "SW-T5157" },
+  },
 }
 
 export const WithLoading: Story = {
@@ -63,7 +69,7 @@ export const WithLoading: Story = {
     )
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5158" },
   },
   play: async ({ canvasElement, step }) => {
     const body = within(canvasElement.ownerDocument.body)
@@ -101,7 +107,7 @@ export const ControlledOpen: Story = {
     )
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5159" },
   },
   play: async ({ canvasElement, step }) => {
     const body = within(canvasElement.ownerDocument.body)
@@ -149,6 +155,9 @@ export const AsyncConfirm: Story = {
       </div>
     )
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5160" },
+  },
 }
 
 // Keep interaction-only stories out of docs/sidebar so dialogs do not flash
@@ -157,7 +166,7 @@ export const DefaultInteractionTest: Story = {
   tags: ["!dev", "!autodocs"],
   args: defaultArgs,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5161" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -201,7 +210,7 @@ export const DestructiveInteractionTest: Story = {
   tags: ["!dev", "!autodocs"],
   args: destructiveArgs,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5162" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -237,7 +246,7 @@ export const AsyncConfirmInteractionTest: Story = {
   tags: ["!dev", "!autodocs"],
   render: AsyncConfirm.render,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5163" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

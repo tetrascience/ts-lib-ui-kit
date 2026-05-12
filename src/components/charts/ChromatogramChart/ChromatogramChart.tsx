@@ -19,6 +19,7 @@ import {
 } from "./dataProcessing";
 import { detectPeaks } from "./peakDetection";
 import { buildRangeAnnotationElements } from "./rangeAnnotations";
+import { createRegionOverlayTraces } from "./regionOverlays";
 
 import type {
   ChromatogramSeries,
@@ -86,6 +87,8 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   onPeakHover,
   selectionAppearance,
   annotationStyle = "arrow",
+  titleFontSize = 20,
+  titleTopMargin,
 }) => {
   const enablePeakDetection = peakDetectionOptions !== undefined;
   const plotRef = useRef<HTMLDivElement>(null);
@@ -293,17 +296,30 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       }
     }
 
+    // Region overlay traces — thickened colored segments along the signal between
+    // peak boundaries. Pushed before the hit-area trace so peak interactions still work.
+    processedAnnotations.forEach((ann) => {
+      if (ann.regionOverlay && processedSeries[0]) {
+        plotData.push(...createRegionOverlayTraces([ann], 0, processedSeries[0]));
+      }
+    });
+    allDetectedPeaks.forEach(({ peaks, seriesIndex }) => {
+      if (peaks.some((p) => p.regionOverlay) && processedSeries[seriesIndex]) {
+        plotData.push(...createRegionOverlayTraces(peaks, seriesIndex, processedSeries[seriesIndex]));
+      }
+    });
+
     // Invisible hit-area markers for click / hover on peaks.
     // hovertemplate "<extra></extra>" suppresses the tooltip entry while still
     // allowing plotly_click and plotly_hover to fire for these points.
     if (allPeaksForInteraction.length > 0) {
+      const anyHoverText = allPeaksForInteraction.some((p) => p.peak.hoverText);
       const hitAreaTrace: Plotly.Data = {
         x: allPeaksForInteraction.map((p) => p.peak.x),
         y: allPeaksForInteraction.map((p) => p.peak.y),
         type: "scatter" as const,
         mode: "markers" as const,
         marker: { size: 14, opacity: 0 },
-        hovertemplate: "<extra></extra>",
         showlegend: false,
         name: "",
         customdata: allPeaksForInteraction.map((p) => ({
@@ -313,6 +329,13 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
           seriesName: p.seriesName,
           isAutoDetected: p.isAutoDetected,
         })) as unknown as Plotly.Datum[],
+        ...(anyHoverText
+          ? {
+              hovertemplate: allPeaksForInteraction.map((p) =>
+                p.peak.hoverText ? `${p.peak.hoverText}<extra></extra>` : "<extra></extra>"
+              ),
+            }
+          : { hovertemplate: "<extra></extra>" }),
       };
       plotData.push(hitAreaTrace);
     }
@@ -334,7 +357,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       title: title
         ? {
             text: title,
-            font: { size: 20, family: "Inter, sans-serif", color: theme.textColor },
+            font: { size: titleFontSize, family: "Inter, sans-serif", color: theme.textColor },
           }
         : undefined,
       width,
@@ -343,7 +366,9 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
         l: CHROMATOGRAM_LAYOUT.MARGIN_LEFT,
         r: CHROMATOGRAM_LAYOUT.MARGIN_RIGHT,
         b: CHROMATOGRAM_LAYOUT.MARGIN_BOTTOM,
-        t: title ? CHROMATOGRAM_LAYOUT.MARGIN_TOP_WITH_TITLE : CHROMATOGRAM_LAYOUT.MARGIN_TOP_NO_TITLE,
+        t: title
+          ? (titleTopMargin ?? CHROMATOGRAM_LAYOUT.MARGIN_TOP_WITH_TITLE)
+          : CHROMATOGRAM_LAYOUT.MARGIN_TOP_NO_TITLE,
         pad: CHROMATOGRAM_LAYOUT.MARGIN_PAD,
       },
       paper_bgcolor: theme.paperBg,
@@ -558,7 +583,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     };
   }, [
     processedSeries, allDetectedPeaks, allPeaksForInteraction, series.length,
-    width, height, title, xAxisTitle, yAxisTitle,
+    width, height, title, titleFontSize, titleTopMargin, xAxisTitle, yAxisTitle,
     processedAnnotations, xRange, yRange, showLegend, showGridX, showGridY,
     showMarkers, markerSize, showCrosshairs, enablePeakDetection, peakDetectionOptions,
     showPeakAreas, boundaryMarkers, annotationOverlapThreshold, showExportButton,

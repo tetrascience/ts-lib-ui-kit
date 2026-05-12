@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 
 export type PlateMapPlateSelectorVariant = "dropdown" | "tabs";
@@ -59,69 +60,53 @@ export function PlateMapPlateSelector({
 
   if (variant === "tabs") {
     return (
-      <div
-        role="tablist"
-        aria-label={label}
-        className={cn("flex flex-wrap items-center gap-1", className)}
-        data-slot="plate-tabs"
-      >
-        {plates.map((plate) => {
-          const selected = plate.id === activePlate?.id;
-          const canRemove = !!onRemovePlate && plates.length > 1;
-          return (
-            <div
-              key={plate.id}
-              className={cn(
-                "inline-flex items-stretch overflow-hidden rounded-md border",
-                selected ? "border-primary" : "border-border",
-              )}
-            >
-              <Button
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                variant={selected ? "default" : "ghost"}
-                size="sm"
-                disabled={plate.disabled || !onPlateChange}
-                className="h-7 rounded-none border-0 px-2 text-xs"
-                onClick={() => onPlateChange?.(plate.id)}
-              >
-                <span className="truncate">{plate.label ?? plate.barcode}</span>
-                {plate.count === undefined ? null : (
-                  <span
-                    className={cn(
-                      "ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-sm px-1 text-[0.65rem] font-semibold",
-                      selected ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground",
-                    )}
-                  >
-                    {plate.count}
-                  </span>
-                )}
-              </Button>
-              {canRemove ? (
-                <Button
-                  type="button"
-                  variant={selected ? "default" : "ghost"}
-                  size="icon-xs"
-                  aria-label={`${removePlateLabel} ${plate.label ?? plate.barcode}`}
-                  className="h-7 rounded-none border-0 border-l border-border/60"
-                  onClick={() => onRemovePlate?.(plate.id)}
+      <div className={cn("inline-flex flex-wrap items-center gap-1", className)} data-slot="plate-tabs">
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          size="sm"
+          value={activePlate?.id ?? ""}
+          aria-label={label}
+          onValueChange={(value) => {
+            if (value) onPlateChange?.(value);
+          }}
+        >
+          {plates.map((plate) => {
+            const selected = plate.id === activePlate?.id;
+            const canRemove = !!onRemovePlate && plates.length > 1;
+            return (
+              <div key={plate.id} className="inline-flex items-stretch">
+                <ToggleGroupItem
+                  value={plate.id}
+                  disabled={plate.disabled || !onPlateChange}
+                  aria-label={plate.label ?? plate.barcode}
+                  className={cn(canRemove && "rounded-r-none border-r-0")}
                 >
-                  <X aria-hidden />
-                </Button>
-              ) : null}
-            </div>
-          );
-        })}
+                  <span className="truncate">{plate.label ?? plate.barcode}</span>
+                  {plate.count === undefined ? null : (
+                    <Badge variant={selected ? "secondary" : "outline"} className="ml-1 h-4 px-1 text-[0.65rem]">
+                      {plate.count}
+                    </Badge>
+                  )}
+                </ToggleGroupItem>
+                {canRemove ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    aria-label={`${removePlateLabel} ${plate.label ?? plate.barcode}`}
+                    className="rounded-l-none"
+                    onClick={() => onRemovePlate?.(plate.id)}
+                  >
+                    <X aria-hidden />
+                  </Button>
+                ) : null}
+              </div>
+            );
+          })}
+        </ToggleGroup>
         {onAddPlate ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            aria-label={addPlateLabel}
-            className="h-7"
-            onClick={() => onAddPlate()}
-          >
+          <Button type="button" variant="ghost" size="icon-sm" aria-label={addPlateLabel} onClick={() => onAddPlate()}>
             <Plus aria-hidden />
           </Button>
         ) : null}

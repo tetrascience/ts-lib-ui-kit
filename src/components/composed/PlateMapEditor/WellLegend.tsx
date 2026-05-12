@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export interface WellLegendItem {
@@ -15,7 +16,7 @@ export interface WellLegendItem {
 
 export interface WellLegendProps {
   items: WellLegendItem[];
-  /** Render-prop for fully custom cards. Bypasses the default layout. */
+  /** Render-prop for fully custom cards. Bypasses the default card layout. */
   renderItem?: (item: WellLegendItem) => React.ReactNode;
   onHoverEnter?: (id: string) => void;
   onHoverLeave?: (id: string) => void;
@@ -48,41 +49,40 @@ export function WellLegend({
       {items.map((item) => {
         if (renderItem) return <React.Fragment key={item.id}>{renderItem(item)}</React.Fragment>;
         return (
-          <div
+          <Card
             key={item.id}
+            size="sm"
             data-slot="well-legend-item"
             data-disabled={item.disabled || undefined}
+            className={cn("py-2 hover:bg-muted/40", item.disabled && "opacity-50")}
             onMouseEnter={() => onHoverEnter?.(item.id)}
             onMouseLeave={() => onHoverLeave?.(item.id)}
-            className={cn(
-              "flex items-start gap-2 rounded-md border bg-card px-2 py-1.5",
-              "hover:bg-muted/40",
-              item.disabled && "opacity-50",
-            )}
           >
-            <span
-              aria-hidden
-              className="mt-0.5 size-3.5 shrink-0 rounded-sm border border-foreground/20"
-              style={{ backgroundColor: item.color }}
-            />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-medium">{item.label}</div>
-              {item.meta ? (
-                <div className="truncate text-[0.65rem] text-muted-foreground">{item.meta}</div>
+            <CardContent className="flex items-start gap-2">
+              <span
+                aria-hidden
+                className="mt-0.5 size-3.5 shrink-0 rounded-sm border border-foreground/20"
+                style={{ backgroundColor: item.color }}
+              />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-xs font-medium">{item.label}</div>
+                {item.meta ? (
+                  <div className="truncate text-[0.65rem] text-muted-foreground">{item.meta}</div>
+                ) : null}
+              </div>
+              {onRemove ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`${removeLabel} ${typeof item.label === "string" ? item.label : item.id}`}
+                  onClick={() => onRemove(item.id)}
+                >
+                  <X aria-hidden />
+                </Button>
               ) : null}
-            </div>
-            {onRemove ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label={`${removeLabel} ${typeof item.label === "string" ? item.label : item.id}`}
-                onClick={() => onRemove(item.id)}
-              >
-                <X aria-hidden />
-              </Button>
-            ) : null}
-          </div>
+            </CardContent>
+          </Card>
         );
       })}
     </div>

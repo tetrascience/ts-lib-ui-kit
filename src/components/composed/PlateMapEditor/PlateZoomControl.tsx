@@ -1,6 +1,7 @@
 import { ZoomIn, ZoomOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
 import { cn } from "@/lib/utils";
 
 export interface PlateZoomControlProps {
@@ -10,10 +11,12 @@ export interface PlateZoomControlProps {
   step?: number;
   min?: number;
   max?: number;
-  /** Render a percentage readout beside the buttons. Defaults to true. */
+  /** Render a percentage readout between the buttons. Defaults to true. */
   showReadout?: boolean;
   className?: string;
 }
+
+const ZOOM_DECIMALS = 2;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -28,14 +31,14 @@ export function PlateZoomControl({
   showReadout = true,
   className,
 }: PlateZoomControlProps) {
-  const setZoom = (next: number) => onZoomChange(clamp(Number(next.toFixed(2)), min, max));
+  const setZoom = (next: number) => onZoomChange(clamp(Number(next.toFixed(ZOOM_DECIMALS)), min, max));
 
   return (
-    <div className={cn("inline-flex items-center gap-1", className)} data-slot="plate-zoom-control">
+    <ButtonGroup className={cn(className)} data-slot="plate-zoom-control">
       <Button
         type="button"
-        variant="ghost"
-        size="icon-xs"
+        variant="outline"
+        size="icon-sm"
         aria-label="Zoom out"
         disabled={zoom <= min}
         onClick={() => setZoom(zoom - step)}
@@ -43,20 +46,20 @@ export function PlateZoomControl({
         <ZoomOut aria-hidden />
       </Button>
       {showReadout ? (
-        <span className="min-w-[44px] text-center text-xs tabular-nums text-muted-foreground">
+        <ButtonGroupText className="min-w-[3.25rem] justify-center text-xs tabular-nums">
           {Math.round(zoom * 100)}%
-        </span>
+        </ButtonGroupText>
       ) : null}
       <Button
         type="button"
-        variant="ghost"
-        size="icon-xs"
+        variant="outline"
+        size="icon-sm"
         aria-label="Zoom in"
         disabled={zoom >= max}
         onClick={() => setZoom(zoom + step)}
       >
         <ZoomIn aria-hidden />
       </Button>
-    </div>
+    </ButtonGroup>
   );
 }

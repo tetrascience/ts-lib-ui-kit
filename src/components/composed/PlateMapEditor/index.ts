@@ -24,6 +24,12 @@ export { plateOptionsFromCsvTriage, triagePlateMapCsvByBarcode, triagePlateMapCs
 export { ManifestFilterPopover } from "./ManifestFilterPopover";
 export type { ManifestFilterPopoverProps } from "./ManifestFilterPopover";
 
+export { WellLegend } from "./WellLegend";
+export type { WellLegendItem, WellLegendProps } from "./WellLegend";
+
+export { PlateZoomControl } from "./PlateZoomControl";
+export type { PlateZoomControlProps } from "./PlateZoomControl";
+
 export {
   EMPTY_FILTER_STATE,
   OPERATOR_LABELS,

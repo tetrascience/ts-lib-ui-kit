@@ -33,7 +33,7 @@ export const Default: Story = {
     trend: "up",
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1485" },
+    zephyr: { testCaseId: "SW-T5168" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -65,7 +65,7 @@ export const TrendDown: Story = {
     trend: "down",
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1486" },
+    zephyr: { testCaseId: "SW-T5169" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -90,7 +90,7 @@ export const TrendNeutral: Story = {
     trend: "neutral",
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1487" },
+    zephyr: { testCaseId: "SW-T5170" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -109,7 +109,7 @@ export const NoDelta: Story = {
     value: "4",
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1488" },
+    zephyr: { testCaseId: "SW-T5171" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -155,7 +155,7 @@ export const GridOfFour: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "SW-T1489" },
+    zephyr: { testCaseId: "SW-T5172" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -186,7 +186,7 @@ export const WithDescription: Story = {
     description: "Limit: 100 GB",
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1490" },
+    zephyr: { testCaseId: "SW-T5173" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

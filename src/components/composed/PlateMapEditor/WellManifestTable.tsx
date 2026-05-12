@@ -1,4 +1,4 @@
-import { ArrowDownToLine, Check } from "lucide-react";
+import { ArrowDownToLine, Check, ChevronDown, ChevronRight, Layers } from "lucide-react";
 import * as React from "react";
 
 import { ManifestFilterPopover } from "./ManifestFilterPopover";
@@ -146,7 +146,29 @@ export interface WellManifestTableProps<T extends WellRecord = WellRecord> {
    * from `columns` (with type inferred from matching field kinds).
    */
   filterColumns?: FilterColumn[];
+  /** Enables an inline group-by selector. Defaults to false. */
+  groupable?: boolean;
   className?: string;
+}
+
+interface GroupedRow<T> {
+  key: string;
+  rows: Array<{ id: WellId; row: T }>;
+}
+
+function groupRowsBy<T extends WellRecord>(
+  rows: Array<{ id: WellId; row: T }>,
+  field: string,
+): GroupedRow<T>[] {
+  const map = new Map<string, GroupedRow<T>>();
+  for (const entry of rows) {
+    const raw = (entry.row as Record<string, unknown>)[field];
+    const key = raw === undefined || raw === null || raw === "" ? "(blank)" : String(raw);
+    const existing = map.get(key);
+    if (existing) existing.rows.push(entry);
+    else map.set(key, { key, rows: [entry] });
+  }
+  return [...map.values()];
 }
 
 const NUMERIC_KINDS = new Set(["number", "integer"]);
@@ -180,12 +202,15 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
   rowProps,
   filterable = false,
   filterColumns,
+  groupable = false,
   className,
 }: WellManifestTableProps<T>) {
   const [showAll, setShowAll] = React.useState(false);
   const [page, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(initialPageSize);
   const [filterState, setFilterState] = React.useState<FilterState>(EMPTY_FILTER_STATE);
+  const [groupByField, setGroupByField] = React.useState<string>("");
+  const [collapsedGroups, setCollapsedGroups] = React.useState<Set<string>>(new Set());
 
   React.useEffect(() => {
     setPage(0);
@@ -518,9 +543,62 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
     );
   };
 
+  const groupableColumns = React.useMemo(
+    () => columns.filter((col) => !!col.field),
+    [columns],
+  );
+  const activeGroupField = groupable && groupByField ? groupByField : "";
+  const grouped = React.useMemo(
+    () => (activeGroupField ? groupRowsBy(rows, activeGroupField) : null),
+    [activeGroupField, rows],
+  );
+
   const totalRows = rows.length;
   const lastPage = Math.max(0, Math.ceil(totalRows / pageSize) - 1);
   const selSize = selection?.size ?? 0;
+  const totalColSpan = columns.length + 1 + (onSelectionChange ? 1 : 0);
+
+  const renderDataRow = (id: WellId, row: T) => {
+    const isSelected = selection?.has(id);
+    const extra = rowProps?.({ wellId: id, row, isSelected: !!isSelected });
+    return (
+      <TableRow key={id} {...extra}>
+        {onSelectionChange ? (
+          <TableCell className="w-10">
+            <Checkbox
+              checked={!!isSelected}
+              onCheckedChange={() => toggleSelect(id)}
+              aria-label={`Select ${id}`}
+            />
+          </TableCell>
+        ) : null}
+        <TableCell className="font-semibold">{id}</TableCell>
+        {columns.map((col) => (
+          <TableCell
+            key={col.id ?? col.field ?? col.header}
+            style={col.minWidth ? { minWidth: col.minWidth } : undefined}
+          >
+            {renderCell(col, id, row)}
+          </TableCell>
+        ))}
+      </TableRow>
+    );
+  };
+
+  const toggleGroup = (key: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const groupHeaderLabel = (() => {
+    if (!activeGroupField) return "";
+    const col = columns.find((c) => c.field === activeGroupField);
+    return col?.header ?? activeGroupField;
+  })();
 
   return (
     <div data-slot="well-manifest-table" className={cn("flex flex-col gap-2", className)}>
@@ -534,6 +612,24 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
             state={filterState}
             onStateChange={setFilterState}
           />
+        ) : null}
+        {groupable ? (
+          <div className="inline-flex items-center gap-1.5">
+            <Layers aria-hidden className="size-3.5 text-muted-foreground" />
+            <Select value={groupByField || "__none"} onValueChange={(v) => setGroupByField(v === "__none" ? "" : v)}>
+              <SelectTrigger size="sm" className="h-7 min-w-[160px]" aria-label="Group by">
+                <SelectValue placeholder="Group by…" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none">No grouping</SelectItem>
+                {groupableColumns.map((col) => (
+                  <SelectItem key={col.id ?? col.field} value={col.field ?? ""}>
+                    {col.header}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         ) : null}
         <span className="text-xs text-muted-foreground">
           {totalRows} rows · {selSize} selected
@@ -564,38 +660,39 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {pagedRows.map(({ id, row }) => {
-              const isSelected = selection?.has(id);
-              const extra = rowProps?.({ wellId: id, row, isSelected: !!isSelected });
-              return (
-                <TableRow key={id} {...extra}>
-                  {onSelectionChange ? (
-                    <TableCell className="w-10">
-                      <Checkbox
-                        checked={!!isSelected}
-                        onCheckedChange={() => toggleSelect(id)}
-                        aria-label={`Select ${id}`}
-                      />
-                    </TableCell>
-                  ) : null}
-                  <TableCell className="font-semibold">{id}</TableCell>
-                  {columns.map((col) => (
-                    <TableCell
-                      key={col.id ?? col.field ?? col.header}
-                      style={col.minWidth ? { minWidth: col.minWidth } : undefined}
-                    >
-                      {renderCell(col, id, row)}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              );
-            })}
-            {pagedRows.length === 0 ? (
+            {grouped
+              ? grouped.map((group) => {
+                  const isCollapsed = collapsedGroups.has(group.key);
+                  return (
+                    <React.Fragment key={group.key}>
+                      <TableRow
+                        className="cursor-pointer bg-muted/40"
+                        onClick={() => toggleGroup(group.key)}
+                      >
+                        <TableCell colSpan={totalColSpan} className="py-1.5">
+                          <div className="flex items-center gap-2 text-xs font-medium">
+                            {isCollapsed ? (
+                              <ChevronRight aria-hidden className="size-3.5 text-muted-foreground" />
+                            ) : (
+                              <ChevronDown aria-hidden className="size-3.5 text-muted-foreground" />
+                            )}
+                            <span>
+                              {groupHeaderLabel}: {group.key}
+                            </span>
+                            <span className="text-muted-foreground">
+                              ({group.rows.length} {group.rows.length === 1 ? "row" : "rows"})
+                            </span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {isCollapsed ? null : group.rows.map(({ id, row }) => renderDataRow(id, row))}
+                    </React.Fragment>
+                  );
+                })
+              : pagedRows.map(({ id, row }) => renderDataRow(id, row))}
+            {(grouped ? grouped.length === 0 : pagedRows.length === 0) ? (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length + 1 + (onSelectionChange ? 1 : 0)}
-                  className="text-xs text-muted-foreground"
-                >
+                <TableCell colSpan={totalColSpan} className="text-xs text-muted-foreground">
                   No rows. Paint wells on the plate.
                 </TableCell>
               </TableRow>
@@ -604,6 +701,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
         </Table>
       </TooltipProvider>
 
+      {grouped ? null : (
       <div className="flex items-center justify-end gap-3 text-xs text-muted-foreground">
         <span className="text-muted-foreground">Rows per page</span>
         <Select
@@ -641,6 +739,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
           Next
         </Button>
       </div>
+      )}
     </div>
   );
 }

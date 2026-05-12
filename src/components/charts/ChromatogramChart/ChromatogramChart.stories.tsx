@@ -713,6 +713,184 @@ export const PeakHoverAndSelection: StoryObj<typeof ChromatogramChart> = {
 };
 
 /**
+ * Per-peak color overrides: red (fail), green (pass), grey (excluded).
+ * Matches the SST runner's pass/fail coloring where each peak carries a `color`
+ * derived from its `passed` field. Arrows, borders, and boundary markers all
+ * inherit the per-peak color.
+ */
+export const PerPeakColorOverride: Story = {
+  args: {
+    series: [{ ...singleInjectionData, name: "Sample A" }],
+    title: "Per-Peak Color Override",
+    annotations: [
+      {
+        id: "peak-pass",
+        x: 5.8,
+        y: 420,
+        text: "Caffeine (pass)",
+        color: "#22c55e",
+        startX: 5.0,
+        endX: 6.6,
+      },
+      {
+        id: "peak-fail",
+        x: 12.5,
+        y: 180,
+        text: "Theobromine (fail)",
+        color: "#ef4444",
+        startX: 11.5,
+        endX: 13.5,
+      },
+      {
+        id: "peak-excluded",
+        x: 18.3,
+        y: 350,
+        text: "Theophylline (N/A)",
+        color: "#6b7280",
+        startX: 17.5,
+        endX: 19.2,
+      },
+    ],
+    boundaryMarkers: "enabled",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Per-Peak Color Override")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Colored annotation labels are rendered", async () => {
+      expect(canvas.getByText("Caffeine (pass)")).toBeInTheDocument();
+      expect(canvas.getByText("Theobromine (fail)")).toBeInTheDocument();
+      expect(canvas.getByText("Theophylline (N/A)")).toBeInTheDocument();
+    });
+
+    await step("Boundary marker traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBeGreaterThan(1);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Each peak carries a `color` override (green = pass, red = fail, grey = N/A). The annotation label, arrow, border, and boundary markers all use the per-peak color. Existing peaks without a color override are unaffected.",
+      },
+    },
+  },
+};
+
+/**
+ * Region overlay: two peaks have a thickened colored segment painted along the
+ * underlying trace between their startX/endX boundaries, using per-peak colors
+ * (green = pass, red = fail).
+ */
+export const WithRegionOverlay: Story = {
+  args: {
+    series: [{ ...singleInjectionData, name: "Sample A" }],
+    title: "Peak Region Overlays",
+    annotations: [
+      {
+        id: "peak-pass",
+        x: 5.8,
+        y: 420,
+        text: "Caffeine (pass)",
+        color: "#22c55e",
+        startX: 5.0,
+        endX: 6.6,
+        regionOverlay: true,
+        regionOverlayWidth: 4,
+        hoverText: "<b>Caffeine</b><br>RT: 5.80 min<br>Area: 1842.3<br>USP Tailing: 1.04<br>S/N: 42.1<br>Status: <span style='color:#22c55e'>PASS</span>",
+      },
+      {
+        id: "peak-fail",
+        x: 12.5,
+        y: 180,
+        text: "Theobromine (fail)",
+        color: "#ef4444",
+        startX: 11.5,
+        endX: 13.5,
+        regionOverlay: true,
+        hoverText: "<b>Theobromine</b><br>RT: 12.50 min<br>Area: 631.7<br>USP Tailing: 1.48<br>S/N: 18.3<br>Status: <span style='color:#ef4444'>FAIL</span>",
+      },
+    ],
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Peak Region Overlays")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Annotation labels are rendered", async () => {
+      expect(canvas.getByText("Caffeine (pass)")).toBeInTheDocument();
+      expect(canvas.getByText("Theobromine (fail)")).toBeInTheDocument();
+    });
+
+    await step("Region overlay traces are present (series + overlays)", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      // 1 series trace + 2 region overlay traces + 1 hit-area trace = at least 4
+      expect(traces.length).toBeGreaterThanOrEqual(4);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Each peak with `regionOverlay: true` paints a thickened colored line segment along the underlying trace between its `startX` and `endX`. Uses `peak.color` when set; falls back to the series color.",
+      },
+    },
+  },
+};
+
+/**
+ * Compact title: 13 px font with a tighter top margin.
+ * Matches the per-channel panel style used by the SST runner where many charts
+ * are stacked vertically and a full 20 px title wastes space.
+ */
+export const CompactTitle: Story = {
+  args: {
+    series: [{ ...singleInjectionData, name: "Sample A" }],
+    title: "Channel 214 nm",
+    titleFontSize: 13,
+    titleTopMargin: 28,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Compact title is displayed", async () => {
+      expect(canvas.getByText("Channel 214 nm")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Trace is rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(1);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Use `titleFontSize` and `titleTopMargin` to shrink the title area for compact multi-panel layouts. The 13 px / 28 px combination matches the SST runner's per-channel panel style. Default stories are unaffected.",
+      },
+    },
+  },
+};
+
+/**
  * Inline annotation style: labels float directly above the trace at the peak Y value
  * with no arrow. Cleaner for dense chromatograms where arrows create visual noise.
  */

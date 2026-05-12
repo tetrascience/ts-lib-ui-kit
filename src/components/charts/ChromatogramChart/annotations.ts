@@ -124,16 +124,17 @@ function resolveAnnotationBorderStyle(
   isDimmed: boolean,
   isUserDefined: boolean,
   seriesColor: string,
-  appearance: ResolvedSelectionAppearance
+  appearance: ResolvedSelectionAppearance,
+  hasColorOverride: boolean
 ): AnnotationBorderStyle {
   const bgcolor = isSelected ? appearance.selected.backgroundColor : COLORS.WHITE;
   let bordercolor: string | undefined;
   if (isSelected) {
     bordercolor = appearance.selected.borderColor;
   } else {
-    bordercolor = isUserDefined ? undefined : seriesColor;
+    bordercolor = isUserDefined && !hasColorOverride ? undefined : seriesColor;
   }
-  const borderwidth = isSelected ? 2 : isUserDefined ? 0 : 1;
+  const borderwidth = isSelected ? 2 : isUserDefined && !hasColorOverride ? 0 : 1;
   const opacity = isDimmed ? appearance.unselected.opacity : undefined;
   return { bgcolor, bordercolor, borderwidth, ...(opacity === undefined ? {} : { opacity }) };
 }
@@ -184,12 +185,11 @@ export function createPeakAnnotation(
   } = options;
 
   const isUserDefined = seriesIndex === -1;
-  const color = isUserDefined
-    ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_COLOR
-    : seriesColor(seriesIndex);
-  const textColor = isUserDefined
-    ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_TEXT_COLOR
-    : color;
+  const defaultColor = isUserDefined
+    ? COLORS.GREY_500
+    : CHART_COLORS[seriesIndex % CHART_COLORS.length];
+  const color = peak.color ?? defaultColor;
+  const textColor = isUserDefined && !peak.color ? COLORS.BLACK_900 : color;
 
   const rawText = peak.text ?? (peak._computed?.area === undefined ? "" : `Area: ${peak._computed.area.toFixed(2)}`);
 
@@ -211,7 +211,7 @@ export function createPeakAnnotation(
   const ay = isUserDefined && peak.ay !== undefined ? peak.ay : slot.ay;
 
   const borderStyle = resolveAnnotationBorderStyle(
-    isSelected, isDimmed, isUserDefined, color, appearance
+    isSelected, isDimmed, isUserDefined, color, appearance, peak.color !== undefined
   );
 
   return {

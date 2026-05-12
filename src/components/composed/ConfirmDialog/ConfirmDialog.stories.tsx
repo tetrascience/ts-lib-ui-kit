@@ -63,7 +63,7 @@ export const WithLoading: Story = {
     )
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1517" },
+    zephyr: { testCaseId: "" },
   },
   play: async ({ canvasElement, step }) => {
     const body = within(canvasElement.ownerDocument.body)
@@ -101,7 +101,7 @@ export const ControlledOpen: Story = {
     )
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1518" },
+    zephyr: { testCaseId: "" },
   },
   play: async ({ canvasElement, step }) => {
     const body = within(canvasElement.ownerDocument.body)
@@ -157,7 +157,7 @@ export const DefaultInteractionTest: Story = {
   tags: ["!dev", "!autodocs"],
   args: defaultArgs,
   parameters: {
-    zephyr: { testCaseId: "SW-T1515" },
+    zephyr: { testCaseId: "" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -201,7 +201,7 @@ export const DestructiveInteractionTest: Story = {
   tags: ["!dev", "!autodocs"],
   args: destructiveArgs,
   parameters: {
-    zephyr: { testCaseId: "SW-T1516" },
+    zephyr: { testCaseId: "" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -237,7 +237,7 @@ export const AsyncConfirmInteractionTest: Story = {
   tags: ["!dev", "!autodocs"],
   render: AsyncConfirm.render,
   parameters: {
-    zephyr: { testCaseId: "SW-T1519" },
+    zephyr: { testCaseId: "" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

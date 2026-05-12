@@ -76,7 +76,7 @@ export const SingleSection: Story = {
     </FormSection>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5164" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -194,7 +194,7 @@ export const SectionedForm: Story = {
     </form>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5165" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -289,7 +289,7 @@ export const WithValidation: Story = {
     )
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5166" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -491,7 +491,7 @@ export const MultiStepForm: Story = {
     )
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5167" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

@@ -38,6 +38,12 @@ export interface PlatePaintGridProps<T extends WellRecord = WellRecord> {
   emptyWellFillColor?: string | null;
   /** Geometric shape of each well. `"circle"` matches scientific plate visuals. Defaults to `"rect"`. */
   wellShape?: WellShape;
+  /**
+   * When true, wraps the grid in a card-like surface (rounded, bordered,
+   * padded, soft shadow) so it reads as a physical plate. Pairs well with
+   * `wellShape="circle"`.
+   */
+  framed?: boolean;
   /** Pixel size of each well cell. Defaults to 34 when fixed. */
   cellSize?: number;
   /** Resize wells to fill available width when `cellSize` is not fixed. */
@@ -395,6 +401,7 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   colorForWell,
   emptyWellFillColor = PLATE_MAP_EMPTY_WELL_FILL,
   wellShape = "rect",
+  framed = false,
   cellSize,
   autoScale = true,
   minCellSize = DEFAULT_MIN_AUTO_CELL,
@@ -566,7 +573,11 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   return (
     <div
       ref={containerRef}
-      className={cn("relative overflow-auto select-none", className)}
+      className={cn(
+        "relative overflow-auto select-none",
+        framed && "inline-block rounded-xl border bg-card p-3 shadow-sm",
+        className,
+      )}
       data-slot="plate-paint-grid"
     >
       <svg

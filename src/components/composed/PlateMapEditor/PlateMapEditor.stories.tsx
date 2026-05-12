@@ -1,4 +1,13 @@
-import { Barcode, FileText, Tag } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  pointerWithin,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { Barcode, FileText, GripVertical, Tag } from "lucide-react";
 import * as React from "react";
 
 import { getPlateMapScopedWellId, PlateMapEditor } from "./PlateMapEditor";
@@ -7,9 +16,12 @@ import { PlateZoomControl } from "./PlateZoomControl";
 import { WellLegend } from "./WellLegend";
 
 import type { WellColumn, WellField, WellId, WellRecord } from "./types";
+import type { DragEndEvent } from "@dnd-kit/core";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface DemoWell extends WellRecord {
   plateBarcode?: string;
@@ -47,18 +59,24 @@ const COLUMNS: WellColumn<DemoWell>[] = [
   { header: "Notes", field: "notes", minWidth: 160 },
 ];
 
-const SAMPLE_IDS = ["SAMP-001", "SAMP-002", "SAMP-003", "SAMP-004", "SAMP-005", "SAMP-006"];
+const SAMPLE_PALETTE: ReadonlyArray<{
+  id: string;
+  role: NonNullable<DemoWell["role"]>;
+  notes: string;
+}> = [
+  { id: "SAMP-001", role: "sample", notes: "primary" },
+  { id: "SAMP-002", role: "sample", notes: "primary" },
+  { id: "SAMP-003", role: "sample", notes: "replicate" },
+  { id: "SAMP-004", role: "control", notes: "positive" },
+  { id: "SAMP-005", role: "control", notes: "negative" },
+  { id: "BLANK-001", role: "blank", notes: "media" },
+];
 
 const SEED_LAYOUT: ReadonlyArray<readonly [WellId, NonNullable<DemoWell["role"]>, number]> = [
   ["A01", "sample", 0],
   ["A02", "sample", 1],
-  ["A03", "sample", 2],
   ["B01", "control", 3],
-  ["B02", "control", 4],
   ["C01", "blank", 5],
-  ["C02", "blank", 5],
-  ["D04", "sample", 0],
-  ["D05", "sample", 1],
 ];
 
 const INITIAL_PLATE_ID = "DEMO-PLATE-001";
@@ -81,15 +99,63 @@ function isPopulated(row: DemoWell): boolean {
   return !!(row.role || row.sampleId || row.notes);
 }
 
+function DraggableSampleChip({
+  sample,
+}: {
+  sample: (typeof SAMPLE_PALETTE)[number];
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `palette-${sample.id}`,
+    data: { sampleId: sample.id, role: sample.role, notes: sample.notes },
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={cn(
+        "flex cursor-grab items-center gap-2 rounded-md border bg-card px-2 py-1.5 text-xs",
+        "ring-1 ring-foreground/5 active:cursor-grabbing",
+        isDragging && "opacity-40",
+      )}
+    >
+      <GripVertical aria-hidden className="size-3 text-muted-foreground" />
+      <span
+        aria-hidden
+        className="size-3 shrink-0 rounded-full"
+        style={{ backgroundColor: ROLE_COLOR[sample.role] }}
+      />
+      <span className="flex-1 truncate font-medium">{sample.id}</span>
+      <span className="text-[0.65rem] text-muted-foreground">{sample.role}</span>
+    </div>
+  );
+}
+
+function DroppableWellOverlay({ wellId, cellSize }: { wellId: WellId; cellSize: number }) {
+  const { isOver, setNodeRef, active } = useDroppable({ id: wellId });
+  if (!active) return null;
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "pointer-events-auto h-full w-full rounded-full transition-colors",
+        isOver && "bg-primary/20 ring-2 ring-primary",
+      )}
+      style={{ width: cellSize, height: cellSize }}
+    />
+  );
+}
+
 function PlateMapEditorDemo() {
   const seed = React.useMemo(() => {
     const map = new Map<WellId, DemoWell>();
     for (const [wellId, role, idx] of SEED_LAYOUT) {
+      const sample = SAMPLE_PALETTE[idx];
       map.set(getPlateMapScopedWellId(INITIAL_PLATE_ID, wellId), {
         plateBarcode: INITIAL_PLATE_ID,
         role,
-        sampleId: SAMPLE_IDS[idx % SAMPLE_IDS.length],
-        notes: idx % 2 === 0 ? "primary" : "replicate",
+        sampleId: sample.id,
+        notes: sample.notes,
       });
     }
     return map;
@@ -100,6 +166,8 @@ function PlateMapEditorDemo() {
   const [activePlateId, setActivePlateId] = React.useState(INITIAL_PLATE_ID);
   const [hoveredSampleId, setHoveredSampleId] = React.useState<string | null>(null);
   const [zoom, setZoom] = React.useState(1);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   const plateIds = React.useMemo(() => {
     const ids = new Set<string>();
@@ -161,49 +229,84 @@ function PlateMapEditorDemo() {
     }
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    const data = active.data.current as { sampleId?: string; role?: DemoWell["role"]; notes?: string } | undefined;
+    if (!data?.sampleId) return;
+    const wellId = String(over.id);
+    const next = new Map(values);
+    next.set(getPlateMapScopedWellId(activePlateId, wellId), {
+      plateBarcode: activePlateId,
+      role: data.role,
+      sampleId: data.sampleId,
+      notes: data.notes,
+    });
+    setValues(next);
+  };
+
   return (
-    <PlateMapEditor<DemoWell>
-      format="96"
-      values={values}
-      onChange={setValues}
-      selection={selection}
-      onSelectionChange={setSelection}
-      fields={FIELDS}
-      tableColumns={COLUMNS}
-      colorForWell={colorForWell}
-      emptyEntry={emptyEntry}
-      isPopulated={isPopulated}
-      cycleFieldOnWellDoubleClick="role"
-      title="Plate map editor"
-      wellShape="circle"
-      plates={plateOptions}
-      activePlateId={activePlateId}
-      onPlateChange={(plateId) => {
-        setActivePlateId(plateId);
-        setSelection(new Set());
-      }}
-      onAddPlate={handleAddPlate}
-      onRemovePlate={handleRemovePlate}
-      plateSelectorVariant="tabs"
-      highlightedWellIds={highlightedWellIds}
-      manifestFilterable
-      manifestGroupable
-      badges={
-        <>
-          <Badge variant="secondary">96-well · circle</Badge>
-          <Badge variant="info">{selection.size} selected</Badge>
-        </>
-      }
-      legend={
-        <WellLegend
-          items={legendItems}
-          onHoverEnter={setHoveredSampleId}
-          onHoverLeave={() => setHoveredSampleId(null)}
-          emptyLabel="No samples assigned yet"
-        />
-      }
-      plateToolbar={<PlateZoomControl zoom={zoom} onZoomChange={setZoom} />}
-    />
+    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
+        <Card size="sm" className="w-full xl:w-64 xl:shrink-0">
+          <CardHeader className="border-b">
+            <CardTitle>Sample palette</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-1.5">
+            {SAMPLE_PALETTE.map((sample) => (
+              <DraggableSampleChip key={sample.id} sample={sample} />
+            ))}
+          </CardContent>
+        </Card>
+
+        <div className="min-w-0 flex-1">
+          <PlateMapEditor<DemoWell>
+            format="96"
+            values={values}
+            onChange={setValues}
+            selection={selection}
+            onSelectionChange={setSelection}
+            fields={FIELDS}
+            tableColumns={COLUMNS}
+            colorForWell={colorForWell}
+            emptyEntry={emptyEntry}
+            isPopulated={isPopulated}
+            cycleFieldOnWellDoubleClick="role"
+            title="Plate map editor"
+            wellShape="circle"
+            framedPlate
+            wrapWell={(wellId, cellSize) => <DroppableWellOverlay wellId={wellId} cellSize={cellSize} />}
+            plates={plateOptions}
+            activePlateId={activePlateId}
+            onPlateChange={(plateId) => {
+              setActivePlateId(plateId);
+              setSelection(new Set());
+            }}
+            onAddPlate={handleAddPlate}
+            onRemovePlate={handleRemovePlate}
+            plateSelectorVariant="tabs"
+            highlightedWellIds={highlightedWellIds}
+            manifestFilterable
+            manifestGroupable
+            badges={
+              <>
+                <Badge variant="secondary">96-well · circle</Badge>
+                <Badge variant="info">{selection.size} selected</Badge>
+              </>
+            }
+            legend={
+              <WellLegend
+                items={legendItems}
+                onHoverEnter={setHoveredSampleId}
+                onHoverLeave={() => setHoveredSampleId(null)}
+                emptyLabel="No samples assigned yet"
+              />
+            }
+            plateToolbar={<PlateZoomControl zoom={zoom} onZoomChange={setZoom} />}
+          />
+        </div>
+      </div>
+    </DndContext>
   );
 }
 

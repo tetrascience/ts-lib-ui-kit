@@ -116,6 +116,8 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   emptyWellFillColor?: string | null;
   /** Well shape forwarded to `PlatePaintGrid`. Defaults to `"rect"`. */
   wellShape?: WellShape;
+  /** When true, wraps the grid in a card-like plate frame (rounded + border + soft shadow). */
+  framedPlate?: boolean;
   /**
    * Forwarded to `PlatePaintGrid`. Render-prop that places a node inside each
    * absolute-positioned well cell — used to wire drop targets without binding
@@ -259,6 +261,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   cellSize,
   emptyWellFillColor,
   wellShape,
+  framedPlate,
   wrapWell,
   highlightedWellIds,
   onHoveredWellChange,
@@ -582,6 +585,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
               colorForWell={colorForWell}
               emptyWellFillColor={emptyWellFillColor}
               wellShape={wellShape}
+              framed={framedPlate}
               wrapWell={wrapWell}
               highlightedWellIds={highlightedWellIds}
               onWellHover={(wellId) => {

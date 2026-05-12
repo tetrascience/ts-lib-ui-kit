@@ -1,10 +1,10 @@
 import { ListFilterIcon, PlusIcon, XIcon } from "lucide-react";
-import { Popover } from "radix-ui";
 
 import type { FilterColumnConfig, FilterCondition, FilterOperator } from "@/components/ui/data-table/data-table";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
@@ -67,8 +67,8 @@ export function ManifestFilterPopover({
   const activeCount = filters.length;
 
   return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         <Button
           type="button"
           variant="outline"
@@ -85,20 +85,9 @@ export function ManifestFilterPopover({
             </span>
           ) : null}
         </Button>
-      </Popover.Trigger>
+      </PopoverTrigger>
 
-      <Popover.Portal>
-        <Popover.Content
-          align="end"
-          sideOffset={4}
-          className={cn(
-            "z-50 min-w-80 rounded-lg border bg-popover p-3 text-popover-foreground shadow-md outline-none",
-            "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-            "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-            "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
-          )}
-        >
+      <PopoverContent align="end" className="min-w-80">
           <div className="flex flex-col gap-2">
             {filters.map((condition) => {
               const colConfig = columns.find((c) => c.columnId === condition.columnId);
@@ -196,8 +185,7 @@ export function ManifestFilterPopover({
               ) : null}
             </div>
           </div>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+      </PopoverContent>
+    </Popover>
   );
 }

@@ -60,6 +60,14 @@ export interface PlatePaintGridProps<T extends WellRecord = WellRecord> {
   flashWellKey?: number;
   onWellHover?: (wellId: WellId | null) => void;
   onWellDoubleClick?: (wellId: WellId) => void;
+  /**
+   * Optional render-prop invoked once per well. The returned node is placed
+   * inside an absolutely-positioned cell on top of the SVG, sized to
+   * `cellSize`. The wrapper layer is `pointer-events: none` so the SVG keeps
+   * pointer interaction by default; consumers wiring drop targets are expected
+   * to set `pointer-events: auto` on their own element while a drag is active.
+   */
+  wrapWell?: (wellId: WellId, cellSize: number) => React.ReactNode;
   className?: string;
 }
 
@@ -389,6 +397,7 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   flashWellKey,
   onWellHover,
   onWellDoubleClick,
+  wrapWell,
   className,
 }: PlatePaintGridProps<T>) {
   const dims = resolveDimensions(format, rows, columns);
@@ -512,8 +521,36 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   const gridLines = wellShape === "circle" ? [] : buildGridLines(dims, resolvedCellSize, borderColor);
   const wellOverlays = buildWellOverlays(wellRenderArgs);
 
+  const overlayCells: React.ReactNode[] = [];
+  if (wrapWell) {
+    for (let r = 0; r < dims.rows; r++) {
+      for (let c = 0; c < dims.columns; c++) {
+        const id = pos(r, c, dims.columns);
+        overlayCells.push(
+          <div
+            key={id}
+            style={{
+              position: "absolute",
+              left: LABEL_PAD + c * resolvedCellSize,
+              top: LABEL_PAD + r * resolvedCellSize,
+              width: resolvedCellSize,
+              height: resolvedCellSize,
+            }}
+            data-well-id={id}
+          >
+            {wrapWell(id, resolvedCellSize)}
+          </div>,
+        );
+      }
+    }
+  }
+
   return (
-    <div ref={containerRef} className={cn("overflow-auto select-none", className)} data-slot="plate-paint-grid">
+    <div
+      ref={containerRef}
+      className={cn("relative overflow-auto select-none", className)}
+      data-slot="plate-paint-grid"
+    >
       <svg
         ref={svgRef}
         width={width}
@@ -533,6 +570,16 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
         {gridLines}
         {wellOverlays}
       </svg>
+      {wrapWell ? (
+        <div
+          className="pointer-events-none absolute top-0 left-0"
+          style={{ width, height }}
+          aria-hidden
+          data-slot="plate-well-overlay"
+        >
+          {overlayCells}
+        </div>
+      ) : null}
     </div>
   );
 }

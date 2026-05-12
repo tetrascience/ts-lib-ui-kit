@@ -110,6 +110,12 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   emptyWellFillColor?: string | null;
   /** Well shape forwarded to `PlatePaintGrid`. Defaults to `"rect"`. */
   wellShape?: WellShape;
+  /**
+   * Forwarded to `PlatePaintGrid`. Render-prop that places a node inside each
+   * absolute-positioned well cell — used to wire drop targets without binding
+   * the kit to a specific DnD library.
+   */
+  wrapWell?: (wellId: WellId, cellSize: number) => React.ReactNode;
   autoScaleGrid?: boolean;
   minCellSize?: number;
   maxCellSize?: number;
@@ -236,6 +242,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   cellSize,
   emptyWellFillColor,
   wellShape,
+  wrapWell,
   autoScaleGrid,
   minCellSize,
   maxCellSize,
@@ -551,6 +558,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
               colorForWell={colorForWell}
               emptyWellFillColor={emptyWellFillColor}
               wellShape={wellShape}
+              wrapWell={wrapWell}
               onWellHover={setHoverPos}
               onWellDoubleClick={doubleClickCycleField ? cycleWellField : undefined}
               selectionFillMode={doubleClickCycleField ? "well" : "selection"}

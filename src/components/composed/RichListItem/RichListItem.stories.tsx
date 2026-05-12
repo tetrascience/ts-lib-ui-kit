@@ -28,7 +28,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5122" },
   },
   args: {
     leading: <RichListItemAvatar initials="JS" />,
@@ -52,7 +52,7 @@ export const Default: Story = {
 
 export const TeamList: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T3579" },
   },
   render: () => {
     const members = [
@@ -122,7 +122,7 @@ export const TeamList: Story = {
 
 export const MinimalList: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T3580" },
   },
   render: () => (
     <div className="divide-y divide-border">

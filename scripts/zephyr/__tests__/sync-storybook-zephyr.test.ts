@@ -361,6 +361,14 @@ export const Warning: Story = {
         "Component: Elevation & Shape<br>Story: Brand — Active<br>File: `src/foo.stories.tsx`",
       );
     });
+
+    it("does not recursively decode entities produced by earlier replacements", () => {
+      const objective = "Component: Copy<br>Story: Literal &amp;mdash; Text<br>File: `src/foo.stories.tsx`";
+
+      expect(normalizeZephyrObjective(objective)).toBe(
+        "Component: Copy<br>Story: Literal &mdash; Text<br>File: `src/foo.stories.tsx`",
+      );
+    });
   });
 
   describe("selectReusableTestCase", () => {

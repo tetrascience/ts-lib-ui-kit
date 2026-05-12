@@ -123,6 +123,13 @@ const folderIdCache: FolderCache = {};
 let generatedTestCaseCache: ZephyrTestCase[] | null = null;
 const testCaseDetailCache = new Map<string, ZephyrTestCase>();
 const executionCountCache = new Map<string, number>();
+const OBJECTIVE_ENTITY_REPLACEMENTS: Record<string, string> = {
+  "#39": "'",
+  amp: "&",
+  mdash: "—",
+  ndash: "–",
+  quot: "\"",
+};
 
 function findStoryFiles(dir: string): string[] {
   const storyFiles: string[] = [];
@@ -462,11 +469,7 @@ export function findDuplicateZephyrIds(stories: StoryCase[]): DuplicateZephyrId[
 
 export function normalizeZephyrObjective(objective: string | null | undefined): string {
   return (objective ?? "")
-    .replace(/&amp;/g, "&")
-    .replace(/&mdash;/g, "—")
-    .replace(/&ndash;/g, "–")
-    .replace(/&quot;/g, "\"")
-    .replace(/&#39;/g, "'")
+    .replace(/&(#39|amp|mdash|ndash|quot);/g, (_, entity: string) => OBJECTIVE_ENTITY_REPLACEMENTS[entity])
     .replace(/<br\s*\/?\s*>/gi, "<br>")
     .replace(/\s+/g, " ")
     .trim();

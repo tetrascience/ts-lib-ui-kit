@@ -13,6 +13,8 @@ import {
   extractZephyrIdsFromParameters,
   findDuplicateZephyrIds,
   findStoryNameAssignment,
+  normalizeZephyrObjective,
+  selectReusableTestCase,
   updateStoryFile,
 } from "../sync-storybook-zephyr";
 
@@ -348,6 +350,44 @@ export const Warning: Story = {
 
       const stories = parseStoryFile("src/components/ui/banner.stories.tsx", content);
       expect(findDuplicateZephyrIds(stories)).toEqual([]);
+    });
+  });
+
+  describe("normalizeZephyrObjective", () => {
+    it("normalizes Zephyr objective HTML variants for stable identity matching", () => {
+      const objective = "Component: Elevation &amp; Shape<br/>Story: Brand &mdash; Active<br>File: `src/foo.stories.tsx`";
+
+      expect(normalizeZephyrObjective(objective)).toBe(
+        "Component: Elevation & Shape<br>Story: Brand — Active<br>File: `src/foo.stories.tsx`",
+      );
+    });
+
+    it("does not recursively decode entities produced by earlier replacements", () => {
+      const objective = "Component: Copy<br>Story: Literal &amp;mdash; Text<br>File: `src/foo.stories.tsx`";
+
+      expect(normalizeZephyrObjective(objective)).toBe(
+        "Component: Copy<br>Story: Literal &mdash; Text<br>File: `src/foo.stories.tsx`",
+      );
+    });
+  });
+
+  describe("selectReusableTestCase", () => {
+    it("prefers candidates with execution history", () => {
+      const selected = selectReusableTestCase([
+        { key: "SW-T200", name: "Button - Default", executionCount: 0, createdOn: "2026-05-12T00:00:00Z" },
+        { key: "SW-T100", name: "Button - Default", executionCount: 3, createdOn: "2026-05-11T00:00:00Z" },
+      ]);
+
+      expect(selected?.key).toBe("SW-T100");
+    });
+
+    it("uses the oldest candidate when execution counts tie", () => {
+      const selected = selectReusableTestCase([
+        { key: "SW-T200", name: "Button - Default", executionCount: 0, createdOn: "2026-05-12T00:00:00Z" },
+        { key: "SW-T100", name: "Button - Default", executionCount: 0, createdOn: "2026-05-11T00:00:00Z" },
+      ]);
+
+      expect(selected?.key).toBe("SW-T100");
     });
   });
 

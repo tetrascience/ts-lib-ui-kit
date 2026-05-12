@@ -79,6 +79,12 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   legend?: React.ReactNode;
   /** Form helper slot rendered between fields and the action row. */
   formExtras?: React.ReactNode;
+  /**
+   * Fully replaces the left column. When set, the built-in `WellMetadataForm`
+   * is omitted — use this for alternative workflows like a drag-and-drop
+   * source palette. The legend slot still renders beneath the replacement.
+   */
+  formSlot?: React.ReactNode;
   /** Footer actions (e.g. Save, Back). */
   footer?: React.ReactNode;
   /** Title for the plate grid panel. */
@@ -239,6 +245,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   banner,
   legend,
   formExtras,
+  formSlot,
   footer,
   plateTitle = "Plate",
   plateToolbar,
@@ -499,15 +506,17 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
         {/* Form column */}
         <Card className="flex w-full max-w-[360px] min-w-[300px] basis-[360px] flex-col" size="sm">
           <CardContent className="flex h-full flex-1 flex-col gap-3">
-            <WellMetadataForm
-              fields={fields}
-              value={staged}
-              onChange={setStaged}
-              selectionSize={selection.size}
-              onApply={applyStagedToSelection}
-              onClear={clearWells}
-              extras={formExtras}
-            />
+            {formSlot ?? (
+              <WellMetadataForm
+                fields={fields}
+                value={staged}
+                onChange={setStaged}
+                selectionSize={selection.size}
+                onApply={applyStagedToSelection}
+                onClear={clearWells}
+                extras={formExtras}
+              />
+            )}
             <PlateMapEditorLegend legend={legend} />
           </CardContent>
         </Card>

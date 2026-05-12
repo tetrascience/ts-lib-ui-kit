@@ -33,23 +33,6 @@ export type { PlateZoomControlProps } from "./PlateZoomControl";
 export { autoFillPositions, autoFillRecords } from "./autoFill";
 export type { AutoFillOptions, FillStrategy } from "./autoFill";
 
-export {
-  EMPTY_FILTER_STATE,
-  OPERATOR_LABELS,
-  applyFilterState,
-  defaultOperatorFor,
-  makeFilterCondition,
-  operatorsForType,
-  valueInputRequired,
-} from "./manifestFilter";
-export type {
-  FilterColumn as ManifestFilterColumn,
-  FilterCondition as ManifestFilterCondition,
-  FilterOperator as ManifestFilterOperator,
-  FilterState as ManifestFilterState,
-  FilterValueType as ManifestFilterValueType,
-} from "./manifestFilter";
-
 export type {
   PlateDimensions,
   PlateMapCsvPlate,

@@ -1,221 +1,202 @@
-import { Popover } from "@base-ui/react";
-import { Filter, Plus, Trash2, X } from "lucide-react";
+import { ListFilterIcon, PlusIcon, XIcon } from "lucide-react";
+import { Popover } from "radix-ui";
 
-import {
-  EMPTY_FILTER_STATE,
-  OPERATOR_LABELS,
-  defaultOperatorFor,
-  makeFilterCondition,
-  operatorsForType,
-  valueInputRequired,
-} from "./manifestFilter";
+import type { FilterColumnConfig, FilterCondition, FilterOperator } from "@/components/ui/data-table/data-table";
 
-import type { FilterColumn, FilterCondition, FilterOperator, FilterState } from "./manifestFilter";
-
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
+const OPERATOR_LABELS: Record<FilterOperator, string> = {
+  contains: "contains",
+  equals: "equals",
+  not_equals: "not equals",
+  starts_with: "starts with",
+  ends_with: "ends with",
+  is_empty: "is empty",
+  is_not_empty: "is not empty",
+};
+
+const VALUE_FREE_OPERATORS: FilterOperator[] = ["is_empty", "is_not_empty"];
+
+const DEFAULT_OPERATORS: FilterOperator[] = [
+  "contains",
+  "equals",
+  "not_equals",
+  "starts_with",
+  "ends_with",
+  "is_empty",
+  "is_not_empty",
+];
+
+function makeCondition(columnId: string, allowedOperators?: FilterOperator[]): FilterCondition {
+  const operator = allowedOperators?.[0] ?? "contains";
+  return { id: crypto.randomUUID(), columnId, operator, value: "" };
+}
+
 export interface ManifestFilterPopoverProps {
-  columns: FilterColumn[];
-  state: FilterState;
-  onStateChange: (next: FilterState) => void;
+  /** Filterable columns. Operator subsets can be specified per column. */
+  columns: FilterColumnConfig[];
+  /** Column id → display label resolver. */
+  columnLabel?: (columnId: string) => string;
+  filters: FilterCondition[];
+  onFiltersChange: (next: FilterCondition[]) => void;
   triggerLabel?: string;
   className?: string;
 }
 
-function updateCondition(
-  state: FilterState,
-  id: string,
-  patch: Partial<FilterCondition>,
-): FilterState {
-  return {
-    ...state,
-    conditions: state.conditions.map((cond) => (cond.id === id ? { ...cond, ...patch } : cond)),
-  };
-}
-
-function removeCondition(state: FilterState, id: string): FilterState {
-  return { ...state, conditions: state.conditions.filter((cond) => cond.id !== id) };
-}
-
-function addCondition(state: FilterState, columns: FilterColumn[]): FilterState {
-  const first = columns[0];
-  if (!first) return state;
-  return {
-    ...state,
-    conditions: [...state.conditions, makeFilterCondition(first.field, first.type ?? "string")],
-  };
-}
-
 export function ManifestFilterPopover({
   columns,
-  state,
-  onStateChange,
+  columnLabel,
+  filters,
+  onFiltersChange,
   triggerLabel = "Filter",
   className,
 }: ManifestFilterPopoverProps) {
-  const activeCount = state.conditions.length;
-  const hasConditions = activeCount > 0;
+  const labelFor = (columnId: string): string => columnLabel?.(columnId) ?? columnId;
+  const firstColumn = columns[0];
+  const firstColumnId = firstColumn?.columnId ?? "";
+
+  const addFilter = () => onFiltersChange([...filters, makeCondition(firstColumnId, firstColumn?.operators)]);
+  const removeFilter = (id: string) => onFiltersChange(filters.filter((cond) => cond.id !== id));
+  const updateFilter = (id: string, patch: Partial<FilterCondition>) =>
+    onFiltersChange(filters.map((cond) => (cond.id === id ? { ...cond, ...patch } : cond)));
+  const clearAll = () => onFiltersChange([]);
+
+  const activeCount = filters.length;
 
   return (
     <Popover.Root>
-      <Popover.Trigger
-        render={
-          <Button type="button" variant="outline" size="sm" className={cn("h-7", className)}>
-            <Filter aria-hidden />
-            <span>{triggerLabel}</span>
-            {activeCount > 0 ? (
-              <Badge variant="secondary" className="ml-1 h-4 px-1 text-[0.65rem]">
-                {activeCount}
-              </Badge>
-            ) : null}
-          </Button>
-        }
-      />
-      <Popover.Portal>
-        <Popover.Positioner align="start" sideOffset={4}>
-          <Popover.Popup className="z-50 w-[480px] rounded-md border bg-popover p-3 text-popover-foreground shadow-md outline-none">
-            {hasConditions ? null : (
-              <p className="px-1 pb-2 text-xs text-muted-foreground">
-                No filters applied. Click &quot;Add condition&quot; to begin.
-              </p>
-            )}
+      <Popover.Trigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          data-slot="manifest-filter"
+          className={cn(className)}
+          aria-label={activeCount > 0 ? `${triggerLabel} (${activeCount} active)` : triggerLabel}
+        >
+          <ListFilterIcon className="size-3.5" />
+          {triggerLabel}
+          {activeCount > 0 ? (
+            <span className="flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+              {activeCount}
+            </span>
+          ) : null}
+        </Button>
+      </Popover.Trigger>
 
-            {hasConditions ? (
-              <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
-                <span>Show records where</span>
-                {state.conditions.length > 1 ? (
+      <Popover.Portal>
+        <Popover.Content
+          align="end"
+          sideOffset={4}
+          className={cn(
+            "z-50 min-w-80 rounded-lg border bg-popover p-3 text-popover-foreground shadow-md outline-none",
+            "data-[state=open]:animate-in data-[state=closed]:animate-out",
+            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+            "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
+          )}
+        >
+          <div className="flex flex-col gap-2">
+            {filters.map((condition) => {
+              const colConfig = columns.find((c) => c.columnId === condition.columnId);
+              const operators = colConfig?.operators ?? DEFAULT_OPERATORS;
+              const isValueFree = VALUE_FREE_OPERATORS.includes(condition.operator);
+              return (
+                <div key={condition.id} className="flex items-center gap-2">
                   <Select
-                    value={state.conjunction}
-                    onValueChange={(v) => onStateChange({ ...state, conjunction: v as "and" | "or" })}
+                    value={condition.columnId}
+                    onValueChange={(value) => {
+                      const nextConfig = columns.find((c) => c.columnId === value);
+                      const nextOperators = nextConfig?.operators ?? DEFAULT_OPERATORS;
+                      const nextOperator = nextOperators.includes(condition.operator)
+                        ? condition.operator
+                        : (nextOperators[0] ?? "contains");
+                      updateFilter(condition.id, { columnId: value, operator: nextOperator, value: "" });
+                    }}
                   >
-                    <SelectTrigger size="sm" className="h-7 w-[72px]" aria-label="Conjunction">
+                    <SelectTrigger size="sm" className="w-36">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="and">And</SelectItem>
-                      <SelectItem value="or">Or</SelectItem>
+                      {columns.map((c) => (
+                        <SelectItem key={c.columnId} value={c.columnId}>
+                          {c.label ?? labelFor(c.columnId)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                ) : null}
-                <span>conditions match.</span>
-              </div>
-            ) : null}
 
-            <div className="flex flex-col gap-1.5">
-              {state.conditions.map((cond, idx) => {
-                const colDef = columns.find((c) => c.field === cond.field) ?? columns[0];
-                const colType = colDef?.type ?? "string";
-                const ops = operatorsForType(colType);
-                const needsValue = valueInputRequired(cond.operator);
+                  <Select
+                    value={condition.operator}
+                    onValueChange={(value) =>
+                      updateFilter(condition.id, { operator: value as FilterOperator, value: "" })
+                    }
+                  >
+                    <SelectTrigger size="sm" className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {operators.map((op) => (
+                        <SelectItem key={op} value={op}>
+                          {OPERATOR_LABELS[op]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-                return (
-                  <div key={cond.id} className="flex items-center gap-1.5">
-                    <span className="w-12 shrink-0 text-right text-xs text-muted-foreground">
-                      {idx === 0 ? "Where" : state.conjunction === "or" ? "Or" : "And"}
-                    </span>
-                    <Select
-                      value={cond.field}
-                      onValueChange={(field) => {
-                        const next = columns.find((c) => c.field === field) ?? columns[0];
-                        const nextType = next?.type ?? "string";
-                        onStateChange(
-                          updateCondition(state, cond.id, {
-                            field,
-                            operator: defaultOperatorFor(nextType),
-                            value: "",
-                          }),
-                        );
-                      }}
-                    >
-                      <SelectTrigger size="sm" className="h-7 w-[140px]" aria-label="Field">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {columns.map((c) => (
-                          <SelectItem key={c.field} value={c.field}>
-                            {c.headerName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select
-                      value={cond.operator}
-                      onValueChange={(op) =>
-                        onStateChange(updateCondition(state, cond.id, { operator: op as FilterOperator }))
-                      }
-                    >
-                      <SelectTrigger size="sm" className="h-7 w-[140px]" aria-label="Operator">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ops.map((op) => (
-                          <SelectItem key={op} value={op}>
-                            {OPERATOR_LABELS[op]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {needsValue ? (
-                      <Input
-                        className="h-7 flex-1"
-                        type={colType === "number" ? "number" : "text"}
-                        placeholder="Value"
-                        value={cond.value}
-                        onChange={(e) => onStateChange(updateCondition(state, cond.id, { value: e.target.value }))}
-                      />
-                    ) : (
-                      <span className="flex-1" />
-                    )}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-xs"
-                      aria-label="Remove condition"
-                      onClick={() => onStateChange(removeCondition(state, cond.id))}
-                    >
-                      <X aria-hidden />
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
+                  {isValueFree ? (
+                    <div className="h-8 w-40" aria-hidden />
+                  ) : (
+                    <Input
+                      className="w-40"
+                      placeholder="Value…"
+                      value={condition.value}
+                      onChange={(event) => updateFilter(condition.id, { value: event.target.value })}
+                    />
+                  )}
 
-            <div
-              className={cn(
-                "mt-2 flex items-center gap-2 pt-2 text-xs",
-                hasConditions ? "border-t" : "",
-              )}
-            >
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => removeFilter(condition.id)}
+                    aria-label="Remove filter"
+                  >
+                    <XIcon className="size-3.5" />
+                  </Button>
+                </div>
+              );
+            })}
+
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="h-7"
-                onClick={() => onStateChange(addCondition(state, columns))}
+                onClick={addFilter}
                 disabled={columns.length === 0}
               >
-                <Plus aria-hidden />
-                Add condition
+                <PlusIcon className="size-3.5" />
+                Add filter
               </Button>
-              {hasConditions ? (
+              {filters.length > 0 ? (
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="ml-auto h-7 text-destructive hover:text-destructive"
-                  onClick={() => onStateChange(EMPTY_FILTER_STATE)}
+                  className="text-muted-foreground"
+                  onClick={clearAll}
                 >
-                  <Trash2 aria-hidden />
                   Clear all
                 </Button>
               ) : null}
             </div>
-          </Popover.Popup>
-        </Popover.Positioner>
+          </div>
+        </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
   );

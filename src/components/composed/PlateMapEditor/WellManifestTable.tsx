@@ -1,11 +1,10 @@
 import { ArrowDownToLine, Check, ChevronDown, ChevronRight, Layers } from "lucide-react";
 import * as React from "react";
 
-import { EMPTY_FILTER_STATE, applyFilterState } from "./manifestFilter";
 import { ManifestFilterPopover } from "./ManifestFilterPopover";
 
-import type { FilterColumn, FilterState, FilterValueType } from "./manifestFilter";
 import type { WellColumn, WellField, WellId, WellRecord, WellSelectOption } from "./types";
+import type { FilterColumnConfig, FilterCondition } from "@/components/ui/data-table/data-table";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +21,7 @@ import {
   ComboboxValue,
   useComboboxAnchor,
 } from "@/components/ui/combobox";
+import { applyFilterCondition } from "@/components/ui/data-table/data-table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -142,10 +142,11 @@ export interface WellManifestTableProps<T extends WellRecord = WellRecord> {
   /** Enables an inline filter popover above the table. Defaults to false. */
   filterable?: boolean;
   /**
-   * Optional override of filterable columns. When omitted, columns are derived
-   * from `columns` (with type inferred from matching field kinds).
+   * Optional override of filterable column configs. When omitted, every column
+   * with a `field` becomes filterable using the default operator set from the
+   * shared data-table filter system.
    */
-  filterColumns?: FilterColumn[];
+  filterColumns?: FilterColumnConfig[];
   /** Enables an inline group-by selector. Defaults to false. */
   groupable?: boolean;
   className?: string;
@@ -171,20 +172,10 @@ function groupRowsBy<T extends WellRecord>(
   return [...map.values()];
 }
 
-const NUMERIC_KINDS = new Set(["number", "integer"]);
-
-function inferFilterColumns<T extends WellRecord>(
-  columns: WellColumn<T>[],
-  fieldByKey: Map<string, WellField<T>>,
-): FilterColumn[] {
-  const out: FilterColumn[] = [];
-  for (const col of columns) {
-    if (!col.field) continue;
-    const field = fieldByKey.get(col.field);
-    const type: FilterValueType = field && NUMERIC_KINDS.has(field.kind) ? "number" : "string";
-    out.push({ field: col.field, headerName: col.header, type });
-  }
-  return out;
+function inferFilterColumns<T extends WellRecord>(columns: WellColumn<T>[]): FilterColumnConfig[] {
+  return columns
+    .filter((col) => !!col.field)
+    .map((col) => ({ columnId: col.field as string, label: col.header }));
 }
 
 export function WellManifestTable<T extends WellRecord = WellRecord>({
@@ -208,7 +199,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
   const [showAll, setShowAll] = React.useState(false);
   const [page, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(initialPageSize);
-  const [filterState, setFilterState] = React.useState<FilterState>(EMPTY_FILTER_STATE);
+  const [filters, setFilters] = React.useState<FilterCondition[]>([]);
   const [groupByField, setGroupByField] = React.useState<string>("");
   const [collapsedGroups, setCollapsedGroups] = React.useState<Set<string>>(new Set());
 
@@ -222,9 +213,9 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
     return m;
   }, [fields]);
 
-  const resolvedFilterColumns = React.useMemo<FilterColumn[]>(
-    () => filterColumns ?? inferFilterColumns(columns, fieldByKey),
-    [columns, fieldByKey, filterColumns],
+  const resolvedFilterColumns = React.useMemo<FilterColumnConfig[]>(
+    () => filterColumns ?? inferFilterColumns(columns),
+    [columns, filterColumns],
   );
 
   const rows = React.useMemo(() => {
@@ -236,15 +227,15 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
     if (!showAll && isPopulated) {
       filtered = arr.filter((r) => isPopulated(r.row));
     }
-    if (filterable && filterState.conditions.length > 0) {
-      const survivors = new Set(
-        applyFilterState(
-          filtered.map(({ id, row }) => ({ ...(row as Record<string, unknown>), __id: id })),
-          filterState,
-          resolvedFilterColumns,
-        ).map((r) => r.__id as WellId),
-      );
-      filtered = filtered.filter((r) => survivors.has(r.id));
+    if (filterable && filters.length > 0) {
+      filtered = filtered.filter((entry) => {
+        const record = entry.row as Record<string, unknown>;
+        return filters.every((condition) => {
+          const cellRaw = record[condition.columnId];
+          const cellValue = cellRaw === undefined || cellRaw === null ? "" : String(cellRaw);
+          return applyFilterCondition(cellValue, condition.operator, condition.value);
+        });
+      });
     }
     if (selection && selection.size > 0) {
       const have = new Set(filtered.map((r) => r.id));
@@ -255,11 +246,11 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
       });
     }
     return filtered.sort((a, b) => a.id.localeCompare(b.id));
-  }, [values, showAll, isPopulated, selection, emptyEntry, filterable, filterState, resolvedFilterColumns]);
+  }, [values, showAll, isPopulated, selection, emptyEntry, filterable, filters]);
 
   React.useEffect(() => {
     setPage(0);
-  }, [filterState]);
+  }, [filters]);
 
   const pagedRows = React.useMemo(
     () => rows.slice(page * pageSize, page * pageSize + pageSize),
@@ -609,8 +600,8 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
         {filterable ? (
           <ManifestFilterPopover
             columns={resolvedFilterColumns}
-            state={filterState}
-            onStateChange={setFilterState}
+            filters={filters}
+            onFiltersChange={setFilters}
           />
         ) : null}
         {groupable ? (

@@ -384,6 +384,7 @@ export const ThinkingCard: Story = {
       await expect(canvas.getByText(/dark mode/i)).toBeInTheDocument()
       await expect(canvas.getByText(/Thinking/i)).toBeInTheDocument()
     })
+    zephyr: { testCaseId: "SW-T4751" },
   },
 }
 

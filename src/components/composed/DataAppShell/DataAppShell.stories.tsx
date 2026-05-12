@@ -1149,6 +1149,7 @@ export const MobileNavigation: Story = {
         expect(closedSheet).not.toBeInTheDocument();
       });
     });
+    zephyr: { testCaseId: "SW-T4910" },
   },
 };
 

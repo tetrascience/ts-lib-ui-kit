@@ -502,7 +502,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
 
       {banner}
 
-      <div className="flex flex-wrap gap-3 xl:flex-nowrap">
+      <div className="flex flex-wrap gap-3 md:flex-nowrap">
         {/* Form column */}
         <Card className="flex w-full max-w-[360px] min-w-[300px] basis-[360px] flex-col" size="sm">
           <CardContent className="flex h-full flex-1 flex-col gap-3">

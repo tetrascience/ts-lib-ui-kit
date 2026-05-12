@@ -115,19 +115,10 @@ function seedPlate(): Map<WellId, DemoWell> {
 function useEditorState() {
   const [values, setValues] = React.useState<Map<WellId, DemoWell>>(seedPlate);
   const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+  const [plateIds, setPlateIds] = React.useState<string[]>([INITIAL_PLATE_ID]);
   const [activePlateId, setActivePlateId] = React.useState(INITIAL_PLATE_ID);
   const [hoveredSampleId, setHoveredSampleId] = React.useState<string | null>(null);
   const [zoom, setZoom] = React.useState(1);
-
-  const plateIds = React.useMemo(() => {
-    const ids = new Set<string>();
-    [...values.keys()].forEach((key) => {
-      const idx = key.indexOf("::");
-      if (idx > 0) ids.add(key.slice(0, idx));
-    });
-    if (ids.size === 0) ids.add(INITIAL_PLATE_ID);
-    return [...ids];
-  }, [values]);
 
   const legendItems = React.useMemo(() => {
     const seen = new Map<string, DemoWell>();
@@ -164,7 +155,9 @@ function useEditorState() {
 
   const handleAddPlate = () => {
     const next = `DEMO-PLATE-${String(plateIds.length + 1).padStart(3, "0")}`;
+    setPlateIds((prev) => (prev.includes(next) ? prev : [...prev, next]));
     setActivePlateId(next);
+    setSelection(new Set());
   };
 
   const handleRemovePlate = (plateId: string) => {
@@ -173,6 +166,7 @@ function useEditorState() {
       if (key.startsWith(`${plateId}::`)) next.delete(key);
     });
     setValues(next);
+    setPlateIds((prev) => prev.filter((id) => id !== plateId));
     if (activePlateId === plateId) {
       const fallback = plateIds.find((id) => id !== plateId);
       setActivePlateId(fallback ?? INITIAL_PLATE_ID);

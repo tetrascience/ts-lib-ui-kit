@@ -122,6 +122,10 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
    * the kit to a specific DnD library.
    */
   wrapWell?: (wellId: WellId, cellSize: number) => React.ReactNode;
+  /** Wells to highlight (e.g. when hovering a legend item externally). */
+  highlightedWellIds?: ReadonlySet<WellId>;
+  /** Fires whenever the currently hovered well changes (null on leave). */
+  onHoveredWellChange?: (wellId: WellId | null) => void;
   autoScaleGrid?: boolean;
   minCellSize?: number;
   maxCellSize?: number;
@@ -252,6 +256,8 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   emptyWellFillColor,
   wellShape,
   wrapWell,
+  highlightedWellIds,
+  onHoveredWellChange,
   autoScaleGrid,
   minCellSize,
   maxCellSize,
@@ -571,7 +577,11 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
               emptyWellFillColor={emptyWellFillColor}
               wellShape={wellShape}
               wrapWell={wrapWell}
-              onWellHover={setHoverPos}
+              highlightedWellIds={highlightedWellIds}
+              onWellHover={(wellId) => {
+                setHoverPos(wellId);
+                onHoveredWellChange?.(wellId);
+              }}
               onWellDoubleClick={doubleClickCycleField ? cycleWellField : undefined}
               selectionFillMode={doubleClickCycleField ? "well" : "selection"}
               flashWellId={flashWell?.wellId}

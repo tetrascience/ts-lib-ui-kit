@@ -17,6 +17,7 @@ const LABEL_BASELINE_OFFSET = 5;
 const WELL_INSET = 1;
 const STROKE_DEFAULT = 4;
 const STROKE_SELECTED = 4;
+const STROKE_HIGHLIGHT = 3;
 const STROKE_FLASH = 5;
 const FLASH_DURATION_MS = 650;
 export const PLATE_MAP_EMPTY_WELL_FILL = "var(--surface-container)";
@@ -58,6 +59,13 @@ export interface PlatePaintGridProps<T extends WellRecord = WellRecord> {
   flashWellId?: WellId;
   /** Changing this value restarts the flash animation for the same well. */
   flashWellKey?: number;
+  /**
+   * Well ids that should render with a highlight ring. Used for cross-component
+   * hover sync (e.g. hovering a legend item to highlight matching wells).
+   */
+  highlightedWellIds?: ReadonlySet<WellId>;
+  /** Stroke color for highlighted wells. Defaults to the kit primary blue. */
+  highlightBorderColor?: string;
   onWellHover?: (wellId: WellId | null) => void;
   onWellDoubleClick?: (wellId: WellId) => void;
   /**
@@ -131,6 +139,8 @@ interface BuildWellCellsArgs<T extends WellRecord> {
   selectedFillOpacity: number;
   selectionFillMode: "selection" | "well";
   wellShape: WellShape;
+  highlightedWellIds: ReadonlySet<WellId>;
+  highlightBorderColor: string;
   flashWellId?: WellId;
   flashWellKey?: number;
 }
@@ -260,12 +270,24 @@ function buildWellOverlay<T extends WellRecord>(
   row: number,
   column: number,
 ): React.ReactNode {
-  const { dims, cellSize, selection, dragPositions, selectedBorderColor, flashWellId, flashWellKey, wellShape } = args;
+  const {
+    dims,
+    cellSize,
+    selection,
+    dragPositions,
+    selectedBorderColor,
+    flashWellId,
+    flashWellKey,
+    wellShape,
+    highlightedWellIds,
+    highlightBorderColor,
+  } = args;
   const id = pos(row, column, dims.columns);
   const isSelected = selection.has(id) || dragPositions.has(id);
   const isFlashing = flashWellId === id;
+  const isHighlighted = !isSelected && highlightedWellIds.has(id);
 
-  if (!isSelected && !isFlashing) return null;
+  if (!isSelected && !isFlashing && !isHighlighted) return null;
 
   const x = LABEL_PAD + column * cellSize + WELL_INSET;
   const y = LABEL_PAD + row * cellSize + WELL_INSET;
@@ -314,9 +336,36 @@ function buildWellOverlay<T extends WellRecord>(
     </>
   );
 
+  const renderHighlightOutline = () =>
+    isCircle ? (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke={highlightBorderColor}
+        strokeWidth={STROKE_HIGHLIGHT}
+        pointerEvents="none"
+        data-well-highlight={id}
+      />
+    ) : (
+      <rect
+        x={x}
+        y={y}
+        width={size}
+        height={size}
+        fill="none"
+        stroke={highlightBorderColor}
+        strokeWidth={STROKE_HIGHLIGHT}
+        pointerEvents="none"
+        data-well-highlight={id}
+      />
+    );
+
   return (
     <g key={`overlay-${id}`}>
       {isSelected ? renderSelectionOutline() : null}
+      {isHighlighted ? renderHighlightOutline() : null}
       {isFlashing ? (
         isCircle ? (
           <circle
@@ -395,6 +444,8 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   selectionFillMode = "selection",
   flashWellId,
   flashWellKey,
+  highlightedWellIds,
+  highlightBorderColor = "var(--color-primary)",
   onWellHover,
   onWellDoubleClick,
   wrapWell,
@@ -500,6 +551,7 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
 
   const colLabels = buildColumnLabels(dims.columns, resolvedCellSize);
   const rowLabels = buildRowLabels(dims.rows, resolvedCellSize);
+  const resolvedHighlightedWellIds: ReadonlySet<WellId> = highlightedWellIds ?? new Set();
   const wellRenderArgs = {
     dims,
     cellSize: resolvedCellSize,
@@ -514,6 +566,8 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
     selectedFillOpacity,
     selectionFillMode,
     wellShape,
+    highlightedWellIds: resolvedHighlightedWellIds,
+    highlightBorderColor,
     flashWellId,
     flashWellKey,
   };

@@ -66,6 +66,15 @@ interface FolderCache {
 interface ZephyrTestCase {
   key: string;
   name: string;
+  objective?: string | null;
+  labels?: unknown[];
+  createdOn?: string;
+  executionCount?: number;
+}
+interface ZephyrTestCaseListResponse {
+  values: ZephyrTestCase[];
+  total?: number;
+  isLast?: boolean;
 }
 
 const ZEPHYR_BASE_URL = "https://api.zephyrscale.smartbear.com/v2";
@@ -82,6 +91,7 @@ function getZephyrToken(): string {
 const ZEPHYR_LABELS = process.env.ZEPHYR_LABELS?.split(",")
   .map((l) => l.trim())
   .filter(Boolean) || ["storybook", "vitest", "automated"];
+const TEST_CASE_PAGE_SIZE = 1000;
 
 // Folder prefix for Zephyr - can be customized via env var
 const FOLDER_PREFIX = process.env.ZEPHYR_FOLDER_PREFIX || "React UI Kit";
@@ -110,6 +120,9 @@ function generateFolderMapping(): { [key: string]: string } {
 
 const FOLDER_MAPPING = generateFolderMapping();
 const folderIdCache: FolderCache = {};
+let generatedTestCaseCache: ZephyrTestCase[] | null = null;
+const testCaseDetailCache = new Map<string, ZephyrTestCase>();
+const executionCountCache = new Map<string, number>();
 
 function findStoryFiles(dir: string): string[] {
   const storyFiles: string[] = [];
@@ -445,6 +458,155 @@ export function findDuplicateZephyrIds(stories: StoryCase[]): DuplicateZephyrId[
         componentName,
       })),
     }));
+}
+
+export function normalizeZephyrObjective(objective: string | null | undefined): string {
+  return (objective ?? "")
+    .replace(/&amp;/g, "&")
+    .replace(/&mdash;/g, "—")
+    .replace(/&ndash;/g, "–")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;/g, "'")
+    .replace(/<br\s*\/?\s*>/gi, "<br>")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function selectReusableTestCase(candidates: ZephyrTestCase[]): ZephyrTestCase | null {
+  if (candidates.length === 0) return null;
+
+  return [...candidates].sort((a, b) => {
+    const executionDelta = (Number(b.executionCount) || 0) - (Number(a.executionCount) || 0);
+    if (executionDelta !== 0) return executionDelta;
+
+    const aCreated = a.createdOn ? Date.parse(a.createdOn) : Number.MAX_SAFE_INTEGER;
+    const bCreated = b.createdOn ? Date.parse(b.createdOn) : Number.MAX_SAFE_INTEGER;
+    if (aCreated !== bCreated) return aCreated - bCreated;
+
+    return a.key.localeCompare(b.key, undefined, { numeric: true });
+  })[0];
+}
+
+function getLabelNames(testCase: ZephyrTestCase): string[] {
+  const labels = testCase.labels ?? [];
+  return labels.map((label) => {
+    if (typeof label === "string") return label;
+    if (label && typeof label === "object" && "name" in label) {
+      return String((label as { name: unknown }).name);
+    }
+    return String(label);
+  });
+}
+
+function hasConfiguredLabels(testCase: ZephyrTestCase): boolean {
+  const labels = new Set(getLabelNames(testCase));
+  return ZEPHYR_LABELS.every((label) => labels.has(label));
+}
+
+async function getTestCase(testCaseKey: string): Promise<ZephyrTestCase> {
+  const cached = testCaseDetailCache.get(testCaseKey);
+  if (cached) return cached;
+
+  const url = `${ZEPHYR_BASE_URL}/testcases/${testCaseKey}`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch test case ${testCaseKey}: ${response.status} ${errorText}`);
+  }
+
+  const testCase = (await response.json()) as ZephyrTestCase;
+  testCaseDetailCache.set(testCaseKey, testCase);
+  return testCase;
+}
+
+async function getGeneratedTestCases(): Promise<ZephyrTestCase[]> {
+  if (generatedTestCaseCache) return generatedTestCaseCache;
+
+  const testCases: ZephyrTestCase[] = [];
+  let startAt = 0;
+  let fetchedCount = 0;
+
+  while (true) {
+    const url = `${ZEPHYR_BASE_URL}/testcases?projectKey=${PROJECT_KEY}&startAt=${startAt}&maxResults=${TEST_CASE_PAGE_SIZE}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to list test cases: ${response.status} ${errorText}`);
+    }
+
+    const page = (await response.json()) as ZephyrTestCaseListResponse;
+    const values = page.values ?? [];
+    fetchedCount += values.length;
+    testCases.push(...values.filter(hasConfiguredLabels));
+
+    if (page.isLast || values.length === 0 || fetchedCount >= (page.total ?? Number.MAX_SAFE_INTEGER)) break;
+    startAt += values.length;
+  }
+
+  generatedTestCaseCache = testCases;
+  return generatedTestCaseCache;
+}
+
+async function getExecutionCount(testCaseKey: string): Promise<number> {
+  const cached = executionCountCache.get(testCaseKey);
+  if (cached !== undefined) return cached;
+
+  const url = `${ZEPHYR_BASE_URL}/testexecutions?projectKey=${PROJECT_KEY}&testCase=${encodeURIComponent(
+    testCaseKey,
+  )}&maxResults=1`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch executions for ${testCaseKey}: ${response.status} ${errorText}`);
+  }
+
+  const page = (await response.json()) as { total?: number; values?: unknown[] };
+  const count = page.total ?? page.values?.length ?? 0;
+  executionCountCache.set(testCaseKey, count);
+  return count;
+}
+
+async function findReusableTestCase(testName: string, objective: string): Promise<ZephyrTestCase | null> {
+  const targetObjective = normalizeZephyrObjective(objective);
+  const generatedTestCases = await getGeneratedTestCases();
+  const sameNameCandidates = generatedTestCases.filter((testCase) => testCase.name === testName);
+  const matchingCandidates: ZephyrTestCase[] = [];
+
+  for (const candidate of sameNameCandidates) {
+    const detailedCandidate = await getTestCase(candidate.key);
+    if (normalizeZephyrObjective(detailedCandidate.objective) !== targetObjective) continue;
+    matchingCandidates.push({ ...candidate, ...detailedCandidate });
+  }
+
+  if (matchingCandidates.length === 0) return null;
+
+  const candidatesWithExecutions = await Promise.all(
+    matchingCandidates.map(async (candidate) => ({
+      ...candidate,
+      executionCount: await getExecutionCount(candidate.key),
+    })),
+  );
+
+  const reusableTestCase = selectReusableTestCase(candidatesWithExecutions);
+  if (matchingCandidates.length > 1 && reusableTestCase) {
+    const duplicateKeys = matchingCandidates.map((candidate) => candidate.key).join(", ");
+    console.warn(`  [WARN] Found duplicate Zephyr cases for this story: ${duplicateKeys}`);
+    console.warn(`         Reusing ${reusableTestCase.key}; cleanup should remove the unreferenced duplicates.`);
+  }
+
+  return reusableTestCase;
 }
 
 async function getFolders(): Promise<FolderCache> {
@@ -875,11 +1037,13 @@ async function main(): Promise<void> {
   let updateFailCount = 0;
   let stepSyncCount = 0;
   let stepSyncFail = 0;
+  let createdCount = 0;
+  let reusedCount = 0;
 
   if (storiesNeedingIds.length === 0) {
     console.log("[INFO] All stories already have Zephyr IDs!\n");
   } else {
-    console.log(`[INFO] Creating ${storiesNeedingIds.length} test case(s) in Zephyr...\n`);
+    console.log(`[INFO] Creating or reusing ${storiesNeedingIds.length} test case(s) in Zephyr...\n`);
 
     for (const story of storiesNeedingIds) {
       const relativePath = path.relative(process.cwd(), story.filePath);
@@ -892,9 +1056,17 @@ async function main(): Promise<void> {
         const humanName = story.storyName.replace(/([A-Z])/g, " $1").trim();
         const testName = `${story.componentName} - ${humanName}`;
 
-        console.log(`  [API] Creating test case in Zephyr...`);
-        const result = await createTestCase(testName, objective, folderId);
-        console.log(`  [SUCCESS] Created ${result.key}`);
+        console.log(`  [API] Looking for an existing Zephyr test case...`);
+        const reusableTestCase = await findReusableTestCase(testName, objective);
+        const result = reusableTestCase ?? (await createTestCase(testName, objective, folderId));
+
+        if (reusableTestCase) {
+          reusedCount++;
+          console.log(`  [SUCCESS] Reused ${result.key}`);
+        } else {
+          createdCount++;
+          console.log(`  [SUCCESS] Created ${result.key}`);
+        }
 
         if (story.steps.length > 0) {
           try {
@@ -964,6 +1136,8 @@ async function main(): Promise<void> {
   console.log("\n=====================================");
   console.log(`[INFO] Sync complete!`);
   console.log(`  Fully synced: ${successCount}`);
+  console.log(`  Created in Zephyr: ${createdCount}`);
+  console.log(`  Reused from Zephyr: ${reusedCount}`);
   console.log(`  Created but needs manual update: ${updateFailCount}`);
   console.log(`  Test steps synced: ${stepSyncCount}`);
   console.log(`  Failed: ${failCount}`);

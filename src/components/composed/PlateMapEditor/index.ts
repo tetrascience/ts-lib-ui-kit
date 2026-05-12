@@ -8,7 +8,7 @@ export { PlateMapPlateSelector } from "./PlateMapPlateSelector";
 export type { PlateMapPlateSelectorProps } from "./PlateMapPlateSelector";
 
 export { PlatePaintGrid } from "./PlatePaintGrid";
-export type { PlatePaintGridProps } from "./PlatePaintGrid";
+export type { PlatePaintGridProps, WellShape } from "./PlatePaintGrid";
 
 export { WellMetadataForm } from "./WellMetadataForm";
 export type { WellMetadataFormProps } from "./WellMetadataForm";

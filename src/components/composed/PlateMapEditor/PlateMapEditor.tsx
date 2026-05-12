@@ -9,6 +9,7 @@ import { WellManifestTable } from "./WellManifestTable";
 import { WellMetadataForm } from "./WellMetadataForm";
 
 import type { PlateMapActionsMenuProps } from "./PlateMapActionsMenu";
+import type { WellShape } from "./PlatePaintGrid";
 import type {
   PlateFormat,
   PlateMapCsvTriage,
@@ -107,6 +108,8 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   cellSize?: number;
   /** Fill color for empty wells. Pass `null` to delegate empty wells to `colorForWell`. */
   emptyWellFillColor?: string | null;
+  /** Well shape forwarded to `PlatePaintGrid`. Defaults to `"rect"`. */
+  wellShape?: WellShape;
   autoScaleGrid?: boolean;
   minCellSize?: number;
   maxCellSize?: number;
@@ -232,6 +235,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   renderHoverSummary,
   cellSize,
   emptyWellFillColor,
+  wellShape,
   autoScaleGrid,
   minCellSize,
   maxCellSize,
@@ -546,6 +550,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
               onSelectionChange={onSelectionChange}
               colorForWell={colorForWell}
               emptyWellFillColor={emptyWellFillColor}
+              wellShape={wellShape}
               onWellHover={setHoverPos}
               onWellDoubleClick={doubleClickCycleField ? cycleWellField : undefined}
               selectionFillMode={doubleClickCycleField ? "well" : "selection"}

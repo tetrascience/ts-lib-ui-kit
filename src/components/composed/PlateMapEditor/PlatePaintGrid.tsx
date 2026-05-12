@@ -22,6 +22,8 @@ const FLASH_DURATION_MS = 650;
 export const PLATE_MAP_EMPTY_WELL_FILL = "var(--surface-container)";
 export const PLATE_MAP_CELL_BORDER = "var(--border)";
 
+export type WellShape = "rect" | "circle";
+
 export interface PlatePaintGridProps<T extends WellRecord = WellRecord> {
   format: PlateFormat;
   rows?: number;
@@ -33,6 +35,8 @@ export interface PlatePaintGridProps<T extends WellRecord = WellRecord> {
   colorForWell: (well: T | undefined, wellId: WellId) => string;
   /** Fill color for empty wells. Pass `null` to delegate empty wells to `colorForWell`. */
   emptyWellFillColor?: string | null;
+  /** Geometric shape of each well. `"circle"` matches scientific plate visuals. Defaults to `"rect"`. */
+  wellShape?: WellShape;
   /** Pixel size of each well cell. Defaults to 34 when fixed. */
   cellSize?: number;
   /** Resize wells to fill available width when `cellSize` is not fixed. */
@@ -118,6 +122,7 @@ interface BuildWellCellsArgs<T extends WellRecord> {
   selectedFillColor: string;
   selectedFillOpacity: number;
   selectionFillMode: "selection" | "well";
+  wellShape: WellShape;
   flashWellId?: WellId;
   flashWellKey?: number;
 }
@@ -138,6 +143,7 @@ function buildWellCell<T extends WellRecord>(
     selectedFillColor,
     selectedFillOpacity,
     selectionFillMode,
+    wellShape,
   } = args;
   const id = pos(row, column, dims.columns);
   const entry = values.get(id);
@@ -146,6 +152,26 @@ function buildWellCell<T extends WellRecord>(
   const usesWellFill = isSelected && selectionFillMode === "well" && entry !== undefined;
   const usesSelectionFill = isSelected && !usesWellFill;
   const fill = usesSelectionFill ? selectedFillColor : wellFill;
+  const fillOpacity = usesSelectionFill ? selectedFillOpacity : undefined;
+
+  if (wellShape === "circle") {
+    const cx = LABEL_PAD + column * cellSize + cellSize / 2;
+    const cy = LABEL_PAD + row * cellSize + cellSize / 2;
+    const r = cellSize / 2 - WELL_INSET;
+    return (
+      <circle
+        key={id}
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill={fill}
+        fillOpacity={fillOpacity}
+        stroke="none"
+        data-well={id}
+        data-selected={isSelected ? "true" : undefined}
+      />
+    );
+  }
 
   return (
     <rect
@@ -155,7 +181,7 @@ function buildWellCell<T extends WellRecord>(
       width={cellSize}
       height={cellSize}
       fill={fill}
-      fillOpacity={usesSelectionFill ? selectedFillOpacity : undefined}
+      fillOpacity={fillOpacity}
       stroke="none"
       data-well={id}
       data-selected={isSelected ? "true" : undefined}
@@ -226,7 +252,7 @@ function buildWellOverlay<T extends WellRecord>(
   row: number,
   column: number,
 ): React.ReactNode {
-  const { dims, cellSize, selection, dragPositions, selectedBorderColor, flashWellId, flashWellKey } = args;
+  const { dims, cellSize, selection, dragPositions, selectedBorderColor, flashWellId, flashWellKey, wellShape } = args;
   const id = pos(row, column, dims.columns);
   const isSelected = selection.has(id) || dragPositions.has(id);
   const isFlashing = flashWellId === id;
@@ -236,46 +262,88 @@ function buildWellOverlay<T extends WellRecord>(
   const x = LABEL_PAD + column * cellSize + WELL_INSET;
   const y = LABEL_PAD + row * cellSize + WELL_INSET;
   const size = cellSize - WELL_INSET * 2;
+  const cx = LABEL_PAD + column * cellSize + cellSize / 2;
+  const cy = LABEL_PAD + row * cellSize + cellSize / 2;
+  const r = cellSize / 2 - WELL_INSET;
+  const isCircle = wellShape === "circle";
+
+  const renderSelectionOutline = () =>
+    isCircle ? (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke={selectedBorderColor}
+        strokeWidth={STROKE_SELECTED}
+        pointerEvents="none"
+        data-well-selection={id}
+      />
+    ) : (
+      <rect
+        x={x}
+        y={y}
+        width={size}
+        height={size}
+        fill="none"
+        stroke={selectedBorderColor}
+        strokeWidth={STROKE_SELECTED}
+        pointerEvents="none"
+        data-well-selection={id}
+      />
+    );
+
+  const flashAnimations = (
+    <>
+      <animate attributeName="fill-opacity" values="0.24;0.1;0" dur={`${FLASH_DURATION_MS}ms`} fill="freeze" />
+      <animate attributeName="stroke-opacity" values="0.92;0.42;0" dur={`${FLASH_DURATION_MS}ms`} fill="freeze" />
+      <animate
+        attributeName="stroke-width"
+        values={`${STROKE_FLASH};${STROKE_SELECTED}`}
+        dur={`${FLASH_DURATION_MS}ms`}
+        fill="freeze"
+      />
+    </>
+  );
 
   return (
     <g key={`overlay-${id}`}>
-      {isSelected ? (
-        <rect
-          x={x}
-          y={y}
-          width={size}
-          height={size}
-          fill="none"
-          stroke={selectedBorderColor}
-          strokeWidth={STROKE_SELECTED}
-          pointerEvents="none"
-          data-well-selection={id}
-        />
-      ) : null}
+      {isSelected ? renderSelectionOutline() : null}
       {isFlashing ? (
-        <rect
-          key={`${id}-${flashWellKey}`}
-          x={x}
-          y={y}
-          width={size}
-          height={size}
-          fill={selectedBorderColor}
-          fillOpacity={0.24}
-          stroke={selectedBorderColor}
-          strokeOpacity={0.92}
-          strokeWidth={STROKE_FLASH}
-          pointerEvents="none"
-          data-well-flash={id}
-        >
-          <animate attributeName="fill-opacity" values="0.24;0.1;0" dur={`${FLASH_DURATION_MS}ms`} fill="freeze" />
-          <animate attributeName="stroke-opacity" values="0.92;0.42;0" dur={`${FLASH_DURATION_MS}ms`} fill="freeze" />
-          <animate
-            attributeName="stroke-width"
-            values={`${STROKE_FLASH};${STROKE_SELECTED}`}
-            dur={`${FLASH_DURATION_MS}ms`}
-            fill="freeze"
-          />
-        </rect>
+        isCircle ? (
+          <circle
+            key={`${id}-${flashWellKey}`}
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill={selectedBorderColor}
+            fillOpacity={0.24}
+            stroke={selectedBorderColor}
+            strokeOpacity={0.92}
+            strokeWidth={STROKE_FLASH}
+            pointerEvents="none"
+            data-well-flash={id}
+          >
+            {flashAnimations}
+          </circle>
+        ) : (
+          <rect
+            key={`${id}-${flashWellKey}`}
+            x={x}
+            y={y}
+            width={size}
+            height={size}
+            fill={selectedBorderColor}
+            fillOpacity={0.24}
+            stroke={selectedBorderColor}
+            strokeOpacity={0.92}
+            strokeWidth={STROKE_FLASH}
+            pointerEvents="none"
+            data-well-flash={id}
+          >
+            {flashAnimations}
+          </rect>
+        )
       ) : null}
     </g>
   );
@@ -307,6 +375,7 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   onSelectionChange,
   colorForWell,
   emptyWellFillColor = PLATE_MAP_EMPTY_WELL_FILL,
+  wellShape = "rect",
   cellSize,
   autoScale = true,
   minCellSize = DEFAULT_MIN_AUTO_CELL,
@@ -435,11 +504,12 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
     selectedFillColor,
     selectedFillOpacity,
     selectionFillMode,
+    wellShape,
     flashWellId,
     flashWellKey,
   };
   const wellCells = buildWellCells(wellRenderArgs);
-  const gridLines = buildGridLines(dims, resolvedCellSize, borderColor);
+  const gridLines = wellShape === "circle" ? [] : buildGridLines(dims, resolvedCellSize, borderColor);
   const wellOverlays = buildWellOverlays(wellRenderArgs);
 
   return (

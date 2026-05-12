@@ -464,9 +464,6 @@ export const Default: Story = {
       await userEvent.keyboard("{Escape}");
     });
   },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4665" },
-  },
 };
 
 export const CollapsedWorkflow: Story = {
@@ -479,9 +476,6 @@ export const CollapsedWorkflow: Story = {
       expect(canvas.queryByText("Global Filtering")).not.toBeInTheDocument();
       expect(canvas.queryByText("Workflow")).not.toBeInTheDocument();
     });
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4666" },
   },
 };
 
@@ -521,9 +515,6 @@ export const NonWorkflowPage: Story = {
       await waitFor(() => expect(body.getByText("v2.4.1")).toBeInTheDocument());
       await userEvent.keyboard("{Escape}");
     });
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4667" },
   },
 };
 
@@ -615,9 +606,6 @@ export const Interactive: Story = {
       expect(canvas.getAllByText("Data Overview").length).toBeGreaterThan(0);
     });
   },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4668" },
-  },
 };
 
 // =============================================================================
@@ -663,9 +651,6 @@ export const AppDropdownInteraction: Story = {
         expect(body.queryByText("Back to TDP Platform")).not.toBeInTheDocument();
       });
     });
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4669" },
   },
 };
 
@@ -721,9 +706,6 @@ export const BreadcrumbVariants: Story = {
       separators.forEach((s) => expect(s.textContent).toBe("/"));
     });
   },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4670" },
-  },
 };
 
 // =============================================================================
@@ -759,9 +741,6 @@ export const HelpButtonPresent: Story = {
       // Top nav right side: help button should be present
       expect(buttons.length).toBeGreaterThanOrEqual(1);
     });
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4671" },
   },
 };
 
@@ -843,9 +822,6 @@ export const WorkflowPanelInteractions: Story = {
       expect(canvas.getByTestId("collapsed-state").textContent).toBe("Collapsed: false");
     });
   },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4672" },
-  },
 };
 
 // =============================================================================
@@ -900,9 +876,6 @@ export const MultipleNavGroups: Story = {
       const iconContainer = activePage?.querySelector(".bg-primary\\/10");
       expect(iconContainer).toBeInTheDocument();
     });
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4673" },
   },
 };
 
@@ -989,9 +962,6 @@ export const BackToPlatformCallback: Story = {
       });
     });
   },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4674" },
-  },
 };
 
 // =============================================================================
@@ -1048,9 +1018,6 @@ export const BackToPlatformPath: Story = {
       });
     });
   },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4675" },
-  },
 };
 
 // =============================================================================
@@ -1060,10 +1027,7 @@ export const BackToPlatformPath: Story = {
 export const MobileNavigation: Story = {
   name: "Mobile Navigation",
   tags: ['!dev'],
-  parameters: {
-    viewport: { defaultViewport: 'mobile1' },
-    zephyr: { testCaseId: "SW-T4676" },
-  },
+  parameters: { viewport: { defaultViewport: 'mobile1' } },
   render: () => (
     <DataAppShell
       appName="HTS"
@@ -1149,7 +1113,6 @@ export const MobileNavigation: Story = {
         expect(closedSheet).not.toBeInTheDocument();
       });
     });
-    zephyr: { testCaseId: "SW-T4910" },
   },
 };
 
@@ -1239,8 +1202,5 @@ export const CompactProperty: Story = {
       // User avatar (initials TU) should be present in the rail
       expect(within(rail!).getByText("TU")).toBeInTheDocument();
     });
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4677" },
   },
 };

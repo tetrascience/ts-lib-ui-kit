@@ -9,6 +9,7 @@ import { WellManifestTable } from "./WellManifestTable";
 import { WellMetadataForm } from "./WellMetadataForm";
 
 import type { PlateMapActionsMenuProps } from "./PlateMapActionsMenu";
+import type { PlateMapPlateSelectorVariant } from "./PlateMapPlateSelector";
 import type { WellShape } from "./PlatePaintGrid";
 import type {
   PlateFormat,
@@ -90,8 +91,13 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   onPlateChange?: (plateId: string) => void;
   /** Opens the host app's manual barcode entry flow for creating a plate. */
   onAddPlate?: () => void;
+  /** Removes a plate (typically when using `plateSelectorVariant="tabs"`). */
+  onRemovePlate?: (plateId: string) => void;
   addPlateLabel?: string;
+  removePlateLabel?: string;
   plateSelectorLabel?: string;
+  /** Layout of the plate selector. Defaults to `"dropdown"`. */
+  plateSelectorVariant?: PlateMapPlateSelectorVariant;
   /** Row field used to stamp the active user-provided barcode onto edited wells. Defaults to `plateBarcode`. */
   plateBarcodeField?: keyof T & string;
   /** Header for the automatic manifest barcode column. */
@@ -230,8 +236,11 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   activePlateId,
   onPlateChange,
   onAddPlate,
+  onRemovePlate,
   addPlateLabel,
+  removePlateLabel,
   plateSelectorLabel,
+  plateSelectorVariant,
   plateBarcodeField,
   plateBarcodeColumnHeader = DEFAULT_PLATE_BARCODE_HEADER,
   hidePlateBarcodeColumn = false,
@@ -520,8 +529,11 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
                   activePlateId={activePlate?.id}
                   onPlateChange={canChangePlate ? handlePlateChange : undefined}
                   onAddPlate={onAddPlate}
+                  onRemovePlate={onRemovePlate}
                   addPlateLabel={addPlateLabel}
+                  removePlateLabel={removePlateLabel}
                   label={plateSelectorLabel}
+                  variant={plateSelectorVariant}
                 />
               ) : null}
             </div>

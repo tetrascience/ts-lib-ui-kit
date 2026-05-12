@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Plus } from "lucide-react";
+import { Check, ChevronDown, Plus, X } from "lucide-react";
 
 import type { PlateMapPlateOption } from "./types";
 
@@ -14,13 +14,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
+export type PlateMapPlateSelectorVariant = "dropdown" | "tabs";
+
 export interface PlateMapPlateSelectorProps {
   plates?: PlateMapPlateOption[];
   activePlateId?: string;
   onPlateChange?: (plateId: string) => void;
   onAddPlate?: () => void;
+  /** When supplied, the tabs variant renders a delete affordance per plate. */
+  onRemovePlate?: (plateId: string) => void;
   addPlateLabel?: string;
+  removePlateLabel?: string;
   label?: string;
+  /** Layout. `"dropdown"` is the default single-trigger menu, `"tabs"` is a horizontal tab strip. */
+  variant?: PlateMapPlateSelectorVariant;
   align?: "start" | "center" | "end";
   side?: "top" | "right" | "bottom" | "left";
   className?: string;
@@ -39,13 +46,88 @@ export function PlateMapPlateSelector({
   activePlateId,
   onPlateChange,
   onAddPlate,
+  onRemovePlate,
   addPlateLabel = "Add Plate",
+  removePlateLabel = "Remove plate",
   label = "Plate",
+  variant = "dropdown",
   align = "start",
   side = "bottom",
   className,
 }: PlateMapPlateSelectorProps) {
   const activePlate = plates.find((plate) => plate.id === activePlateId) ?? (activePlateId ? undefined : plates[0]);
+
+  if (variant === "tabs") {
+    return (
+      <div
+        role="tablist"
+        aria-label={label}
+        className={cn("flex flex-wrap items-center gap-1", className)}
+        data-slot="plate-tabs"
+      >
+        {plates.map((plate) => {
+          const selected = plate.id === activePlate?.id;
+          const canRemove = !!onRemovePlate && plates.length > 1;
+          return (
+            <div
+              key={plate.id}
+              className={cn(
+                "inline-flex items-stretch overflow-hidden rounded-md border",
+                selected ? "border-primary" : "border-border",
+              )}
+            >
+              <Button
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                variant={selected ? "default" : "ghost"}
+                size="sm"
+                disabled={plate.disabled || !onPlateChange}
+                className="h-7 rounded-none border-0 px-2 text-xs"
+                onClick={() => onPlateChange?.(plate.id)}
+              >
+                <span className="truncate">{plate.label ?? plate.barcode}</span>
+                {plate.count === undefined ? null : (
+                  <span
+                    className={cn(
+                      "ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-sm px-1 text-[0.65rem] font-semibold",
+                      selected ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {plate.count}
+                  </span>
+                )}
+              </Button>
+              {canRemove ? (
+                <Button
+                  type="button"
+                  variant={selected ? "default" : "ghost"}
+                  size="icon-xs"
+                  aria-label={`${removePlateLabel} ${plate.label ?? plate.barcode}`}
+                  className="h-7 rounded-none border-0 border-l border-border/60"
+                  onClick={() => onRemovePlate?.(plate.id)}
+                >
+                  <X aria-hidden />
+                </Button>
+              ) : null}
+            </div>
+          );
+        })}
+        {onAddPlate ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label={addPlateLabel}
+            className="h-7"
+            onClick={() => onAddPlate()}
+          >
+            <Plus aria-hidden />
+          </Button>
+        ) : null}
+      </div>
+    );
+  }
 
   if (plates.length === 0) {
     return (

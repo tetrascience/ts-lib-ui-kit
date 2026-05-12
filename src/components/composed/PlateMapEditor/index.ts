@@ -5,7 +5,7 @@ export { PlateMapActionsMenu } from "./PlateMapActionsMenu";
 export type { PlateMapActionsMenuProps } from "./PlateMapActionsMenu";
 
 export { PlateMapPlateSelector } from "./PlateMapPlateSelector";
-export type { PlateMapPlateSelectorProps } from "./PlateMapPlateSelector";
+export type { PlateMapPlateSelectorProps, PlateMapPlateSelectorVariant } from "./PlateMapPlateSelector";
 
 export { PlatePaintGrid } from "./PlatePaintGrid";
 export type { PlatePaintGridProps, WellShape } from "./PlatePaintGrid";

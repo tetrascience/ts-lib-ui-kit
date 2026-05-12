@@ -195,6 +195,9 @@ export const Empty: Story = {
       await expect(canvas.getByPlaceholderText("Ask anything...")).toHaveValue("Explain quantum entanglement")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4656" },
+  },
 }
 
 export const WithMessages: Story = {
@@ -221,6 +224,9 @@ export const WithMessages: Story = {
       await expect(canvas.getByText(/Used 2 sources/i)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4657" },
+  },
 }
 
 export const SingleModel: Story = {
@@ -238,6 +244,9 @@ export const SingleModel: Story = {
     await step("Model selector hidden with single model", async () => {
       await expect(canvas.queryByRole("combobox")).not.toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4658" },
   },
 }
 
@@ -276,6 +285,9 @@ export const SubmitAndStreamLifecycle: Story = {
         timeout: 3600,
       })
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4659" },
   },
 }
 
@@ -541,6 +553,9 @@ const ReasoningCitationsQueueDemo = () => {
 export const WithReasoningCitationsAndQueue: Story = {
   name: "With Reasoning, Citations & Queue",
   render: () => <ReasoningCitationsQueueDemo />,
+  parameters: {
+    zephyr: { testCaseId: "SW-T4660" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -636,6 +651,9 @@ const TaskAndToolsDemo = () => {
 export const WithTaskAndTools: Story = {
   name: "With Task & Tool Calling",
   render: () => <TaskAndToolsDemo />,
+  parameters: {
+    zephyr: { testCaseId: "SW-T4661" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -699,6 +717,9 @@ export const WithAttachments: Story = {
       </Message>
     </ChatShell>
   ),
+  parameters: {
+    zephyr: { testCaseId: "SW-T4662" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -861,6 +882,9 @@ const HumanInTheLoopDemo = () => {
 export const WithHumanInTheLoop: Story = {
   name: "With Human-in-the-Loop Confirmation",
   render: () => <HumanInTheLoopDemo />,
+  parameters: {
+    zephyr: { testCaseId: "SW-T4663" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -1531,5 +1555,8 @@ export const Interactive: Story = {
       await userEvent.type(canvas.getByPlaceholderText("Ask anything..."), "Hello")
       await expect(canvas.getByRole("button", { name: /send|submit/i })).not.toBeDisabled()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4664" },
   },
 }

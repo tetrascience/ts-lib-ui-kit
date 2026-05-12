@@ -1,5 +1,9 @@
-import { Project } from 'ts-morph';
-import { describe, it, expect } from 'vitest';
+import fs from "fs";
+import os from "os";
+import path from "path";
+
+import { Project } from "ts-morph";
+import { afterEach, describe, it, expect } from "vitest";
 
 import {
   parseStoryFile,
@@ -7,104 +11,124 @@ import {
   detectStoryPattern,
   extractNameFromStory,
   extractZephyrIdsFromParameters,
+  findDuplicateZephyrIds,
   findStoryNameAssignment,
-} from '../sync-storybook-zephyr';
+  updateStoryFile,
+} from "../sync-storybook-zephyr";
+
+const tempDirs: string[] = [];
+
+function createTempStoryFile(content: string) {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "sync-storybook-zephyr-"));
+  tempDirs.push(cwd);
+
+  const filePath = path.join(cwd, "Component.stories.tsx");
+  fs.writeFileSync(filePath, content, "utf-8");
+
+  return filePath;
+}
+
+afterEach(() => {
+  while (tempDirs.length > 0) {
+    fs.rmSync(tempDirs.pop()!, { recursive: true, force: true });
+  }
+});
 
 // Helper to get a variable declaration from code
 function getDeclaration(code: string, name: string) {
   const project = new Project({ useInMemoryFileSystem: true });
-  const sourceFile = project.createSourceFile('temp.tsx', code);
+  const sourceFile = project.createSourceFile("temp.tsx", code);
   return sourceFile.getVariableDeclaration(name);
 }
 
-describe('sync-storybook-zephyr', () => {
-  describe('detectStoryPattern', () => {
-    it('should detect CSF3 object pattern with Story type', () => {
+describe("sync-storybook-zephyr", () => {
+  describe("detectStoryPattern", () => {
+    it("should detect CSF3 object pattern with Story type", () => {
       const decl = getDeclaration(
         `import { Story } from "@storybook/react";
          export const Primary: Story = { args: { label: "Click me" } };`,
-        'Primary',
+        "Primary",
       );
-      expect(detectStoryPattern(decl!)).toBe('csf3-object');
+      expect(detectStoryPattern(decl!)).toBe("csf3-object");
     });
 
-    it('should detect CSF3 object pattern with StoryObj type', () => {
+    it("should detect CSF3 object pattern with StoryObj type", () => {
       const decl = getDeclaration(
         `import { StoryObj } from "@storybook/react";
          export const Primary: StoryObj<typeof Button> = { args: {} };`,
-        'Primary',
+        "Primary",
       );
-      expect(detectStoryPattern(decl!)).toBe('csf3-object');
+      expect(detectStoryPattern(decl!)).toBe("csf3-object");
     });
 
-    it('should detect CSF2 Template.bind pattern', () => {
+    it("should detect CSF2 Template.bind pattern", () => {
       const decl = getDeclaration(
         `const Template = (args) => <Button {...args} />;
          export const Primary = Template.bind({});`,
-        'Primary',
+        "Primary",
       );
-      expect(detectStoryPattern(decl!)).toBe('csf2-template-bind');
+      expect(detectStoryPattern(decl!)).toBe("csf2-template-bind");
     });
 
-    it('should detect React.FC pattern', () => {
+    it("should detect React.FC pattern", () => {
       const decl = getDeclaration(
         `import React from "react";
          export const Primary: React.FC = () => <Button />;`,
-        'Primary',
+        "Primary",
       );
-      expect(detectStoryPattern(decl!)).toBe('react-fc');
+      expect(detectStoryPattern(decl!)).toBe("react-fc");
     });
 
-    it('should detect arrow function pattern', () => {
-      const decl = getDeclaration(`export const Primary = () => <Button label="Click" />;`, 'Primary');
-      expect(detectStoryPattern(decl!)).toBe('arrow-function');
+    it("should detect arrow function pattern", () => {
+      const decl = getDeclaration(`export const Primary = () => <Button label="Click" />;`, "Primary");
+      expect(detectStoryPattern(decl!)).toBe("arrow-function");
     });
 
-    it('should return unknown for unsupported patterns', () => {
-      const decl = getDeclaration(`export const someValue = "not a story";`, 'someValue');
-      expect(detectStoryPattern(decl!)).toBe('unknown');
-    });
-  });
-
-  describe('extractNameFromStory', () => {
-    it('should extract name from story object', () => {
-      const decl = getDeclaration(`export const Primary: Story = { name: "Primary Button", args: {} };`, 'Primary');
-      expect(extractNameFromStory(decl!)).toBe('Primary Button');
-    });
-
-    it('should return undefined when no name property', () => {
-      const decl = getDeclaration(`export const Primary: Story = { args: {} };`, 'Primary');
-      expect(extractNameFromStory(decl!)).toBeUndefined();
-    });
-
-    it('should return undefined for non-object initializers', () => {
-      const decl = getDeclaration(`export const Primary = Template.bind({});`, 'Primary');
-      expect(extractNameFromStory(decl!)).toBeUndefined();
+    it("should return unknown for unsupported patterns", () => {
+      const decl = getDeclaration(`export const someValue = "not a story";`, "someValue");
+      expect(detectStoryPattern(decl!)).toBe("unknown");
     });
   });
 
-  describe('findStoryNameAssignment', () => {
-    it('should find storyName assignment', () => {
+  describe("extractNameFromStory", () => {
+    it("should extract name from story object", () => {
+      const decl = getDeclaration(`export const Primary: Story = { name: "Primary Button", args: {} };`, "Primary");
+      expect(extractNameFromStory(decl!)).toBe("Primary Button");
+    });
+
+    it("should return undefined when no name property", () => {
+      const decl = getDeclaration(`export const Primary: Story = { args: {} };`, "Primary");
+      expect(extractNameFromStory(decl!)).toBeUndefined();
+    });
+
+    it("should return undefined for non-object initializers", () => {
+      const decl = getDeclaration(`export const Primary = Template.bind({});`, "Primary");
+      expect(extractNameFromStory(decl!)).toBeUndefined();
+    });
+  });
+
+  describe("findStoryNameAssignment", () => {
+    it("should find storyName assignment", () => {
       const code = `export const Primary = Template.bind({});
 Primary.storyName = "Custom Name";`;
       const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('temp.tsx', code);
-      const decl = sourceFile.getVariableDeclaration('Primary');
-      expect(findStoryNameAssignment(decl!)).toBe('Custom Name');
+      const sourceFile = project.createSourceFile("temp.tsx", code);
+      const decl = sourceFile.getVariableDeclaration("Primary");
+      expect(findStoryNameAssignment(decl!)).toBe("Custom Name");
     });
 
-    it('should return undefined when no storyName assignment', () => {
+    it("should return undefined when no storyName assignment", () => {
       const code = `export const Primary = Template.bind({});
 Primary.args = { label: "Click" };`;
       const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('temp.tsx', code);
-      const decl = sourceFile.getVariableDeclaration('Primary');
+      const sourceFile = project.createSourceFile("temp.tsx", code);
+      const decl = sourceFile.getVariableDeclaration("Primary");
       expect(findStoryNameAssignment(decl!)).toBeUndefined();
     });
   });
 
-  describe('parseStoryFile', () => {
-    it('should parse a CSF3 story file', () => {
+  describe("parseStoryFile", () => {
+    it("should parse a CSF3 story file", () => {
       const content = `import type { Meta, StoryObj } from "@storybook/react";
 import { Button } from "./Button";
 
@@ -124,15 +148,15 @@ export const Secondary: Story = {
   args: { label: "Secondary" },
 };`;
 
-      const stories = parseStoryFile('src/components/atoms/Button.stories.tsx', content);
+      const stories = parseStoryFile("src/components/atoms/Button.stories.tsx", content);
       expect(stories).toHaveLength(2);
-      expect(stories[0].exportName).toBe('Primary');
-      expect(stories[0].pattern).toBe('csf3-object');
-      expect(stories[0].componentName).toBe('Button');
-      expect(stories[1].exportName).toBe('Secondary');
+      expect(stories[0].exportName).toBe("Primary");
+      expect(stories[0].pattern).toBe("csf3-object");
+      expect(stories[0].componentName).toBe("Button");
+      expect(stories[1].exportName).toBe("Secondary");
     });
 
-    it('should detect existing Zephyr IDs in story names', () => {
+    it("should detect existing Zephyr IDs in story names", () => {
       const content = `import type { Meta, StoryObj } from "@storybook/react";
 
 export default { title: "UI/Input" };
@@ -143,14 +167,14 @@ export const Default: Story = {
   args: {},
 };`;
 
-      const stories = parseStoryFile('src/components/atoms/Input.stories.tsx', content);
+      const stories = parseStoryFile("src/components/atoms/Input.stories.tsx", content);
       expect(stories).toHaveLength(1);
       expect(stories[0].hasZephyrId).toBe(true);
-      expect(stories[0].existingId).toBe('SW-T123');
-      expect(stories[0].storyName).toBe('Default Input');
+      expect(stories[0].existingId).toBe("SW-T123");
+      expect(stories[0].storyName).toBe("Default Input");
     });
 
-    it('should detect stories with empty testCaseId in parameters', () => {
+    it("should detect stories with empty testCaseId in parameters", () => {
       const content = `import type { Meta, StoryObj } from "@storybook/react";
 
 export default { title: "UI/Input" };
@@ -163,13 +187,13 @@ export const Default: Story = {
   },
 };`;
 
-      const stories = parseStoryFile('src/components/atoms/Input.stories.tsx', content);
+      const stories = parseStoryFile("src/components/atoms/Input.stories.tsx", content);
       expect(stories).toHaveLength(1);
       expect(stories[0].hasZephyrId).toBe(false);
       expect(stories[0].hasEmptyZephyrProperty).toBe(true);
     });
 
-    it('should detect stories with valid testCaseId in parameters', () => {
+    it("should detect stories with valid testCaseId in parameters", () => {
       const content = `import type { Meta, StoryObj } from "@storybook/react";
 
 export default { title: "UI/Button" };
@@ -182,16 +206,16 @@ export const Primary: Story = {
   },
 };`;
 
-      const stories = parseStoryFile('src/components/atoms/Button.stories.tsx', content);
+      const stories = parseStoryFile("src/components/atoms/Button.stories.tsx", content);
       expect(stories).toHaveLength(1);
       expect(stories[0].hasZephyrId).toBe(true);
-      expect(stories[0].existingId).toBe('SW-T456');
+      expect(stories[0].existingId).toBe("SW-T456");
       expect(stories[0].hasEmptyZephyrProperty).toBe(false);
     });
   });
 
-  describe('parsePlayFunctionSteps', () => {
-    it('should extract step names from a play function with multiple steps', () => {
+  describe("parsePlayFunctionSteps", () => {
+    it("should extract step names from a play function with multiple steps", () => {
       const decl = getDeclaration(
         `export const MyStory: Story = {
           args: {},
@@ -207,29 +231,29 @@ export const Primary: Story = {
             });
           },
         };`,
-        'MyStory',
+        "MyStory",
       );
       const steps = parsePlayFunctionSteps(decl!);
       expect(steps).toHaveLength(3);
-      expect(steps[0].description).toBe('Chart title is displayed');
-      expect(steps[1].description).toBe('Chart container renders');
-      expect(steps[2].description).toBe('Trace is rendered');
-      expect(steps[0].testData).toBe('');
-      expect(steps[0].expectedResult).toBe('Step executed successfully');
+      expect(steps[0].description).toBe("Chart title is displayed");
+      expect(steps[1].description).toBe("Chart container renders");
+      expect(steps[2].description).toBe("Trace is rendered");
+      expect(steps[0].testData).toBe("");
+      expect(steps[0].expectedResult).toBe("Step executed successfully");
     });
 
-    it('should return empty array for a story without play function', () => {
+    it("should return empty array for a story without play function", () => {
       const decl = getDeclaration(
         `export const MyStory: Story = {
           args: { label: "Click me" },
         };`,
-        'MyStory',
+        "MyStory",
       );
       const steps = parsePlayFunctionSteps(decl!);
       expect(steps).toHaveLength(0);
     });
 
-    it('should return empty array for a play function without step() calls', () => {
+    it("should return empty array for a play function without step() calls", () => {
       const decl = getDeclaration(
         `export const MyStory: Story = {
           args: {},
@@ -238,35 +262,121 @@ export const Primary: Story = {
             expect(canvas.getByText("Hello")).toBeInTheDocument();
           },
         };`,
-        'MyStory',
+        "MyStory",
       );
       const steps = parsePlayFunctionSteps(decl!);
       expect(steps).toHaveLength(0);
     });
 
-    it('should return empty array for non-object initializers', () => {
-      const decl = getDeclaration(`export const MyStory = Template.bind({});`, 'MyStory');
+    it("should return empty array for non-object initializers", () => {
+      const decl = getDeclaration(`export const MyStory = Template.bind({});`, "MyStory");
       const steps = parsePlayFunctionSteps(decl!);
       expect(steps).toHaveLength(0);
     });
 
-    it('should handle step names with single quotes', () => {
+    it("should handle step names with single quotes", () => {
       const decl = getDeclaration(
         `export const MyStory: Story = {
           play: async ({ step }) => {
             await step('Single quoted step', async () => {});
           },
         };`,
-        'MyStory',
+        "MyStory",
       );
       const steps = parsePlayFunctionSteps(decl!);
       expect(steps).toHaveLength(1);
-      expect(steps[0].description).toBe('Single quoted step');
+      expect(steps[0].description).toBe("Single quoted step");
     });
   });
 
-  describe('parseStoryFile - steps integration', () => {
-    it('should populate steps on StoryCase for stories with play+step()', () => {
+  describe("findDuplicateZephyrIds", () => {
+    it("should report duplicate non-empty IDs across stories", () => {
+      const firstContent = `import type { StoryObj } from "@storybook/react";
+
+export default { title: "UI/Avatar" };
+type Story = StoryObj;
+
+export const Small: Story = {
+  args: {},
+  parameters: {
+    zephyr: { testCaseId: "SW-T123" },
+  },
+};`;
+
+      const secondContent = `import type { StoryObj } from "@storybook/react";
+
+export default { title: "UI/Banner" };
+type Story = StoryObj;
+
+export const Info: Story = {
+  args: {},
+  parameters: {
+    zephyr: { testCaseId: "SW-T123" },
+  },
+};`;
+
+      const stories = [
+        ...parseStoryFile("src/components/ui/avatar.stories.tsx", firstContent),
+        ...parseStoryFile("src/components/ui/banner.stories.tsx", secondContent),
+      ];
+
+      const duplicates = findDuplicateZephyrIds(stories);
+      expect(duplicates).toHaveLength(1);
+      expect(duplicates[0].id).toBe("SW-T123");
+      expect(duplicates[0].stories.map((story) => story.exportName)).toEqual(["Small", "Info"]);
+    });
+
+    it("should ignore empty testCaseId placeholders", () => {
+      const content = `import type { StoryObj } from "@storybook/react";
+
+export default { title: "UI/Banner" };
+type Story = StoryObj;
+
+export const Info: Story = {
+  args: {},
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};
+
+export const Warning: Story = {
+  args: {},
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};`;
+
+      const stories = parseStoryFile("src/components/ui/banner.stories.tsx", content);
+      expect(findDuplicateZephyrIds(stories)).toEqual([]);
+    });
+  });
+
+  describe("updateStoryFile", () => {
+    it("should add zephyr inside an existing one-line parameters object", () => {
+      const filePath = createTempStoryFile(`import type { StoryObj } from "@storybook/react";
+type Story = StoryObj;
+
+export const MobileNavigation: Story = {
+  name: "Mobile Navigation",
+  parameters: { viewport: { defaultViewport: "mobile1" } },
+  play: async ({ step }) => {
+    await step("opens mobile navigation", async () => {});
+  },
+};`);
+
+      expect(updateStoryFile(filePath, 1, "MobileNavigation", "SW-T999", "csf3-object")).toBe(true);
+
+      const updated = fs.readFileSync(filePath, "utf-8");
+      const stories = parseStoryFile(filePath, updated);
+      expect(stories[0].existingId).toBe("SW-T999");
+
+      const playBlock = updated.slice(updated.indexOf("play:"));
+      expect(playBlock).not.toContain("zephyr:");
+    });
+  });
+
+  describe("parseStoryFile - steps integration", () => {
+    it("should populate steps on StoryCase for stories with play+step()", () => {
       const content = `import type { Meta, StoryObj } from "@storybook/react";
 
 export default { title: "Charts/MyChart" };
@@ -284,14 +394,14 @@ export const Default: Story = {
   },
 };`;
 
-      const stories = parseStoryFile('src/components/charts/MyChart.stories.tsx', content);
+      const stories = parseStoryFile("src/components/charts/MyChart.stories.tsx", content);
       expect(stories).toHaveLength(1);
       expect(stories[0].steps).toHaveLength(2);
-      expect(stories[0].steps[0].description).toBe('Title renders');
-      expect(stories[0].steps[1].description).toBe('Data loads');
+      expect(stories[0].steps[0].description).toBe("Title renders");
+      expect(stories[0].steps[1].description).toBe("Data loads");
     });
 
-    it('should leave steps empty for stories without play functions', () => {
+    it("should leave steps empty for stories without play functions", () => {
       const content = `import type { Meta, StoryObj } from "@storybook/react";
 
 export default { title: "UI/Button" };
@@ -301,14 +411,14 @@ export const Primary: Story = {
   args: { label: "Click" },
 };`;
 
-      const stories = parseStoryFile('src/components/ui/Button.stories.tsx', content);
+      const stories = parseStoryFile("src/components/ui/Button.stories.tsx", content);
       expect(stories).toHaveLength(1);
       expect(stories[0].steps).toHaveLength(0);
     });
   });
 
-  describe('extractZephyrIdsFromParameters', () => {
-    it('should return hasZephyrProperty=true with empty ids for empty testCaseId', () => {
+  describe("extractZephyrIdsFromParameters", () => {
+    it("should return hasZephyrProperty=true with empty ids for empty testCaseId", () => {
       const decl = getDeclaration(
         `export const Default: Story = {
           args: {},
@@ -316,14 +426,14 @@ export const Primary: Story = {
             zephyr: { testCaseId: "" },
           },
         };`,
-        'Default',
+        "Default",
       );
       const result = extractZephyrIdsFromParameters(decl!);
       expect(result.hasZephyrProperty).toBe(true);
       expect(result.ids).toEqual([]);
     });
 
-    it('should return hasZephyrProperty=true with ids for valid testCaseId', () => {
+    it("should return hasZephyrProperty=true with ids for valid testCaseId", () => {
       const decl = getDeclaration(
         `export const Default: Story = {
           args: {},
@@ -331,14 +441,14 @@ export const Primary: Story = {
             zephyr: { testCaseId: "SW-T789" },
           },
         };`,
-        'Default',
+        "Default",
       );
       const result = extractZephyrIdsFromParameters(decl!);
       expect(result.hasZephyrProperty).toBe(true);
-      expect(result.ids).toEqual(['SW-T789']);
+      expect(result.ids).toEqual(["SW-T789"]);
     });
 
-    it('should return hasZephyrProperty=false when no zephyr property exists', () => {
+    it("should return hasZephyrProperty=false when no zephyr property exists", () => {
       const decl = getDeclaration(
         `export const Default: Story = {
           args: {},
@@ -346,19 +456,19 @@ export const Primary: Story = {
             docs: { story: "A story" },
           },
         };`,
-        'Default',
+        "Default",
       );
       const result = extractZephyrIdsFromParameters(decl!);
       expect(result.hasZephyrProperty).toBe(false);
       expect(result.ids).toEqual([]);
     });
 
-    it('should return hasZephyrProperty=false when no parameters exist', () => {
+    it("should return hasZephyrProperty=false when no parameters exist", () => {
       const decl = getDeclaration(
         `export const Default: Story = {
           args: {},
         };`,
-        'Default',
+        "Default",
       );
       const result = extractZephyrIdsFromParameters(decl!);
       expect(result.hasZephyrProperty).toBe(false);

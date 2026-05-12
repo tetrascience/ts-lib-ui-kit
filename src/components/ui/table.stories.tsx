@@ -570,6 +570,9 @@ export const StickyHeader: Story = {
       expect(canvas.getAllByRole("columnheader").length).toBeGreaterThan(0)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4735" },
+  },
 }
 
 
@@ -768,5 +771,8 @@ export const FixedLayoutWithTruncation: Story = {
       const cells = canvasElement.querySelectorAll("[data-slot='table-cell'].truncate")
       expect(cells.length).toBeGreaterThan(0)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4736" },
   },
 }

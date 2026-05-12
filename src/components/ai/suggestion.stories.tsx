@@ -40,6 +40,9 @@ export const Default: Story = {
       await expect(canvas.getByText("How do I make pasta carbonara?")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4639" },
+  },
 }
 
 export const Interactive: Story = {
@@ -70,6 +73,9 @@ export const Interactive: Story = {
       )
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4640" },
+  },
 }
 
 export const Few: Story = {
@@ -84,6 +90,9 @@ export const Few: Story = {
     await step("Two suggestions render", async () => {
       await expect(canvas.getByText("Tell me a joke")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4641" },
   },
 }
 
@@ -113,5 +122,8 @@ export const CustomChildren: Story = {
       await userEvent.click(canvas.getByRole("button", { name: "No callback" }))
       await expect(args.onSelect).toHaveBeenCalledOnce()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4642" },
   },
 }

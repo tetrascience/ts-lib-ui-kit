@@ -72,6 +72,23 @@ export interface PeakAnnotation {
   /** Marker style for end boundary (default: "diamond") */
   endMarker?: BoundaryMarkerType;
   /**
+   * Optional per-peak color override. When set, overrides the default
+   * series-color / grey for the annotation label, arrow, border, and boundary markers.
+   */
+  color?: string;
+  /**
+   * When true, overlay a thickened line along the underlying trace between startX and endX.
+   * Requires startX/endX. Uses peak.color if set, otherwise series color.
+   */
+  regionOverlay?: boolean;
+  /** Line width for the region overlay (default: 3.5) */
+  regionOverlayWidth?: number;
+  /**
+   * Plotly hovertemplate HTML string used by the region overlay and the invisible
+   * hit-area marker for this peak. Falls back to a default summary when omitted.
+   */
+  hoverText?: string;
+  /**
    * Internal computed fields populated by the component.
    * @internal Do not set these directly - they are computed from startX/endX or auto-detection.
    */
@@ -296,6 +313,14 @@ export interface ChromatogramChartProps {
    * - "inline" — no arrow; label sits 4 px above the actual trace Y value
    */
   annotationStyle?: "arrow" | "inline";
+
+  /** Title font size in pixels (default: 20) */
+  titleFontSize?: number;
+  /**
+   * Top margin override when a title is shown (default: from
+   * CHROMATOGRAM_LAYOUT.MARGIN_TOP_WITH_TITLE).
+   */
+  titleTopMargin?: number;
 }
 
 /**

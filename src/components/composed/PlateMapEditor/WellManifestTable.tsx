@@ -1,6 +1,10 @@
 import { ArrowDownToLine, Check } from "lucide-react";
 import * as React from "react";
 
+import { ManifestFilterPopover } from "./ManifestFilterPopover";
+import { EMPTY_FILTER_STATE, applyFilterState } from "./manifestFilter";
+
+import type { FilterColumn, FilterState, FilterValueType } from "./manifestFilter";
 import type { WellColumn, WellField, WellId, WellRecord, WellSelectOption } from "./types";
 
 import { Badge } from "@/components/ui/badge";
@@ -135,7 +139,30 @@ export interface WellManifestTableProps<T extends WellRecord = WellRecord> {
    * drag sources. The kit stays DnD-library-agnostic.
    */
   rowProps?: (ctx: WellManifestTableRowContext<T>) => React.ComponentProps<"tr"> | undefined;
+  /** Enables an inline filter popover above the table. Defaults to false. */
+  filterable?: boolean;
+  /**
+   * Optional override of filterable columns. When omitted, columns are derived
+   * from `columns` (with type inferred from matching field kinds).
+   */
+  filterColumns?: FilterColumn[];
   className?: string;
+}
+
+const NUMERIC_KINDS = new Set(["number", "integer"]);
+
+function inferFilterColumns<T extends WellRecord>(
+  columns: WellColumn<T>[],
+  fieldByKey: Map<string, WellField<T>>,
+): FilterColumn[] {
+  const out: FilterColumn[] = [];
+  for (const col of columns) {
+    if (!col.field) continue;
+    const field = fieldByKey.get(col.field);
+    const type: FilterValueType = field && NUMERIC_KINDS.has(field.kind) ? "number" : "string";
+    out.push({ field: col.field, headerName: col.header, type });
+  }
+  return out;
 }
 
 export function WellManifestTable<T extends WellRecord = WellRecord>({
@@ -151,11 +178,14 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
   pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   enableFillDown = true,
   rowProps,
+  filterable = false,
+  filterColumns,
   className,
 }: WellManifestTableProps<T>) {
   const [showAll, setShowAll] = React.useState(false);
   const [page, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(initialPageSize);
+  const [filterState, setFilterState] = React.useState<FilterState>(EMPTY_FILTER_STATE);
 
   React.useEffect(() => {
     setPage(0);
@@ -167,6 +197,11 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
     return m;
   }, [fields]);
 
+  const resolvedFilterColumns = React.useMemo<FilterColumn[]>(
+    () => filterColumns ?? inferFilterColumns(columns, fieldByKey),
+    [columns, fieldByKey, filterColumns],
+  );
+
   const rows = React.useMemo(() => {
     const arr = [...values.entries()].map(([id, row]) => ({
       id,
@@ -175,6 +210,16 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
     let filtered = arr;
     if (!showAll && isPopulated) {
       filtered = arr.filter((r) => isPopulated(r.row));
+    }
+    if (filterable && filterState.conditions.length > 0) {
+      const survivors = new Set(
+        applyFilterState(
+          filtered.map(({ id, row }) => ({ ...(row as Record<string, unknown>), __id: id })),
+          filterState,
+          resolvedFilterColumns,
+        ).map((r) => r.__id as WellId),
+      );
+      filtered = filtered.filter((r) => survivors.has(r.id));
     }
     if (selection && selection.size > 0) {
       const have = new Set(filtered.map((r) => r.id));
@@ -185,7 +230,11 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
       });
     }
     return filtered.sort((a, b) => a.id.localeCompare(b.id));
-  }, [values, showAll, isPopulated, selection, emptyEntry]);
+  }, [values, showAll, isPopulated, selection, emptyEntry, filterable, filterState, resolvedFilterColumns]);
+
+  React.useEffect(() => {
+    setPage(0);
+  }, [filterState]);
 
   const pagedRows = React.useMemo(
     () => rows.slice(page * pageSize, page * pageSize + pageSize),
@@ -479,6 +528,13 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
         <Button variant="outline" size="sm" onClick={() => setShowAll((v) => !v)}>
           {showAll ? "Hide empty wells" : "Show all wells"}
         </Button>
+        {filterable ? (
+          <ManifestFilterPopover
+            columns={resolvedFilterColumns}
+            state={filterState}
+            onStateChange={setFilterState}
+          />
+        ) : null}
         <span className="text-xs text-muted-foreground">
           {totalRows} rows · {selSize} selected
         </span>

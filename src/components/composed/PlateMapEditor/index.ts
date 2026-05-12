@@ -21,6 +21,26 @@ export type { TemplateIOPanelProps } from "./TemplateIOPanel";
 
 export { plateOptionsFromCsvTriage, triagePlateMapCsvByBarcode, triagePlateMapCsvFile } from "./csvPlateTriage";
 
+export { ManifestFilterPopover } from "./ManifestFilterPopover";
+export type { ManifestFilterPopoverProps } from "./ManifestFilterPopover";
+
+export {
+  EMPTY_FILTER_STATE,
+  OPERATOR_LABELS,
+  applyFilterState,
+  defaultOperatorFor,
+  makeFilterCondition,
+  operatorsForType,
+  valueInputRequired,
+} from "./manifestFilter";
+export type {
+  FilterColumn as ManifestFilterColumn,
+  FilterCondition as ManifestFilterCondition,
+  FilterOperator as ManifestFilterOperator,
+  FilterState as ManifestFilterState,
+  FilterValueType as ManifestFilterValueType,
+} from "./manifestFilter";
+
 export type {
   PlateDimensions,
   PlateMapCsvPlate,

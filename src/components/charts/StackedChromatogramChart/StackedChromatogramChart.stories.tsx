@@ -383,6 +383,58 @@ export const StackWithRangeAnnotations: Story = {
 };
 
 /**
+ * stackingOrder="first-on-top" places series[0] at the top of the stack.
+ * This matches the SST Injection-Viewer convention where rank 0 (the earliest
+ * injection) appears at the top so time flows downward.
+ * Annotations follow the same direction and stay pinned to their trace.
+ */
+export const StackingOrderFirstOnTop: Story = {
+  args: {
+    series: stackSeriesData,
+    title: "Stacked — Earliest Injection on Top",
+    stackingMode: "stack",
+    stackOffset: 500,
+    stackingOrder: "first-on-top",
+    annotations: [
+      [{ x: 5.8, y: 420, text: "Day 1", ay: -35 }],
+      [{ x: 5.9, y: 390, text: "Day 2", ay: -35 }],
+      [{ x: 5.75, y: 450, text: "Day 3", ay: -35 }],
+    ],
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(
+        canvas.getByText("Stacked — Earliest Injection on Top")
+      ).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Three traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(3);
+    });
+
+    await step("Annotation labels are rendered", async () => {
+      const annotationEls = canvasElement.querySelectorAll(".annotation-text");
+      expect(annotationEls.length).toBeGreaterThanOrEqual(3);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'With `stackingOrder="first-on-top"`, series[0] (Day 1) is shifted to the highest position and series[N-1] sits at the base. Annotations follow the same ordering. Compare with the default `StackMode` story where series[0] is at the bottom.',
+      },
+    },
+  },
+};
+
+/**
  * Drag the "Stack Offset" slider in the Controls panel to adjust the vertical
  * separation between traces in real time. stackingMode is locked to 'stack'.
  */

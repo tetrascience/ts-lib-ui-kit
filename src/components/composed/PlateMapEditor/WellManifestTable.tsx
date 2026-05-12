@@ -104,6 +104,12 @@ function parseInputValue(kind: string, raw: string): unknown {
   return raw;
 }
 
+export interface WellManifestTableRowContext<T extends WellRecord = WellRecord> {
+  wellId: WellId;
+  row: T;
+  isSelected: boolean;
+}
+
 export interface WellManifestTableProps<T extends WellRecord = WellRecord> {
   values: Map<WellId, T>;
   columns: WellColumn<T>[];
@@ -123,6 +129,12 @@ export interface WellManifestTableProps<T extends WellRecord = WellRecord> {
   pageSizeOptions?: number[];
   /** Adds a column header action that copies the first non-empty value downward. */
   enableFillDown?: boolean;
+  /**
+   * Extra props spread onto each `<tr>` — typically used to attach a DnD
+   * library's `setNodeRef`, listeners, and data attributes so rows can act as
+   * drag sources. The kit stays DnD-library-agnostic.
+   */
+  rowProps?: (ctx: WellManifestTableRowContext<T>) => React.ComponentProps<"tr"> | undefined;
   className?: string;
 }
 
@@ -138,6 +150,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
   pageSize: initialPageSize = DEFAULT_PAGE_SIZE,
   pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   enableFillDown = true,
+  rowProps,
   className,
 }: WellManifestTableProps<T>) {
   const [showAll, setShowAll] = React.useState(false);
@@ -497,8 +510,9 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
           <TableBody>
             {pagedRows.map(({ id, row }) => {
               const isSelected = selection?.has(id);
+              const extra = rowProps?.({ wellId: id, row, isSelected: !!isSelected });
               return (
-                <TableRow key={id}>
+                <TableRow key={id} {...extra}>
                   {onSelectionChange ? (
                     <TableCell className="w-10">
                       <Checkbox

@@ -14,7 +14,7 @@ export { WellMetadataForm } from "./WellMetadataForm";
 export type { WellMetadataFormProps } from "./WellMetadataForm";
 
 export { WellManifestTable } from "./WellManifestTable";
-export type { WellManifestTableProps } from "./WellManifestTable";
+export type { WellManifestTableProps, WellManifestTableRowContext } from "./WellManifestTable";
 
 export { TemplateIOPanel } from "./TemplateIOPanel";
 export type { TemplateIOPanelProps } from "./TemplateIOPanel";

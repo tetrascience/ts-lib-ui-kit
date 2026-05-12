@@ -126,6 +126,10 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   highlightedWellIds?: ReadonlySet<WellId>;
   /** Fires whenever the currently hovered well changes (null on leave). */
   onHoveredWellChange?: (wellId: WellId | null) => void;
+  /** Enables the filter popover on the manifest table. */
+  manifestFilterable?: boolean;
+  /** Enables the group-by selector on the manifest table. */
+  manifestGroupable?: boolean;
   autoScaleGrid?: boolean;
   minCellSize?: number;
   maxCellSize?: number;
@@ -258,6 +262,8 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   wrapWell,
   highlightedWellIds,
   onHoveredWellChange,
+  manifestFilterable,
+  manifestGroupable,
   autoScaleGrid,
   minCellSize,
   maxCellSize,
@@ -648,6 +654,8 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
             onSelectionChange={onSelectionChange}
             emptyEntry={emptyEntry}
             isPopulated={isPopulated}
+            filterable={manifestFilterable}
+            groupable={manifestGroupable}
           />
         </CardContent>
       </Card>

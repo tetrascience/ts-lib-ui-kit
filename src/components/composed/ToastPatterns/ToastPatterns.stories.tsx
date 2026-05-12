@@ -76,7 +76,7 @@ export const InlineAlerts: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "SW-T1495" },
+    zephyr: { testCaseId: "" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -165,7 +165,7 @@ export const ToastTriggers: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "SW-T1496" },
+    zephyr: { testCaseId: "" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -232,7 +232,7 @@ export const AlertWithAction: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "SW-T1497" },
+    zephyr: { testCaseId: "" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -310,7 +310,7 @@ export const ContextualUsage: Story = {
     )
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1498" },
+    zephyr: { testCaseId: "" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

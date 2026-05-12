@@ -52,7 +52,7 @@ export const Default: Story = {
 
 export const TeamList: Story = {
   parameters: {
-    zephyr: { testCaseId: "SW-T3579" },
+    zephyr: { testCaseId: "SW-T5123" },
   },
   render: () => {
     const members = [
@@ -122,7 +122,7 @@ export const TeamList: Story = {
 
 export const MinimalList: Story = {
   parameters: {
-    zephyr: { testCaseId: "SW-T3580" },
+    zephyr: { testCaseId: "SW-T5124" },
   },
   render: () => (
     <div className="divide-y divide-border">

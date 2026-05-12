@@ -297,31 +297,27 @@ function buildWellOverlay<T extends WellRecord>(
   const r = cellSize / 2 - WELL_INSET;
   const isCircle = wellShape === "circle";
 
-  const renderSelectionOutline = () =>
-    isCircle ? (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={r}
-        fill="none"
-        stroke={selectedBorderColor}
-        strokeWidth={STROKE_SELECTED}
-        pointerEvents="none"
-        data-well-selection={id}
-      />
+  type WellShapeProps = Record<string, string | number | undefined>;
+  const shapeProps: WellShapeProps = isCircle
+    ? { cx, cy, r }
+    : { x, y, width: size, height: size };
+
+  const renderShape = (
+    extraProps: Record<string, string | number | undefined>,
+    children?: React.ReactNode,
+    elementKey?: string | number,
+  ): React.ReactNode => {
+    const props = { ...shapeProps, ...extraProps, pointerEvents: "none" as const };
+    return isCircle ? (
+      <circle key={elementKey} {...props}>
+        {children}
+      </circle>
     ) : (
-      <rect
-        x={x}
-        y={y}
-        width={size}
-        height={size}
-        fill="none"
-        stroke={selectedBorderColor}
-        strokeWidth={STROKE_SELECTED}
-        pointerEvents="none"
-        data-well-selection={id}
-      />
+      <rect key={elementKey} {...props}>
+        {children}
+      </rect>
     );
+  };
 
   const flashAnimations = (
     <>
@@ -336,72 +332,38 @@ function buildWellOverlay<T extends WellRecord>(
     </>
   );
 
-  const renderHighlightOutline = () =>
-    isCircle ? (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={r}
-        fill="none"
-        stroke={highlightBorderColor}
-        strokeWidth={STROKE_HIGHLIGHT}
-        pointerEvents="none"
-        data-well-highlight={id}
-      />
-    ) : (
-      <rect
-        x={x}
-        y={y}
-        width={size}
-        height={size}
-        fill="none"
-        stroke={highlightBorderColor}
-        strokeWidth={STROKE_HIGHLIGHT}
-        pointerEvents="none"
-        data-well-highlight={id}
-      />
-    );
-
   return (
     <g key={`overlay-${id}`}>
-      {isSelected ? renderSelectionOutline() : null}
-      {isHighlighted ? renderHighlightOutline() : null}
-      {isFlashing ? (
-        isCircle ? (
-          <circle
-            key={`${id}-${flashWellKey}`}
-            cx={cx}
-            cy={cy}
-            r={r}
-            fill={selectedBorderColor}
-            fillOpacity={0.24}
-            stroke={selectedBorderColor}
-            strokeOpacity={0.92}
-            strokeWidth={STROKE_FLASH}
-            pointerEvents="none"
-            data-well-flash={id}
-          >
-            {flashAnimations}
-          </circle>
-        ) : (
-          <rect
-            key={`${id}-${flashWellKey}`}
-            x={x}
-            y={y}
-            width={size}
-            height={size}
-            fill={selectedBorderColor}
-            fillOpacity={0.24}
-            stroke={selectedBorderColor}
-            strokeOpacity={0.92}
-            strokeWidth={STROKE_FLASH}
-            pointerEvents="none"
-            data-well-flash={id}
-          >
-            {flashAnimations}
-          </rect>
-        )
-      ) : null}
+      {isSelected
+        ? renderShape({
+            fill: "none",
+            stroke: selectedBorderColor,
+            strokeWidth: STROKE_SELECTED,
+            "data-well-selection": id,
+          })
+        : null}
+      {isHighlighted
+        ? renderShape({
+            fill: "none",
+            stroke: highlightBorderColor,
+            strokeWidth: STROKE_HIGHLIGHT,
+            "data-well-highlight": id,
+          })
+        : null}
+      {isFlashing
+        ? renderShape(
+            {
+              fill: selectedBorderColor,
+              fillOpacity: 0.24,
+              stroke: selectedBorderColor,
+              strokeOpacity: 0.92,
+              strokeWidth: STROKE_FLASH,
+              "data-well-flash": id,
+            },
+            flashAnimations,
+            `${id}-${flashWellKey}`,
+          )
+        : null}
     </g>
   );
 }
@@ -575,12 +537,13 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   const gridLines = wellShape === "circle" ? [] : buildGridLines(dims, resolvedCellSize, borderColor);
   const wellOverlays = buildWellOverlays(wellRenderArgs);
 
-  const overlayCells: React.ReactNode[] = [];
-  if (wrapWell) {
+  const overlayCells = React.useMemo<React.ReactNode[]>(() => {
+    if (!wrapWell) return [];
+    const cells: React.ReactNode[] = [];
     for (let r = 0; r < dims.rows; r++) {
       for (let c = 0; c < dims.columns; c++) {
         const id = pos(r, c, dims.columns);
-        overlayCells.push(
+        cells.push(
           <div
             key={id}
             style={{
@@ -597,7 +560,8 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
         );
       }
     }
-  }
+    return cells;
+  }, [wrapWell, dims.rows, dims.columns, resolvedCellSize]);
 
   return (
     <div

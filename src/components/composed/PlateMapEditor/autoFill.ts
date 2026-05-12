@@ -16,35 +16,35 @@ export interface AutoFillOptions {
   replicates?: number;
 }
 
-function fullOrder(dims: PlateDimensions, strategy: FillStrategy): WellId[] {
-  const out: WellId[] = [];
+function positionAtIndex(dims: PlateDimensions, strategy: FillStrategy, index: number): WellId {
   const { rows, columns } = dims;
   if (strategy === "row-major") {
-    for (let r = 0; r < rows; r++) for (let c = 0; c < columns; c++) out.push(pos(r, c, columns));
-    return out;
+    return pos(Math.floor(index / columns), index % columns, columns);
   }
   if (strategy === "column-major") {
-    for (let c = 0; c < columns; c++) for (let r = 0; r < rows; r++) out.push(pos(r, c, columns));
-    return out;
+    return pos(index % rows, Math.floor(index / rows), columns);
   }
   if (strategy === "row-snake") {
-    for (let r = 0; r < rows; r++) {
-      if (r % 2 === 0) {
-        for (let c = 0; c < columns; c++) out.push(pos(r, c, columns));
-      } else {
-        for (let c = columns - 1; c >= 0; c--) out.push(pos(r, c, columns));
-      }
-    }
-    return out;
+    const r = Math.floor(index / columns);
+    const i = index % columns;
+    const c = r % 2 === 0 ? i : columns - 1 - i;
+    return pos(r, c, columns);
   }
-  for (let c = 0; c < columns; c++) {
-    if (c % 2 === 0) {
-      for (let r = 0; r < rows; r++) out.push(pos(r, c, columns));
-    } else {
-      for (let r = rows - 1; r >= 0; r--) out.push(pos(r, c, columns));
-    }
+  const c = Math.floor(index / rows);
+  const i = index % rows;
+  const r = c % 2 === 0 ? i : rows - 1 - i;
+  return pos(r, c, columns);
+}
+
+function findStartIndex(dims: PlateDimensions, strategy: FillStrategy, startWellId: WellId | undefined): number {
+  if (!startWellId) return 0;
+  const parsed = parsePos(startWellId, dims);
+  if (!parsed) return 0;
+  const total = dims.rows * dims.columns;
+  for (let i = 0; i < total; i++) {
+    if (positionAtIndex(dims, strategy, i) === startWellId) return i;
   }
-  return out;
+  return 0;
 }
 
 /**
@@ -57,24 +57,14 @@ export function autoFillPositions(options: AutoFillOptions): WellId[] {
   const { dims, count, startWellId, strategy = "row-major", replicates = 1 } = options;
   if (count <= 0 || replicates <= 0) return [];
 
-  const order = fullOrder(dims, strategy);
-  let startIdx = 0;
-  if (startWellId) {
-    const startIndex = order.indexOf(startWellId);
-    if (startIndex >= 0) startIdx = startIndex;
-    else {
-      const parsed = parsePos(startWellId, dims);
-      if (parsed) {
-        const targetId = pos(parsed.row, parsed.col, dims.columns);
-        const matched = order.indexOf(targetId);
-        if (matched >= 0) startIdx = matched;
-      }
-    }
+  const total = dims.rows * dims.columns;
+  const startIdx = findStartIndex(dims, strategy, startWellId);
+  const end = Math.min(total, startIdx + count * replicates);
+  const out: WellId[] = [];
+  for (let i = startIdx; i < end; i++) {
+    out.push(positionAtIndex(dims, strategy, i));
   }
-
-  const totalNeeded = count * replicates;
-  const slice = order.slice(startIdx, startIdx + totalNeeded);
-  return slice;
+  return out;
 }
 
 /**

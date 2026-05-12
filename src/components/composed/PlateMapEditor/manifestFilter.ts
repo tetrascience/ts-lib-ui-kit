@@ -148,11 +148,13 @@ export function applyFilterState<T extends Record<string, unknown>>(
   return rows.filter((row) => state.conditions[match]((cond) => evaluateCondition(row, cond, columns)));
 }
 
+const RADIX_BASE36 = 36;
+
 export function makeFilterCondition(field: string, type: FilterValueType = "string"): FilterCondition {
   const id =
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID()
-      : `cond_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      : `cond_${Date.now()}_${Math.random().toString(RADIX_BASE36).slice(2)}`;
   return {
     id,
     field,

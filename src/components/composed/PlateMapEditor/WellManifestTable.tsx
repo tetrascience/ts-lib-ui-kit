@@ -1,8 +1,8 @@
 import { ArrowDownToLine, Check, ChevronDown, ChevronRight, Layers } from "lucide-react";
 import * as React from "react";
 
-import { ManifestFilterPopover } from "./ManifestFilterPopover";
 import { EMPTY_FILTER_STATE, applyFilterState } from "./manifestFilter";
+import { ManifestFilterPopover } from "./ManifestFilterPopover";
 
 import type { FilterColumn, FilterState, FilterValueType } from "./manifestFilter";
 import type { WellColumn, WellField, WellId, WellRecord, WellSelectOption } from "./types";

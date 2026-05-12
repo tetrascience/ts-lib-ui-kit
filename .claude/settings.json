@@ -5,7 +5,9 @@
       "Bash(yarn typecheck *)",
       "Bash(echo \"exit: $?\")",
       "Bash(node -e \"const b = require\\('@base-ui/react'\\); console.log\\(Object.keys\\(b\\).filter\\(k => k.toLowerCase\\(\\).includes\\('popover'\\)\\)\\)\")",
-      "Bash(node -e \"const p = require\\('@base-ui/react'\\).Popover; console.log\\(Object.keys\\(p\\)\\)\")"
+      "Bash(node -e \"const p = require\\('@base-ui/react'\\).Popover; console.log\\(Object.keys\\(p\\)\\)\")",
+      "Bash(yarn lint *)",
+      "Bash(echo \"lint exit: $?\")"
     ]
   }
 }

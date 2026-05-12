@@ -30,6 +30,9 @@ export type { WellLegendItem, WellLegendProps } from "./WellLegend";
 export { PlateZoomControl } from "./PlateZoomControl";
 export type { PlateZoomControlProps } from "./PlateZoomControl";
 
+export { autoFillPositions, autoFillRecords } from "./autoFill";
+export type { AutoFillOptions, FillStrategy } from "./autoFill";
+
 export {
   EMPTY_FILTER_STATE,
   OPERATOR_LABELS,

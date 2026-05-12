@@ -11,6 +11,8 @@ const DEFAULT_MIN_AUTO_CELL = 24;
 const DEFAULT_MAX_AUTO_CELL = 72;
 const DEFAULT_MAX_DENSE_AUTO_CELL = 36;
 const LABEL_PAD = 26;
+const FRAME_PADDING_PX = 12;
+const FRAME_BORDER_PX = 1;
 const LABEL_FONT_SIZE = 16;
 const LABEL_TEXT_INSET = 9;
 const LABEL_BASELINE_OFFSET = 5;
@@ -445,9 +447,10 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
       return cellSize ?? DEFAULT_CELL;
     }
     const autoMaxCellSize = maxCellSize ?? (dims.columns > 12 ? DEFAULT_MAX_DENSE_AUTO_CELL : DEFAULT_MAX_AUTO_CELL);
-    const fitSize = Math.floor((containerWidth - LABEL_PAD) / dims.columns);
+    const frameAdjust = framed ? (FRAME_PADDING_PX + FRAME_BORDER_PX) * 2 : 0;
+    const fitSize = Math.floor((containerWidth - LABEL_PAD - frameAdjust) / dims.columns);
     return Math.max(minCellSize, Math.min(autoMaxCellSize, fitSize));
-  }, [autoScale, cellSize, containerWidth, dims.columns, maxCellSize, minCellSize]);
+  }, [autoScale, cellSize, containerWidth, dims.columns, framed, maxCellSize, minCellSize]);
 
   const cellAt = React.useCallback(
     (evt: React.MouseEvent): { r: number; c: number } | null => {
@@ -573,42 +576,51 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   return (
     <div
       ref={containerRef}
-      className={cn(
-        "relative overflow-auto select-none",
-        framed && "inline-block rounded-xl border bg-card p-3 shadow-sm",
-        className,
-      )}
+      className={cn("relative w-full select-none", className)}
       data-slot="plate-paint-grid"
     >
-      <svg
-        ref={svgRef}
-        width={width}
-        height={height}
-        className="block cursor-crosshair"
-        onMouseDown={handleDown}
-        onMouseMove={handleMove}
-        onMouseUp={handleUp}
-        onMouseLeave={handleLeave}
-        onDoubleClick={handleDoubleClick}
-        role="group"
-        aria-label={`${dims.rows} row by ${dims.columns} column plate map. Drag to select wells.`}
+      <div
+        className={cn(
+          "relative inline-block",
+          framed && "rounded-xl border bg-card p-3 shadow-sm",
+        )}
+        data-slot="plate-paint-grid-frame"
       >
-        {colLabels}
-        {rowLabels}
-        {wellCells}
-        {gridLines}
-        {wellOverlays}
-      </svg>
-      {wrapWell ? (
-        <div
-          className="pointer-events-none absolute top-0 left-0"
-          style={{ width, height }}
-          aria-hidden
-          data-slot="plate-well-overlay"
+        <svg
+          ref={svgRef}
+          width={width}
+          height={height}
+          className="block cursor-crosshair"
+          onMouseDown={handleDown}
+          onMouseMove={handleMove}
+          onMouseUp={handleUp}
+          onMouseLeave={handleLeave}
+          onDoubleClick={handleDoubleClick}
+          role="group"
+          aria-label={`${dims.rows} row by ${dims.columns} column plate map. Drag to select wells.`}
         >
-          {overlayCells}
-        </div>
-      ) : null}
+          {colLabels}
+          {rowLabels}
+          {wellCells}
+          {gridLines}
+          {wellOverlays}
+        </svg>
+        {wrapWell ? (
+          <div
+            className="pointer-events-none absolute"
+            style={{
+              top: framed ? FRAME_PADDING_PX : 0,
+              left: framed ? FRAME_PADDING_PX : 0,
+              width,
+              height,
+            }}
+            aria-hidden
+            data-slot="plate-well-overlay"
+          >
+            {overlayCells}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

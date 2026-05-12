@@ -10,6 +10,7 @@ export function StackedChromatogramChart({
   series,
   stackingMode = "overlay",
   stackOffset = 0,
+  stackingOrder = "first-on-bottom",
   annotations,
   rangeAnnotations,
   ...restProps
@@ -26,9 +27,10 @@ export function StackedChromatogramChart({
         annotations,
         rangeAnnotations,
         stackingMode,
-        stackOffset
+        stackOffset,
+        stackingOrder
       ),
-    [series, annotations, rangeAnnotations, stackingMode, stackOffset]
+    [series, annotations, rangeAnnotations, stackingMode, stackOffset, stackingOrder]
   );
 
   return (

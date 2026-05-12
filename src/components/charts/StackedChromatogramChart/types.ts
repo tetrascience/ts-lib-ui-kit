@@ -39,4 +39,12 @@ export interface StackedChromatogramChartProps
    * (they derive their position from paper-space or the already-shifted data).
    */
   rangeAnnotations?: RangeAnnotation[][];
+
+  /**
+   * Controls which end of the stack series[0] lands on (stack mode only).
+   * - "first-on-bottom" (default) — series[0] sits at the base; series[N-1] is highest.
+   * - "first-on-top" — series[0] is shifted to the top; series[N-1] is at the base.
+   *   Annotations and numeric-yAnchor range annotations follow the chosen direction.
+   */
+  stackingOrder?: "first-on-bottom" | "first-on-top";
 }

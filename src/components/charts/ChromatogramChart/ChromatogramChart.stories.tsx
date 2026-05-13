@@ -6,7 +6,6 @@ import {
   type ChromatogramSeries,
   type PeakAnnotation,
   type PeakSelectEvent,
-  type RangeAnnotation,
 } from "./ChromatogramChart";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -73,49 +72,36 @@ const multiInjectionData: ChromatogramSeries[] = [
   },
 ];
 
-// Peak annotations for compound identification (simple labels without boundaries)
-const sampleAnnotations: PeakAnnotation[] = [
-  { x: 5.8, y: 420, text: "Caffeine", ax: 0, ay: -40 },
-  { x: 12.5, y: 180, text: "Theobromine", ax: 30, ay: -55 },
-  { x: 18.3, y: 350, text: "Theophylline", ax: -30, ay: -80 },
-];
-
-// User-defined peaks with boundary information for boundary markers
-// Users simply provide startX and endX (retention times) - the component handles the rest
-const userDefinedPeaksWithBoundaries: PeakAnnotation[] = [
+// User-defined peaks with boundary information.
+// Provide startX and endX (retention times) — the component computes area and boundary markers.
+const userDefinedPeaks: PeakAnnotation[] = [
   {
     x: 5.8,
     y: 420,
-    text: "Caffeine",
+    text: "Caffeine (pass)",
+    color: "#22c55e",
     ay: -40,
-    startX: 5.0, // Start retention time
-    endX: 6.6, // End retention time
-    // area is auto-computed from boundaries
+    startX: 5.0,
+    endX: 6.6,
   },
   {
     x: 12.5,
     y: 180,
-    text: "Theobromine",
+    text: "Theobromine (fail)",
+    color: "#ef4444",
     ay: -55,
-    startX: 11.5, // Start retention time
-    endX: 13.5, // End retention time
+    startX: 11.5,
+    endX: 13.5,
   },
   {
     x: 18.3,
     y: 350,
-    text: "Theophylline",
+    text: "Theophylline (N/A)",
+    color: "#6b7280",
     ay: -80,
-    startX: 17.3, // Start retention time
-    endX: 19.3, // End retention time
+    startX: 17.3,
+    endX: 19.3,
   },
-];
-
-// Range annotations marking chromatographic fractions across the x-axis
-const sampleRangeAnnotations: RangeAnnotation[] = [
-  { label: "Void", startX: 0, endX: 2.5, color: "#8E8E93" },
-  { label: "Caffeine", startX: 4.5, endX: 7.2, color: "#007AFF" },
-  { label: "Theobromine", startX: 11.0, endX: 14.0, color: "#34C759" },
-  { label: "Theophylline", startX: 16.8, endX: 19.8, color: "#FF9500" },
 ];
 
 // Annotations with stable IDs for selection stories
@@ -217,83 +203,6 @@ export const MultipleTraces: Story = {
 };
 
 /**
- * Series with injection metadata displayed in tooltips.
- */
-export const WithMetadata: Story = {
-  args: {
-    series: [
-      {
-        ...generateChromatogramData([
-          { rt: 5.8, height: 420, width: 0.4 },
-          { rt: 12.5, height: 180, width: 0.5 },
-          { rt: 18.3, height: 350, width: 0.45 },
-        ]),
-        name: "Sample A - UV 254nm",
-        metadata: {
-          sampleName: "Caffeine Standard",
-          injectionId: "INJ-2024-001",
-          detectorType: "UV",
-          wavelength: 254,
-          methodName: "Caffeine_HPLC_v2",
-          instrumentName: "Agilent 1260",
-          wellPosition: "A1",
-          injectionVolume: 10,
-        },
-      },
-      {
-        ...generateChromatogramData([
-          { rt: 5.9, height: 380, width: 0.42 },
-          { rt: 12.6, height: 195, width: 0.48 },
-          { rt: 18.4, height: 320, width: 0.47 },
-        ], 0.8),
-        name: "Sample B - UV 254nm",
-        metadata: {
-          sampleName: "Coffee Extract",
-          injectionId: "INJ-2024-002",
-          detectorType: "UV",
-          wavelength: 254,
-          methodName: "Caffeine_HPLC_v2",
-          wellPosition: "A2",
-        },
-      },
-    ],
-    title: "Chromatogram with Injection Metadata",
-    showCrosshairs: true,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("Chromatogram with Injection Metadata");
-      expect(title).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-
-    await step("Both traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(2);
-    });
-
-    await step("Legend shows series names", async () => {
-      expect(canvas.getByText("Sample A - UV 254nm")).toBeInTheDocument();
-      expect(canvas.getByText("Sample B - UV 254nm")).toBeInTheDocument();
-    });
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: "Hover over traces to see injection metadata in the tooltip. Metadata includes sample name, injection ID, detector type, wavelength, method name, and well position.",
-      },
-    },
-    zephyr: { testCaseId: "SW-T1110" },
-  },
-};
-
-/**
  * Automatic peak detection with area calculations using trapezoidal integration.
  */
 export const PeakDetection: Story = {
@@ -337,124 +246,16 @@ export const PeakDetection: Story = {
 };
 
 /**
- * Full featured chromatogram combining all major features.
+ * User-provided peaks with startX / endX boundaries and per-peak pass/fail colors.
+ * Boundary markers (triangle at start, diamond at end) and annotation label/arrow/border
+ * all inherit the peak color. Area is auto-computed via trapezoidal integration over the
+ * bounded slice — no auto-detection needed.
  */
-export const FullFeatured: Story = {
-  args: {
-    series: multiInjectionData,
-    annotations: sampleAnnotations,
-    title: "Full Featured Chromatogram",
-    showGridX: true,
-    showGridY: true,
-    showCrosshairs: true,
-    baselineCorrection: "linear",
-    peakDetectionOptions: {
-      minHeight: 0.15,
-      prominence: 0.1,
-    },
-    showPeakAreas: true,
-    boundaryMarkers: "enabled",
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("Full Featured Chromatogram");
-      expect(title).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-
-    await step("Multiple traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBeGreaterThanOrEqual(3);
-    });
-
-    await step("User annotations are displayed", async () => {
-      expect(canvas.getByText("Caffeine")).toBeInTheDocument();
-      expect(canvas.getByText("Theobromine")).toBeInTheDocument();
-      expect(canvas.getByText("Theophylline")).toBeInTheDocument();
-    });
-
-    await step("Peak area annotations are displayed", async () => {
-      const annotations = canvasElement.querySelectorAll(".annotation-text");
-      // User annotations are displayed (auto-detected peaks at same positions are filtered out)
-      expect(annotations.length).toBeGreaterThanOrEqual(3);
-    });
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: "Combines all major features: multiple traces, grid lines, crosshairs, manual annotations, baseline correction, and automatic peak detection.",
-      },
-    },
-    zephyr: { testCaseId: "SW-T1112" },
-  },
-};
-
-/**
- * Peak boundary markers showing triangle markers at peak start and diamond markers
- * with vertical lines at peak end (the default styling).
- */
-export const WithBoundaryMarkers: Story = {
-  args: {
-    series: [{ ...singleInjectionData, name: "Sample A" }],
-    title: "Peak Boundary Markers",
-    peakDetectionOptions: {
-      minHeight: 0.1,
-      prominence: 0.05,
-      minDistance: 20,
-    },
-    showPeakAreas: true,
-    boundaryMarkers: "enabled",
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("Peak Boundary Markers");
-      expect(title).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-
-    await step("Boundary marker traces are rendered", async () => {
-      // Boundary markers add additional scatter traces for the markers
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBeGreaterThan(1); // Main trace + boundary marker traces
-    });
-
-    await step("Peak area annotations are displayed", async () => {
-      const annotations = canvasElement.querySelectorAll(".annotation-text");
-      expect(annotations.length).toBeGreaterThan(0);
-    });
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: "Peak boundary markers visually indicate peak start and end points. Use 'auto' to automatically choose triangle markers (▲) for isolated boundaries at baseline or diamond markers (◆) with vertical lines for overlapping peaks. Set to 'triangle' or 'diamond' to force a specific marker style.",
-      },
-    },
-    zephyr: { testCaseId: "SW-T1113" },
-  },
-};
-
-/**
- * User-defined peaks with boundary information. Users can provide their own peak
- * annotations with startIndex and endIndex to display boundary markers without
- * using automatic peak detection.
- */
-export const UserDefinedPeakBoundaries: Story = {
+export const UserDefinedPeaks: Story = {
   args: {
     series: [{ ...singleInjectionData, name: "Sample A" }],
     title: "User-Defined Peak Boundaries",
-    annotations: userDefinedPeaksWithBoundaries,
+    annotations: userDefinedPeaks,
     boundaryMarkers: "enabled",
   },
   play: async ({ canvasElement, step }) => {
@@ -470,14 +271,13 @@ export const UserDefinedPeakBoundaries: Story = {
       expect(container).toBeInTheDocument();
     });
 
-    await step("User-defined peak annotations are displayed", async () => {
-      expect(canvas.getByText("Caffeine")).toBeInTheDocument();
-      expect(canvas.getByText("Theobromine")).toBeInTheDocument();
-      expect(canvas.getByText("Theophylline")).toBeInTheDocument();
+    await step("Colored peak annotations are displayed", async () => {
+      expect(canvas.getByText("Caffeine (pass)")).toBeInTheDocument();
+      expect(canvas.getByText("Theobromine (fail)")).toBeInTheDocument();
+      expect(canvas.getByText("Theophylline (N/A)")).toBeInTheDocument();
     });
 
-    await step("Boundary marker traces are rendered for user-defined peaks", async () => {
-      // With boundary markers enabled, additional traces should be rendered
+    await step("Boundary marker traces are rendered", async () => {
       const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
       expect(traces.length).toBeGreaterThan(1);
     });
@@ -485,175 +285,11 @@ export const UserDefinedPeakBoundaries: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Users can provide their own peak annotations with boundary information (startIndex, endIndex) to display boundary markers. This is useful when peak boundaries are known from external analysis or when manual peak integration is required. The annotations array accepts PeakAnnotation objects with optional index, startIndex, endIndex, and area fields.",
+        story:
+          "Supply `startX`, `endX`, and `color` on each annotation to define peak boundaries with pass/fail coloring (green = pass, red = fail, grey = N/A). The component renders triangle markers (▲) at the start and diamond markers (◆) at the end; the label, arrow, border, and boundary markers all inherit the per-peak color. Area is auto-computed via trapezoidal integration over the bounded slice.",
       },
     },
     zephyr: { testCaseId: "SW-T1114" },
-  },
-};
-
-/**
- * Combining automatic peak detection with user-defined annotations. Auto-detected peaks
- * show computed areas while user annotations provide custom labels. Both can have
- * boundary markers displayed.
- */
-export const CombinedAutoAndUserPeaks: Story = {
-  args: {
-    series: [{ ...singleInjectionData, name: "Sample A" }],
-    title: "Combined Auto-Detected and User-Defined Peaks",
-    annotations: [
-      // User-defined annotation with boundaries (will show boundary markers)
-      // Just provide startX and endX - area is auto-computed
-      {
-        x: 5.8,
-        y: 420,
-        text: "Caffeine (user-defined)",
-        ay: -40,
-        startX: 5.0,
-        endX: 6.6,
-      },
-      // Simple user annotation without boundaries (just a label)
-      { x: 24.1, y: 220, text: "Unknown Peak", ay: -60 },
-    ],
-    peakDetectionOptions: {
-      minHeight: 0.1,
-      prominence: 0.05,
-    },
-    showPeakAreas: true,
-    boundaryMarkers: "enabled",
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("Combined Auto-Detected and User-Defined Peaks");
-      expect(title).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
-      expect(container).toBeInTheDocument();
-    });
-
-    await step("User-defined annotations are displayed", async () => {
-      expect(canvas.getByText("Caffeine (user-defined)")).toBeInTheDocument();
-      expect(canvas.getByText("Unknown Peak")).toBeInTheDocument();
-    });
-
-    await step("Auto-detected peak area annotations are displayed", async () => {
-      // Peak areas from auto-detection + user annotations
-      const annotations = canvasElement.querySelectorAll(".annotation-text");
-      expect(annotations.length).toBeGreaterThan(2);
-    });
-
-    await step("Boundary markers from both sources are rendered", async () => {
-      // Main trace + boundary marker traces from both auto-detected and user-defined peaks
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBeGreaterThan(1);
-    });
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: "This example shows automatic peak detection combined with user-provided annotations. The auto-detected peaks display computed areas, while user annotations can provide custom labels. User annotations with boundary info (startIndex, endIndex) will also display boundary markers alongside auto-detected peaks.",
-      },
-    },
-    zephyr: { testCaseId: "SW-T1115" },
-  },
-};
-
-/**
- * Horizontal colored bars mark chromatographic fractions (Void, Caffeine, Theobromine,
- * Theophylline) above the signal trace. Labels stay centred within their bar. Zoom or
- * pan the chart to verify that labels reposition to the visible portion of each bar and
- * disappear when a bar scrolls fully out of view.
- */
-export const WithRangeAnnotations: Story = {
-  args: {
-    series: [{ ...singleInjectionData, name: "Sample A" }],
-    title: "Chromatogram with Fraction Windows",
-    rangeAnnotations: sampleRangeAnnotations,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Chromatogram with Fraction Windows")).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(1);
-    });
-
-    await step("Range annotation labels are rendered", async () => {
-      expect(canvas.getByText("Caffeine")).toBeInTheDocument();
-      expect(canvas.getByText("Theobromine")).toBeInTheDocument();
-      expect(canvas.getByText("Theophylline")).toBeInTheDocument();
-      expect(canvas.getByText("Void")).toBeInTheDocument();
-    });
-
-    await step("Range annotation shapes are rendered", async () => {
-      const shapes = canvasElement.querySelectorAll(".shapelayer path");
-      expect(shapes.length).toBeGreaterThanOrEqual(4);
-    });
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Fraction windows rendered as coloured bars above the chromatogram trace. Labels reposition to stay centred within the visible portion of each bar as the user zooms or pans.",
-      },
-    },
-    zephyr: { testCaseId: "SW-T1116" },
-  },
-};
-
-/**
- * Range annotations combined with auto peak detection. The fraction bars sit above the
- * axis area while the peak labels (with areas) annotate the signal directly.
- */
-export const WithRangeAnnotationsAndPeakDetection: Story = {
-  args: {
-    series: [{ ...singleInjectionData, name: "Sample A" }],
-    title: "Fraction Windows + Peak Detection",
-    rangeAnnotations: sampleRangeAnnotations,
-    peakDetectionOptions: { minHeight: 0.1, prominence: 0.05, minDistance: 20 },
-    showPeakAreas: true,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Fraction Windows + Peak Detection")).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Range annotation labels are rendered", async () => {
-      expect(canvas.getByText("Theophylline")).toBeInTheDocument();
-      expect(canvas.getByText("Void")).toBeInTheDocument();
-    });
-
-    await step("Peak area annotations are displayed", async () => {
-      const annotations = canvasElement.querySelectorAll(".annotation-text");
-      expect(annotations.length).toBeGreaterThan(4);
-    });
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Fraction windows coexist with auto-detected peak labels. The bars reserve space at the top of the plot; peak area annotations appear directly on the signal.",
-      },
-    },
-    zephyr: { testCaseId: "SW-T1117" },
   },
 };
 
@@ -709,79 +345,6 @@ export const PeakHoverAndSelection: StoryObj<typeof ChromatogramChart> = {
       },
     },
     zephyr: { testCaseId: "SW-T1118" },
-  },
-};
-
-/**
- * Per-peak color overrides: red (fail), green (pass), grey (excluded).
- * Matches the SST runner's pass/fail coloring where each peak carries a `color`
- * derived from its `passed` field. Arrows, borders, and boundary markers all
- * inherit the per-peak color.
- */
-export const PerPeakColorOverride: Story = {
-  args: {
-    series: [{ ...singleInjectionData, name: "Sample A" }],
-    title: "Per-Peak Color Override",
-    annotations: [
-      {
-        id: "peak-pass",
-        x: 5.8,
-        y: 420,
-        text: "Caffeine (pass)",
-        color: "#22c55e",
-        startX: 5.0,
-        endX: 6.6,
-      },
-      {
-        id: "peak-fail",
-        x: 12.5,
-        y: 180,
-        text: "Theobromine (fail)",
-        color: "#ef4444",
-        startX: 11.5,
-        endX: 13.5,
-      },
-      {
-        id: "peak-excluded",
-        x: 18.3,
-        y: 350,
-        text: "Theophylline (N/A)",
-        color: "#6b7280",
-        startX: 17.5,
-        endX: 19.2,
-      },
-    ],
-    boundaryMarkers: "enabled",
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Per-Peak Color Override")).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Colored annotation labels are rendered", async () => {
-      expect(canvas.getByText("Caffeine (pass)")).toBeInTheDocument();
-      expect(canvas.getByText("Theobromine (fail)")).toBeInTheDocument();
-      expect(canvas.getByText("Theophylline (N/A)")).toBeInTheDocument();
-    });
-
-    await step("Boundary marker traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBeGreaterThan(1);
-    });
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Each peak carries a `color` override (green = pass, red = fail, grey = N/A). The annotation label, arrow, border, and boundary markers all use the per-peak color. Existing peaks without a color override are unaffected.",
-      },
-    },
   },
 };
 
@@ -853,46 +416,10 @@ export const WithRegionOverlay: Story = {
 };
 
 /**
- * Compact title: 13 px font with a tighter top margin.
- * Matches the per-channel panel style used by the SST runner where many charts
- * are stacked vertically and a full 20 px title wastes space.
- */
-export const CompactTitle: Story = {
-  args: {
-    series: [{ ...singleInjectionData, name: "Sample A" }],
-    title: "Channel 214 nm",
-    titleFontSize: 13,
-    titleTopMargin: 28,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Compact title is displayed", async () => {
-      expect(canvas.getByText("Channel 214 nm")).toBeInTheDocument();
-    });
-
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(1);
-    });
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Use `titleFontSize` and `titleTopMargin` to shrink the title area for compact multi-panel layouts. The 13 px / 28 px combination matches the SST runner's per-channel panel style. Default stories are unaffected.",
-      },
-    },
-  },
-};
-
-/**
  * Inline annotation style: labels float directly above the trace at the peak Y value
  * with no arrow. Cleaner for dense chromatograms where arrows create visual noise.
+ * Use `titleFontSize` and `titleTopMargin` to shrink the title area for compact
+ * multi-panel layouts (e.g. `titleFontSize={13}` matches the SST runner panel style).
  */
 export const InlineAnnotationStyle: Story = {
   args: {
@@ -922,7 +449,7 @@ export const InlineAnnotationStyle: Story = {
     docs: {
       description: {
         story:
-          'With annotationStyle="inline" labels sit 4 px above the actual trace Y value with no arrow. Useful for dense chromatograms where arrowheads clutter the signal.',
+          'With `annotationStyle="inline"` labels sit 4 px above the actual trace Y value with no arrow. Useful for dense chromatograms where arrowheads clutter the signal.',
       },
     },
     zephyr: { testCaseId: "SW-T1119" },

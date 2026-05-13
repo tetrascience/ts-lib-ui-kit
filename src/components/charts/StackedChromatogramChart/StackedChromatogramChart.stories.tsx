@@ -232,9 +232,9 @@ export const StackModeWithAnnotations: Story = {
       expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
     });
 
-    await step("Three traces are rendered", async () => {
+    await step("Four traces are rendered", async () => {
       const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(3);
+      expect(traces.length).toBe(4);
     });
 
     await step("Annotations are rendered", async () => {

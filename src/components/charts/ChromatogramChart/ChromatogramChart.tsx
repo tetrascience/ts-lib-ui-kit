@@ -18,7 +18,6 @@ import {
   processUserAnnotations,
 } from "./dataProcessing";
 import { detectPeaks } from "./peakDetection";
-import { buildRangeAnnotationElements } from "./rangeAnnotations";
 import { createRegionOverlayTraces } from "./regionOverlays";
 
 import type {
@@ -32,7 +31,6 @@ import type {
   PeakDetectionOptions,
   ChromatogramChartProps,
   PeakWithMeta,
-  RangeAnnotation,
 } from "./types";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
@@ -43,7 +41,6 @@ export type {
   PeakAnnotation,
   PeakSelectEvent,
   PeakSelectionAppearance,
-  RangeAnnotation,
   BaselineCorrectionMethod,
   BoundaryMarkerStyle,
   BoundaryMarkerType,
@@ -75,8 +72,6 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   boundaryMarkers = "none",
   annotationOverlapThreshold = 0.4,
   showExportButton = true,
-  rangeAnnotations = [],
-  rangeAnnotationOverlapThreshold = 0,
   selectedPeakIds,
   onPeakClick,
   onPeakHover,
@@ -89,10 +84,6 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
 
-  // Prevents the plotly_relayout fired by our own annotation update from
-  // being treated as a user-initiated zoom and triggering another update cycle.
-  const isAnnotationRelayout = useRef(false);
-
   // Stable refs for callbacks — avoids including them in effect dep arrays
   // (consumers often pass arrow functions that change identity every render).
   const onPeakClickRef = useRef(onPeakClick);
@@ -103,15 +94,9 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   // Tracks the series index whose line is currently thickened on hover.
   const thickenedSeriesRef = useRef<number | null>(null);
 
-  // Holds the latest peak Plotly annotations so that closures (e.g. the range
-  // repositioning handler) always use the current selection-styled annotations.
+  // Holds the latest peak Plotly annotations so that closures in effects always
+  // read the latest selection-styled annotations.
   const peakAnnotationsRef = useRef<Partial<Plotly.Annotations>[]>([]);
-
-  // Holds the latest range annotation labels, kept in sync by both the main
-  // effect (initial render) and the range-repositioning handler (on pan/zoom).
-  // The selection effect reads this ref so it can combine peak + range labels
-  // in Plotly.relayout without wiping out any repositioning done by the user.
-  const rangeAnnotationLabelsRef = useRef<Partial<Plotly.Annotations>[]>([]);
 
   // Memoize processed series with baseline correction
   const processedSeries = useMemo(() => {
@@ -333,19 +318,6 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       plotData.push(hitAreaTrace);
     }
 
-    // Range annotation shapes and labels
-    const { shapes: rangeShapes, annotations: rangeAnnotationLabels, yDomainMax } =
-      rangeAnnotations.length > 0
-        ? buildRangeAnnotationElements(
-            rangeAnnotations,
-            rangeAnnotationOverlapThreshold,
-            processedSeries
-          )
-        : { shapes: [], annotations: [], yDomainMax: 1.0 };
-
-    // Store initial range labels so the selection effect can combine them
-    rangeAnnotationLabelsRef.current = rangeAnnotationLabels;
-
     const layout: Partial<Plotly.Layout> = {
       title: title
         ? {
@@ -402,7 +374,6 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
         linewidth: 1,
         range: yRange,
         autorange: !yRange,
-        domain: [0, yDomainMax] as [number, number],
         zeroline: false,
         tickfont: { size: 12, color: theme.textColor, family: "Inter, sans-serif" },
         showspikes: showCrosshairs,
@@ -421,8 +392,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
         font: { size: 12, color: theme.textColor, family: "Inter, sans-serif" },
       },
       showlegend: showLegend && series.length > 1,
-      annotations: [...peakAnnotationsRef.current, ...rangeAnnotationLabels],
-      shapes: rangeShapes,
+      annotations: peakAnnotationsRef.current,
     };
 
     const config: Partial<Plotly.Config> = {
@@ -500,76 +470,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       }
     );
 
-    // ── Range annotation label repositioning on pan / zoom ─────────────────
-    // Deferred via requestAnimationFrame to avoid re-entering Plotly's own RAF
-    // rendering pass. isAnnotationRelayout guards against feedback loops.
-    let pendingLabelUpdate: ReturnType<typeof requestAnimationFrame> | null = null;
-
-    if (rangeAnnotations.length > 0) {
-      (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
-        "plotly_relayout",
-        (eventData: Plotly.PlotRelayoutEvent) => {
-          const ed = eventData as Record<string, unknown>;
-          if (isAnnotationRelayout.current) return;
-
-          const isXAxisChange =
-            "xaxis.range[0]" in ed ||
-            ("xaxis.range" in ed && Array.isArray(ed["xaxis.range"])) ||
-            ed["xaxis.autorange"] === true;
-          if (!isXAxisChange) return;
-
-          const isAutorange = ed["xaxis.autorange"] === true;
-          const xMin = isAutorange
-            ? null
-            : "xaxis.range[0]" in ed
-              ? (ed["xaxis.range[0]"] as number)
-              : (ed["xaxis.range"] as [number, number])[0];
-          const xMax = isAutorange
-            ? null
-            : "xaxis.range[0]" in ed
-              ? (ed["xaxis.range[1]"] as number)
-              : (ed["xaxis.range"] as [number, number])[1];
-
-          if (pendingLabelUpdate !== null) cancelAnimationFrame(pendingLabelUpdate);
-
-          pendingLabelUpdate = requestAnimationFrame(() => {
-            pendingLabelUpdate = null;
-            if (!currentRef) return;
-
-            const updatedRangeLabels = (() => {
-              if (isAutorange || xMin === null || xMax === null) {
-                return rangeAnnotationLabels;
-              }
-              return rangeAnnotationLabels.map((labelAnn, i) => {
-                const rangeAnn = rangeAnnotations[i];
-                if (!rangeAnn) return labelAnn;
-                const visibleStart = Math.max(rangeAnn.startX, xMin);
-                const visibleEnd = Math.min(rangeAnn.endX, xMax);
-                if (visibleStart >= visibleEnd) {
-                  return { ...labelAnn, visible: false, x: (xMin + xMax) / 2 };
-                }
-                return { ...labelAnn, x: (visibleStart + visibleEnd) / 2, visible: true };
-              });
-            })();
-
-            isAnnotationRelayout.current = true;
-            (Plotly.relayout(currentRef, {
-              annotations: [...peakAnnotationsRef.current, ...updatedRangeLabels],
-            } as unknown as Partial<Plotly.Layout>) as unknown as Promise<unknown>)
-              .finally(() => {
-                // Keep rangeAnnotationLabelsRef in sync with the repositioned labels
-                // so the selection effect can use them correctly.
-                rangeAnnotationLabelsRef.current = updatedRangeLabels;
-                isAnnotationRelayout.current = false;
-              });
-          });
-        }
-      );
-    }
-
     return () => {
-      if (pendingLabelUpdate !== null) cancelAnimationFrame(pendingLabelUpdate);
-      isAnnotationRelayout.current = false;
       thickenedSeriesRef.current = null;
       if (currentRef) Plotly.purge(currentRef);
     };
@@ -579,7 +480,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     processedAnnotations, xRange, yRange, showLegend, showGridX, showGridY,
     showMarkers, markerSize, showCrosshairs, enablePeakDetection, peakDetectionOptions,
     showPeakAreas, boundaryMarkers, annotationOverlapThreshold, showExportButton,
-    theme, rangeAnnotations, rangeAnnotationOverlapThreshold,
+    theme,
     // resolvedAppearance included so hover multiplier stays in sync with the
     // event handler closure without it being in a ref itself.
     resolvedAppearance,
@@ -595,7 +496,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     if (!(el as { _fullLayout?: unknown })._fullLayout) return;
 
     Plotly.relayout(el, {
-      annotations: [...peakAnnotations, ...rangeAnnotationLabelsRef.current],
+      annotations: peakAnnotations,
     } as unknown as Partial<Plotly.Layout>);
   }, [peakAnnotations]);
 

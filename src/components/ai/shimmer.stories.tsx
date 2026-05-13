@@ -28,6 +28,9 @@ export const Default: Story = {
       await expect(canvas.getByText("Generating response...")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4607" },
+  },
 }
 
 export const Heading: Story = {
@@ -41,6 +44,9 @@ export const Heading: Story = {
     await step("Shimmer heading renders", async () => {
       await expect(canvas.getByRole("heading", { level: 2 })).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4608" },
   },
 }
 
@@ -56,6 +62,9 @@ export const LongText: Story = {
       await expect(canvas.getByText(/carefully reasoning/)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4609" },
+  },
 }
 
 export const CustomDuration: Story = {
@@ -69,6 +78,9 @@ export const CustomDuration: Story = {
       await expect(canvas.getByText("Processing...")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4610" },
+  },
 }
 
 export const BrandGradient: Story = {
@@ -81,6 +93,9 @@ export const BrandGradient: Story = {
     await step("Brand gradient shimmer renders", async () => {
       await expect(canvas.getByText("Thinking about your question...")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4611" },
   },
 }
 
@@ -98,5 +113,8 @@ export const InContext: Story = {
       await expect(canvas.getByText("Analyzing your data...")).toBeInTheDocument()
       await expect(canvas.getByText("Preparing summary...")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4612" },
   },
 }

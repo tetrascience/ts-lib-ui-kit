@@ -1057,6 +1057,9 @@ export const SizedColumnsWithLongContent: Story = {
       expect(statusCells.every((el) => !el.classList.contains("truncate"))).toBe(true)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4713" },
+  },
 }
 
 export const ControlledState: Story = {
@@ -1120,7 +1123,7 @@ export const AdvancedFiltering: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1448" },
+    zephyr: { testCaseId: "SW-T4714" },
   },
 }
 
@@ -1171,7 +1174,7 @@ export const MultiConditionFiltering: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1449" },
+    zephyr: { testCaseId: "SW-T4715" },
   },
 }
 
@@ -1218,7 +1221,7 @@ export const FilteringWithConfig: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1450" },
+    zephyr: { testCaseId: "SW-T4716" },
   },
 }
 
@@ -1267,6 +1270,6 @@ export const ControlledFiltering: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1451" },
+    zephyr: { testCaseId: "SW-T4717" },
   },
 }

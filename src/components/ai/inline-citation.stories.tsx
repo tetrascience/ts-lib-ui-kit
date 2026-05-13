@@ -79,6 +79,9 @@ export const Single: Story = {
       await expect(canvas.getByText(/Plants convert sunlight/)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4551" },
+  },
 }
 
 export const MultipleInText: Story = {
@@ -133,6 +136,9 @@ export const MultipleInText: Story = {
       await expect(canvas.getByText(/relies on chlorophyll/)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4552" },
+  },
 }
 
 export const WithCarousel: Story = {
@@ -179,6 +185,9 @@ export const WithCarousel: Story = {
     await step("Citation with carousel renders", async () => {
       await expect(canvas.getByText(/supported by multiple studies/)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4553" },
   },
 }
 
@@ -231,6 +240,9 @@ export const OpenCardWithCarouselControls: Story = {
       await userEvent.click(prev)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4554" },
+  },
 }
 
 export const CustomIndexChildren: Story = {
@@ -259,6 +271,9 @@ export const CustomIndexChildren: Story = {
     await step("Custom index renders", async () => {
       await expect(await screen.findByText("Custom index")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4555" },
   },
 }
 
@@ -291,5 +306,8 @@ export const EmptySourcesTrigger: Story = {
       await expect(canvas.getByText("unknown")).toBeInTheDocument()
       await expect(canvas.getByText("highlighted text")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4556" },
   },
 }

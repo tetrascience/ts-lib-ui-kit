@@ -71,6 +71,9 @@ export const Default: Story = {
       await expect(canvas.getByText("Create src/ directory layout")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4643" },
+  },
 }
 
 export const MultipleTasks: Story = {
@@ -109,6 +112,9 @@ export const MultipleTasks: Story = {
       await expect(canvas.getByText("Configure CI/CD")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4644" },
+  },
 }
 
 export const WithFileReferences: Story = {
@@ -145,6 +151,9 @@ export const WithFileReferences: Story = {
       await expect(canvas.getByText("Button.tsx")).toBeInTheDocument()
       await expect(canvas.getByText("index.ts")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4645" },
   },
 }
 
@@ -184,6 +193,9 @@ export const Collapsed: Story = {
       await expectCollapsedChevronConfiguredForHoverReveal(trigger as HTMLElement)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4646" },
+  },
 }
 
 export const StreamingAutoClose: Story = {
@@ -207,5 +219,8 @@ export const StreamingAutoClose: Story = {
         timeout: 1800,
       })
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4647" },
   },
 }

@@ -70,6 +70,9 @@ export const Default: Story = {
       await expect(canvas.getByText("Always allow")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4528" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -101,6 +104,9 @@ export const Accepted: Story = {
       await expect(canvas.getByText(/Allowed/)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4529" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -131,6 +137,9 @@ export const Rejected: Story = {
     await step("Rejected state renders denial message", async () => {
       await expect(canvas.getByText(/Denied/)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4530" },
   },
 }
 
@@ -202,5 +211,8 @@ export const Interactive: Story = {
         timeout: 2500,
       })
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4531" },
   },
 }

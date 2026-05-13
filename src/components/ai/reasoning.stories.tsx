@@ -87,6 +87,9 @@ export const Default: Story = {
       await expect(canvas.getByRole("button")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4602" },
+  },
 }
 
 export const WithDuration: Story = {
@@ -103,6 +106,9 @@ export const WithDuration: Story = {
     await step("Reasoning with duration renders", async () => {
       await expect(canvas.getByText(/4\.2 seconds/)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4603" },
   },
 }
 
@@ -123,6 +129,9 @@ export const Streaming: Story = {
       await expect(canvas.getByRole("button")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4604" },
+  },
 }
 
 export const Collapsed: Story = {
@@ -142,6 +151,9 @@ export const Collapsed: Story = {
     await step("Collapsed chevron appears on hover", async () => {
       await expectCollapsedChevronConfiguredForHoverReveal(canvas.getByRole("button"))
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4605" },
   },
 }
 
@@ -169,5 +181,8 @@ export const StreamingLifecycle: Story = {
         timeout: 1800,
       })
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4606" },
   },
 }

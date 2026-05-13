@@ -57,6 +57,9 @@ export const Default: Story = {
       await expect(canvas.getByRole("img", { name: "Model context usage" })).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4532" },
+  },
 }
 
 export const WithVisiblePercentage: Story = {
@@ -79,6 +82,9 @@ export const WithVisiblePercentage: Story = {
       await expect(canvas.getByText("1.3%")).toBeInTheDocument()
       await expect(canvas.getByRole("img", { name: "Model context usage" })).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4533" },
   },
 }
 
@@ -111,6 +117,9 @@ export const WithReasoning: Story = {
       await expect(canvas.getByRole("button")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4534" },
+  },
 }
 
 export const WithCaching: Story = {
@@ -141,6 +150,9 @@ export const WithCaching: Story = {
     await step("Context with cache usage renders", async () => {
       await expect(canvas.getByRole("button")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4535" },
   },
 }
 
@@ -179,6 +191,9 @@ export const OpenPopover: Story = {
       await expect(screen.getByText("Total cost")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4536" },
+  },
 }
 
 export const WarningThreshold: Story = {
@@ -204,6 +219,9 @@ export const WarningThreshold: Story = {
     await step("Warning threshold renders progress bar", async () => {
       await expect(await screen.findByText("Input")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4537" },
   },
 }
 
@@ -261,6 +279,9 @@ export const CustomChildrenOverride: Story = {
       await expect(screen.getByText("Custom footer")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4538" },
+  },
 }
 
 export const ZeroUsageHidesRows: Story = {
@@ -285,6 +306,9 @@ export const ZeroUsageHidesRows: Story = {
       await expect(screen.queryByText("Input")).not.toBeInTheDocument()
       await expect(screen.queryByText("Output")).not.toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4539" },
   },
 }
 
@@ -314,6 +338,9 @@ export const NearLimit: Story = {
     await step("Near-limit context renders", async () => {
       await expect(canvas.getByRole("button")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4540" },
   },
 }
 
@@ -352,6 +379,9 @@ export const UsageWithoutCost: Story = {
       await expect(screen.queryByText(/\$\d/)).not.toBeInTheDocument()
       await expect(screen.getByText("—")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4541" },
   },
 }
 
@@ -392,5 +422,8 @@ export const WithCostBreakdown: Story = {
       await expect(screen.getByText("Cache")).toBeInTheDocument()
       await expect(screen.getByText("$0.07")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4542" },
   },
 }

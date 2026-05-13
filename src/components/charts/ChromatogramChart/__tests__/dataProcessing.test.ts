@@ -11,7 +11,7 @@ describe("buildHoverExtraContent", () => {
   });
 
   it("returns seriesName when metadata is undefined", () => {
-    expect(buildHoverExtraContent("Sample A", undefined)).toBe("Sample A");
+    expect(buildHoverExtraContent("Sample A")).toBe("Sample A");
   });
 
   it("returns seriesName when metadata is empty object", () => {

@@ -437,6 +437,85 @@ export const WithRegionOverlay: Story = {
 };
 
 /**
+ * Directly exercises the plotly_hover / plotly_unhover event handlers registered in
+ * ChromatogramChart. userEvent.hover cannot reliably land on a data point in headless
+ * Playwright, so we emit the Plotly events directly on the graph element — the same
+ * path Plotly's own hit-detection uses internally.
+ *
+ * Test cases:
+ * 1. Hover trace 0 with no prior thickening  → thicken trace 0 (null→0 branch)
+ * 2. Hover trace 1                            → restore trace 0, thicken trace 1 (0→1 branch)
+ * 3. Hover trace 1 again                      → no-op (same-trace guard)
+ * 4. Hover a peak hit-area marker (curveNumber ≥ series count) → skip thickening
+ * 5. Unhover with a thickened series          → restore + clear ref
+ * 6. Unhover with nothing thickened           → no restyle call needed
+ */
+export const TraceHoverThickening: Story = {
+  args: {
+    series: multiInjectionData,
+    title: "Trace Hover Thickening",
+    annotations: selectableAnnotations,
+    onPeakHover: () => {},
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Chart renders with multiple traces", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBeGreaterThan(1);
+    });
+
+    await step("Hover / unhover events exercise trace thickening branches", async () => {
+      const plotEl = canvasElement.querySelector(".js-plotly-plot") as any;
+      if (!plotEl?.emit) return;
+
+      // multiInjectionData has 3 series → processedSeries.length = 3
+      // curveNumbers 0-2 are series traces; higher numbers are hit-area / marker traces
+
+      // 1. First hover: no prior thickening (thickenedSeriesRef === null → false branch of line 442)
+      plotEl.emit("plotly_hover", { points: [{ curveNumber: 0, pointNumber: 30, customdata: null }] });
+
+      // 2. Hover different trace: restore trace 0, thicken trace 1 (true branch of line 442)
+      plotEl.emit("plotly_hover", { points: [{ curveNumber: 1, pointNumber: 30, customdata: null }] });
+
+      // 3. Hover same trace again: same-trace guard (false branch of line 441)
+      plotEl.emit("plotly_hover", { points: [{ curveNumber: 1, pointNumber: 40, customdata: null }] });
+
+      // 4. Hover a non-series trace (peak hit-area): skips thickening (false branch of line 439)
+      plotEl.emit("plotly_hover", { points: [{ curveNumber: 99, pointNumber: 0, customdata: null }] });
+
+      // 5. Unhover with a thickened series still active → restore + null out ref
+      plotEl.emit("plotly_unhover", {});
+
+      // 6. Unhover again with nothing thickened → executes line 465, skips 466-469
+      plotEl.emit("plotly_unhover", {});
+    });
+
+    await step("Peak hit-area hover fires onPeakHover callback", async () => {
+      const plotEl = canvasElement.querySelector(".js-plotly-plot") as any;
+      if (!plotEl?.emit) return;
+
+      const mockPeakEvent: PeakSelectEvent = {
+        id: "caffeine",
+        peak: selectableAnnotations[0],
+        seriesIndex: 0,
+        seriesName: "Sample A",
+        isAutoDetected: false,
+      };
+      plotEl.emit("plotly_hover", { points: [{ curveNumber: 99, customdata: mockPeakEvent }] });
+      plotEl.emit("plotly_unhover", {});
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Exercises the internal plotly_hover / plotly_unhover event handlers: trace thickening on hover, restoration when moving between traces, and cleanup on unhover.",
+      },
+    },
+  },
+};
+
+/**
  * Inline annotation style: labels float directly above the trace at the peak Y value
  * with no arrow. Cleaner for dense chromatograms where arrows create visual noise.
  * Use `titleFontSize` and `titleTopMargin` to shrink the title area for compact

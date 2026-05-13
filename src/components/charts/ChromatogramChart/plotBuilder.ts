@@ -1,3 +1,5 @@
+import Plotly from "plotly.js-dist";
+
 import { CHART_COLORS } from "../../../utils/colors";
 
 import { createBoundaryMarkerTraces } from "./boundaryMarkers";
@@ -7,7 +9,6 @@ import { createRegionOverlayTraces } from "./regionOverlays";
 
 import type { ChromatogramSeries, PeakAnnotation, BoundaryMarkerStyle, PeakSelectEvent } from "./types";
 import type { PlotlyThemeColors } from "@/hooks/use-plotly-theme";
-import Plotly from "plotly.js-dist";
 
 type PeakForInteraction = {
   peak: PeakAnnotation & { id: string };

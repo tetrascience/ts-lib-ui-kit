@@ -378,6 +378,7 @@ export const WithRegionOverlay: Story = {
   args: {
     series: [{ ...singleInjectionData, name: "Sample A" }],
     title: "Peak Region Overlays",
+    annotationStyle: "inline",
     annotations: [
       {
         id: "peak-pass",
@@ -430,7 +431,7 @@ export const WithRegionOverlay: Story = {
     docs: {
       description: {
         story:
-          "Each peak with `regionOverlay: true` paints a thickened colored line segment along the underlying trace between its `startX` and `endX`. Uses `peak.color` when set; falls back to the series color.",
+          "Each peak with `regionOverlay: true` paints a thickened colored line segment along the underlying trace between its `startX` and `endX`. Uses `peak.color` when set; falls back to the series color. Labels use `annotationStyle=\"inline\"` — floating directly above the trace with no arrow.",
       },
     },
   },

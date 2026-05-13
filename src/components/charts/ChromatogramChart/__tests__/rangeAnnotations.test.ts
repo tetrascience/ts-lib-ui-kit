@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-import { assignRangeLanes, buildRangeAnnotationElements } from "../rangeAnnotations";
 import { RANGE_ANNOTATION } from "../constants";
+import { assignRangeLanes, buildRangeAnnotationElements } from "../rangeAnnotations";
 
 import type { RangeAnnotation } from "../types";
 

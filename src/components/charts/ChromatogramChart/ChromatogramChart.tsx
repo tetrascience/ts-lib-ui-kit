@@ -1,24 +1,19 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef } from "react";
 
-import { CHART_COLORS } from "../../../utils/colors";
-
 import {
   groupOverlappingPeaks,
   createGroupAnnotations,
   resolveSelectionAppearance,
 } from "./annotations";
-import { createBoundaryMarkerTraces } from "./boundaryMarkers";
-import { CHROMATOGRAM_LAYOUT, CHROMATOGRAM_TRACE } from "./constants";
+import { CHROMATOGRAM_TRACE } from "./constants";
 import {
   validateSeriesData,
   applyBaselineCorrection,
-  buildHoverExtraContent,
-  collectPeaksWithBoundaryData,
   processUserAnnotations,
 } from "./dataProcessing";
 import { detectPeaks } from "./peakDetection";
-import { createRegionOverlayTraces } from "./regionOverlays";
+import { buildTraceData, buildLayout, buildConfig } from "./plotBuilder";
 
 import type {
   ChromatogramSeries,
@@ -243,176 +238,38 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     const currentRef = plotRef.current;
     if (!currentRef || series.length === 0) return;
 
-    // Build trace data
-    const plotData: Plotly.Data[] = processedSeries.map((s, index) => {
-      const traceColor = s.color || CHART_COLORS[index % CHART_COLORS.length];
-      const extraContent = buildHoverExtraContent(s.name, s.metadata);
-
-      const trace: Plotly.Data = {
-        x: s.x,
-        y: s.y,
-        type: "scatter" as const,
-        mode: showMarkers ? "lines+markers" as const : "lines" as const,
-        name: s.name,
-        line: {
-          color: traceColor,
-          width: CHROMATOGRAM_TRACE.BASE_LINE_WIDTH,
-        },
-        hovertemplate: `%{x:.2f} ${xAxisTitle}<br>%{y:.2f} ${yAxisTitle}<extra>${extraContent}</extra>`,
-      };
-      if (showMarkers) {
-        trace.marker = { size: markerSize, color: traceColor };
-      }
-      return trace;
+    const plotData = buildTraceData({
+      processedSeries,
+      processedAnnotations,
+      allDetectedPeaks,
+      allPeaksForInteraction,
+      showMarkers,
+      markerSize,
+      xAxisTitle,
+      yAxisTitle,
+      boundaryMarkers,
     });
 
-    // Peak boundary markers
-    if (boundaryMarkers !== "none") {
-      const peaksWithData = collectPeaksWithBoundaryData(allDetectedPeaks, processedAnnotations, processedSeries);
-      if (peaksWithData.length > 0) {
-        plotData.push(...createBoundaryMarkerTraces(peaksWithData));
-      }
-    }
-
-    // Region overlay traces — thickened colored segments along the signal between
-    // peak boundaries. Pushed before the hit-area trace so peak interactions still work.
-    processedAnnotations.forEach((ann) => {
-      if (ann.regionOverlay && processedSeries[0]) {
-        plotData.push(...createRegionOverlayTraces([ann], 0, processedSeries[0]));
-      }
-    });
-    allDetectedPeaks.forEach(({ peaks, seriesIndex }) => {
-      if (peaks.some((p) => p.regionOverlay) && processedSeries[seriesIndex]) {
-        plotData.push(...createRegionOverlayTraces(peaks, seriesIndex, processedSeries[seriesIndex]));
-      }
-    });
-
-    // Invisible hit-area markers for click / hover on peaks.
-    // hovertemplate "<extra></extra>" suppresses the tooltip entry while still
-    // allowing plotly_click and plotly_hover to fire for these points.
-    if (allPeaksForInteraction.length > 0) {
-      const anyHoverText = allPeaksForInteraction.some((p) => p.peak.hoverText);
-      const hitAreaTrace: Plotly.Data = {
-        x: allPeaksForInteraction.map((p) => p.peak.x),
-        y: allPeaksForInteraction.map((p) => p.peak.y),
-        type: "scatter" as const,
-        mode: "markers" as const,
-        marker: { size: 14, opacity: 0 },
-        showlegend: false,
-        name: "",
-        customdata: allPeaksForInteraction.map((p) => ({
-          id: p.peak.id,
-          peak: p.peak,
-          seriesIndex: p.seriesIndex,
-          seriesName: p.seriesName,
-          isAutoDetected: p.isAutoDetected,
-        })) as unknown as Plotly.Datum[],
-        ...(anyHoverText
-          ? {
-              hovertemplate: allPeaksForInteraction.map((p) =>
-                p.peak.hoverText ? `${p.peak.hoverText}<extra></extra>` : "<extra></extra>"
-              ),
-            }
-          : { hovertemplate: "<extra></extra>" }),
-      };
-      plotData.push(hitAreaTrace);
-    }
-
-    const layout: Partial<Plotly.Layout> = {
-      title: title
-        ? {
-            text: title,
-            font: { size: titleFontSize, family: "Inter, sans-serif", color: theme.textColor },
-          }
-        : undefined,
+    const layout = buildLayout({
+      title,
+      titleFontSize,
+      titleTopMargin,
       width,
       height,
-      margin: {
-        l: CHROMATOGRAM_LAYOUT.MARGIN_LEFT,
-        r: CHROMATOGRAM_LAYOUT.MARGIN_RIGHT,
-        b: CHROMATOGRAM_LAYOUT.MARGIN_BOTTOM,
-        t: title
-          ? (titleTopMargin ?? CHROMATOGRAM_LAYOUT.MARGIN_TOP_WITH_TITLE)
-          : CHROMATOGRAM_LAYOUT.MARGIN_TOP_NO_TITLE,
-        pad: CHROMATOGRAM_LAYOUT.MARGIN_PAD,
-      },
-      paper_bgcolor: theme.paperBg,
-      plot_bgcolor: theme.plotBg,
-      font: { family: "Inter, sans-serif" },
-      hovermode: showCrosshairs ? "x" as const : "x unified" as const,
-      dragmode: "zoom" as const,
-      xaxis: {
-        title: {
-          text: xAxisTitle,
-          font: { size: 14, color: theme.textSecondary, family: "Inter, sans-serif" },
-          standoff: 15,
-        },
-        showgrid: showGridX,
-        gridcolor: theme.gridColor,
-        linecolor: theme.lineColor,
-        linewidth: 1,
-        range: xRange,
-        autorange: !xRange,
-        zeroline: false,
-        tickfont: { size: 12, color: theme.textColor, family: "Inter, sans-serif" },
-        showspikes: showCrosshairs,
-        spikemode: "across" as const,
-        spikesnap: "cursor" as const,
-        spikecolor: theme.spikeColor,
-        spikethickness: 1,
-        spikedash: "dot" as const,
-      },
-      yaxis: {
-        title: {
-          text: yAxisTitle,
-          font: { size: 14, color: theme.textSecondary, family: "Inter, sans-serif" },
-          standoff: 10,
-        },
-        showgrid: showGridY,
-        gridcolor: theme.gridColor,
-        linecolor: theme.lineColor,
-        linewidth: 1,
-        range: yRange,
-        autorange: !yRange,
-        zeroline: false,
-        tickfont: { size: 12, color: theme.textColor, family: "Inter, sans-serif" },
-        showspikes: showCrosshairs,
-        spikemode: "across" as const,
-        spikesnap: "cursor" as const,
-        spikecolor: theme.spikeColor,
-        spikethickness: 1,
-        spikedash: "dot" as const,
-      },
-      legend: {
-        x: 0.5,
-        y: -0.15,
-        xanchor: "center" as const,
-        yanchor: "top" as const,
-        orientation: "h" as const,
-        font: { size: 12, color: theme.textColor, family: "Inter, sans-serif" },
-      },
-      showlegend: showLegend && series.length > 1,
-      annotations: peakAnnotationsRef.current,
-    };
+      xAxisTitle,
+      yAxisTitle,
+      xRange,
+      yRange,
+      showLegend,
+      seriesCount: series.length,
+      showGridX,
+      showGridY,
+      showCrosshairs,
+      theme,
+      peakAnnotations: peakAnnotationsRef.current,
+    });
 
-    const config: Partial<Plotly.Config> = {
-      responsive: true,
-      displayModeBar: true,
-      displaylogo: false,
-      modeBarButtonsToRemove: [
-        "lasso2d",
-        "select2d",
-        ...(showExportButton ? [] : ["toImage"] as Plotly.ModeBarDefaultButtons[]),
-      ] as Plotly.ModeBarDefaultButtons[],
-      ...(showExportButton && {
-        toImageButtonOptions: {
-          format: "png",
-          filename: "chromatogram",
-          width,
-          height,
-        },
-      }),
-    };
+    const config = buildConfig({ showExportButton, width, height });
 
     Plotly.newPlot(currentRef, plotData, layout, config);
 

@@ -20,8 +20,8 @@ describe("resolveSelectionAppearance", () => {
     expect(result.hoverLineWidthMultiplier).toBeCloseTo(5 / 3);
   });
 
-  it("returns defaults when called with undefined", () => {
-    const result = resolveSelectionAppearance(undefined);
+  it("returns defaults when called with no overrides", () => {
+    const result = resolveSelectionAppearance();
     expect(result.selected.borderColor).toBe("#3b82f6");
   });
 

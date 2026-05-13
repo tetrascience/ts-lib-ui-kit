@@ -6,14 +6,13 @@ import {
   createGroupAnnotations,
   resolveSelectionAppearance,
 } from "./annotations";
-import { CHROMATOGRAM_TRACE } from "./constants";
 import {
   validateSeriesData,
   applyBaselineCorrection,
   processUserAnnotations,
 } from "./dataProcessing";
 import { detectPeaks } from "./peakDetection";
-import { buildTraceData, buildLayout, buildConfig } from "./plotBuilder";
+import { buildTraceData, buildLayout, buildConfig, createHoverHandler, createUnhoverHandler } from "./plotBuilder";
 
 import type {
   ChromatogramSeries,
@@ -284,47 +283,14 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       }
     );
 
-    // ── Event: trace hover / peak hover ───────────────────────────────────
-    // Trace thickening fires on hover over any point on a series trace (matches
-    // SST ChromatogramPanel behaviour). The onPeakHover callback fires only when
-    // the cursor is over an invisible peak hit-area marker.
     (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
       "plotly_hover",
-      (eventData: Plotly.PlotHoverEvent) => {
-        // General trace thickening — first hovered point that belongs to a series trace
-        const pt = eventData.points[0];
-        if (pt && pt.curveNumber < processedSeries.length) {
-          const targetIdx = pt.curveNumber;
-          if (thickenedSeriesRef.current !== targetIdx) {
-            if (thickenedSeriesRef.current !== null) {
-              Plotly.restyle(currentRef, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH } as Plotly.Data, [thickenedSeriesRef.current]);
-            }
-            Plotly.restyle(
-              currentRef,
-              { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH * resolvedAppearance.hoverLineWidthMultiplier } as Plotly.Data,
-              [targetIdx]
-            );
-            thickenedSeriesRef.current = targetIdx;
-          }
-        }
-
-        // Peak-specific callback — only when near an invisible hit-area marker
-        const peakPoint = eventData.points.find((p) => p.customdata != null);
-        if (peakPoint) {
-          onPeakHoverRef.current?.(peakPoint.customdata as unknown as PeakSelectEvent);
-        }
-      }
+      createHoverHandler(currentRef, processedSeries.length, thickenedSeriesRef, onPeakHoverRef, resolvedAppearance.hoverLineWidthMultiplier)
     );
 
     (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
       "plotly_unhover",
-      () => {
-        onPeakHoverRef.current?.(null);
-        if (thickenedSeriesRef.current !== null) {
-          Plotly.restyle(currentRef, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH } as Plotly.Data, [thickenedSeriesRef.current]);
-          thickenedSeriesRef.current = null;
-        }
-      }
+      createUnhoverHandler(currentRef, thickenedSeriesRef, onPeakHoverRef)
     );
 
     return () => {

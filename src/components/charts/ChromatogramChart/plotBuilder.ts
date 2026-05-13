@@ -5,9 +5,9 @@ import { CHROMATOGRAM_LAYOUT, CHROMATOGRAM_TRACE } from "./constants";
 import { buildHoverExtraContent, collectPeaksWithBoundaryData } from "./dataProcessing";
 import { createRegionOverlayTraces } from "./regionOverlays";
 
-import type { ChromatogramSeries, PeakAnnotation, BoundaryMarkerStyle } from "./types";
+import type { ChromatogramSeries, PeakAnnotation, BoundaryMarkerStyle, PeakSelectEvent } from "./types";
 import type { PlotlyThemeColors } from "@/hooks/use-plotly-theme";
-import type Plotly from "plotly.js-dist";
+import Plotly from "plotly.js-dist";
 
 type PeakForInteraction = {
   peak: PeakAnnotation & { id: string };
@@ -260,5 +260,47 @@ export function buildConfig(params: BuildConfigParams): Partial<Plotly.Config> {
         height,
       },
     }),
+  };
+}
+
+type MutableRef<T> = { current: T };
+
+export function createHoverHandler(
+  domElement: HTMLElement,
+  processedSeriesLength: number,
+  thickenedSeriesRef: MutableRef<number | null>,
+  onPeakHoverRef: MutableRef<((event: PeakSelectEvent | null) => void) | undefined>,
+  hoverLineWidthMultiplier: number
+): (eventData: Plotly.PlotHoverEvent) => void {
+  return (eventData) => {
+    const pt = eventData.points[0];
+    if (pt && pt.curveNumber < processedSeriesLength) {
+      const targetIdx = pt.curveNumber;
+      if (thickenedSeriesRef.current !== targetIdx) {
+        if (thickenedSeriesRef.current !== null) {
+          Plotly.restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH } as Plotly.Data, [thickenedSeriesRef.current]);
+        }
+        Plotly.restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH * hoverLineWidthMultiplier } as Plotly.Data, [targetIdx]);
+        thickenedSeriesRef.current = targetIdx;
+      }
+    }
+    const peakPoint = eventData.points.find((p) => p.customdata != null);
+    if (peakPoint) {
+      onPeakHoverRef.current?.(peakPoint.customdata as unknown as PeakSelectEvent);
+    }
+  };
+}
+
+export function createUnhoverHandler(
+  domElement: HTMLElement,
+  thickenedSeriesRef: MutableRef<number | null>,
+  onPeakHoverRef: MutableRef<((event: PeakSelectEvent | null) => void) | undefined>
+): () => void {
+  return () => {
+    onPeakHoverRef.current?.(null);
+    if (thickenedSeriesRef.current !== null) {
+      Plotly.restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH } as Plotly.Data, [thickenedSeriesRef.current]);
+      thickenedSeriesRef.current = null;
+    }
   };
 }

@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { CHROMATOGRAM_LAYOUT } from "../constants";
-import { buildConfig, buildLayout, buildTraceData } from "../plotBuilder";
+import { CHROMATOGRAM_LAYOUT, CHROMATOGRAM_TRACE } from "../constants";
+import { buildConfig, buildLayout, buildTraceData, createHoverHandler, createUnhoverHandler } from "../plotBuilder";
 
 import type { PlotlyThemeColors } from "@/hooks/use-plotly-theme";
+
+vi.mock("plotly.js-dist", () => ({
+  default: { restyle: vi.fn() },
+}));
 
 vi.mock("../dataProcessing", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../dataProcessing")>();
@@ -328,5 +332,145 @@ describe("buildConfig", () => {
 
     expect(config.modeBarButtonsToRemove).toContain("toImage");
     expect(config.toImageButtonOptions).toBeUndefined();
+  });
+});
+
+// ── createHoverHandler ──────────────────────────────────────────────────────
+
+describe("createHoverHandler", () => {
+  let mockRestyle: ReturnType<typeof vi.fn>;
+  let domElement: HTMLElement;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const Plotly = (await import("plotly.js-dist")).default;
+    mockRestyle = vi.mocked(Plotly.restyle);
+    domElement = document.createElement("div");
+  });
+
+  function makeEvent(curveNumber: number, customdata?: unknown) {
+    return {
+      points: [{ curveNumber, customdata }],
+    } as unknown as import("plotly.js-dist").PlotHoverEvent;
+  }
+
+  it("thickens the hovered series trace and sets the ref when nothing was thickened before", () => {
+    const thickenedRef = { current: null as number | null };
+    const onPeakHoverRef = { current: undefined as ((e: unknown) => void) | undefined };
+    const handler = createHoverHandler(domElement, 2, thickenedRef, onPeakHoverRef, 2);
+
+    handler(makeEvent(0));
+
+    expect(mockRestyle).toHaveBeenCalledTimes(1);
+    expect(mockRestyle).toHaveBeenCalledWith(
+      domElement,
+      { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH * 2 },
+      [0]
+    );
+    expect(thickenedRef.current).toBe(0);
+  });
+
+  it("restores the previous trace and thickens the new one when a different trace is hovered", () => {
+    const thickenedRef = { current: 0 as number | null };
+    const onPeakHoverRef = { current: undefined as ((e: unknown) => void) | undefined };
+    const handler = createHoverHandler(domElement, 2, thickenedRef, onPeakHoverRef, 2);
+
+    handler(makeEvent(1));
+
+    expect(mockRestyle).toHaveBeenCalledTimes(2);
+    expect(mockRestyle).toHaveBeenNthCalledWith(1, domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH }, [0]);
+    expect(mockRestyle).toHaveBeenNthCalledWith(2, domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH * 2 }, [1]);
+    expect(thickenedRef.current).toBe(1);
+  });
+
+  it("does nothing when the hovered trace is already thickened", () => {
+    const thickenedRef = { current: 0 as number | null };
+    const onPeakHoverRef = { current: undefined as ((e: unknown) => void) | undefined };
+    const handler = createHoverHandler(domElement, 2, thickenedRef, onPeakHoverRef, 2);
+
+    handler(makeEvent(0));
+
+    expect(mockRestyle).not.toHaveBeenCalled();
+  });
+
+  it("does not call restyle when curveNumber is a non-series trace", () => {
+    const thickenedRef = { current: null as number | null };
+    const onPeakHoverRef = { current: undefined as ((e: unknown) => void) | undefined };
+    const handler = createHoverHandler(domElement, 2, thickenedRef, onPeakHoverRef, 2);
+
+    handler(makeEvent(5)); // curveNumber >= processedSeriesLength
+
+    expect(mockRestyle).not.toHaveBeenCalled();
+  });
+
+  it("calls onPeakHoverRef when a point has customdata", () => {
+    const thickenedRef = { current: null as number | null };
+    const callback = vi.fn();
+    const onPeakHoverRef = { current: callback };
+    const handler = createHoverHandler(domElement, 2, thickenedRef, onPeakHoverRef, 2);
+    const fakeEvent = {
+      points: [{ curveNumber: 5, customdata: { id: "peak-0-0" } }],
+    } as unknown as import("plotly.js-dist").PlotHoverEvent;
+
+    handler(fakeEvent);
+
+    expect(callback).toHaveBeenCalledWith({ id: "peak-0-0" });
+  });
+
+  it("does not throw when eventData.points is empty", () => {
+    const thickenedRef = { current: null as number | null };
+    const onPeakHoverRef = { current: undefined as ((e: unknown) => void) | undefined };
+    const handler = createHoverHandler(domElement, 2, thickenedRef, onPeakHoverRef, 2);
+    const emptyEvent = { points: [] } as unknown as import("plotly.js-dist").PlotHoverEvent;
+
+    expect(() => handler(emptyEvent)).not.toThrow();
+    expect(mockRestyle).not.toHaveBeenCalled();
+  });
+});
+
+// ── createUnhoverHandler ────────────────────────────────────────────────────
+
+describe("createUnhoverHandler", () => {
+  let mockRestyle: ReturnType<typeof vi.fn>;
+  let domElement: HTMLElement;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const Plotly = (await import("plotly.js-dist")).default;
+    mockRestyle = vi.mocked(Plotly.restyle);
+    domElement = document.createElement("div");
+  });
+
+  it("restores line width, clears the ref, and calls onPeakHoverRef with null when a trace was thickened", () => {
+    const thickenedRef = { current: 1 as number | null };
+    const callback = vi.fn();
+    const onPeakHoverRef = { current: callback };
+    const handler = createUnhoverHandler(domElement, thickenedRef, onPeakHoverRef);
+
+    handler();
+
+    expect(callback).toHaveBeenCalledWith(null);
+    expect(mockRestyle).toHaveBeenCalledWith(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH }, [1]);
+    expect(thickenedRef.current).toBeNull();
+  });
+
+  it("does not call restyle when no trace was thickened, but still calls onPeakHoverRef", () => {
+    const thickenedRef = { current: null as number | null };
+    const callback = vi.fn();
+    const onPeakHoverRef = { current: callback };
+    const handler = createUnhoverHandler(domElement, thickenedRef, onPeakHoverRef);
+
+    handler();
+
+    expect(mockRestyle).not.toHaveBeenCalled();
+    expect(callback).toHaveBeenCalledWith(null);
+  });
+
+  it("does not throw when onPeakHoverRef.current is undefined", () => {
+    const thickenedRef = { current: null as number | null };
+    const onPeakHoverRef = { current: undefined as ((e: unknown) => void) | undefined };
+    const handler = createUnhoverHandler(domElement, thickenedRef, onPeakHoverRef);
+
+    expect(() => handler()).not.toThrow();
   });
 });

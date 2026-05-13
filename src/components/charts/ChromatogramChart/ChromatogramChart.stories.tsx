@@ -337,6 +337,30 @@ export const PeakHoverAndSelection: StoryObj<typeof ChromatogramChart> = {
     title: "Peak Hover and Selection",
     annotations: selectableAnnotations,
   },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart renders with peak annotations", async () => {
+      expect(canvas.getByText("Peak Hover and Selection")).toBeInTheDocument();
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Mouse events exercise hover, unhover, and click handler paths", async () => {
+      const dragRect = canvasElement.querySelector(".xy.drag") as Element | null;
+      if (!dragRect) return;
+
+      const { left, top, width, height } = dragRect.getBoundingClientRect();
+      const cx = Math.round(left + width * 0.35);
+      const cy = Math.round(top + height * 0.5);
+
+      // mousemove → plotly_hover fires (trace thickening + peak hover callback paths)
+      dragRect.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: cx, clientY: cy }));
+      // mouseout → plotly_unhover fires (unhover cleanup paths)
+      dragRect.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+      // click → plotly_click fires (click handler paths, no-peak early-return branch)
+      dragRect.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: cx, clientY: cy }));
+    });
+  },
   parameters: {
     docs: {
       description: {

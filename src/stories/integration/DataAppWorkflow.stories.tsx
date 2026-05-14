@@ -180,13 +180,14 @@ export const SortByName: Story = {
     })
 
     await step("Clicking Name header sorts ascending", async () => {
-      await userEvent.click(canvas.getByRole("columnheader", { name: "Name" }))
+      // Click the inner sort div, not the <th> — the onClick handler lives there
+      await userEvent.click(canvas.getByText("Name"))
       const rows = canvas.getAllByRole("row").slice(1)
       expect(rows[0]).toHaveTextContent("Amoxicillin")
     })
 
     await step("Clicking Name header again sorts descending", async () => {
-      await userEvent.click(canvas.getByRole("columnheader", { name: "Name" }))
+      await userEvent.click(canvas.getByText("Name"))
       const rows = canvas.getAllByRole("row").slice(1)
       expect(rows[0]).toHaveTextContent("Warfarin")
     })

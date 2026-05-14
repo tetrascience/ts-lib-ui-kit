@@ -2,11 +2,11 @@
 
 ## Supported Versions
 
-Only the latest stable release of `@tetrascience-npm/tetrascience-react-ui` receives security fixes.
+Only the latest release of `@tetrascience-npm/tetrascience-react-ui` receives security fixes.
 
 | Version | Supported |
 | --- | --- |
-| Latest stable | Yes |
+| Latest | Yes |
 | Older releases | No |
 
 ## Reporting a Vulnerability

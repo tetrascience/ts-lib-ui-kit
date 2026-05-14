@@ -27,13 +27,14 @@ function DataTablePagination({
   pageSizeOptions = [DEFAULT_PAGE_SIZE_SMALL, DEFAULT_PAGE_SIZE_MEDIUM, DEFAULT_PAGE_SIZE_LARGE],
   className,
 }: DataTablePaginationProps) {
-  const { table } = useDataTable()
+  const { table, grouping, enableGrouping } = useDataTable()
 
   const pageCount = table.getPageCount()
   const { pageIndex, pageSize } = table.getState().pagination
   const totalRows = table.getFilteredRowModel().rows.length
 
   if (totalRows === 0) return null
+  if (enableGrouping && grouping) return null
 
   const start = pageIndex * pageSize + 1
   const end = Math.min((pageIndex + 1) * pageSize, totalRows)

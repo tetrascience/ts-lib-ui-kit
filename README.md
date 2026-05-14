@@ -4,6 +4,10 @@ React component library for building TetraScience applications.
 
 [![npm version](https://img.shields.io/npm/v/@tetrascience-npm/tetrascience-react-ui)](https://www.npmjs.com/package/@tetrascience-npm/tetrascience-react-ui) [![CI](https://github.com/tetrascience/ts-lib-ui-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/tetrascience/ts-lib-ui-kit/actions/workflows/ci.yml) **[Storybook](https://ts-lib-ui-kit-storybook.vercel.app/)** | **[Contributing Guide](./CONTRIBUTING.md)**
 
+## Version
+
+v0.5.0
+
 This library provides:
 
 - **UI Components**: shadcn/ui primitives (Radix UI) with Tailwind CSS
@@ -17,6 +21,17 @@ This library provides:
 - **React 19+**
 - **Node.js 18+**
 - **TypeScript 5.5+** (optional, but recommended)
+
+## Compatibility
+
+| Library version | React | Node.js | TDP (server utilities) |
+| --- | --- | --- | --- |
+| v0.5.x | 19+ | 18+ | v4.x+ |
+| v0.4.x | 19+ | 18+ | v4.x+ |
+
+> **Note:** The client-side components have no TDP version dependency.
+> The `/server` utilities (JWT auth, provider helpers) require a running TDP instance of v4.x or later.
+> Browser support follows React 19's matrix (modern evergreen browsers).
 
 ## Installation
 
@@ -85,7 +100,7 @@ Accordion, Alert, AlertDialog, AspectRatio, Avatar, Badge, Breadcrumb, Button, B
 
 TetraScience-specific compositions built from UI primitives:
 
-AppHeader, AppLayout, AssistantModal, CodeScriptEditorButton, LaunchContent, Main, Navbar, ProtocolConfiguration, ProtocolYamlCard, PythonEditorModal, Sidebar, TdpLink, TdpSearch, TdpUrl
+AppHeader, AppLayout, AssistantModal *(Beta)*, CodeScriptEditorButton, LaunchContent, Main, Navbar, ProtocolConfiguration, ProtocolYamlCard, PythonEditorModal, Sidebar, TdpLink, TdpSearch, TdpUrl
 
 ### Charts (`charts/`)
 

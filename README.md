@@ -100,7 +100,7 @@ Accordion, Alert, AlertDialog, AspectRatio, Avatar, Badge, Breadcrumb, Button, B
 
 TetraScience-specific compositions built from UI primitives:
 
-AppHeader, AppLayout, AssistantModal *(Beta)*, CodeScriptEditorButton, LaunchContent, Main, Navbar, ProtocolConfiguration, ProtocolYamlCard, PythonEditorModal, Sidebar, TdpLink, TdpSearch, TdpUrl
+AppHeader, AppLayout, AssistantModal, CodeScriptEditorButton, LaunchContent, Main, Navbar, ProtocolConfiguration, ProtocolYamlCard, PythonEditorModal, Sidebar, TdpLink, TdpSearch, TdpUrl
 
 ### Charts (`charts/`)
 

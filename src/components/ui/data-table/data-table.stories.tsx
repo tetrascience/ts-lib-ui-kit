@@ -1340,7 +1340,7 @@ export const Grouping: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5192" },
   },
 }
 
@@ -1426,7 +1426,7 @@ export const GroupHeaderAccessibility: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5193" },
   },
 }
 
@@ -1466,7 +1466,7 @@ export const GroupingWithConfig: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5194" },
   },
 }
 
@@ -1524,7 +1524,7 @@ export const ControlledGrouping: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5195" },
   },
 }
 
@@ -1566,6 +1566,6 @@ export const GroupingWithFilter: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5196" },
   },
 }

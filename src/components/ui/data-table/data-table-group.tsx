@@ -2,6 +2,7 @@
 
 import { GroupIcon, XIcon } from "lucide-react"
 import { Popover } from "radix-ui"
+import { useId } from "react"
 
 import { useDataTable } from "./data-table"
 
@@ -46,6 +47,7 @@ interface DataTableGroupProps {
 }
 
 function DataTableGroup({ className }: DataTableGroupProps) {
+  const selectId = useId()
   const {
     table,
     columnLabels,
@@ -122,7 +124,7 @@ function DataTableGroup({ className }: DataTableGroupProps) {
           <div className="flex flex-col gap-2">
             <label
               className="text-xs font-medium text-muted-foreground"
-              htmlFor="data-table-group-select"
+              htmlFor={selectId}
             >
               Group rows by
             </label>
@@ -132,7 +134,7 @@ function DataTableGroup({ className }: DataTableGroupProps) {
                 onValueChange={(v) => setGrouping(v === NO_GROUPING ? null : v)}
               >
                 <SelectTrigger
-                  id="data-table-group-select"
+                  id={selectId}
                   size="sm"
                   className="w-44"
                 >

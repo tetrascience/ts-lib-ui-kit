@@ -51,7 +51,7 @@ function MultiSelectCell({
 
   return (
     <Combobox multiple items={options.map((o) => o.value)} value={value} onValueChange={onChange}>
-      <ComboboxChips ref={anchorRef} className="min-h-7 w-full py-0.5">
+      <ComboboxChips ref={anchorRef} className={cn("min-h-7 w-full py-0.5", CELL_EDITOR_CLASS)}>
         <ComboboxValue>
           {(items: string[]) =>
             items.map((item) => <ComboboxChip key={item}>{labelByValue.get(item) ?? item}</ComboboxChip>)
@@ -72,6 +72,13 @@ function MultiSelectCell({
     </Combobox>
   );
 }
+
+/**
+ * Cell editors render borderless by default so the table reads flat. The
+ * underlying primitives keep their `focus-visible` / `focus-within` rings, so
+ * an outline only appears while the user is actively editing the cell.
+ */
+const CELL_EDITOR_CLASS = "border-transparent shadow-none hover:border-input/40";
 
 const PAGE_SIZE_SMALL = 25;
 const PAGE_SIZE_MEDIUM = 50;
@@ -157,10 +164,7 @@ interface GroupedRow<T> {
   rows: Array<{ id: WellId; row: T }>;
 }
 
-function groupRowsBy<T extends WellRecord>(
-  rows: Array<{ id: WellId; row: T }>,
-  field: string,
-): GroupedRow<T>[] {
+function groupRowsBy<T extends WellRecord>(rows: Array<{ id: WellId; row: T }>, field: string): GroupedRow<T>[] {
   const map = new Map<string, GroupedRow<T>>();
   for (const entry of rows) {
     const raw = (entry.row as Record<string, unknown>)[field];
@@ -173,9 +177,7 @@ function groupRowsBy<T extends WellRecord>(
 }
 
 function inferFilterColumns<T extends WellRecord>(columns: WellColumn<T>[]): FilterColumnConfig[] {
-  return columns
-    .filter((col) => !!col.field)
-    .map((col) => ({ columnId: col.field as string, label: col.header }));
+  return columns.filter((col) => !!col.field).map((col) => ({ columnId: col.field as string, label: col.header }));
 }
 
 export function WellManifestTable<T extends WellRecord = WellRecord>({
@@ -319,7 +321,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
       value={(value as string | undefined) ?? ""}
       onValueChange={(v) => updateRow(wellId, { [fieldKey]: v } as Partial<T>)}
     >
-      <SelectTrigger size="sm" className="h-7 w-full" aria-label={ariaLabel}>
+      <SelectTrigger size="sm" className={cn("h-7 w-full", CELL_EDITOR_CLASS)} aria-label={ariaLabel}>
         <SelectValue placeholder={field.placeholder ?? "Select…"} />
       </SelectTrigger>
       <SelectContent>
@@ -379,11 +381,9 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
       step={field.kind === "integer" ? 1 : undefined}
       placeholder={field.placeholder}
       aria-label={ariaLabel}
-      className="h-7"
+      className={cn("h-7", CELL_EDITOR_CLASS)}
       value={(value as string | number | undefined) ?? ""}
-      onChange={(e) =>
-        updateRow(wellId, { [fieldKey]: parseInputValue(field.kind, e.target.value) } as Partial<T>)
-      }
+      onChange={(e) => updateRow(wellId, { [fieldKey]: parseInputValue(field.kind, e.target.value) } as Partial<T>)}
     />
   );
 
@@ -401,9 +401,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
           value={current}
           options={field.options ?? []}
           placeholder={field.placeholder}
-          onChange={(next) =>
-            updateRow(wellId, { [fieldKey]: next.length === 0 ? undefined : next } as Partial<T>)
-          }
+          onChange={(next) => updateRow(wellId, { [fieldKey]: next.length === 0 ? undefined : next } as Partial<T>)}
         />
       );
     }
@@ -534,10 +532,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
     );
   };
 
-  const groupableColumns = React.useMemo(
-    () => columns.filter((col) => !!col.field),
-    [columns],
-  );
+  const groupableColumns = React.useMemo(() => columns.filter((col) => !!col.field), [columns]);
   const activeGroupField = groupable && groupByField ? groupByField : "";
   const grouped = React.useMemo(
     () => (activeGroupField ? groupRowsBy(rows, activeGroupField) : null),
@@ -556,11 +551,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
       <TableRow key={id} {...extra}>
         {onSelectionChange ? (
           <TableCell className="w-10">
-            <Checkbox
-              checked={!!isSelected}
-              onCheckedChange={() => toggleSelect(id)}
-              aria-label={`Select ${id}`}
-            />
+            <Checkbox checked={!!isSelected} onCheckedChange={() => toggleSelect(id)} aria-label={`Select ${id}`} />
           </TableCell>
         ) : null}
         <TableCell className="font-semibold">{id}</TableCell>
@@ -598,17 +589,13 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
           {showAll ? "Hide empty wells" : "Show all wells"}
         </Button>
         {filterable ? (
-          <ManifestFilterPopover
-            columns={resolvedFilterColumns}
-            filters={filters}
-            onFiltersChange={setFilters}
-          />
+          <ManifestFilterPopover columns={resolvedFilterColumns} filters={filters} onFiltersChange={setFilters} />
         ) : null}
         {groupable ? (
           <div className="inline-flex items-center gap-1.5">
             <Layers aria-hidden className="size-3.5 text-muted-foreground" />
             <Select value={groupByField || "__none"} onValueChange={(v) => setGroupByField(v === "__none" ? "" : v)}>
-              <SelectTrigger size="sm" className="h-7 min-w-[160px]" aria-label="Group by">
+              <SelectTrigger size="sm" className="h-7 min-w-40" aria-label="Group by">
                 <SelectValue placeholder="Group by…" />
               </SelectTrigger>
               <SelectContent>
@@ -656,10 +643,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
                   const isCollapsed = collapsedGroups.has(group.key);
                   return (
                     <React.Fragment key={group.key}>
-                      <TableRow
-                        className="cursor-pointer bg-muted/40"
-                        onClick={() => toggleGroup(group.key)}
-                      >
+                      <TableRow className="cursor-pointer bg-muted/40" onClick={() => toggleGroup(group.key)}>
                         <TableCell colSpan={totalColSpan} className="py-1.5">
                           <div className="flex items-center gap-2 text-xs font-medium">
                             {isCollapsed ? (
@@ -693,43 +677,43 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
       </TooltipProvider>
 
       {grouped ? null : (
-      <div className="flex items-center justify-end gap-3 text-xs text-muted-foreground">
-        <span className="text-muted-foreground">Rows per page</span>
-        <Select
-          value={String(pageSize)}
-          onValueChange={(v) => {
-            setPageSize(parseInt(v, 10));
-            setPage(0);
-          }}
-        >
-          <SelectTrigger size="sm" className="h-7 w-[72px]" aria-label="Rows per page">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {pageSizeOptions.map((s) => (
-              <SelectItem key={s} value={String(s)}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <span>
-          {totalRows === 0
-            ? "0 of 0"
-            : `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, totalRows)} of ${totalRows}`}
-        </span>
-        <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
-          Prev
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= lastPage}
-          onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
-        >
-          Next
-        </Button>
-      </div>
+        <div className="flex items-center justify-end gap-3 text-xs text-muted-foreground">
+          <span className="text-muted-foreground">Rows per page</span>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(v) => {
+              setPageSize(parseInt(v, 10));
+              setPage(0);
+            }}
+          >
+            <SelectTrigger size="sm" className="h-7 w-18" aria-label="Rows per page">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {pageSizeOptions.map((s) => (
+                <SelectItem key={s} value={String(s)}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span>
+            {totalRows === 0
+              ? "0 of 0"
+              : `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, totalRows)} of ${totalRows}`}
+          </span>
+          <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+            Prev
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= lastPage}
+            onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+          >
+            Next
+          </Button>
+        </div>
       )}
     </div>
   );

@@ -7,7 +7,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Barcode, FileText, GripVertical, Tag } from "lucide-react";
+import { Barcode, Database, FileText, GripVertical, Plus, Tag, X } from "lucide-react";
 import * as React from "react";
 
 import { getPlateMapScopedWellId, PlateMapEditor } from "./PlateMapEditor";
@@ -15,11 +15,22 @@ import { PLATE_MAP_EMPTY_WELL_FILL } from "./PlatePaintGrid";
 import { PlateZoomControl } from "./PlateZoomControl";
 import { WellLegend } from "./WellLegend";
 
-import type { WellColumn, WellField, WellId, WellRecord } from "./types";
+import type {
+  PlateFormat,
+  PlateMapCsvTriage,
+  TemplateOption,
+  WellColumn,
+  WellField,
+  WellId,
+  WellRecord,
+} from "./types";
 import type { DragEndEvent } from "@dnd-kit/core";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 interface DemoWell extends WellRecord {
@@ -79,6 +90,14 @@ const SEED_LAYOUT: ReadonlyArray<readonly [WellId, NonNullable<DemoWell["role"]>
 ];
 
 const INITIAL_PLATE_ID = "DEMO-PLATE-001";
+
+const DEMO_TEMPLATES: TemplateOption[] = [
+  { id: "single-point", label: "Single concentration", group: "Built-in", description: "1 dose, all wells" },
+  { id: "three-point-auc", label: "3-point AUC", group: "Built-in", description: "high / medium / low" },
+  { id: "seven-point-dr", label: "7-point dose response", group: "Built-in" },
+  { id: "eleven-point-dr", label: "11-point dose response", group: "Built-in" },
+  { id: "custom", label: "Custom layout", group: "User" },
+];
 
 function countPlateEntries(values: Map<WellId, DemoWell>, plateId: string): number {
   const prefix = getPlateMapScopedWellId(plateId, "");
@@ -191,6 +210,89 @@ function useEditorState() {
   };
 }
 
+/**
+ * Story-only LIMS query panel. Demonstrates wiring an app-owned action into
+ * the editor's `plateToolbar` slot. In production the OCB app would replace
+ * the `onSubmit` handler with a real backend call and map the response into
+ * the editor's `Map<WellId, T>` state via `onChange`.
+ */
+function QueryLimsPanel({ onSubmit }: { onSubmit?: (plateIds: string[]) => void }) {
+  const [open, setOpen] = React.useState(false);
+  const [plateIds, setPlateIds] = React.useState<string[]>([""]);
+
+  const updateId = (idx: number, value: string) =>
+    setPlateIds((prev) => prev.map((v, i) => (i === idx ? value : v)));
+  const addId = () => setPlateIds((prev) => [...prev, ""]);
+  const removeId = (idx: number) =>
+    setPlateIds((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
+
+  const handleSubmit = () => {
+    const cleaned = plateIds.map((v) => v.trim()).filter(Boolean);
+    onSubmit?.(cleaned);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Database aria-hidden className="size-3.5" />
+          Query LIMS
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72">
+        <div className="flex flex-col gap-2">
+          <div className="text-sm font-medium">Query LIMS</div>
+          <div className="text-xs text-muted-foreground">
+            Enter one or more plate IDs to populate from LIMS.
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {plateIds.map((value, idx) => (
+              <div key={idx} className="flex items-center gap-1.5">
+                <Input
+                  aria-label={`Plate ID ${idx + 1}`}
+                  placeholder="PLATE-XXXX"
+                  value={value}
+                  onChange={(e) => updateId(idx, e.target.value)}
+                  className="h-8"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-8 shrink-0"
+                  disabled={plateIds.length === 1}
+                  aria-label={`Remove plate ID ${idx + 1}`}
+                  onClick={() => removeId(idx)}
+                >
+                  <X aria-hidden className="size-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+          <Button type="button" variant="ghost" size="sm" className="justify-start" onClick={addId}>
+            <Plus aria-hidden className="size-3.5" />
+            Add plate ID
+          </Button>
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={!plateIds.some((v) => v.trim())}
+              onClick={handleSubmit}
+            >
+              Query
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function DraggableSampleChip({ sample }: { sample: (typeof SAMPLE_PALETTE)[number] }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `palette-${sample.id}`,
@@ -208,11 +310,7 @@ function DraggableSampleChip({ sample }: { sample: (typeof SAMPLE_PALETTE)[numbe
       )}
     >
       <GripVertical aria-hidden className="size-3 text-muted-foreground" />
-      <span
-        aria-hidden
-        className="size-3 shrink-0 rounded-full"
-        style={{ backgroundColor: ROLE_COLOR[sample.role] }}
-      />
+      <span aria-hidden className="size-3 shrink-0 rounded-full" style={{ backgroundColor: ROLE_COLOR[sample.role] }} />
       <span className="flex-1 truncate font-medium">{sample.id}</span>
       <span className="text-[0.65rem] text-muted-foreground">{sample.role}</span>
     </div>
@@ -234,12 +332,27 @@ function DroppableWellOverlay({ wellId, cellSize }: { wellId: WellId; cellSize: 
   );
 }
 
-function PlateMapEditorDefault() {
+function PlateMapEditorDefault({ format = "96" }: { format?: PlateFormat } = {}) {
   const state = useEditorState();
+  const [templateId, setTemplateId] = React.useState<string | undefined>();
+
+  const handleImportCsv = React.useCallback((file: File, triage?: PlateMapCsvTriage) => {
+    // eslint-disable-next-line no-console
+    console.log("[story] import CSV", file.name, triage?.plates.length ?? 0, "plate(s)");
+  }, []);
+  const handleExportCsv = React.useCallback(() => {
+    // eslint-disable-next-line no-console
+    console.log("[story] export CSV", state.values.size, "wells");
+  }, [state.values]);
+  const handleClearTemplate = React.useCallback(() => {
+    setTemplateId(undefined);
+    state.setValues(new Map());
+    state.setSelection(new Set());
+  }, [state]);
 
   return (
     <PlateMapEditor<DemoWell>
-      format="96"
+      format={format}
       values={state.values}
       onChange={state.setValues}
       selection={state.selection}
@@ -265,9 +378,15 @@ function PlateMapEditorDefault() {
       highlightedWellIds={state.highlightedWellIds}
       manifestFilterable
       manifestGroupable
+      templates={DEMO_TEMPLATES}
+      templateId={templateId}
+      onTemplateChange={setTemplateId}
+      onClearTemplate={handleClearTemplate}
+      onImportCsv={handleImportCsv}
+      onExportCsv={handleExportCsv}
       badges={
         <>
-          <Badge variant="secondary">96-well · circle</Badge>
+          <Badge variant="secondary">{format}-well · circle</Badge>
           <Badge variant="info">{state.selection.size} selected</Badge>
         </>
       }
@@ -279,7 +398,17 @@ function PlateMapEditorDefault() {
           emptyLabel="No samples assigned yet"
         />
       }
-      plateToolbar={<PlateZoomControl zoom={state.zoom} onZoomChange={state.setZoom} />}
+      plateToolbar={
+        <>
+          <PlateZoomControl zoom={state.zoom} onZoomChange={state.setZoom} />
+          <QueryLimsPanel
+            onSubmit={(ids) => {
+              // eslint-disable-next-line no-console
+              console.log("[story] Query LIMS", ids);
+            }}
+          />
+        </>
+      }
     />
   );
 }
@@ -291,9 +420,7 @@ function PlateMapEditorDragDrop() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
-    const data = active.data.current as
-      | { sampleId?: string; role?: DemoWell["role"]; notes?: string }
-      | undefined;
+    const data = active.data.current as { sampleId?: string; role?: DemoWell["role"]; notes?: string } | undefined;
     if (!data?.sampleId) return;
     const wellId = String(over.id);
     const next = new Map(state.values);
@@ -355,7 +482,17 @@ function PlateMapEditorDragDrop() {
             emptyLabel="No samples assigned yet"
           />
         }
-        plateToolbar={<PlateZoomControl zoom={state.zoom} onZoomChange={state.setZoom} />}
+        plateToolbar={
+          <>
+            <PlateZoomControl zoom={state.zoom} onZoomChange={state.setZoom} />
+            <QueryLimsPanel
+              onSubmit={(ids) => {
+                // eslint-disable-next-line no-console
+                console.log("[story] Query LIMS", ids);
+              }}
+            />
+          </>
+        }
         badges={
           <>
             <Badge variant="secondary">96-well · circle</Badge>
@@ -368,7 +505,7 @@ function PlateMapEditorDragDrop() {
 }
 
 const meta: Meta<typeof PlateMapEditor<DemoWell>> = {
-  title: "Composed/PlateMapEditor",
+  title: "Patterns/PlateMapEditor",
   component: PlateMapEditor,
   parameters: { layout: "padded" },
 };
@@ -378,7 +515,13 @@ export default meta;
 type Story = StoryObj<typeof PlateMapEditor<DemoWell>>;
 
 export const Default: Story = {
-  render: () => <PlateMapEditorDefault />,
+  name: "Default (96-well)",
+  render: () => <PlateMapEditorDefault format="96" />,
+};
+
+export const Default384: Story = {
+  name: "Default (384-well)",
+  render: () => <PlateMapEditorDefault format="384" />,
 };
 
 export const DragAndDrop: Story = {

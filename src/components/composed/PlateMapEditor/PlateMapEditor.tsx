@@ -525,6 +525,22 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
         <Card className="flex min-w-[360px] flex-1 flex-col" size="sm">
           <CardHeader className="border-b">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <CardTitle className="min-w-0">{plateTitle}</CardTitle>
+              {showPlateSelector ? (
+                <PlateMapPlateSelector
+                  plates={availablePlates}
+                  activePlateId={activePlate?.id}
+                  onPlateChange={canChangePlate ? handlePlateChange : undefined}
+                  onAddPlate={onAddPlate}
+                  onRemovePlate={onRemovePlate}
+                  addPlateLabel={addPlateLabel}
+                  removePlateLabel={removePlateLabel}
+                  label={plateSelectorLabel}
+                  variant={plateSelectorVariant}
+                />
+              ) : null}
+            </div>
+            <CardAction className="flex flex-wrap items-center gap-2">
               <PlateMapActionsMenu
                 templates={templates}
                 templateId={templateId}
@@ -546,22 +562,10 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
                 exportCsvLabel={exportCsvLabel}
                 clearLabel={clearLabel}
               />
-              <CardTitle className="min-w-0">{plateTitle}</CardTitle>
-              {showPlateSelector ? (
-                <PlateMapPlateSelector
-                  plates={availablePlates}
-                  activePlateId={activePlate?.id}
-                  onPlateChange={canChangePlate ? handlePlateChange : undefined}
-                  onAddPlate={onAddPlate}
-                  onRemovePlate={onRemovePlate}
-                  addPlateLabel={addPlateLabel}
-                  removePlateLabel={removePlateLabel}
-                  label={plateSelectorLabel}
-                  variant={plateSelectorVariant}
-                />
-              ) : null}
-            </div>
-            <CardAction className="flex flex-wrap items-center gap-2">
+            </CardAction>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-1.5">
+            <div className="flex flex-wrap items-center justify-start gap-3">
               {plateToolbar}
               <div className="flex items-center gap-2 text-xs">
                 <button
@@ -580,9 +584,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
                   Deselect all
                 </button>
               </div>
-            </CardAction>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-1.5">
+            </div>
             <div className="h-5 text-xs text-muted-foreground">{hoverSummary}</div>
             <PlatePaintGrid
               format={format}

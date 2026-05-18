@@ -1,6 +1,7 @@
 "use client"
 
 import { ListFilterIcon, PlusIcon, XIcon } from "lucide-react"
+import { Popover } from "radix-ui"
 
 import { useDataTable } from "./data-table"
 
@@ -8,7 +9,6 @@ import type { FilterColumnConfig, FilterCondition, FilterOperator } from "./data
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -115,8 +115,8 @@ function DataTableFilter({ className }: DataTableFilterProps) {
   const activeCount = filters.length
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <Popover.Root>
+      <Popover.Trigger asChild>
         <Button
           type="button"
           variant="outline"
@@ -133,9 +133,21 @@ function DataTableFilter({ className }: DataTableFilterProps) {
             </span>
           )}
         </Button>
-      </PopoverTrigger>
+      </Popover.Trigger>
 
-      <PopoverContent data-slot="data-table-filter-panel" align="end" className="min-w-80">
+      <Popover.Portal>
+        <Popover.Content
+          data-slot="data-table-filter-panel"
+          align="end"
+          sideOffset={4}
+          className={cn(
+            "z-50 min-w-80 rounded-lg border bg-popover p-3 text-popover-foreground shadow-md outline-none",
+            "data-[state=open]:animate-in data-[state=closed]:animate-out",
+            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+            "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
+          )}
+        >
           <div className="flex flex-col gap-2">
             {filters.map((condition) => {
               const colConfig = resolvedColumns.find((c) => c.columnId === condition.columnId)
@@ -248,8 +260,9 @@ function DataTableFilter({ className }: DataTableFilterProps) {
               )}
             </div>
           </div>
-      </PopoverContent>
-    </Popover>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   )
 }
 

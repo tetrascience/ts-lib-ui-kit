@@ -26,6 +26,9 @@ export const Default: Story = {
       await expect(canvas.getByRole("button")).toBeInTheDocument();
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4616" },
+  },
 };
 
 export const WithTranscriptionHandler: Story = {
@@ -40,6 +43,9 @@ export const WithTranscriptionHandler: Story = {
       await expect(canvas.getByRole("button")).toBeInTheDocument();
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4617" },
+  },
 };
 
 export const GhostVariant: Story = {
@@ -52,6 +58,9 @@ export const GhostVariant: Story = {
     await step("Ghost variant speech input renders", async () => {
       await expect(canvas.getByRole("button")).toBeInTheDocument();
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4618" },
   },
 };
 
@@ -69,6 +78,9 @@ export const InPromptContext: Story = {
       await expect(canvas.getByRole("button")).toBeInTheDocument();
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4619" },
+  },
 };
 
 /** Button has the correct accessible label when not listening. */
@@ -79,6 +91,9 @@ export const MicrophoneAriaLabel: Story = {
     await step("Button has aria-label Microphone when idle", async () => {
       await expect(canvas.getByRole("button", { name: "Microphone" })).toBeInTheDocument();
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4620" },
   },
 };
 
@@ -94,6 +109,9 @@ export const TranscriptionCallback: Story = {
       // In Chromium (Playwright), webkitSpeechRecognition exists so the button becomes enabled
       await waitFor(() => expect(button).not.toBeDisabled(), { timeout: 2000 });
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4621" },
   },
 };
 
@@ -115,6 +133,9 @@ export const NoSpeechApiDisabled: Story = {
     await step("Button renders regardless of speech API availability", async () => {
       await expect(canvas.getByRole("button")).toBeInTheDocument();
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4622" },
   },
 };
 
@@ -264,6 +285,9 @@ export const ListeningState: Story = {
       await waitFor(() => expect(canvas.getByRole("button", { name: "Microphone" })).toBeInTheDocument());
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4623" },
+  },
 };
 
 /** MediaRecorder fallback starts recording, stops recording, and forwards audio transcript. */
@@ -297,6 +321,9 @@ export const MediaRecorderStartsAndStops: Story = {
       await waitFor(() => expect(canvas.getByRole("button", { name: "Microphone" })).not.toBeDisabled());
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4624" },
+  },
 };
 
 /** MediaRecorder constructor failures are caught and return the button to idle. */
@@ -318,6 +345,9 @@ export const MediaRecorderConstructorError: Story = {
       await expect(args.onAudioRecorded).not.toHaveBeenCalled();
       await waitFor(() => expect(canvas.getByRole("button", { name: "Microphone" })).not.toBeDisabled());
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4625" },
   },
 };
 
@@ -348,6 +378,9 @@ export const MediaRecorderError: Story = {
       await waitFor(() => expect(canvas.getByRole("button", { name: "Microphone" })).not.toBeDisabled());
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4626" },
+  },
 };
 
 /** Unmounting while recording stops MediaRecorder via the cleanup ref branch. */
@@ -377,6 +410,9 @@ export const MediaRecorderCleanupWhileRecording: Story = {
       await expect(latestMediaRecorderState).toBe("inactive");
       await expect(mediaTrackStopMock).toHaveBeenCalledTimes(1);
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4627" },
   },
 };
 
@@ -441,6 +477,9 @@ export const TranscriptionResult: Story = {
       await waitFor(() => expect(args.onTranscriptionChange).toHaveBeenCalledWith("hello world"));
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4628" },
+  },
 };
 
 /** Recognition error event (e.g. not-allowed) exits listening state gracefully. */
@@ -482,5 +521,8 @@ export const RecognitionError: Story = {
       await userEvent.click(canvas.getByRole("button", { name: "Microphone" }));
       await waitFor(() => expect(canvas.getByRole("button", { name: "Microphone" })).toBeInTheDocument());
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4629" },
   },
 };

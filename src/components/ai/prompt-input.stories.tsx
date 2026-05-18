@@ -253,6 +253,9 @@ export const Default: Story = {
       await expect(canvas.getByRole("button", { name: /submit/i })).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4568" },
+  },
 }
 
 /**
@@ -262,6 +265,7 @@ export const Default: Story = {
 export const IntroScreen: Story = {
   parameters: {
     layout: "centered",
+    zephyr: { testCaseId: "SW-T4569" },
   },
   render: () => {
     const [text, setText] = useState("")
@@ -430,6 +434,9 @@ export const Minimal: Story = {
       await expect(canvas.getByRole("button", { name: /submit/i })).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4570" },
+  },
 }
 
 /** Full-featured prompt with attachment header, model selector, web search toggle. */
@@ -503,6 +510,9 @@ export const WithAttachmentsAndSpeech: Story = {
       await userEvent.click(await screen.findByText(/Add photos or files/i))
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4571" },
+  },
 }
 
 /** Streaming state — submit button shows a stop icon. */
@@ -529,6 +539,9 @@ export const Streaming: Story = {
     await step("Streaming state shows stop button", async () => {
       await expect(canvas.getByRole("button", { name: /stop/i })).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4572" },
   },
 }
 
@@ -569,6 +582,9 @@ export const EnterKeySubmit: Story = {
       )
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4573" },
+  },
 }
 
 /** Shift+Enter inserts a newline without submitting. */
@@ -608,6 +624,9 @@ export const ShiftEnterNewline: Story = {
       await expect(textarea).toHaveFocus()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4574" },
+  },
 }
 
 /** Stop button calls onStop instead of submitting when streaming. */
@@ -639,6 +658,9 @@ export const StreamingStopCallback: Story = {
       await expect(args.onStop).toHaveBeenCalledOnce()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4575" },
+  },
 }
 
 /** Submitted status — spinner shown while waiting for response. */
@@ -665,6 +687,9 @@ export const SubmittedStatus: Story = {
     await step("Submitted status renders stop button (aria)", async () => {
       await expect(canvas.getByRole("button", { name: /stop/i })).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4576" },
   },
 }
 
@@ -700,6 +725,9 @@ export const FileValidationMaxSize: Story = {
       ))
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4577" },
+  },
 }
 
 /** File type validation — onError fires when the uploaded MIME type is rejected by accept. */
@@ -734,6 +762,9 @@ export const FileAcceptTypeValidation: Story = {
         expect.objectContaining({ code: "accept" })
       ))
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4578" },
   },
 }
 
@@ -773,6 +804,9 @@ export const MaxFilesValidation: Story = {
         expect.objectContaining({ code: "max_files" })
       ))
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4579" },
   },
 }
 
@@ -817,6 +851,9 @@ export const BackspaceRemovesAttachment: Story = {
       await userEvent.keyboard("{Backspace}")
       await waitFor(() => expect(canvas.getByTestId("attachment-count")).toHaveTextContent("0"))
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4580" },
   },
 }
 
@@ -870,6 +907,9 @@ export const PasteFileIntoTextarea: Story = {
       await waitFor(() => expect(canvas.getByTestId("attachment-count")).toHaveTextContent("1"))
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4581" },
+  },
 }
 
 /** PromptInputProvider: textarea is controlled externally and cleared after submit. */
@@ -900,6 +940,9 @@ export const ProviderClearsAfterSubmit: Story = {
       await userEvent.keyboard("{Enter}")
       await waitFor(() => expect(textarea).toHaveValue(""))
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4582" },
   },
 }
 
@@ -936,6 +979,9 @@ export const ProviderRetainsTextOnError: Story = {
       await new Promise((r) => setTimeout(r, 100))
       await expect(textarea).toHaveValue("My message")
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4583" },
   },
 }
 
@@ -998,6 +1044,9 @@ export const ProviderFileValidation: Story = {
       await waitFor(() => expect(within(canvasElement).getByTestId("attachment-count")).toHaveTextContent("1"))
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4584" },
+  },
 }
 
 /** PromptInputButton string tooltip — tooltip content and optional shortcut render. */
@@ -1037,6 +1086,9 @@ export const ButtonStringTooltip: Story = {
       await userEvent.hover(canvas.getByRole("button", { name: "+" }))
       await waitFor(() => expect(screen.getByRole("tooltip")).toHaveTextContent("⌘K"))
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4585" },
   },
 }
 
@@ -1092,6 +1144,9 @@ export const BlobAttachmentSubmitConversion: Story = {
       )
       await waitFor(() => expect(canvas.getByTestId("attachment-count")).toHaveTextContent("0"))
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4586" },
   },
 }
 
@@ -1157,6 +1212,9 @@ export const ProviderAttachmentControls: Story = {
       await expect(canvas.getByText("Provider unmounted")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4587" },
+  },
 }
 
 /** Referenced source helpers add, remove, and clear local PromptInput sources. */
@@ -1193,6 +1251,9 @@ export const ReferencedSourcesControls: Story = {
       await userEvent.click(canvas.getByRole("button", { name: "Clear sources" }))
       await waitFor(() => expect(canvas.getByTestId("source-count")).toHaveTextContent("0"))
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4588" },
   },
 }
 
@@ -1231,6 +1292,9 @@ export const GlobalDropAttachments: Story = {
       document.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer }))
       await waitFor(() => expect(canvas.getByTestId("attachment-count")).toHaveTextContent("1"))
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4589" },
   },
 }
 
@@ -1271,6 +1335,9 @@ export const KeyboardSubmitGuards: Story = {
       await expect(args.onKeyDown).toHaveBeenCalled()
       await expect(args.onSubmit).not.toHaveBeenCalled()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4590" },
   },
 }
 
@@ -1316,6 +1383,9 @@ export const CompositionAndDisabledSubmitGuards: Story = {
       await expect(args.onSubmit).not.toHaveBeenCalled()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4591" },
+  },
 }
 
 /** Paste events with no clipboard items are ignored. */
@@ -1345,6 +1415,9 @@ export const PasteWithoutClipboardItems: Story = {
       await expect(canvas.getByTestId("attachment-count")).toHaveTextContent("0")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4592" },
+  },
 }
 
 /** Error-state submit button renders and delegates regular clicks to onClick. */
@@ -1372,6 +1445,9 @@ export const ErrorSubmitClick: Story = {
       await userEvent.click(canvas.getByRole("button", { name: /submit/i }))
       await expect(args.onClick).toHaveBeenCalledOnce()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4593" },
   },
 }
 
@@ -1458,6 +1534,9 @@ export const WrapperPrimitives: Story = {
       await expect(canvas.getByPlaceholderText("Search commands")).toBeInTheDocument()
       await expect(canvas.getByText("Summarize")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4594" },
   },
 }
 
@@ -1602,5 +1681,8 @@ export const ScreenshotActionAddsAttachment: Story = {
     if (originalVideoHeightDescriptor) {
       Object.defineProperty(HTMLVideoElement.prototype, "videoHeight", originalVideoHeightDescriptor)
     }
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4595" },
   },
 }

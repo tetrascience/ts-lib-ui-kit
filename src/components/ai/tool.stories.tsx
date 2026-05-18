@@ -72,6 +72,9 @@ export const InputStreaming: Story = {
       await expect(canvas.getByText(/get_weather/i)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4648" },
+  },
 }
 
 export const InputAvailable: Story = {
@@ -90,6 +93,9 @@ export const InputAvailable: Story = {
     await step("Tool with available input renders", async () => {
       await expect(canvas.getByText(/search_web/i)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4649" },
   },
 }
 
@@ -118,6 +124,9 @@ export const OutputAvailable: Story = {
       await expect(canvas.getByText(/get_weather/i)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4650" },
+  },
 }
 
 export const OutputError: Story = {
@@ -137,6 +146,9 @@ export const OutputError: Story = {
     await step("Tool with error output renders", async () => {
       await expect(canvas.getByText(/read_file/i)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4651" },
   },
 }
 
@@ -161,6 +173,9 @@ export const CustomTitle: Story = {
     await step("Custom title tool renders", async () => {
       await expect(canvas.getByText("Run Python Script")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4652" },
   },
 }
 
@@ -188,6 +203,9 @@ export const Collapsed: Story = {
       await expectCollapsedChevronConfiguredForHoverReveal(trigger)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4653" },
+  },
 }
 
 export const StreamingAutoClose: Story = {
@@ -211,6 +229,9 @@ export const StreamingAutoClose: Story = {
         timeout: 1800,
       })
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4654" },
   },
 }
 
@@ -253,5 +274,8 @@ export const OutputEdgeCases: Story = {
       await expect(canvas.getByText("Denied")).toBeInTheDocument()
       await expect(canvas.getByText("Manual review required")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4655" },
   },
 }

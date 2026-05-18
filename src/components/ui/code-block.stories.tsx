@@ -66,6 +66,9 @@ export const Default: Story = {
       )
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4691" },
+  },
 }
 
 export const WithLineNumbers: Story = {
@@ -86,6 +89,9 @@ export const WithLineNumbers: Story = {
         { timeout: 5000 }
       )
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4692" },
   },
 }
 
@@ -112,6 +118,9 @@ export const WithHeader: Story = {
       await userEvent.click(button)
       await expect(button).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4693" },
   },
 }
 
@@ -163,6 +172,9 @@ export const WithLanguageSelector: Story = {
       await expect(canvas.getByRole("combobox")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4694" },
+  },
 }
 
 export const EmptyCode: Story = {
@@ -173,6 +185,9 @@ export const EmptyCode: Story = {
     await step("Empty code block renders without errors", async () => {
       await expect(canvasElement.querySelector('[data-language="ts"]')).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4695" },
   },
 }
 
@@ -193,6 +208,9 @@ export const ManualContent: Story = {
       await expect(canvas.getByText("manual.ts")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4696" },
+  },
 }
 
 export const SubscribesToHighlight: Story = {
@@ -203,5 +221,8 @@ export const SubscribesToHighlight: Story = {
       // Either cached (non-null) or pending; both exercise branches.
       await expect(result === null || typeof result === "object").toBe(true)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4697" },
   },
 }

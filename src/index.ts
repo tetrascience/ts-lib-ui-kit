@@ -2,15 +2,19 @@
 import "@/index.css";
 
 // Composed
+export * from "@/components/composed/FormPatterns";
+export * from "@/components/composed/StatCard";
 export * from "@/components/composed/DataAppShell";
 export * from "@/components/composed/Chat";
 export * from "@/components/composed/PlateMapEditor";
+export * from "@/components/composed/ConfirmDialog"
+export * from "@/components/composed/RichListItem";
+export * from "@/components/composed/EmptyState";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";
 export * from "@/components/composed/tdp-link";
 export * from "@/components/composed/tdp-url";
-
 
 // Charts
 export * from "@/components/charts/AreaGraph";
@@ -33,6 +37,7 @@ export * from "@/components/ui/alert-dialog";
 export * from "@/components/ui/aspect-ratio";
 export * from "@/components/ui/avatar";
 export * from "@/components/ui/badge";
+export * from "@/components/ui/banner";
 export * from "@/components/ui/breadcrumb";
 export * from "@/components/ui/button";
 export * from "@/components/ui/button-group";

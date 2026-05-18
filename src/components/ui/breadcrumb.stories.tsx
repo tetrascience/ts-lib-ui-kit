@@ -104,6 +104,9 @@ export const SlashSeparator: Story = {
       expect(canvas.getByRole("link", { name: "Data Overview" })).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4690" },
+  },
 }
 
 export const Collapsed: Story = {

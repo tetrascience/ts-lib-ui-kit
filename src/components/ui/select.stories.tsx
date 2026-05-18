@@ -173,7 +173,7 @@ function renderUncontrolledSelect(args: Story["args"]) {
 export const OpenAndSelect: Story = {
   render: renderUncontrolledSelect,
   parameters: {
-    zephyr: { testCaseId: "SW-T1282" },
+    zephyr: { testCaseId: "SW-T4718" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -206,7 +206,7 @@ export const OpenAndSelect: Story = {
 export const KeyboardNavigation: Story = {
   render: renderUncontrolledSelect,
   parameters: {
-    zephyr: { testCaseId: "SW-T1283" },
+    zephyr: { testCaseId: "SW-T4719" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -249,7 +249,7 @@ function renderDisabledSelect(args: Story["args"]) {
 export const Disabled: Story = {
   render: renderDisabledSelect,
   parameters: {
-    zephyr: { testCaseId: "SW-T1284" },
+    zephyr: { testCaseId: "SW-T4720" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -281,7 +281,7 @@ function renderDisabledItemSelect(args: Story["args"]) {
 export const DisabledItem: Story = {
   render: renderDisabledItemSelect,
   parameters: {
-    zephyr: { testCaseId: "SW-T1285" },
+    zephyr: { testCaseId: "SW-T4721" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -326,7 +326,7 @@ function renderGroupedSelect(args: Story["args"]) {
 export const Grouped: Story = {
   render: renderGroupedSelect,
   parameters: {
-    zephyr: { testCaseId: "SW-T1286" },
+    zephyr: { testCaseId: "SW-T4722" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -379,7 +379,7 @@ function renderManyItemsSelect(args: Story["args"]) {
 export const ManyItems: Story = {
   render: renderManyItemsSelect,
   parameters: {
-    zephyr: { testCaseId: "SW-T1287" },
+    zephyr: { testCaseId: "SW-T4723" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

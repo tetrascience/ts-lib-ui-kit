@@ -11,6 +11,7 @@ import { Badge } from "../badge"
 import { DataTable, TableToolbar, useDataTable } from "./data-table"
 import { DataTableColumnToggle } from "./data-table-column-toggle"
 import { DataTableFilter } from "./data-table-filter"
+import { DataTableGroup } from "./data-table-group"
 import { DataTablePagination } from "./data-table-pagination"
 
 import type { FilterCondition } from "./data-table"
@@ -1057,6 +1058,9 @@ export const SizedColumnsWithLongContent: Story = {
       expect(statusCells.every((el) => !el.classList.contains("truncate"))).toBe(true)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4713" },
+  },
 }
 
 export const ControlledState: Story = {
@@ -1120,7 +1124,7 @@ export const AdvancedFiltering: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1448" },
+    zephyr: { testCaseId: "SW-T4714" },
   },
 }
 
@@ -1171,7 +1175,7 @@ export const MultiConditionFiltering: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1449" },
+    zephyr: { testCaseId: "SW-T4715" },
   },
 }
 
@@ -1218,7 +1222,7 @@ export const FilteringWithConfig: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1450" },
+    zephyr: { testCaseId: "SW-T4716" },
   },
 }
 
@@ -1267,6 +1271,301 @@ export const ControlledFiltering: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T1451" },
+    zephyr: { testCaseId: "SW-T4717" },
+  },
+}
+
+// ===========================================================================
+// Grouping stories
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// Grouping — basic group-by-column flow
+// ---------------------------------------------------------------------------
+
+export const Grouping: Story = {
+  render: () => (
+    <DataTable
+      columns={workspaceColumns}
+      data={workspaceData}
+      enableGrouping
+      enableSorting
+    >
+      <TableToolbar>
+        <DataTableGroup />
+      </TableToolbar>
+    </DataTable>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Open the group panel and select a column", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /group/i }))
+      const trigger = await body.findByRole("combobox")
+      await userEvent.click(trigger)
+      await userEvent.click(await body.findByRole("option", { name: /^status$/i }))
+    })
+
+    await step("Group header rows appear for each unique value", async () => {
+      const headers = canvasElement.querySelectorAll(
+        "[data-slot='data-table-group-header']",
+      )
+      // Workspaces have 3 statuses: Active, Paused, Archived
+      expect(headers.length).toBe(3)
+    })
+
+    await step("Collapsing a group hides its data rows", async () => {
+      const headers = canvasElement.querySelectorAll(
+        "[data-slot='data-table-group-header']",
+      )
+      const firstHeaderButton = headers[0].querySelector("button")
+      expect(firstHeaderButton).not.toBeNull()
+      const rowsBefore = canvas.getAllByRole("row").length
+      await userEvent.click(firstHeaderButton as HTMLElement)
+      const rowsAfter = canvas.getAllByRole("row").length
+      expect(rowsAfter).toBeLessThan(rowsBefore)
+    })
+
+    await step("Clearing grouping restores flat rows", async () => {
+      // Reopen the popover and pick None
+      await userEvent.click(canvas.getByRole("button", { name: /grouped by/i }))
+      const trigger = await body.findByRole("combobox")
+      await userEvent.click(trigger)
+      await userEvent.click(await body.findByRole("option", { name: /^none$/i }))
+      // Group headers should be gone
+      expect(
+        canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length,
+      ).toBe(0)
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5192" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// GroupHeaderAccessibility — full-row click target + keyboard toggle
+// ---------------------------------------------------------------------------
+
+export const GroupHeaderAccessibility: Story = {
+  render: () => (
+    <DataTable
+      columns={workspaceColumns}
+      data={workspaceData}
+      enableGrouping
+      grouping="status"
+    >
+      <TableToolbar>
+        <DataTableGroup />
+      </TableToolbar>
+    </DataTable>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Group header button fills the entire row cell", async () => {
+      const headerCell = canvasElement.querySelector<HTMLElement>(
+        "[data-slot='data-table-group-header'] td",
+      )
+      const headerBtn = canvasElement.querySelector<HTMLButtonElement>(
+        "[data-slot='data-table-group-header'] button",
+      )
+      expect(headerCell).not.toBeNull()
+      expect(headerBtn).not.toBeNull()
+      const cellRect = (headerCell as HTMLElement).getBoundingClientRect()
+      const btnRect = (headerBtn as HTMLButtonElement).getBoundingClientRect()
+      // Button should cover the cell within a 2px tolerance for sub-pixel rendering
+      expect(Math.abs(btnRect.width - cellRect.width)).toBeLessThanOrEqual(2)
+      expect(Math.abs(btnRect.height - cellRect.height)).toBeLessThanOrEqual(2)
+    })
+
+    await step(
+      "Clicking near the far right edge of the row still toggles the group",
+      async () => {
+        const headerCell = canvasElement.querySelector<HTMLElement>(
+          "[data-slot='data-table-group-header'] td",
+        )!
+        const rect = headerCell.getBoundingClientRect()
+        const x = Math.round(rect.right - 8)
+        const y = Math.round(rect.top + rect.height / 2)
+        const target = canvasElement.ownerDocument.elementFromPoint(x, y)
+        expect(target).not.toBeNull()
+        expect(target!.closest("[data-slot='data-table-group-header'] button")).not.toBeNull()
+        const rowsBefore = canvas.getAllByRole("row").length
+        await userEvent.click(target as HTMLElement)
+        const rowsAfter = canvas.getAllByRole("row").length
+        expect(rowsAfter).toBeLessThan(rowsBefore)
+      },
+    )
+
+    await step("Enter key re-expands the focused group", async () => {
+      const headerBtn = canvasElement.querySelector<HTMLButtonElement>(
+        "[data-slot='data-table-group-header'] button",
+      )!
+      headerBtn.focus()
+      expect(canvasElement.ownerDocument.activeElement).toBe(headerBtn)
+      expect(headerBtn.getAttribute("aria-expanded")).toBe("false")
+      const rowsBefore = canvas.getAllByRole("row").length
+      await userEvent.keyboard("{Enter}")
+      const rowsAfter = canvas.getAllByRole("row").length
+      expect(rowsAfter).toBeGreaterThan(rowsBefore)
+      expect(headerBtn.getAttribute("aria-expanded")).toBe("true")
+    })
+
+    await step("Space key collapses the focused group", async () => {
+      const headerBtn = canvasElement.querySelector<HTMLButtonElement>(
+        "[data-slot='data-table-group-header'] button",
+      )!
+      headerBtn.focus()
+      const rowsBefore = canvas.getAllByRole("row").length
+      await userEvent.keyboard(" ")
+      const rowsAfter = canvas.getAllByRole("row").length
+      expect(rowsAfter).toBeLessThan(rowsBefore)
+      expect(headerBtn.getAttribute("aria-expanded")).toBe("false")
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5193" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// GroupingWithConfig — restrict groupable columns via groupConfig
+// ---------------------------------------------------------------------------
+
+export const GroupingWithConfig: Story = {
+  render: () => (
+    <DataTable
+      columns={workspaceColumns}
+      data={workspaceData}
+      enableGrouping
+      groupConfig={[
+        { columnId: "status", label: "Status" },
+        { columnId: "owner", label: "Owner" },
+      ]}
+    >
+      <TableToolbar>
+        <DataTableGroup />
+      </TableToolbar>
+    </DataTable>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Only configured columns appear in the group selector", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /group/i }))
+      const trigger = await body.findByRole("combobox")
+      await userEvent.click(trigger)
+      const listbox = await body.findByRole("listbox")
+      const options = within(listbox).getAllByRole("option")
+      const optionLabels = options.map((o) => o.textContent?.trim()).filter(Boolean)
+      // None + Status + Owner only
+      expect(optionLabels).toEqual(["None", "Status", "Owner"])
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5194" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// ControlledGrouping — external grouping state
+// ---------------------------------------------------------------------------
+
+function ControlledGroupingStory() {
+  const [grouping, setGrouping] = React.useState<string | null>("owner")
+
+  return (
+    <div className="space-y-4">
+      <DataTable
+        columns={workspaceColumns}
+        data={workspaceData}
+        enableGrouping
+        grouping={grouping}
+        onGroupingChange={setGrouping}
+      >
+        <TableToolbar>
+          <DataTableGroup />
+        </TableToolbar>
+      </DataTable>
+      <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+        <p className="text-xs font-medium text-muted-foreground">
+          Live state from controlled prop <code>grouping</code>:
+        </p>
+        <SyntaxHighlighter
+          language="json"
+          style={
+            document.documentElement.classList.contains("dark") ? oneDark : oneLight
+          }
+          customStyle={{ margin: 0, borderRadius: "0.5rem", fontSize: "0.75rem" }}
+        >
+          {JSON.stringify({ grouping }, null, 2)}
+        </SyntaxHighlighter>
+      </div>
+    </div>
+  )
+}
+
+export const ControlledGrouping: Story = {
+  render: () => <ControlledGroupingStory />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Initial controlled grouping is reflected in the trigger button", async () => {
+      expect(
+        canvas.getByRole("button", { name: /grouped by owner/i }),
+      ).toBeInTheDocument()
+      // 4 unique owners in workspaceData
+      expect(
+        canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length,
+      ).toBe(4)
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5195" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// GroupingWithFilter — grouping combined with the existing filter UI
+// ---------------------------------------------------------------------------
+
+export const GroupingWithFilter: Story = {
+  args: { dataset: "Compounds" },
+  render: (args) => {
+    const { data, columns } = getDataset(args as Record<string, unknown>)
+    return (
+      <DataTable
+        columns={columns}
+        data={data}
+        enableGrouping
+        enableFiltering
+        enableSorting
+      >
+        <TableToolbar>
+          <DataTableFilter />
+          <DataTableGroup />
+        </TableToolbar>
+      </DataTable>
+    )
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Group by category", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /group by/i }))
+      const trigger = await body.findByRole("combobox")
+      await userEvent.click(trigger)
+      await userEvent.click(await body.findByRole("option", { name: /^category$/i }))
+      expect(
+        canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length,
+      ).toBeGreaterThan(0)
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5196" },
   },
 }

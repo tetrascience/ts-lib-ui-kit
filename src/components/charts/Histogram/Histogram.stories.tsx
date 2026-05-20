@@ -7,7 +7,7 @@ import { Histogram } from "./Histogram";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Histogram> = {
-  title: "Charts/Histogram",
+  title: "Data Visualization/Histogram",
   component: Histogram,
   parameters: {
     layout: "centered",

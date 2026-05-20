@@ -6,7 +6,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 
 const meta: Meta<typeof Chromatogram> = {
-  title: "Charts/Chromatogram",
+  title: "Data Visualization/Electropherogram",
   component: Chromatogram,
   parameters: {
     layout: "centered",

@@ -15,7 +15,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const meta: Meta<typeof PlateMap> = {
-  title: "Charts/PlateMap",
+  title: "Data Visualization/Plate Map",
   component: PlateMap,
   tags: ["autodocs"],
 };

@@ -38,6 +38,7 @@ const preview: Preview = {
           "Introduction",
           "Foundations",
           "Design Patterns",
+          "Data Visualization",
           "Components",
           "AI Elements",
           ["Chat", "*"],

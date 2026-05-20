@@ -280,7 +280,7 @@ const generateDemoDataWithErrorBars = (): LineDataSeries[] => {
 };
 
 const meta: Meta<typeof LineGraph> = {
-  title: "Charts/LineGraph",
+  title: "Data Visualization/Line Plot",
   component: LineGraph,
   parameters: {
     layout: "centered",

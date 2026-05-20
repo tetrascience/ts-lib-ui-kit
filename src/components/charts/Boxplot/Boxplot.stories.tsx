@@ -7,7 +7,7 @@ import type { BoxDataSeries } from "./Boxplot";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Boxplot> = {
-  title: "Charts/Boxplot",
+  title: "Data Visualization/Box Plot",
   component: Boxplot,
   parameters: {
     layout: "centered",

@@ -14,12 +14,12 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
  * - Custom tooltip formatting
  */
 const meta: Meta<typeof Heatmap> = {
-  title: "Charts/Heatmap (Deprecated)",
+  title: "Legacy/Heatmap (Deprecated)",
   component: Heatmap,
   parameters: {
     layout: "centered",
   },
-  tags: ["autodocs"],
+  tags: ["!dev", "!autodocs"],
 };
 
 export default meta;

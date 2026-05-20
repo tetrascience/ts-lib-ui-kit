@@ -108,7 +108,7 @@ const userDefinedPeaksWithBoundaries: PeakAnnotation[] = [
 ];
 
 const meta: Meta<typeof ChromatogramChart> = {
-  title: "Charts/ChromatogramChart",
+  title: "Data Visualization/Chromatogram",
   component: ChromatogramChart,
   parameters: {
     layout: "centered",

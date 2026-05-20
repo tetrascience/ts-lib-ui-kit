@@ -31,7 +31,7 @@ const generateScatterDemoData = (): ScatterDataSeries[] => {
 };
 
 const meta: Meta<typeof ScatterGraph> = {
-  title: "Charts/ScatterGraph",
+  title: "Data Visualization/Scatter Plot",
   component: ScatterGraph,
   parameters: {
     layout: "centered",

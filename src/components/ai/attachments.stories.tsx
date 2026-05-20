@@ -119,6 +119,9 @@ export const Grid: Story = {
       await expect(removeButtons.length).toBeGreaterThan(0)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4508" },
+  },
 }
 
 export const Inline: Story = {
@@ -148,6 +151,9 @@ export const Inline: Story = {
       await expect(canvas.getByText("AI Research Paper")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4509" },
+  },
 }
 
 export const List: Story = {
@@ -176,6 +182,9 @@ export const List: Story = {
       await expect(canvas.getByText("image/png")).toBeInTheDocument()
       await expect(canvas.getByText("application/pdf")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4510" },
   },
 }
 
@@ -208,6 +217,9 @@ export const WithHoverCard: Story = {
       await userEvent.hover(canvas.getByText("screenshot.png"))
       await expect(await screen.findAllByRole("img", { name: "screenshot.png" })).toHaveLength(2)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4511" },
   },
 }
 
@@ -251,6 +263,9 @@ export const MediaFallbacksAndRemove: Story = {
       await expect(args.onRemove).toHaveBeenCalledOnce()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4512" },
+  },
 }
 
 export const EmptyState: Story = {
@@ -266,5 +281,8 @@ export const EmptyState: Story = {
       await expect(canvas.getByText("No attachments")).toBeInTheDocument()
       await expect(canvas.getByText("Nothing selected")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4513" },
   },
 }

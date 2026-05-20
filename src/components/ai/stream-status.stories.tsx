@@ -56,6 +56,9 @@ export const Default: Story = {
       await expect(canvas.getByText(/tokens/i)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4630" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -96,6 +99,9 @@ export const IconVariants: Story = {
     await step("All four icon variants render", async () => {
       await expect(canvas.getByText("8.7k tokens")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4631" },
   },
 }
 
@@ -143,6 +149,9 @@ export const IndicatorStates: Story = {
       await expect(canvas.getByText("2.1k tokens")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4632" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -180,6 +189,9 @@ export const WithAndWithoutIndicator: Story = {
       await expect(canvas.getAllByText("8.7k tokens")).toHaveLength(2)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4633" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -216,6 +228,9 @@ export const LiveTimer: Story = {
       await expect(canvas.getByText(/tokens/i)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4634" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -237,6 +252,9 @@ export const Finished: Story = {
       await expect(canvas.getByText(/12\.4k tokens/i)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4635" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -255,6 +273,9 @@ export const TimeOnly: Story = {
     await step("Time-only variant renders", async () => {
       await expect(canvas.getByText(/s$/)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4636" },
   },
 }
 
@@ -280,6 +301,9 @@ export const CustomIconAndFinishRipple: Story = {
       )
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4637" },
+  },
 }
 
 export const IdleWithoutStartTime: Story = {
@@ -297,5 +321,8 @@ export const IdleWithoutStartTime: Story = {
     await step("Idle status can render tokens without elapsed time", async () => {
       await expect(canvas.getByText("42 tokens")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4638" },
   },
 }

@@ -1,4 +1,5 @@
 export * from "./data-table"
 export * from "./data-table-column-toggle"
 export * from "./data-table-filter"
+export * from "./data-table-group"
 export * from "./data-table-pagination"

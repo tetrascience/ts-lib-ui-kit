@@ -40,6 +40,9 @@ export const Default: Story = {
       await expect(canvas.getByRole("button", { name: /copy/i })).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4731" },
+  },
 }
 
 export const WithPrefix: Story = {
@@ -61,6 +64,9 @@ export const WithPrefix: Story = {
       await expect(canvas.getByDisplayValue("npx shadcn@latest add button")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4732" },
+  },
 }
 
 export const Equation: Story = {
@@ -77,6 +83,9 @@ export const Equation: Story = {
     await step("Equation renders", async () => {
       await expect(canvas.getByDisplayValue(/6CO₂/)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4733" },
   },
 }
 
@@ -96,5 +105,8 @@ export const CopyFeedback: Story = {
       await userEvent.click(button)
       await expect(button).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4734" },
   },
 }

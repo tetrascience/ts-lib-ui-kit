@@ -74,6 +74,9 @@ export const UserMessage: Story = {
       await expect(canvas.getByText(/How does photosynthesis/)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4557" },
+  },
 }
 
 export const AssistantMessage: Story = {
@@ -106,6 +109,9 @@ The overall equation:`}
     await step("Assistant message renders", async () => {
       await expect(canvas.getByText(/Photosynthesis is the process/)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4558" },
   },
 }
 
@@ -141,6 +147,9 @@ export const WithActions: Story = {
       await expect(canvas.getByText(/Eiffel Tower/)).toBeInTheDocument()
       await expect(canvas.getByRole("button", { name: "Copy" })).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4559" },
   },
 }
 
@@ -181,6 +190,9 @@ This is a fundamental constant of nature and forms the basis of Einstein's theor
       await expect(canvas.getAllByText(/speed of light/i).length).toBeGreaterThan(0)
       await expect(canvas.getByText(/8 minutes and 20 seconds/)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4560" },
   },
 }
 
@@ -230,6 +242,9 @@ export const WithBranching: Story = {
       await expect(canvas.getAllByText(/recursion/).length).toBeGreaterThan(0)
       await expect(canvas.getByText(/2 of 3/)).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4561" },
   },
 }
 
@@ -300,6 +315,9 @@ export const TooltipAndBranchNavigation: Story = {
       await expect(args.onBranchChange).toHaveBeenCalledWith(1)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4562" },
+  },
 }
 
 export const SingleBranchControls: Story = {
@@ -333,6 +351,9 @@ export const SingleBranchControls: Story = {
       await expect(canvas.queryByText("Hidden selector")).not.toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4563" },
+  },
 }
 
 export const MemoizedResponse: Story = {
@@ -346,5 +367,8 @@ export const MemoizedResponse: Story = {
       await expect(canvas.getByText("Render count: 1")).toBeInTheDocument()
       await expect(canvas.getByText("Stable memoized response")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4564" },
   },
 }

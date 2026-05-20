@@ -72,6 +72,9 @@ export const Default: Story = {
       await expect(canvas.getByText("Wikipedia")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4523" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -122,6 +125,9 @@ export const WithSearch: Story = {
       await expect(canvas.getAllByText("www.github.com").length).toBeGreaterThan(0)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4524" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -155,6 +161,9 @@ export const WithImageAnalysis: Story = {
       await expect(canvas.getByText(/Revenue grew 23%/)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4525" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -185,6 +194,9 @@ export const Streaming: Story = {
       await expect(canvas.getByText(/Searching for recent/)).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4526" },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -210,5 +222,8 @@ export const Collapsed: Story = {
     await step("Collapsed chevron appears on hover", async () => {
       await expectCollapsedChevronConfiguredForHoverReveal(canvas.getByRole("button"))
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4527" },
   },
 }

@@ -115,6 +115,9 @@ export const Default: Story = {
       await expect(canvas.getByText("GPT-4o")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4565" },
+  },
 }
 
 export const EmptySearch: Story = {
@@ -148,6 +151,9 @@ export const EmptySearch: Story = {
       await userEvent.type(input, "zzznothing")
       await expect(await screen.findByText("No models found.")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4566" },
   },
 }
 
@@ -185,5 +191,8 @@ export const UsingCommandDialog: Story = {
       await expect(await screen.findByPlaceholderText("Type a model…")).toBeInTheDocument()
       await expect(screen.getByText("Models")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4567" },
   },
 }

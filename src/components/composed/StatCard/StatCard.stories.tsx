@@ -5,7 +5,7 @@ import { StatCard } from "./StatCard"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof StatCard> = {
-  title: "Patterns/StatCard",
+  title: "Design Patterns/StatCard",
   component: StatCard,
   parameters: {
     layout: "centered",

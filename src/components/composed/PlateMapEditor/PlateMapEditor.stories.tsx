@@ -337,11 +337,9 @@ function PlateMapEditorDefault({ format = "96" }: { format?: PlateFormat } = {})
   const [templateId, setTemplateId] = React.useState<string | undefined>();
 
   const handleImportCsv = React.useCallback((file: File, triage?: PlateMapCsvTriage) => {
-    // eslint-disable-next-line no-console
     console.log("[story] import CSV", file.name, triage?.plates.length ?? 0, "plate(s)");
   }, []);
   const handleExportCsv = React.useCallback(() => {
-    // eslint-disable-next-line no-console
     console.log("[story] export CSV", state.values.size, "wells");
   }, [state.values]);
   const handleClearTemplate = React.useCallback(() => {
@@ -403,7 +401,6 @@ function PlateMapEditorDefault({ format = "96" }: { format?: PlateFormat } = {})
           <PlateZoomControl zoom={state.zoom} onZoomChange={state.setZoom} />
           <QueryLimsPanel
             onSubmit={(ids) => {
-              // eslint-disable-next-line no-console
               console.log("[story] Query LIMS", ids);
             }}
           />
@@ -487,7 +484,6 @@ function PlateMapEditorDragDrop() {
             <PlateZoomControl zoom={state.zoom} onZoomChange={state.setZoom} />
             <QueryLimsPanel
               onSubmit={(ids) => {
-                // eslint-disable-next-line no-console
                 console.log("[story] Query LIMS", ids);
               }}
             />
@@ -505,7 +501,7 @@ function PlateMapEditorDragDrop() {
 }
 
 const meta: Meta<typeof PlateMapEditor<DemoWell>> = {
-  title: "Patterns/PlateMapEditor",
+  title: "Design Patterns/PlateMapEditor",
   component: PlateMapEditor,
   parameters: { layout: "padded" },
 };

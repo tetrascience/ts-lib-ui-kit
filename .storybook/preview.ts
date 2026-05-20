@@ -37,7 +37,7 @@ const preview: Preview = {
         order: [
           "Introduction",
           "Foundations",
-          "Patterns",
+          "Design Patterns",
           "Components",
           "AI Elements",
           ["Chat", "*"],

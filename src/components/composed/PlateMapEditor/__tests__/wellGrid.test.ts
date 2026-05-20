@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   allPositions,
   parsePos,
+  parseRowLabel,
   pos,
   rectPositions,
   resolveDimensions,
@@ -51,5 +52,29 @@ describe("wellGrid", () => {
     expect(all).toHaveLength(96);
     expect(all[0]).toBe("A01");
     expect(all.at(-1)).toBe("H12");
+  });
+
+  it("falls back to defaults when custom dimensions are not provided", () => {
+    expect(resolveDimensions("custom")).toEqual({ rows: 8, columns: 12 });
+  });
+
+  it("parses single and double-letter row labels", () => {
+    expect(parseRowLabel("A")).toBe(0);
+    expect(parseRowLabel("Z")).toBe(25);
+    expect(parseRowLabel("AA")).toBe(26);
+    expect(parseRowLabel("AF")).toBe(31);
+  });
+
+  it("pads columns to triple digits once the plate has 100+ columns", () => {
+    expect(pos(0, 0, 100)).toBe("A001");
+    expect(pos(0, 99, 100)).toBe("A100");
+  });
+
+  it("rejects empty, malformed, or out-of-range well ids", () => {
+    const dims = { rows: 8, columns: 12 };
+    expect(parsePos("", dims)).toBeNull();
+    expect(parsePos("XX", dims)).toBeNull();
+    expect(parsePos("A13", dims)).toBeNull();
+    expect(parsePos("I01", dims)).toBeNull();
   });
 });

@@ -343,7 +343,7 @@ function DataCountPills({ dataCounts }: { dataCounts: DataCount[] }) {
 // =============================================================================
 
 const meta: Meta<typeof DataAppShell> = {
-  title: "Design Patterns/DataAppShell",
+  title: "Design Patterns/Data App Shell",
   component: DataAppShell,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

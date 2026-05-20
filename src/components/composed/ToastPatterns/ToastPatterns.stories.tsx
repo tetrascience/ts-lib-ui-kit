@@ -28,7 +28,7 @@ import {
 import { Toaster } from "@/components/ui/sonner"
 
 const meta: Meta = {
-  title: "Design Patterns/ToastPatterns",
+  title: "Design Patterns/Toast Patterns",
   parameters: {
     layout: "centered",
   },

@@ -31,7 +31,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 
 const meta: Meta<typeof FormSection> = {
-  title: "Design Patterns/FormPatterns",
+  title: "Design Patterns/Form Patterns",
   component: FormSection,
   parameters: {
     layout: "centered",

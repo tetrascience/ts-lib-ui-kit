@@ -9,6 +9,7 @@ import {
 } from "@dnd-kit/core";
 import { Barcode, Database, FileText, GripVertical, Plus, Tag, X } from "lucide-react";
 import * as React from "react";
+import { expect, within } from "storybook/test";
 
 import { getPlateMapScopedWellId, PlateMapEditor } from "./PlateMapEditor";
 import { PLATE_MAP_EMPTY_WELL_FILL } from "./PlatePaintGrid";
@@ -504,6 +505,7 @@ const meta: Meta<typeof PlateMapEditor<DemoWell>> = {
   title: "Patterns/PlateMapEditor",
   component: PlateMapEditor,
   parameters: { layout: "padded" },
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -513,14 +515,75 @@ type Story = StoryObj<typeof PlateMapEditor<DemoWell>>;
 export const Default: Story = {
   name: "Default (96-well)",
   render: () => <PlateMapEditorDefault format="96" />,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Renders header title and badges", async () => {
+      expect(canvas.getByText("Plate map editor")).toBeInTheDocument();
+      expect(canvas.getByText(/96-well/)).toBeInTheDocument();
+    });
+
+    await step("Renders 96 wells in the plate grid", async () => {
+      const wells = canvasElement.querySelectorAll("[data-well]");
+      expect(wells.length).toBe(96);
+    });
+
+    await step("Renders the sample manifest table", async () => {
+      expect(canvas.getByText("Sample manifest")).toBeInTheDocument();
+    });
+
+    await step("Renders the template I/O panel actions", async () => {
+      expect(canvas.getByRole("button", { name: /actions/i })).toBeInTheDocument();
+    });
+  },
 };
 
 export const Default384: Story = {
   name: "Default (384-well)",
   render: () => <PlateMapEditorDefault format="384" />,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Renders 384-well badge", async () => {
+      expect(canvas.getByText(/384-well/)).toBeInTheDocument();
+    });
+
+    await step("Renders 384 wells in the plate grid", async () => {
+      const wells = canvasElement.querySelectorAll("[data-well]");
+      expect(wells.length).toBe(384);
+    });
+  },
 };
 
 export const DragAndDrop: Story = {
   name: "Drag-and-drop palette",
   render: () => <PlateMapEditorDragDrop />,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Renders DnD title and badge", async () => {
+      expect(canvas.getByText("Drag samples onto plate")).toBeInTheDocument();
+      expect(canvas.getByText(/drag & drop/i)).toBeInTheDocument();
+    });
+
+    await step("Renders draggable sample palette", async () => {
+      expect(canvas.getByText("Drag a sample onto a well")).toBeInTheDocument();
+      expect(canvas.getAllByText("SAMP-001").length).toBeGreaterThan(0);
+      expect(canvas.getAllByText("BLANK-001").length).toBeGreaterThan(0);
+    });
+
+    await step("Renders 96 wells in the plate grid", async () => {
+      const wells = canvasElement.querySelectorAll("[data-well]");
+      expect(wells.length).toBe(96);
+    });
+  },
 };

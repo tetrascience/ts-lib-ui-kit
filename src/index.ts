@@ -2,12 +2,19 @@
 import "@/index.css";
 
 // Composed
+export * from "@/components/composed/FormPatterns";
+export * from "@/components/composed/StatCard";
+export * from "@/components/composed/DataAppShell";
+export * from "@/components/composed/Chat";
+export * from "@/components/composed/PlateMapEditor";
+export * from "@/components/composed/ConfirmDialog"
+export * from "@/components/composed/RichListItem";
+export * from "@/components/composed/EmptyState";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";
 export * from "@/components/composed/tdp-link";
 export * from "@/components/composed/tdp-url";
-
 
 // Charts
 export * from "@/components/charts/AreaGraph";
@@ -31,6 +38,7 @@ export * from "@/components/ui/alert-dialog";
 export * from "@/components/ui/aspect-ratio";
 export * from "@/components/ui/avatar";
 export * from "@/components/ui/badge";
+export * from "@/components/ui/banner";
 export * from "@/components/ui/breadcrumb";
 export * from "@/components/ui/button";
 export * from "@/components/ui/button-group";
@@ -56,6 +64,7 @@ export * from "@/components/ui/kbd";
 export * from "@/components/ui/label";
 export * from "@/components/ui/menubar";
 export * from "@/components/ui/navigation-menu";
+export * from "@/components/ui/popover";
 export * from "@/components/ui/radio-group";
 export * from "@/components/ui/resizable";
 export * from "@/components/ui/scroll-area";
@@ -76,6 +85,27 @@ export * from "@/components/ui/toggle-group";
 export * from "@/components/ui/tooltip";
 export * from "@/components/ui/code-editor";
 export * from "@/components/ui/tetrascience-icon";
+
+// AI
+export * from "@/components/ai/attachments";
+export * from "@/components/ai/chain-of-thought";
+export * from "@/components/ui/code-block";
+export * from "@/components/ai/confirmation";
+export * from "@/components/ai/context";
+export * from "@/components/ai/conversation";
+export * from "@/components/ai/inline-citation";
+export * from "@/components/ai/message";
+export * from "@/components/ai/model-selector";
+export * from "@/components/ai/prompt-input";
+export * from "@/components/ai/queue";
+export * from "@/components/ai/reasoning";
+export * from "@/components/ai/shimmer";
+export * from "@/components/ai/sources";
+export * from "@/components/ai/speech-input";
+export * from "@/components/ai/stream-status";
+export * from "@/components/ai/suggestion";
+export * from "@/components/ai/task";
+export * from "@/components/ai/tool";
 
 // Utils
 export * from "@/utils/colors";

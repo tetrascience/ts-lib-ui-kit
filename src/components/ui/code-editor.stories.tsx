@@ -39,6 +39,13 @@ export default meta;
 
 type Story = StoryObj<typeof CodeEditor>;
 
+async function waitForMonacoEditor(canvasElement: HTMLElement) {
+  await waitFor(
+    () => expect(canvasElement.querySelector(".monaco-editor")).toBeInTheDocument(),
+    { timeout: 5000 }
+  );
+}
+
 const defaultHandlers = {
   onCopy: (code: string) => {
     navigator.clipboard.writeText(code);
@@ -96,9 +103,7 @@ export const LightMode: Story = {
     const canvas = within(canvasElement);
 
     await step("Editor renders in light theme", async () => {
-      await waitFor(() =>
-        expect(canvasElement.querySelector(".monaco-editor")).toBeInTheDocument()
-      );
+      await waitForMonacoEditor(canvasElement);
     });
 
     await step("Toolbar actions present", async () => {
@@ -145,9 +150,7 @@ export default Counter;`,
     const canvas = within(canvasElement);
 
     await step("Editor renders for larger snippet", async () => {
-      await waitFor(() =>
-        expect(canvasElement.querySelector(".monaco-editor")).toBeInTheDocument()
-      );
+      await waitForMonacoEditor(canvasElement);
     });
 
     await step("Copy and launch controls render", async () => {

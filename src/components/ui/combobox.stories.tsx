@@ -421,6 +421,9 @@ export const MultipleSelection: Story = {
       expect(chips[0]).toHaveTextContent("Remix")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4698" },
+  },
 }
 
 export const Grouped: Story = {
@@ -490,6 +493,9 @@ export const Grouped: Story = {
       expect(input).toHaveValue("Eleventy")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4699" },
+  },
 }
 
 export const CustomItems: Story = {
@@ -550,6 +556,9 @@ export const CustomItems: Story = {
       expect(input).toHaveValue("Turbopack")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4700" },
+  },
 }
 
 export const InvalidState: Story = {
@@ -599,6 +608,9 @@ export const InvalidState: Story = {
       expect(input).toHaveAttribute("aria-invalid", "true")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4701" },
+  },
 }
 
 export const Disabled: Story = {
@@ -634,6 +646,9 @@ export const Disabled: Story = {
       await userEvent.click(input, { pointerEventsCheck: 0 })
       expect(canvas.queryByRole("listbox")).not.toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4702" },
   },
 }
 
@@ -678,6 +693,9 @@ export const AutoHighlight: Story = {
       expect(input).toHaveValue("Astro")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4703" },
+  },
 }
 
 export const TypeToFilter: Story = {
@@ -713,6 +731,9 @@ export const TypeToFilter: Story = {
       const empty = document.querySelector('[data-slot="combobox-empty"]')
       expect(empty).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4704" },
   },
 }
 
@@ -751,6 +772,9 @@ export const ItemDefault: Story = {
         expect(opt).toHaveAttribute("data-slot", "combobox-item")
       }
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4705" },
   },
 }
 
@@ -803,6 +827,9 @@ export const ItemDisabled: Story = {
       expect(input).not.toHaveValue("Remix")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4706" },
+  },
 }
 
 export const ListScrollable: Story = {
@@ -838,6 +865,9 @@ export const ListScrollable: Story = {
       expect(list).toBeInTheDocument()
       expect(list!.scrollHeight).toBeGreaterThan(list!.clientHeight)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4707" },
   },
 }
 
@@ -900,6 +930,9 @@ export const GroupWithLabels: Story = {
       ])
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4708" },
+  },
 }
 
 export const SeparatorBetweenGroups: Story = {
@@ -946,6 +979,9 @@ export const SeparatorBetweenGroups: Story = {
       expect(hasSepBefore).toBe(false)
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4709" },
+  },
 }
 
 export const EmptyState: Story = {
@@ -971,6 +1007,9 @@ export const EmptyState: Story = {
       expect(empty).toBeInTheDocument()
       expect(empty).toHaveTextContent("No frameworks found.")
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4710" },
   },
 }
 
@@ -1052,6 +1091,9 @@ export const ChipDefault: Story = {
       expect(chips[1]).toHaveTextContent("Astro")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4711" },
+  },
 }
 
 export const ChipWithoutRemove: Story = {
@@ -1067,5 +1109,8 @@ export const ChipWithoutRemove: Story = {
       )
       expect(removes).toHaveLength(0)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4712" },
   },
 }

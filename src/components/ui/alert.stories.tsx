@@ -141,7 +141,7 @@ export const Info: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "SW-T1186" },
+    zephyr: { testCaseId: "SW-T4678" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -177,7 +177,7 @@ export const Positive: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "SW-T1187" },
+    zephyr: { testCaseId: "SW-T4679" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -214,7 +214,7 @@ export const Warning: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "SW-T1188" },
+    zephyr: { testCaseId: "SW-T4680" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

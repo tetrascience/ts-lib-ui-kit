@@ -47,6 +47,21 @@ describe("resolveSelectionAppearance", () => {
     expect(result.unselected.opacity).toBe(0.2);
     expect(result.hoverLineWidthMultiplier).toBe(2);
   });
+
+  it("falls back to defaults when appearance has no selected field", () => {
+    // exercises the ?? fallback branches for selected.{borderColor,backgroundColor,bold}
+    const result = resolveSelectionAppearance({ unselected: { opacity: 0.3 } });
+    expect(result.selected.borderColor).toBe("#3b82f6");
+    expect(result.selected.backgroundColor).toBe("#dbeafe");
+    expect(result.selected.bold).toBe(true);
+    expect(result.unselected.opacity).toBe(0.3);
+  });
+
+  it("falls back to default unselected opacity when appearance has no unselected field", () => {
+    const result = resolveSelectionAppearance({ hoverLineWidthMultiplier: 3 });
+    expect(result.unselected.opacity).toBe(0.4);
+    expect(result.hoverLineWidthMultiplier).toBe(3);
+  });
 });
 
 describe("groupOverlappingPeaks", () => {
@@ -201,6 +216,38 @@ describe("createPeakAnnotation", () => {
       anySelected: false,
     });
     expect(ann.opacity).toBeUndefined();
+  });
+
+  it("inline: applies selected color and bold wrap when peak is selected", () => {
+    // exercises the isSelected=true branch inside createInlineAnnotation
+    const peak = { x: 5, y: 100, text: "Peak A", id: "peak-0-0" };
+    const ann = createPeakAnnotation(peak, 0, slot, {
+      annotationStyle: "inline",
+      selectedPeakIds: ["peak-0-0"],
+      anySelected: true,
+    });
+    expect(ann.text).toBe("<b>Peak A</b>");
+    const font = ann.font as { color: string };
+    expect(font.color).toBe("#3b82f6");
+    expect(ann.opacity).toBeUndefined();
+  });
+
+  it("inline: honors custom selected.borderColor for selected font color", () => {
+    const peak = { x: 5, y: 100, text: "P", id: "p" };
+    const ann = createPeakAnnotation(peak, 0, slot, {
+      annotationStyle: "inline",
+      selectedPeakIds: ["p"],
+      anySelected: true,
+      appearance: {
+        selected: { borderColor: "#ff00ff", backgroundColor: "#fff", bold: false },
+        unselected: { opacity: 0.4 },
+        hoverLineWidthMultiplier: 1,
+      },
+    });
+    const font = ann.font as { color: string };
+    expect(font.color).toBe("#ff00ff");
+    // bold:false → no <b> wrap
+    expect(ann.text).toBe("P");
   });
 });
 

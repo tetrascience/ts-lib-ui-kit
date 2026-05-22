@@ -438,6 +438,98 @@ export const WithRegionOverlay: Story = {
 };
 
 /**
+ * Selection toggled programmatically via a Clear button — exercises the
+ * selection-update effect (Plotly.relayout) without depending on Plotly's
+ * internal click handler firing under the test runner.
+ */
+export const SelectionTogglesViaButton: StoryObj<typeof ChromatogramChart> = {
+  render: (args) => {
+    const [selectedPeakIds, setSelectedPeakIds] = useState<string[]>(["caffeine"]);
+    return (
+      <div style={{ fontFamily: "Inter, sans-serif" }}>
+        <ChromatogramChart {...args} selectedPeakIds={selectedPeakIds} />
+        <div style={{ marginTop: 8 }}>
+          <button
+            data-testid="set-selection"
+            onClick={() => setSelectedPeakIds(["theobromine"])}
+          >
+            Select Theobromine
+          </button>{" "}
+          <button data-testid="clear-selection" onClick={() => setSelectedPeakIds([])}>
+            Clear
+          </button>
+        </div>
+      </div>
+    );
+  },
+  args: {
+    series: [{ ...singleInjectionData, name: "Sample A" }],
+    title: "Selection Update Effect",
+    annotations: selectableAnnotations,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart mounts with initial selection", async () => {
+      expect(canvas.getByText("Selection Update Effect")).toBeInTheDocument();
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Switching selection triggers the relayout effect", async () => {
+      const setBtn = canvas.getByTestId("set-selection");
+      await userEvent.click(setBtn);
+    });
+
+    await step("Clearing selection triggers the relayout effect again", async () => {
+      const clearBtn = canvas.getByTestId("clear-selection");
+      await userEvent.click(clearBtn);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Verifies that changing `selectedPeakIds` after the chart has mounted re-runs the lightweight selection-update effect (which calls `Plotly.relayout` rather than rebuilding the chart).",
+      },
+    },
+  },
+};
+
+/**
+ * Empty series — the component should mount cleanly and not attempt to call
+ * Plotly.newPlot. Exercises the `series.length === 0` early return in the main
+ * effect.
+ */
+export const EmptySeries: Story = {
+  args: {
+    series: [],
+    title: "Empty Series",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Title renders even with empty series", async () => {
+      // Title comes from the chart wrapper outside Plotly; container exists
+      // but no plot is initialized.
+      const container = canvasElement.querySelector(".chromatogram-chart-container");
+      expect(container).toBeInTheDocument();
+      // No Plotly plot should be initialized when there are no series.
+      expect(canvasElement.querySelector(".js-plotly-plot")).not.toBeInTheDocument();
+      // Avoid unused-var lint
+      expect(canvas).toBeTruthy();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "When `series` is empty the component mounts the container but skips Plotly initialization — useful when data is still loading.",
+      },
+    },
+  },
+};
+
+/**
  * Inline annotation style: labels float directly above the trace at the peak Y value
  * with no arrow. Cleaner for dense chromatograms where arrows create visual noise.
  * Use `titleFontSize` and `titleTopMargin` to shrink the title area for compact

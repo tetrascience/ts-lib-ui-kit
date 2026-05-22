@@ -84,7 +84,7 @@ const stackSeriesData: StackedChromatogramChartProps["series"] = [
 ];
 
 const meta: Meta<typeof StackedChromatogramChart> = {
-  title: "Charts/StackedChromatogramChart",
+  title: "Charts/ChromatogramChart/Stacked",
   component: StackedChromatogramChart,
   parameters: {
     layout: "centered",

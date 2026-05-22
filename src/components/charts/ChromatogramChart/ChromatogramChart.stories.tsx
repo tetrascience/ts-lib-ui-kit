@@ -112,7 +112,7 @@ const selectableAnnotations: PeakAnnotation[] = [
 ];
 
 const meta: Meta<typeof ChromatogramChart> = {
-  title: "Charts/ChromatogramChart",
+  title: "Charts/ChromatogramChart/Default",
   component: ChromatogramChart,
   parameters: {
     layout: "centered",

@@ -255,6 +255,47 @@ export const StackModeWithAnnotations: Story = {
 };
 
 /**
+ * Stack mode with `stackingOrder: "first-on-top"` — the first series is offset
+ * the most, so it sits at the top of the waterfall. Mirror image of the default
+ * `first-on-bottom` layout.
+ */
+export const StackModeFirstOnTop: Story = {
+  args: {
+    series: stackSeriesData,
+    title: "Charge Variant Runs — First On Top",
+    stackingMode: "stack",
+    stackOffset: 500,
+    stackingOrder: "first-on-top",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(
+        canvas.getByText("Charge Variant Runs — First On Top")
+      ).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Three traces are rendered", async () => {
+      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
+      expect(traces.length).toBe(3);
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "With `stackingOrder: \"first-on-top\"` the first series gets the largest vertical offset, placing it at the top of the waterfall. Annotations follow the same offset so labels stay anchored to their peaks.",
+      },
+    },
+  },
+};
+
+/**
  * Drag the "Stack Offset" slider in the Controls panel to adjust the vertical
  * separation between traces in real time. stackingMode is locked to 'stack'.
  */

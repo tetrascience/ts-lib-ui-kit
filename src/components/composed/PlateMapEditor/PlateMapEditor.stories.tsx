@@ -9,7 +9,9 @@ import {
 } from "@dnd-kit/core";
 import { Barcode, Database, FileText, GripVertical, Plus, Tag, X } from "lucide-react";
 import * as React from "react";
+import { expect, within } from "storybook/test";
 
+import { autoFillPositions, autoFillRecords } from "./autoFill";
 import { getPlateMapScopedWellId, PlateMapEditor } from "./PlateMapEditor";
 import { PLATE_MAP_EMPTY_WELL_FILL } from "./PlatePaintGrid";
 import { PlateZoomControl } from "./PlateZoomControl";
@@ -91,6 +93,7 @@ const SEED_LAYOUT: ReadonlyArray<readonly [WellId, NonNullable<DemoWell["role"]>
 ];
 
 const INITIAL_PLATE_ID = "DEMO-PLATE-001";
+const AUTO_FILL_TEST_DIMS = { rows: 2, columns: 3 };
 
 const DEMO_TEMPLATES: TemplateOption[] = [
   { id: "single-point", label: "Single concentration", group: "Built-in", description: "1 dose, all wells" },
@@ -514,6 +517,73 @@ type Story = StoryObj<typeof PlateMapEditor<DemoWell>>;
 export const Default: Story = {
   name: "Default (96-well)",
   render: () => <PlateMapEditorDefault format="96" />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Renders the seeded 96-well editor", async () => {
+      expect(canvas.getByText("Plate map editor")).toBeInTheDocument();
+      expect(canvasElement.querySelectorAll("[data-well]")).toHaveLength(96);
+      expect(canvas.getAllByText("SAMP-001").length).toBeGreaterThan(0);
+    });
+
+    await step("Auto-fill traversal strategies produce expected well order", async () => {
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 4 })).toEqual(["A01", "A02", "A03", "B01"]);
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 4, strategy: "column-major" })).toEqual([
+        "A01",
+        "B01",
+        "A02",
+        "B02",
+      ]);
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 6, strategy: "row-snake" })).toEqual([
+        "A01",
+        "A02",
+        "A03",
+        "B03",
+        "B02",
+        "B01",
+      ]);
+      expect(
+        autoFillPositions({
+          dims: { rows: 3, columns: 2 },
+          count: 6,
+          strategy: "column-snake",
+        }),
+      ).toEqual(["A01", "B01", "C01", "C02", "B02", "A02"]);
+    });
+
+    await step("Auto-fill handles start wells, bounds, and sparse records", async () => {
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 3, startWellId: "B02" })).toEqual(["B02", "B03"]);
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 2, startWellId: "Z99" })).toEqual(["A01", "A02"]);
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 2, startWellId: "A1" })).toEqual(["A01", "A02"]);
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 0 })).toEqual([]);
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 2, replicates: 0 })).toEqual([]);
+
+      const records = autoFillRecords(["sample-1", "sample-2"], (item, index, wellId) => `${item}:${index}:${wellId}`, {
+        dims: AUTO_FILL_TEST_DIMS,
+        replicates: 2,
+      });
+
+      expect([...records.entries()]).toEqual([
+        ["A01", "sample-1:0:A01"],
+        ["A02", "sample-1:0:A02"],
+        ["A03", "sample-2:1:A03"],
+        ["B01", "sample-2:1:B01"],
+      ]);
+
+      let sparseBuildCalls = 0;
+      const sparseRecords = autoFillRecords<string | undefined>(
+        [undefined],
+        (item) => {
+          sparseBuildCalls += 1;
+          return item;
+        },
+        { dims: AUTO_FILL_TEST_DIMS },
+      );
+
+      expect(sparseRecords.size).toBe(0);
+      expect(sparseBuildCalls).toBe(0);
+    });
+  },
 };
 
 export const Default384: Story = {

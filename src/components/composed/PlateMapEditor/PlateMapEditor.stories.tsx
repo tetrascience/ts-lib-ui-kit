@@ -9,7 +9,9 @@ import {
 } from "@dnd-kit/core";
 import { Barcode, Database, FileText, GripVertical, Plus, Tag, X } from "lucide-react";
 import * as React from "react";
+import { expect, within } from "storybook/test";
 
+import { autoFillPositions, autoFillRecords } from "./autoFill";
 import { getPlateMapScopedWellId, PlateMapEditor } from "./PlateMapEditor";
 import { PLATE_MAP_EMPTY_WELL_FILL } from "./PlatePaintGrid";
 import { PlateZoomControl } from "./PlateZoomControl";
@@ -27,7 +29,6 @@ import type {
 import type { DragEndEvent } from "@dnd-kit/core";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { PATTERNS_COMPONENT_PREFIX } from "@/components/storybook-categories";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,6 +92,7 @@ const SEED_LAYOUT: ReadonlyArray<readonly [WellId, NonNullable<DemoWell["role"]>
 ];
 
 const INITIAL_PLATE_ID = "DEMO-PLATE-001";
+const AUTO_FILL_TEST_DIMS = { rows: 2, columns: 3 };
 
 const DEMO_TEMPLATES: TemplateOption[] = [
   { id: "single-point", label: "Single concentration", group: "Built-in", description: "1 dose, all wells" },
@@ -221,11 +223,9 @@ function QueryLimsPanel({ onSubmit }: { onSubmit?: (plateIds: string[]) => void 
   const [open, setOpen] = React.useState(false);
   const [plateIds, setPlateIds] = React.useState<string[]>([""]);
 
-  const updateId = (idx: number, value: string) =>
-    setPlateIds((prev) => prev.map((v, i) => (i === idx ? value : v)));
+  const updateId = (idx: number, value: string) => setPlateIds((prev) => prev.map((v, i) => (i === idx ? value : v)));
   const addId = () => setPlateIds((prev) => [...prev, ""]);
-  const removeId = (idx: number) =>
-    setPlateIds((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
+  const removeId = (idx: number) => setPlateIds((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
 
   const handleSubmit = () => {
     const cleaned = plateIds.map((v) => v.trim()).filter(Boolean);
@@ -244,9 +244,7 @@ function QueryLimsPanel({ onSubmit }: { onSubmit?: (plateIds: string[]) => void 
       <PopoverContent align="start" className="w-72">
         <div className="flex flex-col gap-2">
           <div className="text-sm font-medium">Query LIMS</div>
-          <div className="text-xs text-muted-foreground">
-            Enter one or more plate IDs to populate from LIMS.
-          </div>
+          <div className="text-xs text-muted-foreground">Enter one or more plate IDs to populate from LIMS.</div>
           <div className="flex flex-col gap-1.5">
             {plateIds.map((value, idx) => (
               <div key={idx} className="flex items-center gap-1.5">
@@ -279,12 +277,7 @@ function QueryLimsPanel({ onSubmit }: { onSubmit?: (plateIds: string[]) => void 
             <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              disabled={!plateIds.some((v) => v.trim())}
-              onClick={handleSubmit}
-            >
+            <Button type="button" size="sm" disabled={!plateIds.some((v) => v.trim())} onClick={handleSubmit}>
               Query
             </Button>
           </div>
@@ -502,7 +495,7 @@ function PlateMapEditorDragDrop() {
 }
 
 const meta: Meta<typeof PlateMapEditor<DemoWell>> = {
-  title: `${PATTERNS_COMPONENT_PREFIX}/PlateMapEditor`,
+  title: "Design Patterns/PlateMapEditor",
   component: PlateMapEditor,
   parameters: { layout: "padded" },
 };
@@ -516,6 +509,73 @@ export const Default: Story = {
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
     zephyr: { testCaseId: "SW-T5206" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Renders the seeded 96-well editor", async () => {
+      expect(canvas.getByText("Plate map editor")).toBeInTheDocument();
+      expect(canvasElement.querySelectorAll("[data-well]")).toHaveLength(96);
+      expect(canvas.getAllByText("SAMP-001").length).toBeGreaterThan(0);
+    });
+
+    await step("Auto-fill traversal strategies produce expected well order", async () => {
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 4 })).toEqual(["A01", "A02", "A03", "B01"]);
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 4, strategy: "column-major" })).toEqual([
+        "A01",
+        "B01",
+        "A02",
+        "B02",
+      ]);
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 6, strategy: "row-snake" })).toEqual([
+        "A01",
+        "A02",
+        "A03",
+        "B03",
+        "B02",
+        "B01",
+      ]);
+      expect(
+        autoFillPositions({
+          dims: { rows: 3, columns: 2 },
+          count: 6,
+          strategy: "column-snake",
+        }),
+      ).toEqual(["A01", "B01", "C01", "C02", "B02", "A02"]);
+    });
+
+    await step("Auto-fill handles start wells, bounds, and sparse records", async () => {
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 3, startWellId: "B02" })).toEqual(["B02", "B03"]);
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 2, startWellId: "Z99" })).toEqual(["A01", "A02"]);
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 2, startWellId: "A1" })).toEqual(["A01", "A02"]);
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 0 })).toEqual([]);
+      expect(autoFillPositions({ dims: AUTO_FILL_TEST_DIMS, count: 2, replicates: 0 })).toEqual([]);
+
+      const records = autoFillRecords(["sample-1", "sample-2"], (item, index, wellId) => `${item}:${index}:${wellId}`, {
+        dims: AUTO_FILL_TEST_DIMS,
+        replicates: 2,
+      });
+
+      expect([...records.entries()]).toEqual([
+        ["A01", "sample-1:0:A01"],
+        ["A02", "sample-1:0:A02"],
+        ["A03", "sample-2:1:A03"],
+        ["B01", "sample-2:1:B01"],
+      ]);
+
+      let sparseBuildCalls = 0;
+      const sparseRecords = autoFillRecords<string | undefined>(
+        [undefined],
+        (item) => {
+          sparseBuildCalls += 1;
+          return item;
+        },
+        { dims: AUTO_FILL_TEST_DIMS },
+      );
+
+      expect(sparseRecords.size).toBe(0);
+      expect(sparseBuildCalls).toBe(0);
+    });
   },
 };
 

@@ -4,12 +4,11 @@ import { RichListItem, RichListItemAvatar } from "./RichListItem";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { PATTERNS_COMPONENT_PREFIX } from "@/components/storybook-categories";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const meta: Meta<typeof RichListItem> = {
-  title: `${PATTERNS_COMPONENT_PREFIX}/RichListItem`,
+  title: "Design Patterns/RichListItem",
   component: RichListItem,
   parameters: {
     layout: "centered",

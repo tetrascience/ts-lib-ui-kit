@@ -7,6 +7,7 @@ import {
   ProcessFlow,
   type ProcessFlowConnection,
   type ProcessFlowStep,
+  type ProcessFlowStepStatus,
 } from "./ProcessFlow";
 
 import type { ReactElement } from "react";
@@ -248,6 +249,39 @@ describe("ProcessFlow", () => {
     const desc = container.querySelector("[data-slot='process-flow-description']");
     expect(desc).toBeTruthy();
     expect(desc?.getAttribute("data-description-visibility")).toBe("visible");
+  });
+
+  it("applies compact size with vertical orientation (inline content layout)", () => {
+    render(<ProcessFlow steps={steps} size="compact" orientation="vertical" />);
+    const viewport = container.querySelector("[data-slot='process-flow-viewport']") as HTMLElement;
+    expect(viewport.style.getPropertyValue("--process-flow-marker-size-base")).toBe("1.75rem");
+    expect(container.querySelector("[data-orientation='vertical']")).toBeTruthy();
+  });
+
+  it("renders error and pending connection styles in horizontal flow", () => {
+    const mixedSteps: ProcessFlowStep[] = [
+      { id: "a", label: "A", status: "error" },
+      { id: "b", label: "B", status: "pending" },
+      { id: "c", label: "C", status: "pending" },
+    ];
+    render(<ProcessFlow steps={mixedSteps} />);
+    const connections = container.querySelectorAll(
+      "[data-slot='process-flow-list'] > li[aria-hidden='true']:not([style*='left: calc(0%'])",
+    );
+    expect(connections.length).toBeGreaterThan(0);
+  });
+
+  it("renders active, error, and pending connection styles in vertical flow", () => {
+    // error→pending="error"; pending→pending="pending"; pending→active="active"
+    const verticalSteps: ProcessFlowStep[] = [
+      { id: "a", label: "A", status: "error" },
+      { id: "b", label: "B", status: "pending" },
+      { id: "c", label: "C", status: "pending" },
+      { id: "d", label: "D", status: "active" },
+    ];
+    render(<ProcessFlow steps={verticalSteps} orientation="vertical" />);
+    const list = container.querySelector("[data-slot='process-flow-list']");
+    expect(list?.querySelectorAll("li[aria-hidden='true']").length).toBeGreaterThan(0);
   });
 
   it("does not call onStepSelect for steps with selectable set to false", () => {

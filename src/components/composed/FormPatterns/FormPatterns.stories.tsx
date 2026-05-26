@@ -5,6 +5,7 @@ import { FormSection } from "./FormSection"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
+import { PATTERNS_COMPONENT_PREFIX } from "@/components/storybook-categories"
 import {
   Alert,
   AlertDescription,
@@ -31,7 +32,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 
 const meta: Meta<typeof FormSection> = {
-  title: "Design Patterns/Form Patterns",
+  title: `${PATTERNS_COMPONENT_PREFIX}/Form Patterns`,
   component: FormSection,
   parameters: {
     layout: "centered",

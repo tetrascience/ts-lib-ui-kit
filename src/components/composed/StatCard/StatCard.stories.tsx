@@ -4,8 +4,10 @@ import { StatCard } from "./StatCard"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
+import { PATTERNS_COMPONENT_PREFIX } from "@/components/storybook-categories"
+
 const meta: Meta<typeof StatCard> = {
-  title: "Design Patterns/Stat Card",
+  title: `${PATTERNS_COMPONENT_PREFIX}/Stat Card`,
   component: StatCard,
   parameters: {
     layout: "centered",

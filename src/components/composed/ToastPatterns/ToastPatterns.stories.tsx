@@ -11,6 +11,7 @@ import { expect, userEvent, waitFor, within } from "storybook/test"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
+import { PATTERNS_COMPONENT_PREFIX } from "@/components/storybook-categories"
 import {
   Alert,
   AlertAction,
@@ -28,7 +29,7 @@ import {
 import { Toaster } from "@/components/ui/sonner"
 
 const meta: Meta = {
-  title: "Design Patterns/Toast Patterns",
+  title: `${PATTERNS_COMPONENT_PREFIX}/Toast Patterns`,
   parameters: {
     layout: "centered",
   },

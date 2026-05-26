@@ -5,10 +5,11 @@ import { ConfirmDialog } from "./ConfirmDialog"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
+import { PATTERNS_COMPONENT_PREFIX } from "@/components/storybook-categories"
 import { Button } from "@/components/ui/button"
 
 const meta: Meta<typeof ConfirmDialog> = {
-  title: "Design Patterns/Confirm Dialog",
+  title: `${PATTERNS_COMPONENT_PREFIX}/Confirm Dialog`,
   component: ConfirmDialog,
   parameters: {
     layout: "centered",

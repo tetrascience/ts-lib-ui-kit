@@ -21,6 +21,7 @@ import type { NavGroup } from "./DataAppShell";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { TdpNavigationProvider } from "@/components/composed/tdp-link";
+import { PATTERNS_COMPONENT_PREFIX } from "@/components/storybook-categories";
 import {
   Avatar,
   AvatarFallback,
@@ -343,7 +344,7 @@ function DataCountPills({ dataCounts }: { dataCounts: DataCount[] }) {
 // =============================================================================
 
 const meta: Meta<typeof DataAppShell> = {
-  title: "Design Patterns/Data App Shell",
+  title: `${PATTERNS_COMPONENT_PREFIX}/Data App Shell`,
   component: DataAppShell,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

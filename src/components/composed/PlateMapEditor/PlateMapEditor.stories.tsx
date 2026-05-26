@@ -27,6 +27,7 @@ import type {
 import type { DragEndEvent } from "@dnd-kit/core";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { PATTERNS_COMPONENT_PREFIX } from "@/components/storybook-categories";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -501,7 +502,7 @@ function PlateMapEditorDragDrop() {
 }
 
 const meta: Meta<typeof PlateMapEditor<DemoWell>> = {
-  title: "Design Patterns/PlateMapEditor",
+  title: `${PATTERNS_COMPONENT_PREFIX}/PlateMapEditor`,
   component: PlateMapEditor,
   parameters: { layout: "padded" },
 };

@@ -10,6 +10,7 @@ export * from "@/components/composed/PlateMapEditor";
 export * from "@/components/composed/ConfirmDialog"
 export * from "@/components/composed/RichListItem";
 export * from "@/components/composed/EmptyState";
+export * from "@/components/composed/Stepper";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";

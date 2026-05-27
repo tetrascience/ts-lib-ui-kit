@@ -1,7 +1,6 @@
 import { FlaskConical } from "lucide-react";
 import { expect, within } from "storybook/test";
 
-
 import { EmptyState } from "./EmptyState";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -35,11 +34,7 @@ export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText("No records yet")).toBeInTheDocument();
-    expect(
-      canvas.getByText(
-        "Import a dataset or connect a data source to get started."
-      )
-    ).toBeInTheDocument();
+    expect(canvas.getByText("Import a dataset or connect a data source to get started.")).toBeInTheDocument();
   },
 };
 
@@ -55,9 +50,7 @@ export const NoData: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText("No records yet")).toBeInTheDocument();
-    expect(
-      canvas.getByRole("button", { name: "Import data" })
-    ).toBeInTheDocument();
+    expect(canvas.getByRole("button", { name: "Import data" })).toBeInTheDocument();
   },
 };
 
@@ -77,9 +70,7 @@ export const NoResults: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText("No results found")).toBeInTheDocument();
-    expect(
-      canvas.getByRole("button", { name: "Clear filters" })
-    ).toBeInTheDocument();
+    expect(canvas.getByRole("button", { name: "Clear filters" })).toBeInTheDocument();
   },
 };
 
@@ -93,9 +84,7 @@ export const NoAccess: Story = {
     const canvas = within(canvasElement);
     expect(canvas.getByText("Access restricted")).toBeInTheDocument();
     expect(
-      canvas.getByText(
-        "You don't have permission to view this resource. Contact your admin."
-      )
+      canvas.getByText("You don't have permission to view this resource. Contact your admin."),
     ).toBeInTheDocument();
   },
 };
@@ -116,9 +105,7 @@ export const EmptyFolder: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText("This folder is empty")).toBeInTheDocument();
-    expect(
-      canvas.getByRole("button", { name: "Upload files" })
-    ).toBeInTheDocument();
+    expect(canvas.getByRole("button", { name: "Upload files" })).toBeInTheDocument();
   },
 };
 
@@ -156,14 +143,8 @@ export const CustomContent: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText("No experiments run yet")).toBeInTheDocument();
-    expect(
-      canvas.getByText(
-        "Configure your protocol and run your first experiment."
-      )
-    ).toBeInTheDocument();
-    expect(
-      canvas.getByRole("button", { name: "Create experiment" })
-    ).toBeInTheDocument();
+    expect(canvas.getByText("Configure your protocol and run your first experiment.")).toBeInTheDocument();
+    expect(canvas.getByRole("button", { name: "Create experiment" })).toBeInTheDocument();
   },
 };
 
@@ -181,9 +162,7 @@ export const OverrideTitle: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText("No pipelines configured")).toBeInTheDocument();
-    expect(
-      canvas.getByText("Create a pipeline to start processing your data.")
-    ).toBeInTheDocument();
+    expect(canvas.getByText("Create a pipeline to start processing your data.")).toBeInTheDocument();
     expect(canvas.queryByText("No records yet")).not.toBeInTheDocument();
   },
 };

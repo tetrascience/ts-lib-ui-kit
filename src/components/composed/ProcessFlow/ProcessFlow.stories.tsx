@@ -646,3 +646,131 @@ export const BranchingWorkflow: Story = {
     });
   },
 };
+
+export const BranchingWithSelection: Story = {
+  args: {
+    steps: branchingSteps,
+    connections: branchingConnections,
+    selectedStepId: "assay",
+    onStepSelect: fn(),
+  },
+  play: async ({ canvasElement, step, args }) => {
+    const canvas = within(canvasElement);
+
+    await step("Branching steps render as buttons when onStepSelect is provided", async () => {
+      const uploadBtn = canvas.getByRole("button", { name: /Upload/i });
+      await userEvent.click(uploadBtn);
+      expect(args.onStepSelect).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "upload" }),
+        expect.objectContaining({ status: "completed" }),
+      );
+    });
+  },
+};
+
+export const SingleStep: Story = {
+  args: {
+    steps: [{ id: "only", label: "Process", description: "Only step", status: "active" }],
+    selectedStepId: "only",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Single step renders without a connection rail", async () => {
+      expect(canvas.getByText("Process")).toBeInTheDocument();
+      expect(canvasElement.querySelector("[aria-current='step']")).toBeInTheDocument();
+      expect(canvasElement.querySelector("[data-slot='process-flow-list'] > li[aria-hidden='true']")).toBeNull();
+    });
+  },
+};
+
+export const SingleStepVertical: Story = {
+  args: {
+    steps: [{ id: "only", label: "Process", description: "Only step", status: "active" }],
+    orientation: "vertical",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Single vertical step renders without a connection rail", async () => {
+      expect(canvas.getByText("Process")).toBeInTheDocument();
+      expect(canvasElement.querySelector("[data-orientation='vertical']")).toBeInTheDocument();
+      expect(canvasElement.querySelector("[data-slot='process-flow-list'] > li[aria-hidden='true']")).toBeNull();
+    });
+  },
+};
+
+export const CompactVertical: Story = {
+  args: {
+    steps: uploadSteps,
+    selectedStepId: "validate-inputs",
+    orientation: "vertical",
+    size: "compact",
+    onStepSelect: fn(),
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Compact vertical renders with correct marker-size CSS variable", async () => {
+      expect(canvasElement.querySelector("[data-orientation='vertical']")).toBeInTheDocument();
+      const viewport = canvasElement.querySelector("[data-slot='process-flow-viewport']") as HTMLElement;
+      expect(viewport.style.getPropertyValue("--process-flow-marker-size-base")).toBe("1.75rem");
+    });
+  },
+};
+
+export const DescriptionsAlwaysVisible: Story = {
+  args: {
+    steps: uploadSteps,
+    selectedStepId: "validate-inputs",
+    showDescriptions: true,
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("All descriptions are shown when showDescriptions is true", async () => {
+      const descs = canvasElement.querySelectorAll("[data-slot='process-flow-description']");
+      expect(descs.length).toBeGreaterThan(0);
+      expect(descs[0].getAttribute("data-description-visibility")).toBe("visible");
+    });
+  },
+};
+
+export const VerticalWithErrorAndPendingConnections: Story = {
+  args: {
+    // error→pending="error", pending→pending="pending", pending→active="active"
+    steps: [
+      { id: "a", label: "Upload", status: "error" },
+      { id: "b", label: "Validate", status: "pending" },
+      { id: "c", label: "Normalize", status: "pending" },
+      { id: "d", label: "Publish", status: "active" },
+    ],
+    orientation: "vertical",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Vertical flow renders error, pending, and active connection styles", async () => {
+      expect(canvas.getByText("Upload").closest("[data-status='error']")).toBeInTheDocument();
+      expect(canvasElement.querySelector("[data-orientation='vertical']")).toBeInTheDocument();
+      const connections = canvasElement.querySelectorAll(
+        "[data-slot='process-flow-list'] > li[aria-hidden='true']",
+      );
+      expect(connections.length).toBeGreaterThan(0);
+    });
+  },
+};
+
+export const NonSelectableStep: Story = {
+  args: {
+    steps: [
+      { id: "a", label: "Step A", status: "completed" },
+      { id: "b", label: "Step B", status: "active", selectable: false },
+      { id: "c", label: "Step C", status: "pending" },
+    ],
+    onStepSelect: fn(),
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Step with selectable=false is rendered disabled despite active status", async () => {
+      expect(canvas.getByRole("button", { name: "Step B, Active" })).toBeDisabled();
+    });
+  },
+};

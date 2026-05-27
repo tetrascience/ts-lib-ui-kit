@@ -85,6 +85,28 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
    * source palette. The legend slot still renders beneath the replacement.
    */
   formSlot?: React.ReactNode;
+  /**
+   * Optional slot rendered at the very top of the left panel card, above the
+   * form. Use this for navigation elements such as tab switchers.
+   */
+  leftPanelTopSlot?: React.ReactNode;
+  /**
+   * Additional className applied to the left panel Card. Use to override
+   * rounding, border, shadow, etc. (e.g. "rounded-none shadow-none border-r").
+   */
+  leftPanelClassName?: string;
+  /**
+   * Layout variant. `"default"` renders the two panels side-by-side as Cards.
+   * `"sidebar"` renders the left panel as a flush full-height aside (matching
+   * a typical app sidebar style) and the right content in a scrollable area.
+   */
+  layoutVariant?: "default" | "sidebar";
+  /**
+   * Optional banner rendered at the top of the right (plate) panel card,
+   * above the toolbar. Use this for stats or contextual info scoped to the
+   * plate view.
+   */
+  plateBanner?: React.ReactNode;
   /** Footer actions (e.g. Save, Back). */
   footer?: React.ReactNode;
   /** Title for the plate grid panel. */
@@ -246,6 +268,10 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   legend,
   formExtras,
   formSlot,
+  leftPanelTopSlot,
+  leftPanelClassName,
+  layoutVariant = "default",
+  plateBanner,
   footer,
   plateTitle = "Plate",
   plateToolbar,
@@ -496,28 +522,217 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   const showPlateSelector = shouldShowPlateSelector(availablePlates.length, onAddPlate);
   const canChangePlate = canUpdatePlateSelection(isPlateSelectionControlled, onPlateChange);
 
+  // ── Shared left-panel content ──────────────────────────────────────────────
+  const leftPanelContent = (
+    <>
+      {leftPanelTopSlot}
+      {formSlot ?? (
+        <WellMetadataForm
+          fields={fields}
+          value={staged}
+          onChange={setStaged}
+          selectionSize={selection.size}
+          onApply={applyStagedToSelection}
+          onClear={clearWells}
+          extras={formExtras}
+        />
+      )}
+      <PlateMapEditorLegend legend={legend} />
+    </>
+  );
+
+  // ── Sidebar layout ──────────────────────────────────────────────────────────
+  if (layoutVariant === "sidebar") {
+    return (
+      <div data-slot="plate-map-editor" className={cn("flex min-h-0 flex-1 overflow-hidden", className)}>
+        {/* Left sidebar */}
+        <aside
+          className={cn(
+            "flex w-72 shrink-0 flex-col gap-4 overflow-y-auto border-r border-border bg-card p-4",
+            leftPanelClassName,
+          )}
+        >
+          {leftPanelContent}
+        </aside>
+
+        {/* Right scrollable content */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-5 gap-5">
+          <PlateMapEditorTitleBar title={title} badges={badges} />
+          {banner}
+
+          {/* Plate card */}
+          <Card className="flex shrink-0 flex-col" size="sm">
+            <CardHeader className="border-b">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <CardTitle className="min-w-0">{plateTitle}</CardTitle>
+                {showPlateSelector ? (
+                  <PlateMapPlateSelector
+                    plates={availablePlates}
+                    activePlateId={activePlate?.id}
+                    onPlateChange={canChangePlate ? handlePlateChange : undefined}
+                    onAddPlate={onAddPlate}
+                    onRemovePlate={onRemovePlate}
+                    addPlateLabel={addPlateLabel}
+                    removePlateLabel={removePlateLabel}
+                    label={plateSelectorLabel}
+                    variant={plateSelectorVariant}
+                  />
+                ) : null}
+              </div>
+              <CardAction className="flex flex-wrap items-center gap-2">
+                <PlateMapActionsMenu
+                  templates={templates}
+                  templateId={templateId}
+                  onTemplateChange={onTemplateChange}
+                  onClearTemplate={onClearTemplate}
+                  hasEntries={values.size > 0}
+                  onImportCsv={onImportCsv ? handleImportCsv : undefined}
+                  onExportCsv={onExportCsv}
+                  onImportTemplate={onImportTemplate}
+                  onExportTemplate={onExportTemplate}
+                  csvAccept={csvAccept}
+                  templateAccept={templateAccept}
+                  label={label}
+                  align={align}
+                  side={side}
+                  importTemplateLabel={importTemplateLabel}
+                  exportTemplateLabel={exportTemplateLabel}
+                  importCsvLabel={importCsvLabel}
+                  exportCsvLabel={exportCsvLabel}
+                  clearLabel={clearLabel}
+                />
+              </CardAction>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-1.5">
+              {plateBanner}
+              <div className="flex flex-wrap items-center justify-start gap-3">
+                {plateToolbar}
+                <div className="flex items-center gap-2 text-xs">
+                  <button
+                    type="button"
+                    className="font-medium text-primary underline-offset-2 hover:text-primary/80 hover:underline"
+                    onClick={selectAll}
+                  >
+                    Select all
+                  </button>
+                  <span className="text-muted-foreground/60">·</span>
+                  <button
+                    type="button"
+                    className="font-medium text-primary underline-offset-2 hover:text-primary/80 hover:underline"
+                    onClick={deselectAll}
+                  >
+                    Deselect all
+                  </button>
+                </div>
+              </div>
+              <div className="h-5 text-xs text-muted-foreground">{hoverSummary}</div>
+              <PlatePaintGrid
+                format={format}
+                rows={rows}
+                columns={columns}
+                values={scopedValues}
+                selection={selection}
+                onSelectionChange={onSelectionChange}
+                colorForWell={colorForWell}
+                emptyWellFillColor={emptyWellFillColor}
+                wellShape={wellShape}
+                framed={framedPlate}
+                wrapWell={wrapWell}
+                highlightedWellIds={highlightedWellIds}
+                onWellHover={(wellId) => {
+                  setHoverPos(wellId);
+                  onHoveredWellChange?.(wellId);
+                }}
+                onWellDoubleClick={doubleClickCycleField ? cycleWellField : undefined}
+                selectionFillMode={doubleClickCycleField ? "well" : "selection"}
+                flashWellId={flashWell?.wellId}
+                flashWellKey={flashWell?.key}
+                cellSize={cellSize}
+                autoScale={autoScaleGrid}
+                minCellSize={minCellSize}
+                maxCellSize={maxCellSize}
+              />
+              {groups && groups.length > 0 ? (
+                <>
+                  <Separator className="mt-2" />
+                  <div className="flex max-h-28 flex-wrap gap-3 overflow-y-auto pt-1">
+                    {groups.map((group) => {
+                      const isActive = group.id === activeGroupId;
+                      const count = group.count ?? group.wellIds?.length;
+                      return (
+                        <button
+                          key={group.id}
+                          type="button"
+                          disabled={group.disabled}
+                          onClick={() => onGroupClick?.(group)}
+                          className={cn(
+                            "flex w-16 flex-col items-center gap-1 rounded-md px-1 py-1 text-center text-xs transition-colors",
+                            "text-muted-foreground hover:bg-muted/60",
+                            isActive && "bg-muted text-foreground ring-1 ring-primary/40",
+                            group.disabled && "pointer-events-none opacity-50",
+                          )}
+                          title={group.label}
+                        >
+                          <span
+                            className="size-7 rounded-full border"
+                            style={{
+                              backgroundColor: group.color,
+                              borderColor: group.borderColor,
+                            }}
+                            aria-hidden
+                          />
+                          <span className="w-full truncate text-foreground">{group.label}</span>
+                          {count === undefined ? null : (
+                            <span className="text-[0.7rem] leading-none text-muted-foreground">{count} wells</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          {/* Manifest card */}
+          <Card size="sm" className="shrink-0">
+            <CardHeader className="border-b">
+              <CardTitle>Sample manifest</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <WellManifestTable
+                values={scopedValues}
+                onChange={commitScopedValues}
+                columns={manifestColumns}
+                fields={fields}
+                selection={selection}
+                onSelectionChange={onSelectionChange}
+                emptyEntry={emptyEntry}
+                isPopulated={isPopulated}
+                filterable={manifestFilterable}
+                groupable={manifestGroupable}
+              />
+            </CardContent>
+          </Card>
+
+          {footer ? <div className="flex justify-end gap-2 pt-2">{footer}</div> : null}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Default layout ──────────────────────────────────────────────────────────
   return (
     <div data-slot="plate-map-editor" className={cn("flex flex-col gap-4", className)}>
       <PlateMapEditorTitleBar title={title} badges={badges} />
 
       {banner}
 
-      <div className="flex flex-wrap gap-3 md:flex-nowrap">
+      <div className="flex min-h-0 flex-1 flex-wrap gap-3 md:flex-nowrap">
         {/* Form column */}
-        <Card className="flex w-full max-w-[360px] min-w-[300px] basis-[360px] flex-col" size="sm">
+        <Card className={cn("flex w-full max-w-[360px] min-w-[300px] basis-[360px] flex-col", leftPanelClassName)} size="sm">
           <CardContent className="flex h-full flex-1 flex-col gap-3">
-            {formSlot ?? (
-              <WellMetadataForm
-                fields={fields}
-                value={staged}
-                onChange={setStaged}
-                selectionSize={selection.size}
-                onApply={applyStagedToSelection}
-                onClear={clearWells}
-                extras={formExtras}
-              />
-            )}
-            <PlateMapEditorLegend legend={legend} />
+            {leftPanelContent}
           </CardContent>
         </Card>
 
@@ -565,6 +780,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
             </CardAction>
           </CardHeader>
           <CardContent className="flex flex-col gap-1.5">
+            {plateBanner}
             <div className="flex flex-wrap items-center justify-start gap-3">
               {plateToolbar}
               <div className="flex items-center gap-2 text-xs">

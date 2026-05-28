@@ -6,7 +6,6 @@ export * from "@/components/composed/FormPatterns";
 export * from "@/components/composed/StatCard";
 export * from "@/components/composed/DataAppShell";
 export * from "@/components/composed/Chat";
-export * from "@/components/composed/PlateMapEditor";
 export * from "@/components/composed/ConfirmDialog"
 export * from "@/components/composed/RichListItem";
 export * from "@/components/composed/EmptyState";
@@ -64,7 +63,6 @@ export * from "@/components/ui/kbd";
 export * from "@/components/ui/label";
 export * from "@/components/ui/menubar";
 export * from "@/components/ui/navigation-menu";
-export * from "@/components/ui/popover";
 export * from "@/components/ui/radio-group";
 export * from "@/components/ui/resizable";
 export * from "@/components/ui/scroll-area";

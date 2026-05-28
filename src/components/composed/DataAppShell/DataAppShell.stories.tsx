@@ -21,10 +21,7 @@ import type { NavGroup } from "./DataAppShell";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { TdpNavigationProvider } from "@/components/composed/tdp-link";
-import {
-  Avatar,
-  AvatarFallback,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,12 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -86,17 +78,12 @@ function UserMenuButton({ name, userRole, expanded = false }: UserMenuButtonProp
             <div className="flex flex-col items-start min-w-0">
               <span className="text-xs font-medium text-foreground truncate">{name}</span>
               {userRole && (
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                  {userRole}
-                </span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{userRole}</span>
               )}
             </div>
           </button>
         ) : (
-          <button
-            type="button"
-            className="cursor-pointer bg-transparent border-none p-0"
-          >
+          <button type="button" className="cursor-pointer bg-transparent border-none p-0">
             <Avatar size="sm" className="bg-primary cursor-pointer hover:opacity-85 transition-opacity">
               <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
                 {initials}
@@ -164,7 +151,7 @@ const stepItemVariants = cva(
       },
     },
     defaultVariants: { active: false },
-  }
+  },
 );
 
 function WorkflowPanel({
@@ -205,7 +192,7 @@ function WorkflowPanel({
                     className={cn(
                       "flex justify-center items-center py-3.5 border-l-[5px] cursor-pointer bg-transparent border-r-0 border-t-0 border-b-0 w-full",
                       step.isActive ? "border-l-primary" : "border-l-border",
-                      step.disabled && "opacity-45 cursor-not-allowed"
+                      step.disabled && "opacity-45 cursor-not-allowed",
                     )}
                     onClick={() => !step.disabled && step.onClick?.()}
                     disabled={step.disabled}
@@ -213,7 +200,12 @@ function WorkflowPanel({
                     {Icon ? (
                       <Icon className={cn("w-5 h-5", step.isActive ? "text-primary" : "text-muted-foreground")} />
                     ) : (
-                      <div className={cn("w-2.5 h-2.5 rounded-full", step.isActive ? "bg-primary" : "bg-muted-foreground/40")} />
+                      <div
+                        className={cn(
+                          "w-2.5 h-2.5 rounded-full",
+                          step.isActive ? "bg-primary" : "bg-muted-foreground/40",
+                        )}
+                      />
                     )}
                   </button>
                 </TooltipTrigger>
@@ -254,13 +246,21 @@ function WorkflowPanel({
             <button
               type="button"
               key={step.id}
-              className={cn(stepItemVariants({ active: step.isActive ?? false }), step.disabled && "opacity-45 cursor-not-allowed")}
+              className={cn(
+                stepItemVariants({ active: step.isActive ?? false }),
+                step.disabled && "opacity-45 cursor-not-allowed",
+              )}
               onClick={() => !step.disabled && step.onClick?.()}
               disabled={step.disabled}
               title={step.disabled ? (step.disabledReason ?? step.label) : step.label}
             >
               {Icon && (
-                <span className={cn("flex items-center justify-center w-6 h-6 shrink-0", step.isActive ? "text-primary" : "text-muted-foreground")}>
+                <span
+                  className={cn(
+                    "flex items-center justify-center w-6 h-6 shrink-0",
+                    step.isActive ? "text-primary" : "text-muted-foreground",
+                  )}
+                >
                   <Icon className="w-5 h-5" />
                 </span>
               )}
@@ -306,7 +306,7 @@ const countPillVariants = cva(
       },
     },
     defaultVariants: { variant: "default", clickable: false },
-  }
+  },
 );
 
 function DataCountPills({ dataCounts }: { dataCounts: DataCount[] }) {
@@ -343,7 +343,7 @@ function DataCountPills({ dataCounts }: { dataCounts: DataCount[] }) {
 // =============================================================================
 
 const meta: Meta<typeof DataAppShell> = {
-  title: "Patterns/DataAppShell",
+  title: "Design Patterns/DataAppShell",
   component: DataAppShell,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
@@ -366,16 +366,23 @@ const htsNavGroups: NavGroup[] = [
 ];
 
 const htsWorkflowSteps: WorkflowStep[] = [
-  { id: "data-overview",    label: "Data Overview",      icon: LayoutGrid, isActive: true, inputCount: 649568, outputCount: 645396 },
-  { id: "global-filtering", label: "Global Filtering",   icon: Filter,                     inputCount: 645396, outputCount: 4803 },
-  { id: "explore-clusters", label: "Explore Clusters",   icon: Library,                    inputCount: 3917,   outputCount: 20 },
-  { id: "review-compound",  label: "Review Selection",   icon: Search,                     inputCount: 20,     outputCount: 15 },
-  { id: "export-list",      label: "Export Primary List", icon: Download,                  inputCount: 15 },
+  {
+    id: "data-overview",
+    label: "Data Overview",
+    icon: LayoutGrid,
+    isActive: true,
+    inputCount: 649568,
+    outputCount: 645396,
+  },
+  { id: "global-filtering", label: "Global Filtering", icon: Filter, inputCount: 645396, outputCount: 4803 },
+  { id: "explore-clusters", label: "Explore Clusters", icon: Library, inputCount: 3917, outputCount: 20 },
+  { id: "review-compound", label: "Review Selection", icon: Search, inputCount: 20, outputCount: 15 },
+  { id: "export-list", label: "Export Primary List", icon: Download, inputCount: 15 },
 ];
 
 const htsBreadcrumbs = [
   { label: "All Projects", onClick: () => console.log("All Projects") },
-  { label: "DUX4",         onClick: () => console.log("DUX4") },
+  { label: "DUX4", onClick: () => console.log("DUX4") },
   { label: "Primary Screening", onClick: () => console.log("Primary Screening") },
   { label: "Data Overview" },
 ];
@@ -402,7 +409,7 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
     activeStep?.inputCount == null || activeStep?.outputCount == null
       ? []
       : [
-          { label: "INPUT",  count: activeStep.inputCount,  variant: "outline" },
+          { label: "INPUT", count: activeStep.inputCount, variant: "outline" },
           { label: "Output", count: activeStep.outputCount, variant: "primary" },
         ];
 
@@ -419,14 +426,17 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
       headerActions={
         <>
           <DataCountPills dataCounts={dataCounts} />
-          <Button size="sm" disabled={isLastStep} onClick={() => !isLastStep && setActiveStepId(htsWorkflowSteps[activeStepIndex + 1].id)} className="gap-1">
+          <Button
+            size="sm"
+            disabled={isLastStep}
+            onClick={() => !isLastStep && setActiveStepId(htsWorkflowSteps[activeStepIndex + 1].id)}
+            className="gap-1"
+          >
             {isLastStep ? "Push to Downstream" : "Next"}
           </Button>
         </>
       }
-      sidebarPanel={
-        <WorkflowPanel steps={steps} collapsed={collapsed} onCollapseChange={setCollapsed} />
-      }
+      sidebarPanel={<WorkflowPanel steps={steps} collapsed={collapsed} onCollapseChange={setCollapsed} />}
     >
       <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground text-sm">Main content area</p>
@@ -555,14 +565,15 @@ const InteractiveShell = () => {
   const activeStep = steps.find((s) => s.isActive);
   const isProjectPage = activePageId === "project";
 
-  const dataCounts: DataCount[] = activeStep?.inputCount == null
-    ? []
-    : [
-        { label: "INPUT",  count: activeStep.inputCount,  variant: "outline" },
-        ...(activeStep.outputCount == null
-          ? []
-          : [{ label: "Output", count: activeStep.outputCount, variant: "primary" as const }]),
-      ];
+  const dataCounts: DataCount[] =
+    activeStep?.inputCount == null
+      ? []
+      : [
+          { label: "INPUT", count: activeStep.inputCount, variant: "outline" },
+          ...(activeStep.outputCount == null
+            ? []
+            : [{ label: "Output", count: activeStep.outputCount, variant: "primary" as const }]),
+        ];
 
   return (
     <DataAppShell
@@ -595,8 +606,7 @@ const InteractiveShell = () => {
       <div className="p-8">
         <h1 className="text-2xl font-semibold mb-2">{activeStep?.label ?? "Select a step"}</h1>
         <p className="text-sm text-muted-foreground">
-          Active page: <strong>{activePageId}</strong> | Active step:{" "}
-          <strong>{activeStepId}</strong> | Collapsed:{" "}
+          Active page: <strong>{activePageId}</strong> | Active step: <strong>{activeStepId}</strong> | Collapsed:{" "}
           <strong>{collapsed ? "yes" : "no"}</strong>
         </p>
       </div>
@@ -626,7 +636,7 @@ export const Interactive: Story = {
 
 export const AppDropdownInteraction: Story = {
   name: "App Dropdown Interaction",
-  tags: ['!dev'], // Hides from sidebar, remains testable
+  tags: ["!dev"], // Hides from sidebar, remains testable
   render: () => (
     <DataAppShell
       appName="HTS"
@@ -636,7 +646,9 @@ export const AppDropdownInteraction: Story = {
       onAppNameClick={() => console.log("App name clicked")}
       onBackToPlatform={() => console.log("Back to platform")}
     >
-      <div className="p-6"><p className="text-muted-foreground text-sm">Content area</p></div>
+      <div className="p-6">
+        <p className="text-muted-foreground text-sm">Content area</p>
+      </div>
     </DataAppShell>
   ),
   play: async ({ canvasElement, step }) => {
@@ -680,13 +692,15 @@ export const BreadcrumbVariants: Story = {
       appName="APP"
       navGroups={[{ pages: [{ id: "home", label: "Home", icon: ClipboardList }] }]}
       breadcrumbs={[
-        { label: "Linked",    href: "#" },                   // renders as <a>
+        { label: "Linked", href: "#" }, // renders as <a>
         { label: "Clickable", onClick: () => console.log("clicked") }, // renders as <button>
-        { label: "Static" },                                // no action → <span>
-        { label: "Current Page" },                          // last item → BreadcrumbPage
+        { label: "Static" }, // no action → <span>
+        { label: "Current Page" }, // last item → BreadcrumbPage
       ]}
     >
-      <div className="p-6"><p>Content</p></div>
+      <div className="p-6">
+        <p>Content</p>
+      </div>
     </DataAppShell>
   ),
   play: async ({ canvasElement, step }) => {
@@ -739,11 +753,12 @@ export const HelpButtonPresent: Story = {
       onHelpClick={() => console.log("Help")}
       breadcrumbs={[{ label: "Page" }]}
     >
-      <div className="p-6"><p>Content</p></div>
+      <div className="p-6">
+        <p>Content</p>
+      </div>
     </DataAppShell>
   ),
   play: async ({ canvasElement, step }) => {
-
     await step("Help button renders when onHelpClick is provided", async () => {
       // Help button should be present in the top nav when onHelpClick is provided
       const topNav = canvasElement.querySelector("[data-slot='data-app-top-nav']");
@@ -765,7 +780,6 @@ export const HelpButtonPresent: Story = {
   },
 };
 
-
 // =============================================================================
 // Workflow panel collapse / expand + step interaction
 // =============================================================================
@@ -775,9 +789,25 @@ const WorkflowInteractionShell = () => {
   const [activeStepId, setActiveStepId] = useState("step-a");
 
   const steps: WorkflowStep[] = [
-    { id: "step-a", label: "Step Alpha", icon: LayoutGrid, isActive: activeStepId === "step-a", onClick: () => setActiveStepId("step-a"), inputCount: 1000, outputCount: 800 },
-    { id: "step-b", label: "Step Beta",  icon: Filter,     isActive: activeStepId === "step-b", onClick: () => setActiveStepId("step-b"), inputCount: 800,  outputCount: 200 },
-    { id: "step-c", label: "Disabled",   icon: Search,     disabled: true, disabledReason: "Requires upstream data" },
+    {
+      id: "step-a",
+      label: "Step Alpha",
+      icon: LayoutGrid,
+      isActive: activeStepId === "step-a",
+      onClick: () => setActiveStepId("step-a"),
+      inputCount: 1000,
+      outputCount: 800,
+    },
+    {
+      id: "step-b",
+      label: "Step Beta",
+      icon: Filter,
+      isActive: activeStepId === "step-b",
+      onClick: () => setActiveStepId("step-b"),
+      inputCount: 800,
+      outputCount: 200,
+    },
+    { id: "step-c", label: "Disabled", icon: Search, disabled: true, disabledReason: "Requires upstream data" },
   ];
 
   return (
@@ -796,7 +826,7 @@ const WorkflowInteractionShell = () => {
 
 export const WorkflowPanelInteractions: Story = {
   name: "Workflow Panel Interactions",
-  tags: ['!dev'], // Hides from sidebar, remains testable
+  tags: ["!dev"], // Hides from sidebar, remains testable
   render: () => <WorkflowInteractionShell />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -861,20 +891,20 @@ export const MultipleNavGroups: Story = {
         {
           label: "Main",
           pages: [
-            { id: "project",  label: "Project",  icon: ClipboardList },
+            { id: "project", label: "Project", icon: ClipboardList },
             { id: "explorer", label: "Explorer", icon: Search },
           ],
         },
         {
           label: "Tools",
-          pages: [
-            { id: "filter", label: "Filters", icon: Filter, isActive: true },
-          ],
+          pages: [{ id: "filter", label: "Filters", icon: Filter, isActive: true }],
         },
       ]}
       breadcrumbs={[{ label: "Filters" }]}
     >
-      <div className="p-6"><p>Content</p></div>
+      <div className="p-6">
+        <p>Content</p>
+      </div>
     </DataAppShell>
   ),
   play: async ({ canvasElement, step }) => {
@@ -912,7 +942,7 @@ export const MultipleNavGroups: Story = {
 
 export const BackToPlatformCallback: Story = {
   name: "Back to TDP Platform Callback",
-  tags: ['!dev'],
+  tags: ["!dev"],
   render: () => {
     const [callbackCount, setCallbackCount] = React.useState(0);
     const handleBackClick = () => {
@@ -1000,7 +1030,7 @@ export const BackToPlatformCallback: Story = {
 
 export const BackToPlatformPath: Story = {
   name: "Back to TDP Platform Path",
-  tags: ['!dev'],
+  tags: ["!dev"],
   render: () => (
     <TdpNavigationProvider tdpBaseUrl="https://tetrascience.com/my-org">
       <DataAppShell
@@ -1011,7 +1041,9 @@ export const BackToPlatformPath: Story = {
         backToPlatformPath="/data-workspace"
         breadcrumbs={[{ label: "Project" }]}
       >
-        <div className="p-6"><p>Main content</p></div>
+        <div className="p-6">
+          <p>Main content</p>
+        </div>
       </DataAppShell>
     </TdpNavigationProvider>
   ),
@@ -1059,9 +1091,9 @@ export const BackToPlatformPath: Story = {
 
 export const MobileNavigation: Story = {
   name: "Mobile Navigation",
-  tags: ['!dev'],
+  tags: ["!dev"],
   parameters: {
-    viewport: { defaultViewport: 'mobile1' },
+    viewport: { defaultViewport: "mobile1" },
     zephyr: { testCaseId: "SW-T4676" },
   },
   render: () => (
@@ -1081,7 +1113,9 @@ export const MobileNavigation: Story = {
       breadcrumbs={[{ label: "Project" }]}
       userMenu={<UserMenuButton name="Test User" userRole="ADMIN" />}
     >
-      <div className="p-6"><p>Main content</p></div>
+      <div className="p-6">
+        <p>Main content</p>
+      </div>
     </DataAppShell>
   ),
   play: async ({ canvasElement, step }) => {
@@ -1158,7 +1192,7 @@ export const MobileNavigation: Story = {
 
 export const CompactProperty: Story = {
   name: "Compact Property",
-  tags: ['!dev'], // Hides from sidebar, remains testable
+  tags: ["!dev"], // Hides from sidebar, remains testable
   render: () => (
     <DataAppShell
       appName="HTS"
@@ -1168,25 +1202,24 @@ export const CompactProperty: Story = {
         {
           label: "Main",
           pages: [
-            { id: "project",  label: "Project",  icon: ClipboardList, isActive: true },
+            { id: "project", label: "Project", icon: ClipboardList, isActive: true },
             { id: "explorer", label: "Explorer", icon: Search },
           ],
         },
         {
           label: "Tools",
-          pages: [
-            { id: "filter", label: "Filters", icon: Filter },
-          ],
+          pages: [{ id: "filter", label: "Filters", icon: Filter }],
         },
       ]}
       breadcrumbs={[{ label: "Project" }]}
       userMenu={<UserMenuButton name="Test User" userRole="ADMIN" />}
     >
-      <div className="p-6"><p>Content area</p></div>
+      <div className="p-6">
+        <p>Content area</p>
+      </div>
     </DataAppShell>
   ),
   play: async ({ canvasElement, step }) => {
-
     await step("Compact icon rail renders on desktop (hidden on mobile)", async () => {
       const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
       expect(rail).toBeInTheDocument();

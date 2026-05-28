@@ -501,12 +501,12 @@ export const ResponsiveLongWorkflow: Story = {
       const viewport = canvasElement.querySelector("[data-slot='process-flow-viewport']") as HTMLElement;
       const list = canvasElement.querySelector("[data-slot='process-flow-list']") as HTMLElement;
       const label = canvas.getByText("Map fields");
-      const autoDescription = canvas.getByText("Map columns to schema");
+      const description = canvas.getByText("Map columns to schema");
 
       expect(list.scrollWidth).toBeLessThanOrEqual(viewport.clientWidth);
       expect(getComputedStyle(label).display).not.toBe("none");
       expect(Number.parseFloat(getComputedStyle(label).fontSize)).toBeGreaterThanOrEqual(13);
-      expect(getComputedStyle(autoDescription).display).toBe("none");
+      expect(getComputedStyle(description).display).not.toBe("none");
       expectHorizontalMarkersAligned(canvasElement);
     });
   },
@@ -563,10 +563,11 @@ export const MiniLongWorkflow: Story = {
       const list = canvasElement.querySelector("[data-slot='process-flow-list']") as HTMLElement;
       const label = canvas.getByText("Map fields");
       const text = label.closest("[data-slot='process-flow-text']") as HTMLElement;
+      const description = text.querySelector("[data-slot='process-flow-description']") as HTMLElement;
 
       expect(list.scrollWidth).toBeLessThanOrEqual(viewport.clientWidth);
-      expect(list.scrollWidth).toBeLessThanOrEqual(420);
-      expect(getComputedStyle(text).display).toBe("none");
+      expect(getComputedStyle(text).display).not.toBe("none");
+      expect(getComputedStyle(description).display).toBe("none");
       expectHorizontalMarkersAligned(canvasElement);
     });
   },

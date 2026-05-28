@@ -97,7 +97,7 @@ export interface ProcessFlowProps extends Omit<ComponentPropsWithoutRef<"nav">, 
   onStepSelect?: (step: ProcessFlowStep, details: ProcessFlowStepSelectDetails) => void;
   orientation?: ProcessFlowOrientation;
   size?: ProcessFlowSize;
-  /** Defaults to true for default size and false for compact size. */
+  /** Defaults to true. Set to false to hide step descriptions. */
   showDescriptions?: boolean;
 }
 
@@ -243,19 +243,16 @@ const MINI_LINEAR_MARKER_SIZE: Record<ProcessFlowSize, string> = {
   compact: "1.125rem",
 };
 
-function getDescriptionVisibility(
-  showDescriptions: boolean | undefined,
-  size: ProcessFlowSize,
-): ProcessFlowDescriptionVisibility {
+function getDescriptionVisibility(showDescriptions: boolean | undefined): ProcessFlowDescriptionVisibility {
   if (showDescriptions === true) {
     return "visible";
   }
 
-  if (showDescriptions === false || size === "compact") {
+  if (showDescriptions === false) {
     return "hidden";
   }
 
-  return "auto";
+  return "visible";
 }
 
 function normalizeGridIndex(value: number | undefined, fallback: number) {
@@ -458,6 +455,7 @@ function getLabelClassName({
 }: Pick<StepControlClassOptions, "layout" | "isSelected" | "status">) {
   return cn(
     "block max-w-full truncate font-medium text-current",
+    layout === "linear" && isSelected && status === "completed" && "text-positive",
     layout === "linear" && isSelected && status !== "completed" && status !== "error" && "text-primary",
   );
 }
@@ -589,7 +587,7 @@ function HorizontalProcessFlow({
 }) {
   const positionedSteps = steps.map((step, index) => positionStep(step, index, "horizontal"));
   const resolvedConnections = resolveConnections(positionedSteps);
-  const descriptionVisibility = getDescriptionVisibility(showDescriptions, size);
+  const descriptionVisibility = getDescriptionVisibility(showDescriptions);
   const flowStyle = {
     "--process-flow-count": steps.length,
     "--process-flow-step-min-width-base": STEP_MIN_WIDTH[size],
@@ -670,7 +668,7 @@ function VerticalProcessFlow({
 }) {
   const positionedSteps = steps.map((step, index) => positionStep(step, index, "vertical"));
   const resolvedConnections = resolveConnections(positionedSteps);
-  const descriptionVisibility = getDescriptionVisibility(showDescriptions, size);
+  const descriptionVisibility = getDescriptionVisibility(showDescriptions);
   const flowStyle = {
     "--process-flow-count": steps.length,
     "--process-flow-row-min-height-base": ROW_MIN_HEIGHT[size],
@@ -755,7 +753,7 @@ export function ProcessFlow({
     return (
       <nav
         aria-label={ariaLabel}
-        className={cn("w-full max-w-[88rem] min-w-0", className)}
+        className={cn("w-full min-w-0", className)}
         data-orientation={orientation}
         data-slot="process-flow"
         data-size={size}
@@ -777,7 +775,7 @@ export function ProcessFlow({
     return (
       <nav
         aria-label={ariaLabel}
-        className={cn("w-full max-w-md min-w-0", className)}
+        className={cn("w-full min-w-0", className)}
         data-orientation={orientation}
         data-slot="process-flow"
         data-size={size}
@@ -799,7 +797,7 @@ export function ProcessFlow({
   const rowCount = Math.max(...positionedSteps.map((step) => step.row + 1), 1);
   const columnCount = Math.max(...positionedSteps.map((step) => step.column + 1), 1);
   const resolvedConnections = resolveConnections(positionedSteps, connections);
-  const descriptionVisibility = getDescriptionVisibility(showDescriptions, size);
+  const descriptionVisibility = getDescriptionVisibility(showDescriptions);
   const flowStyle = {
     "--process-flow-columns": columnCount,
     "--process-flow-rows": rowCount,

@@ -115,9 +115,9 @@ import {
 } from "@tetrascience-npm/tetrascience-react-ui";
 
 const steps: ProcessFlowStep[] = [
-  { id: "upload", label: "Upload", status: "completed" },
-  { id: "validate", label: "Validate", status: "active" },
-  { id: "publish", label: "Publish", status: "pending" },
+  { id: "upload", label: "Upload", description: "Choose source files", status: "completed" },
+  { id: "validate", label: "Validate", description: "Check schema and lineage", status: "active" },
+  { id: "publish", label: "Publish", description: "Send downstream", status: "pending" },
 ];
 
 function WorkflowProgress() {
@@ -141,6 +141,10 @@ Expected contract:
 - `selectedStepId` means the step the user is viewing or has clicked; it is separate from the `active` workflow state.
 - `onStepSelect` emits user selection only. It does not mean a workflow step completed.
 - Parent workflow code owns completion, error handling, retries, analytics, and other side effects.
+- `description` is shown by default. Pass `showDescriptions={false}` to hide all descriptions.
+- Descriptions auto-hide at narrow container widths (≤40rem) for mobile layouts.
+- The component fills 100% of its container width — size it by controlling the container.
+- Selected completed steps render with a green label; selected active steps render with a blue label.
 - Use `connections` and per-step `position` only for simple branching/configurable flows.
 
 For AI-assisted consuming apps, add a short instruction like this to the app's `AGENTS.md` or `CLAUDE.md`:

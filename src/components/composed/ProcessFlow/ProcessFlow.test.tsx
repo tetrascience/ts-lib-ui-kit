@@ -123,7 +123,7 @@ describe("ProcessFlow", () => {
     expect(viewport.style.getPropertyValue("--process-flow-marker-size-responsive")).toBe("2rem");
     expect(viewport.style.getPropertyValue("--process-flow-marker-size-squeezed")).toBe("1.5rem");
     expect(viewport.style.getPropertyValue("--process-flow-marker-size-mini")).toBe("1.25rem");
-    expect(description?.getAttribute("data-description-visibility")).toBe("auto");
+    expect(description?.getAttribute("data-description-visibility")).toBe("visible");
   });
 
   it("respects explicit description visibility", () => {
@@ -239,9 +239,11 @@ describe("ProcessFlow", () => {
     expect(viewport.style.getPropertyValue("--process-flow-marker-size-base")).toBe("1.75rem");
   });
 
-  it("hides descriptions by default in compact size", () => {
+  it("shows descriptions by default in compact size", () => {
     render(<ProcessFlow steps={steps} size="compact" />);
-    expect(container.querySelector("[data-slot='process-flow-description']")).toBeNull();
+    const desc = container.querySelector("[data-slot='process-flow-description']");
+    expect(desc).toBeTruthy();
+    expect(desc?.getAttribute("data-description-visibility")).toBe("visible");
   });
 
   it("shows descriptions in compact size when showDescriptions is true", () => {

@@ -5,7 +5,6 @@ import { expect, fn, userEvent, within } from "storybook/test";
 import {
   PROCESS_FLOW_STEP_STATUSES,
   ProcessFlow,
-  type ProcessFlowConnection,
   type ProcessFlowStep,
   type ProcessFlowStepStatus,
 } from "./ProcessFlow";
@@ -68,51 +67,6 @@ const reviewSteps: ProcessFlowStep[] = [
   },
 ];
 
-const branchingSteps: ProcessFlowStep[] = [
-  {
-    id: "upload",
-    label: "Upload",
-    description: "Receive files",
-    status: "completed",
-    position: { row: 1, column: 0 },
-  },
-  {
-    id: "metadata",
-    label: "Metadata",
-    description: "Extract context",
-    status: "completed",
-    position: { row: 0, column: 1 },
-  },
-  {
-    id: "assay",
-    label: "Assay data",
-    description: "Normalize rows",
-    status: "active",
-    position: { row: 2, column: 1 },
-  },
-  {
-    id: "review",
-    label: "Review",
-    description: "Inspect output",
-    status: "pending",
-    position: { row: 1, column: 2 },
-  },
-  {
-    id: "publish",
-    label: "Publish",
-    description: "Write records",
-    status: "pending",
-    position: { row: 1, column: 3 },
-  },
-];
-
-const branchingConnections: ProcessFlowConnection[] = [
-  { from: "upload", to: "metadata", status: "completed" },
-  { from: "upload", to: "assay", status: "active" },
-  { from: "metadata", to: "review" },
-  { from: "assay", to: "review" },
-  { from: "review", to: "publish" },
-];
 
 const longWorkflowSteps: ProcessFlowStep[] = [
   {
@@ -351,7 +305,7 @@ function DynamicProcessFlow() {
   );
 
   return (
-    <div className="flex w-[760px] flex-col gap-4">
+    <div className="flex w-full flex-col gap-4">
       <ProcessFlow steps={steps} selectedStepId={selectedStepId} onStepSelect={(step) => setSelectedStepId(step.id)} />
       <div className="flex flex-wrap gap-2">
         <Button
@@ -371,10 +325,10 @@ function DynamicProcessFlow() {
 }
 
 const meta: Meta<typeof ProcessFlow> = {
-  title: "Patterns/ProcessFlow",
+  title: "Design Patterns/ProcessFlow",
   component: ProcessFlow,
   parameters: {
-    layout: "centered",
+    layout: "padded",
     docs: {
       description: {
         component:
@@ -394,16 +348,7 @@ const meta: Meta<typeof ProcessFlow> = {
     },
   },
   tags: ["autodocs"],
-  decorators: [
-    (Story, context) =>
-      context.parameters.layout === "fullscreen" ? (
-        <Story />
-      ) : (
-        <div className="w-[820px] max-w-[calc(100vw-2rem)]">
-          <Story />
-        </div>
-      ),
-  ],
+  decorators: [(Story) => <Story />],
 };
 
 export default meta;
@@ -627,46 +572,6 @@ export const MiniLongWorkflow: Story = {
   },
 };
 
-export const BranchingWorkflow: Story = {
-  args: {
-    steps: branchingSteps,
-    connections: branchingConnections,
-    selectedStepId: "assay",
-    size: "compact",
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Branching steps and connections render", async () => {
-      expect(canvas.getByText("Metadata")).toBeInTheDocument();
-      expect(canvas.getByText("Assay data")).toBeInTheDocument();
-      expect(
-        canvasElement.querySelectorAll("[data-slot='process-flow-canvas'] > svg > path[data-status]"),
-      ).toHaveLength(branchingConnections.length);
-    });
-  },
-};
-
-export const BranchingWithSelection: Story = {
-  args: {
-    steps: branchingSteps,
-    connections: branchingConnections,
-    selectedStepId: "assay",
-    onStepSelect: fn(),
-  },
-  play: async ({ canvasElement, step, args }) => {
-    const canvas = within(canvasElement);
-
-    await step("Branching steps render as buttons when onStepSelect is provided", async () => {
-      const uploadBtn = canvas.getByRole("button", { name: /Upload/i });
-      await userEvent.click(uploadBtn);
-      expect(args.onStepSelect).toHaveBeenCalledWith(
-        expect.objectContaining({ id: "upload" }),
-        expect.objectContaining({ status: "completed" }),
-      );
-    });
-  },
-};
 
 export const SingleStep: Story = {
   args: {

@@ -29,10 +29,6 @@
   --process-flow-marker-size: var(--process-flow-marker-size-base);
 }
 
-[data-slot="process-flow"][data-orientation="horizontal"] [data-slot="process-flow-list"] {
-  width: min(100%, calc(var(--process-flow-count) * var(--process-flow-step-min-width)));
-  margin-inline: auto;
-}
 
 [data-slot="process-flow"] [data-slot="process-flow-label"] {
   font-size: var(--process-flow-label-font-size);
@@ -53,9 +49,6 @@
     padding-inline: 0.75rem;
   }
 
-  [data-slot="process-flow-description"][data-description-visibility="auto"] {
-    display: none;
-  }
 }
 
 @container process-flow (max-width: 56rem) {
@@ -84,6 +77,12 @@
   }
 }
 
+@container process-flow (max-width: 40rem) {
+  [data-slot="process-flow-description"] {
+    display: none;
+  }
+}
+
 @container process-flow (max-width: 32rem) {
   [data-slot="process-flow"] [data-slot="process-flow-viewport"] {
     --process-flow-step-min-width: var(
@@ -98,11 +97,6 @@
     --process-flow-gap: var(--process-flow-gap-mini, var(--process-flow-gap-responsive));
     --process-flow-marker-size: var(--process-flow-marker-size-mini, var(--process-flow-marker-size-responsive));
     padding-inline: 0.5rem;
-  }
-
-  [data-slot="process-flow"][data-orientation="horizontal"]
-    [data-slot="process-flow-text"][data-text-visibility="auto"] {
-    display: none;
   }
 }
 

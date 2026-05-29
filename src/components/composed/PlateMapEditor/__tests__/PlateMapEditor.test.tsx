@@ -1,8 +1,7 @@
 import * as React from "react";
 import { act } from "react";
-import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { plateOptionsFromCsvTriage, triagePlateMapCsvByBarcode } from "../csvPlateTriage";
 import { PlateMapActionsMenu } from "../PlateMapActionsMenu";
@@ -86,8 +85,8 @@ function setFileInput(input: HTMLInputElement, file: File) {
 }
 
 async function flushFilePick() {
-  await Promise.resolve();
-  await Promise.resolve();
+  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  await new Promise<void>((resolve) => setTimeout(resolve, 0));
 }
 
 interface HarnessHandle {
@@ -126,9 +125,18 @@ describe("PlateMapEditor", () => {
   let container: HTMLDivElement;
   let root: Root;
   let handle: HarnessHandle;
+  let priorActEnv: boolean | undefined;
 
   beforeAll(() => {
-    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    const g = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
+    priorActEnv = g.IS_REACT_ACT_ENVIRONMENT;
+    g.IS_REACT_ACT_ENVIRONMENT = true;
+  });
+
+  afterAll(() => {
+    const g = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
+    if (priorActEnv === undefined) delete g.IS_REACT_ACT_ENVIRONMENT;
+    else g.IS_REACT_ACT_ENVIRONMENT = priorActEnv;
   });
 
   beforeEach(() => {
@@ -176,7 +184,7 @@ describe("PlateMapEditor", () => {
     act(() => {
       handle.current.setSelection(new Set(["A01", "A02"]));
     });
-    flushSync(() => {});
+    act(() => {});
 
     const sampleInput = container.querySelector('input[id="field-sampleId"]') as HTMLInputElement | null;
     expect(sampleInput).not.toBeNull();
@@ -208,7 +216,7 @@ describe("PlateMapEditor", () => {
       handle.current.setValues(m);
       handle.current.setSelection(new Set(["A01"]));
     });
-    flushSync(() => {});
+    act(() => {});
 
     const clearBtn = [...container.querySelectorAll("button")].find(
       (b) => b.textContent?.trim() === "Clear wells",
@@ -229,7 +237,7 @@ describe("PlateMapEditor", () => {
       handle.current.setValues(m);
       handle.current.setSelection(new Set(["A01", "A02", "A03"]));
     });
-    flushSync(() => {});
+    act(() => {});
 
     const fillDownRole = [...container.querySelectorAll("button")].find(
       (b) => b.getAttribute("aria-label") === "Fill down Role",
@@ -273,7 +281,7 @@ describe("PlateMapEditor", () => {
       act(() => {
         plate!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 30, clientY: 30 }));
       });
-      flushSync(() => {});
+      act(() => {});
       act(() => {
         plate!.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, clientX: 30, clientY: 30 }));
       });
@@ -630,13 +638,13 @@ describe("PlateMapEditor", () => {
 
     const csvInput = container.querySelector('input[accept=".csv,text/csv"]') as HTMLInputElement;
 
-    await act(async () => {
+    act(() => {
       setFileInput(
         csvInput,
         new File(["plate barcode,well\nPLATE-001,A01\nPLATE-002,A01"], "plates.csv", { type: "text/csv" }),
       );
-      await flushFilePick();
     });
+    await flushFilePick();
 
     expect(onImportCsv).toHaveBeenCalledWith(
       expect.objectContaining({ name: "plates.csv" }),
@@ -745,11 +753,11 @@ describe("PlateMapEditor", () => {
       templateInput.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
-    await act(async () => {
+    act(() => {
       setFileInput(templateInput, new File(["{}"], "template.json", { type: "application/json" }));
       setFileInput(csvInput, new File(["plate barcode,well\nPLATE-001,A01"], "plates.csv", { type: "text/csv" }));
-      await flushFilePick();
     });
+    await flushFilePick();
 
     expect(onImportTemplate).toHaveBeenCalledWith(expect.objectContaining({ name: "template.json" }));
     expect(onImportCsv).toHaveBeenCalledWith(
@@ -812,11 +820,11 @@ describe("PlateMapEditor", () => {
     const templateInput = container.querySelector('input[accept=".json"]') as HTMLInputElement;
     const csvInput = container.querySelector('input[accept=".csv"]') as HTMLInputElement;
 
-    await act(async () => {
+    act(() => {
       setFileInput(templateInput, new File(["{}"], "template.json", { type: "application/json" }));
       setFileInput(csvInput, new File(["well,sample"], "plate.csv", { type: "text/csv" }));
-      await flushFilePick();
     });
+    await flushFilePick();
 
     expect(onImportTemplate).toHaveBeenCalledWith(expect.objectContaining({ name: "template.json" }));
     expect(onImportCsv).toHaveBeenCalledWith(

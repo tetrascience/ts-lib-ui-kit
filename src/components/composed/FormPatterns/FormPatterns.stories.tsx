@@ -1,20 +1,37 @@
-import { useState } from "react";
-import { expect, userEvent, within } from "storybook/test";
+import { useState } from "react"
+import { expect, userEvent, within } from "storybook/test"
 
-import { FormSection } from "./FormSection";
+import { FormSection } from "./FormSection"
 
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from "@storybook/react-vite"
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Field, FieldContent, FieldDescription, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Spinner } from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Spinner } from "@/components/ui/spinner"
+import { Switch } from "@/components/ui/switch"
 
 const meta: Meta<typeof FormSection> = {
-  title: "Design Patterns/FormPatterns",
+  title: "Patterns/FormPatterns",
   component: FormSection,
   parameters: {
     layout: "centered",
@@ -27,11 +44,11 @@ const meta: Meta<typeof FormSection> = {
       </div>
     ),
   ],
-};
+}
 
-export default meta;
+export default meta
 
-type Story = StoryObj<typeof FormSection>;
+type Story = StoryObj<typeof FormSection>
 
 export const SingleSection: Story = {
   args: {
@@ -62,17 +79,17 @@ export const SingleSection: Story = {
     zephyr: { testCaseId: "SW-T5164" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
+    const canvas = within(canvasElement)
 
     await step("Section title renders", async () => {
-      expect(canvas.getByText("Project details")).toBeInTheDocument();
-    });
+      expect(canvas.getByText("Project details")).toBeInTheDocument()
+    })
 
     await step("Fields render", async () => {
-      expect(canvas.getByPlaceholderText("Enter project name")).toBeInTheDocument();
-    });
+      expect(canvas.getByPlaceholderText("Enter project name")).toBeInTheDocument()
+    })
   },
-};
+}
 
 export const SectionedForm: Story = {
   render: () => (
@@ -180,40 +197,42 @@ export const SectionedForm: Story = {
     zephyr: { testCaseId: "SW-T5165" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
+    const canvas = within(canvasElement)
 
     await step("All three section titles render", async () => {
-      expect(canvas.getByText("Personal info")).toBeInTheDocument();
-      expect(canvas.getByText("Role & Access")).toBeInTheDocument();
-      expect(canvas.getByText("Preferences")).toBeInTheDocument();
-    });
+      expect(canvas.getByText("Personal info")).toBeInTheDocument()
+      expect(canvas.getByText("Role & Access")).toBeInTheDocument()
+      expect(canvas.getByText("Preferences")).toBeInTheDocument()
+    })
 
     await step("Key form fields render", async () => {
-      expect(canvas.getByPlaceholderText("First name")).toBeInTheDocument();
-      expect(canvas.getByPlaceholderText("Email address")).toBeInTheDocument();
-    });
+      expect(canvas.getByPlaceholderText("First name")).toBeInTheDocument()
+      expect(canvas.getByPlaceholderText("Email address")).toBeInTheDocument()
+    })
 
     await step("Submit button renders", async () => {
-      expect(canvas.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
-    });
+      expect(
+        canvas.getByRole("button", { name: "Save changes" })
+      ).toBeInTheDocument()
+    })
   },
-};
+}
 
 export const WithValidation: Story = {
   render: () => {
-    const [submitted, setSubmitted] = useState(false);
-    const [firstName, setFirstName] = useState("");
-    const [email, setEmail] = useState("");
+    const [submitted, setSubmitted] = useState(false)
+    const [firstName, setFirstName] = useState("")
+    const [email, setEmail] = useState("")
 
-    const firstNameError = submitted && !firstName.trim();
-    const emailError = submitted && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const firstNameError = submitted && !firstName.trim()
+    const emailError = submitted && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
     return (
       <form
         className="flex flex-col gap-8"
         onSubmit={(e) => {
-          e.preventDefault();
-          setSubmitted(true);
+          e.preventDefault()
+          setSubmitted(true)
         }}
       >
         <FormSection heading="Personal info">
@@ -228,9 +247,15 @@ export const WithValidation: Story = {
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 aria-invalid={firstNameError || undefined}
-                className={firstNameError ? "border-destructive focus-visible:ring-destructive" : undefined}
+                className={
+                  firstNameError
+                    ? "border-destructive focus-visible:ring-destructive"
+                    : undefined
+                }
               />
-              {firstNameError && <FieldError>First name is required.</FieldError>}
+              {firstNameError && (
+                <FieldError>First name is required.</FieldError>
+              )}
             </FieldContent>
           </Field>
           <Field>
@@ -245,9 +270,15 @@ export const WithValidation: Story = {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 aria-invalid={emailError || undefined}
-                className={emailError ? "border-destructive focus-visible:ring-destructive" : undefined}
+                className={
+                  emailError
+                    ? "border-destructive focus-visible:ring-destructive"
+                    : undefined
+                }
               />
-              {emailError && <FieldError>Enter a valid email address.</FieldError>}
+              {emailError && (
+                <FieldError>Enter a valid email address.</FieldError>
+              )}
             </FieldContent>
           </Field>
         </FormSection>
@@ -255,35 +286,45 @@ export const WithValidation: Story = {
           Save changes
         </Button>
       </form>
-    );
+    )
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5166" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
+    const canvas = within(canvasElement)
 
     await step("No errors shown before submit", async () => {
-      expect(canvas.queryByText("First name is required.")).not.toBeInTheDocument();
-      expect(canvas.queryByText("Enter a valid email address.")).not.toBeInTheDocument();
-    });
+      expect(
+        canvas.queryByText("First name is required.")
+      ).not.toBeInTheDocument()
+      expect(
+        canvas.queryByText("Enter a valid email address.")
+      ).not.toBeInTheDocument()
+    })
 
     await step("Fields are empty and form is ready", async () => {
-      expect(canvas.getByPlaceholderText("First name")).toBeInTheDocument();
-      expect(canvas.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
-    });
+      expect(canvas.getByPlaceholderText("First name")).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: "Save changes" })).toBeInTheDocument()
+    })
   },
-};
+}
 
 const STEPS = [
   { label: "Personal info", id: 1 },
   { label: "Role & Access", id: 2 },
   { label: "Review", id: 3 },
-];
+]
 
-function StepIndicator({ step, current }: { step: (typeof STEPS)[number]; current: number }) {
-  const done = step.id < current;
-  const active = step.id === current;
+function StepIndicator({
+  step,
+  current,
+}: {
+  step: (typeof STEPS)[number]
+  current: number
+}) {
+  const done = step.id < current
+  const active = step.id === current
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -301,21 +342,21 @@ function StepIndicator({ step, current }: { step: (typeof STEPS)[number]; curren
       </div>
       <span className="text-xs text-muted-foreground">{step.label}</span>
     </div>
-  );
+  )
 }
 
 export const MultiStepForm: Story = {
   render: () => {
-    const [step, setStep] = useState(1);
-    const [submitting, setSubmitting] = useState(false);
-    const [done, setDone] = useState(false);
+    const [step, setStep] = useState(1)
+    const [submitting, setSubmitting] = useState(false)
+    const [done, setDone] = useState(false)
 
     function handleSubmit() {
-      setSubmitting(true);
+      setSubmitting(true)
       setTimeout(() => {
-        setSubmitting(false);
-        setDone(true);
-      }, 1000);
+        setSubmitting(false)
+        setDone(true)
+      }, 1000)
     }
 
     if (done) {
@@ -323,20 +364,22 @@ export const MultiStepForm: Story = {
         <div className="w-[520px]">
           <Alert variant="positive">
             <AlertTitle>Profile saved</AlertTitle>
-            <AlertDescription>Your account has been set up successfully.</AlertDescription>
+            <AlertDescription>
+              Your account has been set up successfully.
+            </AlertDescription>
           </Alert>
           <Button
             variant="ghost"
             className="mt-4"
             onClick={() => {
-              setStep(1);
-              setDone(false);
+              setStep(1)
+              setDone(false)
             }}
           >
             Start over
           </Button>
         </div>
-      );
+      )
     }
 
     return (
@@ -345,7 +388,9 @@ export const MultiStepForm: Story = {
           {STEPS.map((s, i) => (
             <div key={s.id} className="flex items-center">
               <StepIndicator step={s} current={step} />
-              {i < STEPS.length - 1 && <div className="mx-2 mt-[-16px] h-px w-12 bg-border" />}
+              {i < STEPS.length - 1 && (
+                <div className="mx-2 mt-[-16px] h-px w-12 bg-border" />
+              )}
             </div>
           ))}
         </div>
@@ -405,7 +450,9 @@ export const MultiStepForm: Story = {
             <Field orientation="horizontal">
               <FieldLabel htmlFor="ms-notifications">
                 <FieldTitle>Email notifications</FieldTitle>
-                <FieldDescription>Receive alerts for pipeline events.</FieldDescription>
+                <FieldDescription>
+                  Receive alerts for pipeline events.
+                </FieldDescription>
               </FieldLabel>
               <FieldContent>
                 <Switch id="ms-notifications" />
@@ -417,12 +464,18 @@ export const MultiStepForm: Story = {
         {step === 3 && (
           <div className="flex flex-col gap-3 rounded-lg border p-4 text-sm">
             <p className="font-semibold">Review your information</p>
-            <p className="text-muted-foreground">Confirm the details above are correct before saving your profile.</p>
+            <p className="text-muted-foreground">
+              Confirm the details above are correct before saving your profile.
+            </p>
           </div>
         )}
 
         <div className="flex justify-between">
-          <Button variant="outline" disabled={step === 1} onClick={() => setStep((s) => s - 1)}>
+          <Button
+            variant="outline"
+            disabled={step === 1}
+            onClick={() => setStep((s) => s - 1)}
+          >
             Back
           </Button>
           {step < STEPS.length ? (
@@ -435,29 +488,29 @@ export const MultiStepForm: Story = {
           )}
         </div>
       </div>
-    );
+    )
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5167" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
+    const canvas = within(canvasElement)
 
     await step("Step 1 renders with step indicator", async () => {
-      expect(canvas.getByText("Step 1 of 3")).toBeInTheDocument();
-      expect(canvas.getByPlaceholderText("First name")).toBeInTheDocument();
-    });
+      expect(canvas.getByText("Step 1 of 3")).toBeInTheDocument()
+      expect(canvas.getByPlaceholderText("First name")).toBeInTheDocument()
+    })
 
     await step("Clicking Next advances to step 2", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Next" }));
-      expect(canvas.getByText("Step 2 of 3")).toBeInTheDocument();
-      expect(canvas.getByRole("combobox")).toBeInTheDocument();
-      expect(canvas.getAllByText("Role & Access").length).toBeGreaterThan(0);
-    });
+      await userEvent.click(canvas.getByRole("button", { name: "Next" }))
+      expect(canvas.getByText("Step 2 of 3")).toBeInTheDocument()
+      expect(canvas.getByRole("combobox")).toBeInTheDocument()
+      expect(canvas.getAllByText("Role & Access").length).toBeGreaterThan(0)
+    })
 
     await step("Clicking Back returns to step 1", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Back" }));
-      expect(canvas.getByText("Step 1 of 3")).toBeInTheDocument();
-    });
+      await userEvent.click(canvas.getByRole("button", { name: "Back" }))
+      expect(canvas.getByText("Step 1 of 3")).toBeInTheDocument()
+    })
   },
-};
+}

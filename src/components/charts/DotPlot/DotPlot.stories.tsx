@@ -7,7 +7,7 @@ import { DotPlot, type MarkerSymbol } from "./DotPlot";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof DotPlot> = {
-  title: "Charts/DotPlot",
+  title: "Charts/Dot Plot",
   component: DotPlot,
   parameters: {
     layout: "centered",

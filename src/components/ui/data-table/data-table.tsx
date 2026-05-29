@@ -1152,5 +1152,6 @@ function TableToolbar({
   )
 }
 
-export { DataTable, TableToolbar, useDataTable }
+
+export { DataTable, TableToolbar, useDataTable, applyFilterCondition }
 export type { DataTableProps, FilterCondition, FilterOperator, FilterColumnConfig, GroupColumnConfig }

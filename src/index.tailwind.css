@@ -129,8 +129,8 @@
   --card-foreground: oklch(0.2330 0.0698 265.03); /* #0D1B3E */
   --popover: oklch(1 0 0); /* #FFFFFF */
   --popover-foreground: oklch(0.2330 0.0698 265.03); /* #0D1B3E */
-  /* Primary — TetraScience blue #4285F4 */
-  --primary: oklch(0.6304 0.1800 259.96); /* #4285F4 */
+  /* Primary — TetraScience Blue 500 #2F45B5 */
+  --primary: oklch(0.4465 0.1784 269.19); /* #2F45B5 */
   --primary-foreground: oklch(1 0 0); /* #FFFFFF */
   /* Secondary — light indigo tint container */
   --secondary: oklch(0.9619 0.0179 272.31); /* #EEF2FF */
@@ -145,14 +145,14 @@
   --tertiary: oklch(0.4784 0.0817 205.03); /* #006A73 */
   --tertiary-foreground: oklch(1 0 0); /* #FFFFFF */
   /* Semantic status colors */
-  --info: oklch(0.6304 0.1800 259.96); /* #4285F4 */
-  --destructive: oklch(0.5060 0.1927 27.70); /* #BA1A1A */
-  --positive: oklch(0.4810 0.1238 153.01); /* #00713A */
-  --warning: oklch(0.5154 0.1202 60.55); /* #985400 */
+  --info: oklch(0.4465 0.1784 269.19); /* #2F45B5 */
+  --destructive: oklch(0.6383 0.1725 22.52); /* #E15759 */
+  --positive: oklch(0.6204 0.1424 152.38); /* #2E9E5A */
+  --warning: oklch(0.7676 0.1635 60.41); /* #FD972F */
   /* Borders — DEL cool gray */
   --border: oklch(0.9288 0.0126 255.51); /* #E2E8F0 */
   --input: oklch(0.9288 0.0126 255.51); /* #E2E8F0 */
-  --ring: oklch(0.6304 0.1800 259.96); /* #4285F4 */
+  --ring: oklch(0.4465 0.1784 269.19); /* #2F45B5 */
   /* Charts — Primary tonal palette */
   --chart-1: oklch(0.8296 0.0847 273.37); /* #B5C4FF — tone 80 */
   --chart-2: oklch(0.6746 0.1379 272.92); /* #7B8FEB — tone 60 */
@@ -165,7 +165,7 @@
   --sidebar-primary: oklch(0.6304 0.1800 259.96); /* #4285F4 */
   --sidebar-primary-foreground: oklch(1 0 0); /* #FFFFFF */
   --sidebar-accent: oklch(0.9619 0.0179 272.31); /* #EEF2FF */
-  --sidebar-accent-foreground: oklch(0.6304 0.1800 259.96); /* #4285F4 */
+  --sidebar-accent-foreground: oklch(0.4465 0.1784 269.19); /* #2F45B5 */
   --sidebar-border: oklch(0.9288 0.0126 255.51); /* #E2E8F0 */
   --sidebar-ring: oklch(0.7827 0.0298 268.30); /* #B0B8CC */
 

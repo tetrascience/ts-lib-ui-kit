@@ -121,6 +121,9 @@ export const FullMenu: Story = {
       await waitFor(() => expect(args.onClearTemplate).toHaveBeenCalled());
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5262" },
+  },
 };
 
 /**
@@ -182,6 +185,9 @@ export const FileImportFlow: Story = {
       expect((csvInput as HTMLInputElement).value).toBe("");
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5263" },
+  },
 };
 
 /**
@@ -213,6 +219,9 @@ export const HiddenInputCancel: Story = {
       csvInput?.dispatchEvent(new Event("change", { bubbles: true }));
       expect(args.onImportCsv).not.toHaveBeenCalled();
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5264" },
   },
 };
 
@@ -247,6 +256,9 @@ export const DisabledExports: Story = {
       await closeMenu();
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5265" },
+  },
 };
 
 /**
@@ -276,6 +288,9 @@ export const TemplatesOnly: Story = {
       );
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5266" },
+  },
 };
 
 /**
@@ -288,5 +303,8 @@ export const EmptyReturnsNull: Story = {
       expect(canvasElement.querySelector("button")).toBeNull();
       expect(canvasElement.querySelector('input[type="file"]')).toBeNull();
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5267" },
   },
 };

@@ -518,7 +518,7 @@ export const Default: Story = {
   name: "Default (96-well)",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5206" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -547,7 +547,7 @@ export const Default384: Story = {
   name: "Default (384-well)",
   render: () => <PlateMapEditorDefault format="384" />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5207" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -567,7 +567,7 @@ export const DragAndDrop: Story = {
   name: "Drag-and-drop palette",
   render: () => <PlateMapEditorDragDrop />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5208" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -594,7 +594,7 @@ export const FormApplyAndClear: Story = {
   name: "Form apply + clear",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5268" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -637,7 +637,7 @@ export const Filtering: Story = {
   name: "Manifest filtering",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5269" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -673,7 +673,7 @@ export const FilteringIsEmpty: Story = {
   name: "Manifest filter — operator switch",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5270" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -715,7 +715,7 @@ export const GroupingAndPaging: Story = {
   name: "Grouping + page size",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5271" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -765,7 +765,7 @@ export const ZoomControls: Story = {
   name: "Plate zoom buttons",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5272" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -818,7 +818,7 @@ export const LegendStates: Story = {
     );
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5273" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -892,7 +892,7 @@ export const RichForm: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5274" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -946,7 +946,7 @@ export const MultiPlateTabs: Story = {
   name: "Tabs: add + remove plates",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5275" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -984,7 +984,7 @@ export const ZoomReadoutHidden: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5276" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -1115,7 +1115,7 @@ export const ManifestEditableCells: Story = {
   name: "Manifest editable cells (multiselect, switch, number)",
   render: () => <RichManifestEditableHarness />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5277" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -1191,7 +1191,7 @@ export const ManifestReadonlyCells: Story = {
   name: "Manifest readonly cells (badges, switches, dashes)",
   render: () => <RichManifestReadonlyHarness />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5278" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -1465,7 +1465,7 @@ export const RectShapeAndGroups: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5279" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -1503,7 +1503,7 @@ export const GridDragSelection: Story = {
   name: "Grid drag selection: replace / shift-add / alt-remove / double-click",
   render: () => <PlateMapEditorRectNoPlates />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5280" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -1605,7 +1605,7 @@ export const HighlightedWells: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5281" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -1635,7 +1635,7 @@ export const GroupsAndHoverFields: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5282" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -1671,7 +1671,7 @@ export const CsvImportSwapsPlates: Story = {
   name: "CSV import switches the active plate",
   render: () => <PlateMapEditorImportCsv />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5283" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -1715,7 +1715,7 @@ export const ManifestFillDownAndKeyboardGroup: Story = {
   name: "Manifest fill-down button + group keyboard toggle",
   render: () => <RichManifestEditableHarness />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5284" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -1792,7 +1792,7 @@ export const FormCustomAndIntegerKinds: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5285" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);

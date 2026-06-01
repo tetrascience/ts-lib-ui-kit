@@ -71,6 +71,9 @@ export const Default: Story = {
       expect(body.getByText("Notifications")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5209" },
+  },
 }
 
 export const WithAnchor: Story = {
@@ -110,5 +113,8 @@ export const WithAnchor: Story = {
       await userEvent.click(canvas.getByRole("button", { name: "Open from anchor" }))
       expect(body.getByText("Anchored content")).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5300" },
   },
 }

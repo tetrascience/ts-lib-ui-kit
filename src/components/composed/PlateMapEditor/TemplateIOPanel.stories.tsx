@@ -30,7 +30,7 @@ type Story = StoryObj<typeof TemplateIOPanel>;
  */
 export const FullPanel: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5293" },
   },
   args: {
     templates: DEMO_TEMPLATES,
@@ -107,7 +107,7 @@ export const FullPanel: Story = {
  */
 export const NoEntries: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5294" },
   },
   args: {
     templates: DEMO_TEMPLATES,
@@ -147,7 +147,7 @@ export const NoEntries: Story = {
  */
 export const CsvOnly: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5295" },
   },
   args: {
     hasEntries: true,
@@ -183,7 +183,7 @@ export const CsvOnly: Story = {
  */
 export const TemplateOnly: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5296" },
   },
   args: {
     hasEntries: true,
@@ -216,7 +216,7 @@ export const TemplateOnly: Story = {
  */
 export const TemplatesWithoutClear: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5297" },
   },
   args: {
     templates: DEMO_TEMPLATES,
@@ -247,7 +247,7 @@ export const TemplatesWithoutClear: Story = {
  */
 export const EmptyPanel: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5298" },
   },
   args: {},
   render: (args) => (
@@ -274,7 +274,7 @@ export const EmptyPanel: Story = {
  */
 export const FilePickCancelled: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5299" },
   },
   args: {
     hasEntries: true,

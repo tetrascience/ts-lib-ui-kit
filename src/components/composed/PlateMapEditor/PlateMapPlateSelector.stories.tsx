@@ -69,7 +69,7 @@ export const DropdownDefault: Story = {
   name: "Dropdown: select a plate",
   render: () => <StatefulSelector initialPlates={BASE_PLATES} variant="dropdown" />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5286" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -119,7 +119,7 @@ export const DropdownEmpty: Story = {
   name: "Dropdown: empty state add",
   render: () => <StatefulSelector initialPlates={[]} variant="dropdown" />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5287" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -143,7 +143,7 @@ export const DropdownEmptyDisabled: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5288" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -159,7 +159,7 @@ export const TabsAddAndRemove: Story = {
   name: "Tabs: add + remove + select",
   render: () => <StatefulSelector initialPlates={BASE_PLATES} variant="tabs" />,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5289" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -204,7 +204,7 @@ export const TabsSinglePlateNoRemove: Story = {
     />
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5290" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -224,7 +224,7 @@ export const TabsReadOnly: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5291" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -249,7 +249,7 @@ export const DropdownNoAddNoChange: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5292" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);

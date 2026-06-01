@@ -13,7 +13,7 @@ import {
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof ContextMenuItem> = {
-  title: "Components/ContextMenu",
+  title: "Components/Context Menu",
   component: ContextMenuItem,
   parameters: {
     layout: "centered",

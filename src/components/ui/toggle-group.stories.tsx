@@ -6,7 +6,7 @@ import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof ToggleGroup> = {
-  title: "Components/ToggleGroup",
+  title: "Components/Toggle Group",
   component: ToggleGroup,
   parameters: {
     layout: "centered",

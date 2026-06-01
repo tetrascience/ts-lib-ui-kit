@@ -570,12 +570,7 @@ function IntroductionPage() {
                 <Sparkles className="size-4.5 text-tertiary" />
               </div>
               <div>
-                <p className="font-medium">
-                  AI Elements{" "}
-                  <Badge variant="secondary" className="ml-1 text-[10px]">
-                    Coming Soon
-                  </Badge>
-                </p>
+                <p className="font-medium">AI Elements</p>
                 <p className="text-sm text-muted-foreground">
                   Conversational UI, assistant modals, and AI-powered components
                   for scientific workflows.

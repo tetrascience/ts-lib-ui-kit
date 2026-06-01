@@ -6,7 +6,7 @@ import { AreaGraph } from "./AreaGraph";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof AreaGraph> = {
-  title: "Charts/AreaGraph",
+  title: "Charts/Area Graph",
   component: AreaGraph,
   parameters: {
     layout: "centered",

@@ -51,6 +51,7 @@ jobs:
         with:
           commit_message: 'chore: add Zephyr test case IDs to stories'
           file_pattern: 'src/**/*.stories.tsx'
+          disable_globbing: true
 
       - name: Remove zephyr_sync label
         if: github.event_name == 'pull_request'

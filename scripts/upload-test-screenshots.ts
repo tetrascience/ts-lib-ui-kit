@@ -73,11 +73,13 @@ function getRepoName(): string {
   return GITHUB_REPOSITORY.split("/").pop() || "unknown";
 }
 
+const CLOUDFRONT_DOMAIN = "d3kr1q5iwe1zqc.cloudfront.net";
+
 /**
- * Build S3 URL (direct URL, no presigning - bucket should have appropriate policy)
+ * Build artifact URL via CloudFront distribution in front of the S3 bucket.
  */
-function buildS3Url(s3Key: string): string {
-  return `https://${S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${s3Key}`;
+function buildArtifactUrl(s3Key: string): string {
+  return `https://${CLOUDFRONT_DOMAIN}/${s3Key}`;
 }
 
 /**
@@ -113,7 +115,7 @@ async function uploadScreenshotForZephyrId(screenshotPath: string, zephyrId: str
   return {
     zephyrId,
     s3Key,
-    url: buildS3Url(s3Key),
+    url: buildArtifactUrl(s3Key),
   };
 }
 

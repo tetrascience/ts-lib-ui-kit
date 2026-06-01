@@ -10,8 +10,11 @@ import { Badge } from "../badge"
 
 import { DataTable, TableToolbar, useDataTable } from "./data-table"
 import { DataTableColumnToggle } from "./data-table-column-toggle"
+import { DataTableFilter } from "./data-table-filter"
+import { DataTableGroup } from "./data-table-group"
 import { DataTablePagination } from "./data-table-pagination"
 
+import type { FilterCondition } from "./data-table"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import type { ColumnDef } from "@tanstack/react-table"
 
@@ -862,10 +865,11 @@ function FullColumnManagementStory({ dataset }: { dataset: DatasetKey }) {
       enableColumnVisibility
       enableColumnReorder
       enablePagination
+      enableFiltering
       defaultPageSize={5}
     >
       <TableToolbar>
-        <div className="flex-1" />
+        <DataTableFilter />
         <DataTableColumnToggle />
       </TableToolbar>
       <DataTablePagination pageSizeOptions={[5, 10, 25]} />
@@ -982,6 +986,83 @@ function ControlledStateStory({ dataset }: { dataset: DatasetKey }) {
   )
 }
 
+// ---------------------------------------------------------------------------
+// SizedColumnsWithLongContent
+// ---------------------------------------------------------------------------
+
+const longContentData: Row[] = [
+  {
+    id: "3f8a2b1c-d4e5-6f7a-8b9c-0d1e2f3a4b5c",
+    name: "Compound Analysis Pipeline Run",
+    path: "/tetrascience/pipelines/compound-analysis/2025-05-06/run-001/output/results-normalized.json",
+    status: "Active",
+  },
+  {
+    id: "a9b8c7d6-e5f4-3a2b-1c0d-ef1234567890",
+    name: "QC Dashboard Automated Run",
+    path: "/tetrascience/pipelines/qc-dashboard/2025-04-30/run-042/intermediate/preprocessed-compounds.parquet",
+    status: "Paused",
+  },
+  {
+    id: "f1e2d3c4-b5a6-9780-dcba-fedcba987654",
+    name: "Proteomics ETL Workflow",
+    path: "/tetrascience/data-lake/proteomics/raw-uploads/2025-03-15T14:22:08Z/MS-data-batch-20250315.mzML",
+    status: "Archived",
+  },
+]
+
+const sizedColumns: ColumnDef<Row>[] = [
+  { accessorKey: "id", header: "ID", size: 100 },
+  { accessorKey: "name", header: "Name", size: 180 },
+  { accessorKey: "path", header: "File Path", size: 260 },
+  {
+    accessorKey: "status",
+    header: "Status",
+    size: 100,
+    meta: { truncate: false },
+    cell: ({ row }) => {
+      const value = String(row.getValue("status"))
+      return <Badge variant={statusVariant[value] ?? "secondary"}>{value}</Badge>
+    },
+  },
+]
+
+export const SizedColumnsWithLongContent: Story = {
+  render: () => (
+    <DataTable columns={sizedColumns} data={longContentData} />
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders with fixed layout class", async () => {
+      const table = canvas.getByRole("table")
+      expect(table).toHaveClass("table-fixed")
+    })
+
+    await step("All data rows render", async () => {
+      const rows = canvas.getAllByRole("row")
+      expect(rows.length).toBe(longContentData.length + 1)
+    })
+
+    await step("Data cells have truncate class (default truncate=true)", async () => {
+      const truncatedCells = canvasElement.querySelectorAll("[data-slot='table-cell'].truncate")
+      expect(truncatedCells.length).toBeGreaterThan(0)
+    })
+
+    await step("Status column Badge renders without being clipped (meta.truncate: false)", async () => {
+      const badges = canvasElement.querySelectorAll("[data-slot='badge']")
+      expect(badges.length).toBe(longContentData.length)
+      // The status cells must NOT have the truncate class
+      const statusCells = [...canvasElement.querySelectorAll("[data-slot='table-cell']")]
+        .filter((el) => el.querySelector("[data-slot='badge']"))
+      expect(statusCells.every((el) => !el.classList.contains("truncate"))).toBe(true)
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4713" },
+  },
+}
+
 export const ControlledState: Story = {
   render: (args) => <ControlledStateStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />,
   play: async ({ canvasElement, step }) => {
@@ -995,5 +1076,496 @@ export const ControlledState: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1447" },
+  },
+}
+
+// ===========================================================================
+// Advanced filtering stories
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// AdvancedFiltering
+// ---------------------------------------------------------------------------
+
+export const AdvancedFiltering: Story = {
+  render: (args) => {
+    const { data, columns } = getDataset(args as Record<string, unknown>)
+    return (
+      <DataTable columns={columns} data={data} enableFiltering enableSorting>
+        <TableToolbar>
+          <DataTableColumnToggle />
+          <DataTableFilter />
+        </TableToolbar>
+      </DataTable>
+    )
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Opening the filter panel and adding a filter row", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /filter/i }))
+      await userEvent.click(body.getByRole("button", { name: /add filter/i }))
+      expect(body.getByPlaceholderText(/value/i)).toBeInTheDocument()
+    })
+
+    await step("Typing a value filters rows", async () => {
+      await userEvent.type(body.getByPlaceholderText(/value/i), "Active")
+      const rows = canvas.getAllByRole("row")
+      // Header row + at least one data row matching "Active"
+      expect(rows.length).toBeGreaterThan(1)
+    })
+
+    await step("Clear all removes the filter and restores all rows", async () => {
+      await userEvent.click(body.getByRole("button", { name: /clear all/i }))
+      const rows = canvas.getAllByRole("row")
+      // All original data rows should be back (header + 5 workspace rows)
+      expect(rows.length).toBeGreaterThan(3)
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4714" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// MultiConditionFiltering — AND logic across two columns
+// ---------------------------------------------------------------------------
+
+export const MultiConditionFiltering: Story = {
+  render: () => (
+    <DataTable columns={workspaceColumns} data={workspaceData} enableFiltering>
+      <TableToolbar>
+        <DataTableFilter />
+      </TableToolbar>
+    </DataTable>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Open filter panel and add first condition: Status equals Active", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /filter/i }))
+      await userEvent.click(body.getByRole("button", { name: /add filter/i }))
+      // Switch column from default (Name) to Status
+      const comboboxes = body.getAllByRole("combobox")
+      await userEvent.click(comboboxes[0])
+      await userEvent.click(await body.findByRole("option", { name: /^status$/i }))
+      // Switch operator to equals
+      const updatedComboboxes = body.getAllByRole("combobox")
+      await userEvent.click(updatedComboboxes[1])
+      await userEvent.click(await body.findByRole("option", { name: /^equals$/i }))
+      await userEvent.type(body.getByPlaceholderText(/value/i), "Active")
+    })
+
+    await step("Add second condition: Owner contains Data Ops", async () => {
+      await userEvent.click(body.getByRole("button", { name: /add filter/i }))
+      // The new row's column combobox is the 3rd combobox (col1, op1, col2, op2)
+      const comboboxes = body.getAllByRole("combobox")
+      await userEvent.click(comboboxes[2])
+      await userEvent.click(await body.findByRole("option", { name: /^owner$/i }))
+      const inputs = body.getAllByPlaceholderText(/value/i)
+      await userEvent.type(inputs[1], "Data Ops")
+    })
+
+    await step("AND logic: only rows matching both conditions appear", async () => {
+      const rows = canvas.getAllByRole("row")
+      // Clinical exports: Status=Active AND Owner=Data Ops — only 1 match
+      expect(rows.length).toBe(2) // header + 1 data row
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4715" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// FilteringWithConfig — restrict columns and operators via filterConfig
+// ---------------------------------------------------------------------------
+
+export const FilteringWithConfig: Story = {
+  render: () => (
+    <DataTable
+      columns={workspaceColumns}
+      data={workspaceData}
+      enableFiltering
+      filterConfig={[
+        { columnId: "status", label: "Status", operators: ["equals", "not_equals", "is_empty", "is_not_empty"] },
+        { columnId: "owner",  label: "Owner",  operators: ["contains", "equals"] },
+      ]}
+    >
+      <TableToolbar>
+        <DataTableFilter />
+      </TableToolbar>
+    </DataTable>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Only configured columns appear in the column selector", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /filter/i }))
+      await userEvent.click(body.getByRole("button", { name: /add filter/i }))
+      // The first combobox is the column selector
+      const triggers = body.getAllByRole("combobox")
+      expect(triggers.length).toBeGreaterThan(0)
+
+      await userEvent.click(triggers[0])
+
+      const listbox = await within(document.body).findByRole("listbox")
+      const options = within(listbox).getAllByRole("option")
+      const optionLabels = options.map((option) => option.textContent?.trim()).filter(Boolean)
+
+      expect(optionLabels).toEqual(["Status", "Owner"])
+      expect(within(listbox).queryByRole("option", { name: "Status" })).toBeInTheDocument()
+      expect(within(listbox).queryByRole("option", { name: "Owner" })).toBeInTheDocument()
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4716" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// ControlledFiltering — external filter state
+// ---------------------------------------------------------------------------
+
+function ControlledFilteringStory() {
+  const [filters, setFilters] = React.useState<FilterCondition[]>([])
+
+  return (
+    <div className="space-y-4">
+      <DataTable
+        columns={workspaceColumns}
+        data={workspaceData}
+        enableFiltering
+        filters={filters}
+        onFiltersChange={setFilters}
+      >
+        <TableToolbar>
+          <DataTableFilter />
+        </TableToolbar>
+      </DataTable>
+      <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+        <p className="text-xs font-medium text-muted-foreground">Live state from controlled prop <code>filters</code>:</p>
+        <SyntaxHighlighter
+          language="json"
+          style={document.documentElement.classList.contains("dark") ? oneDark : oneLight}
+          customStyle={{ margin: 0, borderRadius: "0.5rem", fontSize: "0.75rem" }}
+        >
+          {JSON.stringify(filters, null, 2)}
+        </SyntaxHighlighter>
+      </div>
+    </div>
+  )
+}
+
+export const ControlledFiltering: Story = {
+  render: () => <ControlledFilteringStory />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Table renders in controlled mode", async () => {
+      expect(canvas.getByRole("table")).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: /filter/i })).toBeInTheDocument()
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4717" },
+  },
+}
+
+// ===========================================================================
+// Grouping stories
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// Grouping — basic group-by-column flow
+// ---------------------------------------------------------------------------
+
+export const Grouping: Story = {
+  render: () => (
+    <DataTable
+      columns={workspaceColumns}
+      data={workspaceData}
+      enableGrouping
+      enableSorting
+    >
+      <TableToolbar>
+        <DataTableGroup />
+      </TableToolbar>
+    </DataTable>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Open the group panel and select a column", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /group/i }))
+      const trigger = await body.findByRole("combobox")
+      await userEvent.click(trigger)
+      await userEvent.click(await body.findByRole("option", { name: /^status$/i }))
+    })
+
+    await step("Group header rows appear for each unique value", async () => {
+      const headers = canvasElement.querySelectorAll(
+        "[data-slot='data-table-group-header']",
+      )
+      // Workspaces have 3 statuses: Active, Paused, Archived
+      expect(headers.length).toBe(3)
+    })
+
+    await step("Collapsing a group hides its data rows", async () => {
+      const headers = canvasElement.querySelectorAll(
+        "[data-slot='data-table-group-header']",
+      )
+      const firstHeaderButton = headers[0].querySelector("button")
+      expect(firstHeaderButton).not.toBeNull()
+      const rowsBefore = canvas.getAllByRole("row").length
+      await userEvent.click(firstHeaderButton as HTMLElement)
+      const rowsAfter = canvas.getAllByRole("row").length
+      expect(rowsAfter).toBeLessThan(rowsBefore)
+    })
+
+    await step("Clearing grouping restores flat rows", async () => {
+      // Reopen the popover and pick None
+      await userEvent.click(canvas.getByRole("button", { name: /grouped by/i }))
+      const trigger = await body.findByRole("combobox")
+      await userEvent.click(trigger)
+      await userEvent.click(await body.findByRole("option", { name: /^none$/i }))
+      // Group headers should be gone
+      expect(
+        canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length,
+      ).toBe(0)
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5192" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// GroupHeaderAccessibility — full-row click target + keyboard toggle
+// ---------------------------------------------------------------------------
+
+export const GroupHeaderAccessibility: Story = {
+  render: () => (
+    <DataTable
+      columns={workspaceColumns}
+      data={workspaceData}
+      enableGrouping
+      grouping="status"
+    >
+      <TableToolbar>
+        <DataTableGroup />
+      </TableToolbar>
+    </DataTable>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Group header button fills the entire row cell", async () => {
+      const headerCell = canvasElement.querySelector<HTMLElement>(
+        "[data-slot='data-table-group-header'] td",
+      )
+      const headerBtn = canvasElement.querySelector<HTMLButtonElement>(
+        "[data-slot='data-table-group-header'] button",
+      )
+      expect(headerCell).not.toBeNull()
+      expect(headerBtn).not.toBeNull()
+      const cellRect = (headerCell as HTMLElement).getBoundingClientRect()
+      const btnRect = (headerBtn as HTMLButtonElement).getBoundingClientRect()
+      // Button should cover the cell within a 2px tolerance for sub-pixel rendering
+      expect(Math.abs(btnRect.width - cellRect.width)).toBeLessThanOrEqual(2)
+      expect(Math.abs(btnRect.height - cellRect.height)).toBeLessThanOrEqual(2)
+    })
+
+    await step(
+      "Clicking near the far right edge of the row still toggles the group",
+      async () => {
+        const headerCell = canvasElement.querySelector<HTMLElement>(
+          "[data-slot='data-table-group-header'] td",
+        )!
+        const rect = headerCell.getBoundingClientRect()
+        const x = Math.round(rect.right - 8)
+        const y = Math.round(rect.top + rect.height / 2)
+        const target = canvasElement.ownerDocument.elementFromPoint(x, y)
+        expect(target).not.toBeNull()
+        expect(target!.closest("[data-slot='data-table-group-header'] button")).not.toBeNull()
+        const rowsBefore = canvas.getAllByRole("row").length
+        await userEvent.click(target as HTMLElement)
+        const rowsAfter = canvas.getAllByRole("row").length
+        expect(rowsAfter).toBeLessThan(rowsBefore)
+      },
+    )
+
+    await step("Enter key re-expands the focused group", async () => {
+      const headerBtn = canvasElement.querySelector<HTMLButtonElement>(
+        "[data-slot='data-table-group-header'] button",
+      )!
+      headerBtn.focus()
+      expect(canvasElement.ownerDocument.activeElement).toBe(headerBtn)
+      expect(headerBtn.getAttribute("aria-expanded")).toBe("false")
+      const rowsBefore = canvas.getAllByRole("row").length
+      await userEvent.keyboard("{Enter}")
+      const rowsAfter = canvas.getAllByRole("row").length
+      expect(rowsAfter).toBeGreaterThan(rowsBefore)
+      expect(headerBtn.getAttribute("aria-expanded")).toBe("true")
+    })
+
+    await step("Space key collapses the focused group", async () => {
+      const headerBtn = canvasElement.querySelector<HTMLButtonElement>(
+        "[data-slot='data-table-group-header'] button",
+      )!
+      headerBtn.focus()
+      const rowsBefore = canvas.getAllByRole("row").length
+      await userEvent.keyboard(" ")
+      const rowsAfter = canvas.getAllByRole("row").length
+      expect(rowsAfter).toBeLessThan(rowsBefore)
+      expect(headerBtn.getAttribute("aria-expanded")).toBe("false")
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5193" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// GroupingWithConfig — restrict groupable columns via groupConfig
+// ---------------------------------------------------------------------------
+
+export const GroupingWithConfig: Story = {
+  render: () => (
+    <DataTable
+      columns={workspaceColumns}
+      data={workspaceData}
+      enableGrouping
+      groupConfig={[
+        { columnId: "status", label: "Status" },
+        { columnId: "owner", label: "Owner" },
+      ]}
+    >
+      <TableToolbar>
+        <DataTableGroup />
+      </TableToolbar>
+    </DataTable>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Only configured columns appear in the group selector", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /group/i }))
+      const trigger = await body.findByRole("combobox")
+      await userEvent.click(trigger)
+      const listbox = await body.findByRole("listbox")
+      const options = within(listbox).getAllByRole("option")
+      const optionLabels = options.map((o) => o.textContent?.trim()).filter(Boolean)
+      // None + Status + Owner only
+      expect(optionLabels).toEqual(["None", "Status", "Owner"])
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5194" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// ControlledGrouping — external grouping state
+// ---------------------------------------------------------------------------
+
+function ControlledGroupingStory() {
+  const [grouping, setGrouping] = React.useState<string | null>("owner")
+
+  return (
+    <div className="space-y-4">
+      <DataTable
+        columns={workspaceColumns}
+        data={workspaceData}
+        enableGrouping
+        grouping={grouping}
+        onGroupingChange={setGrouping}
+      >
+        <TableToolbar>
+          <DataTableGroup />
+        </TableToolbar>
+      </DataTable>
+      <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+        <p className="text-xs font-medium text-muted-foreground">
+          Live state from controlled prop <code>grouping</code>:
+        </p>
+        <SyntaxHighlighter
+          language="json"
+          style={
+            document.documentElement.classList.contains("dark") ? oneDark : oneLight
+          }
+          customStyle={{ margin: 0, borderRadius: "0.5rem", fontSize: "0.75rem" }}
+        >
+          {JSON.stringify({ grouping }, null, 2)}
+        </SyntaxHighlighter>
+      </div>
+    </div>
+  )
+}
+
+export const ControlledGrouping: Story = {
+  render: () => <ControlledGroupingStory />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Initial controlled grouping is reflected in the trigger button", async () => {
+      expect(
+        canvas.getByRole("button", { name: /grouped by owner/i }),
+      ).toBeInTheDocument()
+      // 4 unique owners in workspaceData
+      expect(
+        canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length,
+      ).toBe(4)
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5195" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// GroupingWithFilter — grouping combined with the existing filter UI
+// ---------------------------------------------------------------------------
+
+export const GroupingWithFilter: Story = {
+  args: { dataset: "Compounds" },
+  render: (args) => {
+    const { data, columns } = getDataset(args as Record<string, unknown>)
+    return (
+      <DataTable
+        columns={columns}
+        data={data}
+        enableGrouping
+        enableFiltering
+        enableSorting
+      >
+        <TableToolbar>
+          <DataTableFilter />
+          <DataTableGroup />
+        </TableToolbar>
+      </DataTable>
+    )
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Group by category", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /group by/i }))
+      const trigger = await body.findByRole("combobox")
+      await userEvent.click(trigger)
+      await userEvent.click(await body.findByRole("option", { name: /^category$/i }))
+      expect(
+        canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length,
+      ).toBeGreaterThan(0)
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5196" },
   },
 }

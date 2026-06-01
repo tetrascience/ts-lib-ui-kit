@@ -40,13 +40,13 @@ export const alias = {
   "@": path.resolve(__dirname, "./src"),
 };
 
-const external: (string | RegExp)[] = [
-  "react",
-  "react/jsx-runtime",
-  "react-dom",
+const externalNames = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
 ];
+
+const external = (id: string) =>
+  externalNames.some((name) => id === name || id.startsWith(`${name}/`));
 
 const SCREENSHOT_DIR = path.resolve(process.cwd(), "test-results/screenshots");
 const storybookZephyrMapping = generateZephyrMapping();

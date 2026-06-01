@@ -1,153 +1,141 @@
-# Registry — Shareable Components & Data‑App Templates
+# Registry — Design Patterns & Data‑App Examples
 
-> **Status:** Phase 1 implemented (buildable + publishable registry). Phases 2–3 are proposed.
+> **Status:** Phase 1 implemented (buildable + publishable patterns registry, one example block). More example blocks are proposed in the roadmap.
 
-This document describes how `@tetrascience-npm/tetrascience-react-ui` distributes
-its components as a [shadcn registry](https://ui.shadcn.com/docs/registry), so
-that **data‑app builders can pull pre‑coded examples into their apps, tweak them,
-and own the source** — distinct from the locked, versioned npm package.
+This document describes the **patterns registry**: a [shadcn registry](https://ui.shadcn.com/docs/registry) that lets data‑app builders pull **pre‑coded examples** into their app, tweak them, and own the source.
+
+It is deliberately **separate from the component library itself**. The base UI — every primitive, composed component, and chart — is distributed through the **npm package** (`@tetrascience-npm/tetrascience-react-ui`) and is **not** published to the registry. The registry only ships _examples that compose those npm components_.
 
 ---
 
-## 1. Why a registry (the two consumption modes)
+## 1. The boundary: npm vs the registry
 
-The npm package is the right tool when a team wants components they **upgrade**,
-not edit: import `Button`, get our `Button`, get our fixes on `yarn upgrade`.
+| | npm package | patterns registry |
+| --- | --- | --- |
+| Contains | All components: `ui/`, `composed/`, `charts/`, `ai/`, utils | Only example pages / patterns |
+| Install | `yarn add @tetrascience-npm/tetrascience-react-ui` | `npx shadcn add <url>` |
+| Ownership | Library owns it; you upgrade via the package | You own the copied example source |
+| Imports | `import { Button } from "@tetrascience-npm/tetrascience-react-ui"` | The example imports components **from the npm package** |
 
-But a lot of what we want to share with data‑app builders is the opposite: a
-starting point they are **expected to fork** — a dashboard layout, a TDP search +
-chart wiring, a settings page. For that, copying the source into their repo is
-the right model, and that is exactly what a shadcn registry does.
+**Why keep base UI out of the registry?** The components are a versioned, supported
+artifact — consumers should get fixes and improvements via `yarn upgrade`, not by
+copying a frozen snapshot into their repo. Examples are the opposite: a starting
+point you are _expected_ to fork. So an example **imports** the components from the
+package and only the example glue (layout, sample data, wiring) is copied.
 
-|           | npm package                      | shadcn registry                                 |
-| --------- | -------------------------------- | ----------------------------------------------- |
-| Install   | `yarn add …`                     | `npx shadcn add <url>`                          |
-| Ownership | Library owns the code            | Consumer owns the copied source                 |
-| Upgrades  | `yarn upgrade`                   | Manual re‑add / diff                            |
-| Best for  | Stable primitives, design tokens | Templates & examples meant to be tweaked        |
-| Imports   | `import { Button } from "…"`     | Source copied under the consumer's `@/` aliases |
+```tsx
+// What a registry example looks like — it depends on the package, it does not copy it.
+import { DataAppShell, StatCard, LineGraph } from "@tetrascience-npm/tetrascience-react-ui";
+```
 
-The two modes are complementary and ship from the **same source tree** — no
-duplicated component code.
+This means a copied example "just works" against the installed package, and the
+components inside it keep getting updates from npm.
 
 ---
 
 ## 2. How it works
 
-shadcn registries are just **static JSON files served over HTTP**. Each item
-(`button.json`, `tdp-link.json`, …) inlines its source files plus its npm and
-intra‑registry dependencies. The consumer runs `npx shadcn add <url>`, and the
-CLI writes the source into their project, rewriting our `@/` aliases to theirs
-and installing any npm dependencies.
+shadcn registries are **static JSON files served over HTTP**. Each item inlines its
+source files and declares its dependencies. The consumer runs `npx shadcn add <url>`
+and the CLI writes the example source into their project and installs the listed
+npm dependencies (including `@tetrascience-npm/tetrascience-react-ui` itself).
 
 ```
-registry.json                     # manifest: every item, its files & deps
+registry.json                     # manifest: example items, their files & npm deps
    │  yarn registry:build  (= shadcn build --output .storybook/public/r)
    ▼
-.storybook/public/r/*.json        # one built file per item (generated, gitignored)
+.storybook/public/r/*.json        # one built file per example (generated, gitignored)
    │  storybook build  (staticDirs: ["./public"])  →  Vercel deploy
    ▼
 https://ts-lib-ui-kit-storybook.vercel.app/r/<name>.json
    │  npx shadcn add <url>
    ▼
-consumer app: src/components/ui/button.tsx  (theirs to edit)
+consumer app: components/DataExplorerPage.tsx  (theirs to edit; imports the npm pkg)
 ```
 
-### Hosting decision
+### Where example source lives
 
-The built registry is **co‑hosted with the Storybook site** on Vercel. Because
-Storybook serves `staticDirs: ["./public"]`, anything written to
-`.storybook/public/r/` is published at `<storybook-url>/r/`. This means:
+Example source lives in the top‑level **`registry/`** directory — intentionally
+**outside `src/`**, so it is excluded from the npm library build (`vite.config.ts`)
+and the library's `tsconfig` (`include: ["src"]`). Examples are shipped _by the
+registry_, never bundled into the npm package.
 
-- **No new infrastructure** — every Storybook deploy publishes the current registry.
-- **Discoverability** — the component you're looking at in Storybook and its
-  `npx shadcn add` command live at the same origin.
+### Hosting
 
-`yarn build-storybook` runs `yarn registry:build` first (see `package.json`), so
-the registry is always rebuilt from `registry.json` on deploy. The generated
-`.storybook/public/r/` directory is gitignored — `registry.json` is the source
-of truth.
+The built registry is **co‑hosted with the Storybook site** on Vercel. Storybook
+serves `staticDirs: ["./public"]`, so anything written to `.storybook/public/r/`
+is published at `<storybook-url>/r/`. `yarn build-storybook` runs `yarn registry:build`
+first, so every Storybook deploy republishes the registry. The generated
+`.storybook/public/r/` directory is gitignored — `registry.json` is the source of truth.
 
 ---
 
-## 3. Authoring an item
+## 3. Authoring an example
 
-Components are written normally in `src/` using `@/` import aliases (which the
-codebase already does everywhere). To publish one, add an entry to
-`registry.json`:
+1. Add source under `registry/examples/<name>/`. Import every component **from
+   `@tetrascience-npm/tetrascience-react-ui`** (never via `@/` aliases — that would
+   make shadcn copy a primitive instead of importing the package).
+2. Register it in `registry.json`:
 
 ```jsonc
 {
-  "name": "stat-card",
-  "type": "registry:component", // ui | component | block | lib | hook
-  "title": "Stat Card",
-  "description": "A KPI card with trend indicator.",
-  "dependencies": ["lucide-react"], // npm packages
-  "registryDependencies": ["card"], // other items in THIS registry
-  "files": [{ "path": "src/components/composed/StatCard/StatCard.tsx", "type": "registry:component" }],
+  "name": "data-explorer",
+  "type": "registry:block",
+  "title": "Data Explorer",
+  "description": "…",
+  // The package is a normal npm dependency of the example.
+  "dependencies": ["@tetrascience-npm/tetrascience-react-ui", "lucide-react"],
+  // No registryDependencies — we do NOT pull copies of base UI.
+  "files": [
+    { "path": "registry/examples/data-explorer/DataExplorerPage.tsx", "type": "registry:component" },
+    { "path": "registry/examples/data-explorer/useSampleData.ts", "type": "registry:lib" }
+  ]
 }
 ```
 
-Then `yarn registry:build` regenerates the served JSON. Keep `dependencies` and
-`registryDependencies` accurate — they drive what the consumer's CLI installs.
+3. `yarn registry:build` regenerates the served JSON. Keep `dependencies` accurate
+   and `registryDependencies` empty (examples depend on the **package**, not on other
+   registry items).
 
-### Item types we use
-
-| Type                 | Meaning                            | Lands in consumer at          |
-| -------------------- | ---------------------------------- | ----------------------------- |
-| `registry:ui`        | A primitive                        | `components/ui/`              |
-| `registry:component` | A composition of primitives        | `components/`                 |
-| `registry:block`     | A full multi‑file template/example | `components/` (+ pages/hooks) |
-| `registry:lib`       | A utility module                   | `lib/`                        |
-| `registry:hook`      | A React hook                       | `hooks/`                      |
+> Note: `registry/` is linted (`yarn lint`) but not type‑checked by the library's
+> `tsconfig` (which only includes `src`). Author examples against the real component
+> APIs; a future improvement could add a dedicated tsconfig that aliases the package
+> name to `src` so examples type‑check in‑repo.
 
 ---
 
-## 4. Current catalog (Phase 1)
+## 4. Current catalog
 
-All ~50 `ui/` primitives are published, plus `tdp-link` (a composed component +
-its `tdp-url` lib). Run `yarn registry:build` and inspect `.storybook/public/r/`,
-or browse them at `https://ts-lib-ui-kit-storybook.vercel.app/r/<name>.json`.
+| Item | Type | What it shows |
+| --- | --- | --- |
+| `data-explorer` | `registry:block` | An end‑to‑end data‑app page: `DataAppShell` nav + `StatCard` KPIs + `LineGraph` trend + results `Table`, backed by a swappable `useSampleData` hook. |
 
-> Phase 1 also removed three stale `registry.json` entries that pointed at files
-> which never existed (`chart`, `dashboard`, `settings-page`) and corrected the
-> `tdp-link` paths (the source lives in `composed/`, not `ui/`), so the build is
-> green.
+```bash
+npx shadcn@latest add https://ts-lib-ui-kit-storybook.vercel.app/r/data-explorer.json
+```
 
 ---
 
-## 5. Roadmap
+## 5. Roadmap — more example blocks
 
-### Phase 2 — Promote the real templates
+The headline deliverable is a small, curated set of opinionated, end‑to‑end
+starters — each composing npm components into a real data‑app pattern:
 
-The "pre‑coded examples data‑app builders want to own" already exist in the
-tree but aren't in the registry yet. Promote them as registry items:
+- **`tdp-search-app`** — `DataAppShell` + `TdpSearch` + results table; the canonical
+  "find data in TDP and act on it" flow.
+- **`ai-assistant`** — the `Chat` / `ai/*` components wired into a working assistant pane.
+- **`instrument-dashboard`** — a KPI + multi‑chart dashboard (`StatCard`, `BarGraph`,
+  `Heatmap`).
+- **`plate-map-workbench`** — `PlateMapEditor` in an editing workflow.
 
-- **Composed components** — `DataAppShell`, `StatCard`, `EmptyState`,
-  `ConfirmDialog`, `RichListItem`, `TdpSearch`, `FormPatterns`, `ToastPatterns`,
-  `Chat`, `PlateMapEditor`.
-- **Charts** — the 12 Plotly visualizations (`LineGraph`, `ScatterGraph`,
-  `Heatmap`, `Chromatogram`, `PlateMap`, …), each carrying its Plotly deps and
-  the `use-plotly-theme` hook (`registry:hook`) + `colors` util (`registry:lib`)
-  as dependencies.
-- **`registry:block` data‑app templates** — the headline deliverable. A small
-  number of opinionated, end‑to‑end starters that wire the above together, e.g.:
-  - **`tdp-data-explorer`** — `DataAppShell` + `TdpSearch` + a results `Table` +
-    a `LineGraph`, backed by a sample data hook. The canonical "tweak and own"
-    data app.
-  - **`dashboard`** / **`settings-page`** — re‑introduce as _real_ blocks
-    (the now‑removed stubs were aspirational).
+Each lands as a `registry:block` under `registry/examples/`, importing components
+from the npm package.
 
-  Source the blocks from the (currently empty) `examples/vite-themed-app/` so the
-  template doubles as a runnable example and a registry item.
+### Discoverability (Phase 3)
 
-### Phase 3 — Discoverability
-
-- Add a "Copy registry command" snippet to each component's Storybook docs page
-  (the install URL and the Storybook page share an origin).
-- A short Storybook "Using the registry" docs page mirroring §1–2 here.
-- Consider a `registry:style` item bundling our design tokens (`index.css`) so a
-  consumer can `npx shadcn add tetrascience-theme` to adopt the look wholesale.
+- A "Copy this example" snippet on the matching Storybook docs page (same origin as
+  the registry URL).
+- A short Storybook "Using the patterns registry" page mirroring §1–2.
 
 ---
 
@@ -159,5 +147,6 @@ yarn storybook           # browse components; registry served at /r/*.json
 yarn build-storybook     # registry:build + storybook build (what Vercel runs)
 ```
 
-To test the consumer experience end‑to‑end, point `shadcn add` at a locally
-served file (e.g. run `yarn storybook` and add from `http://localhost:6006/r/<name>.json`).
+To test the consumer experience, point `shadcn add` at a locally served file (run
+`yarn storybook`, then `npx shadcn add http://localhost:6006/r/data-explorer.json`
+in a scratch app).

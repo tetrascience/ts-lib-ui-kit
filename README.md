@@ -61,28 +61,27 @@ function App() {
 }
 ```
 
-## Copy Components Into Your App (shadcn registry)
+## Starter Examples (patterns registry)
 
-There are two ways to consume this library:
-
-| Mode | How | When |
-| --- | --- | --- |
-| **npm package** (above) | `yarn add @tetrascience-npm/tetrascience-react-ui` | You want versioned, locked components you upgrade via the package. |
-| **shadcn registry** | `npx shadcn add <url>` | You're a **data‑app builder** who wants the source dropped into your app to **tweak and own**. |
-
-The registry publishes each component as a [shadcn registry item](https://ui.shadcn.com/docs/registry). It is served alongside the Storybook site:
+The components above are the building blocks. To get a **running data‑app page**
+to start from, use the patterns registry — a [shadcn registry](https://ui.shadcn.com/docs/registry)
+of pre‑coded **examples** you copy into your app and own:
 
 ```bash
-# Add a single primitive — source is copied into your app under your own aliases
-npx shadcn@latest add https://ts-lib-ui-kit-storybook.vercel.app/r/button.json
-
-# Add a composition (pulls its registry dependencies automatically)
-npx shadcn@latest add https://ts-lib-ui-kit-storybook.vercel.app/r/tdp-link.json
+npx shadcn@latest add https://ts-lib-ui-kit-storybook.vercel.app/r/data-explorer.json
 ```
 
-Your project needs a `components.json` (run `npx shadcn@latest init` once). The CLI rewrites the library's `@/` import aliases to match your project, so the copied source is yours to edit.
+This drops an example (e.g. a `DataAppShell` + `StatCard` + `LineGraph` + `Table`
+page with a swappable sample‑data hook) into your project. The example **imports the
+components from this npm package** — so you own and edit the example glue, while the
+components keep getting updates via `yarn upgrade`.
 
-> See [REGISTRY.md](./REGISTRY.md) for the registry architecture, the full item catalog, and the roadmap for shareable data‑app **template blocks**.
+The registry contains **only examples** — the base UI is intentionally not copyable;
+it ships through npm so you get fixes and improvements through the package. Your
+project needs a `components.json` (run `npx shadcn@latest init` once).
+
+> See [REGISTRY.md](./REGISTRY.md) for the npm‑vs‑registry boundary, the example
+> catalog, and how to author new example blocks.
 
 ## Styling & CSS
 

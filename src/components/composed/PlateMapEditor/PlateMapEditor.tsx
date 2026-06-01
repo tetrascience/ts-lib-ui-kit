@@ -409,7 +409,8 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
     const next = new Map(scopedValues);
     selection.forEach((wellId) => {
       const existing = next.get(wellId);
-      const merged = stampActivePlateBarcode(merge(existing, staged, wellId));
+      const base = existing ?? emptyEntry(wellId);
+      const merged = stampActivePlateBarcode(merge(base, staged, wellId));
       next.set(wellId, merged);
     });
     commitScopedValues(next);

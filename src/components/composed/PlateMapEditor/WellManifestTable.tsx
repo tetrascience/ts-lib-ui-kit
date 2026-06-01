@@ -281,7 +281,12 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
     if (!col.field) return null;
 
     const selectionActive = !!selection && selection.size > 0;
-    const sourceRows = selectionActive ? rows.filter(({ id }) => selection.has(id)) : pagedRows;
+    const groupingActive = groupable && !!groupByField;
+    const sourceRows = selectionActive
+      ? rows.filter(({ id }) => selection.has(id))
+      : groupingActive
+        ? rows
+        : pagedRows;
     const sourceIndex = sourceRows.findIndex(({ row }) => hasFillValue(row[col.field!]));
     if (sourceIndex < 0) return null;
 
@@ -643,7 +648,19 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
                   const isCollapsed = collapsedGroups.has(group.key);
                   return (
                     <React.Fragment key={group.key}>
-                      <TableRow className="cursor-pointer bg-muted/40" onClick={() => toggleGroup(group.key)}>
+                      <TableRow
+                        className="cursor-pointer bg-muted/40"
+                        onClick={() => toggleGroup(group.key)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            toggleGroup(group.key);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={!isCollapsed}
+                      >
                         <TableCell colSpan={totalColSpan} className="py-1.5">
                           <div className="flex items-center gap-2 text-xs font-medium">
                             {isCollapsed ? (

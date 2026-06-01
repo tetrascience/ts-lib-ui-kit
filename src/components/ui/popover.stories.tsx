@@ -1,7 +1,7 @@
 import { expect, userEvent, within } from "storybook/test"
 
 import { Button } from "./button"
-import { Popover, PopoverContent, PopoverTrigger } from "./popover"
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "./popover"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
@@ -69,6 +69,46 @@ export const Default: Story = {
     await step("Click trigger reveals portaled content", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Open settings" }))
       expect(body.getByText("Notifications")).toBeInTheDocument()
+    })
+  },
+}
+
+export const WithAnchor: Story = {
+  render: (args) => (
+    <div className="flex h-[260px] w-[360px] items-center justify-center rounded-xl border bg-background">
+      <Popover>
+        <PopoverAnchor asChild>
+          <div data-testid="popover-anchor" className="rounded-md border px-3 py-2">
+            Anchor element
+          </div>
+        </PopoverAnchor>
+        <PopoverTrigger asChild>
+          <Button variant="outline">Open from anchor</Button>
+        </PopoverTrigger>
+        <PopoverContent {...args}>
+          <div className="grid gap-2">
+            <div className="font-medium">Anchored content</div>
+            <p className="text-sm text-muted-foreground">
+              This popover is positioned relative to the anchor element.
+            </p>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+
+    await step("Anchor element renders with data-slot", async () => {
+      const anchor = canvas.getByTestId("popover-anchor")
+      expect(anchor).toBeInTheDocument()
+      expect(anchor).toHaveAttribute("data-slot", "popover-anchor")
+    })
+
+    await step("Click trigger reveals content anchored to the anchor", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Open from anchor" }))
+      expect(body.getByText("Anchored content")).toBeInTheDocument()
     })
   },
 }

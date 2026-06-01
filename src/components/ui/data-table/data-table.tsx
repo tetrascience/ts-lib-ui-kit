@@ -97,7 +97,7 @@ interface GroupColumnConfig {
   label?: string
 }
 
-function applyFilterCondition(
+export function applyFilterCondition(
   cellValue: string,
   operator: FilterOperator,
   filterValue: string,

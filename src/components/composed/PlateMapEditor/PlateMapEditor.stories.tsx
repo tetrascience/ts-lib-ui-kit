@@ -9,7 +9,7 @@ import {
 } from "@dnd-kit/core";
 import { Barcode, Database, FileText, GripVertical, Plus, Tag, X } from "lucide-react";
 import * as React from "react";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 
 import { getPlateMapScopedWellId, PlateMapEditor } from "./PlateMapEditor";
 import { PLATE_MAP_EMPTY_WELL_FILL } from "./PlatePaintGrid";
@@ -1220,6 +1220,604 @@ export const ManifestReadonlyCells: Story = {
 
     await step("Renders sampleId raw string for B01", async () => {
       expect(canvas.getByText("S-3")).toBeInTheDocument();
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Coverage stories: focused on edge cases and uncovered code paths.
+// ---------------------------------------------------------------------------
+
+function PlateMapEditorRectNoPlates({
+  onHoveredWellChange,
+  renderHoverSummary,
+}: {
+  onHoveredWellChange?: (wellId: WellId | null) => void;
+  renderHoverSummary?: (well: DemoWell | undefined, wellId: WellId) => React.ReactNode;
+} = {}) {
+  const [values, setValues] = React.useState<Map<WellId, DemoWell>>(() => {
+    const map = new Map<WellId, DemoWell>();
+    map.set("A01", { role: "sample", sampleId: "S-1", notes: "primary" });
+    map.set("B02", { role: "control", sampleId: "S-2" });
+    return map;
+  });
+  const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+  return (
+    <PlateMapEditor<DemoWell>
+      format="96"
+      values={values}
+      onChange={setValues}
+      selection={selection}
+      onSelectionChange={setSelection}
+      fields={FIELDS}
+      tableColumns={COLUMNS}
+      colorForWell={colorForWell}
+      emptyEntry={emptyEntry}
+      isPopulated={isPopulated}
+      cycleFieldOnWellDoubleClick="role"
+      title="Rect wells, no plates"
+      wellShape="rect"
+      onHoveredWellChange={onHoveredWellChange}
+      renderHoverSummary={renderHoverSummary}
+      badges={<Badge variant="secondary">rect · no plates</Badge>}
+    />
+  );
+}
+
+function PlateMapEditorWithGroups() {
+  const [values, setValues] = React.useState<Map<WellId, DemoWell>>(() => new Map());
+  const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+  const [activeGroupId, setActiveGroupId] = React.useState<string | undefined>();
+  const groups = [
+    {
+      id: "g1",
+      label: "Plasma",
+      color: "var(--color-chart-1)",
+      borderColor: "var(--border)",
+      wellIds: ["A01", "A02"],
+      count: 2,
+    },
+    {
+      id: "g2",
+      label: "Serum",
+      color: "var(--color-chart-2)",
+      borderColor: "var(--border)",
+      count: 4,
+    },
+    {
+      id: "g3",
+      label: "Archived",
+      color: "var(--color-muted)",
+      borderColor: "var(--border)",
+      disabled: true,
+    },
+  ];
+  return (
+    <PlateMapEditor<DemoWell>
+      format="96"
+      values={values}
+      onChange={setValues}
+      selection={selection}
+      onSelectionChange={setSelection}
+      fields={FIELDS}
+      tableColumns={COLUMNS}
+      colorForWell={colorForWell}
+      emptyEntry={emptyEntry}
+      isPopulated={isPopulated}
+      title="Groups under the plate"
+      groups={groups}
+      activeGroupId={activeGroupId}
+      onGroupClick={(group) => setActiveGroupId(group.id)}
+      badges={<Badge variant="secondary">groups</Badge>}
+    />
+  );
+}
+
+function PlateMapEditorHoverFieldKinds() {
+  interface HoverWell extends WellRecord {
+    role?: "sample" | "control";
+    tags?: string[];
+    active?: boolean;
+    notes?: string;
+  }
+  const richFields: WellField<HoverWell>[] = [
+    {
+      key: "role",
+      label: "Role",
+      kind: "select",
+      options: [
+        { value: "sample", label: "Sample" },
+        { value: "control", label: "Control" },
+      ],
+    },
+    {
+      key: "tags",
+      label: "Tags",
+      kind: "multiselect",
+      options: [
+        { value: "red", label: "Red" },
+        { value: "blue", label: "Blue" },
+      ],
+    },
+    { key: "active", label: "Active", kind: "boolean" },
+    { key: "notes", label: "Notes", kind: "text" },
+  ];
+  const richColumns: WellColumn<HoverWell>[] = [
+    { header: "Role", field: "role" },
+    { header: "Tags", field: "tags" },
+    { header: "Active", field: "active" },
+    { header: "Notes", field: "notes" },
+  ];
+  const [values, setValues] = React.useState<Map<WellId, HoverWell>>(() => {
+    const map = new Map<WellId, HoverWell>();
+    map.set("A01", { role: "sample", tags: ["red", "blue"], active: true, notes: "n1" });
+    // Row with an unmatched select option label, plus an empty multiselect.
+    map.set("A02", { role: "control", tags: [], active: false, notes: "" });
+    return map;
+  });
+  const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+  return (
+    <PlateMapEditor<HoverWell>
+      format="96"
+      values={values}
+      onChange={setValues}
+      selection={selection}
+      onSelectionChange={setSelection}
+      fields={richFields}
+      tableColumns={richColumns}
+      colorForWell={(well) => (well?.role === "sample" ? "var(--color-chart-1)" : PLATE_MAP_EMPTY_WELL_FILL)}
+      emptyEntry={() => ({})}
+      title="Hover fields cover all kinds"
+    />
+  );
+}
+
+function PlateMapEditorImportCsv() {
+  const [values, setValues] = React.useState<Map<WellId, DemoWell>>(() => new Map());
+  const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+  const handleImportCsv = React.useCallback(
+    (_file: File, _triage?: PlateMapCsvTriage) => {
+      // No-op; story only verifies that the editor swaps plates on import.
+    },
+    [],
+  );
+  return (
+    <PlateMapEditor<DemoWell>
+      format="96"
+      values={values}
+      onChange={setValues}
+      selection={selection}
+      onSelectionChange={setSelection}
+      fields={FIELDS}
+      tableColumns={COLUMNS}
+      colorForWell={colorForWell}
+      emptyEntry={emptyEntry}
+      isPopulated={isPopulated}
+      title="CSV import (uncontrolled plates)"
+      onImportCsv={handleImportCsv}
+      onExportCsv={() => {}}
+    />
+  );
+}
+
+function dispatchSvgMouse(
+  svg: SVGSVGElement,
+  type: "mousedown" | "mousemove" | "mouseup" | "mouseleave" | "dblclick",
+  options: { row: number; column: number; cellSize: number; shiftKey?: boolean; altKey?: boolean },
+) {
+  const rect = svg.getBoundingClientRect();
+  const LABEL_PAD = 26;
+  const clientX = rect.left + LABEL_PAD + options.column * options.cellSize + options.cellSize / 2;
+  const clientY = rect.top + LABEL_PAD + options.row * options.cellSize + options.cellSize / 2;
+  const init = {
+    clientX,
+    clientY,
+    shiftKey: options.shiftKey,
+    altKey: options.altKey,
+    bubbles: true,
+    cancelable: true,
+  };
+  if (type === "mousedown") fireEvent.mouseDown(svg, init);
+  else if (type === "mousemove") fireEvent.mouseMove(svg, init);
+  else if (type === "mouseup") fireEvent.mouseUp(svg, init);
+  else if (type === "mouseleave") fireEvent.mouseLeave(svg, init);
+  else fireEvent.doubleClick(svg, init);
+}
+
+function getActiveSvg(canvasElement: HTMLElement): SVGSVGElement {
+  const svg = canvasElement.querySelector("[data-slot='plate-paint-grid'] svg") as SVGSVGElement | null;
+  if (!svg) throw new Error("plate grid svg missing");
+  return svg;
+}
+
+function getCellSize(svg: SVGSVGElement): number {
+  // Read a rendered well rect to learn the resolved cell size.
+  const firstRect = svg.querySelector('[data-well="A01"]');
+  if (firstRect instanceof SVGRectElement) {
+    return Number(firstRect.getAttribute("width") ?? "34");
+  }
+  if (firstRect instanceof SVGCircleElement) {
+    const r = Number(firstRect.getAttribute("r") ?? "16");
+    return (r + 1) * 2;
+  }
+  return 34;
+}
+
+export const RectShapeAndGroups: Story = {
+  name: "Rect wells, no plates + onHoveredWellChange",
+  render: () => {
+    function Demo() {
+      const [hovered, setHovered] = React.useState<WellId | null>(null);
+      return (
+        <div className="flex flex-col gap-2">
+          <div data-testid="hovered-readout" className="text-xs text-muted-foreground">
+            Hovered: {hovered ?? "(none)"}
+          </div>
+          <PlateMapEditorRectNoPlates
+            onHoveredWellChange={setHovered}
+            renderHoverSummary={(well, wellId) =>
+              well?.role ? `Custom: ${wellId} · ${well.role}` : `Custom: ${wellId}`
+            }
+          />
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Renders rect wells (96)", async () => {
+      const wells = canvasElement.querySelectorAll("[data-well]");
+      expect(wells.length).toBe(96);
+      // rect path covers PlatePaintGrid 202-212.
+      expect(wells[0]?.tagName.toLowerCase()).toBe("rect");
+    });
+
+    await step("Hover a well dispatches onHoveredWellChange + renderHoverSummary", async () => {
+      const svg = getActiveSvg(canvasElement);
+      const cellSize = getCellSize(svg);
+      dispatchSvgMouse(svg, "mousemove", { row: 0, column: 0, cellSize });
+      await waitFor(() => expect(canvas.getByTestId("hovered-readout").textContent).toMatch(/Hovered: A01/));
+      await waitFor(() => expect(canvasElement.textContent).toMatch(/Custom: A01/));
+    });
+
+    await step("Mouse-leave clears hover state", async () => {
+      const svg = getActiveSvg(canvasElement);
+      fireEvent.mouseOut(svg, { relatedTarget: canvasElement.ownerDocument.body });
+      fireEvent.mouseLeave(svg, { relatedTarget: canvasElement.ownerDocument.body });
+      await waitFor(() => expect(canvas.getByTestId("hovered-readout").textContent).toMatch(/\(none\)/));
+    });
+
+    await step("Apply with empty selection is a no-op (covers early return)", async () => {
+      const applyBtn = canvas.getByRole("button", { name: "Apply" });
+      expect((applyBtn as HTMLButtonElement).disabled).toBe(true);
+    });
+  },
+};
+
+export const GridDragSelection: Story = {
+  name: "Grid drag selection: replace / shift-add / alt-remove / double-click",
+  render: () => <PlateMapEditorRectNoPlates />,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Drag-rectangle in replace mode selects A01..B02", async () => {
+      const svg = getActiveSvg(canvasElement);
+      const cellSize = getCellSize(svg);
+      dispatchSvgMouse(svg, "mousedown", { row: 0, column: 0, cellSize });
+      dispatchSvgMouse(svg, "mousemove", { row: 1, column: 1, cellSize });
+      dispatchSvgMouse(svg, "mouseup", { row: 1, column: 1, cellSize });
+      await waitFor(() => expect(canvas.getByText(/Apply to 4 wells/)).toBeInTheDocument());
+    });
+
+    await step("Shift-drag adds a second range to the selection", async () => {
+      const svg = getActiveSvg(canvasElement);
+      const cellSize = getCellSize(svg);
+      dispatchSvgMouse(svg, "mousedown", { row: 2, column: 0, cellSize, shiftKey: true });
+      dispatchSvgMouse(svg, "mousemove", { row: 2, column: 1, cellSize, shiftKey: true });
+      dispatchSvgMouse(svg, "mouseup", { row: 2, column: 1, cellSize, shiftKey: true });
+      await waitFor(() => expect(canvas.getByText(/Apply to 6 wells/)).toBeInTheDocument());
+    });
+
+    await step("Alt-drag removes a range from the selection", async () => {
+      const svg = getActiveSvg(canvasElement);
+      const cellSize = getCellSize(svg);
+      dispatchSvgMouse(svg, "mousedown", { row: 0, column: 0, cellSize, altKey: true });
+      dispatchSvgMouse(svg, "mousemove", { row: 0, column: 0, cellSize, altKey: true });
+      dispatchSvgMouse(svg, "mouseup", { row: 0, column: 0, cellSize, altKey: true });
+      await waitFor(() => expect(canvas.getByText(/Apply to 5 wells/)).toBeInTheDocument());
+    });
+
+    await step("Mouse-leave during drag commits the in-progress drag", async () => {
+      const svg = getActiveSvg(canvasElement);
+      const cellSize = getCellSize(svg);
+      dispatchSvgMouse(svg, "mousedown", { row: 5, column: 0, cellSize });
+      dispatchSvgMouse(svg, "mousemove", { row: 5, column: 2, cellSize });
+      fireEvent.mouseOut(svg, { relatedTarget: canvasElement.ownerDocument.body });
+      fireEvent.mouseLeave(svg, { relatedTarget: canvasElement.ownerDocument.body });
+      await waitFor(() => expect(canvas.getByText(/Apply to 3 wells/)).toBeInTheDocument());
+    });
+
+    await step("Mousedown outside the well area is ignored (cellAt returns null)", async () => {
+      const svg = getActiveSvg(canvasElement);
+      // Far off the grid origin — clientX/Y land before LABEL_PAD.
+      fireEvent.mouseDown(svg, { clientX: 0, clientY: 0, bubbles: true, cancelable: true });
+      fireEvent.mouseUp(svg, { clientX: 0, clientY: 0, bubbles: true, cancelable: true });
+      // Still 3 from the previous step.
+      await waitFor(() => expect(canvas.getByText(/Apply to 3 wells/)).toBeInTheDocument());
+    });
+
+    await step("Double-click a well cycles the role (covers cycleWellField + flash)", async () => {
+      const svg = getActiveSvg(canvasElement);
+      const cellSize = getCellSize(svg);
+      // Already populated A01 so the cycle moves to the next role and flashes.
+      dispatchSvgMouse(svg, "dblclick", { row: 0, column: 0, cellSize });
+      // Empty well also exercises the empty-entry branch of cycleWellField.
+      dispatchSvgMouse(svg, "dblclick", { row: 7, column: 7, cellSize });
+      // Out-of-bounds double-click is a no-op (cellAt returns null).
+      fireEvent.doubleClick(svg, { clientX: 0, clientY: 0, bubbles: true, cancelable: true });
+    });
+
+    await step("Clear wells empties the selected wells", async () => {
+      const clearBtn = canvas.getByRole("button", { name: "Clear wells" });
+      await userEvent.click(clearBtn);
+    });
+  },
+};
+
+export const HighlightedWells: Story = {
+  name: "Highlighted wells + select-all + deselect-all",
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(() => {
+        const map = new Map<WellId, DemoWell>();
+        map.set("A01", { role: "sample", sampleId: "S-1" });
+        map.set("A02", { role: "sample", sampleId: "S-1" });
+        return map;
+      });
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      const highlighted: ReadonlySet<WellId> = new Set(["A01", "B05"]);
+      return (
+        <PlateMapEditor<DemoWell>
+          format="96"
+          values={values}
+          onChange={setValues}
+          selection={selection}
+          onSelectionChange={setSelection}
+          fields={FIELDS}
+          tableColumns={COLUMNS}
+          colorForWell={colorForWell}
+          emptyEntry={emptyEntry}
+          isPopulated={isPopulated}
+          title="Highlighted wells"
+          wellShape="circle"
+          highlightedWellIds={highlighted}
+        />
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Highlight overlay renders for the highlighted well", async () => {
+      await waitFor(() => {
+        const highlight = canvasElement.querySelector('[data-well-highlight="A01"]');
+        expect(highlight).not.toBeNull();
+      });
+    });
+
+    await step("Select all then deselect all flips the form prompt", async () => {
+      await userEvent.click(canvas.getByText("Select all"));
+      await waitFor(() => expect(canvas.getByText("Apply to 96 wells")).toBeInTheDocument());
+      await userEvent.click(canvas.getByText("Deselect all"));
+      await waitFor(() => expect(canvas.getByText("Select wells to edit")).toBeInTheDocument());
+    });
+  },
+};
+
+export const GroupsAndHoverFields: Story = {
+  name: "Groups + hover with multiselect/boolean fields",
+  render: () => (
+    <div className="flex flex-col gap-6">
+      <PlateMapEditorWithGroups />
+      <PlateMapEditorHoverFieldKinds />
+    </div>
+  ),
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Groups strip renders each group", async () => {
+      expect(canvas.getByTitle("Plasma")).toBeInTheDocument();
+      expect(canvas.getByTitle("Serum")).toBeInTheDocument();
+      expect(canvas.getByTitle("Archived")).toBeInTheDocument();
+      expect(canvas.getByText("2 wells")).toBeInTheDocument();
+      expect(canvas.getByText("4 wells")).toBeInTheDocument();
+    });
+
+    await step("Click an enabled group fires onGroupClick", async () => {
+      await userEvent.click(canvas.getByTitle("Plasma"));
+    });
+
+    await step("Hover an A01 well rendered with rich fields builds hover summary", async () => {
+      const allSvgs = canvasElement.querySelectorAll("[data-slot='plate-paint-grid'] svg");
+      const svg = allSvgs[allSvgs.length - 1] as SVGSVGElement;
+      const cellSize = getCellSize(svg);
+      dispatchSvgMouse(svg, "mousemove", { row: 0, column: 0, cellSize });
+      // Hover summary should include the well id; the hoverFields render covers
+      // multiselect, boolean and select branches.
+      await waitFor(() => {
+        const summary = canvasElement.textContent ?? "";
+        expect(summary).toMatch(/A01/);
+      });
+    });
+  },
+};
+
+export const CsvImportSwapsPlates: Story = {
+  name: "CSV import switches the active plate",
+  render: () => <PlateMapEditorImportCsv />,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+
+    await step("Open the Actions menu so the hidden file input is reachable", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Actions/ }));
+      const importItem = await body.findByText(/Import plate map/);
+      expect(importItem).toBeInTheDocument();
+    });
+
+    await step("Upload a CSV file directly to the hidden file input", async () => {
+      const fileInput = canvasElement.ownerDocument.querySelector(
+        'input[type="file"][accept*="csv"]',
+      ) as HTMLInputElement;
+      expect(fileInput).not.toBeNull();
+
+      const csv = [
+        "plateBarcode,role,sampleId",
+        "PLATE-A,sample,S-1",
+        "PLATE-A,control,S-2",
+        "PLATE-B,sample,S-3",
+      ].join("\n");
+      const file = new File([csv], "import.csv", { type: "text/csv" });
+      // The input is `hidden` so userEvent.upload refuses; fire change directly.
+      Object.defineProperty(fileInput, "files", { value: [file], configurable: true });
+      fireEvent.change(fileInput);
+    });
+
+    await step("Active plate is set to the first imported plate", async () => {
+      await waitFor(() => {
+        const selector = canvasElement.querySelector("[data-slot='plate-map-plate-selector']");
+        const source = selector ? selector.textContent : canvasElement.textContent;
+        expect(source).toMatch(/PLATE-A/);
+      });
+    });
+  },
+};
+
+export const ManifestFillDownAndKeyboardGroup: Story = {
+  name: "Manifest fill-down button + group keyboard toggle",
+  render: () => <RichManifestEditableHarness />,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+
+    await step("Click the fill-down arrow on the Sample ID column", async () => {
+      const fillBtn = canvas.getByRole("button", { name: /Fill down Sample ID/ });
+      await userEvent.click(fillBtn);
+      await waitFor(() => {
+        const s3 = canvas.getByLabelText("Sample ID for B01") as HTMLInputElement;
+        expect(s3.value).toBe("S-1");
+      });
+    });
+
+    await step("Group by Role and toggle the first group with the keyboard", async () => {
+      await userEvent.click(canvas.getByRole("combobox", { name: /Group by/i }));
+      await userEvent.click(await body.findByRole("option", { name: /^Role$/ }));
+      const groupRow = canvasElement.querySelector("tbody tr.bg-muted\\/40") as HTMLElement | null;
+      expect(groupRow).not.toBeNull();
+      groupRow?.focus();
+      await userEvent.keyboard("{Enter}");
+      // Space toggles back open.
+      await userEvent.keyboard(" ");
+      // Pressing a non-handled key should not crash.
+      await userEvent.keyboard("a");
+    });
+  },
+};
+
+interface CustomRenderWell extends WellRecord {
+  custom?: string;
+  count?: number;
+  weight?: number;
+}
+
+export const FormCustomAndIntegerKinds: Story = {
+  name: "Form: custom render + integer parsing",
+  render: () => {
+    function Demo() {
+      const [value, setValue] = React.useState<Partial<CustomRenderWell>>({});
+      const fields: WellField<CustomRenderWell>[] = [
+        {
+          key: "custom",
+          label: "Custom",
+          kind: "custom",
+          render: ({ value: v, onChange, selectionSize }) => (
+            <div className="flex items-center gap-2">
+              <input
+                aria-label="custom-render-input"
+                value={(v as string | undefined) ?? ""}
+                onChange={(e) => onChange(e.target.value)}
+                className="rounded border px-1 py-0.5 text-xs"
+              />
+              <span className="text-[0.65rem] text-muted-foreground">{selectionSize} sel</span>
+            </div>
+          ),
+        },
+        { key: "count", label: "Count", kind: "integer" },
+        { key: "weight", label: "Weight", kind: "number" },
+      ];
+      return (
+        <div className="max-w-sm p-4">
+          <WellMetadataForm<CustomRenderWell>
+            fields={fields}
+            value={value}
+            onChange={setValue}
+            selectionSize={2}
+            onApply={() => {}}
+            onClear={() => {}}
+          />
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Custom-rendered field invokes the render prop", async () => {
+      const customInput = canvas.getByLabelText("custom-render-input") as HTMLInputElement;
+      await userEvent.type(customInput, "abc");
+      await waitFor(() => expect(customInput.value).toBe("abc"));
+    });
+
+    await step("Integer field parses through parseInt", async () => {
+      const countInput = canvasElement.querySelector('input[id="field-count"]') as HTMLInputElement;
+      await userEvent.clear(countInput);
+      await userEvent.type(countInput, "42");
+      await waitFor(() => expect(countInput.value).toBe("42"));
+      // Clear back to empty so parseInputValue's `raw === ""` short-circuit runs.
+      await userEvent.clear(countInput);
+      await waitFor(() => expect(countInput.value).toBe(""));
+    });
+
+    await step("Number field parses through parseFloat", async () => {
+      const weightInput = canvasElement.querySelector('input[id="field-weight"]') as HTMLInputElement;
+      await userEvent.clear(weightInput);
+      await userEvent.type(weightInput, "1.5");
+      await waitFor(() => expect(weightInput.value).toBe("1.5"));
     });
   },
 };

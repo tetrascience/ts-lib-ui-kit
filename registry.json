@@ -76,12 +76,6 @@
       "files": [{ "path": "src/components/ui/carousel.tsx", "type": "registry:ui" }]
     },
     {
-      "name": "chart",
-      "type": "registry:ui",
-      "dependencies": ["recharts"],
-      "files": [{ "path": "src/components/ui/chart.tsx", "type": "registry:ui" }]
-    },
-    {
       "name": "checkbox",
       "type": "registry:ui",
       "dependencies": ["lucide-react"],
@@ -280,10 +274,9 @@
     {
       "name": "tdp-link",
       "type": "registry:ui",
-      "dependencies": ["styled-components"],
       "files": [
-        { "path": "src/components/ui/tdp-link.tsx", "type": "registry:ui" },
-        { "path": "src/components/ui/tdp-url.ts", "type": "registry:lib" }
+        { "path": "src/components/composed/tdp-link.tsx", "type": "registry:ui" },
+        { "path": "src/components/composed/tdp-url.ts", "type": "registry:lib" }
       ]
     },
     {
@@ -308,23 +301,6 @@
       "name": "tooltip",
       "type": "registry:ui",
       "files": [{ "path": "src/components/ui/tooltip.tsx", "type": "registry:ui" }]
-    },
-    {
-      "name": "dashboard",
-      "type": "registry:component",
-      "title": "Dashboard",
-      "description": "A full dashboard layout with sidebar navigation, stats cards, and data table.",
-      "dependencies": ["lucide-react"],
-      "registryDependencies": ["badge", "card", "separator", "sidebar", "table"],
-      "files": [{ "path": "src/components/ui/dashboard.tsx", "type": "registry:component" }]
-    },
-    {
-      "name": "settings-page",
-      "type": "registry:component",
-      "title": "Settings Page",
-      "description": "A profile settings page with avatar, form fields, and card layout.",
-      "registryDependencies": ["avatar", "button", "card", "field", "input", "select", "separator", "textarea"],
-      "files": [{ "path": "src/components/ui/settings-page.tsx", "type": "registry:component" }]
     }
   ]
 }

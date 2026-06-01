@@ -23,6 +23,9 @@ test-results
 storybook-static
 debug-storybook.log
 
+# Generated shadcn registry output (built into Storybook static dir on deploy)
+.storybook/public/r
+
 # Dependency directory
 node_modules
 

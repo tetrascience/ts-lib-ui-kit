@@ -61,6 +61,29 @@ function App() {
 }
 ```
 
+## Copy Components Into Your App (shadcn registry)
+
+There are two ways to consume this library:
+
+| Mode | How | When |
+| --- | --- | --- |
+| **npm package** (above) | `yarn add @tetrascience-npm/tetrascience-react-ui` | You want versioned, locked components you upgrade via the package. |
+| **shadcn registry** | `npx shadcn add <url>` | You're a **data‑app builder** who wants the source dropped into your app to **tweak and own**. |
+
+The registry publishes each component as a [shadcn registry item](https://ui.shadcn.com/docs/registry). It is served alongside the Storybook site:
+
+```bash
+# Add a single primitive — source is copied into your app under your own aliases
+npx shadcn@latest add https://ts-lib-ui-kit-storybook.vercel.app/r/button.json
+
+# Add a composition (pulls its registry dependencies automatically)
+npx shadcn@latest add https://ts-lib-ui-kit-storybook.vercel.app/r/tdp-link.json
+```
+
+Your project needs a `components.json` (run `npx shadcn@latest init` once). The CLI rewrites the library's `@/` import aliases to match your project, so the copied source is yours to edit.
+
+> See [REGISTRY.md](./REGISTRY.md) for the registry architecture, the full item catalog, and the roadmap for shareable data‑app **template blocks**.
+
 ## Styling & CSS
 
 This library uses **Tailwind CSS 4** with design tokens defined as CSS custom properties (oklch color space). All CSS files are declared as [`sideEffects`](https://webpack.js.org/guides/tree-shaking/#mark-the-file-as-side-effect-free) in `package.json`, so bundlers will preserve them while still tree-shaking unused JavaScript.

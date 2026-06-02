@@ -3,11 +3,12 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+import { ProcessFlow } from "./ProcessFlow";
+
+import type { ProcessFlowStep } from "./ProcessFlow.utils";
+
 // Suppress "not configured to support act(...)" warnings in jsdom
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
-
-import { ProcessFlow } from "./ProcessFlow";
-import type { ProcessFlowStep } from "./ProcessFlow.utils";
 
 let container: HTMLDivElement;
 let root: ReturnType<typeof createRoot>;

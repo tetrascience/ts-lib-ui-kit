@@ -504,7 +504,7 @@ function PlateMapEditorDragDrop() {
 }
 
 const meta: Meta<typeof PlateMapEditor<DemoWell>> = {
-  title: "Patterns/PlateMapEditor",
+  title: "Design Patterns/PlateMapEditor",
   component: PlateMapEditor,
   parameters: { layout: "padded" },
   tags: ["autodocs"],

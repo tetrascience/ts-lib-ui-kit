@@ -11,7 +11,7 @@ import {
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof DropdownMenuItem> = {
-  title: "Components/DropdownMenu",
+  title: "Components/Dropdown Menu",
   component: DropdownMenuItem,
   parameters: {
     layout: "centered",

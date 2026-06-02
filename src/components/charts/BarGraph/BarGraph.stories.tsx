@@ -7,7 +7,7 @@ import type { BarDataSeries } from "./BarGraph";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof BarGraph> = {
-  title: "Charts/BarGraph",
+  title: "Charts/Bar Graph",
   component: BarGraph,
   parameters: {
     layout: "centered",

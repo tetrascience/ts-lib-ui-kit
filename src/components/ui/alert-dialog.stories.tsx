@@ -15,7 +15,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta<typeof AlertDialogContent> = {
-  title: "Components/AlertDialog",
+  title: "Components/Alert Dialog",
   component: AlertDialogContent,
   parameters: {
     layout: "centered",

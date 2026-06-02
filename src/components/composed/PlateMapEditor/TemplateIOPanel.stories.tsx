@@ -14,7 +14,7 @@ const DEMO_TEMPLATES: TemplateOption[] = [
 ];
 
 const meta: Meta<typeof TemplateIOPanel> = {
-  title: "Patterns/PlateMapEditor/TemplateIOPanel",
+  title: "Design Patterns/PlateMapEditor/TemplateIOPanel",
   component: TemplateIOPanel,
   parameters: { layout: "padded" },
   tags: ["autodocs"],

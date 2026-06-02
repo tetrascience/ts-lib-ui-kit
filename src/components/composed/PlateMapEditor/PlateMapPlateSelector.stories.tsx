@@ -56,7 +56,7 @@ function StatefulSelector({
 }
 
 const meta: Meta<typeof PlateMapPlateSelector> = {
-  title: "Patterns/PlateMapEditor/PlateMapPlateSelector",
+  title: "Design Patterns/PlateMapEditor/PlateMapPlateSelector",
   component: PlateMapPlateSelector,
   parameters: { layout: "padded" },
 };

@@ -129,8 +129,8 @@
   --card-foreground: var(--surface-foreground);
   --popover: var(--surface-bright);
   --popover-foreground: var(--surface-foreground);
-  /* Primary — TetraScience blue #4285F4 */
-  --primary: oklch(0.6304 0.1800 259.96); /* #4285F4 */
+  /* Primary — TetraScience Blue 500 #2F45B5 */
+  --primary: oklch(0.4465 0.1784 269.19); /* #2F45B5 */
   --primary-foreground: var(--on-primary);
   /* Secondary — light indigo tint container */
   --secondary: oklch(0.9619 0.0179 272.31);
@@ -144,11 +144,11 @@
   /* Tertiary — teal (Material Design 3 tertiary role) */
   --tertiary: oklch(0.4784 0.0817 205.03); /* #006A73 */
   --tertiary-foreground: oklch(1 0 0); /* #FFFFFF */
-  /* Semantic status colors */    
-  --info: oklch(0.6304 0.1800 259.96); /* #4285F4 */
-  --destructive: oklch(0.5060 0.1927 27.70); /* #BA1A1A */
-  --positive: oklch(0.4810 0.1238 153.01); /* #00713A */
-  --warning: oklch(0.5154 0.1202 60.55); /* #985400 */
+  /* Semantic status colors */
+  --info: oklch(0.4465 0.1784 269.19); /* #2F45B5 */
+  --destructive: oklch(0.6383 0.1725 22.52); /* #E15759 */
+  --positive: oklch(0.6204 0.1424 152.38); /* #2E9E5A */
+  --warning: oklch(0.7676 0.1635 60.41); /* #FD972F */
   /* Borders — DEL cool gray */
   --border: var(--surface-dim); /* #E2E8F0 */
   --input: var(--outline); /* #E2E8F0 */
@@ -172,7 +172,7 @@
   /* MD3 Surface variants — DEL palette */
   --surface: oklch(0.9864 0.0042 236.5); 
   --surface-foreground: oklch(0.2330 0.0698 265.03); /* #0D1B3E */
-  --surface-tint: oklch(0.6304 0.1800 259.96); /* #4285F4 — primary */
+  --surface-tint: oklch(0.4465 0.1784 269.19); /* #2F45B5 — primary */
   --surface-dim: oklch(0.9288 0.0126 255.51); /* #E2E8F0 */
   --surface-bright: oklch(1 0 0); /* #FFFFFF */
   --surface-container: oklch(0.9665 0.0045 258.32);

@@ -361,6 +361,11 @@ export const UploadWorkflow: Story = {
     selectedStepId: "validate-inputs",
     onStepSelect: fn(),
   },
+  parameters: {
+    zephyr: {
+      testCaseId: "",
+    },
+  },
   render: (args) => <EditableUploadWorkflow {...args} />,
   play: async ({ args, canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -404,6 +409,11 @@ export const ReviewNeedsAttention: Story = {
   args: {
     steps: reviewSteps,
   },
+  parameters: {
+    zephyr: {
+      testCaseId: "",
+    },
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
@@ -416,6 +426,11 @@ export const ReviewNeedsAttention: Story = {
 };
 
 export const DynamicState: Story = {
+  parameters: {
+    zephyr: {
+      testCaseId: "",
+    },
+  },
   render: () => <DynamicProcessFlow />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -438,6 +453,11 @@ export const VerticalWorkflow: Story = {
     selectedStepId: "validate-inputs",
     orientation: "vertical",
   },
+  parameters: {
+    zephyr: {
+      testCaseId: "",
+    },
+  },
   render: (args) => <EditableUploadWorkflow {...args} />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -453,6 +473,9 @@ export const VerticalWorkflow: Story = {
 export const EightStepWorkflow: Story = {
   parameters: {
     layout: "fullscreen",
+    zephyr: {
+      testCaseId: "",
+    },
   },
   args: {
     steps: longWorkflowSteps,
@@ -484,6 +507,9 @@ export const EightStepWorkflow: Story = {
 export const ResponsiveLongWorkflow: Story = {
   parameters: {
     layout: "fullscreen",
+    zephyr: {
+      testCaseId: "",
+    },
   },
   render: () => (
     <div className="flex min-h-64 items-center justify-center p-4">
@@ -515,6 +541,9 @@ export const ResponsiveLongWorkflow: Story = {
 export const SqueezedLongWorkflow: Story = {
   parameters: {
     layout: "fullscreen",
+    zephyr: {
+      testCaseId: "",
+    },
   },
   render: () => (
     <div className="flex min-h-64 items-center justify-center p-4">
@@ -545,6 +574,9 @@ export const SqueezedLongWorkflow: Story = {
 export const MiniLongWorkflow: Story = {
   parameters: {
     layout: "fullscreen",
+    zephyr: {
+      testCaseId: "",
+    },
   },
   render: () => (
     <div className="flex min-h-64 items-center justify-center p-4">
@@ -579,6 +611,11 @@ export const SingleStep: Story = {
     steps: [{ id: "only", label: "Process", description: "Only step", status: "active" }],
     selectedStepId: "only",
   },
+  parameters: {
+    zephyr: {
+      testCaseId: "",
+    },
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
@@ -594,6 +631,11 @@ export const SingleStepVertical: Story = {
   args: {
     steps: [{ id: "only", label: "Process", description: "Only step", status: "active" }],
     orientation: "vertical",
+  },
+  parameters: {
+    zephyr: {
+      testCaseId: "",
+    },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -614,6 +656,11 @@ export const CompactVertical: Story = {
     size: "compact",
     onStepSelect: fn(),
   },
+  parameters: {
+    zephyr: {
+      testCaseId: "",
+    },
+  },
   play: async ({ canvasElement, step }) => {
     await step("Compact vertical renders with correct marker-size CSS variable", async () => {
       expect(canvasElement.querySelector("[data-orientation='vertical']")).toBeInTheDocument();
@@ -628,6 +675,11 @@ export const DescriptionsAlwaysVisible: Story = {
     steps: uploadSteps,
     selectedStepId: "validate-inputs",
     showDescriptions: true,
+  },
+  parameters: {
+    zephyr: {
+      testCaseId: "",
+    },
   },
   play: async ({ canvasElement, step }) => {
     await step("All descriptions are shown when showDescriptions is true", async () => {
@@ -648,6 +700,11 @@ export const VerticalWithErrorAndPendingConnections: Story = {
       { id: "d", label: "Publish", status: "active" },
     ],
     orientation: "vertical",
+  },
+  parameters: {
+    zephyr: {
+      testCaseId: "",
+    },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -671,6 +728,11 @@ export const NonSelectableStep: Story = {
       { id: "c", label: "Step C", status: "pending" },
     ],
     onStepSelect: fn(),
+  },
+  parameters: {
+    zephyr: {
+      testCaseId: "",
+    },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);

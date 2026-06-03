@@ -363,7 +363,7 @@ export const UploadWorkflow: Story = {
   },
   parameters: {
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5313",
     },
   },
   render: (args) => <EditableUploadWorkflow {...args} />,
@@ -411,7 +411,7 @@ export const ReviewNeedsAttention: Story = {
   },
   parameters: {
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5314",
     },
   },
   play: async ({ canvasElement, step }) => {
@@ -428,7 +428,7 @@ export const ReviewNeedsAttention: Story = {
 export const DynamicState: Story = {
   parameters: {
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5315",
     },
   },
   render: () => <DynamicProcessFlow />,
@@ -455,7 +455,7 @@ export const VerticalWorkflow: Story = {
   },
   parameters: {
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5316",
     },
   },
   render: (args) => <EditableUploadWorkflow {...args} />,
@@ -474,7 +474,7 @@ export const EightStepWorkflow: Story = {
   parameters: {
     layout: "fullscreen",
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5317",
     },
   },
   args: {
@@ -508,7 +508,7 @@ export const ResponsiveLongWorkflow: Story = {
   parameters: {
     layout: "fullscreen",
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5318",
     },
   },
   render: () => (
@@ -542,7 +542,7 @@ export const SqueezedLongWorkflow: Story = {
   parameters: {
     layout: "fullscreen",
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5319",
     },
   },
   render: () => (
@@ -575,7 +575,7 @@ export const MiniLongWorkflow: Story = {
   parameters: {
     layout: "fullscreen",
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5320",
     },
   },
   render: () => (
@@ -613,7 +613,7 @@ export const SingleStep: Story = {
   },
   parameters: {
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5321",
     },
   },
   play: async ({ canvasElement, step }) => {
@@ -634,7 +634,7 @@ export const SingleStepVertical: Story = {
   },
   parameters: {
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5322",
     },
   },
   play: async ({ canvasElement, step }) => {
@@ -658,7 +658,7 @@ export const CompactVertical: Story = {
   },
   parameters: {
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5323",
     },
   },
   play: async ({ canvasElement, step }) => {
@@ -678,7 +678,7 @@ export const DescriptionsAlwaysVisible: Story = {
   },
   parameters: {
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5324",
     },
   },
   play: async ({ canvasElement, step }) => {
@@ -703,7 +703,7 @@ export const VerticalWithErrorAndPendingConnections: Story = {
   },
   parameters: {
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5325",
     },
   },
   play: async ({ canvasElement, step }) => {
@@ -731,7 +731,7 @@ export const NonSelectableStep: Story = {
   },
   parameters: {
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5326",
     },
   },
   play: async ({ canvasElement, step }) => {

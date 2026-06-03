@@ -146,9 +146,9 @@
   --tertiary-foreground: oklch(1 0 0); /* #FFFFFF */
   /* Semantic status colors */
   --info: oklch(0.4465 0.1784 269.19); /* #2F45B5 */
-  --destructive: oklch(0.6383 0.1725 22.52); /* #E15759 */
-  --positive: oklch(0.6204 0.1424 152.38); /* #2E9E5A */
-  --warning: oklch(0.7676 0.1635 60.41); /* #FD972F */
+  --destructive: oklch(0.5692 0.2174 25.93); /* #da1e28 — AA 5.0:1 on white */
+  --positive: oklch(0.5272 0.1408 148.3); /* #198038 —  AA 5.0:1 on white */
+  --warning: oklch(0.5716 0.1335 60.41); /* #AF6100 — darkened amber, AA 4.6:1 on white */
   /* Borders — DEL cool gray */
   --border: var(--surface-dim); /* #E2E8F0 */
   --input: var(--outline); /* #E2E8F0 */

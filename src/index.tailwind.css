@@ -221,7 +221,7 @@
   --secondary-foreground: var(--on-secondary);
   /* Muted — visibly darker than background for hover/selected states */
   --muted: oklch(0.9100 0.0150 258.00); /* ~#D8DFE9 */
-  --muted-foreground: oklch(0.5544 0.0407 257.42); /* #64748B */
+  --muted-foreground: oklch(0.4878 0.0372 255.3); /* #526175 — SW-1925 darken for contrast */
   /* Accent — subtle primary tint for hover/focus backgrounds */
   --accent: oklch(0.9619 0.0179 272.31); /* #EEF2FF — matches secondary */
   --accent-foreground: oklch(0.2330 0.0698 265.03); /* #0D1B3E */

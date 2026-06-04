@@ -235,7 +235,7 @@
   --warning: oklch(0.5716 0.1335 60.41); /* #AF6100 — darkened amber, AA 4.6:1 on white */
   /* Borders — DEL cool gray */
   --border: var(--surface-dim); /* #E2E8F0 */
-  --input: var(--outline); /* #E2E8F0 */
+  --input: oklch(0.79 0.0229 250.7); /* #B0BCC9 — SW-1920 input border */
   --ring: var(--primary); /* #4285F4 */
   /* Charts — Primary tonal palette */
   --chart-1: oklch(0.8296 0.0847 273.37); /* #B5C4FF — tone 80 */

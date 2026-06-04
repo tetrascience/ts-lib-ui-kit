@@ -16,6 +16,90 @@
 
 @custom-variant dark (&:is(.dark *));
 
+[data-slot="process-flow"] {
+  container: process-flow / inline-size;
+  --process-flow-label-font-size: 0.875rem;
+}
+
+[data-slot="process-flow"] [data-slot="process-flow-viewport"] {
+  --process-flow-step-min-width: var(--process-flow-step-min-width-base);
+  --process-flow-step-max-width: 1fr;
+  --process-flow-row-min-height: var(--process-flow-row-min-height-base);
+  --process-flow-gap: var(--process-flow-gap-base);
+  --process-flow-marker-size: var(--process-flow-marker-size-base);
+}
+
+
+[data-slot="process-flow"] [data-slot="process-flow-label"] {
+  font-size: var(--process-flow-label-font-size);
+}
+
+@container process-flow (max-width: 64rem) {
+  [data-slot="process-flow"] [data-slot="process-flow-viewport"] {
+    --process-flow-step-min-width: var(
+      --process-flow-step-min-width-responsive,
+      var(--process-flow-step-min-width-base)
+    );
+    --process-flow-row-min-height: var(
+      --process-flow-row-min-height-responsive,
+      var(--process-flow-row-min-height-base)
+    );
+    --process-flow-gap: var(--process-flow-gap-responsive, var(--process-flow-gap-base));
+    --process-flow-marker-size: var(--process-flow-marker-size-responsive, var(--process-flow-marker-size-base));
+    padding-inline: 0.75rem;
+  }
+
+}
+
+@container process-flow (max-width: 56rem) {
+  [data-slot="process-flow"] [data-slot="process-flow-viewport"] {
+    --process-flow-label-font-size: 0.8125rem;
+    --process-flow-step-min-width: calc(var(--process-flow-step-min-width-responsive) - 1rem);
+    --process-flow-row-min-height: calc(var(--process-flow-row-min-height-responsive) - 0.75rem);
+    --process-flow-step-max-width: var(--process-flow-step-min-width);
+    --process-flow-gap: var(--process-flow-gap-squeezed, var(--process-flow-gap-responsive));
+    --process-flow-marker-size: var(--process-flow-marker-size-squeezed, var(--process-flow-marker-size-responsive));
+  }
+}
+
+@container process-flow (max-width: 48rem) {
+  [data-slot="process-flow"] [data-slot="process-flow-viewport"] {
+    --process-flow-label-font-size: 0.75rem;
+    --process-flow-step-min-width: var(
+      --process-flow-step-min-width-squeezed,
+      var(--process-flow-step-min-width-responsive)
+    );
+    --process-flow-row-min-height: var(
+      --process-flow-row-min-height-squeezed,
+      var(--process-flow-row-min-height-responsive)
+    );
+    --process-flow-step-max-width: var(--process-flow-step-min-width);
+  }
+}
+
+@container process-flow (max-width: 40rem) {
+  [data-slot="process-flow-description"] {
+    display: none;
+  }
+}
+
+@container process-flow (max-width: 32rem) {
+  [data-slot="process-flow"] [data-slot="process-flow-viewport"] {
+    --process-flow-step-min-width: var(
+      --process-flow-step-min-width-mini,
+      var(--process-flow-step-min-width-squeezed)
+    );
+    --process-flow-row-min-height: var(
+      --process-flow-row-min-height-mini,
+      var(--process-flow-row-min-height-responsive)
+    );
+    --process-flow-step-max-width: var(--process-flow-step-min-width);
+    --process-flow-gap: var(--process-flow-gap-mini, var(--process-flow-gap-responsive));
+    --process-flow-marker-size: var(--process-flow-marker-size-mini, var(--process-flow-marker-size-responsive));
+    padding-inline: 0.5rem;
+  }
+}
+
 @keyframes shimmer {
   0%   { transform: translateX(-100%); }
   50%  { transform: translateX(100%); }

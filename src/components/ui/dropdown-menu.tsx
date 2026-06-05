@@ -1,5 +1,5 @@
-import { CheckIcon, ChevronRightIcon } from "lucide-react"
-import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
+import { CheckIcon, ChevronDownIcon, ChevronRightIcon } from "lucide-react"
+import { DropdownMenu as DropdownMenuPrimitive, Slot } from "radix-ui"
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -20,13 +20,20 @@ function DropdownMenuPortal({
 }
 
 function DropdownMenuTrigger({
+  children,
+  caret = true,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger> & {
+  /** Render a downward caret at the trigger's right edge to signal more options. */
+  caret?: boolean
+}) {
   return (
-    <DropdownMenuPrimitive.Trigger
-      data-slot="dropdown-menu-trigger"
-      {...props}
-    />
+    <DropdownMenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props}>
+      <Slot.Slottable>{children}</Slot.Slottable>
+      {caret && (
+        <ChevronDownIcon className="ml-auto size-4 shrink-0 opacity-60" />
+      )}
+    </DropdownMenuPrimitive.Trigger>
   )
 }
 

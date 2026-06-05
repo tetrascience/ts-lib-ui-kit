@@ -99,6 +99,42 @@ export const WithoutCaret: Story = {
   },
 }
 
+export const Kebab: Story = {
+  args: {
+    children: "Rename",
+    variant: "default",
+  },
+  render: (args) => (
+    <DropdownMenu open>
+      <DropdownMenuTrigger variant="kebab" aria-label="More options" />
+      <DropdownMenuContent className="w-48">
+        <DropdownMenuItem {...args}>Rename</DropdownMenuItem>
+        <DropdownMenuItem>Duplicate</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Kebab trigger is an icon-only button", async () => {
+      const trigger = canvasElement.querySelector(
+        '[data-slot="dropdown-menu-trigger"]'
+      )
+      expect(trigger).not.toBeNull()
+      expect(trigger).toHaveAttribute("aria-label", "More options")
+    })
+
+    await step("Kebab shows a vertical ellipsis and no caret", async () => {
+      const trigger = canvasElement.querySelector(
+        '[data-slot="dropdown-menu-trigger"]'
+      )
+      expect(trigger?.querySelector(".lucide-ellipsis-vertical")).not.toBeNull()
+      expect(trigger?.querySelector(".lucide-chevron-down")).toBeNull()
+    })
+  },
+}
+
 export const Destructive: Story = {
   args: {
     children: "Delete",

@@ -1,7 +1,13 @@
-import { CheckIcon, ChevronDownIcon, ChevronRightIcon } from "lucide-react"
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  EllipsisVerticalIcon,
+} from "lucide-react"
 import { DropdownMenu as DropdownMenuPrimitive, Slot } from "radix-ui"
 import * as React from "react"
 
+import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 
@@ -20,17 +26,39 @@ function DropdownMenuPortal({
 }
 
 function DropdownMenuTrigger({
+  className,
   children,
-  caret = true,
+  variant = "default",
+  caret,
+  asChild,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger> & {
-  /** Render a downward caret at the trigger's right edge to signal more options. */
+  /** `"kebab"` renders a self-contained icon-only (⋮) trigger; `"default"` renders children. */
+  variant?: "default" | "kebab"
+  /**
+   * Render a downward caret at the trigger's right edge to signal more options.
+   * Defaults to `true` for the default variant and `false` for the kebab variant.
+   */
   caret?: boolean
 }) {
+  const isKebab = variant === "kebab"
+  const showCaret = caret ?? !isKebab
+
   return (
-    <DropdownMenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props}>
+    <DropdownMenuPrimitive.Trigger
+      data-slot="dropdown-menu-trigger"
+      data-variant={variant}
+      asChild={asChild}
+      className={cn(
+        // Only style our own element; when asChild, the consumer's element owns styling.
+        isKebab && !asChild && buttonVariants({ variant: "ghost", size: "icon" }),
+        className
+      )}
+      {...props}
+    >
       <Slot.Slottable>{children}</Slot.Slottable>
-      {caret && (
+      {isKebab && <EllipsisVerticalIcon className="size-4 shrink-0" />}
+      {showCaret && (
         <ChevronDownIcon className="ml-auto size-4 shrink-0 opacity-60" />
       )}
     </DropdownMenuPrimitive.Trigger>

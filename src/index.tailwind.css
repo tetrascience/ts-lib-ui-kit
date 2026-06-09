@@ -317,6 +317,22 @@
   --state-focus-opacity: 0.10;
   --state-pressed-opacity: 0.10;
   --state-dragged-opacity: 0.16;
+
+  /* Graph qualitative palette — consumed by CHART_COLORS in src/utils/colors.ts.
+     CHART_COLORS resolves these at module load, so dark-mode overrides are not
+     applied at runtime; values are identical across themes by design. */
+  --graph-primary-orange: #FFA62E;
+  --graph-primary-red: #FF5C64;
+  --graph-primary-green: #A5C34E;
+  --graph-primary-blue: #2D9CDB;
+  --graph-primary-yellow: #FBED53;
+  --graph-primary-purple: #7A51AB;
+  --graph-secondary-brown: #AD7942;
+  --graph-secondary-pink: #FB90B4;
+  --graph-secondary-teal: #3CCABA;
+  --graph-secondary-dark-blue: #4072D2;
+  --graph-secondary-black: #424E62;
+  --graph-secondary-grey: #B4B4B4;
 }
 
 .dark {

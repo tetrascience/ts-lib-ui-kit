@@ -55,10 +55,21 @@ const DARK_FALLBACK: PlotlyThemeColors = {
   isDark: true,
 };
 
+let normalizerCtx: CanvasRenderingContext2D | null | undefined;
+
+function getNormalizerCtx(): CanvasRenderingContext2D | null {
+  if (normalizerCtx !== undefined) return normalizerCtx;
+  normalizerCtx =
+    typeof document === "undefined"
+      ? null
+      : document.createElement("canvas").getContext("2d");
+  return normalizerCtx;
+}
+
 /**
  * Resolve a CSS custom property to a Plotly-parseable color string.
- * Uses a canvas to normalize modern color functions (oklch, lch, color-mix)
- * into the rgba() form that Plotly's color parser understands.
+ * Uses a shared canvas to normalize modern color functions (oklch, lch,
+ * color-mix) into the rgba() form that Plotly's color parser understands.
  */
 function resolveToken(name: string, fallback: string): string {
   if (typeof document === "undefined") return fallback;
@@ -66,7 +77,7 @@ function resolveToken(name: string, fallback: string): string {
     .getPropertyValue(name)
     .trim();
   if (!raw) return fallback;
-  const ctx = document.createElement("canvas").getContext("2d");
+  const ctx = getNormalizerCtx();
   if (!ctx) return raw;
   ctx.fillStyle = raw;
   return ctx.fillStyle as string;

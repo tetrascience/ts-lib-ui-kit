@@ -66,17 +66,10 @@ function resolveToken(name: string, fallback: string): string {
     .getPropertyValue(name)
     .trim();
   if (!raw) return fallback;
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+  const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) return raw;
-  try {
-    ctx.fillStyle = "#000";
-    ctx.fillStyle = raw;
-    const normalized = ctx.fillStyle;
-    return typeof normalized === "string" ? normalized : fallback;
-  } catch {
-    return fallback;
-  }
+  ctx.fillStyle = raw;
+  return ctx.fillStyle as string;
 }
 
 /**

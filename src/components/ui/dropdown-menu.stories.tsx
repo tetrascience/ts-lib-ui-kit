@@ -30,11 +30,15 @@ export default meta
 
 type Story = StoryObj<typeof DropdownMenuItem>
 
+// The caret trigger is the default pattern for this component (SW-2014).
 function renderMenu(args: Story["args"]) {
   return (
     <DropdownMenu open>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">Open menu</Button>
+        <Button variant="outline">
+          Open menu
+          <ChevronDownIcon data-icon="inline-end" />
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-48">
         <DropdownMenuItem {...args}>Rename</DropdownMenuItem>
@@ -57,48 +61,7 @@ export const Default: Story = {
     const canvas = within(canvasElement)
     const body = within(canvasElement.ownerDocument.body)
 
-    await step("Menu trigger renders", async () => {
-      expect(canvas.getByText("Open menu")).toBeInTheDocument()
-    })
-
-    await step("Menu items render", async () => {
-      expect(body.getByRole("menuitem", { name: "Rename" })).toBeInTheDocument()
-      expect(body.getByRole("menuitem", { name: "Duplicate" })).toBeInTheDocument()
-    })
-  },
-}
-
-/**
- * Trigger with a trailing caret icon — composes the existing `asChild` Button
- * with a lucide `ChevronDownIcon`. No component API changes required.
- */
-export const WithCaret: Story = {
-  args: {
-    children: "Rename",
-    variant: "default",
-  },
-  render: (args) => (
-    <DropdownMenu open>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline">
-          Open menu
-          <ChevronDownIcon data-icon="inline-end" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48">
-        <DropdownMenuItem {...args}>Rename</DropdownMenuItem>
-        <DropdownMenuItem>Duplicate</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  ),
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
-
-    await step("Trigger renders with a caret icon", async () => {
+    await step("Menu trigger renders with a caret icon", async () => {
       const trigger = canvas.getByText("Open menu").closest("button")
       expect(trigger).toBeInTheDocument()
       expect(trigger?.querySelector(".lucide-chevron-down")).not.toBeNull()

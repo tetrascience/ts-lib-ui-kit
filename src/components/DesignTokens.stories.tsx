@@ -1,12 +1,11 @@
-import { Check, Copy, Info } from "lucide-react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Check, Copy, Info } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { cn } from "../lib/utils"
+import { cn } from "../lib/utils";
 
-import { Alert, AlertDescription } from "./ui/alert"
+import { Alert, AlertDescription } from "./ui/alert";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 // ---------------------------------------------------------------------------
 // Token definitions — names only; all colour values are read live from
@@ -15,11 +14,11 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 // ---------------------------------------------------------------------------
 
 interface TokenDef {
-  name: string
-  cssVar: string
-  tailwind: string
+  name: string;
+  cssVar: string;
+  tailwind: string;
   /** Name of the paired background token (for foreground tokens) */
-  bgPair?: string
+  bgPair?: string;
 }
 
 function t(name: string, tailwindPrefix = "bg", bgPair?: string): TokenDef {
@@ -28,27 +27,27 @@ function t(name: string, tailwindPrefix = "bg", bgPair?: string): TokenDef {
     cssVar: `var(--${name})`,
     tailwind: `${tailwindPrefix}-${name}`,
     bgPair,
-  }
+  };
 }
 
 // Pairs are kept adjacent; foreground tokens carry a reference to their bg pair
 const CORE_TOKENS: TokenDef[] = [
   t("background"),
-  t("foreground",           "bg", "background"),
+  t("foreground", "bg", "background"),
   t("card"),
-  t("card-foreground",      "bg", "card"),
+  t("card-foreground", "bg", "card"),
   t("popover"),
-  t("popover-foreground",   "bg", "popover"),
+  t("popover-foreground", "bg", "popover"),
   t("primary"),
-  t("primary-foreground",   "bg", "primary"),
+  t("primary-foreground", "bg", "primary"),
   t("secondary"),
   t("secondary-foreground", "bg", "secondary"),
   t("muted"),
-  t("muted-foreground",     "bg", "muted"),
+  t("muted-foreground", "bg", "muted"),
   t("accent"),
-  t("accent-foreground",    "bg", "accent"),
+  t("accent-foreground", "bg", "accent"),
   t("tertiary"),
-  t("tertiary-foreground",  "bg", "tertiary"),
+  t("tertiary-foreground", "bg", "tertiary"),
   t("info"),
   t("destructive"),
   t("positive"),
@@ -56,19 +55,19 @@ const CORE_TOKENS: TokenDef[] = [
   t("border"),
   t("input"),
   t("ring"),
-]
+];
 
 // MD3 color role aliases — these reference existing tokens via var() but
 // expose the Material Design 3 naming convention for consumers.
 const MD3_ROLE_TOKENS: TokenDef[] = [
   t("outline"),
   t("outline-variant"),
-  t("on-primary",                "text"),
-  t("on-secondary",              "text"),
-  t("on-surface",                "text"),
-  t("on-error",                  "text"),
+  t("on-primary", "text"),
+  t("on-secondary", "text"),
+  t("on-surface", "text"),
+  t("on-error", "text"),
   t("surface"),
-  t("surface-foreground",        "bg", "surface"),
+  t("surface-foreground", "bg", "surface"),
   t("surface-tint"),
   t("surface-dim"),
   t("surface-bright"),
@@ -76,7 +75,7 @@ const MD3_ROLE_TOKENS: TokenDef[] = [
   t("surface-container-low"),
   t("surface-container-high"),
   t("surface-container-highest"),
-]
+];
 
 const CHART_TOKENS: TokenDef[] = [
   t("chart-1"),
@@ -84,18 +83,25 @@ const CHART_TOKENS: TokenDef[] = [
   t("chart-3"),
   t("chart-4"),
   t("chart-5"),
-]
+  t("chart-6"),
+  t("chart-7"),
+  t("chart-8"),
+  t("chart-9"),
+  t("chart-10"),
+  t("chart-11"),
+  t("chart-12"),
+];
 
 const SIDEBAR_TOKENS: TokenDef[] = [
   t("sidebar"),
-  t("sidebar-foreground",        "bg", "sidebar"),
+  t("sidebar-foreground", "bg", "sidebar"),
   t("sidebar-primary"),
   t("sidebar-primary-foreground", "bg", "sidebar-primary"),
   t("sidebar-accent"),
   t("sidebar-accent-foreground", "bg", "sidebar-accent"),
   t("sidebar-border"),
   t("sidebar-ring"),
-]
+];
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -103,29 +109,27 @@ const SIDEBAR_TOKENS: TokenDef[] = [
 
 interface ResolvedToken {
   /** Raw computed value of the CSS custom property (e.g. `oklch(...)`) */
-  oklch: string
-  rgba: string
-  hex: string
+  oklch: string;
+  rgba: string;
+  hex: string;
 }
 
 /** Resolve a CSS color string to rgba + hex via an off-screen canvas. */
 function colorToParts(color: string): { rgba: string; hex: string } {
-  const canvas = document.createElement("canvas")
-  canvas.width = 1
-  canvas.height = 1
-  const ctx = canvas.getContext("2d")
-  if (!ctx) return { rgba: color, hex: "" }
-  ctx.fillStyle = color
-  ctx.fillRect(0, 0, 1, 1)
-  const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
-  const rgba = a === 255
-    ? `rgb(${r}, ${g}, ${b})`
-    : `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(2)})`
+  const canvas = document.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = 1;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return { rgba: color, hex: "" };
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, 1, 1);
+  const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+  const rgba = a === 255 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(2)})`;
   const hex = `#${[r, g, b]
     .map((n) => n.toString(16).padStart(2, "0"))
     .join("")
-    .toUpperCase()}`
-  return { rgba, hex }
+    .toUpperCase()}`;
+  return { rgba, hex };
 }
 
 /**
@@ -137,7 +141,7 @@ function colorToParts(color: string): { rgba: string; hex: string } {
  * reflect the active theme via normal inheritance.
  */
 function getTokenValue(el: Element, name: string): string {
-  return getComputedStyle(el).getPropertyValue(`--${name}`).trim()
+  return getComputedStyle(el).getPropertyValue(`--${name}`).trim();
 }
 
 // ---------------------------------------------------------------------------
@@ -145,13 +149,13 @@ function getTokenValue(el: Element, name: string): string {
 // ---------------------------------------------------------------------------
 
 function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }, [text])
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [text]);
 
   return (
     <button
@@ -166,14 +170,10 @@ function CopyButton({ text }: { text: string }) {
       )}
       title={`Copy: ${text}`}
     >
-      {copied ? (
-        <Check className="size-3 shrink-0" />
-      ) : (
-        <Copy className="size-3 shrink-0" />
-      )}
+      {copied ? <Check className="size-3 shrink-0" /> : <Copy className="size-3 shrink-0" />}
       {text}
     </button>
-  )
+  );
 }
 
 /**
@@ -195,7 +195,7 @@ function Swatch({ token }: { token: TokenDef }) {
       >
         Aa
       </div>
-    )
+    );
   }
 
   return (
@@ -203,7 +203,7 @@ function Swatch({ token }: { token: TokenDef }) {
       className="size-8 shrink-0 rounded-md border border-border shadow-sm"
       style={{ backgroundColor: `var(--${token.name})` }}
     />
-  )
+  );
 }
 
 function TokenTable({
@@ -211,17 +211,17 @@ function TokenTable({
   tokens,
   resolvedValues,
 }: {
-  title: string
-  tokens: TokenDef[]
-  resolvedValues: Map<string, ResolvedToken>
+  title: string;
+  tokens: TokenDef[];
+  resolvedValues: Map<string, ResolvedToken>;
 }) {
   // Determine which tokens start a new visual group (bg token followed by fg pair)
-  const groupStarters = new Set<string>()
+  const groupStarters = new Set<string>();
   tokens.forEach((token, i) => {
     if (i > 0 && token.bgPair && tokens[i - 1].name === token.bgPair) {
-      groupStarters.add(token.bgPair) // the bg token starts this group
+      groupStarters.add(token.bgPair); // the bg token starts this group
     }
-  })
+  });
 
   return (
     <section className="space-y-3">
@@ -241,14 +241,13 @@ function TokenTable({
           </thead>
           <tbody>
             {tokens.map((token, i) => {
-              const resolved = resolvedValues.get(token.name)
+              const resolved = resolvedValues.get(token.name);
 
               // Foreground tokens get a slightly indented, muted background to visually nest under their pair
-              const isFgRow = !!token.bgPair && i > 0 && tokens[i - 1].name === token.bgPair
+              const isFgRow = !!token.bgPair && i > 0 && tokens[i - 1].name === token.bgPair;
               // Add a top border separator before a new non-paired group
               const isGroupSeparator =
-                i > 0 && !token.bgPair && !tokens[i - 1].bgPair &&
-                (groupStarters.has(tokens[i - 1].name) === false)
+                i > 0 && !token.bgPair && !tokens[i - 1].bgPair && groupStarters.has(tokens[i - 1].name) === false;
 
               return (
                 <tr
@@ -293,64 +292,99 @@ function TokenTable({
                   </td>
                   {/* RGBA */}
                   <td className="px-4 py-2.5">
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {resolved?.rgba ?? "—"}
-                    </span>
+                    <span className="font-mono text-xs text-muted-foreground">{resolved?.rgba ?? "—"}</span>
                   </td>
                 </tr>
-              )
+              );
             })}
           </tbody>
         </table>
       </div>
     </section>
-  )
+  );
+}
+
+const CHART_RAMPS: { label: string; prefix: string }[] = [
+  { label: "Sequential — Blue", prefix: "chart-seq-blue" },
+  { label: "Sequential — Teal", prefix: "chart-seq-teal" },
+  { label: "Sequential — Purple", prefix: "chart-seq-purple" },
+  { label: "Diverging — Blue → Orange", prefix: "chart-div-blue-orange" },
+  { label: "Diverging — Teal → Magenta", prefix: "chart-div-teal-magenta" },
+  { label: "Diverging — Purple → Yellow-Green", prefix: "chart-div-purple-yellowgreen" },
+];
+
+// Sequential & diverging ramps rendered as 12-step strips (a 72-row table would
+// be unwieldy). Each segment is driven directly by its --chart-{prefix}-NN var.
+function ChartRamps() {
+  return (
+    <section className="space-y-3">
+      <h2 className="text-lg font-semibold text-foreground">Chart Ramps</h2>
+      <p className="max-w-2xl text-sm text-muted-foreground">
+        CVD-friendly continuous palettes for heatmaps and gradients. Tuned for white / Light Gray backgrounds; on dark
+        surfaces lift the bottom 2–3 steps. Available as <code className="rounded bg-muted px-1 py-0.5 text-xs">
+          var(--chart-seq-blue-01)
+        </code> … and as <code className="rounded bg-muted px-1 py-0.5 text-xs">CHART_SEQUENTIAL</code> /{" "}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">CHART_DIVERGING</code> arrays for chart colorscales.
+      </p>
+      <div className="space-y-4 rounded-lg border border-border bg-card p-4">
+        {CHART_RAMPS.map((r) => (
+          <div key={r.prefix} className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-foreground">{r.label}</span>
+              <code className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">--{r.prefix}-01 … 12</code>
+            </div>
+            <div className="flex h-8 overflow-hidden rounded-md border border-border">
+              {Array.from({ length: 12 }, (_, i) => {
+                const v = `--${r.prefix}-${String(i + 1).padStart(2, "0")}`;
+                return <div key={v} className="flex-1" style={{ backgroundColor: `var(${v})` }} title={v} />;
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function DesignTokensPage() {
-  const [resolvedValues, setResolvedValues] = useState<Map<string, ResolvedToken>>(
-    new Map(),
-  )
-  const probeRef = useRef<HTMLDivElement>(null)
-  const allTokens = useMemo(
-    () => [...CORE_TOKENS, ...MD3_ROLE_TOKENS, ...CHART_TOKENS, ...SIDEBAR_TOKENS],
-    [],
-  )
-  const rafRef = useRef(0)
+  const [resolvedValues, setResolvedValues] = useState<Map<string, ResolvedToken>>(new Map());
+  const probeRef = useRef<HTMLDivElement>(null);
+  const allTokens = useMemo(() => [...CORE_TOKENS, ...MD3_ROLE_TOKENS, ...CHART_TOKENS, ...SIDEBAR_TOKENS], []);
+  const rafRef = useRef(0);
 
   const resolve = useCallback(() => {
-    const probe = probeRef.current
-    if (!probe) return
-    const map = new Map<string, ResolvedToken>()
+    const probe = probeRef.current;
+    if (!probe) return;
+    const map = new Map<string, ResolvedToken>();
     for (const token of allTokens) {
-      const oklch = getTokenValue(probe, token.name)
+      const oklch = getTokenValue(probe, token.name);
       if (!oklch) {
-        map.set(token.name, { oklch: "", rgba: "—", hex: "" })
-        continue
+        map.set(token.name, { oklch: "", rgba: "—", hex: "" });
+        continue;
       }
-      const { rgba, hex } = colorToParts(oklch)
-      map.set(token.name, { oklch, rgba, hex })
+      const { rgba, hex } = colorToParts(oklch);
+      map.set(token.name, { oklch, rgba, hex });
     }
-    setResolvedValues(map)
-  }, [allTokens])
+    setResolvedValues(map);
+  }, [allTokens]);
 
   useEffect(() => {
-    resolve()
+    resolve();
 
     const mo = new MutationObserver(() => {
-      cancelAnimationFrame(rafRef.current)
-      rafRef.current = requestAnimationFrame(resolve)
-    })
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(resolve);
+    });
     mo.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
-    })
+    });
 
     return () => {
-      mo.disconnect()
-      cancelAnimationFrame(rafRef.current)
-    }
-  }, [resolve])
+      mo.disconnect();
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [resolve]);
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 p-12">
@@ -361,47 +395,37 @@ function DesignTokensPage() {
         <h1 className="text-2xl font-bold text-foreground">Design Tokens</h1>
         <p className="text-sm text-muted-foreground max-w-2xl">
           Semantic color tokens following{" "}
-          <a href="https://ui.shadcn.com/docs/theming" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-4">
+          <a
+            href="https://ui.shadcn.com/docs/theming"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline underline-offset-4"
+          >
             shadcn/ui conventions
           </a>
-          , defined in{" "}
-          <code className="rounded bg-muted px-1.5 py-0.5 text-xs">src/index.tailwind.css</code>
-          {" "}and automatically available as Tailwind utility classes.
-          Light and dark values are set via CSS custom properties — no configuration required.
+          , defined in <code className="rounded bg-muted px-1.5 py-0.5 text-xs">src/index.tailwind.css</code> and
+          automatically available as Tailwind utility classes. Light and dark values are set via CSS custom properties —
+          no configuration required.
         </p>
         <Alert className="max-w-2xl">
           <Info className="size-4" />
           <AlertDescription>
             Prefer the <span className="font-medium text-foreground">Tailwind class</span> (e.g.{" "}
             <code className="rounded bg-muted px-1.5 py-0.5 text-xs">bg-primary</code>,{" "}
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">text-muted-foreground</code>)
-            {" "}over raw CSS variables for better semantics and dark mode support. Click any value to copy. Toggle dark mode to see dark theme values.
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">text-muted-foreground</code>) over raw CSS
+            variables for better semantics and dark mode support. Click any value to copy. Toggle dark mode to see dark
+            theme values.
           </AlertDescription>
         </Alert>
       </div>
 
-      <TokenTable
-        title="Core Colors"
-        tokens={CORE_TOKENS}
-        resolvedValues={resolvedValues}
-      />
-      <TokenTable
-        title="MD3 Color Role Aliases"
-        tokens={MD3_ROLE_TOKENS}
-        resolvedValues={resolvedValues}
-      />
-      <TokenTable
-        title="Chart Colors"
-        tokens={CHART_TOKENS}
-        resolvedValues={resolvedValues}
-      />
-      <TokenTable
-        title="Sidebar Colors"
-        tokens={SIDEBAR_TOKENS}
-        resolvedValues={resolvedValues}
-      />
+      <TokenTable title="Core Colors" tokens={CORE_TOKENS} resolvedValues={resolvedValues} />
+      <TokenTable title="MD3 Color Role Aliases" tokens={MD3_ROLE_TOKENS} resolvedValues={resolvedValues} />
+      <TokenTable title="Chart Colors" tokens={CHART_TOKENS} resolvedValues={resolvedValues} />
+      <ChartRamps />
+      <TokenTable title="Sidebar Colors" tokens={SIDEBAR_TOKENS} resolvedValues={resolvedValues} />
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -416,15 +440,15 @@ const meta: Meta = {
     controls: { disable: true },
     actions: { disable: true },
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
 export const Overview: Story = {
   render: () => <DesignTokensPage />,
   parameters: {
     zephyr: { testCaseId: "SW-T1467" },
   },
-}
+};

@@ -137,6 +137,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  /* Focus halo — neutral elevation-style shadow (SW-2015 ALT1); pairs with
+     focus-visible:border-ring. Usage: focus-visible:shadow-focus */
+  --shadow-focus: var(--focus-shadow);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -237,6 +240,9 @@
   --border: var(--surface-dim); /* #E2E8F0 */
   --input: oklch(0.79 0.0229 250.7); /* #B0BCC9 — SW-1920 input border */
   --ring: oklch(0.5590 0.1657 269.30); /* #4E6AD4 — SW-2015 focus ring, decoupled from primary */
+  /* SW-2015 ALT1: focus halo is a neutral elevation-style shadow (key ring
+     + ambient halo) instead of a flat colored ring; adapts in dark mode */
+  --focus-shadow: 0 1px 1px 0 rgba(0,0,0,0.18), 0 1px 2px 1px rgba(0,0,0,0.08);
   /* Charts — Primary tonal palette */
   --chart-1: oklch(0.8296 0.0847 273.37); /* #B5C4FF — tone 80 */
   --chart-2: oklch(0.6746 0.1379 272.92); /* #7B8FEB — tone 60 */
@@ -351,6 +357,8 @@
   --border: var(--outline-variant); /* #454650 */
   --input: var(--outline-variant); /* #454650 */
   --ring: var(--primary); /* #B5C4FF */
+  /* SW-2015 ALT1 dark: ambient leads at .4, key at .3 */
+  --focus-shadow: 0 1px 2px 1px rgba(0,0,0,0.4), 0 1px 1px 0 rgba(0,0,0,0.3);
   /* Charts — Primary tonal palette (same in both modes) */
   --chart-1: oklch(0.8296 0.0847 273.37); /* #B5C4FF — tone 80 */
   --chart-2: oklch(0.6746 0.1379 272.92); /* #7B8FEB — tone 60 */

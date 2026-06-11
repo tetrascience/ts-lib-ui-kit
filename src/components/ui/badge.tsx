@@ -5,7 +5,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:shadow-focus has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:shadow-focus [&>svg]:pointer-events-none [&>svg]:size-3!",
   {
     variants: {
       variant: {
@@ -13,13 +13,13 @@ const badgeVariants = cva(
         secondary:
           "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
         info:
-          "bg-info/15 text-info focus-visible:border-info focus-visible:ring-info/20 dark:bg-info/20 dark:text-info dark:focus-visible:ring-info/40 [a]:hover:bg-info/25",
+          "bg-info/15 text-info focus-visible:border-info dark:bg-info/20 dark:text-info [a]:hover:bg-info/25",
         destructive:
-          "bg-destructive/15 text-destructive focus-visible:border-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:text-destructive dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/25",
+          "bg-destructive/15 text-destructive focus-visible:border-destructive dark:bg-destructive/20 dark:text-destructive [a]:hover:bg-destructive/25",
         positive:
-          "bg-positive/15 text-positive focus-visible:border-positive focus-visible:ring-positive/20 dark:bg-positive/20 dark:text-positive dark:focus-visible:ring-positive/40 [a]:hover:bg-positive/25",
+          "bg-positive/15 text-positive focus-visible:border-positive dark:bg-positive/20 dark:text-positive [a]:hover:bg-positive/25",
         warning:
-          "bg-warning/15 text-warning focus-visible:border-warning focus-visible:ring-warning/20 dark:bg-warning/20 dark:text-warning dark:focus-visible:ring-warning/40 [a]:hover:bg-warning/25",
+          "bg-warning/15 text-warning focus-visible:border-warning dark:bg-warning/20 dark:text-warning [a]:hover:bg-warning/25",
         outline:
           "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
         ghost:

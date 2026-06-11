@@ -234,7 +234,7 @@ function getVerticalRailStyle(): CSSProperties {
 
 function getStepControlClassName({ contentLayout, onStepSelect, isDisabled, size, status }: StepControlClassOptions) {
   return cn(
-    "flex w-full min-w-0 border-0 bg-transparent p-0 text-sm outline-none transition-all focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30",
+    "flex w-full min-w-0 border-0 bg-transparent p-0 text-sm outline-none transition-all focus-visible:border-ring focus-visible:shadow-focus",
     contentLayout === "inline" && "flex-row items-center gap-3 text-left",
     contentLayout === "stacked" && "flex-col items-center gap-2 text-center",
     contentLayout === "anchored" && "relative h-full flex-col items-center justify-center text-center",

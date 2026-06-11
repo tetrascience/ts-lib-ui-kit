@@ -98,7 +98,7 @@ export const Kebab: Story = {
     </DropdownMenu>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5406" },
   },
   play: async ({ canvasElement, step }) => {
     const body = within(canvasElement.ownerDocument.body)

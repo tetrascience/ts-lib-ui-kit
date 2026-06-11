@@ -1905,7 +1905,7 @@ export const SidebarFormLayout: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5407" },
   },
   play: async ({ canvasElement, step }) => {
     await step("Form renders inside the sidebar with no Card chrome", async () => {
@@ -1969,7 +1969,7 @@ export const StackedFormCardLayout: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5408" },
   },
   play: async ({ canvasElement, step }) => {
     await step("Form is wrapped in a Card", async () => {
@@ -2033,7 +2033,7 @@ export const FullWidthManifestLayout: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5409" },
   },
   play: async ({ canvasElement, step }) => {
     await step("Manifest renders with no Card chrome", async () => {

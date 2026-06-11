@@ -221,6 +221,9 @@ export const MediaVariants: Story = {
       expect(media).toHaveClass("group-has-data-[slot=item-description]/item:self-start");
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5410" },
+  },
 };
 
 export const ImageMedia: Story = {
@@ -306,5 +309,8 @@ export const GroupedItems: Story = {
       expect(within(footer).getByText("Updated 2 hours ago")).toBeInTheDocument();
       expect(within(footer).getByText("1.2 MB")).toBeInTheDocument();
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5411" },
   },
 };

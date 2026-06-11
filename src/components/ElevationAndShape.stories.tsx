@@ -6,11 +6,13 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const ELEVATION_LEVELS = [
   { level: 0, cssClass: "shadow-elevation-0", cssVar: "--elevation-0", description: "Flat / no shadow" },
-  { level: 1, cssClass: "shadow-elevation-1", cssVar: "--elevation-1", description: "Cards, buttons at rest" },
-  { level: 2, cssClass: "shadow-elevation-2", cssVar: "--elevation-2", description: "Raised cards, menus" },
-  { level: 3, cssClass: "shadow-elevation-3", cssVar: "--elevation-3", description: "Navigation drawers, FABs" },
-  { level: 4, cssClass: "shadow-elevation-4", cssVar: "--elevation-4", description: "App bars, elevated navigation" },
-  { level: 5, cssClass: "shadow-elevation-5", cssVar: "--elevation-5", description: "Dialogs, modals" },
+  { level: 1, cssClass: "shadow-elevation-1", cssVar: "--elevation-1", description: "Hairline raise (≙ shadow-2xs)" },
+  { level: 2, cssClass: "shadow-elevation-2", cssVar: "--elevation-2", description: "Subtle cards, chips (≙ shadow-xs)" },
+  { level: 3, cssClass: "shadow-elevation-3", cssVar: "--elevation-3", description: "Cards, tab pills, sidebar (≙ shadow-sm)" },
+  { level: 4, cssClass: "shadow-elevation-4", cssVar: "--elevation-4", description: "Menus, popovers, selects (≙ shadow-md)" },
+  { level: 5, cssClass: "shadow-elevation-5", cssVar: "--elevation-5", description: "Dialogs, sheets, submenus (≙ shadow-lg)" },
+  { level: 6, cssClass: "shadow-elevation-6", cssVar: "--elevation-6", description: "Reserved headroom (≙ shadow-xl)" },
+  { level: 7, cssClass: "shadow-elevation-7", cssVar: "--elevation-7", description: "Maximum lift (≙ shadow-2xl)" },
 ]
 
 // ---------------------------------------------------------------------------

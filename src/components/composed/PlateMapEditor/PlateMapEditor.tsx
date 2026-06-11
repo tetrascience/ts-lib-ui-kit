@@ -2,11 +2,10 @@ import * as React from "react";
 
 import { plateOptionsFromCsvTriage } from "./csvPlateTriage";
 import { PlateMapActionsMenu } from "./PlateMapActionsMenu";
+import { PlateMapForm } from "./PlateMapForm";
+import { PlateMapGrid } from "./PlateMapGrid";
+import { PlateMapManifest } from "./PlateMapManifest";
 import { PlateMapPlateSelector } from "./PlateMapPlateSelector";
-import { PlatePaintGrid } from "./PlatePaintGrid";
-import { resolveDimensions, allPositions } from "./wellGrid";
-import { WellManifestTable } from "./WellManifestTable";
-import { WellMetadataForm } from "./WellMetadataForm";
 
 import type { PlateMapActionsMenuProps } from "./PlateMapActionsMenu";
 import type { PlateMapPlateSelectorVariant } from "./PlateMapPlateSelector";
@@ -24,7 +23,6 @@ import type {
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 const PLATE_WELL_KEY_SEPARATOR = "::";
@@ -214,17 +212,6 @@ function PlateMapEditorTitleBar({ title, badges }: { title?: string; badges?: Re
   );
 }
 
-function PlateMapEditorLegend({ legend }: { legend?: React.ReactNode }) {
-  if (!legend) return null;
-
-  return (
-    <>
-      <Separator />
-      {legend}
-    </>
-  );
-}
-
 export function PlateMapEditor<T extends WellRecord = WellRecord>({
   format,
   rows,
@@ -297,7 +284,6 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   exportCsvLabel,
   clearLabel,
 }: PlateMapEditorProps<T>) {
-  const dims = resolveDimensions(format, rows, columns);
   const [staged, setStaged] = React.useState<Partial<T>>({});
   const [hoverPos, setHoverPos] = React.useState<WellId | null>(null);
   const [flashWell, setFlashWell] = React.useState<{ wellId: WellId; key: number }>();
@@ -442,40 +428,6 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
     [commitScopedValues, doubleClickCycleField, emptyEntry, scopedValues, stampActivePlateBarcode],
   );
 
-  const selectAll = () => {
-    onSelectionChange(new Set(allPositions(dims)));
-  };
-  const deselectAll = () => onSelectionChange(new Set());
-
-  const hoverEntry = hoverPos ? scopedValues.get(hoverPos) : undefined;
-
-  const hoverFields = hoverEntry
-    ? (fields
-        .map((f) => {
-          const v = hoverEntry[f.key];
-          if (v === undefined || v === null || v === "") return null;
-          if (f.kind === "select") {
-            const opt = (f.options ?? []).find((o) => o.value === v);
-            return opt?.label ?? String(v);
-          }
-          if (f.kind === "multiselect") {
-            const arr = Array.isArray(v) ? (v as string[]) : [];
-            if (arr.length === 0) return null;
-            return arr
-              .map((item) => (f.options ?? []).find((o) => o.value === item)?.label ?? item)
-              .join(", ");
-          }
-          if (f.kind === "boolean") {
-            return v ? f.label : null;
-          }
-          return String(v);
-        })
-        .filter(Boolean) as string[])
-    : [];
-
-  const hoverSummary = hoverPos
-    ? (renderHoverSummary?.(hoverEntry, hoverPos) ?? [hoverPos, ...hoverFields].join(" • "))
-    : " ";
   const manifestColumns = React.useMemo(() => {
     if (!isPlateScoped || !activePlateBarcode || hidePlateBarcodeColumn) return tableColumns;
     const alreadyHasBarcodeColumn = tableColumns.some(
@@ -507,18 +459,17 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
         {/* Form column */}
         <Card className="flex w-full max-w-[360px] min-w-[300px] basis-[360px] flex-col" size="sm">
           <CardContent className="flex h-full flex-1 flex-col gap-3">
-            {formSlot ?? (
-              <WellMetadataForm
-                fields={fields}
-                value={staged}
-                onChange={setStaged}
-                selectionSize={selection.size}
-                onApply={applyStagedToSelection}
-                onClear={clearWells}
-                extras={formExtras}
-              />
-            )}
-            <PlateMapEditorLegend legend={legend} />
+            <PlateMapForm
+              fields={fields}
+              value={staged}
+              onChange={setStaged}
+              selectionSize={selection.size}
+              onApply={applyStagedToSelection}
+              onClear={clearWells}
+              extras={formExtras}
+              legend={legend}
+              formSlot={formSlot}
+            />
           </CardContent>
         </Card>
 
@@ -565,29 +516,8 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
               />
             </CardAction>
           </CardHeader>
-          <CardContent className="flex flex-col gap-1.5">
-            <div className="flex flex-wrap items-center justify-start gap-3">
-              {plateToolbar}
-              <div className="flex items-center gap-2 text-xs">
-                <button
-                  type="button"
-                  className="font-medium text-primary underline-offset-2 hover:text-primary/80 hover:underline"
-                  onClick={selectAll}
-                >
-                  Select all
-                </button>
-                <span className="text-muted-foreground/60">·</span>
-                <button
-                  type="button"
-                  className="font-medium text-primary underline-offset-2 hover:text-primary/80 hover:underline"
-                  onClick={deselectAll}
-                >
-                  Deselect all
-                </button>
-              </div>
-            </div>
-            <div className="h-5 text-xs text-muted-foreground">{hoverSummary}</div>
-            <PlatePaintGrid
+          <CardContent>
+            <PlateMapGrid
               format={format}
               rows={rows}
               columns={columns}
@@ -595,15 +525,19 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
               selection={selection}
               onSelectionChange={onSelectionChange}
               colorForWell={colorForWell}
+              fields={fields}
+              renderHoverSummary={renderHoverSummary}
+              hoveredWellId={hoverPos}
+              onHoveredWellChange={(wellId) => {
+                setHoverPos(wellId);
+                onHoveredWellChange?.(wellId);
+              }}
+              toolbar={plateToolbar}
               emptyWellFillColor={emptyWellFillColor}
               wellShape={wellShape}
               framed={framedPlate}
               wrapWell={wrapWell}
               highlightedWellIds={highlightedWellIds}
-              onWellHover={(wellId) => {
-                setHoverPos(wellId);
-                onHoveredWellChange?.(wellId);
-              }}
               onWellDoubleClick={doubleClickCycleField ? cycleWellField : undefined}
               selectionFillMode={doubleClickCycleField ? "well" : "selection"}
               flashWellId={flashWell?.wellId}
@@ -612,46 +546,10 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
               autoScale={autoScaleGrid}
               minCellSize={minCellSize}
               maxCellSize={maxCellSize}
+              groups={groups}
+              activeGroupId={activeGroupId}
+              onGroupClick={onGroupClick}
             />
-            {groups && groups.length > 0 ? (
-              <>
-                <Separator className="mt-2" />
-                <div className="flex max-h-28 flex-wrap gap-3 overflow-y-auto pt-1">
-                  {groups.map((group) => {
-                    const isActive = group.id === activeGroupId;
-                    const count = group.count ?? group.wellIds?.length;
-                    return (
-                      <button
-                        key={group.id}
-                        type="button"
-                        disabled={group.disabled}
-                        onClick={() => onGroupClick?.(group)}
-                        className={cn(
-                          "flex w-16 flex-col items-center gap-1 rounded-md px-1 py-1 text-center text-xs transition-colors",
-                          "text-muted-foreground hover:bg-muted/60",
-                          isActive && "bg-muted text-foreground ring-1 ring-primary/40",
-                          group.disabled && "pointer-events-none opacity-50",
-                        )}
-                        title={group.label}
-                      >
-                        <span
-                          className="size-7 rounded-full border"
-                          style={{
-                            backgroundColor: group.color,
-                            borderColor: group.borderColor,
-                          }}
-                          aria-hidden
-                        />
-                        <span className="w-full truncate text-foreground">{group.label}</span>
-                        {count === undefined ? null : (
-                          <span className="text-[0.7rem] leading-none text-muted-foreground">{count} wells</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            ) : null}
           </CardContent>
         </Card>
       </div>
@@ -661,7 +559,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
           <CardTitle>Sample manifest</CardTitle>
         </CardHeader>
         <CardContent>
-          <WellManifestTable
+          <PlateMapManifest
             values={scopedValues}
             onChange={commitScopedValues}
             columns={manifestColumns}

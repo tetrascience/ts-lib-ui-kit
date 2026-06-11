@@ -1,6 +1,15 @@
 export { PlateMapEditor, getPlateMapScopedWellId } from "./PlateMapEditor";
 export type { PlateMapEditorProps } from "./PlateMapEditor";
 
+export { PlateMapForm } from "./PlateMapForm";
+export type { PlateMapFormProps } from "./PlateMapForm";
+
+export { PlateMapGrid } from "./PlateMapGrid";
+export type { PlateMapGridProps } from "./PlateMapGrid";
+
+export { PlateMapManifest } from "./PlateMapManifest";
+export type { PlateMapManifestProps } from "./PlateMapManifest";
+
 export { PlateMapActionsMenu } from "./PlateMapActionsMenu";
 export type { PlateMapActionsMenuProps } from "./PlateMapActionsMenu";
 

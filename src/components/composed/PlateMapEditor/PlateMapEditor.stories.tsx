@@ -11,7 +11,11 @@ import { Barcode, Database, FileText, GripVertical, Plus, Tag, X } from "lucide-
 import * as React from "react";
 import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 
+import { PlateMapActionsMenu } from "./PlateMapActionsMenu";
 import { getPlateMapScopedWellId, PlateMapEditor } from "./PlateMapEditor";
+import { PlateMapForm } from "./PlateMapForm";
+import { PlateMapGrid } from "./PlateMapGrid";
+import { PlateMapManifest } from "./PlateMapManifest";
 import { PLATE_MAP_EMPTY_WELL_FILL } from "./PlatePaintGrid";
 import { PlateZoomControl } from "./PlateZoomControl";
 import { WellLegend } from "./WellLegend";
@@ -32,6 +36,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -1818,6 +1823,234 @@ export const FormCustomAndIntegerKinds: Story = {
       await userEvent.clear(weightInput);
       await userEvent.type(weightInput, "1.5");
       await waitFor(() => expect(weightInput.value).toBe("1.5"));
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Deconstructed layout stories (SW-1916): the form, grid, and manifest are
+// independently composable and Card-agnostic. These stories prove they can be
+// arranged freely — bare in a sidebar, stacked inside Cards, or spanning the
+// full screen width with no Card at all.
+// ---------------------------------------------------------------------------
+
+function useDeconstructedDemo() {
+  const [values, setValues] = React.useState<Map<WellId, DemoWell>>(() => {
+    const map = new Map<WellId, DemoWell>();
+    map.set("A01", { role: "sample", sampleId: "SAMP-001", notes: "primary" });
+    map.set("A02", { role: "sample", sampleId: "SAMP-002", notes: "primary" });
+    map.set("B01", { role: "control", sampleId: "SAMP-004", notes: "positive" });
+    map.set("C01", { role: "blank", sampleId: "BLANK-001", notes: "media" });
+    return map;
+  });
+  const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+  const [staged, setStaged] = React.useState<Partial<DemoWell>>({});
+
+  const applyToSelection = () => {
+    if (selection.size === 0) return;
+    setValues((prev) => {
+      const next = new Map(prev);
+      selection.forEach((wellId) => {
+        const base = next.get(wellId) ?? emptyEntry(wellId);
+        next.set(wellId, { ...base, ...staged });
+      });
+      return next;
+    });
+  };
+  const clearSelection = () => {
+    if (selection.size === 0) return;
+    setValues((prev) => {
+      const next = new Map(prev);
+      selection.forEach((wellId) => next.delete(wellId));
+      return next;
+    });
+  };
+
+  return { values, setValues, selection, setSelection, staged, setStaged, applyToSelection, clearSelection };
+}
+
+export const SidebarFormLayout: Story = {
+  name: "Layout: form in a sidebar (no Card)",
+  render: () => {
+    function Demo() {
+      const s = useDeconstructedDemo();
+      return (
+        <div className="flex min-h-[480px] overflow-hidden rounded-lg ring-1 ring-foreground/10">
+          <aside className="w-72 shrink-0 border-r bg-muted/30 p-4">
+            <div className="mb-3 text-sm font-semibold">Well metadata</div>
+            <PlateMapForm<DemoWell>
+              fields={FIELDS}
+              value={s.staged}
+              onChange={s.setStaged}
+              selectionSize={s.selection.size}
+              onApply={s.applyToSelection}
+              onClear={s.clearSelection}
+            />
+          </aside>
+          <div className="flex-1 p-4">
+            <PlateMapGrid<DemoWell>
+              format="96"
+              values={s.values}
+              selection={s.selection}
+              onSelectionChange={s.setSelection}
+              colorForWell={colorForWell}
+              fields={FIELDS}
+              wellShape="circle"
+              framed
+            />
+          </div>
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5407" },
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Form renders inside the sidebar with no Card chrome", async () => {
+      const form = canvasElement.querySelector('[data-slot="plate-map-form"]');
+      expect(form).not.toBeNull();
+      expect(form?.closest('[data-slot="card"]')).toBeNull();
+    });
+
+    await step("Grid renders 96 wells alongside the sidebar", async () => {
+      const wells = canvasElement.querySelectorAll("[data-well]");
+      expect(wells.length).toBe(96);
+    });
+  },
+};
+
+export const StackedFormCardLayout: Story = {
+  name: "Layout: form in a Card above the grid",
+  render: () => {
+    function Demo() {
+      const s = useDeconstructedDemo();
+      return (
+        <div className="mx-auto flex max-w-2xl flex-col gap-4">
+          <Card size="sm">
+            <CardHeader className="border-b">
+              <CardTitle>Well metadata</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PlateMapForm<DemoWell>
+                fields={FIELDS}
+                value={s.staged}
+                onChange={s.setStaged}
+                selectionSize={s.selection.size}
+                onApply={s.applyToSelection}
+                onClear={s.clearSelection}
+              />
+            </CardContent>
+          </Card>
+          <Card size="sm">
+            <CardHeader className="border-b">
+              <CardTitle>Plate</CardTitle>
+              <CardAction className="flex items-center gap-2">
+                <PlateMapActionsMenu hasEntries={s.values.size > 0} onExportCsv={() => {}} />
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              <PlateMapGrid<DemoWell>
+                format="96"
+                values={s.values}
+                selection={s.selection}
+                onSelectionChange={s.setSelection}
+                colorForWell={colorForWell}
+                fields={FIELDS}
+                wellShape="circle"
+                framed
+              />
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5408" },
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Form is wrapped in a Card", async () => {
+      const form = canvasElement.querySelector('[data-slot="plate-map-form"]');
+      expect(form).not.toBeNull();
+      expect(form?.closest('[data-slot="card"]')).not.toBeNull();
+    });
+
+    await step("Form Card is positioned above the grid", async () => {
+      const form = canvasElement.querySelector('[data-slot="plate-map-form"]') as HTMLElement;
+      const grid = canvasElement.querySelector('[data-slot="plate-map-grid"]') as HTMLElement;
+      expect(form.getBoundingClientRect().top).toBeLessThan(grid.getBoundingClientRect().top);
+    });
+
+    await step("Actions menu renders in the grid Card header", async () => {
+      const canvas = within(canvasElement);
+      expect(canvas.getByRole("button", { name: /actions/i })).toBeInTheDocument();
+    });
+  },
+};
+
+export const FullWidthManifestLayout: Story = {
+  name: "Layout: full-width manifest (no Card)",
+  render: () => {
+    function Demo() {
+      const s = useDeconstructedDemo();
+      return (
+        <div className="flex flex-col gap-4">
+          <div className="mx-auto w-full max-w-md">
+            <Card size="sm">
+              <CardContent>
+                <PlateMapGrid<DemoWell>
+                  format="96"
+                  values={s.values}
+                  selection={s.selection}
+                  onSelectionChange={s.setSelection}
+                  colorForWell={colorForWell}
+                  fields={FIELDS}
+                  wellShape="circle"
+                  framed
+                />
+              </CardContent>
+            </Card>
+          </div>
+          <PlateMapManifest<DemoWell>
+            title="Sample manifest"
+            values={s.values}
+            onChange={s.setValues}
+            columns={COLUMNS}
+            fields={FIELDS}
+            selection={s.selection}
+            onSelectionChange={s.setSelection}
+            emptyEntry={emptyEntry}
+            isPopulated={isPopulated}
+            filterable
+            groupable
+          />
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5409" },
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Manifest renders with no Card chrome", async () => {
+      const manifest = canvasElement.querySelector('[data-slot="plate-map-manifest"]');
+      expect(manifest).not.toBeNull();
+      expect(manifest?.closest('[data-slot="card"]')).toBeNull();
+    });
+
+    await step("Manifest spans wider than the card-constrained grid", async () => {
+      const manifest = canvasElement.querySelector('[data-slot="plate-map-manifest"]') as HTMLElement;
+      const grid = canvasElement.querySelector('[data-slot="plate-map-grid"]') as HTMLElement;
+      expect(manifest.getBoundingClientRect().width).toBeGreaterThan(grid.getBoundingClientRect().width);
+    });
+
+    await step("Manifest shows its optional heading", async () => {
+      const canvas = within(canvasElement);
+      expect(canvas.getByText("Sample manifest")).toBeInTheDocument();
     });
   },
 };

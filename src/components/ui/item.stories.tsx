@@ -2,7 +2,18 @@ import { FileTextIcon, MoreHorizontalIcon, StarIcon } from "lucide-react";
 import { expect, within } from "storybook/test";
 
 import { Button } from "./button";
-import { Item, ItemActions, ItemContent, ItemDescription, ItemHeader, ItemMedia, ItemTitle } from "./item";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemFooter,
+  ItemGroup,
+  ItemHeader,
+  ItemMedia,
+  ItemSeparator,
+  ItemTitle,
+} from "./item";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
@@ -242,6 +253,58 @@ export const ImageMedia: Story = {
 
     await step("Preview image is present", async () => {
       expect(canvas.getByRole("img", { name: "Preview" })).toBeInTheDocument();
+    });
+  },
+};
+
+export const GroupedItems: Story = {
+  render: () => (
+    <ItemGroup className="w-[440px]">
+      <Item variant="outline">
+        <ItemContent>
+          <ItemTitle>Weekly throughput report</ItemTitle>
+          <ItemDescription>Aggregated instrument runs for the past week.</ItemDescription>
+        </ItemContent>
+        <ItemFooter data-testid="item-footer">
+          <span>Updated 2 hours ago</span>
+          <span>1.2 MB</span>
+        </ItemFooter>
+      </Item>
+      <ItemSeparator data-testid="item-separator" />
+      <Item variant="outline">
+        <ItemContent>
+          <ItemTitle>Plate map archive</ItemTitle>
+        </ItemContent>
+      </Item>
+    </ItemGroup>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Item group renders as a list containing both items", async () => {
+      const group = canvas.getByRole("list");
+      expect(group).toHaveAttribute("data-slot", "item-group");
+      expect(group).toHaveClass("flex", "flex-col", "gap-4");
+      // The w-[440px] override replaces the default w-full via tailwind-merge
+      expect(group).toHaveClass("w-[440px]");
+      expect(group).not.toHaveClass("w-full");
+      expect(within(group).getByText("Weekly throughput report")).toBeInTheDocument();
+      expect(within(group).getByText("Plate map archive")).toBeInTheDocument();
+    });
+
+    await step("Item separator renders horizontally between items", async () => {
+      const separator = canvas.getByTestId("item-separator");
+      expect(separator).toHaveAttribute("data-slot", "item-separator");
+      expect(separator).toHaveAttribute("data-orientation", "horizontal");
+      expect(separator).toHaveClass("my-2");
+    });
+
+    await step("Item footer spans the full width with spaced metadata", async () => {
+      const footer = canvas.getByTestId("item-footer");
+      expect(footer).toHaveAttribute("data-slot", "item-footer");
+      expect(footer).toHaveClass("basis-full", "items-center", "justify-between");
+      expect(within(footer).getByText("Updated 2 hours ago")).toBeInTheDocument();
+      expect(within(footer).getByText("1.2 MB")).toBeInTheDocument();
     });
   },
 };

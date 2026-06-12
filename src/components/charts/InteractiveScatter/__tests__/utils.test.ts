@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { COLORS, DEFAULT_CATEGORY_COLORS } from "../constants";
+import { DEFAULT_CATEGORY_COLORS } from "../constants";
 import { lttbDownsample, mapColors } from "../utils";
 
 import type { ColorMapping, ScatterPoint } from "../types";
@@ -197,14 +197,17 @@ describe("NaN / Infinity propagation", () => {
 });
 
 describe("mapColors", () => {
+  // Pre-token static fallback retained in utils.ts (see SW-2037 follow-up)
+  const LEGACY_PRIMARY = "#4575b4";
+
   const points = (metas: Array<Record<string, unknown>>): ScatterPoint[] =>
     metas.map((metadata, i) => ({ id: i, x: i, y: i, metadata }));
 
-  it("fills with the primary token color when no mapping is provided", () => {
+  it("fills with the legacy primary fallback when no mapping is provided", () => {
     let mapping: ColorMapping | undefined;
     expect(mapColors(points([{}, {}]), mapping)).toEqual([
-      COLORS.primary,
-      COLORS.primary,
+      LEGACY_PRIMARY,
+      LEGACY_PRIMARY,
     ]);
   });
 
@@ -216,9 +219,9 @@ describe("mapColors", () => {
     expect(colors).toEqual(["#123456"]);
   });
 
-  it("falls back to the primary token color for a static mapping without a value", () => {
+  it("falls back to the legacy primary for a static mapping without a value", () => {
     expect(mapColors(points([{}]), { type: "static" })).toEqual([
-      COLORS.primary,
+      LEGACY_PRIMARY,
     ]);
   });
 
@@ -237,11 +240,11 @@ describe("mapColors", () => {
     ]);
   });
 
-  it("falls back to the primary token color for unhandled mapping types", () => {
+  it("falls back to the legacy primary for unhandled mapping types", () => {
     const colors = mapColors(points([{}]), {
       type: "continuous",
       field: "value",
     });
-    expect(colors).toEqual([COLORS.primary]);
+    expect(colors).toEqual([LEGACY_PRIMARY]);
   });
 });

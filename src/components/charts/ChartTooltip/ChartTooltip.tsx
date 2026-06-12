@@ -15,17 +15,24 @@ import {
 export { chartTooltipLines } from "./lines";
 export type { ChartTooltipHoverPoint } from "./lines";
 
-/** How far (px) from a point Plotly still reports a hover — larger = stickier */
-const HOVER_DISTANCE_PX = 40;
+/**
+ * How far (px) from a point Plotly still reports a hover. Matches Plotly's
+ * default — a larger radius makes tooltips snap to neighbors in dense plots
+ */
+const HOVER_DISTANCE_PX = 20;
 /** Grace period before hiding, so the tooltip survives gaps between points */
 const HIDE_GRACE_MS = 150;
+/** How long the exit animation plays before the tooltip unmounts */
+const EXIT_ANIMATION_MS = 200;
 /** Distance (px) between the anchor position and the tooltip arrow */
-const TOOLTIP_OFFSET_PX = 12;
+const TOOLTIP_OFFSET_PX = 6;
 
 export interface ChartTooltipAnchor {
   left: number;
   top: number;
   lines: string[];
+  /** Plays the exit animation before the tooltip unmounts */
+  closing?: boolean;
 }
 
 interface ChartTooltipEmitter {
@@ -63,7 +70,13 @@ export function ChartTooltip({ anchor }: ChartTooltipProps) {
         <TooltipContent
           side="top"
           sideOffset={TOOLTIP_OFFSET_PX}
-          className="pointer-events-none"
+          // The base component only animates Radix-managed states; controlled
+          // chart tooltips animate entry on mount and exit via `closing`
+          className={
+            anchor.closing
+              ? "pointer-events-none animate-out fade-out-0 zoom-out-95 fill-mode-forwards"
+              : "pointer-events-none animate-in fade-in-0 zoom-in-95"
+          }
         >
           {anchor.lines.map((line, index) => (
             <div key={`${index}-${line}`}>{line}</div>
@@ -138,7 +151,13 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
 
     emitter.on("plotly_unhover", () => {
       clearTimeout(hideTimerRef.current);
-      hideTimerRef.current = setTimeout(() => setAnchor(null), HIDE_GRACE_MS);
+      // After the grace period, play the exit animation, then unmount
+      hideTimerRef.current = setTimeout(() => {
+        setAnchor((previous) =>
+          previous ? { ...previous, closing: true } : previous,
+        );
+        hideTimerRef.current = setTimeout(() => setAnchor(null), EXIT_ANIMATION_MS);
+      }, HIDE_GRACE_MS);
     });
   }, []);
 

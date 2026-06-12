@@ -4,13 +4,19 @@ import {
   PLATE_FORMAT_1536,
 } from "./types";
 
+import {
+  CHART_COLORS,
+  CHART_DIVERGING,
+  toPlotlyColorscale,
+} from "@/utils/colors";
+
 /**
  * Default category colors for well types in categorical visualization mode.
  * Override these by passing custom colors via the `categoryColors` prop.
  */
 export const DEFAULT_CATEGORY_COLORS: Record<string, string> = {
-  sample: "#4575b4", // Blue
-  control: "#d73027", // Red
+  sample: CHART_COLORS[0], // Blue
+  control: CHART_COLORS[3], // Red
   empty: "#f0f0f0", // Light gray
 };
 
@@ -27,28 +33,18 @@ export const PLATE_CONFIGS: Record<
 };
 
 /**
- * Default color scale (blue to red gradient suitable for plate data)
+ * Default color scale (CVD-friendly blue → orange diverging ramp
+ * suitable for plate data)
  */
-export const DEFAULT_COLOR_SCALE: Array<[number, string]> = [
-  [0, "#313695"],
-  [0.1, "#4575b4"],
-  [0.2, "#74add1"],
-  [0.3, "#abd9e9"],
-  [0.4, "#e0f3f8"],
-  [0.5, "#ffffbf"],
-  [0.6, "#fee090"],
-  [0.7, "#fdae61"],
-  [0.8, "#f46d43"],
-  [0.9, "#d73027"],
-  [1, "#a50026"],
-];
+export const DEFAULT_COLOR_SCALE: Array<[number, string]> =
+  toPlotlyColorscale(CHART_DIVERGING.blueOrange);
 
 /**
  * UI color constants for PlateMap component styling
  */
 export const COLORS = {
   /** Primary blue color for active states */
-  primary: "#4575b4",
+  primary: CHART_COLORS[0],
   /** White background */
   white: "#fff",
   /** Light gray for borders */

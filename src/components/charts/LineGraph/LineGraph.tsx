@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { CHART_COLORS } from "@/utils/colors";
 
 type MarkerSymbol =
   | "circle"
@@ -155,7 +156,8 @@ interface LineDataSeries {
   x: number[];
   y: number[];
   name: string;
-  color: string;
+  /** Optional color override (auto-assigned from CHART_COLORS if not provided) */
+  color?: string;
   symbol?: MarkerSymbol;
   error_y?: {
     type: "data";
@@ -279,36 +281,39 @@ const LineGraph: React.FC<LineGraphProps> = ({
   useEffect(() => {
     if (!plotRef.current) return;
 
-    const plotData = dataSeries.map((series) => ({
-      x: series.x,
-      y: series.y,
-      type: "scatter" as const,
-      mode: mode,
-      name: series.name,
-      line: {
-        color: series.color,
-        width: 1.5,
-      },
-      marker:
-        variant === "lines"
-          ? { opacity: 0 }
-          : {
-              color: series.color,
-              size: 8,
-              symbol: series.symbol || "triangle-up",
-            },
-      error_y:
-        variant === "lines+markers+error_bars"
-          ? series.error_y || {
-              type: "data" as const,
-              array: series.y.map(() => 10),
-              visible: true,
-              color: series.color,
-              thickness: 1,
-              width: 5,
-            }
-          : undefined,
-    }));
+    const plotData = dataSeries.map((series, index) => {
+      const color = series.color ?? CHART_COLORS[index % CHART_COLORS.length];
+      return {
+        x: series.x,
+        y: series.y,
+        type: "scatter" as const,
+        mode: mode,
+        name: series.name,
+        line: {
+          color,
+          width: 1.5,
+        },
+        marker:
+          variant === "lines"
+            ? { opacity: 0 }
+            : {
+                color,
+                size: 8,
+                symbol: series.symbol || "triangle-up",
+              },
+        error_y:
+          variant === "lines+markers+error_bars"
+            ? series.error_y || {
+                type: "data" as const,
+                array: series.y.map(() => 10),
+                visible: true,
+                color,
+                thickness: 1,
+                width: 5,
+              }
+            : undefined,
+      };
+    });
 
     const layout = {
       title: {

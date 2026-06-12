@@ -2,7 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { COLORS } from "@/utils/colors";
+import { CHART_COLORS } from "@/utils/colors";
 
 interface PieDataSeries {
   labels: string[];
@@ -31,14 +31,7 @@ type PieChartProps = {
   rotation?: number;
 };
 
-const DEFAULT_COLORS = [
-  COLORS.BLUE,
-  COLORS.GREEN,
-  COLORS.ORANGE,
-  COLORS.RED,
-  COLORS.YELLOW,
-  COLORS.PURPLE,
-];
+const DEFAULT_COLORS = CHART_COLORS;
 
 const PieChart: React.FC<PieChartProps> = ({
   dataSeries,

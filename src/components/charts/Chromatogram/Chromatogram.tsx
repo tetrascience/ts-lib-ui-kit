@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { CHART_COLORS } from "@/utils/colors";
 import "./Chromatogram.scss";
 
 /** Height offset for the plot area in pixels */
@@ -62,10 +63,10 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
   width = 900,
   height = 600,
   positionInterval = 10,
-  colorA = "#2D9CDB",
-  colorT = "#A1C63C",
-  colorG = "#FF5C64",
-  colorC = "#FFA62E",
+  colorA = CHART_COLORS[0], // blue
+  colorT = CHART_COLORS[2], // teal/green
+  colorG = CHART_COLORS[3], // red
+  colorC = CHART_COLORS[1], // orange
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();

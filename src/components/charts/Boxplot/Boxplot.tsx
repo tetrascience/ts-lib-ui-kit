@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { CHART_COLORS } from "@/utils/colors";
 
 /** Default point position offset from the box edge */
 const DEFAULT_POINT_POSITION = -1.8;
@@ -9,7 +10,8 @@ const DEFAULT_POINT_POSITION = -1.8;
 interface BoxDataSeries {
   y: number[];
   name: string;
-  color: string;
+  /** Optional color override (auto-assigned from CHART_COLORS if not provided) */
+  color?: string;
   x?: string[] | number[];
   boxpoints?: "all" | "outliers" | "suspectedoutliers" | false;
   jitter?: number;
@@ -124,22 +126,30 @@ const Boxplot: React.FC<BoxplotProps> = ({
   useEffect(() => {
     if (!plotRef.current) return;
 
-    const data = dataSeries.map((series) => ({
-      y: series.y,
-      x: series.x,
-      type: "box" as const,
-      name: series.name,
-      marker: {
-        color: series.color,
-      },
-      line: {
-        color: series.color,
-      },
-      fillcolor: series.color + "40", // Add transparency
-      boxpoints: showPoints ? series.boxpoints || "outliers" : (false as const),
-      jitter: series.jitter || 0.3,
-      pointpos: series.pointpos || DEFAULT_POINT_POSITION,
-    }));
+    const data = dataSeries.map((series, index) => {
+      const color = series.color ?? CHART_COLORS[index % CHART_COLORS.length];
+      return {
+        y: series.y,
+        x: series.x,
+        type: "box" as const,
+        name: series.name,
+        marker: {
+          color,
+        },
+        line: {
+          color,
+        },
+        fillcolor:
+          typeof color === "string" && color.startsWith("#") && color.length === 7
+            ? `${color}40`
+            : color, // Add transparency for hex colors only
+        boxpoints: showPoints
+          ? series.boxpoints || "outliers"
+          : (false as const),
+        jitter: series.jitter || 0.3,
+        pointpos: series.pointpos || DEFAULT_POINT_POSITION,
+      };
+    });
 
     const layout = {
       width,

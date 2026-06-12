@@ -107,10 +107,16 @@ export interface AxisConfig {
 export interface TooltipConfig {
   /** Enable/disable tooltips */
   enabled?: boolean;
-  /** Custom tooltip content function */
+  /** Custom tooltip content function. Lines are separated with `<br>`. */
   content?: (point: ScatterPoint) => string;
   /** Fields to display in default tooltip */
   fields?: string[];
+  /**
+   * Use Plotly's built-in hover labels instead of the theme-styled
+   * HTML tooltip rendered by the component.
+   * @default false
+   */
+  native?: boolean;
 }
 
 /**

@@ -859,3 +859,64 @@ export const SelectionEvents: Story = {
     });
   },
 };
+
+/**
+ * The theme-styled HTML tooltip (default) replaces Plotly's hover labels —
+ * it follows the design tokens in light and dark mode. Set
+ * `tooltip.native: true` to restore Plotly's built-in labels.
+ */
+export const ThemedTooltip: Story = {
+  args: {
+    data: EVENT_DATA,
+    title: "Themed Tooltip",
+    tooltip: { enabled: true, fields: ["category"] },
+    ...DEFAULT_DIMS,
+  },
+  play: async ({ canvasElement, step }) => {
+    type EmittingPlot = HTMLElement & {
+      emit: (event: string, data?: unknown) => void;
+      data: Array<{ ids?: string[] }>;
+    };
+
+    const plot = await waitFor(() => {
+      const gd = canvasElement.querySelector(".js-plotly-plot") as EmittingPlot | null;
+      expect(gd).toBeInTheDocument();
+      expect(gd?.data?.[0]?.ids?.length).toBeGreaterThan(0);
+      return gd as EmittingPlot;
+    });
+
+    const fakeAxis = { d2p: () => 100, _offset: 40 };
+
+    await step("Hovering a point shows the themed tooltip", async () => {
+      plot.emit("plotly_hover", {
+        points: [
+          {
+            data: plot.data[0],
+            pointIndex: 0,
+            x: EVENT_DATA[0].x,
+            y: EVENT_DATA[0].y,
+            xaxis: fakeAxis,
+            yaxis: fakeAxis,
+          },
+        ],
+      });
+      await waitFor(() => {
+        const tip = canvasElement.querySelector('[role="tooltip"]');
+        expect(tip).toBeInTheDocument();
+        expect(tip).toHaveTextContent("Label: Point 1");
+        expect(tip).toHaveTextContent("category: Group A");
+      });
+    });
+
+    await step("No native Plotly hover label is rendered", async () => {
+      expect(canvasElement.querySelector(".hoverlayer .hovertext")).not.toBeInTheDocument();
+    });
+
+    await step("Unhover hides the tooltip", async () => {
+      plot.emit("plotly_unhover");
+      await waitFor(() => {
+        expect(canvasElement.querySelector('[role="tooltip"]')).not.toBeInTheDocument();
+      });
+    });
+  },
+};

@@ -1,7 +1,7 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import { DEFAULT_COLOR_SCALE, PLOT_CONSTANTS } from "./constants";
+import { COLORS, DEFAULT_COLOR_SCALE, PLOT_CONSTANTS } from "./constants";
 import {
   applySelection,
   calculateAxisRange,
@@ -215,7 +215,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
         marker: {
           opacity: 1,
           line: {
-            color: "#d73027",
+            color: COLORS.selected,
             width: 2,
           },
         },

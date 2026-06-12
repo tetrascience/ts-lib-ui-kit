@@ -2,7 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { COLORS } from "@/utils/colors";
+import { CHART_COLORS } from "@/utils/colors";
 
 type MarkerSymbol =
   | "circle"
@@ -51,17 +51,7 @@ const DotPlot: React.FC<DotPlotProps> = ({
     [dataSeries],
   );
 
-  const defaultColors = useMemo(
-    () => [
-      COLORS.ORANGE,
-      COLORS.RED,
-      COLORS.GREEN,
-      COLORS.BLUE,
-      COLORS.YELLOW,
-      COLORS.PURPLE,
-    ],
-    [],
-  );
+  const defaultColors = CHART_COLORS;
 
   const defaultSymbols: MarkerSymbol[] = useMemo(
     () => [

@@ -131,6 +131,9 @@ export default defineConfig({
               },
             ],
             viewport: { width: 1920, height: 1080 },
+            // Keep failure screenshots out of src/ — `__screenshots__/*.stories.tsx`
+            // directories match Storybook's stories glob and break story indexing
+            screenshotDirectory: SCREENSHOT_DIR,
           },
           provide: {
             storybookZephyrMapping,

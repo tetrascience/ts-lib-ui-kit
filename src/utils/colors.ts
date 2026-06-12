@@ -4,6 +4,41 @@
  * while maintaining TypeScript support and IntelliSense
  */
 
+let colorProbe: CanvasRenderingContext2D | null | undefined;
+
+const OPAQUE_ALPHA = 255;
+
+/**
+ * Normalize a CSS color to a hex/rgba string that Plotly (tinycolor) can
+ * parse. Tokens are declared in oklch, which tinycolor does not understand,
+ * so resolved values are painted onto a 1×1 canvas and read back as sRGB
+ * pixel values (the fillStyle getter alone won't do — browsers serialize
+ * oklch back as oklch).
+ */
+const toPlotlySafeColor = (value: string, fallback?: string): string => {
+  if (/^(#|rgb)/.test(value)) return value;
+  if (colorProbe === undefined) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    colorProbe = canvas.getContext("2d", { willReadFrequently: true });
+  }
+  if (!colorProbe) return fallback || value;
+  colorProbe.fillStyle = "#000";
+  colorProbe.fillStyle = value;
+  // An unparseable value leaves the sentinel in place — prefer the fallback
+  if (colorProbe.fillStyle === "#000000" && fallback) return fallback;
+  colorProbe.clearRect(0, 0, 1, 1);
+  colorProbe.fillRect(0, 0, 1, 1);
+  const [r, g, b, a] = colorProbe.getImageData(0, 0, 1, 1).data;
+  if (a === OPAQUE_ALPHA) {
+    return (
+      "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")
+    );
+  }
+  return `rgba(${r}, ${g}, ${b}, ${(a / OPAQUE_ALPHA).toFixed(3)})`;
+};
+
 /**
  * Get a CSS variable value with optional fallback
  * @param cssVar - The CSS variable name (without --)
@@ -15,7 +50,8 @@ const getCSSVar = (cssVar: string, fallback?: string): string => {
     const value = getComputedStyle(document.documentElement)
       .getPropertyValue("--" + cssVar)
       .trim();
-    return value || fallback || "";
+    if (!value) return fallback || "";
+    return toPlotlySafeColor(value, fallback);
   }
   const fallbackSuffix = fallback ? ", " + fallback : "";
   return "var(--" + cssVar + fallbackSuffix + ")";
@@ -163,5 +199,14 @@ export const CHART_DIVERGING = {
   tealMagenta: ramp("chart-div-teal-magenta", ["#055A66", "#099DB3", "#34B9CC", "#88DAE6", "#CFF1F5", "#F0FAFB", "#FBEBF3", "#F0C8DE", "#E29EC2", "#CC79A7", "#A85585", "#7E3B62"]),
   purpleYellowGreen: ramp("chart-div-purple-yellowgreen", ["#481B6E", "#8243BA", "#A767D0", "#C593E0", "#E3C5EE", "#F4E6F8", "#F2F7D9", "#DCEB9F", "#B8D266", "#8FB939", "#6E9A1F", "#527516"]),
 } as const;
+
+/**
+ * Convert a color ramp (e.g. `CHART_SEQUENTIAL.blue`, `CHART_DIVERGING.blueOrange`)
+ * into Plotly's colorscale format: evenly spaced [position, color] stops.
+ */
+export const toPlotlyColorscale = (
+  ramp: readonly string[],
+): Array<[number, string]> =>
+  ramp.map((color, i) => [i / (ramp.length - 1), color]);
 
 export type ColorToken = keyof typeof COLORS;

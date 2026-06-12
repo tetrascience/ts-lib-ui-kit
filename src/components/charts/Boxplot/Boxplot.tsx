@@ -139,7 +139,10 @@ const Boxplot: React.FC<BoxplotProps> = ({
         line: {
           color,
         },
-        fillcolor: color + "40", // Add transparency
+        fillcolor:
+          typeof color === "string" && color.startsWith("#") && color.length === 7
+            ? `${color}40`
+            : color, // Add transparency for hex colors only
         boxpoints: showPoints
           ? series.boxpoints || "outliers"
           : (false as const),

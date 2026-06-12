@@ -2,7 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { COLORS } from "@/utils/colors";
+import { CHART_COLORS } from "@/utils/colors";
 import "./Histogram.scss";
 
 /** Exponent coefficient for normal distribution calculation */
@@ -113,17 +113,7 @@ const Histogram: React.FC<HistogramProps> = ({
     "stack" | "group" | "overlay" | "relative" | undefined
   >(() => (seriesArray.length > 1 ? "stack" : undefined), [seriesArray.length]);
 
-  const defaultColors = useMemo(
-    () => [
-      COLORS.ORANGE,
-      COLORS.RED,
-      COLORS.BLUE,
-      COLORS.GREEN,
-      COLORS.PURPLE,
-      COLORS.YELLOW,
-    ],
-    [],
-  );
+  const defaultColors = CHART_COLORS;
 
   const seriesWithColors = useMemo(() => {
     return seriesArray.map((series, index) => {

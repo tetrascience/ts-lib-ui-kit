@@ -2,6 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { CHART_COLORS } from "@/utils/colors";
 
 interface ScatterDataPoint {
   x: number;
@@ -13,7 +14,8 @@ interface ScatterDataSeries {
   x: number[];
   y: number[];
   name: string;
-  color: string;
+  /** Optional color override (auto-assigned from CHART_COLORS if not provided) */
+  color?: string;
 }
 
 interface ScatterGraphProps {
@@ -144,14 +146,14 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
   useEffect(() => {
     if (!plotRef.current) return;
 
-    const plotData = dataSeries.map((series) => ({
+    const plotData = dataSeries.map((series, index) => ({
       x: series.x,
       y: series.y,
       type: "scatter" as const,
       mode: "markers" as const,
       name: series.name,
       marker: {
-        color: series.color,
+        color: series.color ?? CHART_COLORS[index % CHART_COLORS.length],
         size: 10,
         symbol: "circle" as const,
       },

@@ -1,7 +1,7 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
-import { useChartTooltip } from "../ChartTooltip";
+import { chartTooltipLines, useChartTooltip } from "../ChartTooltip";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { CHART_COLORS } from "@/utils/colors";
@@ -42,7 +42,19 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
-  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
+  const { bindTooltip, tooltipElement } = useChartTooltip({
+    // Stacked traces carry the original series values as customdata;
+    // display those instead of the cumulative stack heights
+    getLines: (points) =>
+      chartTooltipLines(
+        points.map((point) =>
+          typeof point.customdata === "number"
+            ? { ...point, y: point.customdata }
+            : point,
+        ),
+        { xLabel: xTitle, yLabel: yTitle },
+      ),
+  });
 
   const { xMin, xMax, yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
@@ -173,6 +185,8 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         return {
           x: series.x,
           y: stackedY,
+          // Tooltips report the series' own values, not the stacked sums
+          customdata: series.y,
           type: "scatter" as const,
           mode: "lines" as const,
           name: series.name,

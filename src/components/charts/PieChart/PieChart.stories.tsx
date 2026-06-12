@@ -1,6 +1,5 @@
 import { expect, within } from "storybook/test";
 
-import { COLORS } from "../../../utils/colors";
 
 import { PieChart } from "./index";
 
@@ -75,7 +74,7 @@ export const WithCustomColors: Story = {
       labels: ["pH", "Temperature", "Dissolved Oxygen", "Cell Density", "Viability"],
       values: [12, 23, 35, 18, 12],
       name: "Bioreactor Parameters",
-      colors: [COLORS.ORANGE, COLORS.RED, COLORS.GREEN, COLORS.BLUE, COLORS.PURPLE],
+      colors: ["#FFA62E", "#FF5C64", "#A5C34E", "#2D9CDB", "#7A51AB"],
     },
     title: "Bioreactor Parameter Distribution",
     width: 480,

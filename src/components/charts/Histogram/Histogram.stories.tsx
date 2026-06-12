@@ -1,6 +1,5 @@
 import { expect, within } from "storybook/test";
 
-import { COLORS } from "../../../utils/colors";
 
 import { Histogram } from "./Histogram";
 
@@ -77,7 +76,7 @@ export const WithCustomColor: Story = {
     dataSeries: {
       x: generateNormalData(20, 8, 200),
       name: "Custom Color",
-      color: COLORS.RED,
+      color: "#FF5C64",
     },
     title: "Histogram with Custom Color",
     xTitle: "Torque",

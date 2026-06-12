@@ -1,6 +1,5 @@
 import { expect, within } from "storybook/test";
 
-import { COLORS } from "../../../utils/colors";
 
 import { DotPlot, type MarkerSymbol } from "./DotPlot";
 
@@ -147,14 +146,14 @@ export const WithCustomColors: Story = {
         x: generateGridData(15, 25, 0.15).x,
         y: generateGridData(15, 25, 0.15).y,
         name: "Series A",
-        color: COLORS.BLUE,
+        color: "#2D9CDB",
         symbol: "circle" as MarkerSymbol,
       },
       {
         x: generateGridData(15, 25, 0.1).x,
         y: generateGridData(15, 25, 0.1).y,
         name: "Series B",
-        color: COLORS.RED,
+        color: "#FF5C64",
         symbol: "square" as MarkerSymbol,
       },
     ],

@@ -5,16 +5,12 @@ import {
 } from "@/utils/colors";
 
 /**
- * Default colors for the scatter plot
+ * Default colors for the scatter plot. Background, grid, and axis colors
+ * come from the active theme via `usePlotlyTheme`.
  */
 export const COLORS = {
   primary: CHART_COLORS[0],
   selected: CHART_COLORS[3],
-  unselected: "#cccccc",
-  hover: CHART_COLORS[1],
-  gridLine: "#e0e0e0",
-  axisLine: "#333333",
-  background: "#ffffff",
 };
 
 /**

@@ -1,9 +1,22 @@
 import { describe, it, expect } from "vitest";
 
-import { DEFAULT_CATEGORY_COLORS } from "../constants";
-import { lttbDownsample, mapColors } from "../utils";
+import { COLORS, DEFAULT_CATEGORY_COLORS, DEFAULT_MARKER_SIZE } from "../constants";
+import {
+  applySelection,
+  calculateAxisRange,
+  calculateRange,
+  downsampleData,
+  generateTooltipContent,
+  getPlotlyLayoutConfig,
+  getSelectionMode,
+  lttbDownsample,
+  mapColors,
+  mapShapes,
+  mapSizes,
+} from "../utils";
 
 import type { ColorMapping, ScatterPoint } from "../types";
+import type { PlotlyThemeColors } from "@/hooks/use-plotly-theme";
 
 function pt(x: number, y: number): ScatterPoint {
   return { id: `${x},${y}`, x, y };
@@ -196,18 +209,15 @@ describe("NaN / Infinity propagation", () => {
   });
 });
 
+const points = (metas: Array<Record<string, unknown>>): ScatterPoint[] =>
+  metas.map((metadata, i) => ({ id: i, x: i, y: i, metadata }));
+
 describe("mapColors", () => {
-  // Pre-token static fallback retained in utils.ts (see SW-2037 follow-up)
-  const LEGACY_PRIMARY = "#4575b4";
-
-  const points = (metas: Array<Record<string, unknown>>): ScatterPoint[] =>
-    metas.map((metadata, i) => ({ id: i, x: i, y: i, metadata }));
-
-  it("fills with the legacy primary fallback when no mapping is provided", () => {
+  it("fills with the primary token color when no mapping is provided", () => {
     let mapping: ColorMapping | undefined;
     expect(mapColors(points([{}, {}]), mapping)).toEqual([
-      LEGACY_PRIMARY,
-      LEGACY_PRIMARY,
+      COLORS.primary,
+      COLORS.primary,
     ]);
   });
 
@@ -219,9 +229,9 @@ describe("mapColors", () => {
     expect(colors).toEqual(["#123456"]);
   });
 
-  it("falls back to the legacy primary for a static mapping without a value", () => {
+  it("falls back to the primary token color for a static mapping without a value", () => {
     expect(mapColors(points([{}]), { type: "static" })).toEqual([
-      LEGACY_PRIMARY,
+      COLORS.primary,
     ]);
   });
 
@@ -240,11 +250,290 @@ describe("mapColors", () => {
     ]);
   });
 
-  it("falls back to the legacy primary for unhandled mapping types", () => {
+  it("falls back to the primary token color for unhandled mapping types", () => {
     const colors = mapColors(points([{}]), {
       type: "continuous",
       field: "value",
     });
-    expect(colors).toEqual([LEGACY_PRIMARY]);
+    expect(colors).toEqual([COLORS.primary]);
+  });
+});
+
+describe("calculateRange", () => {
+  it("returns min/max of a numeric metadata field", () => {
+    const data = points([{ v: 3 }, { v: -1 }, { v: 7 }]);
+    expect(calculateRange(data, "v")).toEqual({ min: -1, max: 7 });
+  });
+
+  it("returns {0, 1} when no values are numeric", () => {
+    const data = points([{ v: "a" }, {}]);
+    expect(calculateRange(data, "v")).toEqual({ min: 0, max: 1 });
+  });
+
+  it("widens the range when min equals max", () => {
+    const data = points([{ v: 5 }, { v: 5 }]);
+    expect(calculateRange(data, "v")).toEqual({ min: 4, max: 6 });
+  });
+});
+
+describe("mapShapes", () => {
+  it("fills with circles when no mapping is provided", () => {
+    expect(mapShapes(points([{}, {}]))).toEqual(["circle", "circle"]);
+  });
+
+  it("uses the static shape value", () => {
+    expect(mapShapes(points([{}]), { type: "static", value: "star" })).toEqual(["star"]);
+  });
+
+  it("maps categories to explicit and default shapes", () => {
+    const data = points([{ kind: "a" }, { kind: "b" }, { kind: "c" }]);
+    const shapes = mapShapes(data, {
+      type: "categorical",
+      field: "kind",
+      categoryShapes: { b: "diamond" },
+    });
+    expect(shapes).toEqual(["circle", "diamond", "diamond"]);
+  });
+
+  it("falls back to circle for points outside the category map", () => {
+    const data = points([{ kind: "a" }, { other: 1 }]);
+    const shapes = mapShapes(data, { type: "categorical", field: "kind" });
+    expect(shapes).toEqual(["circle", "circle"]);
+  });
+});
+
+describe("mapSizes", () => {
+  it("fills with the default marker size when no mapping is provided", () => {
+    expect(mapSizes(points([{}]))).toEqual([DEFAULT_MARKER_SIZE]);
+  });
+
+  it("uses the static size value", () => {
+    expect(mapSizes(points([{}]), { type: "static", value: 14 })).toEqual([14]);
+  });
+
+  it("assigns increasing default sizes per category", () => {
+    const data = points([{ kind: "a" }, { kind: "b" }, { other: 1 }]);
+    const sizes = mapSizes(data, { type: "categorical", field: "kind" });
+    expect(sizes).toEqual([
+      DEFAULT_MARKER_SIZE,
+      DEFAULT_MARKER_SIZE + 2,
+      DEFAULT_MARKER_SIZE,
+    ]);
+  });
+
+  it("interpolates continuous values into the size range", () => {
+    const data = points([{ v: 0 }, { v: 10 }, { v: "n/a" }]);
+    const sizes = mapSizes(data, {
+      type: "continuous",
+      field: "v",
+      sizeRange: [4, 20],
+    });
+    expect(sizes[0]).toBe(4);
+    expect(sizes[1]).toBe(20);
+    expect(sizes[2]).toBe(DEFAULT_MARKER_SIZE);
+  });
+
+  it("respects explicit min/max for continuous mapping", () => {
+    const data = points([{ v: 5 }]);
+    const sizes = mapSizes(data, {
+      type: "continuous",
+      field: "v",
+      min: 0,
+      max: 10,
+      sizeRange: [0, 10],
+    });
+    expect(sizes).toEqual([5]);
+  });
+});
+
+describe("downsampleData", () => {
+  const data = pts(Array.from({ length: 50 }, (_, i) => i));
+
+  it("returns the data unchanged when disabled", () => {
+    expect(downsampleData(data, { enabled: false })).toBe(data);
+  });
+
+  it("returns the data unchanged when below maxPoints", () => {
+    expect(downsampleData(data, { enabled: true, maxPoints: 100 })).toBe(data);
+  });
+
+  it("downsamples with lttb when above maxPoints", () => {
+    const result = downsampleData(data, { enabled: true, maxPoints: 10 });
+    expect(result).toHaveLength(10);
+  });
+
+  it("returns the data unchanged for unknown strategies", () => {
+    const result = downsampleData(data, {
+      enabled: true,
+      maxPoints: 10,
+      strategy: "uniform",
+    });
+    expect(result).toBe(data);
+  });
+});
+
+describe("generateTooltipContent", () => {
+  it("always includes x and y", () => {
+    expect(generateTooltipContent({ id: 1, x: 1.234, y: 5.678 })).toBe("X: 1.23<br>Y: 5.68");
+  });
+
+  it("includes the label and requested metadata fields only", () => {
+    const point: ScatterPoint = {
+      id: 1,
+      x: 0,
+      y: 0,
+      label: "P1",
+      metadata: { a: 1, b: 2 },
+    };
+    const content = generateTooltipContent(point, ["b", "missing"]);
+    expect(content).toContain("Label: P1");
+    expect(content).toContain("b: 2");
+    expect(content).not.toContain("a: 1");
+  });
+
+  it("includes all metadata when no fields are specified", () => {
+    const point: ScatterPoint = { id: 1, x: 0, y: 0, metadata: { a: 1, b: 2 } };
+    const content = generateTooltipContent(point);
+    expect(content).toContain("a: 1");
+    expect(content).toContain("b: 2");
+  });
+});
+
+describe("getSelectionMode", () => {
+  const event = (mods: Partial<{ shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }>) => ({
+    shiftKey: false,
+    ctrlKey: false,
+    metaKey: false,
+    ...mods,
+  });
+
+  it("replaces by default", () => {
+    expect(getSelectionMode(event({}))).toBe("replace");
+  });
+
+  it("adds with shift", () => {
+    expect(getSelectionMode(event({ shiftKey: true }))).toBe("add");
+  });
+
+  it("removes with ctrl or cmd", () => {
+    expect(getSelectionMode(event({ ctrlKey: true }))).toBe("remove");
+    expect(getSelectionMode(event({ metaKey: true }))).toBe("remove");
+  });
+
+  it("toggles with shift + ctrl", () => {
+    expect(getSelectionMode(event({ shiftKey: true, ctrlKey: true }))).toBe("toggle");
+  });
+});
+
+describe("calculateAxisRange", () => {
+  it("pads a linear range by the given fraction", () => {
+    const data = pts([0, 10]);
+    const [min, max] = calculateAxisRange(data, "y", 0.1);
+    expect(min).toBeCloseTo(-1);
+    expect(max).toBeCloseTo(11);
+  });
+
+  it("returns [0, 1] when no values are finite", () => {
+    const data: ScatterPoint[] = [{ id: 1, x: Number.NaN, y: Number.NaN }];
+    expect(calculateAxisRange(data, "x")).toEqual([0, 1]);
+  });
+
+  it("widens the range when min equals max", () => {
+    const data: ScatterPoint[] = [{ id: 1, x: 5, y: 5 }];
+    expect(calculateAxisRange(data, "x")).toEqual([4, 6]);
+  });
+
+  it("computes log-space ranges for log scales", () => {
+    const data: ScatterPoint[] = [
+      { id: 1, x: 1, y: 1 },
+      { id: 2, x: 100, y: 1 },
+    ];
+    const [min, max] = calculateAxisRange(data, "x", 0.1, "log");
+    expect(min).toBeCloseTo(-0.2);
+    expect(max).toBeCloseTo(2.2);
+  });
+});
+
+describe("applySelection", () => {
+  const current = () => new Set<string | number>([1, 2]);
+
+  it("replaces the selection", () => {
+    expect(applySelection(current(), new Set([3]), "replace")).toEqual(new Set([3]));
+  });
+
+  it("adds to the selection", () => {
+    expect(applySelection(current(), new Set([3]), "add")).toEqual(new Set([1, 2, 3]));
+  });
+
+  it("removes from the selection", () => {
+    expect(applySelection(current(), new Set([2]), "remove")).toEqual(new Set([1]));
+  });
+
+  it("toggles membership", () => {
+    expect(applySelection(current(), new Set([2, 3]), "toggle")).toEqual(new Set([1, 3]));
+  });
+
+  it("returns the current selection for unknown modes", () => {
+    expect(applySelection(current(), new Set([3]), "unknown" as never)).toEqual(new Set([1, 2]));
+  });
+});
+
+describe("getPlotlyLayoutConfig", () => {
+  const theme: PlotlyThemeColors = {
+    paperBg: "transparent",
+    plotBg: "transparent",
+    textColor: "rgba(26, 26, 26, 1)",
+    textSecondary: "rgba(26, 26, 26, 0.6)",
+    gridColor: "rgba(225, 231, 239, 1)",
+    lineColor: "rgba(26, 26, 26, 1)",
+    tickColor: "rgba(225, 231, 239, 1)",
+    legendColor: "rgba(4, 38, 63, 1)",
+    spikeColor: "rgba(100, 116, 139, 1)",
+    isDark: false,
+  };
+
+  const base = {
+    title: "My Plot" as string | undefined,
+    xAxis: {},
+    yAxis: {},
+    width: 800,
+    height: 600,
+    xRange: undefined,
+    yRange: undefined,
+    enableLassoSelection: false,
+    enableBoxSelection: false,
+    theme,
+  };
+
+  it("applies theme colors instead of hardcoded values", () => {
+    const layout = getPlotlyLayoutConfig(base);
+    expect(layout.paper_bgcolor).toBe(theme.paperBg);
+    expect(layout.plot_bgcolor).toBe(theme.plotBg);
+    expect(layout.font?.color).toBe(theme.textColor);
+    expect(layout.xaxis?.gridcolor).toBe(theme.gridColor);
+    expect(layout.yaxis?.linecolor).toBe(theme.lineColor);
+  });
+
+  it("renders a centered title when provided and omits it otherwise", () => {
+    expect(getPlotlyLayoutConfig(base).title).toMatchObject({ text: "My Plot" });
+    expect(getPlotlyLayoutConfig({ ...base, title: undefined }).title).toBeUndefined();
+  });
+
+  it("uses log axis types and explicit ranges when configured", () => {
+    const layout = getPlotlyLayoutConfig({
+      ...base,
+      xAxis: { scale: "log" as const },
+      xRange: [0, 2] as [number, number],
+    });
+    expect(layout.xaxis?.type).toBe("log");
+    expect(layout.xaxis?.range).toEqual([0, 2]);
+    expect(layout.xaxis?.autorange).toBe(false);
+    expect(layout.yaxis?.type).toBe("linear");
+  });
+
+  it("selects dragmode from the enabled selection tools", () => {
+    expect(getPlotlyLayoutConfig({ ...base, enableLassoSelection: true }).dragmode).toBe("lasso");
+    expect(getPlotlyLayoutConfig({ ...base, enableBoxSelection: true }).dragmode).toBe("select");
+    expect(getPlotlyLayoutConfig(base).dragmode).toBe(false);
   });
 });

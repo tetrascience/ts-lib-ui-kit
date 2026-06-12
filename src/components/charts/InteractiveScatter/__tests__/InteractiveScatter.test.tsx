@@ -10,10 +10,20 @@ import type { Root } from "react-dom/client";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+// Radix tooltip positioning (floating-ui) requires ResizeObserver, which jsdom lacks
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver ??=
+  ResizeObserverStub;
+
 // Capture the event callbacks the component registers via plotElement.on(...)
 const plotly = vi.hoisted(() => ({
   newPlot: vi.fn(),
   restyle: vi.fn(),
+  relayout: vi.fn(),
   purge: vi.fn(),
 }));
 
@@ -227,10 +237,12 @@ describe("InteractiveScatter rendering", () => {
 });
 
 describe("tooltips", () => {
-  const hoverAxis = { d2p: (v: number | string) => Number(v) * 10, _offset: 5 };
   const hoverEvent = (pointIndex: number, x: number, y: number) => ({
-    points: [{ pointIndex, x, y, xaxis: hoverAxis, yaxis: hoverAxis, data: { ids: ["a", "b", "c"] } }],
+    points: [{ pointIndex, x, y, data: { ids: ["a", "b", "c"] } }],
+    event: { clientX: x * 10 + 5, clientY: y * 10 + 5 },
   });
+  const tooltipContent = () =>
+    document.querySelector('[data-slot="tooltip-content"]');
 
   it("builds tooltip text and suppresses Plotly's native hover label by default", () => {
     render({ data });
@@ -242,30 +254,46 @@ describe("tooltips", () => {
     expect(trace.text[0]).toContain("Label: Point A");
   });
 
-  it("shows and hides the themed HTML tooltip on hover/unhover", () => {
-    const { container } = render({ data, tooltip: { enabled: true, content: (p) => `id=${p.id}<br>row 2` } });
+  it("shows and hides the design-system tooltip on hover/unhover", () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = render({
+        data,
+        tooltip: { enabled: true, content: (p) => `id=${p.id}<br>row 2` },
+      });
 
-    fire("plotly_hover", hoverEvent(1, 2, 20));
-    const tip = container.querySelector('[role="tooltip"]') as HTMLElement;
-    expect(tip).not.toBeNull();
-    expect(tip.textContent).toContain("id=b");
-    expect(tip.textContent).toContain("row 2");
-    expect(tip.style.left).toBe("25px"); // d2p(2) * 10 + offset 5
+      fire("plotly_hover", hoverEvent(1, 2, 20));
+      const tip = tooltipContent();
+      expect(tip).not.toBeNull();
+      expect(tip?.textContent).toContain("id=b");
+      expect(tip?.textContent).toContain("row 2");
+      // Anchor positioned at the mouse coordinates (container-relative)
+      const anchor = container.querySelector(
+        '[data-slot="chart-tooltip-anchor"]',
+      ) as HTMLElement;
+      expect(anchor.style.left).toBe("25px");
 
-    fire("plotly_unhover");
-    expect(container.querySelector('[role="tooltip"]')).toBeNull();
+      fire("plotly_unhover");
+      // Still visible during the grace period, hidden afterwards
+      expect(tooltipContent()).not.toBeNull();
+      act(() => {
+        vi.runAllTimers();
+      });
+      expect(tooltipContent()).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
-  it("ignores hover events without points and tolerates out-of-range indices", () => {
-    const { container } = render({ data });
+  it("ignores hover events without points and out-of-range indices", () => {
+    render({ data });
 
     fire("plotly_hover", { points: [] });
-    expect(container.querySelector('[role="tooltip"]')).toBeNull();
+    expect(tooltipContent()).toBeNull();
 
+    // Out-of-range index produces no lines, so no tooltip is shown
     fire("plotly_hover", hoverEvent(99, 1, 10));
-    const tip = container.querySelector('[role="tooltip"]');
-    expect(tip).not.toBeNull();
-    expect(tip?.textContent).toBe("");
+    expect(tooltipContent()).toBeNull();
   });
 
   it("uses Plotly's native hover labels when tooltip.native is set", () => {

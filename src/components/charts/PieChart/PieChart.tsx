@@ -1,6 +1,8 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { CHART_COLORS } from "@/utils/colors";
 
@@ -44,6 +46,7 @@ const PieChart: React.FC<PieChartProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip();
 
   const colors = useMemo(() => {
     if (
@@ -78,7 +81,7 @@ const PieChart: React.FC<PieChartProps> = ({
           colors: colors,
         },
         textinfo: textInfo,
-        hoverinfo: "label+text+value" as const,
+        hoverinfo: "none" as const,
         insidetextfont: {
           size: 0,
           family: "Inter, sans-serif",
@@ -109,6 +112,7 @@ const PieChart: React.FC<PieChartProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -118,7 +122,7 @@ const PieChart: React.FC<PieChartProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [colors, dataSeries.labels, dataSeries.name, dataSeries.values, width, height, textInfo, hole, rotation, theme]);
+  }, [colors, dataSeries.labels, dataSeries.name, dataSeries.values, width, height, textInfo, hole, rotation, theme, bindTooltip]);
 
   const PieChartLegend: React.FC<{ labels: string[]; colors: string[] }> = ({
     labels,
@@ -147,7 +151,7 @@ const PieChart: React.FC<PieChartProps> = ({
   };
 
   return (
-    <div className="card-container" style={{ width: width }}>
+    <div className="card-container relative" style={{ width: width }}>
       <div className="chart-container">
         {title && (
           <div className="title-container">
@@ -164,6 +168,7 @@ const PieChart: React.FC<PieChartProps> = ({
         />
         <PieChartLegend labels={dataSeries.labels} colors={colors} />
       </div>
+      {tooltipElement}
     </div>
   );
 };

@@ -2,6 +2,8 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import "./PlateMap.scss";
+import { useChartTooltip } from "../ChartTooltip";
+
 import {
   PLATE_CONFIGS,
   DEFAULT_COLOR_SCALE,
@@ -98,6 +100,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip();
   const onWellClickRef = useRef(onWellClick);
   onWellClickRef.current = onWellClick;
 
@@ -449,7 +452,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
             width: 1,
           },
         },
-        hoverinfo: "text" as const,
+        hoverinfo: "none" as const,
         text: textData,
       },
     ];
@@ -533,6 +536,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
     };
 
     Plotly.newPlot(currentRef, plotData, layout, config);
+    bindTooltip(currentRef);
 
     // Always attach click handler - check onWellClickRef.current inside callback
     // This ensures handler is registered even if onWellClick is provided after initial render
@@ -596,6 +600,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
     legendConfig,
     markerShape,
     theme,
+    bindTooltip,
   ]);
 
   // Render layer selector tabs
@@ -724,7 +729,12 @@ const PlateMap: React.FC<PlateMapProps> = ({
   };
 
   // Build the plot content based on legend position
-  const plotContent = <div ref={plotRef} className="platemap-plot" style={{ width, height }} />;
+  const plotContent = (
+    <div className="relative">
+      <div ref={plotRef} className="platemap-plot" style={{ width, height }} />
+      {tooltipElement}
+    </div>
+  );
   const legendContent = renderLegend();
 
   const renderPlotWithLegend = () => {

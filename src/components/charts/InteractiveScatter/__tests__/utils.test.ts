@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { COLORS, DEFAULT_CATEGORY_COLORS, DEFAULT_MARKER_SIZE } from "../constants";
+import { COLORS, DEFAULT_CATEGORY_COLORS, DEFAULT_MARKER_SIZE, DEFAULT_MAX_POINTS, DEFAULT_SIZE_RANGE } from "../constants";
 import {
   applySelection,
   calculateAxisRange,
@@ -257,6 +257,16 @@ describe("mapColors", () => {
     });
     expect(colors).toEqual([COLORS.primary]);
   });
+
+  it("assigns the first default color to points outside the category map", () => {
+    const data = points([{ kind: "a" }, { other: 1 }]);
+    const colors = mapColors(data, { type: "categorical", field: "kind" });
+    expect(colors).toEqual([DEFAULT_CATEGORY_COLORS[0], DEFAULT_CATEGORY_COLORS[0]]);
+  });
+
+  it("falls back to the primary token color for a categorical mapping without a field", () => {
+    expect(mapColors(points([{}]), { type: "categorical" })).toEqual([COLORS.primary]);
+  });
 });
 
 describe("calculateRange", () => {
@@ -299,6 +309,10 @@ describe("mapShapes", () => {
     const data = points([{ kind: "a" }, { other: 1 }]);
     const shapes = mapShapes(data, { type: "categorical", field: "kind" });
     expect(shapes).toEqual(["circle", "circle"]);
+  });
+
+  it("falls back to circle for a categorical mapping without a field", () => {
+    expect(mapShapes(points([{}, {}]), { type: "categorical" })).toEqual(["circle", "circle"]);
   });
 });
 
@@ -344,6 +358,26 @@ describe("mapSizes", () => {
     });
     expect(sizes).toEqual([5]);
   });
+
+  it("uses explicit category sizes when provided", () => {
+    const data = points([{ kind: "a" }, { kind: "b" }]);
+    const sizes = mapSizes(data, {
+      type: "categorical",
+      field: "kind",
+      categorySizes: { a: 12 },
+    });
+    expect(sizes).toEqual([12, DEFAULT_MARKER_SIZE + 2]);
+  });
+
+  it("uses the default size range for continuous mapping when none is given", () => {
+    const data = points([{ v: 0 }, { v: 10 }]);
+    const sizes = mapSizes(data, { type: "continuous", field: "v" });
+    expect(sizes).toEqual([DEFAULT_SIZE_RANGE[0], DEFAULT_SIZE_RANGE[1]]);
+  });
+
+  it("falls back to the default marker size for a continuous mapping without a field", () => {
+    expect(mapSizes(points([{}]), { type: "continuous" })).toEqual([DEFAULT_MARKER_SIZE]);
+  });
 });
 
 describe("downsampleData", () => {
@@ -369,6 +403,12 @@ describe("downsampleData", () => {
       strategy: "uniform",
     });
     expect(result).toBe(data);
+  });
+
+  it("applies the default maxPoints and lttb strategy when not specified", () => {
+    const large = pts(Array.from({ length: DEFAULT_MAX_POINTS + 1 }, (_, i) => i % 13));
+    const result = downsampleData(large, { enabled: true });
+    expect(result).toHaveLength(DEFAULT_MAX_POINTS);
   });
 });
 
@@ -452,6 +492,18 @@ describe("calculateAxisRange", () => {
     expect(min).toBeCloseTo(-0.2);
     expect(max).toBeCloseTo(2.2);
   });
+
+  it("skips non-positive values on log scales", () => {
+    const data: ScatterPoint[] = [
+      { id: 1, x: -5, y: 1 },
+      { id: 2, x: 0, y: 1 },
+      { id: 3, x: 1, y: 1 },
+      { id: 4, x: 100, y: 1 },
+    ];
+    const [min, max] = calculateAxisRange(data, "x", 0.1, "log");
+    expect(min).toBeCloseTo(-0.2);
+    expect(max).toBeCloseTo(2.2);
+  });
 });
 
 describe("applySelection", () => {
@@ -489,6 +541,7 @@ describe("getPlotlyLayoutConfig", () => {
     tickColor: "rgba(225, 231, 239, 1)",
     legendColor: "rgba(4, 38, 63, 1)",
     spikeColor: "rgba(100, 116, 139, 1)",
+    markerOutline: "rgba(26, 26, 26, 0.45)",
     isDark: false,
   };
 
@@ -535,5 +588,15 @@ describe("getPlotlyLayoutConfig", () => {
     expect(getPlotlyLayoutConfig({ ...base, enableLassoSelection: true }).dragmode).toBe("lasso");
     expect(getPlotlyLayoutConfig({ ...base, enableBoxSelection: true }).dragmode).toBe("select");
     expect(getPlotlyLayoutConfig(base).dragmode).toBe(false);
+  });
+
+  it("uses the configured axis titles", () => {
+    const layout = getPlotlyLayoutConfig({
+      ...base,
+      xAxis: { title: "Time (s)" },
+      yAxis: { title: "Signal" },
+    });
+    expect(layout.xaxis?.title).toMatchObject({ text: "Time (s)" });
+    expect(layout.yaxis?.title).toMatchObject({ text: "Signal" });
   });
 });

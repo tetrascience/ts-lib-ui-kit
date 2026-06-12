@@ -2,6 +2,8 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { COLORS, DEFAULT_COLOR_SCALE, PLOT_CONSTANTS } from "./constants";
 import {
   applySelection,
@@ -127,13 +129,6 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
   const tooltipEnabled = tooltip.enabled !== false;
   const nativeTooltip = tooltip.native === true;
 
-  // Theme-styled HTML tooltip state (used unless tooltip.native is set)
-  const [hoverTip, setHoverTip] = useState<{
-    left: number;
-    top: number;
-    lines: string[];
-  } | null>(null);
-
   // Build tooltip text
   const tooltipText = useMemo(() => {
     if (!tooltipEnabled) return [];
@@ -142,6 +137,15 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
       tooltip.content ? tooltip.content(point) : generateTooltipContent(point, tooltip.fields),
     );
   }, [processedData, tooltip, tooltipEnabled]);
+
+  // Design-system tooltip driven by Plotly hover events
+  const { bindTooltip, tooltipElement } = useChartTooltip({
+    getLines: (points) => {
+      const index = points[0]?.pointIndex;
+      if (index === undefined) return [];
+      return (tooltipText[index] ?? "").split("<br>").filter(Boolean);
+    },
+  });
 
   // Prepare Plotly-compatible color data
   const plotlyColors = useMemo(() => {
@@ -343,29 +347,12 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
       });
     }
 
-    // Theme-styled HTML tooltip — positions over the hovered point using
-    // Plotly's data→pixel axis converters
+    // Design-system tooltip driven by Plotly hover events
     if (tooltipEnabled && !nativeTooltip) {
-      type AxisWithPixels = { d2p: (value: number | string) => number; _offset: number };
-
-      plotElement.on("plotly_hover", (eventData: Plotly.PlotMouseEvent) => {
-        const point = eventData.points[0];
-        if (!point) return;
-        const xaxis = point.xaxis as unknown as AxisWithPixels;
-        const yaxis = point.yaxis as unknown as AxisWithPixels;
-        const text = tooltipText[point.pointIndex] ?? "";
-        setHoverTip({
-          left: xaxis.d2p(point.x as number) + xaxis._offset,
-          top: yaxis.d2p(point.y as number) + yaxis._offset,
-          lines: text.split("<br>").filter(Boolean),
-        });
-      });
-
-      plotElement.on("plotly_unhover", () => setHoverTip(null));
+      bindTooltip(currentRef);
     }
 
     return () => {
-      setHoverTip(null);
       if (currentRef) {
         Plotly.purge(currentRef);
       }
@@ -388,6 +375,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     originalIdLookup,
     tooltipEnabled,
     nativeTooltip,
+    bindTooltip,
     theme,
   ]);
 
@@ -430,21 +418,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
   return (
     <div className={containerClassName}>
       <div ref={plotRef} className="interactive-scatter__plot" style={{ width, height }} />
-      {hoverTip && (
-        <div
-          role="tooltip"
-          className="pointer-events-none absolute z-10 max-w-64 rounded-md border border-border bg-popover px-3 py-1.5 text-xs text-popover-foreground shadow-md"
-          style={{
-            left: hoverTip.left,
-            top: hoverTip.top - 12,
-            transform: "translate(-50%, -100%)",
-          }}
-        >
-          {hoverTip.lines.map((line, index) => (
-            <div key={`${index}-${line}`}>{line}</div>
-          ))}
-        </div>
-      )}
+      {tooltipElement}
     </div>
   );
 };

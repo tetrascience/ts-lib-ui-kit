@@ -1,6 +1,8 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { CHART_COLORS } from "@/utils/colors";
 
@@ -41,6 +43,7 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
 
   const { xMin, xMax, yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
@@ -157,7 +160,7 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
         size: 10,
         symbol: "circle" as const,
       },
-      hovertemplate: `${xTitle}: %{x}<br>${yTitle}: %{y}<extra>${series.name}</extra>`,
+      hoverinfo: "none" as const,
     }));
 
     const layout = {
@@ -243,6 +246,7 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -252,11 +256,12 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, effectiveXRange, effectiveYRange, xTicks, yTicks, tickOptions, spikeOptions, theme]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, effectiveXRange, effectiveYRange, xTicks, yTicks, tickOptions, spikeOptions, theme, bindTooltip]);
 
   return (
-    <div className="chart-container">
+    <div className="chart-container relative">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
+      {tooltipElement}
     </div>
   );
 };

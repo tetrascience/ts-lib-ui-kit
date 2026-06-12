@@ -2,7 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef } from "react";
 
 import { CHART_COLORS } from "../../../utils/colors";
-
+import { useChartTooltip } from "../ChartTooltip";
 
 import {
   groupOverlappingPeaks,
@@ -13,7 +13,6 @@ import { CHROMATOGRAM_LAYOUT } from "./constants";
 import {
   validateSeriesData,
   applyBaselineCorrection,
-  buildHoverExtraContent,
   collectPeaksWithBoundaryData,
   processUserAnnotations,
 } from "./dataProcessing";
@@ -72,6 +71,10 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   const enablePeakDetection = peakDetectionOptions !== undefined;
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({
+    xLabel: xAxisTitle,
+    yLabel: yAxisTitle,
+  });
 
   // Memoize processed series with baseline correction
   const processedSeries = useMemo(() => {
@@ -116,7 +119,6 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     // Build trace data with auto-assigned colors
     const plotData: Plotly.Data[] = processedSeries.map((s, index) => {
       const traceColor = s.color || CHART_COLORS[index % CHART_COLORS.length];
-      const extraContent = buildHoverExtraContent(s.name, s.metadata);
 
       const trace: Plotly.Data = {
         x: s.x,
@@ -128,7 +130,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
           color: traceColor,
           width: 1.5,
         },
-        hovertemplate: `%{x:.2f} ${xAxisTitle}<br>%{y:.2f} ${yAxisTitle}<extra>${extraContent}</extra>`,
+        hoverinfo: "none" as const,
       };
       if (showMarkers) {
         trace.marker = {
@@ -272,6 +274,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     };
 
     Plotly.newPlot(currentRef, plotData, layout, config);
+    bindTooltip(currentRef);
 
     return () => {
       if (currentRef) {
@@ -282,12 +285,13 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     processedSeries, allDetectedPeaks, series.length, width, height, title, xAxisTitle, yAxisTitle,
     processedAnnotations, xRange, yRange, showLegend, showGridX, showGridY, showMarkers, markerSize,
     showCrosshairs, enablePeakDetection, peakDetectionOptions, showPeakAreas, boundaryMarkers,
-    annotationOverlapThreshold, showExportButton, theme,
+    annotationOverlapThreshold, showExportButton, theme, bindTooltip,
   ]);
 
   return (
-    <div className="chromatogram-chart-container">
+    <div className="chromatogram-chart-container relative">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
+      {tooltipElement}
     </div>
   );
 };

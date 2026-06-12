@@ -885,9 +885,7 @@ export const ThemedTooltip: Story = {
       return gd as EmittingPlot;
     });
 
-    const fakeAxis = { d2p: () => 100, _offset: 40 };
-
-    await step("Hovering a point shows the themed tooltip", async () => {
+    await step("Hovering a point shows the design-system tooltip", async () => {
       plot.emit("plotly_hover", {
         points: [
           {
@@ -895,13 +893,13 @@ export const ThemedTooltip: Story = {
             pointIndex: 0,
             x: EVENT_DATA[0].x,
             y: EVENT_DATA[0].y,
-            xaxis: fakeAxis,
-            yaxis: fakeAxis,
           },
         ],
+        event: new MouseEvent("mousemove", { clientX: 200, clientY: 200 }),
       });
+      // The tooltip content portals to document.body
       await waitFor(() => {
-        const tip = canvasElement.querySelector('[role="tooltip"]');
+        const tip = document.querySelector('[data-slot="tooltip-content"]');
         expect(tip).toBeInTheDocument();
         expect(tip).toHaveTextContent("Label: Point 1");
         expect(tip).toHaveTextContent("category: Group A");
@@ -912,10 +910,10 @@ export const ThemedTooltip: Story = {
       expect(canvasElement.querySelector(".hoverlayer .hovertext")).not.toBeInTheDocument();
     });
 
-    await step("Unhover hides the tooltip", async () => {
+    await step("Unhover hides the tooltip after the grace period", async () => {
       plot.emit("plotly_unhover");
       await waitFor(() => {
-        expect(canvasElement.querySelector('[role="tooltip"]')).not.toBeInTheDocument();
+        expect(document.querySelector('[data-slot="tooltip-content"]')).not.toBeInTheDocument();
       });
     });
   },

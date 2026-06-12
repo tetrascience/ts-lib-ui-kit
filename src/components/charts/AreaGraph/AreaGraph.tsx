@@ -1,6 +1,8 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { CHART_COLORS } from "@/utils/colors";
 
@@ -40,6 +42,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
 
   const { xMin, xMax, yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
@@ -173,6 +176,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           type: "scatter" as const,
           mode: "lines" as const,
           name: series.name,
+          hoverinfo: "none" as const,
           fill: index === 0 ? ("tozeroy" as const) : ("tonexty" as const),
           fillcolor: color,
           line: {
@@ -191,6 +195,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           type: "scatter" as const,
           mode: "lines" as const,
           name: series.name,
+          hoverinfo: "none" as const,
           fill: series.fill || ("tozeroy" as const),
           fillcolor: color,
           line: {
@@ -274,6 +279,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, data, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -284,11 +290,12 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks, theme]);
+  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks, theme, bindTooltip]);
 
   return (
-    <div className="area-graph-container">
+    <div className="area-graph-container relative">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
+      {tooltipElement}
     </div>
   );
 };

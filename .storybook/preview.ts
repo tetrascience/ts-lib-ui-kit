@@ -41,6 +41,7 @@ const preview: Preview = {
           "Components",
           "AI Elements",
           ["Chat", "*"],
+          "Integration",
           "*",
           "Legacy",
         ],

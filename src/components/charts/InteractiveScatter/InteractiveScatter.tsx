@@ -1,7 +1,8 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import { DEFAULT_COLOR_SCALE, PLOT_CONSTANTS } from "./constants";
+
+import { COLORS, DEFAULT_COLOR_SCALE, PLOT_CONSTANTS } from "./constants";
 import {
   applySelection,
   calculateAxisRange,
@@ -16,6 +17,8 @@ import {
 } from "./utils";
 
 import type { InteractiveScatterProps, SelectionMode } from "./types";
+
+import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 
 /**
  * InteractiveScatter component for visualizing scatter plot data with advanced interactions.
@@ -60,6 +63,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
   className,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
+  const theme = usePlotlyTheme();
   const onSelectionChangeRef = useRef(onSelectionChange);
   const onPointClickRef = useRef(onPointClick);
   const selectedIdsRef = useRef<Set<string | number>>(new Set());
@@ -215,7 +219,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
         marker: {
           opacity: 1,
           line: {
-            color: "#d73027",
+            color: COLORS.selected,
             width: 2,
           },
         },
@@ -235,6 +239,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
       yRange,
       enableLassoSelection,
       enableBoxSelection,
+      theme,
     });
 
     const config: Partial<Plotly.Config> = {
@@ -344,6 +349,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     enableLassoSelection,
     originalIdLookup,
     tooltipEnabled,
+    theme,
   ]);
 
   // Apply selection state to Plotly

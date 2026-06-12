@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 
-import { lttbDownsample } from "../utils";
+import { COLORS, DEFAULT_CATEGORY_COLORS } from "../constants";
+import { lttbDownsample, mapColors } from "../utils";
 
-import type { ScatterPoint } from "../types";
+import type { ColorMapping, ScatterPoint } from "../types";
 
 function pt(x: number, y: number): ScatterPoint {
   return { id: `${x},${y}`, x, y };
@@ -192,5 +193,55 @@ describe("NaN / Infinity propagation", () => {
       expect(Number.isFinite(p.x)).toBe(true);
       expect(Number.isFinite(p.y)).toBe(true);
     }
+  });
+});
+
+describe("mapColors", () => {
+  const points = (metas: Array<Record<string, unknown>>): ScatterPoint[] =>
+    metas.map((metadata, i) => ({ id: i, x: i, y: i, metadata }));
+
+  it("fills with the primary token color when no mapping is provided", () => {
+    let mapping: ColorMapping | undefined;
+    expect(mapColors(points([{}, {}]), mapping)).toEqual([
+      COLORS.primary,
+      COLORS.primary,
+    ]);
+  });
+
+  it("uses the static value when provided", () => {
+    const colors = mapColors(points([{}]), {
+      type: "static",
+      value: "#123456",
+    });
+    expect(colors).toEqual(["#123456"]);
+  });
+
+  it("falls back to the primary token color for a static mapping without a value", () => {
+    expect(mapColors(points([{}]), { type: "static" })).toEqual([
+      COLORS.primary,
+    ]);
+  });
+
+  it("uses explicit category colors and cycles defaults for the rest", () => {
+    const data = points([{ kind: "a" }, { kind: "b" }, { kind: "c" }]);
+    const colors = mapColors(data, {
+      type: "categorical",
+      field: "kind",
+      categoryColors: { b: "#abcdef" },
+    });
+    // Categories are sorted (a, b, c); a and c take palette defaults by index
+    expect(colors).toEqual([
+      DEFAULT_CATEGORY_COLORS[0],
+      "#abcdef",
+      DEFAULT_CATEGORY_COLORS[2],
+    ]);
+  });
+
+  it("falls back to the primary token color for unhandled mapping types", () => {
+    const colors = mapColors(points([{}]), {
+      type: "continuous",
+      field: "value",
+    });
+    expect(colors).toEqual([COLORS.primary]);
   });
 });

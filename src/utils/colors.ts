@@ -24,10 +24,16 @@ const toPlotlySafeColor = (value: string, fallback?: string): string => {
     colorProbe = canvas.getContext("2d", { willReadFrequently: true });
   }
   if (!colorProbe) return fallback || value;
+  // An unparseable value leaves the previous fillStyle in place. Assigning it
+  // after two different sentinels distinguishes "parsed" (same result twice)
+  // from "ignored" (the sentinels leak through) without colliding with any
+  // legitimately black/white token.
   colorProbe.fillStyle = "#000";
   colorProbe.fillStyle = value;
-  // An unparseable value leaves the sentinel in place — prefer the fallback
-  if (colorProbe.fillStyle === "#000000" && fallback) return fallback;
+  const first = colorProbe.fillStyle;
+  colorProbe.fillStyle = "#fff";
+  colorProbe.fillStyle = value;
+  if (first !== colorProbe.fillStyle) return fallback || value;
   colorProbe.clearRect(0, 0, 1, 1);
   colorProbe.fillRect(0, 0, 1, 1);
   const [r, g, b, a] = colorProbe.getImageData(0, 0, 1, 1).data;
@@ -206,7 +212,15 @@ export const CHART_DIVERGING = {
  */
 export const toPlotlyColorscale = (
   ramp: readonly string[],
-): Array<[number, string]> =>
-  ramp.map((color, i) => [i / (ramp.length - 1), color]);
+): Array<[number, string]> => {
+  if (ramp.length === 0) return [];
+  if (ramp.length === 1) {
+    return [
+      [0, ramp[0]],
+      [1, ramp[0]],
+    ];
+  }
+  return ramp.map((color, i) => [i / (ramp.length - 1), color]);
+};
 
 export type ColorToken = keyof typeof COLORS;

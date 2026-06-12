@@ -1,5 +1,4 @@
 import {
-  COLORS,
   DEFAULT_CATEGORY_COLORS,
   DEFAULT_MAX_POINTS,
   DEFAULT_MARKER_SIZE,
@@ -61,7 +60,7 @@ export function getUniqueCategories(data: ScatterPoint[], field: string): string
  */
 export function mapColors(data: ScatterPoint[], colorMapping: ColorMapping | undefined): string[] {
   if (!colorMapping || colorMapping.type === "static") {
-    const color = colorMapping?.value || COLORS.primary;
+    const color = colorMapping?.value || "#4575b4";
     return new Array(data.length).fill(color);
   }
 
@@ -82,7 +81,7 @@ export function mapColors(data: ScatterPoint[], colorMapping: ColorMapping | und
     });
   }
 
-  return new Array(data.length).fill(COLORS.primary);
+  return new Array(data.length).fill("#4575b4");
 }
 
 /**

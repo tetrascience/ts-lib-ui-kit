@@ -38,13 +38,13 @@ interface ChartTooltipHoverEvent {
 }
 
 export interface ChartTooltipProps {
-  /** Anchor position (relative to the chart container) and content lines */
+  /** Anchor position (viewport coordinates) and content lines */
   anchor: ChartTooltipAnchor | null;
 }
 
 /**
- * The design-system tooltip anchored at a chart position. Render inside a
- * `relative` chart container; drive it with `useChartTooltip`.
+ * The design-system tooltip anchored at a chart position; drive it with
+ * `useChartTooltip`.
  */
 export function ChartTooltip({ anchor }: ChartTooltipProps) {
   if (!anchor) return null;
@@ -56,7 +56,7 @@ export function ChartTooltip({ anchor }: ChartTooltipProps) {
           <span
             aria-hidden
             data-slot="chart-tooltip-anchor"
-            className="pointer-events-none absolute size-0"
+            className="pointer-events-none fixed size-0"
             style={{ left: anchor.left, top: anchor.top }}
           />
         </TooltipTrigger>
@@ -90,7 +90,7 @@ export interface UseChartTooltipOptions {
  * const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel, yLabel });
  * // after Plotly.newPlot(...): set trace hoverinfo to "none", then
  * bindTooltip(plotRef.current);
- * // in the (relative-positioned) container:
+ * // anywhere in the chart markup:
  * {tooltipElement}
  * ```
  */
@@ -118,13 +118,22 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
       if (lines.length === 0) return;
 
       clearTimeout(hideTimerRef.current);
-      const rect = plotDiv.getBoundingClientRect();
+      // Anchor to the hovered point's bounds (in plot-div pixels) when
+      // Plotly provides them; fall back to the mouse position. The anchor
+      // is position:fixed, so viewport coordinates are used directly.
+      const bbox = points[0]?.bbox;
       const mouse = eventData.event;
-      setAnchor({
-        left: mouse ? mouse.clientX - rect.left : 0,
-        top: mouse ? mouse.clientY - rect.top : 0,
-        lines,
-      });
+      let left = 0;
+      let top = 0;
+      if (bbox) {
+        const rect = plotDiv.getBoundingClientRect();
+        left = rect.left + (bbox.x0 + bbox.x1) / 2;
+        top = rect.top + Math.min(bbox.y0, bbox.y1);
+      } else if (mouse) {
+        left = mouse.clientX;
+        top = mouse.clientY;
+      }
+      setAnchor({ left, top, lines });
     });
 
     emitter.on("plotly_unhover", () => {

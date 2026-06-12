@@ -257,7 +257,7 @@ describe("tooltips", () => {
   it("shows and hides the design-system tooltip on hover/unhover", () => {
     vi.useFakeTimers();
     try {
-      const { container } = render({
+      render({
         data,
         tooltip: { enabled: true, content: (p) => `id=${p.id}<br>row 2` },
       });
@@ -267,8 +267,8 @@ describe("tooltips", () => {
       expect(tip).not.toBeNull();
       expect(tip?.textContent).toContain("id=b");
       expect(tip?.textContent).toContain("row 2");
-      // Anchor positioned at the mouse coordinates (container-relative)
-      const anchor = container.querySelector(
+      // Anchor positioned at the mouse coordinates (viewport, portaled to body)
+      const anchor = document.querySelector(
         '[data-slot="chart-tooltip-anchor"]',
       ) as HTMLElement;
       expect(anchor.style.left).toBe("25px");

@@ -1,16 +1,12 @@
 import Plotly from "plotly.js-dist";
 import { useCallback, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { chartTooltipLines } from "./lines";
 
 import type { ChartTooltipHoverPoint } from "./lines";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 export { chartTooltipLines } from "./lines";
 export type { ChartTooltipHoverPoint } from "./lines";
@@ -24,8 +20,6 @@ const HOVER_DISTANCE_PX = 20;
 const HIDE_GRACE_MS = 150;
 /** How long the exit animation plays before the tooltip unmounts */
 const EXIT_ANIMATION_MS = 200;
-/** Distance (px) between the anchor position and the tooltip arrow */
-const TOOLTIP_OFFSET_PX = 6;
 
 export interface ChartTooltipAnchor {
   left: number;
@@ -49,41 +43,63 @@ export interface ChartTooltipProps {
   anchor: ChartTooltipAnchor | null;
 }
 
+/** Show the tooltip below the point when the anchor is this close to the top */
+const FLIP_THRESHOLD_PX = 72;
+
 /**
  * The design-system tooltip anchored at a chart position; drive it with
  * `useChartTooltip`.
+ *
+ * Renders the same visual as the ui `TooltipContent` (bubble + arrow) but
+ * positions it directly from the anchor coordinates — Radix's popper
+ * repositions asynchronously and mis-measures animated content, which made
+ * tooltips drift on charts.
  */
 export function ChartTooltip({ anchor }: ChartTooltipProps) {
   if (!anchor) return null;
-  return (
-    <TooltipProvider>
-      {/* Re-key per anchor so Radix repositions to the moved trigger */}
-      <Tooltip open key={`${anchor.left},${anchor.top}`}>
-        <TooltipTrigger asChild>
-          <span
-            aria-hidden
-            data-slot="chart-tooltip-anchor"
-            className="pointer-events-none fixed size-0"
-            style={{ left: anchor.left, top: anchor.top }}
-          />
-        </TooltipTrigger>
-        <TooltipContent
-          side="top"
-          sideOffset={TOOLTIP_OFFSET_PX}
-          // The base component only animates Radix-managed states; controlled
-          // chart tooltips animate entry on mount and exit via `closing`
-          className={
+  // Flip below the point when there is no room above it
+  const flipped = anchor.top < FLIP_THRESHOLD_PX;
+  return createPortal(
+    <div
+      data-slot="chart-tooltip-anchor"
+      className="pointer-events-none fixed z-50"
+      style={{ left: anchor.left, top: anchor.top }}
+    >
+      {/* Positioning transforms live on this node; animations (which also
+          drive `transform`) live on the bubble below so they can't clobber
+          each other */}
+      <div
+        className={cn(
+          "w-max -translate-x-1/2",
+          flipped
+            ? "translate-y-[10px]"
+            : "-translate-y-[calc(100%+10px)]",
+        )}
+      >
+        <div
+          data-slot="tooltip-content"
+          data-side={flipped ? "bottom" : "top"}
+          className={cn(
+            "relative w-fit max-w-xs rounded-md bg-foreground px-3 py-1.5 text-xs text-background",
             anchor.closing
-              ? "pointer-events-none animate-out fade-out-0 zoom-out-95 fill-mode-forwards"
-              : "pointer-events-none animate-in fade-in-0 zoom-in-95"
-          }
+              ? "animate-out fade-out zoom-out-95 fill-mode-forwards"
+              : "animate-in fade-in-0 zoom-in-95",
+          )}
         >
           {anchor.lines.map((line, index) => (
             <div key={`${index}-${line}`}>{line}</div>
           ))}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+          <span
+            aria-hidden
+            className={cn(
+              "absolute left-1/2 size-2.5 -translate-x-1/2 rotate-45 rounded-[2px] bg-foreground",
+              flipped ? "-top-1" : "-bottom-1",
+            )}
+          />
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }
 

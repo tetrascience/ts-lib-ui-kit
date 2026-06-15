@@ -1,21 +1,19 @@
-
 export default {
   branches: ["main"],
   plugins: [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     ["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }],
-    [
-      "@semantic-release/npm",
-      { npmPublish: false },
-    ],
-    [
-      "@semantic-release/git",
-      {
-        assets: ["CHANGELOG.md", "package.json"],
-        message: "chore(release): ${nextRelease.version} [skip ci]",
-      },
-    ],
+    ["@semantic-release/npm", { npmPublish: false }],
+    // TODO: Revisit permissions to commit directly to main branch
+    // [
+    //   "@semantic-release/git",
+    //   {
+    //     assets: ["CHANGELOG.md", "package.json"],
+    //     message: "chore(release): ${nextRelease.version} [skip ci]",
+    //   },
+    // ],
+    ["@semantic-release/git", { assets: false }],
     "@semantic-release/github",
   ],
 };

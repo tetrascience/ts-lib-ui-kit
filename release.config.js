@@ -13,7 +13,6 @@ export default {
     //     message: "chore(release): ${nextRelease.version} [skip ci]",
     //   },
     // ],
-    ["@semantic-release/git", { assets: false }],
     "@semantic-release/github",
   ],
 };

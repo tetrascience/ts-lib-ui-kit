@@ -1,0 +1,24 @@
+# [0.6.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v0.5.0...v0.6.0) (2026-06-15)
+
+
+### Bug Fixes
+
+* SW-1904 update status color tokens to meet WCAG AA contrast on white ([3514ee8](https://github.com/tetrascience/ts-lib-ui-kit/commit/3514ee826319f3d48eeb08127acb6294ee4f8a64)), closes [#BA1A1A](https://github.com/tetrascience/ts-lib-ui-kit/issues/BA1A1A) [#da1e28](https://github.com/tetrascience/ts-lib-ui-kit/issues/da1e28) [#00713A](https://github.com/tetrascience/ts-lib-ui-kit/issues/00713A) [#198038](https://github.com/tetrascience/ts-lib-ui-kit/issues/198038) [#985400](https://github.com/tetrascience/ts-lib-ui-kit/issues/985400) [#AF6100](https://github.com/tetrascience/ts-lib-ui-kit/issues/AF6100)
+* **tokens:** address review — update MD3 primitives, keep var() references ([1cf53c6](https://github.com/tetrascience/ts-lib-ui-kit/commit/1cf53c6b3ca6aa6c4a48b2ecf3abef14b02ac7d3)), closes [#4285F4](https://github.com/tetrascience/ts-lib-ui-kit/issues/4285F4) [#2F45B5](https://github.com/tetrascience/ts-lib-ui-kit/issues/2F45B5)
+* **ui:** SW-1925 — darken muted-foreground to [#526175](https://github.com/tetrascience/ts-lib-ui-kit/issues/526175) for contrast ([#118](https://github.com/tetrascience/ts-lib-ui-kit/issues/118)) ([4823af3](https://github.com/tetrascience/ts-lib-ui-kit/commit/4823af3aefa5e975830253539bc503cbcabc7ee5))
+
+
+### Features
+
+* **button:** SW-1947 make outline variant background transparent ([#119](https://github.com/tetrascience/ts-lib-ui-kit/issues/119)) ([e238a6a](https://github.com/tetrascience/ts-lib-ui-kit/commit/e238a6ab576eb81cc58d26d72d144ecf934b8184))
+* **dropdown-menu:** SW-2014 — Storybook examples with caret & kebab triggers ([#125](https://github.com/tetrascience/ts-lib-ui-kit/issues/125)) ([7094a81](https://github.com/tetrascience/ts-lib-ui-kit/commit/7094a8149e956a51889460371dc39f18b1287167))
+* **platemapeditor:** SW-1916 break PlateMapEditor into composable form, grid, and manifest panels ([#115](https://github.com/tetrascience/ts-lib-ui-kit/issues/115)) ([416ce8c](https://github.com/tetrascience/ts-lib-ui-kit/commit/416ce8c361cb43d070541c74f32b10c974258666))
+* SW-1566 Add column grouping to DataTable ([#101](https://github.com/tetrascience/ts-lib-ui-kit/issues/101)) ([011c9a5](https://github.com/tetrascience/ts-lib-ui-kit/commit/011c9a57bdf6d6e2ac97096f23d33c979d4d5cad))
+* SW-1579 Restore Platemap Editor ([#110](https://github.com/tetrascience/ts-lib-ui-kit/issues/110)) ([f04b2f2](https://github.com/tetrascience/ts-lib-ui-kit/commit/f04b2f257846495d4ac5d010540e715455f4338e))
+* SW-1579 update story titles to reflect 'Design Patterns' category ([#114](https://github.com/tetrascience/ts-lib-ui-kit/issues/114)) ([4404706](https://github.com/tetrascience/ts-lib-ui-kit/commit/4404706a7d8d9e0fb0ffd3a440dd6020045b69f0))
+* SW-1826 Consolidate Storybook design patterns navigation ([#104](https://github.com/tetrascience/ts-lib-ui-kit/issues/104)) ([e4de1f6](https://github.com/tetrascience/ts-lib-ui-kit/commit/e4de1f6867240cb2843a40a8912252f3d5cdde5e))
+* **tokens:** update light mode semantic color tokens to TetraScience brand palette ([59cc95b](https://github.com/tetrascience/ts-lib-ui-kit/commit/59cc95bfa64e8faf95089834bb1115bb0f439c91)), closes [#4285F4](https://github.com/tetrascience/ts-lib-ui-kit/issues/4285F4) [#2F45B5](https://github.com/tetrascience/ts-lib-ui-kit/issues/2F45B5) [#BA1A1A](https://github.com/tetrascience/ts-lib-ui-kit/issues/BA1A1A) [#E15759](https://github.com/tetrascience/ts-lib-ui-kit/issues/E15759) [#00713A](https://github.com/tetrascience/ts-lib-ui-kit/issues/00713A) [#2E9E5A](https://github.com/tetrascience/ts-lib-ui-kit/issues/2E9E5A) [#985400](https://github.com/tetrascience/ts-lib-ui-kit/issues/985400) [#FD972F](https://github.com/tetrascience/ts-lib-ui-kit/issues/FD972F) [#4285F4](https://github.com/tetrascience/ts-lib-ui-kit/issues/4285F4)
+* **ui:** SW-1795 — CVD-friendly chart color palette tokens  ([#124](https://github.com/tetrascience/ts-lib-ui-kit/issues/124)) ([0ea9345](https://github.com/tetrascience/ts-lib-ui-kit/commit/0ea9345c9a50738b71d2fc94f17840e69e851999))
+* **ui:** SW-1920 — white field/table backgrounds, softer input border, 50% Card ([#116](https://github.com/tetrascience/ts-lib-ui-kit/issues/116)) ([7bf40b2](https://github.com/tetrascience/ts-lib-ui-kit/commit/7bf40b2f8fa6659aa75c98dc8cf0eb5ce7ccc3f0))
+* **ui:** SW-1929 — dialog background (bg-card/90), light mode ([#120](https://github.com/tetrascience/ts-lib-ui-kit/issues/120)) ([da203e2](https://github.com/tetrascience/ts-lib-ui-kit/commit/da203e283ff43ecd7f9ddd38908eed6232f6f0c1))
+* **ui:** SW-2015 — soften focus-visible treatment (https://tetrascience.atlassian.net/browse/SW-2015) ([#126](https://github.com/tetrascience/ts-lib-ui-kit/issues/126)) ([84c2721](https://github.com/tetrascience/ts-lib-ui-kit/commit/84c272130e3b97cb41078d4c847ebd604c60bb2a))

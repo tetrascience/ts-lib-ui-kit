@@ -46,7 +46,9 @@ const PieChart: React.FC<PieChartProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
-  const { bindTooltip, tooltipElement } = useChartTooltip();
+  // Slices are large hover targets, so the tooltip tracks the cursor (clamped
+  // to the viewport) rather than pinning to the slice centroid
+  const { bindTooltip, tooltipElement } = useChartTooltip({ followCursor: true });
 
   const colors = useMemo(() => {
     if (

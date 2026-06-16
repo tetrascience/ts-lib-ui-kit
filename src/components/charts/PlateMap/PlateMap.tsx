@@ -100,7 +100,6 @@ const PlateMap: React.FC<PlateMapProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
-  const { bindTooltip, tooltipElement } = useChartTooltip();
   const onWellClickRef = useRef(onWellClick);
   onWellClickRef.current = onWellClick;
 
@@ -119,6 +118,16 @@ const PlateMap: React.FC<PlateMapProps> = ({
     rows = config.rows;
     columns = config.columns;
   }
+
+  // Diameter (px) of each well marker; also drives the hover hit radius so the
+  // whole circle is hoverable instead of just a small zone around its center
+  const markerSize = useMemo(
+    () => calculateMarkerSize(width, height, rows, columns, markerShape, !!title, !!yTitle),
+    [width, height, rows, columns, markerShape, title, yTitle],
+  );
+  const { bindTooltip, tooltipElement } = useChartTooltip({
+    hoverDistance: Math.ceil(markerSize / 2),
+  });
 
   // Auto-generate layers from multi-value WellData
   const effectiveLayers = useMemo((): LayerConfig[] | null => {
@@ -416,17 +425,6 @@ const PlateMap: React.FC<PlateMapProps> = ({
       plotZMin
     );
 
-    // Calculate marker size based on plot dimensions
-    const markerSize = calculateMarkerSize(
-      width,
-      height,
-      rows,
-      columns,
-      markerShape,
-      !!title,
-      !!yTitle
-    );
-
     // Create scatter plot with markers
     const plotData: Plotly.Data[] = [
       {
@@ -599,6 +597,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
     columns,
     legendConfig,
     markerShape,
+    markerSize,
     theme,
     bindTooltip,
   ]);

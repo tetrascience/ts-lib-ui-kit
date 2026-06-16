@@ -22,6 +22,13 @@ export interface ChartTooltipHoverPoint {
   customdata?: unknown;
   /** Hovered point bounds in plot-div pixels (provided by Plotly) */
   bbox?: { x0: number; x1: number; y0: number; y1: number };
+  /**
+   * Plotly axis objects (internal) used to project a data value to a plot-div
+   * pixel. Bars report a `bbox` that sits below their visual top, so we anchor
+   * to `_offset + l2p(value)` instead.
+   */
+  yaxis?: { _offset?: number; l2p?: (value: number) => number };
+  xaxis?: { _offset?: number; l2p?: (value: number) => number };
 }
 
 const formatValue = (value: number | string): string => {

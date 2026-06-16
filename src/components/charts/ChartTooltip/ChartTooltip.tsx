@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { chartTooltipLines } from "./lines";
 
 import type { ChartTooltipHoverPoint } from "./lines";
+import type { Ref } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,9 @@ export interface ChartTooltipAnchor {
   closing?: boolean;
 }
 
+/** Keep an anchor point this far from the viewport edges when clamping */
+const VIEWPORT_PADDING_PX = 8;
+
 interface ChartTooltipEmitter {
   on: (event: string, handler: (data: ChartTooltipHoverEvent) => void) => void;
 }
@@ -41,6 +45,8 @@ interface ChartTooltipHoverEvent {
 export interface ChartTooltipProps {
   /** Anchor position (viewport coordinates) and content lines */
   anchor: ChartTooltipAnchor | null;
+  /** Ref to the bubble node, used by cursor-following charts to clamp it on-screen */
+  bubbleRef?: Ref<HTMLDivElement>;
 }
 
 /** Show the tooltip below the point when the anchor is this close to the top */
@@ -55,7 +61,7 @@ const FLIP_THRESHOLD_PX = 72;
  * repositions asynchronously and mis-measures animated content, which made
  * tooltips drift on charts.
  */
-export function ChartTooltip({ anchor }: ChartTooltipProps) {
+export function ChartTooltip({ anchor, bubbleRef }: ChartTooltipProps) {
   if (!anchor) return null;
   // Flip below the point when there is no room above it
   const flipped = anchor.top < FLIP_THRESHOLD_PX;
@@ -69,6 +75,7 @@ export function ChartTooltip({ anchor }: ChartTooltipProps) {
           drive `transform`) live on the bubble below so they can't clobber
           each other */}
       <div
+        ref={bubbleRef}
         className={cn(
           "w-max -translate-x-1/2",
           flipped
@@ -110,7 +117,38 @@ export interface UseChartTooltipOptions {
   yLabel?: string;
   /** Override the default line builder entirely */
   getLines?: (points: ChartTooltipHoverPoint[]) => string[];
+  /**
+   * Track the cursor instead of anchoring to the hovered point's bounds, and
+   * keep the tooltip clamped inside the viewport. Use for traces with large
+   * hover targets (e.g. pie slices) where a fixed anchor feels disconnected.
+   */
+  followCursor?: boolean;
+  /**
+   * Override Plotly's hover hit radius (px). A larger radius makes big markers
+   * (e.g. heatmap circles) hoverable across their whole face.
+   */
+  hoverDistance?: number;
 }
+
+/** Clamp an anchor point so a bubble of `width`×`height` stays on-screen */
+const clampAnchor = (
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+): { left: number; top: number } => {
+  const halfWidth = width / 2;
+  const clampedLeft = Math.min(
+    Math.max(left, halfWidth + VIEWPORT_PADDING_PX),
+    window.innerWidth - halfWidth - VIEWPORT_PADDING_PX,
+  );
+  // The bubble sits above the anchor; keep its top edge inside the viewport
+  const clampedTop = Math.min(
+    Math.max(top, height + 10 + VIEWPORT_PADDING_PX),
+    window.innerHeight - VIEWPORT_PADDING_PX,
+  );
+  return { left: clampedLeft, top: clampedTop };
+};
 
 /**
  * Drives the design-system tooltip from Plotly hover events.
@@ -128,36 +166,75 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
   const hideTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const optionsRef = useRef(options);
   optionsRef.current = options;
+  // Measured bubble node, used to clamp the cursor-following tooltip on-screen
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  // Active lines while a cursor-following tooltip is shown; null when hidden
+  const cursorLinesRef = useRef<string[] | null>(null);
 
   const bindTooltip = useCallback((plotDiv: HTMLElement | null) => {
     if (!plotDiv) return;
     setAnchor(null);
+    cursorLinesRef.current = null;
 
     // A larger hover radius makes the tooltip easier to acquire and keep
-    void Plotly.relayout(plotDiv, { hoverdistance: HOVER_DISTANCE_PX });
+    void Plotly.relayout(plotDiv, {
+      hoverdistance: optionsRef.current.hoverDistance ?? HOVER_DISTANCE_PX,
+    });
 
     const emitter = plotDiv as unknown as ChartTooltipEmitter;
 
+    // Place the cursor-following tooltip at the (clamped) cursor position
+    const positionAtCursor = (lines: string[], clientX: number, clientY: number) => {
+      const bubble = bubbleRef.current;
+      const { left, top } = clampAnchor(
+        clientX,
+        clientY,
+        bubble?.offsetWidth ?? 0,
+        bubble?.offsetHeight ?? 0,
+      );
+      setAnchor({ left, top, lines });
+    };
+
     emitter.on("plotly_hover", (eventData) => {
       const points = eventData.points ?? [];
-      const { getLines, xLabel, yLabel } = optionsRef.current;
+      const { getLines, xLabel, yLabel, followCursor } = optionsRef.current;
       const lines = getLines
         ? getLines(points)
         : chartTooltipLines(points, { xLabel, yLabel });
       if (lines.length === 0) return;
 
       clearTimeout(hideTimerRef.current);
+
+      const mouse = eventData.event;
+      if (followCursor) {
+        cursorLinesRef.current = lines;
+        positionAtCursor(lines, mouse?.clientX ?? 0, mouse?.clientY ?? 0);
+        return;
+      }
+
       // Anchor to the hovered point's bounds (in plot-div pixels) when
       // Plotly provides them; fall back to the mouse position. The anchor
       // is position:fixed, so viewport coordinates are used directly.
-      const bbox = points[0]?.bbox;
-      const mouse = eventData.event;
+      const point = points[0];
+      const bbox = point?.bbox;
       let left = 0;
       let top = 0;
       if (bbox) {
         const rect = plotDiv.getBoundingClientRect();
         left = rect.left + (bbox.x0 + bbox.x1) / 2;
-        top = rect.top + Math.min(bbox.y0, bbox.y1);
+        // Bars report a zero-height bbox that sits below their visual top;
+        // anchor to the bar's true top via the axis projection instead.
+        const yaxis = point?.yaxis;
+        if (
+          bbox.y0 === bbox.y1 &&
+          typeof point?.y === "number" &&
+          typeof yaxis?.l2p === "function" &&
+          typeof yaxis._offset === "number"
+        ) {
+          top = rect.top + yaxis._offset + yaxis.l2p(point.y);
+        } else {
+          top = rect.top + Math.min(bbox.y0, bbox.y1);
+        }
       } else if (mouse) {
         left = mouse.clientX;
         top = mouse.clientY;
@@ -165,8 +242,18 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
       setAnchor({ left, top, lines });
     });
 
+    // While following the cursor, keep the tooltip glued to the pointer even
+    // when Plotly does not re-fire hover within the same point (e.g. a slice)
+    plotDiv.addEventListener("mousemove", (event) => {
+      if (!optionsRef.current.followCursor) return;
+      const lines = cursorLinesRef.current;
+      if (!lines) return;
+      positionAtCursor(lines, event.clientX, event.clientY);
+    });
+
     emitter.on("plotly_unhover", () => {
       clearTimeout(hideTimerRef.current);
+      cursorLinesRef.current = null;
       // After the grace period, play the exit animation, then unmount
       hideTimerRef.current = setTimeout(() => {
         setAnchor((previous) =>
@@ -179,6 +266,6 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
 
   return {
     bindTooltip,
-    tooltipElement: <ChartTooltip anchor={anchor} />,
+    tooltipElement: <ChartTooltip anchor={anchor} bubbleRef={bubbleRef} />,
   };
 }

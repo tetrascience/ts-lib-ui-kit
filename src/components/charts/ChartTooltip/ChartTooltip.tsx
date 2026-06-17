@@ -1,5 +1,5 @@
 import Plotly from "plotly.js-dist";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { chartTooltipLines } from "./lines";
@@ -22,16 +22,55 @@ const HIDE_GRACE_MS = 150;
 /** How long the exit animation plays before the tooltip unmounts */
 const EXIT_ANIMATION_MS = 200;
 
+/** Which edge of the point the tooltip is placed against (matches Radix). */
+export type ChartTooltipSide = "top" | "bottom" | "left" | "right";
+
 export interface ChartTooltipAnchor {
   left: number;
   top: number;
   lines: string[];
+  /** Preferred placement side; auto-flips to the opposite when it won't fit */
+  side?: ChartTooltipSide;
   /** Plays the exit animation before the tooltip unmounts */
   closing?: boolean;
 }
 
 /** Keep an anchor point this far from the viewport edges when clamping */
 const VIEWPORT_PADDING_PX = 8;
+/** Gap (px) between the anchor point and the bubble on every side */
+const TOOLTIP_GAP_PX = 10;
+
+/** The opposite side to flip to when the preferred one has no room */
+const OPPOSITE_SIDE: Record<ChartTooltipSide, ChartTooltipSide> = {
+  top: "bottom",
+  bottom: "top",
+  left: "right",
+  right: "left",
+};
+
+/**
+ * Per-side transforms. The wrapper carries positioning transforms (kept off
+ * the bubble so they don't clobber the entry/exit animation), and the arrow
+ * sits on the edge facing the point.
+ */
+const SIDE_CLASSES: Record<ChartTooltipSide, { wrapper: string; arrow: string }> = {
+  top: {
+    wrapper: "-translate-x-1/2 -translate-y-[calc(100%+10px)]",
+    arrow: "-bottom-1 left-1/2 -translate-x-1/2",
+  },
+  bottom: {
+    wrapper: "-translate-x-1/2 translate-y-[10px]",
+    arrow: "-top-1 left-1/2 -translate-x-1/2",
+  },
+  left: {
+    wrapper: "-translate-y-1/2 -translate-x-[calc(100%+10px)]",
+    arrow: "-right-1 top-1/2 -translate-y-1/2",
+  },
+  right: {
+    wrapper: "-translate-y-1/2 translate-x-[10px]",
+    arrow: "-left-1 top-1/2 -translate-y-1/2",
+  },
+};
 
 interface ChartTooltipEmitter {
   on: (event: string, handler: (data: ChartTooltipHoverEvent) => void) => void;
@@ -49,8 +88,30 @@ export interface ChartTooltipProps {
   bubbleRef?: Ref<HTMLDivElement>;
 }
 
-/** Show the tooltip below the point when the anchor is this close to the top */
-const FLIP_THRESHOLD_PX = 72;
+/**
+ * Resolve the side the bubble actually renders on: keep the preferred side
+ * when it fits in the viewport, otherwise flip to the opposite side.
+ */
+const resolveSide = (
+  preferred: ChartTooltipSide,
+  anchor: { left: number; top: number },
+  width: number,
+  height: number,
+): ChartTooltipSide => {
+  const pad = VIEWPORT_PADDING_PX;
+  const reach = TOOLTIP_GAP_PX;
+  const fits: Record<ChartTooltipSide, boolean> = {
+    top: anchor.top - reach - height >= pad,
+    bottom: anchor.top + reach + height <= window.innerHeight - pad,
+    left: anchor.left - reach - width >= pad,
+    right: anchor.left + reach + width <= window.innerWidth - pad,
+  };
+  // Flip only when the preferred side overflows and the opposite has room
+  if (!fits[preferred] && fits[OPPOSITE_SIDE[preferred]]) {
+    return OPPOSITE_SIDE[preferred];
+  }
+  return preferred;
+};
 
 /**
  * The design-system tooltip anchored at a chart position; drive it with
@@ -59,12 +120,42 @@ const FLIP_THRESHOLD_PX = 72;
  * Renders the same visual as the ui `TooltipContent` (bubble + arrow) but
  * positions it directly from the anchor coordinates — Radix's popper
  * repositions asynchronously and mis-measures animated content, which made
- * tooltips drift on charts.
+ * tooltips drift on charts. Placement supports all four sides with
+ * Radix-style collision flipping.
  */
 export function ChartTooltip({ anchor, bubbleRef }: ChartTooltipProps) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const preferredSide = anchor?.side ?? "top";
+  const [resolvedSide, setResolvedSide] = useState<ChartTooltipSide>(preferredSide);
+
+  // Forward the wrapper node to both the internal measure ref and the
+  // optional external ref (used by cursor-following charts to clamp it)
+  const setBubbleNode = useCallback(
+    (node: HTMLDivElement | null) => {
+      wrapperRef.current = node;
+      if (typeof bubbleRef === "function") bubbleRef(node);
+      else if (bubbleRef) {
+        (bubbleRef as { current: HTMLDivElement | null }).current = node;
+      }
+    },
+    [bubbleRef],
+  );
+
+  // Measure before paint and flip to the opposite side if needed
+  useLayoutEffect(() => {
+    const node = wrapperRef.current;
+    if (!anchor || !node) return;
+    const next = resolveSide(
+      preferredSide,
+      anchor,
+      node.offsetWidth,
+      node.offsetHeight,
+    );
+    setResolvedSide((current) => (current === next ? current : next));
+  }, [anchor, preferredSide]);
+
   if (!anchor) return null;
-  // Flip below the point when there is no room above it
-  const flipped = anchor.top < FLIP_THRESHOLD_PX;
+  const side = SIDE_CLASSES[resolvedSide];
   return createPortal(
     <div
       data-slot="chart-tooltip-anchor"
@@ -74,18 +165,10 @@ export function ChartTooltip({ anchor, bubbleRef }: ChartTooltipProps) {
       {/* Positioning transforms live on this node; animations (which also
           drive `transform`) live on the bubble below so they can't clobber
           each other */}
-      <div
-        ref={bubbleRef}
-        className={cn(
-          "w-max -translate-x-1/2",
-          flipped
-            ? "translate-y-[10px]"
-            : "-translate-y-[calc(100%+10px)]",
-        )}
-      >
+      <div ref={setBubbleNode} className={cn("w-max", side.wrapper)}>
         <div
           data-slot="tooltip-content"
-          data-side={flipped ? "bottom" : "top"}
+          data-side={resolvedSide}
           className={cn(
             "relative w-fit max-w-xs rounded-md bg-foreground px-3 py-1.5 text-xs text-background",
             anchor.closing
@@ -99,8 +182,8 @@ export function ChartTooltip({ anchor, bubbleRef }: ChartTooltipProps) {
           <span
             aria-hidden
             className={cn(
-              "absolute left-1/2 size-2.5 -translate-x-1/2 rotate-45 rounded-[2px] bg-foreground",
-              flipped ? "-top-1" : "-bottom-1",
+              "absolute size-2.5 rotate-45 rounded-[2px] bg-foreground",
+              side.arrow,
             )}
           />
         </div>
@@ -128,6 +211,11 @@ export interface UseChartTooltipOptions {
    * (e.g. heatmap circles) hoverable across their whole face.
    */
   hoverDistance?: number;
+  /**
+   * Preferred side to place the tooltip on relative to the point. Auto-flips to
+   * the opposite side when there isn't room (Radix-style). Defaults to "top".
+   */
+  side?: ChartTooltipSide;
 }
 
 /** Clamp an anchor point so a bubble of `width`×`height` stays on-screen */
@@ -192,7 +280,7 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
         bubble?.offsetWidth ?? 0,
         bubble?.offsetHeight ?? 0,
       );
-      setAnchor({ left, top, lines });
+      setAnchor({ left, top, lines, side: optionsRef.current.side });
     };
 
     emitter.on("plotly_hover", (eventData) => {
@@ -239,7 +327,7 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
         left = mouse.clientX;
         top = mouse.clientY;
       }
-      setAnchor({ left, top, lines });
+      setAnchor({ left, top, lines, side: optionsRef.current.side });
     });
 
     // While following the cursor, keep the tooltip glued to the pointer even

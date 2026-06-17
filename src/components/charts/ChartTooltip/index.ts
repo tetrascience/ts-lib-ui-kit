@@ -7,5 +7,6 @@ export type {
   ChartTooltipAnchor,
   ChartTooltipHoverPoint,
   ChartTooltipProps,
+  ChartTooltipSide,
   UseChartTooltipOptions,
 } from "./ChartTooltip";

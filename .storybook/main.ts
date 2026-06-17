@@ -14,6 +14,10 @@ const config: StorybookConfig = {
     getAbsolutePath("@storybook/addon-docs"),
     getAbsolutePath("@storybook/addon-a11y"),
     getAbsolutePath("@storybook/addon-themes"),
+    // Serves the MCP endpoint at http://localhost:6006/mcp when running `storybook dev`.
+    // Local dev exposes the full toolset (docs + dev + testing). The deployed
+    // (static Vercel) build serves MCP via the `api/mcp` serverless function instead.
+    getAbsolutePath("@storybook/addon-mcp"),
   ],
   framework: {
     name: getAbsolutePath("@storybook/react-vite"),

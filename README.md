@@ -392,6 +392,24 @@ Visit <http://localhost:6006>.
 - [Theming Guide](./THEMING.md) - Customise the design system
 - [Contributing](./CONTRIBUTING.md#development-setup) - Clone the repo and run `yarn storybook`
 
+## MCP server (for AI coding agents)
+
+This library exposes an [MCP](https://modelcontextprotocol.io/) server so AI
+coding agents (Claude Code, Cursor, Claude Desktop) can query authoritative
+component lists, prop/variant options, and usage examples instead of guessing —
+reducing hallucinated component APIs when scaffolding a data app.
+
+**Deployed (no local checkout needed):**
+
+```bash
+npx mcp-add --type http --url "https://ts-lib-ui-kit-storybook.vercel.app/api/mcp"
+```
+
+**Local (full toolset, incl. writing & testing stories):** run `yarn storybook`,
+then point your agent at `http://localhost:6006/mcp`.
+
+See [docs/mcp-poc.md](./docs/mcp-poc.md) for how it works and what metadata it exposes.
+
 ## Tech Stack
 
 - React 19

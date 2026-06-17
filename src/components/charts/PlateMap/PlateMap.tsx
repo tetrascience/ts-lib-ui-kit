@@ -194,9 +194,17 @@ const PlateMap: React.FC<PlateMapProps> = ({
     return { grid: resultGrid, categoriesGrid: resultCategories, allValuesMap: resultAllValues, tooltipDataMap: resultTooltipData };
   }, [data, rows, columns, activeLayerId_]);
 
-  // Generate labels - use custom labels if provided, otherwise auto-generate
-  const rowLabels = customYLabels ?? generateRowLabels(rows);
-  const colLabels = customXLabels ?? generateColumnLabels(columns);
+  // Generate labels - use custom labels if provided, otherwise auto-generate.
+  // Memoized so a tooltip-driven re-render doesn't change their identity and
+  // needlessly rebuild the plot (which would clear the open tooltip).
+  const rowLabels = useMemo(
+    () => customYLabels ?? generateRowLabels(rows),
+    [customYLabels, rows],
+  );
+  const colLabels = useMemo(
+    () => customXLabels ?? generateColumnLabels(columns),
+    [customXLabels, columns],
+  );
 
   // Calculate value range if not provided
   const range = calculateValueRange(grid);
@@ -211,9 +219,13 @@ const PlateMap: React.FC<PlateMapProps> = ({
   const sentinelValue = zMin - (zMax - zMin) * PLATEMAP_CONSTANTS.SENTINEL_RATIO - 1;
 
   // Replace null values with sentinel for Plotly rendering
-  const displayGrid = hasNullValues
-    ? grid.map(row => row.map(val => val === null ? sentinelValue : val))
-    : grid;
+  const displayGrid = useMemo(
+    () =>
+      hasNullValues
+        ? grid.map((row) => row.map((val) => (val === null ? sentinelValue : val)))
+        : grid,
+    [hasNullValues, grid, sentinelValue],
+  );
 
   // Extend colorscale to include emptyWellColor at the bottom for null values
   const effectiveColorScale = useMemo(() => {
@@ -269,22 +281,27 @@ const PlateMap: React.FC<PlateMapProps> = ({
     return map;
   }, [effectiveLayers]);
 
-  // Build custom hover text matrix - shows ALL values regardless of active layer
-  const hoverText: string[][] = grid.map((row, rowIdx) =>
-    row.map((val, colIdx) => {
-      const wellId = `${rowLabels[rowIdx]}${colLabels[colIdx]}`;
-      const wellIdUpper = String(wellId).toUpperCase();
-      return buildWellHoverText({
-        wellId,
-        value: val,
-        allValues: allValuesMap.get(wellIdUpper),
-        tooltipExtra: tooltipDataMap.get(wellIdUpper),
-        activeLayerId: activeLayer?.id,
-        layerConfigMap,
-        precision,
-        valueUnit,
-      });
-    })
+  // Build custom hover text matrix - shows ALL values regardless of active layer.
+  // Memoized so its identity is stable across tooltip-driven re-renders.
+  const hoverText = useMemo<string[][]>(
+    () =>
+      grid.map((row, rowIdx) =>
+        row.map((val, colIdx) => {
+          const wellId = `${rowLabels[rowIdx]}${colLabels[colIdx]}`;
+          const wellIdUpper = String(wellId).toUpperCase();
+          return buildWellHoverText({
+            wellId,
+            value: val,
+            allValues: allValuesMap.get(wellIdUpper),
+            tooltipExtra: tooltipDataMap.get(wellIdUpper),
+            activeLayerId: activeLayer?.id,
+            layerConfigMap,
+            precision,
+            valueUnit,
+          });
+        })
+      ),
+    [grid, rowLabels, colLabels, allValuesMap, tooltipDataMap, activeLayer?.id, layerConfigMap, precision, valueUnit],
   );
 
   // Build categorical data for categorical mode

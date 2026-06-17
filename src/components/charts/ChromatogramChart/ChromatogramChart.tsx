@@ -43,6 +43,11 @@ export type {
 };
 
 
+// Stable default so the no-annotations case keeps a constant identity; an
+// inline `[]` default would change every render, re-running the plot effect
+// (and tearing down the hover tooltip) on each re-render.
+const EMPTY_ANNOTATIONS: PeakAnnotation[] = [];
+
 const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   series,
   width = 900,
@@ -50,7 +55,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   title,
   xAxisTitle = "Retention Time (min)",
   yAxisTitle = "Signal (mAU)",
-  annotations = [],
+  annotations = EMPTY_ANNOTATIONS,
   xRange,
   yRange,
   showLegend = true,

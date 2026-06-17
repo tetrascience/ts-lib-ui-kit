@@ -167,6 +167,7 @@ export function ChartTooltip({ anchor, bubbleRef }: ChartTooltipProps) {
           each other */}
       <div ref={setBubbleNode} className={cn("w-max", side.wrapper)}>
         <div
+          role="tooltip"
           data-slot="tooltip-content"
           data-side={resolvedSide}
           className={cn(
@@ -258,9 +259,16 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
   const bubbleRef = useRef<HTMLDivElement>(null);
   // Active lines while a cursor-following tooltip is shown; null when hidden
   const cursorLinesRef = useRef<string[] | null>(null);
+  // Removes the mousemove listener registered by the previous bindTooltip call
+  const detachMouseMoveRef = useRef<(() => void) | null>(null);
 
   const bindTooltip = useCallback((plotDiv: HTMLElement | null) => {
     if (!plotDiv) return;
+    // The chart effect can re-run (size/theme/props changes) and call this
+    // again on the same node; drop the prior mousemove listener so they don't
+    // accumulate. (Plotly's own hover/unhover handlers are cleared by newPlot.)
+    detachMouseMoveRef.current?.();
+    detachMouseMoveRef.current = null;
     setAnchor(null);
     cursorLinesRef.current = null;
 
@@ -332,12 +340,15 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
 
     // While following the cursor, keep the tooltip glued to the pointer even
     // when Plotly does not re-fire hover within the same point (e.g. a slice)
-    plotDiv.addEventListener("mousemove", (event) => {
+    const handleMouseMove = (event: MouseEvent) => {
       if (!optionsRef.current.followCursor) return;
       const lines = cursorLinesRef.current;
       if (!lines) return;
       positionAtCursor(lines, event.clientX, event.clientY);
-    });
+    };
+    plotDiv.addEventListener("mousemove", handleMouseMove);
+    detachMouseMoveRef.current = () =>
+      plotDiv.removeEventListener("mousemove", handleMouseMove);
 
     emitter.on("plotly_unhover", () => {
       clearTimeout(hideTimerRef.current);

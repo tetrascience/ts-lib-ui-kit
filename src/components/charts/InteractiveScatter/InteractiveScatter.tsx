@@ -175,7 +175,8 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
       // Points carry no outline; depth comes from a CSS drop-shadow
       // (see InteractiveScatter.scss). Selected points re-add a line below.
       line: {
-        width: 0,
+        color: theme.markerOutline,
+        width: 1,
       },
     };
 
@@ -203,7 +204,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     }
 
     return config;
-  }, [sizes, shapes, colorMapping, plotlyColorscale, plotlyColors, showColorBar, processedData, colors]);
+  }, [sizes, shapes, colorMapping, plotlyColorscale, plotlyColors, showColorBar, processedData, colors, theme]);
 
   // Create Plotly plot
   useEffect(() => {
@@ -354,6 +355,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     }
 
     return () => {
+      setHoverTip(null);
       if (currentRef) {
         Plotly.purge(currentRef);
       }

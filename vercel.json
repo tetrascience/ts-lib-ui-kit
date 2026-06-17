@@ -5,7 +5,8 @@
   "framework": null,
   "functions": {
     "api/mcp.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "storybook-static/mcp/components.json"
     }
   }
 }

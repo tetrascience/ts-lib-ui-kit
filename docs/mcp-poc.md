@@ -41,14 +41,17 @@ time. This is the "custom MCP server" alternative called out in the spike's scop
    allowed variant/size options), default args, and per-story args (concrete,
    copy-pasteable usage examples). Wired into the `build-storybook` script.
 3. **`api/mcp.ts`** — Vercel serverless function. Stateless Streamable-HTTP MCP
-   server (`@modelcontextprotocol/sdk`) that reads the catalog from its own
-   deployment and exposes three tools:
+   server (`@modelcontextprotocol/sdk`) that reads the catalog from disk (bundled
+   into the function, see below) and exposes three tools:
    - `list_components` — full inventory with story counts and tags
    - `get_component` — props/variants, default args, stories with example args, import hint
    - `search_components` — fuzzy search by name/title/tag/prop
-4. **`vercel.json`** — keeps the static Storybook as the deployment output and
-   configures the function. Vercel auto-routes `api/mcp.ts` to `/api/mcp` (no
-   rewrite needed).
+
+   The catalog is read from the filesystem rather than fetched over HTTP, so the
+   function makes no outbound request — no user-controlled URL, no SSRF surface.
+4. **`vercel.json`** — keeps the static Storybook as the deployment output,
+   bundles the catalog into the function via `functions.includeFiles`, and
+   configures it. Vercel auto-routes `api/mcp.ts` to `/api/mcp` (no rewrite needed).
 
 ## How to use it
 

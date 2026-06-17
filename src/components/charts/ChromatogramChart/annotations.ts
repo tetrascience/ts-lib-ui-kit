@@ -2,7 +2,7 @@
  * Annotation utilities for ChromatogramChart
  */
 
-import { CHART_COLORS } from "../../../utils/colors";
+import { seriesColor } from "../../../utils/colors";
 
 import { CHROMATOGRAM_ANNOTATION } from "./constants";
 
@@ -72,7 +72,7 @@ export function createPeakAnnotation(
   const isUserDefined = seriesIndex === -1;
   const color = isUserDefined
     ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_COLOR
-    : CHART_COLORS[seriesIndex % CHART_COLORS.length];
+    : seriesColor(seriesIndex);
   const textColor = isUserDefined
     ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_TEXT_COLOR
     : color;

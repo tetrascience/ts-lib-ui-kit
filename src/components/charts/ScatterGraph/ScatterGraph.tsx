@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useMemo } from "react";
 import { useChartTooltip } from "../ChartTooltip";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { CHART_COLORS } from "@/utils/colors";
+import { seriesColor } from "@/utils/colors";
 
 interface ScatterDataPoint {
   x: number;
@@ -145,7 +145,7 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
       mode: "markers" as const,
       name: series.name,
       marker: {
-        color: series.color ?? CHART_COLORS[index % CHART_COLORS.length],
+        color: seriesColor(index, series.color),
         size: 10,
         symbol: "circle" as const,
       },

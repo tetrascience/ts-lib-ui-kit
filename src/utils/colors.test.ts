@@ -4,6 +4,7 @@ import {
   CHART_COLORS,
   CHART_SEQUENTIAL,
   CHART_DIVERGING,
+  seriesColor,
   toPlotlyColorscale,
 } from "./colors";
 
@@ -28,6 +29,26 @@ describe("chart ramps", () => {
     ]) {
       expect(ramp).toHaveLength(12);
     }
+  });
+});
+
+describe("seriesColor", () => {
+  it("cycles through the palette by index when no explicit color is given", () => {
+    expect(seriesColor(0)).toBe(CHART_COLORS[0]);
+    expect(seriesColor(2)).toBe(CHART_COLORS[2]);
+  });
+
+  it("wraps around when the index exceeds the palette length", () => {
+    expect(seriesColor(CHART_COLORS.length)).toBe(CHART_COLORS[0]);
+    expect(seriesColor(CHART_COLORS.length + 3)).toBe(CHART_COLORS[3]);
+  });
+
+  it("uses the explicit color when provided", () => {
+    expect(seriesColor(5, "#abcdef")).toBe("#abcdef");
+  });
+
+  it("falls back to the palette for a null override", () => {
+    expect(seriesColor(1, null)).toBe(CHART_COLORS[1]);
   });
 });
 

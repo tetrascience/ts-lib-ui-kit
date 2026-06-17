@@ -2,7 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { CHART_COLORS } from "@/utils/colors";
+import { seriesColor } from "@/utils/colors";
 
 /** Default point position offset from the box edge */
 const DEFAULT_POINT_POSITION = -1.8;
@@ -127,7 +127,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
     if (!plotRef.current) return;
 
     const data = dataSeries.map((series, index) => {
-      const color = series.color ?? CHART_COLORS[index % CHART_COLORS.length];
+      const color = seriesColor(index, series.color);
       return {
         y: series.y,
         x: series.x,

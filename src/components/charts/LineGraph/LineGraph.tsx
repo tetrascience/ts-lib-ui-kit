@@ -2,7 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { CHART_COLORS } from "@/utils/colors";
+import { seriesColor } from "@/utils/colors";
 
 type MarkerSymbol =
   | "circle"
@@ -282,7 +282,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
     if (!plotRef.current) return;
 
     const plotData = dataSeries.map((series, index) => {
-      const color = series.color ?? CHART_COLORS[index % CHART_COLORS.length];
+      const color = seriesColor(index, series.color);
       return {
         x: series.x,
         y: series.y,

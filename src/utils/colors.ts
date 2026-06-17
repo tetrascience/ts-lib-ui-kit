@@ -89,6 +89,17 @@ export const CHART_COLORS = [
 ] as const;
 
 /**
+ * Resolve the color for a data series: use the explicit color when one is
+ * provided, otherwise cycle through the {@link CHART_COLORS} palette by series
+ * index (wrapping around when there are more series than palette slots).
+ *
+ * @param index - Zero-based series index
+ * @param explicit - Caller-provided color override, if any
+ */
+export const seriesColor = (index: number, explicit?: string | null): string =>
+  explicit ?? CHART_COLORS[index % CHART_COLORS.length];
+
+/**
  * Build a continuous color ramp from the `--chart-{name}-01` … `-12` CSS
  * variables, falling back to the provided hex steps during SSR.
  */

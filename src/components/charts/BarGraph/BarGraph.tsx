@@ -2,7 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { CHART_COLORS } from "@/utils/colors";
+import { seriesColor } from "@/utils/colors";
 
 interface BarDataSeries {
   x: number[];
@@ -142,7 +142,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
       type: "bar" as const,
       name: series.name,
       marker: {
-        color: series.color ?? CHART_COLORS[index % CHART_COLORS.length],
+        color: seriesColor(index, series.color),
       },
       width: barWidth,
       error_y: series.error_y,

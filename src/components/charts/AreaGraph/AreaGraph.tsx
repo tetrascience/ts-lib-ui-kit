@@ -2,7 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { CHART_COLORS } from "@/utils/colors";
+import { seriesColor } from "@/utils/colors";
 
 interface AreaDataSeries {
   x: number[];
@@ -166,7 +166,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           return result;
         });
 
-        const color = series.color ?? CHART_COLORS[index % CHART_COLORS.length];
+        const color = seriesColor(index, series.color);
         return {
           x: series.x,
           y: stackedY,
@@ -184,7 +184,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
     } else {
       // Normal mode - each area fills independently from zero
       data = dataSeries.map((series, index) => {
-        const color = series.color ?? CHART_COLORS[index % CHART_COLORS.length];
+        const color = seriesColor(index, series.color);
         return {
           x: series.x,
           y: series.y,

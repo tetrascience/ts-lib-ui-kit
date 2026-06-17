@@ -82,11 +82,14 @@ Or in Claude Code's MCP config:
 - The serverless handler was driven over HTTP locally: `initialize`, `tools/list`
   (3 tools), `get_component(Button)` (returns correct variant options + import
   hint), and `search_components("chart")` (13 matches) all succeed.
+- **Live on a Vercel preview deployment**: `GET /mcp/components.json` (200), MCP
+  `initialize` (200), and `tools/call get_component(Button)` all return correctly
+  against the deployed function — confirming the `includeFiles` disk-read works in
+  the real Vercel runtime.
 - `yarn typecheck` and `yarn lint` pass.
 
-> Still to verify on a real deploy: the live `/api/mcp` function behaviour on
-> Vercel (preview deployment) and a head-to-head agent scaffolding test
-> (MCP vs. baseline). Tracked as follow-ups below.
+> Still to do: a head-to-head agent scaffolding test (MCP vs. baseline). Tracked
+> as a follow-up below.
 
 ## Gaps in our component metadata (and how to close them)
 
@@ -118,8 +121,10 @@ both paths read from it.
 
 ### Suggested follow-up tickets
 
-1. Verify live `/api/mcp` on a Vercel preview deploy; document the canonical URL.
-2. Head-to-head agent scaffolding eval (MCP vs. baseline) on a representative data-app component.
-3. Metadata enrichment pass: complete `argTypes`, add descriptions to top components.
-4. (Optional) `react-docgen` prop extraction + design-token surfacing in the catalog.
-5. (Optional) Auth for the deployed endpoint if we ever gate the Storybook.
+1. Head-to-head agent scaffolding eval (MCP vs. baseline) on a representative data-app component.
+2. Metadata enrichment pass: complete `argTypes`, add descriptions to top components.
+3. (Optional) `react-docgen` prop extraction + design-token surfacing in the catalog.
+4. (Optional) Auth for the deployed endpoint if we ever gate the Storybook.
+
+> Live deployed endpoint confirmed working on a Vercel preview; the production URL
+> is `https://ts-lib-ui-kit-storybook.vercel.app/api/mcp` after merge to `main`.

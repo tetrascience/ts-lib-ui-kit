@@ -408,8 +408,6 @@ npx mcp-add --type http --url "https://ts-lib-ui-kit-storybook.vercel.app/api/mc
 **Local (full toolset, incl. writing & testing stories):** run `yarn storybook`,
 then point your agent at `http://localhost:6006/mcp`.
 
-See [docs/mcp-poc.md](./docs/mcp-poc.md) for how it works and what metadata it exposes.
-
 ## Tech Stack
 
 - React 19

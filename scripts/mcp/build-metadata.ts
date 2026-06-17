@@ -26,6 +26,7 @@ import path from "node:path";
 import {
   Node,
   Project,
+  SyntaxKind,
   type ObjectLiteralExpression,
   type SourceFile,
 } from "ts-morph";
@@ -99,7 +100,12 @@ function literalValue(node: Node | undefined): unknown {
   if (Node.isNullLiteral(node)) return null;
   if (Node.isPrefixUnaryExpression(node)) {
     const operand = literalValue(node.getOperand());
-    return typeof operand === "number" ? -operand : node.getText();
+    if (typeof operand === "number") {
+      const op = node.getOperatorToken();
+      if (op === SyntaxKind.MinusToken) return -operand;
+      if (op === SyntaxKind.PlusToken) return operand; // unary plus is a no-op
+    }
+    return node.getText();
   }
   if (Node.isArrayLiteralExpression(node)) {
     return node.getElements().map((el) => literalValue(el));

@@ -1,6 +1,5 @@
 import { expect, within } from "storybook/test";
 
-import { COLORS } from "./../../../utils/colors";
 import { Boxplot } from "./Boxplot";
 
 import type { BoxDataSeries } from "./Boxplot";
@@ -22,7 +21,6 @@ const generateBasicBoxData = (): BoxDataSeries[] => {
   return [
     {
       name: "Data A",
-      color: COLORS.ORANGE,
       y: [155, 135, 175, 185, 120, 125, 140, 160, 180, 145, 170, 165, 150],
     },
   ];
@@ -32,31 +30,26 @@ const generateMultipleBoxData = (): BoxDataSeries[] => {
   return [
     {
       name: "Group 1",
-      color: COLORS.ORANGE,
       y: [155, 135, 175, 185, 120, 125, 140, 160, 180, 145, 170, 165, 150],
       x: ["Group 1"],
     },
     {
       name: "Group 2",
-      color: COLORS.RED,
       y: [90, 85, 95, 105, 75, 80, 88, 92, 98, 82, 96, 87, 91],
       x: ["Group 2"],
     },
     {
       name: "Group 3",
-      color: COLORS.GREEN,
       y: [185, 165, 205, 215, 150, 155, 170, 190, 210, 175, 200, 195, 180],
       x: ["Group 3"],
     },
     {
       name: "Group 4",
-      color: COLORS.BLUE,
       y: [220, 200, 240, 250, 185, 190, 205, 225, 245, 210, 235, 230, 215],
       x: ["Group 4"],
     },
     {
       name: "Group 5",
-      color: COLORS.PURPLE,
       y: [135, 115, 155, 165, 100, 105, 120, 140, 160, 125, 150, 145, 130],
       x: ["Group 5"],
     },
@@ -67,7 +60,6 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
   return [
     {
       name: "Category A",
-      color: COLORS.ORANGE,
       y: [155, 135, 175, 185, 120, 125, 140, 160, 180, 145, 170, 165, 150, 155, 135, 175, 185, 120, 125, 140],
       x: [
         "200",
@@ -94,7 +86,6 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
     },
     {
       name: "Category B",
-      color: COLORS.RED,
       y: [90, 85, 95, 105, 75, 80, 88, 92, 98, 82, 96, 87, 91, 85, 95, 105, 75, 80, 88, 92],
       x: [
         "350",
@@ -121,7 +112,6 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
     },
     {
       name: "Category C",
-      color: COLORS.GREEN,
       y: [68, 45, 85, 95, 30, 35, 48, 68, 88, 53, 78, 73, 58, 65, 75, 85, 40, 45, 58, 72],
       x: [
         "500",
@@ -148,7 +138,6 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
     },
     {
       name: "Category D",
-      color: COLORS.BLUE,
       y: [220, 200, 240, 250, 185, 190, 205, 225, 245, 210, 235, 230, 215, 225, 195, 235, 245, 180, 185, 200],
       x: [
         "800",
@@ -175,7 +164,6 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
     },
     {
       name: "Category E",
-      color: COLORS.PURPLE,
       y: [135, 115, 155, 165, 100, 105, 120, 140, 160, 125, 150, 145, 130, 125, 135, 145, 90, 95, 110, 130],
       x: [
         "1000",

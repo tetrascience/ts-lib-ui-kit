@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { expect, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 
 import { InteractiveScatter } from "./InteractiveScatter";
 
@@ -739,5 +739,184 @@ return (
         language: "tsx",
       },
     },
+  },
+};
+
+/**
+ * Continuous color mapping: point color encodes a numeric field via the
+ * CVD-friendly diverging colorscale, with a colorbar legend.
+ */
+export const ContinuousColorMapping: Story = {
+  args: {
+    data: BASIC_DATA,
+    title: "Continuous Color Mapping",
+    xAxis: { title: "X Axis" },
+    yAxis: { title: "Y Axis" },
+    colorMapping: { type: "continuous", field: "value" },
+    showColorBar: true,
+    ...DEFAULT_DIMS,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart renders with a continuous trace", async () => {
+      await waitFor(() => {
+        expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+        expect(canvasElement.querySelectorAll(".scatterlayer .trace .points path").length).toBeGreaterThan(0);
+      });
+    });
+
+    await step("Colorbar legend is displayed with the field name", async () => {
+      await waitFor(() => {
+        expect(canvasElement.querySelector(".colorbar")).toBeInTheDocument();
+        expect(canvas.getByText("value")).toBeInTheDocument();
+      });
+    });
+  },
+};
+
+const EVENT_DATA: ScatterPoint[] = Array.from({ length: 6 }, (_, i) => ({
+  id: i + 1, // numeric IDs exercise the original-ID restoration path
+  x: (i + 1) * 10,
+  y: (i + 1) * 10,
+  label: `Point ${i + 1}`,
+  metadata: { category: CATEGORIES[i % 3] },
+}));
+
+/**
+ * Drives Plotly's click / box-select / deselect events programmatically to
+ * verify the full selection pipeline (handler → state → restyle → callback).
+ */
+export const SelectionEvents: Story = {
+  render: function Render(args) {
+    const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
+    const [lastMode, setLastMode] = useState<SelectionMode | "none">("none");
+    return (
+      <div>
+        <InteractiveScatter
+          {...args}
+          onSelectionChange={(ids, mode) => {
+            setSelectedIds(ids);
+            setLastMode(mode);
+          }}
+        />
+        <p style={{ fontFamily: "monospace", marginTop: 12 }}>
+          Selected: {selectedIds.size} | Mode: {lastMode} | Ids: {[...selectedIds].join(",")}
+        </p>
+      </div>
+    );
+  },
+  args: {
+    data: EVENT_DATA,
+    title: "Selection Events",
+    enableClickSelection: true,
+    enableBoxSelection: true,
+    enableLassoSelection: true,
+    ...DEFAULT_DIMS,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    type EmittingPlot = HTMLElement & {
+      emit: (event: string, data?: unknown) => void;
+      data: Array<{ ids?: string[] }>;
+    };
+
+    const plot = await waitFor(() => {
+      const gd = canvasElement.querySelector(".js-plotly-plot") as EmittingPlot | null;
+      expect(gd).toBeInTheDocument();
+      expect(gd?.data?.[0]?.ids?.length).toBeGreaterThan(0);
+      return gd as EmittingPlot;
+    });
+
+    await step("Clicking a point replaces the selection", async () => {
+      plot.emit("plotly_click", {
+        points: [{ data: plot.data[0], pointIndex: 1 }],
+        event: new MouseEvent("click"),
+      });
+      await waitFor(() => {
+        expect(canvas.getByText(/Selected: 1 \| Mode: replace \| Ids: 2/)).toBeInTheDocument();
+      });
+    });
+
+    await step("Box/lasso selection replaces with all enclosed points", async () => {
+      plot.emit("plotly_selected", {
+        points: [
+          { data: plot.data[0], pointIndex: 2 },
+          { data: plot.data[0], pointIndex: 3 },
+        ],
+      });
+      await waitFor(() => {
+        expect(canvas.getByText(/Selected: 2 \| Mode: replace \| Ids: 3,4/)).toBeInTheDocument();
+      });
+    });
+
+    await step("Deselect clears the selection", async () => {
+      plot.emit("plotly_deselect");
+      await waitFor(() => {
+        expect(canvas.getByText(/Selected: 0 \| Mode: replace/)).toBeInTheDocument();
+      });
+    });
+  },
+};
+
+/**
+ * The theme-styled HTML tooltip (default) replaces Plotly's hover labels —
+ * it follows the design tokens in light and dark mode. Set
+ * `tooltip.native: true` to restore Plotly's built-in labels.
+ */
+export const ThemedTooltip: Story = {
+  args: {
+    data: EVENT_DATA,
+    title: "Themed Tooltip",
+    tooltip: { enabled: true, fields: ["category"] },
+    ...DEFAULT_DIMS,
+  },
+  play: async ({ canvasElement, step }) => {
+    type EmittingPlot = HTMLElement & {
+      emit: (event: string, data?: unknown) => void;
+      data: Array<{ ids?: string[] }>;
+    };
+
+    const plot = await waitFor(() => {
+      const gd = canvasElement.querySelector(".js-plotly-plot") as EmittingPlot | null;
+      expect(gd).toBeInTheDocument();
+      expect(gd?.data?.[0]?.ids?.length).toBeGreaterThan(0);
+      return gd as EmittingPlot;
+    });
+
+    const fakeAxis = { d2p: () => 100, _offset: 40 };
+
+    await step("Hovering a point shows the themed tooltip", async () => {
+      plot.emit("plotly_hover", {
+        points: [
+          {
+            data: plot.data[0],
+            pointIndex: 0,
+            x: EVENT_DATA[0].x,
+            y: EVENT_DATA[0].y,
+            xaxis: fakeAxis,
+            yaxis: fakeAxis,
+          },
+        ],
+      });
+      await waitFor(() => {
+        const tip = canvasElement.querySelector('[role="tooltip"]');
+        expect(tip).toBeInTheDocument();
+        expect(tip).toHaveTextContent("Label: Point 1");
+        expect(tip).toHaveTextContent("category: Group A");
+      });
+    });
+
+    await step("No native Plotly hover label is rendered", async () => {
+      expect(canvasElement.querySelector(".hoverlayer .hovertext")).not.toBeInTheDocument();
+    });
+
+    await step("Unhover hides the tooltip", async () => {
+      plot.emit("plotly_unhover");
+      await waitFor(() => {
+        expect(canvasElement.querySelector('[role="tooltip"]')).not.toBeInTheDocument();
+      });
+    });
   },
 };

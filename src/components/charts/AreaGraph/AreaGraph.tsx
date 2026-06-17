@@ -2,12 +2,14 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { seriesColor } from "@/utils/colors";
 
 interface AreaDataSeries {
   x: number[];
   y: number[];
   name: string;
-  color: string;
+  /** Optional color override (auto-assigned from CHART_COLORS if not provided) */
+  color?: string;
   fill?: "tozeroy" | "tonexty" | "toself";
 }
 
@@ -164,6 +166,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           return result;
         });
 
+        const color = seriesColor(index, series.color);
         return {
           x: series.x,
           y: stackedY,
@@ -171,28 +174,31 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           mode: "lines" as const,
           name: series.name,
           fill: index === 0 ? ("tozeroy" as const) : ("tonexty" as const),
-          fillcolor: series.color,
+          fillcolor: color,
           line: {
-            color: series.color,
+            color,
             width: 2,
           },
         };
       });
     } else {
       // Normal mode - each area fills independently from zero
-      data = dataSeries.map((series) => ({
-        x: series.x,
-        y: series.y,
-        type: "scatter" as const,
-        mode: "lines" as const,
-        name: series.name,
-        fill: series.fill || ("tozeroy" as const),
-        fillcolor: series.color,
-        line: {
-          color: series.color,
-          width: 2,
-        },
-      }));
+      data = dataSeries.map((series, index) => {
+        const color = seriesColor(index, series.color);
+        return {
+          x: series.x,
+          y: series.y,
+          type: "scatter" as const,
+          mode: "lines" as const,
+          name: series.name,
+          fill: series.fill || ("tozeroy" as const),
+          fillcolor: color,
+          line: {
+            color,
+            width: 2,
+          },
+        };
+      });
     }
 
     const layout = {

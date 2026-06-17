@@ -52,10 +52,15 @@ Tokens live in `src/index.css` as CSS custom properties under `:root` / `.dark`.
 
 ### Chart Color Palette
 
-`src/utils/colors.ts` exports a `CHART_COLORS` array of 12 pre-harmonized colors (orange, red, green, yellow, purple, brown, pink, teal, dark blue, black, grey) used consistently across all chart components. Import via:
+`src/utils/colors.ts` exports a `CHART_COLORS` array of 12 CVD-friendly categorical colors (backed by the `--chart-1` … `--chart-12` tokens), plus `CHART_SEQUENTIAL` / `CHART_DIVERGING` ramps and a `toPlotlyColorscale()` helper, used consistently across all chart components. Import via:
 
 ```ts
-import { CHART_COLORS, COLORS } from "@tetrascience-npm/tetrascience-react-ui";
+import {
+  CHART_COLORS,
+  CHART_SEQUENTIAL,
+  CHART_DIVERGING,
+  toPlotlyColorscale,
+} from "@tetrascience-npm/tetrascience-react-ui";
 ```
 
 ---

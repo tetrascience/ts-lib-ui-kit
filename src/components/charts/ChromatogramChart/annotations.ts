@@ -2,7 +2,7 @@
  * Annotation utilities for ChromatogramChart
  */
 
-import { COLORS, CHART_COLORS } from "../../../utils/colors";
+import { seriesColor } from "../../../utils/colors";
 
 import { CHROMATOGRAM_ANNOTATION } from "./constants";
 
@@ -71,9 +71,11 @@ export function createPeakAnnotation(
 ): Partial<Plotly.Annotations> {
   const isUserDefined = seriesIndex === -1;
   const color = isUserDefined
-    ? COLORS.GREY_500
-    : CHART_COLORS[seriesIndex % CHART_COLORS.length];
-  const textColor = isUserDefined ? COLORS.BLACK_900 : color;
+    ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_COLOR
+    : seriesColor(seriesIndex);
+  const textColor = isUserDefined
+    ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_TEXT_COLOR
+    : color;
 
   // Use provided text or auto-generate from computed area
   const text = peak.text ?? (peak._computed?.area === undefined ? "" : `Area: ${peak._computed.area.toFixed(2)}`);
@@ -100,7 +102,7 @@ export function createPeakAnnotation(
       color: textColor,
       family: "Inter, sans-serif",
     },
-    bgcolor: COLORS.WHITE,
+    bgcolor: CHROMATOGRAM_ANNOTATION.BACKGROUND_COLOR,
     borderpad: 2,
     bordercolor: isUserDefined ? undefined : color,
     borderwidth: isUserDefined ? 0 : 1,

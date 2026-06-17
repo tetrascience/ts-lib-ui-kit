@@ -1,7 +1,7 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef } from "react";
 
-import { CHART_COLORS } from "../../../utils/colors";
+import { seriesColor } from "../../../utils/colors";
 
 
 import {
@@ -115,7 +115,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
 
     // Build trace data with auto-assigned colors
     const plotData: Plotly.Data[] = processedSeries.map((s, index) => {
-      const traceColor = s.color || CHART_COLORS[index % CHART_COLORS.length];
+      const traceColor = seriesColor(index, s.color);
       const extraContent = buildHoverExtraContent(s.name, s.metadata);
 
       const trace: Plotly.Data = {

@@ -1,42 +1,28 @@
+import {
+  CHART_COLORS,
+  CHART_DIVERGING,
+  toPlotlyColorscale,
+} from "@/utils/colors";
+
 /**
- * Default colors for the scatter plot
+ * Default colors for the scatter plot. Background, grid, and axis colors
+ * come from the active theme via `usePlotlyTheme`.
  */
 export const COLORS = {
-  primary: "#4575b4",
-  selected: "#d73027",
-  unselected: "#cccccc",
-  hover: "#fdae61",
-  gridLine: "#e0e0e0",
-  axisLine: "#333333",
-  background: "#ffffff",
+  primary: CHART_COLORS[0],
+  selected: CHART_COLORS[3],
 };
 
 /**
- * Default color scale for continuous color mapping
+ * Default color scale for continuous color mapping (CVD-friendly diverging ramp)
  */
-export const DEFAULT_COLOR_SCALE: Array<[number, string]> = [
-  [0, "#313695"],
-  [0.25, "#4575b4"],
-  [0.5, "#ffffbf"],
-  [0.75, "#fdae61"],
-  [1, "#a50026"],
-];
+export const DEFAULT_COLOR_SCALE: Array<[number, string]> =
+  toPlotlyColorscale(CHART_DIVERGING.blueOrange);
 
 /**
  * Default category colors (cycle through these)
  */
-export const DEFAULT_CATEGORY_COLORS = [
-  "#4575b4", // Blue
-  "#d73027", // Red
-  "#1a9850", // Green
-  "#fdae61", // Orange
-  "#9467bd", // Purple
-  "#e377c2", // Pink
-  "#8c564b", // Brown
-  "#bcbd22", // Olive
-  "#17becf", // Cyan
-  "#ff7f0e", // Dark orange
-];
+export const DEFAULT_CATEGORY_COLORS = CHART_COLORS;
 
 /**
  * Default sizes

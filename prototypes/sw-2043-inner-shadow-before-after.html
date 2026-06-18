@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SW-2043 — input-group focus inner shadow: before / after</title>
+<style>
+  .scope {
+    --background: oklch(0.9864 0.0042 236.5);
+    --foreground: oklch(0.233 0.0698 265.03);
+    --card: oklch(1 0 0);
+    --border: oklch(0.9288 0.0126 255.51);
+    --input: oklch(0.79 0.0229 250.7);
+    --muted-foreground: oklch(0.4878 0.0372 255.3);
+    --ring: oklch(0.5590 0.1657 269.30);
+    --focus-shadow: 0 1px 1px 0 rgba(0,0,0,0.18), 0 1px 2px 1px rgba(0,0,0,0.08);
+  }
+  .scope.dark {
+    --background: oklch(0.2259 0.0116 293.09);
+    --foreground: oklch(0.9152 0.0115 308.32);
+    --card: oklch(0.3126 0.0107 293.42);
+    --border: oklch(0.397 0.0168 281.07);
+    --input: oklch(0.397 0.0168 281.07);
+    --muted-foreground: oklch(0.6569 0.0162 285.95);
+    --ring: oklch(0.7889 0.1227 271.5);
+    --focus-shadow: 0 1px 2px 1px rgba(0,0,0,0.4), 0 1px 1px 0 rgba(0,0,0,0.3);
+  }
+
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+         background:#f1f3f7; color:#0D1B3E; -webkit-font-smoothing:antialiased; }
+  header.page { padding:26px 32px 12px; border-bottom:1px solid #e2e6ee; background:#fff; }
+  header.page h1 { margin:0 0 4px; font-size:19px; }
+  header.page p { margin:0; color:#586173; font-size:13px; max-width:980px; }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.92em; }
+  .controls { padding:12px 32px; border-bottom:1px solid #e2e6ee; background:#fff; }
+  .seg { display:inline-flex; gap:2px; padding:3px; background:#eef1f6; border-radius:10px; }
+  .seg .lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#7a8295; align-self:center; padding:0 8px 0 4px; }
+  .seg button { font:inherit; font-size:13px; font-weight:500; padding:6px 12px; border-radius:8px; border:0; background:transparent; color:#0D1B3E; cursor:pointer; }
+  .seg button.active { background:#2F45B5; color:#fff; }
+
+  main { padding:30px 32px 64px; }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:760px){ .cols { grid-template-columns:1fr; } }
+  .pane { background:var(--background); color:var(--foreground); border:1px solid var(--border); border-radius:14px; padding:26px 26px 40px; }
+  .tag { font-size:11px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; margin-bottom:4px; }
+  .tag.before { color:#b4540a; } .tag.after { color:#1f7a3d; }
+  .dark .tag.before { color:#ffb066; } .dark .tag.after { color:#5fd189; }
+  .note { font-size:12px; opacity:.75; margin-bottom:26px; min-height:34px; }
+
+  /* input group — focused appearance */
+  .ig { display:flex; align-items:center; width:320px; height:32px; border:1px solid var(--ring);
+        border-radius:10px; background:var(--card); box-shadow:var(--focus-shadow); }
+  .ig .addon { display:flex; align-items:center; height:100%; padding:0 10px; font-size:13px; color:var(--muted-foreground);
+        border-right:1px solid var(--border); background:color-mix(in oklch, var(--foreground) 4%, transparent); border-radius:9px 0 0 9px; }
+  .ig .control { flex:1; padding:0 10px; font-size:13px; color:var(--foreground); }
+  /* BEFORE: the inner control also paints its own focus shadow (the bug) */
+  .before .ig .control { box-shadow:var(--focus-shadow); border-radius:6px; }
+  /* AFTER: focus-visible:shadow-none on the control → no inner shadow */
+</style>
+</head>
+<body>
+<header class="page">
+  <h1>SW-2043 — input-group focus: doubled inner shadow</h1>
+  <p>On keyboard focus the wrapper shows <code>border-ring</code> + <code>shadow-focus</code>. <b>Before</b>, the inner
+     control (built on <code>Input</code>) also painted its own <code>focus-visible:shadow-focus</code> — a faint second
+     shadow box around the text field. <b>After</b> adds <code>focus-visible:shadow-none</code> to the control, so only
+     the wrapper shows the indicator.</p>
+</header>
+<div class="controls">
+  <div class="seg" id="themeSeg"><span class="lbl">Theme</span>
+    <button data-theme="light" class="active">Light</button>
+    <button data-theme="dark">Dark</button></div>
+</div>
+<main>
+  <div class="cols" id="cols"></div>
+</main>
+<script>
+  const ig = () => `<div class="ig"><span class="addon">https://</span><span class="control">app.tetrascience.com</span></div>`;
+  const data = [
+    { cls:'before', tag:'Before', note:'Wrapper shadow <b>plus</b> the inner control with its own <code>shadow-focus</code> — a doubled, offset box.' },
+    { cls:'after',  tag:'After',  note:'Control gets <code>focus-visible:shadow-none</code>; only the single wrapper-level indicator remains.' },
+  ];
+  const cols = document.getElementById('cols');
+  data.forEach(d => {
+    const p = document.createElement('div');
+    p.className = `pane scope ${d.cls}`;
+    p.innerHTML = `<div class="tag ${d.cls}">${d.tag}</div><div class="note">${d.note}</div>${ig()}`;
+    cols.appendChild(p);
+  });
+  let theme='light';
+  const apply=()=>document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('dark', theme==='dark'));
+  document.getElementById('themeSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;theme=b.dataset.theme;document.querySelectorAll('#themeSeg button').forEach(x=>x.classList.toggle('active',x===b));apply();});
+  apply();
+  const p=new URLSearchParams(location.search); if(p.get('theme')==='dark') document.querySelector('#themeSeg [data-theme=dark]').click();
+</script>
+</body>
+</html>

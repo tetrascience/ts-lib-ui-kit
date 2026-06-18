@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Focus-shadow audit — before / after</title>
+<style>
+  .scope {
+    --background: oklch(0.9864 0.0042 236.5);
+    --foreground: oklch(0.233 0.0698 265.03);
+    --card: oklch(1 0 0);
+    --border: oklch(0.9288 0.0126 255.51);   /* #E2E8F0 */
+    --input: oklch(0.79 0.0229 250.7);        /* #B0BCC9 */
+    --muted: oklch(0.91 0.015 258);
+    --muted-foreground: oklch(0.4878 0.0372 255.3); /* #526175 */
+    --accent: oklch(0.9678 0.0153 257.20);    /* #EEF5FF */
+    --accent-foreground: oklch(0.233 0.0698 265.03);
+    --primary: oklch(0.4465 0.1784 269.19);
+    --ring: oklch(0.5590 0.1657 269.30);      /* #4E6AD4 */
+    --focus-shadow: 0 1px 1px 0 rgba(0,0,0,0.18), 0 1px 2px 1px rgba(0,0,0,0.08);
+  }
+  .scope.dark {
+    --background: oklch(0.2259 0.0116 293.09);
+    --foreground: oklch(0.9152 0.0115 308.32);
+    --card: oklch(0.3126 0.0107 293.42);
+    --border: oklch(0.397 0.0168 281.07);
+    --input: oklch(0.397 0.0168 281.07);
+    --muted: oklch(0.18 0.0102 285.33);
+    --muted-foreground: oklch(0.6569 0.0162 285.95); /* #90909B */
+    --accent: oklch(0.3126 0.0307 270.54);
+    --accent-foreground: oklch(0.9152 0.0115 308.32);
+    --primary: oklch(0.7889 0.1227 271.5);
+    --ring: oklch(0.7889 0.1227 271.5);
+    --focus-shadow: 0 1px 2px 1px rgba(0,0,0,0.4), 0 1px 1px 0 rgba(0,0,0,0.3);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+         background:#f1f3f7; color:#0D1B3E; -webkit-font-smoothing:antialiased; }
+  header.page { padding:26px 32px 12px; border-bottom:1px solid #e2e6ee; background:#fff; }
+  header.page h1 { margin:0 0 4px; font-size:20px; }
+  header.page p { margin:0; color:#586173; font-size:13px; max-width:980px; }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.92em; }
+
+  .controls { display:flex; gap:8px; align-items:center; padding:12px 32px; position:sticky; top:0; z-index:5;
+              background:rgba(255,255,255,.92); backdrop-filter:blur(6px); border-bottom:1px solid #e2e6ee; }
+  .controls button { font:inherit; font-size:13px; font-weight:500; padding:6px 14px; border-radius:8px;
+                     border:1px solid #cdd4e0; background:#fff; color:#0D1B3E; cursor:pointer; }
+  .controls button.active { background:#2F45B5; color:#fff; border-color:#2F45B5; }
+  .controls .how { font-size:12px; color:#5a6072; margin-left:auto; }
+  .controls .how b { color:#2F45B5; }
+
+  main { padding:24px 32px 72px; display:flex; flex-direction:column; gap:22px; }
+  .finding { border:1px solid #e2e6ee; border-radius:14px; background:#fff; overflow:hidden; }
+  .finding > .head { padding:14px 18px; border-bottom:1px solid #eef1f6; }
+  .finding > .head h2 { margin:0 0 3px; font-size:15px; }
+  .finding > .head .sev { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+                          padding:2px 7px; border-radius:6px; margin-right:8px; }
+  .sev.high { background:#fde7e7; color:#b3261e; } .sev.med { background:#fef0dc; color:#9a5b00; }
+  .sev.low { background:#e7eefc; color:#2f45b5; }
+  .finding > .head p { margin:4px 0 0; font-size:12.5px; color:#586173; }
+  .finding > .head .file { font-family:ui-monospace,Menlo,monospace; font-size:11.5px; color:#7a8295; }
+
+  .ba { display:grid; grid-template-columns:1fr 1fr; }
+  @media (max-width:820px){ .ba { grid-template-columns:1fr; } }
+  .pane { padding:20px; background:var(--background); color:var(--foreground); }
+  .pane + .pane { border-left:1px solid var(--border); }
+  @media (max-width:820px){ .pane + .pane { border-left:0; border-top:1px solid var(--border); } }
+  .pane > .tag { font-size:11px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; margin-bottom:4px; }
+  .tag.before { color:#b4540a; } .tag.after { color:#1f7a3d; }
+  .dark .tag.before { color:#ffb066; } .dark .tag.after { color:#5fd189; }
+  .pane > .note { font-size:11.5px; opacity:.72; margin-bottom:16px; min-height:30px; }
+  .stage { display:flex; align-items:center; gap:16px; flex-wrap:wrap; min-height:60px; }
+
+  /* ---------------- accordion trigger ---------------- */
+  .acc { width:280px; border:1px solid var(--border); border-radius:10px; background:var(--card); }
+  .acc-trigger { position:relative; display:flex; width:100%; align-items:center; justify-content:space-between;
+    padding:12px 14px; border:1px solid transparent; border-radius:10px; background:transparent;
+    color:var(--foreground); font:inherit; font-size:14px; font-weight:500; cursor:pointer; outline:none; }
+  .acc-trigger:focus-visible, .force .acc-trigger {
+    border-color:var(--ring); box-shadow:var(--focus-shadow); }
+  /* BEFORE only: the orphan ::after the audit flags — visualized as a dashed box to PROVE it has no geometry */
+  .before .acc-trigger.orphan::after { content:""; border:2px solid var(--ring); /* no inset / size / position → nothing renders */ }
+
+  /* ---------------- slider ---------------- */
+  .slider { position:relative; width:220px; height:4px; border-radius:9999px; background:var(--muted); }
+  .slider .range { position:absolute; left:0; top:0; height:100%; width:55%; border-radius:9999px; background:var(--primary); }
+  .thumb { position:absolute; top:50%; left:55%; transform:translate(-50%,-50%); width:14px; height:14px;
+    border-radius:50%; border:1px solid var(--ring); background:#fff; cursor:grab; outline:none; padding:0; }
+  /* BEFORE: halo on hover + active + focus-visible */
+  .before .thumb:hover, .before .thumb:active, .before .thumb:focus-visible, .before.force .thumb { box-shadow:var(--focus-shadow); }
+  /* AFTER: halo only on keyboard focus */
+  .after .thumb:focus-visible, .after.force .thumb { box-shadow:var(--focus-shadow); }
+
+  /* ---------------- combobox chips ---------------- */
+  /* chips = combobox-chips: min-h-12, gap-1, rounded-md, border-input, bg-transparent, px-1/py-1 */
+  .chips { display:flex; flex-wrap:wrap; align-items:center; gap:4px; width:260px; min-height:48px;
+    padding:4px 4px; border:1px solid var(--input); border-radius:8px; background:var(--card); }
+  .chip { display:inline-flex; align-items:center; height:20px; padding:0 8px; border-radius:9999px;
+    background:var(--accent); color:var(--accent-foreground); font-size:12px; }
+  .chips input { flex:1; min-width:60px; border:0; outline:none; background:transparent; color:var(--foreground); font:inherit; font-size:13px; }
+  /* BEFORE: focus-within (mouse OR keyboard) */
+  .before .chips:focus-within, .before.force .chips { border-color:var(--ring); box-shadow:var(--focus-shadow); }
+  /* AFTER: keyboard only via :has(:focus-visible) */
+  .after .chips:has(input:focus-visible), .after.force .chips { border-color:var(--ring); box-shadow:var(--focus-shadow); }
+  /* single combobox (input-group reference) — keyboard-only in BOTH before & after */
+  /* single = input-group: h-8 (32px), rounded-lg (10px), border-input, bg-transparent */
+  /* single combobox now matches Select: h-10 (40px) + bg-card (white) */
+  .cbx-single { display:flex; align-items:center; width:220px; height:40px; padding:0 10px; border:1px solid var(--input); border-radius:10px; background:var(--card); }
+  .cbx-single input { flex:1; min-width:0; border:0; outline:none; background:transparent; color:var(--foreground); font:inherit; font-size:13px; }
+  .cbx-single .chev { width:16px; height:16px; flex:none; color:var(--muted-foreground); }
+  .cbx-single:has(input:focus-visible), .force .cbx-single { border-color:var(--ring); box-shadow:var(--focus-shadow); }
+  .cbx-demo { display:flex; flex-direction:column; gap:5px; }
+  .cbx-label { font-size:10.5px; font-weight:600; opacity:.6; text-transform:uppercase; letter-spacing:.03em; }
+
+  /* ---------------- scroll area ---------------- */
+  .sa { width:240px; height:96px; border:1px solid var(--border); border-radius:10px; overflow:auto;
+    background:var(--card); outline:none; }
+  .sa .inner { padding:10px 12px; font-size:13px; line-height:1.7; }
+  /* BEFORE: drop shadow-focus on the viewport */
+  .before .sa:focus-visible, .before.force .sa { box-shadow:var(--focus-shadow); }
+  /* No change proposed — After keeps the current shadow-focus */
+  .after .sa:focus-visible, .after.force .sa { box-shadow:var(--focus-shadow); }
+
+  /* ---------------- reference components (Input / Textarea / Select) ---------------- */
+  /* All use bg-card (white) + border-input + rounded-lg + focus-visible:border-ring:shadow-focus */
+  .inp, .txa { width:240px; border:1px solid var(--input); border-radius:10px; background:var(--card);
+    color:var(--foreground); font:inherit; font-size:13px; outline:none; }
+  .inp { height:32px; padding:0 10px; }
+  .txa { min-height:64px; padding:8px 10px; resize:none; }
+  .inp::placeholder, .txa::placeholder { color:var(--muted-foreground); }
+  .sel { display:flex; align-items:center; justify-content:space-between; gap:6px; width:240px; height:40px;
+    padding:0 8px 0 10px; border:1px solid var(--input); border-radius:10px; background:var(--card);
+    color:var(--foreground); font:inherit; font-size:13px; cursor:pointer; outline:none; }
+  .sel .chev { width:16px; height:16px; flex:none; color:var(--muted-foreground); }
+  /* identical in both panes — these are the consistent baseline (border-ring + shadow-focus, keyboard-only) */
+  .inp:focus-visible, .force .inp,
+  .txa:focus-visible, .force .txa,
+  .sel:focus-visible, .force .sel { border-color:var(--ring); box-shadow:var(--focus-shadow); }
+</style>
+</head>
+<body>
+<header class="page">
+  <h1>Focus-shadow audit — before / after</h1>
+  <p>Each finding renders the real element with the <b>current</b> CSS (Before) and the <b>proposed</b> fix (After).
+     Focus behavior is native: use the keyboard (Tab) vs the mouse (click/hover) to see the difference, or hit
+     <b>Force focus state</b> to apply the focus styling statically to everything.</p>
+</header>
+
+<div class="controls">
+  <button id="lightBtn" class="active" onclick="setMode('light')">Light</button>
+  <button id="darkBtn" onclick="setMode('dark')">Dark</button>
+  <button id="forceBtn" onclick="toggleForce()">Force focus state: <b id="forceState">off</b></button>
+  <span class="how">Try it: <b>Tab</b> = keyboard focus · <b>click / hover</b> = mouse</span>
+</div>
+
+<main id="main">
+
+  <!-- 1. ACCORDION -->
+  <div class="finding">
+    <div class="head">
+      <h2><span class="sev high">High</span>Accordion — orphan <code>focus-visible:after:border-ring</code></h2>
+      <p>The <code>::after</code> has no <code>content</code>/size/position, so the class paints nothing — a dead no-op. The real indicator (<code>border-ring</code> + <code>shadow-focus</code>) is unaffected. After = orphan removed.</p>
+      <span class="file">src/components/ui/accordion.tsx:44</span>
+    </div>
+    <div class="ba" data-demo="accordion"></div>
+  </div>
+
+  <!-- 2. SLIDER -->
+  <div class="finding">
+    <div class="head">
+      <h2><span class="sev med">Med</span>Slider — focus halo leaks onto hover &amp; active</h2>
+      <p>Before applies <code>shadow-focus</code> on <code>hover</code>, <code>active</code> and <code>focus-visible</code>, so mouse users see the focus halo. After scopes it to keyboard focus only. <b>Hover the thumb</b> to see the difference.</p>
+      <span class="file">src/components/ui/slider.tsx:50</span>
+    </div>
+    <div class="ba" data-demo="slider"></div>
+  </div>
+
+  <!-- 3. COMBOBOX -->
+  <div class="finding">
+    <div class="head">
+      <h2><span class="sev med">Med</span>Combobox chips — <code>focus-within</code> instead of keyboard-only</h2>
+      <p>The same component ships two surfaces: the <b>chips</b> variant uses <code>focus-within</code> (fires on mouse click), while the <b>single / input-group</b> variant is already keyboard-only via <code>:has(input:focus-visible)</code>. After aligns chips to the reference. <b>Click</b> each field — in Before only the chips lights up; the single one (correctly) doesn't.</p>
+      <span class="file">src/components/ui/combobox.tsx:227</span>
+    </div>
+    <div class="ba" data-demo="combobox"></div>
+  </div>
+
+  <!-- 4. SCROLL AREA -->
+  <div class="finding">
+    <div class="head">
+      <h2><span class="sev low">Low–Med</span>Scroll-area — flagged, no change proposed</h2>
+      <p>The viewport's <code>shadow-focus</code> is a soft downward drop shadow and may never fire if the viewport isn't tab-focusable. Noted as low-confidence — <b>leaving as-is</b>; After matches Before for reference.</p>
+      <span class="file">src/components/ui/scroll-area.tsx:21</span>
+    </div>
+    <div class="ba" data-demo="scrollarea"></div>
+  </div>
+
+  <!-- REFERENCE COMPONENTS — standard focus treatment, faithful light backgrounds -->
+  <div class="finding">
+    <div class="head">
+      <h2><span class="sev low">Ref</span>Input — standard treatment (bg-card)</h2>
+      <p>Reference: no audit issue. <code>border-input</code> + <code>bg-card</code> (white), focus → <code>border-ring</code> + <code>shadow-focus</code> on the focusable element, keyboard-only. Both panes identical — this is the baseline. Toggle <b>Force focus state</b> to flip default → focus.</p>
+      <span class="file">src/components/ui/input.tsx:11</span>
+    </div>
+    <div class="ba" data-demo="input"></div>
+  </div>
+
+  <div class="finding">
+    <div class="head">
+      <h2><span class="sev low">Ref</span>Textarea — standard treatment (bg-card)</h2>
+      <p>Reference: <code>border-input</code> + <code>bg-card</code> (white), <code>min-h-16</code>, focus → <code>border-ring</code> + <code>shadow-focus</code>, keyboard-only.</p>
+      <span class="file">src/components/ui/textarea.tsx:10</span>
+    </div>
+    <div class="ba" data-demo="textarea"></div>
+  </div>
+
+  <div class="finding">
+    <div class="head">
+      <h2><span class="sev low">Ref</span>Select trigger — standard treatment (bg-card)</h2>
+      <p>Reference: <code>border-input</code> + <code>bg-card</code> (white), chevron in <code>--muted-foreground</code>, focus → <code>border-ring</code> + <code>shadow-focus</code> on the trigger button, keyboard-only.</p>
+      <span class="file">src/components/ui/select.tsx:48</span>
+    </div>
+    <div class="ba" data-demo="select"></div>
+  </div>
+
+</main>
+
+<script>
+  const demos = {
+    accordion: (side) => `
+      <div class="acc">
+        <button class="acc-trigger ${side==='before'?'orphan':''}">Section title <span>⌄</span></button>
+      </div>`,
+    slider: () => `
+      <div class="slider"><div class="range"></div>
+        <button class="thumb" aria-label="value"></button>
+      </div>`,
+    combobox: () => `
+      <div class="cbx-demo"><div class="cbx-label">Chips (multi) · flagged</div>
+        <div class="chips"><span class="chip">alpha</span><span class="chip">beta</span><input placeholder="Add…" /></div></div>
+      <div class="cbx-demo"><div class="cbx-label">Single (input-group) · matches Select (h-10, bg-card)</div>
+        <div class="cbx-single"><input placeholder="Search…" /><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div></div>`,
+    scrollarea: () => `
+      <div class="sa" tabindex="0"><div class="inner">
+        Row one<br/>Row two<br/>Row three<br/>Row four<br/>Row five<br/>Row six<br/>Row seven<br/>Row eight
+      </div></div>`,
+    input: () => `<input class="inp" placeholder="Enter a value…" />`,
+    textarea: () => `<textarea class="txa" placeholder="Enter a longer value…"></textarea>`,
+    select: () => `<button class="sel">Choose an option<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>`,
+  };
+
+  function paneHTML(side, demo) {
+    const note = {
+      accordion: { before:'Dead <code>::after</code> rule present (renders nothing).', after:'Orphan class removed — identical focus.' },
+      slider:    { before:'Halo on hover · active · focus.', after:'Halo on keyboard focus only.' },
+      combobox:  { before:'Chips: <code>focus-within</code> (mouse+kbd). Single: keyboard-only — inconsistent.', after:'Chips now matches Single — both keyboard-only.' },
+      scrollarea:{ before:'Current <code>shadow-focus</code>.', after:'No change — kept as-is.' },
+      input:     { before:'bg-card · border-ring + shadow-focus on focus.', after:'Same — reference baseline (no change).' },
+      textarea:  { before:'bg-card · border-ring + shadow-focus on focus.', after:'Same — reference baseline (no change).' },
+      select:    { before:'bg-card · border-ring + shadow-focus on focus.', after:'Same — reference baseline (no change).' },
+    }[demo][side];
+    return `<div class="tag ${side}">${side}</div><div class="note">${note}</div>
+            <div class="stage">${demos[demo](side)}</div>`;
+  }
+
+  document.querySelectorAll('.ba').forEach(ba => {
+    const demo = ba.dataset.demo;
+    ['before','after'].forEach(side => {
+      const pane = document.createElement('div');
+      pane.className = `pane scope ${side}`;
+      pane.innerHTML = paneHTML(side, demo);
+      ba.appendChild(pane);
+    });
+  });
+
+  let mode='light', forced=false;
+  function applyMode(){
+    document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('dark', mode==='dark'));
+    lightBtn.classList.toggle('active', mode==='light');
+    darkBtn.classList.toggle('active', mode==='dark');
+  }
+  function setMode(m){ mode=m; applyMode(); }
+  function toggleForce(){
+    forced=!forced; forceState.textContent=forced?'on':'off';
+    document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('force', forced));
+  }
+  applyMode();
+
+  const params=new URLSearchParams(location.search);
+  if(params.get('mode')==='dark') setMode('dark');
+  if(params.get('force')==='1') toggleForce();
+</script>
+</body>
+</html>

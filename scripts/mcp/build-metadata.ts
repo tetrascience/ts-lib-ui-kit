@@ -35,10 +35,9 @@ const ROOT = process.cwd();
 const STATIC_DIR = path.resolve(ROOT, process.argv[2] ?? "storybook-static");
 const INDEX_JSON = path.join(STATIC_DIR, "index.json");
 const OUT_DIR = path.join(STATIC_DIR, "mcp");
+// Read at runtime by the serverless function (api/mcp.ts), which Vercel bundles
+// into the function via `functions.includeFiles` in vercel.json.
 const OUT_FILE = path.join(OUT_DIR, "components.json");
-// Copy bundled into the serverless function via a static import (see api/mcp.ts),
-// so the deployed `/api/mcp` ships the data without any vercel.json config.
-const FUNCTION_CATALOG = path.join(ROOT, "api", "_components.json");
 
 /** A single entry in Storybook's generated `index.json`. */
 interface StorybookIndexEntry {
@@ -289,12 +288,8 @@ function main(): void {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(OUT_FILE, `${JSON.stringify(catalog, null, 2)}\n`, "utf8");
 
-  // Minified copy next to the serverless function for the bundler to inline.
-  fs.writeFileSync(FUNCTION_CATALOG, `${JSON.stringify(catalog)}\n`, "utf8");
-
   console.log(
-    `[mcp] wrote ${components.length} components to ${path.relative(ROOT, OUT_FILE)} ` +
-      `and ${path.relative(ROOT, FUNCTION_CATALOG)}`,
+    `[mcp] wrote ${components.length} components to ${path.relative(ROOT, OUT_FILE)}`,
   );
 }
 

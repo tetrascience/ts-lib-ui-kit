@@ -12,8 +12,6 @@
 dist
 *.tgz
 storybook-static
-# Generated MCP catalog bundled into the api/mcp serverless function at build time
-api/_components.json
 
 # Coverage reports
 coverage

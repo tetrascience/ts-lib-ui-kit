@@ -36,26 +36,28 @@ time. This is the "custom MCP server" alternative called out in the spike's scop
    full-featured local `/mcp` for free.
 2. **`scripts/mcp/build-metadata.ts`** — runs after `storybook build`. Uses
    `storybook-static/index.json` (the published inventory) as the spine and
-   enriches it from the `*.stories.tsx` sources via `ts-morph`, emitting the
-   catalog twice: `storybook-static/mcp/components.json` (for reference) and
-   `api/_components.json` (gitignored) next to the function. Each component carries
-   `argTypes` (the exact allowed variant/size options), default args, and per-story
-   args (concrete, copy-pasteable usage examples). Wired into `build-storybook`.
+   enriches it from the `*.stories.tsx` sources via `ts-morph`, emitting
+   `storybook-static/mcp/components.json`. Each component carries `argTypes` (the
+   exact allowed variant/size options), default args, and per-story args (concrete,
+   copy-pasteable usage examples). Wired into `build-storybook`.
 3. **`api/mcp.ts`** — Vercel serverless function. Stateless Streamable-HTTP MCP
    server (`@modelcontextprotocol/sdk`) that exposes three tools:
    - `list_components` — full inventory with story counts and tags
    - `get_component` — props/variants, default args, stories with example args, import hint
    - `search_components` — fuzzy search by name/title/tag/prop
 
-   It `import`s `api/_components.json`; Vercel's bundler inlines that JSON into the
-   function, so the function makes **no outbound request** — no user-controlled
-   URL, no SSRF surface.
-4. **`vercel.json`** — **required**. Pins `buildCommand` to `yarn build-storybook`
-   (so the metadata step writes `api/_components.json` *before* the function is
-   bundled), sets the static `outputDirectory`, and declares the `api/mcp.ts`
-   function. Without it the deployed function 404s: the build reverts to dashboard
-   settings, `api/_components.json` is never generated, and the import fails to
-   bundle. Vercel auto-routes `api/mcp.ts` to `/api/mcp` (no rewrite needed).
+   It reads `storybook-static/mcp/components.json` from disk at runtime (cached per
+   warm instance), so the function makes **no outbound request** — no
+   user-controlled URL, no SSRF surface. (An earlier attempt to ship the data via a
+   JSON `import` 500'd on Vercel: in this `"type": "module"` package the runtime
+   applied native-ESM JSON import-attribute rules. The disk read avoids that.)
+4. **`vercel.json`** — **required**, doing two things the deploy can't work without:
+   pins `buildCommand` to `yarn build-storybook` (so the metadata step generates the
+   catalog), and bundles that catalog into the function via `functions.includeFiles`
+   (it lives in the static output, not the function's source tree) while declaring
+   the `api/mcp.ts` function. It also sets the static `outputDirectory`. Without it
+   the deployed function **404s** (build reverts to dashboard settings, catalog
+   never generated). Vercel auto-routes `api/mcp.ts` to `/api/mcp` (no rewrite).
 
 ## How to use it
 

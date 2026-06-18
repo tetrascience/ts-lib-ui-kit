@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "yarn build-storybook",
+  "outputDirectory": "storybook-static",
+  "framework": null,
+  "functions": {
+    "api/mcp.ts": {
+      "maxDuration": 30
+    }
+  }
+}

@@ -445,7 +445,7 @@ npx mcp-add --type http --url "https://ts-lib-ui-kit-storybook.vercel.app/api/mc
 
 Then ask your agent something like *"using the ts-ui-kit MCP, list the available
 components"* or *"build a form using ts-ui-kit primitives"* to confirm it's wired
-up. See [docs/mcp-poc.md](./docs/mcp-poc.md) for how it works.
+up.
 
 ## Tech Stack
 

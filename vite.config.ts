@@ -104,6 +104,10 @@ export default defineConfig({
           ],
           exclude: ["node_modules", "dist", "examples"],
           environmentMatchGlobs: [["src/server/**/*.test.ts", "node"]],
+          // ts-morph's first parse loads the TS compiler; under CI + v8 coverage
+          // that cold start can push the heavier zephyr AST tests past the 5s
+          // default, causing intermittent timeouts. Give them headroom.
+          testTimeout: 20000,
           mockReset: true,
           restoreMocks: true,
         },

@@ -1,6 +1,8 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { seriesColor } from "@/utils/colors";
 
@@ -43,6 +45,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
 
   const { yMin, yMax } = useMemo(() => {
     let minY = Number.MAX_VALUE;
@@ -133,6 +136,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
         x: series.x,
         type: "box" as const,
         name: series.name,
+        hoverinfo: "none" as const,
         marker: {
           color,
         },
@@ -222,6 +226,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, data, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -232,11 +237,12 @@ const Boxplot: React.FC<BoxplotProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks, theme]);
+  }, [dataSeries, width, height, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks, theme, bindTooltip]);
 
   return (
-    <div className="boxplot-container">
+    <div className="boxplot-container relative">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
+      {tooltipElement}
     </div>
   );
 };

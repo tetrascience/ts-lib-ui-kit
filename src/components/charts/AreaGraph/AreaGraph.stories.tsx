@@ -1,4 +1,4 @@
-import { expect, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 
 import { AreaGraph } from "./AreaGraph";
 
@@ -120,6 +120,25 @@ export const Stacked: Story = {
       expect(canvas.getByText("Series 1")).toBeInTheDocument();
       expect(canvas.getByText("Series 2")).toBeInTheDocument();
       expect(canvas.getByText("Series 3")).toBeInTheDocument();
+    });
+
+    await step("Tooltip shows the series value, not the stacked sum", async () => {
+      type EmittingPlot = HTMLElement & {
+        emit: (event: string, data?: unknown) => void;
+      };
+      const plot = canvasElement.querySelector(".js-plotly-plot") as EmittingPlot;
+      // Series 2 at x=600: own value 70, stacked y = 140 + 70 = 210
+      plot.emit("plotly_hover", {
+        points: [{ x: 600, y: 210, customdata: 70, data: { name: "Series 2" } }],
+        event: new MouseEvent("mousemove", { clientX: 300, clientY: 200 }),
+      });
+      await waitFor(() => {
+        const tip = document.querySelector('[data-slot="tooltip-content"]');
+        expect(tip).toBeInTheDocument();
+        expect(tip).toHaveTextContent("Rows: 70");
+        expect(tip).not.toHaveTextContent("Rows: 210");
+      });
+      plot.emit("plotly_unhover");
     });
   },
 };

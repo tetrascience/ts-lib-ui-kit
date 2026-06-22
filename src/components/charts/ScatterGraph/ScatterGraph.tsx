@@ -1,6 +1,8 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { seriesColor } from "@/utils/colors";
 
@@ -41,6 +43,7 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
 
   const { xMin, xMax, yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
@@ -132,17 +135,6 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
     [theme],
   );
 
-  const spikeOptions = useMemo(
-    () => ({
-      showspikes: true,
-      spikemode: "across" as const,
-      spikedash: "solid" as const,
-      spikecolor: theme.spikeColor,
-      spikethickness: 2,
-    }),
-    [theme],
-  );
-
   useEffect(() => {
     if (!plotRef.current) return;
 
@@ -157,7 +149,7 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
         size: 10,
         symbol: "circle" as const,
       },
-      hovertemplate: `${xTitle}: %{x}<br>${yTitle}: %{y}<extra>${series.name}</extra>`,
+      hoverinfo: "none" as const,
     }));
 
     const layout = {
@@ -196,7 +188,6 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
         tickvals: xTicks,
         ticktext: xTicks.map(String),
         showgrid: true,
-        ...spikeOptions,
         ...tickOptions,
       },
       yaxis: {
@@ -216,7 +207,6 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
         tickmode: "array" as const,
         tickvals: yTicks,
         showgrid: true,
-        ...spikeOptions,
         ...tickOptions,
       },
       legend: {
@@ -243,20 +233,61 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
+
+    // Crosshair guide lines through the hovered point. Drawn as layout shapes
+    // with `layer: "below"` so they sit behind the markers — native Plotly
+    // spikelines always render on top and can't be moved behind.
+    const emitter = plotElement as unknown as Plotly.PlotlyHTMLElement;
+    const crosshairLine = { color: theme.spikeColor, width: 2 };
+    emitter.on("plotly_hover", (eventData) => {
+      const point = eventData.points[0];
+      if (!point) return;
+      void Plotly.relayout(plotElement, {
+        shapes: [
+          {
+            type: "line",
+            xref: "x",
+            yref: "paper",
+            x0: point.x,
+            x1: point.x,
+            y0: 0,
+            y1: 1,
+            line: crosshairLine,
+            layer: "below",
+          },
+          {
+            type: "line",
+            xref: "paper",
+            yref: "y",
+            x0: 0,
+            x1: 1,
+            y0: point.y,
+            y1: point.y,
+            line: crosshairLine,
+            layer: "below",
+          },
+        ],
+      });
+    });
+    emitter.on("plotly_unhover", () => {
+      void Plotly.relayout(plotElement, { shapes: [] });
+    });
 
     return () => {
       if (plotElement) {
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, effectiveXRange, effectiveYRange, xTicks, yTicks, tickOptions, spikeOptions, theme]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, effectiveXRange, effectiveYRange, xTicks, yTicks, tickOptions, theme, bindTooltip]);
 
   return (
-    <div className="chart-container">
+    <div className="chart-container relative">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
+      {tooltipElement}
     </div>
   );
 };

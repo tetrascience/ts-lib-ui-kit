@@ -1,6 +1,8 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { seriesColor } from "@/utils/colors";
 
@@ -46,6 +48,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
 
   const { yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
@@ -141,6 +144,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
       y: series.y,
       type: "bar" as const,
       name: series.name,
+      hoverinfo: "none" as const,
       marker: {
         color: seriesColor(index, series.color),
       },
@@ -229,6 +233,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, data, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -239,11 +244,12 @@ const BarGraph: React.FC<BarGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, theme]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, theme, bindTooltip]);
 
   return (
-    <div className="bar-graph-container">
+    <div className="bar-graph-container relative">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
+      {tooltipElement}
     </div>
   );
 };

@@ -2,7 +2,7 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef } from "react";
 
 import { seriesColor } from "../../../utils/colors";
-
+import { useChartTooltip } from "../ChartTooltip";
 
 import {
   groupOverlappingPeaks,
@@ -13,7 +13,6 @@ import { CHROMATOGRAM_LAYOUT } from "./constants";
 import {
   validateSeriesData,
   applyBaselineCorrection,
-  buildHoverExtraContent,
   collectPeaksWithBoundaryData,
   processUserAnnotations,
 } from "./dataProcessing";
@@ -44,6 +43,11 @@ export type {
 };
 
 
+// Stable default so the no-annotations case keeps a constant identity; an
+// inline `[]` default would change every render, re-running the plot effect
+// (and tearing down the hover tooltip) on each re-render.
+const EMPTY_ANNOTATIONS: PeakAnnotation[] = [];
+
 const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   series,
   width = 900,
@@ -51,7 +55,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   title,
   xAxisTitle = "Retention Time (min)",
   yAxisTitle = "Signal (mAU)",
-  annotations = [],
+  annotations = EMPTY_ANNOTATIONS,
   xRange,
   yRange,
   showLegend = true,
@@ -72,6 +76,10 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   const enablePeakDetection = peakDetectionOptions !== undefined;
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({
+    xLabel: xAxisTitle,
+    yLabel: yAxisTitle,
+  });
 
   // Memoize processed series with baseline correction
   const processedSeries = useMemo(() => {
@@ -116,7 +124,6 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     // Build trace data with auto-assigned colors
     const plotData: Plotly.Data[] = processedSeries.map((s, index) => {
       const traceColor = seriesColor(index, s.color);
-      const extraContent = buildHoverExtraContent(s.name, s.metadata);
 
       const trace: Plotly.Data = {
         x: s.x,
@@ -128,7 +135,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
           color: traceColor,
           width: 1.5,
         },
-        hovertemplate: `%{x:.2f} ${xAxisTitle}<br>%{y:.2f} ${yAxisTitle}<extra>${extraContent}</extra>`,
+        hoverinfo: "none" as const,
       };
       if (showMarkers) {
         trace.marker = {
@@ -272,6 +279,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     };
 
     Plotly.newPlot(currentRef, plotData, layout, config);
+    bindTooltip(currentRef);
 
     return () => {
       if (currentRef) {
@@ -282,12 +290,13 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     processedSeries, allDetectedPeaks, series.length, width, height, title, xAxisTitle, yAxisTitle,
     processedAnnotations, xRange, yRange, showLegend, showGridX, showGridY, showMarkers, markerSize,
     showCrosshairs, enablePeakDetection, peakDetectionOptions, showPeakAreas, boundaryMarkers,
-    annotationOverlapThreshold, showExportButton, theme,
+    annotationOverlapThreshold, showExportButton, theme, bindTooltip,
   ]);
 
   return (
-    <div className="chromatogram-chart-container">
+    <div className="chromatogram-chart-container relative">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
+      {tooltipElement}
     </div>
   );
 };

@@ -31,6 +31,13 @@ import {
   type SourceFile,
 } from "ts-morph";
 
+import type {
+  ArgType,
+  Catalog,
+  ComponentMeta,
+  StoryMeta,
+} from "../../api/_catalog-types";
+
 const ROOT = process.cwd();
 const STATIC_DIR = path.resolve(ROOT, process.argv[2] ?? "storybook-static");
 const INDEX_JSON = path.join(STATIC_DIR, "index.json");
@@ -52,37 +59,6 @@ interface StorybookIndexEntry {
 interface StorybookIndex {
   v: number;
   entries: Record<string, StorybookIndexEntry>;
-}
-
-interface ArgType {
-  control?: string;
-  options?: unknown[];
-  description?: string;
-}
-
-interface StoryMeta {
-  name: string;
-  args?: Record<string, unknown>;
-  hasPlayTest: boolean;
-}
-
-interface ComponentMeta {
-  title: string;
-  name: string;
-  importPath: string;
-  tags: string[];
-  hasDocsPage: boolean;
-  argTypes: Record<string, ArgType>;
-  defaultArgs: Record<string, unknown>;
-  stories: StoryMeta[];
-}
-
-interface Catalog {
-  generatedAt: string;
-  packageName: string;
-  packageVersion: string;
-  componentCount: number;
-  components: ComponentMeta[];
 }
 
 /**

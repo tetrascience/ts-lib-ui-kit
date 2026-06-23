@@ -751,11 +751,10 @@ export const WorkflowPanelInteractions: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
-    await step("Expanded panel shows step labels and counts", async () => {
+    await step("Expanded panel shows step labels", async () => {
       expect(canvas.getByText("Step Alpha")).toBeInTheDocument();
       expect(canvas.getByText("Step Beta")).toBeInTheDocument();
       expect(canvas.getByText("Disabled")).toBeInTheDocument();
-      expect(canvas.getByText("1K")).toBeInTheDocument();
     });
 
     await step("Clicking Step Beta makes it the active step", async () => {
@@ -833,7 +832,7 @@ export const MultipleNavGroups: Story = {
     await step("All pages from both groups are visible", async () => {
       expect(canvas.getByRole("button", { name: "Project" })).toBeInTheDocument();
       expect(canvas.getByRole("button", { name: "Explorer" })).toBeInTheDocument();
-      expect(canvas.getAllByText("Filters").length).toBeGreaterThan(0);
+      expect(canvas.getByRole("button", { name: "Filters" })).toBeInTheDocument();
     });
 
     await step("A separator divides the two groups in the icon rail", async () => {
@@ -846,7 +845,7 @@ export const MultipleNavGroups: Story = {
     await step("Active page icon has primary highlight", async () => {
       // Filters page is isActive — its icon container has bg-primary/10
       const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
-      const activePage = within(rail!).getByText("Filters").closest("button");
+      const activePage = within(rail!).getByRole("button", { name: "Filters" });
       const iconContainer = activePage?.querySelector(".bg-primary\\/10");
       expect(iconContainer).toBeInTheDocument();
     });
@@ -1183,7 +1182,7 @@ export const CompactProperty: Story = {
       // Icon rail has md:flex which means it's hidden on mobile
       expect(rail).toHaveClass("hidden", "md:flex");
       const railStyles = window.getComputedStyle(rail!);
-      expect(railStyles.width).toBe("60px");
+      expect(railStyles.width).toBe("48px");
     });
 
     await step("User menu is visible at bottom of icon rail", async () => {

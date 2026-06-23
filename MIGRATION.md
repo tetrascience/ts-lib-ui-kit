@@ -117,10 +117,8 @@ These shadcn components are new additions with no prior equivalent:
 | `ComboBox`          | Searchable select           |
 | `Command`           | Command palette (cmdk)      |
 | `ContextMenu`       | Right-click menus           |
-| `Drawer`            | Bottom sheet drawer         |
 | `HoverCard`         | Hover info cards            |
 | `InputGroup`        | Input with addons           |
-| `InputOTP`          | OTP code input              |
 | `Item`              | Generic list item           |
 | `KBD`               | Keyboard shortcut display   |
 | `NavigationMenu`    | Navigation menus            |
@@ -208,7 +206,6 @@ The following exports no longer exist:
 - `embla-carousel-react` — Carousel
 - `react-day-picker` + `date-fns` — Calendar
 - `react-resizable-panels` — Resizable layouts
-- `vaul` — Drawer component
 
 ### Removed
 

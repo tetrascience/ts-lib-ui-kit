@@ -17,6 +17,10 @@ interface AreaDataSeries {
 
 type AreaGraphVariant = "normal" | "stacked";
 
+/** Top margin reserving room for the 32px title; reduced when no title is set */
+const TITLE_MARGIN_TOP = 80;
+const NO_TITLE_MARGIN_TOP = 40;
+
 interface AreaGraphProps {
   dataSeries: AreaDataSeries[];
   width?: number;
@@ -38,7 +42,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   variant = "normal",
   xTitle = "Columns",
   yTitle = "Rows",
-  title = "Area Graph",
+  title,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
@@ -146,21 +150,24 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   );
 
   const titleOptions = useMemo(
-    () => ({
-      text: title,
-      x: 0.5,
-      y: 0.95,
-      xanchor: "center" as const,
-      yanchor: "top" as const,
-      font: {
-        size: 32,
-        weight: 600,
-        family: "Inter, sans-serif",
-        color: theme.textColor,
-        lineheight: 1.2,
-        standoff: 30,
-      },
-    }),
+    () =>
+      title
+        ? {
+            text: title,
+            x: 0.5,
+            y: 0.95,
+            xanchor: "center" as const,
+            yanchor: "top" as const,
+            font: {
+              size: 32,
+              weight: 600,
+              family: "Inter, sans-serif",
+              color: theme.textColor,
+              lineheight: 1.2,
+              standoff: 30,
+            },
+          }
+        : undefined,
     [title, theme],
   );
 
@@ -235,8 +242,14 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
     const layout = {
       width,
       height: height,
-      title: titleOptions,
-      margin: { l: 80, r: 40, b: 80, t: 80, pad: 0 },
+      ...(titleOptions ? { title: titleOptions } : {}),
+      margin: {
+        l: 80,
+        r: 40,
+        b: 80,
+        t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+        pad: 0,
+      },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
@@ -316,7 +329,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks, theme, bindTooltip]);
+  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, theme, bindTooltip]);
 
   return (
     <div className="area-graph-container relative">

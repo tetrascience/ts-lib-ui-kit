@@ -1,4 +1,5 @@
 import { SparklesIcon } from "lucide-react"
+import { expect, userEvent } from "storybook/test"
 
 import {
   AssistantDockControls,
@@ -64,7 +65,7 @@ function MockContent() {
 
 function Demo({ defaultDock }: { defaultDock?: AssistantDock }) {
   return (
-    <AssistantLayoutProvider defaultDock={defaultDock} storageKey={`sb.assistant.${defaultDock ?? "left"}`}>
+    <AssistantLayoutProvider defaultDock={defaultDock} persist={false}>
       <div className="flex h-screen w-full flex-col gap-2 p-3">
         <div className="flex shrink-0 items-center justify-between">
           <span className="text-sm font-semibold">Workspace</span>
@@ -78,6 +79,42 @@ function Demo({ defaultDock }: { defaultDock?: AssistantDock }) {
   )
 }
 
-export const DockedLeft: Story = { render: () => <Demo defaultDock="left" /> }
+export const DockedLeft: Story = {
+  render: () => <Demo defaultDock="left" />,
+  play: async ({ canvasElement, step }) => {
+    const body = () => canvasElement.querySelector('[data-slot="assistant-layout"]') as HTMLElement
+    const assistant = () =>
+      canvasElement.querySelector('[data-slot="assistant-layout-assistant"]') as HTMLElement
+    // The three dock buttons are the only elements with aria-pressed.
+    const dockButtons = () => [...canvasElement.querySelectorAll<HTMLElement>("[aria-pressed]")]
+
+    await step("Starts docked left (row, assistant first)", async () => {
+      expect(getComputedStyle(body()).flexDirection).toBe("row")
+      expect(getComputedStyle(assistant()).order).toBe("0")
+      expect(assistant()).toBeVisible()
+    })
+
+    await step("Dock bottom → column", async () => {
+      await userEvent.click(dockButtons()[1]) // [left, bottom, right]
+      expect(getComputedStyle(body()).flexDirection).toBe("column")
+      expect(getComputedStyle(assistant()).order).toBe("2")
+    })
+
+    await step("Click the active dock again → hidden, no splitter, none pressed", async () => {
+      await userEvent.click(dockButtons()[1]) // now active → hides
+      expect(canvasElement.querySelector('[role="separator"]')).toBeNull()
+      expect(dockButtons().some((b) => b.getAttribute("aria-pressed") === "true")).toBe(false)
+      // assistant stays mounted (state preserved) but is visually hidden
+      expect(assistant()).not.toBeVisible()
+    })
+
+    await step("Re-dock right → visible again, assistant after content", async () => {
+      await userEvent.click(dockButtons()[2])
+      expect(assistant()).toBeVisible()
+      expect(getComputedStyle(body()).flexDirection).toBe("row")
+      expect(getComputedStyle(assistant()).order).toBe("2")
+    })
+  },
+}
 export const DockedRight: Story = { render: () => <Demo defaultDock="right" /> }
 export const DockedBottom: Story = { render: () => <Demo defaultDock="bottom" /> }

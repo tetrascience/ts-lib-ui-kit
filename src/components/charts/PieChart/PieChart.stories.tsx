@@ -54,11 +54,23 @@ export const Default: Story = {
     });
 
     await step("Legend shows parameter labels", async () => {
-      const legendRoot = canvasElement.querySelector(".legend-container");
+      const legendRoot = canvasElement.querySelector("[data-slot='pie-legend']");
       expect(legendRoot).toBeTruthy();
       const legend = within(legendRoot as HTMLElement);
       expect(legend.getByText("pH")).toBeInTheDocument();
       expect(legend.getByText("Temperature")).toBeInTheDocument();
+    });
+
+    await step("Legend color swatches have non-zero rendered size", async () => {
+      const swatches = canvasElement.querySelectorAll<HTMLElement>(
+        "[data-slot='pie-legend-swatch']",
+      );
+      expect(swatches.length).toBe(5);
+      swatches.forEach((swatch) => {
+        const rect = swatch.getBoundingClientRect();
+        expect(rect.width).toBeGreaterThan(0);
+        expect(rect.height).toBeGreaterThan(0);
+      });
     });
   },
 };
@@ -101,7 +113,7 @@ export const WithCustomColors: Story = {
     });
 
     await step("Legend shows parameter labels", async () => {
-      const legendRoot = canvasElement.querySelector(".legend-container");
+      const legendRoot = canvasElement.querySelector("[data-slot='pie-legend']");
       expect(legendRoot).toBeTruthy();
       const legend = within(legendRoot as HTMLElement);
       expect(legend.getByText("pH")).toBeInTheDocument();
@@ -149,7 +161,7 @@ export const DonutChart: Story = {
     });
 
     await step("Legend shows parameter labels", async () => {
-      const legendRoot = canvasElement.querySelector(".legend-container");
+      const legendRoot = canvasElement.querySelector("[data-slot='pie-legend']");
       expect(legendRoot).toBeTruthy();
       const legend = within(legendRoot as HTMLElement);
       expect(legend.getByText("Viability")).toBeInTheDocument();
@@ -195,7 +207,7 @@ export const WithLabelAndValues: Story = {
     });
 
     await step("Legend shows parameter labels", async () => {
-      const legendRoot = canvasElement.querySelector(".legend-container");
+      const legendRoot = canvasElement.querySelector("[data-slot='pie-legend']");
       expect(legendRoot).toBeTruthy();
       const legend = within(legendRoot as HTMLElement);
       expect(legend.getByText("pH")).toBeInTheDocument();
@@ -243,7 +255,7 @@ export const WithRotation: Story = {
     });
 
     await step("Legend shows parameter labels", async () => {
-      const legendRoot = canvasElement.querySelector(".legend-container");
+      const legendRoot = canvasElement.querySelector("[data-slot='pie-legend']");
       expect(legendRoot).toBeTruthy();
       const legend = within(legendRoot as HTMLElement);
       expect(legend.getByText("Dissolved Oxygen")).toBeInTheDocument();

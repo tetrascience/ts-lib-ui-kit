@@ -11,6 +11,7 @@ export * from "@/components/composed/ConfirmDialog";
 export * from "@/components/composed/RichListItem";
 export * from "@/components/composed/EmptyState";
 export * from "@/components/composed/ProcessFlow";
+export * from "@/components/composed/AssistantLayout";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";

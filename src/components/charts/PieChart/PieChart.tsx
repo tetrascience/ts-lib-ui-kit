@@ -131,7 +131,7 @@ const PieChart: React.FC<PieChartProps> = ({
     colors,
   }) => {
     const items = labels.map((label, i) => (
-      <React.Fragment key={label}>
+      <React.Fragment key={`${label}-${i}`}>
         <div className="flex items-center text-[13px] leading-[18px] font-medium">
           <span
             data-slot="pie-legend-swatch"

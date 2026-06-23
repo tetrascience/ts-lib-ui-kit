@@ -45,7 +45,10 @@ export const COMPACT_AXIS_TITLE_STANDOFF = 8;
  */
 export const COMPACT_CHART_MARGIN = { l: 44, r: 16, b: 36, t: 30, pad: 0 };
 
-/** Resolve the font-size tokens for a density (defaults to comfortable). */
+/**
+ * Resolve the font-size tokens for a density. Accepts `undefined` (treated as
+ * comfortable) so it can be called directly with an optional `density?` prop.
+ */
 export const chartDensityTokens = (
-  density: ChartDensity = "comfortable",
+  density?: ChartDensity,
 ): ChartDensityTokens => (density === "compact" ? COMPACT : COMFORTABLE);

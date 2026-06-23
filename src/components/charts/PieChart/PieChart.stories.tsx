@@ -265,8 +265,10 @@ export const CompactDashboardTile: Story = {
       name: "Bioreactor Parameters",
     },
     title: "Parameters",
-    width: 260,
-    height: 260,
+    // `width` matches the tile; `height` is the plot height — the HTML title and
+    // legend stack above/below it, so plot(200) + title + legend ≈ the 260 tile.
+    width: 600,
+    height: 200,
     textInfo: "percent",
     hole: 0,
     rotation: 0,
@@ -280,9 +282,6 @@ export const CompactDashboardTile: Story = {
         border: "1px solid var(--border, #e2e8f0)",
         borderRadius: 8,
         overflow: "hidden",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
       }}
     >
       <PieChart {...args} />

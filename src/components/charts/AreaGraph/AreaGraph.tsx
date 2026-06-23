@@ -6,6 +6,12 @@ import { chartTooltipLines, useChartTooltip } from "../ChartTooltip";
 import { useElementSize } from "@/hooks/use-element-size";
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { cn } from "@/lib/utils";
+import {
+  COMPACT_AXIS_TITLE_STANDOFF,
+  COMPACT_CHART_MARGIN,
+  chartDensityTokens,
+  type ChartDensity,
+} from "@/utils/chartDensity";
 import { seriesColor } from "@/utils/colors";
 
 interface AreaDataSeries {
@@ -18,6 +24,9 @@ interface AreaDataSeries {
 }
 
 type AreaGraphVariant = "normal" | "stacked";
+
+/** Comfortable-density gap between each axis title and its ticks */
+const COMFORTABLE_AXIS_TITLE_STANDOFF = 15;
 
 /** Top margin reserving room for the 32px title; reduced when no title is set */
 const TITLE_MARGIN_TOP = 80;
@@ -41,6 +50,8 @@ interface AreaGraphProps {
   xTitle?: string;
   yTitle?: string;
   title?: string;
+  /** Sizing preset; `"compact"` shrinks fonts and margins for dashboard tiles */
+  density?: ChartDensity;
   /**
    * Categorical labels for the x-axis ticks. When provided, the x data values
    * still drive area positioning but the displayed tick labels match these
@@ -60,6 +71,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   xTitle,
   yTitle,
   title,
+  density = "comfortable",
   xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
@@ -169,6 +181,9 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
     return ticks;
   }, [effectiveYRange]);
 
+  const tokens = useMemo(() => chartDensityTokens(density), [density]);
+  const compact = density === "compact";
+
   // When categorical labels are supplied, ticks must sit on the actual data
   // x-positions rather than the computed nice-step values above. Sorted
   // ascending so labels map deterministically to x regardless of series order.
@@ -188,7 +203,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
       tickwidth: 1,
       ticks: "outside" as const,
       tickfont: {
-        size: 16,
+        size: tokens.tickFontSize,
         color: theme.textColor,
         family: "Inter, sans-serif",
         weight: 400,
@@ -198,7 +213,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
       position: 0,
       zeroline: false,
     }),
-    [theme],
+    [theme, tokens.tickFontSize],
   );
 
   const titleOptions = useMemo(
@@ -211,7 +226,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
             xanchor: "center" as const,
             yanchor: "top" as const,
             font: {
-              size: 32,
+              size: tokens.titleFontSize,
               weight: 600,
               family: "Inter, sans-serif",
               color: theme.textColor,
@@ -220,7 +235,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
             },
           }
         : undefined,
-    [title, theme],
+    [title, theme, tokens.titleFontSize],
   );
 
   useEffect(() => {
@@ -283,15 +298,17 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
       width: sizeRef.current.width,
       height: sizeRef.current.height,
       ...(titleOptions ? { title: titleOptions } : {}),
-      margin: {
-        l: 80,
-        r: 40,
-        // Reserve room for tick labels, the x-axis title, and the
-        // container-anchored bottom legend stacked beneath them.
-        b: 96,
-        t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
-        pad: 0,
-      },
+      margin: compact
+        ? COMPACT_CHART_MARGIN
+        : {
+            l: 80,
+            r: 40,
+            // Reserve room for tick labels, the x-axis title, and the
+            // container-anchored bottom legend stacked beneath them.
+            b: 96,
+            t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+            pad: 0,
+          },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
@@ -302,12 +319,12 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         title: {
           text: xTitle,
           font: {
-            size: 16,
+            size: tokens.axisTitleFontSize,
             color: theme.textSecondary,
             family: "Inter, sans-serif",
             weight: 400,
           },
-          standoff: 15,
+          standoff: compact ? COMPACT_AXIS_TITLE_STANDOFF : COMFORTABLE_AXIS_TITLE_STANDOFF,
         },
         gridcolor: theme.gridColor,
         range: xRange,
@@ -318,19 +335,19 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         showgrid: true,
         // Reserve space for tick labels + the axis title so the bottom legend
         // can't overlap them at small sizes (SW-2157).
-        automargin: true,
+        automargin: !compact,
         ...tickOptions,
       },
       yaxis: {
         title: {
           text: yTitle,
           font: {
-            size: 16,
+            size: tokens.axisTitleFontSize,
             color: theme.textSecondary,
             family: "Inter, sans-serif",
             weight: 400,
           },
-          standoff: 15,
+          standoff: compact ? COMPACT_AXIS_TITLE_STANDOFF : COMFORTABLE_AXIS_TITLE_STANDOFF,
         },
         gridcolor: theme.gridColor,
         range: yRange,
@@ -338,7 +355,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         tickmode: "array" as const,
         tickvals: yTicks,
         showgrid: true,
-        automargin: true,
+        automargin: !compact,
         ...tickOptions,
       },
       legend: {
@@ -359,7 +376,9 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           lineheight: 18,
         },
       },
-      showlegend: true,
+      // Compact tiles are too short to fit a legend below the plot without
+      // Plotly's automargin eating most of the data area
+      showlegend: !compact,
     };
 
     const config = {
@@ -385,7 +404,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, hasSize, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, bindTooltip]);
+  }, [dataSeries, hasSize, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, bindTooltip, compact, tokens]);
 
   // Resize in place when the measured/overridden size changes — far cheaper
   // than recreating the plot (and it preserves tooltip/event bindings).

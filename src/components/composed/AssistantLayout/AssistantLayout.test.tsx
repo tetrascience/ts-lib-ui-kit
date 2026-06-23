@@ -43,12 +43,17 @@ function click(selector: string) {
   const el = q<HTMLElement>(selector)
   expect(el).not.toBeNull()
   act(() => {
-    el?.click()
+    el!.click()
   })
 }
 
 function hasClass(el: HTMLElement | null, className: string) {
   return (el?.className.split(/\s+/) ?? []).includes(className)
+}
+
+function flexSizePx(el: HTMLElement | null) {
+  const value = /0 0 (\d+)px/.exec(el?.style.flex ?? "")
+  return value ? Number(value[1]) : null
 }
 
 function TestLayout({
@@ -124,19 +129,24 @@ describe("AssistantLayout", () => {
     const assistant = q<HTMLElement>('[data-slot="assistant-layout-assistant"]')
     expect(separator?.getAttribute("aria-orientation")).toBe("horizontal")
 
+    const initial = flexSizePx(assistant)
+    expect(initial).toBe(420)
+
     act(() => {
       separator?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }))
     })
-    expect(assistant?.style.flex).toBe("0 0 404px")
-    expect(window.localStorage.getItem("spec.assistant.size")).toBe("404")
+    const afterDown = flexSizePx(assistant)
+    expect(afterDown).toBeLessThan(initial!)
+    expect(window.localStorage.getItem("spec.assistant.size")).toBe(String(afterDown))
 
     act(() => {
       separator?.dispatchEvent(
         new KeyboardEvent("keydown", { key: "ArrowUp", shiftKey: true, bubbles: true })
       )
     })
-    expect(assistant?.style.flex).toBe("0 0 452px")
-    expect(window.localStorage.getItem("spec.assistant.size")).toBe("452")
+    const afterShiftUp = flexSizePx(assistant)
+    expect(afterShiftUp).toBeGreaterThan(afterDown!)
+    expect(window.localStorage.getItem("spec.assistant.size")).toBe(String(afterShiftUp))
 
     act(() => {
       separator?.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true }))

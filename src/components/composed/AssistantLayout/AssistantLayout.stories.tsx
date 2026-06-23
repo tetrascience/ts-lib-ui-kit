@@ -10,7 +10,7 @@ import type { AssistantDock } from "./dockLayout"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof AssistantLayout> = {
-  title: "Design Patterns/Assistant Layout",
+  title: "AI Elements/Layout Manager",
   component: AssistantLayout,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

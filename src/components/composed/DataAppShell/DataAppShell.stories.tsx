@@ -435,7 +435,7 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
           </Button>
         </>
       }
-      navRailHidden={collapsed}
+      showNavRail={!collapsed}
       sidebarPanel={<WorkflowPanel steps={steps} collapsed={collapsed} onCollapseChange={setCollapsed} />}
     >
       <div className="flex items-center justify-center h-full">

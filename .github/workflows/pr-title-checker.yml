@@ -20,7 +20,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          subjectPattern: '^([A-Z]+-[1-9][0-9]* )?.+'
+          subjectPattern: '^([A-Z]+-[1-9][0-9]* )?\S.*'
           subjectPatternError: |
             The subject "{subject}" must be non-empty and can optionally start with a Jira ticket number.
             Accepted formats: "type: Description" or "type: PROJ-123 Description"

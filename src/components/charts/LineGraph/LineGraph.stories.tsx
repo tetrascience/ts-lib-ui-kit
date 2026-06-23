@@ -254,6 +254,26 @@ const generateDemoDataWithErrorBars = (): LineDataSeries[] => {
   }));
 };
 
+const generateWeekdayData = (): LineDataSeries[] => {
+  // x positions are integer indices; xTickText supplies the day labels
+  const x = [0, 1, 2, 3, 4, 5, 6];
+
+  return [
+    {
+      name: "Instrument A",
+      symbol: "circle",
+      x,
+      y: [12, 18, 15, 22, 19, 8, 5],
+    },
+    {
+      name: "Instrument B",
+      symbol: "square",
+      x,
+      y: [20, 24, 21, 28, 26, 14, 10],
+    },
+  ];
+};
+
 const meta: Meta<typeof LineGraph> = {
   title: "Charts/Line Graph",
   component: LineGraph,
@@ -294,6 +314,59 @@ export const Basic: Story = {
     await step("Legend shows series names", async () => {
       expect(canvas.getByText("Data A")).toBeInTheDocument();
       expect(canvas.getByText("Data F")).toBeInTheDocument();
+    });
+  },
+};
+
+export const CategoricalXLabels: Story = {
+  name: "Categorical X Labels",
+  parameters: {
+    // Leave testCaseId empty for new stories; sync-storybook-zephyr generates it
+    zephyr: { testCaseId: "" },
+    docs: {
+      description: {
+        story:
+          "Use `xTickText` to display categorical x-axis labels (e.g. days of the week). The numeric `x` values still drive line positioning, but the rendered tick labels match `xTickText` in order.",
+      },
+    },
+  },
+  args: {
+    dataSeries: generateWeekdayData(),
+    xTickText: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    variant: "lines+markers",
+    title: "Runs per Weekday",
+    xTitle: "Day",
+    yTitle: "Runs",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Runs per Weekday")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("X-axis ticks show categorical labels, not integers", async () => {
+      const tickLabels = [
+        ...canvasElement.querySelectorAll(".xtick text"),
+      ].map((node) => node.textContent);
+      expect(tickLabels).toEqual([
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun",
+      ]);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Instrument A")).toBeInTheDocument();
+      expect(canvas.getByText("Instrument B")).toBeInTheDocument();
     });
   },
 };

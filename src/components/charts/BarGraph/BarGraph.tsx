@@ -32,6 +32,13 @@ interface BarGraphProps {
   yTitle?: string;
   title?: string;
   barWidth?: number;
+  /**
+   * Categorical labels for the x-axis ticks. When provided, the x data values
+   * still drive bar positioning but the displayed tick labels match these
+   * strings in order (e.g. ["Mon", "Tue", …]). Should align 1:1 with the
+   * unique, ordered x values across all series.
+   */
+  xTickText?: string[];
 }
 
 const BarGraph: React.FC<BarGraphProps> = ({
@@ -45,6 +52,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
   yTitle = "Rows",
   title = "Bar Graph",
   barWidth = 24,
+  xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
@@ -188,6 +196,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
         autorange: !xRange,
         tickmode: "array" as const,
         tickvals: xTicks,
+        ...(xTickText ? { ticktext: xTickText } : {}),
         showgrid: true,
         ...tickOptions,
       },
@@ -244,7 +253,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, theme, bindTooltip]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, xTickText, theme, bindTooltip]);
 
   return (
     <div className="bar-graph-container relative">

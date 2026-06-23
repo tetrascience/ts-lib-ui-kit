@@ -51,6 +51,26 @@ const generateGroupedBarData = (): BarDataSeries[] => {
   ];
 };
 
+const generatePipelineRunsByStatus = (): BarDataSeries[] => {
+  // x positions are integer indices; xTickText supplies the day labels
+  const x = [0, 1, 2, 3, 4, 5, 6];
+
+  return [
+    {
+      name: "Success",
+      x,
+      y: [42, 51, 38, 60, 55, 12, 8],
+      color: "#29A634",
+    },
+    {
+      name: "Failed",
+      x,
+      y: [3, 5, 2, 7, 4, 1, 0],
+      color: "#CD4246",
+    },
+  ];
+};
+
 const generateStackedBarData = (): BarDataSeries[] => {
   const x = [200, 300, 400, 500, 600, 700, 800, 900, 1000];
 
@@ -167,6 +187,61 @@ export const StackedBars: Story = {
     await step("Legend shows all series names", async () => {
       expect(canvas.getByText("Data A")).toBeInTheDocument();
       expect(canvas.getByText("Data B")).toBeInTheDocument();
+    });
+  },
+};
+
+export const CategoricalXLabels: Story = {
+  name: "Categorical X Labels",
+  parameters: {
+    // Leave testCaseId empty for new stories; sync-storybook-zephyr generates it
+    zephyr: { testCaseId: "" },
+    docs: {
+      description: {
+        story:
+          "Use `xTickText` to display categorical x-axis labels (e.g. days of the week). The numeric `x` values still drive bar positioning, but the rendered tick labels match `xTickText` in order.",
+      },
+    },
+  },
+  args: {
+    dataSeries: generatePipelineRunsByStatus(),
+    xTickText: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    variant: "group",
+    title: "Pipeline Runs by Status",
+    xTitle: "Day",
+    yTitle: "Runs",
+    width: 1000,
+    height: 600,
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Pipeline Runs by Status")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("X-axis ticks show categorical labels, not integers", async () => {
+      const tickLabels = [
+        ...canvasElement.querySelectorAll(".xtick text"),
+      ].map((node) => node.textContent);
+      expect(tickLabels).toEqual([
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun",
+      ]);
+    });
+
+    await step("Legend shows all series names", async () => {
+      expect(canvas.getByText("Success")).toBeInTheDocument();
+      expect(canvas.getByText("Failed")).toBeInTheDocument();
     });
   },
 };

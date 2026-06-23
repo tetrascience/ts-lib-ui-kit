@@ -27,6 +27,13 @@ interface AreaGraphProps {
   xTitle?: string;
   yTitle?: string;
   title?: string;
+  /**
+   * Categorical labels for the x-axis ticks. When provided, the x data values
+   * still drive area positioning but the displayed tick labels match these
+   * strings in order (e.g. ["Mon", "Tue", …]). Should align 1:1 with the
+   * unique, ordered x values across all series.
+   */
+  xTickText?: string[];
 }
 
 const AreaGraph: React.FC<AreaGraphProps> = ({
@@ -39,6 +46,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   xTitle = "Columns",
   yTitle = "Rows",
   title = "Area Graph",
+  xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
@@ -124,6 +132,13 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
     }
     return ticks;
   }, [effectiveYRange]);
+
+  // When categorical labels are supplied, ticks must sit on the actual data
+  // x-positions rather than the computed nice-step values above.
+  const xDataValues = useMemo(
+    () => [...new Set(dataSeries.flatMap((s) => s.x))],
+    [dataSeries],
+  );
 
   const tickOptions = useMemo(
     () => ({
@@ -258,7 +273,8 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         range: xRange,
         autorange: !xRange,
         tickmode: "array" as const,
-        tickvals: xTicks,
+        tickvals: xTickText ? xDataValues : xTicks,
+        ...(xTickText ? { ticktext: xTickText } : {}),
         showgrid: true,
         ...tickOptions,
       },
@@ -316,7 +332,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks, theme, bindTooltip]);
+  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks, xDataValues, xTickText, theme, bindTooltip]);
 
   return (
     <div className="area-graph-container relative">

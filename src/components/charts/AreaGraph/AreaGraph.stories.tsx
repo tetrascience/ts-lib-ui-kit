@@ -143,6 +143,65 @@ export const Stacked: Story = {
   },
 };
 
+const weekdayDataSeries = [
+  {
+    // x positions are integer indices; xTickText supplies the day labels
+    x: [0, 1, 2, 3, 4, 5, 6],
+    y: [120, 130, 100, 110, 140, 80, 60],
+    name: "Throughput",
+  },
+];
+
+export const CategoricalXLabels: Story = {
+  name: "Categorical X Labels",
+  parameters: {
+    // Leave testCaseId empty for new stories; sync-storybook-zephyr generates it
+    zephyr: { testCaseId: "" },
+    docs: {
+      description: {
+        story:
+          "Use `xTickText` to display categorical x-axis labels (e.g. days of the week). The numeric `x` values still drive area positioning, but the rendered tick labels match `xTickText` in order.",
+      },
+    },
+  },
+  args: {
+    dataSeries: weekdayDataSeries,
+    xTickText: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    title: "Throughput by Weekday",
+    xTitle: "Day",
+    yTitle: "Files",
+    width: 1000,
+    height: 600,
+    variant: "normal",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Throughput by Weekday")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("X-axis ticks show categorical labels, not integers", async () => {
+      const tickLabels = [
+        ...canvasElement.querySelectorAll(".xtick text"),
+      ].map((node) => node.textContent);
+      expect(tickLabels).toEqual([
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun",
+      ]);
+    });
+  },
+};
+
 export const CustomRange: Story = {
   name: "Custom Range",
   parameters: {

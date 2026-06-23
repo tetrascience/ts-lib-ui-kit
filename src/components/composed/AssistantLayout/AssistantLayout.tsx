@@ -41,7 +41,12 @@ export interface AssistantLayoutProviderProps {
   defaultSize?: number
   /** Whether the assistant starts visible. */
   defaultVisible?: boolean
+  /** Persist dock + size to localStorage. Defaults to `true`. */
+  persist?: boolean
 }
+
+/** A persisted size is capped to this fraction of the viewport on read. */
+const PERSISTED_SIZE_VIEWPORT_CAP = 0.85
 
 function readDock(key: string, fallback: AssistantDock): AssistantDock {
   if (typeof window === "undefined") return fallback
@@ -52,7 +57,11 @@ function readDock(key: string, fallback: AssistantDock): AssistantDock {
 function readSize(key: string, fallback: number): number {
   if (typeof window === "undefined") return fallback
   const v = Number(window.localStorage.getItem(`${key}.size`))
-  return Number.isFinite(v) && v > 0 ? v : fallback
+  if (!Number.isFinite(v) || v <= 0) return fallback
+  // Clamp a stale persisted size to the current viewport so a value saved on a
+  // larger screen can't crowd out the content panel on a smaller one.
+  const cap = Math.min(window.innerWidth, window.innerHeight) * PERSISTED_SIZE_VIEWPORT_CAP
+  return Math.min(v, cap)
 }
 
 export function AssistantLayoutProvider({
@@ -61,26 +70,32 @@ export function AssistantLayoutProvider({
   defaultDock = "left",
   defaultSize = 420,
   defaultVisible = true,
+  persist = true,
 }: AssistantLayoutProviderProps) {
-  const [dock, setDockState] = React.useState<AssistantDock>(() => readDock(storageKey, defaultDock))
-  const [size, setSizeState] = React.useState<number>(() => readSize(storageKey, defaultSize))
+  const [dock, setDockState] = React.useState<AssistantDock>(() =>
+    persist ? readDock(storageKey, defaultDock) : defaultDock
+  )
+  const [size, setSizeState] = React.useState<number>(() =>
+    persist ? readSize(storageKey, defaultSize) : defaultSize
+  )
   const [visible, setVisible] = React.useState(defaultVisible)
 
   const setDock = React.useCallback(
     (next: AssistantDock) => {
       setDockState(next)
-      if (typeof window !== "undefined") window.localStorage.setItem(`${storageKey}.dock`, next)
+      if (persist && typeof window !== "undefined")
+        window.localStorage.setItem(`${storageKey}.dock`, next)
     },
-    [storageKey]
+    [storageKey, persist]
   )
 
   const setSize = React.useCallback(
     (next: number) => {
       setSizeState(next)
-      if (typeof window !== "undefined")
+      if (persist && typeof window !== "undefined")
         window.localStorage.setItem(`${storageKey}.size`, String(Math.round(next)))
     },
-    [storageKey]
+    [storageKey, persist]
   )
 
   const value = React.useMemo(
@@ -162,46 +177,88 @@ interface AssistantSplitterProps {
   onResize: (size: number) => void
   min: number
   maxRatio: number
+  order: number
 }
 
-function AssistantSplitter({ dock, size, onResize, min, maxRatio }: AssistantSplitterProps) {
+/**
+ * Resize handle. Operable by mouse, touch, and pen (Pointer Events, with
+ * pointer capture so a drag that ends off the handle — or unmounts mid-drag —
+ * cleans up automatically) and by keyboard (arrow keys; Shift = larger step,
+ * Home = collapse to min). Exposes `separator` semantics with `aria-valuenow`.
+ */
+function AssistantSplitter({ dock, size, onResize, min, maxRatio, order }: AssistantSplitterProps) {
   const horizontal = dock === "bottom" // bar is horizontal, resizes vertically
-
-  const onMouseDown = React.useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault()
-      const startPos = horizontal ? e.clientY : e.clientX
-      const startSize = size
-      const max = (horizontal ? window.innerHeight : window.innerWidth) * maxRatio
-
-      const onMouseMove = (ev: MouseEvent) => {
-        const cur = horizontal ? ev.clientY : ev.clientX
-        const delta = cur - startPos
-        onResize(clampAssistantSize(nextAssistantSize(dock, startSize, delta), min, max))
-      }
-      const onMouseUp = () => {
-        document.removeEventListener("mousemove", onMouseMove)
-        document.removeEventListener("mouseup", onMouseUp)
-        document.body.style.userSelect = ""
-      }
-      document.body.style.userSelect = "none"
-      document.addEventListener("mousemove", onMouseMove)
-      document.addEventListener("mouseup", onMouseUp)
-    },
-    [dock, horizontal, size, onResize, min, maxRatio]
+  const getMax = React.useCallback(
+    () => (typeof window === "undefined" ? Infinity : (horizontal ? window.innerHeight : window.innerWidth) * maxRatio),
+    [horizontal, maxRatio]
   )
 
+  const onPointerDown = React.useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.button !== 0) return
+      e.preventDefault()
+      const el = e.currentTarget
+      el.setPointerCapture(e.pointerId)
+      const startPos = horizontal ? e.clientY : e.clientX
+      const startSize = size
+      const max = getMax()
+      document.body.style.userSelect = "none"
+
+      const onMove = (ev: PointerEvent) => {
+        const cur = horizontal ? ev.clientY : ev.clientX
+        onResize(clampAssistantSize(nextAssistantSize(dock, startSize, cur - startPos), min, max))
+      }
+      const onUp = (ev: PointerEvent) => {
+        el.releasePointerCapture?.(ev.pointerId)
+        el.removeEventListener("pointermove", onMove)
+        el.removeEventListener("pointerup", onUp)
+        el.removeEventListener("pointercancel", onUp)
+        document.body.style.userSelect = ""
+      }
+      el.addEventListener("pointermove", onMove)
+      el.addEventListener("pointerup", onUp)
+      el.addEventListener("pointercancel", onUp)
+    },
+    [dock, horizontal, size, onResize, min, getMax]
+  )
+
+  const onKeyDown = React.useCallback(
+    (e: React.KeyboardEvent) => {
+      const step = e.shiftKey ? 48 : 16
+      const growKey = horizontal ? "ArrowDown" : "ArrowRight"
+      const shrinkKey = horizontal ? "ArrowUp" : "ArrowLeft"
+      let delta: number | null = null
+      if (e.key === growKey) delta = step
+      else if (e.key === shrinkKey) delta = -step
+      else if (e.key === "Home") {
+        e.preventDefault()
+        onResize(min)
+        return
+      }
+      if (delta === null) return
+      e.preventDefault()
+      onResize(clampAssistantSize(nextAssistantSize(dock, size, delta), min, getMax()))
+    },
+    [dock, horizontal, size, onResize, min, getMax]
+  )
+
+  const max = getMax()
   return (
     <div
       role="separator"
+      tabIndex={0}
       aria-orientation={horizontal ? "horizontal" : "vertical"}
       aria-label="Resize AI Assistant panel"
-      onMouseDown={onMouseDown}
+      aria-valuenow={Math.round(size)}
+      aria-valuemin={min}
+      aria-valuemax={Number.isFinite(max) ? Math.round(max) : undefined}
+      onPointerDown={onPointerDown}
+      onKeyDown={onKeyDown}
       className={cn(
-        "relative z-[1] shrink-0 self-stretch bg-transparent transition-colors hover:bg-border",
+        "relative z-[1] shrink-0 touch-none self-stretch bg-transparent transition-colors hover:bg-border focus-visible:bg-ring focus-visible:outline-none",
         horizontal ? "h-2 cursor-row-resize" : "w-2 cursor-col-resize"
       )}
-      style={{ order: 1 }}
+      style={{ order }}
     />
   )
 }
@@ -226,8 +283,16 @@ export interface AssistantLayoutProps {
 
 /**
  * Flex body that docks the assistant left / right / bottom of the main content
- * and resizes it with a splitter. Must be rendered inside an
- * `AssistantLayoutProvider`; pair with `AssistantDockControls` in a top bar.
+ * and resizes it with an accessible splitter (mouse, touch, and keyboard).
+ * Must be rendered inside an `AssistantLayoutProvider`; pair with
+ * `AssistantDockControls` in a top bar.
+ *
+ * Implementation note: docking is a CSS `order` + `flex-direction` change on a
+ * single flex container — the panels never re-mount, so the assistant's state
+ * survives a redock *and* a hide (it stays mounted, hidden via `display:none`).
+ * That cross-direction, no-remount behavior is why this uses an order-based
+ * layout rather than `react-resizable-panels` (whose group/direction model
+ * would re-mount panels when switching between a horizontal and vertical dock).
  */
 export function AssistantLayout({
   assistant,
@@ -247,18 +312,19 @@ export function AssistantLayout({
       className={cn("flex min-h-0 flex-1 overflow-hidden", className)}
       style={{ flexDirection: layout.flexDirection }}
     >
-      {visible && (
-        <div
-          data-slot="assistant-layout-assistant"
-          className={cn(
-            "flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card",
-            assistantClassName
-          )}
-          style={{ order: layout.assistantOrder, flex: `0 0 ${size}px` }}
-        >
-          {assistant}
-        </div>
-      )}
+      {/* The assistant stays mounted when hidden (display:none) so its state —
+          conversation, scroll, drafts — survives a hide/show toggle. */}
+      <div
+        data-slot="assistant-layout-assistant"
+        className={cn(
+          "flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card",
+          !visible && "hidden",
+          assistantClassName
+        )}
+        style={{ order: layout.assistantOrder, flex: `0 0 ${size}px` }}
+      >
+        {assistant}
+      </div>
 
       {visible && (
         <AssistantSplitter
@@ -267,6 +333,7 @@ export function AssistantLayout({
           onResize={setSize}
           min={minSize}
           maxRatio={maxSizeRatio}
+          order={layout.splitterOrder}
         />
       )}
 

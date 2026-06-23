@@ -134,11 +134,16 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   }, [effectiveYRange]);
 
   // When categorical labels are supplied, ticks must sit on the actual data
-  // x-positions rather than the computed nice-step values above.
+  // x-positions rather than the computed nice-step values above. Sorted
+  // ascending so labels map deterministically to x regardless of series order.
   const xDataValues = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))],
+    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
     [dataSeries],
   );
+
+  // Only apply categorical labels when they align 1:1 with the tick positions;
+  // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
+  const useCategoricalX = !!xTickText && xTickText.length === xDataValues.length;
 
   const tickOptions = useMemo(
     () => ({
@@ -273,8 +278,8 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         range: xRange,
         autorange: !xRange,
         tickmode: "array" as const,
-        tickvals: xTickText ? xDataValues : xTicks,
-        ...(xTickText ? { ticktext: xTickText } : {}),
+        tickvals: useCategoricalX ? xDataValues : xTicks,
+        ...(useCategoricalX ? { ticktext: xTickText } : {}),
         showgrid: true,
         ...tickOptions,
       },
@@ -332,7 +337,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks, xDataValues, xTickText, theme, bindTooltip]);
+  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, bindTooltip]);
 
   return (
     <div className="area-graph-container relative">

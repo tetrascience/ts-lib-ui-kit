@@ -1,8 +1,10 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { COLORS } from "@/utils/colors";
+import { CHART_COLORS } from "@/utils/colors";
 
 type MarkerSymbol =
   | "circle"
@@ -46,22 +48,13 @@ const DotPlot: React.FC<DotPlotProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
   const seriesArray = useMemo(
     () => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]),
     [dataSeries],
   );
 
-  const defaultColors = useMemo(
-    () => [
-      COLORS.ORANGE,
-      COLORS.RED,
-      COLORS.GREEN,
-      COLORS.BLUE,
-      COLORS.YELLOW,
-      COLORS.PURPLE,
-    ],
-    [],
-  );
+  const defaultColors = CHART_COLORS;
 
   const defaultSymbols: MarkerSymbol[] = useMemo(
     () => [
@@ -117,9 +110,9 @@ const DotPlot: React.FC<DotPlotProps> = ({
             width: 1,
           },
         },
-        hovertemplate: `${xTitle}: %{x}<br>${yTitle}: %{y}<extra>${series.name}</extra>`,
+        hoverinfo: "none" as const,
       })),
-    [seriesWithColors, xTitle, yTitle, theme],
+    [seriesWithColors, theme],
   );
 
   const tickOptions = useMemo(
@@ -226,6 +219,7 @@ const DotPlot: React.FC<DotPlotProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -235,10 +229,10 @@ const DotPlot: React.FC<DotPlotProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [width, height, xTitle, yTitle, plotData, titleOptions, tickOptions, gridColor, theme]);
+  }, [width, height, xTitle, yTitle, plotData, titleOptions, tickOptions, gridColor, theme, bindTooltip]);
 
   return (
-    <div className="dotplot-container" style={{ width: width }}>
+    <div className="dotplot-container relative" style={{ width: width }}>
       <div
         ref={plotRef}
         style={{
@@ -247,6 +241,7 @@ const DotPlot: React.FC<DotPlotProps> = ({
           margin: "0",
         }}
       />
+      {tooltipElement}
     </div>
   );
 };

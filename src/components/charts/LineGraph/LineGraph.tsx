@@ -1,7 +1,10 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { seriesColor } from "@/utils/colors";
 
 type MarkerSymbol =
   | "circle"
@@ -155,7 +158,8 @@ interface LineDataSeries {
   x: number[];
   y: number[];
   name: string;
-  color: string;
+  /** Optional color override (auto-assigned from CHART_COLORS if not provided) */
+  color?: string;
   symbol?: MarkerSymbol;
   error_y?: {
     type: "data";
@@ -191,6 +195,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
 
   const { yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
@@ -279,36 +284,40 @@ const LineGraph: React.FC<LineGraphProps> = ({
   useEffect(() => {
     if (!plotRef.current) return;
 
-    const plotData = dataSeries.map((series) => ({
-      x: series.x,
-      y: series.y,
-      type: "scatter" as const,
-      mode: mode,
-      name: series.name,
-      line: {
-        color: series.color,
-        width: 1.5,
-      },
-      marker:
-        variant === "lines"
-          ? { opacity: 0 }
-          : {
-              color: series.color,
-              size: 8,
-              symbol: series.symbol || "triangle-up",
-            },
-      error_y:
-        variant === "lines+markers+error_bars"
-          ? series.error_y || {
-              type: "data" as const,
-              array: series.y.map(() => 10),
-              visible: true,
-              color: series.color,
-              thickness: 1,
-              width: 5,
-            }
-          : undefined,
-    }));
+    const plotData = dataSeries.map((series, index) => {
+      const color = seriesColor(index, series.color);
+      return {
+        x: series.x,
+        y: series.y,
+        type: "scatter" as const,
+        mode: mode,
+        name: series.name,
+        hoverinfo: "none" as const,
+        line: {
+          color,
+          width: 1.5,
+        },
+        marker:
+          variant === "lines"
+            ? { opacity: 0 }
+            : {
+                color,
+                size: 8,
+                symbol: series.symbol || "triangle-up",
+              },
+        error_y:
+          variant === "lines+markers+error_bars"
+            ? series.error_y || {
+                type: "data" as const,
+                array: series.y.map(() => 10),
+                visible: true,
+                color,
+                thickness: 1,
+                width: 5,
+              }
+            : undefined,
+      };
+    });
 
     const layout = {
       title: {
@@ -390,6 +399,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -399,11 +409,12 @@ const LineGraph: React.FC<LineGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, effectiveYRange, variant, theme]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, effectiveYRange, variant, theme, bindTooltip]);
 
   return (
-    <div className="chart-container">
+    <div className="chart-container relative">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
+      {tooltipElement}
     </div>
   );
 };

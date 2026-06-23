@@ -1,7 +1,10 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { seriesColor } from "@/utils/colors";
 
 /** Default point position offset from the box edge */
 const DEFAULT_POINT_POSITION = -1.8;
@@ -9,7 +12,8 @@ const DEFAULT_POINT_POSITION = -1.8;
 interface BoxDataSeries {
   y: number[];
   name: string;
-  color: string;
+  /** Optional color override (auto-assigned from CHART_COLORS if not provided) */
+  color?: string;
   x?: string[] | number[];
   boxpoints?: "all" | "outliers" | "suspectedoutliers" | false;
   jitter?: number;
@@ -41,6 +45,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
 
   const { yMin, yMax } = useMemo(() => {
     let minY = Number.MAX_VALUE;
@@ -124,22 +129,31 @@ const Boxplot: React.FC<BoxplotProps> = ({
   useEffect(() => {
     if (!plotRef.current) return;
 
-    const data = dataSeries.map((series) => ({
-      y: series.y,
-      x: series.x,
-      type: "box" as const,
-      name: series.name,
-      marker: {
-        color: series.color,
-      },
-      line: {
-        color: series.color,
-      },
-      fillcolor: series.color + "40", // Add transparency
-      boxpoints: showPoints ? series.boxpoints || "outliers" : (false as const),
-      jitter: series.jitter || 0.3,
-      pointpos: series.pointpos || DEFAULT_POINT_POSITION,
-    }));
+    const data = dataSeries.map((series, index) => {
+      const color = seriesColor(index, series.color);
+      return {
+        y: series.y,
+        x: series.x,
+        type: "box" as const,
+        name: series.name,
+        hoverinfo: "none" as const,
+        marker: {
+          color,
+        },
+        line: {
+          color,
+        },
+        fillcolor:
+          typeof color === "string" && color.startsWith("#") && color.length === 7
+            ? `${color}40`
+            : color, // Add transparency for hex colors only
+        boxpoints: showPoints
+          ? series.boxpoints || "outliers"
+          : (false as const),
+        jitter: series.jitter || 0.3,
+        pointpos: series.pointpos || DEFAULT_POINT_POSITION,
+      };
+    });
 
     const layout = {
       width,
@@ -212,6 +226,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, data, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -222,11 +237,12 @@ const Boxplot: React.FC<BoxplotProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks, theme]);
+  }, [dataSeries, width, height, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks, theme, bindTooltip]);
 
   return (
-    <div className="boxplot-container">
+    <div className="boxplot-container relative">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
+      {tooltipElement}
     </div>
   );
 };

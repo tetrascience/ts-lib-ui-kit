@@ -25,6 +25,8 @@ export interface PlotlyThemeColors {
   legendColor: string;
   /** Spike/crosshair line color */
   spikeColor: string;
+  /** Outline color for scatter/dot markers — contrasts with the background */
+  markerOutline: string;
   /** Whether dark mode is active */
   isDark: boolean;
 }
@@ -34,11 +36,12 @@ const LIGHT_THEME: PlotlyThemeColors = {
   plotBg: "transparent",
   textColor: "rgba(26, 26, 26, 1)",
   textSecondary: "rgba(26, 26, 26, 0.6)",
-  gridColor: "rgba(225, 231, 239, 1)",
+  gridColor: "rgba(158, 172, 192, 0.55)",
   lineColor: "rgba(26, 26, 26, 1)",
   tickColor: "rgba(225, 231, 239, 1)",
   legendColor: "rgba(4, 38, 63, 1)",
   spikeColor: "rgba(100, 116, 139, 1)",
+  markerOutline: "rgba(26, 26, 26, 0.45)",
   isDark: false,
 };
 
@@ -47,11 +50,12 @@ const DARK_THEME: PlotlyThemeColors = {
   plotBg: "transparent",
   textColor: "rgba(255, 255, 255, 0.9)",
   textSecondary: "rgba(255, 255, 255, 0.6)",
-  gridColor: "rgba(51, 65, 86, 1)",
+  gridColor: "rgba(100, 116, 139, 0.55)",
   lineColor: "rgba(158, 172, 192, 1)",
   tickColor: "rgba(51, 65, 86, 1)",
   legendColor: "rgba(200, 214, 229, 1)",
   spikeColor: "rgba(158, 172, 192, 1)",
+  markerOutline: "rgba(255, 255, 255, 0.55)",
   isDark: true,
 };
 

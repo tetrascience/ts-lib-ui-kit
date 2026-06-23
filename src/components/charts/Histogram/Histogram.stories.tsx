@@ -1,6 +1,5 @@
 import { expect, within } from "storybook/test";
 
-import { COLORS } from "../../../utils/colors";
 
 import { Histogram } from "./Histogram";
 
@@ -77,7 +76,7 @@ export const WithCustomColor: Story = {
     dataSeries: {
       x: generateNormalData(20, 8, 200),
       name: "Custom Color",
-      color: COLORS.RED,
+      color: "#FF5C64",
     },
     title: "Histogram with Custom Color",
     xTitle: "Torque",
@@ -160,12 +159,10 @@ export const StackedHistogram: Story = {
       {
         x: generateNormalData(20, 8, 200),
         name: "Series A",
-        color: COLORS.ORANGE,
       },
       {
         x: generateNormalData(20, 6, 150),
         name: "Series B",
-        color: COLORS.RED,
       },
     ],
     title: "Group of Histogram",
@@ -208,22 +205,18 @@ export const MultipleSeries: Story = {
       {
         x: generateNormalData(10, 5, 100),
         name: "Series A",
-        color: COLORS.BLUE,
       },
       {
         x: generateNormalData(20, 5, 100),
         name: "Series B",
-        color: COLORS.RED,
       },
       {
         x: generateNormalData(30, 5, 100),
         name: "Series C",
-        color: COLORS.GREEN,
       },
       {
         x: generateNormalData(40, 5, 100),
         name: "Series D",
-        color: COLORS.ORANGE,
       },
     ],
     title: "Multiple Series Histogram",
@@ -267,7 +260,6 @@ export const WithDistributionLine: Story = {
     dataSeries: {
       x: generateNormalData(20, 8, 200),
       name: "Label",
-      color: COLORS.ORANGE,
     },
     title: "Histogram with Fitted Distribution Line",
     xTitle: "Torque",
@@ -304,7 +296,6 @@ export const WithCustomBinsAndDistributionLine: Story = {
     dataSeries: {
       x: generateNormalData(20, 8, 200),
       name: "Label",
-      color: COLORS.ORANGE,
       autobinx: false,
       xbins: {
         start: 0,
@@ -353,12 +344,10 @@ export const MultipleSeriesWithDistributionLines: Story = {
       {
         x: generateNormalData(20, 8, 200),
         name: "Series A",
-        color: COLORS.ORANGE,
       },
       {
         x: generateNormalData(15, 5, 150),
         name: "Series B",
-        color: COLORS.RED,
       },
     ],
     title: "Group of Histogram with Fitted Distribution Line",

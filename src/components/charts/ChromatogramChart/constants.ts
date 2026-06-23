@@ -30,5 +30,11 @@ export const CHROMATOGRAM_ANNOTATION = {
   USER_ANNOTATION_FONT_SIZE: 11,
   /** Font size for auto-detected peak annotations */
   AUTO_ANNOTATION_FONT_SIZE: 10,
+  /** Arrow color for user-defined annotations (grey 500) */
+  USER_ANNOTATION_COLOR: "rgba(100, 116, 139, 1)",
+  /** Text color for user-defined annotations (black 900) */
+  USER_ANNOTATION_TEXT_COLOR: "rgba(26, 26, 26, 1)",
+  /** Background color behind annotation text */
+  BACKGROUND_COLOR: "#ffffff",
 } as const;
 

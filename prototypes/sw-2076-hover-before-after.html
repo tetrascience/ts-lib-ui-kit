@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SW-2076 — hover harmonization: before / after</title>
+<style>
+  .scope {
+    --background: oklch(0.9864 0.0042 236.5);
+    --foreground: oklch(0.233 0.0698 265.03);
+    --card: oklch(1 0 0);
+    --border: oklch(0.9288 0.0126 255.51);
+    --input: oklch(0.79 0.0229 250.7);
+    --muted: oklch(0.91 0.015 258);
+    --muted-foreground: oklch(0.4878 0.0372 255.3);
+    --primary: oklch(0.4465 0.1784 269.19);
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.9619 0.0179 272.31);
+    --secondary-foreground: oklch(0.233 0.0698 265.03);
+    --accent: oklch(0.9619 0.0179 272.31);
+    --accent-foreground: oklch(0.233 0.0698 265.03);
+    --destructive: oklch(0.5692 0.2174 25.93);
+  }
+  .scope.dark {
+    --background: oklch(0.2259 0.0116 293.09);
+    --foreground: oklch(0.9152 0.0115 308.32);
+    --card: oklch(0.3126 0.0107 293.42);
+    --border: oklch(0.397 0.0168 281.07);
+    --input: oklch(0.397 0.0168 281.07);
+    --muted: oklch(0.18 0.0102 285.33);
+    --muted-foreground: oklch(0.6569 0.0162 285.95);
+    --primary: oklch(0.7889 0.1227 271.5);
+    --primary-foreground: oklch(0.2065 0.0353 268.7);
+    --secondary: oklch(0.4412 0.1421 262.97);
+    --secondary-foreground: oklch(0.9072 0.0425 279.69);
+    --accent: oklch(0.3126 0.0307 270.54);
+    --accent-foreground: oklch(0.9152 0.0115 308.32);
+    --destructive: oklch(0.8383 0.0891 26.76);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  body.scope { background:var(--background); color:var(--foreground); }
+  header.page { padding:24px 30px 12px; border-bottom:1px solid color-mix(in oklch,var(--foreground) 12%,transparent); }
+  header.page h1 { margin:0 0 4px; font-size:19px; }
+  header.page p { margin:0; opacity:.7; font-size:13px; max-width:1020px; }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.9em; }
+
+  .controls { display:flex; gap:18px; align-items:center; padding:12px 30px; position:sticky; top:0; z-index:5;
+    background:color-mix(in oklch,var(--background) 92%,transparent); backdrop-filter:blur(6px);
+    border-bottom:1px solid color-mix(in oklch,var(--foreground) 12%,transparent); }
+  .seg { display:inline-flex; gap:2px; padding:3px; background:color-mix(in oklch,var(--foreground) 8%,transparent); border-radius:10px; }
+  .seg .lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; opacity:.55; align-self:center; padding:0 8px 0 4px; }
+  .seg button { font:inherit; font-size:13px; font-weight:500; padding:6px 12px; border-radius:8px; border:0; background:transparent; color:inherit; cursor:pointer; }
+  .seg button.active { background:var(--primary); color:var(--primary-foreground); }
+  .hint { font-size:12px; opacity:.6; margin-left:auto; }
+
+  main { padding:22px 30px 70px; }
+  h2.sect { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; opacity:.55; margin:24px 0 10px; }
+  table { width:100%; border-collapse:separate; border-spacing:0 8px; }
+  th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; opacity:.5; padding:0 14px; font-weight:700; }
+  td { padding:12px 14px; background:var(--card); border-top:1px solid color-mix(in oklch,var(--foreground) 10%,transparent); border-bottom:1px solid color-mix(in oklch,var(--foreground) 10%,transparent); vertical-align:middle; }
+  td:first-child { border-left:1px solid color-mix(in oklch,var(--foreground) 10%,transparent); border-radius:10px 0 0 10px; }
+  td:last-child  { border-right:1px solid color-mix(in oklch,var(--foreground) 10%,transparent); border-radius:0 10px 10px 0; }
+  .elname { font-size:13px; font-weight:600; }
+  .col-spec { font-size:11px; opacity:.6; font-family:ui-monospace,Menlo,monospace; margin-top:6px; }
+  .tag { font-size:10px; font-weight:700; padding:2px 6px; border-radius:5px; white-space:nowrap; }
+  .tag.fix { background:color-mix(in oklch,oklch(0.53 0.14 148) 18%,transparent); color:oklch(0.5 0.14 148); }
+  .dark .tag.fix { color:oklch(0.74 0.16 152); }
+  .tag.unify { background:color-mix(in oklch,var(--primary) 16%,transparent); color:var(--primary); }
+  .tag.same { background:color-mix(in oklch,var(--foreground) 8%,transparent); opacity:.65; }
+  .tag.tweak { background:color-mix(in oklch,oklch(0.57 0.13 60) 20%,transparent); color:oklch(0.5 0.13 60); }
+  .dark .tag.tweak { color:oklch(0.79 0.16 64); }
+
+  /* ---------- element styles ---------- */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:32px; padding:0 11px;
+    border-radius:10px; font-size:13px; font-weight:500; border:1px solid transparent; cursor:pointer; color:var(--foreground); background:transparent; transition:background .12s,color .12s; }
+  .btn.default{ background:var(--primary); color:var(--primary-foreground); }
+  .btn.secondary{ background:var(--secondary); color:var(--secondary-foreground); }
+  .btn.outline{ border-color:var(--border); }
+  .btn.destructive{ background:color-mix(in oklch,var(--destructive) 10%,transparent); color:var(--destructive); }
+  .btn.link{ color:var(--primary); height:auto; padding:0; }
+  .icon{ width:32px;height:32px;border-radius:10px; }
+  .icon svg{ width:15px;height:15px; }
+  .tg{ display:inline-flex;align-items:center;justify-content:center;height:32px;min-width:32px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid transparent;cursor:pointer;background:transparent;color:var(--foreground);transition:background .12s; }
+  .track{ background:var(--muted); border-radius:10px; padding:3px; display:inline-flex; }
+  .tab{ display:inline-flex;align-items:center;height:26px;padding:0 12px;border-radius:7px;font-size:13px;font-weight:500;color:color-mix(in oklch,var(--foreground) 60%,transparent);cursor:pointer;transition:background .12s,color .12s; }
+  .tab.active{ background:var(--card); color:var(--foreground); box-shadow:0 1px 2px 0 rgba(0,0,0,.08); }
+  .dark .tab.active{ background:oklch(0.3126 0.0107 293.42); }
+  .select{ display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 8px 0 10px;border:1px solid var(--input);border-radius:10px;background:var(--card);font-size:13px;color:var(--foreground);cursor:pointer;transition:background .12s; }
+  .select svg{ width:15px;height:15px;opacity:.6; }
+
+  /* ===== BEFORE hovers (current) — applied on :hover or when .forced ===== */
+  .forced .b.btn.secondary, .b.btn.secondary:hover { background:color-mix(in oklch,var(--secondary) 80%,transparent); }
+  .forced .b.btn.outline, .b.btn.outline:hover,
+  .forced .b.btn.ghost, .b.btn.ghost:hover,
+  .forced .b.icon.ghost, .b.icon.ghost:hover,
+  .forced .b.tg, .b.tg:hover { background:var(--muted); color:var(--foreground); }
+  .forced .b.btn.destructive, .b.btn.destructive:hover { background:color-mix(in oklch,var(--destructive) 20%,transparent); }
+  .forced .b.btn.link, .b.btn.link:hover { text-decoration:underline; }
+  .forced .b.tab, .b.tab:hover { background:var(--accent); color:var(--accent-foreground); }
+  /* .b.default / .b.icon.default / .b.select : NO before hover (the gaps) */
+
+  /* ===== AFTER hovers (proposed) ===== */
+  .forced .a.btn.default, .a.btn.default:hover,
+  .forced .a.icon.default, .a.icon.default:hover { background:color-mix(in oklch,var(--primary) 85%,transparent); }   /* NEW: bg-primary/85 */
+  .a.btn.secondary:hover { background:color-mix(in oklch,var(--secondary) 75%,transparent); }        /* light: /80 -> /75 */
+  .dark .a.btn.secondary:hover { background:color-mix(in oklch,var(--secondary) 85%,transparent); }  /* dark: /85 */
+  .forced .a.btn.outline, .a.btn.outline:hover,
+  .forced .a.btn.ghost, .a.btn.ghost:hover,
+  .forced .a.icon.ghost, .a.icon.ghost:hover,
+  .forced .a.tg, .a.tg:hover { background:var(--accent); color:var(--accent-foreground); }                            /* unify: muted -> accent */
+  .forced .a.btn.destructive, .a.btn.destructive:hover { background:color-mix(in oklch,var(--destructive) 20%,transparent); }
+  .forced .a.btn.link, .a.btn.link:hover { text-decoration:underline; }
+  .forced .a.tab, .a.tab:hover { background:var(--accent); color:var(--accent-foreground); }
+  .forced .a.select, .a.select:hover { background:var(--accent); }                                                     /* NEW: light hover */
+</style>
+</head>
+<body class="scope">
+<header class="page">
+  <h1>SW-2076 — harmonize hover states (before / after)</h1>
+  <p><b>Before</b> = current behavior (some elements have no hover). <b>After</b> = proposed: every interactive element
+     has a hover; neutral surfaces unify on <code>accent</code>; solid fills hover by darkening (primary <code>/85</code>, secondary <code>/75</code> in light).
+     <b>Mouse over</b> each element to see its hover.</p>
+</header>
+<div class="controls">
+  <div class="seg" id="themeSeg"><span class="lbl">Theme</span>
+    <button data-theme="light" class="active">Light</button>
+    <button data-theme="dark">Dark</button></div>
+  <span class="hint">After-column proposals are tagged <span style="color:oklch(0.5 0.14 148)">fixed</span> / <span style="color:var(--primary)">unified</span> / unchanged.</span>
+</div>
+<main id="main"></main>
+<script>
+  const chev = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+  const ROWS = [
+    ['Button variants', [
+      { n:'Default (primary)', cls:'btn default', t:'Save', tag:['fix','fixed'], b:'none ([a]:hover only)', a:'hover:bg-primary/85' },
+      { n:'Secondary', cls:'btn secondary', t:'Secondary', tag:['tweak','/80 → /75'], b:'hover:bg-secondary/80', a:'hover:bg-secondary/75 (light)' },
+      { n:'Outline', cls:'btn outline', t:'Outline', tag:['unify','unified'], b:'hover:bg-muted', a:'hover:bg-accent' },
+      { n:'Ghost', cls:'btn ghost', t:'Ghost', tag:['unify','unified'], b:'hover:bg-muted', a:'hover:bg-accent' },
+      { n:'Destructive', cls:'btn destructive', t:'Delete', tag:['same','unchanged'], b:'hover:bg-destructive/20', a:'hover:bg-destructive/20' },
+      { n:'Link', cls:'btn link', t:'Link', tag:['same','unchanged'], b:'hover:underline', a:'hover:underline' },
+    ]],
+    ['Icon buttons', [
+      { n:'Icon · default', cls:'btn icon default', t:chev, tag:['fix','fixed'], b:'none', a:'hover:bg-primary/85' },
+      { n:'Icon · ghost', cls:'btn icon ghost', t:chev, tag:['unify','unified'], b:'hover:bg-muted', a:'hover:bg-accent' },
+    ]],
+    ['Other interactive controls', [
+      { n:'Toggle', cls:'tg', t:'B', tag:['unify','unified'], b:'hover:bg-muted', a:'hover:bg-accent' },
+      { n:'Tabs (horizontal · default)', tabs:true, tag:['same','unchanged'], b:'inactive hover:bg-accent', a:'inactive hover:bg-accent' },
+      { n:'Select trigger', cls:'select', t:'Choose '+chev, tag:['fix','fixed'], b:'none in light', a:'hover:bg-accent' },
+    ]],
+  ];
+  const main = document.getElementById('main');
+  ROWS.forEach(([title, items]) => {
+    const h=document.createElement('h2'); h.className='sect'; h.textContent=title; main.appendChild(h);
+    const tbl=document.createElement('table');
+    tbl.innerHTML = `<thead><tr><th style="width:200px">Element</th><th style="width:33%">Before</th><th style="width:33%">After</th></tr></thead>`;
+    const tb=document.createElement('tbody');
+    items.forEach(it=>{
+      const tabsBar = (pfx)=>`<span class="track">`
+        + `<span class="tab active">Visualizations</span>`
+        + `<span class="${pfx} tab">Table</span>`
+        + `<span class="${pfx} tab">Settings</span></span>`;
+      let before, after;
+      if (it.tabs) { before = tabsBar('b'); after = tabsBar('a'); }
+      else if (it.wrap==='track') { before = `<span class="track"><span class="b ${it.cls}">${it.t}</span></span>`; after = `<span class="track"><span class="a ${it.cls}">${it.t}</span></span>`; }
+      else { before = `<span class="b ${it.cls}">${it.t}</span>`; after = `<span class="a ${it.cls}">${it.t}</span>`; }
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td><div class="elname">${it.n}</div></td>
+        <td>${before}<div class="col-spec">${it.b}</div></td>
+        <td><div style="display:flex;align-items:center;gap:10px">${after}<span class="tag ${it.tag[0]}">${it.tag[1]}</span></div><div class="col-spec">${it.a}</div></td>`;
+      tb.appendChild(tr);
+    });
+    tbl.appendChild(tb); main.appendChild(tbl);
+  });
+  let theme='light';
+  document.getElementById('themeSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    theme=b.dataset.theme; document.body.classList.toggle('dark',theme==='dark');
+    document.querySelectorAll('#themeSeg button').forEach(x=>x.classList.toggle('active',x===b));});
+  const p=new URLSearchParams(location.search);
+  if(p.get('theme')==='dark') document.querySelector('#themeSeg [data-theme=dark]').click();
+</script>
+</body>
+</html>

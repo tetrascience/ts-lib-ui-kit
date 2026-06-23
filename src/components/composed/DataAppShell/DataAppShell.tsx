@@ -518,8 +518,8 @@ function DataAppShell({
         data-slot="data-app-shell"
         className={cn("flex flex-row w-full h-screen overflow-hidden", className)}
       >
-        {/* Desktop icon rail (hidden on mobile, or when showNavRail is false) */}
-        {showNavRail && <IconRailSidebar {...sidebarProps} />}
+        {/* Desktop icon rail (hidden on mobile, or when navRailHidden is true) */}
+        {!navRailHidden && <IconRailSidebar {...sidebarProps} />}
 
         {/* Mobile sidebar Sheet */}
         <SheetContent

@@ -369,14 +369,23 @@ function SidebarBody({
 
       {/* ── Bottom: user menu slot ──────────────────────────────────────────── */}
       {userMenu && (
-        <div
-          className={cn(
-            "shrink-0 border-t border-sidebar-border",
-            compact ? "flex flex-col items-center py-2" : "p-2"
+        <>
+          {/* Collapsed: short centered divider aligned under the icon column.
+              Expanded uses the full-width border on the wrapper below. */}
+          {compact && (
+            <div className="shrink-0 mx-auto w-8 border-t border-sidebar-border" />
           )}
-        >
-          {userMenu}
-        </div>
+          <div
+            className={cn(
+              "shrink-0",
+              compact
+                ? "flex flex-col items-center py-2"
+                : "p-2 border-t border-sidebar-border"
+            )}
+          >
+            {userMenu}
+          </div>
+        </>
       )}
     </TooltipProvider>
   );

@@ -147,7 +147,7 @@ const pageIconVariants = cva(
         false: "bg-transparent",
       },
       compact: {
-        true: "w-9 h-9 hover:bg-muted",
+        true: "w-9 h-9 hover:bg-accent",
         false: "w-8 h-8",
       },
     },

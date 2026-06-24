@@ -211,7 +211,7 @@ export function PlateMapGrid<T extends WellRecord = WellRecord>({
                   onClick={() => onGroupClick?.(group)}
                   className={cn(
                     "flex w-16 flex-col items-center gap-1 rounded-md px-1 py-1 text-center text-xs transition-colors",
-                    "text-muted-foreground hover:bg-muted/60",
+                    "text-muted-foreground hover:bg-accent/60",
                     isActive && "bg-muted text-foreground ring-1 ring-primary/40",
                     group.disabled && "pointer-events-none opacity-50",
                   )}

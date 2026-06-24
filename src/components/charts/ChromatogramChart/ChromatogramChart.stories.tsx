@@ -289,7 +289,7 @@ export const UserDefinedPeaks: Story = {
           "Supply `startX`, `endX`, and `color` on each annotation to define peak boundaries with pass/fail coloring (green = pass, red = fail, grey = N/A). The component renders triangle markers (▲) at the start and diamond markers (◆) at the end; the label, arrow, border, and boundary markers all inherit the per-peak color. Area is auto-computed via trapezoidal integration over the bounded slice.",
       },
     },
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5420" },
   },
 };
 
@@ -365,7 +365,7 @@ export const PeakHoverAndSelection: StoryObj<typeof ChromatogramChart> = {
           "Click a peak to select it (blue border, bold label). Click again to deselect. Other peaks dim while one is selected. Hover over the trace to thicken the line.",
       },
     },
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5421" },
   },
 };
 
@@ -428,6 +428,7 @@ export const WithRegionOverlay: Story = {
     });
   },
   parameters: {
+      zephyr: { testCaseId: "SW-T5422" },
     docs: {
       description: {
         story:
@@ -486,6 +487,7 @@ export const SelectionTogglesViaButton: StoryObj<typeof ChromatogramChart> = {
     });
   },
   parameters: {
+      zephyr: { testCaseId: "SW-T5423" },
     docs: {
       description: {
         story:
@@ -518,6 +520,7 @@ export const EmptySeries: Story = {
     });
   },
   parameters: {
+      zephyr: { testCaseId: "SW-T5424" },
     docs: {
       description: {
         story:
@@ -564,6 +567,6 @@ export const InlineAnnotationStyle: Story = {
           'With `annotationStyle="inline"` labels sit 4 px above the actual trace Y value with no arrow. Useful for dense chromatograms where arrowheads clutter the signal.',
       },
     },
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5425" },
   },
 };

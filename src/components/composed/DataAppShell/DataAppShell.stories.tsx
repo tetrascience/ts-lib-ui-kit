@@ -435,6 +435,7 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
           </Button>
         </>
       }
+      showNavRail={!collapsed}
       sidebarPanel={<WorkflowPanel steps={steps} collapsed={collapsed} onCollapseChange={setCollapsed} />}
     >
       <div className="flex items-center justify-center h-full">
@@ -487,6 +488,12 @@ export const CollapsedWorkflow: Story = {
     await step("Collapsed workflow — step labels hidden", async () => {
       expect(canvas.queryByText("Global Filtering")).not.toBeInTheDocument();
       expect(canvas.queryByText("Workflow")).not.toBeInTheDocument();
+    });
+
+    await step("Collapsed workflow — app nav rail is hidden", async () => {
+      expect(
+        canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")
+      ).not.toBeInTheDocument();
     });
   },
   parameters: {

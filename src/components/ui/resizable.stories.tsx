@@ -72,6 +72,31 @@ export const Horizontal: Story = {
   },
 }
 
+export const GutterAndHoverReveal: Story = {
+  name: "Gutter & hover reveal",
+  render: (args) => renderResizable(args, true),
+  play: async ({ canvasElement, step }) => {
+    const handle = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="resizable-handle"]'
+    )
+    if (!handle) throw new Error("resize handle not found")
+
+    await step("Divider footprint is 1px, on the panel seam", async () => {
+      // vertical separator (side-by-side panels) → 1px-wide divider in layout
+      expect(Math.round(handle.getBoundingClientRect().width)).toBe(1)
+    })
+
+    await step("Divider is hidden until interaction", async () => {
+      expect(getComputedStyle(handle).backgroundColor).toBe("rgba(0, 0, 0, 0)")
+    })
+
+    await step("Grab area is a wide overlay that takes no layout", async () => {
+      // ::after extends the hit area to 12px without shifting the panels
+      expect(getComputedStyle(handle, "::after").width).toBe("12px")
+    })
+  },
+}
+
 export const VerticalWithHandle: Story = {
   args: {
     orientation: "vertical",

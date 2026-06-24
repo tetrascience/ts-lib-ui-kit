@@ -18,8 +18,8 @@ function Table({
       data-slot="table-container"
       data-variant={variant}
       className={cn(
-        "relative w-full overflow-auto",
-        variant === "card" && "rounded-lg border bg-card",
+        "relative w-full overflow-auto bg-card",
+        variant === "card" && "rounded-lg border",
         containerClassName,
       )}
     >

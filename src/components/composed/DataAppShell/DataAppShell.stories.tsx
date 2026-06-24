@@ -343,7 +343,7 @@ function DataCountPills({ dataCounts }: { dataCounts: DataCount[] }) {
 // =============================================================================
 
 const meta: Meta<typeof DataAppShell> = {
-  title: "Design Patterns/DataAppShell",
+  title: "Design Patterns/Data App Shell",
   component: DataAppShell,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
@@ -382,9 +382,8 @@ const htsWorkflowSteps: WorkflowStep[] = [
 
 const htsBreadcrumbs = [
   { label: "All Projects", onClick: () => console.log("All Projects") },
-  { label: "DUX4", onClick: () => console.log("DUX4") },
-  { label: "Primary Screening", onClick: () => console.log("Primary Screening") },
-  { label: "Data Overview" },
+  { label: "Project Name", onClick: () => console.log("Project Name") },
+  { label: "worksession name" },
 ];
 
 // =============================================================================
@@ -585,9 +584,8 @@ const InteractiveShell = () => {
       userMenu={<UserMenuButton name="Emily Liu" userRole="ADMIN" />}
       breadcrumbs={[
         { label: "All Projects", onClick: () => setActivePageId("explorer") },
-        { label: "DUX4" },
-        { label: "Primary Screening" },
-        { label: activeStep?.label ?? "Data Overview" },
+        { label: "Project Name" },
+        { label: "worksession name" },
       ]}
       headerActions={
         isProjectPage && (

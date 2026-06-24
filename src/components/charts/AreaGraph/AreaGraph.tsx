@@ -1,13 +1,17 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { chartTooltipLines, useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { seriesColor } from "@/utils/colors";
 
 interface AreaDataSeries {
   x: number[];
   y: number[];
   name: string;
-  color: string;
+  /** Optional color override (auto-assigned from CHART_COLORS if not provided) */
+  color?: string;
   fill?: "tozeroy" | "tonexty" | "toself";
 }
 
@@ -38,6 +42,19 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({
+    // Stacked traces carry the original series values as customdata;
+    // display those instead of the cumulative stack heights
+    getLines: (points) =>
+      chartTooltipLines(
+        points.map((point) =>
+          typeof point.customdata === "number"
+            ? { ...point, y: point.customdata }
+            : point,
+        ),
+        { xLabel: xTitle, yLabel: yTitle },
+      ),
+  });
 
   const { xMin, xMax, yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
@@ -164,35 +181,55 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           return result;
         });
 
+        const color = seriesColor(index, series.color);
         return {
           x: series.x,
           y: stackedY,
+          // Tooltips report the series' own values, not the stacked sums
+          customdata: series.y,
           type: "scatter" as const,
-          mode: "lines" as const,
+          // Dots mark each data point — the spots the tooltip anchors to
+          mode: "lines+markers" as const,
           name: series.name,
+          hoverinfo: "none" as const,
           fill: index === 0 ? ("tozeroy" as const) : ("tonexty" as const),
-          fillcolor: series.color,
+          fillcolor: color,
           line: {
-            color: series.color,
+            color,
             width: 2,
+          },
+          marker: {
+            size: 6,
+            color,
+            line: { color: theme.markerOutline, width: 1.5 },
           },
         };
       });
     } else {
       // Normal mode - each area fills independently from zero
-      data = dataSeries.map((series) => ({
-        x: series.x,
-        y: series.y,
-        type: "scatter" as const,
-        mode: "lines" as const,
-        name: series.name,
-        fill: series.fill || ("tozeroy" as const),
-        fillcolor: series.color,
-        line: {
-          color: series.color,
-          width: 2,
-        },
-      }));
+      data = dataSeries.map((series, index) => {
+        const color = seriesColor(index, series.color);
+        return {
+          x: series.x,
+          y: series.y,
+          type: "scatter" as const,
+          // Dots mark each data point — the spots the tooltip anchors to
+          mode: "lines+markers" as const,
+          name: series.name,
+          hoverinfo: "none" as const,
+          fill: series.fill || ("tozeroy" as const),
+          fillcolor: color,
+          line: {
+            color,
+            width: 2,
+          },
+          marker: {
+            size: 6,
+            color,
+            line: { color: theme.markerOutline, width: 1.5 },
+          },
+        };
+      });
     }
 
     const layout = {
@@ -268,6 +305,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, data, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -278,11 +316,12 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks, theme]);
+  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks, theme, bindTooltip]);
 
   return (
-    <div className="area-graph-container">
+    <div className="area-graph-container relative">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
+      {tooltipElement}
     </div>
   );
 };

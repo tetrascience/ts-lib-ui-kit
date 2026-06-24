@@ -25,9 +25,9 @@ This library provides:
 ## Compatibility
 
 | Library version | React | Node.js | TDP (server utilities) |
-| --- | --- | --- | --- |
-| v0.5.x | 19+ | 18+ | v4.x+ |
-| v0.4.x | 19+ | 18+ | v4.x+ |
+| --------------- | ----- | ------- | ---------------------- |
+| v0.5.x          | 19+   | 18+     | v4.x+                  |
+| v0.4.x          | 19+   | 18+     | v4.x+                  |
 
 > **Note:** The client-side components have no TDP version dependency.
 > The `/server` utilities (JWT auth, provider helpers) require a running TDP instance of v4.x or later.
@@ -43,10 +43,10 @@ yarn add @tetrascience-npm/tetrascience-react-ui
 
 ```tsx
 // 1. Import the CSS once at your app root (required)
-import '@tetrascience-npm/tetrascience-react-ui/index.css';
+import "@tetrascience-npm/tetrascience-react-ui/index.css";
 
 // 2. Import components
-import { Button, Card, CardHeader, CardContent } from '@tetrascience-npm/tetrascience-react-ui';
+import { Button, Card, CardHeader, CardContent } from "@tetrascience-npm/tetrascience-react-ui";
 
 function App() {
   return (
@@ -67,9 +67,9 @@ This library uses **Tailwind CSS 4** with design tokens defined as CSS custom pr
 
 ### CSS Import Options
 
-| Import path | Use case |
-| --- | --- |
-| `@tetrascience-npm/tetrascience-react-ui/index.css` | **Pre-built CSS** — use this for most apps. Import once at your app root. |
+| Import path                                                  | Use case                                                                                             |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `@tetrascience-npm/tetrascience-react-ui/index.css`          | **Pre-built CSS** — use this for most apps. Import once at your app root.                            |
 | `@tetrascience-npm/tetrascience-react-ui/index.tailwind.css` | **Tailwind source** — for apps that run their own Tailwind build and want to extend/override tokens. |
 
 Most consumers only need `index.css`:
@@ -100,7 +100,58 @@ Accordion, Alert, AlertDialog, AspectRatio, Avatar, Badge, Breadcrumb, Button, B
 
 TetraScience-specific compositions built from UI primitives:
 
-AppHeader, AppLayout, AssistantModal, CodeScriptEditorButton, LaunchContent, Main, Navbar, ProtocolConfiguration, ProtocolYamlCard, PythonEditorModal, Sidebar, TdpLink, TdpSearch, TdpUrl
+AppHeader, AppLayout, AssistantModal, CodeScriptEditorButton, LaunchContent, Main, Navbar, ProcessFlow, ProtocolConfiguration, ProtocolYamlCard, PythonEditorModal, Sidebar, TdpLink, TdpSearch, TdpUrl
+
+#### ProcessFlow
+
+Use `ProcessFlow` to render parent-owned multi-step workflow state such as uploads, validation pipelines, review flows, processing stages, and setup sequences. Import it from the package and keep all workflow transitions and side effects in the consuming app.
+
+```tsx
+import {
+  PROCESS_FLOW_STEP_STATUSES,
+  ProcessFlow,
+  type ProcessFlowStep,
+  type ProcessFlowStepStatus,
+} from "@tetrascience-npm/tetrascience-react-ui";
+
+const steps: ProcessFlowStep[] = [
+  { id: "upload", label: "Upload", description: "Choose source files", status: "completed" },
+  { id: "validate", label: "Validate", description: "Check schema and lineage", status: "active" },
+  { id: "publish", label: "Publish", description: "Send downstream", status: "pending" },
+];
+
+function WorkflowProgress() {
+  return (
+    <ProcessFlow
+      steps={steps}
+      selectedStepId="validate"
+      onStepSelect={(step, details) => {
+        console.log(step.id, details.status);
+      }}
+    />
+  );
+}
+
+const allStatuses: readonly ProcessFlowStepStatus[] = PROCESS_FLOW_STEP_STATUSES;
+```
+
+Expected contract:
+
+- `status` is independently controlled per step: `pending`, `active`, `completed`, `error`, or `disabled`.
+- `selectedStepId` means the step the user is viewing or has clicked; it is separate from the `active` workflow state.
+- `onStepSelect` emits user selection only. It does not mean a workflow step completed.
+- Parent workflow code owns completion, error handling, retries, analytics, and other side effects.
+- `description` is shown by default. Pass `showDescriptions={false}` to hide all descriptions.
+- Descriptions auto-hide at narrow container widths (≤40rem) for mobile layouts.
+- The component fills 100% of its container width — size it by controlling the container.
+- Selected completed steps render with a green label; selected active steps render with a blue label.
+- Use `connections` and per-step `position` only for simple branching/configurable flows.
+
+For AI-assisted consuming apps, add a short instruction like this to the app's `AGENTS.md` or `CLAUDE.md`:
+
+```md
+Use `ProcessFlow` from `@tetrascience-npm/tetrascience-react-ui` for multi-step workflow visualization. Do not build a custom stepper for upload, validation, review, approval, processing, or setup flows. Parent components own the workflow state and pass `steps: ProcessFlowStep[]`; each step status must be one of `PROCESS_FLOW_STEP_STATUSES`. Use `selectedStepId` only for the viewed/selected step. Keep completion/error side effects in the parent workflow code, not inside `ProcessFlow`.
+```
 
 ### Charts (`charts/`)
 
@@ -117,7 +168,7 @@ Beyond UI components, this library includes server-side helper functions for bui
 **JWT Token Manager** - Manages JWT token retrieval for data apps:
 
 ```typescript
-import { jwtManager } from '@tetrascience-npm/tetrascience-react-ui/server';
+import { jwtManager } from "@tetrascience-npm/tetrascience-react-ui/server";
 
 // In Express middleware
 app.use(async (req, res, next) => {
@@ -146,12 +197,8 @@ TypeScript equivalents of the Python helpers from `ts-lib-ui-kit-streamlit` for 
 **Getting Provider Configurations:**
 
 ```typescript
-import { TDPClient } from '@tetrascience-npm/ts-connectors-sdk';
-import {
-  getProviderConfigurations,
-  buildProvider,
-  jwtManager,
-} from '@tetrascience-npm/tetrascience-react-ui/server';
+import { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
+import { getProviderConfigurations, buildProvider, jwtManager } from "@tetrascience-npm/tetrascience-react-ui/server";
 
 // Get user's auth token from request (e.g., in Express middleware)
 const userToken = await jwtManager.getTokenFromExpressRequest(req);
@@ -160,7 +207,7 @@ const userToken = await jwtManager.getTokenFromExpressRequest(req);
 // Other fields (tdpEndpoint, connectorId, orgSlug) are read from environment variables
 const client = new TDPClient({
   authToken: userToken,
-  artifactType: 'data-app',
+  artifactType: "data-app",
 });
 await client.init();
 
@@ -172,7 +219,7 @@ for (const config of providers) {
 
   // Build a database connection from the config
   const provider = await buildProvider(config);
-  const results = await provider.query('SELECT * FROM my_table LIMIT 10');
+  const results = await provider.query("SELECT * FROM my_table LIMIT 10");
   await provider.close();
 }
 ```
@@ -185,21 +232,21 @@ import {
   buildDatabricksProvider,
   getTdpAthenaProvider,
   type ProviderConfiguration,
-} from '@tetrascience-npm/tetrascience-react-ui/server';
+} from "@tetrascience-npm/tetrascience-react-ui/server";
 
 // Snowflake
 const snowflakeProvider = await buildSnowflakeProvider(config);
-const data = await snowflakeProvider.query('SELECT * FROM users');
+const data = await snowflakeProvider.query("SELECT * FROM users");
 await snowflakeProvider.close();
 
 // Databricks
 const databricksProvider = await buildDatabricksProvider(config);
-const data = await databricksProvider.query('SELECT * FROM events');
+const data = await databricksProvider.query("SELECT * FROM events");
 await databricksProvider.close();
 
 // TDP Athena (uses environment configuration)
 const athenaProvider = await getTdpAthenaProvider();
-const data = await athenaProvider.query('SELECT * FROM files');
+const data = await athenaProvider.query("SELECT * FROM files");
 await athenaProvider.close();
 ```
 
@@ -211,15 +258,15 @@ import {
   MissingTableError,
   ProviderConnectionError,
   InvalidProviderConfigurationError,
-} from '@tetrascience-npm/tetrascience-react-ui/server';
+} from "@tetrascience-npm/tetrascience-react-ui/server";
 
 try {
-  const results = await provider.query('SELECT * FROM missing_table');
+  const results = await provider.query("SELECT * FROM missing_table");
 } catch (error) {
   if (error instanceof MissingTableError) {
-    console.error('Table not found:', error.message);
+    console.error("Table not found:", error.message);
   } else if (error instanceof QueryError) {
-    console.error('Query failed:', error.message);
+    console.error("Query failed:", error.message);
   }
 }
 ```
@@ -242,20 +289,20 @@ The TDP connector key/value store lets data apps persist small pieces of state (
 **Reading and writing values with the user's JWT token:**
 
 ```typescript
-import { TDPClient } from '@tetrascience-npm/ts-connectors-sdk';
-import { jwtManager } from '@tetrascience-npm/tetrascience-react-ui/server';
+import { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
+import { jwtManager } from "@tetrascience-npm/tetrascience-react-ui/server";
 
 // In an Express route handler:
-app.get('/api/kv/:key', async (req, res) => {
+app.get("/api/kv/:key", async (req, res) => {
   // 1. Get the user's JWT from request cookies
   const userToken = await jwtManager.getTokenFromExpressRequest(req);
-  if (!userToken) return res.status(401).json({ error: 'Not authenticated' });
+  if (!userToken) return res.status(401).json({ error: "Not authenticated" });
 
   // 2. Create a TDPClient authenticated as the user
   //    (CONNECTOR_ID, TDP_ENDPOINT, ORG_SLUG are read from env vars)
   const client = new TDPClient({
     authToken: userToken,
-    artifactType: 'data-app',
+    artifactType: "data-app",
   });
   await client.init();
 
@@ -264,13 +311,13 @@ app.get('/api/kv/:key', async (req, res) => {
   res.json({ key: req.params.key, value });
 });
 
-app.put('/api/kv/:key', async (req, res) => {
+app.put("/api/kv/:key", async (req, res) => {
   const userToken = await jwtManager.getTokenFromExpressRequest(req);
-  if (!userToken) return res.status(401).json({ error: 'Not authenticated' });
+  if (!userToken) return res.status(401).json({ error: "Not authenticated" });
 
   const client = new TDPClient({
     authToken: userToken,
-    artifactType: 'data-app',
+    artifactType: "data-app",
   });
   await client.init();
 
@@ -283,7 +330,7 @@ app.put('/api/kv/:key', async (req, res) => {
 **Reading multiple values at once:**
 
 ```typescript
-const values = await client.getValues(['theme', 'locale', 'last-run']);
+const values = await client.getValues(["theme", "locale", "last-run"]);
 // values[0] → theme, values[1] → locale, values[2] → last-run
 ```
 
@@ -315,8 +362,8 @@ Frontend: use `<TdpSearch columns={...} />` with default `apiEndpoint="/api/sear
 Full TypeScript support with exported types:
 
 ```tsx
-import { Button } from '@tetrascience-npm/tetrascience-react-ui';
-import type { ButtonProps, BarGraphProps, BarDataSeries } from '@tetrascience-npm/tetrascience-react-ui';
+import { Button } from "@tetrascience-npm/tetrascience-react-ui";
+import type { ButtonProps, BarGraphProps, BarDataSeries } from "@tetrascience-npm/tetrascience-react-ui";
 ```
 
 ## Examples
@@ -344,6 +391,61 @@ Visit <http://localhost:6006>.
 - [Migration Guide](./MIGRATION.md) - Migrating from the old atom/molecule/organism architecture
 - [Theming Guide](./THEMING.md) - Customise the design system
 - [Contributing](./CONTRIBUTING.md#development-setup) - Clone the repo and run `yarn storybook`
+
+## MCP server (for AI coding agents)
+
+This library exposes an [MCP](https://modelcontextprotocol.io/) server so AI
+coding agents (Claude Code, Cursor, Claude Desktop) can query authoritative
+component lists, prop/variant options, and usage examples instead of guessing —
+reducing hallucinated component APIs when scaffolding a data app.
+
+There are two endpoints. Pick whichever fits; you can add both.
+
+| Endpoint | URL | Tools |
+| --- | --- | --- |
+| **Deployed** (no local checkout needed) | `https://ts-lib-ui-kit-storybook.vercel.app/api/mcp` | docs: `list_components`, `get_component`, `search_components` |
+| **Local** (needs `yarn storybook` running) | `http://localhost:6006/mcp` | full set: docs **+** write/preview/test stories |
+
+### Add the connection
+
+**Claude Code** — register the deployed server (HTTP transport):
+
+```bash
+claude mcp add --transport http ts-ui-kit https://ts-lib-ui-kit-storybook.vercel.app/api/mcp
+```
+
+Use `--scope project` to share it with your team via a checked-in `.mcp.json`, or
+`--scope user` to make it available across all your projects. For the local
+server, run `yarn storybook` first, then:
+
+```bash
+claude mcp add --transport http ts-ui-kit-local http://localhost:6006/mcp
+```
+
+**Cursor / Claude Desktop / other clients** — add an HTTP MCP server to the
+client's MCP config (e.g. Cursor's `.cursor/mcp.json`, or Claude Desktop's
+`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "ts-ui-kit": {
+      "type": "http",
+      "url": "https://ts-lib-ui-kit-storybook.vercel.app/api/mcp"
+    }
+  }
+}
+```
+
+**Any client (generic helper):**
+
+```bash
+npx mcp-add --type http --url "https://ts-lib-ui-kit-storybook.vercel.app/api/mcp"
+```
+
+Then ask your agent something like *"using the ts-ui-kit MCP, list the available
+components"* or *"build a form using ts-ui-kit primitives"* to confirm it's wired
+up.
 
 ## Tech Stack
 

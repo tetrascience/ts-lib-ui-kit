@@ -1,7 +1,10 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { CHART_COLORS } from "@/utils/colors";
 import "./Chromatogram.scss";
 
 /** Height offset for the plot area in pixels */
@@ -62,13 +65,17 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
   width = 900,
   height = 600,
   positionInterval = 10,
-  colorA = "#2D9CDB",
-  colorT = "#A1C63C",
-  colorG = "#FF5C64",
-  colorC = "#FFA62E",
+  colorA = CHART_COLORS[0], // blue
+  colorT = CHART_COLORS[2], // teal/green
+  colorG = CHART_COLORS[3], // red
+  colorC = CHART_COLORS[1], // orange
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({
+    xLabel: "Position",
+    yLabel: "Intensity",
+  });
 
   const positions = useMemo(() => data.map((item) => item.position), [data]);
   const sequence = useMemo(() => data.map((item) => determineBase(item)), [data]);
@@ -83,6 +90,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
       y: peakA,
       type: "scatter" as const,
       mode: "lines" as const,
+      hoverinfo: "none" as const,
       name: "A",
       line: { color: colorA, width: 2, shape: "spline" as const },
     }),
@@ -95,6 +103,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
       y: peakT,
       type: "scatter" as const,
       mode: "lines" as const,
+      hoverinfo: "none" as const,
       name: "T",
       line: { color: colorT, width: 2, shape: "spline" as const },
     }),
@@ -107,6 +116,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
       y: peakG,
       type: "scatter" as const,
       mode: "lines" as const,
+      hoverinfo: "none" as const,
       name: "G",
       line: { color: colorG, width: 2, shape: "spline" as const },
     }),
@@ -119,6 +129,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
       y: peakC,
       type: "scatter" as const,
       mode: "lines" as const,
+      hoverinfo: "none" as const,
       name: "C",
       line: { color: colorC, width: 2, shape: "spline" as const },
     }),
@@ -171,6 +182,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -180,7 +192,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [data, width, height, aTrace, tTrace, gTrace, cTrace, maxValue, positions, theme]);
+  }, [data, width, height, aTrace, tTrace, gTrace, cTrace, maxValue, positions, theme, bindTooltip]);
 
   if (data.length === 0) {
     return <div className="chart-container">No data available</div>;
@@ -278,11 +290,12 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
   };
 
   return (
-    <div className="chromatogram-container" style={{ width, height }}>
+    <div className="chromatogram-container relative" style={{ width, height }}>
       {renderSequence()}
       <div className="chromatogram-chart">
         <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
       </div>
+      {tooltipElement}
     </div>
   );
 };

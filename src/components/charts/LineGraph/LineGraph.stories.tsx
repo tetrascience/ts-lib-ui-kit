@@ -1,6 +1,5 @@
 import { expect, within } from "storybook/test";
 
-import { COLORS } from "../../../utils/colors";
 
 import { LineGraph } from "./LineGraph";
 
@@ -13,37 +12,31 @@ const generateBasicDemoData = (): LineDataSeries[] => {
   return [
     {
       name: "Data A",
-      color: COLORS.ORANGE,
       x,
       y: [75, 140, 105, 120, 145, 115, 110, 80, 90],
     },
     {
       name: "Data B",
-      color: COLORS.RED,
       x,
       y: [125, 160, 115, 145, 190, 180, 120, 105, 110],
     },
     {
       name: "Data C",
-      color: COLORS.GREEN,
       x,
       y: [185, 195, 145, 215, 205, 200, 160, 145, 135],
     },
     {
       name: "Data D",
-      color: COLORS.BLUE,
       x,
       y: [225, 215, 210, 245, 230, 230, 200, 185, 190],
     },
     {
       name: "Data E",
-      color: COLORS.YELLOW,
       x,
       y: [245, 260, 235, 265, 250, 250, 220, 220, 225],
     },
     {
       name: "Data F",
-      color: COLORS.PURPLE,
       x,
       y: [275, 295, 270, 285, 300, 300, 250, 255, 260],
     },
@@ -58,7 +51,6 @@ const generateDataStartingFromZero = (): LineDataSeries[] => {
   return [
     {
       name: "Data A",
-      color: COLORS.ORANGE,
       symbol: "circle",
       x,
       y: [
@@ -75,7 +67,6 @@ const generateDataStartingFromZero = (): LineDataSeries[] => {
     },
     {
       name: "Data B",
-      color: COLORS.RED,
       symbol: "square",
       x,
       y: [
@@ -92,7 +83,6 @@ const generateDataStartingFromZero = (): LineDataSeries[] => {
     },
     {
       name: "Data C",
-      color: COLORS.GREEN,
       symbol: "diamond",
       x,
       y: [
@@ -109,7 +99,6 @@ const generateDataStartingFromZero = (): LineDataSeries[] => {
     },
     {
       name: "Data D",
-      color: COLORS.BLUE,
       symbol: "triangle-up",
       x,
       y: [
@@ -126,7 +115,6 @@ const generateDataStartingFromZero = (): LineDataSeries[] => {
     },
     {
       name: "Data E",
-      color: COLORS.YELLOW,
       symbol: "triangle-down",
       x,
       y: [
@@ -143,7 +131,6 @@ const generateDataStartingFromZero = (): LineDataSeries[] => {
     },
     {
       name: "Data F",
-      color: COLORS.PURPLE,
       symbol: "pentagon",
       x,
       y: [
@@ -167,21 +154,18 @@ const generateWideRangeData = (): LineDataSeries[] => {
   return [
     {
       name: "Data A",
-      color: COLORS.ORANGE,
       symbol: "circle",
       x,
       y: [20, 35, 30, 45, 25, 40, 30, 20, 25],
     },
     {
       name: "Data B",
-      color: COLORS.RED,
       symbol: "square",
       x,
       y: [120, 140, 130, 145, 160, 150, 135, 125, 155],
     },
     {
       name: "Data C",
-      color: COLORS.GREEN,
       symbol: "diamond",
       x,
       y: [320, 360, 340, 380, 350, 370, 330, 345, 355],
@@ -195,21 +179,18 @@ const generateNarrowRangeData = (): LineDataSeries[] => {
   return [
     {
       name: "Data A",
-      color: COLORS.ORANGE,
       symbol: "circle",
       x,
       y: [160, 158, 165, 162, 170, 168, 172, 165, 175],
     },
     {
       name: "Data B",
-      color: COLORS.RED,
       symbol: "square",
       x,
       y: [180, 182, 178, 185, 183, 188, 186, 184, 190],
     },
     {
       name: "Data C",
-      color: COLORS.GREEN,
       symbol: "diamond",
       x,
       y: [200, 198, 204, 202, 208, 205, 210, 207, 212],
@@ -223,42 +204,36 @@ const generateDemoData = (): LineDataSeries[] => {
   return [
     {
       name: "Data A",
-      color: COLORS.ORANGE,
       symbol: "circle",
       x,
       y: [75, 140, 105, 120, 145, 115, 110, 80, 90],
     },
     {
       name: "Data B",
-      color: COLORS.RED,
       symbol: "square",
       x,
       y: [125, 160, 115, 145, 190, 180, 120, 105, 110],
     },
     {
       name: "Data C",
-      color: COLORS.GREEN,
       symbol: "diamond",
       x,
       y: [185, 195, 145, 215, 205, 200, 160, 145, 135],
     },
     {
       name: "Data D",
-      color: COLORS.BLUE,
       symbol: "triangle-up",
       x,
       y: [225, 215, 210, 245, 230, 230, 200, 185, 190],
     },
     {
       name: "Data E",
-      color: COLORS.YELLOW,
       symbol: "triangle-down",
       x,
       y: [245, 260, 235, 265, 250, 250, 220, 220, 225],
     },
     {
       name: "Data F",
-      color: COLORS.PURPLE,
       symbol: "pentagon",
       x,
       y: [275, 295, 270, 285, 300, 300, 250, 255, 260],
@@ -280,7 +255,7 @@ const generateDemoDataWithErrorBars = (): LineDataSeries[] => {
 };
 
 const meta: Meta<typeof LineGraph> = {
-  title: "Charts/LineGraph",
+  title: "Charts/Line Graph",
   component: LineGraph,
   parameters: {
     layout: "centered",

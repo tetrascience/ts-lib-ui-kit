@@ -52,95 +52,101 @@ Tokens live in `src/index.css` as CSS custom properties under `:root` / `.dark`.
 
 ### Chart Color Palette
 
-`src/utils/colors.ts` exports a `CHART_COLORS` array of 12 pre-harmonized colors (orange, red, green, yellow, purple, brown, pink, teal, dark blue, black, grey) used consistently across all chart components. Import via:
+`src/utils/colors.ts` exports a `CHART_COLORS` array of 12 CVD-friendly categorical colors (backed by the `--chart-1` … `--chart-12` tokens), plus `CHART_SEQUENTIAL` / `CHART_DIVERGING` ramps and a `toPlotlyColorscale()` helper, used consistently across all chart components. Import via:
 
 ```ts
-import { CHART_COLORS, COLORS } from "@tetrascience-npm/tetrascience-react-ui";
+import {
+  CHART_COLORS,
+  CHART_SEQUENTIAL,
+  CHART_DIVERGING,
+  toPlotlyColorscale,
+} from "@tetrascience-npm/tetrascience-react-ui";
 ```
 
 ---
 
 ## 3. Component Inventory
 
-| Component                | Category     | Base (shadcn)         | Key Additions                              | Status |
-| ------------------------ | ------------ | --------------------- | ------------------------------------------ | ------ |
-| `Button`                 | Action       | `button`              | 8 size variants, icon-only mode            | Stable |
-| `ButtonGroup`            | Action       | —                     | Segmented button container                 | Stable |
-| `Toggle`                 | Action       | `toggle`              | Pressable on/off button                    | Stable |
-| `ToggleGroup`            | Action       | `toggle-group`        | Exclusive/multi-select toggle set          | Stable |
-| `Input`                  | Form         | `input`               | —                                          | Stable |
-| `InputGroup`             | Form         | —                     | Leading/trailing adornments                | Stable |
-| `Field`                  | Form         | —                     | Label + input + error wrapper              | Stable |
-| `Label`                  | Form         | `label`               | —                                          | Stable |
-| `Select`                 | Form         | `select`              | —                                          | Stable |
-| `Combobox`               | Form         | `command`             | Searchable select                          | Stable |
-| `Checkbox`               | Form         | `checkbox`            | —                                          | Stable |
-| `RadioGroup`             | Form         | `radio-group`         | —                                          | Stable |
-| `Switch`                 | Form         | `switch`              | —                                          | Stable |
-| `Textarea`               | Form         | `textarea`            | —                                          | Stable |
-| `Calendar`               | Form         | `calendar`            | —                                          | Stable |
-| `InputOtp`               | Form         | `input-otp`           | —                                          | Stable |
-| `Slider`                 | Form         | `slider`              | —                                          | Stable |
-| `CodeEditor`             | Form         | —                     | Monaco editor, theme-aware                 | Stable |
-| `Dialog`                 | Overlay      | `dialog`              | —                                          | Stable |
-| `AlertDialog`            | Overlay      | `alert-dialog`        | —                                          | Stable |
-| `Sheet`                  | Overlay      | `sheet`               | —                                          | Stable |
-| `Drawer`                 | Overlay      | `drawer`              | —                                          | Stable |
-| `Tooltip`                | Overlay      | `tooltip`             | —                                          | Stable |
-| `HoverCard`              | Overlay      | `hover-card`          | —                                          | Stable |
-| `Command`                | Overlay      | `command`             | Command palette / search                   | Stable |
-| `DropdownMenu`           | Navigation   | `dropdown-menu`       | —                                          | Stable |
-| `ContextMenu`            | Navigation   | `context-menu`        | —                                          | Stable |
-| `Menubar`                | Navigation   | `menubar`             | —                                          | Stable |
-| `NavigationMenu`         | Navigation   | `navigation-menu`     | —                                          | Stable |
-| `Breadcrumb`             | Navigation   | `breadcrumb`          | —                                          | Stable |
-| `Tabs`                   | Navigation   | `tabs`                | —                                          | Stable |
-| `Sidebar`                | Navigation   | `sidebar`             | App-level sidebar pattern                  | Stable |
-| `Alert`                  | Feedback     | `alert`               | —                                          | Stable |
-| `Badge`                  | Feedback     | `badge`               | —                                          | Stable |
-| `Skeleton`               | Feedback     | `skeleton`            | —                                          | Stable |
-| `Spinner`                | Feedback     | —                     | Loading indicator                          | Stable |
-| `Sonner`                 | Feedback     | `sonner`              | Toast notifications                        | Stable |
-| `Table`                  | Data Display | `table`               | —                                          | Stable |
+| Component                | Category     | Base (shadcn)         | Key Additions                                     | Status |
+| ------------------------ | ------------ | --------------------- | ------------------------------------------------- | ------ |
+| `Button`                 | Action       | `button`              | 8 size variants, icon-only mode                   | Stable |
+| `ButtonGroup`            | Action       | —                     | Segmented button container                        | Stable |
+| `Toggle`                 | Action       | `toggle`              | Pressable on/off button                           | Stable |
+| `ToggleGroup`            | Action       | `toggle-group`        | Exclusive/multi-select toggle set                 | Stable |
+| `Input`                  | Form         | `input`               | —                                                 | Stable |
+| `InputGroup`             | Form         | —                     | Leading/trailing adornments                       | Stable |
+| `Field`                  | Form         | —                     | Label + input + error wrapper                     | Stable |
+| `Label`                  | Form         | `label`               | —                                                 | Stable |
+| `Select`                 | Form         | `select`              | —                                                 | Stable |
+| `Combobox`               | Form         | `command`             | Searchable select                                 | Stable |
+| `Checkbox`               | Form         | `checkbox`            | —                                                 | Stable |
+| `RadioGroup`             | Form         | `radio-group`         | —                                                 | Stable |
+| `Switch`                 | Form         | `switch`              | —                                                 | Stable |
+| `Textarea`               | Form         | `textarea`            | —                                                 | Stable |
+| `Calendar`               | Form         | `calendar`            | —                                                 | Stable |
+| `InputOtp`               | Form         | `input-otp`           | —                                                 | Stable |
+| `Slider`                 | Form         | `slider`              | —                                                 | Stable |
+| `CodeEditor`             | Form         | —                     | Monaco editor, theme-aware                        | Stable |
+| `Dialog`                 | Overlay      | `dialog`              | —                                                 | Stable |
+| `AlertDialog`            | Overlay      | `alert-dialog`        | —                                                 | Stable |
+| `Sheet`                  | Overlay      | `sheet`               | —                                                 | Stable |
+| `Drawer`                 | Overlay      | `drawer`              | —                                                 | Stable |
+| `Tooltip`                | Overlay      | `tooltip`             | —                                                 | Stable |
+| `HoverCard`              | Overlay      | `hover-card`          | —                                                 | Stable |
+| `Command`                | Overlay      | `command`             | Command palette / search                          | Stable |
+| `DropdownMenu`           | Navigation   | `dropdown-menu`       | —                                                 | Stable |
+| `ContextMenu`            | Navigation   | `context-menu`        | —                                                 | Stable |
+| `Menubar`                | Navigation   | `menubar`             | —                                                 | Stable |
+| `NavigationMenu`         | Navigation   | `navigation-menu`     | —                                                 | Stable |
+| `Breadcrumb`             | Navigation   | `breadcrumb`          | —                                                 | Stable |
+| `Tabs`                   | Navigation   | `tabs`                | —                                                 | Stable |
+| `Sidebar`                | Navigation   | `sidebar`             | App-level sidebar pattern                         | Stable |
+| `Alert`                  | Feedback     | `alert`               | —                                                 | Stable |
+| `Badge`                  | Feedback     | `badge`               | —                                                 | Stable |
+| `Skeleton`               | Feedback     | `skeleton`            | —                                                 | Stable |
+| `Spinner`                | Feedback     | —                     | Loading indicator                                 | Stable |
+| `Sonner`                 | Feedback     | `sonner`              | Toast notifications                               | Stable |
+| `Table`                  | Data Display | `table`               | —                                                 | Stable |
 | `DataTable`              | Data Display | —                     | TanStack Table wrapper, pagination, column toggle | In Dev |
-| `Card`                   | Data Display | `card`                | —                                          | Stable |
-| `Avatar`                 | Data Display | `avatar`              | —                                          | Stable |
-| `Accordion`              | Data Display | `accordion`           | —                                          | Stable |
-| `Collapsible`            | Data Display | `collapsible`         | —                                          | Stable |
-| `Carousel`               | Data Display | `carousel`            | —                                          | Stable |
-| `Item`                   | Data Display | —                     | Generic list/menu item                     | Stable |
-| `Kbd`                    | Data Display | —                     | Keyboard shortcut indicator                | Stable |
-| `TetraScienceIcon`       | Data Display | —                     | Brand icon component                       | Stable |
-| `ScrollArea`             | Layout       | `scroll-area`         | —                                          | Stable |
-| `Resizable`              | Layout       | `resizable`           | —                                          | Stable |
-| `Separator`              | Layout       | `separator`           | —                                          | Stable |
-| `AspectRatio`            | Layout       | `aspect-ratio`        | —                                          | Stable |
-| `AppLayout`              | Composed     | —                     | Full app shell with sidebar                | Stable |
-| `AppHeader`              | Composed     | —                     | Top nav with avatar/actions                | Stable |
-| `Main`                   | Composed     | —                     | Main content area with navbar, sidebar, tab bar | Stable |
-| `Navbar`                 | Composed     | —                     | Secondary nav bar                          | Stable |
-| `Sidebar` (composed)     | Composed     | —                     | App sidebar with navigation sections       | Stable |
-| `LaunchContent`          | Composed     | —                     | Launch/welcome content panel               | Stable |
-| `ProtocolConfiguration`  | Composed     | —                     | Protocol config form                       | Stable |
-| `ProtocolYamlCard`       | Composed     | —                     | YAML protocol display card                 | Stable |
-| `AssistantModal`         | Composed     | `dialog`              | AI assistant chat modal                    | Beta   |
-| `CodeScriptEditorButton` | Composed     | —                     | Button that opens code/script editor       | Stable |
-| `PythonEditorModal`      | Composed     | `dialog` + CodeEditor | Python script editor                       | Stable |
-| `TdpSearch`              | Composed     | `command`             | TetraScience data platform search          | Stable |
-| `TdpLink`                | Composed     | —                     | TDP-aware link component                   | Stable |
-| `AreaGraph`              | Chart        | —                     | Plotly area chart                          | Stable |
-| `BarGraph`               | Chart        | —                     | Plotly bar chart (grouped/stacked)         | Stable |
-| `LineGraph`              | Chart        | —                     | Plotly line chart                          | Stable |
-| `ScatterGraph`           | Chart        | —                     | Plotly scatter                             | Stable |
-| `Histogram`              | Chart        | —                     | Plotly histogram                           | Stable |
-| `PieChart`               | Chart        | —                     | Plotly pie                                 | Stable |
-| `Heatmap`                | Chart        | —                     | Plotly heatmap                             | Stable |
-| `Boxplot`                | Chart        | —                     | Plotly box plot                            | Stable |
-| `DotPlot`                | Chart        | —                     | Plotly dot plot                            | Stable |
-| `Chromatogram`           | Chart        | —                     | Specialized lab chromatogram (themed)      | Stable |
-| `ChromatogramChart`      | Chart        | —                     | Legacy chromatogram (non-themed)           | Stable |
-| `PlateMap`               | Chart        | —                     | 96/384-well plate visualization            | Stable |
-| `InteractiveScatter`     | Chart        | —                     | Zoomable scatter with selection            | Stable |
+| `Card`                   | Data Display | `card`                | —                                                 | Stable |
+| `Avatar`                 | Data Display | `avatar`              | —                                                 | Stable |
+| `Accordion`              | Data Display | `accordion`           | —                                                 | Stable |
+| `Collapsible`            | Data Display | `collapsible`         | —                                                 | Stable |
+| `Carousel`               | Data Display | `carousel`            | —                                                 | Stable |
+| `Item`                   | Data Display | —                     | Generic list/menu item                            | Stable |
+| `Kbd`                    | Data Display | —                     | Keyboard shortcut indicator                       | Stable |
+| `TetraScienceIcon`       | Data Display | —                     | Brand icon component                              | Stable |
+| `ScrollArea`             | Layout       | `scroll-area`         | —                                                 | Stable |
+| `Resizable`              | Layout       | `resizable`           | —                                                 | Stable |
+| `Separator`              | Layout       | `separator`           | —                                                 | Stable |
+| `AspectRatio`            | Layout       | `aspect-ratio`        | —                                                 | Stable |
+| `AppLayout`              | Composed     | —                     | Full app shell with sidebar                       | Stable |
+| `AppHeader`              | Composed     | —                     | Top nav with avatar/actions                       | Stable |
+| `Main`                   | Composed     | —                     | Main content area with navbar, sidebar, tab bar   | Stable |
+| `Navbar`                 | Composed     | —                     | Secondary nav bar                                 | Stable |
+| `ProcessFlow`            | Composed     | —                     | Controlled multi-step workflow visualizer         | Stable |
+| `Sidebar` (composed)     | Composed     | —                     | App sidebar with navigation sections              | Stable |
+| `LaunchContent`          | Composed     | —                     | Launch/welcome content panel                      | Stable |
+| `ProtocolConfiguration`  | Composed     | —                     | Protocol config form                              | Stable |
+| `ProtocolYamlCard`       | Composed     | —                     | YAML protocol display card                        | Stable |
+| `AssistantModal`         | Composed     | `dialog`              | AI assistant chat modal                           | Beta   |
+| `CodeScriptEditorButton` | Composed     | —                     | Button that opens code/script editor              | Stable |
+| `PythonEditorModal`      | Composed     | `dialog` + CodeEditor | Python script editor                              | Stable |
+| `TdpSearch`              | Composed     | `command`             | TetraScience data platform search                 | Stable |
+| `TdpLink`                | Composed     | —                     | TDP-aware link component                          | Stable |
+| `AreaGraph`              | Chart        | —                     | Plotly area chart                                 | Stable |
+| `BarGraph`               | Chart        | —                     | Plotly bar chart (grouped/stacked)                | Stable |
+| `LineGraph`              | Chart        | —                     | Plotly line chart                                 | Stable |
+| `ScatterGraph`           | Chart        | —                     | Plotly scatter                                    | Stable |
+| `Histogram`              | Chart        | —                     | Plotly histogram                                  | Stable |
+| `PieChart`               | Chart        | —                     | Plotly pie                                        | Stable |
+| `Heatmap`                | Chart        | —                     | Plotly heatmap                                    | Stable |
+| `Boxplot`                | Chart        | —                     | Plotly box plot                                   | Stable |
+| `DotPlot`                | Chart        | —                     | Plotly dot plot                                   | Stable |
+| `Chromatogram`           | Chart        | —                     | Specialized lab chromatogram (themed)             | Stable |
+| `ChromatogramChart`      | Chart        | —                     | Legacy chromatogram (non-themed)                  | Stable |
+| `PlateMap`               | Chart        | —                     | 96/384-well plate visualization                   | Stable |
+| `InteractiveScatter`     | Chart        | —                     | Zoomable scatter with selection                   | Stable |
 
 ---
 

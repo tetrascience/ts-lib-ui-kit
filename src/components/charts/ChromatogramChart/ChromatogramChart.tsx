@@ -1,6 +1,8 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import {
   groupOverlappingPeaks,
   createGroupAnnotations,
@@ -43,6 +45,11 @@ export type {
 };
 
 
+// Stable default so the no-annotations case keeps a constant identity; an
+// inline `[]` default would change every render, re-running the plot effect
+// (and tearing down the hover tooltip) on each re-render.
+const EMPTY_ANNOTATIONS: PeakAnnotation[] = [];
+
 const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   series,
   width = 900,
@@ -50,7 +57,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   title,
   xAxisTitle = "Retention Time (min)",
   yAxisTitle = "Signal (mAU)",
-  annotations = [],
+  annotations = EMPTY_ANNOTATIONS,
   xRange,
   yRange,
   showLegend = true,
@@ -77,6 +84,10 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   const enablePeakDetection = peakDetectionOptions !== undefined;
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({
+    xLabel: xAxisTitle,
+    yLabel: yAxisTitle,
+  });
 
   // Stable refs for callbacks — avoids including them in effect dep arrays
   // (consumers often pass arrow functions that change identity every render).
@@ -289,6 +300,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     const config = buildConfig({ showExportButton, width, height });
 
     Plotly.newPlot(currentRef, plotData, layout, config);
+    bindTooltip(currentRef);
 
     // ── Event: peak click ──────────────────────────────────────────────────
     (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
@@ -325,6 +337,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     // resolvedAppearance included so hover multiplier stays in sync with the
     // event handler closure without it being in a ref itself.
     resolvedAppearance,
+    bindTooltip,
   ]);
 
   // ── Selection update effect ────────────────────────────────────────────────
@@ -342,8 +355,9 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
   }, [peakAnnotations]);
 
   return (
-    <div className="chromatogram-chart-container">
+    <div className="chromatogram-chart-container relative">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
+      {tooltipElement}
     </div>
   );
 };

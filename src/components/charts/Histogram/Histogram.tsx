@@ -1,8 +1,10 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { COLORS } from "@/utils/colors";
+import { CHART_COLORS } from "@/utils/colors";
 import "./Histogram.scss";
 
 /** Exponent coefficient for normal distribution calculation */
@@ -105,6 +107,7 @@ const Histogram: React.FC<HistogramProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
   const seriesArray = useMemo(
     () => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]),
     [dataSeries],
@@ -113,17 +116,7 @@ const Histogram: React.FC<HistogramProps> = ({
     "stack" | "group" | "overlay" | "relative" | undefined
   >(() => (seriesArray.length > 1 ? "stack" : undefined), [seriesArray.length]);
 
-  const defaultColors = useMemo(
-    () => [
-      COLORS.ORANGE,
-      COLORS.RED,
-      COLORS.BLUE,
-      COLORS.GREEN,
-      COLORS.PURPLE,
-      COLORS.YELLOW,
-    ],
-    [],
-  );
+  const defaultColors = CHART_COLORS;
 
   const seriesWithColors = useMemo(() => {
     return seriesArray.map((series, index) => {
@@ -160,9 +153,9 @@ const Histogram: React.FC<HistogramProps> = ({
         },
         autobinx: series.autobinx,
         xbins: series.xbins,
-        hovertemplate: `${xTitle}: %{x}<br>${yTitle}: %{y}<extra>${series.name}</extra>`,
+        hoverinfo: "none" as const,
       })),
-    [seriesWithColors, xTitle, yTitle, theme],
+    [seriesWithColors, theme],
   );
 
   const distributionLines = useMemo(
@@ -285,6 +278,7 @@ const Histogram: React.FC<HistogramProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -294,7 +288,7 @@ const Histogram: React.FC<HistogramProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [width, height, xTitle, yTitle, bargap, plotData, effectiveBarMode, gridColor, theme]);
+  }, [width, height, xTitle, yTitle, bargap, plotData, effectiveBarMode, gridColor, theme, bindTooltip]);
 
   const ChartLegend: React.FC<{
     series: Array<{ name: string; color: string }>;
@@ -323,7 +317,7 @@ const Histogram: React.FC<HistogramProps> = ({
   };
 
   return (
-    <div className="histogram-container" style={{ width: width }}>
+    <div className="histogram-container relative" style={{ width: width }}>
       <div className="chart-container">
         {title && (
           <div className="title-container">
@@ -340,6 +334,7 @@ const Histogram: React.FC<HistogramProps> = ({
         />
         <ChartLegend series={seriesWithColors} />
       </div>
+      {tooltipElement}
     </div>
   );
 };

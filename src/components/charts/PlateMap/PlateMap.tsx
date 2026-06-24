@@ -2,6 +2,8 @@ import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import "./PlateMap.scss";
+import { useChartTooltip } from "../ChartTooltip";
+
 import {
   PLATE_CONFIGS,
   DEFAULT_COLOR_SCALE,
@@ -117,6 +119,16 @@ const PlateMap: React.FC<PlateMapProps> = ({
     columns = config.columns;
   }
 
+  // Diameter (px) of each well marker; also drives the hover hit radius so the
+  // whole circle is hoverable instead of just a small zone around its center
+  const markerSize = useMemo(
+    () => calculateMarkerSize(width, height, rows, columns, markerShape, !!title, !!yTitle),
+    [width, height, rows, columns, markerShape, title, yTitle],
+  );
+  const { bindTooltip, tooltipElement } = useChartTooltip({
+    hoverDistance: Math.ceil(markerSize / 2),
+  });
+
   // Auto-generate layers from multi-value WellData
   const effectiveLayers = useMemo((): LayerConfig[] | null => {
     // Check if data contains multi-value wells
@@ -182,9 +194,17 @@ const PlateMap: React.FC<PlateMapProps> = ({
     return { grid: resultGrid, categoriesGrid: resultCategories, allValuesMap: resultAllValues, tooltipDataMap: resultTooltipData };
   }, [data, rows, columns, activeLayerId_]);
 
-  // Generate labels - use custom labels if provided, otherwise auto-generate
-  const rowLabels = customYLabels ?? generateRowLabels(rows);
-  const colLabels = customXLabels ?? generateColumnLabels(columns);
+  // Generate labels - use custom labels if provided, otherwise auto-generate.
+  // Memoized so a tooltip-driven re-render doesn't change their identity and
+  // needlessly rebuild the plot (which would clear the open tooltip).
+  const rowLabels = useMemo(
+    () => customYLabels ?? generateRowLabels(rows),
+    [customYLabels, rows],
+  );
+  const colLabels = useMemo(
+    () => customXLabels ?? generateColumnLabels(columns),
+    [customXLabels, columns],
+  );
 
   // Calculate value range if not provided
   const range = calculateValueRange(grid);
@@ -199,9 +219,13 @@ const PlateMap: React.FC<PlateMapProps> = ({
   const sentinelValue = zMin - (zMax - zMin) * PLATEMAP_CONSTANTS.SENTINEL_RATIO - 1;
 
   // Replace null values with sentinel for Plotly rendering
-  const displayGrid = hasNullValues
-    ? grid.map(row => row.map(val => val === null ? sentinelValue : val))
-    : grid;
+  const displayGrid = useMemo(
+    () =>
+      hasNullValues
+        ? grid.map((row) => row.map((val) => (val === null ? sentinelValue : val)))
+        : grid,
+    [hasNullValues, grid, sentinelValue],
+  );
 
   // Extend colorscale to include emptyWellColor at the bottom for null values
   const effectiveColorScale = useMemo(() => {
@@ -257,22 +281,27 @@ const PlateMap: React.FC<PlateMapProps> = ({
     return map;
   }, [effectiveLayers]);
 
-  // Build custom hover text matrix - shows ALL values regardless of active layer
-  const hoverText: string[][] = grid.map((row, rowIdx) =>
-    row.map((val, colIdx) => {
-      const wellId = `${rowLabels[rowIdx]}${colLabels[colIdx]}`;
-      const wellIdUpper = String(wellId).toUpperCase();
-      return buildWellHoverText({
-        wellId,
-        value: val,
-        allValues: allValuesMap.get(wellIdUpper),
-        tooltipExtra: tooltipDataMap.get(wellIdUpper),
-        activeLayerId: activeLayer?.id,
-        layerConfigMap,
-        precision,
-        valueUnit,
-      });
-    })
+  // Build custom hover text matrix - shows ALL values regardless of active layer.
+  // Memoized so its identity is stable across tooltip-driven re-renders.
+  const hoverText = useMemo<string[][]>(
+    () =>
+      grid.map((row, rowIdx) =>
+        row.map((val, colIdx) => {
+          const wellId = `${rowLabels[rowIdx]}${colLabels[colIdx]}`;
+          const wellIdUpper = String(wellId).toUpperCase();
+          return buildWellHoverText({
+            wellId,
+            value: val,
+            allValues: allValuesMap.get(wellIdUpper),
+            tooltipExtra: tooltipDataMap.get(wellIdUpper),
+            activeLayerId: activeLayer?.id,
+            layerConfigMap,
+            precision,
+            valueUnit,
+          });
+        })
+      ),
+    [grid, rowLabels, colLabels, allValuesMap, tooltipDataMap, activeLayer?.id, layerConfigMap, precision, valueUnit],
   );
 
   // Build categorical data for categorical mode
@@ -413,17 +442,6 @@ const PlateMap: React.FC<PlateMapProps> = ({
       plotZMin
     );
 
-    // Calculate marker size based on plot dimensions
-    const markerSize = calculateMarkerSize(
-      width,
-      height,
-      rows,
-      columns,
-      markerShape,
-      !!title,
-      !!yTitle
-    );
-
     // Create scatter plot with markers
     const plotData: Plotly.Data[] = [
       {
@@ -449,7 +467,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
             width: 1,
           },
         },
-        hoverinfo: "text" as const,
+        hoverinfo: "none" as const,
         text: textData,
       },
     ];
@@ -533,6 +551,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
     };
 
     Plotly.newPlot(currentRef, plotData, layout, config);
+    bindTooltip(currentRef);
 
     // Always attach click handler - check onWellClickRef.current inside callback
     // This ensures handler is registered even if onWellClick is provided after initial render
@@ -595,7 +614,9 @@ const PlateMap: React.FC<PlateMapProps> = ({
     columns,
     legendConfig,
     markerShape,
+    markerSize,
     theme,
+    bindTooltip,
   ]);
 
   // Render layer selector tabs
@@ -724,7 +745,12 @@ const PlateMap: React.FC<PlateMapProps> = ({
   };
 
   // Build the plot content based on legend position
-  const plotContent = <div ref={plotRef} className="platemap-plot" style={{ width, height }} />;
+  const plotContent = (
+    <div className="relative">
+      <div ref={plotRef} className="platemap-plot" style={{ width, height }} />
+      {tooltipElement}
+    </div>
+  );
   const legendContent = renderLegend();
 
   const renderPlotWithLegend = () => {

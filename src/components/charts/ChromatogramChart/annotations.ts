@@ -256,4 +256,3 @@ export function createGroupAnnotations(
     return createPeakAnnotation(peak, seriesIndex, slot, options);
   });
 }
-

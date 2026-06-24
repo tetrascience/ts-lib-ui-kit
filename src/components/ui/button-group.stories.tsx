@@ -11,7 +11,7 @@ import {
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof ButtonGroup> = {
-  title: "Components/ButtonGroup",
+  title: "Components/Button Group",
   component: ButtonGroup,
   parameters: {
     layout: "centered",

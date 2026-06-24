@@ -104,6 +104,10 @@ export default defineConfig({
           ],
           exclude: ["node_modules", "dist", "examples"],
           environmentMatchGlobs: [["src/server/**/*.test.ts", "node"]],
+          // ts-morph's first parse loads the TS compiler; under CI + v8 coverage
+          // that cold start can push the heavier zephyr AST tests past the 5s
+          // default, causing intermittent timeouts. Give them headroom.
+          testTimeout: 20000,
           mockReset: true,
           restoreMocks: true,
         },
@@ -131,6 +135,9 @@ export default defineConfig({
               },
             ],
             viewport: { width: 1920, height: 1080 },
+            // Keep failure screenshots out of src/ — `__screenshots__/*.stories.tsx`
+            // directories match Storybook's stories glob and break story indexing
+            screenshotDirectory: SCREENSHOT_DIR,
           },
           provide: {
             storybookZephyrMapping,

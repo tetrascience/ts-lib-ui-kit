@@ -2,7 +2,7 @@
  * Boundary marker utilities for ChromatogramChart
  */
 
-import { CHART_COLORS } from "../../../utils/colors";
+import { seriesColor } from "../../../utils/colors";
 
 import type { PeakAnnotation, BoundaryMarkerType } from "./types";
 import type Plotly from "plotly.js-dist";
@@ -62,7 +62,7 @@ export function createBoundaryMarkerTraces(
   const traces: Plotly.Data[] = [];
 
   for (const { peaks, seriesIndex, x } of allPeaks) {
-    const seriesColor = CHART_COLORS[seriesIndex % CHART_COLORS.length];
+    const defaultSeriesColor = seriesColor(seriesIndex);
     // Separate y positions for start vs end markers to prevent overlap when peaks are adjacent
     // Also stagger by series index to prevent overlap between different traces
     const startMarkerY = BOUNDARY_MARKER_START_Y + seriesIndex * BOUNDARY_MARKER_SERIES_OFFSET;
@@ -78,7 +78,7 @@ export function createBoundaryMarkerTraces(
       const startMarkerType = peak.startMarker ?? "triangle";
       const endMarkerType = peak.endMarker ?? "diamond";
 
-      const color = peak.color ?? seriesColor;
+      const color = peak.color ?? defaultSeriesColor;
 
       // Create start boundary marker (upper row, staggered by series)
       traces.push(...createMarkerTrace(startX, startMarkerY, startMarkerType, color));
@@ -90,4 +90,3 @@ export function createBoundaryMarkerTraces(
 
   return traces;
 }
-

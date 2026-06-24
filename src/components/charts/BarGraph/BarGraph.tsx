@@ -1,13 +1,17 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { seriesColor } from "@/utils/colors";
 
 interface BarDataSeries {
   x: number[];
   y: number[];
   name: string;
-  color: string;
+  /** Optional color override (auto-assigned from CHART_COLORS if not provided) */
+  color?: string;
   error_y?: {
     type: "data";
     array: number[];
@@ -44,6 +48,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
 
   const { yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
@@ -134,13 +139,14 @@ const BarGraph: React.FC<BarGraphProps> = ({
   useEffect(() => {
     if (!plotRef.current) return;
 
-    const data = dataSeries.map((series) => ({
+    const data = dataSeries.map((series, index) => ({
       x: series.x,
       y: series.y,
       type: "bar" as const,
       name: series.name,
+      hoverinfo: "none" as const,
       marker: {
-        color: series.color,
+        color: seriesColor(index, series.color),
       },
       width: barWidth,
       error_y: series.error_y,
@@ -227,6 +233,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, data, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -237,11 +244,12 @@ const BarGraph: React.FC<BarGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, theme]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, theme, bindTooltip]);
 
   return (
-    <div className="bar-graph-container">
+    <div className="bar-graph-container relative">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
+      {tooltipElement}
     </div>
   );
 };

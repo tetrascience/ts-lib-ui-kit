@@ -31,6 +31,7 @@ import type {
   PeakWithMeta,
 } from "./types";
 
+import { EmptyState } from "@/components/composed/EmptyState";
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 
 // Re-export types for external use
@@ -367,6 +368,24 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
       annotations: peakAnnotations,
     } as unknown as Partial<Plotly.Layout>);
   }, [peakAnnotations]);
+
+  // No data: render an explicit empty state instead of an uninitialized
+  // (blank) Plotly container, so the chart reads as "no data yet" rather
+  // than looking broken while data is still loading.
+  if (series.length === 0) {
+    return (
+      <div
+        className="chromatogram-chart-container relative flex items-center justify-center"
+        style={{ width, height }}
+      >
+        <EmptyState
+          variant="no-data"
+          title="No chromatogram data"
+          description="There is no signal data to display yet."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="chromatogram-chart-container relative">

@@ -508,22 +508,20 @@ export const EmptySeries: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
-    await step("Title renders even with empty series", async () => {
-      // Title comes from the chart wrapper outside Plotly; container exists
-      // but no plot is initialized.
+    await step("Empty state renders instead of a blank plot", async () => {
+      // Container mounts but Plotly is never initialized when series is empty.
       const container = canvasElement.querySelector(".chromatogram-chart-container");
       expect(container).toBeInTheDocument();
-      // No Plotly plot should be initialized when there are no series.
       expect(canvasElement.querySelector(".js-plotly-plot")).not.toBeInTheDocument();
-      // Avoid unused-var lint
-      expect(canvas).toBeTruthy();
+      // A clear "no data" placeholder is shown rather than a blank canvas.
+      expect(canvas.getByText("No chromatogram data")).toBeVisible();
     });
   },
   parameters: {
     docs: {
       description: {
         story:
-          "When `series` is empty the component mounts the container but skips Plotly initialization — useful when data is still loading.",
+          "When `series` is empty the component skips Plotly initialization and renders a 'no data' empty state instead of a blank canvas — useful when data is still loading.",
       },
     },
   },

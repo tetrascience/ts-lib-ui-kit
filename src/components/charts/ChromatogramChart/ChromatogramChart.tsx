@@ -127,17 +127,35 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     return peaks;
   }, [processedSeries, enablePeakDetection, peakDetectionOptions]);
 
-  // Resolve selection appearance defaults once (stable as long as individual
-  // fields don't change — consumers should memoize selectionAppearance if needed).
+  // Normalize the selection appearance into primitive fields up front so the
+  // memo below depends on stable values rather than the (possibly unstable)
+  // selectionAppearance object reference. This keeps the dependency array
+  // exhaustive-deps clean without requiring callers to memoize the prop.
+  const selectedBorderColor = selectionAppearance?.selected?.borderColor;
+  const selectedBackgroundColor = selectionAppearance?.selected?.backgroundColor;
+  const selectedBold = selectionAppearance?.selected?.bold;
+  const unselectedOpacity = selectionAppearance?.unselected?.opacity;
+  const hoverLineWidthMultiplier = selectionAppearance?.hoverLineWidthMultiplier;
+
+  // Resolve selection appearance defaults once (stable as long as the
+  // individual fields above don't change).
   const resolvedAppearance = useMemo(
-    () => resolveSelectionAppearance(selectionAppearance),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    () =>
+      resolveSelectionAppearance({
+        selected: {
+          borderColor: selectedBorderColor,
+          backgroundColor: selectedBackgroundColor,
+          bold: selectedBold,
+        },
+        unselected: { opacity: unselectedOpacity },
+        hoverLineWidthMultiplier,
+      }),
     [
-      selectionAppearance?.selected?.borderColor,
-      selectionAppearance?.selected?.backgroundColor,
-      selectionAppearance?.selected?.bold,
-      selectionAppearance?.unselected?.opacity,
-      selectionAppearance?.hoverLineWidthMultiplier,
+      selectedBorderColor,
+      selectedBackgroundColor,
+      selectedBold,
+      unselectedOpacity,
+      hoverLineWidthMultiplier,
     ]
   );
 

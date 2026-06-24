@@ -137,7 +137,7 @@ export const OverlayMode: Story = {
           "Overlay mode (default). All traces occupy the same y-axis range so retention times and peak heights can be compared directly. Crosshairs are enabled to aid comparison.",
       },
     },
-    zephyr: { testCaseId: "SW-T1120" },
+    zephyr: { testCaseId: "" },
   },
 };
 
@@ -183,7 +183,7 @@ export const StackMode: Story = {
           "Stack mode shifts each series up by stackOffset data units, creating a waterfall layout. The y-axis range automatically expands to fit all offset traces.",
       },
     },
-    zephyr: { testCaseId: "SW-T1121" },
+    zephyr: { testCaseId: "" },
   },
 };
 
@@ -250,7 +250,7 @@ export const StackModeWithAnnotations: Story = {
           "Per-series annotations passed as a 2-D array (annotations[i] → series[i]). In stack mode the component automatically shifts each annotation's y-value by the same offset applied to its trace, so labels stay anchored to their peaks.",
       },
     },
-    zephyr: { testCaseId: "SW-T1122" },
+    zephyr: { testCaseId: "" },
   },
 };
 
@@ -320,6 +320,6 @@ export const InteractiveOffset: Story = {
           "Use the **Stack Offset** slider in the Controls panel to adjust vertical separation between traces live. At 0 the traces overlap (equivalent to overlay mode); increasing the offset creates a waterfall layout.",
       },
     },
-    zephyr: { testCaseId: "SW-T1124" },
+    zephyr: { testCaseId: "" },
   },
 };

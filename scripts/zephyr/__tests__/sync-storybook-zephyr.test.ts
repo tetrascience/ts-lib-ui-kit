@@ -326,7 +326,7 @@ export const Info: Story = {
       expect(duplicates).toHaveLength(1);
       expect(duplicates[0].id).toBe("SW-T123");
       expect(duplicates[0].stories.map((story) => story.exportName)).toEqual(["Small", "Info"]);
-    }, 15000);
+    });
 
     it("should ignore empty testCaseId placeholders", () => {
       const content = `import type { StoryObj } from "@storybook/react";

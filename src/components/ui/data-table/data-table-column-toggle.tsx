@@ -67,7 +67,7 @@ function SortableColumnItem({ id, label, visible, onToggle }: SortableColumnItem
       }}
       className={cn(
         "group/col-item flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm select-none hover:bg-accent hover:text-accent-foreground",
-        isDragging && "z-50 bg-accent text-accent-foreground shadow-sm",
+        isDragging && "z-50 bg-accent text-accent-foreground shadow-elevation-3",
       )}
     >
       <button
@@ -159,7 +159,7 @@ function DataTableColumnToggle({ className }: DataTableColumnToggleProps) {
 
       {open && (
         <div
-          className="absolute right-0 top-full z-50 mt-1 w-56 rounded-lg border bg-popover p-1 shadow-md"
+          className="absolute right-0 top-full z-50 mt-1 w-56 rounded-lg border bg-popover p-1 shadow-elevation-4"
           role="group"
           aria-label="Toggle and reorder columns"
         >

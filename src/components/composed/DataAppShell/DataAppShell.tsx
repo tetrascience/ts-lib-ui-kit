@@ -104,6 +104,8 @@ export interface DataAppShellProps {
   // -- Shell --
   /** Slot rendered between the icon rail and the content (e.g. WorkflowPanel) */
   sidebarPanel?: React.ReactNode;
+  /** Show the desktop icon nav rail. Set false to reclaim width when the panel is collapsed. */
+  showNavRail?: boolean; // default true
   /** Main content area */
   children: React.ReactNode;
   /** Additional className for the root container */
@@ -492,6 +494,7 @@ function DataAppShell({
   onHelpClick,
   headerActions,
   sidebarPanel,
+  showNavRail = true,
   children,
   className,
 }: DataAppShellProps) {
@@ -515,8 +518,8 @@ function DataAppShell({
         data-slot="data-app-shell"
         className={cn("flex flex-row w-full h-screen overflow-hidden", className)}
       >
-        {/* Desktop icon rail (hidden on mobile) */}
-        <IconRailSidebar {...sidebarProps} />
+        {/* Desktop icon rail (hidden on mobile, or when showNavRail is false) */}
+        {showNavRail && <IconRailSidebar {...sidebarProps} />}
 
         {/* Mobile sidebar Sheet */}
         <SheetContent

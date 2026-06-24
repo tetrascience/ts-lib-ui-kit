@@ -2,8 +2,7 @@
  * Annotation utilities for ChromatogramChart
  */
 
-import { seriesColor } from "../../../utils/colors";
-
+import { CHART_COLORS } from "../../../utils/colors";
 import { CHROMATOGRAM_ANNOTATION } from "./constants";
 
 import type { PeakAnnotation, PeakSelectionAppearance, PeakWithMeta } from "./types";
@@ -127,7 +126,9 @@ function resolveAnnotationBorderStyle(
   appearance: ResolvedSelectionAppearance,
   hasColorOverride: boolean
 ): AnnotationBorderStyle {
-  const bgcolor = isSelected ? appearance.selected.backgroundColor : COLORS.WHITE;
+  const bgcolor = isSelected
+    ? appearance.selected.backgroundColor
+    : CHROMATOGRAM_ANNOTATION.BACKGROUND_COLOR;
   let bordercolor: string | undefined;
   if (isSelected) {
     bordercolor = appearance.selected.borderColor;
@@ -186,10 +187,12 @@ export function createPeakAnnotation(
 
   const isUserDefined = seriesIndex === -1;
   const defaultColor = isUserDefined
-    ? COLORS.GREY_500
+    ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_COLOR
     : CHART_COLORS[seriesIndex % CHART_COLORS.length];
   const color = peak.color ?? defaultColor;
-  const textColor = isUserDefined && !peak.color ? COLORS.BLACK_900 : color;
+  const textColor = isUserDefined && !peak.color
+    ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_TEXT_COLOR
+    : color;
 
   const rawText = peak.text ?? (peak._computed?.area === undefined ? "" : `Area: ${peak._computed.area.toFixed(2)}`);
 

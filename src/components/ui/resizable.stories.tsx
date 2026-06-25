@@ -26,13 +26,12 @@ const meta: Meta<DemoArgs> = {
       control: { type: "select" },
       options: ["horizontal", "vertical"],
       description: "Axis the panels are laid out and resized along.",
-      table: { category: "ResizablePanelGroup" },
     },
     withHandle: {
       control: { type: "boolean" },
       description:
-        "Show the drag grip on the handle. Omit (or set `false`) to render the handle without a grip.",
-      table: { category: "ResizableHandle", defaultValue: { summary: "false" } },
+        "Show the drag grip on the ResizableHandle. Omit (or set `false`) to render the handle without a grip.",
+      table: { defaultValue: { summary: "false" } },
     },
   },
   args: {

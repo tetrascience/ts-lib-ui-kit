@@ -7,9 +7,14 @@ import {
 } from "./resizable"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import type { ReactNode } from "react"
+import type { ComponentProps, ReactNode } from "react"
 
-const meta: Meta<typeof ResizablePanelGroup> = {
+/** Args for the demos: the panel-group props plus the handle's `withHandle`. */
+type DemoArgs = ComponentProps<typeof ResizablePanelGroup> & {
+  withHandle?: boolean
+}
+
+const meta: Meta<DemoArgs> = {
   title: "Components/Resizable",
   component: ResizablePanelGroup,
   parameters: {
@@ -20,16 +25,25 @@ const meta: Meta<typeof ResizablePanelGroup> = {
     orientation: {
       control: { type: "select" },
       options: ["horizontal", "vertical"],
+      description: "Axis the panels are laid out and resized along.",
+      table: { category: "ResizablePanelGroup" },
+    },
+    withHandle: {
+      control: { type: "boolean" },
+      description:
+        "Show the drag grip on the handle. Omit (or set `false`) to render the handle without a grip.",
+      table: { category: "ResizableHandle", defaultValue: { summary: "false" } },
     },
   },
   args: {
     orientation: "horizontal",
+    withHandle: true,
   },
 }
 
 export default meta
 
-type Story = StoryObj<typeof ResizablePanelGroup>
+type Story = StoryObj<DemoArgs>
 
 /* ---- shared panel content (mirrors the SW-2120 prototype) ---- */
 
@@ -46,7 +60,7 @@ function PanelShell({
   // background showing through the gap between them
   return (
     <div className="h-full p-2">
-      <div className="flex h-full flex-col gap-3 overflow-auto rounded-lg border bg-card p-4 shadow-sm">
+      <div className="flex h-full flex-col gap-3 overflow-auto rounded-lg border bg-card p-4">
         <div>
           <p className="text-sm font-semibold">{title}</p>
           {subtitle && (
@@ -120,13 +134,13 @@ export const Horizontal: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1276" },
   },
-  render: (args) => (
+  render: ({ withHandle, ...args }) => (
     <div className="h-[360px] w-[760px] overflow-hidden rounded-xl border bg-muted/40">
       <ResizablePanelGroup {...args}>
         <ResizablePanel defaultSize="38%" minSize="20%" maxSize="80%">
           <SummaryPanel />
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle={withHandle} />
         <ResizablePanel defaultSize="62%">
           <LeadsPanel
             subtitle="Selected leads"
@@ -178,7 +192,7 @@ export const VerticalWithHandle: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1277" },
   },
-  render: (args) => (
+  render: ({ withHandle, ...args }) => (
     <div className="h-[520px] w-[480px] overflow-hidden rounded-xl border bg-muted/40">
       <ResizablePanelGroup {...args}>
         <ResizablePanel defaultSize="55%" minSize="20%" maxSize="80%">
@@ -192,7 +206,7 @@ export const VerticalWithHandle: Story = {
             ]}
           />
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle={withHandle} />
         <ResizablePanel defaultSize="45%">
           <AssistantPanel />
         </ResizablePanel>
@@ -216,16 +230,19 @@ export const VerticalWithHandle: Story = {
 /* ---- option: no grip (withHandle omitted) ---- */
 
 export const WithoutGrip: Story = {
+  args: {
+    withHandle: false,
+  },
   parameters: {
     zephyr: { testCaseId: "SW-T5440" },
   },
-  render: (args) => (
+  render: ({ withHandle, ...args }) => (
     <div className="h-[360px] w-[760px] overflow-hidden rounded-xl border bg-muted/40">
       <ResizablePanelGroup {...args}>
         <ResizablePanel defaultSize="38%" minSize="20%" maxSize="80%">
           <SummaryPanel />
         </ResizablePanel>
-        <ResizableHandle />
+        <ResizableHandle withHandle={withHandle} />
         <ResizablePanel defaultSize="62%">
           <LeadsPanel
             subtitle="Selected leads"
@@ -262,14 +279,14 @@ export const AlwaysVisibleDivider: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T5441" },
   },
-  render: (args) => (
+  render: ({ withHandle, ...args }) => (
     <div className="h-[360px] w-[760px] overflow-hidden rounded-xl border bg-muted/40">
       <ResizablePanelGroup {...args}>
         <ResizablePanel defaultSize="38%" minSize="20%" maxSize="80%">
           <SummaryPanel />
         </ResizablePanel>
         <ResizableHandle
-          withHandle
+          withHandle={withHandle}
           className="bg-border [&>div]:bg-border"
         />
         <ResizablePanel defaultSize="62%">

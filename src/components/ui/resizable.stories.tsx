@@ -213,7 +213,7 @@ export const VerticalWithHandle: Story = {
 
 export const WithoutGrip: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5440" },
   },
   render: (args) => (
     <div className="h-[280px] w-[680px] overflow-hidden rounded-xl border bg-background">
@@ -256,7 +256,7 @@ export const WithoutGrip: Story = {
 
 export const AlwaysVisibleDivider: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5441" },
   },
   render: (args) => (
     <div className="h-[280px] w-[680px] overflow-hidden rounded-xl border bg-background">

@@ -42,15 +42,19 @@ function PanelShell({
   subtitle?: string
   children: ReactNode
 }) {
+  // padded wrapper so each section reads as its own card, with the panel-group
+  // background showing through the gap between them
   return (
-    <div className="flex h-full flex-col gap-3 overflow-auto bg-card p-4">
-      <div>
-        <p className="text-sm font-semibold">{title}</p>
-        {subtitle && (
-          <p className="text-xs text-muted-foreground">{subtitle}</p>
-        )}
+    <div className="h-full p-2">
+      <div className="flex h-full flex-col gap-3 overflow-auto rounded-lg border bg-card p-4 shadow-sm">
+        <div>
+          <p className="text-sm font-semibold">{title}</p>
+          {subtitle && (
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
+          )}
+        </div>
+        {children}
       </div>
-      {children}
     </div>
   )
 }
@@ -117,7 +121,7 @@ export const Horizontal: Story = {
     zephyr: { testCaseId: "SW-T1276" },
   },
   render: (args) => (
-    <div className="h-[280px] w-[680px] overflow-hidden rounded-xl border bg-background">
+    <div className="h-[360px] w-[760px] overflow-hidden rounded-xl border bg-muted/40">
       <ResizablePanelGroup {...args}>
         <ResizablePanel defaultSize="38%" minSize="20%" maxSize="80%">
           <SummaryPanel />
@@ -175,7 +179,7 @@ export const VerticalWithHandle: Story = {
     zephyr: { testCaseId: "SW-T1277" },
   },
   render: (args) => (
-    <div className="h-[420px] w-[460px] overflow-hidden rounded-xl border bg-background">
+    <div className="h-[520px] w-[480px] overflow-hidden rounded-xl border bg-muted/40">
       <ResizablePanelGroup {...args}>
         <ResizablePanel defaultSize="55%" minSize="20%" maxSize="80%">
           <LeadsPanel
@@ -216,7 +220,7 @@ export const WithoutGrip: Story = {
     zephyr: { testCaseId: "SW-T5440" },
   },
   render: (args) => (
-    <div className="h-[280px] w-[680px] overflow-hidden rounded-xl border bg-background">
+    <div className="h-[360px] w-[760px] overflow-hidden rounded-xl border bg-muted/40">
       <ResizablePanelGroup {...args}>
         <ResizablePanel defaultSize="38%" minSize="20%" maxSize="80%">
           <SummaryPanel />
@@ -259,7 +263,7 @@ export const AlwaysVisibleDivider: Story = {
     zephyr: { testCaseId: "SW-T5441" },
   },
   render: (args) => (
-    <div className="h-[280px] w-[680px] overflow-hidden rounded-xl border bg-background">
+    <div className="h-[360px] w-[760px] overflow-hidden rounded-xl border bg-muted/40">
       <ResizablePanelGroup {...args}>
         <ResizablePanel defaultSize="38%" minSize="20%" maxSize="80%">
           <SummaryPanel />

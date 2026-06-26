@@ -94,7 +94,7 @@ Dark mode is supported via the `.dark` class on a parent element. See [THEMING.m
 
 shadcn/ui components built on Radix UI with Tailwind CSS and CVA variants:
 
-Accordion, Alert, AlertDialog, AspectRatio, Avatar, Badge, Breadcrumb, Button, ButtonGroup, Calendar, Card, Carousel, Checkbox, CodeEditor, Collapsible, ComboBox, Command, ContextMenu, Dialog, Drawer, DropdownMenu, Field, HoverCard, Input, InputGroup, InputOTP, Item, KBD, Label, MenuBar, NavigationMenu, RadioGroup, ResizablePanel, ScrollArea, Select, Separator, Sheet, Sidebar, Skeleton, Slider, Sonner, Spinner, Switch, Table, Tabs, Textarea, TetraScience Icon, Toggle, ToggleGroup, Tooltip
+Accordion, Alert, AlertDialog, AspectRatio, Avatar, Badge, Breadcrumb, Button, ButtonGroup, Calendar, Card, Carousel, Checkbox, CodeEditor, Collapsible, ComboBox, Command, ContextMenu, Dialog, DropdownMenu, Field, HoverCard, Input, InputGroup, Item, KBD, Label, MenuBar, NavigationMenu, RadioGroup, ResizablePanel, ScrollArea, Select, Separator, Sheet, Sidebar, Skeleton, Slider, Sonner, Spinner, Switch, Table, Tabs, Textarea, TetraScience Icon, Toggle, ToggleGroup, Tooltip
 
 ### Composed Components (`composed/`)
 

@@ -31,6 +31,10 @@ type BarGraphVariant = "group" | "stack" | "overlay";
 const COMFORTABLE_X_AXIS_TITLE_STANDOFF = 32;
 const COMFORTABLE_Y_AXIS_TITLE_STANDOFF = 30;
 
+/** Top margin reserving room for the 32px title; reduced when no title is set */
+const TITLE_MARGIN_TOP = 60;
+const NO_TITLE_MARGIN_TOP = 30;
+
 interface BarGraphProps {
   dataSeries: BarDataSeries[];
   width?: number;
@@ -44,6 +48,13 @@ interface BarGraphProps {
   barWidth?: number;
   /** Sizing preset; `"compact"` shrinks fonts and margins for dashboard tiles */
   density?: ChartDensity;
+  /**
+   * Categorical labels for the x-axis ticks. When provided, the x data values
+   * still drive bar positioning but the displayed tick labels match these
+   * strings in order (e.g. ["Mon", "Tue", …]). Should align 1:1 with the
+   * unique, ordered x values across all series.
+   */
+  xTickText?: string[];
 }
 
 const BarGraph: React.FC<BarGraphProps> = ({
@@ -55,9 +66,10 @@ const BarGraph: React.FC<BarGraphProps> = ({
   variant = "group",
   xTitle = "Columns",
   yTitle = "Rows",
-  title = "Bar Graph",
+  title,
   barWidth = 24,
   density = "comfortable",
+  xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
@@ -97,9 +109,13 @@ const BarGraph: React.FC<BarGraphProps> = ({
   );
 
   const xTicks = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))],
+    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
     [dataSeries],
   );
+
+  // Only apply categorical labels when they align 1:1 with the tick positions;
+  // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
+  const useCategoricalX = !!xTickText && xTickText.length === xTicks.length;
 
   const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
@@ -169,17 +185,29 @@ const BarGraph: React.FC<BarGraphProps> = ({
     }));
 
     const layout = {
-      title: {
-        text: title,
-        font: {
-          size: tokens.titleFontSize,
-          family: "Inter, sans-serif",
-          color: theme.textColor,
-        },
-      },
+      ...(title
+        ? {
+            title: {
+              text: title,
+              font: {
+                size: tokens.titleFontSize,
+                family: "Inter, sans-serif",
+                color: theme.textColor,
+              },
+            },
+          }
+        : {}),
       width,
       height,
-      margin: compact ? COMPACT_CHART_MARGIN : { l: 80, r: 30, b: 80, t: 60, pad: 0 },
+      margin: compact
+        ? COMPACT_CHART_MARGIN
+        : {
+            l: 80,
+            r: 30,
+            b: 80,
+            t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+            pad: 0,
+          },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
@@ -204,6 +232,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
         autorange: !xRange,
         tickmode: "array" as const,
         tickvals: xTicks,
+        ...(useCategoricalX ? { ticktext: xTickText } : {}),
         showgrid: true,
         ...tickOptions,
       },
@@ -262,7 +291,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, theme, bindTooltip, compact, tokens]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, theme, bindTooltip, compact, tokens]);
 
   return (
     <div className="bar-graph-container relative">

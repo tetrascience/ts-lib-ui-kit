@@ -773,6 +773,9 @@ export const ContinuousColorMapping: Story = {
       });
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5412" },
+  },
 };
 
 const EVENT_DATA: ScatterPoint[] = Array.from({ length: 6 }, (_, i) => ({
@@ -858,6 +861,9 @@ export const SelectionEvents: Story = {
       });
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5413" },
+  },
 };
 
 /**
@@ -916,5 +922,8 @@ export const ThemedTooltip: Story = {
         expect(document.querySelector('[data-slot="tooltip-content"]')).not.toBeInTheDocument();
       });
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5414" },
   },
 };

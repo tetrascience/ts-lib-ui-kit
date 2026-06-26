@@ -180,6 +180,10 @@ type LineGraphVariant = "lines" | "lines+markers" | "lines+markers+error_bars";
 const COMFORTABLE_X_AXIS_TITLE_STANDOFF = 32;
 const COMFORTABLE_Y_AXIS_TITLE_STANDOFF = 30;
 
+/** Top margin reserving room for the 32px title; reduced when no title is set */
+const TITLE_MARGIN_TOP = 60;
+const NO_TITLE_MARGIN_TOP = 30;
+
 type LineGraphProps = {
   dataSeries: LineDataSeries[];
   width?: number;
@@ -192,6 +196,13 @@ type LineGraphProps = {
   title?: string;
   /** Sizing preset; `"compact"` shrinks fonts and margins for dashboard tiles */
   density?: ChartDensity;
+  /**
+   * Categorical labels for the x-axis ticks. When provided, the x data values
+   * still drive line positioning but the displayed tick labels match these
+   * strings in order (e.g. ["Mon", "Tue", …]). Should align 1:1 with the
+   * unique, ordered x values across all series.
+   */
+  xTickText?: string[];
 };
 
 const LineGraph: React.FC<LineGraphProps> = ({
@@ -203,8 +214,9 @@ const LineGraph: React.FC<LineGraphProps> = ({
   variant = "lines",
   xTitle = "Columns",
   yTitle = "Rows",
-  title = "Line Graph",
+  title,
   density = "comfortable",
+  xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
@@ -260,9 +272,13 @@ const LineGraph: React.FC<LineGraphProps> = ({
   }, [effectiveYRange]);
 
   const xTicks = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))],
+    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
     [dataSeries],
   );
+
+  // Only apply categorical labels when they align 1:1 with the tick positions;
+  // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
+  const useCategoricalX = !!xTickText && xTickText.length === xTicks.length;
 
   const mode = useMemo((): "lines" | "lines+markers" => {
     switch (variant) {
@@ -336,17 +352,29 @@ const LineGraph: React.FC<LineGraphProps> = ({
     });
 
     const layout = {
-      title: {
-        text: title,
-        font: {
-          size: tokens.titleFontSize,
-          family: "Inter, sans-serif",
-          color: theme.textColor,
-        },
-      },
+      ...(title
+        ? {
+            title: {
+              text: title,
+              font: {
+                size: tokens.titleFontSize,
+                family: "Inter, sans-serif",
+                color: theme.textColor,
+              },
+            },
+          }
+        : {}),
       width,
       height,
-      margin: compact ? COMPACT_CHART_MARGIN : { l: 80, r: 30, b: 80, t: 60, pad: 10 },
+      margin: compact
+        ? COMPACT_CHART_MARGIN
+        : {
+            l: 80,
+            r: 30,
+            b: 80,
+            t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+            pad: 10,
+          },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
@@ -369,7 +397,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
         autorange: !xRange,
         tickmode: "array" as const,
         tickvals: xTicks,
-        ticktext: xTicks.map(String),
+        ticktext: useCategoricalX ? xTickText : xTicks.map(String),
         showgrid: true,
         ...tickOptions,
       },
@@ -427,7 +455,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, effectiveYRange, variant, theme, bindTooltip, compact, tokens]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, effectiveYRange, variant, theme, bindTooltip, compact, tokens]);
 
   return (
     <div className="relative size-full">

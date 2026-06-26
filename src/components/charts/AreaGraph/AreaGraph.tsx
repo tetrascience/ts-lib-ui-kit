@@ -26,6 +26,10 @@ type AreaGraphVariant = "normal" | "stacked";
 /** Comfortable-density gap between each axis title and its ticks */
 const COMFORTABLE_AXIS_TITLE_STANDOFF = 15;
 
+/** Top margin reserving room for the 32px title; reduced when no title is set */
+const TITLE_MARGIN_TOP = 80;
+const NO_TITLE_MARGIN_TOP = 40;
+
 interface AreaGraphProps {
   dataSeries: AreaDataSeries[];
   width?: number;
@@ -38,6 +42,13 @@ interface AreaGraphProps {
   title?: string;
   /** Sizing preset; `"compact"` shrinks fonts and margins for dashboard tiles */
   density?: ChartDensity;
+  /**
+   * Categorical labels for the x-axis ticks. When provided, the x data values
+   * still drive area positioning but the displayed tick labels match these
+   * strings in order (e.g. ["Mon", "Tue", …]). Should align 1:1 with the
+   * unique, ordered x values across all series.
+   */
+  xTickText?: string[];
 }
 
 const AreaGraph: React.FC<AreaGraphProps> = ({
@@ -49,8 +60,9 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   variant = "normal",
   xTitle = "Columns",
   yTitle = "Rows",
-  title = "Area Graph",
+  title,
   density = "comfortable",
+  xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
@@ -140,6 +152,18 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   const tokens = useMemo(() => chartDensityTokens(density), [density]);
   const compact = density === "compact";
 
+  // When categorical labels are supplied, ticks must sit on the actual data
+  // x-positions rather than the computed nice-step values above. Sorted
+  // ascending so labels map deterministically to x regardless of series order.
+  const xDataValues = useMemo(
+    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
+    [dataSeries],
+  );
+
+  // Only apply categorical labels when they align 1:1 with the tick positions;
+  // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
+  const useCategoricalX = !!xTickText && xTickText.length === xDataValues.length;
+
   const tickOptions = useMemo(
     () => ({
       tickcolor: theme.tickColor,
@@ -161,21 +185,24 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   );
 
   const titleOptions = useMemo(
-    () => ({
-      text: title,
-      x: 0.5,
-      y: 0.95,
-      xanchor: "center" as const,
-      yanchor: "top" as const,
-      font: {
-        size: tokens.titleFontSize,
-        weight: 600,
-        family: "Inter, sans-serif",
-        color: theme.textColor,
-        lineheight: 1.2,
-        standoff: 30,
-      },
-    }),
+    () =>
+      title
+        ? {
+            text: title,
+            x: 0.5,
+            y: 0.95,
+            xanchor: "center" as const,
+            yanchor: "top" as const,
+            font: {
+              size: tokens.titleFontSize,
+              weight: 600,
+              family: "Inter, sans-serif",
+              color: theme.textColor,
+              lineheight: 1.2,
+              standoff: 30,
+            },
+          }
+        : undefined,
     [title, theme, tokens.titleFontSize],
   );
 
@@ -250,8 +277,16 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
     const layout = {
       width,
       height: height,
-      title: titleOptions,
-      margin: compact ? COMPACT_CHART_MARGIN : { l: 80, r: 40, b: 80, t: 80, pad: 0 },
+      ...(titleOptions ? { title: titleOptions } : {}),
+      margin: compact
+        ? COMPACT_CHART_MARGIN
+        : {
+            l: 80,
+            r: 40,
+            b: 80,
+            t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+            pad: 0,
+          },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
@@ -273,7 +308,8 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         range: xRange,
         autorange: !xRange,
         tickmode: "array" as const,
-        tickvals: xTicks,
+        tickvals: useCategoricalX ? xDataValues : xTicks,
+        ...(useCategoricalX ? { ticktext: xTickText } : {}),
         showgrid: true,
         ...tickOptions,
       },
@@ -333,7 +369,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks, theme, bindTooltip, compact, tokens]);
+  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, bindTooltip, compact, tokens]);
 
   return (
     <div className="area-graph-container relative">

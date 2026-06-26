@@ -412,7 +412,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
   }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, effectiveYRange, variant, theme, bindTooltip]);
 
   return (
-    <div className="chart-container relative">
+    <div className="relative size-full">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
       {tooltipElement}
     </div>

@@ -131,11 +131,17 @@ const PieChart: React.FC<PieChartProps> = ({
     colors,
   }) => {
     const items = labels.map((label, i) => (
-      <React.Fragment key={label}>
-        <div className="legend-item">
-          <span className="color-box" style={{ background: colors[i] }} />
+      <React.Fragment key={`${label}-${i}`}>
+        <div className="flex items-center text-[13px] leading-[18px] font-medium">
+          <span
+            data-slot="pie-legend-swatch"
+            className="mr-1.5 inline-block size-3 rounded-[4px]"
+            style={{ background: colors[i] }}
+          />
           {label}
-          {i < labels.length - 1 && <span className="divider" />}
+          {i < labels.length - 1 && (
+            <span className="mx-3 inline-block h-6 w-0.5 bg-border" />
+          )}
         </div>
       </React.Fragment>
     ));
@@ -144,20 +150,27 @@ const PieChart: React.FC<PieChartProps> = ({
     const rows = [];
     for (let i = 0; i < items.length; i += rowSize) {
       rows.push(
-        <div className="legend-row" key={i}>
+        <div
+          className="mb-2 flex w-full max-w-full flex-wrap items-center justify-center gap-y-3 break-words px-10"
+          key={i}
+        >
           {items.slice(i, i + rowSize)}
         </div>
       );
     }
-    return <div className="legend-container">{rows}</div>;
+    return (
+      <div data-slot="pie-legend" className="flex w-full flex-wrap text-foreground">
+        {rows}
+      </div>
+    );
   };
 
   return (
-    <div className="card-container relative" style={{ width: width }}>
-      <div className="chart-container">
+    <div className="relative" style={{ width: width }}>
+      <div className="size-full">
         {title && (
-          <div className="title-container">
-            <h2 className="title">{title}</h2>
+          <div className="px-10 text-center">
+            <h2 className="m-0 text-[32px] leading-tight font-semibold">{title}</h2>
           </div>
         )}
         <div

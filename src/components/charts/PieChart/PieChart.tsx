@@ -39,7 +39,7 @@ const PieChart: React.FC<PieChartProps> = ({
   dataSeries,
   width = 400,
   height = 400,
-  title = "Pie Chart",
+  title,
   textInfo = "percent",
   hole = 0,
   rotation = 0,

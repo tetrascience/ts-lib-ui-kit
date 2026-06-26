@@ -170,6 +170,10 @@ interface LineDataSeries {
 
 type LineGraphVariant = "lines" | "lines+markers" | "lines+markers+error_bars";
 
+/** Top margin reserving room for the 32px title; reduced when no title is set */
+const TITLE_MARGIN_TOP = 60;
+const NO_TITLE_MARGIN_TOP = 30;
+
 type LineGraphProps = {
   dataSeries: LineDataSeries[];
   width?: number;
@@ -198,7 +202,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
   variant = "lines",
   xTitle = "Columns",
   yTitle = "Rows",
-  title = "Line Graph",
+  title,
   xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
@@ -332,17 +336,27 @@ const LineGraph: React.FC<LineGraphProps> = ({
     });
 
     const layout = {
-      title: {
-        text: title,
-        font: {
-          size: 32,
-          family: "Inter, sans-serif",
-          color: theme.textColor,
-        },
-      },
+      ...(title
+        ? {
+            title: {
+              text: title,
+              font: {
+                size: 32,
+                family: "Inter, sans-serif",
+                color: theme.textColor,
+              },
+            },
+          }
+        : {}),
       width,
       height,
-      margin: { l: 80, r: 30, b: 80, t: 60, pad: 10 },
+      margin: {
+        l: 80,
+        r: 30,
+        b: 80,
+        t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+        pad: 10,
+      },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {

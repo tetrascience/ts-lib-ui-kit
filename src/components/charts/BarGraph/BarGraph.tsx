@@ -21,6 +21,10 @@ interface BarDataSeries {
 
 type BarGraphVariant = "group" | "stack" | "overlay";
 
+/** Top margin reserving room for the 32px title; reduced when no title is set */
+const TITLE_MARGIN_TOP = 60;
+const NO_TITLE_MARGIN_TOP = 30;
+
 interface BarGraphProps {
   dataSeries: BarDataSeries[];
   width?: number;
@@ -50,7 +54,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
   variant = "group",
   xTitle = "Columns",
   yTitle = "Rows",
-  title = "Bar Graph",
+  title,
   barWidth = 24,
   xTickText,
 }) => {
@@ -165,17 +169,27 @@ const BarGraph: React.FC<BarGraphProps> = ({
     }));
 
     const layout = {
-      title: {
-        text: title,
-        font: {
-          size: 32,
-          family: "Inter, sans-serif",
-          color: theme.textColor,
-        },
-      },
+      ...(title
+        ? {
+            title: {
+              text: title,
+              font: {
+                size: 32,
+                family: "Inter, sans-serif",
+                color: theme.textColor,
+              },
+            },
+          }
+        : {}),
       width,
       height,
-      margin: { l: 80, r: 30, b: 80, t: 60, pad: 0 },
+      margin: {
+        l: 80,
+        r: 30,
+        b: 80,
+        t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+        pad: 0,
+      },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {

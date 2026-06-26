@@ -184,6 +184,13 @@ type LineGraphProps = {
   xTitle?: string;
   yTitle?: string;
   title?: string;
+  /**
+   * Categorical labels for the x-axis ticks. When provided, the x data values
+   * still drive line positioning but the displayed tick labels match these
+   * strings in order (e.g. ["Mon", "Tue", …]). Should align 1:1 with the
+   * unique, ordered x values across all series.
+   */
+  xTickText?: string[];
 };
 
 const LineGraph: React.FC<LineGraphProps> = ({
@@ -196,6 +203,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
   xTitle = "Columns",
   yTitle = "Rows",
   title,
+  xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
@@ -251,9 +259,13 @@ const LineGraph: React.FC<LineGraphProps> = ({
   }, [effectiveYRange]);
 
   const xTicks = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))],
+    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
     [dataSeries],
   );
+
+  // Only apply categorical labels when they align 1:1 with the tick positions;
+  // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
+  const useCategoricalX = !!xTickText && xTickText.length === xTicks.length;
 
   const mode = useMemo((): "lines" | "lines+markers" => {
     switch (variant) {
@@ -367,7 +379,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
         autorange: !xRange,
         tickmode: "array" as const,
         tickvals: xTicks,
-        ticktext: xTicks.map(String),
+        ticktext: useCategoricalX ? xTickText : xTicks.map(String),
         showgrid: true,
         ...tickOptions,
       },
@@ -423,10 +435,10 @@ const LineGraph: React.FC<LineGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, effectiveYRange, variant, theme, bindTooltip]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, effectiveYRange, variant, theme, bindTooltip]);
 
   return (
-    <div className="chart-container relative">
+    <div className="relative size-full">
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
       {tooltipElement}
     </div>

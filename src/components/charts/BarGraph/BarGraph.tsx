@@ -36,6 +36,13 @@ interface BarGraphProps {
   yTitle?: string;
   title?: string;
   barWidth?: number;
+  /**
+   * Categorical labels for the x-axis ticks. When provided, the x data values
+   * still drive bar positioning but the displayed tick labels match these
+   * strings in order (e.g. ["Mon", "Tue", …]). Should align 1:1 with the
+   * unique, ordered x values across all series.
+   */
+  xTickText?: string[];
 }
 
 const BarGraph: React.FC<BarGraphProps> = ({
@@ -49,6 +56,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
   yTitle = "Rows",
   title,
   barWidth = 24,
+  xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
@@ -88,9 +96,13 @@ const BarGraph: React.FC<BarGraphProps> = ({
   );
 
   const xTicks = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))],
+    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
     [dataSeries],
   );
+
+  // Only apply categorical labels when they align 1:1 with the tick positions;
+  // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
+  const useCategoricalX = !!xTickText && xTickText.length === xTicks.length;
 
   const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
@@ -202,6 +214,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
         autorange: !xRange,
         tickmode: "array" as const,
         tickvals: xTicks,
+        ...(useCategoricalX ? { ticktext: xTickText } : {}),
         showgrid: true,
         ...tickOptions,
       },
@@ -258,7 +271,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, theme, bindTooltip]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, theme, bindTooltip]);
 
   return (
     <div className="bar-graph-container relative">

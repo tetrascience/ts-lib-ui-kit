@@ -21,9 +21,9 @@ const badgeVariants = cva(
         warning:
           "bg-warning/15 text-warning focus-visible:border-warning dark:bg-warning/20 dark:text-warning [a]:hover:bg-warning/25",
         outline:
-          "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
+          "border-border text-foreground [a]:hover:bg-accent [a]:hover:text-accent-foreground",
         ghost:
-          "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
+          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
       },
     },

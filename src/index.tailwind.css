@@ -307,7 +307,7 @@
   --muted: oklch(0.91 0.015 258); /* ~#D8DFE9 */
   --muted-foreground: oklch(0.4878 0.0372 255.3); /* #526175 — SW-1925 darken for contrast */
   /* Accent — subtle primary tint for hover/focus backgrounds */
-  --accent: oklch(0.9619 0.0179 272.31); /* #EEF2FF — matches secondary */
+  --accent: oklch(0.9678 0.0153 257.20); /* #EEF5FF — hover/interactive surface (SW-2071) */
   --accent-foreground: oklch(0.233 0.0698 265.03); /* #0D1B3E */
   /* Tertiary — teal (Material Design 3 tertiary role) */
   --tertiary: oklch(0.4784 0.0817 205.03); /* #006A73 */

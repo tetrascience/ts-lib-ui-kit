@@ -104,6 +104,8 @@ export interface DataAppShellProps {
   // -- Shell --
   /** Slot rendered between the icon rail and the content (e.g. WorkflowPanel) */
   sidebarPanel?: React.ReactNode;
+  /** Show the desktop icon nav rail. Set false to reclaim width when the panel is collapsed. */
+  showNavRail?: boolean; // default true
   /** Main content area */
   children: React.ReactNode;
   /** Additional className for the root container */
@@ -145,7 +147,7 @@ const pageIconVariants = cva(
         false: "bg-transparent",
       },
       compact: {
-        true: "w-9 h-9 hover:bg-muted",
+        true: "w-9 h-9 hover:bg-accent",
         false: "w-8 h-8",
       },
     },
@@ -171,8 +173,10 @@ function SidebarBody({
       {/* ── Header: app icon / name + version ──────────────────────────────── */}
       <div
         className={cn(
-          "shrink-0 border-b border-sidebar-border",
-          compact ? "flex justify-center py-2" : "flex px-3 py-2.5"
+          "shrink-0 flex",
+          // Expanded: full-width header border. Collapsed: no full-width border —
+          // a short centered divider (below) aligns under the icon column instead.
+          compact ? "justify-center py-2" : "px-3 py-2.5 border-b border-sidebar-border"
         )}
       >
         <DropdownMenu>
@@ -253,6 +257,10 @@ function SidebarBody({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Collapsed: short centered divider aligned under the icon column
+          (matches the nav-group dividers). Expanded uses the header's border-b. */}
+      {compact && <div className="shrink-0 mx-auto w-8 border-t border-sidebar-border" />}
 
       {/* ── Nav groups ──────────────────────────────────────────────────────── */}
       <div
@@ -363,14 +371,23 @@ function SidebarBody({
 
       {/* ── Bottom: user menu slot ──────────────────────────────────────────── */}
       {userMenu && (
-        <div
-          className={cn(
-            "shrink-0 border-t border-sidebar-border",
-            compact ? "flex flex-col items-center py-2" : "p-2"
+        <>
+          {/* Collapsed: short centered divider aligned under the icon column.
+              Expanded uses the full-width border on the wrapper below. */}
+          {compact && (
+            <div className="shrink-0 mx-auto w-8 border-t border-sidebar-border" />
           )}
-        >
-          {userMenu}
-        </div>
+          <div
+            className={cn(
+              "shrink-0",
+              compact
+                ? "flex flex-col items-center py-2"
+                : "p-2 border-t border-sidebar-border"
+            )}
+          >
+            {userMenu}
+          </div>
+        </>
       )}
     </TooltipProvider>
   );
@@ -492,6 +509,7 @@ function DataAppShell({
   onHelpClick,
   headerActions,
   sidebarPanel,
+  showNavRail = true,
   children,
   className,
 }: DataAppShellProps) {
@@ -515,8 +533,8 @@ function DataAppShell({
         data-slot="data-app-shell"
         className={cn("flex flex-row w-full h-screen overflow-hidden", className)}
       >
-        {/* Desktop icon rail (hidden on mobile) */}
-        <IconRailSidebar {...sidebarProps} />
+        {/* Desktop icon rail (hidden on mobile, or when showNavRail is false) */}
+        {showNavRail && <IconRailSidebar {...sidebarProps} />}
 
         {/* Mobile sidebar Sheet */}
         <SheetContent

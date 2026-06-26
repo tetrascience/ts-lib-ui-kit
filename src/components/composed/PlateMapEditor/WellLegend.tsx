@@ -54,7 +54,7 @@ export function WellLegend({
             size="sm"
             data-slot="well-legend-item"
             data-disabled={item.disabled || undefined}
-            className={cn("py-2 hover:bg-muted/40", item.disabled && "opacity-50")}
+            className={cn("py-2 hover:bg-accent/40", item.disabled && "opacity-50")}
             onMouseEnter={() => onHoverEnter?.(item.id)}
             onMouseLeave={() => onHoverLeave?.(item.id)}
           >

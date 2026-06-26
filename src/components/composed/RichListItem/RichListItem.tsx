@@ -48,7 +48,7 @@ function RichListItem({
       variant={variant}
       size={size}
       className={cn(
-        "flex-nowrap items-center gap-3 rounded-none border-transparent px-4 py-3 hover:bg-muted/50",
+        "flex-nowrap items-center gap-3 rounded-none border-transparent px-4 py-3 hover:bg-accent/50",
         className,
       )}
       {...props}

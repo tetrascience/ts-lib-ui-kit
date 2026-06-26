@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useMemo } from "react";
 import { useChartTooltip } from "../ChartTooltip";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { chartDensityTokens, type ChartDensity } from "@/utils/chartDensity";
 import { CHART_COLORS } from "@/utils/colors";
 
 interface PieDataSeries {
@@ -31,6 +32,8 @@ type PieChartProps = {
   textInfo?: PieTextInfo;
   hole?: number;
   rotation?: number;
+  /** Sizing preset; `"compact"` shrinks the title and margins for dashboard tiles */
+  density?: ChartDensity;
 };
 
 const DEFAULT_COLORS = CHART_COLORS;
@@ -43,9 +46,11 @@ const PieChart: React.FC<PieChartProps> = ({
   textInfo = "percent",
   hole = 0,
   rotation = 0,
+  density = "comfortable",
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const compact = density === "compact";
   // Slices are large hover targets, so the tooltip tracks the cursor (clamped
   // to the viewport) rather than pinning to the slice centroid
   const { bindTooltip, tooltipElement } = useChartTooltip({ followCursor: true });
@@ -102,7 +107,8 @@ const PieChart: React.FC<PieChartProps> = ({
         color: theme.textColor,
       },
       showlegend: false,
-      margin: { l: 40, r: 40, b: 40, t: 40 },
+      // Pie has no axes, so compact only needs to trim whitespace around the slices
+      margin: compact ? { l: 8, r: 8, b: 8, t: 8 } : { l: 40, r: 40, b: 40, t: 40 },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
     };
@@ -124,7 +130,7 @@ const PieChart: React.FC<PieChartProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [colors, dataSeries.labels, dataSeries.name, dataSeries.values, width, height, textInfo, hole, rotation, theme, bindTooltip]);
+  }, [colors, dataSeries.labels, dataSeries.name, dataSeries.values, width, height, textInfo, hole, rotation, theme, bindTooltip, compact]);
 
   const PieChartLegend: React.FC<{ labels: string[]; colors: string[] }> = ({
     labels,
@@ -170,7 +176,12 @@ const PieChart: React.FC<PieChartProps> = ({
       <div className="size-full">
         {title && (
           <div className="px-10 text-center">
-            <h2 className="m-0 text-[32px] leading-tight font-semibold">{title}</h2>
+            <h2
+              className="m-0 text-[32px] leading-tight font-semibold"
+              style={compact ? { fontSize: chartDensityTokens(density).titleFontSize } : undefined}
+            >
+              {title}
+            </h2>
           </div>
         )}
         <div

@@ -4,6 +4,12 @@ import React, { useEffect, useRef, useMemo } from "react";
 import { chartTooltipLines, useChartTooltip } from "../ChartTooltip";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import {
+  COMPACT_AXIS_TITLE_STANDOFF,
+  COMPACT_CHART_MARGIN,
+  chartDensityTokens,
+  type ChartDensity,
+} from "@/utils/chartDensity";
 import { seriesColor } from "@/utils/colors";
 
 interface AreaDataSeries {
@@ -16,6 +22,9 @@ interface AreaDataSeries {
 }
 
 type AreaGraphVariant = "normal" | "stacked";
+
+/** Comfortable-density gap between each axis title and its ticks */
+const COMFORTABLE_AXIS_TITLE_STANDOFF = 15;
 
 /** Top margin reserving room for the 32px title; reduced when no title is set */
 const TITLE_MARGIN_TOP = 80;
@@ -31,6 +40,8 @@ interface AreaGraphProps {
   xTitle?: string;
   yTitle?: string;
   title?: string;
+  /** Sizing preset; `"compact"` shrinks fonts and margins for dashboard tiles */
+  density?: ChartDensity;
   /**
    * Categorical labels for the x-axis ticks. When provided, the x data values
    * still drive area positioning but the displayed tick labels match these
@@ -50,6 +61,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   xTitle = "Columns",
   yTitle = "Rows",
   title,
+  density = "comfortable",
   xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
@@ -137,6 +149,9 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
     return ticks;
   }, [effectiveYRange]);
 
+  const tokens = useMemo(() => chartDensityTokens(density), [density]);
+  const compact = density === "compact";
+
   // When categorical labels are supplied, ticks must sit on the actual data
   // x-positions rather than the computed nice-step values above. Sorted
   // ascending so labels map deterministically to x regardless of series order.
@@ -156,7 +171,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
       tickwidth: 1,
       ticks: "outside" as const,
       tickfont: {
-        size: 16,
+        size: tokens.tickFontSize,
         color: theme.textColor,
         family: "Inter, sans-serif",
         weight: 400,
@@ -166,7 +181,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
       position: 0,
       zeroline: false,
     }),
-    [theme],
+    [theme, tokens.tickFontSize],
   );
 
   const titleOptions = useMemo(
@@ -179,7 +194,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
             xanchor: "center" as const,
             yanchor: "top" as const,
             font: {
-              size: 32,
+              size: tokens.titleFontSize,
               weight: 600,
               family: "Inter, sans-serif",
               color: theme.textColor,
@@ -188,7 +203,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
             },
           }
         : undefined,
-    [title, theme],
+    [title, theme, tokens.titleFontSize],
   );
 
   useEffect(() => {
@@ -263,13 +278,15 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
       width,
       height: height,
       ...(titleOptions ? { title: titleOptions } : {}),
-      margin: {
-        l: 80,
-        r: 40,
-        b: 80,
-        t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
-        pad: 0,
-      },
+      margin: compact
+        ? COMPACT_CHART_MARGIN
+        : {
+            l: 80,
+            r: 40,
+            b: 80,
+            t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+            pad: 0,
+          },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
@@ -280,12 +297,12 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         title: {
           text: xTitle,
           font: {
-            size: 16,
+            size: tokens.axisTitleFontSize,
             color: theme.textSecondary,
             family: "Inter, sans-serif",
             weight: 400,
           },
-          standoff: 15,
+          standoff: compact ? COMPACT_AXIS_TITLE_STANDOFF : COMFORTABLE_AXIS_TITLE_STANDOFF,
         },
         gridcolor: theme.gridColor,
         range: xRange,
@@ -300,12 +317,12 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         title: {
           text: yTitle,
           font: {
-            size: 16,
+            size: tokens.axisTitleFontSize,
             color: theme.textSecondary,
             family: "Inter, sans-serif",
             weight: 400,
           },
-          standoff: 15,
+          standoff: compact ? COMPACT_AXIS_TITLE_STANDOFF : COMFORTABLE_AXIS_TITLE_STANDOFF,
         },
         gridcolor: theme.gridColor,
         range: yRange,
@@ -329,7 +346,9 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           lineheight: 18,
         },
       },
-      showlegend: true,
+      // Compact tiles are too short to fit a legend below the plot without
+      // Plotly's automargin eating most of the data area
+      showlegend: !compact,
     };
 
     const config = {
@@ -350,7 +369,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, bindTooltip]);
+  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, bindTooltip, compact, tokens]);
 
   return (
     <div className="area-graph-container relative">

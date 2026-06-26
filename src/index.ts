@@ -109,4 +109,5 @@ export * from "@/components/ai/task";
 export * from "@/components/ai/tool";
 
 // Utils
+export * from "@/utils/chartDensity";
 export * from "@/utils/colors";

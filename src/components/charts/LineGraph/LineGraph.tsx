@@ -4,6 +4,12 @@ import React, { useEffect, useRef, useMemo } from "react";
 import { useChartTooltip } from "../ChartTooltip";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import {
+  COMPACT_AXIS_TITLE_STANDOFF,
+  COMPACT_CHART_MARGIN,
+  chartDensityTokens,
+  type ChartDensity,
+} from "@/utils/chartDensity";
 import { seriesColor } from "@/utils/colors";
 
 type MarkerSymbol =
@@ -170,6 +176,10 @@ interface LineDataSeries {
 
 type LineGraphVariant = "lines" | "lines+markers" | "lines+markers+error_bars";
 
+/** Comfortable-density gaps between each axis title and its ticks */
+const COMFORTABLE_X_AXIS_TITLE_STANDOFF = 32;
+const COMFORTABLE_Y_AXIS_TITLE_STANDOFF = 30;
+
 /** Top margin reserving room for the 32px title; reduced when no title is set */
 const TITLE_MARGIN_TOP = 60;
 const NO_TITLE_MARGIN_TOP = 30;
@@ -184,6 +194,8 @@ type LineGraphProps = {
   xTitle?: string;
   yTitle?: string;
   title?: string;
+  /** Sizing preset; `"compact"` shrinks fonts and margins for dashboard tiles */
+  density?: ChartDensity;
   /**
    * Categorical labels for the x-axis ticks. When provided, the x data values
    * still drive line positioning but the displayed tick labels match these
@@ -203,6 +215,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
   xTitle = "Columns",
   yTitle = "Rows",
   title,
+  density = "comfortable",
   xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
@@ -277,6 +290,9 @@ const LineGraph: React.FC<LineGraphProps> = ({
     }
   }, [variant]);
 
+  const tokens = useMemo(() => chartDensityTokens(density), [density]);
+  const compact = density === "compact";
+
   const tickOptions = useMemo(
     () => ({
       tickcolor: theme.tickColor,
@@ -284,7 +300,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
       tickwidth: 1,
       ticks: "outside" as const,
       tickfont: {
-        size: 16,
+        size: tokens.tickFontSize,
         color: theme.textColor,
         family: "Inter, sans-serif",
         weight: 400,
@@ -294,7 +310,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
       position: 0,
       zeroline: false,
     }),
-    [theme],
+    [theme, tokens.tickFontSize],
   );
 
   useEffect(() => {
@@ -341,7 +357,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
             title: {
               text: title,
               font: {
-                size: 32,
+                size: tokens.titleFontSize,
                 family: "Inter, sans-serif",
                 color: theme.textColor,
               },
@@ -350,13 +366,15 @@ const LineGraph: React.FC<LineGraphProps> = ({
         : {}),
       width,
       height,
-      margin: {
-        l: 80,
-        r: 30,
-        b: 80,
-        t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
-        pad: 10,
-      },
+      margin: compact
+        ? COMPACT_CHART_MARGIN
+        : {
+            l: 80,
+            r: 30,
+            b: 80,
+            t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+            pad: 10,
+          },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
@@ -367,12 +385,12 @@ const LineGraph: React.FC<LineGraphProps> = ({
         title: {
           text: xTitle,
           font: {
-            size: 16,
+            size: tokens.axisTitleFontSize,
             color: theme.textSecondary,
             family: "Inter, sans-serif",
             weight: 400,
           },
-          standoff: 32,
+          standoff: compact ? COMPACT_AXIS_TITLE_STANDOFF : COMFORTABLE_X_AXIS_TITLE_STANDOFF,
         },
         gridcolor: theme.gridColor,
         range: xRange,
@@ -387,12 +405,12 @@ const LineGraph: React.FC<LineGraphProps> = ({
         title: {
           text: yTitle,
           font: {
-            size: 16,
+            size: tokens.axisTitleFontSize,
             color: theme.textSecondary,
             family: "Inter, sans-serif",
             weight: 400,
           },
-          standoff: 30,
+          standoff: compact ? COMPACT_AXIS_TITLE_STANDOFF : COMFORTABLE_Y_AXIS_TITLE_STANDOFF,
         },
         gridcolor: theme.gridColor,
         range: yRange,
@@ -415,7 +433,9 @@ const LineGraph: React.FC<LineGraphProps> = ({
           weight: 500,
         },
       },
-      showlegend: true,
+      // Compact tiles are too short to fit a legend below the plot without
+      // Plotly's automargin eating most of the data area
+      showlegend: !compact,
     };
 
     const config = {
@@ -435,7 +455,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, effectiveYRange, variant, theme, bindTooltip]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, effectiveYRange, variant, theme, bindTooltip, compact, tokens]);
 
   return (
     <div className="relative size-full">

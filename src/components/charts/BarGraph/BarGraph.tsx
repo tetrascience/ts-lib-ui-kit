@@ -4,6 +4,12 @@ import React, { useEffect, useRef, useMemo } from "react";
 import { useChartTooltip } from "../ChartTooltip";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import {
+  COMPACT_AXIS_TITLE_STANDOFF,
+  COMPACT_CHART_MARGIN,
+  chartDensityTokens,
+  type ChartDensity,
+} from "@/utils/chartDensity";
 import { seriesColor } from "@/utils/colors";
 
 interface BarDataSeries {
@@ -21,6 +27,10 @@ interface BarDataSeries {
 
 type BarGraphVariant = "group" | "stack" | "overlay";
 
+/** Comfortable-density gaps between each axis title and its ticks */
+const COMFORTABLE_X_AXIS_TITLE_STANDOFF = 32;
+const COMFORTABLE_Y_AXIS_TITLE_STANDOFF = 30;
+
 /** Top margin reserving room for the 32px title; reduced when no title is set */
 const TITLE_MARGIN_TOP = 60;
 const NO_TITLE_MARGIN_TOP = 30;
@@ -36,6 +46,8 @@ interface BarGraphProps {
   yTitle?: string;
   title?: string;
   barWidth?: number;
+  /** Sizing preset; `"compact"` shrinks fonts and margins for dashboard tiles */
+  density?: ChartDensity;
   /**
    * Categorical labels for the x-axis ticks. When provided, the x data values
    * still drive bar positioning but the displayed tick labels match these
@@ -56,6 +68,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
   yTitle = "Rows",
   title,
   barWidth = 24,
+  density = "comfortable",
   xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
@@ -132,6 +145,9 @@ const BarGraph: React.FC<BarGraphProps> = ({
     }
   }, [variant]);
 
+  const tokens = useMemo(() => chartDensityTokens(density), [density]);
+  const compact = density === "compact";
+
   const tickOptions = useMemo(
     () => ({
       tickcolor: theme.tickColor,
@@ -139,7 +155,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
       tickwidth: 1,
       ticks: "outside" as const,
       tickfont: {
-        size: 16,
+        size: tokens.tickFontSize,
         color: theme.textColor,
         family: "Inter, sans-serif",
         weight: 400,
@@ -149,7 +165,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
       position: 0,
       zeroline: false,
     }),
-    [theme],
+    [theme, tokens.tickFontSize],
   );
 
   useEffect(() => {
@@ -174,7 +190,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
             title: {
               text: title,
               font: {
-                size: 32,
+                size: tokens.titleFontSize,
                 family: "Inter, sans-serif",
                 color: theme.textColor,
               },
@@ -183,13 +199,15 @@ const BarGraph: React.FC<BarGraphProps> = ({
         : {}),
       width,
       height,
-      margin: {
-        l: 80,
-        r: 30,
-        b: 80,
-        t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
-        pad: 0,
-      },
+      margin: compact
+        ? COMPACT_CHART_MARGIN
+        : {
+            l: 80,
+            r: 30,
+            b: 80,
+            t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+            pad: 0,
+          },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
@@ -202,12 +220,12 @@ const BarGraph: React.FC<BarGraphProps> = ({
         title: {
           text: xTitle,
           font: {
-            size: 16,
+            size: tokens.axisTitleFontSize,
             color: theme.textSecondary,
             family: "Inter, sans-serif",
             weight: 400,
           },
-          standoff: 32,
+          standoff: compact ? COMPACT_AXIS_TITLE_STANDOFF : COMFORTABLE_X_AXIS_TITLE_STANDOFF,
         },
         gridcolor: theme.gridColor,
         range: xRange,
@@ -222,12 +240,12 @@ const BarGraph: React.FC<BarGraphProps> = ({
         title: {
           text: yTitle,
           font: {
-            size: 16,
+            size: tokens.axisTitleFontSize,
             color: theme.textSecondary,
             family: "Inter, sans-serif",
             weight: 400,
           },
-          standoff: 30,
+          standoff: compact ? COMPACT_AXIS_TITLE_STANDOFF : COMFORTABLE_Y_AXIS_TITLE_STANDOFF,
         },
         gridcolor: theme.gridColor,
         range: yRange,
@@ -250,7 +268,9 @@ const BarGraph: React.FC<BarGraphProps> = ({
           weight: 500,
         },
       },
-      showlegend: dataSeries.length > 1,
+      // Compact tiles are too short to fit a legend below the plot without
+      // Plotly's automargin eating most of the data area
+      showlegend: !compact && dataSeries.length > 1,
     };
 
     const config = {
@@ -271,7 +291,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, theme, bindTooltip]);
+  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, theme, bindTooltip, compact, tokens]);
 
   return (
     <div className="bar-graph-container relative">

@@ -1,5 +1,10 @@
 import { expect, waitFor, within } from "storybook/test";
 
+/** A Plotly plot div exposes `emit` to dispatch synthetic hover events. */
+type EmittingPlot = HTMLElement & {
+  emit: (event: string, data?: unknown) => void;
+};
+
 import { AreaGraph } from "./AreaGraph";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -82,6 +87,22 @@ export const Default: Story = {
       expect(canvas.getByText("Series 2")).toBeInTheDocument();
       expect(canvas.getByText("Series 3")).toBeInTheDocument();
     });
+
+    await step("Tooltip shows the hovered point's own value", async () => {
+      const plot = canvasElement.querySelector(".js-plotly-plot") as EmittingPlot;
+      // Normal-mode traces carry no customdata, so the tooltip reports the
+      // point's own y value directly.
+      plot.emit("plotly_hover", {
+        points: [{ x: 600, y: 140, data: { name: "Series 1" } }],
+        event: new MouseEvent("mousemove", { clientX: 300, clientY: 200 }),
+      });
+      await waitFor(() => {
+        const tip = document.querySelector('[data-slot="tooltip-content"]');
+        expect(tip).toBeInTheDocument();
+        expect(tip).toHaveTextContent("Rows: 140");
+      });
+      plot.emit("plotly_unhover");
+    });
   },
 };
 
@@ -123,9 +144,6 @@ export const Stacked: Story = {
     });
 
     await step("Tooltip shows the series value, not the stacked sum", async () => {
-      type EmittingPlot = HTMLElement & {
-        emit: (event: string, data?: unknown) => void;
-      };
       const plot = canvasElement.querySelector(".js-plotly-plot") as EmittingPlot;
       // Series 2 at x=600: own value 70, stacked y = 140 + 70 = 210
       plot.emit("plotly_hover", {

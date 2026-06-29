@@ -62,7 +62,7 @@ export function createBoundaryMarkerTraces(
   const traces: Plotly.Data[] = [];
 
   for (const { peaks, seriesIndex, x } of allPeaks) {
-    const color = seriesColor(seriesIndex);
+    const defaultSeriesColor = seriesColor(seriesIndex);
     // Separate y positions for start vs end markers to prevent overlap when peaks are adjacent
     // Also stagger by series index to prevent overlap between different traces
     const startMarkerY = BOUNDARY_MARKER_START_Y + seriesIndex * BOUNDARY_MARKER_SERIES_OFFSET;
@@ -78,6 +78,8 @@ export function createBoundaryMarkerTraces(
       const startMarkerType = peak.startMarker ?? "triangle";
       const endMarkerType = peak.endMarker ?? "diamond";
 
+      const color = peak.color ?? defaultSeriesColor;
+
       // Create start boundary marker (upper row, staggered by series)
       traces.push(...createMarkerTrace(startX, startMarkerY, startMarkerType, color));
 
@@ -88,4 +90,3 @@ export function createBoundaryMarkerTraces(
 
   return traces;
 }
-

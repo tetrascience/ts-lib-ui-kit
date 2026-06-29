@@ -30,11 +30,21 @@ export const CHROMATOGRAM_ANNOTATION = {
   USER_ANNOTATION_FONT_SIZE: 11,
   /** Font size for auto-detected peak annotations */
   AUTO_ANNOTATION_FONT_SIZE: 10,
+  /** Pixel offset above the data point for inline-style annotations (no arrow) */
+  INLINE_YSHIFT: 4,
   /** Arrow color for user-defined annotations (grey 500) */
   USER_ANNOTATION_COLOR: "rgba(100, 116, 139, 1)",
   /** Text color for user-defined annotations (black 900) */
   USER_ANNOTATION_TEXT_COLOR: "rgba(26, 26, 26, 1)",
   /** Background color behind annotation text */
   BACKGROUND_COLOR: "#ffffff",
+} as const;
+
+/**
+ * Trace rendering constants
+ */
+export const CHROMATOGRAM_TRACE = {
+  /** Base line width in pixels for all series traces */
+  BASE_LINE_WIDTH: 1.5,
 } as const;
 

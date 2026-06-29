@@ -215,8 +215,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           // Tooltips report the series' own values, not the stacked sums
           customdata: series.y,
           type: "scatter" as const,
-          // Dots mark each data point — the spots the tooltip anchors to
-          mode: "lines+markers" as const,
+          mode: "lines" as const,
           name: series.name,
           hoverinfo: "none" as const,
           fill: index === 0 ? ("tozeroy" as const) : ("tonexty" as const),
@@ -224,11 +223,6 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           line: {
             color,
             width: 2,
-          },
-          marker: {
-            size: 6,
-            color,
-            line: { color: theme.markerOutline, width: 1.5 },
           },
         };
       });
@@ -240,8 +234,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           x: series.x,
           y: series.y,
           type: "scatter" as const,
-          // Dots mark each data point — the spots the tooltip anchors to
-          mode: "lines+markers" as const,
+          mode: "lines" as const,
           name: series.name,
           hoverinfo: "none" as const,
           fill: series.fill || ("tozeroy" as const),
@@ -249,11 +242,6 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           line: {
             color,
             width: 2,
-          },
-          marker: {
-            size: 6,
-            color,
-            line: { color: theme.markerOutline, width: 1.5 },
           },
         };
       });

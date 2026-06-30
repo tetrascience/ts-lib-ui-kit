@@ -127,7 +127,10 @@ const Histogram: React.FC<HistogramProps> = ({
   const resolvedWidth = width ?? measured.width;
   const resolvedHeight = height ?? measured.height;
   const hasSize = resolvedWidth > 0 && resolvedHeight > 0;
-  const fillContainer = width === undefined && height === undefined;
+  // Fill is per-dimension: omit width to fill the container width, omit height
+  // to fill its height (so e.g. a fixed width with a container-driven height works).
+  const fillWidth = width === undefined;
+  const fillHeight = height === undefined;
   const sizeRef = useRef({ width: resolvedWidth, height: resolvedHeight });
   sizeRef.current = { width: resolvedWidth, height: resolvedHeight };
   const plotInitedRef = useRef(false);
@@ -373,10 +376,10 @@ const Histogram: React.FC<HistogramProps> = ({
 
   return (
     <div
-      className={cn("histogram-container relative", fillContainer && "size-full")}
-      style={fillContainer ? undefined : { width }}
+      className={cn("histogram-container relative", fillWidth && "w-full", fillHeight && "h-full")}
+      style={width === undefined ? undefined : { width }}
     >
-      <div className={cn("chart-container", fillContainer && "flex h-full flex-col")}>
+      <div className={cn("chart-container", fillHeight && "flex h-full flex-col")}>
         {title && (
           <div className="title-container">
             <h2 className="title">{title}</h2>
@@ -384,7 +387,7 @@ const Histogram: React.FC<HistogramProps> = ({
         )}
         {/* Measured plot area — flexes to fill the space left by the title and
             legend in fill mode, so the Plotly canvas tracks it. */}
-        <div ref={plotAreaRef} className={cn(fillContainer && "min-h-0 flex-1")}>
+        <div ref={plotAreaRef} className={cn(fillHeight && "min-h-0 flex-1")}>
           <div
             ref={plotRef}
             style={{

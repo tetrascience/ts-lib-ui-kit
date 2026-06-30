@@ -131,6 +131,23 @@ describe("AreaGraph sizing", () => {
     expect(layout.height).toBe(200);
   });
 
+  it("fills only the omitted dimension (fixed width + measured height)", () => {
+    render({ dataSeries, width: 500 });
+
+    // Height is still unmeasured, so the plot must not initialize at height 0.
+    expect(plotly.newPlot).not.toHaveBeenCalled();
+
+    act(() => {
+      triggerResize(999, 300);
+    });
+
+    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
+    const { layout } = lastPlotCall();
+    // Fixed width wins; height comes from the measurement.
+    expect(layout.width).toBe(500);
+    expect(layout.height).toBe(300);
+  });
+
   it("relayouts in place on resize instead of recreating the plot", () => {
     render({ dataSeries });
 

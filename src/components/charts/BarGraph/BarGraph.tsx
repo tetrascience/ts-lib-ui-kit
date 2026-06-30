@@ -78,7 +78,10 @@ const BarGraph: React.FC<BarGraphProps> = ({
   const resolvedWidth = width ?? measured.width;
   const resolvedHeight = height ?? measured.height;
   const hasSize = resolvedWidth > 0 && resolvedHeight > 0;
-  const fillContainer = width === undefined && height === undefined;
+  // Fill is per-dimension: omit width to fill the container width, omit height
+  // to fill its height (so e.g. a fixed width with a container-driven height works).
+  const fillWidth = width === undefined;
+  const fillHeight = height === undefined;
   const sizeRef = useRef({ width: resolvedWidth, height: resolvedHeight });
   sizeRef.current = { width: resolvedWidth, height: resolvedHeight };
   const plotInitedRef = useRef(false);
@@ -337,7 +340,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
   return (
     <div
       ref={containerRef}
-      className={cn("bar-graph-container relative", fillContainer && "size-full")}
+      className={cn("bar-graph-container relative", fillWidth && "w-full", fillHeight && "h-full")}
     >
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
       {tooltipElement}

@@ -72,7 +72,10 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   const resolvedWidth = width ?? measured.width;
   const resolvedHeight = height ?? measured.height;
   const hasSize = resolvedWidth > 0 && resolvedHeight > 0;
-  const fillContainer = width === undefined && height === undefined;
+  // Fill is per-dimension: omit width to fill the container width, omit height
+  // to fill its height (so e.g. a fixed width with a container-driven height works).
+  const fillWidth = width === undefined;
+  const fillHeight = height === undefined;
 
   // Hold the latest resolved size in a ref so the newPlot effect can read it
   // without listing it as a dependency — size changes are handled by a
@@ -421,7 +424,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   return (
     <div
       ref={containerRef}
-      className={cn("area-graph-container relative", fillContainer && "size-full")}
+      className={cn("area-graph-container relative", fillWidth && "w-full", fillHeight && "h-full")}
     >
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
       {tooltipElement}

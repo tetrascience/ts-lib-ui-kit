@@ -146,5 +146,19 @@ export const ContainerFilled: Story = {
         expect(plot.clientWidth).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
       });
     });
+
+    await step("Chart resizes in place when the container resizes", async () => {
+      const wrapper = canvasElement.querySelector(
+        '[data-testid="fill-wrapper"]',
+      ) as HTMLElement;
+      // Shrink the container; the ResizeObserver should drive a Plotly relayout
+      // (not a full re-plot) so the canvas tracks the new width.
+      wrapper.style.width = "440px";
+      await waitFor(() => {
+        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
+        expect(plot.clientWidth).toBeGreaterThanOrEqual(420);
+        expect(plot.clientWidth).toBeLessThanOrEqual(460);
+      });
+    });
   },
 };

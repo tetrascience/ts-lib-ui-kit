@@ -3,7 +3,9 @@ import React, { useEffect, useRef, useMemo } from "react";
 
 import { useChartTooltip } from "../ChartTooltip";
 
+import { useElementSize } from "@/hooks/use-element-size";
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { cn } from "@/lib/utils";
 import { seriesColor } from "@/utils/colors";
 
 interface BarDataSeries {
@@ -27,7 +29,15 @@ const NO_TITLE_MARGIN_TOP = 30;
 
 interface BarGraphProps {
   dataSeries: BarDataSeries[];
+  /**
+   * Fixed width in pixels. When omitted, the chart fills its container and
+   * tracks the container's width via a `ResizeObserver`.
+   */
   width?: number;
+  /**
+   * Fixed height in pixels. When omitted, the chart fills its container and
+   * tracks the container's height via a `ResizeObserver`.
+   */
   height?: number;
   xRange?: [number, number];
   yRange?: [number, number];
@@ -47,13 +57,13 @@ interface BarGraphProps {
 
 const BarGraph: React.FC<BarGraphProps> = ({
   dataSeries,
-  width = 1000,
-  height = 600,
+  width,
+  height,
   xRange,
   yRange,
   variant = "group",
-  xTitle = "Columns",
-  yTitle = "Rows",
+  xTitle,
+  yTitle,
   title,
   barWidth = 24,
   xTickText,
@@ -61,6 +71,20 @@ const BarGraph: React.FC<BarGraphProps> = ({
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
   const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
+
+  // Omitted width/height → fill the container and track its measured size;
+  // explicit pixel values override. See AreaGraph for the reference pattern.
+  const [containerRef, measured] = useElementSize<HTMLDivElement>();
+  const resolvedWidth = width ?? measured.width;
+  const resolvedHeight = height ?? measured.height;
+  const hasSize = resolvedWidth > 0 && resolvedHeight > 0;
+  const fillContainer = width === undefined && height === undefined;
+  const sizeRef = useRef({ width: resolvedWidth, height: resolvedHeight });
+  sizeRef.current = { width: resolvedWidth, height: resolvedHeight };
+  const plotInitedRef = useRef(false);
+  // Size last applied to the plot, so the resize effect can skip a redundant
+  // relayout right after newPlot already drew at that size.
+  const appliedSizeRef = useRef({ width: 0, height: 0 });
 
   const { yMin, yMax } = useMemo(() => {
     let minX = Number.MAX_VALUE;
@@ -153,7 +177,7 @@ const BarGraph: React.FC<BarGraphProps> = ({
   );
 
   useEffect(() => {
-    if (!plotRef.current) return;
+    if (!plotRef.current || !hasSize) return;
 
     const data = dataSeries.map((series, index) => ({
       x: series.x,
@@ -181,12 +205,14 @@ const BarGraph: React.FC<BarGraphProps> = ({
             },
           }
         : {}),
-      width,
-      height,
+      width: sizeRef.current.width,
+      height: sizeRef.current.height,
       margin: {
         l: 80,
         r: 30,
-        b: 80,
+        // Reserve room for tick labels, the x-axis title, and the
+        // container-anchored bottom legend stacked beneath them.
+        b: 96,
         t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
         pad: 0,
       },
@@ -216,6 +242,9 @@ const BarGraph: React.FC<BarGraphProps> = ({
         tickvals: xTicks,
         ...(useCategoricalX ? { ticktext: xTickText } : {}),
         showgrid: true,
+        // Reserve space for tick labels + the axis title so the bottom legend
+        // can't overlap them at small sizes (SW-2157).
+        automargin: true,
         ...tickOptions,
       },
       yaxis: {
@@ -235,13 +264,18 @@ const BarGraph: React.FC<BarGraphProps> = ({
         tickmode: "array" as const,
         tickvals: yTicks,
         showgrid: true,
+        automargin: true,
         ...tickOptions,
       },
       legend: {
+        // Anchor to the bottom of the container (not the plot area) so the
+        // legend always clears the x-axis tick labels + title — a paper-relative
+        // fractional offset collapses into the ticks at small heights (SW-2157).
         x: 0.5,
-        y: -0.2,
+        y: 0,
         xanchor: "center" as const,
-        yanchor: "top" as const,
+        yanchor: "bottom" as const,
+        yref: "container" as const,
         orientation: "h" as const,
         font: {
           size: 16,
@@ -254,7 +288,9 @@ const BarGraph: React.FC<BarGraphProps> = ({
     };
 
     const config = {
-      responsive: true,
+      // Sizing is driven from the measured container; disable Plotly's own
+      // window-resize responsiveness (it can't see container resizes).
+      responsive: false,
       displayModeBar: false,
       displaylogo: false,
     };
@@ -264,17 +300,45 @@ const BarGraph: React.FC<BarGraphProps> = ({
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
+    plotInitedRef.current = true;
+    appliedSizeRef.current = { ...sizeRef.current };
 
     // Cleanup function
     return () => {
       if (plotElement) {
         Plotly.purge(plotElement);
+        plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, theme, bindTooltip]);
+  }, [dataSeries, hasSize, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, theme, bindTooltip]);
+
+  // Resize in place when the measured/overridden size changes — cheaper than
+  // recreating the plot, and it preserves tooltip/event bindings.
+  useEffect(() => {
+    const plotElement = plotRef.current;
+    if (!plotElement || !plotInitedRef.current || resolvedWidth <= 0 || resolvedHeight <= 0) {
+      return;
+    }
+    // newPlot already drew at the current size; skip the redundant relayout
+    // (it would queue an automargin redraw that can reject if we unmount first).
+    if (
+      appliedSizeRef.current.width === resolvedWidth &&
+      appliedSizeRef.current.height === resolvedHeight
+    ) {
+      return;
+    }
+    appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };
+    // Swallow rejections from a relayout that races an unmount/purge.
+    void Plotly.relayout(plotElement, { width: resolvedWidth, height: resolvedHeight }).catch(
+      () => {},
+    );
+  }, [resolvedWidth, resolvedHeight]);
 
   return (
-    <div className="bar-graph-container relative">
+    <div
+      ref={containerRef}
+      className={cn("bar-graph-container relative", fillContainer && "size-full")}
+    >
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
       {tooltipElement}
     </div>

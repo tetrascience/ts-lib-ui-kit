@@ -53,11 +53,14 @@ jobs:
           JFROG_NPM_AUTH: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
         run: |
           set -euo pipefail
-          host="${JFROG_NPM_REGISTRY#https://}"; host="${host#http://}"
+          # Normalize the host: strip scheme and any trailing slash so the auth
+          # line is always `//<host>/:_auth=...` regardless of whether the secret
+          # URL ends with a slash (npm requires the `/` before `:_auth`).
+          host="${JFROG_NPM_REGISTRY#https://}"; host="${host#http://}"; host="${host%/}"
           npmrc="$RUNNER_TEMP/.npmrc-jfrog"
           # JFROG_ARTIFACTORY_READ_NPM_AUTH is the base64 npm `_auth` identity for
           # the read-only Artifactory user (same value used across the org's repos).
-          printf 'registry=%s\n//%s:_auth=%s\nalways-auth=true\n' \
+          printf 'registry=%s\n//%s/:_auth=%s\nalways-auth=true\n' \
             "$JFROG_NPM_REGISTRY" "$host" "$JFROG_NPM_AUTH" > "$npmrc"
           tgz=$(npm pack ts-lib-zephyr-nodejs@0.4.0 --userconfig "$npmrc" --registry "$JFROG_NPM_REGISTRY")
           rm -rf node_modules/ts-lib-zephyr-nodejs

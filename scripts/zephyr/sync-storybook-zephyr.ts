@@ -611,8 +611,9 @@ async function getFolders(): Promise<FolderCache> {
     return {};
   }
 
-  // Find or create the root folder
-  let rootFolderId = folders.find((f) => f.name === FOLDER_PREFIX && !f.parentId)?.id;
+  // Find or create the root folder. Match on `parentId === null` (not a falsy
+  // check) so a legitimate folder id of 0 is never mistaken for a root folder.
+  let rootFolderId = folders.find((f) => f.name === FOLDER_PREFIX && f.parentId === null)?.id;
   if (rootFolderId === undefined) {
     try {
       rootFolderId = await createFolder(FOLDER_PREFIX);

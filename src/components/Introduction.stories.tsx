@@ -37,7 +37,7 @@ function GithubInvertocatWhite(props: SVGProps<SVGSVGElement>) {
   )
 }
 
-const VERSION = "0.5.0"
+const VERSION = "0.7.0"
 const PKG_NAME = "@tetrascience-npm/tetrascience-react-ui"
 
 /** Detect dark mode by watching <html> class and URL globals */

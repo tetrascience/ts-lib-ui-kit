@@ -56,37 +56,21 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      # ts-lib-zephyr-nodejs is published only to TetraScience's JFrog Artifactory.
-      # It is deliberately kept OUT of package.json / yarn.lock so public and
-      # external-contributor `yarn install` stays on the public npm registry.
-      # Fetch it here as a leaf tarball and extract into node_modules — this avoids
-      # `npm install`'s full-tree reconciliation, which corrupts the Yarn-managed
-      # node_modules. Its only transitive need (ts-morph) is already installed.
+      # ts-lib-zephyr-nodejs is published only to TetraScience's JFrog Artifactory
+      # and is deliberately kept OUT of package.json / yarn.lock so public and
+      # external-contributor `yarn install` stays on the public npm registry. The
+      # shared composite action fetches it as a leaf tarball into node_modules
+      # (its only transitive need, ts-morph, is already installed).
+      # NOTE: pinned to the action's PR branch for testing; switch to @main once
+      # tetrascience/ts-ci-cd-lib#29 merges.
       - name: Install ts-lib-zephyr-nodejs (JFrog)
-        env:
-          # Read-only JFrog virtual registry URL. This is infra info, not a
-          # credential, so it is hardcoded rather than pulled from the
-          # environment-scoped JFROG_ARTIFACTORY_NPM_VIRTUAL_URL secret (which is
-          # only visible to jobs bound to the artifactory-prod environment). Only
-          # the read auth token comes from a secret (org-level, no environment).
-          JFROG_NPM_REGISTRY: https://tetrascience.jfrog.io/artifactory/api/npm/ts-npm-virtual/
-          JFROG_NPM_AUTH: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
-        run: |
-          set -euo pipefail
-          # Normalize the host: strip scheme and any trailing slash so the auth
-          # line is always `//<host>/:_auth=...` regardless of whether the secret
-          # URL ends with a slash (npm requires the `/` before `:_auth`).
-          host="${JFROG_NPM_REGISTRY#https://}"; host="${host#http://}"; host="${host%/}"
-          npmrc="$RUNNER_TEMP/.npmrc-jfrog"
-          # JFROG_ARTIFACTORY_READ_NPM_AUTH is the base64 npm `_auth` identity for
-          # the read-only Artifactory user (same value used across the org's repos).
-          printf 'registry=%s\n//%s/:_auth=%s\nalways-auth=true\n' \
-            "$JFROG_NPM_REGISTRY" "$host" "$JFROG_NPM_AUTH" > "$npmrc"
-          tgz=$(npm pack ts-lib-zephyr-nodejs@0.4.0 --userconfig "$npmrc" --registry "$JFROG_NPM_REGISTRY")
-          rm -rf node_modules/ts-lib-zephyr-nodejs
-          mkdir -p node_modules/ts-lib-zephyr-nodejs
-          tar -xzf "$tgz" -C node_modules/ts-lib-zephyr-nodejs --strip-components=1
-          rm -f "$npmrc" "$tgz"
+        uses: tetrascience/ts-ci-cd-lib/install-jfrog-npm-package@install-jfrog-npm-package-action
+        with:
+          package: ts-lib-zephyr-nodejs
+          version: "0.4.0"
+          # Read-only virtual registry URL — infra info, not a credential.
+          registry-url: https://tetrascience.jfrog.io/artifactory/api/npm/ts-npm-virtual/
+          auth: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
 
       - name: Download test results artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0

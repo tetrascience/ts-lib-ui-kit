@@ -64,7 +64,12 @@ jobs:
       # node_modules. Its only transitive need (ts-morph) is already installed.
       - name: Install ts-lib-zephyr-nodejs (JFrog)
         env:
-          JFROG_NPM_REGISTRY: ${{ secrets.JFROG_ARTIFACTORY_NPM_VIRTUAL_URL }}
+          # Read-only JFrog virtual registry URL. This is infra info, not a
+          # credential, so it is hardcoded rather than pulled from the
+          # environment-scoped JFROG_ARTIFACTORY_NPM_VIRTUAL_URL secret (which is
+          # only visible to jobs bound to the artifactory-prod environment). Only
+          # the read auth token comes from a secret (org-level, no environment).
+          JFROG_NPM_REGISTRY: https://tetrascience.jfrog.io/artifactory/api/npm/ts-npm-virtual/
           JFROG_NPM_AUTH: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
         run: |
           set -euo pipefail

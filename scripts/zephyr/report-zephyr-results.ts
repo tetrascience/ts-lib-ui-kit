@@ -1,4 +1,3 @@
-#!/usr/bin/env tsx
 /**
  * Report Storybook test execution results to Zephyr Scale
  *
@@ -26,23 +25,23 @@ import path from "path";
 import { XMLParser } from "fast-xml-parser";
 import { Node, Project, type VariableDeclaration } from "ts-morph";
 
-// ============================================================================
-// Screenshot URL Mapping Types
-// ============================================================================
+import type { ZephyrClient, ZephyrScreenshot, ZephyrStep } from "ts-lib-zephyr-nodejs";
 
-interface ScreenshotUrlMapping {
-  zephyrId: string;
-  s3Key: string;
-  url: string;
-}
-
-interface ScreenshotUrlsFile {
-  uploadedAt: string;
-  bucket: string;
-  region: string;
-  runNumber: string;
-  repository: string;
-  screenshots: ScreenshotUrlMapping[];
+/**
+ * Lazily loads the JFrog-only `ts-lib-zephyr-nodejs` package at runtime.
+ *
+ * The specifier is held in a variable so bundlers/Vitest can't statically
+ * resolve it at module-load time — this lets the unit test suite (which only
+ * exercises the pure parsing/cache helpers below) import this module even in
+ * environments where the package isn't installed. The library is only actually
+ * loaded when a Zephyr report run reaches the reporting code path.
+ */
+type ZephyrLib = typeof import("ts-lib-zephyr-nodejs");
+let zephyrLibPromise: Promise<ZephyrLib> | null = null;
+function getZephyrLib(): Promise<ZephyrLib> {
+  const spec = "ts-lib-zephyr-nodejs";
+  zephyrLibPromise ??= import(spec) as Promise<ZephyrLib>;
+  return zephyrLibPromise;
 }
 
 // ============================================================================
@@ -329,6 +328,9 @@ const ZEPHYR_BASE_URL = "https://api.zephyrscale.smartbear.com/v2";
 const PROJECT_KEY = process.env.ZEPHYR_PROJECT_KEY || "SW";
 const JUNIT_PATH = process.env.JUNIT_PATH || "test-results/storybook-junit.xml";
 
+/** Directory where the Storybook vitest setup writes per-story screenshots (`<zephyrId>.png`). */
+const SCREENSHOT_DIR = process.env.SCREENSHOT_DIR || "test-results/screenshots";
+
 function getZephyrToken(): string {
   const token = process.env.ZEPHYR_TOKEN;
   if (!token) {
@@ -338,6 +340,17 @@ function getZephyrToken(): string {
   return token;
 }
 
+/**
+ * Builds the shared Zephyr API client. All HTTP (auth headers, timeouts, error
+ * surfacing, execution/step endpoints) is delegated to `ts-lib-zephyr-nodejs`.
+ * `cycleKey` is resolved per-run and passed on each `postExecution` call, so a
+ * placeholder is fine here.
+ */
+async function createZephyrClient(): Promise<ZephyrClient> {
+  const { ZephyrClient } = await getZephyrLib();
+  return new ZephyrClient({ baseUrl: ZEPHYR_BASE_URL, apiToken: getZephyrToken(), projectKey: PROJECT_KEY, cycleKey: "" });
+}
+
 /** Gets the GitHub Actions run URL from environment variable */
 function getGitHubActionsUrl(): string | null {
   // GITHUB_ACTIONS_URL is set by the workflow to point to the correct run
@@ -345,50 +358,14 @@ function getGitHubActionsUrl(): string | null {
   return process.env.GITHUB_ACTIONS_URL || null;
 }
 
-const SCREENSHOT_URLS_PATH = process.env.SCREENSHOT_URLS_PATH || "test-results/screenshot-urls.json";
-
 /**
- * Loads screenshot URLs from the mapping file created by upload-test-screenshots.ts
- * Returns null if the file doesn't exist or is invalid
+ * Resolves the on-disk path to a test case's screenshot, or null when absent.
+ * The Storybook vitest setup (`.storybook/vitest.setup.ts`) captures one PNG per
+ * story named `<zephyrId>.png`; CI ships this directory alongside the JUnit report.
  */
-function loadScreenshotUrls(): ScreenshotUrlsFile | null {
-  const screenshotUrlsPath = path.resolve(process.cwd(), SCREENSHOT_URLS_PATH);
-
-  if (!fs.existsSync(screenshotUrlsPath)) {
-    console.log("[INFO] No screenshot URLs file found (screenshots may not have been uploaded)");
-    return null;
-  }
-
-  try {
-    const content = fs.readFileSync(screenshotUrlsPath, "utf-8");
-    const data = JSON.parse(content) as ScreenshotUrlsFile;
-
-    if (!data.screenshots || data.screenshots.length === 0) {
-      console.log("[INFO] Screenshot URLs file exists but contains no screenshots");
-      return null;
-    }
-
-    console.log(`[INFO] Loaded ${data.screenshots.length} screenshot URLs from ${screenshotUrlsPath}`);
-    return data;
-  } catch (error) {
-    console.error("[WARN] Failed to parse screenshot URLs file:", error);
-    return null;
-  }
-}
-
-/**
- * Formats a screenshot URL for inclusion in test execution comment
- */
-function formatScreenshotLinkComment(screenshotUrl: string): string {
-  return `Test Screenshot: ${screenshotUrl}`;
-}
-
-/**
- * Finds the screenshot URL for a specific Zephyr test case
- */
-function findScreenshotForTestCase(screenshotUrls: ScreenshotUrlsFile, testCaseKey: string): string | null {
-  const screenshot = screenshotUrls.screenshots.find((s) => s.zephyrId === testCaseKey);
-  return screenshot?.url || null;
+function findScreenshotPath(testCaseKey: string): string | null {
+  const p = path.resolve(process.cwd(), SCREENSHOT_DIR, `${testCaseKey}.png`);
+  return fs.existsSync(p) ? p : null;
 }
 
 /** Validates that a cache file path is safe (no path traversal) */
@@ -419,18 +396,13 @@ export function sanitizeBranchName(branch: string): string {
   return branch.replace(/[^a-zA-Z0-9\-_/]/g, "-");
 }
 
-/** Creates a new test cycle and returns its key */
-async function createTestCycle(name: string): Promise<string> {
-  const url = `${ZEPHYR_BASE_URL}/testcycles`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ projectKey: PROJECT_KEY, name }),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to create test cycle: HTTP ${response.status}`);
-  }
-  const data = await response.json();
+/**
+ * Creates a new test cycle and returns its key.
+ * The library's `ZephyrClient` has no cycle-creation method, so we use its generic
+ * `request()` — this still routes through the shared auth/timeout/error handling.
+ */
+async function createTestCycle(client: ZephyrClient, name: string): Promise<string> {
+  const data = await client.request<{ key: string }>("POST", "/testcycles", { projectKey: PROJECT_KEY, name });
   return data.key;
 }
 
@@ -438,7 +410,7 @@ async function createTestCycle(name: string): Promise<string> {
  * Determines which test cycle to use based on environment variables.
  * Returns the cycle key (existing or newly created) and the source.
  */
-async function resolveCycleKey(): Promise<{ cycleKey: string; source: string }> {
+async function resolveCycleKey(client: ZephyrClient): Promise<{ cycleKey: string; source: string }> {
   const cycleKey = process.env.ZEPHYR_CYCLE_KEY?.trim();
   const branch = process.env.ZEPHYR_BRANCH?.trim();
   const cacheFile = process.env.ZEPHYR_CYCLE_CACHE_FILE || ".zephyr-cycle-key";
@@ -459,7 +431,7 @@ async function resolveCycleKey(): Promise<{ cycleKey: string; source: string }> 
     const safeBranch = sanitizeBranchName(branch);
     const cycleName = `React UI Lib Storybook Tests - ${safeBranch}`;
     console.log(`[INFO] Creating test cycle: ${cycleName}`);
-    const newKey = await createTestCycle(cycleName);
+    const newKey = await createTestCycle(client, cycleName);
     console.log(`[SUCCESS] Created test cycle: ${newKey}`);
 
     // Cache the key for subsequent runs
@@ -595,61 +567,64 @@ export function parseJUnitXML(
   return results;
 }
 
-async function reportTestExecution(
-  cycleKey: string,
-  result: TestResult,
-  screenshotUrls: ScreenshotUrlsFile | null,
-): Promise<void> {
-  const url = `${ZEPHYR_BASE_URL}/testexecutions`;
-  const body: {
-    projectKey: string;
-    testCycleKey: string;
-    testCaseKey: string;
-    statusName: string;
-    executionTime?: number;
-    comment?: string;
-  } = {
-    projectKey: PROJECT_KEY,
-    testCycleKey: cycleKey,
-    testCaseKey: result.testCaseKey,
-    statusName: result.status,
-  };
-  if (result.executionTime) body.executionTime = result.executionTime;
-
-  // Build comment with GitHub Actions link and screenshot links if available
+/** Builds the execution comment: result message + CI run link. */
+function buildExecutionComment(result: TestResult, stripAnsi: (text: string) => string): string {
   const commentParts: string[] = [];
+  if (result.comment) commentParts.push(stripAnsi(result.comment));
 
-  // Add test result comment (failure message, skip reason, etc.)
-  if (result.comment) {
-    commentParts.push(result.comment);
-  }
-
-  // Add GitHub Actions link
   const githubUrl = getGitHubActionsUrl();
-  if (githubUrl) {
-    commentParts.push(`View CI run: ${githubUrl}`);
-  }
+  if (githubUrl) commentParts.push(`View CI run: ${githubUrl}`);
 
-  // Add screenshot link for this specific test case if available
-  if (screenshotUrls) {
-    const screenshotUrl = findScreenshotForTestCase(screenshotUrls, result.testCaseKey);
-    if (screenshotUrl) {
-      commentParts.push(formatScreenshotLinkComment(screenshotUrl));
-    }
-  }
+  return commentParts.join("\n\n");
+}
 
-  if (commentParts.length > 0) {
-    body.comment = commentParts.join("\n\n");
-  }
+/**
+ * Reports one test execution to Zephyr and embeds the captured story screenshot
+ * into every step of that execution.
+ *
+ * Flow (mirrors the library's own StorybookZephyrReporter):
+ *   1. POST the execution (creates it + baseline testScriptResults).
+ *   2. Look up the test case's step count and attach the same PNG to each step via
+ *      `buildStepsPayload` (base64 `<img>` embedded in each step's actualResult).
+ *   3. PUT the step payload onto the execution.
+ * Skipped ("Not Executed") tests get no step-image PUT.
+ */
+async function reportTestExecution(client: ZephyrClient, cycleKey: string, result: TestResult): Promise<void> {
+  const { buildStepsPayload, stripAnsi } = await getZephyrLib();
+  const comment = buildExecutionComment(result, stripAnsi);
+  const stepCount = Math.max(1, await client.getStepCount(result.testCaseKey));
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to report execution for ${result.testCaseKey}: HTTP ${response.status}`);
-  }
+  const { key: executionKey } = await client.postExecution(
+    PROJECT_KEY,
+    result.testCaseKey,
+    cycleKey,
+    result.status,
+    comment,
+    // actualResult: the last step's baseline result before screenshots are merged in
+    result.status === "Pass" ? "Story rendered successfully" : (result.comment ?? result.status),
+    result.executionTime,
+    stepCount,
+  );
+
+  // Embed the captured screenshot into every step (per-step evidence).
+  if (result.status === "Not Executed" || !executionKey) return;
+
+  const screenshotPath = findScreenshotPath(result.testCaseKey);
+  if (!screenshotPath) return;
+
+  const failed = result.status === "Fail";
+  const localSteps: ZephyrStep[] = Array.from({ length: stepCount }, () => ({
+    title: result.testCaseKey,
+    failed,
+    ...(failed && result.comment ? { errorMessage: stripAnsi(result.comment) } : {}),
+  }));
+  const screenshots: ZephyrScreenshot[] = Array.from({ length: stepCount }, (_, i) => ({
+    stepIndex: i,
+    filePath: screenshotPath,
+  }));
+
+  const steps = buildStepsPayload(stepCount, localSteps, screenshots);
+  await client.putExecutionSteps(executionKey, steps);
 }
 
 async function main(): Promise<void> {
@@ -671,11 +646,10 @@ async function main(): Promise<void> {
     return;
   }
 
-  // Load screenshot URLs if available (from S3 upload script)
-  const screenshotUrls = loadScreenshotUrls();
+  const client = await createZephyrClient();
 
   // Determine the test cycle to use
-  const { cycleKey, source } = await resolveCycleKey();
+  const { cycleKey, source } = await resolveCycleKey(client);
   console.log(`[INFO] Using test cycle: ${cycleKey} (${source})\n`);
 
   let passCount = 0,
@@ -684,7 +658,7 @@ async function main(): Promise<void> {
 
   for (const result of results) {
     try {
-      await reportTestExecution(cycleKey, result, screenshotUrls);
+      await reportTestExecution(client, cycleKey, result);
       if (result.status === "Pass") passCount++;
       else failCount++;
       console.log(`  [${result.status.toUpperCase()}] ${result.testCaseKey}`);

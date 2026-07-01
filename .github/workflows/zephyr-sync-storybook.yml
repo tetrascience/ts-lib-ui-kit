@@ -41,6 +41,22 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      # ts-lib-zephyr-nodejs is published only to TetraScience's JFrog Artifactory
+      # and is deliberately kept OUT of package.json / yarn.lock so public and
+      # external-contributor `yarn install` stays on the public npm registry. The
+      # shared composite action fetches it as a leaf tarball into node_modules
+      # (its only transitive need, ts-morph, is already installed).
+      # NOTE: pinned to the action's PR branch for testing; switch to @main once
+      # tetrascience/ts-ci-cd-lib#29 merges.
+      - name: Install ts-lib-zephyr-nodejs (JFrog)
+        uses: tetrascience/ts-ci-cd-lib/install-jfrog-npm-package@install-jfrog-npm-package-action
+        with:
+          package: ts-lib-zephyr-nodejs
+          version: "0.4.0"
+          # Read-only virtual registry URL — infra info, not a credential.
+          registry-url: https://tetrascience.jfrog.io/artifactory/api/npm/ts-npm-virtual/
+          auth: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
+
       - name: Run Zephyr sync
         env:
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}

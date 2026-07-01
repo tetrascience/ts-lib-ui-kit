@@ -1,4 +1,3 @@
-#!/usr/bin/env tsx
 /**
  * Sync Storybook stories to Zephyr Scale as test cases
  *
@@ -18,6 +17,7 @@ import path from "path";
 
 import { Project, Node } from "ts-morph";
 
+import type { ZephyrClient } from "ts-lib-zephyr-nodejs";
 import type { VariableDeclaration } from "ts-morph";
 
 // ============================================================================
@@ -55,11 +55,6 @@ export interface DuplicateZephyrId {
   stories: Pick<StoryCase, "filePath" | "exportName" | "storyName" | "componentName">[];
 }
 
-interface ZephyrFolder {
-  id: string;
-  name: string;
-  parentId?: string;
-}
 interface FolderCache {
   [key: string]: string | null;
 }
@@ -87,6 +82,31 @@ function getZephyrToken(): string {
     process.exit(1);
   }
   return token;
+}
+
+/**
+ * Lazily-constructed shared Zephyr API client. All HTTP (auth headers, timeouts,
+ * error surfacing, pagination helpers) is delegated to `ts-lib-zephyr-nodejs`.
+ * Provisioning never posts executions, so `cycleKey` is left blank.
+ *
+ * The package specifier is held in a variable so bundlers/Vitest can't statically
+ * resolve this JFrog-only package at module-load time — the unit test suite only
+ * exercises the pure parsing helpers below and never constructs a client, so it
+ * can import this module even where the package isn't installed.
+ */
+let zephyrClient: ZephyrClient | null = null;
+async function getClient(): Promise<ZephyrClient> {
+  if (!zephyrClient) {
+    const spec = "ts-lib-zephyr-nodejs";
+    const { ZephyrClient } = (await import(spec)) as typeof import("ts-lib-zephyr-nodejs");
+    zephyrClient = new ZephyrClient({
+      baseUrl: ZEPHYR_BASE_URL,
+      apiToken: getZephyrToken(),
+      projectKey: PROJECT_KEY,
+      cycleKey: "",
+    });
+  }
+  return zephyrClient;
 }
 const ZEPHYR_LABELS = process.env.ZEPHYR_LABELS?.split(",")
   .map((l) => l.trim())
@@ -510,18 +530,9 @@ async function getTestCase(testCaseKey: string): Promise<ZephyrTestCase> {
   const cached = testCaseDetailCache.get(testCaseKey);
   if (cached) return cached;
 
-  const url = `${ZEPHYR_BASE_URL}/testcases/${testCaseKey}`;
-  const response = await fetch(url, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to fetch test case ${testCaseKey}: ${response.status} ${errorText}`);
-  }
-
-  const testCase = (await response.json()) as ZephyrTestCase;
+  // The library's typed `getTestCase` omits objective/labels (needed for reuse
+  // matching), so use the generic request to fetch the full test case body.
+  const testCase = await (await getClient()).request<ZephyrTestCase>("GET", `/testcases/${testCaseKey}`);
   testCaseDetailCache.set(testCaseKey, testCase);
   return testCase;
 }
@@ -529,23 +540,16 @@ async function getTestCase(testCaseKey: string): Promise<ZephyrTestCase> {
 async function getGeneratedTestCases(): Promise<ZephyrTestCase[]> {
   if (generatedTestCaseCache) return generatedTestCaseCache;
 
+  const client = await getClient();
   const testCases: ZephyrTestCase[] = [];
   let startAt = 0;
   let fetchedCount = 0;
 
   while (true) {
-    const url = `${ZEPHYR_BASE_URL}/testcases?projectKey=${PROJECT_KEY}&startAt=${startAt}&maxResults=${TEST_CASE_PAGE_SIZE}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to list test cases: ${response.status} ${errorText}`);
-    }
-
-    const page = (await response.json()) as ZephyrTestCaseListResponse;
+    const page = await client.request<ZephyrTestCaseListResponse>(
+      "GET",
+      `/testcases?projectKey=${PROJECT_KEY}&startAt=${startAt}&maxResults=${TEST_CASE_PAGE_SIZE}`,
+    );
     const values = page.values ?? [];
     fetchedCount += values.length;
     testCases.push(...values.filter(hasConfiguredLabels));
@@ -562,20 +566,10 @@ async function getExecutionCount(testCaseKey: string): Promise<number> {
   const cached = executionCountCache.get(testCaseKey);
   if (cached !== undefined) return cached;
 
-  const url = `${ZEPHYR_BASE_URL}/testexecutions?projectKey=${PROJECT_KEY}&testCase=${encodeURIComponent(
-    testCaseKey,
-  )}&maxResults=1`;
-  const response = await fetch(url, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to fetch executions for ${testCaseKey}: ${response.status} ${errorText}`);
-  }
-
-  const page = (await response.json()) as { total?: number; values?: unknown[] };
+  const page = await (await getClient()).request<{ total?: number; values?: unknown[] }>(
+    "GET",
+    `/testexecutions?projectKey=${PROJECT_KEY}&testCase=${encodeURIComponent(testCaseKey)}&maxResults=1`,
+  );
   const count = page.total ?? page.values?.length ?? 0;
   executionCountCache.set(testCaseKey, count);
   return count;
@@ -614,39 +608,36 @@ async function findReusableTestCase(testName: string, objective: string): Promis
 
 async function getFolders(): Promise<FolderCache> {
   if (Object.keys(folderIdCache).length > 0) return folderIdCache;
-  const url = `${ZEPHYR_BASE_URL}/folders?projectKey=${PROJECT_KEY}&folderType=TEST_CASE&maxResults=100`;
-  const response = await fetch(url, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
-  });
-  if (!response.ok) {
+
+  let folders: Array<{ id: number; name: string; parentId: number | null }>;
+  try {
+    folders = await (await getClient()).listFolders(PROJECT_KEY, "TEST_CASE");
+  } catch {
     console.warn("Could not fetch folders");
     return {};
   }
-  const data = await response.json();
-  const folders: ZephyrFolder[] = data.values || [];
 
-  // Find or create the root folder
-  let rootFolder = folders.find((f) => f.name === FOLDER_PREFIX && !f.parentId);
-  if (!rootFolder) {
+  // Find or create the root folder. Match on `parentId === null` (not a falsy
+  // check) so a legitimate folder id of 0 is never mistaken for a root folder.
+  let rootFolderId = folders.find((f) => f.name === FOLDER_PREFIX && f.parentId === null)?.id;
+  if (rootFolderId === undefined) {
     try {
-      rootFolder = await createFolder(FOLDER_PREFIX);
+      rootFolderId = await createFolder(FOLDER_PREFIX);
       console.log(`[INFO] Created root folder: ${FOLDER_PREFIX}`);
     } catch (e: unknown) {
       console.warn(`[WARN] Could not create root folder ${FOLDER_PREFIX}:`, e instanceof Error ? e.message : String(e));
       return {};
     }
   }
-  const rootFolderId = rootFolder.id;
 
   for (const [compType, folderName] of Object.entries(FOLDER_MAPPING)) {
     const existing = folders.find((f) => f.name === folderName && f.parentId === rootFolderId);
     if (existing) {
-      folderIdCache[compType] = existing.id;
+      folderIdCache[compType] = String(existing.id);
     } else {
       try {
-        const newF = await createFolder(folderName, rootFolderId);
-        folderIdCache[compType] = newF.id;
+        const newFolderId = await createFolder(folderName, rootFolderId);
+        folderIdCache[compType] = String(newFolderId);
         console.log(`[INFO] Created subfolder: ${FOLDER_PREFIX}/${folderName}`);
       } catch (e: unknown) {
         console.warn(`[WARN] Could not create subfolder ${folderName}:`, e instanceof Error ? e.message : String(e));
@@ -657,24 +648,9 @@ async function getFolders(): Promise<FolderCache> {
   return folderIdCache;
 }
 
-async function createFolder(folderName: string, parentId?: string): Promise<ZephyrFolder> {
-  const url = `${ZEPHYR_BASE_URL}/folders`;
-  const body: { projectKey: string; name: string; folderType: string; parentId?: string } = {
-    projectKey: PROJECT_KEY,
-    name: folderName,
-    folderType: "TEST_CASE",
-  };
-  if (parentId) body.parentId = parentId;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to create folder: ${response.status} ${errorText}`);
-  }
-  return await response.json();
+/** Creates a TEST_CASE folder and returns its numeric id. */
+async function createFolder(folderName: string, parentId?: number): Promise<number> {
+  return (await getClient()).createFolder(PROJECT_KEY, folderName, "TEST_CASE", parentId ?? null);
 }
 
 async function getFolderId(componentType: string): Promise<string | null> {
@@ -683,7 +659,8 @@ async function getFolderId(componentType: string): Promise<string | null> {
 }
 
 async function createTestCase(testName: string, objective: string, folderId: string | null): Promise<ZephyrTestCase> {
-  const url = `${ZEPHYR_BASE_URL}/testcases`;
+  // Uses the generic request (not the library's typed createTestCase) to preserve
+  // this repo's custom objective format and label set.
   const body: { projectKey: string; name: string; objective: string; labels: string[]; folderId?: string } = {
     projectKey: PROJECT_KEY,
     name: testName,
@@ -691,44 +668,13 @@ async function createTestCase(testName: string, objective: string, folderId: str
     labels: ZEPHYR_LABELS,
   };
   if (folderId) body.folderId = folderId;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to create test case: ${response.status} ${errorText}`);
-  }
-  return await response.json();
+  return (await getClient()).request<ZephyrTestCase>("POST", "/testcases", body);
 }
 
 /** Uploads test steps to a Zephyr test case (overwrites existing steps) */
 async function uploadTestSteps(testCaseKey: string, steps: TestStep[]): Promise<void> {
   if (steps.length === 0) return;
-
-  const url = `${ZEPHYR_BASE_URL}/testcases/${testCaseKey}/teststeps`;
-  const body = {
-    mode: "OVERWRITE",
-    items: steps.map((step) => ({
-      inline: {
-        description: step.description,
-        testData: step.testData,
-        expectedResult: step.expectedResult,
-      },
-    })),
-  };
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${getZephyrToken()}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to upload test steps: ${response.status} ${errorText}`);
-  }
+  await (await getClient()).setTestSteps(testCaseKey, steps);
 }
 
 // ============================================================================

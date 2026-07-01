@@ -1,3 +1,32 @@
+# [0.7.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v0.6.0...v0.7.0) (2026-06-30)
+
+
+### Bug Fixes
+
+* SW-2157 Responsive container sizing for Plotly charts and bottom-legend overlap ([#159](https://github.com/tetrascience/ts-lib-ui-kit/pull/159)) ([a2d10af](https://github.com/tetrascience/ts-lib-ui-kit/commit/a2d10af347d6d8400e4085bf8c98889133922c96))
+* SW-2058 Remove data-point dots from area graph legend and traces ([#157](https://github.com/tetrascience/ts-lib-ui-kit/pull/157)) ([49c28cc](https://github.com/tetrascience/ts-lib-ui-kit/commit/49c28ccf9c46b979ad9d9e1c0641d77d7c2753ce))
+* SW-1889 stop chart title defaulting to component name ([#152](https://github.com/tetrascience/ts-lib-ui-kit/pull/152)) ([c01efcd](https://github.com/tetrascience/ts-lib-ui-kit/commit/c01efcd1fb77f2ff1e1edf9255ebc93c1a93c9b6))
+* SW-1890 Fix PieChart legend rendering unstyled ([#145](https://github.com/tetrascience/ts-lib-ui-kit/pull/145)) ([ccd2cca](https://github.com/tetrascience/ts-lib-ui-kit/commit/ccd2ccaa4c6ddbfc25f5e997f4be32be9b43cfde))
+* SW-2072 chat input grey by default — scope input-group disabled greying to the control ([#143](https://github.com/tetrascience/ts-lib-ui-kit/pull/143)) ([65e7e73](https://github.com/tetrascience/ts-lib-ui-kit/commit/65e7e73632866a77d63e83593661f0bb2b8325be))
+* **DataAppShell:** SW-2097 align collapsed sidebar divider under the icon column ([#153](https://github.com/tetrascience/ts-lib-ui-kit/pull/153)) ([84c2018](https://github.com/tetrascience/ts-lib-ui-kit/commit/84c2018d9c19991642593142ed0c2f817efb8cea))
+* SW-2076 harmonize hover states — add missing button & select hovers ([#149](https://github.com/tetrascience/ts-lib-ui-kit/pull/149)) ([7eef1d0](https://github.com/tetrascience/ts-lib-ui-kit/commit/7eef1d0a85442fa222d6c0285a817a1ade83fa95))
+* SW-2094 default tab active state — white pill instead of blue ([#148](https://github.com/tetrascience/ts-lib-ui-kit/pull/148)) ([d90c397](https://github.com/tetrascience/ts-lib-ui-kit/commit/d90c3977fe66536a5014f3a23276dcba3de440c9))
+* SW-2075 normalize combobox & select to 32px field height + keyboard focus fixes ([#141](https://github.com/tetrascience/ts-lib-ui-kit/pull/141)) ([afaf6de](https://github.com/tetrascience/ts-lib-ui-kit/commit/afaf6de5d9b8fd249ff5e13963d7b1391cd8f6e7))
+* SW-2043 remove doubled inner shadow on input-group focus ([2a04e66](https://github.com/tetrascience/ts-lib-ui-kit/commit/2a04e663476c2ea813f2ec612266cbdf66bcd492))
+
+
+### Features
+
+* SW-1891 add xTickText prop for categorical x-axis labels ([#147](https://github.com/tetrascience/ts-lib-ui-kit/pull/147)) ([693f449](https://github.com/tetrascience/ts-lib-ui-kit/commit/693f44942f46ff9944ba13adf81059e0d3b7dba5))
+* SW-2120 add gutter and hover/focus reveal to Resizable handle ([#156](https://github.com/tetrascience/ts-lib-ui-kit/pull/156)) ([e2de26f](https://github.com/tetrascience/ts-lib-ui-kit/commit/e2de26f1cc6d3e996d8b4013bc68d1883644fdb5))
+* SW-2071 move hover/interactive surfaces from muted to accent ([#140](https://github.com/tetrascience/ts-lib-ui-kit/pull/140)) ([5fdc069](https://github.com/tetrascience/ts-lib-ui-kit/commit/5fdc0692ee21aca6954967188a1af01ac316f8a3))
+* SW-2053 add collapsible nav rail (showNavRail) to Data App Shell ([#137](https://github.com/tetrascience/ts-lib-ui-kit/pull/137)) ([964b8e3](https://github.com/tetrascience/ts-lib-ui-kit/commit/964b8e3e625e2d10f468fa70101cc5119d5680f8))
+* SW-2038 Use the design-system tooltip for all chart hovers ([#129](https://github.com/tetrascience/ts-lib-ui-kit/pull/129)) ([8df7344](https://github.com/tetrascience/ts-lib-ui-kit/commit/8df734464b2d0e5f49be325b8b67eb5bc42589ba))
+* SW-2037 Wire CVD chart palette tokens into chart components ([#128](https://github.com/tetrascience/ts-lib-ui-kit/pull/128)) ([a7b47c9](https://github.com/tetrascience/ts-lib-ui-kit/commit/a7b47c981fb6315f30caa8976cd32e855732e31b))
+* SW-2052 update Data App Shell breadcrumb labels ([#136](https://github.com/tetrascience/ts-lib-ui-kit/pull/136)) ([cd9aeba](https://github.com/tetrascience/ts-lib-ui-kit/commit/cd9aebab9f199e762a69d03500d57a4dc604a9d4))
+
+
+
 # [0.6.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v0.5.0...v0.6.0) (2026-06-15)
 
 

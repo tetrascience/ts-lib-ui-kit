@@ -8,6 +8,8 @@ import {
 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
+import pkg from "../../package.json"
+
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
 import {
@@ -37,8 +39,8 @@ function GithubInvertocatWhite(props: SVGProps<SVGSVGElement>) {
   )
 }
 
-const VERSION = "0.7.0"
-const PKG_NAME = "@tetrascience-npm/tetrascience-react-ui"
+const VERSION = pkg.version
+const PKG_NAME = pkg.name
 
 /** Detect dark mode by watching <html> class and URL globals */
 function useDarkMode() {

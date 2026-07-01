@@ -84,13 +84,11 @@ import {
 | `Switch`                 | Form         | `switch`              | —                                                 | Stable |
 | `Textarea`               | Form         | `textarea`            | —                                                 | Stable |
 | `Calendar`               | Form         | `calendar`            | —                                                 | Stable |
-| `InputOtp`               | Form         | `input-otp`           | —                                                 | Stable |
 | `Slider`                 | Form         | `slider`              | —                                                 | Stable |
 | `CodeEditor`             | Form         | —                     | Monaco editor, theme-aware                        | Stable |
 | `Dialog`                 | Overlay      | `dialog`              | —                                                 | Stable |
 | `AlertDialog`            | Overlay      | `alert-dialog`        | —                                                 | Stable |
 | `Sheet`                  | Overlay      | `sheet`               | —                                                 | Stable |
-| `Drawer`                 | Overlay      | `drawer`              | —                                                 | Stable |
 | `Tooltip`                | Overlay      | `tooltip`             | —                                                 | Stable |
 | `HoverCard`              | Overlay      | `hover-card`          | —                                                 | Stable |
 | `Command`                | Overlay      | `command`             | Command palette / search                          | Stable |

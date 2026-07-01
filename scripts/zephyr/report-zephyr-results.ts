@@ -1,4 +1,3 @@
-#!/usr/bin/env tsx
 /**
  * Report Storybook test execution results to Zephyr Scale
  *
@@ -24,14 +23,26 @@ import fs from "fs";
 import path from "path";
 
 import { XMLParser } from "fast-xml-parser";
-import {
-  ZephyrClient,
-  buildStepsPayload,
-  stripAnsi,
-  type ZephyrScreenshot,
-  type ZephyrStep,
-} from "ts-lib-zephyr-nodejs";
 import { Node, Project, type VariableDeclaration } from "ts-morph";
+
+import type { ZephyrClient, ZephyrScreenshot, ZephyrStep } from "ts-lib-zephyr-nodejs";
+
+/**
+ * Lazily loads the JFrog-only `ts-lib-zephyr-nodejs` package at runtime.
+ *
+ * The specifier is held in a variable so bundlers/Vitest can't statically
+ * resolve it at module-load time — this lets the unit test suite (which only
+ * exercises the pure parsing/cache helpers below) import this module even in
+ * environments where the package isn't installed. The library is only actually
+ * loaded when a Zephyr report run reaches the reporting code path.
+ */
+type ZephyrLib = typeof import("ts-lib-zephyr-nodejs");
+let zephyrLibPromise: Promise<ZephyrLib> | null = null;
+function getZephyrLib(): Promise<ZephyrLib> {
+  const spec = "ts-lib-zephyr-nodejs";
+  zephyrLibPromise ??= import(spec) as Promise<ZephyrLib>;
+  return zephyrLibPromise;
+}
 
 // ============================================================================
 // Story to Zephyr ID Mapping
@@ -335,7 +346,8 @@ function getZephyrToken(): string {
  * `cycleKey` is resolved per-run and passed on each `postExecution` call, so a
  * placeholder is fine here.
  */
-function createZephyrClient(): ZephyrClient {
+async function createZephyrClient(): Promise<ZephyrClient> {
+  const { ZephyrClient } = await getZephyrLib();
   return new ZephyrClient({ baseUrl: ZEPHYR_BASE_URL, apiToken: getZephyrToken(), projectKey: PROJECT_KEY, cycleKey: "" });
 }
 
@@ -556,7 +568,7 @@ export function parseJUnitXML(
 }
 
 /** Builds the execution comment: result message + CI run link. */
-function buildExecutionComment(result: TestResult): string {
+function buildExecutionComment(result: TestResult, stripAnsi: (text: string) => string): string {
   const commentParts: string[] = [];
   if (result.comment) commentParts.push(stripAnsi(result.comment));
 
@@ -578,7 +590,8 @@ function buildExecutionComment(result: TestResult): string {
  * Skipped ("Not Executed") tests get no step-image PUT.
  */
 async function reportTestExecution(client: ZephyrClient, cycleKey: string, result: TestResult): Promise<void> {
-  const comment = buildExecutionComment(result);
+  const { buildStepsPayload, stripAnsi } = await getZephyrLib();
+  const comment = buildExecutionComment(result, stripAnsi);
   const stepCount = Math.max(1, await client.getStepCount(result.testCaseKey));
 
   const { key: executionKey } = await client.postExecution(
@@ -633,7 +646,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const client = createZephyrClient();
+  const client = await createZephyrClient();
 
   // Determine the test cycle to use
   const { cycleKey, source } = await resolveCycleKey(client);

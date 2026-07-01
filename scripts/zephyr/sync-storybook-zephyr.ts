@@ -1,4 +1,3 @@
-#!/usr/bin/env tsx
 /**
  * Sync Storybook stories to Zephyr Scale as test cases
  *
@@ -16,9 +15,9 @@
 import fs from "fs";
 import path from "path";
 
-import { ZephyrClient } from "ts-lib-zephyr-nodejs";
 import { Project, Node } from "ts-morph";
 
+import type { ZephyrClient } from "ts-lib-zephyr-nodejs";
 import type { VariableDeclaration } from "ts-morph";
 
 // ============================================================================
@@ -89,10 +88,17 @@ function getZephyrToken(): string {
  * Lazily-constructed shared Zephyr API client. All HTTP (auth headers, timeouts,
  * error surfacing, pagination helpers) is delegated to `ts-lib-zephyr-nodejs`.
  * Provisioning never posts executions, so `cycleKey` is left blank.
+ *
+ * The package specifier is held in a variable so bundlers/Vitest can't statically
+ * resolve this JFrog-only package at module-load time — the unit test suite only
+ * exercises the pure parsing helpers below and never constructs a client, so it
+ * can import this module even where the package isn't installed.
  */
 let zephyrClient: ZephyrClient | null = null;
-function getClient(): ZephyrClient {
+async function getClient(): Promise<ZephyrClient> {
   if (!zephyrClient) {
+    const spec = "ts-lib-zephyr-nodejs";
+    const { ZephyrClient } = (await import(spec)) as typeof import("ts-lib-zephyr-nodejs");
     zephyrClient = new ZephyrClient({
       baseUrl: ZEPHYR_BASE_URL,
       apiToken: getZephyrToken(),
@@ -526,7 +532,7 @@ async function getTestCase(testCaseKey: string): Promise<ZephyrTestCase> {
 
   // The library's typed `getTestCase` omits objective/labels (needed for reuse
   // matching), so use the generic request to fetch the full test case body.
-  const testCase = await getClient().request<ZephyrTestCase>("GET", `/testcases/${testCaseKey}`);
+  const testCase = await (await getClient()).request<ZephyrTestCase>("GET", `/testcases/${testCaseKey}`);
   testCaseDetailCache.set(testCaseKey, testCase);
   return testCase;
 }
@@ -534,7 +540,7 @@ async function getTestCase(testCaseKey: string): Promise<ZephyrTestCase> {
 async function getGeneratedTestCases(): Promise<ZephyrTestCase[]> {
   if (generatedTestCaseCache) return generatedTestCaseCache;
 
-  const client = getClient();
+  const client = await getClient();
   const testCases: ZephyrTestCase[] = [];
   let startAt = 0;
   let fetchedCount = 0;
@@ -560,7 +566,7 @@ async function getExecutionCount(testCaseKey: string): Promise<number> {
   const cached = executionCountCache.get(testCaseKey);
   if (cached !== undefined) return cached;
 
-  const page = await getClient().request<{ total?: number; values?: unknown[] }>(
+  const page = await (await getClient()).request<{ total?: number; values?: unknown[] }>(
     "GET",
     `/testexecutions?projectKey=${PROJECT_KEY}&testCase=${encodeURIComponent(testCaseKey)}&maxResults=1`,
   );
@@ -605,7 +611,7 @@ async function getFolders(): Promise<FolderCache> {
 
   let folders: Array<{ id: number; name: string; parentId: number | null }>;
   try {
-    folders = await getClient().listFolders(PROJECT_KEY, "TEST_CASE");
+    folders = await (await getClient()).listFolders(PROJECT_KEY, "TEST_CASE");
   } catch {
     console.warn("Could not fetch folders");
     return {};
@@ -644,7 +650,7 @@ async function getFolders(): Promise<FolderCache> {
 
 /** Creates a TEST_CASE folder and returns its numeric id. */
 async function createFolder(folderName: string, parentId?: number): Promise<number> {
-  return getClient().createFolder(PROJECT_KEY, folderName, "TEST_CASE", parentId ?? null);
+  return (await getClient()).createFolder(PROJECT_KEY, folderName, "TEST_CASE", parentId ?? null);
 }
 
 async function getFolderId(componentType: string): Promise<string | null> {
@@ -662,13 +668,13 @@ async function createTestCase(testName: string, objective: string, folderId: str
     labels: ZEPHYR_LABELS,
   };
   if (folderId) body.folderId = folderId;
-  return getClient().request<ZephyrTestCase>("POST", "/testcases", body);
+  return (await getClient()).request<ZephyrTestCase>("POST", "/testcases", body);
 }
 
 /** Uploads test steps to a Zephyr test case (overwrites existing steps) */
 async function uploadTestSteps(testCaseKey: string, steps: TestStep[]): Promise<void> {
   if (steps.length === 0) return;
-  await getClient().setTestSteps(testCaseKey, steps);
+  await (await getClient()).setTestSteps(testCaseKey, steps);
 }
 
 // ============================================================================

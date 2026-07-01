@@ -51,6 +51,30 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      # ts-lib-zephyr-nodejs is published only to TetraScience's JFrog Artifactory.
+      # It is deliberately kept OUT of package.json / yarn.lock so public and
+      # external-contributor `yarn install` stays on the public npm registry.
+      # Fetch it here as a leaf tarball and extract into node_modules — this avoids
+      # `npm install`'s full-tree reconciliation, which corrupts the Yarn-managed
+      # node_modules. Its only transitive need (ts-morph) is already installed.
+      - name: Install ts-lib-zephyr-nodejs (JFrog)
+        env:
+          JFROG_NPM_REGISTRY: ${{ secrets.JFROG_ARTIFACTORY_NPM_VIRTUAL_URL }}
+          JFROG_NPM_AUTH: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
+        run: |
+          set -euo pipefail
+          host="${JFROG_NPM_REGISTRY#https://}"; host="${host#http://}"
+          npmrc="$RUNNER_TEMP/.npmrc-jfrog"
+          # JFROG_ARTIFACTORY_READ_NPM_AUTH is the base64 npm `_auth` identity for
+          # the read-only Artifactory user (same value used across the org's repos).
+          printf 'registry=%s\n//%s:_auth=%s\nalways-auth=true\n' \
+            "$JFROG_NPM_REGISTRY" "$host" "$JFROG_NPM_AUTH" > "$npmrc"
+          tgz=$(npm pack ts-lib-zephyr-nodejs@0.4.0 --userconfig "$npmrc" --registry "$JFROG_NPM_REGISTRY")
+          rm -rf node_modules/ts-lib-zephyr-nodejs
+          mkdir -p node_modules/ts-lib-zephyr-nodejs
+          tar -xzf "$tgz" -C node_modules/ts-lib-zephyr-nodejs --strip-components=1
+          rm -f "$npmrc" "$tgz"
+
       - name: Download test results artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:

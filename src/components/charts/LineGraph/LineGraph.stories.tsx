@@ -1,6 +1,5 @@
-import { expect, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 
-import { COLORS } from "../../../utils/colors";
 
 import { LineGraph } from "./LineGraph";
 
@@ -13,37 +12,31 @@ const generateBasicDemoData = (): LineDataSeries[] => {
   return [
     {
       name: "Data A",
-      color: COLORS.ORANGE,
       x,
       y: [75, 140, 105, 120, 145, 115, 110, 80, 90],
     },
     {
       name: "Data B",
-      color: COLORS.RED,
       x,
       y: [125, 160, 115, 145, 190, 180, 120, 105, 110],
     },
     {
       name: "Data C",
-      color: COLORS.GREEN,
       x,
       y: [185, 195, 145, 215, 205, 200, 160, 145, 135],
     },
     {
       name: "Data D",
-      color: COLORS.BLUE,
       x,
       y: [225, 215, 210, 245, 230, 230, 200, 185, 190],
     },
     {
       name: "Data E",
-      color: COLORS.YELLOW,
       x,
       y: [245, 260, 235, 265, 250, 250, 220, 220, 225],
     },
     {
       name: "Data F",
-      color: COLORS.PURPLE,
       x,
       y: [275, 295, 270, 285, 300, 300, 250, 255, 260],
     },
@@ -58,7 +51,6 @@ const generateDataStartingFromZero = (): LineDataSeries[] => {
   return [
     {
       name: "Data A",
-      color: COLORS.ORANGE,
       symbol: "circle",
       x,
       y: [
@@ -75,7 +67,6 @@ const generateDataStartingFromZero = (): LineDataSeries[] => {
     },
     {
       name: "Data B",
-      color: COLORS.RED,
       symbol: "square",
       x,
       y: [
@@ -92,7 +83,6 @@ const generateDataStartingFromZero = (): LineDataSeries[] => {
     },
     {
       name: "Data C",
-      color: COLORS.GREEN,
       symbol: "diamond",
       x,
       y: [
@@ -109,7 +99,6 @@ const generateDataStartingFromZero = (): LineDataSeries[] => {
     },
     {
       name: "Data D",
-      color: COLORS.BLUE,
       symbol: "triangle-up",
       x,
       y: [
@@ -126,7 +115,6 @@ const generateDataStartingFromZero = (): LineDataSeries[] => {
     },
     {
       name: "Data E",
-      color: COLORS.YELLOW,
       symbol: "triangle-down",
       x,
       y: [
@@ -143,7 +131,6 @@ const generateDataStartingFromZero = (): LineDataSeries[] => {
     },
     {
       name: "Data F",
-      color: COLORS.PURPLE,
       symbol: "pentagon",
       x,
       y: [
@@ -167,21 +154,18 @@ const generateWideRangeData = (): LineDataSeries[] => {
   return [
     {
       name: "Data A",
-      color: COLORS.ORANGE,
       symbol: "circle",
       x,
       y: [20, 35, 30, 45, 25, 40, 30, 20, 25],
     },
     {
       name: "Data B",
-      color: COLORS.RED,
       symbol: "square",
       x,
       y: [120, 140, 130, 145, 160, 150, 135, 125, 155],
     },
     {
       name: "Data C",
-      color: COLORS.GREEN,
       symbol: "diamond",
       x,
       y: [320, 360, 340, 380, 350, 370, 330, 345, 355],
@@ -195,21 +179,18 @@ const generateNarrowRangeData = (): LineDataSeries[] => {
   return [
     {
       name: "Data A",
-      color: COLORS.ORANGE,
       symbol: "circle",
       x,
       y: [160, 158, 165, 162, 170, 168, 172, 165, 175],
     },
     {
       name: "Data B",
-      color: COLORS.RED,
       symbol: "square",
       x,
       y: [180, 182, 178, 185, 183, 188, 186, 184, 190],
     },
     {
       name: "Data C",
-      color: COLORS.GREEN,
       symbol: "diamond",
       x,
       y: [200, 198, 204, 202, 208, 205, 210, 207, 212],
@@ -223,42 +204,36 @@ const generateDemoData = (): LineDataSeries[] => {
   return [
     {
       name: "Data A",
-      color: COLORS.ORANGE,
       symbol: "circle",
       x,
       y: [75, 140, 105, 120, 145, 115, 110, 80, 90],
     },
     {
       name: "Data B",
-      color: COLORS.RED,
       symbol: "square",
       x,
       y: [125, 160, 115, 145, 190, 180, 120, 105, 110],
     },
     {
       name: "Data C",
-      color: COLORS.GREEN,
       symbol: "diamond",
       x,
       y: [185, 195, 145, 215, 205, 200, 160, 145, 135],
     },
     {
       name: "Data D",
-      color: COLORS.BLUE,
       symbol: "triangle-up",
       x,
       y: [225, 215, 210, 245, 230, 230, 200, 185, 190],
     },
     {
       name: "Data E",
-      color: COLORS.YELLOW,
       symbol: "triangle-down",
       x,
       y: [245, 260, 235, 265, 250, 250, 220, 220, 225],
     },
     {
       name: "Data F",
-      color: COLORS.PURPLE,
       symbol: "pentagon",
       x,
       y: [275, 295, 270, 285, 300, 300, 250, 255, 260],
@@ -277,6 +252,26 @@ const generateDemoDataWithErrorBars = (): LineDataSeries[] => {
       visible: true,
     },
   }));
+};
+
+const generateWeekdayData = (): LineDataSeries[] => {
+  // x positions are integer indices; xTickText supplies the day labels
+  const x = [0, 1, 2, 3, 4, 5, 6];
+
+  return [
+    {
+      name: "Instrument A",
+      symbol: "circle",
+      x,
+      y: [12, 18, 15, 22, 19, 8, 5],
+    },
+    {
+      name: "Instrument B",
+      symbol: "square",
+      x,
+      y: [20, 24, 21, 28, 26, 14, 10],
+    },
+  ];
 };
 
 const meta: Meta<typeof LineGraph> = {
@@ -298,6 +293,8 @@ export const Basic: Story = {
     zephyr: { testCaseId: "SW-T998" },
   },
   args: {
+    width: 1000,
+    height: 600,
     dataSeries: generateBasicDemoData(),
     title: "Basic Line Graph",
   },
@@ -323,6 +320,61 @@ export const Basic: Story = {
   },
 };
 
+export const CategoricalXLabels: Story = {
+  name: "Categorical X Labels",
+  parameters: {
+    // Auto-generated by sync-storybook-zephyr - do not add manually
+    zephyr: { testCaseId: "SW-T5460" },
+    docs: {
+      description: {
+        story:
+          "Use `xTickText` to display categorical x-axis labels (e.g. days of the week). The numeric `x` values still drive line positioning, but the rendered tick labels match `xTickText` in order.",
+      },
+    },
+  },
+  args: {
+    width: 1000,
+    height: 600,
+    dataSeries: generateWeekdayData(),
+    xTickText: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    variant: "lines+markers",
+    title: "Runs per Weekday",
+    xTitle: "Day",
+    yTitle: "Runs",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart title is displayed", async () => {
+      expect(canvas.getByText("Runs per Weekday")).toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("X-axis ticks show categorical labels, not integers", async () => {
+      const tickLabels = [
+        ...canvasElement.querySelectorAll(".xtick text"),
+      ].map((node) => node.textContent);
+      expect(tickLabels).toEqual([
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun",
+      ]);
+    });
+
+    await step("Legend shows series names", async () => {
+      expect(canvas.getByText("Instrument A")).toBeInTheDocument();
+      expect(canvas.getByText("Instrument B")).toBeInTheDocument();
+    });
+  },
+};
+
 export const WithMarkers: Story = {
   name: "With Markers",
   parameters: {
@@ -330,6 +382,8 @@ export const WithMarkers: Story = {
     zephyr: { testCaseId: "SW-T999" },
   },
   args: {
+    width: 1000,
+    height: 600,
     dataSeries: generateDataStartingFromZero(),
     variant: "lines+markers",
     title: "Line Graph with Markers",
@@ -363,6 +417,8 @@ export const WithErrorBars: Story = {
     zephyr: { testCaseId: "SW-T1000" },
   },
   args: {
+    width: 1000,
+    height: 600,
     dataSeries: generateDemoDataWithErrorBars(),
     variant: "lines+markers+error_bars",
     title: "Line Graph with Error Bars",
@@ -396,6 +452,8 @@ export const WideRange: Story = {
     zephyr: { testCaseId: "SW-T1001" },
   },
   args: {
+    width: 1000,
+    height: 600,
     dataSeries: generateWideRangeData(),
     variant: "lines+markers",
     title: "Wide Range Data Graph",
@@ -430,6 +488,8 @@ export const NarrowRange: Story = {
     zephyr: { testCaseId: "SW-T1002" },
   },
   args: {
+    width: 1000,
+    height: 600,
     dataSeries: generateNarrowRangeData(),
     variant: "lines+markers",
     title: "Narrow Range Data Graph",
@@ -464,6 +524,8 @@ export const CustomAxes: Story = {
     zephyr: { testCaseId: "SW-T1003" },
   },
   args: {
+    width: 1000,
+    height: 600,
     dataSeries: generateBasicDemoData(),
     xTitle: "Time (s)",
     yTitle: "Temperature (°C)",
@@ -503,6 +565,8 @@ export const CustomRange: Story = {
     zephyr: { testCaseId: "SW-T1004" },
   },
   args: {
+    width: 1000,
+    height: 600,
     dataSeries: generateBasicDemoData(),
     xRange: [300, 800],
     yRange: [100, 300],
@@ -537,6 +601,7 @@ export const AutoRangeLineGraph: Story = {
     height: 600,
     dataSeries: generateDemoData(),
     variant: "lines+markers",
+    title: "Line Graph",
     xTitle: "Columns",
     yTitle: "Rows",
   },
@@ -584,6 +649,7 @@ export const WideRangeAutoScaled: Story = {
     height: 600,
     dataSeries: generateWideRangeData(),
     variant: "lines+markers",
+    title: "Line Graph",
     xTitle: "Columns",
     yTitle: "Rows",
   },
@@ -630,6 +696,7 @@ export const NarrowRangeAutoScaled: Story = {
     height: 600,
     dataSeries: generateNarrowRangeData(),
     variant: "lines+markers",
+    title: "Line Graph",
     xTitle: "Columns",
     yTitle: "Rows",
   },
@@ -687,6 +754,7 @@ export const OnlyXRangeProvided: Story = {
     dataSeries: generateDemoData(),
     variant: "lines+markers",
     xRange: [150, 1050],
+    title: "Line Graph",
     xTitle: "Columns",
     yTitle: "Rows",
   },
@@ -735,6 +803,7 @@ export const OnlyYRangeProvided: Story = {
     dataSeries: generateDemoData(),
     variant: "lines+markers",
     yRange: [50, 350],
+    title: "Line Graph",
     xTitle: "Columns",
     yTitle: "Rows",
   },
@@ -772,6 +841,7 @@ export const LineGraphStartingFromZero: Story = {
     height: 600,
     dataSeries: generateDataStartingFromZero(),
     variant: "lines+markers",
+    title: "Line Graph",
     xTitle: "Columns",
     yTitle: "Rows",
   },
@@ -808,5 +878,144 @@ export const LineGraphStartingFromZero: Story = {
         story: "This graph demonstrates data that starts from 0 on both axes, with evenly distributed data points.",
       },
     },
+  },
+};
+
+export const NoTitle: Story = {
+  name: "No Title",
+  parameters: {
+    // Auto-generated by sync-storybook-zephyr - do not add manually
+    zephyr: { testCaseId: "SW-T5463" },
+  },
+  args: {
+    width: 1000,
+    height: 600,
+    dataSeries: generateBasicDemoData(),
+    xTitle: "Columns",
+    yTitle: "Rows",
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("No title block is rendered", async () => {
+      expect(canvasElement.querySelector(".gtitle")).not.toBeInTheDocument();
+      expect(canvas.queryByText("Line Graph")).not.toBeInTheDocument();
+    });
+
+    await step("Chart container renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("6 traces are rendered", async () => {
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+    });
+
+    await step("Axis titles are displayed", async () => {
+      expect(canvas.getByText("Columns")).toBeInTheDocument();
+      expect(canvas.getByText("Rows")).toBeInTheDocument();
+    });
+  },
+};
+
+export const ContainerFilled: Story = {
+  name: "Container Filled (responsive)",
+  parameters: {
+    // Auto-generated by sync-storybook-zephyr - do not add manually
+    zephyr: { testCaseId: "SW-T5476" },
+    layout: "fullscreen",
+    docs: {
+      description: {
+        story:
+          "Omit `width`/`height` and the chart fills its container, tracking size via a `ResizeObserver`. Wrapped here in an `h-80 w-full` box.",
+      },
+    },
+  },
+  args: {
+    dataSeries: generateBasicDemoData(),
+    title: "Fills its container",
+    variant: "lines+markers",
+  },
+  decorators: [
+    (Story) => (
+      <div data-testid="fill-wrapper" className="h-80 w-full">
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement, step }) => {
+    await step("Chart canvas fills the container width", async () => {
+      const wrapper = canvasElement.querySelector(
+        '[data-testid="fill-wrapper"]',
+      ) as HTMLElement;
+      await waitFor(() => {
+        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
+        expect(plot).toBeInTheDocument();
+        expect(plot.clientWidth).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
+      });
+    });
+
+    await step("Chart resizes in place when the container resizes", async () => {
+      const wrapper = canvasElement.querySelector(
+        '[data-testid="fill-wrapper"]',
+      ) as HTMLElement;
+      // Shrink the container; the ResizeObserver should drive a Plotly relayout
+      // (not a full re-plot) so the canvas tracks the new width.
+      wrapper.style.width = "440px";
+      await waitFor(() => {
+        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
+        expect(plot.clientWidth).toBeGreaterThanOrEqual(420);
+        expect(plot.clientWidth).toBeLessThanOrEqual(460);
+      });
+    });
+  },
+};
+
+const lineRegressionData: LineDataSeries[] = [
+  { name: "Run 1", x: [0, 1, 2, 3, 4, 5], y: [10, 18, 14, 22, 19, 25] },
+  { name: "Run 2", x: [0, 1, 2, 3, 4, 5], y: [8, 12, 17, 15, 21, 23] },
+  { name: "Run 3", x: [0, 1, 2, 3, 4, 5], y: [13, 15, 12, 19, 17, 22] },
+];
+
+export const SmallSizeLegendRegression: Story = {
+  name: "Small Size — Legend vs Ticks",
+  parameters: {
+    // Auto-generated by sync-storybook-zephyr - do not add manually
+    zephyr: { testCaseId: "SW-T5477" },
+    docs: {
+      description: {
+        story:
+          "At a small size with a bottom legend and `xTickText`, the legend sits below the x-axis tick labels rather than overlapping them.",
+      },
+    },
+  },
+  args: {
+    dataSeries: lineRegressionData,
+    xTickText: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    xTitle: "Month",
+    yTitle: "Value",
+    width: 310,
+    height: 200,
+    variant: "lines+markers",
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Legend sits below the x-axis tick labels (no overlap)", async () => {
+      await waitFor(() => {
+        const ticks = [
+          ...canvasElement.querySelectorAll<SVGTextElement>(".xtick text"),
+        ];
+        const legendItems = [
+          ...canvasElement.querySelectorAll<SVGTextElement>(".legend .legendtext"),
+        ];
+        expect(ticks.length).toBeGreaterThan(0);
+        expect(legendItems.length).toBeGreaterThan(0);
+        const tickBottom = Math.max(
+          ...ticks.map((node) => node.getBoundingClientRect().bottom),
+        );
+        const legendTop = Math.min(
+          ...legendItems.map((node) => node.getBoundingClientRect().top),
+        );
+        expect(legendTop).toBeGreaterThanOrEqual(tickBottom - 2);
+      });
+    });
   },
 };

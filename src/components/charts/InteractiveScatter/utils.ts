@@ -1,4 +1,5 @@
 import {
+  COLORS,
   DEFAULT_CATEGORY_COLORS,
   DEFAULT_MAX_POINTS,
   DEFAULT_MARKER_SIZE,
@@ -15,6 +16,7 @@ import type {
   ShapeMapping,
   SizeMapping,
 } from "./types";
+import type { PlotlyThemeColors } from "@/hooks/use-plotly-theme";
 
 /**
  * Calculate min and max values for a numeric field in the data
@@ -58,9 +60,9 @@ export function getUniqueCategories(data: ScatterPoint[], field: string): string
 /**
  * Map colors based on color mapping configuration
  */
-export function mapColors(data: ScatterPoint[], colorMapping: ColorMapping | undefined): string[] {
+export function mapColors(data: ScatterPoint[], colorMapping?: ColorMapping): string[] {
   if (!colorMapping || colorMapping.type === "static") {
-    const color = colorMapping?.value || "#4575b4";
+    const color = colorMapping?.value || COLORS.primary;
     return new Array(data.length).fill(color);
   }
 
@@ -81,13 +83,13 @@ export function mapColors(data: ScatterPoint[], colorMapping: ColorMapping | und
     });
   }
 
-  return new Array(data.length).fill("#4575b4");
+  return new Array(data.length).fill(COLORS.primary);
 }
 
 /**
  * Map shapes based on shape mapping configuration
  */
-export function mapShapes(data: ScatterPoint[], shapeMapping: ShapeMapping | undefined): string[] {
+export function mapShapes(data: ScatterPoint[], shapeMapping?: ShapeMapping): string[] {
   if (!shapeMapping || shapeMapping.type === "static") {
     const shape = shapeMapping?.value || "circle";
     return new Array(data.length).fill(shape);
@@ -116,7 +118,7 @@ export function mapShapes(data: ScatterPoint[], shapeMapping: ShapeMapping | und
 /**
  * Map sizes based on size mapping configuration
  */
-export function mapSizes(data: ScatterPoint[], sizeMapping: SizeMapping | undefined): number[] {
+export function mapSizes(data: ScatterPoint[], sizeMapping?: SizeMapping): number[] {
   if (!sizeMapping || sizeMapping.type === "static") {
     const size = sizeMapping?.value || DEFAULT_MARKER_SIZE;
     return new Array(data.length).fill(size);
@@ -415,6 +417,7 @@ export const getPlotlyLayoutConfig = ({
   yRange,
   enableLassoSelection,
   enableBoxSelection,
+  theme,
 }: {
   title: string | undefined;
   xAxis: AxisConfig;
@@ -425,6 +428,7 @@ export const getPlotlyLayoutConfig = ({
   yRange: [number, number] | undefined;
   enableLassoSelection: boolean;
   enableBoxSelection: boolean;
+  theme: PlotlyThemeColors;
 }): Partial<Plotly.Layout> => ({
   autosize: false,
   width,
@@ -435,7 +439,7 @@ export const getPlotlyLayoutConfig = ({
         font: {
           family: PLOT_CONSTANTS.FONT_FAMILY,
           size: PLOT_CONSTANTS.TITLE_FONT_SIZE,
-          color: "#333333",
+          color: theme.textColor,
         },
         x: 0.5,
         xanchor: "center",
@@ -453,18 +457,19 @@ export const getPlotlyLayoutConfig = ({
       font: {
         family: PLOT_CONSTANTS.FONT_FAMILY,
         size: PLOT_CONSTANTS.AXIS_TITLE_FONT_SIZE,
-        color: "#333333",
+        color: theme.textSecondary,
       },
     },
     type: xAxis.scale === "log" ? "log" : "linear",
     range: xRange,
     autorange: !xRange,
-    gridcolor: "#e0e0e0",
-    linecolor: "#333333",
+    gridcolor: theme.gridColor,
+    linecolor: theme.lineColor,
     linewidth: PLOT_CONSTANTS.AXIS_LINE_WIDTH,
     tickfont: {
       family: PLOT_CONSTANTS.FONT_FAMILY,
       size: PLOT_CONSTANTS.AXIS_TICK_FONT_SIZE,
+      color: theme.textColor,
     },
     zeroline: false,
   },
@@ -474,26 +479,27 @@ export const getPlotlyLayoutConfig = ({
       font: {
         family: PLOT_CONSTANTS.FONT_FAMILY,
         size: PLOT_CONSTANTS.AXIS_TITLE_FONT_SIZE,
-        color: "#333333",
+        color: theme.textSecondary,
       },
     },
     type: yAxis.scale === "log" ? "log" : "linear",
     range: yRange,
     autorange: !yRange,
-    gridcolor: "#e0e0e0",
-    linecolor: "#333333",
+    gridcolor: theme.gridColor,
+    linecolor: theme.lineColor,
     linewidth: PLOT_CONSTANTS.AXIS_LINE_WIDTH,
     tickfont: {
       family: PLOT_CONSTANTS.FONT_FAMILY,
       size: PLOT_CONSTANTS.AXIS_TICK_FONT_SIZE,
+      color: theme.textColor,
     },
     zeroline: false,
   },
-  paper_bgcolor: "#ffffff",
-  plot_bgcolor: "#ffffff",
+  paper_bgcolor: theme.paperBg,
+  plot_bgcolor: theme.plotBg,
   font: {
     family: PLOT_CONSTANTS.FONT_FAMILY,
-    color: "#333333",
+    color: theme.textColor,
   },
   hovermode: "closest",
   dragmode: enableLassoSelection ? "lasso" : enableBoxSelection ? "select" : false,

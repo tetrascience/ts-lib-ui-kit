@@ -392,6 +392,61 @@ Visit <http://localhost:6006>.
 - [Theming Guide](./THEMING.md) - Customise the design system
 - [Contributing](./CONTRIBUTING.md#development-setup) - Clone the repo and run `yarn storybook`
 
+## MCP server (for AI coding agents)
+
+This library exposes an [MCP](https://modelcontextprotocol.io/) server so AI
+coding agents (Claude Code, Cursor, Claude Desktop) can query authoritative
+component lists, prop/variant options, and usage examples instead of guessing —
+reducing hallucinated component APIs when scaffolding a data app.
+
+There are two endpoints. Pick whichever fits; you can add both.
+
+| Endpoint | URL | Tools |
+| --- | --- | --- |
+| **Deployed** (no local checkout needed) | `https://ts-lib-ui-kit-storybook.vercel.app/api/mcp` | docs: `list_components`, `get_component`, `search_components` |
+| **Local** (needs `yarn storybook` running) | `http://localhost:6006/mcp` | full set: docs **+** write/preview/test stories |
+
+### Add the connection
+
+**Claude Code** — register the deployed server (HTTP transport):
+
+```bash
+claude mcp add --transport http ts-ui-kit https://ts-lib-ui-kit-storybook.vercel.app/api/mcp
+```
+
+Use `--scope project` to share it with your team via a checked-in `.mcp.json`, or
+`--scope user` to make it available across all your projects. For the local
+server, run `yarn storybook` first, then:
+
+```bash
+claude mcp add --transport http ts-ui-kit-local http://localhost:6006/mcp
+```
+
+**Cursor / Claude Desktop / other clients** — add an HTTP MCP server to the
+client's MCP config (e.g. Cursor's `.cursor/mcp.json`, or Claude Desktop's
+`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "ts-ui-kit": {
+      "type": "http",
+      "url": "https://ts-lib-ui-kit-storybook.vercel.app/api/mcp"
+    }
+  }
+}
+```
+
+**Any client (generic helper):**
+
+```bash
+npx mcp-add --type http --url "https://ts-lib-ui-kit-storybook.vercel.app/api/mcp"
+```
+
+Then ask your agent something like *"using the ts-ui-kit MCP, list the available
+components"* or *"build a form using ts-ui-kit primitives"* to confirm it's wired
+up.
+
 ## Tech Stack
 
 - React 19

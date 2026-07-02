@@ -19,6 +19,7 @@ export * from "@/components/composed/tdp-url";
 
 // Charts
 export * from "@/components/charts/AreaGraph";
+export * from "@/components/charts/ChartTooltip";
 export * from "@/components/charts/BarGraph";
 export * from "@/components/charts/Boxplot";
 export * from "@/components/charts/Chromatogram";

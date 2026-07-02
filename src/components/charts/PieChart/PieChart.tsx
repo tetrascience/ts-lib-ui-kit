@@ -1,8 +1,10 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { COLORS } from "@/utils/colors";
+import { CHART_COLORS } from "@/utils/colors";
 
 interface PieDataSeries {
   labels: string[];
@@ -31,26 +33,22 @@ type PieChartProps = {
   rotation?: number;
 };
 
-const DEFAULT_COLORS = [
-  COLORS.BLUE,
-  COLORS.GREEN,
-  COLORS.ORANGE,
-  COLORS.RED,
-  COLORS.YELLOW,
-  COLORS.PURPLE,
-];
+const DEFAULT_COLORS = CHART_COLORS;
 
 const PieChart: React.FC<PieChartProps> = ({
   dataSeries,
   width = 400,
   height = 400,
-  title = "Pie Chart",
+  title,
   textInfo = "percent",
   hole = 0,
   rotation = 0,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  // Slices are large hover targets, so the tooltip tracks the cursor (clamped
+  // to the viewport) rather than pinning to the slice centroid
+  const { bindTooltip, tooltipElement } = useChartTooltip({ followCursor: true });
 
   const colors = useMemo(() => {
     if (
@@ -85,7 +83,7 @@ const PieChart: React.FC<PieChartProps> = ({
           colors: colors,
         },
         textinfo: textInfo,
-        hoverinfo: "label+text+value" as const,
+        hoverinfo: "none" as const,
         insidetextfont: {
           size: 0,
           family: "Inter, sans-serif",
@@ -116,6 +114,7 @@ const PieChart: React.FC<PieChartProps> = ({
     };
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
@@ -125,18 +124,24 @@ const PieChart: React.FC<PieChartProps> = ({
         Plotly.purge(plotElement);
       }
     };
-  }, [colors, dataSeries.labels, dataSeries.name, dataSeries.values, width, height, textInfo, hole, rotation, theme]);
+  }, [colors, dataSeries.labels, dataSeries.name, dataSeries.values, width, height, textInfo, hole, rotation, theme, bindTooltip]);
 
   const PieChartLegend: React.FC<{ labels: string[]; colors: string[] }> = ({
     labels,
     colors,
   }) => {
     const items = labels.map((label, i) => (
-      <React.Fragment key={label}>
-        <div className="legend-item">
-          <span className="color-box" style={{ background: colors[i] }} />
+      <React.Fragment key={`${label}-${i}`}>
+        <div className="flex items-center text-[13px] leading-[18px] font-medium">
+          <span
+            data-slot="pie-legend-swatch"
+            className="mr-1.5 inline-block size-3 rounded-[4px]"
+            style={{ background: colors[i] }}
+          />
           {label}
-          {i < labels.length - 1 && <span className="divider" />}
+          {i < labels.length - 1 && (
+            <span className="mx-3 inline-block h-6 w-0.5 bg-border" />
+          )}
         </div>
       </React.Fragment>
     ));
@@ -145,20 +150,27 @@ const PieChart: React.FC<PieChartProps> = ({
     const rows = [];
     for (let i = 0; i < items.length; i += rowSize) {
       rows.push(
-        <div className="legend-row" key={i}>
+        <div
+          className="mb-2 flex w-full max-w-full flex-wrap items-center justify-center gap-y-3 break-words px-10"
+          key={i}
+        >
           {items.slice(i, i + rowSize)}
         </div>
       );
     }
-    return <div className="legend-container">{rows}</div>;
+    return (
+      <div data-slot="pie-legend" className="flex w-full flex-wrap text-foreground">
+        {rows}
+      </div>
+    );
   };
 
   return (
-    <div className="card-container" style={{ width: width }}>
-      <div className="chart-container">
+    <div className="relative" style={{ width: width }}>
+      <div className="size-full">
         {title && (
-          <div className="title-container">
-            <h2 className="title">{title}</h2>
+          <div className="px-10 text-center">
+            <h2 className="m-0 text-[32px] leading-tight font-semibold">{title}</h2>
           </div>
         )}
         <div
@@ -171,6 +183,7 @@ const PieChart: React.FC<PieChartProps> = ({
         />
         <PieChartLegend labels={dataSeries.labels} colors={colors} />
       </div>
+      {tooltipElement}
     </div>
   );
 };

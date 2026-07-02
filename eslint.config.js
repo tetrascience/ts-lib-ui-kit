@@ -205,9 +205,10 @@ export default tseslint.config(
       "react/forbid-component-props": "off",
     },
   },
-  // Script files - more lenient cognitive complexity for build/automation scripts
+  // Script files and serverless functions - more lenient cognitive complexity
+  // for build/automation scripts and HTTP handlers (status codes, AST parsing).
   {
-    files: ["scripts/**/*.ts", "scripts/**/*.tsx"],
+    files: ["scripts/**/*.ts", "scripts/**/*.tsx", "api/**/*.ts"],
     rules: {
       // Scripts are often procedural and more complex; allow higher threshold
       // Zephyr sync scripts are particularly complex due to AST parsing

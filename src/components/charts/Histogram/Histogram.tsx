@@ -1,8 +1,12 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { useChartTooltip } from "../ChartTooltip";
+
+import { useElementSize } from "@/hooks/use-element-size";
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { COLORS } from "@/utils/colors";
+import { cn } from "@/lib/utils";
+import { CHART_COLORS } from "@/utils/colors";
 import "./Histogram.scss";
 
 /** Exponent coefficient for normal distribution calculation */
@@ -25,7 +29,15 @@ interface HistogramDataSeries {
 
 type HistogramProps = {
   dataSeries: HistogramDataSeries | HistogramDataSeries[];
+  /**
+   * Fixed width in pixels. When omitted, the chart fills its container and
+   * tracks the container's width via a `ResizeObserver`.
+   */
   width?: number;
+  /**
+   * Fixed height in pixels. When omitted, the chart fills its container and
+   * tracks the container's height via a `ResizeObserver`.
+   */
   height?: number;
   title?: string;
   xTitle?: string;
@@ -95,8 +107,8 @@ const scaleDistributionCurve = (
 
 const Histogram: React.FC<HistogramProps> = ({
   dataSeries,
-  width = 480,
-  height = 480,
+  width,
+  height,
   title = "Histogram",
   xTitle = "X Axis",
   yTitle = "Frequency",
@@ -105,6 +117,26 @@ const Histogram: React.FC<HistogramProps> = ({
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
+
+  // Omitted width/height → fill the container and track its measured size;
+  // explicit pixel values override. Histogram has its own HTML title + legend,
+  // so we measure a wrapper around just the Plotly canvas. See AreaGraph for
+  // the reference pattern.
+  const [plotAreaRef, measured] = useElementSize<HTMLDivElement>();
+  const resolvedWidth = width ?? measured.width;
+  const resolvedHeight = height ?? measured.height;
+  const hasSize = resolvedWidth > 0 && resolvedHeight > 0;
+  // Fill is per-dimension: omit width to fill the container width, omit height
+  // to fill its height (so e.g. a fixed width with a container-driven height works).
+  const fillWidth = width === undefined;
+  const fillHeight = height === undefined;
+  const sizeRef = useRef({ width: resolvedWidth, height: resolvedHeight });
+  sizeRef.current = { width: resolvedWidth, height: resolvedHeight };
+  const plotInitedRef = useRef(false);
+  // Size last applied to the plot, so the resize effect can skip a redundant
+  // relayout right after newPlot already drew at that size.
+  const appliedSizeRef = useRef({ width: 0, height: 0 });
   const seriesArray = useMemo(
     () => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]),
     [dataSeries],
@@ -113,17 +145,7 @@ const Histogram: React.FC<HistogramProps> = ({
     "stack" | "group" | "overlay" | "relative" | undefined
   >(() => (seriesArray.length > 1 ? "stack" : undefined), [seriesArray.length]);
 
-  const defaultColors = useMemo(
-    () => [
-      COLORS.ORANGE,
-      COLORS.RED,
-      COLORS.BLUE,
-      COLORS.GREEN,
-      COLORS.PURPLE,
-      COLORS.YELLOW,
-    ],
-    [],
-  );
+  const defaultColors = CHART_COLORS;
 
   const seriesWithColors = useMemo(() => {
     return seriesArray.map((series, index) => {
@@ -160,9 +182,9 @@ const Histogram: React.FC<HistogramProps> = ({
         },
         autobinx: series.autobinx,
         xbins: series.xbins,
-        hovertemplate: `${xTitle}: %{x}<br>${yTitle}: %{y}<extra>${series.name}</extra>`,
+        hoverinfo: "none" as const,
       })),
-    [seriesWithColors, xTitle, yTitle, theme],
+    [seriesWithColors, theme],
   );
 
   const distributionLines = useMemo(
@@ -221,11 +243,11 @@ const Histogram: React.FC<HistogramProps> = ({
   );
 
   useEffect(() => {
-    if (!plotRef.current) return;
+    if (!plotRef.current || !hasSize) return;
 
     const layout = {
-      width,
-      height,
+      width: sizeRef.current.width,
+      height: sizeRef.current.height,
       font: {
         family: "Inter, sans-serif",
       },
@@ -250,6 +272,7 @@ const Histogram: React.FC<HistogramProps> = ({
         linecolor: theme.lineColor,
         linewidth: 1,
         zeroline: false,
+        automargin: true,
       },
       yaxis: {
         title: {
@@ -271,6 +294,7 @@ const Histogram: React.FC<HistogramProps> = ({
         linewidth: 1,
         zeroline: false,
         rangemode: "tozero" as const,
+        automargin: true,
       },
       barmode: effectiveBarMode,
       bargap: bargap,
@@ -279,22 +303,50 @@ const Histogram: React.FC<HistogramProps> = ({
     };
 
     const config = {
-      responsive: true,
+      // Sizing is driven from the measured container; disable Plotly's own
+      // window-resize responsiveness (it can't see container resizes).
+      responsive: false,
       displayModeBar: false,
       displaylogo: false,
     };
 
     Plotly.newPlot(plotRef.current, plotData, layout, config);
+    bindTooltip(plotRef.current);
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
+    plotInitedRef.current = true;
+    appliedSizeRef.current = { ...sizeRef.current };
 
     return () => {
       if (plotElement) {
         Plotly.purge(plotElement);
+        plotInitedRef.current = false;
       }
     };
-  }, [width, height, xTitle, yTitle, bargap, plotData, effectiveBarMode, gridColor, theme]);
+  }, [hasSize, xTitle, yTitle, bargap, plotData, effectiveBarMode, gridColor, theme, bindTooltip]);
+
+  // Resize in place when the measured/overridden size changes — cheaper than
+  // recreating the plot, and it preserves tooltip/event bindings.
+  useEffect(() => {
+    const plotElement = plotRef.current;
+    if (!plotElement || !plotInitedRef.current || resolvedWidth <= 0 || resolvedHeight <= 0) {
+      return;
+    }
+    // newPlot already drew at the current size; skip the redundant relayout
+    // (it would queue an automargin redraw that can reject if we unmount first).
+    if (
+      appliedSizeRef.current.width === resolvedWidth &&
+      appliedSizeRef.current.height === resolvedHeight
+    ) {
+      return;
+    }
+    appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };
+    // Swallow rejections from a relayout that races an unmount/purge.
+    void Plotly.relayout(plotElement, { width: resolvedWidth, height: resolvedHeight }).catch(
+      () => {},
+    );
+  }, [resolvedWidth, resolvedHeight]);
 
   const ChartLegend: React.FC<{
     series: Array<{ name: string; color: string }>;
@@ -323,23 +375,31 @@ const Histogram: React.FC<HistogramProps> = ({
   };
 
   return (
-    <div className="histogram-container" style={{ width: width }}>
-      <div className="chart-container">
+    <div
+      className={cn("histogram-container relative", fillWidth && "w-full", fillHeight && "h-full")}
+      style={width === undefined ? undefined : { width }}
+    >
+      <div className={cn("chart-container", fillHeight && "flex h-full flex-col")}>
         {title && (
           <div className="title-container">
             <h2 className="title">{title}</h2>
           </div>
         )}
-        <div
-          ref={plotRef}
-          style={{
-            width: "100%",
-            height: "100%",
-            margin: "0",
-          }}
-        />
+        {/* Measured plot area — flexes to fill the space left by the title and
+            legend in fill mode, so the Plotly canvas tracks it. */}
+        <div ref={plotAreaRef} className={cn(fillHeight && "min-h-0 flex-1")}>
+          <div
+            ref={plotRef}
+            style={{
+              width: "100%",
+              height: "100%",
+              margin: "0",
+            }}
+          />
+        </div>
         <ChartLegend series={seriesWithColors} />
       </div>
+      {tooltipElement}
     </div>
   );
 };

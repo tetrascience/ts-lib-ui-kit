@@ -30,7 +30,9 @@ function render(props: ScatterGraphProps) {
   document.body.appendChild(container);
   const root = createRoot(container);
   roots.push({ root, container });
-  act(() => root.render(<ScatterGraph {...props} />));
+  // Explicit size keeps the chart out of container-fill mode, which would need
+  // a ResizeObserver measurement that jsdom can't provide.
+  act(() => root.render(<ScatterGraph width={600} height={400} {...props} />));
 }
 
 const fire = (event: string, data?: unknown) => act(() => handlers[event]?.(data));

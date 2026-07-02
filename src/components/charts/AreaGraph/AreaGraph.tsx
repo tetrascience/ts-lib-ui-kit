@@ -3,7 +3,9 @@ import React, { useEffect, useRef, useMemo } from "react";
 
 import { chartTooltipLines, useChartTooltip } from "../ChartTooltip";
 
+import { useElementSize } from "@/hooks/use-element-size";
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { cn } from "@/lib/utils";
 import { seriesColor } from "@/utils/colors";
 
 interface AreaDataSeries {
@@ -17,9 +19,21 @@ interface AreaDataSeries {
 
 type AreaGraphVariant = "normal" | "stacked";
 
+/** Top margin reserving room for the 32px title; reduced when no title is set */
+const TITLE_MARGIN_TOP = 80;
+const NO_TITLE_MARGIN_TOP = 40;
+
 interface AreaGraphProps {
   dataSeries: AreaDataSeries[];
+  /**
+   * Fixed width in pixels. When omitted, the chart fills its container and
+   * tracks the container's width via a `ResizeObserver`.
+   */
   width?: number;
+  /**
+   * Fixed height in pixels. When omitted, the chart fills its container and
+   * tracks the container's height via a `ResizeObserver`.
+   */
   height?: number;
   xRange?: [number, number];
   yRange?: [number, number];
@@ -27,21 +41,51 @@ interface AreaGraphProps {
   xTitle?: string;
   yTitle?: string;
   title?: string;
+  /**
+   * Categorical labels for the x-axis ticks. When provided, the x data values
+   * still drive area positioning but the displayed tick labels match these
+   * strings in order (e.g. ["Mon", "Tue", …]). Should align 1:1 with the
+   * unique, ordered x values across all series.
+   */
+  xTickText?: string[];
 }
 
 const AreaGraph: React.FC<AreaGraphProps> = ({
   dataSeries,
-  width = 1000,
-  height = 600,
+  width,
+  height,
   xRange,
   yRange,
   variant = "normal",
-  xTitle = "Columns",
-  yTitle = "Rows",
-  title = "Area Graph",
+  xTitle,
+  yTitle,
+  title,
+  xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+
+  // When width/height are omitted the chart fills its container; otherwise the
+  // explicit pixel size wins. The container is measured either way (cheap) but
+  // only used as the resolved size for the omitted dimension(s).
+  const [containerRef, measured] = useElementSize<HTMLDivElement>();
+  const resolvedWidth = width ?? measured.width;
+  const resolvedHeight = height ?? measured.height;
+  const hasSize = resolvedWidth > 0 && resolvedHeight > 0;
+  // Fill is per-dimension: omit width to fill the container width, omit height
+  // to fill its height (so e.g. a fixed width with a container-driven height works).
+  const fillWidth = width === undefined;
+  const fillHeight = height === undefined;
+
+  // Hold the latest resolved size in a ref so the newPlot effect can read it
+  // without listing it as a dependency — size changes are handled by a
+  // separate relayout effect rather than by tearing down and recreating the plot.
+  const sizeRef = useRef({ width: resolvedWidth, height: resolvedHeight });
+  sizeRef.current = { width: resolvedWidth, height: resolvedHeight };
+  const plotInitedRef = useRef(false);
+  // Size last applied to the plot, so the resize effect can skip a redundant
+  // relayout right after newPlot already drew at that size.
+  const appliedSizeRef = useRef({ width: 0, height: 0 });
   const { bindTooltip, tooltipElement } = useChartTooltip({
     // Stacked traces carry the original series values as customdata;
     // display those instead of the cumulative stack heights
@@ -125,6 +169,18 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
     return ticks;
   }, [effectiveYRange]);
 
+  // When categorical labels are supplied, ticks must sit on the actual data
+  // x-positions rather than the computed nice-step values above. Sorted
+  // ascending so labels map deterministically to x regardless of series order.
+  const xDataValues = useMemo(
+    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
+    [dataSeries],
+  );
+
+  // Only apply categorical labels when they align 1:1 with the tick positions;
+  // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
+  const useCategoricalX = !!xTickText && xTickText.length === xDataValues.length;
+
   const tickOptions = useMemo(
     () => ({
       tickcolor: theme.tickColor,
@@ -146,26 +202,29 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
   );
 
   const titleOptions = useMemo(
-    () => ({
-      text: title,
-      x: 0.5,
-      y: 0.95,
-      xanchor: "center" as const,
-      yanchor: "top" as const,
-      font: {
-        size: 32,
-        weight: 600,
-        family: "Inter, sans-serif",
-        color: theme.textColor,
-        lineheight: 1.2,
-        standoff: 30,
-      },
-    }),
+    () =>
+      title
+        ? {
+            text: title,
+            x: 0.5,
+            y: 0.95,
+            xanchor: "center" as const,
+            yanchor: "top" as const,
+            font: {
+              size: 32,
+              weight: 600,
+              family: "Inter, sans-serif",
+              color: theme.textColor,
+              lineheight: 1.2,
+              standoff: 30,
+            },
+          }
+        : undefined,
     [title, theme],
   );
 
   useEffect(() => {
-    if (!plotRef.current) return;
+    if (!plotRef.current || !hasSize) return;
 
     let data;
 
@@ -188,8 +247,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           // Tooltips report the series' own values, not the stacked sums
           customdata: series.y,
           type: "scatter" as const,
-          // Dots mark each data point — the spots the tooltip anchors to
-          mode: "lines+markers" as const,
+          mode: "lines" as const,
           name: series.name,
           hoverinfo: "none" as const,
           fill: index === 0 ? ("tozeroy" as const) : ("tonexty" as const),
@@ -197,11 +255,6 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           line: {
             color,
             width: 2,
-          },
-          marker: {
-            size: 6,
-            color,
-            line: { color: theme.markerOutline, width: 1.5 },
           },
         };
       });
@@ -213,8 +266,7 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
           x: series.x,
           y: series.y,
           type: "scatter" as const,
-          // Dots mark each data point — the spots the tooltip anchors to
-          mode: "lines+markers" as const,
+          mode: "lines" as const,
           name: series.name,
           hoverinfo: "none" as const,
           fill: series.fill || ("tozeroy" as const),
@@ -223,20 +275,23 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
             color,
             width: 2,
           },
-          marker: {
-            size: 6,
-            color,
-            line: { color: theme.markerOutline, width: 1.5 },
-          },
         };
       });
     }
 
     const layout = {
-      width,
-      height: height,
-      title: titleOptions,
-      margin: { l: 80, r: 40, b: 80, t: 80, pad: 0 },
+      width: sizeRef.current.width,
+      height: sizeRef.current.height,
+      ...(titleOptions ? { title: titleOptions } : {}),
+      margin: {
+        l: 80,
+        r: 40,
+        // Reserve room for tick labels, the x-axis title, and the
+        // container-anchored bottom legend stacked beneath them.
+        b: 96,
+        t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+        pad: 0,
+      },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
@@ -258,8 +313,12 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         range: xRange,
         autorange: !xRange,
         tickmode: "array" as const,
-        tickvals: xTicks,
+        tickvals: useCategoricalX ? xDataValues : xTicks,
+        ...(useCategoricalX ? { ticktext: xTickText } : {}),
         showgrid: true,
+        // Reserve space for tick labels + the axis title so the bottom legend
+        // can't overlap them at small sizes (SW-2157).
+        automargin: true,
         ...tickOptions,
       },
       yaxis: {
@@ -279,13 +338,18 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
         tickmode: "array" as const,
         tickvals: yTicks,
         showgrid: true,
+        automargin: true,
         ...tickOptions,
       },
       legend: {
+        // Anchor to the bottom of the container (not the plot area) so the
+        // legend always clears the x-axis tick labels + title — a paper-relative
+        // fractional offset collapses into the ticks at small heights (SW-2157).
         x: 0.5,
-        y: -0.2,
+        y: 0,
         xanchor: "center" as const,
-        yanchor: "top" as const,
+        yanchor: "bottom" as const,
+        yref: "container" as const,
         orientation: "h" as const,
         font: {
           size: 13,
@@ -299,7 +363,9 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
     };
 
     const config = {
-      responsive: true,
+      // We drive sizing explicitly from the measured container, so Plotly's own
+      // window-resize responsiveness is disabled (it can't see container resizes).
+      responsive: false,
       displayModeBar: false,
       displaylogo: false,
     };
@@ -309,17 +375,45 @@ const AreaGraph: React.FC<AreaGraphProps> = ({
 
     // Capture ref value for cleanup
     const plotElement = plotRef.current;
+    plotInitedRef.current = true;
+    appliedSizeRef.current = { ...sizeRef.current };
 
     // Cleanup function
     return () => {
       if (plotElement) {
         Plotly.purge(plotElement);
+        plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, width, height, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, titleOptions, tickOptions, xTicks, yTicks, theme, bindTooltip]);
+  }, [dataSeries, hasSize, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, bindTooltip]);
+
+  // Resize in place when the measured/overridden size changes — far cheaper
+  // than recreating the plot (and it preserves tooltip/event bindings).
+  useEffect(() => {
+    const plotElement = plotRef.current;
+    if (!plotElement || !plotInitedRef.current || resolvedWidth <= 0 || resolvedHeight <= 0) {
+      return;
+    }
+    // newPlot already drew at the current size; skip the redundant relayout
+    // (it would queue an automargin redraw that can reject if we unmount first).
+    if (
+      appliedSizeRef.current.width === resolvedWidth &&
+      appliedSizeRef.current.height === resolvedHeight
+    ) {
+      return;
+    }
+    appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };
+    // Swallow rejections from a relayout that races an unmount/purge.
+    void Plotly.relayout(plotElement, { width: resolvedWidth, height: resolvedHeight }).catch(
+      () => {},
+    );
+  }, [resolvedWidth, resolvedHeight]);
 
   return (
-    <div className="area-graph-container relative">
+    <div
+      ref={containerRef}
+      className={cn("area-graph-container relative", fillWidth && "w-full", fillHeight && "h-full")}
+    >
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
       {tooltipElement}
     </div>

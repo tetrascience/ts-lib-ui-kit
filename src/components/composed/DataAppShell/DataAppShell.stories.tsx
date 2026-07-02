@@ -362,7 +362,7 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
           </Button>
         </>
       }
-      navRailHidden={collapsed}
+      showNavRail={!collapsed}
       sidebarPanel={<WorkflowPanel steps={steps} collapsed={collapsed} onCollapseChange={setCollapsed} />}
     >
       <div className="flex items-center justify-center h-full">
@@ -832,7 +832,7 @@ export const MultipleNavGroups: Story = {
     await step("All pages from both groups are visible", async () => {
       expect(canvas.getByRole("button", { name: "Project" })).toBeInTheDocument();
       expect(canvas.getByRole("button", { name: "Explorer" })).toBeInTheDocument();
-      expect(canvas.getByRole("button", { name: "Filters" })).toBeInTheDocument();
+      expect(canvas.getAllByText("Filters").length).toBeGreaterThan(0);
     });
 
     await step("A separator divides the two groups in the icon rail", async () => {

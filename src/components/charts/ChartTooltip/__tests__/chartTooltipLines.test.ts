@@ -20,6 +20,12 @@ describe("chartTooltipLines", () => {
     ]);
   });
 
+  it("uses the slice's text percentage when no numeric percent is given", () => {
+    expect(
+      chartTooltipLines([{ label: "pH", value: 12, text: "23%" }]),
+    ).toEqual(["pH", "Value: 12", "23%"]);
+  });
+
   it("splits trace-provided hover text on <br>", () => {
     expect(
       chartTooltipLines([{ text: "Well A1<br>Value: 42", x: 1, y: 1 }]),

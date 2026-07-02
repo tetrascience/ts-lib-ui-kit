@@ -169,7 +169,7 @@ export const ChainOfThoughtSource = ({
   <a
     className={cn(
       "inline-flex items-center rounded-full border border-border/60 bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground transition-colors",
-      props.href && "cursor-pointer hover:bg-muted hover:text-foreground",
+      props.href && "cursor-pointer hover:bg-accent hover:text-accent-foreground",
       className
     )}
     rel="noreferrer"

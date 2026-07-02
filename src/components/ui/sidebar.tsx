@@ -355,10 +355,6 @@ function SidebarSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof Separator>) {
-  // `data-horizontal:w-auto` (not a plain `w-auto`) so it dedupes against the base
-  // Separator's `data-horizontal:w-full`; otherwise both survive tailwind-merge and
-  // the line stays full-width, overflowing the `mx-2` inset (most visible in the
-  // collapsed icon rail, where it spilled past the right edge).
   return (
     <Separator
       data-slot="sidebar-separator"

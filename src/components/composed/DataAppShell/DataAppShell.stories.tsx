@@ -346,7 +346,7 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setActiveStepId(htsWorkflowSteps[activeStepIndex - 1].id)}
+              onClick={() => setActiveStepId(steps[activeStepIndex - 1].id)}
               className="gap-1"
             >
               Back

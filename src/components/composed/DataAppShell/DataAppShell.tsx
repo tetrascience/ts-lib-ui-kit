@@ -130,7 +130,7 @@ interface SidebarBodyProps
     | "userMenu"
   > {
   /**
-   * compact=true  → narrow icon rail (60px): icons + tiny labels stacked, tooltips on hover
+   * compact=true  → narrow icon rail (48px): icon-only nav buttons, tooltips on hover
    * compact=false → expanded mobile sheet (220px): icon + label side-by-side rows
    */
   compact: boolean;
@@ -147,7 +147,7 @@ const pageIconVariants = cva(
         false: "bg-transparent",
       },
       compact: {
-        true: "w-9 h-9 hover:bg-accent",
+        true: "w-[30px] h-[30px] hover:bg-accent",
         false: "w-8 h-8",
       },
     },
@@ -176,7 +176,7 @@ function SidebarBody({
           "shrink-0 flex",
           // Expanded: full-width header border. Collapsed: no full-width border —
           // a short centered divider (below) aligns under the icon column instead.
-          compact ? "justify-center py-2" : "px-3 py-2.5 border-b border-sidebar-border"
+          compact ? "justify-center pt-1 pb-2" : "px-3 py-2.5 border-b border-sidebar-border"
         )}
       >
         <DropdownMenu>
@@ -191,8 +191,7 @@ function SidebarBody({
               {/* Icon */}
               <span
                 className={cn(
-                  "flex items-center justify-center rounded-lg bg-sidebar-accent border border-sidebar-border font-bold text-foreground shrink-0",
-                  compact ? "w-9 h-9 text-[11px]" : "w-8 h-8 text-[10px]"
+                  "flex items-center justify-center rounded-lg bg-sidebar-accent border border-sidebar-border font-bold text-foreground shrink-0 w-8 h-8 text-[10px]"
                 )}
               >
                 {appIcon ?? appName}
@@ -297,7 +296,7 @@ function SidebarBody({
                 const iconEl = Icon ? (
                   <Icon
                     className={cn(
-                      "w-5 h-5",
+                      "w-4 h-4",
                       page.isActive ? "text-primary" : "text-muted-foreground"
                     )}
                   />
@@ -321,22 +320,13 @@ function SidebarBody({
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          className="flex flex-col items-center gap-0.5 cursor-pointer bg-transparent border-none p-0 w-full"
+                          aria-label={page.label}
+                          className="flex flex-col items-center cursor-pointer bg-transparent border-none p-0 w-full"
                           onClick={handleClick}
                         >
                           <div className={cn(pageIconVariants({ active: page.isActive ?? false, compact: true }))}>
                             {iconEl}
                           </div>
-                          <span
-                            className={cn(
-                              "text-[10px] font-medium leading-tight text-center",
-                              page.isActive
-                                ? "text-foreground font-semibold"
-                                : "text-muted-foreground"
-                            )}
-                          >
-                            {page.label}
-                          </span>
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="right">{page.label}</TooltipContent>
@@ -402,7 +392,7 @@ function IconRailSidebar(props: Omit<SidebarBodyProps, "compact" | "onAfterNavCl
     <nav
       data-slot="data-app-sidebar-rail"
       aria-label="Application navigation"
-      className="hidden md:flex w-[60px] flex-col shrink-0 bg-sidebar border-r border-sidebar-border h-full z-50"
+      className="hidden md:flex w-12 flex-col shrink-0 bg-sidebar border-r border-sidebar-border h-full z-50"
     >
       <SidebarBody compact {...props} />
     </nav>
@@ -449,13 +439,13 @@ function TopNav({
                   ) : isClickable && item.onClick ? (
                     <button
                       type="button"
-                      className="text-[13px] text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal"
+                      className="text-sm text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal"
                       onClick={item.onClick}
                     >
                       {item.label}
                     </button>
                   ) : (
-                    <span className="text-[13px] text-muted-foreground">{item.label}</span>
+                    <span className="text-sm text-muted-foreground">{item.label}</span>
                   )}
                 </BreadcrumbItem>
               </React.Fragment>

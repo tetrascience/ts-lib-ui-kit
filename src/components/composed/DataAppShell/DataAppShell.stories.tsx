@@ -85,7 +85,7 @@ function UserMenuButton({ name, userRole, expanded = false }: UserMenuButtonProp
         ) : (
           <button type="button" className="cursor-pointer bg-transparent border-none p-0">
             <Avatar size="sm" className="bg-primary cursor-pointer hover:opacity-85 transition-opacity">
-              <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+              <AvatarFallback className="bg-primary text-primary-foreground group-data-[size=sm]/avatar:text-[10px] font-semibold">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -132,17 +132,8 @@ interface WorkflowStep {
   onClick?: () => void;
 }
 
-const MILLION = 1_000_000;
-const THOUSAND = 1_000;
-
-function formatCount(n: number): string {
-  if (n >= MILLION) return `${(n / MILLION).toFixed(n % MILLION === 0 ? 0 : 1)}M`;
-  if (n >= THOUSAND) return `${(n / THOUSAND).toFixed(n % THOUSAND === 0 ? 0 : 1)}K`;
-  return n.toLocaleString();
-}
-
 const stepItemVariants = cva(
-  "flex items-center gap-2 py-3.5 px-2.5 text-xs font-normal transition-colors duration-150 whitespace-nowrap leading-tight cursor-pointer border-l-[5px] w-full bg-transparent border-r-0 border-t-0 border-b-0",
+  "flex items-center gap-2 py-2 px-2.5 font-normal transition-colors duration-150 whitespace-nowrap leading-tight cursor-pointer border-l-[5px] w-full bg-transparent border-r-0 border-t-0 border-b-0",
   {
     variants: {
       active: {
@@ -198,7 +189,7 @@ function WorkflowPanel({
                     disabled={step.disabled}
                   >
                     {Icon ? (
-                      <Icon className={cn("w-5 h-5", step.isActive ? "text-primary" : "text-muted-foreground")} />
+                      <Icon className={cn("w-4 h-4", step.isActive ? "text-primary" : "text-muted-foreground")} />
                     ) : (
                       <div
                         className={cn(
@@ -261,80 +252,17 @@ function WorkflowPanel({
                     step.isActive ? "text-primary" : "text-muted-foreground",
                   )}
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon className="w-4 h-4" />
                 </span>
               )}
-              <span className="flex flex-col items-start gap-0.5 min-w-0">
-                <span className="truncate">{step.label}</span>
-                {(step.inputCount != null || step.outputCount != null) && (
-                  <span className="text-[10px] text-muted-foreground font-normal tabular-nums">
-                    {step.inputCount != null && <span>{formatCount(step.inputCount)}</span>}
-                    {step.inputCount != null && step.outputCount != null && <span className="mx-0.5">{"\u2192"}</span>}
-                    {step.outputCount != null && <span>{formatCount(step.outputCount)}</span>}
-                  </span>
-                )}
+              <span className={cn("text-title-sm truncate min-w-0", !step.isActive && "font-light")}>
+                {step.label}
               </span>
             </button>
           );
         })}
       </div>
     </nav>
-  );
-}
-
-// ── Data count pills ─────────────────────────────────────────────────────────
-
-interface DataCount {
-  label: string;
-  count: number;
-  variant?: "default" | "outline" | "primary";
-  onClick?: () => void;
-}
-
-const countPillVariants = cva(
-  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium tabular-nums transition-colors",
-  {
-    variants: {
-      variant: {
-        default: "bg-muted text-muted-foreground",
-        outline: "bg-transparent border border-border text-foreground",
-        primary: "bg-primary/10 border border-primary/30 text-primary",
-      },
-      clickable: {
-        true: "cursor-pointer hover:bg-primary/15",
-        false: "cursor-default",
-      },
-    },
-    defaultVariants: { variant: "default", clickable: false },
-  },
-);
-
-function DataCountPills({ dataCounts }: { dataCounts: DataCount[] }) {
-  if (dataCounts.length === 0) return null;
-  return (
-    <div className="flex items-center gap-1.5">
-      {dataCounts.map((dc, i) => {
-        const pillClass = cn(countPillVariants({ variant: dc.variant ?? "outline", clickable: !!dc.onClick }));
-        const pillContent = (
-          <>
-            <span className="text-muted-foreground text-[10px] uppercase tracking-wide font-medium">{dc.label}</span>
-            <span className="font-semibold text-sm">{dc.count.toLocaleString()}</span>
-          </>
-        );
-        return (
-          <React.Fragment key={`${dc.label}-${i}`}>
-            {i > 0 && <span className="text-muted-foreground/50 text-xs">{"\u2192"}</span>}
-            {dc.onClick ? (
-              <button type="button" className={pillClass} onClick={dc.onClick}>
-                {pillContent}
-              </button>
-            ) : (
-              <div className={pillClass}>{pillContent}</div>
-            )}
-          </React.Fragment>
-        );
-      })}
-    </div>
   );
 }
 
@@ -368,16 +296,14 @@ const htsNavGroups: NavGroup[] = [
 const htsWorkflowSteps: WorkflowStep[] = [
   {
     id: "data-overview",
-    label: "Data Overview",
+    label: "Step 1 Name",
     icon: LayoutGrid,
     isActive: true,
-    inputCount: 649568,
-    outputCount: 645396,
   },
-  { id: "global-filtering", label: "Global Filtering", icon: Filter, inputCount: 645396, outputCount: 4803 },
-  { id: "explore-clusters", label: "Explore Clusters", icon: Library, inputCount: 3917, outputCount: 20 },
-  { id: "review-compound", label: "Review Selection", icon: Search, inputCount: 20, outputCount: 15 },
-  { id: "export-list", label: "Export Primary List", icon: Download, inputCount: 15 },
+  { id: "global-filtering", label: "Step 2 Name", icon: Filter },
+  { id: "explore-clusters", label: "Step 3 Name", icon: Library },
+  { id: "review-compound", label: "Step 4 Name", icon: Search },
+  { id: "export-list", label: "Step 5 Name", icon: Download },
 ];
 
 const htsBreadcrumbs = [
@@ -400,17 +326,9 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
     onClick: () => setActiveStepId(s.id),
   }));
 
-  const activeStep = steps.find((s) => s.isActive);
   const activeStepIndex = steps.findIndex((s) => s.isActive);
   const isLastStep = activeStepIndex === steps.length - 1;
-
-  const dataCounts: DataCount[] =
-    activeStep?.inputCount == null || activeStep?.outputCount == null
-      ? []
-      : [
-          { label: "INPUT", count: activeStep.inputCount, variant: "outline" },
-          { label: "Output", count: activeStep.outputCount, variant: "primary" },
-        ];
+  const isFirstStep = activeStepIndex <= 0;
 
   return (
     <DataAppShell
@@ -424,7 +342,16 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
       breadcrumbs={htsBreadcrumbs}
       headerActions={
         <>
-          <DataCountPills dataCounts={dataCounts} />
+          {!isFirstStep && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setActiveStepId(htsWorkflowSteps[activeStepIndex - 1].id)}
+              className="gap-1"
+            >
+              Back
+            </Button>
+          )}
           <Button
             size="sm"
             disabled={isLastStep}
@@ -453,12 +380,11 @@ export const Default: Story = {
 
     await step("Shell renders all regions", async () => {
       expect(canvas.getByText("HTS")).toBeInTheDocument();
-      expect(canvas.getByText("Project")).toBeInTheDocument();
-      expect(canvas.getByText("Explorer")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Project" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Explorer" })).toBeInTheDocument();
       expect(canvas.getByText("Workflow")).toBeInTheDocument();
-      expect(canvas.getAllByText("Data Overview").length).toBeGreaterThan(0);
+      expect(canvas.getAllByText("Step 1 Name").length).toBeGreaterThan(0);
       expect(canvas.getAllByText("All Projects").length).toBeGreaterThan(0);
-      expect(canvas.getByText("649,568")).toBeInTheDocument();
       expect(canvas.getByText("Next")).toBeInTheDocument();
       expect(canvas.getByText("Main content area")).toBeInTheDocument();
     });
@@ -486,7 +412,7 @@ export const CollapsedWorkflow: Story = {
     const canvas = within(canvasElement);
 
     await step("Collapsed workflow — step labels hidden", async () => {
-      expect(canvas.queryByText("Global Filtering")).not.toBeInTheDocument();
+      expect(canvas.queryByText("Step 2 Name")).not.toBeInTheDocument();
       expect(canvas.queryByText("Workflow")).not.toBeInTheDocument();
     });
 
@@ -571,16 +497,6 @@ const InteractiveShell = () => {
   const activeStep = steps.find((s) => s.isActive);
   const isProjectPage = activePageId === "project";
 
-  const dataCounts: DataCount[] =
-    activeStep?.inputCount == null
-      ? []
-      : [
-          { label: "INPUT", count: activeStep.inputCount, variant: "outline" },
-          ...(activeStep.outputCount == null
-            ? []
-            : [{ label: "Output", count: activeStep.outputCount, variant: "primary" as const }]),
-        ];
-
   return (
     <DataAppShell
       appName="HTS"
@@ -597,7 +513,6 @@ const InteractiveShell = () => {
       headerActions={
         isProjectPage && (
           <>
-            <DataCountPills dataCounts={dataCounts} />
             <Button size="sm">Next</Button>
           </>
         )
@@ -627,7 +542,7 @@ export const Interactive: Story = {
 
     await step("Interactive shell renders", async () => {
       expect(canvas.getByText("HTS")).toBeInTheDocument();
-      expect(canvas.getAllByText("Data Overview").length).toBeGreaterThan(0);
+      expect(canvas.getAllByText("Step 1 Name").length).toBeGreaterThan(0);
     });
   },
   parameters: {
@@ -836,11 +751,10 @@ export const WorkflowPanelInteractions: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
-    await step("Expanded panel shows step labels and counts", async () => {
+    await step("Expanded panel shows step labels", async () => {
       expect(canvas.getByText("Step Alpha")).toBeInTheDocument();
       expect(canvas.getByText("Step Beta")).toBeInTheDocument();
       expect(canvas.getByText("Disabled")).toBeInTheDocument();
-      expect(canvas.getByText("1K")).toBeInTheDocument();
     });
 
     await step("Clicking Step Beta makes it the active step", async () => {
@@ -916,8 +830,8 @@ export const MultipleNavGroups: Story = {
     const canvas = within(canvasElement);
 
     await step("All pages from both groups are visible", async () => {
-      expect(canvas.getByText("Project")).toBeInTheDocument();
-      expect(canvas.getByText("Explorer")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Project" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Explorer" })).toBeInTheDocument();
       expect(canvas.getAllByText("Filters").length).toBeGreaterThan(0);
     });
 
@@ -931,7 +845,7 @@ export const MultipleNavGroups: Story = {
     await step("Active page icon has primary highlight", async () => {
       // Filters page is isActive — its icon container has bg-primary/10
       const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
-      const activePage = within(rail!).getByText("Filters").closest("button");
+      const activePage = within(rail!).getByRole("button", { name: "Filters" });
       const iconContainer = activePage?.querySelector(".bg-primary\\/10");
       expect(iconContainer).toBeInTheDocument();
     });
@@ -1228,16 +1142,16 @@ export const CompactProperty: Story = {
     await step("Compact icon rail renders on desktop (hidden on mobile)", async () => {
       const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
       expect(rail).toBeInTheDocument();
-      // Icon rail should have width of 60px
-      expect(rail).toHaveClass("w-[60px]");
+      // Icon rail should have width of 48px
+      expect(rail).toHaveClass("w-12");
     });
 
-    await step("Icon rail displays icons and labels stacked vertically", async () => {
+    await step("Icon rail displays icon-only nav buttons labelled via aria-label", async () => {
       const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
-      // Labels should be present
-      expect(within(rail!).getByText("Project")).toBeInTheDocument();
-      expect(within(rail!).getByText("Explorer")).toBeInTheDocument();
-      expect(within(rail!).getByText("Filters")).toBeInTheDocument();
+      // Labels are exposed as accessible names (aria-label), not visible text
+      expect(within(rail!).getByRole("button", { name: "Project" })).toBeInTheDocument();
+      expect(within(rail!).getByRole("button", { name: "Explorer" })).toBeInTheDocument();
+      expect(within(rail!).getByRole("button", { name: "Filters" })).toBeInTheDocument();
     });
 
     await step("Group labels are hidden in compact icon rail", async () => {
@@ -1249,7 +1163,7 @@ export const CompactProperty: Story = {
 
     await step("Active page has primary background highlight in compact mode", async () => {
       const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
-      const projectBtn = within(rail!).getByText("Project").closest("button");
+      const projectBtn = within(rail!).getByRole("button", { name: "Project" });
       const iconDiv = projectBtn?.querySelector(".bg-primary\\/10");
       expect(iconDiv).toBeInTheDocument();
     });
@@ -1268,7 +1182,7 @@ export const CompactProperty: Story = {
       // Icon rail has md:flex which means it's hidden on mobile
       expect(rail).toHaveClass("hidden", "md:flex");
       const railStyles = window.getComputedStyle(rail!);
-      expect(railStyles.width).toBe("60px");
+      expect(railStyles.width).toBe("48px");
     });
 
     await step("User menu is visible at bottom of icon rail", async () => {

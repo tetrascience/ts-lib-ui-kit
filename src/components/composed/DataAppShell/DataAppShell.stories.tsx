@@ -127,8 +127,6 @@ interface WorkflowStep {
   isActive?: boolean;
   disabled?: boolean;
   disabledReason?: string;
-  inputCount?: number;
-  outputCount?: number;
   onClick?: () => void;
 }
 
@@ -346,7 +344,7 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setActiveStepId(htsWorkflowSteps[activeStepIndex - 1].id)}
+              onClick={() => setActiveStepId(steps[activeStepIndex - 1].id)}
               className="gap-1"
             >
               Back
@@ -715,8 +713,6 @@ const WorkflowInteractionShell = () => {
       icon: LayoutGrid,
       isActive: activeStepId === "step-a",
       onClick: () => setActiveStepId("step-a"),
-      inputCount: 1000,
-      outputCount: 800,
     },
     {
       id: "step-b",
@@ -724,8 +720,6 @@ const WorkflowInteractionShell = () => {
       icon: Filter,
       isActive: activeStepId === "step-b",
       onClick: () => setActiveStepId("step-b"),
-      inputCount: 800,
-      outputCount: 200,
     },
     { id: "step-c", label: "Disabled", icon: Search, disabled: true, disabledReason: "Requires upstream data" },
   ];

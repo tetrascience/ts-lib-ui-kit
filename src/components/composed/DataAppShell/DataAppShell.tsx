@@ -174,8 +174,6 @@ function SidebarBody({
       <div
         className={cn(
           "shrink-0 flex",
-          // Expanded: full-width header border. Collapsed: no full-width border —
-          // a short centered divider (below) aligns under the icon column instead.
           compact ? "justify-center pt-1 pb-2" : "px-3 py-2.5 border-b border-sidebar-border"
         )}
       >

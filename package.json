@@ -28,46 +28,6 @@
         "default": "./dist/index.cjs"
       }
     },
-    "./server": {
-      "import": {
-        "types": "./dist/server.d.ts",
-        "default": "./dist/server.js"
-      },
-      "require": {
-        "types": "./dist/server.d.ts",
-        "default": "./dist/server.cjs"
-      }
-    },
-    "./server/providers/athena": {
-      "import": {
-        "types": "./dist/providers/athena.d.ts",
-        "default": "./dist/providers/athena.js"
-      },
-      "require": {
-        "types": "./dist/providers/athena.d.ts",
-        "default": "./dist/providers/athena.cjs"
-      }
-    },
-    "./server/providers/snowflake": {
-      "import": {
-        "types": "./dist/providers/snowflake.d.ts",
-        "default": "./dist/providers/snowflake.js"
-      },
-      "require": {
-        "types": "./dist/providers/snowflake.d.ts",
-        "default": "./dist/providers/snowflake.cjs"
-      }
-    },
-    "./server/providers/databricks": {
-      "import": {
-        "types": "./dist/providers/databricks.d.ts",
-        "default": "./dist/providers/databricks.js"
-      },
-      "require": {
-        "types": "./dist/providers/databricks.d.ts",
-        "default": "./dist/providers/databricks.cjs"
-      }
-    },
     "./index.css": "./dist/index.css",
     "./index.tailwind.css": "./dist/index.tailwind.css",
     "./package.json": "./package.json"
@@ -100,10 +60,6 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@aws-sdk/client-cloudwatch-logs": ">=3.0.0 <4.0.0",
-    "@aws-sdk/client-sqs": ">=3.0.0 <4.0.0",
-    "@aws-sdk/client-ssm": ">=3.0.0 <4.0.0",
-    "@aws-sdk/lib-storage": ">=3.0.0 <4.0.0",
     "@base-ui/react": "^1.2.0",
     "@dagrejs/dagre": "^1.1.4",
     "@dnd-kit/core": "^6.3.1",
@@ -149,30 +105,14 @@
     "vaul": "^1.1.2"
   },
   "peerDependencies": {
-    "@aws-sdk/client-athena": "^3.0.0",
-    "@databricks/sql": "^1.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "snowflake-sdk": "^2.0.0"
-  },
-  "peerDependenciesMeta": {
-    "@aws-sdk/client-athena": {
-      "optional": true
-    },
-    "@databricks/sql": {
-      "optional": true
-    },
-    "snowflake-sdk": {
-      "optional": true
-    }
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@aws-sdk/client-athena": "^3.975.0",
     "@aws-sdk/client-s3": "^3.985.0",
     "@aws-sdk/s3-request-presigner": "^3.985.0",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
-    "@databricks/sql": "^1.12.0",
     "@eslint/js": "^9.9.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@semantic-release/changelog": "^6.0.3",
@@ -224,7 +164,6 @@
     "sass": "^1.89.0",
     "semantic-release": "^25.0.3",
     "shadcn": "^3.8.5",
-    "snowflake-sdk": "^2.3.3",
     "storybook": "^10.4.6",
     "tailwindcss": "^4.2.2",
     "ts-morph": "^27.0.2",

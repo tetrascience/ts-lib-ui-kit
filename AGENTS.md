@@ -45,24 +45,11 @@ src/
 └── index.ts         # All client-side exports
 ```
 
-## Server Utilities (`./server` sub-export)
+## Server Utilities — moved to `@tetrascience-npm/ts-connectors-sdk`
 
-Import path for consumers: `@tetrascience-npm/tetrascience-react-ui/server`
+As of v1.0.0 the Node-only server utilities (`jwtManager`, data-app providers, `tdpSearchManager`, exceptions) have been **removed** from this package. They now live in `@tetrascience-npm/ts-connectors-sdk` (repo: `ts-sdk-connectors-nodejs`), next to the `TDPClient` they depend on, and are imported from `@tetrascience-npm/ts-connectors-sdk/server` (subpaths unchanged from the old `/server` export). See the README's Server Utilities section for the migration table.
 
-```
-src/server/
-├── auth/
-│   └── JwtTokenManager.ts   # jwtManager singleton — resolves JWT from cookies or env
-├── providers/
-│   ├── buildProvider.ts               # Factory: provider config → typed provider instance
-│   ├── getProviderConfigurations.ts   # Fetch available provider configs via TDPClient
-│   ├── AthenaProvider.ts / SnowflakeProvider.ts / DatabricksProvider.ts
-│   └── exceptions.ts                  # QueryError, MissingTableError, ProviderConnectionError, etc.
-```
-
-Key exports: `jwtManager`, `buildProvider`, `getProviderConfigurations`, `buildSnowflakeProvider`, `buildDatabricksProvider`, `getTdpAthenaProvider`, typed exception classes.
-
-> **Migration note:** This module is being extracted out of this package. Do not add new server functionality here — new server utilities belong in the consuming application or a dedicated server package.
+Do **not** re-add server code here. The only remaining dependency on the SDK is a type-only import (`SearchEqlRequest`/`SearchEqlResponse`) used by the client-side `<TdpSearch>` component, which stays in this package.
 
 ## MCP Server
 

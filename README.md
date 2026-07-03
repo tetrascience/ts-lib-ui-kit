@@ -161,201 +161,29 @@ AreaGraph, BarGraph, Boxplot, Chromatogram, ChromatogramChart, DotPlot, Heatmap,
 
 ## Server Utilities
 
-Beyond UI components, this library includes server-side helper functions for building TetraScience applications. These are available via the `/server` subpath to avoid pulling Node.js dependencies into browser bundles.
+> **Moved in v1.0.0.** The Node-only server utilities (`/server` and `/server/providers/*`) have been **removed from this package** and now live in **[`@tetrascience-npm/ts-connectors-sdk`](https://github.com/tetrascience/ts-sdk-connectors-nodejs)**, next to the `TDPClient` they depend on. See that package's README for full documentation and examples.
 
-### Authentication (`server/auth`)
+### Migration
 
-**JWT Token Manager** - Manages JWT token retrieval for data apps:
+Only the package name in the import specifier changes — the subpaths are identical:
 
-```typescript
-import { jwtManager } from "@tetrascience-npm/tetrascience-react-ui/server";
+| Before (removed) | After |
+|------------------|-------|
+| `@tetrascience-npm/tetrascience-react-ui/server` | `@tetrascience-npm/ts-connectors-sdk/server` |
+| `…/tetrascience-react-ui/server/providers/athena` | `…/ts-connectors-sdk/server/providers/athena` |
+| `…/tetrascience-react-ui/server/providers/snowflake` | `…/ts-connectors-sdk/server/providers/snowflake` |
+| `…/tetrascience-react-ui/server/providers/databricks` | `…/ts-connectors-sdk/server/providers/databricks` |
 
-// In Express middleware
-app.use(async (req, res, next) => {
-  const token = await jwtManager.getTokenFromExpressRequest(req);
-  req.tdpAuth = { token, orgSlug: process.env.ORG_SLUG };
-  next();
-});
-
-// Or with raw cookies
-const token = await jwtManager.getUserToken(req.cookies);
+```ts
+// Before
+import { jwtManager, buildProvider, getProviderConfigurations } from "@tetrascience-npm/tetrascience-react-ui/server";
+// After
+import { jwtManager, buildProvider, getProviderConfigurations } from "@tetrascience-npm/ts-connectors-sdk/server";
 ```
 
-**Environment Variables:**
+`jwtManager` / `JwtTokenManager`, `getProviderConfigurations`, `buildProvider`, the per-provider builders (`buildSnowflakeProvider`, `buildDatabricksProvider`, `getTdpAthenaProvider`), the typed exception classes, and `tdpSearchManager` are all exported from the SDK's `/server` entry. The database drivers (`@aws-sdk/client-athena`, `snowflake-sdk`, `@databricks/sql`) remain **optional peer dependencies** — install only the one(s) you use.
 
-- `ORG_SLUG` - Organization slug (required)
-- `CONNECTOR_ID` - Connector ID for ts-token-ref flow
-- `TDP_ENDPOINT` - API base URL
-- `TS_AUTH_TOKEN` - Service account token (fallback for local dev)
-
-> **Note:** The singleton `jwtManager` reads environment variables when the module is imported. Ensure these are set before importing the module.
-
-### Data App Providers (`server/providers`)
-
-TypeScript equivalents of the Python helpers from `ts-lib-ui-kit-streamlit` for connecting to database providers (Snowflake, Databricks, Athena).
-
-**Getting Provider Configurations:**
-
-```typescript
-import { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
-import { getProviderConfigurations, buildProvider, jwtManager } from "@tetrascience-npm/tetrascience-react-ui/server";
-
-// Get user's auth token from request (e.g., in Express middleware)
-const userToken = await jwtManager.getTokenFromExpressRequest(req);
-
-// Create TDPClient with the user's auth token
-// Other fields (tdpEndpoint, connectorId, orgSlug) are read from environment variables
-const client = new TDPClient({
-  authToken: userToken,
-  artifactType: "data-app",
-});
-await client.init();
-
-// Get all configured providers for this data app
-const providers = await getProviderConfigurations(client);
-
-for (const config of providers) {
-  console.log(`Provider: ${config.name} (${config.type})`);
-
-  // Build a database connection from the config
-  const provider = await buildProvider(config);
-  const results = await provider.query("SELECT * FROM my_table LIMIT 10");
-  await provider.close();
-}
-```
-
-**Using Specific Providers:**
-
-```typescript
-import {
-  buildSnowflakeProvider,
-  buildDatabricksProvider,
-  getTdpAthenaProvider,
-  type ProviderConfiguration,
-} from "@tetrascience-npm/tetrascience-react-ui/server";
-
-// Snowflake
-const snowflakeProvider = await buildSnowflakeProvider(config);
-const data = await snowflakeProvider.query("SELECT * FROM users");
-await snowflakeProvider.close();
-
-// Databricks
-const databricksProvider = await buildDatabricksProvider(config);
-const data = await databricksProvider.query("SELECT * FROM events");
-await databricksProvider.close();
-
-// TDP Athena (uses environment configuration)
-const athenaProvider = await getTdpAthenaProvider();
-const data = await athenaProvider.query("SELECT * FROM files");
-await athenaProvider.close();
-```
-
-**Exception Handling:**
-
-```typescript
-import {
-  QueryError,
-  MissingTableError,
-  ProviderConnectionError,
-  InvalidProviderConfigurationError,
-} from "@tetrascience-npm/tetrascience-react-ui/server";
-
-try {
-  const results = await provider.query("SELECT * FROM missing_table");
-} catch (error) {
-  if (error instanceof MissingTableError) {
-    console.error("Table not found:", error.message);
-  } else if (error instanceof QueryError) {
-    console.error("Query failed:", error.message);
-  }
-}
-```
-
-**Environment Variables:**
-
-- `DATA_APP_PROVIDER_CONFIG` - JSON override for local development only
-- `CONNECTOR_ID` - Connector ID for fetching providers from TDP
-- `TDP_ENDPOINT` - TDP API base URL
-- `ORG_SLUG` - Organization slug
-- `ATHENA_S3_OUTPUT_LOCATION` - S3 bucket for Athena query results
-- `AWS_REGION` - AWS region for Athena
-
-> **Note:** Authentication tokens are obtained from the user's JWT via `jwtManager`. The `TS_AUTH_TOKEN` environment variable is only for local development fallback.
-
-### Connector Key/Value Store
-
-The TDP connector key/value store lets data apps persist small pieces of state (user preferences, cached results, last-run timestamps, etc.) without an external database. The `TDPClient` from `@tetrascience-npm/ts-connectors-sdk` provides `getValue`, `getValues`, `saveValue`, and `saveValues` methods.
-
-**Reading and writing values with the user's JWT token:**
-
-```typescript
-import { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
-import { jwtManager } from "@tetrascience-npm/tetrascience-react-ui/server";
-
-// In an Express route handler:
-app.get("/api/kv/:key", async (req, res) => {
-  // 1. Get the user's JWT from request cookies
-  const userToken = await jwtManager.getTokenFromExpressRequest(req);
-  if (!userToken) return res.status(401).json({ error: "Not authenticated" });
-
-  // 2. Create a TDPClient authenticated as the user
-  //    (CONNECTOR_ID, TDP_ENDPOINT, ORG_SLUG are read from env vars)
-  const client = new TDPClient({
-    authToken: userToken,
-    artifactType: "data-app",
-  });
-  await client.init();
-
-  // 3. Read a value
-  const value = await client.getValue(req.params.key);
-  res.json({ key: req.params.key, value });
-});
-
-app.put("/api/kv/:key", async (req, res) => {
-  const userToken = await jwtManager.getTokenFromExpressRequest(req);
-  if (!userToken) return res.status(401).json({ error: "Not authenticated" });
-
-  const client = new TDPClient({
-    authToken: userToken,
-    artifactType: "data-app",
-  });
-  await client.init();
-
-  // Write a value (any JSON-serialisable type)
-  await client.saveValue(req.params.key, req.body.value, { secure: false });
-  res.json({ key: req.params.key, saved: true });
-});
-```
-
-**Reading multiple values at once:**
-
-```typescript
-const values = await client.getValues(["theme", "locale", "last-run"]);
-// values[0] → theme, values[1] → locale, values[2] → last-run
-```
-
-> See the [example app](./examples/vite-themed-app/) for a complete working server with KV store endpoints.
-
-### TDP Search (`server`)
-
-**TdpSearchManager** - Server-side handler for the TdpSearch component. Resolves auth from request cookies (via `jwtManager`), calls TDP `searchEql`, and returns the response so the frontend hook works with minimal wiring.
-
-```typescript
-import { tdpSearchManager } from "@tetrascience-npm/tetrascience-react-ui/server";
-
-// Express: mount a POST route (e.g. /api/search)
-app.post("/api/search", express.json(), async (req, res) => {
-  try {
-    const body = req.body; // SearchEqlRequest (searchTerm, from, size, sort, order, ...)
-    const response = await tdpSearchManager.handleSearchRequest(req, body);
-    res.json(response);
-  } catch (err) {
-    res.status(401).json({ error: err instanceof Error ? err.message : "Search failed" });
-  }
-});
-```
-
-Frontend: use `<TdpSearch columns={...} />` with default `apiEndpoint="/api/search"`, or pass `apiEndpoint` if you use a different path. Auth is taken from cookies (`ts-auth-token` or `ts-token-ref` via `jwtManager`).
+The `<TdpSearch>` React component stays in this package; only its server-side handler (`tdpSearchManager`) moved.
 
 ## TypeScript Support
 

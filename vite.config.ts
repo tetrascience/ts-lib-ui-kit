@@ -29,7 +29,6 @@ const banner = `/*
 
 // App-only aliases — resolve the package to local src/ during dev/app build
 const appAlias = {
-  "@tetrascience-npm/tetrascience-react-ui/server": path.resolve(__dirname, "./src/server/index.ts"),
   "@tetrascience-npm/tetrascience-react-ui/index.css": path.resolve(__dirname, "./src/index.css"),
   "@tetrascience-npm/tetrascience-react-ui": path.resolve(__dirname, "./src/index.ts"),
 };
@@ -67,11 +66,10 @@ export default defineConfig({
     lib: {
       entry: {
         index: path.resolve(__dirname, "src/index.ts"),
-        server: path.resolve(__dirname, "src/server/index.ts"),
-        "providers/athena": path.resolve(__dirname, "src/server/providers/entries/athena.ts"),
-        "providers/snowflake": path.resolve(__dirname, "src/server/providers/entries/snowflake.ts"),
-        "providers/databricks": path.resolve(__dirname, "src/server/providers/entries/databricks.ts"),
       },
+      // With a single entry Vite defaults to ["es","umd"] (umd needs lib.name);
+      // pin es+cjs to keep the dual index.js / index.cjs outputs the exports map expects.
+      formats: ["es", "cjs"],
       cssFileName: "index",
     },
     rollupOptions: {
@@ -103,7 +101,6 @@ export default defineConfig({
             "scripts/**/*.test.ts",
           ],
           exclude: ["node_modules", "dist", "examples"],
-          environmentMatchGlobs: [["src/server/**/*.test.ts", "node"]],
           // ts-morph's first parse loads the TS compiler; under CI + v8 coverage
           // that cold start can push the heavier zephyr AST tests past the 5s
           // default, causing intermittent timeouts. Give them headroom.

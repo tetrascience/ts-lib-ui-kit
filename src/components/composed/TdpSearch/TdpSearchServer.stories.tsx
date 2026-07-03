@@ -183,7 +183,7 @@ const meta: Meta<typeof TdpSearch> = {
       description: {
         component:
           "Server-side TdpSearch: calls `apiEndpoint` with cookies (or optional `authToken` / `orgSlug` headers). " +
-          "Backend uses `tdpSearchManager` from `@tetrascience-npm/tetrascience-react-ui/server`.\n\n" +
+          "Backend uses `tdpSearchManager` from `@tetrascience-npm/ts-connectors-sdk/server`.\n\n" +
           "Mock returns sample data so stories work without a backend.",
       },
     },

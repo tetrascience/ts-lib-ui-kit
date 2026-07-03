@@ -95,9 +95,8 @@ export interface StreamStatusProps {
    * Convenience shorthand to pick a built-in spinner.
    * Ignored when `icon` is also provided.
    *
-   * Options: `"loader"` | `"loader-circle"` | `"loader-pinwheel"` | `"disc-3"`
-   * | `"tetra"`. The `"tetra"` variant renders the Tetra-branded TetraSpin —
-   * the TetraScience mark with a 3D flip and brand-blue tint while streaming.
+   * Options: `"loader"` | `"loader-circle"` | `"loader-pinwheel"` | `"disc-3"` | `"tetra"`.
+   * The `"tetra"` variant renders the Tetra-branded TetraSpin — the TetraScience mark with a 3D flip and brand-blue tint while streaming.
    */
   iconVariant?: StreamStatusIconVariant;
   className?: string;

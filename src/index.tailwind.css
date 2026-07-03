@@ -869,6 +869,31 @@
 }
 
 /*
+  ts-tetra-spin — the branded "TetraSpin" for the TetraScience mark.
+  A continuous 3D coin-flip about the Y axis with a late scale surge, echoing
+  the :tetraspin3d: gif to signal an agent is thinking. Apply to a wrapper span
+  around the TetraScienceIcon.
+*/
+@keyframes ts-tetra-spin {
+  0% {
+    transform: perspective(80px) rotateY(0deg) scale(1);
+  }
+  80% {
+    transform: perspective(80px) rotateY(288deg) scale(1);
+  }
+  90% {
+    transform: perspective(80px) rotateY(324deg) scale(1.2);
+  }
+  100% {
+    transform: perspective(80px) rotateY(360deg) scale(1);
+  }
+}
+
+@utility ts-tetra-spin {
+  animation: ts-tetra-spin 2s ease-in-out infinite;
+}
+
+/*
   ts-bubble-confirm — single-shot ripple for confirmation moments.
   Apply to an absolutely-positioned overlay element (e.g. a rounded-full span)
   that is mounted on a transition and removed once the animation ends.

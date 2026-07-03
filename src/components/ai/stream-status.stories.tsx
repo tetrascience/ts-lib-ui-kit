@@ -92,16 +92,66 @@ export const IconVariants: Story = {
         isStreaming
         startTime={new Date(Date.now() - 12 * 1000)}
       />
+      <StreamStatus
+        iconVariant="tetra"
+        isStreaming
+        startTime={new Date(Date.now() - 8 * 1000)}
+        tokenCount={640}
+      />
     </div>
   ),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
-    await step("All four icon variants render", async () => {
+    await step("All icon variants render", async () => {
       await expect(canvas.getByText("8.7k tokens")).toBeInTheDocument()
     })
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4631" },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Tetra Spinner — the Tetra-branded "TetraSpin" (SW-1886)
+// ---------------------------------------------------------------------------
+
+export const TetraSpinner: Story = {
+  name: "Tetra Spinner",
+  render: () => (
+    <div className="flex flex-col gap-4 p-4 min-w-72">
+      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+        Agent thinking — branded 3D TetraSpin
+      </p>
+      <StreamStatus
+        iconVariant="tetra"
+        isStreaming
+        showIndicator
+        startTime={new Date(Date.now() - 3 * 1000)}
+        state="streaming"
+        tokenCount={420}
+      />
+      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+        Finished — spin settles, mark dims
+      </p>
+      <StreamStatus
+        iconVariant="tetra"
+        isStreaming={false}
+        showIndicator
+        startTime={new Date(Date.now() - 42 * 1000)}
+        state="done"
+        tokenCount={5300}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    await step("Tetra-branded spinner renders while thinking and when done", async () => {
+      await expect(canvas.getByText("420 tokens")).toBeInTheDocument()
+      await expect(canvas.getByText("5.3k tokens")).toBeInTheDocument()
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
   },
 }
 

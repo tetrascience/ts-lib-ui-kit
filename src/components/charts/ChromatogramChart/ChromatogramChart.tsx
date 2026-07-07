@@ -1,7 +1,6 @@
 import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef } from "react";
 
-import { seriesColor } from "../../../utils/colors";
 import { useChartTooltip } from "../ChartTooltip";
 
 import {
@@ -9,14 +8,19 @@ import {
   createGroupAnnotations,
   resolveSelectionAppearance,
 } from "./annotations";
-import { CHROMATOGRAM_TRACE } from "./constants";
 import {
   validateSeriesData,
   applyBaselineCorrection,
   processUserAnnotations,
 } from "./dataProcessing";
 import { detectPeaks } from "./peakDetection";
-import { buildLayout, buildConfig, createHoverHandler, createUnhoverHandler } from "./plotBuilder";
+import {
+  buildTraceData,
+  buildLayout,
+  buildConfig,
+  createHoverHandler,
+  createUnhoverHandler,
+} from "./plotBuilder";
 
 import type {
   ChromatogramSeries,
@@ -268,26 +272,19 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     const currentRef = plotRef.current;
     if (!currentRef || series.length === 0) return;
 
-    // Build trace data
-    const plotData: Plotly.Data[] = processedSeries.map((s, index) => {
-      const traceColor = seriesColor(index, s.color);
-
-      const trace: Plotly.Data = {
-        x: s.x,
-        y: s.y,
-        type: "scatter" as const,
-        mode: showMarkers ? "lines+markers" as const : "lines" as const,
-        name: s.name,
-        line: {
-          color: traceColor,
-          width: CHROMATOGRAM_TRACE.BASE_LINE_WIDTH,
-        },
-        hoverinfo: "none" as const,
-      };
-      if (showMarkers) {
-        trace.marker = { size: markerSize, color: traceColor };
-      }
-      return trace;
+    // Build trace data (line traces + boundary markers + region overlays +
+    // the invisible hit-area trace that carries peak customdata for
+    // click/hover interaction).
+    const plotData = buildTraceData({
+      processedSeries,
+      processedAnnotations,
+      allDetectedPeaks,
+      allPeaksForInteraction,
+      showMarkers,
+      markerSize,
+      xAxisTitle,
+      yAxisTitle,
+      boundaryMarkers,
     });
 
     const layout = buildLayout({

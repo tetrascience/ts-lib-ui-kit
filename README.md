@@ -42,8 +42,10 @@ yarn add @tetrascience-npm/tetrascience-react-ui
 ## Quick Start
 
 ```tsx
-// 1. Import the CSS once at your app root (required)
-import "@tetrascience-npm/tetrascience-react-ui/index.css";
+// 1. Import the CSS once at your app root (required).
+//    No Tailwind in your app? Use the self-contained standalone bundle:
+import "@tetrascience-npm/tetrascience-react-ui/index.standalone.css";
+//    Running your own Tailwind build? See "CSS Import Options" below instead.
 
 // 2. Import components
 import { Button, Card, CardHeader, CardContent } from "@tetrascience-npm/tetrascience-react-ui";
@@ -67,12 +69,44 @@ This library uses **Tailwind CSS 4** with design tokens defined as CSS custom pr
 
 ### CSS Import Options
 
-| Import path                                                  | Use case                                                                                             |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `@tetrascience-npm/tetrascience-react-ui/index.css`          | **Pre-built CSS** — use this for most apps. Import once at your app root.                            |
-| `@tetrascience-npm/tetrascience-react-ui/index.tailwind.css` | **Tailwind source** — for apps that run their own Tailwind build and want to extend/override tokens. |
+There are two consumption modes. **Use exactly one — never import both**, or the kit's
+utilities and your app's utilities will double-emit and collide in the cascade (SW-1898).
 
-Most consumers only need `index.css`:
+| Import path                                                    | Use case                                                                                                                                 |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `@tetrascience-npm/tetrascience-react-ui/index.standalone.css` | **No Tailwind in your app.** Self-contained bundle — Tailwind preflight + every utility the kit's components use + tokens + fonts. Just import it and the kit renders. |
+| `@tetrascience-npm/tetrascience-react-ui/index.css`            | **You run your own Tailwind build.** Lean bundle — design tokens, component CSS, fonts, and animations only (no preflight, no utilities). Pair it with `@source` (below). |
+
+#### Mode A — you run Tailwind (recommended for TetraScience data apps)
+
+Your Tailwind compiler generates utilities for both your code and the kit's components in a
+single pass, so nothing double-emits:
+
+```css
+/* App.css */
+@import "tailwindcss";
+@import "@tetrascience-npm/tetrascience-react-ui/index.css";
+@source "../node_modules/@tetrascience-npm/tetrascience-react-ui";
+```
+
+The `@source` directive tells Tailwind to scan the kit's compiled JS and emit the utility
+classes its components reference as part of your build.
+
+#### Mode B — no Tailwind (drop-in)
+
+```ts
+import "@tetrascience-npm/tetrascience-react-ui/index.standalone.css";
+```
+
+This styles the **kit's own components**. It does not give your app a general Tailwind
+utility layer for your own markup — write plain CSS for your own chrome, or adopt Tailwind
+and switch to Mode A.
+
+> **Migrating from a previous version:** `index.tailwind.css` has been removed. If you ran
+> your own Tailwind build, switch to Mode A above. If you did not, switch to
+> `index.standalone.css` (Mode B).
+
+### Theming
 
 ### Theming
 

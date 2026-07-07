@@ -614,11 +614,12 @@ function IntroductionPage() {
             <CodeBlock>{`yarn add ${PKG_NAME}`}</CodeBlock>
 
             <p className="text-sm text-muted-foreground">
-              Import a component and the stylesheet:
+              Import a component and the stylesheet. Not running your own Tailwind
+              build? Use the self-contained standalone bundle:
             </p>
             <CodeBlock>
               {`import { Button } from '${PKG_NAME}'
-import '${PKG_NAME}/dist/index.css'`}
+import '${PKG_NAME}/index.standalone.css'`}
             </CodeBlock>
           </div>
         </section>

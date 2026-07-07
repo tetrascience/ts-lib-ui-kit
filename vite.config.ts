@@ -31,6 +31,7 @@ const banner = `/*
 const appAlias = {
   "@tetrascience-npm/tetrascience-react-ui/server": path.resolve(__dirname, "./src/server/index.ts"),
   "@tetrascience-npm/tetrascience-react-ui/index.css": path.resolve(__dirname, "./src/index.css"),
+  "@tetrascience-npm/tetrascience-react-ui/index.standalone.css": path.resolve(__dirname, "./src/index.standalone.css"),
   "@tetrascience-npm/tetrascience-react-ui": path.resolve(__dirname, "./src/index.ts"),
 };
 

@@ -1,0 +1,15 @@
+/*
+ * Standalone bundle — self-contained CSS for consumers that do NOT run their
+ * own Tailwind build. Includes Tailwind preflight + every utility the kit's
+ * own components reference (tree-shaken via content detection) + the kit's
+ * design tokens, component CSS, custom utilities, fonts, and animations.
+ *
+ * Use EITHER this file OR (`index.css` + your own Tailwind) — never both.
+ * Importing this alongside your own Tailwind re-introduces the duplicate
+ * utility emission this split was designed to remove (SW-1898).
+ *
+ * This file styles the kit's own components only; it does not give your app a
+ * general Tailwind utility layer for your own markup.
+ */
+@import "tailwindcss";
+@import "./index.tailwind.css";

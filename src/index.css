@@ -1,2 +1,16 @@
-@import "tailwindcss";
+/*
+ * Lean bundle — the kit's design tokens, component CSS, custom utilities,
+ * fonts, and animations. Does NOT include Tailwind preflight or the standard
+ * utility set. Intended for consumers who run their own Tailwind build:
+ *
+ *   @import "tailwindcss";
+ *   @import "@tetrascience-npm/tetrascience-react-ui/index.css";
+ *   @source "../node_modules/@tetrascience-npm/tetrascience-react-ui";
+ *
+ * The @source directive lets your Tailwind compiler scan the kit's compiled
+ * JS and emit the utilities its components reference in your single pass — no
+ * duplicate emission, no cascade collision (SW-1898).
+ *
+ * If you do NOT run Tailwind, import `index.standalone.css` instead.
+ */
 @import "./index.tailwind.css";

@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "sideEffects": [
     "./dist/index.css",
-    "./dist/index.tailwind.css"
+    "./dist/index.standalone.css"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -69,7 +69,7 @@
       }
     },
     "./index.css": "./dist/index.css",
-    "./index.tailwind.css": "./dist/index.tailwind.css",
+    "./index.standalone.css": "./dist/index.standalone.css",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -83,8 +83,8 @@
     "test:storybook:ci:coverage": "vitest run --project=storybook --reporter=junit --outputFile=test-results/storybook-junit.xml --coverage",
     "test:all": "vitest run",
     "test:all:coverage": "vitest run --coverage",
-    "build": "vite build && yarn run postbuild",
-    "postbuild": "yarn dlx @tailwindcss/cli@4.2.2 -i ./src/index.tailwind.css -o ./dist/index.tailwind.css --minify",
+    "build": "vite build && yarn run build:standalone-css",
+    "build:standalone-css": "vite build -c vite.standalone.config.ts",
     "dev": "yarn storybook",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build && yarn run build-storybook:metadata",

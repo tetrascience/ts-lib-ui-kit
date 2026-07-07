@@ -1,0 +1,3 @@
+/* Published dist/index.css: tokens + component CSS, no preflight/utilities (SW-1898). */
+@import "tailwindcss/theme" layer(theme);
+@import "./index.tailwind.css";

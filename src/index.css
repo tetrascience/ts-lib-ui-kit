@@ -1,13 +1,3 @@
-/*
- * Full bundle — Tailwind preflight + utilities + the kit's tokens, component
- * CSS, custom utilities, fonts, and animations.
- *
- * This is the development stylesheet Storybook renders against, and the source
- * for the published, self-contained `dist/index.standalone.css` (built via
- * vite.standalone.config.ts). It is NOT the published `dist/index.css` — that
- * lean bundle is produced from `index.lean.css` (imported by index.ts) so it
- * ships without preflight/utilities for consumers who run their own Tailwind
- * build. See the README "CSS Import Options" section (SW-1898).
- */
+/* Full bundle: Storybook's stylesheet and the source for dist/index.standalone.css. */
 @import "tailwindcss";
 @import "./index.tailwind.css";

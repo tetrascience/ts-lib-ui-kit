@@ -30,9 +30,8 @@ const banner = `/*
 // App-only aliases — resolve the package to local src/ during dev/app build
 const appAlias = {
   "@tetrascience-npm/tetrascience-react-ui/server": path.resolve(__dirname, "./src/server/index.ts"),
-  // Match published semantics: `/index.css` is the lean bundle, `/index.standalone.css` the full one,
-  // `/index.tailwind.css` the raw Tailwind source layer (Mode A).
-  "@tetrascience-npm/tetrascience-react-ui/index.css": path.resolve(__dirname, "./src/index.lean.css"),
+  // Resolve each published entry to its source during dev.
+  "@tetrascience-npm/tetrascience-react-ui/index.css": path.resolve(__dirname, "./src/index.base.css"),
   "@tetrascience-npm/tetrascience-react-ui/index.standalone.css": path.resolve(__dirname, "./src/index.css"),
   "@tetrascience-npm/tetrascience-react-ui/index.tailwind.css": path.resolve(__dirname, "./src/index.tailwind.css"),
   "@tetrascience-npm/tetrascience-react-ui": path.resolve(__dirname, "./src/index.ts"),

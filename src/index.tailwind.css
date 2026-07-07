@@ -1,16 +1,4 @@
-/*
- * Shared source partial — the kit's theme mapping (@theme), design tokens
- * (:root / .dark), custom utilities (@utility), base/component CSS, fonts, and
- * keyframes. This file ships verbatim as the published `dist/index.tailwind.css`
- * (Mode A) and is the source compiled into `index.css` (lean) and
- * `index.standalone.css` (self-contained).
- *
- * It deliberately does NOT import Tailwind's theme or utilities layers: each
- * compiled entry pulls those in (via `tailwindcss/theme` or full `tailwindcss`),
- * and a Mode A consumer supplies them from their own `@import "tailwindcss"`.
- * So it stays free of collision-causing pre-emitted utilities while still
- * carrying the @utility definitions a consumer's Tailwind needs to emit them.
- */
+/* Shared source: tokens, @utility defs, component CSS. Ships as dist/index.tailwind.css (Mode A). */
 @import "tw-animate-css";
 
 /* ------------------------------------------------------------------ */

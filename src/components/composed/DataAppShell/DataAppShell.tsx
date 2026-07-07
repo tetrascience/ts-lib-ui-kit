@@ -8,6 +8,7 @@ import {
 import * as React from "react";
 
 import { TDPLink } from "@/components/composed/tdp-link";
+import { TopBar } from "@/components/composed/TopBar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -98,6 +99,8 @@ export interface DataAppShellProps {
   breadcrumbs?: BreadcrumbItemConfig[];
   /** Callback when the help button is clicked; omit to hide the button */
   onHelpClick?: () => void;
+  /** Center "context" slot in the top bar (e.g. a version / status selector) */
+  headerCenter?: React.ReactNode;
   /** Slot for right-side actions in the top nav (e.g. data count pills, next button) */
   headerActions?: React.ReactNode;
 
@@ -398,84 +401,99 @@ function IconRailSidebar(props: Omit<SidebarBodyProps, "compact" | "onAfterNavCl
 }
 
 // =============================================================================
-// Top nav
+// Breadcrumb trail — rendered from the shell's breadcrumb config
+// =============================================================================
+
+function TopNavBreadcrumb({ items }: { items: BreadcrumbItemConfig[] }) {
+  return (
+    <Breadcrumb className="min-w-0">
+      <BreadcrumbList>
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
+          const isClickable = !isLast && (!!item.href || !!item.onClick);
+          return (
+            <React.Fragment key={`${item.label}-${index}`}>
+              {index > 0 && <BreadcrumbSeparator>/</BreadcrumbSeparator>}
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                ) : isClickable && item.href ? (
+                  <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
+                ) : isClickable && item.onClick ? (
+                  <button
+                    type="button"
+                    className="text-sm text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal"
+                    onClick={item.onClick}
+                  >
+                    {item.label}
+                  </button>
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    {item.label}
+                  </span>
+                )}
+              </BreadcrumbItem>
+            </React.Fragment>
+          );
+        })}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+}
+
+// =============================================================================
+// Top nav — maps shell props onto the reusable TopBar (left/center/right)
 // =============================================================================
 
 function TopNav({
   breadcrumbs = [],
   onHelpClick,
+  headerCenter,
   headerActions,
   mobileTrigger,
 }: {
   breadcrumbs?: BreadcrumbItemConfig[];
   onHelpClick?: () => void;
+  headerCenter?: React.ReactNode;
   headerActions?: React.ReactNode;
   mobileTrigger?: React.ReactNode;
 }) {
   return (
-    <div
+    <TopBar
       data-slot="data-app-top-nav"
-      className="flex items-center h-10 px-3 bg-sidebar border-b border-sidebar-border sticky top-0 z-40 w-full gap-2"
-    >
-      {/* Mobile hamburger (hidden on md+) */}
-      {mobileTrigger}
+      left={
+        <>
+          {/* Mobile hamburger (hidden on md+) */}
+          {mobileTrigger}
+          <TopNavBreadcrumb items={breadcrumbs} />
+        </>
+      }
+      center={headerCenter}
+      right={
+        <>
+          {headerActions}
 
-      {/* Left: Breadcrumbs */}
-      <Breadcrumb className="flex-1 min-w-0">
-        <BreadcrumbList>
-          {breadcrumbs.map((item, index) => {
-            const isLast = index === breadcrumbs.length - 1;
-            const isClickable = !isLast && (!!item.href || !!item.onClick);
-            return (
-              <React.Fragment key={`${item.label}-${index}`}>
-                {index > 0 && <BreadcrumbSeparator>/</BreadcrumbSeparator>}
-                <BreadcrumbItem>
-                  {isLast ? (
-                    <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                  ) : isClickable && item.href ? (
-                    <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
-                  ) : isClickable && item.onClick ? (
-                    <button
-                      type="button"
-                      className="text-sm text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal"
-                      onClick={item.onClick}
-                    >
-                      {item.label}
-                    </button>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">{item.label}</span>
-                  )}
-                </BreadcrumbItem>
-              </React.Fragment>
-            );
-          })}
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      {/* Right: header actions + help */}
-      <div className="flex items-center gap-2 shrink-0">
-        {headerActions}
-
-        {onHelpClick && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-7 h-7 text-muted-foreground"
-                  onClick={onHelpClick}
-                  aria-label="Help"
-                >
-                  <HelpCircle className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Help</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-      </div>
-    </div>
+          {onHelpClick && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-7 h-7 text-muted-foreground"
+                    onClick={onHelpClick}
+                    aria-label="Help"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Help</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </>
+      }
+    />
   );
 }
 
@@ -495,6 +513,7 @@ function DataAppShell({
   userMenu,
   breadcrumbs = [],
   onHelpClick,
+  headerCenter,
   headerActions,
   sidebarPanel,
   showNavRail = true,
@@ -548,6 +567,7 @@ function DataAppShell({
           <TopNav
             breadcrumbs={breadcrumbs}
             onHelpClick={onHelpClick}
+            headerCenter={headerCenter}
             headerActions={headerActions}
             mobileTrigger={
               <SheetTrigger asChild>

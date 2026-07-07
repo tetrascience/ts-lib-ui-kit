@@ -6,9 +6,7 @@ import { TooltipProvider } from "../src/components/ui/tooltip";
 
 import type { Preview } from "@storybook/react-vite";
 import "./theme/index.css";
-// Storybook itself does not run a consumer-side Tailwind build, so it renders
-// against the self-contained standalone bundle (preflight + utilities + tokens).
-import "../src/index.standalone.css";
+import "../src/index.css";
 
 const preview: Preview = {
   decorators: [

@@ -1,5 +1,6 @@
-// Main styles export
-import "@/index.css";
+// Main styles export — the lean, published `dist/index.css` (no preflight or
+// utilities; consumers run their own Tailwind). See index.lean.css / index.css.
+import "@/index.lean.css";
 
 // Composed
 export * from "@/components/composed/FormPatterns";

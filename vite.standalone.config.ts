@@ -20,7 +20,9 @@ export default defineConfig({
     emptyOutDir: false,
     cssMinify: true,
     rollupOptions: {
-      input: { "index.standalone": path.resolve(__dirname, "src/index.standalone.css") },
+      // The full stylesheet (preflight + utilities + tokens) — same source
+      // Storybook renders against — emitted as the self-contained bundle.
+      input: { "index.standalone": path.resolve(__dirname, "src/index.css") },
       output: {
         assetFileNames: (info) =>
           info.names?.some((name) => name.endsWith(".css"))

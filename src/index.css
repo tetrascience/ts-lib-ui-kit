@@ -1,19 +1,13 @@
 /*
- * Lean bundle — the kit's design tokens, base and component CSS, fonts, and
- * keyframes. Does NOT include Tailwind preflight, the standard utility set, or
- * the kit's custom utilities (text-*, ts-border-*, state-layer) — those are
- * emitted only by a Tailwind utilities pass, i.e. your own build (Mode A) or
- * the standalone bundle. Intended for consumers who run their own Tailwind:
+ * Full bundle — Tailwind preflight + utilities + the kit's tokens, component
+ * CSS, custom utilities, fonts, and animations.
  *
- *   @import "tailwindcss";
- *   @import "@tetrascience-npm/tetrascience-react-ui/index.css";
- *   @source "../node_modules/@tetrascience-npm/tetrascience-react-ui";
- *
- * The @source directive lets your Tailwind compiler scan the kit's compiled
- * JS and emit the utilities its components reference in your single pass — no
- * duplicate emission, no cascade collision (SW-1898).
- *
- * If you do NOT run Tailwind, import `index.standalone.css` instead.
+ * This is the development stylesheet Storybook renders against, and the source
+ * for the published, self-contained `dist/index.standalone.css` (built via
+ * vite.standalone.config.ts). It is NOT the published `dist/index.css` — that
+ * lean bundle is produced from `index.lean.css` (imported by index.ts) so it
+ * ships without preflight/utilities for consumers who run their own Tailwind
+ * build. See the README "CSS Import Options" section (SW-1898).
  */
-@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss";
 @import "./index.tailwind.css";

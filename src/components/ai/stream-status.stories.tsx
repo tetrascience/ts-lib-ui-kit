@@ -121,56 +121,27 @@ export const IconVariants: Story = {
 export const TetraSpinner: Story = {
   name: "Tetra Spinner",
   render: () => (
-    <div className="flex flex-col gap-4 p-4 min-w-72">
-      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-        Agent thinking — branded 360° TetraSpin
-      </p>
-      <StreamStatus
-        iconVariant="tetra"
-        isStreaming
-        showIndicator
-        startTime={new Date(Date.now() - 3 * 1000)}
-        state="streaming"
-        tokenCount={420}
+    <div className="flex items-center gap-8 p-8">
+      <TetraMoleculeIcon
+        aria-label="TetraScience molecule mark"
+        role="img"
+        size={48}
       />
-      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-        Finished — spin settles, mark dims
-      </p>
-      <StreamStatus
-        iconVariant="tetra"
-        isStreaming={false}
-        showIndicator
-        startTime={new Date(Date.now() - 42 * 1000)}
-        state="done"
-        tokenCount={5300}
+      <TetraMoleculeIcon
+        aria-label="TetraScience molecule mark spinning"
+        role="img"
+        size={48}
+        spinning
       />
-      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-        The mark on its own — TetraMoleculeIcon (static + spinning)
-      </p>
-      <div className="flex items-center gap-4">
-        <TetraMoleculeIcon
-          aria-label="TetraScience molecule mark"
-          role="img"
-          size={40}
-        />
-        <TetraMoleculeIcon
-          aria-label="TetraScience molecule mark spinning"
-          className="opacity-90"
-          role="img"
-          size={40}
-          spinning
-        />
-      </div>
     </div>
   ),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
-    await step("Tetra-branded spinner renders while thinking and when done", async () => {
-      await expect(canvas.getByText("420 tokens")).toBeInTheDocument()
-      await expect(canvas.getByText("5.3k tokens")).toBeInTheDocument()
-    })
-    await step("Standalone molecule mark renders", async () => {
+    await step("Static and spinning molecule marks render", async () => {
       await expect(canvas.getByLabelText("TetraScience molecule mark")).toBeInTheDocument()
+      await expect(
+        canvas.getByLabelText("TetraScience molecule mark spinning")
+      ).toBeInTheDocument()
     })
   },
   parameters: {

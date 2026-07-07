@@ -9,14 +9,14 @@ import {
   createGroupAnnotations,
   resolveSelectionAppearance,
 } from "./annotations";
+import { CHROMATOGRAM_TRACE } from "./constants";
 import {
   validateSeriesData,
   applyBaselineCorrection,
-  collectPeaksWithBoundaryData,
   processUserAnnotations,
 } from "./dataProcessing";
 import { detectPeaks } from "./peakDetection";
-import { buildTraceData, buildLayout, buildConfig, createHoverHandler, createUnhoverHandler } from "./plotBuilder";
+import { buildLayout, buildConfig, createHoverHandler, createUnhoverHandler } from "./plotBuilder";
 
 import type {
   ChromatogramSeries,
@@ -91,10 +91,6 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     xLabel: xAxisTitle,
     yLabel: yAxisTitle,
   });
-  // Prevents the plotly_relayout fired by our own annotation update from
-  // being treated as a user-initiated zoom and triggering another update cycle.
-  const isAnnotationRelayout = useRef(false);
-
   // Stable refs for callbacks — avoids including them in effect dep arrays
   // (consumers often pass arrow functions that change identity every render).
   const onPeakClickRef = useRef(onPeakClick);
@@ -349,7 +345,7 @@ const ChromatogramChart: React.FC<ChromatogramChartProps> = ({
     processedAnnotations, xRange, yRange, showLegend, showGridX, showGridY,
     showMarkers, markerSize, showCrosshairs, enablePeakDetection, peakDetectionOptions,
     showPeakAreas, boundaryMarkers, annotationOverlapThreshold, showExportButton,
-    theme, bindTooltip, rangeAnnotations, rangeAnnotationOverlapThreshold,
+    theme, bindTooltip,
     // resolvedAppearance included so hover multiplier stays in sync with the
     // event handler closure without it being in a ref itself.
     resolvedAppearance,

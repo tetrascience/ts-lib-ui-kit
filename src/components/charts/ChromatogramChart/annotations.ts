@@ -3,6 +3,7 @@
  */
 
 import { CHART_COLORS } from "../../../utils/colors";
+
 import { CHROMATOGRAM_ANNOTATION } from "./constants";
 
 import type { PeakAnnotation, PeakSelectionAppearance, PeakWithMeta } from "./types";
@@ -233,7 +234,6 @@ export function createPeakAnnotation(
       color: textColor,
       family: "Inter, sans-serif",
     },
-    bgcolor: CHROMATOGRAM_ANNOTATION.BACKGROUND_COLOR,
     borderpad: 2,
     ...borderStyle,
   };

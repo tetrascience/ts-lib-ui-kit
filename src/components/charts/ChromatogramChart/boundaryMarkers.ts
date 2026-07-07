@@ -2,7 +2,7 @@
  * Boundary marker utilities for ChromatogramChart
  */
 
-import { seriesColor } from "../../../utils/colors";
+import { CHART_COLORS } from "../../../utils/colors";
 
 import type { PeakAnnotation, BoundaryMarkerType } from "./types";
 import type Plotly from "plotly.js-dist";

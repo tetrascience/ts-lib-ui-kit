@@ -1,12 +1,113 @@
 /*
- * Shared source partial — the kit's theme tokens, base/component CSS, custom
- * utilities, fonts, and keyframes. Imported by both `index.css` (lean) and
- * `index.standalone.css` (self-contained). The Tailwind theme layer is pulled
- * in by each entry (via `tailwindcss/theme` or the full `tailwindcss` import),
- * not here, so the standalone build never emits it twice.
+ * Shared source partial — the kit's theme mapping (@theme), design tokens
+ * (:root / .dark), custom utilities (@utility), base/component CSS, fonts, and
+ * keyframes. This file ships verbatim as the published `dist/index.tailwind.css`
+ * (Mode A) and is the source compiled into `index.css` (lean) and
+ * `index.standalone.css` (self-contained).
+ *
+ * It deliberately does NOT import Tailwind's theme or utilities layers: each
+ * compiled entry pulls those in (via `tailwindcss/theme` or full `tailwindcss`),
+ * and a Mode A consumer supplies them from their own `@import "tailwindcss"`.
+ * So it stays free of collision-causing pre-emitted utilities while still
+ * carrying the @utility definitions a consumer's Tailwind needs to emit them.
  */
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+
+/* ------------------------------------------------------------------ */
+/* shadcn Tailwind layer — inlined verbatim from `shadcn/dist/tailwind.css`.
+   Inlined (rather than `@import "shadcn/tailwind.css"`) so this file ships as
+   self-contained Tailwind source: `shadcn` is a build-only dependency and its
+   `./tailwind.css` subpath is not a resolvable export for consumers (Mode A).
+   Provides the accordion keyframes, data-* custom variants, and no-scrollbar
+   utility that kit components rely on. */
+@theme inline {
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height, var(--accordion-panel-height, auto));
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height, var(--accordion-panel-height, auto));
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+@custom-variant data-open {
+  &:where([data-state="open"]),
+  &:where([data-open]:not([data-open="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-closed {
+  &:where([data-state="closed"]),
+  &:where([data-closed]:not([data-closed="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-checked {
+  &:where([data-state="checked"]),
+  &:where([data-checked]:not([data-checked="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-unchecked {
+  &:where([data-state="unchecked"]),
+  &:where([data-unchecked]:not([data-unchecked="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-selected {
+  &:where([data-selected="true"]) {
+    @slot;
+  }
+}
+
+@custom-variant data-disabled {
+  &:where([data-disabled="true"]),
+  &:where([data-disabled]:not([data-disabled="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-active {
+  &:where([data-state="active"]),
+  &:where([data-active]:not([data-active="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-horizontal {
+  &:where([data-orientation="horizontal"]) {
+    @slot;
+  }
+}
+
+@custom-variant data-vertical {
+  &:where([data-orientation="vertical"]) {
+    @slot;
+  }
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
 
 /* inter-latin-wght-normal */
 @font-face {

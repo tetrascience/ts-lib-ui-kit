@@ -7,7 +7,8 @@
   "license": "Apache-2.0",
   "sideEffects": [
     "./dist/index.css",
-    "./dist/index.standalone.css"
+    "./dist/index.standalone.css",
+    "./dist/index.tailwind.css"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -70,6 +71,7 @@
     },
     "./index.css": "./dist/index.css",
     "./index.standalone.css": "./dist/index.standalone.css",
+    "./index.tailwind.css": "./dist/index.tailwind.css",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -83,8 +85,9 @@
     "test:storybook:ci:coverage": "vitest run --project=storybook --reporter=junit --outputFile=test-results/storybook-junit.xml --coverage",
     "test:all": "vitest run",
     "test:all:coverage": "vitest run --coverage",
-    "build": "vite build && yarn run build:standalone-css",
+    "build": "vite build && yarn run build:standalone-css && yarn run build:tailwind-source",
     "build:standalone-css": "vite build -c vite.standalone.config.ts",
+    "build:tailwind-source": "node -e \"require('fs').copyFileSync('src/index.tailwind.css','dist/index.tailwind.css')\"",
     "dev": "yarn storybook",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build && yarn run build-storybook:metadata",
@@ -145,6 +148,7 @@
     "streamdown": "^2.5.0",
     "tailwind-merge": "^3.5.0",
     "tokenlens": "^1.3.1",
+    "tw-animate-css": "^1.4.0",
     "use-stick-to-bottom": "^1.1.3",
     "vaul": "^1.1.2"
   },
@@ -229,7 +233,6 @@
     "tailwindcss": "^4.2.2",
     "ts-morph": "^27.0.2",
     "tsx": "^4.20.6",
-    "tw-animate-css": "^1.4.0",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^7.3.1",

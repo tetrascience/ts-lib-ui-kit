@@ -74,18 +74,23 @@ utilities and your app's utilities will double-emit and collide in the cascade (
 
 | Import path                                                    | Use case                                                                                                                                 |
 | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `@tetrascience-npm/tetrascience-react-ui/index.standalone.css` | **No Tailwind in your app.** Self-contained bundle — Tailwind preflight + every utility the kit's components use + tokens + fonts. Just import it and the kit renders. |
-| `@tetrascience-npm/tetrascience-react-ui/index.css`            | **You run your own Tailwind build.** Lean bundle — design tokens, component CSS, fonts, and animations only (no preflight, no utilities). Pair it with `@source` (below). |
+| `@tetrascience-npm/tetrascience-react-ui/index.tailwind.css`   | **You run your own Tailwind build.** Raw Tailwind source — the kit's `@theme`, tokens, custom utilities (`text-*`, `ts-border-*`, …), and component CSS. Your compiler emits utilities for your code *and* the kit in one pass. Pair with `@source` (below). |
+| `@tetrascience-npm/tetrascience-react-ui/index.standalone.css` | **No Tailwind in your app.** Self-contained compiled bundle — Tailwind preflight + every utility the kit's components use + tokens + fonts. Just import it and the kit renders. |
+
+> The JS entry also auto-imports a compiled baseline (`index.css`: tokens + component CSS,
+> no utilities). You normally don't import it directly — pick a mode below.
 
 #### Mode A — you run Tailwind (recommended for TetraScience data apps)
 
-Your Tailwind compiler generates utilities for both your code and the kit's components in a
-single pass, so nothing double-emits:
+Import the kit's Tailwind **source** into your CSS entry. Your compiler generates utilities
+for both your code and the kit's components in a single pass — no double-emission, no
+cascade collision — and you also get the kit's custom utilities (`text-title-lg`,
+`ts-border-glow`, `state-layer`, …) in your own markup:
 
 ```css
 /* App.css */
 @import "tailwindcss";
-@import "@tetrascience-npm/tetrascience-react-ui/index.css";
+@import "@tetrascience-npm/tetrascience-react-ui/index.tailwind.css";
 @source "../node_modules/@tetrascience-npm/tetrascience-react-ui";
 ```
 
@@ -102,9 +107,10 @@ This styles the **kit's own components**. It does not give your app a general Ta
 utility layer for your own markup — write plain CSS for your own chrome, or adopt Tailwind
 and switch to Mode A.
 
-> **Migrating from a previous version:** `index.tailwind.css` has been removed. If you ran
-> your own Tailwind build, switch to Mode A above. If you did not, switch to
-> `index.standalone.css` (Mode B).
+> **Migrating from a previous version:** `index.tailwind.css` is now shipped as **raw
+> Tailwind source** (it no longer pre-compiles a utility set, which used to collide with
+> your own utilities — SW-1898). Mode A consumers keep importing it, now paired with
+> `@source`. If you don't run Tailwind, switch to `index.standalone.css` (Mode B).
 
 ### Theming
 

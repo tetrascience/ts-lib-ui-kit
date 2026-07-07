@@ -144,9 +144,9 @@ const StreamStatusComponent = ({
         : STREAM_STATUS_ICONS[iconVariant]
       : icon;
 
-  // The branded TetraSpin does a flat 360° rotation (ts-tetra-spin); every
-  // other icon uses the surge-y ts-spin-pulse. The molecule logo carries its
-  // own colours, so it isn't tinted with the surrounding text colour.
+  // The branded TetraSpin does a flat 360° rotation (ts-tetra-spin) and picks
+  // up TS brand blue while active; every other icon uses the surge-y
+  // ts-spin-pulse and inherits the surrounding muted text colour.
   const isTetra = icon === undefined && iconVariant === "tetra";
   const spinClass = isTetra ? "ts-tetra-spin" : "ts-spin-pulse";
 
@@ -199,7 +199,8 @@ const StreamStatusComponent = ({
         <span
           className={cn(
             "shrink-0 [&>svg]:size-3.5",
-            isStreaming ? spinClass : "opacity-40"
+            isStreaming ? spinClass : "opacity-40",
+            isTetra && isStreaming && "text-[#549DFF]" // TS Light Blue 300
           )}
         >
           {resolvedIcon}

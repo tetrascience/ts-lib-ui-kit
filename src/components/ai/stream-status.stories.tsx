@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react"
 import { expect, userEvent, waitFor, within } from "storybook/test"
 
+
 import { StreamStatus } from "./stream-status"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
+
+import { TetraMoleculeIcon } from "@/components/ui/tetra-molecule-icon"
 
 
 const meta: Meta<typeof StreamStatus> = {
@@ -141,6 +144,16 @@ export const TetraSpinner: Story = {
         state="done"
         tokenCount={5300}
       />
+      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+        The mark on its own — TetraMoleculeIcon
+      </p>
+      <TetraMoleculeIcon
+        aria-label="TetraScience molecule mark"
+        className="text-[#2F45B5]"
+        fill="#2F45B5"
+        role="img"
+        size={40}
+      />
     </div>
   ),
   play: async ({ canvasElement, step }) => {
@@ -148,6 +161,9 @@ export const TetraSpinner: Story = {
     await step("Tetra-branded spinner renders while thinking and when done", async () => {
       await expect(canvas.getByText("420 tokens")).toBeInTheDocument()
       await expect(canvas.getByText("5.3k tokens")).toBeInTheDocument()
+    })
+    await step("Standalone molecule mark renders", async () => {
+      await expect(canvas.getByLabelText("TetraScience molecule mark")).toBeInTheDocument()
     })
   },
   parameters: {

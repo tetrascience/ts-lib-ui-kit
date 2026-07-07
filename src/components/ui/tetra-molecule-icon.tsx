@@ -31,9 +31,12 @@ const TetraMoleculeIcon = React.forwardRef<SVGSVGElement, TetraMoleculeIconProps
         xmlns="http://www.w3.org/2000/svg"
         width={size}
         height={size}
-        viewBox="181 188 381 381"
+        // Square viewBox padded around the mark's centre (371.5, 378.5) so the
+        // marks aren't flush with the edges, and `overflow-visible` so the
+        // nodes are never clipped as they sweep through the 360° spin.
+        viewBox="166.5 173.5 410 410"
         fill="none"
-        className={cn("shrink-0", className)}
+        className={cn("shrink-0 overflow-visible", className)}
         {...props}
       >
         <defs>

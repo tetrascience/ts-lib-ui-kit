@@ -120,7 +120,7 @@ export const TetraSpinner: Story = {
   render: () => (
     <div className="flex flex-col gap-4 p-4 min-w-72">
       <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-        Agent thinking — branded 3D TetraSpin
+        Agent thinking — branded 360° TetraSpin
       </p>
       <StreamStatus
         iconVariant="tetra"

@@ -8,7 +8,7 @@ import { memo, useEffect, useRef, useState } from "react";
 
 import type { ReactNode } from "react";
 
-import { TetraScienceIcon } from "@/components/ui/tetrascience-icon";
+import { TetraMoleculeIcon } from "@/components/ui/tetra-molecule-icon";
 import { cn } from "@/lib/utils";
 
 const MS_PER_S = 1000;
@@ -25,16 +25,16 @@ const M = 1_000_000;
  * Built-in spinner icons.
  *
  * The Lucide spinners pair with the flat `ts-spin-pulse` animation; the
- * `tetra` variant is the Tetra-branded "TetraSpin" — the TetraScience mark
- * driven by the 3D `ts-tetra-spin` flip, echoing the `:tetraspin3d:` gif for a
- * sense of brand identity while an agent is thinking.
+ * `tetra` variant is the Tetra-branded "TetraSpin" — the official TetraScience
+ * molecule logo spun a full 360° (`ts-tetra-spin`), echoing the `:tetraspin3d:`
+ * gif for a sense of brand identity while an agent is thinking.
  */
 export const STREAM_STATUS_ICONS = {
   loader: <LoaderIcon />,
   "loader-circle": <LoaderCircleIcon />,
   "loader-pinwheel": <LoaderPinwheelIcon />,
   "disc-3": <Disc3Icon />,
-  tetra: <TetraScienceIcon />,
+  tetra: <TetraMoleculeIcon />,
 } as const;
 
 export type StreamStatusIconVariant = keyof typeof STREAM_STATUS_ICONS;
@@ -96,7 +96,8 @@ export interface StreamStatusProps {
    * Ignored when `icon` is also provided.
    *
    * Options: `"loader"` | `"loader-circle"` | `"loader-pinwheel"` | `"disc-3"` | `"tetra"`.
-   * The `"tetra"` variant renders the Tetra-branded TetraSpin — the TetraScience mark with a 3D flip and brand-blue tint while streaming.
+   * The `"tetra"` variant renders the Tetra-branded TetraSpin — the official
+   * TetraScience molecule logo spinning a full 360° while streaming.
    */
   iconVariant?: StreamStatusIconVariant;
   className?: string;
@@ -143,8 +144,9 @@ const StreamStatusComponent = ({
         : STREAM_STATUS_ICONS[iconVariant]
       : icon;
 
-  // The branded TetraSpin flips in 3D (ts-tetra-spin) and picks up TS brand
-  // blue while active; every other icon uses the flat ts-spin-pulse.
+  // The branded TetraSpin does a flat 360° rotation (ts-tetra-spin); every
+  // other icon uses the surge-y ts-spin-pulse. The molecule logo carries its
+  // own colours, so it isn't tinted with the surrounding text colour.
   const isTetra = icon === undefined && iconVariant === "tetra";
   const spinClass = isTetra ? "ts-tetra-spin" : "ts-spin-pulse";
 
@@ -197,8 +199,7 @@ const StreamStatusComponent = ({
         <span
           className={cn(
             "shrink-0 [&>svg]:size-3.5",
-            isStreaming ? spinClass : "opacity-40",
-            isTetra && isStreaming && "text-[#549DFF]" // TS Light Blue 300
+            isStreaming ? spinClass : "opacity-40"
           )}
         >
           {resolvedIcon}

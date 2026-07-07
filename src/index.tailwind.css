@@ -1,4 +1,10 @@
-@import "tailwindcss/theme" layer(theme);
+/*
+ * Shared source partial — the kit's theme tokens, base/component CSS, custom
+ * utilities, fonts, and keyframes. Imported by both `index.css` (lean) and
+ * `index.standalone.css` (self-contained). The Tailwind theme layer is pulled
+ * in by each entry (via `tailwindcss/theme` or the full `tailwindcss` import),
+ * not here, so the standalone build never emits it twice.
+ */
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 

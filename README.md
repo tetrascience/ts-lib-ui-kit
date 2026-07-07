@@ -108,8 +108,6 @@ and switch to Mode A.
 
 ### Theming
 
-### Theming
-
 The design system is controlled via CSS custom properties in `index.css`. Override them to customise colours, spacing, and radii:
 
 ```css

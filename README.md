@@ -159,10 +159,6 @@ Plotly.js-based data visualisations:
 
 AreaGraph, BarGraph, Boxplot, Chromatogram, ChromatogramChart, DotPlot, Heatmap, Histogram, LineGraph, PieChart, PlateMap, ScatterGraph
 
-## Server Utilities
-
-> **Moved in v1.0.0.** The Node-only server utilities (`/server` and `/server/providers/*`) have been **removed from this package** and now live in **[`@tetrascience-npm/ts-connectors-sdk`](https://github.com/tetrascience/ts-sdk-connectors-nodejs)**, next to the `TDPClient` they depend on. See that package's README for full documentation and examples.
-
 ### Migration
 
 Only the package name in the import specifier changes — the subpaths are identical:

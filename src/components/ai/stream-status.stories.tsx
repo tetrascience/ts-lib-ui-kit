@@ -145,15 +145,22 @@ export const TetraSpinner: Story = {
         tokenCount={5300}
       />
       <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-        The mark on its own — TetraMoleculeIcon
+        The mark on its own — TetraMoleculeIcon (static + spinning)
       </p>
-      <TetraMoleculeIcon
-        aria-label="TetraScience molecule mark"
-        className="text-[#2F45B5]"
-        fill="#2F45B5"
-        role="img"
-        size={40}
-      />
+      <div className="flex items-center gap-4">
+        <TetraMoleculeIcon
+          aria-label="TetraScience molecule mark"
+          role="img"
+          size={40}
+        />
+        <TetraMoleculeIcon
+          aria-label="TetraScience molecule mark spinning"
+          className="opacity-90"
+          role="img"
+          size={40}
+          spinning
+        />
+      </div>
     </div>
   ),
   play: async ({ canvasElement, step }) => {

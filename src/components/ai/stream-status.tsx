@@ -26,8 +26,9 @@ const M = 1_000_000;
  *
  * The Lucide spinners pair with the flat `ts-spin-pulse` animation; the
  * `tetra` variant is the Tetra-branded "TetraSpin" — the official TetraScience
- * molecule logo spun a full 360° (`ts-tetra-spin`), echoing the `:tetraspin3d:`
- * gif for a sense of brand identity while an agent is thinking.
+ * molecule logo filled with the brand blue gradient, rotating 360° with the
+ * gradient held fixed so its nodes shimmer, echoing the `:tetraspin3d:` gif for
+ * a sense of brand identity while an agent is thinking.
  */
 export const STREAM_STATUS_ICONS = {
   loader: <LoaderIcon />,
@@ -97,7 +98,8 @@ export interface StreamStatusProps {
    *
    * Options: `"loader"` | `"loader-circle"` | `"loader-pinwheel"` | `"disc-3"` | `"tetra"`.
    * The `"tetra"` variant renders the Tetra-branded TetraSpin — the official
-   * TetraScience molecule logo spinning a full 360° while streaming.
+   * TetraScience molecule logo with a fixed brand-blue gradient, spinning 360°
+   * so its nodes shimmer while streaming.
    */
   iconVariant?: StreamStatusIconVariant;
   className?: string;
@@ -144,11 +146,11 @@ const StreamStatusComponent = ({
         : STREAM_STATUS_ICONS[iconVariant]
       : icon;
 
-  // The branded TetraSpin does a flat 360° rotation (ts-tetra-spin) and picks
-  // up TS brand blue while active; every other icon uses the surge-y
-  // ts-spin-pulse and inherits the surrounding muted text colour.
+  // The branded TetraSpin (tetra variant) is the TetraMoleculeIcon, which spins
+  // itself so the gradient stays fixed and its nodes shimmer; every other icon
+  // gets the surge-y ts-spin-pulse on its wrapper and inherits the muted text
+  // colour.
   const isTetra = icon === undefined && iconVariant === "tetra";
-  const spinClass = isTetra ? "ts-tetra-spin" : "ts-spin-pulse";
 
   const [elapsed, setElapsed] = useState(() => {
     if (startTime === undefined) return 0;
@@ -194,17 +196,24 @@ const StreamStatusComponent = ({
         className
       )}
     >
-      {/* Spinning icon — spins + pulse-surges while streaming */}
-      {resolvedIcon !== undefined && (
-        <span
-          className={cn(
-            "shrink-0 [&>svg]:size-3.5",
-            isStreaming ? spinClass : "opacity-40",
-            isTetra && isStreaming && "text-[#549DFF]" // TS Light Blue 300
-          )}
-        >
-          {resolvedIcon}
-        </span>
+      {/* Branded molecule — spins itself so the gradient shimmers */}
+      {isTetra ? (
+        <TetraMoleculeIcon
+          className={cn("size-3.5", !isStreaming && "opacity-40")}
+          spinning={isStreaming}
+        />
+      ) : (
+        // Other spinners — spin + pulse-surge while streaming
+        resolvedIcon !== undefined && (
+          <span
+            className={cn(
+              "shrink-0 [&>svg]:size-3.5",
+              isStreaming ? "ts-spin-pulse" : "opacity-40"
+            )}
+          >
+            {resolvedIcon}
+          </span>
+        )
       )}
 
       {/* Elapsed time */}

@@ -871,7 +871,8 @@
 /*
   ts-tetra-spin — the branded "TetraSpin" for the TetraScience molecule logo.
   A continuous, even 360° rotation (clockwise, left to right) to signal an
-  agent is thinking. Apply to a wrapper span around the TetraMoleculeIcon.
+  agent is thinking. Applied to the inner <g> of nodes in TetraMoleculeIcon so
+  the fixed gradient stays put and the nodes shimmer as they turn.
 */
 @keyframes ts-tetra-spin {
   from {

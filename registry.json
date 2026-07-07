@@ -128,12 +128,6 @@
       "files": [{ "path": "src/components/ui/dialog.tsx", "type": "registry:ui" }]
     },
     {
-      "name": "drawer",
-      "type": "registry:ui",
-      "dependencies": ["vaul"],
-      "files": [{ "path": "src/components/ui/drawer.tsx", "type": "registry:ui" }]
-    },
-    {
       "name": "dropdown-menu",
       "type": "registry:ui",
       "dependencies": ["lucide-react"],
@@ -162,12 +156,6 @@
       "dependencies": ["class-variance-authority"],
       "registryDependencies": ["button", "input", "textarea"],
       "files": [{ "path": "src/components/ui/input-group.tsx", "type": "registry:ui" }]
-    },
-    {
-      "name": "input-otp",
-      "type": "registry:ui",
-      "dependencies": ["input-otp", "lucide-react"],
-      "files": [{ "path": "src/components/ui/input-otp.tsx", "type": "registry:ui" }]
     },
     {
       "name": "item",

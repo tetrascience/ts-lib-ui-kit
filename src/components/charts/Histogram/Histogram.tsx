@@ -6,12 +6,26 @@ import { useChartTooltip } from "../ChartTooltip";
 import { useElementSize } from "@/hooks/use-element-size";
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { cn } from "@/lib/utils";
-import { buildChartAnnotations, type Band, type ReferenceLine } from "@/utils/chart-annotations";
+import {
+  buildChartAnnotations,
+  type AnnotationLegendItem,
+  type Band,
+  type ReferenceLine,
+} from "@/utils/chart-annotations";
 import { CHART_COLORS } from "@/utils/colors";
 import "./Histogram.scss";
 
 /** Exponent coefficient for normal distribution calculation */
 const NORMAL_DISTRIBUTION_EXPONENT_COEFF = -0.5;
+
+/** Map a Plotly dash style to the nearest CSS `border-top-style` for legend swatches. */
+const dashToCssBorderStyle = (dash?: string): "solid" | "dotted" | "dashed" =>
+  dash === "solid" ? "solid" : dash === "dot" ? "dotted" : "dashed";
+
+/** Fallback band fill opacity (mirrors the annotation-layer builder default). */
+const DEFAULT_BAND_OPACITY = 0.12;
+/** Floor for band legend swatches so faint fills stay visible at swatch size. */
+const LEGEND_BAND_SWATCH_MIN_OPACITY = 0.35;
 
 interface HistogramDataSeries {
   x: number[];
@@ -319,7 +333,6 @@ const Histogram: React.FC<HistogramProps> = ({
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       shapes: annotationLayer.shapes,
-      annotations: annotationLayer.annotations,
     };
 
     const config = {
@@ -370,13 +383,47 @@ const Histogram: React.FC<HistogramProps> = ({
 
   const ChartLegend: React.FC<{
     series: Array<{ name: string; color: string }>;
-  }> = ({ series }) => {
-    const items = series.map((item, i) => (
-      <React.Fragment key={item.name}>
+    annotations: AnnotationLegendItem[];
+  }> = ({ series, annotations }) => {
+    // Data series (filled boxes) followed by any labeled reference lines / bands
+    // (line and band swatches) — a single legend for everything on the plot.
+    const entries: Array<{ key: string; label: string; swatch: React.ReactNode }> = [
+      ...series.map((s) => ({
+        key: `series-${s.name}`,
+        label: s.name,
+        swatch: <span className="color-box" style={{ background: s.color }} />,
+      })),
+      ...annotations.map((a, i) => ({
+        key: `annotation-${i}-${a.label}`,
+        label: a.label,
+        swatch:
+          a.kind === "band" ? (
+            <span
+              className="color-box"
+              style={{
+                background: a.color,
+                opacity: Math.max(a.opacity ?? DEFAULT_BAND_OPACITY, LEGEND_BAND_SWATCH_MIN_OPACITY),
+              }}
+            />
+          ) : (
+            <span
+              className="line-swatch"
+              style={{
+                borderTopColor: a.color,
+                borderTopStyle: dashToCssBorderStyle(a.dash),
+                borderTopWidth: a.width ?? 2,
+              }}
+            />
+          ),
+      })),
+    ];
+
+    const items = entries.map((entry, i) => (
+      <React.Fragment key={entry.key}>
         <div className="legend-item">
-          <span className="color-box" style={{ background: item.color }} />
-          {item.name}
-          {i < series.length - 1 && <span className="divider" />}
+          {entry.swatch}
+          {entry.label}
+          {i < entries.length - 1 && <span className="divider" />}
         </div>
       </React.Fragment>
     ));
@@ -417,7 +464,7 @@ const Histogram: React.FC<HistogramProps> = ({
             }}
           />
         </div>
-        <ChartLegend series={seriesWithColors} />
+        <ChartLegend series={seriesWithColors} annotations={annotationLayer.legendItems} />
       </div>
       {tooltipElement}
     </div>

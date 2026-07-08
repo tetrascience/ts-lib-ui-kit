@@ -387,7 +387,7 @@ export const WithReferenceLineAndBand: Story = {
     docs: {
       description: {
         story:
-          "Opt-in annotation layer: a shaded pass `band` and a `cutoff` reference line overlaid on the distribution. Rendered as themed Plotly shapes with legible labels.",
+          "Opt-in annotation layer: a shaded pass `band` and a `cutoff` reference line overlaid on the distribution. Labeled lines/bands appear as items in the chart legend.",
       },
     },
   },
@@ -419,12 +419,12 @@ export const WithReferenceLineAndBand: Story = {
       });
     });
 
-    await step("Labels render on the annotation layer", async () => {
-      await waitFor(() => {
-        const text = canvasElement.querySelector(".infolayer")?.textContent ?? "";
-        expect(text).toContain("cutoff");
-        expect(text).toContain("pass");
-      });
+    await step("Labeled line and band appear as legend items", async () => {
+      const legend = canvasElement.querySelector(".legend-container") as HTMLElement;
+      expect(legend).toBeInTheDocument();
+      const legendText = within(legend);
+      expect(legendText.getByText("cutoff")).toBeInTheDocument();
+      expect(legendText.getByText("pass")).toBeInTheDocument();
     });
   },
 };

@@ -1,19 +1,23 @@
 /**
  * Shared annotation layer for charts — threshold/reference lines and shaded
- * bands, rendered as themed Plotly layout `shapes` and `annotations`.
+ * bands, rendered as themed Plotly layout `shapes`. Labeled lines/bands surface
+ * in the chart's legend rather than as on-plot tags.
  *
  * This is an opt-in enabler consumed by chart components (Histogram,
  * InteractiveScatter, …). Consumers pass `referenceLines` / `bands` props;
- * the chart calls {@link buildChartAnnotations} with its resolved theme and
- * merges the result into the Plotly layout.
+ * the chart calls {@link buildChartAnnotations} with its resolved theme, merges
+ * the `shapes` into the Plotly layout, and renders the `legendItems` in its
+ * legend (via {@link annotationLegendTraces} for charts that use Plotly's
+ * legend, or directly for charts with a custom legend).
  *
  * @example
  * ```ts
- * const { shapes, annotations } = buildChartAnnotations(theme, {
+ * const { shapes, legendItems } = buildChartAnnotations(theme, {
  *   referenceLines: [{ axis: "x", value: 0.7, label: "cutoff" }],
  *   bands: [{ axis: "y", from: -3, to: 3, label: "±3σ" }],
  * });
- * const layout = { ...base, shapes, annotations };
+ * const layout = { ...base, shapes, showlegend: legendItems.length > 0 };
+ * const data = [...traces, ...annotationLegendTraces(legendItems)];
  * ```
  */
 import type { PlotlyThemeColors } from "@/hooks/use-plotly-theme";
@@ -43,7 +47,7 @@ export interface ReferenceLine {
   axis: AnnotationAxis;
   /** Position of the line, in data coordinates on `axis`. */
   value: number;
-  /** Optional text tag rendered on the line (themed for light/dark). */
+  /** Optional label; shown as a legend item when provided. */
   label?: string;
   /** Line color. Defaults to a theme-aware neutral that reads in both modes. */
   color?: string;
@@ -68,7 +72,7 @@ export interface Band {
   from: number;
   /** The other edge of the band, in data coordinates on `axis`. */
   to: number;
-  /** Optional text tag rendered on the band (themed for light/dark). */
+  /** Optional label; shown as a legend item when provided. */
   label?: string;
   /** Fill color. Defaults to a theme-aware neutral. */
   color?: string;
@@ -84,47 +88,45 @@ export interface ChartAnnotationsConfig {
   bands?: Band[];
 }
 
-/** Plotly layout fragments produced by {@link buildChartAnnotations}. */
+/** Kind of annotation a legend entry represents. */
+export type AnnotationLegendKind = "line" | "band";
+
+/**
+ * A chart-agnostic legend entry for a labeled reference line or band. Charts
+ * render these in whatever legend they own — via {@link annotationLegendTraces}
+ * for Plotly's legend, or directly for a custom (HTML) legend.
+ */
+export interface AnnotationLegendItem {
+  /** Label text shown in the legend. */
+  label: string;
+  /** Swatch color (the line/band color). */
+  color: string;
+  /** Whether the swatch reads as a line or a filled band. */
+  kind: AnnotationLegendKind;
+  /** Dash style for `"line"` swatches. */
+  dash?: ReferenceLineDash;
+  /** Line width for `"line"` swatches. */
+  width?: number;
+  /** Fill opacity for `"band"` swatches. */
+  opacity?: number;
+}
+
+/** Output of {@link buildChartAnnotations}. */
 export interface ChartAnnotationLayer {
+  /** Plotly layout shapes for the lines/bands. Spread into `layout.shapes`. */
   shapes: Partial<Plotly.Shape>[];
-  annotations: Partial<Plotly.Annotations>[];
+  /** Legend entries for labeled lines/bands, in draw order (bands then lines). */
+  legendItems: AnnotationLegendItem[];
 }
 
 const DEFAULT_LINE_WIDTH = 2;
 const DEFAULT_LINE_DASH: ReferenceLineDash = "dash";
 const DEFAULT_BAND_OPACITY = 0.12;
-
-/**
- * Solid backing color for label tags, chosen for legibility in each theme.
- * The chart's paper background is transparent, so annotation labels need their
- * own opaque-ish fill to stay readable over bars, points, and grid lines.
- */
-const labelBackground = (theme: PlotlyThemeColors): string =>
-  theme.isDark ? "rgba(15, 23, 42, 0.85)" : "rgba(255, 255, 255, 0.85)";
+/** Legend swatch opacity floor so faint bands stay visible in the legend. */
+const LEGEND_BAND_OPACITY_MIN = 0.35;
 
 /** Theme-aware default color for reference lines and bands. */
 const neutralColor = (theme: PlotlyThemeColors): string => theme.textColor;
-
-/**
- * Shared label styling so every tag reads consistently and legibly in both
- * light and dark mode. The tag's border echoes the line/band color, tying the
- * label to what it annotates.
- */
-const labelStyle = (
-  theme: PlotlyThemeColors,
-  borderColor: string,
-): Partial<Plotly.Annotations> => ({
-  showarrow: false,
-  font: {
-    family: "Inter, sans-serif",
-    size: 12,
-    color: theme.textColor,
-  },
-  bgcolor: labelBackground(theme),
-  bordercolor: borderColor,
-  borderwidth: 1,
-  borderpad: 3,
-});
 
 const referenceLineShape = (
   line: ReferenceLine,
@@ -165,37 +167,6 @@ const referenceLineShape = (
   };
 };
 
-const referenceLineLabel = (
-  line: ReferenceLine,
-  color: string,
-  theme: PlotlyThemeColors,
-): Partial<Plotly.Annotations> => {
-  if (line.axis === "x") {
-    // Sit just above the top edge of the plot area, centered on the line.
-    return {
-      ...labelStyle(theme, color),
-      text: line.label,
-      xref: "x",
-      yref: "paper",
-      x: line.value,
-      y: 1,
-      xanchor: "center",
-      yanchor: "bottom",
-    };
-  }
-  // Pin to the right edge of the plot area, centered on the line.
-  return {
-    ...labelStyle(theme, color),
-    text: line.label,
-    xref: "paper",
-    yref: "y",
-    x: 1,
-    y: line.value,
-    xanchor: "right",
-    yanchor: "middle",
-  };
-};
-
 const bandShape = (band: Band, color: string): Partial<Plotly.Shape> => {
   const low = Math.min(band.from, band.to);
   const high = Math.max(band.from, band.to);
@@ -216,45 +187,15 @@ const bandShape = (band: Band, color: string): Partial<Plotly.Shape> => {
   return { ...fill, xref: "paper", yref: "y", x0: 0, x1: 1, y0: low, y1: high };
 };
 
-const bandLabel = (
-  band: Band,
-  color: string,
-  theme: PlotlyThemeColors,
-): Partial<Plotly.Annotations> => {
-  const mid = (band.from + band.to) / 2;
-  if (band.axis === "x") {
-    return {
-      ...labelStyle(theme, color),
-      text: band.label,
-      xref: "x",
-      yref: "paper",
-      x: mid,
-      y: 1,
-      xanchor: "center",
-      yanchor: "bottom",
-    };
-  }
-  return {
-    ...labelStyle(theme, color),
-    text: band.label,
-    xref: "paper",
-    yref: "y",
-    x: 1,
-    y: mid,
-    xanchor: "right",
-    yanchor: "middle",
-  };
-};
-
 /**
- * Build Plotly `shapes` and `annotations` for an opt-in annotation layer.
+ * Build Plotly `shapes` and legend entries for an opt-in annotation layer.
  *
  * Bands are emitted before reference lines so lines render on top of any
- * overlapping band. Labels are only produced when a `label` is provided.
+ * overlapping band. Legend items are only produced when a `label` is provided.
  *
  * @param theme  Resolved Plotly theme (from `usePlotlyTheme`) for legible defaults.
  * @param config Reference lines and bands to render.
- * @returns `{ shapes, annotations }` to spread into a Plotly layout.
+ * @returns `{ shapes, legendItems }`.
  */
 export function buildChartAnnotations(
   theme: PlotlyThemeColors,
@@ -264,13 +205,18 @@ export function buildChartAnnotations(
   const fallback = neutralColor(theme);
 
   const shapes: Partial<Plotly.Shape>[] = [];
-  const annotations: Partial<Plotly.Annotations>[] = [];
+  const legendItems: AnnotationLegendItem[] = [];
 
   for (const band of bands) {
     const color = band.color ?? fallback;
     shapes.push(bandShape(band, color));
     if (band.label) {
-      annotations.push(bandLabel(band, color, theme));
+      legendItems.push({
+        label: band.label,
+        color,
+        kind: "band",
+        opacity: band.opacity ?? DEFAULT_BAND_OPACITY,
+      });
     }
   }
 
@@ -278,9 +224,57 @@ export function buildChartAnnotations(
     const color = line.color ?? fallback;
     shapes.push(referenceLineShape(line, color));
     if (line.label) {
-      annotations.push(referenceLineLabel(line, color, theme));
+      legendItems.push({
+        label: line.label,
+        color,
+        kind: "line",
+        dash: line.dash ?? DEFAULT_LINE_DASH,
+        width: line.width ?? DEFAULT_LINE_WIDTH,
+      });
     }
   }
 
-  return { shapes, annotations };
+  return { shapes, legendItems };
+}
+
+/**
+ * Convert {@link AnnotationLegendItem}s into legend-only Plotly traces (no data
+ * points, so nothing is drawn on the plot — they exist purely to add a swatch +
+ * label to Plotly's legend). Use with charts that render Plotly's own legend.
+ *
+ * Reference lines become a line swatch (matching color/width/dash); bands
+ * become a filled square swatch. The band swatch opacity is floored so faint
+ * fills remain visible at legend size.
+ */
+export function annotationLegendTraces(
+  legendItems: AnnotationLegendItem[],
+): Partial<Plotly.Data>[] {
+  return legendItems.map((item) =>
+    item.kind === "line"
+      ? {
+          x: [null],
+          y: [null],
+          type: "scatter",
+          mode: "lines",
+          name: item.label,
+          line: { color: item.color, width: item.width ?? DEFAULT_LINE_WIDTH, dash: item.dash },
+          showlegend: true,
+          hoverinfo: "skip",
+        }
+      : {
+          x: [null],
+          y: [null],
+          type: "scatter",
+          mode: "markers",
+          name: item.label,
+          marker: {
+            color: item.color,
+            symbol: "square",
+            size: 12,
+            opacity: Math.max(item.opacity ?? DEFAULT_BAND_OPACITY, LEGEND_BAND_OPACITY_MIN),
+          },
+          showlegend: true,
+          hoverinfo: "skip",
+        },
+  );
 }

@@ -930,8 +930,8 @@ export const ThemedTooltip: Story = {
 
 /**
  * Opt-in annotation layer: threshold / reference lines and shaded from–to
- * bands, drawn as themed Plotly shapes. Here a `hit line` marks a y cutoff and
- * a shaded band highlights the high-x region.
+ * bands, drawn as themed Plotly shapes. Labeled lines/bands (`hit line`,
+ * `midpoint`, `focus`) surface in the chart legend.
  */
 export const WithReferenceLinesAndBands: Story = {
   args: {
@@ -945,9 +945,11 @@ export const WithReferenceLinesAndBands: Story = {
     bands: [{ axis: "x", from: 70, to: 100, color: "#038599", label: "focus" }],
   },
   play: async ({ canvasElement, step }) => {
-    await step("Chart renders", async () => {
+    await step("Chart renders with data points", async () => {
       expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll(".scatterlayer .points path").length).toBeGreaterThan(0);
+      });
     });
 
     await step("Two reference lines and one band are drawn", async () => {
@@ -957,9 +959,9 @@ export const WithReferenceLinesAndBands: Story = {
       });
     });
 
-    await step("Labels render on the annotation layer", async () => {
+    await step("Labeled lines and band appear as legend items", async () => {
       await waitFor(() => {
-        const text = canvasElement.querySelector(".infolayer")?.textContent ?? "";
+        const text = canvasElement.querySelector(".infolayer .legend")?.textContent ?? "";
         expect(text).toContain("hit line");
         expect(text).toContain("midpoint");
         expect(text).toContain("focus");

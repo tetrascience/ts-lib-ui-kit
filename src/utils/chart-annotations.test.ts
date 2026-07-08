@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { buildChartAnnotations } from "./chart-annotations";
+import { annotationLegendTraces, buildChartAnnotations } from "./chart-annotations";
 
 import type { PlotlyThemeColors } from "@/hooks/use-plotly-theme";
 
@@ -18,13 +18,11 @@ const LIGHT: PlotlyThemeColors = {
   isDark: false,
 };
 
-const DARK: PlotlyThemeColors = { ...LIGHT, textColor: "rgba(255, 255, 255, 0.9)", isDark: true };
-
 describe("buildChartAnnotations", () => {
   it("returns empty layers when no config is provided", () => {
-    const { shapes, annotations } = buildChartAnnotations(LIGHT);
+    const { shapes, legendItems } = buildChartAnnotations(LIGHT);
     expect(shapes).toEqual([]);
-    expect(annotations).toEqual([]);
+    expect(legendItems).toEqual([]);
   });
 
   it("builds a vertical shape for an x-axis reference line", () => {
@@ -90,25 +88,28 @@ describe("buildChartAnnotations", () => {
     expect(shapes[0].opacity).toBe(0.3);
   });
 
-  it("emits annotations only when a label is present", () => {
-    const { annotations } = buildChartAnnotations(LIGHT, {
+  it("emits legend items only when a label is present", () => {
+    const { legendItems } = buildChartAnnotations(LIGHT, {
       referenceLines: [
         { axis: "x", value: 0.7, label: "cutoff" },
         { axis: "x", value: 0.9 },
       ],
       bands: [{ axis: "y", from: -3, to: 3, label: "±3σ" }],
     });
-    expect(annotations).toHaveLength(2);
-    const texts = annotations.map((a) => a.text);
-    expect(texts).toContain("cutoff");
-    expect(texts).toContain("±3σ");
+    expect(legendItems).toHaveLength(2);
+    // Bands come before reference lines in draw order.
+    expect(legendItems.map((i) => i.label)).toEqual(["±3σ", "cutoff"]);
   });
 
-  it("centers a band label at the midpoint of its range", () => {
-    const { annotations } = buildChartAnnotations(LIGHT, {
-      bands: [{ axis: "x", from: 10, to: 30, label: "pass" }],
+  it("tags legend items with the right kind and swatch metadata", () => {
+    const { legendItems } = buildChartAnnotations(LIGHT, {
+      referenceLines: [{ axis: "x", value: 1, label: "cutoff", color: "#E15759", dash: "dot", width: 3 }],
+      bands: [{ axis: "x", from: 0, to: 2, label: "pass", color: "#038599", opacity: 0.2 }],
     });
-    expect(annotations[0].x).toBe(20);
+    const band = legendItems.find((i) => i.label === "pass");
+    const line = legendItems.find((i) => i.label === "cutoff");
+    expect(band).toMatchObject({ kind: "band", color: "#038599", opacity: 0.2 });
+    expect(line).toMatchObject({ kind: "line", color: "#E15759", dash: "dot", width: 3 });
   });
 
   it("renders bands before reference lines so lines sit on top", () => {
@@ -120,19 +121,46 @@ describe("buildChartAnnotations", () => {
     expect(shapes[1].type).toBe("line");
   });
 
-  it("uses a legible, opaque label backing in each theme", () => {
-    const light = buildChartAnnotations(LIGHT, {
+  it("falls back to a theme-aware neutral color when none is given", () => {
+    const { legendItems } = buildChartAnnotations(LIGHT, {
       referenceLines: [{ axis: "x", value: 1, label: "x" }],
-    }).annotations[0];
-    const dark = buildChartAnnotations(DARK, {
-      referenceLines: [{ axis: "x", value: 1, label: "x" }],
-    }).annotations[0];
+    });
+    expect(legendItems[0].color).toBe(LIGHT.textColor);
+  });
+});
 
-    expect(light.bgcolor).toBe("rgba(255, 255, 255, 0.85)");
-    expect(light.font?.color).toBe(LIGHT.textColor);
-    expect(dark.bgcolor).toBe("rgba(15, 23, 42, 0.85)");
-    expect(dark.font?.color).toBe(DARK.textColor);
-    // Label border echoes the annotated line's color.
-    expect(light.bordercolor).toBe(LIGHT.textColor);
+describe("annotationLegendTraces", () => {
+  it("returns one legend-only trace per item, drawing nothing on the plot", () => {
+    const { legendItems } = buildChartAnnotations(LIGHT, {
+      referenceLines: [{ axis: "x", value: 1, label: "cutoff", color: "#E15759", dash: "dot", width: 3 }],
+      bands: [{ axis: "x", from: 0, to: 2, label: "pass", color: "#038599", opacity: 0.2 }],
+    });
+    const traces = annotationLegendTraces(legendItems);
+    expect(traces).toHaveLength(2);
+    for (const t of traces) {
+      expect(t.x).toEqual([null]);
+      expect(t.y).toEqual([null]);
+      expect(t.showlegend).toBe(true);
+      expect(t.hoverinfo).toBe("skip");
+    }
+  });
+
+  it("renders a line swatch for reference lines", () => {
+    const traces = annotationLegendTraces([
+      { label: "cutoff", color: "#E15759", kind: "line", dash: "dot", width: 3 },
+    ]);
+    expect(traces[0].mode).toBe("lines");
+    expect(traces[0].name).toBe("cutoff");
+    expect(traces[0].line).toMatchObject({ color: "#E15759", dash: "dot", width: 3 });
+  });
+
+  it("renders a square swatch for bands and floors faint opacity", () => {
+    const traces = annotationLegendTraces([
+      { label: "pass", color: "#038599", kind: "band", opacity: 0.1 },
+    ]);
+    expect(traces[0].mode).toBe("markers");
+    expect(traces[0].marker).toMatchObject({ color: "#038599", symbol: "square" });
+    // 0.1 is below the legend floor, so it's raised to 0.35 for visibility.
+    expect((traces[0].marker as { opacity: number }).opacity).toBe(0.35);
   });
 });

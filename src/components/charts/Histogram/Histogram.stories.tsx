@@ -455,25 +455,31 @@ export const ReferenceLineAndBandDarkMode: Story = {
     referenceLines: [{ axis: "x", value: 24, color: "#E15759", label: "cutoff" }],
   },
   play: async ({ canvasElement, step }) => {
-    await step("Dark mode is active", async () => {
-      await waitFor(() => {
-        expect(document.documentElement.classList.contains("dark")).toBe(true);
-      });
-    });
+    // The `globals.theme` toggle drives dark mode in the Storybook UI, but the
+    // Vitest/Playwright runner doesn't propagate it to `documentElement` (what
+    // `useIsDark` observes), so force the class here for a deterministic dark
+    // render, then restore it.
+    const root = document.documentElement;
+    const hadDark = root.classList.contains("dark");
+    root.classList.add("dark");
 
-    await step("Reference line and band shapes are drawn", async () => {
-      await waitFor(() => {
-        expect(canvasElement.querySelectorAll(".shapelayer path").length).toBeGreaterThanOrEqual(2);
+    try {
+      await step("Reference line and band shapes are drawn", async () => {
+        await waitFor(() => {
+          expect(canvasElement.querySelectorAll(".shapelayer path").length).toBeGreaterThanOrEqual(2);
+        });
       });
-    });
 
-    await step("Labels remain legible in dark mode", async () => {
-      await waitFor(() => {
-        const text = canvasElement.querySelector(".infolayer")?.textContent ?? "";
-        expect(text).toContain("cutoff");
-        expect(text).toContain("pass");
+      await step("Labels remain legible in dark mode", async () => {
+        await waitFor(() => {
+          const text = canvasElement.querySelector(".infolayer")?.textContent ?? "";
+          expect(text).toContain("cutoff");
+          expect(text).toContain("pass");
+        });
       });
-    });
+    } finally {
+      if (!hadDark) root.classList.remove("dark");
+    }
   },
 };
 

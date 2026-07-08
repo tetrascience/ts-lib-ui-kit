@@ -357,7 +357,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/client-s3@npm:^3.983.0, @aws-sdk/client-s3@npm:^3.985.0":
+"@aws-sdk/client-s3@npm:^3.983.0":
   version: 3.1021.0
   resolution: "@aws-sdk/client-s3@npm:3.1021.0"
   dependencies:
@@ -980,22 +980,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/s3-request-presigner@npm:^3.985.0":
-  version: 3.1021.0
-  resolution: "@aws-sdk/s3-request-presigner@npm:3.1021.0"
-  dependencies:
-    "@aws-sdk/signature-v4-multi-region": "npm:^3.996.15"
-    "@aws-sdk/types": "npm:^3.973.6"
-    "@aws-sdk/util-format-url": "npm:^3.972.8"
-    "@smithy/middleware-endpoint": "npm:^4.4.28"
-    "@smithy/protocol-http": "npm:^5.3.12"
-    "@smithy/smithy-client": "npm:^4.12.8"
-    "@smithy/types": "npm:^4.13.1"
-    tslib: "npm:^2.6.2"
-  checksum: 10c0/5475fbf393d43401ac600fd8e5f790554b2b3b5cb09264349c0795223922d32627f2348ba1af0de99674d085126e2c9ed852773b1fe65e5bb8114d49b57559e1
-  languageName: node
-  linkType: hard
-
 "@aws-sdk/signature-v4-multi-region@npm:^3.996.15":
   version: 3.996.15
   resolution: "@aws-sdk/signature-v4-multi-region@npm:3.996.15"
@@ -1054,18 +1038,6 @@ __metadata:
     "@smithy/util-endpoints": "npm:^3.3.3"
     tslib: "npm:^2.6.2"
   checksum: 10c0/6356b7b040758af210f6b3d6807c11538e8a6888093ebe8a172949532a170c1f3f0bf93db86f6a75f071749219c3da2a88e63954f53031e8c3f9a092d7d97db9
-  languageName: node
-  linkType: hard
-
-"@aws-sdk/util-format-url@npm:^3.972.8":
-  version: 3.972.8
-  resolution: "@aws-sdk/util-format-url@npm:3.972.8"
-  dependencies:
-    "@aws-sdk/types": "npm:^3.973.6"
-    "@smithy/querystring-builder": "npm:^4.2.12"
-    "@smithy/types": "npm:^4.13.1"
-    tslib: "npm:^2.6.2"
-  checksum: 10c0/f0983faf602c21b960570057df141778200314b7f37cfffb8682a0ad8bbbb87a022761000379106d1f22c11c16f4f6ea76e4242aa7d7ba943ad9948ca5f95481
   languageName: node
   linkType: hard
 
@@ -7888,11 +7860,9 @@ __metadata:
   dependencies:
     "@aws-sdk/client-athena": "npm:^3.975.0"
     "@aws-sdk/client-cloudwatch-logs": "npm:>=3.0.0 <4.0.0"
-    "@aws-sdk/client-s3": "npm:^3.985.0"
     "@aws-sdk/client-sqs": "npm:>=3.0.0 <4.0.0"
     "@aws-sdk/client-ssm": "npm:>=3.0.0 <4.0.0"
     "@aws-sdk/lib-storage": "npm:>=3.0.0 <4.0.0"
-    "@aws-sdk/s3-request-presigner": "npm:^3.985.0"
     "@base-ui/react": "npm:^1.2.0"
     "@commitlint/cli": "npm:^20.5.0"
     "@commitlint/config-conventional": "npm:^20.5.0"

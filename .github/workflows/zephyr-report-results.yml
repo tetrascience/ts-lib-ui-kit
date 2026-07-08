@@ -25,11 +25,16 @@ permissions:
 
 jobs:
   report:
-    # Run on workflow_run (when Storybook Tests completes) or workflow_dispatch (manual)
+    # Run on workflow_run (when Storybook Tests completes) or workflow_dispatch (manual).
+    # For the workflow_run path, require the triggering run to originate from THIS
+    # repository (not a fork). This job is privileged (holds ZEPHYR_TOKEN + JFrog
+    # secrets) and checks out `workflow_run.head_sha`; gating on the head repository
+    # ensures that checked-out ref is always trusted, never untrusted fork code.
     if: >
       github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success' ||
-      github.event.workflow_run.conclusion == 'failure'
+      ((github.event.workflow_run.conclusion == 'success' ||
+        github.event.workflow_run.conclusion == 'failure') &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -50,6 +55,20 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --immutable
+
+      # ts-lib-zephyr-nodejs is published only to TetraScience's JFrog Artifactory
+      # and is deliberately kept OUT of package.json / yarn.lock so public and
+      # external-contributor `yarn install` stays on the public npm registry. The
+      # shared composite action fetches it as a leaf tarball into node_modules
+      # (its only transitive need, ts-morph, is already installed).
+      - name: Install ts-lib-zephyr-nodejs (JFrog)
+        uses: tetrascience/ts-ci-cd-lib/install-jfrog-npm-package@284c2430c739b3b9b8f11dc33bc60b13fe622522 # main
+        with:
+          package: ts-lib-zephyr-nodejs
+          version: "0.4.0"
+          # Read-only virtual registry URL — infra info, not a credential.
+          registry-url: https://tetrascience.jfrog.io/artifactory/api/npm/ts-npm-virtual/
+          auth: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
 
       - name: Download test results artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0

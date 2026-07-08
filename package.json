@@ -87,7 +87,7 @@
     "test:all:coverage": "vitest run --coverage",
     "build": "vite build && yarn run build:standalone-css && yarn run build:tailwind-source",
     "build:standalone-css": "vite build -c vite.standalone.config.ts",
-    "build:tailwind-source": "node -e \"require('fs').copyFileSync('src/index.tailwind.css','dist/index.tailwind.css')\"",
+    "build:tailwind-source": "node scripts/build/emit-tailwind-source.mjs",
     "dev": "yarn storybook",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build && yarn run build-storybook:metadata",

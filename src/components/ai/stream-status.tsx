@@ -97,9 +97,8 @@ export interface StreamStatusProps {
    * Ignored when `icon` is also provided.
    *
    * Options: `"loader"` | `"loader-circle"` | `"loader-pinwheel"` | `"disc-3"` | `"tetra"`.
-   * The `"tetra"` variant renders the Tetra-branded TetraSpin — the official
-   * TetraScience molecule logo with a fixed brand-blue gradient, spinning 360°
-   * so its nodes shimmer while streaming.
+   * The `"tetra"` variant renders the official TetraScience molecule logo with
+   * a fixed brand-blue gradient.
    */
   iconVariant?: StreamStatusIconVariant;
   className?: string;

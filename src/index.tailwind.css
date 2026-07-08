@@ -869,25 +869,6 @@
 }
 
 /*
-  ts-tetra-spin — the branded "TetraSpin" for the TetraScience molecule logo.
-  A continuous, even 360° rotation (clockwise, left to right) to signal an
-  agent is thinking. Applied to the inner <g> of nodes in TetraMoleculeIcon so
-  the fixed gradient stays put and the nodes shimmer as they turn.
-*/
-@keyframes ts-tetra-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@utility ts-tetra-spin {
-  animation: ts-tetra-spin 1.5s linear infinite;
-}
-
-/*
   ts-bubble-confirm — single-shot ripple for confirmation moments.
   Apply to an absolutely-positioned overlay element (e.g. a rounded-full span)
   that is mounted on a transition and removed once the animation ends.

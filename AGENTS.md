@@ -129,8 +129,7 @@ Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) fo
 ## Zephyr Integration
 
 - Zephyr HTTP is handled by a shared internal `ts-lib-zephyr-nodejs` library (`ZephyrClient` + helpers). The repo's scripts are thin wrappers around it — JUnit parsing, story parsing/write-back, cycle resolution, and folder mapping stay local.
-- **Dependency source:** the library lives only on TetraScience's JFrog Artifactory and is deliberately kept **out of `package.json` / `yarn.lock`** so public/external-contributor `yarn install` stays on the public npm registry. CI installs it as a leaf tarball inside the two Zephyr workflows (see `Install ts-lib-zephyr-nodejs (JFrog)` steps; the read-only virtual registry URL is hardcoded and only the org-level `JFROG_ARTIFACTORY_READ_NPM_AUTH` token comes from a secret). For local script work, install it as a leaf: `npm pack ts-lib-zephyr-nodejs@0.4.0 --registry <jfrog-url>` then extract the tgz into `node_modules/ts-lib-zephyr-nodejs` (do **not** `npm install --no-save` — it corrupts the Yarn `node_modules`).
-- Test results reported to Zephyr Scale via `scripts/zephyr/report-zephyr-results.ts`. Each story's screenshot is embedded (base64 `<img>`) into every step of the execution via the library's `buildStepsPayload` + `putExecutionSteps` — there is no S3 upload; CI ships `test-results/screenshots/**` in the `storybook-junit-results` artifact for the report job to read.
+- Test results reported to Zephyr Scale via `scripts/zephyr/report-zephyr-results.ts`.
 - Story-to-testcase sync handled by `scripts/zephyr/sync-storybook-zephyr.ts`
 - Test case IDs live in story parameters: `parameters.zephyr.testCaseId`
 - Do not manually invent, copy, reuse, or paste Zephyr test case IDs between stories.

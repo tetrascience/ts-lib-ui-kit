@@ -146,12 +146,6 @@ const StreamStatusComponent = ({
         : STREAM_STATUS_ICONS[iconVariant]
       : icon;
 
-  // The branded TetraSpin (tetra variant) is the TetraMoleculeIcon, which spins
-  // itself so the gradient stays fixed and its nodes shimmer; every other icon
-  // gets the surge-y ts-spin-pulse on its wrapper and inherits the muted text
-  // colour.
-  const isTetra = icon === undefined && iconVariant === "tetra";
-
   const [elapsed, setElapsed] = useState(() => {
     if (startTime === undefined) return 0;
     const origin =

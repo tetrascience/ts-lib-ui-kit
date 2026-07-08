@@ -107,6 +107,9 @@ export * from "@/components/ai/suggestion";
 export * from "@/components/ai/task";
 export * from "@/components/ai/tool";
 
+// Hooks
+export * from "@/hooks/use-plotly-theme";
+
 // Utils
 export * from "@/utils/colors";
 export * from "@/utils/chart-annotations";

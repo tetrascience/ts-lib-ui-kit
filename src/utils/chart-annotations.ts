@@ -22,7 +22,13 @@ import type { PlotlyThemeColors } from "@/hooks/use-plotly-theme";
 export type AnnotationAxis = "x" | "y";
 
 /** Dash style for a reference line (maps to Plotly's `line.dash`). */
-export type ReferenceLineDash = "solid" | "dot" | "dash" | "longdash" | "dashdot";
+export type ReferenceLineDash =
+  | "solid"
+  | "dot"
+  | "dash"
+  | "longdash"
+  | "dashdot"
+  | "longdashdot";
 
 /**
  * A threshold / reference line drawn across the full plot area.

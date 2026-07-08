@@ -31,8 +31,7 @@ const banner = `/*
 const appAlias = {
   "@tetrascience-npm/tetrascience-react-ui/server": path.resolve(__dirname, "./src/server/index.ts"),
   // Resolve each published entry to its source during dev.
-  "@tetrascience-npm/tetrascience-react-ui/index.css": path.resolve(__dirname, "./src/index.base.css"),
-  "@tetrascience-npm/tetrascience-react-ui/index.standalone.css": path.resolve(__dirname, "./src/index.css"),
+  "@tetrascience-npm/tetrascience-react-ui/index.css": path.resolve(__dirname, "./src/index.css"),
   "@tetrascience-npm/tetrascience-react-ui/index.tailwind.css": path.resolve(__dirname, "./src/index.tailwind.css"),
   "@tetrascience-npm/tetrascience-react-ui": path.resolve(__dirname, "./src/index.ts"),
 };

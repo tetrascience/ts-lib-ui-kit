@@ -1,3 +1,3 @@
-/* Full bundle: Storybook's stylesheet and the source for dist/index.standalone.css. */
+/* Full self-contained bundle: Storybook's stylesheet and the source for the published dist/index.css. */
 @import "tailwindcss";
 @import "./index.tailwind.css";

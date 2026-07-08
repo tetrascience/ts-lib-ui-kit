@@ -1,6 +1,3 @@
-// Baseline styles (published dist/index.css)
-import "@/index.base.css";
-
 // Composed
 export * from "@/components/composed/FormPatterns";
 export * from "@/components/composed/StatCard";

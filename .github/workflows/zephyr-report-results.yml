@@ -62,7 +62,7 @@ jobs:
       # shared composite action fetches it as a leaf tarball into node_modules
       # (its only transitive need, ts-morph, is already installed).
       - name: Install ts-lib-zephyr-nodejs (JFrog)
-        uses: tetrascience/ts-ci-cd-lib/install-jfrog-npm-package@main
+        uses: tetrascience/ts-ci-cd-lib/install-jfrog-npm-package@284c2430c739b3b9b8f11dc33bc60b13fe622522 # main
         with:
           package: ts-lib-zephyr-nodejs
           version: "0.4.0"

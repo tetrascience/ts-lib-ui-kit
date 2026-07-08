@@ -84,16 +84,6 @@ function getZephyrToken(): string {
   return token;
 }
 
-/**
- * Lazily-constructed shared Zephyr API client. All HTTP (auth headers, timeouts,
- * error surfacing, pagination helpers) is delegated to `ts-lib-zephyr-nodejs`.
- * Provisioning never posts executions, so `cycleKey` is left blank.
- *
- * The package specifier is held in a variable so bundlers/Vitest can't statically
- * resolve this JFrog-only package at module-load time — the unit test suite only
- * exercises the pure parsing helpers below and never constructs a client, so it
- * can import this module even where the package isn't installed.
- */
 let zephyrClient: ZephyrClient | null = null;
 async function getClient(): Promise<ZephyrClient> {
   if (!zephyrClient) {

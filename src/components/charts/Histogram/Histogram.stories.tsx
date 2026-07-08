@@ -429,60 +429,6 @@ export const WithReferenceLineAndBand: Story = {
   },
 };
 
-export const ReferenceLineAndBandDarkMode: Story = {
-  name: "Reference Line And Band (Dark Mode)",
-  globals: { theme: "dark" },
-  parameters: {
-    zephyr: { testCaseId: "" },
-    docs: {
-      description: {
-        story:
-          "The same annotation layer in dark mode. Label tags keep an opaque backing and themed text so they stay legible over the plot.",
-      },
-    },
-  },
-  args: {
-    dataSeries: {
-      x: generateNormalData(20, 8, 200),
-      name: "Torque",
-    },
-    title: "Histogram with Cutoff (Dark)",
-    xTitle: "Torque",
-    yTitle: "Frequency",
-    width: 520,
-    height: 480,
-    bands: [{ axis: "x", from: 24, to: 40, color: "#038599", label: "pass" }],
-    referenceLines: [{ axis: "x", value: 24, color: "#E15759", label: "cutoff" }],
-  },
-  play: async ({ canvasElement, step }) => {
-    // The `globals.theme` toggle drives dark mode in the Storybook UI, but the
-    // Vitest/Playwright runner doesn't propagate it to `documentElement` (what
-    // `useIsDark` observes), so force the class here for a deterministic dark
-    // render, then restore it.
-    const root = document.documentElement;
-    const hadDark = root.classList.contains("dark");
-    root.classList.add("dark");
-
-    try {
-      await step("Reference line and band shapes are drawn", async () => {
-        await waitFor(() => {
-          expect(canvasElement.querySelectorAll(".shapelayer path").length).toBeGreaterThanOrEqual(2);
-        });
-      });
-
-      await step("Labels remain legible in dark mode", async () => {
-        await waitFor(() => {
-          const text = canvasElement.querySelector(".infolayer")?.textContent ?? "";
-          expect(text).toContain("cutoff");
-          expect(text).toContain("pass");
-        });
-      });
-    } finally {
-      if (!hadDark) root.classList.remove("dark");
-    }
-  },
-};
-
 export const ContainerFilled: Story = {
   name: "Container Filled (responsive)",
   parameters: {

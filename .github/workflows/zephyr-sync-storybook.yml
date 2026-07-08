@@ -46,10 +46,8 @@ jobs:
       # external-contributor `yarn install` stays on the public npm registry. The
       # shared composite action fetches it as a leaf tarball into node_modules
       # (its only transitive need, ts-morph, is already installed).
-      # NOTE: pinned to the action's PR branch for testing; switch to @main once
-      # tetrascience/ts-ci-cd-lib#29 merges.
       - name: Install ts-lib-zephyr-nodejs (JFrog)
-        uses: tetrascience/ts-ci-cd-lib/install-jfrog-npm-package@install-jfrog-npm-package-action
+        uses: tetrascience/ts-ci-cd-lib/install-jfrog-npm-package@main
         with:
           package: ts-lib-zephyr-nodejs
           version: "0.4.0"

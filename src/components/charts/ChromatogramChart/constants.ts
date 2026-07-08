@@ -36,5 +36,16 @@ export const CHROMATOGRAM_ANNOTATION = {
   USER_ANNOTATION_TEXT_COLOR: "rgba(26, 26, 26, 1)",
   /** Background color behind annotation text */
   BACKGROUND_COLOR: "#ffffff",
+  /** Pixel offset above the data point for inline-style annotations (no arrow) */
+  INLINE_YSHIFT: 4,
 } as const;
+
+/**
+ * Trace rendering constants
+ */
+export const CHROMATOGRAM_TRACE = {
+  /** Base line width in pixels for all series traces */
+  BASE_LINE_WIDTH: 1.5,
+} as const;
+
 

@@ -94,11 +94,11 @@ export interface StreamStatusProps {
   icon?: ReactNode;
   /**
    * Convenience shorthand to pick a built-in spinner.
-   * Ignored when `icon` is also provided.
+   * Ignored when `icon` is also provided. Defaults to `"tetra"`.
    *
    * Options: `"loader"` | `"loader-circle"` | `"loader-pinwheel"` | `"disc-3"` | `"tetra"`.
-   * The `"tetra"` variant renders the official TetraScience molecule logo with
-   * a fixed brand-blue gradient.
+   * The default `"tetra"` variant renders the official TetraScience molecule
+   * logo with a fixed brand-blue gradient. Pass `icon={null}` to render no icon.
    */
   iconVariant?: StreamStatusIconVariant;
   className?: string;
@@ -132,18 +132,16 @@ const StreamStatusComponent = ({
   tokenCount,
   tokenLabel = "↓",
   icon,
-  iconVariant,
+  iconVariant = "tetra",
   className,
 }: StreamStatusProps) => {
   const resolvedState: StreamStatusState =
     stateProp ?? (isStreaming ? "streaming" : "idle");
 
+  // `icon` wins when provided (including `null` for no icon); otherwise fall
+  // back to the built-in variant, which defaults to the branded "tetra" mark.
   const resolvedIcon =
-    icon === undefined
-      ? iconVariant === undefined
-        ? undefined
-        : STREAM_STATUS_ICONS[iconVariant]
-      : icon;
+    icon === undefined ? STREAM_STATUS_ICONS[iconVariant] : icon;
 
   const [elapsed, setElapsed] = useState(() => {
     if (startTime === undefined) return 0;

@@ -196,24 +196,16 @@ const StreamStatusComponent = ({
         className
       )}
     >
-      {/* Branded molecule — spins itself so the gradient shimmers */}
-      {isTetra ? (
-        <TetraMoleculeIcon
-          className={cn("size-3.5", !isStreaming && "opacity-40")}
-          spinning={isStreaming}
-        />
-      ) : (
-        // Other spinners — spin + pulse-surge while streaming
-        resolvedIcon !== undefined && (
-          <span
-            className={cn(
-              "shrink-0 [&>svg]:size-3.5",
-              isStreaming ? "ts-spin-pulse" : "opacity-40"
-            )}
-          >
-            {resolvedIcon}
-          </span>
-        )
+      {/* Spinning icon — spins + pulse-surges while streaming */}
+      {resolvedIcon !== undefined && (
+        <span
+          className={cn(
+            "shrink-0 [&>svg]:size-3.5",
+            isStreaming ? "ts-spin-pulse" : "opacity-40"
+          )}
+        >
+          {resolvedIcon}
+        </span>
       )}
 
       {/* Elapsed time */}

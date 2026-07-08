@@ -1,13 +1,9 @@
 import { useEffect, useState } from "react"
 import { expect, userEvent, waitFor, within } from "storybook/test"
 
-
 import { StreamStatus } from "./stream-status"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
-
-import { TetraMoleculeIcon } from "@/components/ui/tetra-molecule-icon"
-
 
 const meta: Meta<typeof StreamStatus> = {
   title: "AI Elements/Stream Status",
@@ -111,41 +107,6 @@ export const IconVariants: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4631" },
-  },
-}
-
-// ---------------------------------------------------------------------------
-// Tetra Spinner — the Tetra-branded "TetraSpin" (SW-1886)
-// ---------------------------------------------------------------------------
-
-export const TetraSpinner: Story = {
-  name: "Tetra Spinner",
-  render: () => (
-    <div className="flex items-center gap-8 p-8">
-      <TetraMoleculeIcon
-        aria-label="TetraScience molecule mark"
-        role="img"
-        size={48}
-      />
-      <TetraMoleculeIcon
-        aria-label="TetraScience molecule mark spinning"
-        role="img"
-        size={48}
-        spinning
-      />
-    </div>
-  ),
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    await step("Static and spinning molecule marks render", async () => {
-      await expect(canvas.getByLabelText("TetraScience molecule mark")).toBeInTheDocument()
-      await expect(
-        canvas.getByLabelText("TetraScience molecule mark spinning")
-      ).toBeInTheDocument()
-    })
-  },
-  parameters: {
-    zephyr: { testCaseId: "" },
   },
 }
 

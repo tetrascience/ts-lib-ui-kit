@@ -109,3 +109,4 @@ export * from "@/components/ai/tool";
 
 // Utils
 export * from "@/utils/colors";
+export * from "@/utils/chart-annotations";

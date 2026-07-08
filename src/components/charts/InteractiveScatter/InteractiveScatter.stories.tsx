@@ -927,3 +927,86 @@ export const ThemedTooltip: Story = {
     zephyr: { testCaseId: "SW-T5414" },
   },
 };
+
+/**
+ * Opt-in annotation layer: threshold / reference lines and shaded from–to
+ * bands, drawn as themed Plotly shapes. Here a `hit line` marks a y cutoff and
+ * a shaded band highlights the high-x region.
+ */
+export const WithReferenceLinesAndBands: Story = {
+  args: {
+    data: BASIC_DATA,
+    title: "Scatter with Thresholds",
+    ...DEFAULT_DIMS,
+    referenceLines: [
+      { axis: "y", value: 70, color: "#E15759", label: "hit line" },
+      { axis: "x", value: 50, label: "midpoint" },
+    ],
+    bands: [{ axis: "x", from: 70, to: 100, color: "#038599", label: "focus" }],
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Chart renders", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    });
+
+    await step("Two reference lines and one band are drawn", async () => {
+      await waitFor(() => {
+        // 2 reference lines + 1 band = three shapes.
+        expect(canvasElement.querySelectorAll(".shapelayer path").length).toBeGreaterThanOrEqual(3);
+      });
+    });
+
+    await step("Labels render on the annotation layer", async () => {
+      await waitFor(() => {
+        const text = canvasElement.querySelector(".infolayer")?.textContent ?? "";
+        expect(text).toContain("hit line");
+        expect(text).toContain("midpoint");
+        expect(text).toContain("focus");
+      });
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};
+
+/**
+ * The annotation layer in dark mode — line and band colors, and the label
+ * tags' backing/text, stay legible against the dark plot.
+ */
+export const ReferenceLinesAndBandsDarkMode: Story = {
+  name: "Reference Lines And Bands (Dark Mode)",
+  globals: { theme: "dark" },
+  args: {
+    data: BASIC_DATA,
+    title: "Scatter with Thresholds (Dark)",
+    ...DEFAULT_DIMS,
+    referenceLines: [{ axis: "y", value: 70, color: "#FD972F", label: "hit line" }],
+    bands: [{ axis: "x", from: 70, to: 100, color: "#038599", label: "focus" }],
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Dark mode is active", async () => {
+      await waitFor(() => {
+        expect(document.documentElement.classList.contains("dark")).toBe(true);
+      });
+    });
+
+    await step("Reference line and band shapes are drawn", async () => {
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll(".shapelayer path").length).toBeGreaterThanOrEqual(2);
+      });
+    });
+
+    await step("Labels remain legible in dark mode", async () => {
+      await waitFor(() => {
+        const text = canvasElement.querySelector(".infolayer")?.textContent ?? "";
+        expect(text).toContain("hit line");
+        expect(text).toContain("focus");
+      });
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};

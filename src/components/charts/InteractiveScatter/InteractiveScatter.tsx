@@ -21,6 +21,7 @@ import {
 import type { AxisConfig, InteractiveScatterProps, SelectionMode, TooltipConfig } from "./types";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { buildChartAnnotations } from "@/utils/chart-annotations";
 
 // Stable default prop objects — inline defaults would create a new identity
 // on every render, retriggering the plot effect (and tearing down the
@@ -69,6 +70,8 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
   height = 600,
   showColorBar = true,
   className,
+  referenceLines,
+  bands,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
@@ -205,6 +208,12 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     return config;
   }, [sizes, shapes, colorMapping, plotlyColorscale, plotlyColors, showColorBar, processedData, colors]);
 
+  // Opt-in threshold lines / shaded bands, as themed Plotly shapes + labels.
+  const annotationLayer = useMemo(
+    () => buildChartAnnotations(theme, { referenceLines, bands }),
+    [theme, referenceLines, bands],
+  );
+
   // Create Plotly plot
   useEffect(() => {
     const currentRef = plotRef.current;
@@ -262,6 +271,8 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
       enableBoxSelection,
       theme,
     });
+    layout.shapes = annotationLayer.shapes;
+    layout.annotations = annotationLayer.annotations;
 
     const config: Partial<Plotly.Config> = {
       responsive: true,
@@ -378,6 +389,7 @@ const InteractiveScatter: React.FC<InteractiveScatterProps> = ({
     nativeTooltip,
     bindTooltip,
     theme,
+    annotationLayer,
   ]);
 
   // Apply selection state to Plotly

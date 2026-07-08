@@ -380,6 +380,103 @@ export const MultipleSeriesWithDistributionLines: Story = {
   },
 };
 
+export const WithReferenceLineAndBand: Story = {
+  name: "With Reference Line And Band",
+  parameters: {
+    zephyr: { testCaseId: "" },
+    docs: {
+      description: {
+        story:
+          "Opt-in annotation layer: a shaded pass `band` and a `cutoff` reference line overlaid on the distribution. Rendered as themed Plotly shapes with legible labels.",
+      },
+    },
+  },
+  args: {
+    dataSeries: {
+      x: generateNormalData(20, 8, 200),
+      name: "Torque",
+    },
+    title: "Histogram with Cutoff",
+    xTitle: "Torque",
+    yTitle: "Frequency",
+    width: 520,
+    height: 480,
+    bands: [{ axis: "x", from: 24, to: 40, color: "#038599", label: "pass" }],
+    referenceLines: [{ axis: "x", value: 24, color: "#E15759", label: "cutoff" }],
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart renders", async () => {
+      expect(canvas.getByText("Histogram with Cutoff")).toBeInTheDocument();
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Reference line and band shapes are drawn", async () => {
+      await waitFor(() => {
+        // One band rect + one reference line = two shapes.
+        expect(canvasElement.querySelectorAll(".shapelayer path").length).toBeGreaterThanOrEqual(2);
+      });
+    });
+
+    await step("Labels render on the annotation layer", async () => {
+      await waitFor(() => {
+        const text = canvasElement.querySelector(".infolayer")?.textContent ?? "";
+        expect(text).toContain("cutoff");
+        expect(text).toContain("pass");
+      });
+    });
+  },
+};
+
+export const ReferenceLineAndBandDarkMode: Story = {
+  name: "Reference Line And Band (Dark Mode)",
+  globals: { theme: "dark" },
+  parameters: {
+    zephyr: { testCaseId: "" },
+    docs: {
+      description: {
+        story:
+          "The same annotation layer in dark mode. Label tags keep an opaque backing and themed text so they stay legible over the plot.",
+      },
+    },
+  },
+  args: {
+    dataSeries: {
+      x: generateNormalData(20, 8, 200),
+      name: "Torque",
+    },
+    title: "Histogram with Cutoff (Dark)",
+    xTitle: "Torque",
+    yTitle: "Frequency",
+    width: 520,
+    height: 480,
+    bands: [{ axis: "x", from: 24, to: 40, color: "#038599", label: "pass" }],
+    referenceLines: [{ axis: "x", value: 24, color: "#E15759", label: "cutoff" }],
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Dark mode is active", async () => {
+      await waitFor(() => {
+        expect(document.documentElement.classList.contains("dark")).toBe(true);
+      });
+    });
+
+    await step("Reference line and band shapes are drawn", async () => {
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll(".shapelayer path").length).toBeGreaterThanOrEqual(2);
+      });
+    });
+
+    await step("Labels remain legible in dark mode", async () => {
+      await waitFor(() => {
+        const text = canvasElement.querySelector(".infolayer")?.textContent ?? "";
+        expect(text).toContain("cutoff");
+        expect(text).toContain("pass");
+      });
+    });
+  },
+};
+
 export const ContainerFilled: Story = {
   name: "Container Filled (responsive)",
   parameters: {

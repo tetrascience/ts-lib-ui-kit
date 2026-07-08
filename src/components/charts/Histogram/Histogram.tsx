@@ -6,6 +6,7 @@ import { useChartTooltip } from "../ChartTooltip";
 import { useElementSize } from "@/hooks/use-element-size";
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { cn } from "@/lib/utils";
+import { buildChartAnnotations, type Band, type ReferenceLine } from "@/utils/chart-annotations";
 import { CHART_COLORS } from "@/utils/colors";
 import "./Histogram.scss";
 
@@ -44,6 +45,16 @@ type HistogramProps = {
   yTitle?: string;
   bargap?: number;
   showDistributionLine?: boolean;
+  /**
+   * Opt-in threshold / reference lines drawn across the plot (e.g. a cutoff).
+   * Rendered as themed Plotly shapes with optional labels.
+   */
+  referenceLines?: ReferenceLine[];
+  /**
+   * Opt-in shaded from–to bands (e.g. a pass region or ±σ envelope).
+   * Rendered as themed Plotly shapes behind the bars.
+   */
+  bands?: Band[];
 };
 
 const calculateMean = (data: number[]): number => {
@@ -114,6 +125,8 @@ const Histogram: React.FC<HistogramProps> = ({
   yTitle = "Frequency",
   bargap = 0.2,
   showDistributionLine = false,
+  referenceLines,
+  bands,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
@@ -165,6 +178,11 @@ const Histogram: React.FC<HistogramProps> = ({
   }, [seriesArray, showDistributionLine, defaultColors]);
 
   const gridColor = theme.gridColor;
+
+  const annotationLayer = useMemo(
+    () => buildChartAnnotations(theme, { referenceLines, bands }),
+    [theme, referenceLines, bands],
+  );
 
   const histogramData = useMemo(
     () =>
@@ -300,6 +318,8 @@ const Histogram: React.FC<HistogramProps> = ({
       bargap: bargap,
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
+      shapes: annotationLayer.shapes,
+      annotations: annotationLayer.annotations,
     };
 
     const config = {
@@ -324,7 +344,7 @@ const Histogram: React.FC<HistogramProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [hasSize, xTitle, yTitle, bargap, plotData, effectiveBarMode, gridColor, theme, bindTooltip]);
+  }, [hasSize, xTitle, yTitle, bargap, plotData, effectiveBarMode, gridColor, theme, bindTooltip, annotationLayer]);
 
   // Resize in place when the measured/overridden size changes — cheaper than
   // recreating the plot, and it preserves tooltip/event bindings.

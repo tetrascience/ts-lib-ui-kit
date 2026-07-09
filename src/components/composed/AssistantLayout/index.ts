@@ -9,10 +9,4 @@ export type {
   AssistantLayoutProviderProps,
   AssistantDockControlsProps,
 } from "./AssistantLayout"
-export {
-  dockLayout,
-  clampAssistantSize,
-  nextAssistantSize,
-  type AssistantDock,
-  type DockLayout,
-} from "./dockLayout"
+export { dockPanels, type AssistantDock, type DockPanels } from "./dockLayout"

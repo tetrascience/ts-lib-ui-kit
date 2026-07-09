@@ -1,25 +1,46 @@
 import * as React from "react"
 import { act } from "react"
 import { createRoot } from "react-dom/client"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 import {
   AssistantDockControls,
-  AssistantLayout,
   AssistantLayoutProvider,
   useAssistantLayout,
 } from "./AssistantLayout"
 
-(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true
+;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true
 
 let container: HTMLDivElement
 let root: ReturnType<typeof createRoot>
+
+/** jsdom's bundled `localStorage` is a non-functional stub here, so use our own. */
+function installLocalStorage() {
+  const store = new Map<string, string>()
+  const storage: Storage = {
+    getItem: (k) => (store.has(k) ? store.get(k)! : null),
+    setItem: (k, v) => {
+      store.set(k, String(v))
+    },
+    removeItem: (k) => {
+      store.delete(k)
+    },
+    clear: () => {
+      store.clear()
+    },
+    key: (i) => [...store.keys()][i] ?? null,
+    get length() {
+      return store.size
+    },
+  }
+  Object.defineProperty(window, "localStorage", { configurable: true, value: storage })
+}
 
 beforeEach(() => {
   container = document.createElement("div")
   document.body.appendChild(container)
   root = createRoot(container)
-  window.localStorage.clear()
+  installLocalStorage()
 })
 
 afterEach(() => {
@@ -47,18 +68,26 @@ function click(selector: string) {
   })
 }
 
-function hasClass(el: HTMLElement | null, className: string) {
-  return (el?.className.split(/\s+/) ?? []).includes(className)
+/** Surfaces the context values so assertions don't depend on the resizable layout. */
+function Probe() {
+  const { dock, size, visible } = useAssistantLayout()
+  return (
+    <span data-testid="probe" data-dock={dock} data-size={String(size)} data-visible={String(visible)} />
+  )
 }
 
-function flexSizePx(el: HTMLElement | null) {
-  const value = /0 0 (\d+)px/.exec(el?.style.flex ?? "")
-  return value ? Number(value[1]) : null
+function probe() {
+  const el = q('[data-testid="probe"]')
+  return {
+    dock: el?.getAttribute("data-dock"),
+    size: Number(el?.getAttribute("data-size")),
+    visible: el?.getAttribute("data-visible") === "true",
+  }
 }
 
-function TestLayout({
+function Harness({
   dock = "left",
-  size = 420,
+  size,
   persist = true,
   showLabel = true,
 }: {
@@ -68,11 +97,14 @@ function TestLayout({
   showLabel?: boolean
 }) {
   return (
-    <AssistantLayoutProvider storageKey="spec.assistant" defaultDock={dock} defaultSize={size} persist={persist}>
+    <AssistantLayoutProvider
+      storageKey="spec.assistant"
+      defaultDock={dock}
+      defaultSize={size}
+      persist={persist}
+    >
       <AssistantDockControls label={showLabel ? undefined : null} />
-      <AssistantLayout assistant={<div data-testid="assistant-content">assistant</div>}>
-        <div>content</div>
-      </AssistantLayout>
+      <Probe />
     </AssistantLayoutProvider>
   )
 }
@@ -89,110 +121,53 @@ describe("AssistantLayout", () => {
     }).toThrow("useAssistantLayout must be used within an AssistantLayoutProvider")
   })
 
-  it("reads persisted dock/size and clamps stale size to viewport cap", () => {
+  it("reads persisted dock and size", () => {
     window.localStorage.setItem("spec.assistant.dock", "right")
-    window.localStorage.setItem("spec.assistant.size", "1000")
-    vi.spyOn(window, "innerWidth", "get").mockReturnValue(900)
-    vi.spyOn(window, "innerHeight", "get").mockReturnValue(500)
+    window.localStorage.setItem("spec.assistant.size", "45")
 
-    render(<TestLayout dock="left" size={420} />)
+    render(<Harness dock="left" size={32} />)
 
-    const body = q<HTMLElement>('[data-slot="assistant-layout"]')
-    const assistant = q<HTMLElement>('[data-slot="assistant-layout-assistant"]')
-    expect(body?.style.flexDirection).toBe("row")
-    expect(assistant?.style.order).toBe("2")
-    expect(assistant?.style.flex).toBe("0 0 425px")
+    expect(probe().dock).toBe("right")
+    expect(probe().size).toBe(45)
   })
 
-  it("hides on active dock click, shows label by default, and redocks when another icon is clicked", () => {
-    render(<TestLayout dock="left" size={420} />)
+  it("falls back to the default when the persisted size is out of the (0,100) range", () => {
+    window.localStorage.setItem("spec.assistant.size", "150")
 
+    render(<Harness dock="left" size={32} />)
+
+    expect(probe().size).toBe(32)
+  })
+
+  it("ignores persisted values when persist is false", () => {
+    window.localStorage.setItem("spec.assistant.dock", "bottom")
+
+    render(<Harness dock="left" size={32} persist={false} />)
+
+    expect(probe().dock).toBe("left")
+  })
+
+  it("shows the label by default and hides it when label is null", () => {
+    render(<Harness dock="left" />)
     expect(container.textContent).toContain("AI Assistant")
-    expect(q('[role="separator"]')).not.toBeNull()
+
+    act(() => root.unmount())
+    root = createRoot(container)
+    render(<Harness dock="left" showLabel={false} />)
+    expect(container.textContent).not.toContain("AI Assistant")
+  })
+
+  it("hides on active dock click and redocks (persisting the dock) on another icon", () => {
+    render(<Harness dock="left" />)
+    expect(probe().visible).toBe(true)
+    expect(probe().dock).toBe("left")
 
     click('button[aria-label="Hide AI Assistant"]')
-    const assistant = q<HTMLElement>('[data-slot="assistant-layout-assistant"]')
-    expect(hasClass(assistant, "hidden")).toBe(true)
-    expect(q('[role="separator"]')).toBeNull()
+    expect(probe().visible).toBe(false)
 
     click('button[aria-label="Dock assistant right"]')
+    expect(probe().visible).toBe(true)
+    expect(probe().dock).toBe("right")
     expect(window.localStorage.getItem("spec.assistant.dock")).toBe("right")
-    expect(hasClass(assistant, "hidden")).toBe(false)
-    expect(assistant?.style.order).toBe("2")
-  })
-
-  it("supports keyboard resize controls and persists rounded size", () => {
-    render(<TestLayout dock="bottom" size={420} showLabel={false} />)
-
-    expect(container.textContent).not.toContain("AI Assistant")
-    const separator = q<HTMLElement>('[role="separator"]')
-    const assistant = q<HTMLElement>('[data-slot="assistant-layout-assistant"]')
-    expect(separator?.getAttribute("aria-orientation")).toBe("horizontal")
-
-    const initial = flexSizePx(assistant)
-    expect(initial).toBe(420)
-
-    act(() => {
-      separator?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }))
-    })
-    const afterDown = flexSizePx(assistant)
-    expect(afterDown).toBeLessThan(initial!)
-    expect(window.localStorage.getItem("spec.assistant.size")).toBe(String(afterDown))
-
-    act(() => {
-      separator?.dispatchEvent(
-        new KeyboardEvent("keydown", { key: "ArrowUp", shiftKey: true, bubbles: true })
-      )
-    })
-    const afterShiftUp = flexSizePx(assistant)
-    expect(afterShiftUp).toBeGreaterThan(afterDown!)
-    expect(window.localStorage.getItem("spec.assistant.size")).toBe(String(afterShiftUp))
-
-    act(() => {
-      separator?.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true }))
-    })
-    expect(assistant?.style.flex).toBe("0 0 240px")
-    expect(window.localStorage.getItem("spec.assistant.size")).toBe("240")
-  })
-
-  it("supports pointer resize and ignores non-primary pointer down", () => {
-    render(<TestLayout dock="left" size={420} persist={false} />)
-
-    const separator = q<HTMLElement>('[role="separator"]')
-    const assistant = q<HTMLElement>('[data-slot="assistant-layout-assistant"]')
-    expect(separator).not.toBeNull()
-
-    const setPointerCapture = vi.fn()
-    const releasePointerCapture = vi.fn()
-    Object.defineProperties(separator as object, {
-      setPointerCapture: { value: setPointerCapture, configurable: true },
-      releasePointerCapture: { value: releasePointerCapture, configurable: true },
-    })
-
-    act(() => {
-      separator?.dispatchEvent(
-        new PointerEvent("pointerdown", { button: 1, pointerId: 7, clientX: 0, bubbles: true })
-      )
-    })
-    expect(document.body.style.userSelect).toBe("")
-
-    act(() => {
-      separator?.dispatchEvent(
-        new PointerEvent("pointerdown", { button: 0, pointerId: 7, clientX: 100, bubbles: true })
-      )
-    })
-    expect(setPointerCapture).toHaveBeenCalledWith(7)
-    expect(document.body.style.userSelect).toBe("none")
-
-    act(() => {
-      separator?.dispatchEvent(new PointerEvent("pointermove", { pointerId: 7, clientX: 140, bubbles: true }))
-    })
-    expect(assistant?.style.flex).toBe("0 0 460px")
-
-    act(() => {
-      separator?.dispatchEvent(new PointerEvent("pointerup", { pointerId: 7, bubbles: true }))
-    })
-    expect(releasePointerCapture).toHaveBeenCalledWith(7)
-    expect(document.body.style.userSelect).toBe("")
   })
 })

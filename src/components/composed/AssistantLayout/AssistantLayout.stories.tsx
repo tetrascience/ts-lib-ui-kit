@@ -1,5 +1,5 @@
 import { SparklesIcon } from "lucide-react"
-import { expect, userEvent } from "storybook/test"
+import { expect, userEvent, waitFor } from "storybook/test"
 
 import {
   AssistantDockControls,
@@ -85,36 +85,67 @@ export const DockedLeft: Story = {
     const body = () => canvasElement.querySelector('[data-slot="assistant-layout"]') as HTMLElement
     const assistant = () =>
       canvasElement.querySelector('[data-slot="assistant-layout-assistant"]') as HTMLElement
+    const content = () =>
+      canvasElement.querySelector('[data-slot="assistant-layout-content"]') as HTMLElement
     // The three dock buttons are the only elements with aria-pressed.
     const dockButtons = () => [...canvasElement.querySelectorAll<HTMLElement>("[aria-pressed]")]
+    // True when `a` appears before `b` in document order.
+    const precedes = (a: HTMLElement, b: HTMLElement) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
 
-    await step("Starts docked left (row, assistant first)", async () => {
+    await step("Starts docked left (horizontal, assistant before content)", async () => {
       expect(getComputedStyle(body()).flexDirection).toBe("row")
-      expect(getComputedStyle(assistant()).order).toBe("0")
       expect(assistant()).toBeVisible()
+      expect(precedes(assistant(), content())).toBe(true)
+      // The resizable handle is present while the assistant is visible.
+      expect(canvasElement.querySelector('[role="separator"]')).not.toBeNull()
     })
 
-    await step("Dock bottom → column", async () => {
+    await step("Dock bottom → vertical", async () => {
       await userEvent.click(dockButtons()[1]) // [left, bottom, right]
       expect(getComputedStyle(body()).flexDirection).toBe("column")
-      expect(getComputedStyle(assistant()).order).toBe("2")
+      expect(precedes(content(), assistant())).toBe(true)
     })
 
-    await step("Click the active dock again → hidden, no splitter, none pressed", async () => {
+    await step("Click the active dock again → hidden, no handle, none pressed", async () => {
       await userEvent.click(dockButtons()[1]) // now active → hides
       expect(canvasElement.querySelector('[role="separator"]')).toBeNull()
       expect(dockButtons().some((b) => b.getAttribute("aria-pressed") === "true")).toBe(false)
-      // assistant stays mounted (state preserved) but is visually hidden
-      expect(assistant()).not.toBeVisible()
+      expect(canvasElement.querySelector('[data-slot="assistant-layout-assistant"]')).toBeNull()
     })
 
-    await step("Re-dock right → visible again, assistant after content", async () => {
+    await step("Re-dock right → visible again, content before assistant", async () => {
       await userEvent.click(dockButtons()[2])
       expect(assistant()).toBeVisible()
       expect(getComputedStyle(body()).flexDirection).toBe("row")
-      expect(getComputedStyle(assistant()).order).toBe("2")
+      expect(precedes(content(), assistant())).toBe(true)
     })
   },
 }
 export const DockedRight: Story = { render: () => <Demo defaultDock="right" /> }
 export const DockedBottom: Story = { render: () => <Demo defaultDock="bottom" /> }
+
+// testCaseId intentionally left blank — the zephyr_sync workflow backfills it.
+export const ResizeByKeyboard: Story = {
+  parameters: { zephyr: { testCaseId: "" } },
+  render: () => <Demo defaultDock="right" />,
+  play: async ({ canvasElement, step }) => {
+    const separator = () => canvasElement.querySelector('[role="separator"]') as HTMLElement
+    const assistant = () =>
+      canvasElement.querySelector('[data-slot="assistant-layout-assistant"]') as HTMLElement
+
+    await step("Resize handle is present and keyboard-focusable", async () => {
+      expect(separator()).not.toBeNull()
+      expect(assistant()).toBeVisible()
+    })
+
+    await step("Arrow keys resize the panels via the Resizable handle", async () => {
+      const widthBefore = assistant().getBoundingClientRect().width
+      separator().focus()
+      await userEvent.keyboard("{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}")
+      await waitFor(() =>
+        expect(assistant().getBoundingClientRect().width).not.toBe(widthBefore)
+      )
+    })
+  },
+}

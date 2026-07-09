@@ -5,6 +5,8 @@ import "@/index.css";
 export * from "@/components/composed/FormPatterns";
 export * from "@/components/composed/StatCard";
 export * from "@/components/composed/DataAppShell";
+export * from "@/components/composed/TopBar";
+export * from "@/components/composed/UserMenu";
 export * from "@/components/composed/Chat";
 export * from "@/components/composed/PlateMapEditor";
 export * from "@/components/composed/ConfirmDialog";

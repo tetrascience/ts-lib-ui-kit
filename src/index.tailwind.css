@@ -288,6 +288,17 @@
   --spacing-sp-3xl: var(--sp-3xl);
 }
 
+/* ------------------------------------------------------------------ */
+/* Font size — extend Tailwind's scale below text-xs (12px).          */
+/* text-2xs (10px) for dense UI: chart axis labels, table meta, chips.*/
+/* `static` so the token always ships in the compiled CSS, even when   */
+/* nothing in the kit references `text-2xs` yet (SW-2159).             */
+/* Usage: text-2xs                                                     */
+/* ------------------------------------------------------------------ */
+@theme static {
+  --text-2xs: 0.625rem; /* 10px */
+}
+
 :root {
   --radius: 0.625rem;
   /* Background — DEL cool blue-gray */

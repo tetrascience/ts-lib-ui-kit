@@ -42,6 +42,16 @@ const ROLE_COLORS: Record<string, string> = {
   label: "bg-warning/10 text-warning",
 }
 
+// Raw Tailwind font-size utilities the kit extends — distinct from the MD3
+// typescale above. text-2xs (10px) is added one step below Tailwind's built-in
+// text-xs (12px) for dense UI (SW-2159).
+const UTILITY_SIZES: { cssClass: string; size: string; note: string; isNew?: boolean }[] = [
+  { cssClass: "text-2xs",  size: "10px", note: "Dense labels, chips, chart axis ticks, table metadata", isNew: true },
+  { cssClass: "text-xs",   size: "12px", note: "Tailwind base — smallest built-in size" },
+  { cssClass: "text-sm",   size: "14px", note: "Tailwind base" },
+  { cssClass: "text-base", size: "16px", note: "Tailwind base — default body size" },
+]
+
 // ---------------------------------------------------------------------------
 // Components
 // ---------------------------------------------------------------------------
@@ -134,6 +144,50 @@ function TypographyPage() {
               </p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Utility font sizes — raw Tailwind scale, separate from the MD3 typescale */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-foreground">Utility Font Sizes</h2>
+        <p className="max-w-2xl text-sm text-muted-foreground">
+          Raw Tailwind <code className="rounded bg-muted px-1 py-0.5 text-xs">text-*</code> sizes for dense,
+          non-typescale UI. The kit extends the scale with{" "}
+          <code className="rounded bg-muted px-1 py-0.5 text-xs">text-2xs</code> (10px), one step below
+          Tailwind's built-in <code className="rounded bg-muted px-1 py-0.5 text-xs">text-xs</code> (12px).
+        </p>
+        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50">
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Tailwind Class</th>
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Size</th>
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Sample</th>
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Usage</th>
+              </tr>
+            </thead>
+            <tbody>
+              {UTILITY_SIZES.map((s) => (
+                <tr key={s.cssClass} className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors">
+                  <td className="px-4 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <CopyButton text={s.cssClass} />
+                      {s.isNew && (
+                        <span className="inline-flex rounded-full bg-positive/10 px-2 py-0.5 text-xs font-medium text-positive">
+                          New
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{s.size}</td>
+                  <td className="px-4 py-2.5">
+                    <span className={`${s.cssClass} text-foreground`}>{SAMPLE_TEXT}</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-xs text-muted-foreground">{s.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
     </div>

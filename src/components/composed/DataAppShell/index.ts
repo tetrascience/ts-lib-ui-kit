@@ -1,7 +1,13 @@
 export { DataAppShell } from "./DataAppShell";
+export {
+  DataAppShellPrimaryNav,
+  dataAppShellPrimaryNavVariants,
+  dataAppShellPrimaryNavItemVariants,
+} from "./PrimaryNav";
+export type { DataAppShellProps, BreadcrumbItemConfig } from "./DataAppShell";
 export type {
-  DataAppShellProps,
+  DataAppShellPrimaryNavProps,
+  DataAppShellPrimaryNavVariant,
   NavPage,
   NavGroup,
-  BreadcrumbItemConfig,
-} from "./DataAppShell";
+} from "./PrimaryNav";

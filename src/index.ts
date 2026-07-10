@@ -87,6 +87,7 @@ export * from "@/components/ui/toggle";
 export * from "@/components/ui/toggle-group";
 export * from "@/components/ui/tooltip";
 export * from "@/components/ui/code-editor";
+export * from "@/components/ui/tetra-molecule-icon";
 export * from "@/components/ui/tetrascience-icon";
 
 // AI

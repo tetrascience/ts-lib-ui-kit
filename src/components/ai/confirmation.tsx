@@ -84,7 +84,7 @@ export const Confirmation = ({
           <motion.div
             {...passthroughProps}
             className={cn(
-              "flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-sm",
+              "flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-elevation-3",
               className
             )}
             exit={{ opacity: 0, scale: 0.96 }}

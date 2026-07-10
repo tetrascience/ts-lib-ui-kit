@@ -17,7 +17,7 @@ import * as React from "react";
 import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 
-import { DataAppShell } from "./DataAppShell";
+import { AppHeaderMenu, DataAppShell } from "./DataAppShell";
 import { DataAppShellPrimaryNav } from "./PrimaryNav";
 
 import type { NavGroup } from "./DataAppShell";
@@ -1216,7 +1216,16 @@ const TopVariantExample = () => {
           navGroups={[{ pages: topNavPages }]}
           activeKey={activeKey}
           onSelect={setActiveKey}
-          header={<span aria-hidden="true" className="w-9 h-6 rounded-lg bg-primary" />}
+          header={
+            <AppHeaderMenu
+              appName="APP"
+              appFullName="Data App"
+              version="v1.0.0"
+              onBackToPlatform={() => console.log("Back to TDP Platform")}
+              compact
+              menuSide="bottom"
+            />
+          }
           user={<UserMenuButton name="Grace Pan" userRole="ADMIN" />}
           className="h-10 px-3 bg-sidebar border-b border-sidebar-border"
         />
@@ -1254,6 +1263,20 @@ export const PrimaryNavTopVariant: Story = {
         "[data-slot='data-app-shell-primary-nav-user']"
       );
       expect(within(userSlot as HTMLElement).getByText("GP")).toBeInTheDocument();
+    });
+
+    await step("App menu opens below the bar with Back to TDP Platform", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "APP" }));
+      const body = within(document.body);
+      await waitFor(() =>
+        expect(body.getByText("Back to TDP Platform")).toBeInTheDocument()
+      );
+      await userEvent.keyboard("{Escape}");
+      // Wait for the menu to fully close — Radix keeps the rest of the page
+      // aria-hidden until the exit transition completes.
+      await waitFor(() =>
+        expect(body.queryByText("Back to TDP Platform")).not.toBeInTheDocument()
+      );
     });
 
     await step("Selecting an item moves the active state", async () => {

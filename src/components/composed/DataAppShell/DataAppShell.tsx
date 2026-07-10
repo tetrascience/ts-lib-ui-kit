@@ -139,6 +139,8 @@ interface AppHeaderMenuProps
   > {
   /** compact=true → icon-only trigger (rail); compact=false → icon + name row */
   compact: boolean;
+  /** Which side of the trigger the dropdown opens on — `right` beside a rail, `bottom` under a top bar */
+  menuSide?: "right" | "bottom";
 }
 
 function AppHeaderMenu({
@@ -150,6 +152,7 @@ function AppHeaderMenu({
   backToPlatformPath,
   onBackToPlatform,
   compact,
+  menuSide = "right",
 }: AppHeaderMenuProps) {
   return (
     <DropdownMenu>
@@ -178,7 +181,7 @@ function AppHeaderMenu({
               )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="start" className="min-w-[220px]">
+          <DropdownMenuContent side={menuSide} align="start" className="min-w-[220px]">
             <div
               className="flex items-center gap-3 px-3 py-2.5 cursor-pointer"
               onClick={onAppNameClick}
@@ -487,4 +490,4 @@ function DataAppShell({
 }
 
 export default DataAppShell;
-export { DataAppShell };
+export { AppHeaderMenu, DataAppShell };

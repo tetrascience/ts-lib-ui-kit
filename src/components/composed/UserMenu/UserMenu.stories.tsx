@@ -6,7 +6,7 @@ import { UserMenu } from "./UserMenu";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof UserMenu> = {
-  title: "Composed/UserMenu",
+  title: "Composed/User Menu",
   component: UserMenu,
   tags: ["autodocs"],
   parameters: {

@@ -1,304 +1,391 @@
 import Plotly from "plotly.js-dist";
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 
 import { useChartTooltip } from "../ChartTooltip";
 
-import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { CHART_COLORS } from "@/utils/colors";
-import "./Chromatogram.scss";
+import {
+  groupOverlappingPeaks,
+  createGroupAnnotations,
+  resolveSelectionAppearance,
+} from "./annotations";
+import {
+  validateSeriesData,
+  applyBaselineCorrection,
+  processUserAnnotations,
+} from "./dataProcessing";
+import { detectPeaks } from "./peakDetection";
+import {
+  buildTraceData,
+  buildLayout,
+  buildConfig,
+  createHoverHandler,
+  createUnhoverHandler,
+} from "./plotBuilder";
 
-/** Height offset for the plot area in pixels */
-const PLOT_HEIGHT_OFFSET = 75;
-/** Scale factor for y-axis range to add padding above max value */
-const Y_AXIS_PADDING_FACTOR = 1.05;
+import type {
+  ChromatogramSeries,
+  PeakAnnotation,
+  PeakSelectEvent,
+  PeakSelectionAppearance,
+  BaselineCorrectionMethod,
+  BoundaryMarkerStyle,
+  BoundaryMarkerType,
+  PeakDetectionOptions,
+  ChromatogramProps,
+  PeakWithMeta,
+} from "./types";
 
-interface PeakData {
-  position: number;
-  base?: string;
-  peakA: number;
-  peakT: number;
-  peakG: number;
-  peakC: number;
-}
+import { EmptyState } from "@/components/composed/EmptyState";
+import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 
-interface ChromatogramProps {
-  data?: PeakData[];
-  width?: number;
-  height?: number;
-  positionInterval?: number;
-  colorA?: string;
-  colorT?: string;
-  colorG?: string;
-  colorC?: string;
-}
-
-const determineBase = (item: PeakData): string => {
-  const peakValues = {
-    A: item.peakA,
-    T: item.peakT,
-    G: item.peakG,
-    C: item.peakC,
-  };
-
-  const values = Object.values(peakValues);
-  const allEqual = values.every((val) => val === values[0]);
-
-  if (allEqual) {
-    return "";
-  }
-
-  let highestBase = "";
-  let highestValue = 0;
-
-  Object.entries(peakValues).forEach(([base, value]) => {
-    if (value > highestValue) {
-      highestBase = base;
-      highestValue = value;
-    }
-  });
-
-  return highestBase;
+// Re-export types for external use
+export type {
+  ChromatogramSeries,
+  PeakAnnotation,
+  PeakSelectEvent,
+  PeakSelectionAppearance,
+  BaselineCorrectionMethod,
+  BoundaryMarkerStyle,
+  BoundaryMarkerType,
+  PeakDetectionOptions,
+  ChromatogramProps,
 };
 
+
+// Stable default so the no-annotations case keeps a constant identity; an
+// inline `[]` default would change every render, re-running the plot effect
+// (and tearing down the hover tooltip) on each re-render.
+const EMPTY_ANNOTATIONS: PeakAnnotation[] = [];
+
 const Chromatogram: React.FC<ChromatogramProps> = ({
-  data = [],
+  series,
   width = 900,
-  height = 600,
-  positionInterval = 10,
-  colorA = CHART_COLORS[0], // blue
-  colorT = CHART_COLORS[2], // teal/green
-  colorG = CHART_COLORS[3], // red
-  colorC = CHART_COLORS[1], // orange
+  height = 500,
+  title,
+  xAxisTitle = "Retention Time (min)",
+  yAxisTitle = "Signal (mAU)",
+  annotations = EMPTY_ANNOTATIONS,
+  xRange,
+  yRange,
+  showLegend = true,
+  showGridX = true,
+  showGridY = true,
+  showMarkers = false,
+  markerSize = 4,
+  showCrosshairs = false,
+  baselineCorrection = "none",
+  baselineWindowSize = 50,
+  peakDetectionOptions,
+  showPeakAreas = false,
+  boundaryMarkers = "none",
+  annotationOverlapThreshold = 0.4,
+  showExportButton = true,
+  selectedPeakIds,
+  onPeakClick,
+  onPeakHover,
+  selectionAppearance,
+  annotationStyle = "arrow",
+  titleFontSize = 20,
+  titleTopMargin,
 }) => {
+  const enablePeakDetection = peakDetectionOptions !== undefined;
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
   const { bindTooltip, tooltipElement } = useChartTooltip({
-    xLabel: "Position",
-    yLabel: "Intensity",
+    xLabel: xAxisTitle,
+    yLabel: yAxisTitle,
   });
+  // Stable refs for callbacks — avoids including them in effect dep arrays
+  // (consumers often pass arrow functions that change identity every render).
+  const onPeakClickRef = useRef(onPeakClick);
+  const onPeakHoverRef = useRef(onPeakHover);
+  onPeakClickRef.current = onPeakClick;
+  onPeakHoverRef.current = onPeakHover;
 
-  const positions = useMemo(() => data.map((item) => item.position), [data]);
-  const sequence = useMemo(() => data.map((item) => determineBase(item)), [data]);
-  const peakA = useMemo(() => data.map((item) => item.peakA), [data]);
-  const peakT = useMemo(() => data.map((item) => item.peakT), [data]);
-  const peakG = useMemo(() => data.map((item) => item.peakG), [data]);
-  const peakC = useMemo(() => data.map((item) => item.peakC), [data]);
+  // Tracks the series index whose line is currently thickened on hover.
+  const thickenedSeriesRef = useRef<number | null>(null);
 
-  const aTrace = useMemo(
-    () => ({
-      x: positions,
-      y: peakA,
-      type: "scatter" as const,
-      mode: "lines" as const,
-      hoverinfo: "none" as const,
-      name: "A",
-      line: { color: colorA, width: 2, shape: "spline" as const },
-    }),
-    [positions, peakA, colorA],
+  // Holds the latest peak Plotly annotations so that closures in effects always
+  // read the latest selection-styled annotations.
+  const peakAnnotationsRef = useRef<Partial<Plotly.Annotations>[]>([]);
+
+  // Memoize processed series with baseline correction
+  const processedSeries = useMemo(() => {
+    return series.map((s) => {
+      const validated = validateSeriesData(s.x, s.y);
+      return {
+        ...s,
+        x: validated.x,
+        y: applyBaselineCorrection(validated.y, baselineCorrection, baselineWindowSize),
+      };
+    });
+  }, [series, baselineCorrection, baselineWindowSize]);
+
+  // Process user annotations to convert startX/endX to indices and compute areas
+  const processedAnnotations = useMemo(() => {
+    if (annotations.length === 0 || processedSeries.length === 0) {
+      return annotations;
+    }
+    const { x, y } = processedSeries[0];
+    return processUserAnnotations(annotations, x, y);
+  }, [annotations, processedSeries]);
+
+  // Memoize peak detection results
+  const allDetectedPeaks = useMemo(() => {
+    const peaks: { peaks: PeakAnnotation[]; seriesIndex: number }[] = [];
+    if (enablePeakDetection && peakDetectionOptions) {
+      processedSeries.forEach((s, index) => {
+        const detected = detectPeaks(s.x, s.y, peakDetectionOptions);
+        if (detected.length > 0) {
+          peaks.push({ peaks: detected, seriesIndex: index });
+        }
+      });
+    }
+    return peaks;
+  }, [processedSeries, enablePeakDetection, peakDetectionOptions]);
+
+  // Normalize the selection appearance into primitive fields up front so the
+  // memo below depends on stable values rather than the (possibly unstable)
+  // selectionAppearance object reference. This keeps the dependency array
+  // exhaustive-deps clean without requiring callers to memoize the prop.
+  const selectedBorderColor = selectionAppearance?.selected?.borderColor;
+  const selectedBackgroundColor = selectionAppearance?.selected?.backgroundColor;
+  const selectedBold = selectionAppearance?.selected?.bold;
+  const unselectedOpacity = selectionAppearance?.unselected?.opacity;
+  const hoverLineWidthMultiplier = selectionAppearance?.hoverLineWidthMultiplier;
+
+  // Resolve selection appearance defaults once (stable as long as the
+  // individual fields above don't change).
+  const resolvedAppearance = useMemo(
+    () =>
+      resolveSelectionAppearance({
+        selected: {
+          borderColor: selectedBorderColor,
+          backgroundColor: selectedBackgroundColor,
+          bold: selectedBold,
+        },
+        unselected: { opacity: unselectedOpacity },
+        hoverLineWidthMultiplier,
+      }),
+    [
+      selectedBorderColor,
+      selectedBackgroundColor,
+      selectedBold,
+      unselectedOpacity,
+      hoverLineWidthMultiplier,
+    ]
   );
 
-  const tTrace = useMemo(
-    () => ({
-      x: positions,
-      y: peakT,
-      type: "scatter" as const,
-      mode: "lines" as const,
-      hoverinfo: "none" as const,
-      name: "T",
-      line: { color: colorT, width: 2, shape: "spline" as const },
-    }),
-    [positions, peakT, colorT],
-  );
+  // All peaks that can be interacted with (clicked / hovered / selected),
+  // each with a stable ID and the metadata needed for PeakSelectEvent.
+  const allPeaksForInteraction = useMemo(() => {
+    const result: Array<{
+      peak: PeakAnnotation & { id: string };
+      seriesIndex: number;
+      seriesName: string;
+      isAutoDetected: boolean;
+    }> = [];
 
-  const gTrace = useMemo(
-    () => ({
-      x: positions,
-      y: peakG,
-      type: "scatter" as const,
-      mode: "lines" as const,
-      hoverinfo: "none" as const,
-      name: "G",
-      line: { color: colorG, width: 2, shape: "spline" as const },
-    }),
-    [positions, peakG, colorG],
-  );
+    processedAnnotations.forEach((ann, i) => {
+      result.push({
+        peak: { ...ann, id: ann.id ?? `user-ann-${i}` },
+        seriesIndex: 0,
+        seriesName: series[0]?.name ?? "",
+        isAutoDetected: false,
+      });
+    });
 
-  const cTrace = useMemo(
-    () => ({
-      x: positions,
-      y: peakC,
-      type: "scatter" as const,
-      mode: "lines" as const,
-      hoverinfo: "none" as const,
-      name: "C",
-      line: { color: colorC, width: 2, shape: "spline" as const },
-    }),
-    [positions, peakC, colorC],
-  );
+    allDetectedPeaks.forEach(({ peaks, seriesIndex }) => {
+      peaks.forEach((peak, peakIndex) => {
+        result.push({
+          peak: { ...peak, id: `peak-${seriesIndex}-${peakIndex}` },
+          seriesIndex,
+          seriesName: series[seriesIndex]?.name ?? `Series ${seriesIndex + 1}`,
+          isAutoDetected: true,
+        });
+      });
+    });
 
-  const maxValue = useMemo(
-    () => Math.max(...peakA, ...peakT, ...peakG, ...peakC),
-    [peakA, peakT, peakG, peakC],
-  );
+    return result;
+  }, [processedAnnotations, allDetectedPeaks, series]);
 
+  // Build Plotly annotation objects for all peaks, applying selection styling.
+  // This memo re-runs when selectedPeakIds or resolvedAppearance changes so the
+  // selection effect can call Plotly.relayout with updated annotations without
+  // triggering a full chart rebuild.
+  const peakAnnotations = useMemo(() => {
+    const anySelected = (selectedPeakIds?.length ?? 0) > 0;
+    const options = {
+      selectedPeakIds: selectedPeakIds ?? [],
+      anySelected,
+      appearance: resolvedAppearance,
+      annotationStyle,
+    };
+
+    const allPeaksWithMeta: PeakWithMeta[] = [];
+
+    processedAnnotations.forEach((ann, i) => {
+      allPeaksWithMeta.push({
+        peak: { ...ann, id: ann.id ?? `user-ann-${i}` },
+        seriesIndex: -1,
+      });
+    });
+
+    if (showPeakAreas && enablePeakDetection) {
+      allDetectedPeaks.forEach(({ peaks, seriesIndex }) => {
+        peaks.forEach((peak, peakIndex) => {
+          allPeaksWithMeta.push({
+            peak: { ...peak, id: `peak-${seriesIndex}-${peakIndex}` },
+            seriesIndex,
+          });
+        });
+      });
+    }
+
+    const groups = groupOverlappingPeaks(allPeaksWithMeta, annotationOverlapThreshold);
+    const result: Partial<Plotly.Annotations>[] = [];
+    for (const group of groups) {
+      result.push(...createGroupAnnotations(group, options));
+    }
+    return result;
+  }, [
+    processedAnnotations,
+    allDetectedPeaks,
+    showPeakAreas,
+    enablePeakDetection,
+    annotationOverlapThreshold,
+    selectedPeakIds,
+    resolvedAppearance,
+    annotationStyle,
+  ]);
+
+  // Keep the ref in sync every render so that closures in effects always read
+  // the latest selection-styled annotations.
+  peakAnnotationsRef.current = peakAnnotations;
+
+  // ── Main chart effect ──────────────────────────────────────────────────────
+  // Rebuilds the full chart when structural props change (data, size, axes, …).
+  // selectedPeakIds and selectionAppearance are intentionally excluded from
+  // deps — selection changes are handled by the lightweight selection effect
+  // below via Plotly.relayout, which preserves the user's current zoom/pan.
   useEffect(() => {
-    if (!plotRef.current || data.length === 0) return;
+    const currentRef = plotRef.current;
+    if (!currentRef || series.length === 0) return;
 
-    const plotData = [aTrace, tTrace, gTrace, cTrace];
+    // Build trace data (line traces + boundary markers + region overlays +
+    // the invisible hit-area trace that carries peak customdata for
+    // click/hover interaction).
+    const plotData = buildTraceData({
+      processedSeries,
+      processedAnnotations,
+      allDetectedPeaks,
+      allPeaksForInteraction,
+      showMarkers,
+      markerSize,
+      xAxisTitle,
+      yAxisTitle,
+      boundaryMarkers,
+    });
 
-    const layout: Partial<Plotly.Layout> = {
-      width: width,
-      height: height - PLOT_HEIGHT_OFFSET,
-      margin: { l: 0, r: 0, b: 20, t: 10, pad: 0 },
-      paper_bgcolor: theme.paperBg,
-      plot_bgcolor: theme.plotBg,
-      font: {
-        family: CHART_FONT_FAMILY,
-      },
-      showlegend: false,
-      xaxis: {
-        showgrid: false,
-        zeroline: false,
-        showticklabels: false,
-        showline: false,
-        range: [Math.min(...positions), Math.max(...positions)],
-        fixedrange: true,
-      },
-      yaxis: {
-        showgrid: false,
-        zeroline: false,
-        showticklabels: false,
-        showline: false,
-        range: [0, maxValue * Y_AXIS_PADDING_FACTOR],
-        fixedrange: true,
-      },
-    };
+    const layout = buildLayout({
+      title,
+      titleFontSize,
+      titleTopMargin,
+      width,
+      height,
+      xAxisTitle,
+      yAxisTitle,
+      xRange,
+      yRange,
+      showLegend,
+      seriesCount: series.length,
+      showGridX,
+      showGridY,
+      showCrosshairs,
+      theme,
+      peakAnnotations: peakAnnotationsRef.current,
+    });
 
-    const config = {
-      responsive: true,
-      displayModeBar: false,
-      displaylogo: false,
-      fillFrame: true,
-    };
+    const config = buildConfig({ showExportButton, width, height });
 
-    Plotly.newPlot(plotRef.current, plotData, layout, config);
-    bindTooltip(plotRef.current);
+    Plotly.newPlot(currentRef, plotData, layout, config);
+    bindTooltip(currentRef);
 
-    // Capture ref value for cleanup
-    const plotElement = plotRef.current;
+    // ── Event: peak click ──────────────────────────────────────────────────
+    (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
+      "plotly_click",
+      (eventData: Plotly.PlotMouseEvent) => {
+        if (!onPeakClickRef.current) return;
+        const peakPoint = eventData.points.find((p) => p.customdata != null);
+        if (!peakPoint) return;
+        onPeakClickRef.current(peakPoint.customdata as unknown as PeakSelectEvent);
+      }
+    );
+
+    (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
+      "plotly_hover",
+      createHoverHandler(currentRef, processedSeries.length, thickenedSeriesRef, onPeakHoverRef, resolvedAppearance.hoverLineWidthMultiplier)
+    );
+
+    (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
+      "plotly_unhover",
+      createUnhoverHandler(currentRef, thickenedSeriesRef, onPeakHoverRef)
+    );
 
     return () => {
-      if (plotElement) {
-        Plotly.purge(plotElement);
-      }
+      thickenedSeriesRef.current = null;
+      if (currentRef) Plotly.purge(currentRef);
     };
-  }, [data, width, height, aTrace, tTrace, gTrace, cTrace, maxValue, positions, theme, bindTooltip]);
+  }, [
+    processedSeries, allDetectedPeaks, allPeaksForInteraction, series.length,
+    width, height, title, titleFontSize, titleTopMargin, xAxisTitle, yAxisTitle,
+    processedAnnotations, xRange, yRange, showLegend, showGridX, showGridY,
+    showMarkers, markerSize, showCrosshairs, enablePeakDetection, peakDetectionOptions,
+    showPeakAreas, boundaryMarkers, annotationOverlapThreshold, showExportButton,
+    theme, bindTooltip,
+    // resolvedAppearance included so hover multiplier stays in sync with the
+    // event handler closure without it being in a ref itself.
+    resolvedAppearance,
+  ]);
 
-  if (data.length === 0) {
-    return <div className="chart-container">No data available</div>;
-  }
+  // ── Selection update effect ────────────────────────────────────────────────
+  // Runs when selectedPeakIds / selectionAppearance change (peakAnnotations
+  // recomputes). Uses Plotly.relayout so the user's zoom/pan state is preserved.
+  useEffect(() => {
+    const el = plotRef.current;
+    if (!el) return;
+    // Guard: skip if the chart hasn't been initialized by the main effect yet.
+    if (!(el as { _fullLayout?: unknown })._fullLayout) return;
 
-  const renderSequence = () => {
-    const renderSequenceLetters = () => {
-      const minPosition = Math.min(...positions);
-      const maxPosition = Math.max(...positions);
-      const chartWidth = width;
+    Plotly.relayout(el, {
+      annotations: peakAnnotations,
+    } as unknown as Partial<Plotly.Layout>);
+  }, [peakAnnotations]);
 
-      return (
-        <div className="sequence-letters-container">
-          {sequence.map((base, index) => {
-            const position = positions[index];
-            const color =
-              base === "A"
-                ? colorA
-                : base === "T"
-                ? colorT
-                : base === "G"
-                ? colorG
-                : base === "C"
-                ? colorC
-                : theme.textColor;
-
-            const percentage =
-              (position - minPosition) / (maxPosition - minPosition);
-            const leftPosition = percentage * chartWidth;
-
-            return (
-              <span
-                key={`base-${index}`}
-                className="sequence-letter"
-                style={{
-                  left: `${leftPosition}px`,
-                  color,
-                }}
-              >
-                {base}
-              </span>
-            );
-          })}
-        </div>
-      );
-    };
-
-    const renderPositionNumbers = () => {
-      const minPosition = Math.min(...positions);
-      const maxPosition = Math.max(...positions);
-      const chartWidth = width;
-
-      const startPos =
-        Math.ceil(minPosition / positionInterval) * positionInterval;
-
-      const regularPositionLabels: Array<{ position: number; label: string }> =
-        [];
-
-      for (let pos = startPos; pos <= maxPosition; pos += positionInterval) {
-        regularPositionLabels.push({
-          position: pos,
-          label: pos.toString(),
-        });
-      }
-
-      return (
-        <div className="position-numbers-container">
-          {regularPositionLabels.map((label) => {
-            const percentage =
-              (label.position - minPosition) / (maxPosition - minPosition);
-            const leftPosition = percentage * chartWidth;
-
-            return (
-              <span
-                key={`pos-${label.position}`}
-                className="position-number"
-                style={{
-                  left: `${leftPosition}px`,
-                }}
-              >
-                {label.label}
-              </span>
-            );
-          })}
-        </div>
-      );
-    };
-
+  // No data: render an explicit empty state instead of an uninitialized
+  // (blank) Plotly container, so the chart reads as "no data yet" rather
+  // than looking broken while data is still loading.
+  if (series.length === 0) {
     return (
-      <div className="sequence-header">
-        {renderSequenceLetters()}
-        {renderPositionNumbers()}
+      <div
+        className="chromatogram-chart-container relative flex items-center justify-center"
+        style={{ width, height }}
+      >
+        <EmptyState
+          variant="no-data"
+          title="No chromatogram data"
+          description="There is no signal data to display yet."
+        />
       </div>
     );
-  };
+  }
 
   return (
-    <div className="chromatogram-container relative" style={{ width, height }}>
-      {renderSequence()}
-      <div className="chromatogram-chart">
-        <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
-      </div>
+    <div className="chromatogram-chart-container relative">
+      <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
       {tooltipElement}
     </div>
   );
 };
 
 export { Chromatogram };
-export type { PeakData, ChromatogramProps };

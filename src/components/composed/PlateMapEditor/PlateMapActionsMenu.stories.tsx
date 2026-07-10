@@ -15,7 +15,7 @@ const TEMPLATES: TemplateOption[] = [
 ];
 
 const meta: Meta<typeof PlateMapActionsMenu> = {
-  title: "Design Patterns/PlateMapEditor/PlateMapActionsMenu",
+  title: "Design Patterns/Plate Map Editor/Actions Menu",
   component: PlateMapActionsMenu,
   parameters: {
     layout: "centered",

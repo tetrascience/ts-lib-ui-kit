@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 
 
 const meta: Meta<typeof TopBar> = {
-  title: "Composed/TopBar",
+  title: "Composed/Top Bar",
   component: TopBar,
   tags: ["autodocs"],
   parameters: {

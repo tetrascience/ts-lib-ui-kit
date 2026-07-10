@@ -253,7 +253,7 @@ function WorkflowPanel({
                   <Icon className="w-4 h-4" />
                 </span>
               )}
-              <span className={cn("text-title-sm truncate min-w-0", !step.isActive && "font-light")}>
+              <span className={cn("text-sm font-medium truncate min-w-0", !step.isActive && "font-light")}>
                 {step.label}
               </span>
             </button>

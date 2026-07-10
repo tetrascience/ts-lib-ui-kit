@@ -119,7 +119,9 @@ const dataAppShellPrimaryNavItemVariants = cva(
       variant: {
         rail: "flex flex-col items-center p-0 w-full",
         sidebar: "flex items-center gap-3 w-full px-3 py-2 text-sm text-left rounded-md mx-1",
-        top: "flex items-center gap-2 h-7 px-2.5 text-sm rounded-md whitespace-nowrap",
+        // ring-inset — the items row is an overflow-x-auto scroll container,
+        // which would clip an outset ring at the row's edges
+        top: "flex items-center gap-2 h-7 px-2.5 text-sm rounded-md whitespace-nowrap focus-visible:ring-inset",
       },
       active: {
         true: "",

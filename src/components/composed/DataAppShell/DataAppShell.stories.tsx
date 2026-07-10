@@ -1226,7 +1226,7 @@ const HorizontalNavigationExample = () => {
           />
         }
         user={<UserMenuButton name="Grace Pan" userRole="ADMIN" />}
-        className="h-10 px-3 shrink-0 bg-sidebar border-b border-sidebar-border"
+        className="h-10 px-2 shrink-0 bg-sidebar border-b border-sidebar-border"
       />
       <main className="flex-1 flex items-center justify-center overflow-auto">
         <p className="text-muted-foreground text-sm">Main content area</p>

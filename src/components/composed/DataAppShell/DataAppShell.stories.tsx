@@ -916,6 +916,13 @@ export const BackToPlatformCallback: Story = {
       await waitFor(() => {
         expect(canvas.getByTestId("callback-count").textContent).toBe("Callbacks: 1");
       });
+
+      // Wait for the menu to fully close before the next step reopens it —
+      // clicking the trigger while the exit transition is still running gets
+      // swallowed as an outside-click and the reopen never happens.
+      await waitFor(() => {
+        expect(body.queryByText("Back to TDP Platform")).not.toBeInTheDocument();
+      });
     });
 
     await step("Clicking app icon again and Back to TDP Platform increments callback count", async () => {

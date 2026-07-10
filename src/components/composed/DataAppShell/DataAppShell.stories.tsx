@@ -1290,4 +1290,7 @@ export const HorizontalNavigation: Story = {
       });
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5512" },
+  },
 };

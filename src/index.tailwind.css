@@ -252,7 +252,6 @@
   --color-outline-variant: var(--outline-variant);
   --color-shadow: var(--shadow);
   --color-scrim: var(--scrim);
-  --font-sans: "Inter Variable", sans-serif;
   /* ------------------------------------------------------------------ */
   /* MD3 Elevation — shadow tokens                                      */
   /* ------------------------------------------------------------------ */
@@ -262,6 +261,8 @@
   --shadow-elevation-3: var(--elevation-3);
   --shadow-elevation-4: var(--elevation-4);
   --shadow-elevation-5: var(--elevation-5);
+  --shadow-elevation-6: var(--elevation-6);
+  --shadow-elevation-7: var(--elevation-7);
   /* ------------------------------------------------------------------ */
   /* MD3 Shape — border-radius tokens                                   */
   /* ------------------------------------------------------------------ */
@@ -288,15 +289,10 @@
   --spacing-sp-3xl: var(--sp-3xl);
 }
 
-/* ------------------------------------------------------------------ */
-/* Font size — extend Tailwind's scale below text-xs (12px).          */
-/* text-2xs (10px) for dense UI: chart axis labels, table meta, chips.*/
-/* `static` so the token always ships in the compiled CSS, even when   */
-/* nothing in the kit references `text-2xs` yet (SW-2159).             */
-/* Usage: text-2xs                                                     */
-/* ------------------------------------------------------------------ */
 @theme static {
   --text-2xs: 0.625rem; /* 10px */
+  --font-sans: "Inter Variable", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 :root {
@@ -456,13 +452,19 @@
   --shadow: #000000;
   --scrim: #000000;
 
-  /* MD3 Elevation (box-shadow) */
+  /* Elevation (box-shadow) — values mirror the Tailwind default scale
+     1:1 (2xs→1, xs→2, sm→3, md→4, lg→5, xl→6, 2xl→7) so migrating a
+     component from shadow-* to shadow-elevation-* is visually a no-op in
+     light mode. Dark mode (below) strengthens alphas — the reason the
+     elevation tokens exist. */
   --elevation-0: none;
-  --elevation-1: 0 1px 2px 0 rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
-  --elevation-2: 0 1px 2px 0 rgba(0, 0, 0, 0.3), 0 2px 6px 2px rgba(0, 0, 0, 0.15);
-  --elevation-3: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 4px 8px 3px rgba(0, 0, 0, 0.15);
-  --elevation-4: 0 2px 3px 0 rgba(0, 0, 0, 0.3), 0 6px 10px 4px rgba(0, 0, 0, 0.15);
-  --elevation-5: 0 4px 4px 0 rgba(0, 0, 0, 0.3), 0 8px 12px 6px rgba(0, 0, 0, 0.15);
+  --elevation-1: 0 1px rgba(0,0,0,0.05);
+  --elevation-2: 0 1px 2px 0 rgba(0,0,0,0.05);
+  --elevation-3: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+  --elevation-4: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+  --elevation-5: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+  --elevation-6: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+  --elevation-7: 0 25px 50px -12px rgba(0,0,0,0.25);
 
   /* MD3 Shape (border-radius) */
   --shape-xs: 4px;
@@ -578,13 +580,16 @@
   --shadow: #000000;
   --scrim: #000000;
 
-  /* Dark mode elevation — slightly stronger shadows */
+  /* Dark mode elevation — same geometry as light, alphas tripled
+     (.05→.15, .1→.3, .25→.5) so shadows stay legible on dark surfaces */
   --elevation-0: none;
-  --elevation-1: 0 1px 3px 1px rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --elevation-2: 0 2px 6px 2px rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --elevation-3: 0 4px 8px 3px rgba(0, 0, 0, 0.4), 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  --elevation-4: 0 6px 10px 4px rgba(0, 0, 0, 0.4), 0 2px 3px 0 rgba(0, 0, 0, 0.3);
-  --elevation-5: 0 8px 12px 6px rgba(0, 0, 0, 0.4), 0 4px 4px 0 rgba(0, 0, 0, 0.3);
+  --elevation-1: 0 1px rgba(0,0,0,0.15);
+  --elevation-2: 0 1px 2px 0 rgba(0,0,0,0.15);
+  --elevation-3: 0 1px 3px 0 rgba(0,0,0,0.3), 0 1px 2px -1px rgba(0,0,0,0.3);
+  --elevation-4: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.3);
+  --elevation-5: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -4px rgba(0,0,0,0.3);
+  --elevation-6: 0 20px 25px -5px rgba(0,0,0,0.3), 0 8px 10px -6px rgba(0,0,0,0.3);
+  --elevation-7: 0 25px 50px -12px rgba(0,0,0,0.5);
 }
 
 /* ==========================================================================
@@ -798,10 +803,10 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: "Inter Variable", sans-serif;
+    font-family: var(--font-sans);
   }
   html {
-    font-family: "Inter Variable", sans-serif;
+    font-family: var(--font-sans);
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {

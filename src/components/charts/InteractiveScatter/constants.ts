@@ -1,3 +1,4 @@
+import { CHART_FONT_FAMILY } from "@/hooks/use-plotly-theme";
 import {
   CHART_COLORS,
   CHART_DIVERGING,
@@ -47,7 +48,7 @@ export const PLOT_CONSTANTS = {
   AXIS_TITLE_FONT_SIZE: 16,
   AXIS_TICK_FONT_SIZE: 12,
   LEGEND_FONT_SIZE: 12,
-  FONT_FAMILY: "Inter, sans-serif",
+  FONT_FAMILY: CHART_FONT_FAMILY,
   GRID_WIDTH: 1,
   AXIS_LINE_WIDTH: 1,
   AUTO_RANGE_PADDING: 0.1, // 10% padding

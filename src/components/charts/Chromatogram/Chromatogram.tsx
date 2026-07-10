@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useMemo } from "react";
 
 import { useChartTooltip } from "../ChartTooltip";
 
-import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { CHART_COLORS } from "@/utils/colors";
 import "./Chromatogram.scss";
 
@@ -153,7 +153,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
-        family: "Inter, sans-serif",
+        family: CHART_FONT_FAMILY,
       },
       showlegend: false,
       xaxis: {

@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useMemo } from "react";
 import { useChartTooltip } from "../ChartTooltip";
 
 import { useElementSize } from "@/hooks/use-element-size";
-import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { cn } from "@/lib/utils";
 import { CHART_COLORS } from "@/utils/colors";
 import "./Histogram.scss";
@@ -249,7 +249,7 @@ const Histogram: React.FC<HistogramProps> = ({
       width: sizeRef.current.width,
       height: sizeRef.current.height,
       font: {
-        family: "Inter, sans-serif",
+        family: CHART_FONT_FAMILY,
       },
       showlegend: false,
       margin: { l: 90, r: 40, b: 80, t: 40 },
@@ -259,7 +259,7 @@ const Histogram: React.FC<HistogramProps> = ({
           font: {
             size: 16,
             color: theme.textSecondary,
-            family: "Inter, sans-serif",
+            family: CHART_FONT_FAMILY,
             weight: 400,
           },
           standoff: 20,
@@ -280,7 +280,7 @@ const Histogram: React.FC<HistogramProps> = ({
           font: {
             size: 16,
             color: theme.textSecondary,
-            family: "Inter, sans-serif",
+            family: CHART_FONT_FAMILY,
             weight: 400,
           },
           standoff: 20,

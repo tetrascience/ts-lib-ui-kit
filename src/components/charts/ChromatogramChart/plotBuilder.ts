@@ -8,7 +8,8 @@ import { buildHoverExtraContent, collectPeaksWithBoundaryData } from "./dataProc
 import { createRegionOverlayTraces } from "./regionOverlays";
 
 import type { ChromatogramSeries, PeakAnnotation, BoundaryMarkerStyle, PeakSelectEvent } from "./types";
-import type { PlotlyThemeColors } from "@/hooks/use-plotly-theme";
+
+import { CHART_FONT_FAMILY, type PlotlyThemeColors } from "@/hooks/use-plotly-theme";
 
 type PeakForInteraction = {
   peak: PeakAnnotation & { id: string };
@@ -168,7 +169,7 @@ export function buildLayout(params: BuildLayoutParams): Partial<Plotly.Layout> {
     title: title
       ? {
           text: title,
-          font: { size: titleFontSize, family: "Inter, sans-serif", color: theme.textColor },
+          font: { size: titleFontSize, family: CHART_FONT_FAMILY, color: theme.textColor },
         }
       : undefined,
     width,
@@ -184,13 +185,13 @@ export function buildLayout(params: BuildLayoutParams): Partial<Plotly.Layout> {
     },
     paper_bgcolor: theme.paperBg,
     plot_bgcolor: theme.plotBg,
-    font: { family: "Inter, sans-serif" },
+    font: { family: CHART_FONT_FAMILY },
     hovermode: showCrosshairs ? ("x" as const) : ("x unified" as const),
     dragmode: "zoom" as const,
     xaxis: {
       title: {
         text: xAxisTitle,
-        font: { size: 14, color: theme.textSecondary, family: "Inter, sans-serif" },
+        font: { size: 14, color: theme.textSecondary, family: CHART_FONT_FAMILY },
         standoff: 15,
       },
       showgrid: showGridX,
@@ -200,7 +201,7 @@ export function buildLayout(params: BuildLayoutParams): Partial<Plotly.Layout> {
       range: xRange,
       autorange: !xRange,
       zeroline: false,
-      tickfont: { size: 12, color: theme.textColor, family: "Inter, sans-serif" },
+      tickfont: { size: 12, color: theme.textColor, family: CHART_FONT_FAMILY },
       showspikes: showCrosshairs,
       spikemode: "across" as const,
       spikesnap: "cursor" as const,
@@ -211,7 +212,7 @@ export function buildLayout(params: BuildLayoutParams): Partial<Plotly.Layout> {
     yaxis: {
       title: {
         text: yAxisTitle,
-        font: { size: 14, color: theme.textSecondary, family: "Inter, sans-serif" },
+        font: { size: 14, color: theme.textSecondary, family: CHART_FONT_FAMILY },
         standoff: 10,
       },
       showgrid: showGridY,
@@ -221,7 +222,7 @@ export function buildLayout(params: BuildLayoutParams): Partial<Plotly.Layout> {
       range: yRange,
       autorange: !yRange,
       zeroline: false,
-      tickfont: { size: 12, color: theme.textColor, family: "Inter, sans-serif" },
+      tickfont: { size: 12, color: theme.textColor, family: CHART_FONT_FAMILY },
       showspikes: showCrosshairs,
       spikemode: "across" as const,
       spikesnap: "cursor" as const,
@@ -235,7 +236,7 @@ export function buildLayout(params: BuildLayoutParams): Partial<Plotly.Layout> {
       xanchor: "center" as const,
       yanchor: "top" as const,
       orientation: "h" as const,
-      font: { size: 12, color: theme.textColor, family: "Inter, sans-serif" },
+      font: { size: 12, color: theme.textColor, family: CHART_FONT_FAMILY },
     },
     showlegend: showLegend && seriesCount > 1,
     annotations: peakAnnotations,

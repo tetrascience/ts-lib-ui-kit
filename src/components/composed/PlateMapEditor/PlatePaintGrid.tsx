@@ -582,7 +582,7 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
       <div
         className={cn(
           "relative inline-block",
-          framed && "rounded-xl border bg-card p-3 shadow-sm",
+          framed && "rounded-xl border bg-card p-3 shadow-elevation-3",
         )}
         data-slot="plate-paint-grid-frame"
       >

@@ -1208,31 +1208,29 @@ const TopVariantExample = () => {
   const [activeKey, setActiveKey] = useState("projects");
 
   return (
-    <div className="p-4 bg-background min-h-screen">
-      <div className="border border-border rounded-lg overflow-hidden">
-        <DataAppShellPrimaryNav
-          variant="top"
-          aria-label="Application navigation"
-          navGroups={[{ pages: topNavPages }]}
-          activeKey={activeKey}
-          onSelect={setActiveKey}
-          header={
-            <AppHeaderMenu
-              appName="APP"
-              appFullName="Data App"
-              version="v1.0.0"
-              onBackToPlatform={() => console.log("Back to TDP Platform")}
-              compact
-              menuSide="bottom"
-            />
-          }
-          user={<UserMenuButton name="Grace Pan" userRole="ADMIN" />}
-          className="h-10 px-3 bg-sidebar border-b border-sidebar-border"
-        />
-        <div className="h-[300px] flex items-center justify-center bg-background">
-          <p className="text-muted-foreground text-sm">Main content area</p>
-        </div>
-      </div>
+    <div className="flex flex-col h-screen bg-background">
+      <DataAppShellPrimaryNav
+        variant="top"
+        aria-label="Application navigation"
+        navGroups={[{ pages: topNavPages }]}
+        activeKey={activeKey}
+        onSelect={setActiveKey}
+        header={
+          <AppHeaderMenu
+            appName="APP"
+            appFullName="Data App"
+            version="v1.0.0"
+            onBackToPlatform={() => console.log("Back to TDP Platform")}
+            compact
+            menuSide="bottom"
+          />
+        }
+        user={<UserMenuButton name="Grace Pan" userRole="ADMIN" />}
+        className="h-10 px-3 shrink-0 bg-sidebar border-b border-sidebar-border"
+      />
+      <main className="flex-1 flex items-center justify-center overflow-auto">
+        <p className="text-muted-foreground text-sm">Main content area</p>
+      </main>
     </div>
   );
 };

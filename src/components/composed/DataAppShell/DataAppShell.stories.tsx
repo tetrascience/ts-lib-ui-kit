@@ -1194,7 +1194,7 @@ export const CompactProperty: Story = {
 };
 
 // =============================================================================
-// PrimaryNav top variant (horizontal placement)
+// Horizontal navigation (PrimaryNav top variant)
 // =============================================================================
 
 const topNavPages = [
@@ -1204,7 +1204,7 @@ const topNavPages = [
 ];
 
 /** The shell's nav engine in its horizontal placement — logo left, user right. */
-const TopVariantExample = () => {
+const HorizontalNavigationExample = () => {
   const [activeKey, setActiveKey] = useState("projects");
 
   return (
@@ -1235,9 +1235,9 @@ const TopVariantExample = () => {
   );
 };
 
-export const PrimaryNavTopVariant: Story = {
-  name: "Primary Nav Top Variant",
-  render: () => <TopVariantExample />,
+export const HorizontalNavigation: Story = {
+  name: "Horizontal Navigation",
+  render: () => <HorizontalNavigationExample />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 

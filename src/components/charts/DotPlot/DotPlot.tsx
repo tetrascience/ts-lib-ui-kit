@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useMemo } from "react";
 import { useChartTooltip } from "../ChartTooltip";
 
 import { useElementSize } from "@/hooks/use-element-size";
-import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { cn } from "@/lib/utils";
 import { CHART_COLORS } from "@/utils/colors";
 
@@ -151,7 +151,7 @@ const DotPlot: React.FC<DotPlotProps> = ({
       tickfont: {
         size: 16,
         color: theme.textColor,
-        family: "Inter, sans-serif",
+        family: CHART_FONT_FAMILY,
         weight: 400,
       },
       linecolor: theme.lineColor,
@@ -172,7 +172,7 @@ const DotPlot: React.FC<DotPlotProps> = ({
       font: {
         size: 32,
         weight: 600,
-        family: "Inter, sans-serif",
+        family: CHART_FONT_FAMILY,
         color: theme.textColor,
         lineheight: 1.2,
         standoff: 30,
@@ -188,7 +188,7 @@ const DotPlot: React.FC<DotPlotProps> = ({
       width: sizeRef.current.width,
       height: sizeRef.current.height,
       font: {
-        family: "Inter, sans-serif",
+        family: CHART_FONT_FAMILY,
       },
       title: titleOptions,
       // Bottom margin reserves room for tick labels, the x-axis title, and the
@@ -208,7 +208,7 @@ const DotPlot: React.FC<DotPlotProps> = ({
         font: {
           size: 13,
           color: theme.legendColor,
-          family: "Inter, sans-serif",
+          family: CHART_FONT_FAMILY,
           weight: 500,
           lineheight: 18,
         },
@@ -219,7 +219,7 @@ const DotPlot: React.FC<DotPlotProps> = ({
           font: {
             size: 16,
             color: theme.textSecondary,
-            family: "Inter, sans-serif",
+            family: CHART_FONT_FAMILY,
             weight: 400,
           },
           standoff: 15,
@@ -236,7 +236,7 @@ const DotPlot: React.FC<DotPlotProps> = ({
           font: {
             size: 16,
             color: theme.textSecondary,
-            family: "Inter, sans-serif",
+            family: CHART_FONT_FAMILY,
             weight: 400,
           },
           standoff: 15,

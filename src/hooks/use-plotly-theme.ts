@@ -3,6 +3,14 @@ import { useMemo } from "react";
 import { useIsDark } from "@/hooks/use-is-dark";
 
 /**
+ * Font family for all Plotly charts — single source of truth (SW-2254).
+ * Leads with the actually-loaded `"Inter Variable"` face so charts match the
+ * app UI; bare `Inter` and the generic `sans-serif` are fallbacks. Plotly's
+ * `font.family` takes a comma-separated string.
+ */
+export const CHART_FONT_FAMILY = '"Inter Variable", Inter, sans-serif';
+
+/**
  * Plotly theme configuration returned by usePlotlyTheme.
  * Spread into a Plotly layout to apply dark/light mode colors.
  */

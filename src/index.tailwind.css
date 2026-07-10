@@ -252,7 +252,6 @@
   --color-outline-variant: var(--outline-variant);
   --color-shadow: var(--shadow);
   --color-scrim: var(--scrim);
-  --font-sans: "Inter Variable", sans-serif;
   /* ------------------------------------------------------------------ */
   /* MD3 Elevation — shadow tokens                                      */
   /* ------------------------------------------------------------------ */
@@ -288,6 +287,17 @@
   --spacing-sp-xl: var(--sp-xl);
   --spacing-sp-2xl: var(--sp-2xl);
   --spacing-sp-3xl: var(--sp-3xl);
+}
+
+/* ------------------------------------------------------------------ */
+/* Font families — single source of truth (SW-2254).                  */
+/* `static` so --font-sans / --font-mono are always emitted as CSS    */
+/* variables: base styles and consumers reference var(--font-sans),   */
+/* not just the `font-sans` / `font-mono` utilities.                   */
+/* ------------------------------------------------------------------ */
+@theme static {
+  --font-sans: "Inter Variable", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 :root {
@@ -909,10 +919,10 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: "Inter Variable", sans-serif;
+    font-family: var(--font-sans);
   }
   html {
-    font-family: "Inter Variable", sans-serif;
+    font-family: var(--font-sans);
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {

@@ -9,6 +9,8 @@ import { CHROMATOGRAM_ANNOTATION } from "./constants";
 import type { PeakAnnotation, PeakSelectionAppearance, PeakWithMeta } from "./types";
 import type Plotly from "plotly.js-dist";
 
+import { CHART_FONT_FAMILY } from "@/hooks/use-plotly-theme";
+
 // ── Selection appearance helpers ─────────────────────────────────────────────
 
 export interface ResolvedSelectionAppearance {
@@ -163,7 +165,7 @@ function createInlineAnnotation(
     font: {
       size: fontSize,
       color: isSelected ? appearance.selected.borderColor : textColor,
-      family: "Inter, sans-serif",
+      family: CHART_FONT_FAMILY,
     },
     ...(opacity === undefined ? {} : { opacity }),
   };
@@ -232,7 +234,7 @@ export function createPeakAnnotation(
     font: {
       size: fontSize,
       color: textColor,
-      family: "Inter, sans-serif",
+      family: CHART_FONT_FAMILY,
     },
     borderpad: 2,
     ...borderStyle,

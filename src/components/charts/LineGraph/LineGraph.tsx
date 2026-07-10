@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useMemo } from "react";
 import { useChartTooltip } from "../ChartTooltip";
 
 import { useElementSize } from "@/hooks/use-element-size";
-import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { cn } from "@/lib/utils";
 import { seriesColor } from "@/utils/colors";
 
@@ -313,7 +313,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
       tickfont: {
         size: 16,
         color: theme.textColor,
-        family: "Inter, sans-serif",
+        family: CHART_FONT_FAMILY,
         weight: 400,
       },
       linecolor: theme.lineColor,
@@ -369,7 +369,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
               text: title,
               font: {
                 size: 32,
-                family: "Inter, sans-serif",
+                family: CHART_FONT_FAMILY,
                 color: theme.textColor,
               },
             },
@@ -389,7 +389,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
-        family: "Inter, sans-serif",
+        family: CHART_FONT_FAMILY,
       },
       dragmode: false as const,
       xaxis: {
@@ -398,7 +398,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
           font: {
             size: 16,
             color: theme.textSecondary,
-            family: "Inter, sans-serif",
+            family: CHART_FONT_FAMILY,
             weight: 400,
           },
           standoff: 32,
@@ -421,7 +421,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
           font: {
             size: 16,
             color: theme.textSecondary,
-            family: "Inter, sans-serif",
+            family: CHART_FONT_FAMILY,
             weight: 400,
           },
           standoff: 30,
@@ -448,7 +448,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
         font: {
           size: 16,
           color: theme.legendColor,
-          family: "Inter, sans-serif",
+          family: CHART_FONT_FAMILY,
           weight: 500,
         },
       },

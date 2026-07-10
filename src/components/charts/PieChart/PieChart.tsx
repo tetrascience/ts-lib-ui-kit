@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useMemo } from "react";
 
 import { useChartTooltip } from "../ChartTooltip";
 
-import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { CHART_COLORS } from "@/utils/colors";
 
 interface PieDataSeries {
@@ -86,7 +86,7 @@ const PieChart: React.FC<PieChartProps> = ({
         hoverinfo: "none" as const,
         insidetextfont: {
           size: 0,
-          family: "Inter, sans-serif",
+          family: CHART_FONT_FAMILY,
           color: "transparent",
         },
         hole: hole,
@@ -98,7 +98,7 @@ const PieChart: React.FC<PieChartProps> = ({
       width,
       height,
       font: {
-        family: "Inter, sans-serif",
+        family: CHART_FONT_FAMILY,
         color: theme.textColor,
       },
       showlegend: false,

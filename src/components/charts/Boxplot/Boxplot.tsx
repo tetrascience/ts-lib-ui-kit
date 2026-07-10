@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useMemo } from "react";
 import { useChartTooltip } from "../ChartTooltip";
 
 import { useElementSize } from "@/hooks/use-element-size";
-import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { cn } from "@/lib/utils";
 import { seriesColor } from "@/utils/colors";
 
@@ -123,7 +123,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
       tickfont: {
         size: 16,
         color: theme.textColor,
-        family: "Inter, sans-serif",
+        family: CHART_FONT_FAMILY,
         weight: 400,
       },
       linecolor: theme.lineColor,
@@ -144,7 +144,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
       font: {
         size: 32,
         weight: 600,
-        family: "Inter, sans-serif",
+        family: CHART_FONT_FAMILY,
         color: theme.textColor,
         lineheight: 1.2,
         standoff: 30,
@@ -192,7 +192,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
-        family: "Inter, sans-serif",
+        family: CHART_FONT_FAMILY,
       },
       dragmode: false as const,
       xaxis: {
@@ -201,7 +201,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
           font: {
             size: 16,
             color: theme.textSecondary,
-            family: "Inter, sans-serif",
+            family: CHART_FONT_FAMILY,
             weight: 400,
           },
           standoff: 15,
@@ -221,7 +221,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
           font: {
             size: 16,
             color: theme.textSecondary,
-            family: "Inter, sans-serif",
+            family: CHART_FONT_FAMILY,
             weight: 400,
           },
           standoff: 15,
@@ -248,7 +248,7 @@ const Boxplot: React.FC<BoxplotProps> = ({
         font: {
           size: 13,
           color: theme.legendColor,
-          family: "Inter, sans-serif",
+          family: CHART_FONT_FAMILY,
           weight: 500,
           lineheight: 18,
         },

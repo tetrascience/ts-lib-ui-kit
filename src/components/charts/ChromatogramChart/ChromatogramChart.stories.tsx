@@ -10,6 +10,8 @@ import {
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { CHART_FONT_FAMILY } from "@/hooks/use-plotly-theme";
+
 /**
  * Generate realistic HPLC chromatogram data with Gaussian peaks
  */
@@ -310,7 +312,7 @@ export const PeakHoverAndSelection: StoryObj<typeof ChromatogramChart> = {
     };
 
     return (
-      <div style={{ fontFamily: "Inter, sans-serif" }}>
+      <div style={{ fontFamily: CHART_FONT_FAMILY }}>
         <ChromatogramChart
           {...args}
           selectedPeakIds={selectedPeakIds}
@@ -447,7 +449,7 @@ export const SelectionTogglesViaButton: StoryObj<typeof ChromatogramChart> = {
   render: (args) => {
     const [selectedPeakIds, setSelectedPeakIds] = useState<string[]>(["caffeine"]);
     return (
-      <div style={{ fontFamily: "Inter, sans-serif" }}>
+      <div style={{ fontFamily: CHART_FONT_FAMILY }}>
         <ChromatogramChart {...args} selectedPeakIds={selectedPeakIds} />
         <div style={{ marginTop: 8 }}>
           <button

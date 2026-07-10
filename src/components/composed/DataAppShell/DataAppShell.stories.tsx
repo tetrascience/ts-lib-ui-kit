@@ -5,10 +5,12 @@ import {
   ClipboardList,
   Download,
   Filter,
+  FolderKanban,
   LayoutGrid,
   Library,
   LogOut,
   Search,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import * as React from "react";
@@ -16,6 +18,7 @@ import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import { DataAppShell } from "./DataAppShell";
+import { DataAppShellPrimaryNav } from "./PrimaryNav";
 
 import type { NavGroup } from "./DataAppShell";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -1187,5 +1190,83 @@ export const CompactProperty: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4677" },
+  },
+};
+
+// =============================================================================
+// PrimaryNav top variant (horizontal placement)
+// =============================================================================
+
+const topNavPages = [
+  { id: "projects", label: "Projects", icon: FolderKanban },
+  { id: "explorer", label: "Explorer", icon: Search },
+  { id: "policies", label: "Policies", icon: ShieldCheck },
+];
+
+/** The shell's nav engine in its horizontal placement — logo left, user right. */
+const TopVariantExample = () => {
+  const [activeKey, setActiveKey] = useState("projects");
+
+  return (
+    <div className="p-4 bg-background min-h-screen">
+      <div className="border border-border rounded-lg overflow-hidden">
+        <DataAppShellPrimaryNav
+          variant="top"
+          aria-label="Application navigation"
+          navGroups={[{ pages: topNavPages }]}
+          activeKey={activeKey}
+          onSelect={setActiveKey}
+          header={<span aria-hidden="true" className="w-9 h-6 rounded-lg bg-primary" />}
+          user={<UserMenuButton name="Grace Pan" userRole="ADMIN" />}
+          className="h-10 px-3 bg-sidebar border-b border-sidebar-border"
+        />
+        <div className="h-[300px] flex items-center justify-center bg-background">
+          <p className="text-muted-foreground text-sm">Main content area</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const PrimaryNavTopVariant: Story = {
+  name: "Primary Nav Top Variant",
+  render: () => <TopVariantExample />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Nav renders horizontally with visible labels", async () => {
+      const nav = canvasElement.querySelector("[data-slot='data-app-shell-primary-nav']");
+      expect(nav).toHaveAttribute("data-variant", "top");
+      expect(canvas.getByText("Projects")).toBeVisible();
+      expect(canvas.getByText("Explorer")).toBeVisible();
+      expect(canvas.getByText("Policies")).toBeVisible();
+    });
+
+    await step("Active item carries aria-current", async () => {
+      expect(canvas.getByRole("button", { name: /Projects/ })).toHaveAttribute(
+        "aria-current",
+        "page"
+      );
+    });
+
+    await step("User menu sits in the trailing slot", async () => {
+      const userSlot = canvasElement.querySelector(
+        "[data-slot='data-app-shell-primary-nav-user']"
+      );
+      expect(within(userSlot as HTMLElement).getByText("GP")).toBeInTheDocument();
+    });
+
+    await step("Selecting an item moves the active state", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Explorer/ }));
+      await waitFor(() => {
+        expect(canvas.getByRole("button", { name: /Explorer/ })).toHaveAttribute(
+          "aria-current",
+          "page"
+        );
+        expect(canvas.getByRole("button", { name: /Projects/ })).not.toHaveAttribute(
+          "aria-current"
+        );
+      });
+    });
   },
 };

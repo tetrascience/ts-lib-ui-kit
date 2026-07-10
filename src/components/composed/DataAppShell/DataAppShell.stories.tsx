@@ -5,17 +5,20 @@ import {
   ClipboardList,
   Download,
   Filter,
+  FolderKanban,
   LayoutGrid,
   Library,
   LogOut,
   Search,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import * as React from "react";
 import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 
-import { DataAppShell } from "./DataAppShell";
+import { AppHeaderMenu, DataAppShell } from "./DataAppShell";
+import { DataAppShellPrimaryNav } from "./PrimaryNav";
 
 import type { NavGroup } from "./DataAppShell";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -913,6 +916,13 @@ export const BackToPlatformCallback: Story = {
       await waitFor(() => {
         expect(canvas.getByTestId("callback-count").textContent).toBe("Callbacks: 1");
       });
+
+      // Wait for the menu to fully close before the next step reopens it —
+      // clicking the trigger while the exit transition is still running gets
+      // swallowed as an outside-click and the reopen never happens.
+      await waitFor(() => {
+        expect(body.queryByText("Back to TDP Platform")).not.toBeInTheDocument();
+      });
     });
 
     await step("Clicking app icon again and Back to TDP Platform increments callback count", async () => {
@@ -1187,5 +1197,107 @@ export const CompactProperty: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4677" },
+  },
+};
+
+// =============================================================================
+// Horizontal navigation (PrimaryNav top variant)
+// =============================================================================
+
+const topNavPages = [
+  { id: "projects", label: "Projects", icon: FolderKanban },
+  { id: "explorer", label: "Explorer", icon: Search },
+  { id: "policies", label: "Policies", icon: ShieldCheck },
+];
+
+/** The shell's nav engine in its horizontal placement — logo left, user right. */
+const HorizontalNavigationExample = () => {
+  const [activeKey, setActiveKey] = useState("projects");
+
+  return (
+    <div className="flex flex-col h-screen bg-background">
+      <DataAppShellPrimaryNav
+        variant="top"
+        aria-label="Application navigation"
+        navGroups={[{ pages: topNavPages }]}
+        activeKey={activeKey}
+        onSelect={setActiveKey}
+        header={
+          <AppHeaderMenu
+            appName="APP"
+            appFullName="Data App"
+            version="v1.0.0"
+            onBackToPlatform={() => console.log("Back to TDP Platform")}
+            compact
+            menuSide="bottom"
+          />
+        }
+        user={<UserMenuButton name="Grace Pan" userRole="ADMIN" />}
+        className="h-10 px-2 shrink-0 bg-sidebar border-b border-sidebar-border"
+      />
+      <main className="flex-1 flex items-center justify-center overflow-auto">
+        <p className="text-muted-foreground text-sm">Main content area</p>
+      </main>
+    </div>
+  );
+};
+
+export const HorizontalNavigation: Story = {
+  name: "Horizontal Navigation",
+  render: () => <HorizontalNavigationExample />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Nav renders horizontally with visible labels", async () => {
+      const nav = canvasElement.querySelector("[data-slot='data-app-shell-primary-nav']");
+      expect(nav).toHaveAttribute("data-variant", "top");
+      expect(canvas.getByText("Projects")).toBeVisible();
+      expect(canvas.getByText("Explorer")).toBeVisible();
+      expect(canvas.getByText("Policies")).toBeVisible();
+    });
+
+    await step("Active item carries aria-current", async () => {
+      expect(canvas.getByRole("button", { name: /Projects/ })).toHaveAttribute(
+        "aria-current",
+        "page"
+      );
+    });
+
+    await step("User menu sits in the trailing slot", async () => {
+      const userSlot = canvasElement.querySelector(
+        "[data-slot='data-app-shell-primary-nav-user']"
+      );
+      expect(within(userSlot as HTMLElement).getByText("GP")).toBeInTheDocument();
+    });
+
+    await step("App menu opens below the bar with Back to TDP Platform", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "APP" }));
+      const body = within(document.body);
+      await waitFor(() =>
+        expect(body.getByText("Back to TDP Platform")).toBeInTheDocument()
+      );
+      await userEvent.keyboard("{Escape}");
+      // Wait for the menu to fully close — Radix keeps the rest of the page
+      // aria-hidden until the exit transition completes.
+      await waitFor(() =>
+        expect(body.queryByText("Back to TDP Platform")).not.toBeInTheDocument()
+      );
+    });
+
+    await step("Selecting an item moves the active state", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Explorer/ }));
+      await waitFor(() => {
+        expect(canvas.getByRole("button", { name: /Explorer/ })).toHaveAttribute(
+          "aria-current",
+          "page"
+        );
+        expect(canvas.getByRole("button", { name: /Projects/ })).not.toHaveAttribute(
+          "aria-current"
+        );
+      });
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5512" },
   },
 };

@@ -122,7 +122,8 @@ export const Docked: Story = {
 
     await step("Panel is docked and labelled", async () => {
       const panel = await canvas.findByRole("complementary", { name: "Assistant" });
-      expect(panel).toBeVisible();
+      // waitFor — the panel's fade-in entry animation starts at opacity 0
+      await waitFor(() => expect(panel).toBeVisible());
     });
 
     await step("Close button collapses the panel to the FAB and moves focus to it", async () => {
@@ -137,7 +138,8 @@ export const Docked: Story = {
     await step("FAB re-opens the panel and moves focus inside", async () => {
       await sleep(400);
       await userEvent.click(canvas.getByRole("button", { name: "Open assistant panel" }));
-      expect(await canvas.findByRole("complementary", { name: "Assistant" })).toBeVisible();
+      const panel = await canvas.findByRole("complementary", { name: "Assistant" });
+      await waitFor(() => expect(panel).toBeVisible());
       await waitFor(() => expect(canvas.getByRole("button", { name: "Close panel" })).toHaveFocus());
     });
 
@@ -150,7 +152,8 @@ export const Docked: Story = {
     await step("Re-open so the story ends in the docked state", async () => {
       await sleep(400);
       await userEvent.click(canvas.getByRole("button", { name: "Open assistant panel" }));
-      expect(await canvas.findByRole("complementary", { name: "Assistant" })).toBeVisible();
+      const panel = await canvas.findByRole("complementary", { name: "Assistant" });
+      await waitFor(() => expect(panel).toBeVisible());
     });
   },
 };

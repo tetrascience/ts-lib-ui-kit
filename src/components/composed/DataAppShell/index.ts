@@ -13,6 +13,7 @@ export type { DataAppShellProps, BreadcrumbItemConfig } from "./DataAppShell";
 export type {
   DataAppShellRightPanelProps,
   DataAppShellRightPanelTriggerProps,
+  DataAppShellRightPanelVariant,
 } from "./RightPanel";
 export type {
   DataAppShellPrimaryNavProps,

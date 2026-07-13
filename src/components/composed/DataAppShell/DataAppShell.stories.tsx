@@ -7,18 +7,22 @@ import {
   Filter,
   FolderKanban,
   LayoutGrid,
+  Layers,
   Library,
   LogOut,
+  PanelRight,
   Search,
   ShieldCheck,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import * as React from "react";
 import { useState } from "react";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 
 import { AppHeaderMenu, DataAppShell } from "./DataAppShell";
 import { DataAppShellPrimaryNav } from "./PrimaryNav";
+import { DataAppShellRightPanel, type DataAppShellRightPanelVariant } from "./RightPanel";
 
 import type { NavGroup } from "./DataAppShell";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -320,6 +324,8 @@ const htsBreadcrumbs = [
 const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean }) => {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [activeStepId, setActiveStepId] = useState("data-overview");
+  const [assistantOpen, setAssistantOpen] = useState(true);
+  const [assistantVariant, setAssistantVariant] = useState<DataAppShellRightPanelVariant>("docked");
 
   const steps = htsWorkflowSteps.map((s) => ({
     ...s,
@@ -343,6 +349,28 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
       breadcrumbs={htsBreadcrumbs}
       headerActions={
         <>
+          {/* Docked ⇄ overlay toggle for the assistant panel */}
+          <div className="inline-flex overflow-hidden rounded-lg border border-border mr-1">
+            {(
+              [
+                { value: "docked", label: "Dock assistant panel", Icon: PanelRight },
+                { value: "overlay", label: "Overlay assistant panel", Icon: Layers },
+              ] as const
+            ).map(({ value, label, Icon }) => (
+              <Button
+                key={value}
+                variant={assistantVariant === value ? "secondary" : "ghost"}
+                size="icon-sm"
+                className="rounded-none bg-clip-border"
+                aria-label={label}
+                aria-pressed={assistantVariant === value}
+                title={label}
+                onClick={() => setAssistantVariant(value)}
+              >
+                <Icon className="size-4" />
+              </Button>
+            ))}
+          </div>
           {!isFirstStep && (
             <Button
               variant="outline"
@@ -365,6 +393,24 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
       }
       showNavRail={!collapsed}
       sidebarPanel={<WorkflowPanel steps={steps} collapsed={collapsed} onCollapseChange={setCollapsed} />}
+      rightPanel={
+        <DataAppShellRightPanel
+          id="hts-assistant"
+          variant={assistantVariant}
+          open={assistantOpen}
+          onOpenChange={setAssistantOpen}
+          title="Assistant"
+          icon={<Sparkles className="size-4 text-primary" />}
+          triggerLabel="Open assistant panel"
+        >
+          {/* Example content only — the panel body is a plain slot (chat, history, inspector, …) */}
+          <div className="flex flex-col gap-2 p-3">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i} className="h-10 rounded-md bg-muted" />
+            ))}
+          </div>
+        </DataAppShellRightPanel>
+      }
     >
       <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground text-sm">Main content area</p>
@@ -375,9 +421,16 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
 
 export const Default: Story = {
   name: "Default",
+  loaders: [
+    () => {
+      // Deterministic panel width — drop anything persisted by a previous run.
+      window.localStorage.removeItem("ts-ui.right-panel.hts-assistant.width");
+    },
+  ],
   render: () => <DefaultShell />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
+    const body = within(document.body);
 
     await step("Shell renders all regions", async () => {
       expect(canvas.getByText("HTS")).toBeInTheDocument();
@@ -396,9 +449,73 @@ export const Default: Story = {
 
     await step("Version is shown inside the app dropdown under the title", async () => {
       await userEvent.click(canvas.getAllByText("HTS")[0]);
-      const body = within(document.body);
       await waitFor(() => expect(body.getByText("v2.4.1")).toBeInTheDocument());
       await userEvent.keyboard("{Escape}");
+    });
+
+    await step("Right panel is docked beside the content", async () => {
+      const panel = await canvas.findByRole("complementary", { name: "Assistant" });
+      // waitFor — the panel's fade-in entry animation starts at opacity 0
+      await waitFor(() => expect(panel).toBeVisible());
+      expect(panel.style.width).toBe("320px");
+    });
+
+    await step("Drag handle resizes the panel and persists width per id", async () => {
+      const panel = canvas.getByRole("complementary", { name: "Assistant" });
+      const handle = canvas.getByRole("separator", { name: "Resize panel" });
+      fireEvent.pointerDown(handle, { button: 0, pointerId: 1, clientX: 600 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientX: 520 });
+      expect(panel.style.width).toBe("400px");
+      fireEvent.pointerUp(handle, { pointerId: 1, clientX: 520 });
+      expect(window.localStorage.getItem("ts-ui.right-panel.hts-assistant.width")).toBe("400");
+    });
+
+    await step("Handle is a keyboard-operable ARIA separator", async () => {
+      const panel = canvas.getByRole("complementary", { name: "Assistant" });
+      const handle = canvas.getByRole("separator", { name: "Resize panel" });
+      handle.focus();
+      await userEvent.keyboard("{ArrowLeft}");
+      expect(handle).toHaveAttribute("aria-valuenow", "416");
+      await userEvent.keyboard("{End}");
+      expect(panel.style.width).toBe("560px");
+      await userEvent.keyboard("{Home}");
+      expect(panel.style.width).toBe("240px");
+      expect(handle).toHaveAttribute("aria-valuemin", "240");
+      expect(handle).toHaveAttribute("aria-valuemax", "560");
+    });
+
+    await step("Close collapses the panel to the FAB; the FAB re-opens it", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Close panel" }));
+      expect(canvas.queryByRole("complementary", { name: "Assistant" })).not.toBeInTheDocument();
+      const fab = canvas.getByRole("button", { name: "Open assistant panel" });
+      expect(fab).toHaveAttribute("aria-expanded", "false");
+      await waitFor(() => expect(fab).toHaveFocus());
+      await userEvent.click(fab);
+      const panel = await canvas.findByRole("complementary", { name: "Assistant" });
+      await waitFor(() => expect(panel).toBeVisible());
+      await waitFor(() => expect(canvas.getByRole("button", { name: "Close panel" })).toHaveFocus());
+    });
+
+    await step("Esc inside the docked panel closes it", async () => {
+      await userEvent.keyboard("{Escape}");
+      expect(canvas.queryByRole("complementary", { name: "Assistant" })).not.toBeInTheDocument();
+    });
+
+    await step("Overlay variant slides over the content with a scrim (no reflow)", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Overlay assistant panel" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Open assistant panel" }));
+      const overlayPanel = await body.findByRole("dialog", { name: "Assistant" });
+      await waitFor(() => expect(overlayPanel).toBeVisible());
+      expect(document.querySelector('[data-slot="sheet-overlay"]')).not.toBeNull();
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(body.queryByRole("dialog", { name: "Assistant" })).not.toBeInTheDocument());
+    });
+
+    await step("Restore the docked open state", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Dock assistant panel" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Open assistant panel" }));
+      const panel = await canvas.findByRole("complementary", { name: "Assistant" });
+      await waitFor(() => expect(panel).toBeVisible());
     });
   },
   parameters: {

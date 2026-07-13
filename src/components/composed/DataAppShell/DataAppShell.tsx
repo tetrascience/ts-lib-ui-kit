@@ -88,6 +88,8 @@ export interface DataAppShellProps {
   // -- Shell --
   /** Slot rendered between the icon rail and the content (e.g. WorkflowPanel) */
   sidebarPanel?: React.ReactNode;
+  /** Slot rendered after the content (e.g. a DataAppShellRightPanel) — its FAB anchors to the content row */
+  rightPanel?: React.ReactNode;
   /** Show the desktop icon nav rail. Set false to reclaim width when the panel is collapsed. */
   showNavRail?: boolean; // default true
   /** Main content area */
@@ -406,6 +408,7 @@ function DataAppShell({
   headerCenter,
   headerActions,
   sidebarPanel,
+  rightPanel,
   showNavRail = true,
   children,
   className,
@@ -471,17 +474,21 @@ function DataAppShell({
             }
           />
 
-          <div className="flex flex-1 min-h-0 overflow-hidden">
+          {/* relative — anchors the right panel's floating FAB trigger */}
+          <div className="relative flex flex-1 min-h-0 overflow-hidden">
             {/* Sidebar panel slot (e.g. WorkflowPanel) */}
             {sidebarPanel}
 
             {/* Content area */}
             <main
               data-slot="data-app-shell-content"
-              className="flex-1 overflow-auto bg-background"
+              className="flex-1 min-w-0 overflow-auto bg-background"
             >
               {children}
             </main>
+
+            {/* Right panel slot (e.g. DataAppShellRightPanel) */}
+            {rightPanel}
           </div>
         </div>
       </div>

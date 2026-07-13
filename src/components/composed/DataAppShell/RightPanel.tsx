@@ -5,6 +5,7 @@ import { PanelRightOpen, X } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -204,14 +205,21 @@ function DragHandle({ width, minWidth, maxWidth, onResize, onCommit, onDraggingC
 // DataAppShellRightPanel
 // =============================================================================
 
+export type DataAppShellRightPanelVariant = "docked" | "overlay";
+
 export interface DataAppShellRightPanelProps extends Omit<React.ComponentProps<"aside">, "id" | "title"> {
   /** Unique panel id — keys the persisted width in localStorage. */
   id: string;
-  /** Whether the panel is shown (docked) or collapsed to the FAB trigger. */
+  /** Whether the panel is shown or collapsed to the FAB trigger. */
   open: boolean;
-  /** Called with the next open state (close button, Esc, FAB). */
+  /** Called with the next open state (close button, Esc, scrim click, FAB). */
   onOpenChange?: (open: boolean) => void;
-  /** Show the drag handle and allow resizing. Defaults to `true`. */
+  /**
+   * `docked` (default) — in-flow flex sibling: opening/resizing pushes main narrower.
+   * `overlay` — reuses the design-system `Sheet`: slides in over content with a scrim, no reflow.
+   */
+  variant?: DataAppShellRightPanelVariant;
+  /** Show the drag handle and allow resizing. Defaults to `true`. Docked only — the overlay has a fixed width. */
   resizable?: boolean;
   /** Width in px when nothing is persisted yet. */
   defaultWidth?: number;
@@ -238,13 +246,18 @@ export interface DataAppShellRightPanelProps extends Omit<React.ComponentProps<"
 }
 
 /**
- * Docked right-hand panel for the Data App Shell (SW-2117). Rendered in normal
- * flow as a flex sibling of the main content, so opening/resizing pushes main
- * narrower (unlike the overlay `Sheet`, which slides over content). Width is
- * drag-resizable and persisted per `id`; while closed a floating FAB trigger
- * re-opens it.
+ * Right-hand panel for the Data App Shell (SW-2117), in two variants:
  *
- * Place it after the main content inside a `relative` flex row:
+ * - `docked` (default) — rendered in normal flow as a flex sibling of the main
+ *   content, so opening/resizing pushes main narrower. Width is drag-resizable
+ *   and persisted per `id`.
+ * - `overlay` — reuses the design-system `Sheet` (`side="right"`): slides in
+ *   over the content with a scrim and does not reflow main.
+ *
+ * In both variants a floating FAB trigger re-opens the panel while it is
+ * closed, and the body is a plain slot — a chat, history list, inspector, ….
+ * Pass it to the shell's `rightPanel` slot, or place it after the main content
+ * inside a `relative` flex row:
  *
  * ```tsx
  * <div className="relative flex flex-1 min-h-0">
@@ -259,6 +272,7 @@ function DataAppShellRightPanel({
   id,
   open,
   onOpenChange,
+  variant = "docked",
   resizable = true,
   defaultWidth = 320,
   minWidth = 240,
@@ -272,6 +286,7 @@ function DataAppShellRightPanel({
   triggerLabel = "Open panel",
   children,
   className,
+  ref,
   ...props
 }: DataAppShellRightPanelProps) {
   const [width, setWidth] = React.useState<number>(() =>
@@ -301,24 +316,87 @@ function DataAppShellRightPanel({
     else triggerRef.current?.focus();
   }, [open]);
 
-  if (!open) {
-    if (!showTrigger) return null;
-    return (
-      <DataAppShellRightPanelTrigger
-        ref={triggerRef}
-        aria-label={triggerLabel}
-        aria-expanded={false}
-        onClick={() => onOpenChange?.(true)}
+  const accessibleName = typeof title === "string" ? title : "Side panel";
+
+  const fab = showTrigger ? (
+    <DataAppShellRightPanelTrigger
+      ref={triggerRef}
+      aria-label={triggerLabel}
+      aria-expanded={false}
+      onClick={() => onOpenChange?.(true)}
+    >
+      {triggerIcon}
+    </DataAppShellRightPanelTrigger>
+  ) : null;
+
+  const header = (
+    <div
+      data-slot="data-app-shell-right-panel-header"
+      className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2"
+    >
+      {icon != null && <span className="flex shrink-0 items-center justify-center">{icon}</span>}
+      {title != null && <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{title}</span>}
+      {title == null && <span className="flex-1" />}
+      {headerActions}
+      <Button
+        ref={closeButtonRef}
+        variant="ghost"
+        size="icon-sm"
+        className="text-muted-foreground"
+        aria-label="Close panel"
+        onClick={() => onOpenChange?.(false)}
       >
-        {triggerIcon}
-      </DataAppShellRightPanelTrigger>
+        <X />
+      </Button>
+    </div>
+  );
+
+  const content = (
+    <div data-slot="data-app-shell-right-panel-content" className="flex min-h-0 flex-1 flex-col overflow-auto">
+      {children}
+    </div>
+  );
+
+  // Overlay — reuse the design-system Sheet: scrim, slide-in, Esc/click-out
+  // close and focus trapping all come from the primitive. No reflow of main.
+  if (variant === "overlay") {
+    return (
+      <>
+        <Sheet open={open} onOpenChange={onOpenChange}>
+          <SheetContent
+            side="right"
+            showCloseButton={false}
+            data-slot="data-app-shell-right-panel"
+            data-variant="overlay"
+            // The FAB remounts on close, so radix's default "restore previous
+            // focus" targets a dead node — send focus to the new FAB instead.
+            onCloseAutoFocus={(e) => {
+              e.preventDefault();
+              triggerRef.current?.focus();
+            }}
+            style={{ width }}
+            className={cn("gap-0 data-[side=right]:sm:max-w-none", className)}
+            {...props}
+          >
+            <SheetTitle className="sr-only">{accessibleName}</SheetTitle>
+            <SheetDescription className="sr-only">Side panel overlay</SheetDescription>
+            {header}
+            {content}
+          </SheetContent>
+        </Sheet>
+        {!open && fab}
+      </>
     );
   }
 
+  if (!open) return fab;
+
   return (
     <aside
+      ref={ref}
       data-slot="data-app-shell-right-panel"
-      aria-label={typeof title === "string" ? title : "Side panel"}
+      data-variant="docked"
+      aria-label={accessibleName}
       style={{ width }}
       className={cn(
         "relative flex h-full shrink-0 flex-col overflow-hidden border-l border-border bg-background",
@@ -342,29 +420,8 @@ function DataAppShellRightPanel({
         />
       )}
 
-      <div
-        data-slot="data-app-shell-right-panel-header"
-        className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2"
-      >
-        {icon != null && <span className="flex shrink-0 items-center justify-center">{icon}</span>}
-        {title != null && <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{title}</span>}
-        {title == null && <span className="flex-1" />}
-        {headerActions}
-        <Button
-          ref={closeButtonRef}
-          variant="ghost"
-          size="icon-sm"
-          className="text-muted-foreground"
-          aria-label="Close panel"
-          onClick={() => onOpenChange?.(false)}
-        >
-          <X />
-        </Button>
-      </div>
-
-      <div data-slot="data-app-shell-right-panel-content" className="flex min-h-0 flex-1 flex-col overflow-auto">
-        {children}
-      </div>
+      {header}
+      {content}
     </aside>
   );
 }

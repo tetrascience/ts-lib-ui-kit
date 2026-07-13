@@ -86,7 +86,7 @@ export interface DataAppShellProps {
   headerActions?: React.ReactNode;
 
   // -- Shell --
-  /** Slot rendered between the icon rail and the content (e.g. WorkflowPanel) */
+  /** Slot rendered between the icon rail and the content (e.g. a vertical `DataAppShellSecondaryNav`) */
   sidebarPanel?: React.ReactNode;
   /** Show the desktop icon nav rail. Set false to reclaim width when the panel is collapsed. */
   showNavRail?: boolean; // default true

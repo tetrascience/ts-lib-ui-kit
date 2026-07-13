@@ -23,14 +23,24 @@ function clampWidth(width: number, min: number, max: number): number {
 
 function readWidth(id: string, fallback: number, min: number, max: number): number {
   if (typeof window === "undefined") return fallback;
-  const v = Number(window.localStorage.getItem(storageKey(id)));
+  let v: number;
+  try {
+    v = Number(window.localStorage.getItem(storageKey(id)));
+  } catch {
+    // Storage can be blocked (privacy mode, sandboxed iframe) — fall back.
+    return fallback;
+  }
   if (!Number.isFinite(v) || v <= 0) return fallback;
   return clampWidth(v, min, max);
 }
 
 function persistWidth(id: string, width: number) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(storageKey(id), String(Math.round(width)));
+  try {
+    window.localStorage.setItem(storageKey(id), String(Math.round(width)));
+  } catch {
+    // Storage blocked or full — resizing still works, the width just isn't persisted.
+  }
 }
 
 // =============================================================================

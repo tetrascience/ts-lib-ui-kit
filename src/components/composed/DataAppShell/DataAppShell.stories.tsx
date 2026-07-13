@@ -1,7 +1,4 @@
-import { cva } from "class-variance-authority";
 import {
-  ChevronLeft,
-  ChevronRight,
   ClipboardList,
   Download,
   Filter,
@@ -14,7 +11,6 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  type LucideIcon,
 } from "lucide-react";
 import * as React from "react";
 import { useState } from "react";
@@ -23,8 +19,10 @@ import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 import { AppHeaderMenu, DataAppShell } from "./DataAppShell";
 import { DataAppShellPrimaryNav } from "./PrimaryNav";
 import { DataAppShellRightPanel, type DataAppShellRightPanelVariant } from "./RightPanel";
+import { DataAppShellSecondaryNav } from "./SecondaryNav";
 
 import type { NavGroup } from "./DataAppShell";
+import type { NavStep } from "./SecondaryNav";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { TdpNavigationProvider } from "@/components/composed/tdp-link";
@@ -38,8 +36,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 
 // =============================================================================
 // Story-local helpers
@@ -125,152 +121,6 @@ function UserMenuButton({ name, userRole, expanded = false }: UserMenuButtonProp
   );
 }
 
-// ── Workflow panel ───────────────────────────────────────────────────────────
-
-interface WorkflowStep {
-  id: string;
-  label: string;
-  icon?: LucideIcon | React.FC<React.SVGProps<SVGSVGElement>>;
-  isActive?: boolean;
-  disabled?: boolean;
-  disabledReason?: string;
-  onClick?: () => void;
-}
-
-const stepItemVariants = cva(
-  "flex items-center gap-2 py-2 px-2.5 font-normal transition-colors duration-150 whitespace-nowrap leading-tight cursor-pointer border-l-[5px] w-full bg-transparent border-r-0 border-t-0 border-b-0",
-  {
-    variants: {
-      active: {
-        true: "border-l-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-foreground shadow-sm",
-        false: "border-l-sidebar-border bg-transparent text-muted-foreground hover:bg-sidebar-accent/50",
-      },
-    },
-    defaultVariants: { active: false },
-  },
-);
-
-function WorkflowPanel({
-  steps,
-  collapsed,
-  onCollapseChange,
-}: {
-  steps: WorkflowStep[];
-  collapsed: boolean;
-  onCollapseChange: (collapsed: boolean) => void;
-}) {
-  if (collapsed) {
-    return (
-      <div
-        data-slot="data-app-panel-collapsed"
-        className="flex flex-col shrink-0 w-[46px] bg-sidebar border-r border-sidebar-border"
-      >
-        <div className="flex justify-center items-center h-10 border-b border-sidebar-border">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="w-5 h-5" onClick={() => onCollapseChange(false)}>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Expand</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        <TooltipProvider>
-          {steps.map((step) => {
-            const Icon = step.icon;
-            return (
-              <Tooltip key={step.id}>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      "flex justify-center items-center py-3.5 border-l-[5px] cursor-pointer bg-transparent border-r-0 border-t-0 border-b-0 w-full",
-                      step.isActive ? "border-l-primary" : "border-l-border",
-                      step.disabled && "opacity-45 cursor-not-allowed",
-                    )}
-                    onClick={() => !step.disabled && step.onClick?.()}
-                    disabled={step.disabled}
-                  >
-                    {Icon ? (
-                      <Icon className={cn("w-4 h-4", step.isActive ? "text-primary" : "text-muted-foreground")} />
-                    ) : (
-                      <div
-                        className={cn(
-                          "w-2.5 h-2.5 rounded-full",
-                          step.isActive ? "bg-primary" : "bg-muted-foreground/40",
-                        )}
-                      />
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {step.disabled ? (step.disabledReason ?? step.label) : step.label}
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </TooltipProvider>
-      </div>
-    );
-  }
-
-  return (
-    <nav
-      data-slot="data-app-panel-expanded"
-      aria-label="Workflow steps"
-      className="flex flex-col shrink-0 w-[180px] bg-sidebar border-r border-sidebar-border overflow-hidden"
-    >
-      <div className="flex items-center gap-1.5 h-10 px-2.5 pl-4 text-xs font-medium text-muted-foreground whitespace-nowrap border-b border-sidebar-border">
-        <span className="flex-1">Workflow</span>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="w-5 h-5" onClick={() => onCollapseChange(true)}>
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">Collapse</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-      <div className="flex flex-col">
-        {steps.map((step) => {
-          const Icon = step.icon;
-          return (
-            <button
-              type="button"
-              key={step.id}
-              className={cn(
-                stepItemVariants({ active: step.isActive ?? false }),
-                step.disabled && "opacity-45 cursor-not-allowed",
-              )}
-              onClick={() => !step.disabled && step.onClick?.()}
-              disabled={step.disabled}
-              title={step.disabled ? (step.disabledReason ?? step.label) : step.label}
-            >
-              {Icon && (
-                <span
-                  className={cn(
-                    "flex items-center justify-center w-6 h-6 shrink-0",
-                    step.isActive ? "text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                </span>
-              )}
-              <span className={cn("text-title-sm truncate min-w-0", !step.isActive && "font-light")}>
-                {step.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
-
 // =============================================================================
 // Meta
 // =============================================================================
@@ -298,13 +148,8 @@ const htsNavGroups: NavGroup[] = [
   },
 ];
 
-const htsWorkflowSteps: WorkflowStep[] = [
-  {
-    id: "data-overview",
-    label: "Step 1 Name",
-    icon: LayoutGrid,
-    isActive: true,
-  },
+const htsWorkflowSteps: NavStep[] = [
+  { id: "data-overview", label: "Step 1 Name", icon: LayoutGrid },
   { id: "global-filtering", label: "Step 2 Name", icon: Filter },
   { id: "explore-clusters", label: "Step 3 Name", icon: Library },
   { id: "review-compound", label: "Step 4 Name", icon: Search },
@@ -327,14 +172,8 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
   const [assistantOpen, setAssistantOpen] = useState(true);
   const [assistantVariant, setAssistantVariant] = useState<DataAppShellRightPanelVariant>("docked");
 
-  const steps = htsWorkflowSteps.map((s) => ({
-    ...s,
-    isActive: s.id === activeStepId,
-    onClick: () => setActiveStepId(s.id),
-  }));
-
-  const activeStepIndex = steps.findIndex((s) => s.isActive);
-  const isLastStep = activeStepIndex === steps.length - 1;
+  const activeStepIndex = htsWorkflowSteps.findIndex((s) => s.id === activeStepId);
+  const isLastStep = activeStepIndex === htsWorkflowSteps.length - 1;
   const isFirstStep = activeStepIndex <= 0;
 
   return (
@@ -375,7 +214,7 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setActiveStepId(steps[activeStepIndex - 1].id)}
+              onClick={() => setActiveStepId(htsWorkflowSteps[activeStepIndex - 1].id)}
               className="gap-1"
             >
               Back
@@ -392,7 +231,18 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
         </>
       }
       showNavRail={!collapsed}
-      sidebarPanel={<WorkflowPanel steps={steps} collapsed={collapsed} onCollapseChange={setCollapsed} />}
+      sidebarPanel={
+        <DataAppShellSecondaryNav
+          aria-label="Workflow steps"
+          title="Workflow"
+          collapsible
+          steps={htsWorkflowSteps}
+          activeKey={activeStepId}
+          onSelect={setActiveStepId}
+          collapsed={collapsed}
+          onCollapsedChange={setCollapsed}
+        />
+      }
       rightPanel={
         <DataAppShellRightPanel
           id="hts-assistant"
@@ -606,13 +456,7 @@ const InteractiveShell = () => {
     },
   ];
 
-  const steps = htsWorkflowSteps.map((s) => ({
-    ...s,
-    isActive: s.id === activeStepId,
-    onClick: () => setActiveStepId(s.id),
-  }));
-
-  const activeStep = steps.find((s) => s.isActive);
+  const activeStep = htsWorkflowSteps.find((s) => s.id === activeStepId);
   const isProjectPage = activePageId === "project";
 
   return (
@@ -637,7 +481,16 @@ const InteractiveShell = () => {
       }
       sidebarPanel={
         isProjectPage ? (
-          <WorkflowPanel steps={steps} collapsed={collapsed} onCollapseChange={setCollapsed} />
+          <DataAppShellSecondaryNav
+            aria-label="Workflow steps"
+            title="Workflow"
+            collapsible
+            steps={htsWorkflowSteps}
+            activeKey={activeStepId}
+            onSelect={setActiveStepId}
+            collapsed={collapsed}
+            onCollapsedChange={setCollapsed}
+          />
         ) : undefined
       }
     >
@@ -826,21 +679,9 @@ const WorkflowInteractionShell = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [activeStepId, setActiveStepId] = useState("step-a");
 
-  const steps: WorkflowStep[] = [
-    {
-      id: "step-a",
-      label: "Step Alpha",
-      icon: LayoutGrid,
-      isActive: activeStepId === "step-a",
-      onClick: () => setActiveStepId("step-a"),
-    },
-    {
-      id: "step-b",
-      label: "Step Beta",
-      icon: Filter,
-      isActive: activeStepId === "step-b",
-      onClick: () => setActiveStepId("step-b"),
-    },
+  const steps: NavStep[] = [
+    { id: "step-a", label: "Step Alpha", icon: LayoutGrid },
+    { id: "step-b", label: "Step Beta", icon: Filter },
     { id: "step-c", label: "Disabled", icon: Search, disabled: true, disabledReason: "Requires upstream data" },
   ];
 
@@ -848,7 +689,18 @@ const WorkflowInteractionShell = () => {
     <DataAppShell
       appName="T"
       navGroups={[{ pages: [{ id: "p1", label: "Project", icon: ClipboardList }] }]}
-      sidebarPanel={<WorkflowPanel steps={steps} collapsed={collapsed} onCollapseChange={setCollapsed} />}
+      sidebarPanel={
+        <DataAppShellSecondaryNav
+          aria-label="Workflow steps"
+          title="Workflow"
+          collapsible
+          steps={steps}
+          activeKey={activeStepId}
+          onSelect={setActiveStepId}
+          collapsed={collapsed}
+          onCollapsedChange={setCollapsed}
+        />
+      }
     >
       <div className="p-6">
         <p data-testid="active-step">Active: {activeStepId}</p>
@@ -885,21 +737,17 @@ export const WorkflowPanelInteractions: Story = {
     });
 
     await step("Collapse button hides step labels", async () => {
-      const expandedPanel = canvasElement.querySelector("[data-slot='data-app-panel-expanded']");
-      const collapseBtn = within(expandedPanel!).getAllByRole("button")[0];
-      await userEvent.click(collapseBtn);
+      await userEvent.click(canvas.getByRole("button", { name: "Collapse" }));
       await waitFor(() => {
-        expect(canvasElement.querySelector("[data-slot='data-app-panel-collapsed']")).toBeInTheDocument();
+        const panel = canvasElement.querySelector("[data-slot='data-app-shell-secondary-nav']");
+        expect(panel).toHaveAttribute("data-collapsed", "true");
         expect(canvas.queryByText("Step Alpha")).not.toBeInTheDocument();
       });
       expect(canvas.getByTestId("collapsed-state").textContent).toBe("Collapsed: true");
     });
 
     await step("Expand button restores step labels", async () => {
-      const collapsedPanel = canvasElement.querySelector("[data-slot='data-app-panel-collapsed']");
-      // First button in collapsed panel header is the expand button
-      const expandBtn = within(collapsedPanel!).getAllByRole("button")[0];
-      await userEvent.click(expandBtn);
+      await userEvent.click(canvas.getByRole("button", { name: "Expand" }));
       await waitFor(() => {
         expect(canvas.getByText("Step Alpha")).toBeInTheDocument();
       });
@@ -1318,7 +1166,7 @@ export const CompactProperty: Story = {
 };
 
 // =============================================================================
-// Horizontal navigation (PrimaryNav top variant)
+// Horizontal navigation (top PrimaryNav + horizontal SecondaryNav)
 // =============================================================================
 
 const topNavPages = [
@@ -1327,9 +1175,28 @@ const topNavPages = [
   { id: "policies", label: "Policies", icon: ShieldCheck },
 ];
 
-/** The shell's nav engine in its horizontal placement — logo left, user right. */
+const secondaryNavSteps: NavStep[] = [
+  { id: "overview", label: "Data Overview", icon: LayoutGrid },
+  {
+    id: "filtering",
+    label: "Filtering",
+    icon: Filter,
+    steps: [
+      { id: "global-filters", label: "Global Filters" },
+      { id: "cluster-filters", label: "Cluster Filters" },
+    ],
+  },
+  { id: "review", label: "Review Compounds", icon: Library },
+  { id: "export", label: "Export", icon: Download, badge: 12 },
+];
+
+/**
+ * The fully horizontal shell chrome — top PrimaryNav (logo left, user right)
+ * with the horizontal SecondaryNav stepper directly beneath it.
+ */
 const HorizontalNavigationExample = () => {
   const [activeKey, setActiveKey] = useState("projects");
+  const [activeStep, setActiveStep] = useState("filtering");
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -1350,6 +1217,14 @@ const HorizontalNavigationExample = () => {
           />
         }
         user={<UserMenuButton name="Grace Pan" userRole="ADMIN" />}
+        className="h-10 px-2 shrink-0 bg-sidebar border-b border-sidebar-border"
+      />
+      <DataAppShellSecondaryNav
+        orientation="horizontal"
+        aria-label="Steps"
+        steps={secondaryNavSteps}
+        activeKey={activeStep}
+        onSelect={setActiveStep}
         className="h-10 px-2 shrink-0 bg-sidebar border-b border-sidebar-border"
       />
       <main className="flex-1 flex items-center justify-center overflow-auto">
@@ -1411,6 +1286,43 @@ export const HorizontalNavigation: Story = {
         expect(canvas.getByRole("button", { name: /Projects/ })).not.toHaveAttribute(
           "aria-current"
         );
+      });
+    });
+
+    const secondaryNav = () =>
+      canvasElement.querySelector("[data-slot='data-app-shell-secondary-nav']") as HTMLElement;
+
+    await step("Secondary nav stepper renders horizontally under the top nav", async () => {
+      expect(secondaryNav()).toHaveAttribute("data-orientation", "horizontal");
+      expect(within(secondaryNav()).getByText("Filtering")).toBeVisible();
+      expect(within(secondaryNav()).getByText("Global Filters")).toBeVisible();
+    });
+
+    await step("Step statuses derive linearly along the row", async () => {
+      expect(within(secondaryNav()).getByRole("button", { name: /Filtering/ })).toHaveAttribute(
+        "aria-current",
+        "step"
+      );
+      expect(
+        within(secondaryNav()).getByRole("button", { name: /Data Overview/ })
+      ).toHaveAttribute("data-status", "done");
+      expect(within(secondaryNav()).getByRole("button", { name: /Export/ })).toHaveAttribute(
+        "data-status",
+        "todo"
+      );
+    });
+
+    await step("Selecting a later step marks earlier steps done", async () => {
+      await userEvent.click(
+        within(secondaryNav()).getByRole("button", { name: /Review Compounds/ })
+      );
+      await waitFor(() => {
+        expect(
+          within(secondaryNav()).getByRole("button", { name: /Review Compounds/ })
+        ).toHaveAttribute("aria-current", "step");
+        expect(
+          within(secondaryNav()).getByRole("button", { name: /Cluster Filters/ })
+        ).toHaveAttribute("data-status", "done");
       });
     });
   },

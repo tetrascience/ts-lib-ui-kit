@@ -24,7 +24,7 @@
 ### Typography
 
 - **Font family**: Inter Variable (`@fontsource-variable/inter`), variable weight 100–900
-- Scale follows Tailwind defaults (`text-xs` → `text-4xl`)
+- Scale follows Tailwind defaults (`text-xs` → `text-4xl`), plus a kit-added `text-2xs` (10px) for dense UI
 - No custom type scale — lean on Tailwind utilities directly
 
 ### Spacing & Radius

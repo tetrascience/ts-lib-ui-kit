@@ -21,3 +21,14 @@ export type {
   NavPage,
   NavGroup,
 } from "./PrimaryNav";
+export {
+  DataAppShellSecondaryNav,
+  dataAppShellSecondaryNavVariants,
+  dataAppShellSecondaryNavItemVariants,
+} from "./SecondaryNav";
+export type {
+  DataAppShellSecondaryNavProps,
+  DataAppShellSecondaryNavOrientation,
+  NavStep,
+  NavStepStatus,
+} from "./SecondaryNav";

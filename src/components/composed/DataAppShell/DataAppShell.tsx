@@ -86,7 +86,7 @@ export interface DataAppShellProps {
   headerActions?: React.ReactNode;
 
   // -- Shell --
-  /** Slot rendered between the icon rail and the content (e.g. WorkflowPanel) */
+  /** Slot rendered between the icon rail and the content (e.g. a vertical `DataAppShellSecondaryNav`) */
   sidebarPanel?: React.ReactNode;
   /** Slot rendered after the content (e.g. a DataAppShellRightPanel) — its FAB anchors to the content row */
   rightPanel?: React.ReactNode;

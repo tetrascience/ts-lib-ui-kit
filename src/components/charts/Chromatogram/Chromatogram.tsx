@@ -18,6 +18,7 @@ import {
   buildTraceData,
   buildLayout,
   buildConfig,
+  createClickHandler,
   createHoverHandler,
   createUnhoverHandler,
 } from "./plotBuilder";
@@ -314,12 +315,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
     // ── Event: peak click ──────────────────────────────────────────────────
     (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
       "plotly_click",
-      (eventData: Plotly.PlotMouseEvent) => {
-        if (!onPeakClickRef.current) return;
-        const peakPoint = eventData.points.find((p) => p.customdata != null);
-        if (!peakPoint) return;
-        onPeakClickRef.current(peakPoint.customdata as unknown as PeakSelectEvent);
-      }
+      createClickHandler(onPeakClickRef)
     );
 
     (currentRef as unknown as Plotly.PlotlyHTMLElement).on(

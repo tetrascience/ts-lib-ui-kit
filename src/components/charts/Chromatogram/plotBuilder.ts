@@ -293,6 +293,17 @@ export function createHoverHandler(
   };
 }
 
+export function createClickHandler(
+  onPeakClickRef: MutableRef<((event: PeakSelectEvent) => void) | undefined>
+): (eventData: Plotly.PlotMouseEvent) => void {
+  return (eventData) => {
+    if (!onPeakClickRef.current) return;
+    const peakPoint = eventData.points.find((p) => p.customdata != null);
+    if (!peakPoint) return;
+    onPeakClickRef.current(peakPoint.customdata as unknown as PeakSelectEvent);
+  };
+}
+
 export function createUnhoverHandler(
   domElement: HTMLElement,
   thickenedSeriesRef: MutableRef<number | null>,

@@ -3,7 +3,12 @@ import { describe, it, expect } from "vitest";
 import {
   buildHoverExtraContent,
   applyBaselineCorrection,
+  findClosestIndex,
+  collectPeaksWithBoundaryData,
+  validateSeriesData,
 } from "../dataProcessing";
+
+import type { PeakAnnotation } from "../types";
 
 describe("buildHoverExtraContent", () => {
   it("returns seriesName when no metadata provided", () => {
@@ -110,5 +115,82 @@ describe("applyBaselineCorrection", () => {
       const result = applyBaselineCorrection(y, "linear");
       result.forEach((v) => expect(v).toBeCloseTo(0, 10));
     });
+
+    it("baseline-corrects a single-point signal to zero", () => {
+      expect(applyBaselineCorrection([42], "linear")).toEqual([0]);
+    });
+  });
+});
+
+describe("findClosestIndex", () => {
+  const arr = [0, 10, 20, 30, 40];
+
+  it("returns the exact index when the target matches a value", () => {
+    expect(findClosestIndex(arr, 20)).toBe(2);
+  });
+
+  it("rounds down when the target is closer to the lower neighbor", () => {
+    // 21 is closer to 20 (index 2) than 30 (index 3)
+    expect(findClosestIndex(arr, 21)).toBe(2);
+  });
+
+  it("rounds up when the target is closer to the upper neighbor", () => {
+    // 29 is closer to 30 (index 3) than 20 (index 2)
+    expect(findClosestIndex(arr, 29)).toBe(3);
+  });
+
+  it("clamps to the first index for a target below the range", () => {
+    expect(findClosestIndex(arr, -5)).toBe(0);
+  });
+
+  it("clamps to the last index for a target above the range", () => {
+    expect(findClosestIndex(arr, 100)).toBe(4);
+  });
+});
+
+describe("collectPeaksWithBoundaryData", () => {
+  const series = [
+    { x: [1, 2, 3], y: [4, 5, 6] },
+    { x: [7, 8, 9], y: [1, 2, 3] },
+  ];
+
+  it("includes one entry per auto-detected peak group, keyed to its series", () => {
+    const detected = [
+      { peaks: [{ x: 2, y: 5 }] as PeakAnnotation[], seriesIndex: 0 },
+      { peaks: [{ x: 8, y: 2 }] as PeakAnnotation[], seriesIndex: 1 },
+    ];
+    const result = collectPeaksWithBoundaryData(detected, [], series);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toMatchObject({ seriesIndex: 0, x: series[0].x, y: series[0].y });
+    expect(result[1]).toMatchObject({ seriesIndex: 1, x: series[1].x, y: series[1].y });
+  });
+
+  it("appends a first-series entry for annotations that carry computed boundaries", () => {
+    const annotations: PeakAnnotation[] = [
+      { x: 2, y: 5, _computed: { startIndex: 0, endIndex: 2 } },
+    ];
+    const result = collectPeaksWithBoundaryData([], annotations, series);
+    expect(result).toHaveLength(1);
+    expect(result[0].seriesIndex).toBe(0);
+    expect(result[0].peaks).toEqual(annotations);
+  });
+
+  it("ignores annotations without computed boundaries", () => {
+    const annotations: PeakAnnotation[] = [{ x: 2, y: 5 }];
+    expect(collectPeaksWithBoundaryData([], annotations, series)).toHaveLength(0);
+  });
+});
+
+describe("validateSeriesData", () => {
+  it("truncates both arrays to the shorter length", () => {
+    const { x, y } = validateSeriesData([1, 2, 3, 4], [10, 20]);
+    expect(x).toEqual([1, 2]);
+    expect(y).toEqual([10, 20]);
+  });
+
+  it("replaces non-finite values with 0", () => {
+    const { x, y } = validateSeriesData([1, NaN, Infinity], [NaN, 5, -Infinity]);
+    expect(x).toEqual([1, 0, 0]);
+    expect(y).toEqual([0, 5, 0]);
   });
 });

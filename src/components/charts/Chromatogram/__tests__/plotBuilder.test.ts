@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { CHROMATOGRAM_LAYOUT, CHROMATOGRAM_TRACE } from "../constants";
-import { buildConfig, buildLayout, buildTraceData, createHoverHandler, createUnhoverHandler } from "../plotBuilder";
+import { buildConfig, buildLayout, buildTraceData, createClickHandler, createHoverHandler, createUnhoverHandler } from "../plotBuilder";
 
 import type { PlotlyThemeColors } from "@/hooks/use-plotly-theme";
 
@@ -425,6 +425,49 @@ describe("createHoverHandler", () => {
 
     expect(() => handler(emptyEvent)).not.toThrow();
     expect(mockRestyle).not.toHaveBeenCalled();
+  });
+});
+
+// ── createClickHandler ──────────────────────────────────────────────────────
+
+describe("createClickHandler", () => {
+  it("calls onPeakClickRef with the customdata of the first peak point", () => {
+    const callback = vi.fn();
+    const onPeakClickRef = { current: callback };
+    const handler = createClickHandler(onPeakClickRef);
+    const fakeEvent = {
+      points: [
+        { customdata: undefined },
+        { customdata: { id: "peak-1-2" } },
+      ],
+    } as unknown as import("plotly.js-dist").PlotMouseEvent;
+
+    handler(fakeEvent);
+
+    expect(callback).toHaveBeenCalledWith({ id: "peak-1-2" });
+  });
+
+  it("does nothing when no callback is registered", () => {
+    const onPeakClickRef = { current: undefined as ((e: unknown) => void) | undefined };
+    const handler = createClickHandler(onPeakClickRef);
+    const fakeEvent = {
+      points: [{ customdata: { id: "peak-0-0" } }],
+    } as unknown as import("plotly.js-dist").PlotMouseEvent;
+
+    expect(() => handler(fakeEvent)).not.toThrow();
+  });
+
+  it("does not fire the callback when no point carries customdata", () => {
+    const callback = vi.fn();
+    const onPeakClickRef = { current: callback };
+    const handler = createClickHandler(onPeakClickRef);
+    const fakeEvent = {
+      points: [{ customdata: null }, { customdata: undefined }],
+    } as unknown as import("plotly.js-dist").PlotMouseEvent;
+
+    handler(fakeEvent);
+
+    expect(callback).not.toHaveBeenCalled();
   });
 });
 

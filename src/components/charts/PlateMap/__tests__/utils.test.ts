@@ -419,6 +419,21 @@ describe("buildPlotMargins", () => {
     expect(margins).toHaveProperty("b");
     expect(margins).toHaveProperty("l");
   });
+
+  it("uses the no-title top margins when hasTitle is false", () => {
+    const withTitle = buildPlotMargins("top", true, false);
+    const withoutTitle = buildPlotMargins("top", false, false);
+    // The hasTitle branch and its else branch pick different top margins.
+    expect(withoutTitle.t).not.toBe(withTitle.t);
+    expect(typeof withoutTitle.t).toBe("number");
+  });
+
+  it("adds extra room on the side matching the legend position", () => {
+    const left = buildPlotMargins("left", false, true);
+    const bottom = buildPlotMargins("bottom", false, false);
+    expect(left.l).toBeGreaterThan(0);
+    expect(bottom.b).toBeGreaterThan(0);
+  });
 });
 
 // ─── calculateTitleX ───────────────────────────────────────────────────────

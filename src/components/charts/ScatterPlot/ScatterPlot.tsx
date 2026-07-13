@@ -105,10 +105,12 @@ const ScatterPlot: React.FC<ScatterPlotProps> = ({
   );
 
   const { xMin, xMax, yMin, yMax } = useMemo(() => {
-    let minX = Number.MAX_VALUE;
-    let maxX = Number.MIN_VALUE;
-    let minY = Number.MAX_VALUE;
-    let maxY = Number.MIN_VALUE;
+    // Seed with ±Infinity, not MAX_VALUE/MIN_VALUE — MIN_VALUE is the smallest
+    // positive number, so it would clamp the max for all-negative data.
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
 
     seriesArray.forEach((series) => {
       series.x.forEach((x) => {

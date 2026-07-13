@@ -57,11 +57,14 @@ const dnaSequenceData = [
   { position: 305, peakA: 10, peakT: 10, peakG: 10, peakC: 10 },
 ];
 
+// Each explicit `base` deliberately differs from the base the peak heights
+// would infer (e.g. position 270 peaks highest on A but is labeled T), so this
+// data proves `determineBase` prefers an explicit `base` over the inferred one.
 const dnaWithExplicitBases = [
-  { position: 269, base: "C", peakA: 10, peakT: 10, peakG: 10, peakC: 10 },
-  { position: 270, base: "C", peakA: 60, peakT: 10, peakG: 10, peakC: 10 },
-  { position: 271, base: "T", peakA: 10, peakT: 10, peakG: 50, peakC: 10 },
-  { position: 272, peakA: 15, peakT: 70, peakG: 10, peakC: 10 },
+  { position: 269, base: "A", peakA: 10, peakT: 10, peakG: 10, peakC: 10 },
+  { position: 270, base: "T", peakA: 60, peakT: 10, peakG: 10, peakC: 10 },
+  { position: 271, base: "G", peakA: 10, peakT: 50, peakG: 10, peakC: 10 },
+  { position: 272, base: "C", peakA: 15, peakT: 70, peakG: 10, peakC: 10 },
 ];
 
 export const MockupMatch: Story = {
@@ -113,10 +116,13 @@ export const WithExplicitBases: Story = {
       expect(traces.length).toBe(4);
     });
 
-    await step("Sequence letters are displayed", async () => {
+    await step("Explicit bases are honored over inferred ones", async () => {
+      // A/T/G/C are the explicit labels; peak heights would have inferred a
+      // different sequence, so seeing all four confirms item.base wins.
       expect(canvas.getByText("A")).toBeInTheDocument();
-      expect(canvas.getByText("G")).toBeInTheDocument();
       expect(canvas.getByText("T")).toBeInTheDocument();
+      expect(canvas.getByText("G")).toBeInTheDocument();
+      expect(canvas.getByText("C")).toBeInTheDocument();
     });
   },
 };

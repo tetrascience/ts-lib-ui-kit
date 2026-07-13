@@ -1,6 +1,6 @@
 export { ScatterPlot } from "./ScatterPlot";
-// MarkerSymbol is intentionally not re-exported here — the identical union is
-// already exported at the package level via LinePlot.
+// MarkerSymbol is intentionally not re-exported here to avoid a duplicate export name at the package level.
+// Use the package-level `MarkerSymbol` exported via LinePlot (it is a superset of Plotly marker symbols).
 export type {
   ScatterPlotDataSeries,
   ScatterPlotProps,

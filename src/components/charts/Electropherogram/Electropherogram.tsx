@@ -33,6 +33,7 @@ interface ElectropherogramProps {
 }
 
 const determineBase = (item: PeakData): string => {
+  if (item.base !== undefined) return item.base;
   const peakValues = {
     A: item.peakA,
     T: item.peakT,
@@ -219,8 +220,8 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
                 ? colorC
                 : theme.textColor;
 
-            const percentage =
-              (position - minPosition) / (maxPosition - minPosition);
+            const span = maxPosition - minPosition || 1;
+            const percentage = (position - minPosition) / span;
             const leftPosition = percentage * chartWidth;
 
             return (
@@ -261,8 +262,8 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
       return (
         <div className="position-numbers-container">
           {regularPositionLabels.map((label) => {
-            const percentage =
-              (label.position - minPosition) / (maxPosition - minPosition);
+            const span = maxPosition - minPosition || 1;
+            const percentage = (label.position - minPosition) / span;
             const leftPosition = percentage * chartWidth;
 
             return (

@@ -3,6 +3,8 @@ export type {
   ChromatogramSeries,
   PeakAnnotation,
   ChromatogramProps,
+  PeakSelectEvent,
+  PeakSelectionAppearance,
   BaselineCorrectionMethod,
   BoundaryMarkerStyle,
   PeakDetectionOptions,

@@ -112,10 +112,8 @@ export const QueueItemContent = ({
 }: QueueItemContentProps) => (
   <span
     className={cn(
-      "min-w-0 flex-1 truncate",
-      completed
-        ? "text-muted-foreground/50 line-through"
-        : "text-muted-foreground",
+      "min-w-0 flex-1 truncate text-muted-foreground",
+      completed && "line-through",
       className
     )}
     {...props}
@@ -139,10 +137,8 @@ export const QueueItemDescription = ({
 }: QueueItemDescriptionProps) => (
   <div
     className={cn(
-      "text-xs",
-      completed
-        ? "text-muted-foreground/40 line-through"
-        : "text-muted-foreground/70",
+      "text-xs text-muted-foreground",
+      completed && "line-through",
       className
     )}
     {...props}

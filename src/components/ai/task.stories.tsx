@@ -126,19 +126,19 @@ export const WithFileReferences: Story = {
           <TaskItem>
             Creating{" "}
             <TaskItemFile>
-              <span className="text-blue-500">Button.tsx</span>
+              <span className="text-blue-700">Button.tsx</span>
             </TaskItemFile>
           </TaskItem>
           <TaskItem>
             Updating{" "}
             <TaskItemFile>
-              <span className="text-green-600">index.ts</span>
+              <span className="text-green-800">index.ts</span>
             </TaskItemFile>
           </TaskItem>
           <TaskItem>
             Writing tests in{" "}
             <TaskItemFile>
-              <span className="text-yellow-600">Button.test.tsx</span>
+              <span className="text-yellow-800">Button.test.tsx</span>
             </TaskItemFile>
           </TaskItem>
         </TaskContent>

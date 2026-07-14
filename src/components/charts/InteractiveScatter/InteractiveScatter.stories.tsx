@@ -413,7 +413,7 @@ export const SelectionWithDataGrid: Story = {
               </tbody>
             </table>
           ) : (
-            <p style={{ color: "#888" }}>Select points to populate the grid.</p>
+            <p className="text-muted-foreground">Select points to populate the grid.</p>
           )}
         </div>
       </div>

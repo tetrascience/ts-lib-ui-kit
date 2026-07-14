@@ -1,6 +1,6 @@
-import { TriangleAlertIcon } from "lucide-react"
 import * as React from "react"
 
+import { Banner } from "@/components/ui/banner"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -64,10 +64,11 @@ export function ConfirmDialog({
           )}
         </DialogHeader>
         {variant === "destructive" && (
-          <div className="flex items-start gap-2 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-            <TriangleAlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>This action cannot be undone.</span>
-          </div>
+          <Banner
+            variant="destructive"
+            description="This action cannot be undone."
+            className="rounded-md"
+          />
         )}
         <DialogFooter>
           <DialogClose asChild>

@@ -155,11 +155,6 @@ function AppHeaderMenu({
   menuSide = "right",
 }: AppHeaderMenuProps) {
   return (
-    // `modal={false}`: this is the app-switcher menu button, not a blocking
-    // modal — the trigger and rest of the shell should stay perceivable and
-    // focusable while the menu is open (Radix's default `modal` otherwise
-    // marks the trigger `aria-hidden` while it remains focusable, which
-    // trips axe's aria-hidden-focus rule).
     <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <button
@@ -187,14 +182,6 @@ function AppHeaderMenu({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side={menuSide} align="start" className="min-w-[220px]">
-            {/*
-             * A `role="menu"` (DropdownMenuContent) only permits
-             * menuitem/menuitemcheckbox/menuitemradio/group children — a
-             * plain `role="button"` div here trips axe's
-             * aria-required-children rule. Use DropdownMenuItem so the
-             * node gets a valid `menuitem` role plus Radix's built-in
-             * roving-tabindex keyboard handling.
-             */}
             <DropdownMenuItem
               className="gap-3 px-3 py-2.5"
               onSelect={() => onAppNameClick?.()}

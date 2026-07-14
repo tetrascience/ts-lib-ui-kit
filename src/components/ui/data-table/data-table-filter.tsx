@@ -138,9 +138,6 @@ function DataTableFilter({ className }: DataTableFilterProps) {
       <Popover.Portal>
         <Popover.Content
           data-slot="data-table-filter-panel"
-          // Radix's Popover.Content always renders `role="dialog"`, which
-          // needs an accessible name (aria-dialog-name). This panel has no
-          // visible heading, so name it directly.
           aria-label="Filter conditions"
           align="end"
           sideOffset={4}

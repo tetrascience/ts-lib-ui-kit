@@ -111,10 +111,6 @@ function DataTableGroup({ className }: DataTableGroupProps) {
       <Popover.Portal>
         <Popover.Content
           data-slot="data-table-group-panel"
-          // Radix's Popover.Content always renders `role="dialog"`, which
-          // needs an accessible name (aria-dialog-name). This panel has no
-          // visible heading (the inner label targets the select, not the
-          // panel), so name it directly.
           aria-label="Group rows by"
           align="end"
           sideOffset={4}

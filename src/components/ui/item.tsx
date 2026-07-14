@@ -20,12 +20,6 @@ function ItemGroup({
       )}
       {...props}
     >
-      {/*
-       * `role="list"` requires `listitem` children (aria-required-children).
-       * ItemSeparator is a purely decorative divider (role="none" via
-       * Separator), so only tag actual row children — and respect a role
-       * the child already set explicitly.
-       */}
       {React.Children.map(children, (child) => {
         if (
           !React.isValidElement<{ role?: string }>(child) ||

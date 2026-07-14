@@ -87,11 +87,6 @@ export function ManifestFilterPopover({
         </Button>
       </PopoverTrigger>
 
-      {/*
-       * Radix's Popover.Content always renders `role="dialog"`, which
-       * needs an accessible name (aria-dialog-name). This panel has no
-       * visible heading, so name it directly.
-       */}
       <PopoverContent align="end" className="min-w-80" aria-label="Filter conditions">
           <div className="flex flex-col gap-2">
             {filters.map((condition) => {

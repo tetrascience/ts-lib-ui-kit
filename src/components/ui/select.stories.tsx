@@ -1,4 +1,4 @@
-import { expect, userEvent, within } from "storybook/test"
+import { expect, userEvent, waitFor, within } from "storybook/test"
 
 import {
   Select,
@@ -264,7 +264,7 @@ export const Disabled: Story = {
 function renderDisabledItemSelect(args: Story["args"]) {
   return (
     <Select>
-      <SelectTrigger {...args} className="w-[220px]">
+      <SelectTrigger {...args} aria-label="Destination" className="w-[220px]">
         <SelectValue placeholder="Choose a destination" />
       </SelectTrigger>
       <SelectContent position="popper">
@@ -296,6 +296,13 @@ export const DisabledItem: Story = {
       const body = within(document.body)
       const disabledOption = body.getByRole("option", { name: "Report (unavailable)" })
       expect(disabledOption).toHaveAttribute("data-disabled")
+    })
+
+    await step("Close dropdown to restore resting state", async () => {
+      await userEvent.keyboard("{Escape}")
+      await waitFor(() =>
+        expect(within(document.body).queryByRole("listbox")).not.toBeInTheDocument()
+      )
     })
   },
 }

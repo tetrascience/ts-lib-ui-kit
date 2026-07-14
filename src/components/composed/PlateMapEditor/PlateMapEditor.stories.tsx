@@ -941,6 +941,15 @@ export const RichForm: Story = {
       );
     });
 
+    await step("Close the multiselect to restore resting state", async () => {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() =>
+        expect(
+          canvasElement.ownerDocument.body.querySelector('[role="option"]'),
+        ).toBeNull(),
+      );
+    });
+
     await step("Apply to 3 wells label is shown", async () => {
       expect(canvas.getByText("Apply to 3 wells")).toBeInTheDocument();
     });

@@ -260,14 +260,6 @@ const CodeBlockBody = memo(
     showLineNumbers: boolean;
     className?: string;
   }) => {
-    const preStyle = useMemo(
-      () => ({
-        backgroundColor: tokenized.bg,
-        color: tokenized.fg,
-      }),
-      [tokenized.bg, tokenized.fg]
-    );
-
     const keyedLines = useMemo(
       () => addKeysToTokens(tokenized.tokens),
       [tokenized.tokens]
@@ -276,10 +268,14 @@ const CodeBlockBody = memo(
     return (
       <pre
         className={cn(
-          "dark:!bg-[var(--shiki-dark-bg)] dark:!text-[var(--shiki-dark)] m-0 p-4 text-sm",
+          // Shiki's dual-theme codeToTokens() returns "transparent"/"inherit"
+          // for the top-level bg/fg in multi-theme mode — the real per-theme
+          // colors only exist per-token (read via CSS vars in TokenSpan).
+          // The github-light/github-dark theme colors are hardcoded here to
+          // match, rather than relying on that unresolved top-level pair.
+          "!bg-[#ffffff] !text-[#24292e] dark:!bg-[#24292e] dark:!text-[#e1e4e8] m-0 p-4 text-sm",
           className
         )}
-        style={preStyle}
       >
         <code
           className={cn(

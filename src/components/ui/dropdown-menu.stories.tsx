@@ -115,11 +115,9 @@ export const Kebab: Story = {
     const body = within(canvasElement.ownerDocument.body)
 
     await step("Kebab trigger is an icon-only button", async () => {
-      // While the (modal) menu is open Radix marks the trigger aria-hidden,
-      // so role queries can't see it — query the DOM directly instead.
-      const trigger = canvasElement.querySelector('button[aria-label="More options"]')
+      const trigger = within(canvasElement).getByRole("button", { name: "More options" })
       expect(trigger).toBeInTheDocument()
-      expect(trigger?.querySelector(".lucide-ellipsis-vertical")).not.toBeNull()
+      expect(trigger.querySelector(".lucide-ellipsis-vertical")).not.toBeNull()
     })
 
     await step("Menu items render", async () => {

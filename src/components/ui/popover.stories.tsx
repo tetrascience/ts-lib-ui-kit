@@ -43,9 +43,11 @@ function renderPopover(args: Story["args"]) {
         <PopoverTrigger asChild>
           <Button variant="outline">Open settings</Button>
         </PopoverTrigger>
-        <PopoverContent {...args}>
+        <PopoverContent {...args} aria-labelledby="popover-notifications-title">
           <div className="grid gap-2">
-            <div className="font-medium">Notifications</div>
+            <div id="popover-notifications-title" className="font-medium">
+              Notifications
+            </div>
             <p className="text-sm text-muted-foreground">
               Choose what you want to be notified about across your workspaces.
             </p>
@@ -88,9 +90,11 @@ export const WithAnchor: Story = {
         <PopoverTrigger asChild>
           <Button variant="outline">Open from anchor</Button>
         </PopoverTrigger>
-        <PopoverContent {...args}>
+        <PopoverContent {...args} aria-labelledby="popover-anchored-content-title">
           <div className="grid gap-2">
-            <div className="font-medium">Anchored content</div>
+            <div id="popover-anchored-content-title" className="font-medium">
+              Anchored content
+            </div>
             <p className="text-sm text-muted-foreground">
               This popover is positioned relative to the anchor element.
             </p>

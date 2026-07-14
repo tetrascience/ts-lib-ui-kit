@@ -218,6 +218,7 @@ export const ContextContentHeader = ({
           </div>
           <div className="space-y-2">
             <Progress
+              aria-label="Context window usage"
               className={cn("bg-muted", STATUS_PROGRESS[status])}
               value={usedPercent * PERCENT_MAX}
             />

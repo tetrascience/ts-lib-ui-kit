@@ -110,6 +110,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                   size="icon-sm"
                   onClick={() => handleCopy(value)}
                   disabled={disabled}
+                  aria-label="Copy code"
                 >
                   <Copy />
                 </Button>
@@ -130,6 +131,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                   size="icon-sm"
                   onClick={() => handleLaunch(value)}
                   disabled={disabled}
+                  aria-label="Launch code"
                 >
                   <Rocket />
                 </Button>

@@ -1159,7 +1159,13 @@ export const PromptInputButton = ({
 
 export type PromptInputActionMenuProps = ComponentProps<typeof DropdownMenu>;
 export const PromptInputActionMenu = (props: PromptInputActionMenuProps) => (
-  <DropdownMenu {...props} />
+  // `modal={false}` by default: this is a kebab-style attachment/action
+  // menu, not a blocking modal — the trigger and rest of the prompt input
+  // should stay perceivable and focusable while the menu is open (Radix's
+  // default `modal` otherwise marks the trigger `aria-hidden` while it
+  // remains focusable, which trips axe's aria-hidden-focus rule). Callers
+  // may still override via `modal` prop.
+  <DropdownMenu modal={false} {...props} />
 );
 
 export type PromptInputActionMenuTriggerProps = PromptInputButtonProps;
@@ -1377,6 +1383,11 @@ export const PromptInputSlotSwap = ({
   >
     <div
       aria-hidden={show}
+      // `inert` when hidden: the slot is scaled/faded out and
+      // pointer-events-none, but without `inert` its content (e.g. a
+      // button) remains focusable, which trips axe's aria-hidden-focus
+      // rule (an aria-hidden subtree must not contain focusable content).
+      inert={show}
       className={cn(
         "transition-all duration-200 ease-out",
         show ? "pointer-events-none scale-75 opacity-0" : "scale-100 opacity-100"
@@ -1386,6 +1397,7 @@ export const PromptInputSlotSwap = ({
     </div>
     <div
       aria-hidden={!show}
+      inert={!show}
       className={cn(
         "absolute transition-all duration-200 ease-out",
         show ? "scale-100 opacity-100" : "pointer-events-none scale-75 opacity-0"

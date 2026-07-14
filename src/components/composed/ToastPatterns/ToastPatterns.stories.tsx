@@ -131,7 +131,7 @@ export const ToastTriggers: Story = {
           Default
         </Button>
       </div>
-      <Toaster richColors />
+      <Toaster containerAriaLabel="Toast pattern demo notifications" richColors />
     </div>
   ),
   parameters: {
@@ -261,7 +261,7 @@ export const ContextualUsage: Story = {
             <Button size="sm" variant="outline">
               View logs
             </Button>
-            <Toaster richColors />
+            <Toaster containerAriaLabel="Toast pattern demo notifications" richColors />
           </CardFooter>
         </Card>
       </div>

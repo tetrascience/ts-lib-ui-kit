@@ -424,7 +424,7 @@ export const CodeBlockContent = ({
   const tokenized = asyncTokens ?? syncTokens;
 
   return (
-    <div className="relative overflow-auto">
+    <div className="relative overflow-auto" tabIndex={0}>
       <CodeBlockBody showLineNumbers={showLineNumbers} tokenized={tokenized} />
     </div>
   );
@@ -504,6 +504,7 @@ export const CodeBlockCopyButton = ({
 
   return (
     <Button
+      aria-label="Copy code"
       className={cn("shrink-0", className)}
       onClick={copyToClipboard}
       size="icon"
@@ -530,6 +531,7 @@ export const CodeBlockLanguageSelectorTrigger = ({
   ...props
 }: CodeBlockLanguageSelectorTriggerProps) => (
   <SelectTrigger
+    aria-label="Select language"
     className={cn(
       "h-7 border-none bg-transparent px-2 text-xs shadow-none",
       className

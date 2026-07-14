@@ -61,7 +61,14 @@ function MultiSelectCell({
       </ComboboxChips>
       <ComboboxContent anchor={anchorRef}>
         <ComboboxEmpty>No options.</ComboboxEmpty>
-        <ComboboxList>
+        {/*
+         * The popup listbox is a separate DOM node from the input it's
+         * anchored to, so it needs its own accessible name — axe's
+         * aria-input-field-name rule treats a standalone `role="listbox"`
+         * as an input field and doesn't infer a name from the unrelated
+         * input's aria-label.
+         */}
+        <ComboboxList aria-label={ariaLabel}>
           {(item: string) => (
             <ComboboxItem key={item} value={item}>
               {labelByValue.get(item) ?? item}

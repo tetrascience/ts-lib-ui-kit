@@ -45,6 +45,7 @@ function Slider({
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => (
         <SliderPrimitive.Thumb
+          aria-label={_values.length > 1 ? `Value ${index + 1}` : "Value"}
           data-slot="slider-thumb"
           key={index}
           className="relative block size-3 shrink-0 rounded-full border border-ring bg-white transition-[color,box-shadow] select-none after:absolute after:-inset-2 focus-visible:shadow-focus focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"

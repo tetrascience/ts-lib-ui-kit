@@ -132,7 +132,12 @@ export function PlateMapPlateSelector({
   }
 
   return (
-    <DropdownMenu>
+    // `modal={false}`: this is a lightweight plate-picker menu, not a
+    // blocking modal — the trigger and rest of the editor should stay
+    // perceivable and focusable while the menu is open (Radix's default
+    // `modal` otherwise marks the trigger `aria-hidden` while it remains
+    // focusable, which trips axe's aria-hidden-focus rule).
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           type="button"

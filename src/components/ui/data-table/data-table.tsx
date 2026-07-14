@@ -201,6 +201,7 @@ function DraggableHeader<TData>({
         <button
           type="button"
           data-drag-handle=""
+          aria-label="Drag to reorder column"
           className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing opacity-0 group-hover/header:opacity-100 transition-opacity"
           {...attributes}
           {...listeners}

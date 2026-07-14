@@ -69,7 +69,7 @@ function renderToaster(args: Story["args"]) {
             Info
           </Button>
         </div>
-        <Toaster {...args} richColors />
+        <Toaster {...args} containerAriaLabel="Sonner demo notifications" richColors />
       </div>
   )
 }

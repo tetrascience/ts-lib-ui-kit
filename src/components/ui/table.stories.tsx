@@ -610,7 +610,9 @@ function TableHeaderFilterExample(args) {
           <TableHead className="text-right">Runs</TableHead>
         </TableRow>
         <TableRow>
-          <TableHead />
+          <TableHead>
+            <span className="sr-only">No filter for Workspace column</span>
+          </TableHead>
           <TableHead className="p-1 align-top">
             <Combobox multiple items={owners} value={selectedOwners} onValueChange={setSelectedOwners}>
               <ComboboxChips ref={ownerAnchor} className="max-w-[200px]">
@@ -663,8 +665,12 @@ function TableHeaderFilterExample(args) {
               </ComboboxContent>
             </Combobox>
           </TableHead>
-          <TableHead />
-          <TableHead />
+          <TableHead>
+            <span className="sr-only">No filter for Type column</span>
+          </TableHead>
+          <TableHead>
+            <span className="sr-only">No filter for Runs column</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

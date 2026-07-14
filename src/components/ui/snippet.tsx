@@ -77,6 +77,7 @@ export const SnippetInput = ({ className, ...props }: SnippetInputProps) => {
 
   return (
     <InputGroupInput
+      aria-label="Code snippet"
       className={cn("text-foreground", className)}
       readOnly
       value={code}

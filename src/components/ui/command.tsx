@@ -141,6 +141,12 @@ function CommandSeparator({
   return (
     <CommandPrimitive.Separator
       data-slot="command-separator"
+      // cmdk hardcodes `role="separator"` on this element and doesn't
+      // accept an override, but CommandList renders `role="listbox"`,
+      // which only permits option/group children — a separator isn't a
+      // valid listbox child (aria-required-children). It's purely a
+      // visual divider, so hide it from the accessibility tree instead.
+      aria-hidden="true"
       className={cn("-mx-1 h-px bg-border", className)}
       {...props}
     />

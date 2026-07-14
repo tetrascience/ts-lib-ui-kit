@@ -322,7 +322,7 @@ export const IntroScreen: Story = {
               {/* Right: model selector + mic-or-submit */}
               <div className="flex items-center gap-1">
                 <PromptInputSelect onValueChange={setModel} value={model}>
-                  <PromptInputSelectTrigger>
+                  <PromptInputSelectTrigger aria-label="Select model">
                     <PromptInputSelectValue />
                   </PromptInputSelectTrigger>
                   <PromptInputSelectContent>
@@ -474,7 +474,7 @@ export const WithAttachmentsAndSpeech: Story = {
               </PromptInputActionMenu>
 
               <PromptInputSelect onValueChange={setModel} value={model}>
-                <PromptInputSelectTrigger>
+                <PromptInputSelectTrigger aria-label="Select model">
                   <PromptInputSelectValue />
                 </PromptInputSelectTrigger>
                 <PromptInputSelectContent>

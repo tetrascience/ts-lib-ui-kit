@@ -110,7 +110,12 @@ function UserMenu({
   const isDetailed = variant === "detailed";
 
   return (
-    <DropdownMenu>
+    // `modal={false}`: this is a lightweight menu-button, not a blocking
+    // modal — the trigger and rest of the page should stay perceivable and
+    // focusable while the menu is open (Radix's default `modal` otherwise
+    // marks the trigger `aria-hidden` while it remains focusable, which
+    // trips axe's aria-hidden-focus rule).
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"

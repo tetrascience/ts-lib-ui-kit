@@ -155,7 +155,12 @@ function AppHeaderMenu({
   menuSide = "right",
 }: AppHeaderMenuProps) {
   return (
-    <DropdownMenu>
+    // `modal={false}`: this is the app-switcher menu button, not a blocking
+    // modal — the trigger and rest of the shell should stay perceivable and
+    // focusable while the menu is open (Radix's default `modal` otherwise
+    // marks the trigger `aria-hidden` while it remains focusable, which
+    // trips axe's aria-hidden-focus rule).
+    <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
@@ -182,14 +187,17 @@ function AppHeaderMenu({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side={menuSide} align="start" className="min-w-[220px]">
-            <div
-              className="flex items-center gap-3 px-3 py-2.5 cursor-pointer"
-              onClick={onAppNameClick}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") onAppNameClick?.();
-              }}
+            {/*
+             * A `role="menu"` (DropdownMenuContent) only permits
+             * menuitem/menuitemcheckbox/menuitemradio/group children — a
+             * plain `role="button"` div here trips axe's
+             * aria-required-children rule. Use DropdownMenuItem so the
+             * node gets a valid `menuitem` role plus Radix's built-in
+             * roving-tabindex keyboard handling.
+             */}
+            <DropdownMenuItem
+              className="gap-3 px-3 py-2.5"
+              onSelect={() => onAppNameClick?.()}
             >
               <div className="w-8 h-8 rounded-lg bg-sidebar-accent border border-sidebar-border flex items-center justify-center shrink-0">
                 <span className="text-[10px] font-bold text-foreground">
@@ -206,7 +214,7 @@ function AppHeaderMenu({
                   </span>
                 )}
               </div>
-            </div>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2.5 p-0" asChild>
               {backToPlatformPath ? (

@@ -31,13 +31,13 @@ const getUsageStatus = (pct: number): UsageStatus => {
 
 const STATUS_TEXT: Record<UsageStatus, string> = {
   normal: "text-muted-foreground",
-  warning: "text-amber-500",
+  warning: "text-warning",
   danger: "text-destructive",
 };
 
 const STATUS_PROGRESS: Record<UsageStatus, string> = {
   normal: "",
-  warning: "[&_[data-slot=progress-indicator]]:bg-amber-500",
+  warning: "[&_[data-slot=progress-indicator]]:bg-warning",
   danger: "[&_[data-slot=progress-indicator]]:bg-destructive",
 };
 

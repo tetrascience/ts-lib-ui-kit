@@ -80,6 +80,7 @@ function SortableColumnItem({ id, label, visible, onToggle }: SortableColumnItem
         onClick={onToggle}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
             onToggle();
           }
         }}

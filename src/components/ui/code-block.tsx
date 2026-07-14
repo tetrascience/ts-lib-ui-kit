@@ -138,6 +138,38 @@ const highlighterCache = new Map<
   Promise<HighlighterGeneric<BundledLanguage, BundledTheme>>
 >();
 
+// Maps every github-light/github-dark token color onto a --shiki-* CSS
+// variable backed by the design-token palette (defined in index.tailwind.css
+// for :root and .dark), so code colors follow the active theme and meet
+// WCAG AA contrast on --shiki-bg in both modes.
+const SHIKI_COLOR_REPLACEMENTS: Record<string, Record<string, string>> = {
+  "github-light": {
+    "#24292e": "var(--shiki-fg)",
+    "#6a737d": "var(--shiki-comment)",
+    "#586069": "var(--shiki-comment)",
+    "#d73a49": "var(--shiki-keyword)",
+    "#b31d28": "var(--shiki-keyword)",
+    "#005cc5": "var(--shiki-constant)",
+    "#6f42c1": "var(--shiki-entity)",
+    "#22863a": "var(--shiki-tag)",
+    "#032f62": "var(--shiki-string)",
+    "#e36209": "var(--shiki-variable)",
+  },
+  "github-dark": {
+    "#e1e4e8": "var(--shiki-fg)",
+    "#6a737d": "var(--shiki-comment)",
+    "#d1d5da": "var(--shiki-comment)",
+    "#f97583": "var(--shiki-keyword)",
+    "#fdaeb7": "var(--shiki-keyword)",
+    "#79b8ff": "var(--shiki-constant)",
+    "#b392f0": "var(--shiki-entity)",
+    "#85e89d": "var(--shiki-tag)",
+    "#9ecbff": "var(--shiki-string)",
+    "#dbedff": "var(--shiki-string)",
+    "#ffab70": "var(--shiki-variable)",
+  },
+};
+
 // Token cache
 const tokensCache = new Map<string, TokenizedCode>();
 
@@ -216,6 +248,7 @@ export const highlightCode = (
       const langToUse = availableLangs.includes(language) ? language : "text";
 
       const result = highlighter.codeToTokens(code, {
+        colorReplacements: SHIKI_COLOR_REPLACEMENTS,
         lang: langToUse,
         themes: {
           dark: "github-dark",
@@ -271,9 +304,9 @@ const CodeBlockBody = memo(
           // Shiki's dual-theme codeToTokens() returns "transparent"/"inherit"
           // for the top-level bg/fg in multi-theme mode — the real per-theme
           // colors only exist per-token (read via CSS vars in TokenSpan).
-          // The github-light/github-dark theme colors are hardcoded here to
-          // match, rather than relying on that unresolved top-level pair.
-          "!bg-[#ffffff] !text-[#24292e] dark:!bg-[#24292e] dark:!text-[#e1e4e8] m-0 p-4 text-sm",
+          // --shiki-bg/--shiki-fg re-resolve under .dark, so no dark: variant
+          // is needed here.
+          "!bg-[var(--shiki-bg)] !text-[var(--shiki-fg)] m-0 p-4 text-sm",
           className
         )}
       >

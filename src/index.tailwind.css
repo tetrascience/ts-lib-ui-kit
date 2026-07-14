@@ -133,9 +133,13 @@
   --color-tertiary: var(--tertiary);
   --color-tertiary-foreground: var(--tertiary-foreground);
   --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-positive: var(--positive);
+  --color-positive-foreground: var(--positive-foreground);
   --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -321,9 +325,23 @@
   --tertiary-foreground: oklch(1 0 0); /* #FFFFFF */
   /* Semantic status colors */
   --info: oklch(0.4465 0.1784 269.19); /* #2F45B5 */
+  --info-foreground: oklch(1 0 0); /* #FFFFFF — 8.0:1 on --info */
   --destructive: oklch(0.5692 0.2174 25.93); /* #da1e28 — AA 5.0:1 on white */
+  --destructive-foreground: oklch(1 0 0); /* #FFFFFF — 5.0:1 on --destructive */
   --positive: oklch(0.5272 0.1408 148.3); /* #198038 —  AA 5.0:1 on white */
+  --positive-foreground: oklch(1 0 0); /* #FFFFFF — 5.0:1 on --positive */
   --warning: oklch(0.5716 0.1335 60.41); /* #AF6100 — darkened amber, AA 4.6:1 on white */
+  --warning-foreground: oklch(1 0 0); /* #FFFFFF — 4.6:1 on --warning */
+  /* Shiki syntax highlighting — code tokens mapped onto design tokens, AA on --shiki-bg in both modes */
+  --shiki-bg: var(--card); /* #FFFFFF */
+  --shiki-fg: var(--foreground); /* #0D1B3E — 16.9:1 */
+  --shiki-comment: var(--muted-foreground); /* #526175 — 6.3:1 */
+  --shiki-keyword: var(--destructive); /* #DA1E28 — 5.0:1 */
+  --shiki-constant: var(--primary); /* #2F45B5 — 8.0:1 */
+  --shiki-entity: var(--tertiary); /* #006A73 — 6.4:1 */
+  --shiki-tag: var(--positive); /* #198038 — 5.0:1 */
+  --shiki-string: var(--secondary-foreground); /* #0D1B3E — 16.9:1 */
+  --shiki-variable: var(--warning); /* #AF6100 — 4.6:1 */
   /* Borders — DEL cool gray */
   --border: var(--surface-dim); /* #E2E8F0 */
   --input: oklch(0.79 0.0229 250.7); /* #B0BCC9 — SW-1920 input border */
@@ -529,9 +547,16 @@
   --tertiary-foreground: oklch(0.3047 0.0525 208.75); /* #00363D */
   /* Semantic status colors (lighter tones for dark bg) */
   --info: oklch(0.8384 0.0801 273.65); /* #B9C7FF */
+  --info-foreground: oklch(0.3284 0.1216 262.85); /* #102F72 — 7.6:1 on --info */
   --destructive: oklch(0.8383 0.0891 26.76); /* #FFB4AB */
+  --destructive-foreground: oklch(0.3275 0.1336 27.32); /* #690005 — 7.7:1 on --destructive */
   --positive: oklch(0.7432 0.1661 152.81); /* #41C977 */
+  --positive-foreground: oklch(0.3002 0.0893 146.98); /* #00390F — 6.2:1 on --positive */
   --warning: oklch(0.7856 0.1606 64.14); /* #FFA033 */
+  --warning-foreground: oklch(0.2843 0.0638 64.91); /* #3F2200 — 7.2:1 on --warning */
+  /* Shiki syntax highlighting (dark) — the other --shiki-* re-resolve via their source tokens;
+     only comment needs an override, its light source staying too dark on the dark --shiki-bg */
+  --shiki-comment: oklch(0.7092 0.0158 285.99); /* #A0A0AB — muted-foreground family lightened, 5.1:1 */
   /* Borders & inputs — Neutral-variant outline (dark) */
   --border: var(--outline-variant); /* #454650 */
   --input: var(--outline-variant); /* #454650 */

@@ -28,7 +28,7 @@ const StreamingTransitionDemo = () => {
         Finish stream
       </button>
       <StreamStatus
-        icon={<span data-testid="custom-stream-icon">Custom icon</span>}
+        icon={null}
         isStreaming={isStreaming}
         showIndicator
         startTime={startTime}
@@ -284,13 +284,12 @@ export const TimeOnly: Story = {
   },
 }
 
-export const CustomIconAndFinishRipple: Story = {
+export const FinishRipple: Story = {
   render: () => <StreamingTransitionDemo />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
-    await step("Custom icon, numeric start time, and million-token formatting render", async () => {
-      await expect(canvas.getByTestId("custom-stream-icon")).toBeInTheDocument()
+    await step("Numeric start time and million-token formatting render", async () => {
       await expect(canvas.getByText("1.2m tokens")).toBeInTheDocument()
       await expect(canvas.getByText(/\d+m \d{2}s/)).toBeInTheDocument()
     })

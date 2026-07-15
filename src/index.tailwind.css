@@ -499,11 +499,11 @@
   --card-foreground: var(--surface-foreground);
   --popover: var(--surface-bright);
   --popover-foreground: var(--surface-foreground);
-  /* Primary — TS Blue tone 80 for dark */
-  --primary: oklch(0.8296 0.0847 273.37); /* #B5C4FF */
+  /* Primary — brighter sky-blue for dark, reads more clearly as interactive (SW-2292) */
+  --primary: oklch(0.8578 0.071 255.72); /* #B2D3FF */
   --primary-foreground: var(--on-primary); /* #102F72 */
-  /* Secondary — Light Blue container (dark) */
-  --secondary: oklch(0.4412 0.1421 262.97); /* #264DA0 */
+  /* Secondary — deeper navy container for dark (SW-2292) */
+  --secondary: oklch(0.3119 0.1277 270.01); /* #1A2670 */
   --secondary-foreground: var(--on-secondary); /* #DADEFD */
   /* Muted — Neutral tone 5 */
   --muted: oklch(0.18 0.0102 285.33); /* #111116 */

@@ -515,7 +515,7 @@
   --tertiary: oklch(0.8207 0.1194 206.68); /* #4FDAEB */
   --tertiary-foreground: oklch(0.3047 0.0525 208.75); /* #00363D */
   /* Semantic status colors (lighter tones for dark bg) */
-  --info: oklch(0.8384 0.0801 273.65); /* #B9C7FF */
+  --info: oklch(0.8578 0.071 255.72); /* #B2D3FF — matches --primary (as in light mode) */
   --destructive: oklch(0.8383 0.0891 26.76); /* #FFB4AB */
   --positive: oklch(0.7432 0.1661 152.81); /* #41C977 */
   --warning: oklch(0.7856 0.1606 64.14); /* #FFA033 */

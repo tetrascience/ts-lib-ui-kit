@@ -1,6 +1,6 @@
 import { DocsContainer } from "@storybook/addon-docs/blocks";
 import { DecoratorHelpers } from "@storybook/addon-themes";
-import { createElement } from "react";
+import { createElement, useEffect, useState } from "react";
 import { addons } from "storybook/preview-api";
 
 import { Toaster } from "../src/components/ui/sonner";
@@ -37,7 +37,31 @@ import "../src/index.css";
 DecoratorHelpers.initializeThemeState(["light", "dark"], "light");
 
 const previewChannel = addons.getChannel();
-let currentTheme = "light";
+
+/**
+ * Read the theme synchronously from the URL's `globals` param (e.g.
+ * `?globals=theme:dark`) so the very first paint is already themed, instead of
+ * flashing light until the first `setGlobals` event lands.
+ */
+const readInitialTheme = (): string => {
+  try {
+    const globalsParam =
+      new URLSearchParams(window.location.search).get("globals") ?? "";
+    const entry = globalsParam.split(";").find((p) => p.startsWith("theme:"));
+    if (entry) return entry.slice("theme:".length);
+  } catch {
+    /* window.location unavailable — fall back to the default */
+  }
+  return "light";
+};
+
+let currentTheme = readInitialTheme();
+
+/**
+ * Autodocs story iframes load with the default (light) globals and never see
+ * the toolbar selection, so fall back to the parent preview document's `.dark`
+ * class (same-origin). Guarded for the non-iframe / cross-origin case.
+ */
 const parentIsDark = () => {
   try {
     return (
@@ -48,20 +72,67 @@ const parentIsDark = () => {
     return false;
   }
 };
+
 const applyPreviewTheme = () => {
   const dark = currentTheme === "dark" || parentIsDark();
   document.documentElement.classList.toggle("dark", dark);
 };
+
 const onGlobals = ({ globals }: { globals?: { theme?: string } }) => {
   if (globals?.theme) {
     currentTheme = globals.theme;
   }
   applyPreviewTheme();
 };
+
 previewChannel.on("setGlobals", onGlobals);
 previewChannel.on("globalsUpdated", onGlobals);
 previewChannel.on("docsRendered", applyPreviewTheme);
 previewChannel.on("storyRendered", applyPreviewTheme);
+
+// Theme the very first paint (esp. dark story iframes) before any event fires.
+applyPreviewTheme();
+
+// HMR re-evaluates this module against the same persistent channel; without
+// cleanup the listeners (and their closures) accumulate across hot updates.
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    previewChannel.off("setGlobals", onGlobals);
+    previewChannel.off("globalsUpdated", onGlobals);
+    previewChannel.off("docsRendered", applyPreviewTheme);
+    previewChannel.off("storyRendered", applyPreviewTheme);
+  });
+}
+
+/**
+ * SW-2124: theme the Docs *chrome* (argstable, `table.category` rows, Controls
+ * widgets, code blocks). These are emotion-styled from Storybook's docs theme
+ * object — not the design tokens — so the `.dark` class + token CSS can't reach
+ * them; a `table.category` row or a `<select>`/`<textarea>` control would stay
+ * a white band otherwise.
+ *
+ * This subscribes to theme changes itself (rather than reading a module value
+ * once at render) so the chrome re-themes on toggle even if Storybook does not
+ * re-render the container, and always reflects the latest theme on mount.
+ */
+function ThemedDocsContainer(props: ComponentProps<typeof DocsContainer>) {
+  const [theme, setTheme] = useState(currentTheme);
+  useEffect(() => {
+    const sync = ({ globals }: { globals?: { theme?: string } }) => {
+      if (globals?.theme) setTheme(globals.theme);
+    };
+    previewChannel.on("setGlobals", sync);
+    previewChannel.on("globalsUpdated", sync);
+    return () => {
+      previewChannel.off("setGlobals", sync);
+      previewChannel.off("globalsUpdated", sync);
+    };
+  }, []);
+  return createElement(DocsContainer, {
+    ...props,
+    theme: theme === "dark" ? tetrascienceDark : tetrascienceLight,
+  });
+}
 
 const preview: Preview = {
   decorators: [
@@ -75,23 +146,7 @@ const preview: Preview = {
   ],
   parameters: {
     docs: {
-      // SW-2124: prefer inline autodocs rendering (story rendered in the docs
-      // document, inheriting its `.dark`). Note the global `layout: "fullscreen"`
-      // below currently keeps autodocs stories in isolated iframes anyway — the
-      // parent-theme inheritance in the channel sync above is what actually
-      // themes those; this stays as the correct intent if fullscreen is lifted.
-      story: { inline: true },
-      // SW-2124: sync the Docs *chrome* theme (argstable, category rows, the
-      // Controls widgets, code blocks) to dark. These are emotion-styled from
-      // Storybook's docs theme object — not the design tokens — so the `.dark`
-      // class + token CSS can't reach them; a hovered `table.category` row or a
-      // <select>/<textarea> control stays a white band otherwise. Selecting the
-      // container theme from the same `currentTheme` the channel sync tracks.
-      container: (props: ComponentProps<typeof DocsContainer>) =>
-        createElement(DocsContainer, {
-          ...props,
-          theme: currentTheme === "dark" ? tetrascienceDark : tetrascienceLight,
-        }),
+      container: ThemedDocsContainer,
     },
     a11y: {
       test: 'todo',

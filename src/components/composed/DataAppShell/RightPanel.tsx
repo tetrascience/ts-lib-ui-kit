@@ -312,8 +312,10 @@ function DataAppShellRightPanel({
       mountedRef.current = true;
       return;
     }
-    if (open) closeButtonRef.current?.focus();
-    else triggerRef.current?.focus();
+    // preventScroll — plain .focus() scrolls the target into view, which
+    // jolts any scrollable ancestor (e.g. a Storybook docs page) on toggle.
+    if (open) closeButtonRef.current?.focus({ preventScroll: true });
+    else triggerRef.current?.focus({ preventScroll: true });
   }, [open]);
 
   const accessibleName = typeof title === "string" ? title : "Side panel";
@@ -372,7 +374,7 @@ function DataAppShellRightPanel({
             // focus" targets a dead node — send focus to the new FAB instead.
             onCloseAutoFocus={(e) => {
               e.preventDefault();
-              triggerRef.current?.focus();
+              triggerRef.current?.focus({ preventScroll: true });
             }}
             style={{ width }}
             className={cn("gap-0 data-[side=right]:sm:max-w-none", className)}

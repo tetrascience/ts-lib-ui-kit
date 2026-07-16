@@ -121,7 +121,7 @@ const Histogram: React.FC<HistogramProps> = ({
 
   // Omitted width/height → fill the container and track its measured size;
   // explicit pixel values override. Histogram has its own HTML title + legend,
-  // so we measure a wrapper around just the Plotly canvas. See AreaGraph for
+  // so we measure a wrapper around just the Plotly canvas. See AreaPlot for
   // the reference pattern.
   const [plotAreaRef, measured] = useElementSize<HTMLDivElement>();
   const resolvedWidth = width ?? measured.width;

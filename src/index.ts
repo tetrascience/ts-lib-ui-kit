@@ -21,20 +21,19 @@ export * from "@/components/composed/tdp-link";
 export * from "@/components/composed/tdp-url";
 
 // Charts
-export * from "@/components/charts/AreaGraph";
+export * from "@/components/charts/AreaPlot";
 export * from "@/components/charts/ChartTooltip";
-export * from "@/components/charts/BarGraph";
-export * from "@/components/charts/Boxplot";
+export * from "@/components/charts/BarChart";
+export * from "@/components/charts/BoxPlot";
 export * from "@/components/charts/Chromatogram";
-export * from "@/components/charts/ChromatogramChart";
-export * from "@/components/charts/StackedChromatogramChart";
-export * from "@/components/charts/DotPlot";
-export * from "@/components/charts/Heatmap";
+export * from "@/components/charts/StackedChromatogram";
+export * from "@/components/charts/Electropherogram";
 export * from "@/components/charts/Histogram";
-export * from "@/components/charts/LineGraph";
+export * from "@/components/charts/LinePlot";
 export * from "@/components/charts/PieChart";
 export * from "@/components/charts/PlateMap";
-export * from "@/components/charts/ScatterGraph";
+export * from "@/components/charts/ScatterPlot";
+export * from "@/components/charts/ScatterPlotInteractive";
 
 // ui
 export * from "@/components/ui/accordion";

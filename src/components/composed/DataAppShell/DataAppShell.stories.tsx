@@ -121,10 +121,361 @@ function UserMenuButton({ name, userRole, expanded = false }: UserMenuButtonProp
 // Meta
 // =============================================================================
 
+// =============================================================================
+// Anatomy diagram — hand-built in HTML/CSS (positioned callouts over a mock shell)
+// =============================================================================
+
+const NAVY = "#0B1533";
+const CALLOUT_BLUE = "#2E6BF2";
+
+const Line = ({ x, y, w, h }: { x: number; y: number; w: number; h: number }) => (
+  <div style={{ position: "absolute", left: x, top: y, width: w, height: h, background: NAVY }} />
+);
+const Dot = ({ x, y }: { x: number; y: number }) => (
+  <div
+    style={{
+      position: "absolute",
+      left: x - 3.5,
+      top: y - 3.5,
+      width: 7,
+      height: 7,
+      borderRadius: "50%",
+      background: NAVY,
+    }}
+  />
+);
+const Num = ({ x, y, n }: { x: number; y: number; n: number }) => (
+  <div
+    style={{
+      position: "absolute",
+      left: x - 14,
+      top: y - 14,
+      width: 28,
+      height: 28,
+      borderRadius: "50%",
+      background: CALLOUT_BLUE,
+      color: "#fff",
+      fontSize: 13,
+      fontWeight: 700,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 2,
+    }}
+  >
+    {n}
+  </div>
+);
+const Pill = ({ x, y, children }: { x: number; y: number; children: React.ReactNode }) => (
+  <div
+    style={{
+      position: "absolute",
+      left: x,
+      top: y,
+      background: "#ECEEF2",
+      color: "#4A5568",
+      fontSize: 12,
+      borderRadius: 6,
+      padding: "5px 12px",
+      whiteSpace: "nowrap",
+      zIndex: 2,
+    }}
+  >
+    {children}
+  </div>
+);
+
+// Skeleton bar helper
+const Bar = ({ w, bg = "#DDE3EC" }: { w: number | string; bg?: string }) => (
+  <div style={{ width: w, height: 7, borderRadius: 4, background: bg }} />
+);
+
+const AnatomyDiagram = () => (
+  <div>
+    <h2 style={{ margin: "0 0 2px", fontSize: 22, fontWeight: 700, color: "#2F45B5" }}>Anatomy</h2>
+    <p style={{ margin: "0 0 14px", fontSize: 12, color: "#9AA4B2" }}>
+      how the components compose into the AppShell
+    </p>
+
+    <div
+      style={{
+        position: "relative",
+        width: 940,
+        maxWidth: "100%",
+        height: 430,
+        margin: "0 auto",
+        border: "1px solid #E6E8EC",
+        borderRadius: 16,
+        background: "#FCFDFF",
+        overflow: "hidden",
+      }}
+    >
+      {/* ── Mock shell ─────────────────────────────────────────────── */}
+      <div
+        style={{
+          position: "absolute",
+          left: 300,
+          top: 52,
+          width: 380,
+          height: 288,
+          display: "flex",
+          border: "1px solid #E4E8F0",
+          borderRadius: 12,
+          overflow: "hidden",
+          background: "#fff",
+        }}
+      >
+        {/* Primary nav rail */}
+        <div
+          style={{
+            width: 46,
+            background: "#EBEEF3",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            padding: "10px 0",
+            gap: 12,
+          }}
+        >
+          <div style={{ width: 22, height: 22, borderRadius: 6, background: "#1B2233" }} />
+          <div style={{ width: 18, height: 18, borderRadius: 5, background: "#C4CCD9" }} />
+          <div style={{ width: 18, height: 18, borderRadius: 5, background: "#C4CCD9" }} />
+          <div style={{ flex: 1 }} />
+          <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#4C93F7" }} />
+        </div>
+
+        {/* Content column */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          {/* TopBar */}
+          <div
+            style={{
+              height: 40,
+              background: "#FBEAF0",
+              display: "flex",
+              alignItems: "center",
+              padding: "0 12px",
+              gap: 8,
+            }}
+          >
+            <Bar w={150} bg="#E7CAD6" />
+            <div style={{ flex: 1 }} />
+            <div style={{ width: 18, height: 18, borderRadius: 5, background: "#EAD2DC" }} />
+          </div>
+
+          {/* Body */}
+          <div style={{ flex: 1, display: "flex" }}>
+            {/* Secondary nav */}
+            <div
+              style={{
+                width: 120,
+                padding: "12px 10px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              <div
+                style={{
+                  width: 22,
+                  height: 22,
+                  border: "1px solid #B9C6E6",
+                  borderRadius: 5,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6472" strokeWidth="1.8">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M9 3v18" />
+                </svg>
+              </div>
+              <Bar w={70} />
+              <Bar w="100%" bg="#E5EAFB" />
+              <Bar w={84} />
+              <Bar w={60} />
+            </div>
+
+            {/* Main */}
+            <div style={{ flex: 1, padding: 14 }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 12,
+                }}
+              >
+                {[0, 1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    style={{ height: 64, border: "1px solid #E8ECF2", borderRadius: 8, background: "#fff" }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Right panel */}
+            <div
+              style={{
+                width: 92,
+                background: "#EDF2F9",
+                padding: "12px 10px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              <Bar w="100%" bg="#D5DEEC" />
+              <Bar w={54} bg="#D5DEEC" />
+              <Bar w={70} bg="#D5DEEC" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Callouts ───────────────────────────────────────────────── */}
+      {/* 1 · Primary nav: Rail */}
+      <Line x={204} y={195.25} w={96} h={1.5} />
+      <Dot x={300} y={196} />
+      <Num x={74} y={196} n={1} />
+      <Pill x={92} y={184}>Primary nav: Rail</Pill>
+
+      {/* 3 · TopBar */}
+      <Line x={494.25} y={36} w={1.5} h={16} />
+      <Dot x={495} y={52} />
+      <Num x={455} y={20} n={3} />
+      <Pill x={473} y={8}>TopBar</Pill>
+
+      {/* 5 · Right panel / Drawer */}
+      <Line x={588} y={179.25} w={112} h={1.5} />
+      <Dot x={588} y={180} />
+      <Pill x={700} y={168}>Right panel / Drawer</Pill>
+
+      {/* 2 · Secondary nav */}
+      <Line x={405.25} y={340} w={1.5} h={40} />
+      <Dot x={406} y={340} />
+      <Num x={306} y={392} n={2} />
+      <Pill x={324} y={382}>Secondary nav : workflow</Pill>
+
+      {/* 4 · Main */}
+      <Line x={526.25} y={340} w={1.5} h={40} />
+      <Dot x={527} y={340} />
+      <Pill x={505} y={378}>Main</Pill>
+    </div>
+  </div>
+);
+
+type DocRow = { name: string; desc: React.ReactNode };
+
+const SUBCOMPONENTS: DocRow[] = [
+  {
+    name: "1. Primary navigation bar",
+    desc: 'The global icon rail; holds top-level product destinations such as "Home" and "Lists" and persists across workflows, hiding only when the shell is collapsed.',
+  },
+  {
+    name: "2. Secondary nav",
+    desc: "Task-scoped navigation; renders the active workflow's steps as a vertical or horizontal stepper and collapses to an icon rail to reclaim space.",
+  },
+  {
+    name: "3. TopBar",
+    desc: "The experience header; carries the breadcrumb trail, page actions, notifications, the Tetra Agent trigger, and the user menu.",
+  },
+  {
+    name: "4. Main",
+    desc: "The primary content region; renders the active page's tables, dashboards, and forms, and is the only area that scrolls independently.",
+  },
+  {
+    name: "5. Right panel / Drawer",
+    desc: "Contextual companion surface for Tetra Agent and inspectors; mounts inline (docked) for persistent tools or as an overlay drawer for transient tasks.",
+  },
+];
+
+const MAJOR_VARIANTS: DocRow[] = [
+  { name: "Default", desc: "Primary nav as a collapsible sidebar (⇄ rail); no secondary nav." },
+  {
+    name: "Workflow · Vertical",
+    desc: "Rail + vertical step list; collapses to an icon rail (can hide the primary rail).",
+  },
+  {
+    name: "Workflow · Horizontal",
+    desc: "Rail + horizontal stepper; collapses into a step dropdown by the breadcrumb.",
+  },
+  {
+    name: "Secondary Nav · Sidebar",
+    desc: "Rail + grouped sidebar menu (Default / SubMenu / Multiple Group; small–large menu sizes).",
+  },
+];
+
+const DocTable = ({ title, rows }: { title: string; rows: DocRow[] }) => (
+  <>
+    <h2
+      style={{
+        margin: "24px 0 10px",
+        fontSize: 12,
+        fontWeight: 700,
+        textTransform: "uppercase",
+        letterSpacing: "0.06em",
+        color: "#94A3B8",
+      }}
+    >
+      {title}
+    </h2>
+    <div>
+      {rows.map((r) => (
+        <div
+          key={r.name}
+          style={{
+            display: "flex",
+            gap: 12,
+            alignItems: "baseline",
+            padding: "9px 0",
+            borderBottom: "1px solid #E2E8F0",
+            fontSize: 13.5,
+          }}
+        >
+          <b style={{ display: "inline-block", minWidth: 190, color: "#0D1B3E" }}>{r.name}</b>
+          <span style={{ color: "#64748B" }}>{r.desc}</span>
+        </div>
+      ))}
+    </div>
+  </>
+);
+
+const DataAppShellDocsPage = () => (
+  <div
+    style={{
+      maxWidth: 1475,
+      margin: "0 auto",
+      padding: "8px 4px",
+      fontFamily:
+        '-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif',
+      color: "#0D1B3E",
+    }}
+  >
+    <h1 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 700 }}>DataAppShell</h1>
+    <p style={{ margin: "0 0 8px", color: "#64748B", fontSize: 14, lineHeight: 1.6 }}>
+      A composable application shell for TDP data apps. It assembles a Primary Nav, an optional
+      Secondary Nav, a Top Bar, a main content area, and an optional Right Panel. Pick a ready-made
+      variant on the left, or open the Component Properties panel to explore customization options
+      beyond the four main variants.
+    </p>
+
+    <div style={{ margin: "8px 0 10px" }}>
+      <AnatomyDiagram />
+    </div>
+
+    <DocTable title="Subcomponents" rows={SUBCOMPONENTS} />
+    <DocTable title="Major Variants" rows={MAJOR_VARIANTS} />
+  </div>
+);
+
 const meta: Meta<typeof DataAppShell> = {
   title: "Design Patterns/Data App Shell",
   component: DataAppShell,
-  parameters: { layout: "fullscreen" },
+  parameters: {
+    layout: "fullscreen",
+    docs: { page: DataAppShellDocsPage },
+  },
   tags: ["autodocs"],
 };
 
@@ -224,7 +575,7 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
 };
 
 export const Default: Story = {
-  name: "Default",
+  name: "Workflow · Vertical",
   render: () => <DefaultShell />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -258,6 +609,8 @@ export const Default: Story = {
 
 export const CollapsedWorkflow: Story = {
   name: "Collapsed Workflow",
+  // Hidden from the sidebar; still runs as a play/interaction test.
+  tags: ["!dev"],
   render: () => <DefaultShell initialCollapsed />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -283,7 +636,7 @@ export const CollapsedWorkflow: Story = {
 // =============================================================================
 
 export const NonWorkflowPage: Story = {
-  name: "Non-Workflow Page",
+  name: "Default",
   render: () => (
     <DataAppShell
       appName="HTS"
@@ -390,6 +743,8 @@ const InteractiveShell = () => {
 
 export const Interactive: Story = {
   name: "Interactive",
+  // Hidden from the sidebar; still runs as a play/interaction test.
+  tags: ["!dev"],
   render: () => <InteractiveShell />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -461,6 +816,8 @@ export const AppDropdownInteraction: Story = {
 
 export const BreadcrumbVariants: Story = {
   name: "Breadcrumb Variants",
+  // Hidden from the sidebar; still runs as a play/interaction test.
+  tags: ["!dev"],
   render: () => (
     <DataAppShell
       appName="APP"
@@ -520,6 +877,8 @@ export const BreadcrumbVariants: Story = {
 
 export const HelpButtonPresent: Story = {
   name: "Help Button",
+  // Hidden from the sidebar; still runs as a play/interaction test.
+  tags: ["!dev"],
   render: () => (
     <DataAppShell
       appName="APP"
@@ -648,6 +1007,8 @@ export const WorkflowPanelInteractions: Story = {
 
 export const MultipleNavGroups: Story = {
   name: "Multiple Nav Groups",
+  // Hidden from the sidebar; still runs as a play/interaction test.
+  tags: ["!dev"],
   render: () => (
     <DataAppShell
       appName="APP"

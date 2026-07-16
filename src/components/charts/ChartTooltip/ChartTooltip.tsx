@@ -178,7 +178,15 @@ export function ChartTooltip({ anchor, bubbleRef }: ChartTooltipProps) {
           )}
         >
           {anchor.lines.map((line, index) => (
-            <div key={`${index}-${line}`}>{line}</div>
+            // Tooltip content is authored HTML: the default line builders emit
+            // plain strings, and the `tooltip.content` contract lets charts
+            // return rich markup (e.g. `<b>`, badges, or a molecule SVG). The
+            // strings originate from developer-authored content functions and
+            // the library's own builders, not raw untrusted input.
+            <div
+              key={`${index}-${line}`}
+              dangerouslySetInnerHTML={{ __html: line }}
+            />
           ))}
           <span
             aria-hidden

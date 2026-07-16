@@ -5,12 +5,15 @@ import "@/index.css";
 export * from "@/components/composed/FormPatterns";
 export * from "@/components/composed/StatCard";
 export * from "@/components/composed/DataAppShell";
+export * from "@/components/composed/TopBar";
+export * from "@/components/composed/UserMenu";
 export * from "@/components/composed/Chat";
 export * from "@/components/composed/PlateMapEditor";
 export * from "@/components/composed/ConfirmDialog";
 export * from "@/components/composed/RichListItem";
 export * from "@/components/composed/EmptyState";
 export * from "@/components/composed/ProcessFlow";
+export * from "@/components/composed/AssistantLayout";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";
@@ -18,20 +21,19 @@ export * from "@/components/composed/tdp-link";
 export * from "@/components/composed/tdp-url";
 
 // Charts
-export * from "@/components/charts/AreaGraph";
+export * from "@/components/charts/AreaPlot";
 export * from "@/components/charts/ChartTooltip";
-export * from "@/components/charts/BarGraph";
-export * from "@/components/charts/Boxplot";
+export * from "@/components/charts/BarChart";
+export * from "@/components/charts/BoxPlot";
 export * from "@/components/charts/Chromatogram";
-export * from "@/components/charts/ChromatogramChart";
-export * from "@/components/charts/StackedChromatogramChart";
-export * from "@/components/charts/DotPlot";
-export * from "@/components/charts/Heatmap";
+export * from "@/components/charts/StackedChromatogram";
+export * from "@/components/charts/Electropherogram";
 export * from "@/components/charts/Histogram";
-export * from "@/components/charts/LineGraph";
+export * from "@/components/charts/LinePlot";
 export * from "@/components/charts/PieChart";
 export * from "@/components/charts/PlateMap";
-export * from "@/components/charts/ScatterGraph";
+export * from "@/components/charts/ScatterPlot";
+export * from "@/components/charts/ScatterPlotInteractive";
 
 // ui
 export * from "@/components/ui/accordion";
@@ -84,6 +86,7 @@ export * from "@/components/ui/toggle";
 export * from "@/components/ui/toggle-group";
 export * from "@/components/ui/tooltip";
 export * from "@/components/ui/code-editor";
+export * from "@/components/ui/tetra-molecule-icon";
 export * from "@/components/ui/tetrascience-icon";
 
 // AI

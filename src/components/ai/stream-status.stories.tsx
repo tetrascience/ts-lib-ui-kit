@@ -5,7 +5,6 @@ import { StreamStatus } from "./stream-status"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
-
 const meta: Meta<typeof StreamStatus> = {
   title: "AI Elements/Stream Status",
   component: StreamStatus,
@@ -92,11 +91,17 @@ export const IconVariants: Story = {
         isStreaming
         startTime={new Date(Date.now() - 12 * 1000)}
       />
+      <StreamStatus
+        iconVariant="tetra"
+        isStreaming
+        startTime={new Date(Date.now() - 8 * 1000)}
+        tokenCount={640}
+      />
     </div>
   ),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
-    await step("All four icon variants render", async () => {
+    await step("All icon variants render", async () => {
       await expect(canvas.getByText("8.7k tokens")).toBeInTheDocument()
     })
   },

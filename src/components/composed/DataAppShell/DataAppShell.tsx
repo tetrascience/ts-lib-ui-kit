@@ -1,13 +1,12 @@
-import { cva } from "class-variance-authority";
-import {
-  ArrowLeft,
-  HelpCircle,
-  Menu,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowLeft, HelpCircle, Menu } from "lucide-react";
 import * as React from "react";
 
+import { DataAppShellPrimaryNav } from "./PrimaryNav";
+
+import type { NavGroup } from "./PrimaryNav";
+
 import { TDPLink } from "@/components/composed/tdp-link";
+import { TopBar } from "@/components/composed/TopBar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -43,25 +42,8 @@ import { cn } from "@/lib/utils";
 // Types
 // =============================================================================
 
-export interface NavPage {
-  /** Unique identifier */
-  id: string;
-  /** Display label */
-  label: string;
-  /** Lucide icon or custom React SVG component */
-  icon?: LucideIcon | React.FC<React.SVGProps<SVGSVGElement>>;
-  /** Whether this page is currently active */
-  isActive?: boolean;
-  /** Click handler */
-  onClick?: () => void;
-}
-
-export interface NavGroup {
-  /** Optional group label shown as a section header in expanded nav */
-  label?: string;
-  /** Page entries in this group */
-  pages: NavPage[];
-}
+// Nav item types live with the nav engine — re-exported here for back-compat.
+export type { NavPage, NavGroup } from "./PrimaryNav";
 
 export interface BreadcrumbItemConfig {
   /** Display label */
@@ -98,11 +80,13 @@ export interface DataAppShellProps {
   breadcrumbs?: BreadcrumbItemConfig[];
   /** Callback when the help button is clicked; omit to hide the button */
   onHelpClick?: () => void;
+  /** Center "context" slot in the top bar (e.g. a version / status selector) */
+  headerCenter?: React.ReactNode;
   /** Slot for right-side actions in the top nav (e.g. data count pills, next button) */
   headerActions?: React.ReactNode;
 
   // -- Shell --
-  /** Slot rendered between the icon rail and the content (e.g. WorkflowPanel) */
+  /** Slot rendered between the icon rail and the content (e.g. a vertical `DataAppShellSecondaryNav`) */
   sidebarPanel?: React.ReactNode;
   /** Show the desktop icon nav rail. Set false to reclaim width when the panel is collapsed. */
   showNavRail?: boolean; // default true
@@ -138,46 +122,40 @@ interface SidebarBodyProps
   onAfterNavClick?: () => void;
 }
 
-const pageIconVariants = cva(
-  "flex items-center justify-center rounded-lg transition-colors duration-150",
-  {
-    variants: {
-      active: {
-        true: "bg-primary/10",
-        false: "bg-transparent",
-      },
-      compact: {
-        true: "w-[30px] h-[30px] hover:bg-accent",
-        false: "w-8 h-8",
-      },
-    },
-    defaultVariants: { active: false, compact: true },
-  }
-);
+// =============================================================================
+// App header menu — logo/name button opening the app dropdown
+// =============================================================================
 
-function SidebarBody({
+interface AppHeaderMenuProps
+  extends Pick<
+    DataAppShellProps,
+    | "appName"
+    | "appFullName"
+    | "appIcon"
+    | "version"
+    | "onAppNameClick"
+    | "backToPlatformPath"
+    | "onBackToPlatform"
+  > {
+  /** compact=true → icon-only trigger (rail); compact=false → icon + name row */
+  compact: boolean;
+  /** Which side of the trigger the dropdown opens on — `right` beside a rail, `bottom` under a top bar */
+  menuSide?: "right" | "bottom";
+}
+
+function AppHeaderMenu({
   appName,
   appFullName,
   appIcon,
   version,
-  navGroups,
   onAppNameClick,
   backToPlatformPath,
   onBackToPlatform,
-  userMenu,
   compact,
-  onAfterNavClick,
-}: SidebarBodyProps) {
+  menuSide = "right",
+}: AppHeaderMenuProps) {
   return (
-    <TooltipProvider>
-      {/* ── Header: app icon / name + version ──────────────────────────────── */}
-      <div
-        className={cn(
-          "shrink-0 flex",
-          compact ? "justify-center pt-1 pb-2" : "px-3 py-2.5 border-b border-sidebar-border"
-        )}
-      >
-        <DropdownMenu>
+    <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
@@ -203,7 +181,7 @@ function SidebarBody({
               )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="start" className="min-w-[220px]">
+          <DropdownMenuContent side={menuSide} align="start" className="min-w-[220px]">
             <div
               className="flex items-center gap-3 px-3 py-2.5 cursor-pointer"
               onClick={onAppNameClick}
@@ -252,132 +230,48 @@ function SidebarBody({
               )}
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+    </DropdownMenu>
+  );
+}
 
-      {/* Collapsed: short centered divider aligned under the icon column
-          (matches the nav-group dividers). Expanded uses the header's border-b. */}
-      {compact && <div className="shrink-0 mx-auto w-8 border-t border-sidebar-border" />}
+// =============================================================================
+// Sidebar shared body — the PrimaryNav engine with the app header + user slots
+// =============================================================================
 
-      {/* ── Nav groups ──────────────────────────────────────────────────────── */}
-      <div
-        className={cn(
-          "flex-1 min-h-0",
-          compact
-            ? "flex flex-col items-center gap-1 px-2 pt-3 overflow-y-auto"
-            : "flex flex-col py-2 overflow-y-auto"
-        )}
-      >
-        {navGroups.map((group, groupIndex) => (
-          <React.Fragment key={`${groupIndex}-${group.label ?? ""}`}>
-            {groupIndex > 0 && (
-              <div
-                className={cn(
-                  "border-t border-sidebar-border",
-                  compact ? "w-8 my-2" : "mx-3 my-1"
-                )}
-              />
-            )}
-            {!compact && group.label && (
-              <span className="px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">
-                {group.label}
-              </span>
-            )}
-            <div
-              className={cn(
-                "flex flex-col",
-                compact ? "items-center gap-3 w-full" : "gap-0.5"
-              )}
-            >
-              {group.pages.map((page) => {
-                const Icon = page.icon;
-                const iconEl = Icon ? (
-                  <Icon
-                    className={cn(
-                      "w-4 h-4",
-                      page.isActive ? "text-primary" : "text-muted-foreground"
-                    )}
-                  />
-                ) : (
-                  <div
-                    className={cn(
-                      "w-2 h-2 rounded-full",
-                      page.isActive ? "bg-primary" : "bg-muted-foreground/40"
-                    )}
-                  />
-                );
-
-                const handleClick = () => {
-                  page.onClick?.();
-                  onAfterNavClick?.();
-                };
-
-                if (compact) {
-                  return (
-                    <Tooltip key={page.id}>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          aria-label={page.label}
-                          className="flex flex-col items-center cursor-pointer bg-transparent border-none p-0 w-full"
-                          onClick={handleClick}
-                        >
-                          <div className={cn(pageIconVariants({ active: page.isActive ?? false, compact: true }))}>
-                            {iconEl}
-                          </div>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">{page.label}</TooltipContent>
-                    </Tooltip>
-                  );
-                }
-
-                // Expanded (mobile) row
-                return (
-                  <button
-                    key={page.id}
-                    type="button"
-                    className={cn(
-                      "flex items-center gap-3 w-full px-3 py-2 text-sm cursor-pointer bg-transparent border-none text-left transition-colors duration-150 rounded-md mx-1",
-                      page.isActive
-                        ? "bg-sidebar-accent text-sidebar-foreground font-medium"
-                        : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
-                    )}
-                    onClick={handleClick}
-                  >
-                    <div className={cn(pageIconVariants({ active: page.isActive ?? false, compact: false }))}>
-                      {iconEl}
-                    </div>
-                    <span>{page.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </React.Fragment>
-        ))}
-      </div>
-
-      {/* ── Bottom: user menu slot ──────────────────────────────────────────── */}
-      {userMenu && (
-        <>
-          {/* Collapsed: short centered divider aligned under the icon column.
-              Expanded uses the full-width border on the wrapper below. */}
-          {compact && (
-            <div className="shrink-0 mx-auto w-8 border-t border-sidebar-border" />
-          )}
-          <div
-            className={cn(
-              "shrink-0",
-              compact
-                ? "flex flex-col items-center py-2"
-                : "p-2 border-t border-sidebar-border"
-            )}
-          >
-            {userMenu}
-          </div>
-        </>
-      )}
-    </TooltipProvider>
+function SidebarBody({
+  appName,
+  appFullName,
+  appIcon,
+  version,
+  navGroups,
+  onAppNameClick,
+  backToPlatformPath,
+  onBackToPlatform,
+  userMenu,
+  compact,
+  onAfterNavClick,
+}: SidebarBodyProps) {
+  return (
+    <DataAppShellPrimaryNav
+      variant={compact ? "rail" : "sidebar"}
+      aria-label="Application navigation"
+      navGroups={navGroups}
+      onSelect={() => onAfterNavClick?.()}
+      header={
+        <AppHeaderMenu
+          appName={appName}
+          appFullName={appFullName}
+          appIcon={appIcon}
+          version={version}
+          onAppNameClick={onAppNameClick}
+          backToPlatformPath={backToPlatformPath}
+          onBackToPlatform={onBackToPlatform}
+          compact={compact}
+        />
+      }
+      user={userMenu}
+      className="h-full w-full"
+    />
   );
 }
 
@@ -387,95 +281,109 @@ function SidebarBody({
 
 function IconRailSidebar(props: Omit<SidebarBodyProps, "compact" | "onAfterNavClick">) {
   return (
-    <nav
+    <div
       data-slot="data-app-sidebar-rail"
-      aria-label="Application navigation"
       className="hidden md:flex w-12 flex-col shrink-0 bg-sidebar border-r border-sidebar-border h-full z-50"
     >
       <SidebarBody compact {...props} />
-    </nav>
+    </div>
   );
 }
 
 // =============================================================================
-// Top nav
+// Breadcrumb trail — rendered from the shell's breadcrumb config
+// =============================================================================
+
+function TopNavBreadcrumb({ items }: { items: BreadcrumbItemConfig[] }) {
+  return (
+    <Breadcrumb className="min-w-0">
+      <BreadcrumbList>
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
+          const isClickable = !isLast && (!!item.href || !!item.onClick);
+          return (
+            <React.Fragment key={`${item.label}-${index}`}>
+              {index > 0 && <BreadcrumbSeparator>/</BreadcrumbSeparator>}
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                ) : isClickable && item.href ? (
+                  <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
+                ) : isClickable && item.onClick ? (
+                  <button
+                    type="button"
+                    className="text-sm text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal"
+                    onClick={item.onClick}
+                  >
+                    {item.label}
+                  </button>
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    {item.label}
+                  </span>
+                )}
+              </BreadcrumbItem>
+            </React.Fragment>
+          );
+        })}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+}
+
+// =============================================================================
+// Top nav — maps shell props onto the reusable TopBar (left/center/right)
 // =============================================================================
 
 function TopNav({
   breadcrumbs = [],
   onHelpClick,
+  headerCenter,
   headerActions,
   mobileTrigger,
 }: {
   breadcrumbs?: BreadcrumbItemConfig[];
   onHelpClick?: () => void;
+  headerCenter?: React.ReactNode;
   headerActions?: React.ReactNode;
   mobileTrigger?: React.ReactNode;
 }) {
   return (
-    <div
+    <TopBar
       data-slot="data-app-top-nav"
-      className="flex items-center h-10 px-3 bg-sidebar border-b border-sidebar-border sticky top-0 z-40 w-full gap-2"
-    >
-      {/* Mobile hamburger (hidden on md+) */}
-      {mobileTrigger}
+      left={
+        <>
+          {/* Mobile hamburger (hidden on md+) */}
+          {mobileTrigger}
+          <TopNavBreadcrumb items={breadcrumbs} />
+        </>
+      }
+      center={headerCenter}
+      right={
+        <>
+          {headerActions}
 
-      {/* Left: Breadcrumbs */}
-      <Breadcrumb className="flex-1 min-w-0">
-        <BreadcrumbList>
-          {breadcrumbs.map((item, index) => {
-            const isLast = index === breadcrumbs.length - 1;
-            const isClickable = !isLast && (!!item.href || !!item.onClick);
-            return (
-              <React.Fragment key={`${item.label}-${index}`}>
-                {index > 0 && <BreadcrumbSeparator>/</BreadcrumbSeparator>}
-                <BreadcrumbItem>
-                  {isLast ? (
-                    <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                  ) : isClickable && item.href ? (
-                    <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
-                  ) : isClickable && item.onClick ? (
-                    <button
-                      type="button"
-                      className="text-sm text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal"
-                      onClick={item.onClick}
-                    >
-                      {item.label}
-                    </button>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">{item.label}</span>
-                  )}
-                </BreadcrumbItem>
-              </React.Fragment>
-            );
-          })}
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      {/* Right: header actions + help */}
-      <div className="flex items-center gap-2 shrink-0">
-        {headerActions}
-
-        {onHelpClick && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-7 h-7 text-muted-foreground"
-                  onClick={onHelpClick}
-                  aria-label="Help"
-                >
-                  <HelpCircle className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Help</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-      </div>
-    </div>
+          {onHelpClick && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-7 h-7 text-muted-foreground"
+                    onClick={onHelpClick}
+                    aria-label="Help"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Help</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </>
+      }
+    />
   );
 }
 
@@ -495,6 +403,7 @@ function DataAppShell({
   userMenu,
   breadcrumbs = [],
   onHelpClick,
+  headerCenter,
   headerActions,
   sidebarPanel,
   showNavRail = true,
@@ -534,13 +443,11 @@ function DataAppShell({
           <SheetDescription className="sr-only">
             Application navigation menu
           </SheetDescription>
-          <nav aria-label="Application navigation" className="flex flex-col h-full">
-            <SidebarBody
-              compact={false}
-              onAfterNavClick={() => setMobileNavOpen(false)}
-              {...sidebarProps}
-            />
-          </nav>
+          <SidebarBody
+            compact={false}
+            onAfterNavClick={() => setMobileNavOpen(false)}
+            {...sidebarProps}
+          />
         </SheetContent>
 
         {/* Right: top nav + panel + content */}
@@ -548,6 +455,7 @@ function DataAppShell({
           <TopNav
             breadcrumbs={breadcrumbs}
             onHelpClick={onHelpClick}
+            headerCenter={headerCenter}
             headerActions={headerActions}
             mobileTrigger={
               <SheetTrigger asChild>
@@ -582,4 +490,4 @@ function DataAppShell({
 }
 
 export default DataAppShell;
-export { DataAppShell };
+export { AppHeaderMenu, DataAppShell };

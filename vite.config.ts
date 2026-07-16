@@ -125,6 +125,10 @@ export default defineConfig({
         ],
         test: {
           name: "storybook",
+          // The heaviest interaction tests (PlateMapEditor form/grouping flows)
+          // run ~16s on loaded CI runners under coverage instrumentation,
+          // intermittently tripping the 15s default. Give them headroom.
+          testTimeout: 30000,
           browser: {
             enabled: true,
             provider: "playwright",

@@ -762,7 +762,7 @@ function TableSurface<TData>(props: TableSurfaceProps<TData>) {
         </SortableContext>
         <DragOverlay dropAnimation={null}>
           {draggingHeader && (
-            <div className="rounded-md border bg-background px-4 py-3 text-sm font-medium shadow-lg">
+            <div className="rounded-md border bg-background px-4 py-3 text-sm font-medium shadow-elevation-5">
               {columnLabels[draggingHeader.column.id] ??
                 (typeof draggingHeader.column.columnDef.header === "string"
                   ? draggingHeader.column.columnDef.header

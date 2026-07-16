@@ -44,7 +44,7 @@ export * from "./types";
 export { DEFAULT_CATEGORY_COLORS } from "./constants";
 
 import { Button } from "@/components/ui/button";
-import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 
 /**
  * PlateMap component for visualizing well plate data as a heatmap or categorical display.
@@ -480,7 +480,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
         ? {
             text: title,
             font: {
-              family: "Inter, sans-serif",
+              family: CHART_FONT_FAMILY,
               size: 20,
               color: theme.textSecondary,
             },
@@ -499,7 +499,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
           font: {
             size: 16,
             color: theme.textSecondary,
-            family: "Inter, sans-serif",
+            family: CHART_FONT_FAMILY,
           },
           standoff: 15,
         },
@@ -522,7 +522,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
           font: {
             size: 16,
             color: theme.textSecondary,
-            family: "Inter, sans-serif",
+            family: CHART_FONT_FAMILY,
           },
           standoff: 15,
         },
@@ -538,7 +538,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
-        family: "Inter, sans-serif",
+        family: CHART_FONT_FAMILY,
         color: theme.textSecondary,
       },
       shapes: regionShapes,

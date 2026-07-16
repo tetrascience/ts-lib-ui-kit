@@ -157,7 +157,7 @@ Use `ProcessFlow` from `@tetrascience-npm/tetrascience-react-ui` for multi-step 
 
 Plotly.js-based data visualisations:
 
-AreaGraph, BarGraph, Boxplot, Chromatogram, ChromatogramChart, DotPlot, Heatmap, Histogram, LineGraph, PieChart, PlateMap, ScatterGraph
+AreaPlot, BarChart, BoxPlot, Chromatogram, StackedChromatogram, Electropherogram, Histogram, LinePlot, PieChart, PlateMap, ScatterPlot, ScatterPlotInteractive
 
 ## Server Utilities
 
@@ -363,7 +363,7 @@ Full TypeScript support with exported types:
 
 ```tsx
 import { Button } from "@tetrascience-npm/tetrascience-react-ui";
-import type { ButtonProps, BarGraphProps, BarDataSeries } from "@tetrascience-npm/tetrascience-react-ui";
+import type { ButtonProps, BarChartProps, BarDataSeries } from "@tetrascience-npm/tetrascience-react-ui";
 ```
 
 ## Examples

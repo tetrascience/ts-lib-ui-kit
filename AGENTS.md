@@ -34,9 +34,9 @@ src/
 │   ├── ui/          # shadcn/ui primitives (radix-ui + CVA + Tailwind)
 │   ├── composed/    # Multi-component compositions (AppHeader, Sidebar, etc.)
 │   └── charts/      # 12 Plotly.js scientific visualizations:
-│                    #   AreaGraph, BarGraph, LineGraph, ScatterGraph,
-│                    #   InteractiveScatter, Histogram, PieChart, DotPlot,
-│                    #   Heatmap, Boxplot, Chromatogram, PlateMap
+│                    #   AreaPlot, BarChart, LinePlot, ScatterPlot,
+│                    #   ScatterPlotInteractive, Histogram, PieChart, BoxPlot,
+│                    #   Chromatogram, StackedChromatogram, Electropherogram, PlateMap
 ├── hooks/           # Custom React hooks
 ├── lib/utils.ts     # cn() helper (clsx + tailwind-merge)
 ├── server/          # Server-side utilities (being migrated out — see below)
@@ -128,7 +128,8 @@ Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) fo
 
 ## Zephyr Integration
 
-- Test results reported to Zephyr Scale via `scripts/zephyr/report-zephyr-results.ts`
+- Zephyr HTTP is handled by a shared internal `ts-lib-zephyr-nodejs` library (`ZephyrClient` + helpers). The repo's scripts are thin wrappers around it — JUnit parsing, story parsing/write-back, cycle resolution, and folder mapping stay local.
+- Test results reported to Zephyr Scale via `scripts/zephyr/report-zephyr-results.ts`.
 - Story-to-testcase sync handled by `scripts/zephyr/sync-storybook-zephyr.ts`
 - Test case IDs live in story parameters: `parameters.zephyr.testCaseId`
 - Do not manually invent, copy, reuse, or paste Zephyr test case IDs between stories.

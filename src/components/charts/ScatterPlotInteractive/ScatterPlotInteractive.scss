@@ -1,0 +1,14 @@
+// Points have no Plotly outline (marker.line.width === 0); a drop-shadow
+// gives them depth and lifts them off the plot background instead.
+.scatter-plot-interactive {
+  .scatterlayer .points path.point {
+    filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.35));
+  }
+}
+
+// A stronger shadow keeps the lift readable against the dark plot background.
+.dark .scatter-plot-interactive {
+  .scatterlayer .points path.point {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
+  }
+}

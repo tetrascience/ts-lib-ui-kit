@@ -325,7 +325,7 @@ function DynamicProcessFlow() {
 }
 
 const meta: Meta<typeof ProcessFlow> = {
-  title: "Design Patterns/ProcessFlow",
+  title: "Design Patterns/Process Flow",
   component: ProcessFlow,
   parameters: {
     layout: "padded",

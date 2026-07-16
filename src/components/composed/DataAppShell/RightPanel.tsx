@@ -2,6 +2,7 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { PanelRightOpen, X } from "lucide-react";
+import { Slot } from "radix-ui";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,11 @@ const dataAppShellRightPanelTriggerVariants = cva(
 
 export interface DataAppShellRightPanelTriggerProps
   extends React.ComponentProps<"button">,
-    VariantProps<typeof dataAppShellRightPanelTriggerVariants> {}
+    VariantProps<typeof dataAppShellRightPanelTriggerVariants> {
+  /** Merge the trigger styling/props onto the child element instead of
+   *  rendering a `<button>` — makes anything clickable a panel trigger. */
+  asChild?: boolean;
+}
 
 /**
  * Trigger for a `DataAppShellRightPanel`, in two variants:
@@ -87,24 +92,31 @@ export interface DataAppShellRightPanelTriggerProps
  *   it in the shell's `headerActions`, set `showTrigger={false}` on the panel,
  *   and pass the same ref to the panel's `triggerRef` so focus returns here
  *   when the panel closes.
+ *
+ * With `asChild` the trigger renders no element of its own and instead merges
+ * onto its child — any clickable element (a link, menu item, custom button)
+ * can act as the trigger.
  */
 function DataAppShellRightPanelTrigger({
   className,
   variant,
   size,
+  asChild = false,
   children,
   ...props
 }: DataAppShellRightPanelTriggerProps) {
+  const Comp = asChild ? Slot.Root : "button";
   return (
-    <button
-      type="button"
+    <Comp
+      // `type` only when we own the element — a slotted child may not be a button
+      {...(asChild ? {} : { type: "button" as const })}
       data-slot="data-app-shell-right-panel-trigger"
       data-variant={variant ?? "fab"}
       className={cn(dataAppShellRightPanelTriggerVariants({ variant, size }), className)}
       {...props}
     >
-      {children ?? <PanelRightOpen />}
-    </button>
+      {asChild ? children : (children ?? <PanelRightOpen />)}
+    </Comp>
   );
 }
 

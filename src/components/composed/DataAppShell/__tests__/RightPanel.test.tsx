@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { DataAppShellRightPanel } from "../RightPanel";
+import { DataAppShellRightPanel, DataAppShellRightPanelTrigger } from "../RightPanel";
 
 // ---------------------------------------------------------------------------
 // Render harness
@@ -139,5 +139,44 @@ describe("DataAppShellRightPanel — closed rendering", () => {
     expect(
       container.querySelector("[data-slot='data-app-shell-right-panel-trigger']"),
     ).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Trigger — asChild slots onto any clickable element
+// ---------------------------------------------------------------------------
+
+describe("DataAppShellRightPanelTrigger — asChild", () => {
+  it("merges trigger styling and handlers onto the child element", () => {
+    const onOpen = vi.fn();
+    render(
+      <DataAppShellRightPanelTrigger asChild variant="icon" aria-label="Open history" onClick={onOpen}>
+        <a href="#history">History</a>
+      </DataAppShellRightPanelTrigger>,
+    );
+
+    // No wrapping <button> — the anchor itself became the trigger
+    expect(container.querySelector("button")).toBeNull();
+    const link = container.querySelector<HTMLAnchorElement>(
+      "a[data-slot='data-app-shell-right-panel-trigger']",
+    )!;
+    expect(link).not.toBeNull();
+    expect(link.getAttribute("data-variant")).toBe("icon");
+    expect(link.getAttribute("aria-label")).toBe("Open history");
+    expect(link.className).toContain("rounded-lg");
+
+    flushSync(() => link.click());
+    expect(onOpen).toHaveBeenCalledOnce();
+  });
+
+  it("renders its own button with the default icon when not asChild", () => {
+    render(<DataAppShellRightPanelTrigger aria-label="Open panel" />);
+    const button = container.querySelector<HTMLButtonElement>(
+      "button[data-slot='data-app-shell-right-panel-trigger']",
+    )!;
+    expect(button).not.toBeNull();
+    expect(button.type).toBe("button");
+    expect(button.getAttribute("data-variant")).toBe("fab");
+    expect(button.querySelector("svg")).not.toBeNull();
   });
 });

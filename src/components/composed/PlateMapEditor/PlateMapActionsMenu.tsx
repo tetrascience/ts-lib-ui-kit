@@ -112,7 +112,7 @@ export function PlateMapActionsMenu({
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button type="button" variant="outline" size="sm" className={cn("min-w-24 justify-between", className)}>
             <span>{label}</span>

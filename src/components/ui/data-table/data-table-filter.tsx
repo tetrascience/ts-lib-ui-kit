@@ -138,6 +138,7 @@ function DataTableFilter({ className }: DataTableFilterProps) {
       <Popover.Portal>
         <Popover.Content
           data-slot="data-table-filter-panel"
+          aria-label="Filter conditions"
           align="end"
           sideOffset={4}
           className={cn(
@@ -172,7 +173,7 @@ function DataTableFilter({ className }: DataTableFilterProps) {
                       })
                     }}
                   >
-                    <SelectTrigger size="sm" className="w-36">
+                    <SelectTrigger aria-label="Filter column" size="sm" className="w-36">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -197,7 +198,7 @@ function DataTableFilter({ className }: DataTableFilterProps) {
                       })
                     }
                   >
-                    <SelectTrigger size="sm" className="w-32">
+                    <SelectTrigger aria-label="Filter operator" size="sm" className="w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

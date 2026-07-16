@@ -155,7 +155,7 @@ function AppHeaderMenu({
   menuSide = "right",
 }: AppHeaderMenuProps) {
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
@@ -182,14 +182,9 @@ function AppHeaderMenu({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side={menuSide} align="start" className="min-w-[220px]">
-            <div
-              className="flex items-center gap-3 px-3 py-2.5 cursor-pointer"
-              onClick={onAppNameClick}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") onAppNameClick?.();
-              }}
+            <DropdownMenuItem
+              className="gap-3 px-3 py-2.5"
+              onSelect={() => onAppNameClick?.()}
             >
               <div className="w-8 h-8 rounded-lg bg-sidebar-accent border border-sidebar-border flex items-center justify-center shrink-0">
                 <span className="text-[10px] font-bold text-foreground">
@@ -206,7 +201,7 @@ function AppHeaderMenu({
                   </span>
                 )}
               </div>
-            </div>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2.5 p-0" asChild>
               {backToPlatformPath ? (

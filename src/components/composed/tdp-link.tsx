@@ -213,7 +213,7 @@ export const TDPLink: React.FC<TDPLinkProps> = ({
       target={navigationOptions.newTab ? '_blank' : undefined}
       rel={navigationOptions.newTab ? 'noopener noreferrer' : undefined}
       onClick={handleClick}
-      className={`no-underline cursor-pointer hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:rounded-[2px] ${className ?? ''}`}
+      className={`underline underline-offset-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:rounded-[2px] ${className ?? ''}`}
       style={{ color: 'var(--primary)', outlineColor: 'var(--border)' }}
       {...rest}
     >

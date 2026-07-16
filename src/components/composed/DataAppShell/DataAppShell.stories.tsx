@@ -830,17 +830,17 @@ export const BackToPlatformPath: Story = {
     });
 
     await step("Back to TDP Platform renders as a link (not a button)", async () => {
-      const menuItem = body.getByRole("menuitem");
+      const menuItem = body.getByRole("menuitem", { name: /back to tdp platform/i });
       expect(menuItem.tagName.toLowerCase()).toBe("a");
     });
 
     await step("Link href contains the backToPlatformPath", async () => {
-      const menuItem = body.getByRole("menuitem");
+      const menuItem = body.getByRole("menuitem", { name: /back to tdp platform/i });
       expect(menuItem).toHaveAttribute("href", expect.stringContaining("/data-workspace"));
     });
 
     await step("Link href is fully resolved with the TDP base URL", async () => {
-      const menuItem = body.getByRole("menuitem");
+      const menuItem = body.getByRole("menuitem", { name: /back to tdp platform/i });
       expect(menuItem).toHaveAttribute("href", "https://tetrascience.com/my-org/data-workspace");
     });
 

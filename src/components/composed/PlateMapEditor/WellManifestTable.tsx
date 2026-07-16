@@ -61,7 +61,7 @@ function MultiSelectCell({
       </ComboboxChips>
       <ComboboxContent anchor={anchorRef}>
         <ComboboxEmpty>No options.</ComboboxEmpty>
-        <ComboboxList>
+        <ComboboxList aria-label={ariaLabel}>
           {(item: string) => (
             <ComboboxItem key={item} value={item}>
               {labelByValue.get(item) ?? item}

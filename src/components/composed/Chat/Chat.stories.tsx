@@ -1462,13 +1462,13 @@ const InteractiveFullDemo = () => {
           <PromptInputFooter>
             <PromptInputTools>
               <PromptInputActionMenu>
-                <PromptInputActionMenuTrigger />
+                <PromptInputActionMenuTrigger tooltip="Add attachments" />
                 <PromptInputActionMenuContent>
                   <PromptInputActionAddAttachments />
                 </PromptInputActionMenuContent>
               </PromptInputActionMenu>
               <PromptInputSelect onValueChange={setModel} value={model}>
-                <PromptInputSelectTrigger>
+                <PromptInputSelectTrigger aria-label="Select model">
                   <PromptInputSelectValue />
                 </PromptInputSelectTrigger>
                 <PromptInputSelectContent>

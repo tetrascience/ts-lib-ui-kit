@@ -14,6 +14,7 @@ import type { DynamicToolUIPart, ToolUIPart } from "ai";
 import type { ComponentProps, ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { Banner } from "@/components/ui/banner";
 import { CodeBlock } from "@/components/ui/code-block";
 import {
   Collapsible,
@@ -207,17 +208,17 @@ export const ToolOutput = ({
       <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
         {errorText ? "Error" : "Result"}
       </h4>
-      <div
-        className={cn(
-          "overflow-x-auto rounded-md text-xs [&_table]:w-full",
-          errorText
-            ? "bg-destructive/10 text-destructive"
-            : "bg-muted/50 text-foreground"
-        )}
-      >
-        {errorText && <div>{errorText}</div>}
-        {Output}
-      </div>
+      {errorText ? (
+        <Banner
+          variant="destructive"
+          description={errorText}
+          className="rounded-md text-xs"
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-md bg-muted/50 text-foreground text-xs [&_table]:w-full">
+          {Output}
+        </div>
+      )}
     </div>
   );
 };

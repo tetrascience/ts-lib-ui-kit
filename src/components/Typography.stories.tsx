@@ -1,3 +1,5 @@
+import { Badge } from "./ui/badge"
+
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import type { ReactNode } from "react"
 
@@ -67,8 +69,11 @@ function CopyButton({ text }: { text: string }) {
 }
 
 function TagBadge({ tag }: { tag: "New" | "Default" }) {
-  const cls = tag === "New" ? "bg-positive/10 text-positive" : "bg-info/10 text-info"
-  return <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>{tag}</span>
+  return (
+    <Badge variant={tag === "New" ? "positive" : "info"} className="rounded-full">
+      {tag}
+    </Badge>
+  )
 }
 
 const TH = "px-4 py-2.5 text-left font-medium text-muted-foreground"

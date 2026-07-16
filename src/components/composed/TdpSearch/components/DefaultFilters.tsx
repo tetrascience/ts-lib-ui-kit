@@ -37,7 +37,7 @@ export const DefaultFilters: React.FC<TdpFiltersRenderProps> = ({ filters, filte
             value={selectValue}
             onValueChange={(value) => onFilterChange(filter.key, value === emptyOptionValue ? "" : value)}
           >
-            <SelectTrigger className="h-[38px] w-full justify-between rounded-md">
+            <SelectTrigger aria-label={filter.label} className="h-[38px] w-full justify-between rounded-md">
               <SelectValue placeholder="Select an option" />
             </SelectTrigger>
             <SelectContent>

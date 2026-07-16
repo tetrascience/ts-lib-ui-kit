@@ -45,19 +45,31 @@ function persistWidth(id: string, width: number) {
 }
 
 // =============================================================================
-// FAB trigger — floats over the content area while the panel is closed
+// Trigger — FAB over the content area, or an icon button for the top bar
 // =============================================================================
 
 const dataAppShellRightPanelTriggerVariants = cva(
-  "absolute bottom-4 right-4 z-40 inline-flex items-center justify-center rounded-full border-none bg-primary text-primary-foreground shadow-elevation-4 cursor-pointer transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95",
+  "inline-flex items-center justify-center border-none cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
   {
     variants: {
+      variant: {
+        /** Floating action button, bottom-right of the nearest `relative` container */
+        fab: "absolute bottom-4 right-4 z-40 rounded-full bg-primary text-primary-foreground shadow-elevation-4 hover:bg-primary/90 focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95",
+        /** Ghost icon button matching top-bar actions — place in `headerActions` */
+        icon: "rounded-lg bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-foreground",
+      },
       size: {
-        default: "size-10 [&_svg:not([class*='size-'])]:size-4",
-        lg: "size-12 [&_svg:not([class*='size-'])]:size-5",
+        default: "",
+        lg: "",
       },
     },
-    defaultVariants: { size: "default" },
+    compoundVariants: [
+      { variant: "fab", size: "default", class: "size-10 [&_svg:not([class*='size-'])]:size-4" },
+      { variant: "fab", size: "lg", class: "size-12 [&_svg:not([class*='size-'])]:size-5" },
+      { variant: "icon", size: "default", class: "size-7 [&_svg:not([class*='size-'])]:size-4" },
+      { variant: "icon", size: "lg", class: "size-8 [&_svg:not([class*='size-'])]:size-4" },
+    ],
+    defaultVariants: { variant: "fab", size: "default" },
   },
 );
 
@@ -66,13 +78,19 @@ export interface DataAppShellRightPanelTriggerProps
     VariantProps<typeof dataAppShellRightPanelTriggerVariants> {}
 
 /**
- * Floating action button that re-opens a closed `DataAppShellRightPanel`.
- * Rendered automatically by the panel when it is closed; exported for cases
- * where the trigger needs custom placement. Positioned `absolute` — place it
- * inside a `relative` container (normally the shell's content area).
+ * Trigger for a `DataAppShellRightPanel`, in two variants:
+ *
+ * - `fab` (default) — floating action button; what the panel auto-renders
+ *   while closed. Positioned `absolute` — place inside a `relative` container
+ *   (normally the shell's content area).
+ * - `icon` — ghost icon button sized like the shell's top-bar actions. Place
+ *   it in the shell's `headerActions`, set `showTrigger={false}` on the panel,
+ *   and pass the same ref to the panel's `triggerRef` so focus returns here
+ *   when the panel closes.
  */
 function DataAppShellRightPanelTrigger({
   className,
+  variant,
   size,
   children,
   ...props
@@ -81,7 +99,8 @@ function DataAppShellRightPanelTrigger({
     <button
       type="button"
       data-slot="data-app-shell-right-panel-trigger"
-      className={cn(dataAppShellRightPanelTriggerVariants({ size }), className)}
+      data-variant={variant ?? "fab"}
+      className={cn(dataAppShellRightPanelTriggerVariants({ variant, size }), className)}
       {...props}
     >
       {children ?? <PanelRightOpen />}
@@ -240,12 +259,17 @@ export interface DataAppShellRightPanelProps extends Omit<React.ComponentProps<"
   icon?: React.ReactNode;
   /** Extra elements rendered in the header, before the close button. */
   headerActions?: React.ReactNode;
-  /** Render the floating FAB trigger while closed. Defaults to `true`. */
+  /** Render the floating FAB trigger while closed. Defaults to `true`. Set
+   *  `false` when the trigger lives elsewhere (e.g. an `icon`-variant
+   *  `DataAppShellRightPanelTrigger` in the shell's `headerActions`). */
   showTrigger?: boolean;
   /** Icon inside the FAB trigger. Defaults to a panel-open icon. */
   triggerIcon?: React.ReactNode;
   /** Accessible label for the FAB trigger. */
   triggerLabel?: string;
+  /** Ref to an external trigger (e.g. a top-bar icon trigger) that receives
+   *  focus when the panel closes and `showTrigger` is `false`. */
+  triggerRef?: React.RefObject<HTMLButtonElement | null>;
   /** Panel content — any React node (a chat, history list, inspector, …). */
   children?: React.ReactNode;
 }
@@ -289,6 +313,7 @@ function DataAppShellRightPanel({
   showTrigger = true,
   triggerIcon,
   triggerLabel = "Open panel",
+  triggerRef,
   children,
   className,
   ref,
@@ -300,7 +325,9 @@ function DataAppShellRightPanel({
   const [dragging, setDragging] = React.useState(false);
 
   const closeButtonRef = React.useRef<HTMLButtonElement>(null);
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const fabRef = React.useRef<HTMLButtonElement>(null);
+  // Focus lands on the built-in FAB when it renders, else on the external trigger.
+  const closeFocusRef = showTrigger ? fabRef : triggerRef;
 
   const commitWidth = React.useCallback(
     (next: number) => {
@@ -320,14 +347,14 @@ function DataAppShellRightPanel({
     // preventScroll — plain .focus() scrolls the target into view, which
     // jolts any scrollable ancestor (e.g. a Storybook docs page) on toggle.
     if (open) closeButtonRef.current?.focus({ preventScroll: true });
-    else triggerRef.current?.focus({ preventScroll: true });
-  }, [open]);
+    else closeFocusRef?.current?.focus({ preventScroll: true });
+  }, [open, closeFocusRef]);
 
   const accessibleName = typeof title === "string" ? title : "Side panel";
 
   const fab = showTrigger ? (
     <DataAppShellRightPanelTrigger
-      ref={triggerRef}
+      ref={fabRef}
       aria-label={triggerLabel}
       aria-expanded={false}
       onClick={() => onOpenChange?.(true)}
@@ -379,7 +406,7 @@ function DataAppShellRightPanel({
             // focus" targets a dead node — send focus to the new FAB instead.
             onCloseAutoFocus={(e) => {
               e.preventDefault();
-              triggerRef.current?.focus({ preventScroll: true });
+              closeFocusRef?.current?.focus({ preventScroll: true });
             }}
             style={{ width }}
             className={cn("gap-0 data-[side=right]:sm:max-w-none", className)}

@@ -7,6 +7,7 @@ import {
   LayoutGrid,
   Library,
   LogOut,
+  PanelRight,
   Search,
   ShieldCheck,
 } from "lucide-react";
@@ -16,7 +17,11 @@ import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 
 import { AppHeaderMenu, DataAppShell } from "./DataAppShell";
 import { DataAppShellPrimaryNav } from "./PrimaryNav";
-import { DataAppShellRightPanel, type DataAppShellRightPanelVariant } from "./RightPanel";
+import {
+  DataAppShellRightPanel,
+  DataAppShellRightPanelTrigger,
+  type DataAppShellRightPanelVariant,
+} from "./RightPanel";
 import { DataAppShellSecondaryNav } from "./SecondaryNav";
 
 import type { NavGroup } from "./DataAppShell";
@@ -168,15 +173,19 @@ const DefaultShell = ({
   initialCollapsed = false,
   panelVariant = "docked",
   initialPanelOpen = true,
+  triggerPlacement = "header",
 }: {
   initialCollapsed?: boolean;
   /** Right panel variant — `docked` pushes main, `overlay` slides over it. */
   panelVariant?: DataAppShellRightPanelVariant;
   initialPanelOpen?: boolean;
+  /** Where the panel trigger lives — a top-bar icon button or the floating FAB. */
+  triggerPlacement?: "header" | "fab";
 }) => {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [activeStepId, setActiveStepId] = useState("data-overview");
   const [detailsOpen, setDetailsOpen] = useState(initialPanelOpen);
+  const detailsTriggerRef = React.useRef<HTMLButtonElement>(null);
 
   const activeStepIndex = htsWorkflowSteps.findIndex((s) => s.id === activeStepId);
   const isLastStep = activeStepIndex === htsWorkflowSteps.length - 1;
@@ -212,6 +221,19 @@ const DefaultShell = ({
           >
             {isLastStep ? "Push to Downstream" : "Next"}
           </Button>
+          {/* Details panel trigger as a top-bar icon button (instead of the default FAB) */}
+          {triggerPlacement === "header" && (
+            <DataAppShellRightPanelTrigger
+              ref={detailsTriggerRef}
+              variant="icon"
+              aria-label="Toggle details panel"
+              aria-expanded={detailsOpen}
+              title="Toggle details panel"
+              onClick={() => setDetailsOpen((o) => !o)}
+            >
+              <PanelRight />
+            </DataAppShellRightPanelTrigger>
+          )}
         </>
       }
       showNavRail={!collapsed}
@@ -235,6 +257,8 @@ const DefaultShell = ({
           onOpenChange={setDetailsOpen}
           title="Details"
           icon={<Info className="size-4 text-muted-foreground" />}
+          showTrigger={triggerPlacement === "fab"}
+          triggerRef={triggerPlacement === "header" ? detailsTriggerRef : undefined}
           triggerLabel="Open details panel"
         >
           {/* Example content only — the panel body is a plain slot (chat, history, inspector, …) */}
@@ -284,7 +308,14 @@ export const Default: Story = {
     await step("Version is shown inside the app dropdown under the title", async () => {
       await userEvent.click(canvas.getAllByText("HTS")[0]);
       await waitFor(() => expect(body.getByText("v2.4.1")).toBeInTheDocument());
-      await userEvent.keyboard("{Escape}");
+      // Escape on the menu element itself — userEvent.keyboard targets the
+      // active element, which is unreliable when the preview iframe isn't the
+      // focused window (Storybook UI); the menu misses the key and stays open.
+      fireEvent.keyDown(body.getByRole("menu"), { key: "Escape" });
+      // Wait for the menu to fully unmount — while it is open (or animating
+      // out) radix marks the rest of the page aria-hidden, which would hide
+      // the shell's landmarks from the next step's role queries.
+      await waitFor(() => expect(body.queryByText("v2.4.1")).not.toBeInTheDocument());
     });
 
     await step("Right panel is docked beside the content", async () => {
@@ -318,22 +349,30 @@ export const Default: Story = {
       expect(handle).toHaveAttribute("aria-valuemax", "560");
     });
 
-    await step("Close collapses the panel to the FAB; the FAB re-opens it", async () => {
+    await step("Close returns focus to the top-bar trigger; the trigger re-opens the panel", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Close panel" }));
       expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
-      const fab = canvas.getByRole("button", { name: "Open details panel" });
-      expect(fab).toHaveAttribute("aria-expanded", "false");
-      await waitFor(() => expect(fab).toHaveFocus());
-      await userEvent.click(fab);
+      const trigger = canvas.getByRole("button", { name: "Toggle details panel" });
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
+      await waitFor(() => expect(trigger).toHaveFocus());
+      await userEvent.click(trigger);
       const panel = await canvas.findByRole("complementary", { name: "Details" });
       await waitFor(() => expect(panel).toBeVisible());
+      expect(trigger).toHaveAttribute("aria-expanded", "true");
       await waitFor(() => expect(canvas.getByRole("button", { name: "Close panel" })).toHaveFocus());
     });
 
-    await step("Esc inside the docked panel closes it; re-open via the FAB", async () => {
+    await step("The top-bar trigger toggles the open panel closed", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Toggle details panel" }));
+      expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
+    });
+
+    await step("Esc inside the docked panel closes it; re-open via the trigger", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Toggle details panel" }));
+      await waitFor(() => expect(canvas.getByRole("button", { name: "Close panel" })).toHaveFocus());
       await userEvent.keyboard("{Escape}");
       expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
-      await userEvent.click(canvas.getByRole("button", { name: "Open details panel" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Toggle details panel" }));
       const panel = await canvas.findByRole("complementary", { name: "Details" });
       await waitFor(() => expect(panel).toBeVisible());
     });
@@ -345,8 +384,10 @@ export const Default: Story = {
 
 export const CollapsedWorkflow: Story = {
   name: "Collapsed Workflow",
-  // Also demos the right panel's `overlay` variant (starts closed, FAB only).
-  render: () => <DefaultShell initialCollapsed panelVariant="overlay" initialPanelOpen={false} />,
+  // Also demos the right panel's `overlay` variant (starts closed, FAB trigger).
+  render: () => (
+    <DefaultShell initialCollapsed panelVariant="overlay" initialPanelOpen={false} triggerPlacement="fab" />
+  ),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);

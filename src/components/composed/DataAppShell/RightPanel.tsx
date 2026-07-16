@@ -114,14 +114,14 @@ interface DragHandleProps {
  * keyboard-operable ARIA separator: arrows resize, Home/End jump to min/max.
  */
 function DragHandle({ width, minWidth, maxWidth, onResize, onCommit, onDraggingChange }: DragHandleProps) {
-  const dragState = React.useRef<{ startX: number; startWidth: number } | null>(null);
+  const dragState = React.useRef<{ startX: number; startWidth: number; liveWidth: number } | null>(null);
   const widthRef = React.useRef(width);
   widthRef.current = width;
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     // Primary button / touch only
     if (e.button !== 0) return;
-    dragState.current = { startX: e.clientX, startWidth: widthRef.current };
+    dragState.current = { startX: e.clientX, startWidth: widthRef.current, liveWidth: widthRef.current };
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
@@ -135,17 +135,22 @@ function DragHandle({ width, minWidth, maxWidth, onResize, onCommit, onDraggingC
     if (!dragState.current) return;
     // Handle sits on the left edge — dragging left grows the panel.
     const delta = dragState.current.startX - e.clientX;
-    onResize(clampWidth(dragState.current.startWidth + delta, minWidth, maxWidth));
+    const next = clampWidth(dragState.current.startWidth + delta, minWidth, maxWidth);
+    dragState.current.liveWidth = next;
+    onResize(next);
   };
 
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragState.current) return;
+    // Commit the drag state's own width — pointermove renders lazily, so the
+    // width prop can be one frame stale when pointerup lands.
+    const finalWidth = dragState.current.liveWidth;
     dragState.current = null;
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
     onDraggingChange(false);
-    onCommit(widthRef.current);
+    onCommit(finalWidth);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {

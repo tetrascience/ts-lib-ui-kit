@@ -668,6 +668,7 @@ export const RightPanelOverlay: Story = {
 
 export const NonWorkflowPage: Story = {
   name: "Non-Workflow Page",
+  tags: ["!dev"], // Hides from sidebar, remains testable
   render: () => (
     <DataAppShell
       appName="HTS"
@@ -774,6 +775,7 @@ const InteractiveShell = () => {
 
 export const Interactive: Story = {
   name: "Interactive",
+  tags: ["!dev"], // Hides from sidebar, remains testable
   render: () => <InteractiveShell />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -846,6 +848,7 @@ export const AppDropdownInteraction: Story = {
 
 export const BreadcrumbVariants: Story = {
   name: "Breadcrumb Variants",
+  tags: ["!dev"], // Hides from sidebar, remains testable
   render: () => (
     <DataAppShell
       appName="APP"
@@ -905,6 +908,7 @@ export const BreadcrumbVariants: Story = {
 
 export const HelpButtonPresent: Story = {
   name: "Help Button",
+  tags: ["!dev"], // Hides from sidebar, remains testable
   render: () => (
     <DataAppShell
       appName="APP"
@@ -1033,6 +1037,7 @@ export const WorkflowPanelInteractions: Story = {
 
 export const MultipleNavGroups: Story = {
   name: "Multiple Nav Groups",
+  tags: ["!dev"], // Hides from sidebar, remains testable
   render: () => (
     <DataAppShell
       appName="APP"
@@ -1506,6 +1511,7 @@ const HorizontalNavigationExample = () => {
 
 export const HorizontalNavigation: Story = {
   name: "Horizontal Navigation",
+  tags: ["!dev"], // Hides from sidebar, remains testable
   render: () => <HorizontalNavigationExample />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);

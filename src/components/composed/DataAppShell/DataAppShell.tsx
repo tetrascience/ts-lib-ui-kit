@@ -577,8 +577,10 @@ function DataAppShell({
 
   // CSS-grid template areas per navVariant — the shell knows zones, never
   // domain concepts. Zones absent from the tree simply collapse their track.
+  // The secondary (side) zone starts below the top bar / secondary bar, so
+  // breadcrumbs span the full width beside the primary nav.
   const gridClass = isVertical
-    ? "grid h-screen w-full overflow-hidden [grid-template-columns:auto_auto_minmax(0,1fr)] [grid-template-rows:auto_auto_minmax(0,1fr)] [grid-template-areas:'nav_side_top'_'nav_side_sub'_'nav_side_body']"
+    ? "grid h-screen w-full overflow-hidden [grid-template-columns:auto_auto_minmax(0,1fr)] [grid-template-rows:auto_auto_minmax(0,1fr)] [grid-template-areas:'nav_top_top'_'nav_sub_sub'_'nav_side_body']"
     : "grid h-screen w-full overflow-hidden [grid-template-columns:auto_minmax(0,1fr)] [grid-template-rows:auto_auto_auto_minmax(0,1fr)] [grid-template-areas:'pnav_pnav'_'top_top'_'sub_sub'_'side_body']";
 
   return (
@@ -595,7 +597,9 @@ function DataAppShell({
             (isVertical ? (
               <div className="[grid-area:nav] min-h-0">
                 <PrimarySidebar
-                  collapsible={collapsible}
+                  // With a secondary nav present, the collapse toggle lives
+                  // only there — one affordance, no duplicate chevrons.
+                  collapsible={collapsible && !sidebarPanel}
                   collapsed={collapsed}
                   onCollapsedChange={setCollapsed}
                   {...sidebarProps}

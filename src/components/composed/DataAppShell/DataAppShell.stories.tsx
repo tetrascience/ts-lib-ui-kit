@@ -220,8 +220,8 @@ const ShellDemo = ({
   const isLastStep = activeStepIndex === htsWorkflowSteps.length - 1;
   const isWorkflow = secondary === "workflow-vertical" || secondary === "workflow-horizontal";
 
-  // Horizontal workflow: expanded → full stepper bar under the top bar;
-  // collapsed → compact step dropdown placed beside the breadcrumbs.
+  // Horizontal workflow bar below the breadcrumbs: expanded → full stepper;
+  // collapsed → the items fold into a compact step dropdown in the same bar.
   const horizontalStepNav = (
     <DataAppShellSecondaryNav
       aria-label="Workflow steps"
@@ -252,9 +252,8 @@ const ShellDemo = ({
       onHelpClick={() => console.log("Help")}
       userMenu={<UserMenuButton name="Emily Liu" userRole="ADMIN" />}
       breadcrumbs={htsBreadcrumbs}
-      headerCenter={secondary === "workflow-horizontal" && wfCollapsed ? horizontalStepNav : undefined}
       secondaryBar={
-        secondary === "workflow-horizontal" && !wfCollapsed ? (
+        secondary === "workflow-horizontal" ? (
           <div className="border-b border-border bg-card px-4 py-2">{horizontalStepNav}</div>
         ) : undefined
       }
@@ -448,6 +447,11 @@ export const WorkflowVertical: Story = {
       expect(canvas.getByText("Next")).toBeInTheDocument();
     });
 
+    await step("The collapse toggle lives only in the secondary nav — no chevron on the sidebar", async () => {
+      expect(canvas.queryByRole("button", { name: "Collapse navigation" })).not.toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Collapse" })).toBeInTheDocument();
+    });
+
     await step("Selecting a step advances status derivation", async () => {
       await userEvent.click(canvas.getByRole("button", { name: /Step 2 Name/ }));
       expect(canvas.getByRole("button", { name: /Step 2 Name/ })).toHaveAttribute(
@@ -496,9 +500,14 @@ export const WorkflowHorizontal: Story = {
       expect(canvas.getByText("Step 3 Name")).toBeVisible();
     });
 
-    await step("Collapsing the bar swaps it for a step dropdown in the top bar", async () => {
+    await step("Collapsing folds the items into a step dropdown in the same bar", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Collapse steps" }));
       expect(canvas.queryByText("Step 3 Name")).not.toBeInTheDocument();
+      // The bar stays put (below the breadcrumbs) — only its contents collapse
+      const nav = canvasElement.querySelector(
+        "[data-slot='data-app-shell-secondary-nav'][data-collapsed='true']",
+      );
+      expect(nav).toBeInTheDocument();
       const select = canvas.getByRole("combobox", { name: "Current step" });
       expect(select).toBeVisible();
       expect(select).toHaveTextContent("Step 1 · Step 1 Name");

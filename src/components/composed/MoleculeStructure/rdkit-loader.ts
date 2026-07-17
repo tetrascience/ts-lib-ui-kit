@@ -4,47 +4,52 @@ import type { RDKitModule } from "@rdkit/rdkit"
  * Loader for the RDKit.js WebAssembly module.
  *
  * RDKit ships a ~6.6 MB `.wasm` blob, so it must never be part of the main
- * bundle. Instead we load it lazily, once per page, the first time a molecule
- * actually needs rendering. By default the loader script and WASM are pulled
- * from a public CDN, so consumers of the kit do not need to install
- * `@rdkit/rdkit` or serve any static assets. Consumers who cannot reach a CDN
- * (air-gapped, strict CSP) can point the loader at self-hosted copies via
- * {@link configureRDKit}, or hand it a pre-initialised module.
+ * bundle. It is loaded lazily, once per page, the first time a molecule
+ * actually needs rendering.
+ *
+ * **Air-gapped by default, no CDN.** The loader dynamically imports the
+ * `@rdkit/rdkit` package the consumer has installed — nothing is fetched from a
+ * public CDN. Molecule rendering is opt-in: `@rdkit/rdkit` is an optional
+ * peer dependency, so a consumer that never renders a structure needn't install
+ * it, and one that does simply adds it to their own dependencies.
+ *
+ * Consumers whose bundler doesn't co-locate the `.wasm` next to the glue script
+ * can point the loader at a self-hosted copy via {@link configureRDKit}
+ * (`wasmSrc`), or hand it a module they initialised themselves (`instance`).
  *
  * @see https://www.rdkitjs.com
  */
 
-/** RDKit npm version the CDN URLs are pinned to. */
-export const RDKIT_VERSION = "2025.3.4-1.0.0"
+/** The `initRDKitModule` factory exported by `@rdkit/rdkit`. */
+type RDKitFactory = (options?: {
+  locateFile?: () => string
+  print?: (msg: string) => void
+  printErr?: (msg: string) => void
+}) => Promise<RDKitModule>
 
 /** Options controlling how the RDKit module is located and loaded. */
 export interface RDKitLoaderConfig {
   /**
-   * URL of the `RDKit_minimal.js` loader script. When omitted, a pinned
-   * jsDelivr URL for {@link RDKIT_VERSION} is used.
-   */
-  scriptSrc?: string
-  /**
-   * URL of the `RDKit_minimal.wasm` binary. When omitted, a pinned jsDelivr
-   * URL for {@link RDKIT_VERSION} is used. Passed to RDKit as `locateFile`.
+   * URL of the `RDKit_minimal.wasm` binary, passed to RDKit as `locateFile`.
+   * Set this when your bundler doesn't serve the WASM next to the glue script
+   * (e.g. copy it into your app's public dir and point here). When omitted,
+   * RDKit's own default resolution is used.
    */
   wasmSrc?: string
   /**
-   * A module already initialised by the consumer (e.g. self-hosted, or shared
-   * with other parts of the app). When provided, no network request is made.
+   * A module already initialised by the consumer (e.g. shared with other parts
+   * of the app). When provided, no import or network work is done.
    */
   instance?: RDKitModule
+  /**
+   * Override how the `initRDKitModule` factory is obtained. Defaults to
+   * `import("@rdkit/rdkit")`. Provide this only for unusual setups (custom
+   * bundler resolution, a vendored copy, etc.).
+   */
+  importFactory?: () => Promise<RDKitFactory>
 }
 
-const CDN_BASE = `https://cdn.jsdelivr.net/npm/@rdkit/rdkit@${RDKIT_VERSION}/dist`
-
-const defaultConfig: Required<Omit<RDKitLoaderConfig, "instance">> & {
-  instance?: RDKitModule
-} = {
-  scriptSrc: `${CDN_BASE}/RDKit_minimal.js`,
-  wasmSrc: `${CDN_BASE}/RDKit_minimal.wasm`,
-  instance: undefined,
-}
+const defaultConfig: RDKitLoaderConfig = {}
 
 /**
  * Set process-wide defaults for how RDKit is loaded. Call once, before the
@@ -53,11 +58,8 @@ const defaultConfig: Required<Omit<RDKitLoaderConfig, "instance">> & {
  *
  * @example
  * ```ts
- * // Serve the assets yourself instead of hitting the CDN.
- * configureRDKit({
- *   scriptSrc: "/assets/RDKit_minimal.js",
- *   wasmSrc: "/assets/RDKit_minimal.wasm",
- * })
+ * // Serve the WASM yourself (e.g. copied into /public) — no CDN, air-gapped.
+ * configureRDKit({ wasmSrc: "/assets/RDKit_minimal.wasm" })
  * ```
  */
 export function configureRDKit(config: RDKitLoaderConfig): void {
@@ -67,38 +69,13 @@ export function configureRDKit(config: RDKitLoaderConfig): void {
 
 let loadPromise: Promise<RDKitModule> | null = null
 
-// `window.initRDKitModule` is declared globally by the `@rdkit/rdkit` types.
-
-function injectScript(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(
-      `script[data-rdkit-loader]`,
-    )
-    if (existing) {
-      if (existing.dataset.loaded === "true") {
-        resolve()
-        return
-      }
-      existing.addEventListener("load", () => resolve())
-      existing.addEventListener("error", () =>
-        reject(new Error("Failed to load the RDKit loader script")),
-      )
-      return
-    }
-
-    const script = document.createElement("script")
-    script.src = src
-    script.async = true
-    script.dataset.rdkitLoader = "true"
-    script.addEventListener("load", () => {
-      script.dataset.loaded = "true"
-      resolve()
-    })
-    script.addEventListener("error", () =>
-      reject(new Error(`Failed to load the RDKit loader script from ${src}`)),
-    )
-    document.head.append(script)
-  })
+/** Dynamically import the installed `@rdkit/rdkit` and return its factory. */
+async function importRDKitFactory(): Promise<RDKitFactory> {
+  const mod = (await import("@rdkit/rdkit")) as unknown as {
+    default?: RDKitFactory
+  } & RDKitFactory
+  // The package exports the factory as both `module.exports` and `.default`.
+  return mod.default ?? (mod as RDKitFactory)
 }
 
 /**
@@ -106,7 +83,8 @@ function injectScript(src: string): Promise<void> {
  * compiled only once per page. Safe to call from many components concurrently;
  * they all await the same promise.
  *
- * @throws if run outside a browser, or if the script/WASM cannot be loaded.
+ * @throws if run outside a browser, if `@rdkit/rdkit` isn't installed, or if
+ * the WASM cannot be loaded.
  */
 export function loadRDKit(): Promise<RDKitModule> {
   if (defaultConfig.instance) {
@@ -119,11 +97,15 @@ export function loadRDKit(): Promise<RDKitModule> {
       throw new Error("RDKit can only be loaded in a browser environment")
     }
 
-    if (!window.initRDKitModule) {
-      await injectScript(defaultConfig.scriptSrc)
-    }
-    if (!window.initRDKitModule) {
-      throw new Error("RDKit loader script did not define initRDKitModule")
+    let initRDKitModule: RDKitFactory
+    try {
+      initRDKitModule = await (defaultConfig.importFactory ?? importRDKitFactory)()
+    } catch (cause) {
+      const detail = cause instanceof Error ? ` (${cause.message})` : ""
+      throw new Error(
+        `Failed to load @rdkit/rdkit${detail}. Install it as a dependency to ` +
+          "render molecule structures: `yarn add @rdkit/rdkit`.",
+      )
     }
 
     // RDKit is an Emscripten module: its C++ stdout/stderr (including the noisy
@@ -131,14 +113,13 @@ export function loadRDKit(): Promise<RDKitModule> {
     // flow through `print`/`printErr`, which default to console.log/error.
     // Route them to console.debug so a bad SMILES never spams the host app's
     // console — invalid input is surfaced through the renderer's fallback UI.
-    const initOptions = {
-      locateFile: () => defaultConfig.wasmSrc,
+    return initRDKitModule({
+      ...(defaultConfig.wasmSrc
+        ? { locateFile: () => defaultConfig.wasmSrc as string }
+        : {}),
       print: (msg: string) => console.debug("[RDKit]", msg),
       printErr: (msg: string) => console.debug("[RDKit]", msg),
-    }
-    return await window.initRDKitModule(
-      initOptions as Parameters<typeof window.initRDKitModule>[0],
-    )
+    })
   })()
 
   // Let a failed attempt be retried on the next call rather than caching the

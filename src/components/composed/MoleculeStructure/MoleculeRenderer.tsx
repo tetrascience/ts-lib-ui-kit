@@ -116,10 +116,17 @@ export function MoleculeRenderer({
       data-slot="molecule-renderer"
       className={cn("relative flex items-center justify-center", className)}
       title={label}
+      aria-busy={status === "loading"}
       {...props}
     >
       {status === "loading" &&
-        (loadingContent ?? <Skeleton className="size-full rounded-md" />)}
+        (loadingContent ?? (
+          <Skeleton
+            role="img"
+            aria-label={`Loading structure: ${label}`}
+            className="size-full rounded-md"
+          />
+        ))}
 
       {failed &&
         (errorContent ?? (

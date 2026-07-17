@@ -41,17 +41,20 @@ async function freshLoader() {
   return import("../rdkit-loader")
 }
 
-const originalInit = (window as { initRDKitModule?: unknown }).initRDKitModule
-
 afterEach(() => {
-  // Restore any stubbed globals (e.g. the SSR test stubs `document`) BEFORE
-  // touching `document` below, or this cleanup would throw and leak the stub.
+  // Restore any stubbed globals (e.g. the SSR test stubs `document`).
   vi.unstubAllGlobals()
-  ;(window as { initRDKitModule?: unknown }).initRDKitModule = originalInit
-  document
-    .querySelectorAll("script[data-rdkit-loader]")
-    .forEach((node) => node.remove())
 })
+
+/** A fake `initRDKitModule` factory that records the options it was called with. */
+function makeFactory(module: RDKitModule) {
+  const calls: Array<{ locateFile?: () => string }> = []
+  const factory = vi.fn((options?: { locateFile?: () => string }) => {
+    calls.push(options ?? {})
+    return Promise.resolve(module)
+  })
+  return { factory, calls }
+}
 
 describe("moleculeToSvg", () => {
   it("strips RDKit's XML prolog so the SVG embeds in inline HTML", async () => {
@@ -129,58 +132,60 @@ describe("moleculeToSvg", () => {
 })
 
 describe("configureRDKit + loadRDKit", () => {
-  it("returns a pre-configured instance without touching the network", async () => {
+  it("returns a pre-configured instance without importing the package", async () => {
     const { configureRDKit, loadRDKit } = await freshLoader()
     const { module } = makeFakeRDKit()
-    const initSpy = vi.fn()
-    ;(window as { initRDKitModule?: unknown }).initRDKitModule = initSpy
+    const { factory } = makeFactory(module)
 
-    configureRDKit({ instance: module })
+    configureRDKit({ instance: module, importFactory: () => Promise.resolve(factory) })
     await expect(loadRDKit()).resolves.toBe(module)
-    expect(initSpy).not.toHaveBeenCalled()
+    expect(factory).not.toHaveBeenCalled()
   })
 
-  it("memoises so the module is initialised only once", async () => {
-    const { loadRDKit } = await freshLoader()
+  it("loads via the imported factory (air-gapped, no CDN)", async () => {
+    const { configureRDKit, loadRDKit } = await freshLoader()
     const { module } = makeFakeRDKit()
-    const initSpy = vi.fn(() => Promise.resolve(module))
-    ;(window as { initRDKitModule?: unknown }).initRDKitModule = initSpy
+    const { factory } = makeFactory(module)
 
+    configureRDKit({ importFactory: () => Promise.resolve(factory) })
+    await expect(loadRDKit()).resolves.toBe(module)
+    expect(factory).toHaveBeenCalledTimes(1)
+  })
+
+  it("passes wasmSrc through as RDKit's locateFile", async () => {
+    const { configureRDKit, loadRDKit } = await freshLoader()
+    const { module } = makeFakeRDKit()
+    const { factory, calls } = makeFactory(module)
+
+    configureRDKit({
+      wasmSrc: "/assets/RDKit_minimal.wasm",
+      importFactory: () => Promise.resolve(factory),
+    })
+    await loadRDKit()
+    expect(calls[0].locateFile?.()).toBe("/assets/RDKit_minimal.wasm")
+  })
+
+  it("memoises so the factory runs only once", async () => {
+    const { configureRDKit, loadRDKit } = await freshLoader()
+    const { module } = makeFakeRDKit()
+    const { factory } = makeFactory(module)
+
+    configureRDKit({ importFactory: () => Promise.resolve(factory) })
     const [a, b] = await Promise.all([loadRDKit(), loadRDKit()])
     expect(a).toBe(module)
     expect(b).toBe(module)
-    expect(initSpy).toHaveBeenCalledTimes(1)
+    expect(factory).toHaveBeenCalledTimes(1)
   })
 
   it("ignores configureRDKit once loading has begun", async () => {
     const { configureRDKit, loadRDKit } = await freshLoader()
     const { module } = makeFakeRDKit()
-    ;(window as { initRDKitModule?: unknown }).initRDKitModule = vi.fn(() =>
-      Promise.resolve(module),
-    )
+    const { factory } = makeFactory(module)
 
+    configureRDKit({ importFactory: () => Promise.resolve(factory) })
     const promise = loadRDKit()
     // Too late — this must be a no-op and not swap in a different instance.
     configureRDKit({ instance: makeFakeRDKit().module })
-    await expect(promise).resolves.toBe(module)
-  })
-
-  it("injects the loader script when initRDKitModule is absent", async () => {
-    const { loadRDKit } = await freshLoader()
-    const { module } = makeFakeRDKit()
-    delete (window as { initRDKitModule?: unknown }).initRDKitModule
-
-    const promise = loadRDKit()
-    const script = document.querySelector<HTMLScriptElement>(
-      "script[data-rdkit-loader]",
-    )
-    expect(script).not.toBeNull()
-
-    // The script "loads" and defines the global; then init resolves.
-    ;(window as { initRDKitModule?: unknown }).initRDKitModule = vi.fn(() =>
-      Promise.resolve(module),
-    )
-    script!.dispatchEvent(new Event("load"))
     await expect(promise).resolves.toBe(module)
   })
 
@@ -193,51 +198,30 @@ describe("configureRDKit + loadRDKit", () => {
     await expect(loadRDKit()).rejects.toThrow(/browser environment/)
   })
 
-  it("reuses an already-loaded loader script without re-injecting", async () => {
-    const { loadRDKit } = await freshLoader()
-    delete (window as { initRDKitModule?: unknown }).initRDKitModule
-    const existing = document.createElement("script")
-    existing.dataset.rdkitLoader = "true"
-    existing.dataset.loaded = "true"
-    document.head.append(existing)
-
-    // The existing loaded script short-circuits injection; with no global
-    // defined afterwards, loadRDKit reports the missing-init error.
-    await expect(loadRDKit()).rejects.toThrow(/did not define initRDKitModule/)
-    expect(document.querySelectorAll("script[data-rdkit-loader]")).toHaveLength(1)
+  it("throws a helpful error when @rdkit/rdkit cannot be loaded", async () => {
+    const { configureRDKit, loadRDKit } = await freshLoader()
+    configureRDKit({
+      importFactory: () => Promise.reject(new Error("Cannot find module")),
+    })
+    await expect(loadRDKit()).rejects.toThrow(/Failed to load @rdkit\/rdkit/)
   })
 
-  it("rejects when a pending existing loader script errors", async () => {
-    const { loadRDKit } = await freshLoader()
-    delete (window as { initRDKitModule?: unknown }).initRDKitModule
-    const existing = document.createElement("script")
-    existing.dataset.rdkitLoader = "true"
-    document.head.append(existing)
-
-    const promise = loadRDKit()
-    existing.dispatchEvent(new Event("error"))
-    await expect(promise).rejects.toThrow(/Failed to load the RDKit loader script/)
-  })
-
-  it("rejects and allows a retry when the script fails to load", async () => {
-    const { loadRDKit } = await freshLoader()
-    delete (window as { initRDKitModule?: unknown }).initRDKitModule
-
-    const first = loadRDKit()
-    document
-      .querySelector<HTMLScriptElement>("script[data-rdkit-loader]")!
-      .dispatchEvent(new Event("error"))
-    await expect(first).rejects.toThrow(/RDKit loader script/)
-
-    // The failed attempt is not cached: a second call tries again.
+  it("does not cache a failed attempt (allows a retry)", async () => {
+    const { configureRDKit, loadRDKit } = await freshLoader()
     const { module } = makeFakeRDKit()
-    const second = loadRDKit()
-    ;(window as { initRDKitModule?: unknown }).initRDKitModule = vi.fn(() =>
-      Promise.resolve(module),
-    )
-    document
-      .querySelector<HTMLScriptElement>("script[data-rdkit-loader]")!
-      .dispatchEvent(new Event("load"))
-    await expect(second).resolves.toBe(module)
+    const { factory } = makeFactory(module)
+    let attempt = 0
+    configureRDKit({
+      importFactory: () => {
+        attempt += 1
+        return attempt === 1
+          ? Promise.reject(new Error("transient"))
+          : Promise.resolve(factory)
+      },
+    })
+
+    await expect(loadRDKit()).rejects.toThrow(/Failed to load @rdkit\/rdkit/)
+    // The failed attempt is not cached: a second call tries again and succeeds.
+    await expect(loadRDKit()).resolves.toBe(module)
   })
 })

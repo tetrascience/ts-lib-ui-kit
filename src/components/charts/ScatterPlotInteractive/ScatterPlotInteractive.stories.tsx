@@ -470,8 +470,6 @@ export const CustomTooltips: Story = {
     sizeMapping: { type: "continuous", field: "intensity", sizeRange: [5, 18] },
     tooltip: {
       enabled: true,
-      // content returns trusted markup (badges), so opt into HTML rendering.
-      html: true,
       content: (point: ScatterPoint) => {
         const status = point.metadata?.status ?? "Unknown";
         const value = typeof point.metadata?.value === "number" ? (point.metadata.value as number).toFixed(1) : "–";

@@ -109,12 +109,6 @@ export interface TooltipConfig {
   enabled?: boolean;
   /** Custom tooltip content function. Lines are separated with `<br>`. */
   content?: (point: ScatterPoint) => string;
-  /**
-   * Render tooltip lines as HTML instead of escaped text. Off by default so
-   * point labels/metadata can't be injected as markup; enable only when
-   * `content` returns trusted markup (e.g. a molecule SVG).
-   */
-  html?: boolean;
   /** Fields to display in default tooltip */
   fields?: string[];
   /**

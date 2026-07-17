@@ -92,29 +92,6 @@ describe("useChartTooltip", () => {
     expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { hoverdistance: 18 });
   });
 
-  it("escapes tooltip content as text by default (no HTML injection)", () => {
-    renderHook(
-      { getLines: () => ["<b>bold</b><img src=x onerror=alert(1)>"] },
-      makePlotDiv(),
-    );
-    fire("plotly_hover", { points: [{ x: 1, y: 2, bbox: { x0: 0, x1: 0, y0: 0, y1: 0 } }] });
-    const tip = contentEl();
-    // Rendered as literal text — no element was created from the string.
-    expect(tip?.querySelector("b")).toBeNull();
-    expect(tip?.querySelector("img")).toBeNull();
-    expect(tip?.textContent).toContain("<b>bold</b>");
-  });
-
-  it("renders tooltip content as HTML when the caller opts in", () => {
-    renderHook(
-      { html: true, getLines: () => ["<b>bold</b>"] },
-      makePlotDiv(),
-    );
-    fire("plotly_hover", { points: [{ x: 1, y: 2, bbox: { x0: 0, x1: 0, y0: 0, y1: 0 } }] });
-    const tip = contentEl();
-    expect(tip?.querySelector("b")?.textContent).toBe("bold");
-  });
-
   it("anchors bars to their true top via the axis projection", () => {
     renderHook({}, makePlotDiv());
     fire("plotly_hover", {

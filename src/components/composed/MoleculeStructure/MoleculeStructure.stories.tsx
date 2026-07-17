@@ -1,23 +1,18 @@
 import rdkitWasmUrl from "@rdkit/rdkit/dist/RDKit_minimal.wasm?url"
-import * as React from "react"
 import { expect, waitFor, within } from "storybook/test"
 
 import { MoleculeRenderer } from "./MoleculeRenderer"
-import { configureRDKit, moleculeToSvg } from "./rdkit-loader"
-import { useRDKit } from "./use-rdkit"
+import { configureRDKit } from "./rdkit-loader"
 
-import type { ScatterPoint } from "@/components/charts/ScatterPlotInteractive/types"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import type { ColumnDef } from "@tanstack/react-table"
 
-import { ScatterPlotInteractive } from "@/components/charts/ScatterPlotInteractive"
 import { DataTable } from "@/components/ui/data-table/data-table"
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
-import { useIsDark } from "@/hooks/use-is-dark"
 
 // ---------------------------------------------------------------------------
 // Air-gapped RDKit — no CDN.
@@ -204,64 +199,4 @@ export const InDataTable: Story = {
     )
   },
   parameters: { layout: "padded", zephyr: { testCaseId: "" } },
-}
-
-// ---------------------------------------------------------------------------
-// Integration: interactive scatter custom tooltip
-// ---------------------------------------------------------------------------
-
-const SCATTER_DATA: ScatterPoint[] = [
-  { id: "CPD-0142", x: 12, y: 34, label: "CPD-0142", metadata: { smiles: MOLECULES.aspirin.smiles } },
-  { id: "CPD-0143", x: 45, y: 52, label: "CPD-0143", metadata: { smiles: MOLECULES.caffeine.smiles } },
-  { id: "CPD-0144", x: 68, y: 21, label: "CPD-0144", metadata: { smiles: MOLECULES.ibuprofen.smiles } },
-  { id: "CPD-0145", x: 30, y: 70, label: "CPD-0145", metadata: { smiles: MOLECULES.paracetamol.smiles } },
-]
-
-function ScatterWithStructures() {
-  const { rdkit } = useRDKit()
-  const isDark = useIsDark()
-
-  const content = React.useCallback(
-    (point: ScatterPoint) => {
-      const smiles = String(point.metadata?.smiles ?? "")
-      // The chart tooltip bubble uses the `foreground` colour — the inverse of
-      // the page surface — so draw the structure in the opposite mode for
-      // contrast (light structure on the dark bubble in light theme).
-      const svg =
-        rdkit && smiles
-          ? moleculeToSvg(rdkit, smiles, { width: 140, height: 110, dark: !isDark })
-          : null
-      return [
-        `<b>${point.label ?? point.id}</b>`,
-        svg ?? "Loading structure…",
-      ].join("<br>")
-    },
-    [rdkit, isDark],
-  )
-
-  return (
-    <ScatterPlotInteractive
-      data={SCATTER_DATA}
-      title="Hits — hover for structure"
-      xAxis={{ title: "Property A" }}
-      yAxis={{ title: "Property B" }}
-      // content returns a trusted molecule SVG, so opt into HTML rendering.
-      tooltip={{ enabled: true, html: true, content }}
-      width={640}
-      height={420}
-    />
-  )
-}
-
-/** `moleculeToSvg` feeding an `InteractiveScatter` hover tooltip. */
-export const InInteractiveScatter: Story = {
-  render: () => <ScatterWithStructures />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    await waitFor(() =>
-      expect(canvas.getByText("Hits — hover for structure")).toBeInTheDocument(),
-    )
-    expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument()
-  },
-  parameters: { layout: "fullscreen", zephyr: { testCaseId: "" } },
 }

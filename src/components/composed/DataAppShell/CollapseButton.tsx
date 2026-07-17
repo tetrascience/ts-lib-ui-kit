@@ -5,6 +5,7 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 const CHEVRONS = {
   left: ChevronLeft,
@@ -35,9 +36,11 @@ function ShellCollapseButton({
   ...props
 }: ShellCollapseButtonProps) {
   const Chevron = CHEVRONS[direction];
-  const mergedClassName = className
-    ? `w-5 h-5 shrink-0 text-muted-foreground hover:text-primary hover:border-primary ${className}`
-    : "w-5 h-5 shrink-0 text-muted-foreground hover:text-primary hover:border-primary";
+  // cn() so consumer classes properly override the base (tailwind-merge)
+  const mergedClassName = cn(
+    "w-5 h-5 shrink-0 text-muted-foreground hover:text-primary hover:border-primary",
+    className,
+  );
   return (
     <TooltipProvider>
       <Tooltip>

@@ -9,15 +9,9 @@ import {
   useRef,
   useState,
 } from "react";
-import { createHighlighter } from "shiki";
 
 import type { ComponentProps, CSSProperties, HTMLAttributes } from "react";
-import type {
-  BundledLanguage,
-  BundledTheme,
-  HighlighterGeneric,
-  ThemedToken,
-} from "shiki";
+import type { BundledLanguage, ThemedToken } from "shiki";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getCodeBlockHighlighter } from "@/lib/shiki";
 import { cn } from "@/lib/utils";
 
 
@@ -132,12 +127,6 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
   code: "",
 });
 
-// Highlighter cache (singleton per language)
-const highlighterCache = new Map<
-  string,
-  Promise<HighlighterGeneric<BundledLanguage, BundledTheme>>
->();
-
 // Maps every github-light/github-dark token color onto a --shiki-* CSS
 // variable backed by the design-token palette (defined in index.tailwind.css
 // for :root and .dark), so code colors follow the active theme and meet
@@ -184,23 +173,6 @@ const getTokensCacheKey = (code: string, language: BundledLanguage) => {
   return `${language}:${code.length}:${start}:${end}`;
 };
 
-const getHighlighter = (
-  language: BundledLanguage
-): Promise<HighlighterGeneric<BundledLanguage, BundledTheme>> => {
-  const cached = highlighterCache.get(language);
-  if (cached) {
-    return cached;
-  }
-
-  const highlighterPromise = createHighlighter({
-    langs: [language],
-    themes: ["github-light", "github-dark"],
-  });
-
-  highlighterCache.set(language, highlighterPromise);
-  return highlighterPromise;
-};
-
 // Create raw tokens for immediate display while highlighting loads
 const createRawTokens = (code: string): TokenizedCode => ({
   bg: "transparent",
@@ -240,16 +212,16 @@ export const highlightCode = (
     subscribers.get(tokensCacheKey)?.add(callback);
   }
 
-  // Start highlighting in background - fire-and-forget async pattern
-  getHighlighter(language)
+  // Start highlighting in background - fire-and-forget async pattern.
+  // The shared slim highlighter (SW-2007) loads shiki/core, the grammar, and
+  // the themes through dynamic imports; unsupported languages fall back to
+  // plaintext via the resolved `lang`.
+  getCodeBlockHighlighter(language)
     // oxlint-disable-next-line eslint-plugin-promise(prefer-await-to-then)
-    .then((highlighter) => {
-      const availableLangs = highlighter.getLoadedLanguages();
-      const langToUse = availableLangs.includes(language) ? language : "text";
-
+    .then(({ highlighter, lang }) => {
       const result = highlighter.codeToTokens(code, {
         colorReplacements: SHIKI_COLOR_REPLACEMENTS,
-        lang: langToUse,
+        lang,
         themes: {
           dark: "github-dark",
           light: "github-light",

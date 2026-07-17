@@ -18,12 +18,16 @@ vi.mock("plotly.js-dist", () => ({ default: plotly }));
 
 const roots: Array<{ root: Root; container: HTMLElement }> = [];
 
-function render(data: PeakData[]) {
+// Async act so the lazy Plotly import (SW-2007) resolves and the draw
+// completes before assertions run.
+async function render(data: PeakData[]) {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
   roots.push({ root, container });
-  act(() => root.render(<Electropherogram data={data} width={600} height={400} />));
+  await act(async () => {
+    root.render(<Electropherogram data={data} width={600} height={400} />);
+  });
   return container;
 }
 
@@ -42,14 +46,14 @@ afterEach(() => {
 });
 
 describe("Electropherogram", () => {
-  it("renders an empty-state message and skips plotting when data is empty", () => {
-    const container = render([]);
+  it("renders an empty-state message and skips plotting when data is empty", async () => {
+    const container = await render([]);
     expect(container.textContent).toContain("No data available");
     expect(plotly.newPlot).not.toHaveBeenCalled();
   });
 
-  it("plots the base traces when data is provided", () => {
-    render([
+  it("plots the base traces when data is provided", async () => {
+    await render([
       { position: 1, base: "A", peakA: 50, peakT: 10, peakG: 10, peakC: 10 },
       { position: 2, base: "T", peakA: 10, peakT: 50, peakG: 10, peakC: 10 },
     ]);

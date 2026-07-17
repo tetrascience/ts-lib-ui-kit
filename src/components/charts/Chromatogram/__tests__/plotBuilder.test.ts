@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 
+import { loadPlotly } from "../../plotly-loader";
 import { CHROMATOGRAM_LAYOUT, CHROMATOGRAM_TRACE } from "../constants";
 import { buildConfig, buildLayout, buildTraceData, createClickHandler, createHoverHandler, createUnhoverHandler } from "../plotBuilder";
 
@@ -24,6 +25,12 @@ vi.mock("../boundaryMarkers", () => ({
 vi.mock("../regionOverlays", () => ({
   createRegionOverlayTraces: vi.fn(() => [{ type: "scatter", name: "__region__" }]),
 }));
+
+// The hover/unhover handlers call getLoadedPlotly() (SW-2007 lazy loader);
+// prime the loader so it resolves to the mock before any handler runs.
+beforeAll(async () => {
+  await loadPlotly();
+});
 
 const mockTheme: PlotlyThemeColors = {
   paperBg: "transparent",

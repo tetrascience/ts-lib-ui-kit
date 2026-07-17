@@ -1,7 +1,9 @@
-import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { useChartTooltip } from "../ChartTooltip";
+import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+
+import type Plotly from "plotly.js-dist";
 
 import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { CHART_COLORS } from "@/utils/colors";
@@ -182,15 +184,23 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
       fillFrame: true,
     };
 
-    Plotly.newPlot(plotRef.current, plotData, layout, config);
-    bindTooltip(plotRef.current);
+    // Plotly is loaded lazily so it stays out of the consumer's main chunk
+    // (SW-2007); the draw is skipped if the effect re-runs or unmounts first.
+    let cancelled = false;
+    let plotElement: HTMLDivElement | null = null;
+    void loadPlotly().then((plotly) => {
+      if (cancelled || !plotRef.current) return;
+      plotly.newPlot(plotRef.current, plotData, layout, config);
+      bindTooltip(plotRef.current);
 
-    // Capture ref value for cleanup
-    const plotElement = plotRef.current;
+      // Capture ref value for cleanup
+      plotElement = plotRef.current;
+    });
 
     return () => {
+      cancelled = true;
       if (plotElement) {
-        Plotly.purge(plotElement);
+        getLoadedPlotly().purge(plotElement);
       }
     };
   }, [data, width, height, aTrace, tTrace, gTrace, cTrace, maxValue, positions, theme, bindTooltip]);

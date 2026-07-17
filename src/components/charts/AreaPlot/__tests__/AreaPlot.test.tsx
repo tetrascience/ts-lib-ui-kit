@@ -59,12 +59,14 @@ const dataSeries: AreaPlotProps["dataSeries"] = [
 
 const roots: Array<{ root: Root; container: HTMLElement }> = [];
 
-function render(props: AreaPlotProps) {
+// Async act so the lazy Plotly import (SW-2007) resolves and the draw
+// completes before assertions run.
+async function render(props: AreaPlotProps) {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
   roots.push({ root, container });
-  act(() => {
+  await act(async () => {
     root.render(<AreaPlot {...props} />);
   });
 }
@@ -91,8 +93,8 @@ afterEach(() => {
 });
 
 describe("AreaPlot sizing", () => {
-  it("uses explicit width/height and disables Plotly responsiveness", () => {
-    render({ dataSeries, width: 800, height: 400 });
+  it("uses explicit width/height and disables Plotly responsiveness", async () => {
+    await render({ dataSeries, width: 800, height: 400 });
 
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
     const { layout, config } = lastPlotCall();
@@ -101,27 +103,27 @@ describe("AreaPlot sizing", () => {
     expect(config.responsive).toBe(false);
   });
 
-  it("reserves tick/legend space via automargin on both axes", () => {
-    render({ dataSeries, width: 800, height: 400 });
+  it("reserves tick/legend space via automargin on both axes", async () => {
+    await render({ dataSeries, width: 800, height: 400 });
     const { layout } = lastPlotCall();
     expect(layout.xaxis.automargin).toBe(true);
     expect(layout.yaxis.automargin).toBe(true);
   });
 
-  it("defaults axis titles to undefined instead of Columns/Rows", () => {
-    render({ dataSeries, width: 800, height: 400 });
+  it("defaults axis titles to undefined instead of Columns/Rows", async () => {
+    await render({ dataSeries, width: 800, height: 400 });
     const { layout } = lastPlotCall();
     expect(layout.xaxis.title.text).toBeUndefined();
     expect(layout.yaxis.title.text).toBeUndefined();
   });
 
-  it("fills its container from the measured size when width/height are omitted", () => {
-    render({ dataSeries });
+  it("fills its container from the measured size when width/height are omitted", async () => {
+    await render({ dataSeries });
 
     // No measurement yet → no plot is created with a zero-size canvas.
     expect(plotly.newPlot).not.toHaveBeenCalled();
 
-    act(() => {
+    await act(async () => {
       triggerResize(320, 200);
     });
 
@@ -131,13 +133,13 @@ describe("AreaPlot sizing", () => {
     expect(layout.height).toBe(200);
   });
 
-  it("fills only the omitted dimension (fixed width + measured height)", () => {
-    render({ dataSeries, width: 500 });
+  it("fills only the omitted dimension (fixed width + measured height)", async () => {
+    await render({ dataSeries, width: 500 });
 
     // Height is still unmeasured, so the plot must not initialize at height 0.
     expect(plotly.newPlot).not.toHaveBeenCalled();
 
-    act(() => {
+    await act(async () => {
       triggerResize(999, 300);
     });
 
@@ -148,15 +150,15 @@ describe("AreaPlot sizing", () => {
     expect(layout.height).toBe(300);
   });
 
-  it("relayouts in place on resize instead of recreating the plot", () => {
-    render({ dataSeries });
+  it("relayouts in place on resize instead of recreating the plot", async () => {
+    await render({ dataSeries });
 
-    act(() => {
+    await act(async () => {
       triggerResize(320, 200);
     });
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
 
-    act(() => {
+    await act(async () => {
       triggerResize(640, 300);
     });
 
@@ -165,8 +167,8 @@ describe("AreaPlot sizing", () => {
     expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { width: 640, height: 300 });
   });
 
-  it("purges the plot on unmount", () => {
-    render({ dataSeries, width: 800, height: 400 });
+  it("purges the plot on unmount", async () => {
+    await render({ dataSeries, width: 800, height: 400 });
     const { el } = lastPlotCall();
     act(() => {
       roots[0].root.unmount();

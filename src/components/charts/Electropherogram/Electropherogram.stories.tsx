@@ -1,9 +1,8 @@
-import { expect, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 
 import { Electropherogram } from "./Electropherogram";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
-
 
 const meta: Meta<typeof Electropherogram> = {
   title: "Data Viz/Electropherogram",
@@ -80,7 +79,12 @@ export const MockupMatch: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      await waitFor(
+        () => {
+          expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Four traces are rendered", async () => {
@@ -108,7 +112,12 @@ export const WithExplicitBases: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      await waitFor(
+        () => {
+          expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Four traces are rendered", async () => {
@@ -144,7 +153,12 @@ export const CustomColors: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      await waitFor(
+        () => {
+          expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Four traces are rendered", async () => {

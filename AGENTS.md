@@ -104,6 +104,14 @@ See [`DESIGN.md`](./DESIGN.md) for the full design document — tokens, componen
 - Compound components re-export named sub-components alongside root (e.g. `Dialog`, `DialogTrigger`, `DialogContent`)
 - Chart components use `CHART_COLORS` from `src/utils/colors.ts` and `usePlotlyTheme` hook for theme sync
 
+### Heavy dependencies must stay lazy (SW-2007)
+
+The kit ships preserved ES modules with all deps externalized, so a static import of a heavy library lands it in every consumer's **main** chunk. Never statically import these — use the established lazy paths:
+
+- **Plotly**: never `import Plotly from "plotly.js-dist"` (types via `import type` are fine). Draw via `loadPlotly()` / `getLoadedPlotly()` from `src/components/charts/plotly-loader.ts` (see any chart component for the pattern).
+- **Shiki**: never import from `"shiki"` at runtime (full bundle ≈ 200 grammars; OOMs consumer builds). Use the shared slim highlighter in `src/lib/shiki.ts` (`shiki/core` + explicit language set; extend via `registerCodeBlockLanguage`).
+- **mermaid / KaTeX / streamdown plugins**: only via `useStreamdownPlugins()` (`src/components/ai/use-streamdown-plugins.ts`), which dynamic-imports the plugin set. Do not statically import `@streamdown/*` plugins or `src/components/ai/streamdown-plugins.ts` from component code.
+
 ## Testing
 
 - **Prefer Storybook play function tests** for React components — real browser via Playwright, more realistic than jsdom

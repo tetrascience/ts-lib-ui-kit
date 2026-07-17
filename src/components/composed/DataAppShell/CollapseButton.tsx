@@ -27,8 +27,17 @@ export interface ShellCollapseButtonProps extends Omit<React.ComponentProps<type
  * a chevron, placed in a zone's header row when expanded and at the top of the
  * collapsed rail. One component so every zone's trigger looks identical.
  */
-function ShellCollapseButton({ direction, label, tooltipSide = "right", ...props }: ShellCollapseButtonProps) {
+function ShellCollapseButton({
+  direction,
+  label,
+  tooltipSide = "right",
+  className,
+  ...props
+}: ShellCollapseButtonProps) {
   const Chevron = CHEVRONS[direction];
+  const mergedClassName = className
+    ? `w-5 h-5 shrink-0 text-muted-foreground hover:text-primary hover:border-primary ${className}`
+    : "w-5 h-5 shrink-0 text-muted-foreground hover:text-primary hover:border-primary";
   return (
     <TooltipProvider>
       <Tooltip>
@@ -37,9 +46,9 @@ function ShellCollapseButton({ direction, label, tooltipSide = "right", ...props
             data-slot="data-app-shell-collapse-button"
             variant="outline"
             size="icon"
-            className="w-5 h-5 shrink-0 text-muted-foreground hover:text-primary hover:border-primary"
-            aria-label={label}
             {...props}
+            className={mergedClassName}
+            aria-label={label}
           >
             <Chevron className="w-3.5 h-3.5" />
           </Button>

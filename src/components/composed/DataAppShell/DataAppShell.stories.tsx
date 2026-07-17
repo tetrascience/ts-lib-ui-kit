@@ -386,7 +386,7 @@ export const Default: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T4665" },
+    zephyr: { testCaseId: "" },
   },
 };
 

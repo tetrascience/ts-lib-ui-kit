@@ -183,9 +183,7 @@ export function ChartTooltip({ anchor, bubbleRef }: ChartTooltipProps) {
             // return rich markup (e.g. `<b>`, badges, or a molecule SVG). The
             // strings originate from developer-authored content functions and
             // the library's own builders, not raw untrusted input.
-            <div
-              key={`${index}-${line}`}
-              dangerouslySetInnerHTML={{ __html: line }}
+<div key={index} dangerouslySetInnerHTML={{ __html: line }} />
             />
           ))}
           <span

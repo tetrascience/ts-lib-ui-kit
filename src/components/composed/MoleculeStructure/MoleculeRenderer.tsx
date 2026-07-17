@@ -40,7 +40,7 @@ export interface MoleculeRendererProps
   loadingContent?: React.ReactNode
   /** Rendered when the SMILES is invalid or RDKit fails to load. */
   errorContent?: React.ReactNode
-  /** Called once when the SMILES cannot be parsed into a valid molecule. */
+/** Called when the SMILES cannot be parsed into a valid molecule. */
   onError?: (smiles: string) => void
 }
 

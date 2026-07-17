@@ -13,15 +13,6 @@ export interface MoleculeRendererProps
   extends Omit<React.ComponentProps<"div">, "children" | "onError"> {
   /** SMILES string to render as a 2D structure. */
   smiles: string
-  /**
-   * Drawing resolution width in pixels. This sets the SVG's internal
-   * coordinate space and aspect ratio; the rendered structure is vector and
-   * scales to fill the wrapper, so size the wrapper via `className`.
-   * @default 250
-   */
-  width?: number
-  /** Drawing resolution height in pixels. @default 200 */
-  height?: number
   /** Optional caption drawn beneath the structure by RDKit. */
   legend?: string
   /**
@@ -43,10 +34,17 @@ export interface MoleculeRendererProps
   /**
    * Called when the SMILES cannot be parsed into a valid molecule. May fire
    * more than once for the same input — e.g. under React StrictMode, or when
-   * the drawing inputs (size, theme, options) change and the SVG is recomputed.
+   * the theme or draw options change and the SVG is recomputed.
    */
   onError?: (smiles: string) => void
 }
+
+/**
+ * Internal draw resolution. The structure is vector and scales to fill the
+ * wrapper (see {@link makeResponsive}); a square viewBox keeps it centred in
+ * containers of any shape without distortion.
+ */
+const DRAW_SIZE = 300
 
 /** Make an RDKit SVG fluid: fill the wrapper and scale with its aspect ratio. */
 function makeResponsive(svg: string): string {
@@ -71,8 +69,6 @@ function makeResponsive(svg: string): string {
  */
 export function MoleculeRenderer({
   smiles,
-  width = 250,
-  height = 200,
   legend,
   dark,
   alt,
@@ -96,8 +92,8 @@ export function MoleculeRenderer({
   const svg = React.useMemo(() => {
     if (!rdkit) return null
     const drawn = moleculeToSvg(rdkit, smiles, {
-      width,
-      height,
+      width: DRAW_SIZE,
+      height: DRAW_SIZE,
       dark: useDark,
       legend,
       drawOptions,
@@ -107,7 +103,7 @@ export function MoleculeRenderer({
       return null
     }
     return makeResponsive(drawn)
-  }, [rdkit, smiles, width, height, useDark, legend, drawOptions])
+  }, [rdkit, smiles, useDark, legend, drawOptions])
 
   const failed = status === "error" || (status === "ready" && svg === null)
 

@@ -5,9 +5,7 @@ import { MoleculeRenderer } from "./MoleculeRenderer"
 import { configureRDKit } from "./rdkit-loader"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import type { ColumnDef } from "@tanstack/react-table"
 
-import { DataTable } from "@/components/ui/data-table/data-table"
 import {
   HoverCard,
   HoverCardContent,
@@ -28,12 +26,9 @@ import {
 
 configureRDKit({ wasmSrc: rdkitWasmUrl })
 
-// A few real, well-known SMILES for the visual stories.
+// A couple of real, well-known SMILES for the visual stories.
 const MOLECULES = {
-  ethanol: { smiles: "CCO", label: "Ethanol" },
   aspirin: { smiles: "CC(=O)Oc1ccccc1C(=O)O", label: "Aspirin" },
-  caffeine: { smiles: "Cn1cnc2c1c(=O)n(C)c(=O)n2C", label: "Caffeine" },
-  ibuprofen: { smiles: "CC(C)Cc1ccc(cc1)C(C)C(=O)O", label: "Ibuprofen" },
   paracetamol: { smiles: "CC(=O)Nc1ccc(O)cc1", label: "Paracetamol" },
 } as const
 
@@ -47,10 +42,20 @@ const meta: Meta<typeof MoleculeRenderer> = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** The core primitive: a 2D structure from SMILES, sized via `className`. */
+/**
+ * The primitive fills its container — it has no size props. Drag the box's
+ * bottom-right corner: the vector structure scales to fit at any size.
+ */
 export const Default: Story = {
   args: { smiles: MOLECULES.aspirin.smiles, alt: "Aspirin" },
-  render: (args) => <MoleculeRenderer {...args} className="size-48" />,
+  render: (args) => (
+    <div
+      className="resize overflow-hidden rounded-md border border-border p-2"
+      style={{ width: 240, height: 240 }}
+    >
+      <MoleculeRenderer {...args} className="size-full" />
+    </div>
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     // Exposed to assistive tech as a single labelled image.
@@ -58,23 +63,6 @@ export const Default: Story = {
       expect(
         canvas.getByRole("img", { name: "Aspirin" }).querySelector("svg"),
       ).toBeInTheDocument(),
-    )
-  },
-  parameters: { zephyr: { testCaseId: "" } },
-}
-
-/** The SVG is vector: size the wrapper and it scales to fit. */
-export const Sizes: Story = {
-  render: () => (
-    <div className="flex items-end gap-4">
-      <MoleculeRenderer smiles={MOLECULES.caffeine.smiles} alt="Caffeine" className="size-16" />
-      <MoleculeRenderer smiles={MOLECULES.caffeine.smiles} alt="Caffeine" className="size-28" />
-      <MoleculeRenderer smiles={MOLECULES.caffeine.smiles} alt="Caffeine" className="size-44" />
-    </div>
-  ),
-  play: async ({ canvasElement }) => {
-    await waitFor(() =>
-      expect(canvasElement.querySelectorAll("svg").length).toBeGreaterThanOrEqual(3),
     )
   },
   parameters: { zephyr: { testCaseId: "" } },
@@ -125,78 +113,4 @@ export const InHoverCard: Story = {
     ).toBeInTheDocument()
   },
   parameters: { zephyr: { testCaseId: "" } },
-}
-
-// ---------------------------------------------------------------------------
-// Integration: DataTable cell
-// ---------------------------------------------------------------------------
-
-interface CompoundRow {
-  id: string
-  smiles: string
-  qed: number
-}
-
-const COMPOUND_ROWS: CompoundRow[] = [
-  { id: "CPD-0142", smiles: MOLECULES.aspirin.smiles, qed: 0.81 },
-  { id: "CPD-0143", smiles: MOLECULES.caffeine.smiles, qed: 0.74 },
-  { id: "CPD-0144", smiles: MOLECULES.ibuprofen.smiles, qed: 0.69 },
-]
-
-const compoundColumns: ColumnDef<CompoundRow>[] = [
-  {
-    accessorKey: "smiles",
-    header: "Structure",
-    cell: ({ row }) => (
-      <MoleculeRenderer
-        smiles={row.original.smiles}
-        alt={`${row.original.id} structure`}
-        className="size-14"
-      />
-    ),
-  },
-  {
-    accessorKey: "id",
-    header: "Compound",
-    cell: ({ row }) => (
-      <HoverCard openDelay={100}>
-        <HoverCardTrigger asChild>
-          <button type="button" className="text-sm underline decoration-dotted">
-            {row.original.id}
-          </button>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-48">
-          <MoleculeRenderer
-            smiles={row.original.smiles}
-            alt={`${row.original.id} structure`}
-            className="h-36 w-full"
-          />
-        </HoverCardContent>
-      </HoverCard>
-    ),
-  },
-  {
-    accessorKey: "qed",
-    header: "QED",
-    cell: ({ row }) => (
-      <span className="tabular-nums">{row.original.qed.toFixed(2)}</span>
-    ),
-  },
-]
-
-/** Structures rendered directly in `DataTable` cells, with a hover-card ID. */
-export const InDataTable: Story = {
-  render: () => (
-    <div className="w-[520px]">
-      <DataTable columns={compoundColumns} data={COMPOUND_ROWS} />
-    </div>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    expect(canvas.getByRole("table")).toBeInTheDocument()
-    await waitFor(() =>
-      expect(canvasElement.querySelectorAll("svg").length).toBeGreaterThanOrEqual(3),
-    )
-  },
-  parameters: { layout: "padded", zephyr: { testCaseId: "" } },
 }

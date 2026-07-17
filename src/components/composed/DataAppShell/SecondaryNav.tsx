@@ -1,9 +1,18 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { Check, ChevronLeft, ChevronRight, type LucideIcon } from "lucide-react";
+import { Check, ChevronRight, type LucideIcon } from "lucide-react";
 import * as React from "react";
 
+import { ShellCollapseButton } from "./CollapseButton";
+import { useOptionalDataAppShell } from "./ShellContext";
+
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
@@ -129,9 +138,11 @@ export interface DataAppShellSecondaryNavProps
   onSelect?: (key: string, step: NavStep) => void;
   /** Panel title shown in the vertical header (e.g. "Steps") */
   title?: React.ReactNode;
-  /** Vertical only — renders the collapse toggle */
+  /** Renders the collapse toggle. Vertical collapses to an icon rail;
+   *  horizontal collapses to a compact step dropdown. */
   collapsible?: boolean;
-  /** Controlled collapsed state (vertical only) */
+  /** Controlled collapsed state. When omitted inside a `DataAppShell`, the
+   *  shell's single collapse state drives it (one toggle for all zones). */
   collapsed?: boolean;
   /** Uncontrolled initial collapsed state */
   defaultCollapsed?: boolean;
@@ -228,10 +239,19 @@ function DataAppShellSecondaryNav({
 }: DataAppShellSecondaryNavProps) {
   const resolvedOrientation: DataAppShellSecondaryNavOrientation = orientation ?? "vertical";
 
+  // Inside a DataAppShell with `hideNavOnCollapse`, the shell's single collapse
+  // toggle drives this zone too (nav rail + secondary collapse together into
+  // one icon rail). Otherwise the zone owns its collapse — unless explicitly
+  // controlled via the `collapsed` prop, which always wins.
+  const shell = useOptionalDataAppShell();
+  const followShell = collapsed === undefined && shell != null && shell.hideNavOnCollapse;
   const [internalCollapsed, setInternalCollapsed] = React.useState(defaultCollapsed);
-  const isCollapsed = resolvedOrientation === "vertical" && (collapsed ?? internalCollapsed);
+  const isCollapsed = collapsed ?? (followShell ? shell.collapsed : internalCollapsed);
   const setCollapsed = (next: boolean) => {
-    if (collapsed === undefined) setInternalCollapsed(next);
+    if (collapsed === undefined) {
+      if (followShell) shell.setCollapsed(next);
+      else setInternalCollapsed(next);
+    }
     onCollapsedChange?.(next);
   };
 
@@ -246,8 +266,8 @@ function DataAppShellSecondaryNav({
     onSelect?.(step.id, step);
   };
 
-  // ── Collapsed icon rail ──────────────────────────────────────────────────
-  if (isCollapsed) {
+  // ── Collapsed icon rail (vertical) ───────────────────────────────────────
+  if (resolvedOrientation === "vertical" && isCollapsed) {
     return (
       <nav
         data-slot="data-app-shell-secondary-nav"
@@ -261,21 +281,12 @@ function DataAppShellSecondaryNav({
       >
         <TooltipProvider>
           <div className="flex justify-center items-center h-10 shrink-0 border-b border-sidebar-border">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  data-slot="data-app-shell-secondary-nav-toggle"
-                  variant="outline"
-                  size="icon"
-                  className="w-5 h-5"
-                  aria-label="Expand"
-                  onClick={() => setCollapsed(false)}
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Expand</TooltipContent>
-            </Tooltip>
+            <ShellCollapseButton
+              data-slot="data-app-shell-secondary-nav-toggle"
+              direction="right"
+              label="Expand"
+              onClick={() => setCollapsed(false)}
+            />
           </div>
           <div
             data-slot="data-app-shell-secondary-nav-items"
@@ -317,18 +328,68 @@ function DataAppShellSecondaryNav({
     );
   }
 
+  // ── Collapsed horizontal — compact step dropdown (place in the top bar) ───
+  if (resolvedOrientation === "horizontal" && collapsible && isCollapsed) {
+    const active = activeKey == null ? undefined : flat.find((s) => s.id === activeKey);
+    return (
+      <nav
+        data-slot="data-app-shell-secondary-nav"
+        data-orientation="horizontal"
+        data-collapsed="true"
+        className={cn("flex items-center gap-1.5 min-w-0", className)}
+        {...props}
+      >
+        <Select
+          value={activeKey}
+          onValueChange={(id) => {
+            const step = flat.find((s) => s.id === id);
+            if (step) handleSelect(step);
+          }}
+        >
+          <SelectTrigger
+            data-slot="data-app-shell-secondary-nav-step-select"
+            size="sm"
+            aria-label="Current step"
+            className="h-7 min-w-0"
+          >
+            <SelectValue placeholder="Select step">
+              {active
+                ? `Step ${(indexById.get(active.id) ?? 0) + 1} · ${active.label}`
+                : "Select step"}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {flat.map((step, index) => (
+              <SelectItem key={step.id} value={step.id} disabled={step.disabled}>
+                {`Step ${index + 1} · ${step.label}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <ShellCollapseButton
+          data-slot="data-app-shell-secondary-nav-toggle"
+          direction="down"
+          label="Show steps"
+          tooltipSide="bottom"
+          onClick={() => setCollapsed(false)}
+        />
+      </nav>
+    );
+  }
+
   // ── Horizontal stepper ───────────────────────────────────────────────────
   if (resolvedOrientation === "horizontal") {
     return (
       <nav
         data-slot="data-app-shell-secondary-nav"
         data-orientation="horizontal"
+        data-collapsed="false"
         className={cn(dataAppShellSecondaryNavVariants({ orientation: "horizontal" }), className)}
         {...props}
       >
         <div
           data-slot="data-app-shell-secondary-nav-items"
-          className="flex flex-row items-center gap-1 min-w-0 overflow-x-auto"
+          className="flex flex-row items-center gap-1 min-w-0 overflow-x-auto flex-1"
         >
           {flat.map((step, index) => {
             const status = statusOf(step);
@@ -361,6 +422,16 @@ function DataAppShellSecondaryNav({
             );
           })}
         </div>
+        {collapsible && (
+          <ShellCollapseButton
+            data-slot="data-app-shell-secondary-nav-toggle"
+            direction="up"
+            label="Collapse steps"
+            tooltipSide="bottom"
+            className="ml-2"
+            onClick={() => setCollapsed(true)}
+          />
+        )}
       </nav>
     );
   }
@@ -417,23 +488,12 @@ function DataAppShellSecondaryNav({
         >
           <span className="flex-1 truncate">{title}</span>
           {collapsible && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    data-slot="data-app-shell-secondary-nav-toggle"
-                    variant="outline"
-                    size="icon"
-                    className="w-5 h-5"
-                    aria-label="Collapse"
-                    onClick={() => setCollapsed(true)}
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">Collapse</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <ShellCollapseButton
+              data-slot="data-app-shell-secondary-nav-toggle"
+              direction="left"
+              label="Collapse"
+              onClick={() => setCollapsed(true)}
+            />
           )}
         </div>
       )}

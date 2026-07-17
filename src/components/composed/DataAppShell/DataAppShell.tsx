@@ -1,7 +1,9 @@
-import { ArrowLeft, HelpCircle, Menu } from "lucide-react";
+import { ArrowLeft, ChevronRight, HelpCircle, Menu } from "lucide-react";
 import * as React from "react";
 
+import { ShellCollapseButton } from "./CollapseButton";
 import { DataAppShellPrimaryNav } from "./PrimaryNav";
+import { DataAppShellProvider, type DataAppShellNavVariant } from "./ShellContext";
 
 import type { NavGroup } from "./PrimaryNav";
 
@@ -85,13 +87,36 @@ export interface DataAppShellProps {
   /** Slot for right-side actions in the top nav (e.g. data count pills, next button) */
   headerActions?: React.ReactNode;
 
-  // -- Shell --
-  /** Slot rendered between the icon rail and the content (e.g. a vertical `DataAppShellSecondaryNav`) */
+  // -- Shell zones --
+  /** Primary nav axis — `vertical` (sidebar/rail, default) or `horizontal` (top nav row) */
+  navVariant?: DataAppShellNavVariant;
+  /** Slot rendered between the primary nav and the content (e.g. a vertical `DataAppShellSecondaryNav`) */
   sidebarPanel?: React.ReactNode;
+  /** Full-width zone between the top bar and the content row (e.g. a horizontal `DataAppShellSecondaryNav`) */
+  secondaryBar?: React.ReactNode;
   /** Slot rendered after the content (e.g. a DataAppShellRightPanel) — its FAB anchors to the content row */
   rightPanel?: React.ReactNode;
-  /** Show the desktop icon nav rail. Set false to reclaim width when the panel is collapsed. */
+  /** Show the primary nav zone. Set false to hide it entirely. */
   showNavRail?: boolean; // default true
+  /** Show the top bar zone. Set false to hide it entirely. */
+  showTopBar?: boolean; // default true
+
+  // -- Collapse (vertical nav only) --
+  /** Render the collapse toggle on the primary sidebar. Defaults to `true`. */
+  collapsible?: boolean;
+  /** Controlled collapse state — primary + secondary zones collapse together */
+  collapsed?: boolean;
+  /** Uncontrolled initial collapse state */
+  defaultCollapsed?: boolean;
+  /** Called whenever the shell collapse state flips */
+  onCollapsedChange?: (collapsed: boolean) => void;
+  /** Collapsing also hides the primary rail, leaving one icon rail (the secondary
+   *  nav) with an expand affordance — or a floating expand button if there is none. */
+  hideNavOnCollapse?: boolean;
+  /** Media query that auto-collapses the shell while it matches.
+   *  Pass `false` to disable. Defaults to `"(max-width: 1023px)"`. */
+  autoCollapse?: string | false;
+
   /** Main content area */
   children: React.ReactNode;
   /** Additional className for the root container */
@@ -273,16 +298,87 @@ function SidebarBody({
 }
 
 // =============================================================================
-// Icon rail sidebar (desktop only — hidden on mobile)
+// Primary sidebar (desktop only — hidden on mobile). Expanded sidebar with the
+// collapse chevron in the brand row; collapses to an icon rail with the expand
+// chevron directly under the logo (mirrors the SW-2118 playground).
 // =============================================================================
 
-function IconRailSidebar(props: Omit<SidebarBodyProps, "compact" | "onAfterNavClick">) {
+interface PrimarySidebarProps extends Omit<SidebarBodyProps, "compact" | "onAfterNavClick"> {
+  collapsible: boolean;
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
+}
+
+function PrimarySidebar({ collapsible, collapsed, onCollapsedChange, ...sidebarProps }: PrimarySidebarProps) {
+  const { appName, appFullName, appIcon, version, onAppNameClick, backToPlatformPath, onBackToPlatform } =
+    sidebarProps;
+  const headerMenuProps = {
+    appName,
+    appFullName,
+    appIcon,
+    version,
+    onAppNameClick,
+    backToPlatformPath,
+    onBackToPlatform,
+  };
+
+  if (collapsed) {
+    return (
+      <div
+        data-slot="data-app-sidebar-rail"
+        data-collapsed="true"
+        className="hidden md:flex w-12 flex-col shrink-0 bg-sidebar border-r border-sidebar-border h-full z-50"
+      >
+        <DataAppShellPrimaryNav
+          variant="rail"
+          aria-label="Application navigation"
+          navGroups={sidebarProps.navGroups}
+          header={
+            <div className="flex flex-col items-center gap-2">
+              <AppHeaderMenu {...headerMenuProps} compact />
+              {collapsible && (
+                <ShellCollapseButton
+                  direction="right"
+                  label="Expand navigation"
+                  onClick={() => onCollapsedChange(false)}
+                />
+              )}
+            </div>
+          }
+          user={sidebarProps.userMenu}
+          className="h-full w-full"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
-      data-slot="data-app-sidebar-rail"
-      className="hidden md:flex w-12 flex-col shrink-0 bg-sidebar border-r border-sidebar-border h-full z-50"
+      data-slot="data-app-sidebar"
+      data-collapsed="false"
+      className="hidden md:flex w-[220px] flex-col shrink-0 bg-sidebar border-r border-sidebar-border h-full z-50"
     >
-      <SidebarBody compact {...props} />
+      <DataAppShellPrimaryNav
+        variant="sidebar"
+        aria-label="Application navigation"
+        navGroups={sidebarProps.navGroups}
+        header={
+          <div className="flex items-center gap-2 w-full min-w-0">
+            <div className="flex-1 min-w-0">
+              <AppHeaderMenu {...headerMenuProps} compact={false} />
+            </div>
+            {collapsible && (
+              <ShellCollapseButton
+                direction="left"
+                label="Collapse navigation"
+                onClick={() => onCollapsedChange(true)}
+              />
+            )}
+          </div>
+        }
+        user={sidebarProps.userMenu}
+        className="h-full w-full"
+      />
     </div>
   );
 }
@@ -402,13 +498,65 @@ function DataAppShell({
   onHelpClick,
   headerCenter,
   headerActions,
+  navVariant = "vertical",
   sidebarPanel,
+  secondaryBar,
   rightPanel,
   showNavRail = true,
+  showTopBar = true,
+  collapsible = true,
+  collapsed: collapsedProp,
+  defaultCollapsed = false,
+  onCollapsedChange,
+  hideNavOnCollapse = false,
+  autoCollapse = "(max-width: 1023px)",
   children,
   className,
 }: DataAppShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+
+  // ── Single collapse toggle (controlled/uncontrolled) ───────────────────────
+  const [internalCollapsed, setInternalCollapsed] = React.useState(defaultCollapsed);
+  const collapsed = collapsedProp ?? internalCollapsed;
+  const collapsedRef = React.useRef(collapsed);
+  collapsedRef.current = collapsed;
+  // Set when the media query (not the user) collapsed the shell, so leaving
+  // the breakpoint restores the expanded state without fighting manual toggles.
+  const autoCollapsedRef = React.useRef(false);
+
+  const setCollapsed = React.useCallback(
+    (next: boolean) => {
+      autoCollapsedRef.current = false;
+      if (collapsedProp === undefined) setInternalCollapsed(next);
+      onCollapsedChange?.(next);
+    },
+    [collapsedProp, onCollapsedChange],
+  );
+
+  // ── Responsive auto-collapse below the breakpoint ───────────────────────────
+  // The media-query handler lives in a ref so the subscription survives
+  // re-renders without re-running for every collapse/callback change.
+  const applyAutoCollapseRef = React.useRef((matches: boolean) => void matches);
+  applyAutoCollapseRef.current = (matches: boolean) => {
+    if (matches && !collapsedRef.current) {
+      if (collapsedProp === undefined) setInternalCollapsed(true);
+      onCollapsedChange?.(true);
+      autoCollapsedRef.current = true;
+    } else if (!matches && autoCollapsedRef.current) {
+      autoCollapsedRef.current = false;
+      if (collapsedProp === undefined) setInternalCollapsed(false);
+      onCollapsedChange?.(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (autoCollapse === false || navVariant !== "vertical" || !collapsible) return;
+    const mql = window.matchMedia(autoCollapse);
+    applyAutoCollapseRef.current(mql.matches);
+    const onChange = (e: MediaQueryListEvent) => applyAutoCollapseRef.current(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, [autoCollapse, navVariant, collapsible]);
 
   const sidebarProps = {
     appName,
@@ -422,59 +570,113 @@ function DataAppShell({
     userMenu,
   };
 
+  // hideNavOnCollapse — the primary nav zone leaves the grid entirely while
+  // collapsed; the secondary zone (if any) becomes the single icon rail.
+  const navHidden = !showNavRail || (hideNavOnCollapse && collapsed);
+  const isVertical = navVariant === "vertical";
+
+  // CSS-grid template areas per navVariant — the shell knows zones, never
+  // domain concepts. Zones absent from the tree simply collapse their track.
+  const gridClass = isVertical
+    ? "grid h-screen w-full overflow-hidden [grid-template-columns:auto_auto_minmax(0,1fr)] [grid-template-rows:auto_auto_minmax(0,1fr)] [grid-template-areas:'nav_side_top'_'nav_side_sub'_'nav_side_body']"
+    : "grid h-screen w-full overflow-hidden [grid-template-columns:auto_minmax(0,1fr)] [grid-template-rows:auto_auto_auto_minmax(0,1fr)] [grid-template-areas:'pnav_pnav'_'top_top'_'sub_sub'_'side_body']";
+
   return (
-    <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-      <div
-        data-slot="data-app-shell"
-        className={cn("flex flex-row w-full h-screen overflow-hidden", className)}
-      >
-        {/* Desktop icon rail (hidden on mobile, or when showNavRail is false) */}
-        {showNavRail && <IconRailSidebar {...sidebarProps} />}
-
-        {/* Mobile sidebar Sheet */}
-        <SheetContent
-          side="left"
-          showCloseButton={false}
-          className="p-0 bg-sidebar border-r border-sidebar-border data-[side=left]:w-[220px] data-[side=left]:sm:w-[220px] data-[side=left]:sm:max-w-[220px] flex flex-col"
+    <DataAppShellProvider value={{ navVariant, collapsed, setCollapsed, hideNavOnCollapse }}>
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <div
+          data-slot="data-app-shell"
+          data-nav-variant={navVariant}
+          data-collapsed={collapsed || undefined}
+          className={cn(gridClass, className)}
         >
-          <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <SheetDescription className="sr-only">
-            Application navigation menu
-          </SheetDescription>
-          <SidebarBody
-            compact={false}
-            onAfterNavClick={() => setMobileNavOpen(false)}
-            {...sidebarProps}
-          />
-        </SheetContent>
+          {/* Primary nav zone */}
+          {!navHidden &&
+            (isVertical ? (
+              <div className="[grid-area:nav] min-h-0">
+                <PrimarySidebar
+                  collapsible={collapsible}
+                  collapsed={collapsed}
+                  onCollapsedChange={setCollapsed}
+                  {...sidebarProps}
+                />
+              </div>
+            ) : (
+              <div className="[grid-area:pnav] hidden md:block border-b border-sidebar-border bg-sidebar px-3 py-1.5">
+                <DataAppShellPrimaryNav
+                  variant="top"
+                  aria-label="Application navigation"
+                  navGroups={navGroups}
+                  header={<AppHeaderMenu {...sidebarProps} compact menuSide="bottom" />}
+                  user={userMenu}
+                />
+              </div>
+            ))}
 
-        {/* Right: top nav + panel + content */}
-        <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
-          <TopNav
-            breadcrumbs={breadcrumbs}
-            onHelpClick={onHelpClick}
-            headerCenter={headerCenter}
-            headerActions={headerActions}
-            mobileTrigger={
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Open navigation menu"
-                  className="md:hidden w-7 h-7 shrink-0 text-muted-foreground"
-                >
-                  <Menu className="w-4 h-4" />
-                </Button>
-              </SheetTrigger>
-            }
-          />
+          {/* Floating expand affordance — hideNavOnCollapse with no secondary rail */}
+          {hideNavOnCollapse && collapsed && !sidebarPanel && (
+            <Button
+              data-slot="data-app-shell-expand-fab"
+              variant="outline"
+              size="icon-sm"
+              aria-label="Expand navigation"
+              className="absolute left-2 top-2 z-50 shadow-elevation-2"
+              onClick={() => setCollapsed(false)}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          )}
 
-          {/* relative — anchors the right panel's floating FAB trigger */}
-          <div className="relative flex flex-1 min-h-0 overflow-hidden">
-            {/* Sidebar panel slot (e.g. WorkflowPanel) */}
-            {sidebarPanel}
+          {/* Mobile sidebar Sheet */}
+          <SheetContent
+            side="left"
+            showCloseButton={false}
+            className="p-0 bg-sidebar border-r border-sidebar-border data-[side=left]:w-[220px] data-[side=left]:sm:w-[220px] data-[side=left]:sm:max-w-[220px] flex flex-col"
+          >
+            <SheetTitle className="sr-only">Navigation</SheetTitle>
+            <SheetDescription className="sr-only">
+              Application navigation menu
+            </SheetDescription>
+            <SidebarBody
+              compact={false}
+              onAfterNavClick={() => setMobileNavOpen(false)}
+              {...sidebarProps}
+            />
+          </SheetContent>
 
-            {/* Content area */}
+          {/* Secondary (side) zone — e.g. a vertical DataAppShellSecondaryNav */}
+          {sidebarPanel && <div className="[grid-area:side] min-h-0 flex">{sidebarPanel}</div>}
+
+          {/* Top bar zone */}
+          {showTopBar && (
+            <div className="[grid-area:top] min-w-0">
+              <TopNav
+                breadcrumbs={breadcrumbs}
+                onHelpClick={onHelpClick}
+                headerCenter={headerCenter}
+                headerActions={headerActions}
+                mobileTrigger={
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Open navigation menu"
+                      className="md:hidden w-7 h-7 shrink-0 text-muted-foreground"
+                    >
+                      <Menu className="w-4 h-4" />
+                    </Button>
+                  </SheetTrigger>
+                }
+              />
+            </div>
+          )}
+
+          {/* Secondary bar zone — e.g. a horizontal DataAppShellSecondaryNav */}
+          {secondaryBar && <div className="[grid-area:sub] min-w-0">{secondaryBar}</div>}
+
+          {/* Body zone: content + right panel. relative — anchors the right
+              panel's floating FAB trigger */}
+          <div className="[grid-area:body] relative flex min-h-0 min-w-0 overflow-hidden">
             <main
               data-slot="data-app-shell-content"
               className="flex-1 min-w-0 overflow-auto bg-background"
@@ -486,8 +688,8 @@ function DataAppShell({
             {rightPanel}
           </div>
         </div>
-      </div>
-    </Sheet>
+      </Sheet>
+    </DataAppShellProvider>
   );
 }
 

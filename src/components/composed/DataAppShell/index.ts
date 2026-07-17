@@ -32,3 +32,7 @@ export type {
   NavStep,
   NavStepStatus,
 } from "./SecondaryNav";
+export { useDataAppShell, useOptionalDataAppShell } from "./ShellContext";
+export type { DataAppShellContextValue, DataAppShellNavVariant } from "./ShellContext";
+export { ShellCollapseButton } from "./CollapseButton";
+export type { ShellCollapseButtonProps } from "./CollapseButton";

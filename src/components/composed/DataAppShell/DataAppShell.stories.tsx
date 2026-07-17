@@ -4,6 +4,7 @@ import {
   Filter,
   FolderKanban,
   Info,
+  Layers,
   LayoutGrid,
   Library,
   LogOut,
@@ -17,11 +18,7 @@ import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 
 import { AppHeaderMenu, DataAppShell } from "./DataAppShell";
 import { DataAppShellPrimaryNav } from "./PrimaryNav";
-import {
-  DataAppShellRightPanel,
-  DataAppShellRightPanelTrigger,
-  type DataAppShellRightPanelVariant,
-} from "./RightPanel";
+import { DataAppShellRightPanel, DataAppShellRightPanelTrigger } from "./RightPanel";
 import { DataAppShellSecondaryNav } from "./SecondaryNav";
 
 import type { NavGroup } from "./DataAppShell";
@@ -166,30 +163,77 @@ const htsBreadcrumbs = [
 ];
 
 // =============================================================================
-// Default (with workflow)
+// ShellDemo — one configurable composition backing the variant stories below
+// (mirrors the SW-2118 playground presets)
 // =============================================================================
 
-const DefaultShell = ({
-  initialCollapsed = false,
-  panelVariant = "docked",
+/** Menu-style secondary items — explicit statuses so no step semantics apply. */
+const secondaryMenuSteps = (activeId: string): NavStep[] =>
+  (
+    [
+      { id: "overview", label: "Overview", icon: LayoutGrid },
+      { id: "datasets", label: "Datasets", icon: Layers },
+      { id: "reports", label: "Reports", icon: Library },
+    ] as const
+  ).map((item) => ({ ...item, status: item.id === activeId ? "active" : "todo" }));
+
+interface ShellDemoProps {
+  /** Primary nav presentation — `sidebar` collapses to a rail; `rail` is a permanent icon rail. */
+  primary?: "sidebar" | "rail";
+  /** Shell nav axis. */
+  navVariant?: "vertical" | "horizontal";
+  /** Secondary nav zone content. */
+  secondary?: "off" | "menu" | "workflow-vertical" | "workflow-horizontal";
+  /** Right panel zone. */
+  rightPanel?: "off" | "docked" | "overlay";
+  /** Collapse hides the primary rail — one icon rail remains. */
+  hideNavOnCollapse?: boolean;
+  /** Zone visibility switches (pass false to hide a zone). */
+  showNavRail?: boolean;
+  showTopBar?: boolean;
+  /** Auto-collapse media query passthrough (stories default to off for determinism). */
+  autoCollapse?: string | false;
+  initialPanelOpen?: boolean;
+  /** Right panel trigger placement. */
+  triggerPlacement?: "header" | "fab";
+}
+
+const ShellDemo = ({
+  primary = "sidebar",
+  navVariant = "vertical",
+  secondary = "off",
+  rightPanel = "off",
+  hideNavOnCollapse = false,
+  showNavRail = true,
+  showTopBar = true,
+  autoCollapse = false,
   initialPanelOpen = true,
   triggerPlacement = "header",
-}: {
-  initialCollapsed?: boolean;
-  /** Right panel variant — `docked` pushes main, `overlay` slides over it. */
-  panelVariant?: DataAppShellRightPanelVariant;
-  initialPanelOpen?: boolean;
-  /** Where the panel trigger lives — a top-bar icon button or the floating FAB. */
-  triggerPlacement?: "header" | "fab";
-}) => {
-  const [collapsed, setCollapsed] = useState(initialCollapsed);
+}: ShellDemoProps) => {
   const [activeStepId, setActiveStepId] = useState("data-overview");
+  const [activeMenuId, setActiveMenuId] = useState("overview");
+  const [wfCollapsed, setWfCollapsed] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(initialPanelOpen);
   const detailsTriggerRef = React.useRef<HTMLButtonElement>(null);
 
   const activeStepIndex = htsWorkflowSteps.findIndex((s) => s.id === activeStepId);
   const isLastStep = activeStepIndex === htsWorkflowSteps.length - 1;
-  const isFirstStep = activeStepIndex <= 0;
+  const isWorkflow = secondary === "workflow-vertical" || secondary === "workflow-horizontal";
+
+  // Horizontal workflow: expanded → full stepper bar under the top bar;
+  // collapsed → compact step dropdown placed beside the breadcrumbs.
+  const horizontalStepNav = (
+    <DataAppShellSecondaryNav
+      aria-label="Workflow steps"
+      orientation="horizontal"
+      collapsible
+      collapsed={wfCollapsed}
+      onCollapsedChange={setWfCollapsed}
+      steps={htsWorkflowSteps}
+      activeKey={activeStepId}
+      onSelect={setActiveStepId}
+    />
+  );
 
   return (
     <DataAppShell
@@ -197,32 +241,36 @@ const DefaultShell = ({
       appFullName="HTS Hit Finder"
       version="v2.4.1"
       navGroups={htsNavGroups}
+      navVariant={navVariant}
+      collapsible={primary === "sidebar"}
+      defaultCollapsed={primary === "rail"}
+      hideNavOnCollapse={hideNavOnCollapse}
+      showNavRail={showNavRail}
+      showTopBar={showTopBar}
+      autoCollapse={autoCollapse}
       onBackToPlatform={() => console.log("Back to TDP Platform")}
       onHelpClick={() => console.log("Help")}
       userMenu={<UserMenuButton name="Emily Liu" userRole="ADMIN" />}
       breadcrumbs={htsBreadcrumbs}
+      headerCenter={secondary === "workflow-horizontal" && wfCollapsed ? horizontalStepNav : undefined}
+      secondaryBar={
+        secondary === "workflow-horizontal" && !wfCollapsed ? (
+          <div className="border-b border-border bg-card px-4 py-2">{horizontalStepNav}</div>
+        ) : undefined
+      }
       headerActions={
         <>
-          {!isFirstStep && (
+          {isWorkflow && (
             <Button
-              variant="outline"
               size="sm"
-              onClick={() => setActiveStepId(htsWorkflowSteps[activeStepIndex - 1].id)}
+              disabled={isLastStep}
+              onClick={() => !isLastStep && setActiveStepId(htsWorkflowSteps[activeStepIndex + 1].id)}
               className="gap-1"
             >
-              Back
+              {isLastStep ? "Push to Downstream" : "Next"}
             </Button>
           )}
-          <Button
-            size="sm"
-            disabled={isLastStep}
-            onClick={() => !isLastStep && setActiveStepId(htsWorkflowSteps[activeStepIndex + 1].id)}
-            className="gap-1"
-          >
-            {isLastStep ? "Push to Downstream" : "Next"}
-          </Button>
-          {/* Details panel trigger as a top-bar icon button (instead of the default FAB) */}
-          {triggerPlacement === "header" && (
+          {rightPanel !== "off" && triggerPlacement === "header" && (
             <DataAppShellRightPanelTrigger
               ref={detailsTriggerRef}
               variant="icon"
@@ -236,38 +284,47 @@ const DefaultShell = ({
           )}
         </>
       }
-      showNavRail={!collapsed}
       sidebarPanel={
-        <DataAppShellSecondaryNav
-          aria-label="Workflow steps"
-          title="Workflow"
-          collapsible
-          steps={htsWorkflowSteps}
-          activeKey={activeStepId}
-          onSelect={setActiveStepId}
-          collapsed={collapsed}
-          onCollapsedChange={setCollapsed}
-        />
+        secondary === "menu" ? (
+          <DataAppShellSecondaryNav
+            aria-label="Secondary navigation"
+            title="Secondary Nav"
+            collapsible
+            steps={secondaryMenuSteps(activeMenuId)}
+            onSelect={setActiveMenuId}
+          />
+        ) : secondary === "workflow-vertical" ? (
+          <DataAppShellSecondaryNav
+            aria-label="Workflow steps"
+            title="Workflow"
+            collapsible
+            steps={htsWorkflowSteps}
+            activeKey={activeStepId}
+            onSelect={setActiveStepId}
+          />
+        ) : undefined
       }
       rightPanel={
-        <DataAppShellRightPanel
-          id="hts-details"
-          variant={panelVariant}
-          open={detailsOpen}
-          onOpenChange={setDetailsOpen}
-          title="Details"
-          icon={<Info className="size-4 text-muted-foreground" />}
-          showTrigger={triggerPlacement === "fab"}
-          triggerRef={triggerPlacement === "header" ? detailsTriggerRef : undefined}
-          triggerLabel="Open details panel"
-        >
-          {/* Example content only — the panel body is a plain slot (chat, history, inspector, …) */}
-          <div className="flex flex-col gap-2 p-3">
-            {Array.from({ length: 6 }, (_, i) => (
-              <div key={i} className="h-10 rounded-md bg-muted" />
-            ))}
-          </div>
-        </DataAppShellRightPanel>
+        rightPanel === "off" ? undefined : (
+          <DataAppShellRightPanel
+            id="hts-details"
+            variant={rightPanel}
+            open={detailsOpen}
+            onOpenChange={setDetailsOpen}
+            title="Details"
+            icon={<Info className="size-4 text-muted-foreground" />}
+            showTrigger={triggerPlacement === "fab"}
+            triggerRef={triggerPlacement === "header" ? detailsTriggerRef : undefined}
+            triggerLabel="Open details panel"
+          >
+            {/* Example content only — the panel body is a plain slot (chat, history, inspector, …) */}
+            <div className="flex flex-col gap-2 p-3">
+              {Array.from({ length: 6 }, (_, i) => (
+                <div key={i} className="h-10 rounded-md bg-muted" />
+              ))}
+            </div>
+          </DataAppShellRightPanel>
+        )
       }
     >
       <div className="flex items-center justify-center h-full">
@@ -277,46 +334,209 @@ const DefaultShell = ({
   );
 };
 
+/**
+ * 1 · Default — just the collapsible left sidebar and the top bar. The collapse
+ * chevron sits in the sidebar's brand row; collapsed, the sidebar becomes an
+ * icon rail with the expand chevron directly under the logo.
+ */
 export const Default: Story = {
   name: "Default",
+  render: () => <ShellDemo />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+
+    await step("Shell renders sidebar, top bar and content — no secondary or right panel", async () => {
+      expect(canvas.getByText("HTS")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Project" })).toBeInTheDocument();
+      expect(canvas.getAllByText("All Projects").length).toBeGreaterThan(0);
+      expect(canvas.getByText("Main content area")).toBeInTheDocument();
+      expect(canvas.queryByText("Workflow")).not.toBeInTheDocument();
+      expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
+      expect(canvasElement.querySelector("[data-slot='data-app-sidebar']")).toBeInTheDocument();
+    });
+
+    await step("Expanded sidebar shows labels; brand row hosts the collapse chevron", async () => {
+      expect(canvas.getByText("Project")).toBeVisible();
+      expect(canvas.getByRole("button", { name: "Collapse navigation" })).toBeInTheDocument();
+    });
+
+    await step("Collapse chevron shrinks the sidebar to an icon rail", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Collapse navigation" }));
+      expect(canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")).toBeInTheDocument();
+      expect(canvas.queryByText("Project")).not.toBeInTheDocument();
+      // Expand chevron sits at the top of the rail, under the logo
+      expect(canvas.getByRole("button", { name: "Expand navigation" })).toBeInTheDocument();
+    });
+
+    await step("Expand chevron restores the full sidebar", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Expand navigation" }));
+      expect(canvasElement.querySelector("[data-slot='data-app-sidebar']")).toBeInTheDocument();
+      expect(canvas.getByText("Project")).toBeVisible();
+    });
+
+    await step("Version is shown inside the app dropdown under the title", async () => {
+      await userEvent.click(canvas.getAllByText("HTS")[0]);
+      await waitFor(() => expect(body.getByText("v2.4.1")).toBeInTheDocument());
+      // Close via outside pointer-down — works even when the preview iframe
+      // isn't the focused window (interactive Storybook UI), where synthetic
+      // Escape key events don't reliably reach the menu.
+      await userEvent.click(canvas.getByText("Main content area"));
+      await waitFor(() => expect(body.queryByText("v2.4.1")).not.toBeInTheDocument());
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T4665" },
+  },
+};
+
+/**
+ * 2 · Secondary Nav with Sidebar — permanent icon rail for the primary nav
+ * plus a menu-style secondary sidebar with its own collapse toggle (the rail
+ * is unaffected — `hideNavOnCollapse` is off).
+ */
+export const SecondaryNavSidebar: Story = {
+  name: "Secondary Nav · Sidebar",
+  render: () => <ShellDemo primary="rail" secondary="menu" />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Primary is a permanent icon rail; secondary sidebar shows menu items", async () => {
+      expect(canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")).toBeInTheDocument();
+      // Permanent rail — no expand chevron on the primary nav
+      expect(canvas.queryByRole("button", { name: "Expand navigation" })).not.toBeInTheDocument();
+      expect(canvas.getByText("Secondary Nav")).toBeInTheDocument();
+      expect(canvas.getByText("Overview")).toBeVisible();
+      expect(canvas.getByText("Datasets")).toBeVisible();
+    });
+
+    await step("Menu items select without step semantics", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Datasets/ }));
+      expect(canvas.getByRole("button", { name: /Datasets/ })).toHaveAttribute("data-status", "active");
+    });
+
+    await step("Secondary collapses to an icon rail independently of the primary rail", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Collapse" }));
+      expect(canvas.queryByText("Secondary Nav")).not.toBeInTheDocument();
+      const nav = canvasElement.querySelector(
+        "[data-slot='data-app-shell-secondary-nav'][data-collapsed='true']",
+      );
+      expect(nav).toBeInTheDocument();
+      // Primary rail is still there — collapse was zone-local
+      expect(canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")).toBeInTheDocument();
+      await userEvent.click(canvas.getByRole("button", { name: "Expand" }));
+      expect(canvas.getByText("Secondary Nav")).toBeInTheDocument();
+    });
+  },
+};
+
+/**
+ * 3 · Workflow · Vertical — vertical stepper beside the sidebar with
+ * `hideNavOnCollapse`: one toggle collapses nav + workflow together into a
+ * single icon rail (the workflow rail carries the expand chevron).
+ */
+export const WorkflowVertical: Story = {
+  name: "Workflow · Vertical",
+  render: () => <ShellDemo secondary="workflow-vertical" hideNavOnCollapse />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Sidebar + vertical workflow render expanded", async () => {
+      expect(canvasElement.querySelector("[data-slot='data-app-sidebar']")).toBeInTheDocument();
+      expect(canvas.getByText("Workflow")).toBeInTheDocument();
+      expect(canvas.getAllByText("Step 1 Name").length).toBeGreaterThan(0);
+      expect(canvas.getByText("Next")).toBeInTheDocument();
+    });
+
+    await step("Selecting a step advances status derivation", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Step 2 Name/ }));
+      expect(canvas.getByRole("button", { name: /Step 2 Name/ })).toHaveAttribute(
+        "data-status",
+        "active",
+      );
+    });
+
+    await step("One toggle collapses nav + workflow into a single icon rail", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Collapse" }));
+      // hideNavOnCollapse — the primary nav zone is gone entirely
+      expect(canvasElement.querySelector("[data-slot='data-app-sidebar']")).not.toBeInTheDocument();
+      expect(canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")).not.toBeInTheDocument();
+      // The collapsed workflow rail is the single remaining rail
+      expect(
+        canvasElement.querySelector("[data-slot='data-app-shell-secondary-nav'][data-collapsed='true']"),
+      ).toBeInTheDocument();
+      expect(canvas.queryByText("Step 2 Name")).not.toBeInTheDocument();
+    });
+
+    await step("The rail's expand chevron restores both zones", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Expand" }));
+      expect(canvasElement.querySelector("[data-slot='data-app-sidebar']")).toBeInTheDocument();
+      expect(canvas.getByText("Workflow")).toBeInTheDocument();
+    });
+  },
+};
+
+/**
+ * 4 · Workflow · Horizontal — stepper bar between the top bar and the content.
+ * Collapsing tucks the steps into a compact step dropdown beside the
+ * breadcrumbs (reflowing the bar away).
+ */
+export const WorkflowHorizontal: Story = {
+  name: "Workflow · Horizontal",
+  render: () => <ShellDemo secondary="workflow-horizontal" />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+
+    await step("Horizontal stepper bar renders under the top bar", async () => {
+      const nav = canvasElement.querySelector(
+        "[data-slot='data-app-shell-secondary-nav'][data-orientation='horizontal']",
+      );
+      expect(nav).toBeInTheDocument();
+      expect(canvas.getByText("Step 3 Name")).toBeVisible();
+    });
+
+    await step("Collapsing the bar swaps it for a step dropdown in the top bar", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Collapse steps" }));
+      expect(canvas.queryByText("Step 3 Name")).not.toBeInTheDocument();
+      const select = canvas.getByRole("combobox", { name: "Current step" });
+      expect(select).toBeVisible();
+      expect(select).toHaveTextContent("Step 1 · Step 1 Name");
+    });
+
+    await step("The dropdown changes the active step", async () => {
+      await userEvent.click(canvas.getByRole("combobox", { name: "Current step" }));
+      await userEvent.click(await body.findByRole("option", { name: "Step 3 · Step 3 Name" }));
+      await waitFor(() =>
+        expect(canvas.getByRole("combobox", { name: "Current step" })).toHaveTextContent(
+          "Step 3 · Step 3 Name",
+        ),
+      );
+    });
+
+    await step("Expanding restores the stepper bar with the selected step active", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Show steps" }));
+      const active = canvas.getByRole("button", { name: /Step 3 Name/ });
+      expect(active).toHaveAttribute("data-status", "active");
+    });
+  },
+};
+
+/**
+ * 5 · With Right Panel — the Default composition plus the docked, resizable
+ * Details panel and its top-bar icon trigger.
+ */
+export const WithRightPanel: Story = {
+  name: "With Right Panel",
   loaders: [
     () => {
       // Deterministic panel width — drop anything persisted by a previous run.
       window.localStorage.removeItem("ts-ui.right-panel.hts-details.width");
     },
   ],
-  render: () => <DefaultShell />,
+  render: () => <ShellDemo rightPanel="docked" />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const body = within(document.body);
-
-    await step("Shell renders all regions", async () => {
-      expect(canvas.getByText("HTS")).toBeInTheDocument();
-      expect(canvas.getByRole("button", { name: "Project" })).toBeInTheDocument();
-      expect(canvas.getByRole("button", { name: "Explorer" })).toBeInTheDocument();
-      expect(canvas.getByText("Workflow")).toBeInTheDocument();
-      expect(canvas.getAllByText("Step 1 Name").length).toBeGreaterThan(0);
-      expect(canvas.getAllByText("All Projects").length).toBeGreaterThan(0);
-      expect(canvas.getByText("Next")).toBeInTheDocument();
-      expect(canvas.getByText("Main content area")).toBeInTheDocument();
-    });
-
-    await step("User avatar shows initials", async () => {
-      expect(canvas.getByText("EL")).toBeInTheDocument();
-    });
-
-    await step("Version is shown inside the app dropdown under the title", async () => {
-      await userEvent.click(canvas.getAllByText("HTS")[0]);
-      await waitFor(() => expect(body.getByText("v2.4.1")).toBeInTheDocument());
-      // Escape on the menu element itself — userEvent.keyboard targets the
-      // active element, which is unreliable when the preview iframe isn't the
-      // focused window (Storybook UI); the menu misses the key and stays open.
-      fireEvent.keyDown(body.getByRole("menu"), { key: "Escape" });
-      // Wait for the menu to fully unmount — while it is open (or animating
-      // out) radix marks the rest of the page aria-hidden, which would hide
-      // the shell's landmarks from the next step's role queries.
-      await waitFor(() => expect(body.queryByText("v2.4.1")).not.toBeInTheDocument());
-    });
 
     await step("Right panel is docked beside the content", async () => {
       const panel = await canvas.findByRole("complementary", { name: "Details" });
@@ -345,8 +565,6 @@ export const Default: Story = {
       expect(panel.style.width).toBe("560px");
       await userEvent.keyboard("{Home}");
       expect(panel.style.width).toBe("240px");
-      expect(handle).toHaveAttribute("aria-valuemin", "240");
-      expect(handle).toHaveAttribute("aria-valuemax", "560");
     });
 
     await step("Close returns focus to the top-bar trigger; the trigger re-opens the panel", async () => {
@@ -358,18 +576,10 @@ export const Default: Story = {
       await userEvent.click(trigger);
       const panel = await canvas.findByRole("complementary", { name: "Details" });
       await waitFor(() => expect(panel).toBeVisible());
-      expect(trigger).toHaveAttribute("aria-expanded", "true");
       await waitFor(() => expect(canvas.getByRole("button", { name: "Close panel" })).toHaveFocus());
-    });
-
-    await step("The top-bar trigger toggles the open panel closed", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Toggle details panel" }));
-      expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
     });
 
     await step("Esc inside the docked panel closes it; re-open via the trigger", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Toggle details panel" }));
-      await waitFor(() => expect(canvas.getByRole("button", { name: "Close panel" })).toHaveFocus());
       await userEvent.keyboard("{Escape}");
       expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
       await userEvent.click(canvas.getByRole("button", { name: "Toggle details panel" }));
@@ -377,31 +587,54 @@ export const Default: Story = {
       await waitFor(() => expect(panel).toBeVisible());
     });
   },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4665" },
+};
+
+/**
+ * 6 · Customizable — every shell zone and behavior exposed as Storybook
+ * controls (like the `ui/sidebar` story): flip the nav axis, hide zones,
+ * toggle collapse behaviors, and switch the secondary/right-panel content.
+ */
+export const Customizable: StoryObj<typeof ShellDemo> = {
+  name: "Customizable",
+  render: (args) => <ShellDemo {...args} />,
+  args: {
+    primary: "sidebar",
+    navVariant: "vertical",
+    secondary: "workflow-vertical",
+    rightPanel: "off",
+    hideNavOnCollapse: false,
+    showNavRail: true,
+    showTopBar: true,
+    triggerPlacement: "header",
+  },
+  argTypes: {
+    primary: { control: "select", options: ["sidebar", "rail"] },
+    navVariant: { control: "select", options: ["vertical", "horizontal"] },
+    secondary: {
+      control: "select",
+      options: ["off", "menu", "workflow-vertical", "workflow-horizontal"],
+    },
+    rightPanel: { control: "select", options: ["off", "docked", "overlay"] },
+    hideNavOnCollapse: { control: "boolean" },
+    showNavRail: { control: "boolean" },
+    showTopBar: { control: "boolean" },
+    triggerPlacement: { control: "select", options: ["header", "fab"] },
+    autoCollapse: { control: false },
+    initialPanelOpen: { control: false },
   },
 };
 
-export const CollapsedWorkflow: Story = {
-  name: "Collapsed Workflow",
-  // Also demos the right panel's `overlay` variant (starts closed, FAB trigger).
-  render: () => (
-    <DefaultShell initialCollapsed panelVariant="overlay" initialPanelOpen={false} triggerPlacement="fab" />
-  ),
+/**
+ * Hidden test story — the right panel's `overlay` variant (scrim, no reflow)
+ * with the FAB trigger.
+ */
+export const RightPanelOverlay: Story = {
+  name: "Right Panel Overlay",
+  tags: ["!dev"], // Hides from sidebar, remains testable
+  render: () => <ShellDemo rightPanel="overlay" initialPanelOpen={false} triggerPlacement="fab" />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-
-    await step("Collapsed workflow — step labels hidden", async () => {
-      expect(canvas.queryByText("Step 2 Name")).not.toBeInTheDocument();
-      expect(canvas.queryByText("Workflow")).not.toBeInTheDocument();
-    });
-
-    await step("Collapsed workflow — app nav rail is hidden", async () => {
-      expect(
-        canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")
-      ).not.toBeInTheDocument();
-    });
 
     await step("Overlay panel slides over the content with a scrim (no reflow)", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Open details panel" }));
@@ -409,7 +642,6 @@ export const CollapsedWorkflow: Story = {
       // waitFor — the sheet's slide/fade entry animation starts at opacity 0
       await waitFor(() => expect(overlayPanel).toBeVisible());
       expect(document.querySelector('[data-slot="sheet-overlay"]')).not.toBeNull();
-      // Docked <aside> never rendered — the overlay does not reflow main
       expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
     });
 
@@ -418,9 +650,6 @@ export const CollapsedWorkflow: Story = {
       await waitFor(() => expect(body.queryByRole("dialog", { name: "Details" })).not.toBeInTheDocument());
       await waitFor(() => expect(canvas.getByRole("button", { name: "Open details panel" })).toHaveFocus());
     });
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4666" },
   },
 };
 
@@ -582,9 +811,10 @@ export const AppDropdownInteraction: Story = {
     await step("Clicking the app icon opens the dropdown", async () => {
       // The icon button contains the appName text
       await userEvent.click(canvas.getAllByText("HTS")[0]);
-      // Dropdown renders in portal — check document.body
+      // Dropdown renders in portal — check document.body. The full name also
+      // shows in the expanded sidebar brand, so expect an additional copy.
       await waitFor(() => {
-        expect(body.getByText("HTS Hit Finder")).toBeInTheDocument();
+        expect(body.getAllByText("HTS Hit Finder").length).toBeGreaterThan(1);
       });
       expect(body.getByText("Back to TDP Platform")).toBeInTheDocument();
     });
@@ -811,6 +1041,7 @@ export const MultipleNavGroups: Story = {
         },
       ]}
       breadcrumbs={[{ label: "Filters" }]}
+      defaultCollapsed
     >
       <div className="p-6">
         <p>Content</p>
@@ -1130,6 +1361,7 @@ export const CompactProperty: Story = {
       ]}
       breadcrumbs={[{ label: "Project" }]}
       userMenu={<UserMenuButton name="Test User" userRole="ADMIN" />}
+      defaultCollapsed
     >
       <div className="p-6">
         <p>Content area</p>

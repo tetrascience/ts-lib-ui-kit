@@ -40,7 +40,11 @@ export interface MoleculeRendererProps
   loadingContent?: React.ReactNode
   /** Rendered when the SMILES is invalid or RDKit fails to load. */
   errorContent?: React.ReactNode
-  /** Called once when the SMILES cannot be parsed into a valid molecule. */
+  /**
+   * Called when the SMILES cannot be parsed into a valid molecule. May fire
+   * more than once for the same input — e.g. under React StrictMode, or when
+   * the drawing inputs (size, theme, options) change and the SVG is recomputed.
+   */
   onError?: (smiles: string) => void
 }
 

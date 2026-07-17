@@ -33,6 +33,13 @@ export interface ChartTooltipAnchor {
   side?: ChartTooltipSide;
   /** Plays the exit animation before the tooltip unmounts */
   closing?: boolean;
+  /**
+   * Render each line as HTML instead of escaped text. Off by default so
+   * consumer-supplied strings (point labels, trace names, metadata) can never
+   * be injected as markup; opt in only when the content is trusted, e.g. a
+   * molecule SVG. See {@link UseChartTooltipOptions.html}.
+   */
+  html?: boolean;
 }
 
 /** Keep an anchor point this far from the viewport edges when clamping */
@@ -177,17 +184,17 @@ export function ChartTooltip({ anchor, bubbleRef }: ChartTooltipProps) {
               : "animate-in fade-in-0 zoom-in-95",
           )}
         >
-          {anchor.lines.map((line, index) => (
-            // Tooltip content is authored HTML: the default line builders emit
-            // plain strings, and the `tooltip.content` contract lets charts
-            // return rich markup (e.g. `<b>`, badges, or a molecule SVG). The
-            // strings originate from developer-authored content functions and
-            // the library's own builders, not raw untrusted input.
-            <div
-              key={`${index}-${line}`}
-              dangerouslySetInnerHTML={{ __html: line }}
-            />
-          ))}
+          {anchor.lines.map((line, index) =>
+            // Escaped text by default; render as HTML only when the caller
+            // opts in (trusted content such as a molecule SVG). Keying by index
+            // is sufficient — lines are ephemeral and order-based — and avoids
+            // a large SVG string becoming the key.
+            anchor.html ? (
+              <div key={index} dangerouslySetInnerHTML={{ __html: line }} />
+            ) : (
+              <div key={index}>{line}</div>
+            ),
+          )}
           <span
             aria-hidden
             className={cn(
@@ -225,6 +232,12 @@ export interface UseChartTooltipOptions {
    * the opposite side when there isn't room (Radix-style). Defaults to "top".
    */
   side?: ChartTooltipSide;
+  /**
+   * Render tooltip lines as HTML instead of escaped text. Off by default;
+   * enable only when `getLines` returns trusted markup (e.g. a molecule SVG),
+   * never for lines built from untrusted chart data.
+   */
+  html?: boolean;
 }
 
 /** Clamp an anchor point so a bubble of `width`×`height` stays on-screen */
@@ -296,7 +309,13 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
         bubble?.offsetWidth ?? 0,
         bubble?.offsetHeight ?? 0,
       );
-      setAnchor({ left, top, lines, side: optionsRef.current.side });
+      setAnchor({
+        left,
+        top,
+        lines,
+        side: optionsRef.current.side,
+        html: optionsRef.current.html,
+      });
     };
 
     emitter.on("plotly_hover", (eventData) => {
@@ -343,7 +362,13 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
         left = mouse.clientX;
         top = mouse.clientY;
       }
-      setAnchor({ left, top, lines, side: optionsRef.current.side });
+      setAnchor({
+        left,
+        top,
+        lines,
+        side: optionsRef.current.side,
+        html: optionsRef.current.html,
+      });
     });
 
     // While following the cursor, keep the tooltip glued to the pointer even

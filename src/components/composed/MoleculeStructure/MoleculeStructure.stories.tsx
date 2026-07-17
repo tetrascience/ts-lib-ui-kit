@@ -231,7 +231,7 @@ function ScatterWithStructureTooltips() {
       title="Hits — hover for structure"
       xAxis={{ title: "Property A" }}
       yAxis={{ title: "Property B" }}
-      tooltip={{ enabled: true, content }}
+      tooltip={{ enabled: true, html: true, content }}
       width={640}
       height={420}
     />

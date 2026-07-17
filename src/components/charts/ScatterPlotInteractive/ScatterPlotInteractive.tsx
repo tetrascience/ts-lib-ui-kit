@@ -145,6 +145,7 @@ const ScatterPlotInteractive: React.FC<ScatterPlotInteractiveProps> = ({
       if (index === undefined) return [];
       return (tooltipText[index] ?? "").split("<br>").filter(Boolean);
     },
+    html: tooltip.html,
   });
 
   // Prepare Plotly-compatible color data

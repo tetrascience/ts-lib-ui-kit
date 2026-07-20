@@ -112,6 +112,15 @@ The kit ships preserved ES modules with all deps externalized, so a static impor
 - **Shiki**: never import from `"shiki"` at runtime (full bundle ≈ 200 grammars; OOMs consumer builds). Use the shared slim highlighter in `src/lib/shiki.ts` (`shiki/core` + explicit language set; extend via `registerCodeBlockLanguage`).
 - **mermaid / KaTeX / streamdown plugins**: only via `useStreamdownPlugins()` (`src/components/ai/use-streamdown-plugins.ts`), which dynamic-imports the plugin set. Do not statically import `@streamdown/*` plugins or `src/components/ai/streamdown-plugins.ts` from component code.
 
+#### Optional peer dependencies
+
+The lazy paths above keep heavy deps out of a consumer's **bundle** when the component is unused, but a hard `dependency` is still **installed** for everyone. To also keep them out of `node_modules` when unused, the heaviest, narrowest-used ones are declared as **optional `peerDependencies`** (`peerDependenciesMeta.<pkg>.optional = true`) and duplicated in `devDependencies` (so the kit's own Storybook/tests/build still resolve them):
+
+- `plotly.js-dist` — required only by `charts/` components.
+- `@streamdown/mermaid`, `@streamdown/math` — required only by `MessageResponse` / `Reasoning` (markdown).
+
+Consumer contract: apps that use these components must install the matching peer themselves; apps that don't never pull it. A missing peer surfaces as an unresolved-import build error from the consumer's bundler (not a silent runtime failure) — because the importing module is tree-shaken away when the component is unused, non-users never hit it. `shiki` / `@shikijs/*` / `@streamdown/cjk` stay regular `dependencies` (the `CodeBlock` primitive is broadly used and their install size is modest). When adding a component that pulls a new heavy dep, decide deliberately between hard dep (broadly used) and optional peer (heavy + narrow), and keep the loader's runtime guard message pointing at the install command.
+
 ## Testing
 
 - **Prefer Storybook play function tests** for React components — real browser via Playwright, more realistic than jsdom

@@ -7724,6 +7724,9 @@ __metadata:
   peerDependencies:
     "@aws-sdk/client-athena": ^3.0.0
     "@databricks/sql": ^1.0.0
+    "@streamdown/math": ^1.0.2
+    "@streamdown/mermaid": ^1.0.2
+    plotly.js-dist: ^2.35.2
     react: ^19.0.0
     react-dom: ^19.0.0
     snowflake-sdk: ^2.0.0
@@ -7731,6 +7734,12 @@ __metadata:
     "@aws-sdk/client-athena":
       optional: true
     "@databricks/sql":
+      optional: true
+    "@streamdown/math":
+      optional: true
+    "@streamdown/mermaid":
+      optional: true
+    plotly.js-dist:
       optional: true
     snowflake-sdk:
       optional: true

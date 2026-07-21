@@ -1,7 +1,6 @@
 import { ArrowLeft, ChevronRight, HelpCircle, Menu } from "lucide-react";
 import * as React from "react";
 
-import { ShellCollapseButton } from "./CollapseButton";
 import { DataAppShellPrimaryNav } from "./PrimaryNav";
 import { DataAppShellProvider, type DataAppShellNavVariant } from "./ShellContext";
 
@@ -102,9 +101,8 @@ export interface DataAppShellProps {
   showTopBar?: boolean; // default true
 
   // -- Collapse (vertical nav only) --
-  /** Render the collapse toggle on the primary sidebar. Defaults to `true`. */
-  collapsible?: boolean;
-  /** Controlled collapse state — primary + secondary zones collapse together */
+  /** Controlled collapse state — drives the secondary zone (via ShellContext)
+   *  and, with `hideNavOnCollapse`, the primary rail */
   collapsed?: boolean;
   /** Uncontrolled initial collapse state */
   defaultCollapsed?: boolean;
@@ -298,87 +296,16 @@ function SidebarBody({
 }
 
 // =============================================================================
-// Primary sidebar (desktop only — hidden on mobile). Expanded sidebar with the
-// collapse chevron in the brand row; collapses to an icon rail with the expand
-// chevron directly under the logo (mirrors the SW-2118 playground).
+// Icon rail sidebar (desktop only — hidden on mobile)
 // =============================================================================
 
-interface PrimarySidebarProps extends Omit<SidebarBodyProps, "compact" | "onAfterNavClick"> {
-  collapsible: boolean;
-  collapsed: boolean;
-  onCollapsedChange: (collapsed: boolean) => void;
-}
-
-function PrimarySidebar({ collapsible, collapsed, onCollapsedChange, ...sidebarProps }: PrimarySidebarProps) {
-  const { appName, appFullName, appIcon, version, onAppNameClick, backToPlatformPath, onBackToPlatform } =
-    sidebarProps;
-  const headerMenuProps = {
-    appName,
-    appFullName,
-    appIcon,
-    version,
-    onAppNameClick,
-    backToPlatformPath,
-    onBackToPlatform,
-  };
-
-  if (collapsed) {
-    return (
-      <div
-        data-slot="data-app-sidebar-rail"
-        data-collapsed="true"
-        className="hidden md:flex w-12 flex-col shrink-0 bg-sidebar border-r border-sidebar-border h-full z-50"
-      >
-        <DataAppShellPrimaryNav
-          variant="rail"
-          aria-label="Application navigation"
-          navGroups={sidebarProps.navGroups}
-          header={
-            <div className="flex flex-col items-center gap-2">
-              <AppHeaderMenu {...headerMenuProps} compact />
-              {collapsible && (
-                <ShellCollapseButton
-                  direction="right"
-                  label="Expand navigation"
-                  onClick={() => onCollapsedChange(false)}
-                />
-              )}
-            </div>
-          }
-          user={sidebarProps.userMenu}
-          className="h-full w-full"
-        />
-      </div>
-    );
-  }
-
+function IconRailSidebar(props: Omit<SidebarBodyProps, "compact" | "onAfterNavClick">) {
   return (
     <div
-      data-slot="data-app-sidebar"
-      data-collapsed="false"
-      className="hidden md:flex w-[220px] flex-col shrink-0 bg-sidebar border-r border-sidebar-border h-full z-50"
+      data-slot="data-app-sidebar-rail"
+      className="hidden md:flex w-12 flex-col shrink-0 bg-sidebar border-r border-sidebar-border h-full z-50"
     >
-      <DataAppShellPrimaryNav
-        variant="sidebar"
-        aria-label="Application navigation"
-        navGroups={sidebarProps.navGroups}
-        header={
-          <div className="flex items-center gap-2 w-full min-w-0">
-            <div className="flex-1 min-w-0">
-              <AppHeaderMenu {...headerMenuProps} compact={false} />
-            </div>
-            {collapsible && (
-              <ShellCollapseButton
-                direction="left"
-                label="Collapse navigation"
-                onClick={() => onCollapsedChange(true)}
-              />
-            )}
-          </div>
-        }
-        user={sidebarProps.userMenu}
-        className="h-full w-full"
-      />
+      <SidebarBody compact {...props} />
     </div>
   );
 }
@@ -504,7 +431,6 @@ function DataAppShell({
   rightPanel,
   showNavRail = true,
   showTopBar = true,
-  collapsible = true,
   collapsed: collapsedProp,
   defaultCollapsed = false,
   onCollapsedChange,
@@ -550,13 +476,13 @@ function DataAppShell({
   };
 
   React.useEffect(() => {
-    if (autoCollapse === false || navVariant !== "vertical" || !collapsible) return;
+    if (autoCollapse === false || navVariant !== "vertical") return;
     const mql = window.matchMedia(autoCollapse);
     applyAutoCollapseRef.current(mql.matches);
     const onChange = (e: MediaQueryListEvent) => applyAutoCollapseRef.current(e.matches);
     mql.addEventListener("change", onChange);
     return () => mql.removeEventListener("change", onChange);
-  }, [autoCollapse, navVariant, collapsible]);
+  }, [autoCollapse, navVariant]);
 
   const sidebarProps = {
     appName,
@@ -596,14 +522,7 @@ function DataAppShell({
           {!navHidden &&
             (isVertical ? (
               <div className="[grid-area:nav] min-h-0">
-                <PrimarySidebar
-                  // With a secondary nav present, the collapse toggle lives
-                  // only there — one affordance, no duplicate chevrons.
-                  collapsible={collapsible && !sidebarPanel}
-                  collapsed={collapsed}
-                  onCollapsedChange={setCollapsed}
-                  {...sidebarProps}
-                />
+                <IconRailSidebar {...sidebarProps} />
               </div>
             ) : (
               <div className="[grid-area:pnav] hidden md:block border-b border-sidebar-border bg-sidebar px-3 py-1.5">

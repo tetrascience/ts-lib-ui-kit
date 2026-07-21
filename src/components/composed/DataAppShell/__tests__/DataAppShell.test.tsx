@@ -74,43 +74,41 @@ function shell(props: Partial<React.ComponentProps<typeof DataAppShell>> = {}) {
   );
 }
 
-const sidebar = () => container.querySelector("[data-slot='data-app-sidebar']");
 const rail = () => container.querySelector("[data-slot='data-app-sidebar-rail']");
 
 // ---------------------------------------------------------------------------
-// Responsive auto-collapse
+// Responsive auto-collapse — visible through hideNavOnCollapse (the rail
+// itself is permanent; collapse drives the secondary zone / rail hiding)
 // ---------------------------------------------------------------------------
 
 describe("DataAppShell — responsive auto-collapse", () => {
   it("collapses when the media query matches and restores when it stops matching", () => {
     mediaMatches = true;
     const onCollapsedChange = vi.fn();
-    render(shell({ onCollapsedChange }));
+    render(shell({ onCollapsedChange, hideNavOnCollapse: true }));
 
-    expect(rail()).not.toBeNull();
-    expect(sidebar()).toBeNull();
+    expect(rail()).toBeNull();
     expect(onCollapsedChange).toHaveBeenLastCalledWith(true);
 
     flushSync(() => setMediaMatches(false));
-    expect(sidebar()).not.toBeNull();
+    expect(rail()).not.toBeNull();
     expect(onCollapsedChange).toHaveBeenLastCalledWith(false);
   });
 
   it("does not re-expand a shell the user collapsed manually", () => {
-    render(shell({ defaultCollapsed: true }));
-    expect(rail()).not.toBeNull();
+    render(shell({ defaultCollapsed: true, hideNavOnCollapse: true }));
+    expect(rail()).toBeNull();
 
     // Breakpoint enters and leaves — the manual collapse must survive.
     flushSync(() => setMediaMatches(true));
     flushSync(() => setMediaMatches(false));
-    expect(rail()).not.toBeNull();
-    expect(sidebar()).toBeNull();
+    expect(rail()).toBeNull();
   });
 
   it("does not subscribe when autoCollapse is false", () => {
     render(shell({ autoCollapse: false }));
     expect(mediaListeners).toHaveLength(0);
-    expect(sidebar()).not.toBeNull();
+    expect(rail()).not.toBeNull();
   });
 });
 
@@ -121,7 +119,6 @@ describe("DataAppShell — responsive auto-collapse", () => {
 describe("DataAppShell — zones", () => {
   it("hides the primary nav and top bar zones via their switches", () => {
     render(shell({ showNavRail: false, showTopBar: false }));
-    expect(sidebar()).toBeNull();
     expect(rail()).toBeNull();
     expect(container.querySelector("[data-slot='data-app-top-nav']")).toBeNull();
     expect(container.querySelector("[data-slot='data-app-shell-content']")).not.toBeNull();
@@ -132,9 +129,8 @@ describe("DataAppShell — zones", () => {
     expect(container.querySelector("[data-testid='wf-bar']")).not.toBeNull();
   });
 
-  it("renders a top nav row instead of the sidebar for navVariant=horizontal", () => {
+  it("renders a top nav row instead of the rail for navVariant=horizontal", () => {
     render(shell({ navVariant: "horizontal" }));
-    expect(sidebar()).toBeNull();
     expect(rail()).toBeNull();
     const shellRoot = container.querySelector("[data-slot='data-app-shell']");
     expect(shellRoot?.getAttribute("data-nav-variant")).toBe("horizontal");
@@ -167,7 +163,7 @@ describe("DataAppShell — zones", () => {
 
     flushSync(() => seen!.setCollapsed(false));
     expect(seen!.collapsed).toBe(false);
-    expect(sidebar()).not.toBeNull();
+    expect(rail()).not.toBeNull();
   });
 
   it("useDataAppShell throws outside a DataAppShell; the optional variant returns null", () => {
@@ -196,7 +192,6 @@ describe("DataAppShell — zones", () => {
 
   it("hideNavOnCollapse removes the nav zone and offers a floating expand button", () => {
     render(shell({ defaultCollapsed: true, hideNavOnCollapse: true }));
-    expect(sidebar()).toBeNull();
     expect(rail()).toBeNull();
 
     const fab = container.querySelector<HTMLButtonElement>(
@@ -204,6 +199,6 @@ describe("DataAppShell — zones", () => {
     );
     expect(fab).not.toBeNull();
     flushSync(() => fab!.click());
-    expect(sidebar()).not.toBeNull();
+    expect(rail()).not.toBeNull();
   });
 });

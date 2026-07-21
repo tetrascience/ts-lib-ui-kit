@@ -89,9 +89,6 @@ export const InHoverCard: Story = {
           label="CPD-0143"
           className="h-40 w-full"
         />
-        <div className="mt-1 text-2xs text-muted-foreground">
-          QED 0.81 · MW 151.2
-        </div>
       </HoverCardContent>
     </HoverCard>
   ),
@@ -117,7 +114,6 @@ export const InHoverCard: Story = {
       label="CPD-0143"
       className="h-40 w-full"
     />
-    <div className="mt-1 text-2xs text-muted-foreground">QED 0.81 · MW 151.2</div>
   </HoverCardContent>
 </HoverCard>`,
       },

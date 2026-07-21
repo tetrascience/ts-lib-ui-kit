@@ -13,9 +13,13 @@ import type { RDKitModule } from "@rdkit/rdkit"
  * peer dependency, so a consumer that never renders a structure needn't install
  * it, and one that does simply adds it to their own dependencies.
  *
- * Consumers whose bundler doesn't co-locate the `.wasm` next to the glue script
- * can point the loader at a self-hosted copy via {@link configureRDKit}
- * (`wasmSrc`), or hand it a module they initialised themselves (`instance`).
+ * **Bundled apps should set `wasmSrc`.** Without it, RDKit resolves
+ * `RDKit_minimal.wasm` relative to the glue script, which a bundler (Vite,
+ * webpack, …) usually does not emit next to the output — so the fetch 404s at
+ * runtime and the first molecule silently fails to load. Copy the WASM into a
+ * served path (or resolve it via your bundler, e.g. Vite's `?url`) and pass it
+ * to {@link configureRDKit} once at startup. Alternatively hand the loader a
+ * module you initialised yourself (`instance`).
  *
  * @see https://www.rdkitjs.com
  */
@@ -56,10 +60,15 @@ const defaultConfig: RDKitLoaderConfig = {}
  * first molecule renders — typically at app startup. Later calls are ignored
  * once loading has begun.
  *
+ * Bundled apps should set `wasmSrc` — see the module doc above for why.
+ *
  * @example
  * ```ts
  * // Serve the WASM yourself (e.g. copied into /public) — no CDN, air-gapped.
  * configureRDKit({ wasmSrc: "/assets/RDKit_minimal.wasm" })
+ * // …or resolve it from the installed package via your bundler (Vite):
+ * import wasmSrc from "@rdkit/rdkit/dist/RDKit_minimal.wasm?url"
+ * configureRDKit({ wasmSrc })
  * ```
  */
 export function configureRDKit(config: RDKitLoaderConfig): void {

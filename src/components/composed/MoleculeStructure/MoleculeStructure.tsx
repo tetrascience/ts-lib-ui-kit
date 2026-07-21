@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useIsDark } from "@/hooks/use-is-dark"
 import { cn } from "@/lib/utils"
 
-
 export interface MoleculeStructureProps
   extends Omit<React.ComponentProps<"div">, "children" | "onError"> {
   /** SMILES string to render as a 2D structure. */
@@ -25,17 +24,16 @@ export interface MoleculeStructureProps
    * Rendered as the SVG group's `aria-label` and the wrapper's title.
    */
   alt?: string
-  /** Extra RDKit MolDraw2D options. */
+  /**
+   * Extra RDKit MolDraw2D options. Pass a stable (memoised or module-level)
+   * reference — a new object each render re-parses the SMILES through RDKit.
+   */
   drawOptions?: Record<string, unknown>
   /** Rendered while the WASM module and structure are being prepared. */
   loadingContent?: React.ReactNode
   /** Rendered when the SMILES is invalid or RDKit fails to load. */
   errorContent?: React.ReactNode
-  /**
-   * Called when the SMILES cannot be parsed into a valid molecule. May fire
-   * more than once for the same input — e.g. under React StrictMode, or when
-   * the theme or draw options change and the SVG is recomputed.
-   */
+  /** Called once when the SMILES cannot be parsed into a valid molecule. */
   onError?: (smiles: string) => void
 }
 
@@ -89,6 +87,9 @@ export function MoleculeStructure({
     onErrorRef.current = onError
   })
 
+  // Kept pure: the memo only computes the SVG (or null on a parse failure) and
+  // never has side effects, so a render React discards (concurrent / offscreen)
+  // can't fire onError.
   const svg = React.useMemo(() => {
     if (!rdkit) return null
     const drawn = moleculeToSvg(rdkit, smiles, {
@@ -98,14 +99,17 @@ export function MoleculeStructure({
       legend: label,
       drawOptions,
     })
-    if (drawn === null) {
-      onErrorRef.current?.(smiles)
-      return null
-    }
-    return makeResponsive(drawn)
+    return drawn === null ? null : makeResponsive(drawn)
   }, [rdkit, smiles, useDark, label, drawOptions])
 
-  const failed = status === "error" || (status === "ready" && svg === null)
+  const parseFailed = status === "ready" && svg === null
+  const failed = status === "error" || parseFailed
+
+  // Report a parse failure as an effect keyed on the outcome, so onError fires
+  // once per bad input rather than on every (possibly discarded) render.
+  React.useEffect(() => {
+    if (parseFailed) onErrorRef.current?.(smiles)
+  }, [parseFailed, smiles])
 
   return (
     <div
@@ -141,7 +145,9 @@ export function MoleculeStructure({
       {status === "ready" && svg !== null && (
         <div
           // RDKit emits the SVG markup itself; the SMILES is only ever parsed
-          // into a molecule, never echoed into the DOM, so this is trusted.
+          // into a molecule, never echoed into the DOM. The consumer-supplied
+          // `label` is drawn by RDKit as vector glyph paths (not live text), so
+          // it can't carry markup into the DOM either — this is trusted.
           role="img"
           aria-label={accessibleName}
           className="size-full [&>svg]:size-full"

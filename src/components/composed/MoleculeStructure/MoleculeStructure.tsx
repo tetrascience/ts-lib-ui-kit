@@ -9,7 +9,7 @@ import { useIsDark } from "@/hooks/use-is-dark"
 import { cn } from "@/lib/utils"
 
 
-export interface MoleculeRendererProps
+export interface MoleculeStructureProps
   extends Omit<React.ComponentProps<"div">, "children" | "onError"> {
   /** SMILES string to render as a 2D structure. */
   smiles: string
@@ -64,10 +64,10 @@ function makeResponsive(svg: string): string {
  *
  * @example
  * ```tsx
- * <MoleculeRenderer smiles="CC(=O)Oc1ccccc1C(=O)O" className="size-40" />
+ * <MoleculeStructure smiles="CC(=O)Oc1ccccc1C(=O)O" className="size-40" />
  * ```
  */
-export function MoleculeRenderer({
+export function MoleculeStructure({
   smiles,
   legend,
   dark,
@@ -78,7 +78,7 @@ export function MoleculeRenderer({
   onError,
   className,
   ...props
-}: MoleculeRendererProps) {
+}: MoleculeStructureProps) {
   const { rdkit, status } = useRDKit()
   const isDark = useIsDark()
   const useDark = dark ?? isDark
@@ -109,7 +109,7 @@ export function MoleculeRenderer({
 
   return (
     <div
-      data-slot="molecule-renderer"
+      data-slot="molecule-structure"
       className={cn("relative flex items-center justify-center", className)}
       title={label}
       aria-busy={status === "loading"}

@@ -1,7 +1,7 @@
 import rdkitWasmUrl from "@rdkit/rdkit/dist/RDKit_minimal.wasm?url"
 import { expect, waitFor, within } from "storybook/test"
 
-import { MoleculeRenderer } from "./MoleculeRenderer"
+import { MoleculeStructure } from "./MoleculeStructure"
 import { configureRDKit } from "./rdkit-loader"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
@@ -33,9 +33,9 @@ const MOLECULES = {
   paracetamol: { smiles: "CC(=O)Nc1ccc(O)cc1", label: "Paracetamol" },
 } as const
 
-const meta: Meta<typeof MoleculeRenderer> = {
+const meta: Meta<typeof MoleculeStructure> = {
   title: "Design Patterns/Molecule Structure",
-  component: MoleculeRenderer,
+  component: MoleculeStructure,
   parameters: { layout: "centered" },
   tags: ["autodocs"],
 }
@@ -85,7 +85,7 @@ export const InHoverCard: Story = {
       </HoverCardTrigger>
       <HoverCardContent className="w-56">
         <div className="mb-1 text-xs font-medium">CPD-0143</div>
-        <MoleculeRenderer
+        <MoleculeStructure
           smiles={MOLECULES.paracetamol.smiles}
           alt="CPD-0143 structure"
           className="h-40 w-full"
@@ -114,7 +114,7 @@ export const InHoverCard: Story = {
   </HoverCardTrigger>
   <HoverCardContent className="w-56">
     <div className="mb-1 text-xs font-medium">CPD-0143</div>
-    <MoleculeRenderer
+    <MoleculeStructure
       smiles="CC(=O)Nc1ccc(O)cc1"
       alt="CPD-0143 structure"
       className="h-40 w-full"

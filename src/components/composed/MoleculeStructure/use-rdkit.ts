@@ -22,7 +22,7 @@ export interface UseRDKitResult {
  *
  * Use this when you need RDKit available synchronously inside a callback — for
  * example feeding the interactive scatter's `tooltip.content`, which must
- * return a string. For a single structure, prefer the `MoleculeRenderer`
+ * return a string. For a single structure, prefer the `MoleculeStructure`
  * component, which wraps this hook.
  *
  * @example

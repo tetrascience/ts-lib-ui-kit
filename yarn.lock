@@ -7732,7 +7732,7 @@ __metadata:
   peerDependencies:
     "@aws-sdk/client-athena": ^3.0.0
     "@databricks/sql": ^1.0.0
-    "@rdkit/rdkit": ^2025.3.4-1.0.0
+    "@rdkit/rdkit": 2025.3.4-1.0.0
     "@streamdown/math": ^1.0.2
     "@streamdown/mermaid": ^1.0.2
     plotly.js-dist: ^2.35.2

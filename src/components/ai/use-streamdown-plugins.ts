@@ -8,10 +8,16 @@ let cachedPlugins: PluginConfig | null = null;
 let pluginsPromise: Promise<PluginConfig> | null = null;
 
 function loadStreamdownPlugins(): Promise<PluginConfig> {
-  pluginsPromise ??= import("./streamdown-plugins").then((mod) => {
-    cachedPlugins = mod.streamdownPlugins;
-    return cachedPlugins;
-  });
+  pluginsPromise ??= import("./streamdown-plugins")
+    .then((mod) => {
+      cachedPlugins = mod.streamdownPlugins;
+      return cachedPlugins;
+    })
+    .catch((error) => {
+      pluginsPromise = null;
+      cachedPlugins = null;
+      throw error;
+    });
   return pluginsPromise;
 }
 

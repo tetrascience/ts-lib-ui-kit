@@ -71,9 +71,10 @@ export function registerCodeBlockLanguage(
   loader: LanguageLoader,
   aliases: string[] = [],
 ): void {
-  languageLoaders.set(language, loader);
+  const canonical = language.trim().toLowerCase();
+  languageLoaders.set(canonical, loader);
   for (const alias of aliases) {
-    languageAliases.set(alias, language);
+    languageAliases.set(alias.trim().toLowerCase(), canonical);
   }
 }
 

@@ -1777,13 +1777,12 @@ export const FormCustomAndIntegerKinds: Story = {
           kind: "custom",
           render: ({ value: v, onChange, selectionSize }) => (
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 aria-label="custom-render-input"
                 value={(v as string | undefined) ?? ""}
                 onChange={(e) => onChange(e.target.value)}
-                className="rounded border px-1 py-0.5 text-xs"
               />
-              <span className="text-[0.65rem] text-muted-foreground">{selectionSize} sel</span>
+              <span className="text-xs whitespace-nowrap text-muted-foreground">{selectionSize} sel</span>
             </div>
           ),
         },

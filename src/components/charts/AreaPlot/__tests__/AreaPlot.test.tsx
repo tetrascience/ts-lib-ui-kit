@@ -167,6 +167,24 @@ describe("AreaPlot sizing", () => {
     expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { width: 640, height: 300 });
   });
 
+  it("re-checks the applied size in place when only the height changes", async () => {
+    await render({ dataSeries });
+
+    await act(async () => {
+      triggerResize(320, 200);
+    });
+    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
+
+    // Same width, new height: the resize effect re-runs and its width check
+    // matches the applied size, so the height comparison branch is evaluated
+    // before falling through to the relayout.
+    await act(async () => {
+      triggerResize(320, 260);
+    });
+    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
+    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { width: 320, height: 260 });
+  });
+
   it("purges the plot on unmount", async () => {
     await render({ dataSeries, width: 800, height: 400 });
     const { el } = lastPlotCall();

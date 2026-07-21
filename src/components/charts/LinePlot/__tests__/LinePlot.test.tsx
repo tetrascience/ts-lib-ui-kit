@@ -73,3 +73,30 @@ describe("LinePlot error bars", () => {
     expect(lastTraces()[0].error_y).toBeUndefined();
   });
 });
+
+describe("LinePlot resize skip-guard", () => {
+  it("re-checks the applied size in place when only the height changes", async () => {
+    plotly.relayout.mockImplementation(() => Promise.resolve());
+    // Stable dataSeries reference so re-rendering doesn't re-run the draw
+    // effect — only the size-driven resize effect should react.
+    const dataSeries = [{ name: "A", x: [1, 2, 3], y: [10, 20, 30] }];
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    roots.push({ root, container });
+
+    await act(async () => {
+      root.render(<LinePlot dataSeries={dataSeries} width={600} height={400} />);
+    });
+    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
+
+    // Same width, new height: the resize effect re-runs; its width check
+    // matches the applied size, so the height comparison branch is evaluated.
+    await act(async () => {
+      root.render(<LinePlot dataSeries={dataSeries} width={600} height={480} />);
+    });
+    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
+    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { width: 600, height: 480 });
+  });
+});

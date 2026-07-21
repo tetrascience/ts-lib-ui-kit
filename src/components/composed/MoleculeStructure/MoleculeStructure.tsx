@@ -14,7 +14,7 @@ export interface MoleculeStructureProps
   /** SMILES string to render as a 2D structure. */
   smiles: string
   /** Optional caption drawn beneath the structure by RDKit. */
-  legend?: string
+  label?: string
   /**
    * Force dark/light drawing colours. Defaults to following the active theme
    * (the `.dark` class on the document root).
@@ -69,7 +69,7 @@ function makeResponsive(svg: string): string {
  */
 export function MoleculeStructure({
   smiles,
-  legend,
+  label,
   dark,
   alt,
   drawOptions,
@@ -83,7 +83,7 @@ export function MoleculeStructure({
   const isDark = useIsDark()
   const useDark = dark ?? isDark
 
-  const label = alt ?? smiles
+  const accessibleName = alt ?? label ?? smiles
   const onErrorRef = React.useRef(onError)
   React.useEffect(() => {
     onErrorRef.current = onError
@@ -95,7 +95,7 @@ export function MoleculeStructure({
       width: DRAW_SIZE,
       height: DRAW_SIZE,
       dark: useDark,
-      legend,
+      legend: label,
       drawOptions,
     })
     if (drawn === null) {
@@ -103,7 +103,7 @@ export function MoleculeStructure({
       return null
     }
     return makeResponsive(drawn)
-  }, [rdkit, smiles, useDark, legend, drawOptions])
+  }, [rdkit, smiles, useDark, label, drawOptions])
 
   const failed = status === "error" || (status === "ready" && svg === null)
 
@@ -111,7 +111,7 @@ export function MoleculeStructure({
     <div
       data-slot="molecule-structure"
       className={cn("relative flex items-center justify-center", className)}
-      title={label}
+      title={accessibleName}
       aria-busy={status === "loading"}
       {...props}
     >
@@ -119,7 +119,7 @@ export function MoleculeStructure({
         (loadingContent ?? (
           <Skeleton
             role="img"
-            aria-label={`Loading structure: ${label}`}
+            aria-label={`Loading structure: ${accessibleName}`}
             className="size-full rounded-md"
           />
         ))}
@@ -128,7 +128,7 @@ export function MoleculeStructure({
         (errorContent ?? (
           <div
             role="img"
-            aria-label={`Unable to render structure: ${label}`}
+            aria-label={`Unable to render structure: ${accessibleName}`}
             className="flex size-full flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border p-2 text-center text-muted-foreground"
           >
             <AlertTriangleIcon className="size-4 shrink-0" aria-hidden />
@@ -143,7 +143,7 @@ export function MoleculeStructure({
           // RDKit emits the SVG markup itself; the SMILES is only ever parsed
           // into a molecule, never echoed into the DOM, so this is trusted.
           role="img"
-          aria-label={label}
+          aria-label={accessibleName}
           className="size-full [&>svg]:size-full"
           dangerouslySetInnerHTML={{ __html: svg }}
         />

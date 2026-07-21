@@ -84,10 +84,9 @@ export const InHoverCard: Story = {
         <Button variant="link">CPD-0143</Button>
       </HoverCardTrigger>
       <HoverCardContent className="w-56">
-        <div className="mb-1 text-xs font-medium">CPD-0143</div>
         <MoleculeStructure
           smiles={MOLECULES.paracetamol.smiles}
-          alt="CPD-0143 structure"
+          label="CPD-0143"
           className="h-40 w-full"
         />
         <div className="mt-1 text-2xs text-muted-foreground">
@@ -113,10 +112,9 @@ export const InHoverCard: Story = {
     <Button variant="link">CPD-0143</Button>
   </HoverCardTrigger>
   <HoverCardContent className="w-56">
-    <div className="mb-1 text-xs font-medium">CPD-0143</div>
     <MoleculeStructure
       smiles="CC(=O)Nc1ccc(O)cc1"
-      alt="CPD-0143 structure"
+      label="CPD-0143"
       className="h-40 w-full"
     />
     <div className="mt-1 text-2xs text-muted-foreground">QED 0.81 · MW 151.2</div>

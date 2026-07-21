@@ -1,6 +1,5 @@
-import Plotly from "plotly.js-dist";
-
 import { CHART_COLORS } from "../../../utils/colors";
+import { getLoadedPlotly } from "../plotly-loader";
 
 import { createBoundaryMarkerTraces } from "./boundaryMarkers";
 import { CHROMATOGRAM_LAYOUT, CHROMATOGRAM_TRACE } from "./constants";
@@ -8,6 +7,7 @@ import { buildHoverExtraContent, collectPeaksWithBoundaryData } from "./dataProc
 import { createRegionOverlayTraces } from "./regionOverlays";
 
 import type { ChromatogramSeries, PeakAnnotation, BoundaryMarkerStyle, PeakSelectEvent } from "./types";
+import type Plotly from "plotly.js-dist";
 
 import { CHART_FONT_FAMILY, type PlotlyThemeColors } from "@/hooks/use-plotly-theme";
 
@@ -279,10 +279,12 @@ export function createHoverHandler(
     if (pt && pt.curveNumber < processedSeriesLength) {
       const targetIdx = pt.curveNumber;
       if (thickenedSeriesRef.current !== targetIdx) {
+        // Hover events can only fire once the plot is drawn, so the
+        // lazily-loaded Plotly module is guaranteed to be available here.
         if (thickenedSeriesRef.current !== null) {
-          Plotly.restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH } as Plotly.Data, [thickenedSeriesRef.current]);
+          getLoadedPlotly().restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH } as Plotly.Data, [thickenedSeriesRef.current]);
         }
-        Plotly.restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH * hoverLineWidthMultiplier } as Plotly.Data, [targetIdx]);
+        getLoadedPlotly().restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH * hoverLineWidthMultiplier } as Plotly.Data, [targetIdx]);
         thickenedSeriesRef.current = targetIdx;
       }
     }
@@ -312,7 +314,9 @@ export function createUnhoverHandler(
   return () => {
     onPeakHoverRef.current?.(null);
     if (thickenedSeriesRef.current !== null) {
-      Plotly.restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH } as Plotly.Data, [thickenedSeriesRef.current]);
+      // Unhover events can only fire once the plot is drawn, so the
+      // lazily-loaded Plotly module is guaranteed to be available here.
+      getLoadedPlotly().restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH } as Plotly.Data, [thickenedSeriesRef.current]);
       thickenedSeriesRef.current = null;
     }
   };

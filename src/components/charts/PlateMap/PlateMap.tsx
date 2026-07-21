@@ -1,8 +1,8 @@
-import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import "./PlateMap.scss";
 import { useChartTooltip } from "../ChartTooltip";
+import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 
 import {
   PLATE_CONFIGS,
@@ -38,6 +38,7 @@ import type {
   LayerConfig,
   WellData,
 } from "./types";
+import type Plotly from "plotly.js-dist";
 
 // Re-export types and constants for external consumers
 export * from "./types";
@@ -421,8 +422,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   }, [regions, rowLabels, colLabels]);
 
   useEffect(() => {
-    const currentRef = plotRef.current;
-    if (!currentRef) return;
+    if (!plotRef.current) return;
 
     // Determine which grid and colorscale to use based on mode
     const isCategorical = visualizationMode === "categorical";
@@ -550,39 +550,50 @@ const PlateMap: React.FC<PlateMapProps> = ({
       displaylogo: false,
     };
 
-    Plotly.newPlot(currentRef, plotData, layout, config);
-    bindTooltip(currentRef);
+    // Plotly is loaded lazily so it stays out of the consumer's main chunk
+    // (SW-2007); the draw is skipped if the effect re-runs or unmounts first.
+    let cancelled = false;
+    let plotElement: HTMLDivElement | null = null;
+    void loadPlotly().then((plotly) => {
+      if (cancelled || !plotRef.current) return;
+      const currentRef = plotRef.current;
+      plotly.newPlot(currentRef, plotData, layout, config);
+      bindTooltip(currentRef);
 
-    // Always attach click handler - check onWellClickRef.current inside callback
-    // This ensures handler is registered even if onWellClick is provided after initial render
-    (currentRef as unknown as Plotly.PlotlyHTMLElement).on("plotly_click", (eventData: Plotly.PlotMouseEvent) => {
-      if (!onWellClickRef.current) return;
-      const point = eventData.points[0];
-      if (point) {
-        // Cast labels to handle union type
-        const rowLabelsArr = rowLabels as (string | number)[];
-        const colLabelsArr = colLabels as (string | number)[];
-        const rowIdx = rowLabelsArr.indexOf(point.y as string | number);
-        const colIdx = colLabelsArr.indexOf(point.x as string | number);
-        if (rowIdx >= 0 && colIdx >= 0) {
-          const wellId = `${rowLabelsArr[rowIdx]}${colLabelsArr[colIdx]}`;
-          const wellIdUpper = String(wellId).toUpperCase();
-          // Get all values and tooltipData for this well
-          const allValues = allValuesMap.get(wellIdUpper);
-          const tooltipData = tooltipDataMap.get(wellIdUpper);
-          const wellData: WellData = {
-            wellId,
-            values: allValues,
-            tooltipData,
-          };
-          onWellClickRef.current?.(wellData);
+      // Always attach click handler - check onWellClickRef.current inside callback
+      // This ensures handler is registered even if onWellClick is provided after initial render
+      (currentRef as unknown as Plotly.PlotlyHTMLElement).on("plotly_click", (eventData: Plotly.PlotMouseEvent) => {
+        if (!onWellClickRef.current) return;
+        const point = eventData.points[0];
+        if (point) {
+          // Cast labels to handle union type
+          const rowLabelsArr = rowLabels as (string | number)[];
+          const colLabelsArr = colLabels as (string | number)[];
+          const rowIdx = rowLabelsArr.indexOf(point.y as string | number);
+          const colIdx = colLabelsArr.indexOf(point.x as string | number);
+          if (rowIdx >= 0 && colIdx >= 0) {
+            const wellId = `${rowLabelsArr[rowIdx]}${colLabelsArr[colIdx]}`;
+            const wellIdUpper = String(wellId).toUpperCase();
+            // Get all values and tooltipData for this well
+            const allValues = allValuesMap.get(wellIdUpper);
+            const tooltipData = tooltipDataMap.get(wellIdUpper);
+            const wellData: WellData = {
+              wellId,
+              values: allValues,
+              tooltipData,
+            };
+            onWellClickRef.current?.(wellData);
+          }
         }
-      }
+      });
+
+      plotElement = currentRef;
     });
 
     return () => {
-      if (currentRef) {
-        Plotly.purge(currentRef);
+      cancelled = true;
+      if (plotElement) {
+        getLoadedPlotly().purge(plotElement);
       }
     };
   }, [

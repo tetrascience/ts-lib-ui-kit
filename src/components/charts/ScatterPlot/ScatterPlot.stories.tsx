@@ -1,6 +1,5 @@
 import { expect, waitFor, within } from "storybook/test";
 
-
 import { ScatterPlot, type MarkerSymbol, type ScatterPlotDataSeries } from "./ScatterPlot";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -92,7 +91,12 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Scatter Plot")).toBeInTheDocument();
+      await waitFor(
+        () => {
+          expect(canvas.getByText("Scatter Plot")).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Chart container renders", async () => {
@@ -127,7 +131,9 @@ export const CustomRanges: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Scatter Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Scatter Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -171,7 +177,9 @@ export const SingleSeries: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Single Series Scatter Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Single Series Scatter Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -208,7 +216,9 @@ export const Stacked: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Stacked Scatter Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Stacked Scatter Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -261,7 +271,9 @@ export const WithCustomColors: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Custom Colors Scatter Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Custom Colors Scatter Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -304,7 +316,9 @@ export const LargeMarkers: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Large Marker Scatter Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Large Marker Scatter Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -363,7 +377,9 @@ export const MultipleSeriesColors: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Multiple Series Colors")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Multiple Series Colors")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -408,7 +424,9 @@ export const SmallScale: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Small Scale Scatter Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Small Scale Scatter Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -446,7 +464,9 @@ export const HighDensity: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("High Density Scatter Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("High Density Scatter Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -486,9 +506,7 @@ export const ContainerFilled: Story = {
   ],
   play: async ({ canvasElement, step }) => {
     await step("Chart canvas fills the container width", async () => {
-      const wrapper = canvasElement.querySelector(
-        '[data-testid="fill-wrapper"]',
-      ) as HTMLElement;
+      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       await waitFor(() => {
         const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
         expect(plot).toBeInTheDocument();
@@ -497,9 +515,7 @@ export const ContainerFilled: Story = {
     });
 
     await step("Chart resizes in place when the container resizes", async () => {
-      const wrapper = canvasElement.querySelector(
-        '[data-testid="fill-wrapper"]',
-      ) as HTMLElement;
+      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       // Shrink the container; the ResizeObserver should drive a Plotly relayout
       // (not a full re-plot) so the canvas tracks the new width.
       wrapper.style.width = "440px";

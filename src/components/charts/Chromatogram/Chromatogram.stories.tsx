@@ -1,12 +1,7 @@
 import { useState } from "react";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
-import {
-  Chromatogram,
-  type ChromatogramSeries,
-  type PeakAnnotation,
-  type PeakSelectEvent,
-} from "./Chromatogram";
+import { Chromatogram, type ChromatogramSeries, type PeakAnnotation, type PeakSelectEvent } from "./Chromatogram";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
@@ -17,7 +12,7 @@ import { CHART_FONT_FAMILY } from "@/hooks/use-plotly-theme";
  */
 const generateChromatogramData = (
   peaks: Array<{ rt: number; height: number; width: number }>,
-  noise: number = 0.5
+  noise: number = 0.5,
 ): { x: number[]; y: number[] } => {
   const x: number[] = [];
   const y: number[] = [];
@@ -26,9 +21,7 @@ const generateChromatogramData = (
     x.push(parseFloat(t.toFixed(2)));
     let signal = 0;
     peaks.forEach((peak) => {
-      signal +=
-        peak.height *
-        Math.exp(-Math.pow(t - peak.rt, 2) / (2 * Math.pow(peak.width, 2)));
+      signal += peak.height * Math.exp(-Math.pow(t - peak.rt, 2) / (2 * Math.pow(peak.width, 2)));
     });
     signal += (Math.random() - 0.5) * noise;
     y.push(Math.max(0, signal));
@@ -57,19 +50,25 @@ const multiInjectionData: ChromatogramSeries[] = [
     name: "Injection 1",
   },
   {
-    ...generateChromatogramData([
-      { rt: 5.9, height: 380, width: 0.42 },
-      { rt: 12.6, height: 195, width: 0.48 },
-      { rt: 18.4, height: 320, width: 0.47 },
-    ], 0.8),
+    ...generateChromatogramData(
+      [
+        { rt: 5.9, height: 380, width: 0.42 },
+        { rt: 12.6, height: 195, width: 0.48 },
+        { rt: 18.4, height: 320, width: 0.47 },
+      ],
+      0.8,
+    ),
     name: "Injection 2",
   },
   {
-    ...generateChromatogramData([
-      { rt: 5.7, height: 440, width: 0.38 },
-      { rt: 12.4, height: 170, width: 0.52 },
-      { rt: 18.2, height: 365, width: 0.43 },
-    ], 0.6),
+    ...generateChromatogramData(
+      [
+        { rt: 5.7, height: 440, width: 0.38 },
+        { rt: 12.4, height: 170, width: 0.52 },
+        { rt: 18.2, height: 365, width: 0.43 },
+      ],
+      0.6,
+    ),
     name: "Injection 3",
   },
 ];
@@ -137,8 +136,13 @@ export const SingleTrace: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("HPLC Chromatogram - Single Injection");
-      expect(title).toBeInTheDocument();
+      await waitFor(
+        () => {
+          const title = canvas.getByText("HPLC Chromatogram - Single Injection");
+          expect(title).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Chart container renders", async () => {
@@ -174,8 +178,10 @@ export const MultipleTraces: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("HPLC Chromatogram - Injection Overlay");
-      expect(title).toBeInTheDocument();
+      await waitFor(() => {
+        const title = canvas.getByText("HPLC Chromatogram - Injection Overlay");
+        expect(title).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -197,7 +203,8 @@ export const MultipleTraces: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Overlay multiple injections to compare retention times and peak intensities. Crosshairs help compare values across traces.",
+        story:
+          "Overlay multiple injections to compare retention times and peak intensities. Crosshairs help compare values across traces.",
       },
     },
     zephyr: { testCaseId: "SW-T1109" },
@@ -222,8 +229,10 @@ export const PeakDetection: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("Automatic Peak Detection");
-      expect(title).toBeInTheDocument();
+      await waitFor(() => {
+        const title = canvas.getByText("Automatic Peak Detection");
+        expect(title).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -240,7 +249,8 @@ export const PeakDetection: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Automatic peak detection identifies peaks based on height, prominence, and minimum distance. Peak areas are calculated using trapezoidal integration.",
+        story:
+          "Automatic peak detection identifies peaks based on height, prominence, and minimum distance. Peak areas are calculated using trapezoidal integration.",
       },
     },
     zephyr: { testCaseId: "SW-T1111" },
@@ -264,8 +274,10 @@ export const UserDefinedPeaks: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("User-Defined Peak Boundaries");
-      expect(title).toBeInTheDocument();
+      await waitFor(() => {
+        const title = canvas.getByText("User-Defined Peak Boundaries");
+        expect(title).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -307,7 +319,7 @@ export const PeakHoverAndSelection: StoryObj<typeof Chromatogram> = {
 
     const handlePeakClick = (event: PeakSelectEvent) => {
       setSelectedPeakIds((prev) =>
-        prev.includes(event.id) ? prev.filter((id) => id !== event.id) : [...prev, event.id]
+        prev.includes(event.id) ? prev.filter((id) => id !== event.id) : [...prev, event.id],
       );
     };
 
@@ -321,12 +333,13 @@ export const PeakHoverAndSelection: StoryObj<typeof Chromatogram> = {
         />
         <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280", minHeight: 36 }}>
           {hoveredPeak && (
-            <div>Hovering: <strong>{hoveredPeak.peak.text ?? hoveredPeak.id}</strong></div>
+            <div>
+              Hovering: <strong>{hoveredPeak.peak.text ?? hoveredPeak.id}</strong>
+            </div>
           )}
           {selectedPeakIds.length > 0 && (
             <div>
-              Selected: <strong>{selectedPeakIds.join(", ")}</strong>
-              {" "}
+              Selected: <strong>{selectedPeakIds.join(", ")}</strong>{" "}
               <button onClick={() => setSelectedPeakIds([])}>Clear</button>
             </div>
           )}
@@ -343,8 +356,10 @@ export const PeakHoverAndSelection: StoryObj<typeof Chromatogram> = {
     const canvas = within(canvasElement);
 
     await step("Chart renders with peak annotations", async () => {
-      expect(canvas.getByText("Peak Hover and Selection")).toBeInTheDocument();
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Peak Hover and Selection")).toBeInTheDocument();
+        expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      });
     });
 
     await step("Mouse events exercise hover, unhover, and click handler paths", async () => {
@@ -392,7 +407,8 @@ export const WithRegionOverlay: Story = {
         endX: 6.6,
         regionOverlay: true,
         regionOverlayWidth: 4,
-        hoverText: "<b>Caffeine</b><br>RT: 5.80 min<br>Area: 1842.3<br>USP Tailing: 1.04<br>S/N: 42.1<br>Status: <span style='color:#22c55e'>PASS</span>",
+        hoverText:
+          "<b>Caffeine</b><br>RT: 5.80 min<br>Area: 1842.3<br>USP Tailing: 1.04<br>S/N: 42.1<br>Status: <span style='color:#22c55e'>PASS</span>",
       },
       {
         id: "peak-fail",
@@ -403,7 +419,8 @@ export const WithRegionOverlay: Story = {
         startX: 11.5,
         endX: 13.5,
         regionOverlay: true,
-        hoverText: "<b>Theobromine</b><br>RT: 12.50 min<br>Area: 631.7<br>USP Tailing: 1.48<br>S/N: 18.3<br>Status: <span style='color:#ef4444'>FAIL</span>",
+        hoverText:
+          "<b>Theobromine</b><br>RT: 12.50 min<br>Area: 631.7<br>USP Tailing: 1.48<br>S/N: 18.3<br>Status: <span style='color:#ef4444'>FAIL</span>",
       },
     ],
   },
@@ -411,7 +428,9 @@ export const WithRegionOverlay: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Peak Region Overlays")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Peak Region Overlays")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -430,11 +449,11 @@ export const WithRegionOverlay: Story = {
     });
   },
   parameters: {
-      zephyr: { testCaseId: "SW-T5422" },
+    zephyr: { testCaseId: "SW-T5422" },
     docs: {
       description: {
         story:
-          "Each peak with `regionOverlay: true` paints a thickened colored line segment along the underlying trace between its `startX` and `endX`. Uses `peak.color` when set; falls back to the series color. Labels use `annotationStyle=\"inline\"` — floating directly above the trace with no arrow.",
+          'Each peak with `regionOverlay: true` paints a thickened colored line segment along the underlying trace between its `startX` and `endX`. Uses `peak.color` when set; falls back to the series color. Labels use `annotationStyle="inline"` — floating directly above the trace with no arrow.',
       },
     },
   },
@@ -452,10 +471,7 @@ export const SelectionTogglesViaButton: StoryObj<typeof Chromatogram> = {
       <div style={{ fontFamily: CHART_FONT_FAMILY }}>
         <Chromatogram {...args} selectedPeakIds={selectedPeakIds} />
         <div style={{ marginTop: 8 }}>
-          <button
-            data-testid="set-selection"
-            onClick={() => setSelectedPeakIds(["theobromine"])}
-          >
+          <button data-testid="set-selection" onClick={() => setSelectedPeakIds(["theobromine"])}>
             Select Theobromine
           </button>{" "}
           <button data-testid="clear-selection" onClick={() => setSelectedPeakIds([])}>
@@ -474,8 +490,10 @@ export const SelectionTogglesViaButton: StoryObj<typeof Chromatogram> = {
     const canvas = within(canvasElement);
 
     await step("Chart mounts with initial selection", async () => {
-      expect(canvas.getByText("Selection Update Effect")).toBeInTheDocument();
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Selection Update Effect")).toBeInTheDocument();
+        expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      });
     });
 
     await step("Switching selection triggers the relayout effect", async () => {
@@ -489,7 +507,7 @@ export const SelectionTogglesViaButton: StoryObj<typeof Chromatogram> = {
     });
   },
   parameters: {
-      zephyr: { testCaseId: "SW-T5423" },
+    zephyr: { testCaseId: "SW-T5423" },
     docs: {
       description: {
         story:
@@ -522,7 +540,7 @@ export const EmptySeries: Story = {
     });
   },
   parameters: {
-      zephyr: { testCaseId: "SW-T5424" },
+    zephyr: { testCaseId: "SW-T5424" },
     docs: {
       description: {
         story:
@@ -549,7 +567,9 @@ export const InlineAnnotationStyle: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Inline Annotation Style")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Inline Annotation Style")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {

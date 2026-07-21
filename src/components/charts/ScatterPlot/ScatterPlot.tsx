@@ -1,7 +1,9 @@
-import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { useChartTooltip } from "../ChartTooltip";
+import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+
+import type Plotly from "plotly.js-dist";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
@@ -313,56 +315,65 @@ const ScatterPlot: React.FC<ScatterPlotProps> = ({
       displaylogo: false,
     };
 
-    Plotly.newPlot(plotRef.current, plotData, layout, config);
-    bindTooltip(plotRef.current);
+    // Plotly is loaded lazily so it stays out of the consumer's main chunk
+    // (SW-2007); the draw is skipped if the effect re-runs or unmounts first.
+    let cancelled = false;
+    let plotElement: HTMLDivElement | null = null;
+    void loadPlotly().then((plotly) => {
+      if (cancelled || !plotRef.current) return;
+      plotly.newPlot(plotRef.current, plotData, layout, config);
+      bindTooltip(plotRef.current);
 
-    // Capture ref value for cleanup
-    const plotElement = plotRef.current;
-    plotInitedRef.current = true;
-    appliedSizeRef.current = { ...sizeRef.current };
+      // Capture ref value for cleanup
+      const element = plotRef.current;
+      plotElement = element;
+      plotInitedRef.current = true;
+      appliedSizeRef.current = { ...sizeRef.current };
 
-    // Crosshair guide lines through the hovered point. Drawn as layout shapes
-    // with `layer: "below"` so they sit behind the markers — native Plotly
-    // spikelines always render on top and can't be moved behind.
-    const emitter = plotElement as unknown as Plotly.PlotlyHTMLElement;
-    const crosshairLine = { color: theme.spikeColor, width: 2 };
-    emitter.on("plotly_hover", (eventData) => {
-      const point = eventData.points[0];
-      if (!point) return;
-      void Plotly.relayout(plotElement, {
-        shapes: [
-          {
-            type: "line",
-            xref: "x",
-            yref: "paper",
-            x0: point.x,
-            x1: point.x,
-            y0: 0,
-            y1: 1,
-            line: crosshairLine,
-            layer: "below",
-          },
-          {
-            type: "line",
-            xref: "paper",
-            yref: "y",
-            x0: 0,
-            x1: 1,
-            y0: point.y,
-            y1: point.y,
-            line: crosshairLine,
-            layer: "below",
-          },
-        ],
+      // Crosshair guide lines through the hovered point. Drawn as layout shapes
+      // with `layer: "below"` so they sit behind the markers — native Plotly
+      // spikelines always render on top and can't be moved behind.
+      const emitter = element as unknown as Plotly.PlotlyHTMLElement;
+      const crosshairLine = { color: theme.spikeColor, width: 2 };
+      emitter.on("plotly_hover", (eventData) => {
+        const point = eventData.points[0];
+        if (!point) return;
+        void plotly.relayout(element, {
+          shapes: [
+            {
+              type: "line",
+              xref: "x",
+              yref: "paper",
+              x0: point.x,
+              x1: point.x,
+              y0: 0,
+              y1: 1,
+              line: crosshairLine,
+              layer: "below",
+            },
+            {
+              type: "line",
+              xref: "paper",
+              yref: "y",
+              x0: 0,
+              x1: 1,
+              y0: point.y,
+              y1: point.y,
+              line: crosshairLine,
+              layer: "below",
+            },
+          ],
+        });
       });
-    });
-    emitter.on("plotly_unhover", () => {
-      void Plotly.relayout(plotElement, { shapes: [] });
+      emitter.on("plotly_unhover", () => {
+        void plotly.relayout(element, { shapes: [] });
+      });
     });
 
     return () => {
+      cancelled = true;
       if (plotElement) {
-        Plotly.purge(plotElement);
+        getLoadedPlotly().purge(plotElement);
         plotInitedRef.current = false;
       }
     };
@@ -385,9 +396,10 @@ const ScatterPlot: React.FC<ScatterPlotProps> = ({
     }
     appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };
     // Swallow rejections from a relayout that races an unmount/purge.
-    void Plotly.relayout(plotElement, { width: resolvedWidth, height: resolvedHeight }).catch(
-      () => {},
-    );
+    // plotInitedRef guarantees Plotly finished loading, so sync access is safe.
+    void getLoadedPlotly()
+      .relayout(plotElement, { width: resolvedWidth, height: resolvedHeight })
+      .catch(() => {});
   }, [resolvedWidth, resolvedHeight]);
 
   return (

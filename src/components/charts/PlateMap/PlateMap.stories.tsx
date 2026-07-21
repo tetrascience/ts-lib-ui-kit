@@ -1,14 +1,8 @@
-import { expect, within, userEvent } from "storybook/test";
+import { expect, within, userEvent, waitFor } from "storybook/test";
 
-import {
-  PlateMap
-} from "./PlateMap";
+import { PlateMap } from "./PlateMap";
 
-import type {
-  WellData,
-  LayerConfig,
-  PlateRegion,
-  LegendConfig} from "./PlateMap";
+import type { WellData, LayerConfig, PlateRegion, LegendConfig } from "./PlateMap";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 /** Helper to add delay between interactive test actions for smoother viewing */
@@ -90,9 +84,7 @@ function gridToWellData(grid: (number | null)[][], layerId: string = "Value"): W
   return wells;
 }
 
-const layer96WellConfigs: LayerConfig[] = [
-  { id: "RFU", name: "Fluorescence", valueUnit: "RFU" },
-];
+const layer96WellConfigs: LayerConfig[] = [{ id: "RFU", name: "Fluorescence", valueUnit: "RFU" }];
 
 /**
  * 96-well plate with WellData array input
@@ -115,8 +107,13 @@ export const Plate96Well: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("96-Well Plate Assay Results");
-      expect(title).toBeInTheDocument();
+      await waitFor(
+        () => {
+          const title = canvas.getByText("96-Well Plate Assay Results");
+          expect(title).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Chart container renders", async () => {
@@ -149,8 +146,10 @@ export const Plate384Well: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("384-Well Plate Screening");
-      expect(title).toBeInTheDocument();
+      await waitFor(() => {
+        const title = canvas.getByText("384-Well Plate Screening");
+        expect(title).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -197,8 +196,10 @@ export const Plate1536Well: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("1536-Well High-Density Plate");
-      expect(title).toBeInTheDocument();
+      await waitFor(() => {
+        const title = canvas.getByText("1536-Well High-Density Plate");
+        expect(title).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -224,7 +225,7 @@ export const CustomDimensions: Story = {
         [150, 250, 350, 450],
         [200, 300, 400, 500],
       ],
-      "Concentration"
+      "Concentration",
     ),
     plateFormat: "custom",
     rows: 3,
@@ -239,8 +240,10 @@ export const CustomDimensions: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("Custom 3x4 Plate");
-      expect(title).toBeInTheDocument();
+      await waitFor(() => {
+        const title = canvas.getByText("Custom 3x4 Plate");
+        expect(title).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders with custom dimensions", async () => {
@@ -283,8 +286,10 @@ export const PartialPlate: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("Partial Plate (Sparse Data)");
-      expect(title).toBeInTheDocument();
+      await waitFor(() => {
+        const title = canvas.getByText("Partial Plate (Sparse Data)");
+        expect(title).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders with sparse data", async () => {
@@ -312,7 +317,7 @@ export const GenericHeatmap: Story = {
         [20000, 25000, 30000, 35000, 40000],
         [25000, 30000, 35000, 40000, 45000],
       ],
-      "Value"
+      "Value",
     ),
     plateFormat: "custom",
     rows: 5,
@@ -332,8 +337,10 @@ export const GenericHeatmap: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("Generic Heatmap with Custom Labels");
-      expect(title).toBeInTheDocument();
+      await waitFor(() => {
+        const title = canvas.getByText("Generic Heatmap with Custom Labels");
+        expect(title).toBeInTheDocument();
+      });
     });
 
     await step("Custom axis labels are displayed", async () => {
@@ -374,8 +381,10 @@ export const RandomData: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      const title = canvas.getByText("Auto-generated Random Data");
-      expect(title).toBeInTheDocument();
+      await waitFor(() => {
+        const title = canvas.getByText("Auto-generated Random Data");
+        expect(title).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders with auto-generated data", async () => {
@@ -440,8 +449,10 @@ export const CategoricalVisualization: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart renders with title", async () => {
-      const title = canvas.getByText("Categorical Well Types");
-      expect(title).toBeInTheDocument();
+      await waitFor(() => {
+        const title = canvas.getByText("Categorical Well Types");
+        expect(title).toBeInTheDocument();
+      });
     });
 
     await step("Legend displays categories", async () => {
@@ -528,14 +539,14 @@ export const LayerToggling: Story = {
       const rawButton = canvas.getByText("Raw Signal");
       // Active button has blue background (#4575b4)
       expect(rawButton).toHaveAttribute("data-variant", "default");
-    })
+    });
 
     await step("Click Normalized layer toggles active state", async () => {
       const normalizedButton = canvas.getByText("Normalized");
       const rawButton = canvas.getByText("Raw Signal");
 
       // Normalized should be inactive (white background)
-      expect(normalizedButton).not.toHaveFocus()
+      expect(normalizedButton).not.toHaveFocus();
 
       await sleep(1000); // Delay before click for smoother viewing
       await userEvent.click(normalizedButton);
@@ -634,8 +645,10 @@ export const RegionHighlighting: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart renders with title", async () => {
-      const title = canvas.getByText("Plate with Region Highlights");
-      expect(title).toBeInTheDocument();
+      await waitFor(() => {
+        const title = canvas.getByText("Plate with Region Highlights");
+        expect(title).toBeInTheDocument();
+      });
     });
 
     await step("Region legend items are displayed", async () => {
@@ -916,7 +929,9 @@ export const HiddenUIElements: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Hidden UI Elements")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Hidden UI Elements")).toBeInTheDocument();
+      });
     });
 
     await step("Legend items are NOT visible", async () => {
@@ -947,7 +962,7 @@ export const EdgeCases: Story = {
         [NaN, null, 400, 500],
         [200, 300, NaN, 550],
       ],
-      "AU"
+      "AU",
     ),
     plateFormat: "custom",
     rows: 4,
@@ -962,7 +977,9 @@ export const EdgeCases: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Edge Cases Test")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Edge Cases Test")).toBeInTheDocument();
+      });
     });
 
     await step("Chart renders without errors despite NaN/Infinity/null values", async () => {
@@ -987,7 +1004,7 @@ export const UniformValuesAndLeftLegend: Story = {
         [42.0, 42.0, 42.0],
         [42.0, 42.0, 42.0],
       ],
-      "Value"
+      "Value",
     ),
     plateFormat: "custom",
     rows: 3,
@@ -1006,7 +1023,9 @@ export const UniformValuesAndLeftLegend: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Uniform Values Test")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Uniform Values Test")).toBeInTheDocument();
+      });
     });
 
     await step("Chart renders with uniform values", async () => {
@@ -1056,7 +1075,9 @@ export const CategoricalLeftLegend: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Categorical with Left Legend")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Categorical with Left Legend")).toBeInTheDocument();
+      });
     });
 
     await step("Legend is rendered on left", async () => {
@@ -1098,7 +1119,9 @@ export const WellClickInteraction: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Clickable Wells")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Clickable Wells")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders with click handler", async () => {
@@ -1107,9 +1130,9 @@ export const WellClickInteraction: Story = {
     });
 
     await step("Simulate Plotly click event on well A1", async () => {
-      const plotContainer = canvasElement.querySelector(
-        ".js-plotly-plot"
-      ) as HTMLElement & { emit?: (eventName: string, data: unknown) => void };
+      const plotContainer = canvasElement.querySelector(".js-plotly-plot") as HTMLElement & {
+        emit?: (eventName: string, data: unknown) => void;
+      };
       expect(plotContainer).toBeInTheDocument();
 
       // Trigger a plotly_click event with mock data for well A1
@@ -1153,7 +1176,9 @@ export const StringColorscale: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Using Viridis Colorscale")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Using Viridis Colorscale")).toBeInTheDocument();
+      });
     });
 
     await step("Chart renders with string colorscale", async () => {
@@ -1209,7 +1234,9 @@ export const StringColorscaleWithEmptyWells: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Viridis with Empty Wells")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Viridis with Empty Wells")).toBeInTheDocument();
+      });
     });
 
     await step("Chart renders with Viridis colorscale", async () => {
@@ -1240,7 +1267,7 @@ export const ValueRangeOverride: Story = {
         [150, 250, 350],
         [200, 300, 400],
       ],
-      "AU"
+      "AU",
     ),
     plateFormat: "custom",
     rows: 3,
@@ -1256,7 +1283,9 @@ export const ValueRangeOverride: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Custom Value Range (0-500)")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Custom Value Range (0-500)")).toBeInTheDocument();
+      });
     });
 
     await step("Chart renders with custom range", async () => {
@@ -1290,7 +1319,9 @@ export const ColorbarWithTitle: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Heatmap with Colorbar Title")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Heatmap with Colorbar Title")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -1303,8 +1334,6 @@ export const ColorbarWithTitle: Story = {
   },
 };
 
-
-
 /**
  * Invalid regions: tests graceful handling of invalid/out-of-bounds region definitions
  * Covers invalid well format and regions extending beyond plate dimensions
@@ -1316,7 +1345,7 @@ export const InvalidRegions: Story = {
         [100, 200, 300],
         [150, 250, 350],
       ],
-      "Value"
+      "Value",
     ),
     plateFormat: "custom",
     rows: 2,
@@ -1353,7 +1382,9 @@ export const InvalidRegions: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Invalid Regions Test")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Invalid Regions Test")).toBeInTheDocument();
+      });
     });
 
     await step("Valid region is still rendered", async () => {

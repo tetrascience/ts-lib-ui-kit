@@ -2,6 +2,7 @@ import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
+import { loadPlotly } from "../../plotly-loader";
 import { useChartTooltip } from "../ChartTooltip";
 
 import type { UseChartTooltipOptions } from "../ChartTooltip";
@@ -60,8 +61,11 @@ const fireDom = (event: string, data?: unknown) => act(() => domHandlers[event]?
 const anchorEl = () => document.querySelector('[data-slot="chart-tooltip-anchor"]') as HTMLElement | null;
 const contentEl = () => document.querySelector('[data-slot="tooltip-content"]') as HTMLElement | null;
 
-beforeEach(() => {
+beforeEach(async () => {
   plotly.relayout.mockReset();
+  // bindTooltip calls getLoadedPlotly() synchronously (SW-2007 lazy loader);
+  // prime the loader so it resolves to the mock before any hook renders.
+  await loadPlotly();
 });
 
 afterEach(() => {

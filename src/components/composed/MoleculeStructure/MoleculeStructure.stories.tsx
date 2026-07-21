@@ -6,6 +6,7 @@ import { configureRDKit } from "./rdkit-loader"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
+import { Button } from "@/components/ui/button"
 import {
   HoverCard,
   HoverCardContent,
@@ -43,19 +44,11 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * The primitive fills its container — it has no size props. Drag the box's
- * bottom-right corner: the vector structure scales to fit at any size.
+ * The primitive has no size props — the vector structure fills its box, so
+ * size it with `className` (here `size-64`) and it scales to fit.
  */
 export const Default: Story = {
-  args: { smiles: MOLECULES.aspirin.smiles, alt: "Aspirin" },
-  render: (args) => (
-    <div
-      className="resize overflow-hidden rounded-md border border-border p-2"
-      style={{ width: 240, height: 240 }}
-    >
-      <MoleculeRenderer {...args} className="size-full" />
-    </div>
-  ),
+  args: { smiles: MOLECULES.aspirin.smiles, alt: "Aspirin", className: "size-64" },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     // Exposed to assistive tech as a single labelled image.
@@ -70,8 +63,7 @@ export const Default: Story = {
 
 /** Invalid SMILES render an accessible fallback instead of throwing. */
 export const InvalidStructure: Story = {
-  args: { smiles: "not a molecule~!", alt: "bad input" },
-  render: (args) => <MoleculeRenderer {...args} className="size-48" />,
+  args: { smiles: "not a molecule~!", alt: "bad input", className: "size-48" },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     await waitFor(() =>
@@ -89,9 +81,7 @@ export const InHoverCard: Story = {
   render: () => (
     <HoverCard openDelay={100}>
       <HoverCardTrigger asChild>
-        <button type="button" className="text-sm underline decoration-dotted">
-          CPD-0143
-        </button>
+        <Button variant="link">CPD-0143</Button>
       </HoverCardTrigger>
       <HoverCardContent className="w-56">
         <div className="mb-1 text-xs font-medium">CPD-0143</div>
@@ -112,5 +102,27 @@ export const InHoverCard: Story = {
       canvas.getByRole("button", { name: "CPD-0143" }),
     ).toBeInTheDocument()
   },
-  parameters: { zephyr: { testCaseId: "" } },
+  parameters: {
+    zephyr: { testCaseId: "" },
+    // Show the composition sample in "Show code" rather than the whole story
+    // object (a `render` + `play` story otherwise dumps its full definition).
+    docs: {
+      source: {
+        code: `<HoverCard>
+  <HoverCardTrigger asChild>
+    <Button variant="link">CPD-0143</Button>
+  </HoverCardTrigger>
+  <HoverCardContent className="w-56">
+    <div className="mb-1 text-xs font-medium">CPD-0143</div>
+    <MoleculeRenderer
+      smiles="CC(=O)Nc1ccc(O)cc1"
+      alt="CPD-0143 structure"
+      className="h-40 w-full"
+    />
+    <div className="mt-1 text-2xs text-muted-foreground">QED 0.81 · MW 151.2</div>
+  </HoverCardContent>
+</HoverCard>`,
+      },
+    },
+  },
 }

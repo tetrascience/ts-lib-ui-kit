@@ -1,6 +1,6 @@
 "use client"
 
-import { Command as CommandPrimitive } from "cmdk"
+import { Command as CommandPrimitive, useCommandState } from "cmdk"
 import { SearchIcon, CheckIcon } from "lucide-react"
 import * as React from "react"
 
@@ -108,10 +108,22 @@ function CommandList({
 function CommandEmpty({
   className,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Empty>) {
+}: React.ComponentProps<"div">) {
+  const isEmpty = useCommandState((state) => state.filtered.count === 0)
+
+  if (!isEmpty) return null
+
+  // cmdk's own <Command.Empty> hardcodes role="presentation", which leaves
+  // the listbox with no option/group children when a search has zero
+  // results (aria-required-children). Render a disabled option instead so
+  // the listbox stays structurally valid and screen readers still announce
+  // the empty state.
   return (
-    <CommandPrimitive.Empty
+    <div
       data-slot="command-empty"
+      role="option"
+      aria-disabled="true"
+      aria-selected="false"
       className={cn("py-6 text-center text-sm", className)}
       {...props}
     />
@@ -141,6 +153,7 @@ function CommandSeparator({
   return (
     <CommandPrimitive.Separator
       data-slot="command-separator"
+      aria-hidden="true"
       className={cn("-mx-1 h-px bg-border", className)}
       {...props}
     />

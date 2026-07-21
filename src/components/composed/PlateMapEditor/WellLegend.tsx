@@ -54,18 +54,28 @@ export function WellLegend({
             size="sm"
             data-slot="well-legend-item"
             data-disabled={item.disabled || undefined}
-            className={cn("py-2 hover:bg-accent/40", item.disabled && "opacity-50")}
+            className={cn("py-2 hover:bg-accent/40")}
             onMouseEnter={() => onHoverEnter?.(item.id)}
             onMouseLeave={() => onHoverLeave?.(item.id)}
           >
             <CardContent className="flex items-start gap-2">
               <span
                 aria-hidden
-                className="mt-0.5 size-3.5 shrink-0 rounded-sm border border-foreground/20"
+                className={cn(
+                  "mt-0.5 size-3.5 shrink-0 rounded-sm border border-foreground/20",
+                  item.disabled && "opacity-50"
+                )}
                 style={{ backgroundColor: item.color }}
               />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-xs font-medium">{item.label}</div>
+                <div
+                  className={cn(
+                    "truncate text-xs font-medium",
+                    item.disabled && "text-muted-foreground"
+                  )}
+                >
+                  {item.label}
+                </div>
                 {item.meta ? (
                   <div className="truncate text-[0.65rem] text-muted-foreground">{item.meta}</div>
                 ) : null}

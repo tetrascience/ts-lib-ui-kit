@@ -51,7 +51,7 @@ function renderButton(size: "xs" | "sm" | "icon-xs" | "icon-sm") {
       <InputGroup>
         <InputGroupInput placeholder="Search" />
         <InputGroupAddon align="inline-end">
-          <InputGroupButton size={size}>
+          <InputGroupButton size={size} aria-label={isIcon ? "Search" : undefined}>
             {isIcon ? <SearchIcon /> : "Go"}
           </InputGroupButton>
         </InputGroupAddon>

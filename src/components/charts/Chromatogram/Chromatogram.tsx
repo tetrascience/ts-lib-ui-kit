@@ -1,7 +1,7 @@
-import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef } from "react";
 
 import { useChartTooltip } from "../ChartTooltip";
+import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 
 import {
   groupOverlappingPeaks,
@@ -35,6 +35,7 @@ import type {
   ChromatogramProps,
   PeakWithMeta,
 } from "./types";
+import type Plotly from "plotly.js-dist";
 
 import { EmptyState } from "@/components/composed/EmptyState";
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
@@ -309,28 +310,39 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
 
     const config = buildConfig({ showExportButton, width, height });
 
-    Plotly.newPlot(currentRef, plotData, layout, config);
-    bindTooltip(currentRef);
+    // Plotly is loaded lazily so it stays out of the consumer's main chunk
+    // (SW-2007); the draw is skipped if the effect re-runs or unmounts first.
+    let cancelled = false;
+    let plotElement: HTMLDivElement | null = null;
+    void loadPlotly().then((plotly) => {
+      if (cancelled || !plotRef.current) return;
+      plotly.newPlot(currentRef, plotData, layout, config);
+      bindTooltip(currentRef);
 
-    // ── Event: peak click ──────────────────────────────────────────────────
-    (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
-      "plotly_click",
-      createClickHandler(onPeakClickRef)
-    );
+      // ── Event: peak click ────────────────────────────────────────────────
+      (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
+        "plotly_click",
+        createClickHandler(onPeakClickRef)
+      );
 
-    (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
-      "plotly_hover",
-      createHoverHandler(currentRef, processedSeries.length, thickenedSeriesRef, onPeakHoverRef, resolvedAppearance.hoverLineWidthMultiplier)
-    );
+      (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
+        "plotly_hover",
+        createHoverHandler(currentRef, processedSeries.length, thickenedSeriesRef, onPeakHoverRef, resolvedAppearance.hoverLineWidthMultiplier)
+      );
 
-    (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
-      "plotly_unhover",
-      createUnhoverHandler(currentRef, thickenedSeriesRef, onPeakHoverRef)
-    );
+      (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
+        "plotly_unhover",
+        createUnhoverHandler(currentRef, thickenedSeriesRef, onPeakHoverRef)
+      );
+
+      // Capture ref value for cleanup
+      plotElement = currentRef;
+    });
 
     return () => {
+      cancelled = true;
       thickenedSeriesRef.current = null;
-      if (currentRef) Plotly.purge(currentRef);
+      if (plotElement) getLoadedPlotly().purge(plotElement);
     };
   }, [
     processedSeries, allDetectedPeaks, allPeaksForInteraction, series.length,
@@ -351,9 +363,11 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
     const el = plotRef.current;
     if (!el) return;
     // Guard: skip if the chart hasn't been initialized by the main effect yet.
+    // (A truthy _fullLayout also proves newPlot ran, so the lazily-loaded
+    // Plotly module is guaranteed to be available via getLoadedPlotly.)
     if (!(el as { _fullLayout?: unknown })._fullLayout) return;
 
-    Plotly.relayout(el, {
+    getLoadedPlotly().relayout(el, {
       annotations: peakAnnotations,
     } as unknown as Partial<Plotly.Layout>);
   }, [peakAnnotations]);

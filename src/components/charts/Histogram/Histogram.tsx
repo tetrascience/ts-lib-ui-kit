@@ -1,7 +1,7 @@
-import Plotly from "plotly.js-dist";
 import React, { useEffect, useRef, useMemo } from "react";
 
 import { useChartTooltip } from "../ChartTooltip";
+import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
@@ -310,17 +310,25 @@ const Histogram: React.FC<HistogramProps> = ({
       displaylogo: false,
     };
 
-    Plotly.newPlot(plotRef.current, plotData, layout, config);
-    bindTooltip(plotRef.current);
+    // Plotly is loaded lazily so it stays out of the consumer's main chunk
+    // (SW-2007); the draw is skipped if the effect re-runs or unmounts first.
+    let cancelled = false;
+    let plotElement: HTMLDivElement | null = null;
+    void loadPlotly().then((plotly) => {
+      if (cancelled || !plotRef.current) return;
+      plotly.newPlot(plotRef.current, plotData, layout, config);
+      bindTooltip(plotRef.current);
 
-    // Capture ref value for cleanup
-    const plotElement = plotRef.current;
-    plotInitedRef.current = true;
-    appliedSizeRef.current = { ...sizeRef.current };
+      // Capture ref value for cleanup
+      plotElement = plotRef.current;
+      plotInitedRef.current = true;
+      appliedSizeRef.current = { ...sizeRef.current };
+    });
 
     return () => {
+      cancelled = true;
       if (plotElement) {
-        Plotly.purge(plotElement);
+        getLoadedPlotly().purge(plotElement);
         plotInitedRef.current = false;
       }
     };
@@ -343,9 +351,10 @@ const Histogram: React.FC<HistogramProps> = ({
     }
     appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };
     // Swallow rejections from a relayout that races an unmount/purge.
-    void Plotly.relayout(plotElement, { width: resolvedWidth, height: resolvedHeight }).catch(
-      () => {},
-    );
+    // plotInitedRef guarantees Plotly finished loading, so sync access is safe.
+    void getLoadedPlotly()
+      .relayout(plotElement, { width: resolvedWidth, height: resolvedHeight })
+      .catch(() => {});
   }, [resolvedWidth, resolvedHeight]);
 
   const ChartLegend: React.FC<{

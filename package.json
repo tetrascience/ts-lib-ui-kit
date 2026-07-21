@@ -113,10 +113,9 @@
     "@fontsource-variable/inter": "^5.2.8",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
+    "@shikijs/langs": "^4.0.2",
+    "@shikijs/themes": "^4.0.2",
     "@streamdown/cjk": "^1.0.3",
-    "@streamdown/code": "^1.1.1",
-    "@streamdown/math": "^1.0.2",
-    "@streamdown/mermaid": "^1.0.2",
     "@tanstack/react-table": "^8.21.3",
     "@tetrascience-npm/ts-connectors-sdk": "^3.2.0",
     "@xyflow/react": "^12.6.4",
@@ -129,14 +128,10 @@
     "lucide-react": "^0.577.0",
     "monaco-editor": "^0.52.2",
     "motion": "^12.38.0",
-    "plotly.js": "^3.0.1",
-    "plotly.js-dist": "^2.35.2",
     "radix-ui": "^1.4.3",
     "react-day-picker": "^9.14.0",
     "react-markdown": "^10.1.0",
-    "react-plotly.js": "^2.6.0",
     "react-resizable-panels": "^4.7.1",
-    "react-syntax-highlighter": "^15.6.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "shiki": "^4.0.2",
@@ -150,6 +145,9 @@
     "@aws-sdk/client-athena": "^3.0.0",
     "@databricks/sql": "^1.0.0",
     "@rdkit/rdkit": "^2025.3.4-1.0.0",
+    "@streamdown/math": "^1.0.2",
+    "@streamdown/mermaid": "^1.0.2",
+    "plotly.js-dist": "^2.35.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "snowflake-sdk": "^2.0.0"
@@ -162,6 +160,15 @@
       "optional": true
     },
     "@rdkit/rdkit": {
+      "optional": true
+    },
+    "@streamdown/math": {
+      "optional": true
+    },
+    "@streamdown/mermaid": {
+      "optional": true
+    },
+    "plotly.js-dist": {
       "optional": true
     },
     "snowflake-sdk": {
@@ -190,6 +197,8 @@
     "@storybook/addon-vitest": "^10.4.6",
     "@storybook/builder-vite": "^10.4.6",
     "@storybook/react-vite": "^10.4.6",
+    "@streamdown/math": "^1.0.2",
+    "@streamdown/mermaid": "^1.0.2",
     "@tailwindcss/vite": "^4.2.2",
     "@types/eslint-plugin-jsx-a11y": "^6",
     "@types/jsdom": "^27",
@@ -197,8 +206,6 @@
     "@types/plotly.js": "^3.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@types/react-plotly.js": "^2.6.3",
-    "@types/react-syntax-highlighter": "^15",
     "@vercel/node": "^5.4.5",
     "@vitejs/plugin-react": "^4.3.1",
     "@vitest/browser": "^3",
@@ -219,6 +226,7 @@
     "jsdom": "^28.1.0",
     "lint-staged": "^15.2.0",
     "playwright": "^1.58.2",
+    "plotly.js-dist": "^2.35.2",
     "prettier": "^3.8.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

@@ -53,7 +53,7 @@ function DataTablePagination({
           value={String(pageSize)}
           onValueChange={(value) => table.setPageSize(Number(value))}
         >
-          <SelectTrigger className="h-7 w-16">
+          <SelectTrigger aria-label="Rows per page" className="h-7 w-16">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

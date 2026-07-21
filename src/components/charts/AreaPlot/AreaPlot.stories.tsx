@@ -70,7 +70,12 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Area Plot")).toBeInTheDocument();
+      await waitFor(
+        () => {
+          expect(canvas.getByText("Area Plot")).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Chart container renders", async () => {
@@ -125,7 +130,9 @@ export const Stacked: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Stacked Area Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Stacked Area Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -196,7 +203,9 @@ export const CategoricalXLabels: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Throughput by Weekday")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Throughput by Weekday")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -204,18 +213,8 @@ export const CategoricalXLabels: Story = {
     });
 
     await step("X-axis ticks show categorical labels, not integers", async () => {
-      const tickLabels = [
-        ...canvasElement.querySelectorAll(".xtick text"),
-      ].map((node) => node.textContent);
-      expect(tickLabels).toEqual([
-        "Mon",
-        "Tue",
-        "Wed",
-        "Thu",
-        "Fri",
-        "Sat",
-        "Sun",
-      ]);
+      const tickLabels = [...canvasElement.querySelectorAll(".xtick text")].map((node) => node.textContent);
+      expect(tickLabels).toEqual(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
     });
   },
 };
@@ -241,7 +240,9 @@ export const CustomRange: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Area Plot with Custom Range")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Area Plot with Custom Range")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -290,9 +291,7 @@ export const ContainerFilled: Story = {
   ],
   play: async ({ canvasElement, step }) => {
     await step("Chart canvas fills the container width", async () => {
-      const wrapper = canvasElement.querySelector(
-        '[data-testid="fill-wrapper"]',
-      ) as HTMLElement;
+      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       // The plot is created after the first ResizeObserver measurement, so wait
       // for it before asserting it sized to the container (not a fixed 1000px).
       await waitFor(() => {
@@ -303,9 +302,7 @@ export const ContainerFilled: Story = {
     });
 
     await step("Chart resizes in place when the container resizes", async () => {
-      const wrapper = canvasElement.querySelector(
-        '[data-testid="fill-wrapper"]',
-      ) as HTMLElement;
+      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       // Shrink the container; the ResizeObserver should drive a Plotly relayout
       // (not a full re-plot) so the canvas tracks the new width.
       wrapper.style.width = "440px";
@@ -347,28 +344,18 @@ export const SmallSizeLegendRegression: Story = {
   },
   play: async ({ canvasElement, step }) => {
     await step("Chart container renders", async () => {
-      await waitFor(() =>
-        expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument(),
-      );
+      await waitFor(() => expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument());
     });
 
     await step("Legend sits below the x-axis tick labels (no overlap)", async () => {
       await waitFor(() => {
-        const ticks = [
-          ...canvasElement.querySelectorAll<SVGTextElement>(".xtick text"),
-        ];
-        const legendItems = [
-          ...canvasElement.querySelectorAll<SVGTextElement>(".legend .legendtext"),
-        ];
+        const ticks = [...canvasElement.querySelectorAll<SVGTextElement>(".xtick text")];
+        const legendItems = [...canvasElement.querySelectorAll<SVGTextElement>(".legend .legendtext")];
         expect(ticks.length).toBeGreaterThan(0);
         expect(legendItems.length).toBeGreaterThan(0);
 
-        const tickBottom = Math.max(
-          ...ticks.map((node) => node.getBoundingClientRect().bottom),
-        );
-        const legendTop = Math.min(
-          ...legendItems.map((node) => node.getBoundingClientRect().top),
-        );
+        const tickBottom = Math.max(...ticks.map((node) => node.getBoundingClientRect().bottom));
+        const legendTop = Math.min(...legendItems.map((node) => node.getBoundingClientRect().top));
         // Legend must start at or below where the tick labels end (small
         // sub-pixel tolerance for rounding).
         expect(legendTop).toBeGreaterThanOrEqual(tickBottom - 2);

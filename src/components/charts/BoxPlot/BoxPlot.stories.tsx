@@ -207,7 +207,12 @@ export const Basic: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Box Plot")).toBeInTheDocument();
+      await waitFor(
+        () => {
+          expect(canvas.getByText("Box Plot")).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Chart container renders", async () => {
@@ -241,7 +246,9 @@ export const MultipleBoxes: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Multiple Box Plots")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Multiple Box Plots")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -281,7 +288,9 @@ export const CategoricalData: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Box Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Box Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -327,7 +336,9 @@ export const WithOutliers: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Box Plot with Outliers")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Box Plot with Outliers")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -378,7 +389,9 @@ export const CustomStyling: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Custom Box Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Custom Box Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -431,9 +444,7 @@ export const ContainerFilled: Story = {
   ],
   play: async ({ canvasElement, step }) => {
     await step("Chart canvas fills the container width", async () => {
-      const wrapper = canvasElement.querySelector(
-        '[data-testid="fill-wrapper"]',
-      ) as HTMLElement;
+      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       await waitFor(() => {
         const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
         expect(plot).toBeInTheDocument();
@@ -442,9 +453,7 @@ export const ContainerFilled: Story = {
     });
 
     await step("Chart resizes in place when the container resizes", async () => {
-      const wrapper = canvasElement.querySelector(
-        '[data-testid="fill-wrapper"]',
-      ) as HTMLElement;
+      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       // Shrink the container; the ResizeObserver should drive a Plotly relayout
       // (not a full re-plot) so the canvas tracks the new width.
       wrapper.style.width = "440px";

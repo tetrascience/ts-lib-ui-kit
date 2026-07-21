@@ -1,6 +1,5 @@
 import { expect, waitFor, within } from "storybook/test";
 
-
 import { LinePlot } from "./LinePlot";
 
 import type { LineDataSeries } from "./LinePlot";
@@ -302,7 +301,12 @@ export const Basic: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Basic Line Plot")).toBeInTheDocument();
+      await waitFor(
+        () => {
+          expect(canvas.getByText("Basic Line Plot")).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Chart container renders", async () => {
@@ -346,7 +350,9 @@ export const CategoricalXLabels: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Runs per Weekday")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Runs per Weekday")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -354,18 +360,8 @@ export const CategoricalXLabels: Story = {
     });
 
     await step("X-axis ticks show categorical labels, not integers", async () => {
-      const tickLabels = [
-        ...canvasElement.querySelectorAll(".xtick text"),
-      ].map((node) => node.textContent);
-      expect(tickLabels).toEqual([
-        "Mon",
-        "Tue",
-        "Wed",
-        "Thu",
-        "Fri",
-        "Sat",
-        "Sun",
-      ]);
+      const tickLabels = [...canvasElement.querySelectorAll(".xtick text")].map((node) => node.textContent);
+      expect(tickLabels).toEqual(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
     });
 
     await step("Legend shows series names", async () => {
@@ -392,7 +388,9 @@ export const WithMarkers: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Line Plot with Markers")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Line Plot with Markers")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -427,7 +425,9 @@ export const WithErrorBars: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Line Plot with Error Bars")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Line Plot with Error Bars")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -462,7 +462,9 @@ export const WideRange: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Wide Range Data Graph")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Wide Range Data Graph")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -498,7 +500,9 @@ export const NarrowRange: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Narrow Range Data Graph")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Narrow Range Data Graph")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -535,7 +539,9 @@ export const CustomAxes: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Temperature Over Time")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Temperature Over Time")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -576,7 +582,9 @@ export const CustomRange: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Custom Range Graph")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Custom Range Graph")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -609,7 +617,9 @@ export const AutoRangeLinePlot: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Line Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Line Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -657,7 +667,9 @@ export const WideRangeAutoScaled: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Line Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Line Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -704,7 +716,9 @@ export const NarrowRangeAutoScaled: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Line Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Line Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -743,8 +757,7 @@ export const OnlyXRangeProvided: Story = {
     zephyr: { testCaseId: "SW-T1008" },
     docs: {
       description: {
-        story:
-          "In this example, only the X-axis range is provided, while the Y-axis uses autorange.",
+        story: "In this example, only the X-axis range is provided, while the Y-axis uses autorange.",
       },
     },
   },
@@ -762,7 +775,9 @@ export const OnlyXRangeProvided: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Line Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Line Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -792,8 +807,7 @@ export const OnlyYRangeProvided: Story = {
     zephyr: { testCaseId: "SW-T1009" },
     docs: {
       description: {
-        story:
-          "In this example, only the Y-axis range is provided, while the X-axis uses autorange.",
+        story: "In this example, only the Y-axis range is provided, while the X-axis uses autorange.",
       },
     },
   },
@@ -811,7 +825,9 @@ export const OnlyYRangeProvided: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Line Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Line Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -849,7 +865,9 @@ export const LinePlotStartingFromZero: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Line Plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Line Plot")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -944,9 +962,7 @@ export const ContainerFilled: Story = {
   ],
   play: async ({ canvasElement, step }) => {
     await step("Chart canvas fills the container width", async () => {
-      const wrapper = canvasElement.querySelector(
-        '[data-testid="fill-wrapper"]',
-      ) as HTMLElement;
+      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       await waitFor(() => {
         const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
         expect(plot).toBeInTheDocument();
@@ -955,9 +971,7 @@ export const ContainerFilled: Story = {
     });
 
     await step("Chart resizes in place when the container resizes", async () => {
-      const wrapper = canvasElement.querySelector(
-        '[data-testid="fill-wrapper"]',
-      ) as HTMLElement;
+      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       // Shrink the container; the ResizeObserver should drive a Plotly relayout
       // (not a full re-plot) so the canvas tracks the new width.
       wrapper.style.width = "440px";
@@ -1000,20 +1014,12 @@ export const SmallSizeLegendRegression: Story = {
   play: async ({ canvasElement, step }) => {
     await step("Legend sits below the x-axis tick labels (no overlap)", async () => {
       await waitFor(() => {
-        const ticks = [
-          ...canvasElement.querySelectorAll<SVGTextElement>(".xtick text"),
-        ];
-        const legendItems = [
-          ...canvasElement.querySelectorAll<SVGTextElement>(".legend .legendtext"),
-        ];
+        const ticks = [...canvasElement.querySelectorAll<SVGTextElement>(".xtick text")];
+        const legendItems = [...canvasElement.querySelectorAll<SVGTextElement>(".legend .legendtext")];
         expect(ticks.length).toBeGreaterThan(0);
         expect(legendItems.length).toBeGreaterThan(0);
-        const tickBottom = Math.max(
-          ...ticks.map((node) => node.getBoundingClientRect().bottom),
-        );
-        const legendTop = Math.min(
-          ...legendItems.map((node) => node.getBoundingClientRect().top),
-        );
+        const tickBottom = Math.max(...ticks.map((node) => node.getBoundingClientRect().bottom));
+        const legendTop = Math.min(...legendItems.map((node) => node.getBoundingClientRect().top));
         expect(legendTop).toBeGreaterThanOrEqual(tickBottom - 2);
       });
     });

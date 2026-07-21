@@ -1,6 +1,7 @@
-import Plotly from "plotly.js-dist";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+
+import { getLoadedPlotly } from "../plotly-loader";
 
 import { chartTooltipLines } from "./lines";
 
@@ -272,8 +273,10 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
     setAnchor(null);
     cursorLinesRef.current = null;
 
-    // A larger hover radius makes the tooltip easier to acquire and keep
-    void Plotly.relayout(plotDiv, {
+    // A larger hover radius makes the tooltip easier to acquire and keep.
+    // bindTooltip is documented as "call after Plotly.newPlot(...)", so the
+    // lazily-loaded Plotly module is guaranteed to be available here.
+    void getLoadedPlotly().relayout(plotDiv, {
       hoverdistance: optionsRef.current.hoverDistance ?? HOVER_DISTANCE_PX,
     });
 

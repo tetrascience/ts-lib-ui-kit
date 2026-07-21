@@ -4,7 +4,17 @@ export {
   dataAppShellPrimaryNavVariants,
   dataAppShellPrimaryNavItemVariants,
 } from "./PrimaryNav";
+export {
+  DataAppShellRightPanel,
+  DataAppShellRightPanelTrigger,
+  dataAppShellRightPanelTriggerVariants,
+} from "./RightPanel";
 export type { DataAppShellProps, BreadcrumbItemConfig } from "./DataAppShell";
+export type {
+  DataAppShellRightPanelProps,
+  DataAppShellRightPanelTriggerProps,
+  DataAppShellRightPanelVariant,
+} from "./RightPanel";
 export type {
   DataAppShellPrimaryNavProps,
   DataAppShellPrimaryNavVariant,

@@ -44,7 +44,7 @@ function renderVertical() {
 function renderHorizontal(args: Story["args"]) {
   return (
     <ScrollAreaPrimitive.Root className="relative w-[360px] rounded-lg border">
-      <ScrollAreaPrimitive.Viewport className="w-full rounded-[inherit]">
+      <ScrollAreaPrimitive.Viewport className="w-full rounded-[inherit]" tabIndex={0}>
         <div className="flex w-max gap-3 p-4">
           {Array.from({ length: 8 }, (_, index) => (
             <div

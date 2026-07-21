@@ -51,11 +51,14 @@ export const Default: Story = {
   args: { smiles: MOLECULES.aspirin.smiles, alt: "Aspirin", className: "size-64" },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    // Exposed to assistive tech as a single labelled image.
-    await waitFor(() =>
-      expect(
-        canvas.getByRole("img", { name: "Aspirin" }).querySelector("svg"),
-      ).toBeInTheDocument(),
+    // Exposed to assistive tech as a single labelled image. Allow headroom for
+    // RDKit's WASM to compile on a cold runner.
+    await waitFor(
+      () =>
+        expect(
+          canvas.getByRole("img", { name: "Aspirin" }).querySelector("svg"),
+        ).toBeInTheDocument(),
+      { timeout: 15000 },
     )
   },
   parameters: { zephyr: { testCaseId: "" } },
@@ -66,10 +69,12 @@ export const InvalidStructure: Story = {
   args: { smiles: "not a molecule~!", alt: "bad input", className: "size-48" },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    await waitFor(() =>
-      expect(
-        canvas.getByRole("img", { name: /unable to render structure/i }),
-      ).toBeInTheDocument(),
+    await waitFor(
+      () =>
+        expect(
+          canvas.getByRole("img", { name: /unable to render structure/i }),
+        ).toBeInTheDocument(),
+      { timeout: 15000 },
     )
     expect(canvas.getByText(/invalid structure/i)).toBeInTheDocument()
   },

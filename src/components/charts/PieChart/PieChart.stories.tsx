@@ -1,5 +1,4 @@
-import { expect, within } from "storybook/test";
-
+import { expect, waitFor, within } from "storybook/test";
 
 import { PieChart } from "./index";
 
@@ -44,7 +43,12 @@ export const Default: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      await waitFor(
+        () => {
+          expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Pie layer and slices render", async () => {
@@ -62,9 +66,7 @@ export const Default: Story = {
     });
 
     await step("Legend color swatches have non-zero rendered size", async () => {
-      const swatches = canvasElement.querySelectorAll<HTMLElement>(
-        "[data-slot='pie-legend-swatch']",
-      );
+      const swatches = canvasElement.querySelectorAll<HTMLElement>("[data-slot='pie-legend-swatch']");
       expect(swatches.length).toBe(5);
       swatches.forEach((swatch) => {
         const rect = swatch.getBoundingClientRect();
@@ -145,9 +147,7 @@ export const DonutChart: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(
-        canvas.getByText("Bioreactor Parameter Distribution (Donut)"),
-      ).toBeInTheDocument();
+      expect(canvas.getByText("Bioreactor Parameter Distribution (Donut)")).toBeInTheDocument();
     });
 
     await step("Chart container renders", async () => {
@@ -239,9 +239,7 @@ export const WithRotation: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(
-        canvas.getByText("Bioreactor Parameter Distribution (Rotated)"),
-      ).toBeInTheDocument();
+      expect(canvas.getByText("Bioreactor Parameter Distribution (Rotated)")).toBeInTheDocument();
     });
 
     await step("Chart container renders", async () => {

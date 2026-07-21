@@ -5777,6 +5777,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@rdkit/rdkit@npm:2025.3.4-1.0.0":
+  version: 2025.3.4-1.0.0
+  resolution: "@rdkit/rdkit@npm:2025.3.4-1.0.0"
+  checksum: 10c0/9525777dac8c95108df4144221a704316e6e2260c000a686499a9a63da28ecfe7a653e960e14ec284e3be7fe036678309993ba5469760335773c9b8ff71b541b
+  languageName: node
+  linkType: hard
+
 "@renovatebot/pep440@npm:4.2.1":
   version: 4.2.1
   resolution: "@renovatebot/pep440@npm:4.2.1"
@@ -7632,6 +7639,7 @@ __metadata:
     "@modelcontextprotocol/sdk": "npm:^1.29.0"
     "@monaco-editor/react": "npm:^4.7.0"
     "@radix-ui/react-use-controllable-state": "npm:^1.2.2"
+    "@rdkit/rdkit": "npm:2025.3.4-1.0.0"
     "@semantic-release/changelog": "npm:^6.0.3"
     "@semantic-release/commit-analyzer": "npm:^13.0.1"
     "@semantic-release/git": "npm:^10.0.1"
@@ -7724,6 +7732,7 @@ __metadata:
   peerDependencies:
     "@aws-sdk/client-athena": ^3.0.0
     "@databricks/sql": ^1.0.0
+    "@rdkit/rdkit": 2025.3.4-1.0.0
     "@streamdown/math": ^1.0.2
     "@streamdown/mermaid": ^1.0.2
     plotly.js-dist: ^2.35.2
@@ -7734,6 +7743,8 @@ __metadata:
     "@aws-sdk/client-athena":
       optional: true
     "@databricks/sql":
+      optional: true
+    "@rdkit/rdkit":
       optional: true
     "@streamdown/math":
       optional: true

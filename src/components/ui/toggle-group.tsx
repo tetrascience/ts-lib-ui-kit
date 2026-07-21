@@ -75,6 +75,10 @@ function ToggleGroupItem({
           variant: context.variant || variant,
           size: context.size || size,
         }),
+        // SW-2292: selected group items use a high-contrast primary fill (the
+        // shared toggle `on` state is the subtle bg-accent). twMerge drops the
+        // inherited accent so this wins; standalone Toggle is unaffected.
+        "aria-pressed:bg-primary aria-pressed:text-primary-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground",
         className
       )}
       {...props}

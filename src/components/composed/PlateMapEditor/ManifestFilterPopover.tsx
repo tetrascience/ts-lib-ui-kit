@@ -87,7 +87,7 @@ export function ManifestFilterPopover({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent align="end" className="min-w-80">
+      <PopoverContent align="end" className="min-w-80" aria-label="Filter conditions">
           <div className="flex flex-col gap-2">
             {filters.map((condition) => {
               const colConfig = columns.find((c) => c.columnId === condition.columnId);
@@ -106,7 +106,7 @@ export function ManifestFilterPopover({
                       updateFilter(condition.id, { columnId: value, operator: nextOperator, value: "" });
                     }}
                   >
-                    <SelectTrigger size="sm" className="w-36">
+                    <SelectTrigger aria-label="Filter column" size="sm" className="w-36">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -124,7 +124,7 @@ export function ManifestFilterPopover({
                       updateFilter(condition.id, { operator: value as FilterOperator, value: "" })
                     }
                   >
-                    <SelectTrigger size="sm" className="w-32">
+                    <SelectTrigger aria-label="Filter operator" size="sm" className="w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

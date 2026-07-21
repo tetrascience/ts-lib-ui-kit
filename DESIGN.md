@@ -24,7 +24,7 @@
 ### Typography
 
 - **Font family**: Inter Variable (`@fontsource-variable/inter`), variable weight 100–900
-- Scale follows Tailwind defaults (`text-xs` → `text-4xl`)
+- Scale follows Tailwind defaults (`text-xs` → `text-4xl`), plus a kit-added `text-2xs` (10px) for dense UI
 - No custom type scale — lean on Tailwind utilities directly
 
 ### Spacing & Radius
@@ -134,19 +134,18 @@ import {
 | `TdpLink`                | Composed     | —                     | TDP-aware link component                          | Stable |
 | `TopBar`                 | Composed     | —                     | Sticky 3-slot header (left/center/right)          | Stable |
 | `UserMenu`               | Composed     | `avatar` + `dropdown-menu` | Avatar + account dropdown                    | Stable |
-| `AreaGraph`              | Chart        | —                     | Plotly area chart                                 | Stable |
-| `BarGraph`               | Chart        | —                     | Plotly bar chart (grouped/stacked)                | Stable |
-| `LineGraph`              | Chart        | —                     | Plotly line chart                                 | Stable |
-| `ScatterGraph`           | Chart        | —                     | Plotly scatter                                    | Stable |
+| `AreaPlot`               | Chart        | —                     | Plotly area chart                                 | Stable |
+| `BarChart`               | Chart        | —                     | Plotly bar chart (grouped/stacked)                | Stable |
+| `LinePlot`               | Chart        | —                     | Plotly line chart                                 | Stable |
+| `ScatterPlot`            | Chart        | —                     | Plotly scatter (marker symbols, stacked variant)  | Stable |
 | `Histogram`              | Chart        | —                     | Plotly histogram                                  | Stable |
 | `PieChart`               | Chart        | —                     | Plotly pie                                        | Stable |
-| `Heatmap`                | Chart        | —                     | Plotly heatmap                                    | Stable |
-| `Boxplot`                | Chart        | —                     | Plotly box plot                                   | Stable |
-| `DotPlot`                | Chart        | —                     | Plotly dot plot                                   | Stable |
-| `Chromatogram`           | Chart        | —                     | Specialized lab chromatogram (themed)             | Stable |
-| `ChromatogramChart`      | Chart        | —                     | Legacy chromatogram (non-themed)                  | Stable |
-| `PlateMap`               | Chart        | —                     | 96/384-well plate visualization                   | Stable |
-| `InteractiveScatter`     | Chart        | —                     | Zoomable scatter with selection                   | Stable |
+| `BoxPlot`                | Chart        | —                     | Plotly box plot                                   | Stable |
+| `Chromatogram`           | Chart        | —                     | HPLC chromatogram with peak detection             | Stable |
+| `StackedChromatogram`    | Chart        | —                     | Stacked/overlaid chromatogram runs                | Stable |
+| `Electropherogram`       | Chart        | —                     | Sequencing trace viewer (A/T/G/C base peaks)      | Stable |
+| `PlateMap`               | Chart        | —                     | 96/384-well plate visualization + generic heatmap | Stable |
+| `ScatterPlotInteractive` | Chart        | —                     | Zoomable scatter with selection                   | Stable |
 
 ---
 

@@ -1,12 +1,11 @@
 import * as React from "react"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { expect, userEvent, within } from "storybook/test"
 
 import compoundsData from "../../../../.storybook/__fixtures__/compounds"
 import moleculesData from "../../../../.storybook/__fixtures__/molecules"
 import usersData from "../../../../.storybook/__fixtures__/users"
 import { Badge } from "../badge"
+import { CodeBlock } from "../code-block"
 
 import { DataTable, TableToolbar, useDataTable } from "./data-table"
 import { DataTableColumnToggle } from "./data-table-column-toggle"
@@ -974,13 +973,7 @@ function ControlledStateStory({ dataset }: { dataset: DatasetKey }) {
       </DataTable>
       <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
         <p className="text-xs font-medium text-muted-foreground">Live state from controlled props `onColumnVisibilityChange` and `onColumnOrderChange`:</p>
-        <SyntaxHighlighter
-          language="json"
-          style={document.documentElement.classList.contains("dark") ? oneDark : oneLight}
-          customStyle={{ margin: 0, borderRadius: "0.5rem", fontSize: "0.75rem" }}
-        >
-          {JSON.stringify({ columnVisibility, columnOrder }, null, 2)}
-        </SyntaxHighlighter>
+        <CodeBlock language="json" code={JSON.stringify({ columnVisibility, columnOrder }, null, 2)} />
       </div>
     </div>
   )
@@ -1248,13 +1241,7 @@ function ControlledFilteringStory() {
       </DataTable>
       <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
         <p className="text-xs font-medium text-muted-foreground">Live state from controlled prop <code>filters</code>:</p>
-        <SyntaxHighlighter
-          language="json"
-          style={document.documentElement.classList.contains("dark") ? oneDark : oneLight}
-          customStyle={{ margin: 0, borderRadius: "0.5rem", fontSize: "0.75rem" }}
-        >
-          {JSON.stringify(filters, null, 2)}
-        </SyntaxHighlighter>
+        <CodeBlock language="json" code={JSON.stringify(filters, null, 2)} />
       </div>
     </div>
   )
@@ -1494,15 +1481,7 @@ function ControlledGroupingStory() {
         <p className="text-xs font-medium text-muted-foreground">
           Live state from controlled prop <code>grouping</code>:
         </p>
-        <SyntaxHighlighter
-          language="json"
-          style={
-            document.documentElement.classList.contains("dark") ? oneDark : oneLight
-          }
-          customStyle={{ margin: 0, borderRadius: "0.5rem", fontSize: "0.75rem" }}
-        >
-          {JSON.stringify({ grouping }, null, 2)}
-        </SyntaxHighlighter>
+        <CodeBlock language="json" code={JSON.stringify({ grouping }, null, 2)} />
       </div>
     </div>
   )

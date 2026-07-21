@@ -34,9 +34,9 @@ src/
 │   ├── ui/          # shadcn/ui primitives (radix-ui + CVA + Tailwind)
 │   ├── composed/    # Multi-component compositions (AppHeader, Sidebar, etc.)
 │   └── charts/      # 12 Plotly.js scientific visualizations:
-│                    #   AreaGraph, BarGraph, LineGraph, ScatterGraph,
-│                    #   InteractiveScatter, Histogram, PieChart, DotPlot,
-│                    #   Heatmap, Boxplot, Chromatogram, PlateMap
+│                    #   AreaPlot, BarChart, LinePlot, ScatterPlot,
+│                    #   ScatterPlotInteractive, Histogram, PieChart, BoxPlot,
+│                    #   Chromatogram, StackedChromatogram, Electropherogram, PlateMap
 ├── hooks/           # Custom React hooks
 ├── lib/utils.ts     # cn() helper (clsx + tailwind-merge)
 ├── server/          # Server-side utilities (being migrated out — see below)

@@ -56,34 +56,39 @@ function SortableColumnItem({ id, label, visible, onToggle }: SortableColumnItem
     <div
       ref={setNodeRef}
       style={style}
-      role="checkbox"
-      aria-checked={visible}
-      tabIndex={0}
-      onClick={onToggle}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          onToggle();
-        }
-      }}
       className={cn(
-        "group/col-item flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm select-none hover:bg-accent hover:text-accent-foreground",
-        isDragging && "z-50 bg-accent text-accent-foreground shadow-sm",
+        "group/col-item flex items-center gap-2 rounded-md px-2 py-1.5 text-sm select-none hover:bg-accent hover:text-accent-foreground",
+        isDragging && "z-50 bg-accent text-accent-foreground shadow-elevation-3",
       )}
     >
       <button
         type="button"
+        aria-label={`Drag to reorder ${label}`}
         className={cn(
           "cursor-grab touch-none text-muted-foreground group-hover/col-item:text-accent-foreground active:cursor-grabbing",
           !isDragging && "opacity-0 group-hover/col-item:opacity-100 transition-opacity",
         )}
-        onClick={(e) => e.stopPropagation()}
         {...attributes}
         {...listeners}
       >
         <GripVerticalIcon className="size-3.5" />
       </button>
-      <span className="flex-1 truncate">{label}</span>
-      <CheckIcon className={cn("size-4 shrink-0", visible ? "text-muted-foreground group-hover/col-item:text-accent-foreground" : "text-transparent")} />
+      <div
+        role="checkbox"
+        aria-checked={visible}
+        tabIndex={0}
+        onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
+        className="flex flex-1 cursor-pointer items-center gap-2 select-none"
+      >
+        <span className="flex-1 truncate">{label}</span>
+        <CheckIcon className={cn("size-4 shrink-0", visible ? "text-muted-foreground group-hover/col-item:text-accent-foreground" : "text-transparent")} />
+      </div>
     </div>
   )
 }
@@ -159,7 +164,7 @@ function DataTableColumnToggle({ className }: DataTableColumnToggleProps) {
 
       {open && (
         <div
-          className="absolute right-0 top-full z-50 mt-1 w-56 rounded-lg border bg-popover p-1 shadow-md"
+          className="absolute right-0 top-full z-50 mt-1 w-56 rounded-lg border bg-popover p-1 shadow-elevation-4"
           role="group"
           aria-label="Toggle and reorder columns"
         >

@@ -138,10 +138,11 @@ function DataTableFilter({ className }: DataTableFilterProps) {
       <Popover.Portal>
         <Popover.Content
           data-slot="data-table-filter-panel"
+          aria-label="Filter conditions"
           align="end"
           sideOffset={4}
           className={cn(
-            "z-50 min-w-80 rounded-lg border bg-popover p-3 text-popover-foreground shadow-md outline-none",
+            "z-50 min-w-80 rounded-lg border bg-popover p-3 text-popover-foreground shadow-elevation-4 outline-none",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -172,7 +173,7 @@ function DataTableFilter({ className }: DataTableFilterProps) {
                       })
                     }}
                   >
-                    <SelectTrigger size="sm" className="w-36">
+                    <SelectTrigger aria-label="Filter column" size="sm" className="w-36">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -197,7 +198,7 @@ function DataTableFilter({ className }: DataTableFilterProps) {
                       })
                     }
                   >
-                    <SelectTrigger size="sm" className="w-32">
+                    <SelectTrigger aria-label="Filter operator" size="sm" className="w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

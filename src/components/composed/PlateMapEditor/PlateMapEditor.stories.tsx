@@ -509,7 +509,7 @@ function PlateMapEditorDragDrop() {
 }
 
 const meta: Meta<typeof PlateMapEditor<DemoWell>> = {
-  title: "Design Patterns/PlateMapEditor",
+  title: "Design Patterns/Plate Map Editor",
   component: PlateMapEditor,
   parameters: { layout: "padded" },
   tags: ["autodocs"],
@@ -938,6 +938,15 @@ export const RichForm: Story = {
       await userEvent.click(option);
       await waitFor(() =>
         expect(canvasElement.querySelector('[data-slot="combobox-chip"]')).not.toBeNull(),
+      );
+    });
+
+    await step("Close the multiselect to restore resting state", async () => {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() =>
+        expect(
+          canvasElement.ownerDocument.body.querySelector('[role="option"]'),
+        ).toBeNull(),
       );
     });
 

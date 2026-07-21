@@ -6,7 +6,7 @@ import { PieChart } from "./index";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta = {
-  title: "Charts/Pie Chart",
+  title: "Data Viz/Pie Chart",
   component: PieChart,
   parameters: {
     layout: "centered",

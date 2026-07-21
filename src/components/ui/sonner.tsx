@@ -35,6 +35,21 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",
           "--border-radius": "var(--radius)",
+          // richColors: map sonner's status palette onto our AA-verified
+          // solid status tokens (sonner's own rich palette is a tint that
+          // fails WCAG AA contrast).
+          "--success-bg": "var(--positive)",
+          "--success-text": "var(--positive-foreground)",
+          "--success-border": "var(--positive)",
+          "--error-bg": "var(--destructive)",
+          "--error-text": "var(--destructive-foreground)",
+          "--error-border": "var(--destructive)",
+          "--warning-bg": "var(--warning)",
+          "--warning-text": "var(--warning-foreground)",
+          "--warning-border": "var(--warning)",
+          "--info-bg": "var(--info)",
+          "--info-text": "var(--info-foreground)",
+          "--info-border": "var(--info)",
         } as React.CSSProperties
       }
       toastOptions={{

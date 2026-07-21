@@ -5,7 +5,6 @@ import { StreamStatus } from "./stream-status"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
-
 const meta: Meta<typeof StreamStatus> = {
   title: "AI Elements/Stream Status",
   component: StreamStatus,
@@ -29,7 +28,7 @@ const StreamingTransitionDemo = () => {
         Finish stream
       </button>
       <StreamStatus
-        icon={<span data-testid="custom-stream-icon">Custom icon</span>}
+        icon={null}
         isStreaming={isStreaming}
         showIndicator
         startTime={startTime}
@@ -92,11 +91,17 @@ export const IconVariants: Story = {
         isStreaming
         startTime={new Date(Date.now() - 12 * 1000)}
       />
+      <StreamStatus
+        iconVariant="tetra"
+        isStreaming
+        startTime={new Date(Date.now() - 8 * 1000)}
+        tokenCount={640}
+      />
     </div>
   ),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
-    await step("All four icon variants render", async () => {
+    await step("All icon variants render", async () => {
       await expect(canvas.getByText("8.7k tokens")).toBeInTheDocument()
     })
   },
@@ -279,13 +284,12 @@ export const TimeOnly: Story = {
   },
 }
 
-export const CustomIconAndFinishRipple: Story = {
+export const FinishRipple: Story = {
   render: () => <StreamingTransitionDemo />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
-    await step("Custom icon, numeric start time, and million-token formatting render", async () => {
-      await expect(canvas.getByTestId("custom-stream-icon")).toBeInTheDocument()
+    await step("Numeric start time and million-token formatting render", async () => {
       await expect(canvas.getByText("1.2m tokens")).toBeInTheDocument()
       await expect(canvas.getByText(/\d+m \d{2}s/)).toBeInTheDocument()
     })

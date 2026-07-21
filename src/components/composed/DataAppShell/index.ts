@@ -1,7 +1,34 @@
 export { DataAppShell } from "./DataAppShell";
+export {
+  DataAppShellPrimaryNav,
+  dataAppShellPrimaryNavVariants,
+  dataAppShellPrimaryNavItemVariants,
+} from "./PrimaryNav";
+export {
+  DataAppShellRightPanel,
+  DataAppShellRightPanelTrigger,
+  dataAppShellRightPanelTriggerVariants,
+} from "./RightPanel";
+export type { DataAppShellProps, BreadcrumbItemConfig } from "./DataAppShell";
 export type {
-  DataAppShellProps,
+  DataAppShellRightPanelProps,
+  DataAppShellRightPanelTriggerProps,
+  DataAppShellRightPanelVariant,
+} from "./RightPanel";
+export type {
+  DataAppShellPrimaryNavProps,
+  DataAppShellPrimaryNavVariant,
   NavPage,
   NavGroup,
-  BreadcrumbItemConfig,
-} from "./DataAppShell";
+} from "./PrimaryNav";
+export {
+  DataAppShellSecondaryNav,
+  dataAppShellSecondaryNavVariants,
+  dataAppShellSecondaryNavItemVariants,
+} from "./SecondaryNav";
+export type {
+  DataAppShellSecondaryNavProps,
+  DataAppShellSecondaryNavOrientation,
+  NavStep,
+  NavStepStatus,
+} from "./SecondaryNav";

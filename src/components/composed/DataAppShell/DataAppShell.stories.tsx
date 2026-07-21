@@ -1,23 +1,31 @@
-import { cva } from "class-variance-authority";
 import {
-  ChevronLeft,
-  ChevronRight,
   ClipboardList,
   Download,
   Filter,
+  FolderKanban,
+  Info,
   LayoutGrid,
   Library,
   LogOut,
+  PanelRight,
   Search,
-  type LucideIcon,
+  ShieldCheck,
 } from "lucide-react";
 import * as React from "react";
 import { useState } from "react";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 
-import { DataAppShell } from "./DataAppShell";
+import { AppHeaderMenu, DataAppShell } from "./DataAppShell";
+import { DataAppShellPrimaryNav } from "./PrimaryNav";
+import {
+  DataAppShellRightPanel,
+  DataAppShellRightPanelTrigger,
+  type DataAppShellRightPanelVariant,
+} from "./RightPanel";
+import { DataAppShellSecondaryNav } from "./SecondaryNav";
 
 import type { NavGroup } from "./DataAppShell";
+import type { NavStep } from "./SecondaryNav";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { TdpNavigationProvider } from "@/components/composed/tdp-link";
@@ -31,8 +39,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 
 // =============================================================================
 // Story-local helpers
@@ -118,152 +124,6 @@ function UserMenuButton({ name, userRole, expanded = false }: UserMenuButtonProp
   );
 }
 
-// ── Workflow panel ───────────────────────────────────────────────────────────
-
-interface WorkflowStep {
-  id: string;
-  label: string;
-  icon?: LucideIcon | React.FC<React.SVGProps<SVGSVGElement>>;
-  isActive?: boolean;
-  disabled?: boolean;
-  disabledReason?: string;
-  onClick?: () => void;
-}
-
-const stepItemVariants = cva(
-  "flex items-center gap-2 py-2 px-2.5 font-normal transition-colors duration-150 whitespace-nowrap leading-tight cursor-pointer border-l-[5px] w-full bg-transparent border-r-0 border-t-0 border-b-0",
-  {
-    variants: {
-      active: {
-        true: "border-l-sidebar-primary bg-sidebar-accent font-semibold text-sidebar-foreground shadow-sm",
-        false: "border-l-sidebar-border bg-transparent text-muted-foreground hover:bg-sidebar-accent/50",
-      },
-    },
-    defaultVariants: { active: false },
-  },
-);
-
-function WorkflowPanel({
-  steps,
-  collapsed,
-  onCollapseChange,
-}: {
-  steps: WorkflowStep[];
-  collapsed: boolean;
-  onCollapseChange: (collapsed: boolean) => void;
-}) {
-  if (collapsed) {
-    return (
-      <div
-        data-slot="data-app-panel-collapsed"
-        className="flex flex-col shrink-0 w-[46px] bg-sidebar border-r border-sidebar-border"
-      >
-        <div className="flex justify-center items-center h-10 border-b border-sidebar-border">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="w-5 h-5" onClick={() => onCollapseChange(false)}>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Expand</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        <TooltipProvider>
-          {steps.map((step) => {
-            const Icon = step.icon;
-            return (
-              <Tooltip key={step.id}>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      "flex justify-center items-center py-3.5 border-l-[5px] cursor-pointer bg-transparent border-r-0 border-t-0 border-b-0 w-full",
-                      step.isActive ? "border-l-primary" : "border-l-border",
-                      step.disabled && "opacity-45 cursor-not-allowed",
-                    )}
-                    onClick={() => !step.disabled && step.onClick?.()}
-                    disabled={step.disabled}
-                  >
-                    {Icon ? (
-                      <Icon className={cn("w-4 h-4", step.isActive ? "text-primary" : "text-muted-foreground")} />
-                    ) : (
-                      <div
-                        className={cn(
-                          "w-2.5 h-2.5 rounded-full",
-                          step.isActive ? "bg-primary" : "bg-muted-foreground/40",
-                        )}
-                      />
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {step.disabled ? (step.disabledReason ?? step.label) : step.label}
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </TooltipProvider>
-      </div>
-    );
-  }
-
-  return (
-    <nav
-      data-slot="data-app-panel-expanded"
-      aria-label="Workflow steps"
-      className="flex flex-col shrink-0 w-[180px] bg-sidebar border-r border-sidebar-border overflow-hidden"
-    >
-      <div className="flex items-center gap-1.5 h-10 px-2.5 pl-4 text-xs font-medium text-muted-foreground whitespace-nowrap border-b border-sidebar-border">
-        <span className="flex-1">Workflow</span>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="w-5 h-5" onClick={() => onCollapseChange(true)}>
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">Collapse</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-      <div className="flex flex-col">
-        {steps.map((step) => {
-          const Icon = step.icon;
-          return (
-            <button
-              type="button"
-              key={step.id}
-              className={cn(
-                stepItemVariants({ active: step.isActive ?? false }),
-                step.disabled && "opacity-45 cursor-not-allowed",
-              )}
-              onClick={() => !step.disabled && step.onClick?.()}
-              disabled={step.disabled}
-              title={step.disabled ? (step.disabledReason ?? step.label) : step.label}
-            >
-              {Icon && (
-                <span
-                  className={cn(
-                    "flex items-center justify-center w-6 h-6 shrink-0",
-                    step.isActive ? "text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                </span>
-              )}
-              <span className={cn("text-title-sm truncate min-w-0", !step.isActive && "font-light")}>
-                {step.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
-
 // =============================================================================
 // Meta
 // =============================================================================
@@ -291,13 +151,8 @@ const htsNavGroups: NavGroup[] = [
   },
 ];
 
-const htsWorkflowSteps: WorkflowStep[] = [
-  {
-    id: "data-overview",
-    label: "Step 1 Name",
-    icon: LayoutGrid,
-    isActive: true,
-  },
+const htsWorkflowSteps: NavStep[] = [
+  { id: "data-overview", label: "Step 1 Name", icon: LayoutGrid },
   { id: "global-filtering", label: "Step 2 Name", icon: Filter },
   { id: "explore-clusters", label: "Step 3 Name", icon: Library },
   { id: "review-compound", label: "Step 4 Name", icon: Search },
@@ -314,18 +169,26 @@ const htsBreadcrumbs = [
 // Default (with workflow)
 // =============================================================================
 
-const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean }) => {
+const DefaultShell = ({
+  initialCollapsed = false,
+  panelVariant = "docked",
+  initialPanelOpen = true,
+  triggerPlacement = "header",
+}: {
+  initialCollapsed?: boolean;
+  /** Right panel variant — `docked` pushes main, `overlay` slides over it. */
+  panelVariant?: DataAppShellRightPanelVariant;
+  initialPanelOpen?: boolean;
+  /** Where the panel trigger lives — a top-bar icon button or the floating FAB. */
+  triggerPlacement?: "header" | "fab";
+}) => {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [activeStepId, setActiveStepId] = useState("data-overview");
+  const [detailsOpen, setDetailsOpen] = useState(initialPanelOpen);
+  const detailsTriggerRef = React.useRef<HTMLButtonElement>(null);
 
-  const steps = htsWorkflowSteps.map((s) => ({
-    ...s,
-    isActive: s.id === activeStepId,
-    onClick: () => setActiveStepId(s.id),
-  }));
-
-  const activeStepIndex = steps.findIndex((s) => s.isActive);
-  const isLastStep = activeStepIndex === steps.length - 1;
+  const activeStepIndex = htsWorkflowSteps.findIndex((s) => s.id === activeStepId);
+  const isLastStep = activeStepIndex === htsWorkflowSteps.length - 1;
   const isFirstStep = activeStepIndex <= 0;
 
   return (
@@ -344,7 +207,7 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setActiveStepId(steps[activeStepIndex - 1].id)}
+              onClick={() => setActiveStepId(htsWorkflowSteps[activeStepIndex - 1].id)}
               className="gap-1"
             >
               Back
@@ -358,10 +221,54 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
           >
             {isLastStep ? "Push to Downstream" : "Next"}
           </Button>
+          {/* Details panel trigger as a top-bar icon button (instead of the default FAB) */}
+          {triggerPlacement === "header" && (
+            <DataAppShellRightPanelTrigger
+              ref={detailsTriggerRef}
+              variant="icon"
+              aria-label="Toggle details panel"
+              aria-expanded={detailsOpen}
+              title="Toggle details panel"
+              onClick={() => setDetailsOpen((o) => !o)}
+            >
+              <PanelRight />
+            </DataAppShellRightPanelTrigger>
+          )}
         </>
       }
       showNavRail={!collapsed}
-      sidebarPanel={<WorkflowPanel steps={steps} collapsed={collapsed} onCollapseChange={setCollapsed} />}
+      sidebarPanel={
+        <DataAppShellSecondaryNav
+          aria-label="Workflow steps"
+          title="Workflow"
+          collapsible
+          steps={htsWorkflowSteps}
+          activeKey={activeStepId}
+          onSelect={setActiveStepId}
+          collapsed={collapsed}
+          onCollapsedChange={setCollapsed}
+        />
+      }
+      rightPanel={
+        <DataAppShellRightPanel
+          id="hts-details"
+          variant={panelVariant}
+          open={detailsOpen}
+          onOpenChange={setDetailsOpen}
+          title="Details"
+          icon={<Info className="size-4 text-muted-foreground" />}
+          showTrigger={triggerPlacement === "fab"}
+          triggerRef={triggerPlacement === "header" ? detailsTriggerRef : undefined}
+          triggerLabel="Open details panel"
+        >
+          {/* Example content only — the panel body is a plain slot (chat, history, inspector, …) */}
+          <div className="flex flex-col gap-2 p-3">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i} className="h-10 rounded-md bg-muted" />
+            ))}
+          </div>
+        </DataAppShellRightPanel>
+      }
     >
       <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground text-sm">Main content area</p>
@@ -372,9 +279,16 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
 
 export const Default: Story = {
   name: "Default",
+  loaders: [
+    () => {
+      // Deterministic panel width — drop anything persisted by a previous run.
+      window.localStorage.removeItem("ts-ui.right-panel.hts-details.width");
+    },
+  ],
   render: () => <DefaultShell />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
+    const body = within(document.body);
 
     await step("Shell renders all regions", async () => {
       expect(canvas.getByText("HTS")).toBeInTheDocument();
@@ -393,9 +307,74 @@ export const Default: Story = {
 
     await step("Version is shown inside the app dropdown under the title", async () => {
       await userEvent.click(canvas.getAllByText("HTS")[0]);
-      const body = within(document.body);
       await waitFor(() => expect(body.getByText("v2.4.1")).toBeInTheDocument());
+      // Escape on the menu element itself — userEvent.keyboard targets the
+      // active element, which is unreliable when the preview iframe isn't the
+      // focused window (Storybook UI); the menu misses the key and stays open.
+      fireEvent.keyDown(body.getByRole("menu"), { key: "Escape" });
+      // Wait for the menu to fully unmount — while it is open (or animating
+      // out) radix marks the rest of the page aria-hidden, which would hide
+      // the shell's landmarks from the next step's role queries.
+      await waitFor(() => expect(body.queryByText("v2.4.1")).not.toBeInTheDocument());
+    });
+
+    await step("Right panel is docked beside the content", async () => {
+      const panel = await canvas.findByRole("complementary", { name: "Details" });
+      // waitFor — the panel's fade-in entry animation starts at opacity 0
+      await waitFor(() => expect(panel).toBeVisible());
+      expect(panel.style.width).toBe("320px");
+    });
+
+    await step("Drag handle resizes the panel and persists width per id", async () => {
+      const panel = canvas.getByRole("complementary", { name: "Details" });
+      const handle = canvas.getByRole("separator", { name: "Resize panel" });
+      fireEvent.pointerDown(handle, { button: 0, pointerId: 1, clientX: 600 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientX: 520 });
+      expect(panel.style.width).toBe("400px");
+      fireEvent.pointerUp(handle, { pointerId: 1, clientX: 520 });
+      expect(window.localStorage.getItem("ts-ui.right-panel.hts-details.width")).toBe("400");
+    });
+
+    await step("Handle is a keyboard-operable ARIA separator", async () => {
+      const panel = canvas.getByRole("complementary", { name: "Details" });
+      const handle = canvas.getByRole("separator", { name: "Resize panel" });
+      handle.focus();
+      await userEvent.keyboard("{ArrowLeft}");
+      expect(handle).toHaveAttribute("aria-valuenow", "416");
+      await userEvent.keyboard("{End}");
+      expect(panel.style.width).toBe("560px");
+      await userEvent.keyboard("{Home}");
+      expect(panel.style.width).toBe("240px");
+      expect(handle).toHaveAttribute("aria-valuemin", "240");
+      expect(handle).toHaveAttribute("aria-valuemax", "560");
+    });
+
+    await step("Close returns focus to the top-bar trigger; the trigger re-opens the panel", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Close panel" }));
+      expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
+      const trigger = canvas.getByRole("button", { name: "Toggle details panel" });
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
+      await waitFor(() => expect(trigger).toHaveFocus());
+      await userEvent.click(trigger);
+      const panel = await canvas.findByRole("complementary", { name: "Details" });
+      await waitFor(() => expect(panel).toBeVisible());
+      expect(trigger).toHaveAttribute("aria-expanded", "true");
+      await waitFor(() => expect(canvas.getByRole("button", { name: "Close panel" })).toHaveFocus());
+    });
+
+    await step("The top-bar trigger toggles the open panel closed", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Toggle details panel" }));
+      expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
+    });
+
+    await step("Esc inside the docked panel closes it; re-open via the trigger", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Toggle details panel" }));
+      await waitFor(() => expect(canvas.getByRole("button", { name: "Close panel" })).toHaveFocus());
       await userEvent.keyboard("{Escape}");
+      expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
+      await userEvent.click(canvas.getByRole("button", { name: "Toggle details panel" }));
+      const panel = await canvas.findByRole("complementary", { name: "Details" });
+      await waitFor(() => expect(panel).toBeVisible());
     });
   },
   parameters: {
@@ -405,9 +384,13 @@ export const Default: Story = {
 
 export const CollapsedWorkflow: Story = {
   name: "Collapsed Workflow",
-  render: () => <DefaultShell initialCollapsed />,
+  // Also demos the right panel's `overlay` variant (starts closed, FAB trigger).
+  render: () => (
+    <DefaultShell initialCollapsed panelVariant="overlay" initialPanelOpen={false} triggerPlacement="fab" />
+  ),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
+    const body = within(document.body);
 
     await step("Collapsed workflow — step labels hidden", async () => {
       expect(canvas.queryByText("Step 2 Name")).not.toBeInTheDocument();
@@ -418,6 +401,22 @@ export const CollapsedWorkflow: Story = {
       expect(
         canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")
       ).not.toBeInTheDocument();
+    });
+
+    await step("Overlay panel slides over the content with a scrim (no reflow)", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Open details panel" }));
+      const overlayPanel = await body.findByRole("dialog", { name: "Details" });
+      // waitFor — the sheet's slide/fade entry animation starts at opacity 0
+      await waitFor(() => expect(overlayPanel).toBeVisible());
+      expect(document.querySelector('[data-slot="sheet-overlay"]')).not.toBeNull();
+      // Docked <aside> never rendered — the overlay does not reflow main
+      expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
+    });
+
+    await step("Esc closes the overlay and returns focus to the FAB", async () => {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(body.queryByRole("dialog", { name: "Details" })).not.toBeInTheDocument());
+      await waitFor(() => expect(canvas.getByRole("button", { name: "Open details panel" })).toHaveFocus());
     });
   },
   parameters: {
@@ -486,13 +485,7 @@ const InteractiveShell = () => {
     },
   ];
 
-  const steps = htsWorkflowSteps.map((s) => ({
-    ...s,
-    isActive: s.id === activeStepId,
-    onClick: () => setActiveStepId(s.id),
-  }));
-
-  const activeStep = steps.find((s) => s.isActive);
+  const activeStep = htsWorkflowSteps.find((s) => s.id === activeStepId);
   const isProjectPage = activePageId === "project";
 
   return (
@@ -517,7 +510,16 @@ const InteractiveShell = () => {
       }
       sidebarPanel={
         isProjectPage ? (
-          <WorkflowPanel steps={steps} collapsed={collapsed} onCollapseChange={setCollapsed} />
+          <DataAppShellSecondaryNav
+            aria-label="Workflow steps"
+            title="Workflow"
+            collapsible
+            steps={htsWorkflowSteps}
+            activeKey={activeStepId}
+            onSelect={setActiveStepId}
+            collapsed={collapsed}
+            onCollapsedChange={setCollapsed}
+          />
         ) : undefined
       }
     >
@@ -706,21 +708,9 @@ const WorkflowInteractionShell = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [activeStepId, setActiveStepId] = useState("step-a");
 
-  const steps: WorkflowStep[] = [
-    {
-      id: "step-a",
-      label: "Step Alpha",
-      icon: LayoutGrid,
-      isActive: activeStepId === "step-a",
-      onClick: () => setActiveStepId("step-a"),
-    },
-    {
-      id: "step-b",
-      label: "Step Beta",
-      icon: Filter,
-      isActive: activeStepId === "step-b",
-      onClick: () => setActiveStepId("step-b"),
-    },
+  const steps: NavStep[] = [
+    { id: "step-a", label: "Step Alpha", icon: LayoutGrid },
+    { id: "step-b", label: "Step Beta", icon: Filter },
     { id: "step-c", label: "Disabled", icon: Search, disabled: true, disabledReason: "Requires upstream data" },
   ];
 
@@ -728,7 +718,18 @@ const WorkflowInteractionShell = () => {
     <DataAppShell
       appName="T"
       navGroups={[{ pages: [{ id: "p1", label: "Project", icon: ClipboardList }] }]}
-      sidebarPanel={<WorkflowPanel steps={steps} collapsed={collapsed} onCollapseChange={setCollapsed} />}
+      sidebarPanel={
+        <DataAppShellSecondaryNav
+          aria-label="Workflow steps"
+          title="Workflow"
+          collapsible
+          steps={steps}
+          activeKey={activeStepId}
+          onSelect={setActiveStepId}
+          collapsed={collapsed}
+          onCollapsedChange={setCollapsed}
+        />
+      }
     >
       <div className="p-6">
         <p data-testid="active-step">Active: {activeStepId}</p>
@@ -765,21 +766,17 @@ export const WorkflowPanelInteractions: Story = {
     });
 
     await step("Collapse button hides step labels", async () => {
-      const expandedPanel = canvasElement.querySelector("[data-slot='data-app-panel-expanded']");
-      const collapseBtn = within(expandedPanel!).getAllByRole("button")[0];
-      await userEvent.click(collapseBtn);
+      await userEvent.click(canvas.getByRole("button", { name: "Collapse" }));
       await waitFor(() => {
-        expect(canvasElement.querySelector("[data-slot='data-app-panel-collapsed']")).toBeInTheDocument();
+        const panel = canvasElement.querySelector("[data-slot='data-app-shell-secondary-nav']");
+        expect(panel).toHaveAttribute("data-collapsed", "true");
         expect(canvas.queryByText("Step Alpha")).not.toBeInTheDocument();
       });
       expect(canvas.getByTestId("collapsed-state").textContent).toBe("Collapsed: true");
     });
 
     await step("Expand button restores step labels", async () => {
-      const collapsedPanel = canvasElement.querySelector("[data-slot='data-app-panel-collapsed']");
-      // First button in collapsed panel header is the expand button
-      const expandBtn = within(collapsedPanel!).getAllByRole("button")[0];
-      await userEvent.click(expandBtn);
+      await userEvent.click(canvas.getByRole("button", { name: "Expand" }));
       await waitFor(() => {
         expect(canvas.getByText("Step Alpha")).toBeInTheDocument();
       });
@@ -913,6 +910,13 @@ export const BackToPlatformCallback: Story = {
       await waitFor(() => {
         expect(canvas.getByTestId("callback-count").textContent).toBe("Callbacks: 1");
       });
+
+      // Wait for the menu to fully close before the next step reopens it —
+      // clicking the trigger while the exit transition is still running gets
+      // swallowed as an outside-click and the reopen never happens.
+      await waitFor(() => {
+        expect(body.queryByText("Back to TDP Platform")).not.toBeInTheDocument();
+      });
     });
 
     await step("Clicking app icon again and Back to TDP Platform increments callback count", async () => {
@@ -972,17 +976,17 @@ export const BackToPlatformPath: Story = {
     });
 
     await step("Back to TDP Platform renders as a link (not a button)", async () => {
-      const menuItem = body.getByRole("menuitem");
+      const menuItem = body.getByRole("menuitem", { name: /back to tdp platform/i });
       expect(menuItem.tagName.toLowerCase()).toBe("a");
     });
 
     await step("Link href contains the backToPlatformPath", async () => {
-      const menuItem = body.getByRole("menuitem");
+      const menuItem = body.getByRole("menuitem", { name: /back to tdp platform/i });
       expect(menuItem).toHaveAttribute("href", expect.stringContaining("/data-workspace"));
     });
 
     await step("Link href is fully resolved with the TDP base URL", async () => {
-      const menuItem = body.getByRole("menuitem");
+      const menuItem = body.getByRole("menuitem", { name: /back to tdp platform/i });
       expect(menuItem).toHaveAttribute("href", "https://tetrascience.com/my-org/data-workspace");
     });
 
@@ -1187,5 +1191,171 @@ export const CompactProperty: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4677" },
+  },
+};
+
+// =============================================================================
+// Horizontal navigation (top PrimaryNav + horizontal SecondaryNav)
+// =============================================================================
+
+const topNavPages = [
+  { id: "projects", label: "Projects", icon: FolderKanban },
+  { id: "explorer", label: "Explorer", icon: Search },
+  { id: "policies", label: "Policies", icon: ShieldCheck },
+];
+
+const secondaryNavSteps: NavStep[] = [
+  { id: "overview", label: "Data Overview", icon: LayoutGrid },
+  {
+    id: "filtering",
+    label: "Filtering",
+    icon: Filter,
+    steps: [
+      { id: "global-filters", label: "Global Filters" },
+      { id: "cluster-filters", label: "Cluster Filters" },
+    ],
+  },
+  { id: "review", label: "Review Compounds", icon: Library },
+  { id: "export", label: "Export", icon: Download, badge: 12 },
+];
+
+/**
+ * The fully horizontal shell chrome — top PrimaryNav (logo left, user right)
+ * with the horizontal SecondaryNav stepper directly beneath it.
+ */
+const HorizontalNavigationExample = () => {
+  const [activeKey, setActiveKey] = useState("projects");
+  const [activeStep, setActiveStep] = useState("filtering");
+
+  return (
+    <div className="flex flex-col h-screen bg-background">
+      <DataAppShellPrimaryNav
+        variant="top"
+        aria-label="Application navigation"
+        navGroups={[{ pages: topNavPages }]}
+        activeKey={activeKey}
+        onSelect={setActiveKey}
+        header={
+          <AppHeaderMenu
+            appName="APP"
+            appFullName="Data App"
+            version="v1.0.0"
+            onBackToPlatform={() => console.log("Back to TDP Platform")}
+            compact
+            menuSide="bottom"
+          />
+        }
+        user={<UserMenuButton name="Grace Pan" userRole="ADMIN" />}
+        className="h-10 px-2 shrink-0 bg-sidebar border-b border-sidebar-border"
+      />
+      <DataAppShellSecondaryNav
+        orientation="horizontal"
+        aria-label="Steps"
+        steps={secondaryNavSteps}
+        activeKey={activeStep}
+        onSelect={setActiveStep}
+        className="h-10 px-2 shrink-0 bg-sidebar border-b border-sidebar-border"
+      />
+      <main className="flex-1 flex items-center justify-center overflow-auto">
+        <p className="text-muted-foreground text-sm">Main content area</p>
+      </main>
+    </div>
+  );
+};
+
+export const HorizontalNavigation: Story = {
+  name: "Horizontal Navigation",
+  render: () => <HorizontalNavigationExample />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Nav renders horizontally with visible labels", async () => {
+      const nav = canvasElement.querySelector("[data-slot='data-app-shell-primary-nav']");
+      expect(nav).toHaveAttribute("data-variant", "top");
+      expect(canvas.getByText("Projects")).toBeVisible();
+      expect(canvas.getByText("Explorer")).toBeVisible();
+      expect(canvas.getByText("Policies")).toBeVisible();
+    });
+
+    await step("Active item carries aria-current", async () => {
+      expect(canvas.getByRole("button", { name: /Projects/ })).toHaveAttribute(
+        "aria-current",
+        "page"
+      );
+    });
+
+    await step("User menu sits in the trailing slot", async () => {
+      const userSlot = canvasElement.querySelector(
+        "[data-slot='data-app-shell-primary-nav-user']"
+      );
+      expect(within(userSlot as HTMLElement).getByText("GP")).toBeInTheDocument();
+    });
+
+    await step("App menu opens below the bar with Back to TDP Platform", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "APP" }));
+      const body = within(document.body);
+      await waitFor(() =>
+        expect(body.getByText("Back to TDP Platform")).toBeInTheDocument()
+      );
+      await userEvent.keyboard("{Escape}");
+      // Wait for the menu to fully close — Radix keeps the rest of the page
+      // aria-hidden until the exit transition completes.
+      await waitFor(() =>
+        expect(body.queryByText("Back to TDP Platform")).not.toBeInTheDocument()
+      );
+    });
+
+    await step("Selecting an item moves the active state", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: /Explorer/ }));
+      await waitFor(() => {
+        expect(canvas.getByRole("button", { name: /Explorer/ })).toHaveAttribute(
+          "aria-current",
+          "page"
+        );
+        expect(canvas.getByRole("button", { name: /Projects/ })).not.toHaveAttribute(
+          "aria-current"
+        );
+      });
+    });
+
+    const secondaryNav = () =>
+      canvasElement.querySelector("[data-slot='data-app-shell-secondary-nav']") as HTMLElement;
+
+    await step("Secondary nav stepper renders horizontally under the top nav", async () => {
+      expect(secondaryNav()).toHaveAttribute("data-orientation", "horizontal");
+      expect(within(secondaryNav()).getByText("Filtering")).toBeVisible();
+      expect(within(secondaryNav()).getByText("Global Filters")).toBeVisible();
+    });
+
+    await step("Step statuses derive linearly along the row", async () => {
+      expect(within(secondaryNav()).getByRole("button", { name: /Filtering/ })).toHaveAttribute(
+        "aria-current",
+        "step"
+      );
+      expect(
+        within(secondaryNav()).getByRole("button", { name: /Data Overview/ })
+      ).toHaveAttribute("data-status", "done");
+      expect(within(secondaryNav()).getByRole("button", { name: /Export/ })).toHaveAttribute(
+        "data-status",
+        "todo"
+      );
+    });
+
+    await step("Selecting a later step marks earlier steps done", async () => {
+      await userEvent.click(
+        within(secondaryNav()).getByRole("button", { name: /Review Compounds/ })
+      );
+      await waitFor(() => {
+        expect(
+          within(secondaryNav()).getByRole("button", { name: /Review Compounds/ })
+        ).toHaveAttribute("aria-current", "step");
+        expect(
+          within(secondaryNav()).getByRole("button", { name: /Cluster Filters/ })
+        ).toHaveAttribute("data-status", "done");
+      });
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5512" },
   },
 };

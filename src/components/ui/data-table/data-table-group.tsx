@@ -111,10 +111,11 @@ function DataTableGroup({ className }: DataTableGroupProps) {
       <Popover.Portal>
         <Popover.Content
           data-slot="data-table-group-panel"
+          aria-label="Group rows by"
           align="end"
           sideOffset={4}
           className={cn(
-            "z-50 min-w-64 rounded-lg border bg-popover p-3 text-popover-foreground shadow-md outline-none",
+            "z-50 min-w-64 rounded-lg border bg-popover p-3 text-popover-foreground shadow-elevation-4 outline-none",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",

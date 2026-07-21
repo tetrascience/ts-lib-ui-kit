@@ -203,7 +203,7 @@ export const ChainOfThoughtImage = ({
   >
     <img alt={alt} className="max-h-64 w-full object-cover" src={src} />
     {caption && (
-      <figcaption className="border-t px-3 py-2 text-xs italic text-muted-foreground/70">
+      <figcaption className="border-t px-3 py-2 text-xs italic text-muted-foreground">
         {caption}
       </figcaption>
     )}

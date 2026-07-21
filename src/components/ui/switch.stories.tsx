@@ -20,6 +20,7 @@ const meta: Meta<typeof Switch> = {
   },
   args: {
     size: "default",
+    "aria-label": "Enable notifications",
   },
 }
 

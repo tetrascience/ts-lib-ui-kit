@@ -110,7 +110,7 @@ function UserMenu({
   const isDetailed = variant === "detailed";
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"

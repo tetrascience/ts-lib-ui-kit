@@ -112,10 +112,8 @@ export const QueueItemContent = ({
 }: QueueItemContentProps) => (
   <span
     className={cn(
-      "min-w-0 flex-1 truncate",
-      completed
-        ? "text-muted-foreground/50 line-through"
-        : "text-muted-foreground",
+      "min-w-0 flex-1 truncate text-muted-foreground",
+      completed && "line-through",
       className
     )}
     {...props}
@@ -139,10 +137,8 @@ export const QueueItemDescription = ({
 }: QueueItemDescriptionProps) => (
   <div
     className={cn(
-      "text-xs",
-      completed
-        ? "text-muted-foreground/40 line-through"
-        : "text-muted-foreground/70",
+      "text-xs text-muted-foreground",
+      completed && "line-through",
       className
     )}
     {...props}
@@ -358,7 +354,7 @@ export const Queue = ({ className, isStreaming = false, children, style, id, ...
         <motion.div
           {...passthroughProps}
           className={cn(
-            "flex flex-col gap-2 rounded-xl border border-border bg-background px-2 pb-2 pt-2 shadow-xs",
+            "flex flex-col gap-2 rounded-xl border border-border bg-background px-2 pb-2 pt-2 shadow-elevation-2",
             className
           )}
           exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0, overflow: "hidden" }}

@@ -17,6 +17,7 @@ function Table({
     <div
       data-slot="table-container"
       data-variant={variant}
+      tabIndex={0}
       className={cn(
         "relative w-full overflow-auto bg-card",
         variant === "card" && "rounded-lg border",

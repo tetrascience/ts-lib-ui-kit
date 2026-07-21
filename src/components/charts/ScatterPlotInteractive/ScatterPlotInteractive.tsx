@@ -22,6 +22,7 @@ import type { AxisConfig, ScatterPlotInteractiveProps, SelectionMode, TooltipCon
 import type Plotly from "plotly.js-dist";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import { annotationLegendTraces, buildChartAnnotations } from "@/utils/chart-annotations";
 
 // Stable default prop objects — inline defaults would create a new identity
 // on every render, retriggering the plot effect (and tearing down the
@@ -70,6 +71,8 @@ const ScatterPlotInteractive: React.FC<ScatterPlotInteractiveProps> = ({
   height = 600,
   showColorBar = true,
   className,
+  referenceLines,
+  bands,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
@@ -206,6 +209,17 @@ const ScatterPlotInteractive: React.FC<ScatterPlotInteractiveProps> = ({
     return config;
   }, [sizes, shapes, colorMapping, plotlyColorscale, plotlyColors, showColorBar, processedData, colors]);
 
+  // Opt-in threshold lines / shaded bands, as themed Plotly shapes. Labeled
+  // lines/bands surface as legend-only traces (see below).
+  const annotationLayer = useMemo(
+    () => buildChartAnnotations(theme, { referenceLines, bands }),
+    [theme, referenceLines, bands],
+  );
+  const annotationLegend = useMemo(
+    () => annotationLegendTraces(annotationLayer.legendItems),
+    [annotationLayer],
+  );
+
   // Create Plotly plot
   useEffect(() => {
     const currentRef = plotRef.current;
@@ -248,7 +262,10 @@ const ScatterPlotInteractive: React.FC<ScatterPlotInteractiveProps> = ({
       },
     };
 
-    const plotData: Plotly.Data[] = [trace as Plotly.Data];
+    // Data trace stays at index 0 (selection restyle targets it); legend-only
+    // annotation traces follow and carry no points, so they never affect
+    // selection or hover.
+    const plotData: Plotly.Data[] = [trace as Plotly.Data, ...(annotationLegend as Plotly.Data[])];
 
     // Configure layout
     const layout: Partial<Plotly.Layout> = getPlotlyLayoutConfig({
@@ -263,6 +280,17 @@ const ScatterPlotInteractive: React.FC<ScatterPlotInteractiveProps> = ({
       enableBoxSelection,
       theme,
     });
+    layout.shapes = annotationLayer.shapes;
+    // Show Plotly's legend only when there are labeled annotations to list.
+    if (annotationLegend.length > 0) {
+      layout.showlegend = true;
+      layout.legend = {
+        bgcolor: theme.isDark ? "rgba(15, 23, 42, 0.6)" : "rgba(255, 255, 255, 0.6)",
+        bordercolor: theme.gridColor,
+        borderwidth: 1,
+        font: { family: "Inter, sans-serif", color: theme.legendColor },
+      };
+    }
 
     const config: Partial<Plotly.Config> = {
       responsive: true,
@@ -390,6 +418,8 @@ const ScatterPlotInteractive: React.FC<ScatterPlotInteractiveProps> = ({
     nativeTooltip,
     bindTooltip,
     theme,
+    annotationLayer,
+    annotationLegend,
   ]);
 
   // Apply selection state to Plotly

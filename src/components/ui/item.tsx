@@ -5,7 +5,11 @@ import * as React from "react"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
-function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
+function ItemGroup({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div">) {
   return (
     <div
       role="list"
@@ -15,7 +19,19 @@ function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
         className
       )}
       {...props}
-    />
+    >
+      {React.Children.map(children, (child) => {
+        if (
+          !React.isValidElement<{ role?: string }>(child) ||
+          child.type === ItemSeparator
+        ) {
+          return child
+        }
+        return React.cloneElement(child, {
+          role: child.props.role ?? "listitem",
+        })
+      })}
+    </div>
   )
 }
 

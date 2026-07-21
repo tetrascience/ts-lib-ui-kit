@@ -48,7 +48,7 @@ function triggerToast(variant: "default" | "success" | "error" | "warning" | "in
   }
 }
 
-function renderToaster(args: Story["args"]) {
+function renderToaster() {
   return (
       <div className="flex w-[420px] flex-col gap-3 rounded-xl border bg-background p-4">
         <p className="text-sm text-muted-foreground">Trigger each toast state to preview the local Sonner styling.</p>
@@ -69,7 +69,6 @@ function renderToaster(args: Story["args"]) {
             Info
           </Button>
         </div>
-        <Toaster {...args} richColors />
       </div>
   )
 }

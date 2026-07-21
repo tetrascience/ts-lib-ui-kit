@@ -1150,7 +1150,7 @@ export const PromptInputButton = ({
       <TooltipContent side={side}>
         {tooltipContent}
         {shortcut && (
-          <span className="ml-2 text-muted-foreground">{shortcut}</span>
+          <span className="ml-2 text-background/70">{shortcut}</span>
         )}
       </TooltipContent>
     </Tooltip>
@@ -1159,7 +1159,7 @@ export const PromptInputButton = ({
 
 export type PromptInputActionMenuProps = ComponentProps<typeof DropdownMenu>;
 export const PromptInputActionMenu = (props: PromptInputActionMenuProps) => (
-  <DropdownMenu {...props} />
+  <DropdownMenu modal={false} {...props} />
 );
 
 export type PromptInputActionMenuTriggerProps = PromptInputButtonProps;
@@ -1377,6 +1377,7 @@ export const PromptInputSlotSwap = ({
   >
     <div
       aria-hidden={show}
+      inert={show}
       className={cn(
         "transition-all duration-200 ease-out",
         show ? "pointer-events-none scale-75 opacity-0" : "scale-100 opacity-100"
@@ -1386,6 +1387,7 @@ export const PromptInputSlotSwap = ({
     </div>
     <div
       aria-hidden={!show}
+      inert={!show}
       className={cn(
         "absolute transition-all duration-200 ease-out",
         show ? "scale-100 opacity-100" : "pointer-events-none scale-75 opacity-0"

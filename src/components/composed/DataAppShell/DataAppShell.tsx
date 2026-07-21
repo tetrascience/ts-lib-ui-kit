@@ -88,6 +88,8 @@ export interface DataAppShellProps {
   // -- Shell --
   /** Slot rendered between the icon rail and the content (e.g. a vertical `DataAppShellSecondaryNav`) */
   sidebarPanel?: React.ReactNode;
+  /** Slot rendered after the content (e.g. a DataAppShellRightPanel) — its FAB anchors to the content row */
+  rightPanel?: React.ReactNode;
   /** Show the desktop icon nav rail. Set false to reclaim width when the panel is collapsed. */
   showNavRail?: boolean; // default true
   /** Main content area */
@@ -155,7 +157,7 @@ function AppHeaderMenu({
   menuSide = "right",
 }: AppHeaderMenuProps) {
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
@@ -182,14 +184,9 @@ function AppHeaderMenu({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side={menuSide} align="start" className="min-w-[220px]">
-            <div
-              className="flex items-center gap-3 px-3 py-2.5 cursor-pointer"
-              onClick={onAppNameClick}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") onAppNameClick?.();
-              }}
+            <DropdownMenuItem
+              className="gap-3 px-3 py-2.5"
+              onSelect={() => onAppNameClick?.()}
             >
               <div className="w-8 h-8 rounded-lg bg-sidebar-accent border border-sidebar-border flex items-center justify-center shrink-0">
                 <span className="text-[10px] font-bold text-foreground">
@@ -206,7 +203,7 @@ function AppHeaderMenu({
                   </span>
                 )}
               </div>
-            </div>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2.5 p-0" asChild>
               {backToPlatformPath ? (
@@ -406,6 +403,7 @@ function DataAppShell({
   headerCenter,
   headerActions,
   sidebarPanel,
+  rightPanel,
   showNavRail = true,
   children,
   className,
@@ -471,17 +469,21 @@ function DataAppShell({
             }
           />
 
-          <div className="flex flex-1 min-h-0 overflow-hidden">
+          {/* relative — anchors the right panel's floating FAB trigger */}
+          <div className="relative flex flex-1 min-h-0 overflow-hidden">
             {/* Sidebar panel slot (e.g. WorkflowPanel) */}
             {sidebarPanel}
 
             {/* Content area */}
             <main
               data-slot="data-app-shell-content"
-              className="flex-1 overflow-auto bg-background"
+              className="flex-1 min-w-0 overflow-auto bg-background"
             >
               {children}
             </main>
+
+            {/* Right panel slot (e.g. DataAppShellRightPanel) */}
+            {rightPanel}
           </div>
         </div>
       </div>

@@ -111,6 +111,7 @@ function DataTableGroup({ className }: DataTableGroupProps) {
       <Popover.Portal>
         <Popover.Content
           data-slot="data-table-group-panel"
+          aria-label="Group rows by"
           align="end"
           sideOffset={4}
           className={cn(

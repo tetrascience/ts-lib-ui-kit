@@ -1,4 +1,4 @@
-import { expect, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 
 import { StackedChromatogram } from "./StackedChromatogram";
 
@@ -7,7 +7,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const generateChromatogramData = (
   peaks: Array<{ rt: number; height: number; width: number }>,
-  noise: number = 0.5
+  noise: number = 0.5,
 ): { x: number[]; y: number[] } => {
   const x: number[] = [];
   const y: number[] = [];
@@ -15,9 +15,7 @@ const generateChromatogramData = (
     x.push(parseFloat(t.toFixed(2)));
     let signal = 0;
     peaks.forEach((peak) => {
-      signal +=
-        peak.height *
-        Math.exp(-Math.pow(t - peak.rt, 2) / (2 * Math.pow(peak.width, 2)));
+      signal += peak.height * Math.exp(-Math.pow(t - peak.rt, 2) / (2 * Math.pow(peak.width, 2)));
     });
     signal += (Math.random() - 0.5) * noise;
     y.push(Math.max(0, signal));
@@ -37,7 +35,7 @@ const injection2 = generateChromatogramData(
     { rt: 12.6, height: 195, width: 0.48 },
     { rt: 18.4, height: 320, width: 0.47 },
   ],
-  0.8
+  0.8,
 );
 const injection3 = generateChromatogramData(
   [
@@ -45,7 +43,7 @@ const injection3 = generateChromatogramData(
     { rt: 12.4, height: 170, width: 0.52 },
     { rt: 18.2, height: 365, width: 0.43 },
   ],
-  0.6
+  0.6,
 );
 
 const overlaySeriesData: StackedChromatogramProps["series"] = [
@@ -66,7 +64,7 @@ const chargeVariant2 = generateChromatogramData(
     { rt: 5.9, height: 390, width: 0.31 },
     { rt: 6.6, height: 160, width: 0.26 },
   ],
-  0.7
+  0.7,
 );
 const chargeVariant3 = generateChromatogramData(
   [
@@ -74,7 +72,7 @@ const chargeVariant3 = generateChromatogramData(
     { rt: 5.75, height: 450, width: 0.29 },
     { rt: 6.4, height: 200, width: 0.24 },
   ],
-  0.6
+  0.6,
 );
 
 const stackSeriesData: StackedChromatogramProps["series"] = [
@@ -110,9 +108,12 @@ export const OverlayMode: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(
-        canvas.getByText("Injection Overlay — System Suitability")
-      ).toBeInTheDocument();
+      await waitFor(
+        () => {
+          expect(canvas.getByText("Injection Overlay — System Suitability")).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Chart container renders", async () => {
@@ -156,9 +157,9 @@ export const StackMode: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(
-        canvas.getByText("Charge Variant Runs — Stacked")
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Charge Variant Runs — Stacked")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -223,9 +224,9 @@ export const StackModeWithAnnotations: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(
-        canvas.getByText("Stacked Runs with Peak Labels")
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Stacked Runs with Peak Labels")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -271,9 +272,9 @@ export const StackModeFirstOnTop: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(
-        canvas.getByText("Charge Variant Runs — First On Top")
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Charge Variant Runs — First On Top")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -286,11 +287,11 @@ export const StackModeFirstOnTop: Story = {
     });
   },
   parameters: {
-      zephyr: { testCaseId: "SW-T5429" },
+    zephyr: { testCaseId: "SW-T5429" },
     docs: {
       description: {
         story:
-          "With `stackingOrder: \"first-on-top\"` the first series gets the largest vertical offset, placing it at the top of the waterfall. Annotations follow the same offset so labels stay anchored to their peaks.",
+          'With `stackingOrder: "first-on-top"` the first series gets the largest vertical offset, placing it at the top of the waterfall. Annotations follow the same offset so labels stay anchored to their peaks.',
       },
     },
   },

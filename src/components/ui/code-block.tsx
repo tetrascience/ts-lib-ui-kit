@@ -9,15 +9,9 @@ import {
   useRef,
   useState,
 } from "react";
-import { createHighlighter } from "shiki";
 
 import type { ComponentProps, CSSProperties, HTMLAttributes } from "react";
-import type {
-  BundledLanguage,
-  BundledTheme,
-  HighlighterGeneric,
-  ThemedToken,
-} from "shiki";
+import type { BundledLanguage, ThemedToken } from "shiki";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getCodeBlockHighlighter } from "@/lib/shiki";
 import { cn } from "@/lib/utils";
 
 
@@ -132,11 +127,37 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
   code: "",
 });
 
-// Highlighter cache (singleton per language)
-const highlighterCache = new Map<
-  string,
-  Promise<HighlighterGeneric<BundledLanguage, BundledTheme>>
->();
+// Maps every github-light/github-dark token color onto a --shiki-* CSS
+// variable backed by the design-token palette (defined in index.tailwind.css
+// for :root and .dark), so code colors follow the active theme and meet
+// WCAG AA contrast on --shiki-bg in both modes.
+const SHIKI_COLOR_REPLACEMENTS: Record<string, Record<string, string>> = {
+  "github-light": {
+    "#24292e": "var(--shiki-fg)",
+    "#6a737d": "var(--shiki-comment)",
+    "#586069": "var(--shiki-comment)",
+    "#d73a49": "var(--shiki-keyword)",
+    "#b31d28": "var(--shiki-keyword)",
+    "#005cc5": "var(--shiki-constant)",
+    "#6f42c1": "var(--shiki-entity)",
+    "#22863a": "var(--shiki-tag)",
+    "#032f62": "var(--shiki-string)",
+    "#e36209": "var(--shiki-variable)",
+  },
+  "github-dark": {
+    "#e1e4e8": "var(--shiki-fg)",
+    "#6a737d": "var(--shiki-comment)",
+    "#d1d5da": "var(--shiki-comment)",
+    "#f97583": "var(--shiki-keyword)",
+    "#fdaeb7": "var(--shiki-keyword)",
+    "#79b8ff": "var(--shiki-constant)",
+    "#b392f0": "var(--shiki-entity)",
+    "#85e89d": "var(--shiki-tag)",
+    "#9ecbff": "var(--shiki-string)",
+    "#dbedff": "var(--shiki-string)",
+    "#ffab70": "var(--shiki-variable)",
+  },
+};
 
 // Token cache
 const tokensCache = new Map<string, TokenizedCode>();
@@ -150,23 +171,6 @@ const getTokensCacheKey = (code: string, language: BundledLanguage) => {
   const start = code.slice(0, CACHE_KEY_SLICE_LENGTH);
   const end = code.length > CACHE_KEY_SLICE_LENGTH ? code.slice(-CACHE_KEY_SLICE_LENGTH) : "";
   return `${language}:${code.length}:${start}:${end}`;
-};
-
-const getHighlighter = (
-  language: BundledLanguage
-): Promise<HighlighterGeneric<BundledLanguage, BundledTheme>> => {
-  const cached = highlighterCache.get(language);
-  if (cached) {
-    return cached;
-  }
-
-  const highlighterPromise = createHighlighter({
-    langs: [language],
-    themes: ["github-light", "github-dark"],
-  });
-
-  highlighterCache.set(language, highlighterPromise);
-  return highlighterPromise;
 };
 
 // Create raw tokens for immediate display while highlighting loads
@@ -208,15 +212,16 @@ export const highlightCode = (
     subscribers.get(tokensCacheKey)?.add(callback);
   }
 
-  // Start highlighting in background - fire-and-forget async pattern
-  getHighlighter(language)
+  // Start highlighting in background - fire-and-forget async pattern.
+  // The shared slim highlighter (SW-2007) loads shiki/core, the grammar, and
+  // the themes through dynamic imports; unsupported languages fall back to
+  // plaintext via the resolved `lang`.
+  getCodeBlockHighlighter(language)
     // oxlint-disable-next-line eslint-plugin-promise(prefer-await-to-then)
-    .then((highlighter) => {
-      const availableLangs = highlighter.getLoadedLanguages();
-      const langToUse = availableLangs.includes(language) ? language : "text";
-
+    .then(({ highlighter, lang }) => {
       const result = highlighter.codeToTokens(code, {
-        lang: langToUse,
+        colorReplacements: SHIKI_COLOR_REPLACEMENTS,
+        lang,
         themes: {
           dark: "github-dark",
           light: "github-light",
@@ -260,14 +265,6 @@ const CodeBlockBody = memo(
     showLineNumbers: boolean;
     className?: string;
   }) => {
-    const preStyle = useMemo(
-      () => ({
-        backgroundColor: tokenized.bg,
-        color: tokenized.fg,
-      }),
-      [tokenized.bg, tokenized.fg]
-    );
-
     const keyedLines = useMemo(
       () => addKeysToTokens(tokenized.tokens),
       [tokenized.tokens]
@@ -276,10 +273,14 @@ const CodeBlockBody = memo(
     return (
       <pre
         className={cn(
-          "dark:!bg-[var(--shiki-dark-bg)] dark:!text-[var(--shiki-dark)] m-0 p-4 text-sm",
+          // Shiki's dual-theme codeToTokens() returns "transparent"/"inherit"
+          // for the top-level bg/fg in multi-theme mode — the real per-theme
+          // colors only exist per-token (read via CSS vars in TokenSpan).
+          // --shiki-bg/--shiki-fg re-resolve under .dark, so no dark: variant
+          // is needed here.
+          "!bg-[var(--shiki-bg)] !text-[var(--shiki-fg)] m-0 p-4 text-sm",
           className
         )}
-        style={preStyle}
       >
         <code
           className={cn(
@@ -424,7 +425,7 @@ export const CodeBlockContent = ({
   const tokenized = asyncTokens ?? syncTokens;
 
   return (
-    <div className="relative overflow-auto">
+    <div className="relative overflow-auto" tabIndex={0}>
       <CodeBlockBody showLineNumbers={showLineNumbers} tokenized={tokenized} />
     </div>
   );
@@ -504,6 +505,7 @@ export const CodeBlockCopyButton = ({
 
   return (
     <Button
+      aria-label="Copy code"
       className={cn("shrink-0", className)}
       onClick={copyToClipboard}
       size="icon"
@@ -530,6 +532,7 @@ export const CodeBlockLanguageSelectorTrigger = ({
   ...props
 }: CodeBlockLanguageSelectorTriggerProps) => (
   <SelectTrigger
+    aria-label="Select language"
     className={cn(
       "h-7 border-none bg-transparent px-2 text-xs shadow-none",
       className

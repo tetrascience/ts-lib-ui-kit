@@ -8,7 +8,6 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Toaster } from "@/components/ui/sonner";
 
 const meta: Meta = {
   title: "Design Patterns/Toast Patterns",
@@ -131,7 +130,6 @@ export const ToastTriggers: Story = {
           Default
         </Button>
       </div>
-      <Toaster richColors />
     </div>
   ),
   parameters: {
@@ -261,7 +259,6 @@ export const ContextualUsage: Story = {
             <Button size="sm" variant="outline">
               View logs
             </Button>
-            <Toaster richColors />
           </CardFooter>
         </Card>
       </div>

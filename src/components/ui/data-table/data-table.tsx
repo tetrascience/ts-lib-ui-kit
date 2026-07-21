@@ -174,6 +174,14 @@ function DraggableHeader<TData>({
     isDragging,
   } = useSortable({ id: header.column.id })
 
+  const { columnLabels } = useDataTable()
+  const columnLabel =
+    columnLabels[header.column.id] ??
+    (header.column.columnDef.meta as { label?: string } | undefined)?.label ??
+    (typeof header.column.columnDef.header === "string"
+      ? header.column.columnDef.header
+      : header.column.id)
+
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(
       transform ? { ...transform, scaleX: 1, scaleY: 1 } : null,
@@ -201,6 +209,7 @@ function DraggableHeader<TData>({
         <button
           type="button"
           data-drag-handle=""
+          aria-label={`Drag to reorder ${columnLabel} column`}
           className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing opacity-0 group-hover/header:opacity-100 transition-opacity"
           {...attributes}
           {...listeners}

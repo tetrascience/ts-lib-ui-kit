@@ -25,14 +25,18 @@ const dataSeries: ScatterPlotProps["dataSeries"] = [
   { name: "A", x: [1, 2, 3], y: [10, 20, 30] },
 ];
 
-function render(props: ScatterPlotProps) {
+// Async act so the lazy Plotly import (SW-2007) resolves and the draw
+// completes before assertions run.
+async function render(props: ScatterPlotProps) {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
   roots.push({ root, container });
   // Explicit size keeps the chart out of container-fill mode, which would need
   // a ResizeObserver measurement that jsdom can't provide.
-  act(() => root.render(<ScatterPlot width={600} height={400} {...props} />));
+  await act(async () => {
+    root.render(<ScatterPlot width={600} height={400} {...props} />);
+  });
 }
 
 const fire = (event: string, data?: unknown) => act(() => handlers[event]?.(data));
@@ -70,8 +74,8 @@ afterEach(() => {
 });
 
 describe("ScatterPlot crosshair", () => {
-  it("draws crosshair guide lines behind the points on hover", () => {
-    render({ dataSeries });
+  it("draws crosshair guide lines behind the points on hover", async () => {
+    await render({ dataSeries });
     fire("plotly_hover", { points: [{ x: 2, y: 20 }] });
 
     const shapes = lastShapes();
@@ -81,15 +85,15 @@ describe("ScatterPlot crosshair", () => {
     expect(shapes?.every((s) => s.type === "line")).toBe(true);
   });
 
-  it("clears the crosshair on unhover", () => {
-    render({ dataSeries });
+  it("clears the crosshair on unhover", async () => {
+    await render({ dataSeries });
     fire("plotly_hover", { points: [{ x: 2, y: 20 }] });
     fire("plotly_unhover");
     expect(lastShapes()).toEqual([]);
   });
 
-  it("ignores hover events without points", () => {
-    render({ dataSeries });
+  it("ignores hover events without points", async () => {
+    await render({ dataSeries });
     plotly.relayout.mockClear();
     fire("plotly_hover", { points: [] });
     // No shape relayout for an empty hover
@@ -98,16 +102,16 @@ describe("ScatterPlot crosshair", () => {
 });
 
 describe("ScatterPlot series handling", () => {
-  it("accepts a single series object (normalized to one trace)", () => {
-    render({ dataSeries: { name: "Solo", x: [1, 2], y: [3, 4] } });
+  it("accepts a single series object (normalized to one trace)", async () => {
+    await render({ dataSeries: { name: "Solo", x: [1, 2], y: [3, 4] } });
     const traces = lastTraces();
     expect(traces).toHaveLength(1);
     expect(traces[0].name).toBe("Solo");
     expect(traces[0].marker?.symbol).toBe("circle");
   });
 
-  it("renders all series as circles in the default variant", () => {
-    render({
+  it("renders all series as circles in the default variant", async () => {
+    await render({
       dataSeries: [
         { name: "A", x: [1], y: [1] },
         { name: "B", x: [2], y: [2] },
@@ -117,8 +121,8 @@ describe("ScatterPlot series handling", () => {
     expect(traces.map((t) => t.marker?.symbol)).toEqual(["circle", "circle"]);
   });
 
-  it("cycles marker symbols per series in the stacked variant", () => {
-    render({
+  it("cycles marker symbols per series in the stacked variant", async () => {
+    await render({
       variant: "stacked",
       dataSeries: [
         { name: "A", x: [1], y: [1] },
@@ -130,8 +134,8 @@ describe("ScatterPlot series handling", () => {
     expect(traces.map((t) => t.marker?.symbol)).toEqual(["circle", "square", "diamond"]);
   });
 
-  it("honors per-series symbol, size, and color overrides", () => {
-    render({
+  it("honors per-series symbol, size, and color overrides", async () => {
+    await render({
       variant: "stacked",
       markerSize: 12,
       dataSeries: [
@@ -146,5 +150,32 @@ describe("ScatterPlot series handling", () => {
     // Second series falls back to the shared markerSize and cycled symbol
     expect(traces[1].marker?.size).toBe(12);
     expect(traces[1].marker?.symbol).toBe("square");
+  });
+});
+
+describe("ScatterPlot resize skip-guard", () => {
+  it("re-checks the applied size in place when only the height changes", async () => {
+    plotly.relayout.mockImplementation(() => Promise.resolve());
+    // Stable dataSeries reference so re-rendering doesn't re-run the draw
+    // effect — only the size-driven resize effect should react.
+    const stableSeries = [{ name: "A", x: [1, 2, 3], y: [10, 20, 30] }];
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    roots.push({ root, container });
+
+    await act(async () => {
+      root.render(<ScatterPlot dataSeries={stableSeries} width={600} height={400} />);
+    });
+    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
+
+    // Same width, new height: the resize effect re-runs; its width check
+    // matches the applied size, so the height comparison branch is evaluated.
+    await act(async () => {
+      root.render(<ScatterPlot dataSeries={stableSeries} width={600} height={480} />);
+    });
+    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
+    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { width: 600, height: 480 });
   });
 });

@@ -941,6 +941,15 @@ export const RichForm: Story = {
       );
     });
 
+    await step("Close the multiselect to restore resting state", async () => {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() =>
+        expect(
+          canvasElement.ownerDocument.body.querySelector('[role="option"]'),
+        ).toBeNull(),
+      );
+    });
+
     await step("Apply to 3 wells label is shown", async () => {
       expect(canvas.getByText("Apply to 3 wells")).toBeInTheDocument();
     });
@@ -1768,13 +1777,12 @@ export const FormCustomAndIntegerKinds: Story = {
           kind: "custom",
           render: ({ value: v, onChange, selectionSize }) => (
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 aria-label="custom-render-input"
                 value={(v as string | undefined) ?? ""}
                 onChange={(e) => onChange(e.target.value)}
-                className="rounded border px-1 py-0.5 text-xs"
               />
-              <span className="text-[0.65rem] text-muted-foreground">{selectionSize} sel</span>
+              <span className="text-xs whitespace-nowrap text-muted-foreground">{selectionSize} sel</span>
             </div>
           ),
         },

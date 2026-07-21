@@ -150,7 +150,12 @@ export const BasicScatter: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Basic Scatter Plot")).toBeInTheDocument();
+      await waitFor(
+        () => {
+          expect(canvas.getByText("Basic Scatter Plot")).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Chart container renders", async () => {
@@ -198,7 +203,9 @@ export const DataDrivenStyling: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Data-Driven Color / Shape / Size")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Data-Driven Color / Shape / Size")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -235,7 +242,9 @@ export const StaticStyling: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Static Styling")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Static Styling")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -286,7 +295,9 @@ export const Selection: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Click / Box / Lasso Selection")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Click / Box / Lasso Selection")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -354,7 +365,9 @@ export const KeyboardModifierSelection: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Keyboard Modifier Selection")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Keyboard Modifier Selection")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -413,7 +426,7 @@ export const SelectionWithDataGrid: Story = {
               </tbody>
             </table>
           ) : (
-            <p style={{ color: "#888" }}>Select points to populate the grid.</p>
+            <p className="text-muted-foreground">Select points to populate the grid.</p>
           )}
         </div>
       </div>
@@ -435,7 +448,9 @@ export const SelectionWithDataGrid: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Selection → Data Grid")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Selection → Data Grid")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -488,7 +503,9 @@ export const CustomTooltips: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Custom Rich Tooltips")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Custom Rich Tooltips")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -523,7 +540,9 @@ export const AxisFixedRanges: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Fixed Axis Ranges (zoomed to 20-80)")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Fixed Axis Ranges (zoomed to 20-80)")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {
@@ -558,7 +577,9 @@ export const AxisLogScale: Story = {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
-      expect(canvas.getByText("Log-Scale Axes")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvas.getByText("Log-Scale Axes")).toBeInTheDocument();
+      });
     });
 
     await step("Chart container renders", async () => {

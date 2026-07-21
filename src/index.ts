@@ -116,3 +116,8 @@ export * from "@/hooks/use-plotly-theme";
 // Utils
 export * from "@/utils/colors";
 export * from "@/utils/chart-annotations";
+// Extend the slim code-highlighting language set (SW-2007)
+export {
+  getSupportedCodeBlockLanguages,
+  registerCodeBlockLanguage,
+} from "@/lib/shiki";

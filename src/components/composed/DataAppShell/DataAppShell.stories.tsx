@@ -3,18 +3,25 @@ import {
   Download,
   Filter,
   FolderKanban,
+  Info,
   LayoutGrid,
   Library,
   LogOut,
+  PanelRight,
   Search,
   ShieldCheck,
 } from "lucide-react";
 import * as React from "react";
 import { useState } from "react";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 
 import { AppHeaderMenu, DataAppShell } from "./DataAppShell";
 import { DataAppShellPrimaryNav } from "./PrimaryNav";
+import {
+  DataAppShellRightPanel,
+  DataAppShellRightPanelTrigger,
+  type DataAppShellRightPanelVariant,
+} from "./RightPanel";
 import { DataAppShellSecondaryNav } from "./SecondaryNav";
 
 import type { NavGroup } from "./DataAppShell";
@@ -162,9 +169,23 @@ const htsBreadcrumbs = [
 // Default (with workflow)
 // =============================================================================
 
-const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean }) => {
+const DefaultShell = ({
+  initialCollapsed = false,
+  panelVariant = "docked",
+  initialPanelOpen = true,
+  triggerPlacement = "header",
+}: {
+  initialCollapsed?: boolean;
+  /** Right panel variant — `docked` pushes main, `overlay` slides over it. */
+  panelVariant?: DataAppShellRightPanelVariant;
+  initialPanelOpen?: boolean;
+  /** Where the panel trigger lives — a top-bar icon button or the floating FAB. */
+  triggerPlacement?: "header" | "fab";
+}) => {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [activeStepId, setActiveStepId] = useState("data-overview");
+  const [detailsOpen, setDetailsOpen] = useState(initialPanelOpen);
+  const detailsTriggerRef = React.useRef<HTMLButtonElement>(null);
 
   const activeStepIndex = htsWorkflowSteps.findIndex((s) => s.id === activeStepId);
   const isLastStep = activeStepIndex === htsWorkflowSteps.length - 1;
@@ -200,6 +221,19 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
           >
             {isLastStep ? "Push to Downstream" : "Next"}
           </Button>
+          {/* Details panel trigger as a top-bar icon button (instead of the default FAB) */}
+          {triggerPlacement === "header" && (
+            <DataAppShellRightPanelTrigger
+              ref={detailsTriggerRef}
+              variant="icon"
+              aria-label="Toggle details panel"
+              aria-expanded={detailsOpen}
+              title="Toggle details panel"
+              onClick={() => setDetailsOpen((o) => !o)}
+            >
+              <PanelRight />
+            </DataAppShellRightPanelTrigger>
+          )}
         </>
       }
       showNavRail={!collapsed}
@@ -215,6 +249,26 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
           onCollapsedChange={setCollapsed}
         />
       }
+      rightPanel={
+        <DataAppShellRightPanel
+          id="hts-details"
+          variant={panelVariant}
+          open={detailsOpen}
+          onOpenChange={setDetailsOpen}
+          title="Details"
+          icon={<Info className="size-4 text-muted-foreground" />}
+          showTrigger={triggerPlacement === "fab"}
+          triggerRef={triggerPlacement === "header" ? detailsTriggerRef : undefined}
+          triggerLabel="Open details panel"
+        >
+          {/* Example content only — the panel body is a plain slot (chat, history, inspector, …) */}
+          <div className="flex flex-col gap-2 p-3">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i} className="h-10 rounded-md bg-muted" />
+            ))}
+          </div>
+        </DataAppShellRightPanel>
+      }
     >
       <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground text-sm">Main content area</p>
@@ -225,9 +279,16 @@ const DefaultShell = ({ initialCollapsed = false }: { initialCollapsed?: boolean
 
 export const Default: Story = {
   name: "Default",
+  loaders: [
+    () => {
+      // Deterministic panel width — drop anything persisted by a previous run.
+      window.localStorage.removeItem("ts-ui.right-panel.hts-details.width");
+    },
+  ],
   render: () => <DefaultShell />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
+    const body = within(document.body);
 
     await step("Shell renders all regions", async () => {
       expect(canvas.getByText("HTS")).toBeInTheDocument();
@@ -246,9 +307,74 @@ export const Default: Story = {
 
     await step("Version is shown inside the app dropdown under the title", async () => {
       await userEvent.click(canvas.getAllByText("HTS")[0]);
-      const body = within(document.body);
       await waitFor(() => expect(body.getByText("v2.4.1")).toBeInTheDocument());
+      // Escape on the menu element itself — userEvent.keyboard targets the
+      // active element, which is unreliable when the preview iframe isn't the
+      // focused window (Storybook UI); the menu misses the key and stays open.
+      fireEvent.keyDown(body.getByRole("menu"), { key: "Escape" });
+      // Wait for the menu to fully unmount — while it is open (or animating
+      // out) radix marks the rest of the page aria-hidden, which would hide
+      // the shell's landmarks from the next step's role queries.
+      await waitFor(() => expect(body.queryByText("v2.4.1")).not.toBeInTheDocument());
+    });
+
+    await step("Right panel is docked beside the content", async () => {
+      const panel = await canvas.findByRole("complementary", { name: "Details" });
+      // waitFor — the panel's fade-in entry animation starts at opacity 0
+      await waitFor(() => expect(panel).toBeVisible());
+      expect(panel.style.width).toBe("320px");
+    });
+
+    await step("Drag handle resizes the panel and persists width per id", async () => {
+      const panel = canvas.getByRole("complementary", { name: "Details" });
+      const handle = canvas.getByRole("separator", { name: "Resize panel" });
+      fireEvent.pointerDown(handle, { button: 0, pointerId: 1, clientX: 600 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientX: 520 });
+      expect(panel.style.width).toBe("400px");
+      fireEvent.pointerUp(handle, { pointerId: 1, clientX: 520 });
+      expect(window.localStorage.getItem("ts-ui.right-panel.hts-details.width")).toBe("400");
+    });
+
+    await step("Handle is a keyboard-operable ARIA separator", async () => {
+      const panel = canvas.getByRole("complementary", { name: "Details" });
+      const handle = canvas.getByRole("separator", { name: "Resize panel" });
+      handle.focus();
+      await userEvent.keyboard("{ArrowLeft}");
+      expect(handle).toHaveAttribute("aria-valuenow", "416");
+      await userEvent.keyboard("{End}");
+      expect(panel.style.width).toBe("560px");
+      await userEvent.keyboard("{Home}");
+      expect(panel.style.width).toBe("240px");
+      expect(handle).toHaveAttribute("aria-valuemin", "240");
+      expect(handle).toHaveAttribute("aria-valuemax", "560");
+    });
+
+    await step("Close returns focus to the top-bar trigger; the trigger re-opens the panel", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Close panel" }));
+      expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
+      const trigger = canvas.getByRole("button", { name: "Toggle details panel" });
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
+      await waitFor(() => expect(trigger).toHaveFocus());
+      await userEvent.click(trigger);
+      const panel = await canvas.findByRole("complementary", { name: "Details" });
+      await waitFor(() => expect(panel).toBeVisible());
+      expect(trigger).toHaveAttribute("aria-expanded", "true");
+      await waitFor(() => expect(canvas.getByRole("button", { name: "Close panel" })).toHaveFocus());
+    });
+
+    await step("The top-bar trigger toggles the open panel closed", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Toggle details panel" }));
+      expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
+    });
+
+    await step("Esc inside the docked panel closes it; re-open via the trigger", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Toggle details panel" }));
+      await waitFor(() => expect(canvas.getByRole("button", { name: "Close panel" })).toHaveFocus());
       await userEvent.keyboard("{Escape}");
+      expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
+      await userEvent.click(canvas.getByRole("button", { name: "Toggle details panel" }));
+      const panel = await canvas.findByRole("complementary", { name: "Details" });
+      await waitFor(() => expect(panel).toBeVisible());
     });
   },
   parameters: {
@@ -258,9 +384,13 @@ export const Default: Story = {
 
 export const CollapsedWorkflow: Story = {
   name: "Collapsed Workflow",
-  render: () => <DefaultShell initialCollapsed />,
+  // Also demos the right panel's `overlay` variant (starts closed, FAB trigger).
+  render: () => (
+    <DefaultShell initialCollapsed panelVariant="overlay" initialPanelOpen={false} triggerPlacement="fab" />
+  ),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
+    const body = within(document.body);
 
     await step("Collapsed workflow — step labels hidden", async () => {
       expect(canvas.queryByText("Step 2 Name")).not.toBeInTheDocument();
@@ -271,6 +401,22 @@ export const CollapsedWorkflow: Story = {
       expect(
         canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")
       ).not.toBeInTheDocument();
+    });
+
+    await step("Overlay panel slides over the content with a scrim (no reflow)", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Open details panel" }));
+      const overlayPanel = await body.findByRole("dialog", { name: "Details" });
+      // waitFor — the sheet's slide/fade entry animation starts at opacity 0
+      await waitFor(() => expect(overlayPanel).toBeVisible());
+      expect(document.querySelector('[data-slot="sheet-overlay"]')).not.toBeNull();
+      // Docked <aside> never rendered — the overlay does not reflow main
+      expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
+    });
+
+    await step("Esc closes the overlay and returns focus to the FAB", async () => {
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(body.queryByRole("dialog", { name: "Details" })).not.toBeInTheDocument());
+      await waitFor(() => expect(canvas.getByRole("button", { name: "Open details panel" })).toHaveFocus());
     });
   },
   parameters: {
@@ -830,17 +976,17 @@ export const BackToPlatformPath: Story = {
     });
 
     await step("Back to TDP Platform renders as a link (not a button)", async () => {
-      const menuItem = body.getByRole("menuitem");
+      const menuItem = body.getByRole("menuitem", { name: /back to tdp platform/i });
       expect(menuItem.tagName.toLowerCase()).toBe("a");
     });
 
     await step("Link href contains the backToPlatformPath", async () => {
-      const menuItem = body.getByRole("menuitem");
+      const menuItem = body.getByRole("menuitem", { name: /back to tdp platform/i });
       expect(menuItem).toHaveAttribute("href", expect.stringContaining("/data-workspace"));
     });
 
     await step("Link href is fully resolved with the TDP base URL", async () => {
-      const menuItem = body.getByRole("menuitem");
+      const menuItem = body.getByRole("menuitem", { name: /back to tdp platform/i });
       expect(menuItem).toHaveAttribute("href", "https://tetrascience.com/my-org/data-workspace");
     });
 

@@ -55,7 +55,7 @@ type Story = StoryObj<typeof NavigationMenu>
 function renderNavigationMenu(args: Story["args"]) {
   return (
     <div className="flex min-h-[280px] w-[440px] justify-center rounded-xl border bg-background p-6">
-      <NavigationMenu className="w-full justify-start" defaultValue="platform" {...args}>
+      <NavigationMenu className="w-full justify-start" {...args}>
         <NavigationMenuList className="justify-start">
           <NavigationMenuItem value="platform">
             <NavigationMenuTrigger>Platform</NavigationMenuTrigger>

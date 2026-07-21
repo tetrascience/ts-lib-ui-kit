@@ -1,6 +1,5 @@
 import { expect, waitFor, within } from "storybook/test";
 
-
 import { Histogram } from "./Histogram";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -56,7 +55,12 @@ export const Default: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      await waitFor(
+        () => {
+          expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("One histogram trace is rendered", async () => {
@@ -460,9 +464,7 @@ export const ContainerFilled: Story = {
   ],
   play: async ({ canvasElement, step }) => {
     await step("Chart canvas fills the container width", async () => {
-      const wrapper = canvasElement.querySelector(
-        '[data-testid="fill-wrapper"]',
-      ) as HTMLElement;
+      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       await waitFor(() => {
         const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
         expect(plot).toBeInTheDocument();
@@ -471,9 +473,7 @@ export const ContainerFilled: Story = {
     });
 
     await step("Chart resizes in place when the container resizes", async () => {
-      const wrapper = canvasElement.querySelector(
-        '[data-testid="fill-wrapper"]',
-      ) as HTMLElement;
+      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       // Shrink the container; the ResizeObserver should drive a Plotly relayout
       // (not a full re-plot) so the canvas tracks the new width.
       wrapper.style.width = "440px";

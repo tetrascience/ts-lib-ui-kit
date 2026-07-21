@@ -1,8 +1,8 @@
-import Plotly from "plotly.js-dist";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import "./ScatterPlotInteractive.scss";
 import { useChartTooltip } from "../ChartTooltip";
+import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 
 import { COLORS, DEFAULT_COLOR_SCALE, PLOT_CONSTANTS } from "./constants";
 import {
@@ -19,6 +19,7 @@ import {
 } from "./utils";
 
 import type { AxisConfig, ScatterPlotInteractiveProps, SelectionMode, TooltipConfig } from "./types";
+import type Plotly from "plotly.js-dist";
 
 import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { annotationLegendTraces, buildChartAnnotations } from "@/utils/chart-annotations";
@@ -307,83 +308,94 @@ const ScatterPlotInteractive: React.FC<ScatterPlotInteractiveProps> = ({
       config.modeBarButtonsToAdd?.push("lasso2d" as never);
     }
 
-    Plotly.newPlot(currentRef, plotData, layout, config);
+    // Plotly is loaded lazily so it stays out of the consumer's main chunk
+    // (SW-2007); the draw is skipped if the effect re-runs or unmounts first.
+    let cancelled = false;
+    let drawnElement: HTMLDivElement | null = null;
+    void loadPlotly().then((plotly) => {
+      if (cancelled || !plotRef.current) return;
+      plotly.newPlot(currentRef, plotData, layout, config);
 
-    // Attach event handlers
-    const plotElement = currentRef as unknown as Plotly.PlotlyHTMLElement;
+      // Attach event handlers
+      const plotElement = currentRef as unknown as Plotly.PlotlyHTMLElement;
 
-    // Handle point click
-    if (enableClickSelection) {
-      plotElement.on("plotly_click", (eventData: Plotly.PlotMouseEvent) => {
-        const point = eventData.points[0];
-        if (point && point.data.ids) {
-          const clickedId = point.data.ids[point.pointIndex];
-          const clickedPoint = processedData.find((p) => String(p.id) === clickedId);
+      // Handle point click
+      if (enableClickSelection) {
+        plotElement.on("plotly_click", (eventData: Plotly.PlotMouseEvent) => {
+          const point = eventData.points[0];
+          if (point && point.data.ids) {
+            const clickedId = point.data.ids[point.pointIndex];
+            const clickedPoint = processedData.find((p) => String(p.id) === clickedId);
 
-          if (clickedPoint) {
-            // Call point click handler if provided
-            onPointClickRef.current?.(clickedPoint, eventData.event as MouseEvent);
+            if (clickedPoint) {
+              // Call point click handler if provided
+              onPointClickRef.current?.(clickedPoint, eventData.event as MouseEvent);
 
-            // Handle selection. Use the original-typed ID from the matched point so
-            // numeric IDs (e.g., 123) are preserved instead of being coerced to "123".
-            const mode = getSelectionMode(eventData.event as MouseEvent);
-            const newSelection = applySelection(selectedIdsRef.current, new Set([clickedPoint.id]), mode);
+              // Handle selection. Use the original-typed ID from the matched point so
+              // numeric IDs (e.g., 123) are preserved instead of being coerced to "123".
+              const mode = getSelectionMode(eventData.event as MouseEvent);
+              const newSelection = applySelection(selectedIdsRef.current, new Set([clickedPoint.id]), mode);
+
+              if (!isControlledRef.current) {
+                setInternalSelectedIds(newSelection);
+              }
+              onSelectionChangeRef.current?.(newSelection, mode);
+            }
+          }
+        });
+      }
+
+      // Handle box/lasso selection
+      if (enableBoxSelection || enableLassoSelection) {
+        plotElement.on("plotly_selected", (eventData: Plotly.PlotSelectionEvent) => {
+          if (eventData && eventData.points) {
+            const selectedPointIds = eventData.points
+              .map((p): string | number | null => {
+                if (p.data.ids && p.pointIndex !== undefined) {
+                  const strId = p.data.ids[p.pointIndex] as string;
+                  // Restore the original ID type (string or number) via the lookup.
+                  return originalIdLookup.get(strId) ?? strId;
+                }
+                return null;
+              })
+              .filter((id: string | number | null): id is string | number => id !== null);
+
+            // Get selection mode from keyboard state
+            // Note: Plotly doesn't pass the original event, so we can't detect modifiers
+            // For now, box/lasso selection always replaces
+            const mode: SelectionMode = "replace";
+            const newSelection = new Set<string | number>(selectedPointIds);
 
             if (!isControlledRef.current) {
               setInternalSelectedIds(newSelection);
             }
             onSelectionChangeRef.current?.(newSelection, mode);
           }
-        }
-      });
-    }
+        });
 
-    // Handle box/lasso selection
-    if (enableBoxSelection || enableLassoSelection) {
-      plotElement.on("plotly_selected", (eventData: Plotly.PlotSelectionEvent) => {
-        if (eventData && eventData.points) {
-          const selectedPointIds = eventData.points
-            .map((p): string | number | null => {
-              if (p.data.ids && p.pointIndex !== undefined) {
-                const strId = p.data.ids[p.pointIndex] as string;
-                // Restore the original ID type (string or number) via the lookup.
-                return originalIdLookup.get(strId) ?? strId;
-              }
-              return null;
-            })
-            .filter((id: string | number | null): id is string | number => id !== null);
-
-          // Get selection mode from keyboard state
-          // Note: Plotly doesn't pass the original event, so we can't detect modifiers
-          // For now, box/lasso selection always replaces
-          const mode: SelectionMode = "replace";
-          const newSelection = new Set<string | number>(selectedPointIds);
-
+        // Handle deselect (clicking on background)
+        plotElement.on("plotly_deselect", () => {
+          const newSelection = new Set<string | number>();
           if (!isControlledRef.current) {
             setInternalSelectedIds(newSelection);
           }
-          onSelectionChangeRef.current?.(newSelection, mode);
-        }
-      });
+          onSelectionChangeRef.current?.(newSelection, "replace");
+        });
+      }
 
-      // Handle deselect (clicking on background)
-      plotElement.on("plotly_deselect", () => {
-        const newSelection = new Set<string | number>();
-        if (!isControlledRef.current) {
-          setInternalSelectedIds(newSelection);
-        }
-        onSelectionChangeRef.current?.(newSelection, "replace");
-      });
-    }
+      // Design-system tooltip driven by Plotly hover events
+      if (tooltipEnabled && !nativeTooltip) {
+        bindTooltip(currentRef);
+      }
 
-    // Design-system tooltip driven by Plotly hover events
-    if (tooltipEnabled && !nativeTooltip) {
-      bindTooltip(currentRef);
-    }
+      // Capture ref value for cleanup
+      drawnElement = currentRef;
+    });
 
     return () => {
-      if (currentRef) {
-        Plotly.purge(currentRef);
+      cancelled = true;
+      if (drawnElement) {
+        getLoadedPlotly().purge(drawnElement);
       }
     };
   }, [
@@ -412,34 +424,49 @@ const ScatterPlotInteractive: React.FC<ScatterPlotInteractiveProps> = ({
 
   // Apply selection state to Plotly
   useEffect(() => {
-    const currentRef = plotRef.current;
-    if (!currentRef || processedData.length === 0) return;
+    if (!plotRef.current || processedData.length === 0) return;
 
-    const plotElement = currentRef as unknown as Plotly.PlotlyHTMLElement;
+    // Wait for the lazily-loaded Plotly module: the draw effect registers its
+    // loadPlotly().then first, so by the time this callback runs the plot has
+    // been drawn — preserving the original "restyle right after newPlot"
+    // ordering on initial mount.
+    let cancelled = false;
+    void loadPlotly().then((plotly) => {
+      const currentRef = plotRef.current;
+      if (cancelled || !currentRef) return;
+      // Guard: skip if the chart hasn't been drawn (e.g. the draw was cancelled).
+      if (!(currentRef as { _fullLayout?: unknown })._fullLayout) return;
 
-    // Find indices of selected points. Use the string-normalized set to match the string IDs Plotly stores
-    const selectedIndices = processedData
-      .map((point, index) => (normalizedSelectedIds.has(String(point.id)) ? index : null))
-      .filter((index): index is number => index !== null);
+      const plotElement = currentRef as unknown as Plotly.PlotlyHTMLElement;
 
-    // Update Plotly selection
-    if (selectedIndices.length > 0) {
-      Plotly.restyle(
-        plotElement,
-        {
-          selectedpoints: [selectedIndices],
-        },
-        [0],
-      );
-    } else {
-      Plotly.restyle(
-        plotElement,
-        {
-          selectedpoints: [null],
-        },
-        [0],
-      );
-    }
+      // Find indices of selected points. Use the string-normalized set to match the string IDs Plotly stores
+      const selectedIndices = processedData
+        .map((point, index) => (normalizedSelectedIds.has(String(point.id)) ? index : null))
+        .filter((index): index is number => index !== null);
+
+      // Update Plotly selection
+      if (selectedIndices.length > 0) {
+        plotly.restyle(
+          plotElement,
+          {
+            selectedpoints: [selectedIndices],
+          },
+          [0],
+        );
+      } else {
+        plotly.restyle(
+          plotElement,
+          {
+            selectedpoints: [null],
+          },
+          [0],
+        );
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [normalizedSelectedIds, processedData]);
 
   const containerClassName = className

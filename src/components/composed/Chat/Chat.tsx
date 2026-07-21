@@ -275,7 +275,7 @@ export const Chat = ({
               {/* Model selector */}
               {models.length > 1 && (
                 <PromptInputSelect onValueChange={setModel} value={model}>
-                  <PromptInputSelectTrigger>
+                  <PromptInputSelectTrigger aria-label="Select model">
                     <PromptInputSelectValue />
                   </PromptInputSelectTrigger>
                   <PromptInputSelectContent>

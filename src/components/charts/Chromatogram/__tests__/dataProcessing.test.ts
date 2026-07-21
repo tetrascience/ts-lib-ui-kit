@@ -8,7 +8,7 @@ import {
   validateSeriesData,
 } from "../dataProcessing";
 
-import type { PeakAnnotation } from "../types";
+import type { BaselineCorrectionMethod, PeakAnnotation } from "../types";
 
 describe("buildHoverExtraContent", () => {
   it("returns seriesName when no metadata provided", () => {
@@ -118,6 +118,15 @@ describe("applyBaselineCorrection", () => {
 
     it("baseline-corrects a single-point signal to zero", () => {
       expect(applyBaselineCorrection([42], "linear")).toEqual([0]);
+    });
+  });
+
+  describe("unrecognized method", () => {
+    it("returns the signal unchanged as a defensive fallthrough", () => {
+      const y = [1, 2, 3];
+      // Cast an unsupported method to exercise the final `return y` fallthrough
+      // that guards against an out-of-union baseline-correction mode.
+      expect(applyBaselineCorrection(y, "unsupported" as BaselineCorrectionMethod)).toBe(y);
     });
   });
 });

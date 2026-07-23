@@ -244,11 +244,13 @@ const ShellDemo = ({
       showTopBar={showTopBar}
       autoCollapse={autoCollapse}
       onBackToPlatform={() => console.log("Back to TDP Platform")}
-      onHelpClick={() => console.log("Help")}
       userMenu={<UserMenuButton name="Emily Liu" userRole="ADMIN" />}
       breadcrumbs={htsBreadcrumbs}
+      // Collapsing the horizontal workflow removes its bar and tucks the step
+      // dropdown into the top bar beside the breadcrumbs (playground behavior).
+      headerCenter={secondary === "workflow-horizontal" && wfCollapsed ? horizontalStepNav : undefined}
       secondaryBar={
-        secondary === "workflow-horizontal" ? (
+        secondary === "workflow-horizontal" && !wfCollapsed ? (
           <div className="border-b border-border bg-card px-4 py-2">{horizontalStepNav}</div>
         ) : undefined
       }
@@ -373,12 +375,13 @@ export const Default: Story = {
 
 /**
  * 2 · Secondary Nav with Sidebar — permanent icon rail for the primary nav
- * plus a menu-style secondary sidebar with its own collapse toggle (the rail
- * is unaffected — `hideNavOnCollapse` is off).
+ * plus a menu-style secondary sidebar. Collapsing hides the primary rail too
+ * (`hideNavOnCollapse`), leaving one icon rail — matching the playground's
+ * "Hide primary rail" collapse mode.
  */
 export const SecondaryNavSidebar: Story = {
   name: "Secondary Nav · Sidebar",
-  render: () => <ShellDemo secondary="menu" />,
+  render: () => <ShellDemo secondary="menu" hideNavOnCollapse />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
@@ -396,17 +399,21 @@ export const SecondaryNavSidebar: Story = {
       expect(canvas.getByRole("button", { name: /Datasets/ })).toHaveAttribute("data-status", "active");
     });
 
-    await step("Secondary collapses to an icon rail independently of the primary rail", async () => {
+    await step("Collapsing the secondary also hides the primary rail — one icon rail remains", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Collapse" }));
       expect(canvas.queryByText("Secondary Nav")).not.toBeInTheDocument();
       const nav = canvasElement.querySelector(
         "[data-slot='data-app-shell-secondary-nav'][data-collapsed='true']",
       );
       expect(nav).toBeInTheDocument();
-      // Primary rail is still there — collapse was zone-local
-      expect(canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")).toBeInTheDocument();
+      // hideNavOnCollapse — the primary rail leaves with it
+      expect(canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")).not.toBeInTheDocument();
+    });
+
+    await step("The rail's expand chevron restores both zones", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Expand" }));
       expect(canvas.getByText("Secondary Nav")).toBeInTheDocument();
+      expect(canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")).toBeInTheDocument();
     });
   },
 };
@@ -481,15 +488,12 @@ export const WorkflowHorizontal: Story = {
       expect(canvas.getByText("Step 3 Name")).toBeVisible();
     });
 
-    await step("Collapsing folds the items into a step dropdown in the same bar", async () => {
+    await step("Collapsing removes the bar and tucks a step dropdown into the top bar", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Collapse steps" }));
       expect(canvas.queryByText("Step 3 Name")).not.toBeInTheDocument();
-      // The bar stays put (below the breadcrumbs) — only its contents collapse
-      const nav = canvasElement.querySelector(
-        "[data-slot='data-app-shell-secondary-nav'][data-collapsed='true']",
-      );
-      expect(nav).toBeInTheDocument();
-      const select = canvas.getByRole("combobox", { name: "Current step" });
+      // The compact step nav now lives inside the top bar, beside the breadcrumbs
+      const topBar = canvasElement.querySelector("[data-slot='data-app-top-nav']");
+      const select = within(topBar as HTMLElement).getByRole("combobox", { name: "Current step" });
       expect(select).toBeVisible();
       expect(select).toHaveTextContent("Step 1 · Step 1 Name");
     });
@@ -712,7 +716,6 @@ const InteractiveShell = () => {
       appFullName="HTS Hit Finder"
       version="v2.4.1"
       navGroups={navGroups}
-      onHelpClick={() => console.log("Help")}
       userMenu={<UserMenuButton name="Emily Liu" userRole="ADMIN" />}
       breadcrumbs={[
         { label: "All Projects", onClick: () => setActivePageId("explorer") },
@@ -883,43 +886,6 @@ export const BreadcrumbVariants: Story = {
 // =============================================================================
 // Help button visibility
 // =============================================================================
-
-export const HelpButtonPresent: Story = {
-  name: "Help Button",
-  tags: ["!dev"], // Hides from sidebar, remains testable
-  render: () => (
-    <DataAppShell
-      appName="APP"
-      navGroups={htsNavGroups}
-      onHelpClick={() => console.log("Help")}
-      breadcrumbs={[{ label: "Page" }]}
-    >
-      <div className="p-6">
-        <p>Content</p>
-      </div>
-    </DataAppShell>
-  ),
-  play: async ({ canvasElement, step }) => {
-    await step("Help button renders when onHelpClick is provided", async () => {
-      // Help button should be present in the top nav when onHelpClick is provided
-      const topNav = canvasElement.querySelector("[data-slot='data-app-top-nav']");
-      expect(topNav).toBeInTheDocument();
-    });
-
-    await step("Help icon is visible in the top nav", async () => {
-      // The HelpCircle button is visible — check for its container
-      const topNav = canvasElement.querySelector("[data-slot='data-app-top-nav']");
-      expect(topNav).toBeInTheDocument();
-      // Look for the help button (it has no text label, only icon)
-      const buttons = within(topNav!).getAllByRole("button");
-      // Top nav right side: help button should be present
-      expect(buttons.length).toBeGreaterThanOrEqual(1);
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4671" },
-  },
-};
 
 // =============================================================================
 // Workflow panel collapse / expand + step interaction

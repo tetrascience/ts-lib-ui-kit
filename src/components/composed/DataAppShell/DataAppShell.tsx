@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, HelpCircle, Menu } from "lucide-react";
+import { ArrowLeft, ChevronRight, Menu } from "lucide-react";
 import * as React from "react";
 
 import { DataAppShellPrimaryNav } from "./PrimaryNav";
@@ -31,12 +31,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -79,8 +73,6 @@ export interface DataAppShellProps {
   // -- Top nav --
   /** Breadcrumb items from root to current page */
   breadcrumbs?: BreadcrumbItemConfig[];
-  /** Callback when the help button is clicked; omit to hide the button */
-  onHelpClick?: () => void;
   /** Center "context" slot in the top bar (e.g. a version / status selector) */
   headerCenter?: React.ReactNode;
   /** Slot for right-side actions in the top nav (e.g. data count pills, next button) */
@@ -357,13 +349,11 @@ function TopNavBreadcrumb({ items }: { items: BreadcrumbItemConfig[] }) {
 
 function TopNav({
   breadcrumbs = [],
-  onHelpClick,
   headerCenter,
   headerActions,
   mobileTrigger,
 }: {
   breadcrumbs?: BreadcrumbItemConfig[];
-  onHelpClick?: () => void;
   headerCenter?: React.ReactNode;
   headerActions?: React.ReactNode;
   mobileTrigger?: React.ReactNode;
@@ -379,30 +369,7 @@ function TopNav({
         </>
       }
       center={headerCenter}
-      right={
-        <>
-          {headerActions}
-
-          {onHelpClick && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-7 h-7 text-muted-foreground"
-                    onClick={onHelpClick}
-                    aria-label="Help"
-                  >
-                    <HelpCircle className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">Help</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </>
-      }
+      right={headerActions}
     />
   );
 }
@@ -422,7 +389,6 @@ function DataAppShell({
   onBackToPlatform,
   userMenu,
   breadcrumbs = [],
-  onHelpClick,
   headerCenter,
   headerActions,
   navVariant = "vertical",
@@ -575,7 +541,6 @@ function DataAppShell({
             <div className="[grid-area:top] min-w-0">
               <TopNav
                 breadcrumbs={breadcrumbs}
-                onHelpClick={onHelpClick}
                 headerCenter={headerCenter}
                 headerActions={headerActions}
                 mobileTrigger={

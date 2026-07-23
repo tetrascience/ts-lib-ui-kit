@@ -60,7 +60,7 @@ const dataAppShellPrimaryNavVariants = cva("flex min-w-0", {
 const headerAreaVariants = cva("shrink-0 flex", {
   variants: {
     variant: {
-      rail: "justify-center pt-1 pb-2",
+      rail: "justify-center py-2",
       sidebar: "px-3 py-2.5 border-b border-sidebar-border",
       top: "items-center",
     },

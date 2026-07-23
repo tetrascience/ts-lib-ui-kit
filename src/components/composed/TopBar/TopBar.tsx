@@ -66,7 +66,7 @@ function TopBar({ left, center, right, sticky, className, ...props }: TopBarProp
 
       <div
         data-slot="top-bar-right"
-        className="flex items-center gap-2 shrink-0 flex-1 justify-end"
+        className="flex items-center gap-2 shrink-0 justify-end"
       >
         {right}
       </div>

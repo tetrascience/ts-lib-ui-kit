@@ -71,7 +71,7 @@ const headerAreaVariants = cva("shrink-0 flex", {
 const itemsAreaVariants = cva("flex min-h-0", {
   variants: {
     variant: {
-      rail: "flex-1 flex-col items-center gap-1 px-2 pt-3 overflow-y-auto",
+      rail: "flex-1 flex-col items-center gap-1 px-2 pt-2 overflow-y-auto",
       // px-1 — the inset previously lived on each row as `mx-1` alongside
       // `w-full`, which made every row 8px wider than its container and got
       // clipped by this scroll area (SW-2118 sidebar row cut-off).

@@ -3,11 +3,13 @@ import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { DataAppShell } from "../DataAppShell";
+import { AppHeaderMenu, DataAppShell } from "../DataAppShell";
 import { useDataAppShell, useOptionalDataAppShell } from "../ShellContext";
 
 import type { NavGroup } from "../PrimaryNav";
 import type { DataAppShellContextValue } from "../ShellContext";
+
+import { TdpNavigationProvider } from "@/components/composed/tdp-link";
 
 // ---------------------------------------------------------------------------
 // matchMedia stub — controllable from tests
@@ -200,5 +202,81 @@ describe("DataAppShell — zones", () => {
     expect(fab).not.toBeNull();
     flushSync(() => fab!.click());
     expect(rail()).not.toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Breadcrumb rendering — link / plain / page branches
+// ---------------------------------------------------------------------------
+
+describe("DataAppShell — breadcrumbs", () => {
+  it("renders href items as links, non-interactive middle items as plain text, and the last as the page", () => {
+    render(
+      shell({
+        breadcrumbs: [
+          { label: "Root", href: "/root" }, // link branch
+          { label: "Middle" }, // plain span branch (not clickable, not last)
+          { label: "Current" }, // page branch (last)
+        ],
+      }),
+    );
+
+    const link = container.querySelector<HTMLAnchorElement>("a[href='/root']");
+    expect(link?.textContent).toContain("Root");
+
+    // "Middle" is a plain span — neither a link nor a button
+    const middle = [...container.querySelectorAll("span")].find((s) => s.textContent === "Middle");
+    expect(middle).not.toBeUndefined();
+    expect(container.querySelector("a[href], button")?.textContent).not.toBe("Middle");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// App header menu — back-to-platform link vs callback
+// ---------------------------------------------------------------------------
+
+describe("AppHeaderMenu — back to platform", () => {
+  /** Opens the radix dropdown trigger (pointerdown is what radix listens for). */
+  function openMenu(trigger: HTMLElement) {
+    flushSync(() => {
+      trigger.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0 }));
+      trigger.dispatchEvent(new MouseEvent("click", { bubbles: true, button: 0 }));
+    });
+  }
+
+  it("renders a TDP link for backToPlatformPath", () => {
+    render(
+      <TdpNavigationProvider tdpBaseUrl="https://tetrascience.com/org">
+        <AppHeaderMenu appName="APP" appFullName="App Name" version="v1" backToPlatformPath="/platform" compact={false} />
+      </TdpNavigationProvider>,
+    );
+    const trigger = [...container.querySelectorAll<HTMLButtonElement>("button")].find((b) =>
+      b.textContent?.includes("App Name"),
+    )!;
+    openMenu(trigger);
+
+    // Dropdown content is portalled to the body
+    const link = [...document.body.querySelectorAll("a")].find((a) =>
+      a.textContent?.includes("Back to TDP Platform"),
+    );
+    expect(link).not.toBeUndefined();
+  });
+
+  it("renders a button that calls onBackToPlatform when no path is set", () => {
+    const onBackToPlatform = vi.fn();
+    render(
+      <AppHeaderMenu appName="APP" appFullName="App Name" onBackToPlatform={onBackToPlatform} compact={false} />,
+    );
+    const trigger = [...container.querySelectorAll<HTMLButtonElement>("button")].find((b) =>
+      b.textContent?.includes("App Name"),
+    )!;
+    openMenu(trigger);
+
+    const back = [...document.body.querySelectorAll<HTMLButtonElement>("button")].find((b) =>
+      b.textContent?.includes("Back to TDP Platform"),
+    )!;
+    expect(back).not.toBeUndefined();
+    flushSync(() => back.click());
+    expect(onBackToPlatform).toHaveBeenCalledOnce();
   });
 });

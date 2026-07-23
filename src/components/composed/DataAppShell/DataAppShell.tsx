@@ -73,6 +73,9 @@ export interface DataAppShellProps {
   // -- Top nav --
   /** Breadcrumb items from root to current page */
   breadcrumbs?: BreadcrumbItemConfig[];
+  /** Slot rendered after the breadcrumbs in the top bar's left group
+   *  (e.g. a collapsed horizontal workflow's step dropdown) */
+  headerLeft?: React.ReactNode;
   /** Center "context" slot in the top bar (e.g. a version / status selector) */
   headerCenter?: React.ReactNode;
   /** Slot for right-side actions in the top nav (e.g. data count pills, next button) */
@@ -349,11 +352,13 @@ function TopNavBreadcrumb({ items }: { items: BreadcrumbItemConfig[] }) {
 
 function TopNav({
   breadcrumbs = [],
+  headerLeft,
   headerCenter,
   headerActions,
   mobileTrigger,
 }: {
   breadcrumbs?: BreadcrumbItemConfig[];
+  headerLeft?: React.ReactNode;
   headerCenter?: React.ReactNode;
   headerActions?: React.ReactNode;
   mobileTrigger?: React.ReactNode;
@@ -366,6 +371,7 @@ function TopNav({
           {/* Mobile hamburger (hidden on md+) */}
           {mobileTrigger}
           <TopNavBreadcrumb items={breadcrumbs} />
+          {headerLeft}
         </>
       }
       center={headerCenter}
@@ -389,6 +395,7 @@ function DataAppShell({
   onBackToPlatform,
   userMenu,
   breadcrumbs = [],
+  headerLeft,
   headerCenter,
   headerActions,
   navVariant = "vertical",
@@ -541,6 +548,7 @@ function DataAppShell({
             <div className="[grid-area:top] min-w-0">
               <TopNav
                 breadcrumbs={breadcrumbs}
+                headerLeft={headerLeft}
                 headerCenter={headerCenter}
                 headerActions={headerActions}
                 mobileTrigger={

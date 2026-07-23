@@ -247,8 +247,9 @@ const ShellDemo = ({
       userMenu={<UserMenuButton name="Emily Liu" userRole="ADMIN" />}
       breadcrumbs={htsBreadcrumbs}
       // Collapsing the horizontal workflow removes its bar and tucks the step
-      // dropdown into the top bar beside the breadcrumbs (playground behavior).
-      headerCenter={secondary === "workflow-horizontal" && wfCollapsed ? horizontalStepNav : undefined}
+      // dropdown into the top bar's left group, right beside the breadcrumbs
+      // (playground behavior).
+      headerLeft={secondary === "workflow-horizontal" && wfCollapsed ? horizontalStepNav : undefined}
       secondaryBar={
         secondary === "workflow-horizontal" && !wfCollapsed ? (
           <div className="border-b border-border bg-card px-4 py-2">{horizontalStepNav}</div>
@@ -488,14 +489,17 @@ export const WorkflowHorizontal: Story = {
       expect(canvas.getByText("Step 3 Name")).toBeVisible();
     });
 
-    await step("Collapsing removes the bar and tucks a step dropdown into the top bar", async () => {
+    await step("Collapsing removes the bar and tucks a step dropdown next to the breadcrumbs", async () => {
       await userEvent.click(canvas.getByRole("button", { name: "Collapse steps" }));
       expect(canvas.queryByText("Step 3 Name")).not.toBeInTheDocument();
-      // The compact step nav now lives inside the top bar, beside the breadcrumbs
-      const topBar = canvasElement.querySelector("[data-slot='data-app-top-nav']");
-      const select = within(topBar as HTMLElement).getByRole("combobox", { name: "Current step" });
+      // The compact step nav lives in the top bar's LEFT group, after the crumbs
+      const topBarLeft = canvasElement.querySelector("[data-slot='top-bar-left']") as HTMLElement;
+      const select = within(topBarLeft).getByRole("combobox", { name: "Current step" });
       expect(select).toBeVisible();
       expect(select).toHaveTextContent("Step 1 · Step 1 Name");
+      // …positioned after the breadcrumb trail in the reading order
+      const crumbs = within(topBarLeft).getByText("All Projects");
+      expect(crumbs.compareDocumentPosition(select) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
     await step("The dropdown changes the active step", async () => {

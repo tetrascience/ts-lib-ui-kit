@@ -311,29 +311,38 @@ function IconRailSidebar(props: Omit<SidebarBodyProps, "compact" | "onAfterNavCl
 
 function TopNavBreadcrumb({ items }: { items: BreadcrumbItemConfig[] }) {
   return (
+    // min-w-0 lets the trail shrink inside the top bar's flex-1 left group;
+    // flex-nowrap keeps it one line instead of Breadcrumb's default wrap
+    // (which, combined with a squeezed left group, wrapped mid-trail and
+    // pushed the rest of the top bar around — SW-2118).
     <Breadcrumb className="min-w-0">
-      <BreadcrumbList>
+      <BreadcrumbList className="flex-nowrap min-w-0">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
           const isClickable = !isLast && (!!item.href || !!item.onClick);
+          // Only the current (last) crumb truncates — earlier crumbs keep
+          // their natural width so the trail reads left-to-right.
+          const itemClassName = isLast ? "min-w-0" : "shrink-0";
           return (
             <React.Fragment key={`${item.label}-${index}`}>
-              {index > 0 && <BreadcrumbSeparator>/</BreadcrumbSeparator>}
-              <BreadcrumbItem>
+              {index > 0 && <BreadcrumbSeparator className="shrink-0">/</BreadcrumbSeparator>}
+              <BreadcrumbItem className={itemClassName}>
                 {isLast ? (
-                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                  <BreadcrumbPage className="truncate">{item.label}</BreadcrumbPage>
                 ) : isClickable && item.href ? (
-                  <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
+                  <BreadcrumbLink href={item.href} className="whitespace-nowrap">
+                    {item.label}
+                  </BreadcrumbLink>
                 ) : isClickable && item.onClick ? (
                   <button
                     type="button"
-                    className="text-sm text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal"
+                    className="text-sm text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal whitespace-nowrap"
                     onClick={item.onClick}
                   >
                     {item.label}
                   </button>
                 ) : (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
                     {item.label}
                   </span>
                 )}
@@ -368,10 +377,11 @@ function TopNav({
       data-slot="data-app-top-nav"
       left={
         <>
-          {/* Mobile hamburger (hidden on md+) */}
-          {mobileTrigger}
+          {/* Mobile hamburger (hidden on md+). shrink-0 — only the
+              breadcrumb trail gives up width when the left group is tight. */}
+          {mobileTrigger && <div className="shrink-0">{mobileTrigger}</div>}
           <TopNavBreadcrumb items={breadcrumbs} />
-          {headerLeft}
+          {headerLeft != null && <div className="shrink-0">{headerLeft}</div>}
         </>
       }
       center={headerCenter}

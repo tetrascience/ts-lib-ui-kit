@@ -178,6 +178,9 @@ const secondaryMenuSteps = (activeId: string): NavStep[] =>
   ).map((item) => ({ ...item, status: item.id === activeId ? "active" : "todo" }));
 
 interface ShellDemoProps {
+  /** Primary vertical nav presentation — a permanent icon `rail` or a
+   *  collapsible `sidebar` (expanded ⇄ rail via its brand-row chevron). */
+  primary?: "rail" | "sidebar";
   /** Shell nav axis. */
   navVariant?: "vertical" | "horizontal";
   /** Secondary nav zone content. */
@@ -197,6 +200,7 @@ interface ShellDemoProps {
 }
 
 const ShellDemo = ({
+  primary = "rail",
   navVariant = "vertical",
   secondary = "off",
   rightPanel = "off",
@@ -239,6 +243,7 @@ const ShellDemo = ({
       version="v2.4.1"
       navGroups={htsNavGroups}
       navVariant={navVariant}
+      primaryNav={primary}
       hideNavOnCollapse={hideNavOnCollapse}
       showNavRail={showNavRail}
       showTopBar={showTopBar}
@@ -332,31 +337,46 @@ const ShellDemo = ({
 };
 
 /**
- * 1 · Default — just the left icon rail and the top bar.
+ * 1 · Default — a collapsible left sidebar and the top bar. The expanded
+ * sidebar shows labelled nav with a collapse chevron in the brand row; the
+ * chevron collapses it to an icon rail with an expand chevron under the logo.
  */
 export const Default: Story = {
   name: "Default",
-  render: () => <ShellDemo />,
+  render: () => <ShellDemo primary="sidebar" />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
-    await step("Shell renders icon rail, top bar and content — no secondary or right panel", async () => {
+    await step("Shell renders the expanded sidebar, top bar and content", async () => {
       expect(canvas.getByText("HTS")).toBeInTheDocument();
-      expect(canvas.getByRole("button", { name: "Project" })).toBeInTheDocument();
       expect(canvas.getAllByText("All Projects").length).toBeGreaterThan(0);
       expect(canvas.getByText("Main content area")).toBeInTheDocument();
       expect(canvas.queryByText("Workflow")).not.toBeInTheDocument();
       expect(canvas.queryByRole("complementary", { name: "Details" })).not.toBeInTheDocument();
-      expect(canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")).toBeInTheDocument();
+      // Expanded sidebar: labels are visible, not just aria names
+      const sidebar = canvasElement.querySelector("[data-slot='data-app-sidebar']");
+      expect(sidebar).toBeInTheDocument();
+      expect(sidebar).toHaveClass("w-[220px]");
+      expect(canvas.getByText("Project")).toBeVisible();
+      expect(canvas.getByText("Explorer")).toBeVisible();
     });
 
-    await step("Icon rail is compact — labels via aria, no collapse chevron", async () => {
+    await step("The brand-row chevron collapses the sidebar to an icon rail", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Collapse navigation" }));
       const rail = canvasElement.querySelector("[data-slot='data-app-sidebar-rail']");
+      expect(rail).toBeInTheDocument();
       expect(rail).toHaveClass("w-12");
-      // Labels are exposed as accessible names, not visible text
+      // Labels drop to aria-only; the expand chevron sits under the logo
       expect(canvas.queryByText("Project")).not.toBeInTheDocument();
-      expect(canvas.queryByRole("button", { name: "Collapse navigation" })).not.toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Project" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Expand navigation" })).toBeInTheDocument();
+    });
+
+    await step("The expand chevron restores the full sidebar", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Expand navigation" }));
+      expect(canvasElement.querySelector("[data-slot='data-app-sidebar']")).toBeInTheDocument();
+      expect(canvas.getByText("Project")).toBeVisible();
     });
 
     await step("Version is shown inside the app dropdown under the title", async () => {

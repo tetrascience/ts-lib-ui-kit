@@ -1,6 +1,7 @@
 import { ArrowLeft, ChevronRight, Menu } from "lucide-react";
 import * as React from "react";
 
+import { ShellCollapseButton } from "./CollapseButton";
 import { DataAppShellPrimaryNav } from "./PrimaryNav";
 import { DataAppShellProvider, type DataAppShellNavVariant } from "./ShellContext";
 
@@ -84,6 +85,14 @@ export interface DataAppShellProps {
   // -- Shell zones --
   /** Primary nav axis — `vertical` (sidebar/rail, default) or `horizontal` (top nav row) */
   navVariant?: DataAppShellNavVariant;
+  /**
+   * Vertical primary nav presentation:
+   * - `rail` (default) — permanent 48px icon-only rail.
+   * - `sidebar` — collapsible 220px sidebar with labels; its brand-row chevron
+   *   collapses it to an icon rail (with an expand chevron under the logo),
+   *   driven by the shell's `collapsed` state.
+   */
+  primaryNav?: "rail" | "sidebar";
   /** Slot rendered between the primary nav and the content (e.g. a vertical `DataAppShellSecondaryNav`) */
   sidebarPanel?: React.ReactNode;
   /** Full-width zone between the top bar and the content row (e.g. a horizontal `DataAppShellSecondaryNav`) */
@@ -306,6 +315,88 @@ function IconRailSidebar(props: Omit<SidebarBodyProps, "compact" | "onAfterNavCl
 }
 
 // =============================================================================
+// Collapsible primary sidebar (desktop only — hidden on mobile). Expanded, it
+// shows the app name, labelled nav, and a collapse chevron in the brand row;
+// collapsed, it becomes an icon rail with the expand chevron directly under
+// the logo (mirrors the SW-2118 playground).
+// =============================================================================
+
+interface PrimarySidebarProps extends Omit<SidebarBodyProps, "compact" | "onAfterNavClick"> {
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
+}
+
+function PrimarySidebar({ collapsed, onCollapsedChange, ...sidebarProps }: PrimarySidebarProps) {
+  const { appName, appFullName, appIcon, version, onAppNameClick, backToPlatformPath, onBackToPlatform } =
+    sidebarProps;
+  const headerMenuProps = {
+    appName,
+    appFullName,
+    appIcon,
+    version,
+    onAppNameClick,
+    backToPlatformPath,
+    onBackToPlatform,
+  };
+
+  if (collapsed) {
+    return (
+      <div
+        data-slot="data-app-sidebar-rail"
+        data-collapsed="true"
+        className="hidden md:flex w-12 flex-col shrink-0 bg-sidebar border-r border-sidebar-border h-full z-50"
+      >
+        <DataAppShellPrimaryNav
+          variant="rail"
+          aria-label="Application navigation"
+          navGroups={sidebarProps.navGroups}
+          header={
+            <div className="flex flex-col items-center gap-2">
+              <AppHeaderMenu {...headerMenuProps} compact />
+              <ShellCollapseButton
+                direction="right"
+                label="Expand navigation"
+                onClick={() => onCollapsedChange(false)}
+              />
+            </div>
+          }
+          user={sidebarProps.userMenu}
+          className="h-full w-full"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      data-slot="data-app-sidebar"
+      data-collapsed="false"
+      className="hidden md:flex w-[220px] flex-col shrink-0 bg-sidebar border-r border-sidebar-border h-full z-50"
+    >
+      <DataAppShellPrimaryNav
+        variant="sidebar"
+        aria-label="Application navigation"
+        navGroups={sidebarProps.navGroups}
+        header={
+          <div className="flex items-center gap-2 w-full min-w-0">
+            <div className="flex-1 min-w-0">
+              <AppHeaderMenu {...headerMenuProps} compact={false} />
+            </div>
+            <ShellCollapseButton
+              direction="left"
+              label="Collapse navigation"
+              onClick={() => onCollapsedChange(true)}
+            />
+          </div>
+        }
+        user={sidebarProps.userMenu}
+        className="h-full w-full"
+      />
+    </div>
+  );
+}
+
+// =============================================================================
 // Breadcrumb trail — rendered from the shell's breadcrumb config
 // =============================================================================
 
@@ -409,6 +500,7 @@ function DataAppShell({
   headerCenter,
   headerActions,
   navVariant = "vertical",
+  primaryNav = "rail",
   sidebarPanel,
   secondaryBar,
   rightPanel,
@@ -479,10 +571,12 @@ function DataAppShell({
     userMenu,
   };
 
-  // hideNavOnCollapse — the primary nav zone leaves the grid entirely while
-  // collapsed; the secondary zone (if any) becomes the single icon rail.
-  const navHidden = !showNavRail || (hideNavOnCollapse && collapsed);
   const isVertical = navVariant === "vertical";
+  // A collapsible sidebar renders its own collapsed rail, so it is never
+  // hidden by collapse. hideNavOnCollapse only removes the permanent icon rail.
+  const isCollapsibleSidebar = isVertical && primaryNav === "sidebar";
+  const navHidden =
+    !showNavRail || (hideNavOnCollapse && collapsed && !isCollapsibleSidebar);
 
   // CSS-grid template areas per navVariant — the shell knows zones, never
   // domain concepts. Zones absent from the tree simply collapse their track.
@@ -505,7 +599,15 @@ function DataAppShell({
           {!navHidden &&
             (isVertical ? (
               <div className="[grid-area:nav] min-h-0">
-                <IconRailSidebar {...sidebarProps} />
+                {isCollapsibleSidebar ? (
+                  <PrimarySidebar
+                    collapsed={collapsed}
+                    onCollapsedChange={setCollapsed}
+                    {...sidebarProps}
+                  />
+                ) : (
+                  <IconRailSidebar {...sidebarProps} />
+                )}
               </div>
             ) : (
               <div className="[grid-area:pnav] hidden md:block border-b border-sidebar-border bg-sidebar px-3 py-1.5">

@@ -257,7 +257,7 @@ const ShellDemo = ({
       headerLeft={secondary === "workflow-horizontal" && wfCollapsed ? horizontalStepNav : undefined}
       secondaryBar={
         secondary === "workflow-horizontal" && !wfCollapsed ? (
-          <div className="border-b border-border bg-card px-4 py-2">{horizontalStepNav}</div>
+          <div className="border-b border-border bg-card p-2">{horizontalStepNav}</div>
         ) : undefined
       }
       headerActions={
@@ -336,6 +336,127 @@ const ShellDemo = ({
   );
 };
 
+// =============================================================================
+// Copyable composition snippets — surfaced in each story's Docs "Show code"
+// block. The stories render through the shared ShellDemo helper (so the play
+// tests can drive state); these snippets show the real DataAppShell
+// composition a consumer would write, assuming local navGroups / breadcrumbs /
+// step data and a <UserMenu /> in scope.
+// =============================================================================
+
+const DEFAULT_CODE = `<DataAppShell
+  appName="HTS"
+  appFullName="HTS Hit Finder"
+  version="v2.4.1"
+  primaryNav="sidebar"
+  navGroups={navGroups}
+  breadcrumbs={breadcrumbs}
+  userMenu={<UserMenu />}
+>
+  {/* page content */}
+</DataAppShell>`;
+
+const SECONDARY_NAV_CODE = `<DataAppShell
+  appName="HTS"
+  navGroups={navGroups}
+  breadcrumbs={breadcrumbs}
+  userMenu={<UserMenu />}
+  hideNavOnCollapse
+  sidebarPanel={
+    <DataAppShellSecondaryNav
+      title="Secondary Nav"
+      collapsible
+      steps={menuItems}
+      onSelect={setActiveItem}
+    />
+  }
+>
+  {/* page content */}
+</DataAppShell>`;
+
+const WORKFLOW_VERTICAL_CODE = `<DataAppShell
+  appName="HTS"
+  navGroups={navGroups}
+  breadcrumbs={breadcrumbs}
+  userMenu={<UserMenu />}
+  hideNavOnCollapse
+  headerActions={<Button size="sm">Next</Button>}
+  sidebarPanel={
+    <DataAppShellSecondaryNav
+      title="Workflow"
+      collapsible
+      steps={workflowSteps}
+      activeKey={activeStep}
+      onSelect={setActiveStep}
+    />
+  }
+>
+  {/* page content */}
+</DataAppShell>`;
+
+const WORKFLOW_HORIZONTAL_CODE = `const stepNav = (
+  <DataAppShellSecondaryNav
+    orientation="horizontal"
+    collapsible
+    collapsed={collapsed}
+    onCollapsedChange={setCollapsed}
+    steps={workflowSteps}
+    activeKey={activeStep}
+    onSelect={setActiveStep}
+  />
+);
+
+<DataAppShell
+  appName="HTS"
+  navGroups={navGroups}
+  breadcrumbs={breadcrumbs}
+  userMenu={<UserMenu />}
+  headerActions={<Button size="sm">Next</Button>}
+  // collapsed → step dropdown beside the breadcrumbs; expanded → full stepper bar
+  headerLeft={collapsed ? stepNav : undefined}
+  secondaryBar={
+    collapsed ? undefined : (
+      <div className="border-b border-border bg-card p-2">{stepNav}</div>
+    )
+  }
+>
+  {/* page content */}
+</DataAppShell>`;
+
+const RIGHT_PANEL_CODE = `const triggerRef = React.useRef<HTMLButtonElement>(null);
+
+<DataAppShell
+  appName="HTS"
+  navGroups={navGroups}
+  breadcrumbs={breadcrumbs}
+  userMenu={<UserMenu />}
+  headerActions={
+    <DataAppShellRightPanelTrigger
+      ref={triggerRef}
+      variant="icon"
+      aria-label="Toggle details panel"
+      aria-expanded={open}
+      onClick={() => setOpen((o) => !o)}
+    >
+      <PanelRight />
+    </DataAppShellRightPanelTrigger>
+  }
+  rightPanel={
+    <DataAppShellRightPanel
+      id="details"
+      open={open}
+      onOpenChange={setOpen}
+      title="Details"
+      showTrigger={false}
+      triggerRef={triggerRef}
+    >
+      {/* panel content */}
+    </DataAppShellRightPanel>
+  }
+>
+  {/* page content */}
+</DataAppShell>`;
+
 /**
  * 1 · Default — a collapsible left sidebar and the top bar. The expanded
  * sidebar shows labelled nav with a collapse chevron in the brand row; the
@@ -390,6 +511,7 @@ export const Default: Story = {
     });
   },
   parameters: {
+    docs: { source: { code: DEFAULT_CODE, language: "tsx" } },
     zephyr: { testCaseId: "" },
   },
 };
@@ -436,6 +558,9 @@ export const SecondaryNavSidebar: Story = {
       expect(canvas.getByText("Secondary Nav")).toBeInTheDocument();
       expect(canvasElement.querySelector("[data-slot='data-app-sidebar-rail']")).toBeInTheDocument();
     });
+  },
+  parameters: {
+    docs: { source: { code: SECONDARY_NAV_CODE, language: "tsx" } },
   },
 };
 
@@ -487,6 +612,9 @@ export const WorkflowVertical: Story = {
       expect(canvas.getByText("Workflow")).toBeInTheDocument();
     });
   },
+  parameters: {
+    docs: { source: { code: WORKFLOW_VERTICAL_CODE, language: "tsx" } },
+  },
 };
 
 /**
@@ -537,6 +665,9 @@ export const WorkflowHorizontal: Story = {
       const active = canvas.getByRole("button", { name: /Step 3 Name/ });
       expect(active).toHaveAttribute("data-status", "active");
     });
+  },
+  parameters: {
+    docs: { source: { code: WORKFLOW_HORIZONTAL_CODE, language: "tsx" } },
   },
 };
 
@@ -605,6 +736,9 @@ export const WithRightPanel: Story = {
       await waitFor(() => expect(panel).toBeVisible());
     });
   },
+  parameters: {
+    docs: { source: { code: RIGHT_PANEL_CODE, language: "tsx" } },
+  },
 };
 
 /**
@@ -614,6 +748,7 @@ export const WithRightPanel: Story = {
  */
 export const Customizable: StoryObj<typeof ShellDemo> = {
   name: "Customizable",
+  tags: ["!dev"], // Hidden from the sidebar — keeps the visible set to the 5 core variants
   render: (args) => <ShellDemo {...args} />,
   args: {
     navVariant: "vertical",

@@ -280,7 +280,7 @@ function DataAppShellSecondaryNav({
         {...props}
       >
         <TooltipProvider>
-          <div className="flex justify-center items-center h-10 shrink-0 border-b border-sidebar-border">
+          <div className="flex justify-center items-center h-11 shrink-0 border-b border-sidebar-border">
             <ShellCollapseButton
               data-slot="data-app-shell-secondary-nav-toggle"
               direction="right"
@@ -484,7 +484,7 @@ function DataAppShellSecondaryNav({
       {(title != null || collapsible) && (
         <div
           data-slot="data-app-shell-secondary-nav-header"
-          className="flex items-center gap-1.5 h-10 px-2.5 pl-4 shrink-0 text-xs font-medium text-muted-foreground whitespace-nowrap border-b border-sidebar-border"
+          className="flex items-center gap-1.5 h-11 px-2.5 pl-4 shrink-0 text-xs font-medium text-muted-foreground whitespace-nowrap border-b border-sidebar-border"
         >
           <span className="flex-1 truncate">{title}</span>
           {collapsible && (

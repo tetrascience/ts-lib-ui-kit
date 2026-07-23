@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 // =============================================================================
 
 const topBarVariants = cva(
-  "flex items-center h-10 px-3 bg-sidebar border-b border-sidebar-border w-full gap-2 z-40",
+  "flex items-center h-11 px-3 bg-sidebar border-b border-sidebar-border w-full gap-2 z-40",
   {
     variants: {
       sticky: {

@@ -60,7 +60,7 @@ const dataAppShellPrimaryNavVariants = cva("flex min-w-0", {
 const headerAreaVariants = cva("shrink-0 flex", {
   variants: {
     variant: {
-      rail: "justify-center pt-1 pb-2",
+      rail: "justify-center py-2",
       sidebar: "px-3 py-2.5 border-b border-sidebar-border",
       top: "items-center",
     },
@@ -71,8 +71,11 @@ const headerAreaVariants = cva("shrink-0 flex", {
 const itemsAreaVariants = cva("flex min-h-0", {
   variants: {
     variant: {
-      rail: "flex-1 flex-col items-center gap-1 px-2 pt-3 overflow-y-auto",
-      sidebar: "flex-1 flex-col py-2 overflow-y-auto",
+      rail: "flex-1 flex-col items-center gap-1 px-2 pt-2 overflow-y-auto",
+      // px-1 — the inset previously lived on each row as `mx-1` alongside
+      // `w-full`, which made every row 8px wider than its container and got
+      // clipped by this scroll area (SW-2118 sidebar row cut-off).
+      sidebar: "flex-1 flex-col px-1 py-2 overflow-y-auto",
       top: "flex-1 flex-row items-center gap-1 min-w-0 overflow-x-auto",
     },
   },
@@ -118,7 +121,7 @@ const dataAppShellPrimaryNavItemVariants = cva(
     variants: {
       variant: {
         rail: "flex flex-col items-center p-0 w-full",
-        sidebar: "flex items-center gap-3 w-full px-3 py-2 text-sm text-left rounded-md mx-1",
+        sidebar: "flex items-center gap-3 w-full px-3 py-2 text-sm text-left rounded-md",
         // ring-inset — the items row is an overflow-x-auto scroll container,
         // which would clip an outset ring at the row's edges
         top: "flex items-center gap-2 h-7 px-2.5 text-sm rounded-md whitespace-nowrap focus-visible:ring-inset",

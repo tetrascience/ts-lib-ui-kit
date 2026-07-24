@@ -149,6 +149,23 @@ describe("DataAppShellPrimaryNav — rail and sidebar", () => {
     expect(items[0].querySelector("[data-slot='badge']")?.textContent).toBe("3");
     expect(items[1].getAttribute("aria-current")).toBe("page");
   });
+
+  it("sidebar renders group section labels", () => {
+    render(
+      <DataAppShellPrimaryNav
+        variant="sidebar"
+        navGroups={[
+          { label: "Platform", pages: [{ id: "a", label: "Overview", icon: FolderKanban }] },
+          { label: "Workspace", pages: [{ id: "b", label: "Reports", icon: Beaker }] },
+        ]}
+      />
+    );
+
+    const labels = [...container.querySelectorAll("span")]
+      .map((s) => s.textContent)
+      .filter((t) => t === "Platform" || t === "Workspace");
+    expect(labels).toEqual(["Platform", "Workspace"]);
+  });
 });
 
 // ---------------------------------------------------------------------------

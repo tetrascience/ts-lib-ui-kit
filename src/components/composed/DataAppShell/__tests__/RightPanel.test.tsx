@@ -180,3 +180,52 @@ describe("DataAppShellRightPanelTrigger — asChild", () => {
     expect(button.querySelector("svg")).not.toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Overlay variant — reuses the Sheet (portalled to document.body)
+// ---------------------------------------------------------------------------
+
+describe("DataAppShellRightPanel — overlay variant", () => {
+  const getDialog = () =>
+    document.body.querySelector<HTMLElement>(
+      "[data-slot='data-app-shell-right-panel'][data-variant='overlay']",
+    );
+
+  it("renders the panel inside a Sheet dialog while open, and only the FAB while closed", () => {
+    render(
+      <DataAppShellRightPanel id="ov" variant="overlay" open title="Details">
+        <p>overlay body</p>
+      </DataAppShellRightPanel>,
+    );
+    // The overlay content is portalled to the body, not the inline container
+    const dialog = getDialog();
+    expect(dialog).not.toBeNull();
+    expect(dialog?.getAttribute("style")).toContain("width");
+    expect(document.body.textContent).toContain("overlay body");
+    // No docked <aside> — the overlay does not reflow main
+    expect(getPanel()).toBeNull();
+  });
+
+  it("renders the FAB trigger (no dialog) while closed", () => {
+    render(
+      <DataAppShellRightPanel id="ov2" variant="overlay" open={false} title="Details" triggerLabel="Open details" />,
+    );
+    expect(getDialog()).toBeNull();
+    expect(
+      container.querySelector("[data-slot='data-app-shell-right-panel-trigger']"),
+    ).not.toBeNull();
+  });
+
+  it("closes via the header close button", () => {
+    const onOpenChange = vi.fn();
+    render(
+      <DataAppShellRightPanel id="ov3" variant="overlay" open title="Details" onOpenChange={onOpenChange}>
+        <p>body</p>
+      </DataAppShellRightPanel>,
+    );
+    const close = document.body.querySelector<HTMLButtonElement>("button[aria-label='Close panel']")!;
+    expect(close).not.toBeNull();
+    flushSync(() => close.click());
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+});

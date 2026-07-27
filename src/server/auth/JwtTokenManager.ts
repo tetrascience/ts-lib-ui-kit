@@ -24,10 +24,19 @@ export interface CookieDict {
   [key: string]: string;
 }
 
+/** Header dictionary type - matches Express req.headers (keys are lowercased) */
+export interface HeaderDict {
+  [key: string]: string | string[] | undefined;
+}
+
 /** Express-like request interface (works with Express, Koa, etc.) */
 export interface ExpressRequestLike {
   cookies?: CookieDict;
+  headers?: HeaderDict;
 }
+
+/** Request header carrying the resolved JWT injected by the data-apps proxy. */
+const AUTH_TOKEN_HEADER = "ts-auth-token";
 
 /** JWT payload structure */
 interface JwtPayload {
@@ -208,9 +217,37 @@ export class JwtTokenManager {
     return this.getJwtFromTokenRefInternal(tokenRef);
   }
 
-  /** Get token from cookies (ts-auth-token or resolved ts-token-ref) */
-  async getUserToken(cookies: CookieDict): Promise<string | null> {
-    // Prefer ts-auth-token or TS_AUTH_TOKEN env var (latter is for local dev testing)
+  /**
+   * Read the ts-auth-token request header, normalizing the array form that
+   * Node/Express may produce for a repeated header.
+   */
+  private getHeaderAuthToken(headers?: HeaderDict): string | null {
+    const raw = headers?.[AUTH_TOKEN_HEADER];
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    return value || null;
+  }
+
+  /**
+   * Get token from a request (proxy-injected header, then cookie, then token ref).
+   *
+   * Precedence (SW-2352):
+   *   1. `ts-auth-token` request header — for large-JWT sessions the data-apps
+   *      proxy resolves the token reference server-side and injects the real JWT
+   *      here; the `ts-token-ref` cookie is no longer forwarded to the container.
+   *      Checking the header first is also what keeps SSO users authenticated.
+   *   2. `ts-auth-token` cookie / `TS_AUTH_TOKEN` env var (small-JWT + local dev).
+   *   3. `ts-token-ref` cookie → connector K/V resolution (legacy fallback; goes
+   *      dead in prod once the proxy stops forwarding the cookie, retained for
+   *      local dev and defense in depth).
+   */
+  async getUserToken(cookies: CookieDict, headers?: HeaderDict): Promise<string | null> {
+    // Prefer the proxy-injected ts-auth-token request header.
+    const headerAuthToken = this.getHeaderAuthToken(headers);
+    if (headerAuthToken) {
+      return headerAuthToken;
+    }
+
+    // Then ts-auth-token cookie or TS_AUTH_TOKEN env var (latter is for local dev testing)
     const authToken = cookies["ts-auth-token"] || process.env.TS_AUTH_TOKEN;
     if (authToken) {
       return authToken;
@@ -248,8 +285,9 @@ export class JwtTokenManager {
    * ```
    */
   async getTokenFromExpressRequest(req: ExpressRequestLike): Promise<string | null> {
-    // Handle missing cookies gracefully (e.g., if cookie-parser middleware not installed)
-    return this.getUserToken(req.cookies || {});
+    // Handle missing cookies gracefully (e.g., if cookie-parser middleware not installed).
+    // Headers are checked first (proxy-injected ts-auth-token) — see getUserToken.
+    return this.getUserToken(req.cookies || {}, req.headers);
   }
 
   /** Clear the token cache */

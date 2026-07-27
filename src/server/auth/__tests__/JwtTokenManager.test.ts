@@ -99,6 +99,35 @@ describe("JwtTokenManager", () => {
       const result = await manager.getUserToken({ "ts-token-ref": "ref-123" });
       expect(result).toBeNull();
     });
+
+    // SW-2352: the data-apps proxy injects the resolved JWT into the
+    // ts-auth-token request header and no longer forwards the ts-token-ref
+    // cookie to the container.
+    it("should prefer the ts-auth-token request header over cookie and token ref", async () => {
+      process.env.CONNECTOR_ID = "test-connector";
+      process.env.ORG_SLUG = "test-org";
+      const manager = new JwtTokenManager({ baseUrl: "https://api.com" });
+
+      const result = await manager.getUserToken(
+        { "ts-auth-token": "cookie-token", "ts-token-ref": "ref-123" },
+        { "ts-auth-token": "header-token" },
+      );
+
+      expect(result).toBe("header-token");
+      expect(mockGetValues).not.toHaveBeenCalled();
+    });
+
+    it("should normalize an array-valued ts-auth-token header", async () => {
+      const manager = new JwtTokenManager({ baseUrl: "https://api.com" });
+      const result = await manager.getUserToken({}, { "ts-auth-token": ["header-token", "second"] });
+      expect(result).toBe("header-token");
+    });
+
+    it("should fall through to cookie/token ref when the header is absent", async () => {
+      const manager = new JwtTokenManager({ baseUrl: "https://api.com" });
+      const result = await manager.getUserToken({ "ts-auth-token": "cookie-token" }, {});
+      expect(result).toBe("cookie-token");
+    });
   });
 
   describe("getJwtFromTokenRef", () => {
@@ -283,6 +312,21 @@ describe("JwtTokenManager", () => {
       });
 
       expect(result).toBe("cookie-token");
+      expect(mockGetValues).not.toHaveBeenCalled();
+    });
+
+    it("should prefer the proxy-injected ts-auth-token header and never call the KV store (SW-2352)", async () => {
+      process.env.ORG_SLUG = "test-org";
+      process.env.CONNECTOR_ID = "test-connector";
+      mockGetValues.mockResolvedValue([{ jwt: createExpiringToken(3600000) }]);
+
+      const manager = new JwtTokenManager({ baseUrl: "https://api.com" });
+      const result = await manager.getTokenFromExpressRequest({
+        cookies: { "ts-token-ref": "ref-123" },
+        headers: { "ts-auth-token": "header-jwt" },
+      });
+
+      expect(result).toBe("header-jwt");
       expect(mockGetValues).not.toHaveBeenCalled();
     });
   });

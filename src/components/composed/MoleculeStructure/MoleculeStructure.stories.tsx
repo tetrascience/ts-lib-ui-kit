@@ -61,7 +61,7 @@ export const Default: Story = {
       { timeout: 15000 },
     )
   },
-  parameters: { zephyr: { testCaseId: "" } },
+  parameters: { zephyr: { testCaseId: "SW-T5536" } },
 }
 
 /** Invalid SMILES render an accessible fallback instead of throwing. */
@@ -78,7 +78,7 @@ export const InvalidStructure: Story = {
     )
     expect(canvas.getByText(/invalid structure/i)).toBeInTheDocument()
   },
-  parameters: { zephyr: { testCaseId: "" } },
+  parameters: { zephyr: { testCaseId: "SW-T5537" } },
 }
 
 /** Reveal the structure on hover by composing with the `HoverCard` primitive. */
@@ -104,7 +104,7 @@ export const InHoverCard: Story = {
     ).toBeInTheDocument()
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5538" },
     // Show the composition sample in "Show code" rather than the whole story
     // object (a `render` + `play` story otherwise dumps its full definition).
     docs: {

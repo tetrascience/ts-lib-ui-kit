@@ -841,7 +841,7 @@ export const Default: Story = {
   },
   parameters: {
     docs: { source: { code: DEFAULT_CODE, language: "tsx" } },
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5532" },
   },
 };
 
@@ -895,6 +895,7 @@ export const SecondaryNavigation: Story = {
     });
   },
   parameters: {
+      zephyr: { testCaseId: "SW-T5533" },
     docs: { source: { code: WORKFLOW_VERTICAL_CODE, language: "tsx" } },
   },
 };
@@ -949,6 +950,7 @@ export const SecondaryNavigationHorizontal: Story = {
     });
   },
   parameters: {
+      zephyr: { testCaseId: "SW-T5534" },
     docs: { source: { code: WORKFLOW_HORIZONTAL_CODE, language: "tsx" } },
   },
 };
@@ -1019,6 +1021,7 @@ export const WithRightPanel: Story = {
     });
   },
   parameters: {
+      zephyr: { testCaseId: "SW-T5535" },
     docs: { source: { code: RIGHT_PANEL_CODE, language: "tsx" } },
   },
 };

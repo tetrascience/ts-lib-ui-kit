@@ -329,5 +329,25 @@ describe("JwtTokenManager", () => {
       expect(result).toBe("header-jwt");
       expect(mockGetValues).not.toHaveBeenCalled();
     });
+
+    // Local-dev / legacy fallback: with no proxy-injected header and no
+    // ts-auth-token cookie, a ts-token-ref cookie still resolves via the KV
+    // store. In production the proxy no longer forwards this cookie (SW-2352),
+    // so this path is exercised only outside the proxy.
+    it("falls back to ts-token-ref KV resolution when no header or auth cookie is present", async () => {
+      process.env.ORG_SLUG = "test-org";
+      process.env.CONNECTOR_ID = "test-connector";
+      const resolvedJwt = createExpiringToken(3600000);
+      mockGetValues.mockResolvedValue([{ jwt: resolvedJwt }]);
+
+      const manager = new JwtTokenManager({ baseUrl: "https://api.com" });
+      const result = await manager.getTokenFromExpressRequest({
+        cookies: { "ts-token-ref": "ref-123" },
+        headers: {},
+      });
+
+      expect(result).toBe(resolvedJwt);
+      expect(mockGetValues).toHaveBeenCalledWith(["ref-123"]);
+    });
   });
 });

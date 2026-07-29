@@ -454,8 +454,8 @@ const DataAppShellDocsPage = () => (
   >
     <h1 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 700 }}>DataAppShell</h1>
     <p style={{ margin: "0 0 8px", color: "#64748B", fontSize: 14, lineHeight: 1.6 }}>
-      A composable application shell for TDP data apps. It assembles a Primary Nav, an optional
-      Secondary Nav, a Top Bar, a main content area, and an optional Right Panel. Pick a ready-made
+      A composable application shell for TDP data apps. It assembles a Primary nav, an optional
+      Secondary nav, a Top bar, a main content area, and an optional Right panel. Pick a ready-made
       variant on the left, or open the Component Properties panel to explore customization options
       beyond the four main variants.
     </p>

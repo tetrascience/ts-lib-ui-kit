@@ -71,11 +71,9 @@ function categorize(relativePath: string): { category: string; name: string } {
  * One Vite lib entry per public export of `src/index.ts`, keyed
  * `<category>/<name>` (e.g. `"ui/button"`, `"composed/StatCard"`,
  * `"utils/colors"`). Throws if two distinct source files would collide on
- * the same entry key — vite-plugin-dts's `rollupTypes` mode additionally
- * emits a flat, un-nested `<name>.d.ts` at `dist/` root per entry (see
- * `write-jest-preset`-style postbuild note in package.json's `postbuild`),
- * so a same-name collision across categories would silently corrupt one of
- * the two — this check keeps that footgun from shipping unnoticed.
+ * the same entry key — Rollup can only canonicalize one module's output to
+ * a given entry-key path, so a same-name collision across categories would
+ * silently drop one of the two from the build.
  */
 export function getComponentEntries(): Record<string, string> {
   const indexSource = fs.readFileSync(INDEX_TS, "utf8");

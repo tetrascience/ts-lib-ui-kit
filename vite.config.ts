@@ -59,19 +59,8 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    // rollupTypes was true until the ~100 per-component entries in
-    // scripts/build/component-entries.ts were added. With that many
-    // simultaneous `build.lib.entry` keys + `preserveModules`,
-    // vite-plugin-dts@4's rollup-dts pass only fully bundles ONE entry's
-    // graph; every other entry gets a broken `export * from '<relative
-    // path>'` pointing at a file rollupTypes never writes (verified: this
-    // already silently affected the pre-existing providers/* entries before
-    // this change, just unnoticed at only 5 entries). Disabling it instead
-    // emits one self-contained .d.ts per source file, mirroring `src/`
-    // 1:1 — slower to reason about (many small files vs. one bundled file)
-    // but correct at this entry count, and faster to build besides.
-    // package.json's exports map "types" conditions point at this
-    // src-mirrored layout — see scripts/build/component-entries.ts.
+    // Must stay false at this entry count — see "Per-Component Entries" in
+    // AGENTS.md for why.
     dts({
       rollupTypes: false,
     }),
@@ -85,11 +74,7 @@ export default defineConfig({
         "providers/athena": path.resolve(__dirname, "src/server/providers/entries/athena.ts"),
         "providers/snowflake": path.resolve(__dirname, "src/server/providers/entries/snowflake.ts"),
         "providers/databricks": path.resolve(__dirname, "src/server/providers/entries/databricks.ts"),
-        // Single-file Jest support for consumers (stubs for ESM-only /
-        // optional-peer deps + jsdom shims) — see src/jest-setup.tsx.
         "jest-setup": path.resolve(__dirname, "src/jest-setup.tsx"),
-        // One entry per public export of src/index.ts (ui/button,
-        // composed/StatCard, …) — see scripts/build/component-entries.ts.
         ...getComponentEntries(),
       },
       cssFileName: "index",

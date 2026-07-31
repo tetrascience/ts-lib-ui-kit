@@ -40,9 +40,8 @@ import path from "path";
 const SRC_DIR = path.resolve(__dirname, "../../src");
 const INDEX_TS = path.join(SRC_DIR, "index.ts");
 
-// Matches `export * from "@/a/b";` and `export { x, y } from "@/a/b";` —
-// the only two export forms used in src/index.ts.
-const EXPORT_FROM_RE = /^export\s+(?:\*|\{[^}]*\})\s+from\s+"@\/([^"]+)";?\s*$/gm;
+// Matches `export * from "@/a/b";` and `export { x, y } from "@/a/b";` (including multiline).
+const EXPORT_FROM_RE = /export\s+(?:\*|\{[\s\S]*?\})\s+from\s+"@\/([^"]+)"\s*;?/g;
 
 const CANDIDATE_SUFFIXES = [".tsx", ".ts", "/index.ts", "/index.tsx"];
 

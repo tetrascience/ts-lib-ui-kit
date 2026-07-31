@@ -45,6 +45,54 @@ src/
 └── index.ts         # All client-side exports
 ```
 
+## Per-Component Entries
+
+Every public export of `src/index.ts` also ships at its own subpath
+(`./ui/button`, `./composed/StatCard`, `./charts/AreaPlot`, `./ai/message`,
+`./utils/colors`, `./lib/shiki`), so consumers who only need a handful of
+components — and especially Jest, which has no tree-shaking and
+re-evaluates the whole import graph per test file — don't pay for the full
+~150-module barrel. Entries are derived automatically by
+[`scripts/build/component-entries.ts`](./scripts/build/component-entries.ts),
+which parses `src/index.ts`'s `export * from "@/..."` lines (the single
+source of truth for the public API) rather than hand-maintaining a parallel
+manifest that could drift. **Adding a component to `src/index.ts` is
+sufficient** — its subpath entry appears on the next build with no other
+change required, *provided* its file shape matches its category's dominant
+form (see below).
+
+Gotchas, both load-bearing for correctness:
+
+- **`rollupTypes` is off** (`vite.config.ts`'s `dts()` call). It was on
+  before this many entries existed; with `preserveModules` + this many
+  simultaneous `build.lib.entry` keys, vite-plugin-dts@4's rollup-dts pass
+  only fully bundles one entry's type graph — every other entry (this
+  already silently affected the pre-existing `providers/*` entries at only
+  5 total entries) gets a broken `export * from '<relative path>'` pointing
+  at a file that's never written. With it off, every source file gets a
+  self-contained `.d.ts` mirroring its `src/`-relative path instead — which
+  means the exports map's `"types"` condition points at
+  `./dist/components/<category>/<Name>[/index].d.ts` (the mirrored path),
+  while `"import"`/`"require"` point at `./dist/<category>/<Name>.js`/`.cjs`
+  (the entry-key path, which Rollup — independent of the dts setting —
+  canonicalizes correctly regardless of `rollupTypes`). These are
+  deliberately different paths; don't try to unify them.
+- **Two categories mix file shapes.** Most `composed/` and all `charts/`
+  components are directories with a barrel `index.ts` (mirrored `.d.ts`
+  lands at `<Name>/index.d.ts`); most `ui/` and all `ai/`/`utils/`/`lib/`
+  entries are single files (mirrored `.d.ts` lands at `<Name>.d.ts`). Where
+  a category has an exception to its own dominant shape —
+  `ui/data-table` (a directory) and `composed/tdp-link` /
+  `composed/tdp-url` (flat legacy files) today — the wildcard
+  `"./composed/*"` / `"./ui/*"` pattern in `package.json`'s `exports` map
+  can't resolve both shapes with one pattern, so those three have their own
+  literal (non-wildcard) entries listed before the pattern. Adding a new
+  component whose shape doesn't match its category's dominant form needs
+  the same treatment, or its subpath's types will 404 while the runtime
+  import still works (import/require aren't shape-sensitive the way types
+  are) — a mismatch that's easy to miss unless you typecheck against the
+  new subpath, not just run it.
+
 ## Server Utilities (`./server` sub-export)
 
 Import path for consumers: `@tetrascience-npm/tetrascience-react-ui/server`
@@ -126,6 +174,10 @@ Consumer contract: apps that use these components must install the matching peer
 - **Prefer Storybook play function tests** for React components — real browser via Playwright, more realistic than jsdom
 - Unit tests (`*.test.ts` / `*.test.tsx`) for pure utilities, hooks, and non-visual logic only
 - Do not manually assign `parameters.zephyr.testCaseId` values — generate or repair them through `sync-storybook-zephyr`
+
+### Shipped Jest support for consumers (`./jest-setup` sub-export)
+
+[`src/jest-setup.tsx`](./src/jest-setup.tsx) is a single self-registering setup file — consumers add it to Jest's `setupFiles`. On import (guarded on the module-scoped `jest` wrapper variable — it is NOT a real global, so read it as a free variable behind `typeof`) it calls `jest.mock(id, factory)` for every dep Jest's CJS runtime can't load — ESM-only packages (streamdown, shiki/@shikijs subpaths, use-stick-to-bottom, react-resizable-panels) and optional peers (plotly.js-dist, @streamdown/math|mermaid) — and installs jsdom shims (ResizeObserver, matchMedia, pointer capture). Mock registration is non-virtual when the module resolves (Jest keys it by real path) with a `{ virtual: true }` fallback when it doesn't (`import`-only exports or uninstalled peers; virtual bare-specifier mocks are keyed by the specifier and intercept globally). **When adding a dependency, check whether it's ESM-only (`"type": "module"` with no `require` export condition); if a kit module imports it — statically or via the lazy loaders — add a registration there**, or Jest consumers regress to `ERR_REQUIRE_ESM`. Registrations use exact module ids (including each `@shikijs/langs/<lang>` the `CodeBlock` highlighter loads), so extending `src/lib/shiki.ts`'s language set means extending `KIT_SHIKI_LANGUAGES` there too. Entry basename must not be `index` — vite-plugin-dts emits a flat `<basename>.d.ts` per entry and a second `index` clobbers the root `dist/index.d.ts`.
 
 ## Code Style
 

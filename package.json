@@ -7,7 +7,9 @@
   "license": "Apache-2.0",
   "sideEffects": [
     "./dist/index.css",
-    "./dist/index.tailwind.css"
+    "./dist/index.tailwind.css",
+    "./dist/jest-setup.js",
+    "./dist/jest-setup.cjs"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -30,42 +32,142 @@
     },
     "./server": {
       "import": {
-        "types": "./dist/server.d.ts",
+        "types": "./dist/server/index.d.ts",
         "default": "./dist/server.js"
       },
       "require": {
-        "types": "./dist/server.d.ts",
+        "types": "./dist/server/index.d.ts",
         "default": "./dist/server.cjs"
       }
     },
     "./server/providers/athena": {
       "import": {
-        "types": "./dist/providers/athena.d.ts",
+        "types": "./dist/server/providers/entries/athena.d.ts",
         "default": "./dist/providers/athena.js"
       },
       "require": {
-        "types": "./dist/providers/athena.d.ts",
+        "types": "./dist/server/providers/entries/athena.d.ts",
         "default": "./dist/providers/athena.cjs"
       }
     },
     "./server/providers/snowflake": {
       "import": {
-        "types": "./dist/providers/snowflake.d.ts",
+        "types": "./dist/server/providers/entries/snowflake.d.ts",
         "default": "./dist/providers/snowflake.js"
       },
       "require": {
-        "types": "./dist/providers/snowflake.d.ts",
+        "types": "./dist/server/providers/entries/snowflake.d.ts",
         "default": "./dist/providers/snowflake.cjs"
       }
     },
     "./server/providers/databricks": {
       "import": {
-        "types": "./dist/providers/databricks.d.ts",
+        "types": "./dist/server/providers/entries/databricks.d.ts",
         "default": "./dist/providers/databricks.js"
       },
       "require": {
-        "types": "./dist/providers/databricks.d.ts",
+        "types": "./dist/server/providers/entries/databricks.d.ts",
         "default": "./dist/providers/databricks.cjs"
+      }
+    },
+    "./jest-setup": {
+      "import": {
+        "types": "./dist/jest-setup.d.ts",
+        "default": "./dist/jest-setup.js"
+      },
+      "require": {
+        "types": "./dist/jest-setup.d.ts",
+        "default": "./dist/jest-setup.cjs"
+      }
+    },
+    "./ui/data-table": {
+      "import": {
+        "types": "./dist/components/ui/data-table/index.d.ts",
+        "default": "./dist/ui/data-table.js"
+      },
+      "require": {
+        "types": "./dist/components/ui/data-table/index.d.ts",
+        "default": "./dist/ui/data-table.cjs"
+      }
+    },
+    "./ui/*": {
+      "import": {
+        "types": "./dist/components/ui/*.d.ts",
+        "default": "./dist/ui/*.js"
+      },
+      "require": {
+        "types": "./dist/components/ui/*.d.ts",
+        "default": "./dist/ui/*.cjs"
+      }
+    },
+    "./composed/tdp-link": {
+      "import": {
+        "types": "./dist/components/composed/tdp-link.d.ts",
+        "default": "./dist/composed/tdp-link.js"
+      },
+      "require": {
+        "types": "./dist/components/composed/tdp-link.d.ts",
+        "default": "./dist/composed/tdp-link.cjs"
+      }
+    },
+    "./composed/tdp-url": {
+      "import": {
+        "types": "./dist/components/composed/tdp-url.d.ts",
+        "default": "./dist/composed/tdp-url.js"
+      },
+      "require": {
+        "types": "./dist/components/composed/tdp-url.d.ts",
+        "default": "./dist/composed/tdp-url.cjs"
+      }
+    },
+    "./composed/*": {
+      "import": {
+        "types": "./dist/components/composed/*/index.d.ts",
+        "default": "./dist/composed/*.js"
+      },
+      "require": {
+        "types": "./dist/components/composed/*/index.d.ts",
+        "default": "./dist/composed/*.cjs"
+      }
+    },
+    "./charts/*": {
+      "import": {
+        "types": "./dist/components/charts/*/index.d.ts",
+        "default": "./dist/charts/*.js"
+      },
+      "require": {
+        "types": "./dist/components/charts/*/index.d.ts",
+        "default": "./dist/charts/*.cjs"
+      }
+    },
+    "./ai/*": {
+      "import": {
+        "types": "./dist/components/ai/*.d.ts",
+        "default": "./dist/ai/*.js"
+      },
+      "require": {
+        "types": "./dist/components/ai/*.d.ts",
+        "default": "./dist/ai/*.cjs"
+      }
+    },
+    "./utils/*": {
+      "import": {
+        "types": "./dist/utils/*.d.ts",
+        "default": "./dist/utils/*.js"
+      },
+      "require": {
+        "types": "./dist/utils/*.d.ts",
+        "default": "./dist/utils/*.cjs"
+      }
+    },
+    "./lib/*": {
+      "import": {
+        "types": "./dist/lib/*.d.ts",
+        "default": "./dist/lib/*.js"
+      },
+      "require": {
+        "types": "./dist/lib/*.d.ts",
+        "default": "./dist/lib/*.cjs"
       }
     },
     "./index.css": "./dist/index.css",

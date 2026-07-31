@@ -65,6 +65,31 @@ function App() {
 }
 ```
 
+### Per-Component Imports
+
+Every component is also reachable at its own subpath, grouped by category:
+`ui/*`, `composed/*`, `charts/*`, `ai/*`, `utils/*`:
+
+```tsx
+import { Button } from "@tetrascience-npm/tetrascience-react-ui/ui/button";
+import { StatCard } from "@tetrascience-npm/tetrascience-react-ui/composed/StatCard";
+import { AreaPlot } from "@tetrascience-npm/tetrascience-react-ui/charts/AreaPlot";
+```
+
+Importing this way only pulls in that component's own module graph — the main
+`@tetrascience-npm/tetrascience-react-ui` import still works exactly as
+before and pulls in everything. The difference matters most for **Jest**,
+which has no tree-shaking and re-evaluates the full import graph on every
+test file: a full-barrel import costs ~1.2s of module evaluation per test
+file; a single-component subpath costs ~0.1s. For a production bundler
+(Vite, webpack 5) the difference is smaller since unused components are
+already tree-shaken from the main import.
+
+The subpath name always matches the component's directory/file under
+`src/components/<category>/` — check [DESIGN.md](./DESIGN.md) or the
+[Storybook](https://ts-lib-ui-kit-storybook.vercel.app/) sidebar for the
+exact name.
+
 ## Styling & CSS
 
 This library uses **Tailwind CSS 4** with design tokens defined as CSS custom properties (oklch color space). All CSS files are declared as [`sideEffects`](https://webpack.js.org/guides/tree-shaking/#mark-the-file-as-side-effect-free) in `package.json`, so bundlers will preserve them while still tree-shaking unused JavaScript.
@@ -369,6 +394,27 @@ Full TypeScript support with exported types:
 import { Button } from "@tetrascience-npm/tetrascience-react-ui";
 import type { ButtonProps, BarChartProps, BarDataSeries } from "@tetrascience-npm/tetrascience-react-ui";
 ```
+
+## Testing your app with Jest
+
+The kit ships dual ESM + CJS output, so Jest's CommonJS runtime can load every component directly — no need to mock the package. What Jest *can't* load are a few third-party dependencies that publish ESM-only (the streamdown/markdown stack, shiki, `use-stick-to-bottom`, `react-resizable-panels`) and optional peers you may not have installed (`plotly.js-dist`). The kit ships a single setup file that stubs exactly those, plus the jsdom shims Radix-based components need (ResizeObserver, matchMedia, pointer capture, …).
+
+Add one line to `jest.config.js`:
+
+```js
+module.exports = {
+  testEnvironment: "jsdom",
+  setupFiles: ["@tetrascience-npm/tetrascience-react-ui/jest-setup"],
+};
+```
+
+Requires Jest ≥ 28 (package `exports` support) and `jest-environment-jsdom`. To override any stub, register your own mock — `jest.mock("<module>", …)` in a test file or a later setup file replaces the kit's registration. If Jest runs with `injectGlobals: false`, import `installUiKitJestMocks` / `installUiKitDomShims` from the same module and call them from your own setup file with the `jest` object.
+
+What the stubs do:
+
+- **Charts** render their containers; Plotly calls resolve against an inert stub (jsdom has no WebGL). Assert on props/behavior, not pixels — visual assertions belong in a real browser.
+- **`MessageResponse` / `Reasoning`** render the markdown source as plain text, so text-content assertions work without transpiling the markdown ecosystem.
+- **`CodeBlock`** renders unhighlighted code lines.
 
 ## Examples
 

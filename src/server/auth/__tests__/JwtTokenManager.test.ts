@@ -128,6 +128,12 @@ describe("JwtTokenManager", () => {
       const result = await manager.getUserToken({ "ts-auth-token": "cookie-token" }, {});
       expect(result).toBe("cookie-token");
     });
+
+    it("should fall through to the cookie when the header is an empty string", async () => {
+      const manager = new JwtTokenManager({ baseUrl: "https://api.com" });
+      const result = await manager.getUserToken({ "ts-auth-token": "cookie-token" }, { "ts-auth-token": "" });
+      expect(result).toBe("cookie-token");
+    });
   });
 
   describe("getJwtFromTokenRef", () => {

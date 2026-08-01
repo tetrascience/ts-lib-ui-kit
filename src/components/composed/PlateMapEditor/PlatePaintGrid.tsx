@@ -137,8 +137,8 @@ interface BuildWellCellsArgs<T extends WellRecord> {
   dims: PlateDimensions;
   cellSize: number;
   values: Map<WellId, T>;
-  selection: Set<WellId>;
-  dragPositions: Set<WellId>;
+  selection: ReadonlySet<WellId>;
+  dragPositions: ReadonlySet<WellId>;
   colorForWell: (well: T | undefined, wellId: WellId) => string;
   emptyWellFillColor: string | null;
   borderColor: string;
@@ -146,6 +146,8 @@ interface BuildWellCellsArgs<T extends WellRecord> {
   selectedFillColor: string;
   selectedFillOpacity: number;
   selectionFillMode: "selection" | "well";
+  /** Filled during render with each well's unselected fill. See useSelectionPainter. */
+  fillSink?: Map<WellId, string>;
   wellShape: WellShape;
   highlightedWellIds: ReadonlySet<WellId>;
   highlightBorderColor: string;
@@ -162,23 +164,23 @@ function buildWellCell<T extends WellRecord>(
     dims,
     cellSize,
     values,
-    selection,
-    dragPositions,
     colorForWell,
     emptyWellFillColor,
-    selectedFillColor,
-    selectedFillOpacity,
-    selectionFillMode,
     wellShape,
+    fillSink,
   } = args;
   const id = pos(row, column, dims.columns);
   const entry = values.get(id);
-  const isSelected = selection.has(id) || dragPositions.has(id);
-  const wellFill = entry === undefined && emptyWellFillColor !== null ? emptyWellFillColor : colorForWell(entry, id);
-  const usesWellFill = isSelected && selectionFillMode === "well" && entry !== undefined;
-  const usesSelectionFill = isSelected && !usesWellFill;
-  const fill = usesSelectionFill ? selectedFillColor : wellFill;
-  const fillOpacity = usesSelectionFill ? selectedFillOpacity : undefined;
+  // Selection is *not* read here. It is painted onto the committed DOM by
+  // `useSelectionPainter` below, so that selecting a well does not rebuild every well. The fill
+  // written here is the unselected one; the painter overrides it for selected wells and restores
+  // it for deselected ones, using the identical values this would have produced.
+  const fill = entry === undefined && emptyWellFillColor !== null ? emptyWellFillColor : colorForWell(entry, id);
+  const fillOpacity = undefined;
+  const isSelected = false;
+  // What this well looks like unselected, so the painter can restore it on deselect without
+  // recomputing `colorForWell` for all 1536.
+  fillSink?.set(id, fill);
 
   if (wellShape === "circle") {
     const cx = LABEL_PAD + column * cellSize + cellSize / 2;
@@ -393,6 +395,93 @@ function buildWellOverlays<T extends WellRecord>({ dims, ...args }: BuildWellCel
  * - Shift + drag: add to selection
  * - Alt + drag: remove from selection
  */
+/**
+ * Paint the selection onto the committed SVG instead of re-rendering it.
+ *
+ * Selecting a well *replaces* its fill, so the highlight cannot be a translucent layer drawn on
+ * top — that would blend with the fill underneath and the grid would not look the same. Which
+ * left only two options: rebuild all 1536 wells on every click, or set the same attributes React
+ * would have set, on just the wells that changed. This is the second.
+ *
+ * A layout effect, so the paint lands in the same frame as the commit and no unselected flash is
+ * ever visible. It re-applies after any data-driven re-render too — React rewrites `fill` from the
+ * data on those, which would otherwise wipe the highlight — which is why `cellsKey` is a
+ * dependency.
+ *
+ * `baseFills` carries what each well should look like unselected, captured during the render that
+ * produced the DOM, so deselecting restores exactly the value React would have written.
+ */
+function useSelectionPainter({
+  svgRef,
+  selection,
+  dragPositions,
+  baseFills,
+  values,
+  selectedFillColor,
+  selectedFillOpacity,
+  selectionFillMode,
+  cellsKey,
+}: {
+  svgRef: React.RefObject<SVGSVGElement | null>;
+  selection: ReadonlySet<WellId>;
+  dragPositions: ReadonlySet<WellId>;
+  baseFills: Map<WellId, string>;
+  values: Map<WellId, unknown>;
+  selectedFillColor: string;
+  selectedFillOpacity: number;
+  selectionFillMode: "selection" | "well";
+  cellsKey: unknown;
+}) {
+  const paintedRef = React.useRef<Set<WellId>>(new Set());
+
+  React.useLayoutEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    const shouldPaint = (id: WellId) => selection.has(id) || dragPositions.has(id);
+    const next = new Set<WellId>();
+    for (const id of selection) next.add(id);
+    for (const id of dragPositions) next.add(id);
+
+    const apply = (id: WellId, selected: boolean) => {
+      const node = svg.querySelector<SVGElement>(`[data-well="${id}"]`);
+      if (!node) return;
+      // Mirrors what buildWellCell used to compute, so the pixels are the same either way.
+      const usesWellFill = selected && selectionFillMode === "well" && values.get(id) !== undefined;
+      if (selected && !usesWellFill) {
+        node.setAttribute("fill", selectedFillColor);
+        node.setAttribute("fill-opacity", String(selectedFillOpacity));
+      } else {
+        const base = baseFills.get(id);
+        if (base !== undefined) node.setAttribute("fill", base);
+        node.removeAttribute("fill-opacity");
+      }
+      if (selected) node.setAttribute("data-selected", "true");
+      else node.removeAttribute("data-selected");
+    };
+
+    // Only the difference: wells that gained or lost the highlight.
+    for (const id of paintedRef.current) if (!shouldPaint(id)) apply(id, false);
+    for (const id of next) if (!paintedRef.current.has(id)) apply(id, true);
+
+    // After a data-driven re-render React has rewritten every fill, so the still-selected wells
+    // need repainting even though the selection itself did not change.
+    if (paintedRef.current !== next) for (const id of next) apply(id, true);
+
+    paintedRef.current = next;
+  }, [
+    svgRef,
+    selection,
+    dragPositions,
+    baseFills,
+    values,
+    selectedFillColor,
+    selectedFillOpacity,
+    selectionFillMode,
+    cellsKey,
+  ]);
+}
+
 /** Stable stand-in for an absent `highlightedWellIds`; a fresh `new Set()` would break memoisation. */
 const EMPTY_WELL_ID_SET: ReadonlySet<WellId> = new Set<WellId>();
 
@@ -569,13 +658,30 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
     [wellShape, dims, resolvedCellSize, borderColor],
   );
 
+  /**
+   * Each well's unselected fill, rebuilt alongside the cells. Read by the selection painter.
+   */
+  const baseFills = React.useMemo(() => new Map<WellId, string>(), [
+    // Same inputs as the cells below: a new map whenever the cells are rebuilt.
+    dims,
+    resolvedCellSize,
+    values,
+    colorForWell,
+    emptyWellFillColor,
+    wellShape,
+  ]);
+
   const wellRenderArgs = React.useMemo(
     () => ({
       dims,
       cellSize: resolvedCellSize,
       values,
-      selection,
-      dragPositions,
+      // Selection is intentionally absent. It is applied to the committed DOM by
+      // useSelectionPainter, so a click repaints the wells that changed rather than rebuilding
+      // all 1536 — which measured ~220ms a click at a 1536-well plate.
+      selection: EMPTY_WELL_ID_SET,
+      dragPositions: EMPTY_WELL_ID_SET,
+      fillSink: baseFills,
       colorForWell,
       emptyWellFillColor,
       borderColor,
@@ -593,8 +699,7 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
       dims,
       resolvedCellSize,
       values,
-      selection,
-      dragPositions,
+      baseFills,
       colorForWell,
       emptyWellFillColor,
       borderColor,
@@ -611,6 +716,20 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   );
 
   const wellCells = React.useMemo(() => buildWellCells(wellRenderArgs), [wellRenderArgs]);
+
+  // Applies the highlight to the committed DOM. Keyed on `wellCells` so a data-driven rebuild,
+  // which rewrites every fill from the data, gets the selection painted back on.
+  useSelectionPainter({
+    svgRef,
+    selection,
+    dragPositions,
+    baseFills,
+    values,
+    selectedFillColor,
+    selectedFillOpacity,
+    selectionFillMode,
+    cellsKey: wellCells,
+  });
   const wellOverlays = React.useMemo(() => buildWellOverlays(wellRenderArgs), [wellRenderArgs]);
 
   const overlayCells = React.useMemo<React.ReactNode[]>(() => {

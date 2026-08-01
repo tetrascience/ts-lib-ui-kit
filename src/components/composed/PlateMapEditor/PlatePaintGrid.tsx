@@ -393,6 +393,9 @@ function buildWellOverlays<T extends WellRecord>({ dims, ...args }: BuildWellCel
  * - Shift + drag: add to selection
  * - Alt + drag: remove from selection
  */
+/** Stable stand-in for an absent `highlightedWellIds`; a fresh `new Set()` would break memoisation. */
+const EMPTY_WELL_ID_SET: ReadonlySet<WellId> = new Set<WellId>();
+
 export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   format,
   rows,
@@ -474,12 +477,29 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
     setDrag({ start: cell, cur: cell, mode });
   };
 
+  /**
+   * The well `onWellHover` was last told about.
+   *
+   * A ref, not state: this exists to *suppress* renders, so storing it in state would defeat it.
+   */
+  const lastHoveredRef = React.useRef<WellId | null>(null);
+
   const handleMove = (e: React.MouseEvent) => {
     const cell = cellAt(e);
     if (cell && onWellHover) {
-      onWellHover(pos(cell.r, cell.c, dims.columns));
+      const wellId = pos(cell.r, cell.c, dims.columns);
+      // Only when the well actually changes. `mousemove` fires continuously — dozens of events
+      // while the cursor sits inside one well — and every call pushed hover state up to a
+      // consumer, so the whole grid re-rendered for a cursor that had not left the well it was
+      // already in.
+      if (lastHoveredRef.current !== wellId) {
+        lastHoveredRef.current = wellId;
+        onWellHover(wellId);
+      }
     }
     if (!drag || !cell) return;
+    // Same idea for the drag rectangle: only re-render when the far corner moves to a new cell.
+    if (drag.cur.r === cell.r && drag.cur.c === cell.c) return;
     setDrag({ ...drag, cur: cell });
   };
 
@@ -502,6 +522,8 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
 
   const handleUp = () => commitDrag();
   const handleLeave = () => {
+    // Forget the last well, or re-entering the grid on the same one would report nothing.
+    lastHoveredRef.current = null;
     commitDrag();
     onWellHover?.(null);
   };
@@ -521,31 +543,75 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   const width = dims.columns * resolvedCellSize + LABEL_PAD + edgeStrokePadding;
   const height = dims.rows * resolvedCellSize + LABEL_PAD + edgeStrokePadding;
 
-  const colLabels = buildColumnLabels(dims.columns, resolvedCellSize);
-  const rowLabels = buildRowLabels(dims.rows, resolvedCellSize);
-  const resolvedHighlightedWellIds: ReadonlySet<WellId> = highlightedWellIds ?? new Set();
-  const wellRenderArgs = {
-    dims,
-    cellSize: resolvedCellSize,
-    values,
-    selection,
-    dragPositions,
-    colorForWell,
-    emptyWellFillColor,
-    borderColor,
-    selectedBorderColor,
-    selectedFillColor,
-    selectedFillOpacity,
-    selectionFillMode,
-    wellShape,
-    highlightedWellIds: resolvedHighlightedWellIds,
-    highlightBorderColor,
-    flashWellId,
-    flashWellKey,
-  };
-  const wellCells = buildWellCells(wellRenderArgs);
-  const gridLines = wellShape === "circle" ? [] : buildGridLines(dims, resolvedCellSize, borderColor);
-  const wellOverlays = buildWellOverlays(wellRenderArgs);
+  /**
+   * Everything drawn inside the SVG is memoised on what it actually depends on.
+   *
+   * A 1536-well plate is 1536 SVG elements, and none of them depends on hover: hover state lives
+   * in the consumer, which re-renders this component with an identical `wellRenderArgs`. Without
+   * memoisation every hover rebuilt all of them, so dragging the cursor across a 48-column plate
+   * reconciled roughly 48 x 1536 elements and the tab stopped responding.
+   *
+   * Note for callers: `colorForWell` is in the dependency list, so an inline arrow passed as that
+   * prop defeats this. Wrap it in `useCallback`.
+   */
+  const resolvedHighlightedWellIds: ReadonlySet<WellId> = highlightedWellIds ?? EMPTY_WELL_ID_SET;
+
+  const colLabels = React.useMemo(
+    () => buildColumnLabels(dims.columns, resolvedCellSize),
+    [dims.columns, resolvedCellSize],
+  );
+  const rowLabels = React.useMemo(
+    () => buildRowLabels(dims.rows, resolvedCellSize),
+    [dims.rows, resolvedCellSize],
+  );
+  const gridLines = React.useMemo(
+    () => (wellShape === "circle" ? [] : buildGridLines(dims, resolvedCellSize, borderColor)),
+    [wellShape, dims, resolvedCellSize, borderColor],
+  );
+
+  const wellRenderArgs = React.useMemo(
+    () => ({
+      dims,
+      cellSize: resolvedCellSize,
+      values,
+      selection,
+      dragPositions,
+      colorForWell,
+      emptyWellFillColor,
+      borderColor,
+      selectedBorderColor,
+      selectedFillColor,
+      selectedFillOpacity,
+      selectionFillMode,
+      wellShape,
+      highlightedWellIds: resolvedHighlightedWellIds,
+      highlightBorderColor,
+      flashWellId,
+      flashWellKey,
+    }),
+    [
+      dims,
+      resolvedCellSize,
+      values,
+      selection,
+      dragPositions,
+      colorForWell,
+      emptyWellFillColor,
+      borderColor,
+      selectedBorderColor,
+      selectedFillColor,
+      selectedFillOpacity,
+      selectionFillMode,
+      wellShape,
+      resolvedHighlightedWellIds,
+      highlightBorderColor,
+      flashWellId,
+      flashWellKey,
+    ],
+  );
+
+  const wellCells = React.useMemo(() => buildWellCells(wellRenderArgs), [wellRenderArgs]);
+  const wellOverlays = React.useMemo(() => buildWellOverlays(wellRenderArgs), [wellRenderArgs]);
 
   const overlayCells = React.useMemo<React.ReactNode[]>(() => {
     if (!wrapWell) return [];

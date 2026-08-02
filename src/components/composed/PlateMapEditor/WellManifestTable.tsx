@@ -252,7 +252,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
 
   React.useEffect(() => {
     setPage(0);
-  }, [filters]);
+  }, [filters, groupByField]);
 
   const pagedRows = React.useMemo(
     () => rows.slice(page * pageSize, page * pageSize + pageSize),
@@ -544,7 +544,32 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
     [activeGroupField, rows],
   );
 
-  const totalRows = rows.length;
+  /**
+   * Grouping used to render every row of every group, with the pagination controls hidden.
+   *
+   * On a 1536-well plate that is ~40,000 DOM nodes — each row carries a checkbox and editable
+   * cells — built synchronously, with no page control left on screen to escape it. The tab froze
+   * and stayed frozen, which is what "interacting with the manifest broke it" was.
+   *
+   * So groups start collapsed: grouping is how you *find* a batch, and you expand the one you
+   * want. That turns the first paint into one row per group rather than one per well.
+   */
+  React.useEffect(() => {
+    if (!activeGroupField || !grouped) {
+      setCollapsedGroups(new Set());
+      return;
+    }
+    setCollapsedGroups(new Set(grouped.map((group) => group.key)));
+  }, [activeGroupField, grouped]);
+
+  /** Groups are paged like rows are, so a high-cardinality field cannot render unbounded. */
+  const pagedGroups = React.useMemo(
+    () => (grouped ? grouped.slice(page * pageSize, page * pageSize + pageSize) : null),
+    [grouped, page, pageSize],
+  );
+
+  // Paging applies to groups when grouping is on, rows otherwise.
+  const totalRows = grouped ? grouped.length : rows.length;
   const lastPage = Math.max(0, Math.ceil(totalRows / pageSize) - 1);
   const selSize = selection?.size ?? 0;
   const totalColSpan = columns.length + 1 + (onSelectionChange ? 1 : 0);
@@ -643,8 +668,8 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {grouped
-              ? grouped.map((group) => {
+            {pagedGroups
+              ? pagedGroups.map((group) => {
                   const isCollapsed = collapsedGroups.has(group.key);
                   return (
                     <React.Fragment key={group.key}>
@@ -682,7 +707,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
                   );
                 })
               : pagedRows.map(({ id, row }) => renderDataRow(id, row))}
-            {(grouped ? grouped.length === 0 : pagedRows.length === 0) ? (
+            {(pagedGroups ? pagedGroups.length === 0 : pagedRows.length === 0) ? (
               <TableRow>
                 <TableCell colSpan={totalColSpan} className="text-xs text-muted-foreground">
                   No rows. Paint wells on the plate.
@@ -693,9 +718,9 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
         </Table>
       </TooltipProvider>
 
-      {grouped ? null : (
-        <div className="flex items-center justify-end gap-3 text-xs text-muted-foreground">
-          <span className="text-muted-foreground">Rows per page</span>
+      <div className="flex items-center justify-end gap-3 text-xs text-muted-foreground">
+          {/* Shown when grouping too. Hiding it was what left a frozen tab with no way back. */}
+          <span className="text-muted-foreground">{grouped ? "Groups" : "Rows"} per page</span>
           <Select
             value={String(pageSize)}
             onValueChange={(v) => {
@@ -703,7 +728,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
               setPage(0);
             }}
           >
-            <SelectTrigger size="sm" className="h-7 w-18" aria-label="Rows per page">
+            <SelectTrigger size="sm" className="h-7 w-18" aria-label={grouped ? "Groups per page" : "Rows per page"}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -730,8 +755,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
           >
             Next
           </Button>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@
 export const PLATE_FORMAT_96 = "96" as const;
 export const PLATE_FORMAT_384 = "384" as const;
 export const PLATE_FORMAT_1536 = "1536" as const;
+export const PLATE_FORMAT_3456 = "3456" as const;
 export const PLATE_FORMAT_CUSTOM = "custom" as const;
 
 /**
@@ -11,12 +12,15 @@ export const PLATE_FORMAT_CUSTOM = "custom" as const;
  * - `"96"`: 8 rows × 12 columns (wells A1-H12)
  * - `"384"`: 16 rows × 24 columns (wells A1-P24)
  * - `"1536"`: 32 rows × 48 columns (wells A1-AF48)
+ * - `"3456"`: 48 rows × 72 columns (wells A1-AV72). The one preset whose axes are not a power-of-two
+ *   multiple of 96 — it is the 1536 grid scaled by 1.5 on both axes, not doubled.
  * - `"custom"`: User-defined dimensions via `rows` and `columns` props
  */
 export type PlateFormat =
   | typeof PLATE_FORMAT_96
   | typeof PLATE_FORMAT_384
   | typeof PLATE_FORMAT_1536
+  | typeof PLATE_FORMAT_3456
   | typeof PLATE_FORMAT_CUSTOM;
 
 /**

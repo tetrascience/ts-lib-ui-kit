@@ -4,6 +4,7 @@ const FORMAT_DIMENSIONS: Record<Exclude<PlateFormat, "custom">, PlateDimensions>
   "96": { rows: 8, columns: 12 },
   "384": { rows: 16, columns: 24 },
   "1536": { rows: 32, columns: 48 },
+  "3456": { rows: 48, columns: 72 },
 };
 
 const ALPHABET_SIZE = 26;
@@ -26,7 +27,7 @@ export function resolveDimensions(
   return FORMAT_DIMENSIONS[format];
 }
 
-/** Letter for a row index. Supports A-Z then AA-ZZ for 1536-format plates. */
+/** Letter for a row index. A-Z then AA-ZZ, which covers 1536 (to AF) and 3456 (to AV). */
 export function rowLabel(row: number): string {
   if (row < ALPHABET_SIZE) return String.fromCharCode(CHAR_CODE_A + row);
   const high = Math.floor(row / ALPHABET_SIZE) - 1;

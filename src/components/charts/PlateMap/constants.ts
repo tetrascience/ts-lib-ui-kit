@@ -2,6 +2,9 @@ import {
   PLATE_FORMAT_96,
   PLATE_FORMAT_384,
   PLATE_FORMAT_1536,
+  PLATE_FORMAT_3456,
+  PLATE_FORMAT_CUSTOM,
+  type PlateFormat,
 } from "./types";
 
 import {
@@ -24,12 +27,13 @@ export const DEFAULT_CATEGORY_COLORS: Record<string, string> = {
  * Plate dimension configurations
  */
 export const PLATE_CONFIGS: Record<
-  typeof PLATE_FORMAT_96 | typeof PLATE_FORMAT_384 | typeof PLATE_FORMAT_1536,
+  Exclude<PlateFormat, typeof PLATE_FORMAT_CUSTOM>,
   { rows: number; columns: number }
 > = {
   [PLATE_FORMAT_96]: { rows: 8, columns: 12 },
   [PLATE_FORMAT_384]: { rows: 16, columns: 24 },
   [PLATE_FORMAT_1536]: { rows: 32, columns: 48 },
+  [PLATE_FORMAT_3456]: { rows: 48, columns: 72 },
 };
 
 /**

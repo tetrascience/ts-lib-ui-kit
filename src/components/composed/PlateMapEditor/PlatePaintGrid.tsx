@@ -10,7 +10,16 @@ const DEFAULT_CELL = 34;
 const DEFAULT_MIN_AUTO_CELL = 24;
 const DEFAULT_MAX_AUTO_CELL = 72;
 const DEFAULT_MAX_DENSE_AUTO_CELL = 36;
-const LABEL_PAD = 26;
+/**
+ * Left/top gutter for the row and column labels.
+ *
+ * Sized for a two-character row label, not one. Rows past Z are labelled AA, AB, ... AF, and a
+ * 1536-well plate has 32 of them — at a 16px font those are about 20px wide, which with the 9px
+ * text inset ran past the left edge of the SVG and clipped the first character: "AA" rendered as
+ * a stray stroke plus "A". A single-character plate now gets a slightly wider gutter, which is
+ * cheaper than threading a per-plate value through the twenty-odd places this is used.
+ */
+const LABEL_PAD = 36;
 const FRAME_PADDING_PX = 12;
 const FRAME_BORDER_PX = 1;
 const LABEL_FONT_SIZE = 16;

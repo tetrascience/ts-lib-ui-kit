@@ -87,7 +87,10 @@ export function ManifestFilterPopover({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent align="end" className="min-w-80">
+      {/* Wide enough for a whole filter row: two selects, the value box and the remove button.
+          At `min-w-80` the row did not fit, and since flex children shrink by default it was the
+          value input that collapsed — to about 30px, showing "Va" of its own placeholder. */}
+      <PopoverContent align="end" className="w-[34rem] max-w-[calc(100vw-2rem)]">
           <div className="flex flex-col gap-2">
             {filters.map((condition) => {
               const colConfig = columns.find((c) => c.columnId === condition.columnId);
@@ -106,7 +109,7 @@ export function ManifestFilterPopover({
                       updateFilter(condition.id, { columnId: value, operator: nextOperator, value: "" });
                     }}
                   >
-                    <SelectTrigger size="sm" className="w-36">
+                    <SelectTrigger size="sm" className="w-36 shrink-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -124,7 +127,7 @@ export function ManifestFilterPopover({
                       updateFilter(condition.id, { operator: value as FilterOperator, value: "" })
                     }
                   >
-                    <SelectTrigger size="sm" className="w-32">
+                    <SelectTrigger size="sm" className="w-32 shrink-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -137,10 +140,10 @@ export function ManifestFilterPopover({
                   </Select>
 
                   {isValueFree ? (
-                    <div className="h-8 w-40" aria-hidden />
+                    <div className="h-8 w-40 shrink-0" aria-hidden />
                   ) : (
                     <Input
-                      className="w-40"
+                      className="w-40 shrink-0"
                       placeholder="Value…"
                       value={condition.value}
                       onChange={(event) => updateFilter(condition.id, { value: event.target.value })}

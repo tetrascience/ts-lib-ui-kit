@@ -26,6 +26,14 @@ debug-storybook.log
 # Dependency directory
 node_modules
 
+# scripts/verify-jest-consumer is a devtools-only verification harness (npm
+# install against a packed tarball, deliberately outside the Yarn
+# workspace) — not committing its lockfile keeps its own hundreds of
+# transitive devDependencies (jest, babel, testing-library, ...) out of
+# full-lockfile-based dependency scans aimed at shippable code. Direct
+# vulnerable transitives are still pinned via package.json's "overrides".
+scripts/verify-jest-consumer/package-lock.json
+
 # Editors
 .idea
 *.iml

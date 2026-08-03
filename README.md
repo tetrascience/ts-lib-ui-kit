@@ -414,7 +414,7 @@ What the stubs do:
 
 - **Charts** render their containers; Plotly calls resolve against an inert stub (jsdom has no WebGL). Assert on props/behavior, not pixels — visual assertions belong in a real browser.
 - **`MessageResponse` / `Reasoning`** render the markdown source as plain text, so text-content assertions work without transpiling the markdown ecosystem.
-- **`CodeBlock`** renders unhighlighted code lines.
+- **`CodeBlock`** renders unhighlighted code lines. Only the languages the kit ships by default are covered — a grammar you add yourself via `registerCodeBlockLanguage` isn't mockable by this setup file, since it isn't known ahead of time.
 - **`MoleculeStructure`** resolves against a stub that always returns a valid, empty-SVG molecule. For real assertions (invalid-SMILES handling, actual rendered markup), use the kit's own override hook instead of relying on the stub: `configureRDKit({ importFactory: () => Promise.resolve(myFakeRDKitModule) })`, exported alongside `MoleculeStructure`.
 
 ## Examples

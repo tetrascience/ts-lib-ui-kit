@@ -26,6 +26,10 @@ debug-storybook.log
 # Dependency directory
 node_modules
 
+# scripts/verify-jest-consumer installs via npm (deliberately outside the
+# Yarn workspace) and repacks its tarball dependency on every run.
+scripts/verify-jest-consumer/package-lock.json
+
 # Editors
 .idea
 *.iml

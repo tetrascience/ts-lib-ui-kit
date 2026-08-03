@@ -107,6 +107,40 @@ export const plotlyStub = {
 };
 
 // ---------------------------------------------------------------------------
+// RDKit stub — `MoleculeStructure` loads the optional `@rdkit/rdkit` peer
+// (a WASM module) via `loadRDKit()` → `import("@rdkit/rdkit")`. This is a
+// safety net for tests that render `MoleculeStructure` without configuring
+// their own fake: `get_mol` always returns a valid, empty-SVG molecule.
+// For real behavior assertions (invalid-SMILES handling, rendered markup,
+// …), use the kit's own override hook instead — it's more accurate than
+// anything this generic stub can be:
+//
+//   import { configureRDKit } from "@tetrascience-npm/tetrascience-react-ui/composed/MoleculeStructure";
+//   configureRDKit({ importFactory: () => Promise.resolve(myFakeRDKitModule) });
+//
+// (see src/components/composed/MoleculeStructure/__tests__/rdkit-loader.test.ts
+// in the kit's own source for a fuller fake to model one on.)
+// ---------------------------------------------------------------------------
+
+export interface MinimalRdkitMol {
+  is_valid: () => boolean;
+  get_svg_with_highlights: (details: string) => string;
+  delete: () => void;
+}
+
+export const rdkitModuleStub = {
+  get_mol: (smiles: string): MinimalRdkitMol => ({
+    is_valid: () => true,
+    get_svg_with_highlights: () =>
+      `<?xml version='1.0' encoding='iso-8859-1'?>\n<svg data-smiles="${smiles}"></svg>`,
+    delete: () => {},
+  }),
+};
+
+export const rdkitFactoryStub = (): Promise<typeof rdkitModuleStub> =>
+  Promise.resolve(rdkitModuleStub);
+
+// ---------------------------------------------------------------------------
 // streamdown stub — renders the markdown source as plain text so
 // text-content assertions on `MessageResponse` / `Reasoning` keep working
 // without transpiling the unified markdown ecosystem.
@@ -297,14 +331,10 @@ export function installUiKitJestMocks(jestApi: JestMockApi): void {
       jestApi.mock(moduleName, factory, { virtual: true });
     }
   };
-  const streamdownPlugins = {
-    cjk: streamdownPluginStub,
-    code: streamdownPluginStub,
-    math: streamdownPluginStub,
-    mermaid: streamdownPluginStub,
-  };
-
   tryMock("plotly.js-dist", () => plotlyStub);
+  // Same interop shape as plotly: MoleculeStructure's loader does
+  // `mod.default ?? mod`, so the factory returns the raw function directly.
+  tryMock("@rdkit/rdkit", () => rdkitFactoryStub);
   tryMock("streamdown", () => ({
     Streamdown: StreamdownStub,
     default: StreamdownStub,
@@ -322,21 +352,31 @@ export function installUiKitJestMocks(jestApi: JestMockApi): void {
     PanelGroup: ResizableGroupStub,
     PanelResizeHandle: ResizableSeparatorStub,
   }));
-  tryMock("@streamdown/cjk", () => streamdownPlugins);
-  tryMock("@streamdown/math", () => streamdownPlugins);
-  tryMock("@streamdown/mermaid", () => streamdownPlugins);
+  // Each package exports exactly one of these — separate one-key objects
+  // (not a shared multi-key literal) so the shape doesn't imply a
+  // relationship between packages that don't actually share one.
+  tryMock("@streamdown/cjk", () => ({ cjk: streamdownPluginStub }));
+  tryMock("@streamdown/math", () => ({ math: streamdownPluginStub }));
+  tryMock("@streamdown/mermaid", () => ({ mermaid: streamdownPluginStub }));
   tryMock("shiki/core", () => ({
     createHighlighterCore: createHighlighterCoreStub,
   }));
   tryMock("shiki/engine/javascript", () => ({
     createJavaScriptRegexEngine: () => ({}),
   }));
-  tryMock("@shikijs/themes/github-light", () => ({ default: {} }));
-  tryMock("@shikijs/themes/github-dark", () => ({ default: {} }));
+  // These four are consumed via dynamic `import()`, which Rollup's CJS
+  // output rewrites to an interop-wrapped `require()` (see
+  // `dynamicImportInCjs: false` in vite.config.ts) — and that interop
+  // helper unconditionally does `namespace.default = <raw required value>`,
+  // with no `__esModule` check. So a factory returning `{ default: X }`
+  // produces `namespace.default === { default: X }`, not `X` — the factory
+  // must return the value the consuming code expects at `.default` directly.
+  tryMock("@shikijs/themes/github-light", () => ({}));
+  tryMock("@shikijs/themes/github-dark", () => ({}));
   for (const lang of KIT_SHIKI_LANGUAGES) {
-    // Grammars are spread into `loadLanguage(...grammar.default)` — an empty
-    // array is inert there.
-    tryMock(`@shikijs/langs/${lang}`, () => ({ default: [] }));
+    // `src/lib/shiki.ts` does `highlighter.loadLanguage(...grammar.default)`
+    // — an empty array is inert there once unwrapped correctly.
+    tryMock(`@shikijs/langs/${lang}`, () => []);
   }
 }
 

@@ -397,7 +397,7 @@ import type { ButtonProps, BarChartProps, BarDataSeries } from "@tetrascience-np
 
 ## Testing your app with Jest
 
-The kit ships dual ESM + CJS output, so Jest's CommonJS runtime can load every component directly — no need to mock the package. What Jest *can't* load are a few third-party dependencies that publish ESM-only (the streamdown/markdown stack, shiki, `use-stick-to-bottom`, `react-resizable-panels`) and optional peers you may not have installed (`plotly.js-dist`). The kit ships a single setup file that stubs exactly those, plus the jsdom shims Radix-based components need (ResizeObserver, matchMedia, pointer capture, …).
+The kit ships dual ESM + CJS output, so Jest's CommonJS runtime can load every component directly — no need to mock the package. What Jest *can't* load are a few third-party dependencies that publish ESM-only (the streamdown/markdown stack, shiki, `use-stick-to-bottom`, `react-resizable-panels`) and optional peers you may not have installed (`plotly.js-dist`, `@rdkit/rdkit`). The kit ships a single setup file that stubs exactly those, plus the jsdom shims Radix-based components need (ResizeObserver, matchMedia, pointer capture, …).
 
 Add one line to `jest.config.js`:
 
@@ -415,6 +415,7 @@ What the stubs do:
 - **Charts** render their containers; Plotly calls resolve against an inert stub (jsdom has no WebGL). Assert on props/behavior, not pixels — visual assertions belong in a real browser.
 - **`MessageResponse` / `Reasoning`** render the markdown source as plain text, so text-content assertions work without transpiling the markdown ecosystem.
 - **`CodeBlock`** renders unhighlighted code lines.
+- **`MoleculeStructure`** resolves against a stub that always returns a valid, empty-SVG molecule. For real assertions (invalid-SMILES handling, actual rendered markup), use the kit's own override hook instead of relying on the stub: `configureRDKit({ importFactory: () => Promise.resolve(myFakeRDKitModule) })`, exported alongside `MoleculeStructure`.
 
 ## Examples
 

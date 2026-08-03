@@ -1,6 +1,10 @@
+import fs from "fs";
+import path from "path";
+
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+
 
 import {
   KIT_SHIKI_LANGUAGES,
@@ -13,6 +17,8 @@ import {
   installUiKitDomShims,
   installUiKitJestMocks,
   plotlyStub,
+  rdkitFactoryStub,
+  rdkitModuleStub,
   streamdownPluginStub,
   useStickToBottomContextStub,
   useStickToBottomStub,
@@ -21,6 +27,8 @@ import {
 import type { JestMockApi, MockPlotElement } from "../jest-setup";
 import type { ReactNode } from "react";
 import type { Root } from "react-dom/client";
+
+import { getSupportedCodeBlockLanguages } from "@/lib/shiki";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -76,6 +84,7 @@ describe("installUiKitJestMocks", () => {
     const registrations = record();
     const expected = [
       "plotly.js-dist",
+      "@rdkit/rdkit",
       "streamdown",
       "use-stick-to-bottom",
       "react-resizable-panels",
@@ -91,65 +100,109 @@ describe("installUiKitJestMocks", () => {
     expect([...registrations.keys()].sort()).toEqual([...expected].sort());
   });
 
+  /**
+   * Cross-checks the registered set against the kit's runtime optional
+   * peers (`package.json`'s `peerDependenciesMeta`) instead of hand-copying
+   * the same list `installUiKitJestMocks` uses — the test above proves the
+   * setup registers what it registers, this one proves it registers what
+   * the *package* actually needs. Server-only peers (Athena/Databricks/
+   * Snowflake SDKs) are excluded: they're loaded from `src/server/**`,
+   * which real Node `require()` under `environment: "node"` handles
+   * without any of this file's mocks — see vite.config.ts's test.projects.
+   */
+  it("covers every optional peer actually imported from client-facing source", () => {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, "../../package.json"), "utf8"),
+    ) as { peerDependenciesMeta?: Record<string, { optional?: boolean }> };
+    const optionalPeers = Object.entries(pkg.peerDependenciesMeta ?? {})
+      .filter(([, meta]) => meta.optional)
+      .map(([name]) => name);
+    expect(optionalPeers.length).toBeGreaterThan(0);
+
+    const clientDirs = ["components", "hooks", "lib"].map((dir) =>
+      path.resolve(__dirname, "../", dir),
+    );
+    function walk(dir: string): string[] {
+      return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) return walk(full);
+        return /\.(ts|tsx)$/.test(entry.name) ? [full] : [];
+      });
+    }
+    const clientSource = clientDirs.flatMap(walk).map((f) => fs.readFileSync(f, "utf8"));
+    const clientFacingPeers = optionalPeers.filter((peer) =>
+      clientSource.some((src) => src.includes(`"${peer}"`) || src.includes(`'${peer}'`)),
+    );
+    expect(clientFacingPeers.length).toBeGreaterThan(0);
+
+    const registrations = record();
+    for (const peer of clientFacingPeers) {
+      expect(registrations.has(peer), `expected a registration for ${peer}`).toBe(true);
+    }
+  });
+
   it("falls back to a virtual mock when non-virtual registration fails", () => {
+    // installUiKitJestMocks's own try/catch logic against a fake jest.mock
+    // that mirrors real Jest's observed behavior (verified separately,
+    // against real Jest, in scripts/verify-jest-consumer/ — see AGENTS.md):
+    // jest.mock(id, factory) throws synchronously for a genuinely
+    // unresolvable specifier (a missing optional peer, or an ESM-only
+    // package Jest's CJS resolver can't see), and succeeds non-virtually
+    // for anything else.
     const registrations = record(["plotly.js-dist", "streamdown"]);
     expect(registrations.get("plotly.js-dist")?.virtual).toBe(true);
     expect(registrations.get("streamdown")?.virtual).toBe(true);
-    // Resolvable modules stay non-virtual so Jest keys them by real path.
     expect(registrations.get("use-stick-to-bottom")?.virtual).toBe(false);
     expect(registrations.get("shiki/core")?.virtual).toBe(false);
   });
 
   it("factories produce the shapes the kit's imports consume", () => {
     const registrations = record();
-    const factoryOutput = (name: string): Record<string, unknown> =>
-      registrations.get(name)?.factory() as Record<string, unknown>;
+    const factoryOutput = (name: string): unknown => registrations.get(name)?.factory();
+    const factoryOutputObject = (name: string): Record<string, unknown> =>
+      factoryOutput(name) as Record<string, unknown>;
 
-    // plotly loader does `mod.default ?? mod`.
+    // plotly and rdkit loaders both do `mod.default ?? mod`.
     expect(factoryOutput("plotly.js-dist")).toBe(plotlyStub);
-    expect(factoryOutput("streamdown").Streamdown).toBe(StreamdownStub);
-    const stick = factoryOutput("use-stick-to-bottom");
+    expect(factoryOutput("@rdkit/rdkit")).toBe(rdkitFactoryStub);
+
+    expect(factoryOutputObject("streamdown").Streamdown).toBe(StreamdownStub);
+    const stick = factoryOutputObject("use-stick-to-bottom");
     expect(stick.StickToBottom).toBe(StickToBottomStub);
     expect(stick.useStickToBottomContext).toBe(useStickToBottomContextStub);
-    const panels = factoryOutput("react-resizable-panels");
+    const panels = factoryOutputObject("react-resizable-panels");
     expect(panels.Group).toBe(ResizableGroupStub);
     expect(panels.PanelGroup).toBe(ResizableGroupStub);
     expect(panels.PanelResizeHandle).toBe(ResizableSeparatorStub);
-    // streamdown-plugins does `{ cjk }`, `{ math }`, `{ mermaid }`.
-    for (const id of ["@streamdown/cjk", "@streamdown/math", "@streamdown/mermaid"]) {
-      const plugins = factoryOutput(id);
-      expect(plugins.cjk).toBe(streamdownPluginStub);
-      expect(plugins.math).toBe(streamdownPluginStub);
-      expect(plugins.mermaid).toBe(streamdownPluginStub);
-    }
+
+    // Each @streamdown/* package exports exactly one of these — separate
+    // one-key objects, not a shared multi-key literal.
+    expect(factoryOutputObject("@streamdown/cjk")).toEqual({ cjk: streamdownPluginStub });
+    expect(factoryOutputObject("@streamdown/math")).toEqual({ math: streamdownPluginStub });
+    expect(factoryOutputObject("@streamdown/mermaid")).toEqual({ mermaid: streamdownPluginStub });
     expect(streamdownPluginStub()).toEqual({});
-    expect(factoryOutput("shiki/core").createHighlighterCore).toBe(createHighlighterCoreStub);
-    const engine = factoryOutput("shiki/engine/javascript")
+
+    expect(factoryOutputObject("shiki/core").createHighlighterCore).toBe(createHighlighterCoreStub);
+    const engine = factoryOutputObject("shiki/engine/javascript")
       .createJavaScriptRegexEngine as () => unknown;
     expect(engine()).toEqual({});
-    expect(factoryOutput("@shikijs/themes/github-dark").default).toEqual({});
-    // Grammars are spread into `loadLanguage(...grammar.default)`.
-    expect(factoryOutput("@shikijs/langs/python").default).toEqual([]);
+
+    // Consumed via `.default` after Rollup's dynamic-import interop, which
+    // unconditionally sets `namespace.default = <raw factory return>` with
+    // no `__esModule` check (vite.config.ts's `dynamicImportInCjs: false`
+    // comment has the full story) — so the factory must return the value
+    // that belongs at `.default` directly, not wrapped in `{ default: … }`.
+    expect(factoryOutput("@shikijs/themes/github-dark")).toEqual({});
+    expect(factoryOutput("@shikijs/langs/python")).toEqual([]);
   });
 });
 
-describe("import side effect", () => {
-  it("activates only under a jest global, and registers through it", async () => {
-    const globalRef = globalThis as unknown as { jest?: JestMockApi };
-    expect(globalRef.jest).toBeUndefined(); // inert under Vitest by default
-
-    const mock = vi.fn();
-    globalRef.jest = { mock };
-    try {
-      vi.resetModules();
-      await import("../jest-setup");
-      expect(mock).toHaveBeenCalledWith("plotly.js-dist", expect.any(Function));
-      expect(mock.mock.calls.length).toBeGreaterThan(10);
-      // DOM shims were installed too.
-      expect((globalThis as unknown as MutableGlobal).ResizeObserver).toBeTypeOf("function");
-    } finally {
-      delete globalRef.jest;
-    }
+describe("KIT_SHIKI_LANGUAGES", () => {
+  it("matches the real language set src/lib/shiki.ts supports", () => {
+    // Guards against the exact drift AGENTS.md warns maintainers about:
+    // extending src/lib/shiki.ts's language set without extending this
+    // constant leaves the new language unmockable, silently.
+    expect([...KIT_SHIKI_LANGUAGES].sort()).toEqual([...getSupportedCodeBlockLanguages()].sort());
   });
 });
 
@@ -168,6 +221,9 @@ describe("installUiKitDomShims", () => {
   }
 
   it("installs missing observers, matchMedia, and element methods", () => {
+    // jsdom (this repo's jsdom ^28, confirmed empirically) implements none
+    // of these natively — this isn't a defensive "just in case" guard, it's
+    // load-bearing for every jsdom-environment kit test.
     const globalRef = globalThis as unknown as MutableGlobal;
     const savedGlobals = OBSERVER_KEYS.map((k) => [k, globalRef[k]] as const);
     const savedElement = ELEMENT_KEYS.map((k) => [k, elementProto()[k]] as const);
@@ -315,6 +371,17 @@ describe("plotly stub", () => {
   });
 });
 
+describe("rdkit stub", () => {
+  it("resolves a factory that always returns a valid, empty-SVG molecule", async () => {
+    const mod = await rdkitFactoryStub();
+    expect(mod).toBe(rdkitModuleStub);
+    const mol = mod.get_mol("CCO");
+    expect(mol.is_valid()).toBe(true);
+    expect(mol.get_svg_with_highlights("{}")).toContain("<svg");
+    expect(() => mol.delete()).not.toThrow();
+  });
+});
+
 describe("component stubs", () => {
   it("Streamdown renders markdown source as text", async () => {
     const container = await render(
@@ -389,3 +456,14 @@ describe("shiki stub", () => {
     expect(() => highlighter.dispose()).not.toThrow();
   });
 });
+
+// The self-activation wiring (reading the Jest-injected `jest` wrapper
+// variable and calling installUiKitJestMocks/installUiKitDomShims on
+// import) is NOT tested here. Jest injects `jest` as a lexically-scoped
+// free variable via its code transform — it is not `globalThis.jest` and
+// Vitest has no equivalent transform, so there is no way to simulate the
+// real activation path from this file; a test that sets `globalThis.jest`
+// only proves a mechanism the file doesn't use. Real activation is
+// verified end-to-end under actual Jest in
+// scripts/verify-jest-consumer/ — see AGENTS.md's "Shipped Jest support"
+// section.

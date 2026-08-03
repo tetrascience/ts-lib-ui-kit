@@ -19,6 +19,8 @@
     "react-dom": "^19.0.0"
   },
   "overrides": {
-    "ws": "8.20.0"
+    "ws": "^8.21.1",
+    "fast-xml-parser": "^5.10.1",
+    "protobufjs": "^7.6.1"
   }
 }

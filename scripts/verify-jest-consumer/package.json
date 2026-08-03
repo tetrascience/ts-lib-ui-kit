@@ -17,5 +17,8 @@
     "jest-environment-jsdom": "^30.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
+  },
+  "overrides": {
+    "ws": "8.20.0"
   }
 }

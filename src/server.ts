@@ -16,6 +16,7 @@ export { JwtTokenManager, jwtManager } from "./server/auth";
 export type {
   JwtTokenManagerConfig,
   CookieDict,
+  HeaderDict,
   ExpressRequestLike,
 } from "./server/auth";
 

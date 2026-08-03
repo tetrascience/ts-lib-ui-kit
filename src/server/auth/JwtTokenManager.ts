@@ -253,7 +253,12 @@ export class JwtTokenManager {
       return authToken;
     }
 
-    // Try to resolve ts-token-ref
+    // Try to resolve ts-token-ref (legacy fallback).
+    // TODO(next major): drop the ts-token-ref → connector-KV resolution entirely.
+    // As of SW-2352 the data-apps proxy resolves the reference server-side and
+    // injects the JWT via the ts-auth-token header (preferred above), and no
+    // longer forwards the ts-token-ref cookie to the container — so this path is
+    // dead in production and kept only for local dev / older proxies.
     const tokenRef = cookies["ts-token-ref"];
     if (tokenRef && this.connectorId) {
       const jwtToken = await this.getJwtFromTokenRef(tokenRef);

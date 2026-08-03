@@ -65,6 +65,8 @@ function App() {
 }
 ```
 
+Only need a handful of components? Every one is also importable individually — see [Per-Component Imports](#per-component-imports) below.
+
 ### Per-Component Imports
 
 Every component is also reachable at its own subpath, grouped by category:

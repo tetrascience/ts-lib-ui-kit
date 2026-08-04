@@ -8,6 +8,7 @@ import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 
 import pkg from "./package.json" with { type: "json" };
+import { getComponentEntries } from "./scripts/build/component-entries";
 import { generateZephyrMapping } from "./scripts/zephyr/storybook-zephyr-mapping";
 
 const banner = `/*
@@ -58,19 +59,37 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    // Must stay false at this entry count — see "Per-Component Entries" in
+    // AGENTS.md for why.
     dts({
-      rollupTypes: true,
+      rollupTypes: false,
     }),
   ],
   resolve: { alias },
   build: {
     lib: {
+      // Generated entries are spread first, hand-written ones last, so a
+      // collision is resolved in the hand-written entry's favor at the
+      // object-literal level — but getComponentEntries() also throws on
+      // any of these keys itself, so a collision is a build failure either
+      // way, never a silent drop of the hand-written entry.
       entry: {
+        ...getComponentEntries(
+          new Set([
+            "index",
+            "server",
+            "providers/athena",
+            "providers/snowflake",
+            "providers/databricks",
+            "jest-setup",
+          ]),
+        ),
         index: path.resolve(__dirname, "src/index.ts"),
         server: path.resolve(__dirname, "src/server/index.ts"),
         "providers/athena": path.resolve(__dirname, "src/server/providers/entries/athena.ts"),
         "providers/snowflake": path.resolve(__dirname, "src/server/providers/entries/snowflake.ts"),
         "providers/databricks": path.resolve(__dirname, "src/server/providers/entries/databricks.ts"),
+        "jest-setup": path.resolve(__dirname, "src/jest-setup.tsx"),
       },
       cssFileName: "index",
     },
@@ -81,6 +100,13 @@ export default defineConfig({
         globals: { react: "React", "react-dom": "ReactDOM" },
         preserveModules: true,
         preserveModulesRoot: 'src',
+        // Rollup's CJS output otherwise keeps external dynamic `import()`
+        // calls (plotly-loader.ts, lib/shiki.ts) as native `import()` —
+        // outside Jest's CJS module registry, so `jest.mock` can never
+        // intercept them and Jest throws ERR_VM_DYNAMIC_IMPORT_CALLBACK_
+        // MISSING_FLAG. false rewrites them to an interop-wrapped `require()`
+        // instead, which Jest can mock.
+        dynamicImportInCjs: false,
       },
     },
     sourcemap: true,
@@ -102,7 +128,11 @@ export default defineConfig({
             "src/**/*.spec.tsx",
             "scripts/**/*.test.ts",
           ],
-          exclude: ["node_modules", "dist", "examples"],
+          // Bare "node_modules" only matches a literal top-level path
+          // segment, not a nested one — without "**/node_modules/**",
+          // scripts/verify-jest-consumer's own npm-installed node_modules
+          // (a separate project, see AGENTS.md) leaks into "scripts/**/*.test.ts".
+          exclude: ["**/node_modules/**", "dist", "examples"],
           environmentMatchGlobs: [["src/server/**/*.test.ts", "node"]],
           // ts-morph's first parse loads the TS compiler; under CI + v8 coverage
           // that cold start can push the heavier zephyr AST tests past the 5s

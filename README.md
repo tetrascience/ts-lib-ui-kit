@@ -6,7 +6,7 @@ React component library for building TetraScience applications.
 
 ## Version
 
-v0.7.0
+v1.0.0
 
 This library provides:
 
@@ -26,6 +26,7 @@ This library provides:
 
 | Library version | React | Node.js | TDP (server utilities) |
 | --------------- | ----- | ------- | ---------------------- |
+| v1.0.x          | 19+   | 18+     | v4.x+                  |
 | v0.7.x          | 19+   | 18+     | v4.x+                  |
 | v0.6.x          | 19+   | 18+     | v4.x+                  |
 | v0.5.x          | 19+   | 18+     | v4.x+                  |
@@ -35,7 +36,7 @@ This library provides:
 > The `/server` utilities (JWT auth, provider helpers) require a running TDP instance of v4.x or later.
 > Browser support follows React 19's matrix (modern evergreen browsers).
 >
-> As of v0.7.0, heavy dependencies are **optional peer dependencies**: install `plotly.js-dist` if you use the chart components, `@streamdown/mermaid` / `@streamdown/math` if you use the AI markdown components, `@rdkit/rdkit` if you use `MoleculeStructure`, and the provider SDKs (`@aws-sdk/client-athena`, `@databricks/sql`, `snowflake-sdk`) only for the `/server` utilities you use. Apps that don't use these components don't need to install them.
+> As of v1.0.0, heavy dependencies are **optional peer dependencies**: install `plotly.js-dist` if you use the chart components, `@streamdown/mermaid` / `@streamdown/math` if you use the AI markdown components, `@rdkit/rdkit` if you use `MoleculeStructure`, and the provider SDKs (`@aws-sdk/client-athena`, `@databricks/sql`, `snowflake-sdk`) only for the `/server` utilities you use. Apps that don't use these components don't need to install them.
 
 ## Installation
 

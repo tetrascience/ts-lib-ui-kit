@@ -948,3 +948,48 @@ export const ThemedTooltip: Story = {
     zephyr: { testCaseId: "SW-T5414" },
   },
 };
+
+/**
+ * Opt-in annotation layer: threshold / reference lines and shaded from–to
+ * bands, drawn as themed Plotly shapes. Labeled lines/bands (`hit line`,
+ * `midpoint`, `focus`) surface in the chart legend.
+ */
+export const WithReferenceLinesAndBands: Story = {
+  args: {
+    data: BASIC_DATA,
+    title: "Scatter with Thresholds",
+    ...DEFAULT_DIMS,
+    referenceLines: [
+      { axis: "y", value: 70, color: "#E15759", label: "hit line" },
+      { axis: "x", value: 50, label: "midpoint" },
+    ],
+    bands: [{ axis: "x", from: 70, to: 100, color: "#038599", label: "focus" }],
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Chart renders with data points", async () => {
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll(".scatterlayer .points path").length).toBeGreaterThan(0);
+      });
+    });
+
+    await step("Two reference lines and one band are drawn", async () => {
+      await waitFor(() => {
+        // 2 reference lines + 1 band = three shapes.
+        expect(canvasElement.querySelectorAll(".shapelayer path").length).toBeGreaterThanOrEqual(3);
+      });
+    });
+
+    await step("Labeled lines and band appear as legend items", async () => {
+      await waitFor(() => {
+        const text = canvasElement.querySelector(".infolayer .legend")?.textContent ?? "";
+        expect(text).toContain("hit line");
+        expect(text).toContain("midpoint");
+        expect(text).toContain("focus");
+      });
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};

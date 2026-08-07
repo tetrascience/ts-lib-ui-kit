@@ -384,6 +384,55 @@ export const MultipleSeriesWithDistributionLines: Story = {
   },
 };
 
+export const WithReferenceLineAndBand: Story = {
+  name: "With Reference Line And Band",
+  parameters: {
+    zephyr: { testCaseId: "" },
+    docs: {
+      description: {
+        story:
+          "Opt-in annotation layer: a shaded pass `band` and a `cutoff` reference line overlaid on the distribution. Labeled lines/bands appear as items in the chart legend.",
+      },
+    },
+  },
+  args: {
+    dataSeries: {
+      x: generateNormalData(20, 8, 200),
+      name: "Torque",
+    },
+    title: "Histogram with Cutoff",
+    xTitle: "Torque",
+    yTitle: "Frequency",
+    width: 520,
+    height: 480,
+    bands: [{ axis: "x", from: 24, to: 40, color: "#038599", label: "pass" }],
+    referenceLines: [{ axis: "x", value: 24, color: "#E15759", label: "cutoff" }],
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Chart renders", async () => {
+      expect(canvas.getByText("Histogram with Cutoff")).toBeInTheDocument();
+      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    });
+
+    await step("Reference line and band shapes are drawn", async () => {
+      await waitFor(() => {
+        // One band rect + one reference line = two shapes.
+        expect(canvasElement.querySelectorAll(".shapelayer path").length).toBeGreaterThanOrEqual(2);
+      });
+    });
+
+    await step("Labeled line and band appear as legend items", async () => {
+      const legend = canvasElement.querySelector(".legend-container") as HTMLElement;
+      expect(legend).toBeInTheDocument();
+      const legendText = within(legend);
+      expect(legendText.getByText("cutoff")).toBeInTheDocument();
+      expect(legendText.getByText("pass")).toBeInTheDocument();
+    });
+  },
+};
+
 export const ContainerFilled: Story = {
   name: "Container Filled (responsive)",
   parameters: {

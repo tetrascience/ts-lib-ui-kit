@@ -1,6 +1,6 @@
 {
   "name": "@tetrascience-npm/tetrascience-react-ui",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "description": "TetraScience React UI",
   "type": "module",
   "author": "TetraScience",
@@ -313,6 +313,7 @@
     "@vitejs/plugin-react": "^4.3.1",
     "@vitest/browser": "^3",
     "@vitest/coverage-v8": "^3",
+    "conventional-changelog-conventionalcommits": "^9.3.1",
     "cookie-parser": "^1.4.7",
     "eslint": "^9.9.0",
     "eslint-plugin-import": "^2.31.0",

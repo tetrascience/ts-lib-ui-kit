@@ -17,6 +17,9 @@ const meta: Meta<typeof Calendar> = {
   component: Calendar,
   parameters: {
     layout: "centered",
+    // Docs "Show code": stories render via a local helper, so serialize the
+    // rendered JSX tree instead of printing the helper call / story source.
+    docs: { source: { type: "dynamic" } },
   },
   tags: ["autodocs"],
 }

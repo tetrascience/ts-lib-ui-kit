@@ -6,6 +6,7 @@ import { addons } from "storybook/preview-api";
 import { Toaster } from "../src/components/ui/sonner";
 import { TooltipProvider } from "../src/components/ui/tooltip";
 
+import { transformStorySource } from "./source-transform";
 import { tetrascienceDark } from "./theme/tetra-science.dark.theme";
 import { tetrascienceLight } from "./theme/tetra-science.light.theme";
 
@@ -147,6 +148,11 @@ const preview: Preview = {
   parameters: {
     docs: {
       container: ThemedDocsContainer,
+      // Docs "Show code" must show component usage, not story plumbing
+      // (play functions, zephyr test-case ids). Zero-arity `render` stories
+      // fall back to the raw story-object source; this extracts just the
+      // render body. See source-transform.ts for the full rationale.
+      source: { transform: transformStorySource },
     },
     a11y: {
       test: 'error',

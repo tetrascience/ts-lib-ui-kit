@@ -1223,32 +1223,30 @@ export const FilteringWithConfig: Story = {
 // ControlledFiltering — external filter state
 // ---------------------------------------------------------------------------
 
-function ControlledFilteringStory() {
-  const [filters, setFilters] = React.useState<FilterCondition[]>([])
-
-  return (
-    <div className="space-y-4">
-      <DataTable
-        columns={workspaceColumns}
-        data={workspaceData}
-        enableFiltering
-        filters={filters}
-        onFiltersChange={setFilters}
-      >
-        <TableToolbar>
-          <DataTableFilter />
-        </TableToolbar>
-      </DataTable>
-      <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
-        <p className="text-xs font-medium text-muted-foreground">Live state from controlled prop <code>filters</code>:</p>
-        <CodeBlock language="json" code={JSON.stringify(filters, null, 2)} />
-      </div>
-    </div>
-  )
-}
-
 export const ControlledFiltering: Story = {
-  render: () => <ControlledFilteringStory />,
+  render: () => {
+    const [filters, setFilters] = React.useState<FilterCondition[]>([])
+
+    return (
+      <div className="space-y-4">
+        <DataTable
+          columns={workspaceColumns}
+          data={workspaceData}
+          enableFiltering
+          filters={filters}
+          onFiltersChange={setFilters}
+        >
+          <TableToolbar>
+            <DataTableFilter />
+          </TableToolbar>
+        </DataTable>
+        <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+          <p className="text-xs font-medium text-muted-foreground">Live state from controlled prop <code>filters</code>:</p>
+          <CodeBlock language="json" code={JSON.stringify(filters, null, 2)} />
+        </div>
+      </div>
+    )
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
@@ -1461,34 +1459,32 @@ export const GroupingWithConfig: Story = {
 // ControlledGrouping — external grouping state
 // ---------------------------------------------------------------------------
 
-function ControlledGroupingStory() {
-  const [grouping, setGrouping] = React.useState<string | null>("owner")
-
-  return (
-    <div className="space-y-4">
-      <DataTable
-        columns={workspaceColumns}
-        data={workspaceData}
-        enableGrouping
-        grouping={grouping}
-        onGroupingChange={setGrouping}
-      >
-        <TableToolbar>
-          <DataTableGroup />
-        </TableToolbar>
-      </DataTable>
-      <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
-        <p className="text-xs font-medium text-muted-foreground">
-          Live state from controlled prop <code>grouping</code>:
-        </p>
-        <CodeBlock language="json" code={JSON.stringify({ grouping }, null, 2)} />
-      </div>
-    </div>
-  )
-}
-
 export const ControlledGrouping: Story = {
-  render: () => <ControlledGroupingStory />,
+  render: () => {
+    const [grouping, setGrouping] = React.useState<string | null>("owner")
+
+    return (
+      <div className="space-y-4">
+        <DataTable
+          columns={workspaceColumns}
+          data={workspaceData}
+          enableGrouping
+          grouping={grouping}
+          onGroupingChange={setGrouping}
+        >
+          <TableToolbar>
+            <DataTableGroup />
+          </TableToolbar>
+        </DataTable>
+        <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+          <p className="text-xs font-medium text-muted-foreground">
+            Live state from controlled prop <code>grouping</code>:
+          </p>
+          <CodeBlock language="json" code={JSON.stringify({ grouping }, null, 2)} />
+        </div>
+      </div>
+    )
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 

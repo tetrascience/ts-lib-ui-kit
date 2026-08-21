@@ -15,6 +15,9 @@ const meta: Meta<typeof Accordion> = {
   component: Accordion,
   parameters: {
     layout: "centered",
+    // Docs "Show code": stories render via a local helper, so serialize the
+    // rendered JSX tree instead of printing the helper call / story source.
+    docs: { source: { type: "dynamic" } },
   },
   tags: ["autodocs"],
 }
@@ -23,7 +26,7 @@ export default meta
 
 type Story = StoryObj<typeof Accordion>
 
-function AccordionExample(props: React.ComponentProps<typeof Accordion>) {
+function renderAccordion(props: React.ComponentProps<typeof Accordion>) {
   return (
     <Accordion className="w-[420px]" {...props}>
       <AccordionItem value="item-1">
@@ -49,7 +52,7 @@ function AccordionExample(props: React.ComponentProps<typeof Accordion>) {
 }
 
 export const Single: Story = {
-  render: () => <AccordionExample type="single" collapsible defaultValue="item-1" />,
+  render: () => renderAccordion({ type: "single", collapsible: true, defaultValue: "item-1" }),
   parameters: {
     zephyr: { testCaseId: "SW-T1180" },
   },
@@ -77,7 +80,7 @@ export const Single: Story = {
 }
 
 export const Multiple: Story = {
-  render: () => <AccordionExample type="multiple" defaultValue={["item-1", "item-2"]} />,
+  render: () => renderAccordion({ type: "multiple", defaultValue: ["item-1", "item-2"] }),
   parameters: {
     zephyr: { testCaseId: "SW-T1181" },
   },

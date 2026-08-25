@@ -10,9 +10,6 @@ export const NOOP_TELEMETRY: Telemetry = {
 	trackError() {
 		// disabled: nothing is recorded, nothing is buffered
 	},
-	counter() {
-		// disabled: nothing is recorded, nothing is buffered
-	},
 	startSpan: () => NOOP_SPAN,
 	// Still RUNS the callback: withSpan wraps application work, so skipping it
 	// when telemetry is off would make disabling telemetry change what the app
@@ -40,8 +37,7 @@ const MAX_PENDING = 50;
 
 type Pending =
 	| {kind: "event"; name: string; attributes?: Record<string, unknown>; body?: unknown}
-	| {kind: "error"; error: unknown; context?: TrackErrorContext}
-	| {kind: "counter"; name: string; attributes?: Record<string, unknown>};
+	| {kind: "error"; error: unknown; context?: TrackErrorContext};
 
 /**
  * Stable context value that forwards to the currently attached client.
@@ -70,11 +66,7 @@ export function createTelemetryFacade(): TelemetryFacade {
 			if (target) target.trackError(error, context);
 			else buffer({kind: "error", error, context});
 		},
-		counter(name, attributes) {
-			if (target) target.counter(name, attributes);
-			else buffer({kind: "counter", name, attributes});
-		},
-		// Spans are NOT buffered, unlike the three above. A span carries a live
+		// Spans are NOT buffered, unlike the two above. A span carries a live
 		// start and end, so replaying one after attach would invent a duration
 		// that never happened — worse than not recording it. Work that runs
 		// before the provider's effect attaches a client is simply untraced.
@@ -84,8 +76,8 @@ export function createTelemetryFacade(): TelemetryFacade {
 		// Metric recordings before attach are DROPPED, not buffered. A gauge is a
 		// point-in-time reading and a histogram observation is timestamped by the
 		// SDK on record, so replaying either after attach would date it to the
-		// wrong moment. Events and counters buffer because a product event is a
-		// fact that happened, not a sample of a moving value.
+		// wrong moment. Events buffer because a product event is a fact that
+		// happened, not a sample of a moving value.
 		gauge(name, value, attributes) {
 			target?.gauge(name, value, attributes);
 		},
@@ -110,7 +102,6 @@ export function createTelemetryFacade(): TelemetryFacade {
 			pending = [];
 			for (const record of replay) {
 				if (record.kind === "event") client.trackEvent(record.name, record.attributes, record.body);
-				else if (record.kind === "counter") client.counter(record.name, record.attributes);
 				else client.trackError(record.error, record.context);
 			}
 		},

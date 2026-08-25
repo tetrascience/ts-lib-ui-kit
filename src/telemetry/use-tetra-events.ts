@@ -43,9 +43,8 @@ export function useTelemetryClient(): Telemetry {
  *
  * @example
  * ```tsx
- * const {trackEvent, counter} = useTetraEvents();
+ * const {trackEvent} = useTetraEvents();
  * trackEvent('Sandbox:Chat:Submit', {model});
- * counter('Sandbox:Calculation:Execute');
  * ```
  */
 export function useTetraEvents(): TetraEvents {
@@ -65,24 +64,14 @@ export function useTetraEvents(): TetraEvents {
 		[client],
 	);
 
-	// Delegates to the core's counter (SW-2470) rather than re-implementing the
-	// sugar, so React and non-React consumers share one definition. One call =
-	// one record = one increment; no value parameter by design.
-	const counter = useCallback(
-		(name: string, attributes?: Record<string, unknown>) => {
-			client.counter(name, attributes);
-		},
-		[client],
-	);
-
-	// SW-2478. Same delegation rule as counter: the span semantics live in the
-	// core so React and non-React consumers cannot drift.
+	// SW-2478. Every method here delegates to the core rather than
+	// re-implementing anything, so React and non-React consumers cannot drift.
 	const startSpan = useCallback(
 		(name: string, options?: StartSpanOptions) => client.startSpan(name, options),
 		[client],
 	);
 
-	// SW-2478 metrics. Same delegation rule as counter and startSpan: the
+	// SW-2478 metrics. Same delegation rule as startSpan: the
 	// instrument caching, the value guards and the publishable-name warning all
 	// live in the core client, so re-implementing any of it here would give
 	// React apps different behaviour from Node ones for the same call.
@@ -108,7 +97,7 @@ export function useTetraEvents(): TetraEvents {
 	);
 
 	return useMemo(
-		() => ({trackEvent, trackError, counter, startSpan, withSpan, gauge, histogram, upDownCounter}),
-		[trackEvent, trackError, counter, startSpan, withSpan, gauge, histogram, upDownCounter],
+		() => ({trackEvent, trackError, startSpan, withSpan, gauge, histogram, upDownCounter}),
+		[trackEvent, trackError, startSpan, withSpan, gauge, histogram, upDownCounter],
 	);
 }

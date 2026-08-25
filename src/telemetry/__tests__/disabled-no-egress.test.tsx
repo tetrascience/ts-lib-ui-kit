@@ -66,12 +66,11 @@ afterEach(() => {
 const egressCount = () => fetchSpy.mock.calls.length + beaconSpy.mock.calls.length + xhrSendSpy.mock.calls.length;
 
 function EmitOnMount() {
-	const {trackEvent, trackError, counter} = useTetraEvents();
+	const {trackEvent, trackError} = useTetraEvents();
 	useEffect(() => {
 		trackEvent("App:Page:View", {rows: 42});
-		counter("App:Thing:Used");
 		trackError(new Error("boom"));
-	}, [trackEvent, trackError, counter]);
+	}, [trackEvent, trackError]);
 	return <span>ready</span>;
 }
 

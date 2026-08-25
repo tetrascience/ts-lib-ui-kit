@@ -87,12 +87,6 @@ export interface TetraEvents {
 	/** Record an error event with `exception.*` attributes. */
 	trackError(error: unknown, context?: TrackErrorContext): void;
 	/**
-	 * Record one increment of a named counter. Thin sugar over `trackEvent`:
-	 * one call = one record = one increment — aggregate with `COUNT()`
-	 * downstream. There is no value parameter by design.
-	 */
-	counter(name: string, attributes?: Record<string, unknown>): void;
-	/**
 	 * Start a span (SW-2478). No-op unless the provider was given
 	 * `tracing.enabled`. The caller must `end()` it — prefer `withSpan`.
 	 */
@@ -106,7 +100,7 @@ export interface TetraEvents {
 	 * Record the current value of something (SW-2478). No-op unless the
 	 * provider was given `metrics.enabled`.
 	 *
-	 * Unlike {@link TetraEvents.counter}, this carries a VALUE — a counter is
+	 * Unlike {@link TetraEvents.trackEvent}, this carries a VALUE — counting is
 	 * one-record-one-increment and cannot express "the reading right now".
 	 */
 	gauge(name: string, value: number, attributes?: Record<string, unknown>): void;

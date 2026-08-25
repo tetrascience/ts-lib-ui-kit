@@ -181,7 +181,6 @@ describe("createTelemetryFacade", () => {
 		const client = {
 			trackEvent: vi.fn(),
 			trackError: vi.fn(),
-			counter: vi.fn(),
 			startSpan: vi.fn(() => NOOP_SPAN),
 			// Runs the callback, like the real one: a facade that silently skipped
 			// it would change application control flow, so the mock must not hide
@@ -195,31 +194,29 @@ describe("createTelemetryFacade", () => {
 		return client as typeof client & Telemetry;
 	}
 
-	test("buffers all three record kinds before attach and replays them in order", () => {
+	test("buffers both record kinds before attach and replays them in order", () => {
 		const facade = createTelemetryFacade();
 		facade.trackEvent("A", {a: 1}, {body: true});
-		facade.counter("B");
 		facade.trackError(new Error("C"));
 
 		const client = makeClient();
 		facade.attach(client);
 
 		expect(client.trackEvent).toHaveBeenCalledWith("A", {a: 1}, {body: true});
-		expect(client.counter).toHaveBeenCalledWith("B", undefined);
 		expect(client.trackError).toHaveBeenCalledWith(expect.any(Error), undefined);
 	});
 
 	test("drains the buffer exactly once, so a re-attach cannot replay it", () => {
 		const facade = createTelemetryFacade();
-		facade.counter("Once");
+		facade.trackEvent("Once");
 
 		const first = makeClient();
 		facade.attach(first);
 		const second = makeClient();
 		facade.attach(second);
 
-		expect(first.counter).toHaveBeenCalledTimes(1);
-		expect(second.counter).not.toHaveBeenCalled();
+		expect(first.trackEvent).toHaveBeenCalledTimes(1);
+		expect(second.trackEvent).not.toHaveBeenCalled();
 	});
 
 	test("forwards straight through once a client is attached", () => {
@@ -228,11 +225,9 @@ describe("createTelemetryFacade", () => {
 		facade.attach(client);
 
 		facade.trackEvent("A");
-		facade.counter("B");
 		facade.trackError(new Error("C"));
 
 		expect(client.trackEvent).toHaveBeenCalledTimes(1);
-		expect(client.counter).toHaveBeenCalledTimes(1);
 		expect(client.trackError).toHaveBeenCalledTimes(1);
 	});
 
@@ -264,13 +259,13 @@ describe("createTelemetryFacade", () => {
 
 	test("the pending buffer is bounded so a provider-less app cannot leak memory", () => {
 		const facade = createTelemetryFacade();
-		for (let index = 0; index < 500; index += 1) facade.counter(`E${index}`);
+		for (let index = 0; index < 500; index += 1) facade.trackEvent(`E`);
 
 		const client = makeClient();
 		facade.attach(client);
 
 		// MAX_PENDING is 50; the excess is dropped rather than retained.
-		expect(client.counter).toHaveBeenCalledTimes(50);
+		expect(client.trackEvent).toHaveBeenCalledTimes(50);
 	});
 
 	test("flush and shutdown are safe before any client attaches", async () => {
@@ -480,13 +475,13 @@ describe("useTetraEvents", () => {
 		expect(seen).toEqual([true, true]);
 	});
 
-	test("counter is one record per call — no value parameter", () => {
+	test("counting is one record per call — no magnitude attribute", () => {
 		function Counting() {
-			const {counter} = useTetraEvents();
+			const {trackEvent} = useTetraEvents();
 			useEffect(() => {
-				counter("App:Calculation:Execute", {kind: "mean"});
-				counter("App:Calculation:Execute", {kind: "mean"});
-			}, [counter]);
+				trackEvent("App:Calculation:Execute", {kind: "mean"});
+				trackEvent("App:Calculation:Execute", {kind: "mean"});
+			}, [trackEvent]);
 			return null;
 		}
 		renderTree(
@@ -886,7 +881,6 @@ describe("installGlobalErrorHandlers", () => {
 		const client = {
 			trackEvent: vi.fn(),
 			trackError: vi.fn(),
-			counter: vi.fn(),
 			startSpan: vi.fn(() => NOOP_SPAN),
 			withSpan: vi.fn((_name: string, fn: (span: TetraSpan) => unknown) => fn(NOOP_SPAN)),
 			flush: async () => undefined,
@@ -922,14 +916,13 @@ describe("useTetraEvents outside a provider", () => {
 		vi.unstubAllEnvs();
 	});
 
-	test("all three emitters no-op without a provider", () => {
+	test("both emitters no-op without a provider", () => {
 		function Bare() {
-			const {trackEvent, trackError, counter} = useTetraEvents();
+			const {trackEvent, trackError} = useTetraEvents();
 			useEffect(() => {
 				trackEvent("App:A");
 				trackError(new Error("b"));
-				counter("App:C");
-			}, [trackEvent, trackError, counter]);
+			}, [trackEvent, trackError]);
 			return <span>ok</span>;
 		}
 		vi.spyOn(console, "warn").mockImplementation(() => undefined);

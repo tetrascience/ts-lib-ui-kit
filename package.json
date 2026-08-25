@@ -28,6 +28,16 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./telemetry": {
+      "import": {
+        "types": "./dist/telemetry.d.ts",
+        "default": "./dist/telemetry.js"
+      },
+      "require": {
+        "types": "./dist/telemetry.d.ts",
+        "default": "./dist/telemetry.cjs"
+      }
+    },
     "./server": {
       "import": {
         "types": "./dist/server.d.ts",
@@ -150,7 +160,8 @@
     "plotly.js-dist": "^2.35.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "snowflake-sdk": "^2.0.0"
+    "snowflake-sdk": "^2.0.0",
+    "@tetrascience-npm/request": ">=0.4.0"
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-athena": {

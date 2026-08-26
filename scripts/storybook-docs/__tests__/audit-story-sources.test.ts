@@ -22,7 +22,10 @@ import { auditAllStories, findViolations } from "../audit-story-sources";
  *   `docs.source.code` usage (see DataAppShell / PlateMapEditor stories).
  */
 describe("storybook docs source audit", () => {
-  it("every story's docs code panel shows component code", () => {
+  // ts-morph parses all ~109 story files; on loaded CI runners under v8
+  // coverage instrumentation the cold start alone can exceed the project's
+  // 20s default (same reason the zephyr AST tests needed headroom).
+  it("every story's docs code panel shows component code", { timeout: 120_000 }, () => {
     const results = auditAllStories();
 
     // Sanity: the audit actually saw the story corpus.

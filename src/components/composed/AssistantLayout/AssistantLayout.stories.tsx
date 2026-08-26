@@ -160,7 +160,6 @@ export const DockedBottom: Story = {
   },
 }
 
-// testCaseId intentionally left blank — the zephyr_sync workflow backfills it.
 export const ResizeByKeyboard: Story = {
   parameters: {
     docs: { source: { code: usageCode("right"), language: "tsx" } },

@@ -29,6 +29,7 @@
  *                        shown (needs remediation).
  */
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { Project, SyntaxKind } from "ts-morph";
 
@@ -353,7 +354,7 @@ export const findViolations = (
 // CLI: `yarn tsx scripts/storybook-docs/audit-story-sources.ts`
 if (
   process.argv[1] &&
-  path.resolve(process.argv[1]) === path.resolve(import.meta.url.replace("file://", ""))
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
   const results = auditAllStories();
   const violations = findViolations(results);

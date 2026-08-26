@@ -226,6 +226,13 @@ Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) fo
 
 ## Zephyr Integration
 
+- **Branch and PR naming compliance (required for Zephyr automation):** every
+  working branch must be named with its Jira issue key as the prefix —
+  `SW-1234-short-kebab-description` (e.g. `SW-2352-v1-release-prep`). Create
+  the Jira issue first if none exists. PR titles must follow
+  `type: SW-1234 Description` (e.g. `docs: SW-2549 Audit Storybook code
+  panels`) — the `check` CI job (semantic PR title) rejects anything else.
+
 - Zephyr HTTP is handled by a shared internal `ts-lib-zephyr-nodejs` library (`ZephyrClient` + helpers). The repo's scripts are thin wrappers around it — JUnit parsing, story parsing/write-back, cycle resolution, and folder mapping stay local.
 - Test results reported to Zephyr Scale via `scripts/zephyr/report-zephyr-results.ts`.
 - Story-to-testcase sync handled by `scripts/zephyr/sync-storybook-zephyr.ts`

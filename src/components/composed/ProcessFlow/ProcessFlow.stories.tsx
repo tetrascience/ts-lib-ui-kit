@@ -276,54 +276,6 @@ function EditableUploadWorkflow({
   );
 }
 
-function DynamicProcessFlow() {
-  const [activeIndex, setActiveIndex] = useState(1);
-  const [selectedStepId, setSelectedStepId] = useState(uploadSteps[1].id);
-  const [hasError, setHasError] = useState(false);
-  const steps = useMemo(
-    () =>
-      uploadSteps.map((step, index) => {
-        if (hasError && step.id === "validate-inputs") {
-          return { ...step, status: "error" as const };
-        }
-
-        if (hasError && index > activeIndex) {
-          return { ...step, status: "disabled" as const };
-        }
-
-        if (index < activeIndex) {
-          return { ...step, status: "completed" as const };
-        }
-
-        if (index === activeIndex) {
-          return { ...step, status: "active" as const };
-        }
-
-        return { ...step, status: "pending" as const };
-      }),
-    [activeIndex, hasError],
-  );
-
-  return (
-    <div className="flex w-full flex-col gap-4">
-      <ProcessFlow steps={steps} selectedStepId={selectedStepId} onStepSelect={(step) => setSelectedStepId(step.id)} />
-      <div className="flex flex-wrap gap-2">
-        <Button
-          onClick={() => {
-            setHasError(false);
-            setActiveIndex((index) => Math.min(index + 1, uploadSteps.length - 1));
-          }}
-        >
-          Advance
-        </Button>
-        <Button variant="outline" onClick={() => setHasError(true)}>
-          Flag validation
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 const meta: Meta<typeof ProcessFlow> = {
   title: "Design Patterns/Process Flow",
   component: ProcessFlow,
@@ -431,7 +383,53 @@ export const DynamicState: Story = {
       testCaseId: "SW-T5315",
     },
   },
-  render: () => <DynamicProcessFlow />,
+  render: () => {
+    const [activeIndex, setActiveIndex] = useState(1);
+    const [selectedStepId, setSelectedStepId] = useState(uploadSteps[1].id);
+    const [hasError, setHasError] = useState(false);
+    const steps = useMemo(
+      () =>
+        uploadSteps.map((step, index) => {
+          if (hasError && step.id === "validate-inputs") {
+            return { ...step, status: "error" as const };
+          }
+
+          if (hasError && index > activeIndex) {
+            return { ...step, status: "disabled" as const };
+          }
+
+          if (index < activeIndex) {
+            return { ...step, status: "completed" as const };
+          }
+
+          if (index === activeIndex) {
+            return { ...step, status: "active" as const };
+          }
+
+          return { ...step, status: "pending" as const };
+        }),
+      [activeIndex, hasError],
+    );
+
+    return (
+      <div className="flex w-full flex-col gap-4">
+        <ProcessFlow steps={steps} selectedStepId={selectedStepId} onStepSelect={(step) => setSelectedStepId(step.id)} />
+        <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={() => {
+              setHasError(false);
+              setActiveIndex((index) => Math.min(index + 1, uploadSteps.length - 1));
+            }}
+          >
+            Advance
+          </Button>
+          <Button variant="outline" onClick={() => setHasError(true)}>
+            Flag validation
+          </Button>
+        </div>
+      </div>
+    );
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 

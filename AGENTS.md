@@ -175,6 +175,29 @@ Consumer contract: apps that use these components must install the matching peer
 - Unit tests (`*.test.ts` / `*.test.tsx`) for pure utilities, hooks, and non-visual logic only
 - Do not manually assign `parameters.zephyr.testCaseId` values — generate or repair them through `sync-storybook-zephyr`
 
+### Docs "Show code" must show component code
+
+Storybook prints the raw story-object source (play function, zephyr ids and
+all) for stories it can't derive a snippet for. Two things keep the docs code
+panels clean, and a unit test
+([`scripts/storybook-docs/__tests__/audit-story-sources.test.ts`](./scripts/storybook-docs/__tests__/audit-story-sources.test.ts))
+fails CI when a story regresses:
+
+- A global `docs.source.transform` (`.storybook/source-transform.ts`, wired
+  in `preview.ts`) extracts just the `render` body from the static story
+  source — zero-arity inline renders (JSX or hooks-demo block bodies) work
+  with no extra parameters.
+- Stories whose render is a **local helper call** need
+  `docs: { source: { type: "dynamic" } }` (usually at meta level) so the
+  rendered tree is serialized; stories rendering **file-local wrapper
+  components** must either inline the wrapper into the render or hand-write
+  `docs: { source: { code: …, language: "tsx" } }` usage (see DataAppShell,
+  AssistantLayout, PlateMapEditor). Full-page showcases may hide the panel
+  with `docs: { canvas: { sourceState: "none" } }`.
+
+Run the audit directly with `yarn tsx scripts/storybook-docs/audit-story-sources.ts`
+— its output names the offending story and the fix.
+
 ### Shipped Jest support for consumers (`./jest-setup` sub-export)
 
 [`src/jest-setup.tsx`](./src/jest-setup.tsx) is a single self-registering setup file — consumers add it to Jest's `setupFiles`. On import (guarded on the module-scoped `jest` wrapper variable — it is NOT a real global, so read it as a free variable behind `typeof`) it calls `jest.mock(id, factory)` for every dep Jest's CJS runtime can't load — ESM-only packages (streamdown, shiki/@shikijs subpaths, use-stick-to-bottom, react-resizable-panels) and optional peers (plotly.js-dist, @rdkit/rdkit, @streamdown/math|mermaid) — and installs jsdom shims (ResizeObserver, matchMedia, pointer capture; verified against this repo's jsdom ^28, which implements none of them natively — these are load-bearing, not defensive). Mock registration is non-virtual when the module resolves (Jest keys it by real path) with a `{ virtual: true }` fallback when it doesn't (`import`-only exports or uninstalled peers; virtual bare-specifier mocks are keyed by the specifier and intercept globally — verified empirically against real Jest, both directions). **When adding a dependency, check whether it's ESM-only (`"type": "module"` with no `require` export condition); if a kit module imports it — statically or via the lazy loaders — add a registration there**, or Jest consumers regress to `ERR_REQUIRE_ESM`. Registrations use exact module ids (including each `@shikijs/langs/<lang>` the `CodeBlock` highlighter loads), so extending `src/lib/shiki.ts`'s language set means extending `KIT_SHIKI_LANGUAGES` there too — a test asserts they stay equal. Entry basename must not be `index` — vite-plugin-dts emits a flat `<basename>.d.ts` per entry and a second `index` clobbers the root `dist/index.d.ts`.
@@ -202,6 +225,13 @@ yarn release:dry-run  # Validate what would be published without actually publis
 Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) for versioning — `feat:` → minor bump, `fix:` → patch bump, `feat!:` / `BREAKING CHANGE:` → major bump.
 
 ## Zephyr Integration
+
+- **Branch and PR naming compliance (required for Zephyr automation):** every
+  working branch must be named with its Jira issue key as the prefix —
+  `SW-1234-short-kebab-description` (e.g. `SW-2352-v1-release-prep`). Create
+  the Jira issue first if none exists. PR titles must follow
+  `type: SW-1234 Description` (e.g. `docs: SW-2549 Audit Storybook code
+  panels`) — the `check` CI job (semantic PR title) rejects anything else.
 
 - Zephyr HTTP is handled by a shared internal `ts-lib-zephyr-nodejs` library (`ZephyrClient` + helpers). The repo's scripts are thin wrappers around it — JUnit parsing, story parsing/write-back, cycle resolution, and folder mapping stay local.
 - Test results reported to Zephyr Scale via `scripts/zephyr/report-zephyr-results.ts`.

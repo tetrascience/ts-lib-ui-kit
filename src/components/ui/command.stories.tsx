@@ -25,6 +25,9 @@ const meta: Meta<typeof Command> = {
   component: Command,
   parameters: {
     layout: "centered",
+    // Docs "Show code": stories render via a local helper, so serialize the
+    // rendered JSX tree instead of printing the helper call / story source.
+    docs: { source: { type: "dynamic" } },
   },
   tags: ["autodocs"],
 }
@@ -33,7 +36,7 @@ export default meta
 
 type Story = StoryObj<typeof Command>
 
-function CommandContent() {
+function renderCommandContent() {
   return (
     <Command>
       <CommandInput placeholder="Search commands..." />
@@ -70,7 +73,7 @@ function CommandContent() {
 export const Inline: Story = {
   render: () => (
     <div className="w-[360px] overflow-hidden rounded-xl border bg-background">
-      <CommandContent />
+      {renderCommandContent()}
     </div>
   ),
   parameters: {
@@ -95,7 +98,7 @@ export const Inline: Story = {
 export const Dialog: Story = {
   render: () => (
     <CommandDialog description="Search for a destination or command." open title="Command Palette">
-      <CommandContent />
+      {renderCommandContent()}
     </CommandDialog>
   ),
   parameters: {
@@ -124,7 +127,7 @@ export const DialogWithCloseButton: Story = {
       showCloseButton
       title="Command Palette"
     >
-      <CommandContent />
+      {renderCommandContent()}
     </CommandDialog>
   ),
   parameters: {

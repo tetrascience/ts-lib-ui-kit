@@ -33,22 +33,6 @@ type Story = StoryObj<typeof meta>;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function DismissibleBannerStory() {
-  const [visible, setVisible] = React.useState(true);
-
-  return visible ? (
-    <Banner
-      variant="info"
-      title="New features available"
-      description="Check out the redesigned workflow builder in the Data App Studio."
-      dismissible
-      onDismiss={() => setVisible(false)}
-    />
-  ) : (
-    <div className="p-4 text-sm text-muted-foreground">Banner dismissed.</div>
-  );
-}
-
 export const Info: Story = {
   args: {
     variant: "info",
@@ -190,7 +174,21 @@ export const WithAction: Story = {
 };
 
 export const Dismissible: Story = {
-  render: () => <DismissibleBannerStory />,
+  render: () => {
+    const [visible, setVisible] = React.useState(true);
+
+    return visible ? (
+      <Banner
+        variant="info"
+        title="New features available"
+        description="Check out the redesigned workflow builder in the Data App Studio."
+        dismissible
+        onDismiss={() => setVisible(false)}
+      />
+    ) : (
+      <div className="p-4 text-sm text-muted-foreground">Banner dismissed.</div>
+    );
+  },
   parameters: {
     zephyr: { testCaseId: "SW-T4686" },
   },
@@ -211,7 +209,21 @@ export const Dismissible: Story = {
 export const DismissibleInteraction: Story = {
   name: "Dismissible Interaction",
   tags: ["!dev"],
-  render: () => <DismissibleBannerStory />,
+  render: () => {
+    const [visible, setVisible] = React.useState(true);
+
+    return visible ? (
+      <Banner
+        variant="info"
+        title="New features available"
+        description="Check out the redesigned workflow builder in the Data App Studio."
+        dismissible
+        onDismiss={() => setVisible(false)}
+      />
+    ) : (
+      <div className="p-4 text-sm text-muted-foreground">Banner dismissed.</div>
+    );
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 

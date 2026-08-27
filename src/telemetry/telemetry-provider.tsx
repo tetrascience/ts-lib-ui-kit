@@ -1,11 +1,13 @@
+
+import {createTelemetry} from "@tetrascience-npm/request/telemetry";
 import {useEffect, useRef, useState} from "react";
 
-import type {ArtifactIdentity} from "../shared/artifact";
-import {createTelemetry} from "@tetrascience-npm/request/telemetry";
-import type {TelemetryOptions} from "@tetrascience-npm/request/telemetry";
+
 import {TelemetryContext} from "./context";
 import {NOOP_TELEMETRY, createTelemetryFacade} from "./facade";
+
 import type {TelemetryProviderProps} from "./types";
+import type {TelemetryOptions,ArtifactIdentity} from "@tetrascience-npm/request/telemetry";
 
 /**
  * Read a boolean flag from the host-provided browser config (`window.env`) —
@@ -83,6 +85,7 @@ export function TelemetryProvider({children, ...props}: TelemetryProviderProps) 
 		orgSlug: props.orgSlug,
 		logsUrl: props.logsUrl,
 		debug,
+		flushTimeoutMillis: props.flushTimeoutMillis,
 		processors: props.processors,
 		logger: props.logger,
 		tracing: props.tracing,

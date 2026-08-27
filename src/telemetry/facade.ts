@@ -1,6 +1,7 @@
 import {NOOP_SPAN} from "@tetrascience-npm/request/telemetry";
-import type {Telemetry, TrackErrorContext} from "@tetrascience-npm/request/telemetry";
+
 import type {TelemetryFacade} from "./types";
+import type {Telemetry, TrackErrorContext} from "@tetrascience-npm/request/telemetry";
 
 /** A client that accepts and drops everything (`enabled={false}`, no provider). */
 export const NOOP_TELEMETRY: Telemetry = {
@@ -15,6 +16,9 @@ export const NOOP_TELEMETRY: Telemetry = {
 	// when telemetry is off would make disabling telemetry change what the app
 	// does. Only the measurement is dropped.
 	withSpan: (_name, fn) => fn(NOOP_SPAN),
+	counter() {
+		// disabled: nothing is recorded
+	},
 	gauge() {
 		// disabled: nothing is recorded
 	},
@@ -78,6 +82,9 @@ export function createTelemetryFacade(): TelemetryFacade {
 		// SDK on record, so replaying either after attach would date it to the
 		// wrong moment. Events buffer because a product event is a fact that
 		// happened, not a sample of a moving value.
+		counter(name, delta, attributes) {
+			target?.counter(name, delta, attributes);
+		},
 		gauge(name, value, attributes) {
 			target?.gauge(name, value, attributes);
 		},

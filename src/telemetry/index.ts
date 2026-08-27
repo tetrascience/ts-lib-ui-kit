@@ -4,7 +4,7 @@
  * One provider mount and one import is the whole integration:
  *
  * ```tsx
- * import {TelemetryProvider, TSErrorBoundary, useTetraEvents} from '@tetrascience-npm/request/telemetry-react';
+ * import {TelemetryProvider, TSErrorBoundary, useTetraEvents} from '@tetrascience-npm/tetrascience-react-ui/telemetry';
  * ```
  *
  * React is an optional peer dependency — importing the package root or
@@ -19,4 +19,4 @@ export * from "./use-tetra-events";
 export * from "./error-boundary";
 export * from "./global-handlers";
 export * from "@tetrascience-npm/request/telemetry";
-export * from "../shared/artifact";
+export type {ArtifactIdentity} from "@tetrascience-npm/request/telemetry";

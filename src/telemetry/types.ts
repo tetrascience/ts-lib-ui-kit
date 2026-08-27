@@ -1,16 +1,15 @@
 import type {LogRecordProcessor} from "@opentelemetry/sdk-logs";
-import type {ReactNode} from "react";
-
-import type {ArtifactIdentity} from "../shared/artifact";
-import type {RequestTrackingLogger} from "../shared/types";
+import type {RequestTrackingLogger} from "@tetrascience-npm/request";
 import type {
+	ArtifactIdentity,
 	MetricsOptions,
 	StartSpanOptions,
 	Telemetry,
+	TelemetryTracingOptions,
 	TetraSpan,
 	TrackErrorContext,
-	TracingOptions,
 } from "@tetrascience-npm/request/telemetry";
+import type {ReactNode} from "react";
 
 /** Props for {@link TelemetryProvider}. */
 export interface TelemetryProviderProps {
@@ -63,7 +62,7 @@ export interface TelemetryProviderProps {
 	 * tracing adds a second exporter and a per-span network cost, so an app
 	 * opts in rather than acquiring it by upgrading the library.
 	 */
-	tracing?: TracingOptions;
+	tracing?: TelemetryTracingOptions;
 	/**
 	 * OTel metrics (SW-2478). Off unless `metrics.enabled` is true, for the same
 	 * reason tracing is: a metrics reader is a recurring timer and a recurring
@@ -75,6 +74,12 @@ export interface TelemetryProviderProps {
 	 * `gauge()`/`histogram()` came to be callable but permanently inert.
 	 */
 	metrics?: MetricsOptions;
+	/**
+	 * Cap on how long `flush()` and `shutdown()` wait for the exporter, in ms.
+	 * Forwarded to the core, which defaults to 5000. Worth setting when the
+	 * host unmounts on a route change and cannot afford a 5s teardown.
+	 */
+	flushTimeoutMillis?: number;
 	/** Logger for setup failures and stripped attributes. */
 	logger?: RequestTrackingLogger;
 	children?: ReactNode;

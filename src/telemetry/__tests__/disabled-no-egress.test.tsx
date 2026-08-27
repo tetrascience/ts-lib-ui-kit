@@ -2,59 +2,50 @@
  * `enabled={false}` must mean ZERO egress — not "records are dropped late".
  *
  * The provider tests elsewhere inject a processor and assert no record is
- * produced. That proves the emitter no-ops, but it cannot prove the OTLP
- * exporter was never constructed, because injecting `processors` bypasses
- * endpoint resolution entirely. Here `processors` is deliberately OMITTED so
- * the real `logsUrl` path runs, the exporter module is mocked to make
- * construction observable, and the network primitives are spied on.
+ * produced. That proves the emitter no-ops, but not that the export pipeline
+ * was never built, because injecting `processors` bypasses endpoint resolution
+ * entirely. Here `processors` is deliberately OMITTED so the real `logsUrl`
+ * path runs.
  *
- * Both halves are asserted against an enabled control so neither is vacuous.
+ * WHAT IS OBSERVED, AND WHY IT CHANGED. This used to mock
+ * `@opentelemetry/exporter-logs-otlp-http` and spy on fetch/sendBeacon/XHR.
+ * Neither works now that the core is a PUBLISHED package rather than sibling
+ * source: `vi.mock` cannot reach a dependency that a CJS package `require`s
+ * internally (verified — the mock is not applied even when createTelemetry is
+ * called from this file), and the real exporter goes out through Node's http
+ * stack, so the browser primitives never see it either. Both mechanisms were
+ * silently blind, which made the disabled assertions vacuous.
+ *
+ * The observable that survives is the core's own logger. An enabled pipeline
+ * ATTEMPTS an export and reports the failure; a disabled one never does. The
+ * URL is a closed local port so the attempt fails immediately, with no DNS and
+ * no real network.
  */
 import {act, useEffect} from "react";
 import {afterEach, beforeEach, describe, expect, test, vi} from "vitest";
 
 import {TelemetryProvider, useTetraEvents} from "..";
+
 import {ARTIFACT, renderTree} from "./helpers";
 
-const {exporterConstructed} = vi.hoisted(() => ({exporterConstructed: vi.fn()}));
-
-// Hoisted above the imports above, so the provider sees the mock.
-vi.mock("@opentelemetry/exporter-logs-otlp-http", () => ({
-	OTLPLogExporter: class {
-		constructor(config: {url?: string}) {
-			exporterConstructed(config);
-		}
-		async export(_records: unknown, resultCallback: (result: {code: number}) => void) {
-			// Stand in for the real transport so a flush is observable as egress.
-			await fetch("https://gateway.example/v1/otlp/logs", {method: "POST"});
-			resultCallback({code: 0});
-		}
-		async shutdown() {
-			// no transport to tear down in the stub
-		}
-		async forceFlush() {
-			// export() above is what makes egress observable
-		}
-	},
-}));
-
 declare global {
-	// eslint-disable-next-line no-var
+	 
 	var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
+let warnSpy: ReturnType<typeof vi.fn>;
 let fetchSpy: ReturnType<typeof vi.fn>;
 let beaconSpy: ReturnType<typeof vi.fn>;
 let xhrSendSpy: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
-	exporterConstructed.mockClear();
+	warnSpy = vi.fn();
 	fetchSpy = vi.fn(async () => new Response("{}", {status: 200}));
 	beaconSpy = vi.fn(() => true);
 	vi.stubGlobal("fetch", fetchSpy);
 	navigator.sendBeacon = beaconSpy as unknown as typeof navigator.sendBeacon;
-	xhrSendSpy = vi.spyOn(XMLHttpRequest.prototype, "send").mockImplementation(() => undefined);
+	xhrSendSpy = vi.spyOn(XMLHttpRequest.prototype, "send").mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -64,6 +55,17 @@ afterEach(() => {
 });
 
 const egressCount = () => fetchSpy.mock.calls.length + beaconSpy.mock.calls.length + xhrSendSpy.mock.calls.length;
+
+/** A closed port on loopback: connection refused immediately, no DNS lookup. */
+const DEAD_URL = "http://127.0.0.1:1/v1/otlp/logs";
+
+/**
+ * Every case drains for the SAME duration. A shorter drain on the disabled
+ * side would let it pass by not waiting for the failure the enabled side
+ * waits for — mutation-verified: with an uneven drain, a provider that built
+ * telemetry regardless of `enabled` passed the whole suite.
+ */
+const DRAIN_MS = 300;
 
 function EmitOnMount() {
 	const {trackEvent, trackError} = useTetraEvents();
@@ -80,7 +82,11 @@ function LiveProvider({enabled}: {enabled: boolean}) {
 		<TelemetryProvider
 			artifact={ARTIFACT}
 			orgSlug="acme"
-			logsUrl="https://gateway.example/v1/otlp/logs"
+			logsUrl={DEAD_URL}
+			// The core defaults to 5000ms; a unit test cannot wait that long for
+			// the failed export to be reported.
+			flushTimeoutMillis={50}
+			logger={{warn: warnSpy, error: warnSpy, info: () => {}, debug: () => {}} as never}
 			enabled={enabled}
 		>
 			<EmitOnMount />
@@ -88,7 +94,7 @@ function LiveProvider({enabled}: {enabled: boolean}) {
 	);
 }
 
-async function mountAndDrain(enabled: boolean) {
+async function mountAndDrain(enabled: boolean, drainMs = DRAIN_MS) {
 	const tree = renderTree(<LiveProvider enabled={enabled} />);
 	// Exercise every path that would push a batch out: the visibility flush
 	// hook, then unmount (which shuts the provider down, flushing on the way).
@@ -97,32 +103,30 @@ async function mountAndDrain(enabled: boolean) {
 	document.dispatchEvent(new Event("visibilitychange"));
 	await act(async () => {
 		tree.unmount();
-		await new Promise((resolve) => setTimeout(resolve, 10));
+		await new Promise((resolve) => setTimeout(resolve, drainMs));
 	});
 }
 
 describe("enabled={false} builds no exporter and performs no network I/O", () => {
-	test("disabled: the OTLP exporter is never constructed", async () => {
-		await mountAndDrain(false);
-		expect(exporterConstructed).not.toHaveBeenCalled();
-	});
-
 	test("disabled: no network primitive is ever touched", async () => {
 		await mountAndDrain(false);
 		expect(egressCount()).toBe(0);
 	});
 
 	// ── Non-vacuity controls: the identical harness, enabled. ──
+	//
+	// These assert the pipeline was LIVE. Without them the two tests above pass
+	// for a provider that never worked at all.
 
-	test("enabled: the OTLP exporter IS constructed, against the configured URL", async () => {
+	test("enabled: an export IS attempted (the pipeline is live)", async () => {
 		await mountAndDrain(true);
-		expect(exporterConstructed).toHaveBeenCalledWith(
-			expect.objectContaining({url: "https://gateway.example/v1/otlp/logs"}),
-		);
+		const messages = warnSpy.mock.calls.map(([m]) => String(m)).join(" | ");
+		expect(messages).toMatch(/export|flush/i);
 	});
 
-	test("enabled: the pipeline DOES reach the network", async () => {
-		await mountAndDrain(true);
-		expect(egressCount()).toBeGreaterThan(0);
+	test("disabled: the core never reports an export attempt", async () => {
+		await mountAndDrain(false);
+		const messages = warnSpy.mock.calls.map(([m]) => String(m)).join(" | ");
+		expect(messages).not.toMatch(/export|flush/i);
 	});
 });

@@ -1,4 +1,5 @@
 import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon } from "lucide-react"
+import { type ReactNode } from "react"
 import { expect, within } from "storybook/test"
 
 import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
@@ -164,6 +165,158 @@ export const Spaced: Story = {
     await step("Spaced toggle group renders", async () => {
       expect(canvas.getByRole("group")).toBeInTheDocument()
       expect(canvas.getByRole("button", { name: "Align center" })).toBeInTheDocument()
+    })
+  },
+}
+
+/**
+ * SW-2445: labelled multi-select. Label-only items show the dotted-ring→check
+ * indicator by default (no `selectedIndicator` prop needed), so even with every
+ * option selected the items stay countable — each shows a check and the segments
+ * keep their dividers + container outline, so "all selected" never collapses
+ * into one solid button.
+ */
+export const SelectedIndicator: Story = {
+  name: "Selected indicator (SW-2445)",
+  parameters: {
+    zephyr: { testCaseId: "SW-T5647" },
+  },
+  render: () => (
+    <ToggleGroup
+      type="multiple"
+      variant="outline"
+      defaultValue={["samples", "controls", "blanks"]}
+    >
+      <ToggleGroupItem value="samples">Samples</ToggleGroupItem>
+      <ToggleGroupItem value="controls">Controls</ToggleGroupItem>
+      <ToggleGroupItem value="blanks">Blanks</ToggleGroupItem>
+    </ToggleGroup>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("all three options are selected", async () => {
+      const items = canvas.getAllByRole("button")
+      expect(items).toHaveLength(3)
+      items.forEach((el) => expect(el).toHaveAttribute("data-state", "on"))
+    })
+
+    await step("each selected item shows a check indicator", async () => {
+      canvas.getAllByRole("button").forEach((el) => {
+        expect(el.querySelector(".lucide-check")).not.toBeNull()
+      })
+    })
+
+    await step("the segmented items are outlined (per-item borders)", async () => {
+      const item = canvas.getAllByRole("button")[0]
+      expect(getComputedStyle(item).borderTopWidth).not.toBe("0px")
+    })
+  },
+}
+
+function VariationRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <div className="flex flex-wrap items-center gap-4">{children}</div>
+    </div>
+  )
+}
+
+/**
+ * The ways a ToggleGroup is used: single vs multi select, icon-only vs
+ * label-only (which sets the SW-2445 indicator default), the segmented vs
+ * spaced layout, the outline variant, and sizes.
+ */
+export const Variations: Story = {
+  parameters: {
+    layout: "padded",
+    zephyr: { testCaseId: "SW-T5649" },
+  },
+  render: () => (
+    <div className="flex flex-col gap-6">
+      <VariationRow label="Single select — icon-only (no ring)">
+        <ToggleGroup type="single" defaultValue="center" aria-label="Align">
+          <ToggleGroupItem value="left" aria-label="Left">
+            <AlignLeftIcon />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="center" aria-label="Center">
+            <AlignCenterIcon />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="right" aria-label="Right">
+            <AlignRightIcon />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </VariationRow>
+
+      <VariationRow label="Single select — label-only (ring on by default)">
+        <ToggleGroup type="single" defaultValue="board">
+          <ToggleGroupItem value="board">Board</ToggleGroupItem>
+          <ToggleGroupItem value="table">Table</ToggleGroupItem>
+          <ToggleGroupItem value="timeline">Timeline</ToggleGroupItem>
+        </ToggleGroup>
+      </VariationRow>
+
+      <VariationRow label="Multi select — all selected stays countable">
+        <ToggleGroup type="multiple" defaultValue={["samples", "controls", "blanks"]}>
+          <ToggleGroupItem value="samples">Samples</ToggleGroupItem>
+          <ToggleGroupItem value="controls">Controls</ToggleGroupItem>
+          <ToggleGroupItem value="blanks">Blanks</ToggleGroupItem>
+        </ToggleGroup>
+      </VariationRow>
+
+      <VariationRow label="Outline variant + spaced (spacing=4)">
+        <ToggleGroup type="single" variant="outline" defaultValue="center" aria-label="Align">
+          <ToggleGroupItem value="left" aria-label="Left">
+            <AlignLeftIcon />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="center" aria-label="Center">
+            <AlignCenterIcon />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="right" aria-label="Right">
+            <AlignRightIcon />
+          </ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup type="single" variant="outline" spacing={4} defaultValue="center" aria-label="Align spaced">
+          <ToggleGroupItem value="left" aria-label="Left">
+            <AlignLeftIcon />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="center" aria-label="Center">
+            <AlignCenterIcon />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="right" aria-label="Right">
+            <AlignRightIcon />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </VariationRow>
+
+      <VariationRow label="Sizes — sm / default / lg">
+        <ToggleGroup type="single" size="sm" defaultValue="board">
+          <ToggleGroupItem value="board">Board</ToggleGroupItem>
+          <ToggleGroupItem value="table">Table</ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup type="single" size="default" defaultValue="board">
+          <ToggleGroupItem value="board">Board</ToggleGroupItem>
+          <ToggleGroupItem value="table">Table</ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup type="single" size="lg" defaultValue="board">
+          <ToggleGroupItem value="board">Board</ToggleGroupItem>
+          <ToggleGroupItem value="table">Table</ToggleGroupItem>
+        </ToggleGroup>
+      </VariationRow>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    await step("all variation groups render", async () => {
+      expect(
+        canvasElement.querySelectorAll('[data-slot="toggle-group"]').length,
+      ).toBeGreaterThanOrEqual(6)
+    })
+
+    await step("label-only selected items show a check", async () => {
+      expect(canvasElement.querySelector(".lucide-check")).not.toBeNull()
     })
   },
 }

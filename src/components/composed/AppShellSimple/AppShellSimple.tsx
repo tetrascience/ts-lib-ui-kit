@@ -1,28 +1,18 @@
 /**
- * AppShellSimple prototype (SW-2410) — the Data App Shell stripped down to just
- * two zones: a full-width **top bar** and a three-state **side nav**.
+ * AppShellSimple (SW-2410) — a Data App Shell stripped down to just two zones:
+ * a full-width **top bar** and a three-state **side nav**. For apps that don't
+ * need the full `DataAppShell` (no secondary nav, right panel, horizontal nav
+ * variant, or mobile Sheet).
  *
- * How it differs from the shipped `DataAppShell`:
- *  - No secondary nav, right panel, horizontal nav variant, or mobile Sheet —
- *    only the top bar + side nav remain.
  *  - The side-nav control **lives in the top bar** (far left, above the nav).
  *    It ping-pongs the nav through three states — labels ↔ icons ↔ hidden —
  *    and dragging the nav's right border snaps between the same three.
  *  - The **breadcrumb is the top bar name** — it sits right after the toggle.
  *
- * Local prototype only — composes existing kit primitives (`TopBar`,
- * `DataAppShellPrimaryNav`, `Breadcrumb`, `UserMenu`, `Button`). Not part of
- * the shipped library.
+ * Composes existing kit primitives (`TopBar`, `DataAppShellPrimaryNav`,
+ * `Breadcrumb`, `Button`, `Tooltip`).
  */
-import {
-  Database,
-  FlaskConical,
-  LayoutDashboard,
-  LineChart,
-  PanelLeft,
-  Settings,
-  Table2,
-} from "lucide-react";
+import { PanelLeft } from "lucide-react";
 import * as React from "react";
 
 import { DataAppShellPrimaryNav, type NavGroup } from "@/components/composed/DataAppShell";
@@ -36,7 +26,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
@@ -49,9 +38,12 @@ import { cn } from "@/lib/utils";
 // Types
 // =============================================================================
 
-interface BreadcrumbCrumb {
+export interface AppShellSimpleCrumb {
+  /** Display label */
   label: string;
+  /** If set, the crumb renders as a link */
   href?: string;
+  /** Click handler when there's no `href` */
   onClick?: () => void;
 }
 
@@ -113,7 +105,7 @@ export interface AppShellSimpleProps {
   /** Nav groups rendered in the side nav */
   navGroups: NavGroup[];
   /** Breadcrumb trail — the top bar name */
-  breadcrumbs: BreadcrumbCrumb[];
+  breadcrumbs: AppShellSimpleCrumb[];
   /** Right-side top bar actions (e.g. notifications, user menu) */
   headerActions?: React.ReactNode;
   /** Bottom-of-nav user slot */
@@ -128,7 +120,7 @@ export interface AppShellSimpleProps {
 // Breadcrumb trail — the top bar name
 // =============================================================================
 
-function ShellBreadcrumb({ items }: { items: BreadcrumbCrumb[] }) {
+function ShellBreadcrumb({ items }: { items: AppShellSimpleCrumb[] }) {
   return (
     <Breadcrumb className="min-w-0">
       <BreadcrumbList className="flex-nowrap min-w-0">
@@ -145,6 +137,14 @@ function ShellBreadcrumb({ items }: { items: BreadcrumbCrumb[] }) {
                   <BreadcrumbLink href={item.href} className="whitespace-nowrap">
                     {item.label}
                   </BreadcrumbLink>
+                ) : isClickable && item.onClick ? (
+                  <button
+                    type="button"
+                    className="text-sm text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal whitespace-nowrap"
+                    onClick={item.onClick}
+                  >
+                    {item.label}
+                  </button>
                 ) : (
                   <span className="text-sm text-muted-foreground whitespace-nowrap">
                     {item.label}
@@ -160,8 +160,7 @@ function ShellBreadcrumb({ items }: { items: BreadcrumbCrumb[] }) {
 }
 
 // =============================================================================
-// Top-bar side-nav toggle — the collapse/expand control, moved here from the
-// sidebar brand row (SW-2410).
+// Top-bar side-nav toggle — the collapse/expand control (SW-2410).
 // =============================================================================
 
 function SideNavToggle({ label, onCycle }: { label: string; onCycle: () => void }) {
@@ -285,82 +284,5 @@ export function AppShellSimple({
         {children}
       </main>
     </div>
-  );
-}
-
-// =============================================================================
-// Sample data + demo (used by the story and the standalone preview)
-// =============================================================================
-
-const NAV_GROUPS: NavGroup[] = [
-  {
-    pages: [
-      { id: "overview", label: "Overview", icon: LayoutDashboard, isActive: true },
-      { id: "datasets", label: "Datasets", icon: Database, badge: 12 },
-      { id: "analysis", label: "Analysis", icon: LineChart },
-      { id: "results", label: "Results", icon: Table2 },
-    ],
-  },
-  {
-    label: "Workspace",
-    pages: [
-      { id: "assays", label: "Assays", icon: FlaskConical },
-      { id: "settings", label: "Settings", icon: Settings },
-    ],
-  },
-];
-
-const BREADCRUMBS: BreadcrumbCrumb[] = [
-  { label: "Application name", href: "#" },
-  { label: "Overview", href: "#" },
-  { label: "Run 4821 overview" },
-];
-
-function SampleContent() {
-  return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">Run 4821 — Overview</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          A stripped-down shell: just a top bar and a side nav. The control in the top-left
-          ping-pongs the nav (labels ↔ icons ↔ hidden), or drag the nav&rsquo;s right border to
-          snap between them.
-        </p>
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[
-          { title: "Samples", value: "384" },
-          { title: "Passing QC", value: "97.4%" },
-          { title: "Flagged", value: "6" },
-        ].map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <span className="text-2xl font-semibold text-foreground">{stat.value}</span>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Content area</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          The body zone fills the remaining space beside the side nav and scrolls independently.
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-export function AppShellSimpleDemo({ defaultNav = "sidebar" }: { defaultNav?: AppShellSimpleNavState }) {
-  return (
-    <AppShellSimple navGroups={NAV_GROUPS} breadcrumbs={BREADCRUMBS} defaultNav={defaultNav}>
-      <SampleContent />
-    </AppShellSimple>
   );
 }

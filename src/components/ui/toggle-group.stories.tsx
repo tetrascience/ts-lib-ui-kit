@@ -167,3 +167,53 @@ export const Spaced: Story = {
     })
   },
 }
+
+/**
+ * SW-2445: labelled multi-select with the `selectedIndicator="dot"` resting
+ * affordance. Even with every option selected the items stay countable — each
+ * shows a check and the segments keep their dividers + container outline, so
+ * "all selected" never collapses into one solid button.
+ */
+export const SelectedIndicator: Story = {
+  name: "Selected indicator (SW-2445)",
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  render: () => (
+    <ToggleGroup
+      type="multiple"
+      variant="outline"
+      defaultValue={["samples", "controls", "blanks"]}
+    >
+      <ToggleGroupItem value="samples" selectedIndicator="dot">
+        Samples
+      </ToggleGroupItem>
+      <ToggleGroupItem value="controls" selectedIndicator="dot">
+        Controls
+      </ToggleGroupItem>
+      <ToggleGroupItem value="blanks" selectedIndicator="dot">
+        Blanks
+      </ToggleGroupItem>
+    </ToggleGroup>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("all three options are selected", async () => {
+      const items = canvas.getAllByRole("button")
+      expect(items).toHaveLength(3)
+      items.forEach((el) => expect(el).toHaveAttribute("data-state", "on"))
+    })
+
+    await step("each selected item shows a check indicator", async () => {
+      canvas.getAllByRole("button").forEach((el) => {
+        expect(el.querySelector(".lucide-check")).not.toBeNull()
+      })
+    })
+
+    await step("the segmented group is always outlined (container border)", async () => {
+      const border = getComputedStyle(canvas.getByRole("group")).borderTopWidth
+      expect(border).not.toBe("0px")
+    })
+  },
+}

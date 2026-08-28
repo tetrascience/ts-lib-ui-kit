@@ -90,7 +90,7 @@ function VariationRow({ label, children }: { label: string; children: ReactNode 
 export const Variations: Story = {
   parameters: {
     layout: "padded",
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5648" },
   },
   render: () => (
     <div className="flex flex-col gap-6">

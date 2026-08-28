@@ -972,7 +972,11 @@ describe("no client-side user identity", () => {
 		expect(keys.filter((key) => key.startsWith("ts.user."))).toHaveLength(0);
 		expect(keys.filter((key) => /email|token|user/i.test(key))).toHaveLength(0);
 		const values = processor.records.flatMap((record) => Object.values(record.attributes)).map(String);
-		expect(values.some((value) => value.includes("tetrascience.com"))).toBe(false);
+		// No email-shaped value may survive, whatever the domain. Broader than the
+		// `includes("tetrascience.com")` this replaces, and it does not read as URL
+		// host validation: CodeQL flags a bare hostname `includes()` as
+		// js/incomplete-url-substring-sanitization, but nothing here parses a URL.
+		expect(values.some((value) => /@[a-z0-9.-]+\.[a-z]{2,}/i.test(value))).toBe(false);
 	});
 });
 

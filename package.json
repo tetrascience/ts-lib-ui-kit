@@ -30,11 +30,11 @@
     },
     "./telemetry": {
       "import": {
-        "types": "./dist/telemetry.d.ts",
+        "types": "./dist/telemetry/index.d.ts",
         "default": "./dist/telemetry.js"
       },
       "require": {
-        "types": "./dist/telemetry.d.ts",
+        "types": "./dist/telemetry/index.d.ts",
         "default": "./dist/telemetry.cjs"
       }
     },

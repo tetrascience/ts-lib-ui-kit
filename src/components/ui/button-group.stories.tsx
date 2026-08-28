@@ -1,4 +1,5 @@
-import { CalendarIcon, ChevronDownIcon } from "lucide-react"
+import { Bold, CalendarIcon, ChevronDownIcon, Italic, Underline } from "lucide-react"
+import { type ReactNode } from "react"
 import { expect, within } from "storybook/test"
 
 import { Button } from "./button"
@@ -66,6 +67,97 @@ export const Horizontal: Story = {
       expect(canvas.getByRole("button", { name: "Today" })).toBeInTheDocument()
       expect(canvas.getByRole("button", { name: "This week" })).toBeInTheDocument()
       expect(canvas.getByRole("button", { name: "This month" })).toBeInTheDocument()
+    })
+  },
+}
+
+function VariationRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      {children}
+    </div>
+  )
+}
+
+/**
+ * The ways a ButtonGroup is used: it's a presentational wrapper, so the variety
+ * comes from the child buttons' variants + the SW-2445 `aria-pressed` selection
+ * (ButtonGroup itself only owns `orientation` and the text/separator parts).
+ */
+export const Variations: Story = {
+  parameters: {
+    layout: "padded",
+    zephyr: { testCaseId: "" },
+  },
+  render: () => (
+    <div className="flex flex-col gap-6">
+      <VariationRow label="Command group — no selection">
+        <ButtonGroup>
+          <Button variant="outline">Copy</Button>
+          <Button variant="outline">Move</Button>
+          <Button variant="outline">Archive</Button>
+        </ButtonGroup>
+      </VariationRow>
+
+      <VariationRow label="Single active — aria-pressed">
+        <ButtonGroup>
+          <Button variant="outline">Day</Button>
+          <Button variant="outline" aria-pressed>
+            Week
+          </Button>
+          <Button variant="outline">Month</Button>
+        </ButtonGroup>
+      </VariationRow>
+
+      <VariationRow label="Toggle buttons — multiple aria-pressed">
+        <ButtonGroup>
+          <Button variant="outline" aria-pressed aria-label="Bold">
+            <Bold />
+          </Button>
+          <Button variant="outline" aria-label="Italic">
+            <Italic />
+          </Button>
+          <Button variant="outline" aria-pressed aria-label="Underline">
+            <Underline />
+          </Button>
+        </ButtonGroup>
+      </VariationRow>
+
+      <VariationRow label="With text + separator">
+        <ButtonGroup>
+          <Button variant="outline">Prev</Button>
+          <Button variant="outline">Next</Button>
+          <ButtonGroupSeparator />
+          <ButtonGroupText>Page 3 of 12</ButtonGroupText>
+        </ButtonGroup>
+      </VariationRow>
+
+      <VariationRow label="Vertical">
+        <ButtonGroup orientation="vertical" className="w-fit">
+          <Button variant="outline">Top</Button>
+          <Button variant="outline" aria-pressed>
+            Middle
+          </Button>
+          <Button variant="outline">Bottom</Button>
+        </ButtonGroup>
+      </VariationRow>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("all variation groups render", async () => {
+      expect(canvas.getAllByRole("group").length).toBeGreaterThanOrEqual(5)
+    })
+
+    await step("the active button is aria-pressed", async () => {
+      expect(canvas.getByRole("button", { name: "Week" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      )
     })
   },
 }

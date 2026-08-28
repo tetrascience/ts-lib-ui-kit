@@ -1,5 +1,4 @@
 import { type VariantProps } from "class-variance-authority"
-import { CircleDashed, Check } from "lucide-react"
 import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui"
 import * as React from "react"
 
@@ -59,34 +58,10 @@ function ToggleGroupItem({
   children,
   variant = "default",
   size = "default",
-  selectedIndicator,
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
-  VariantProps<typeof toggleVariants> & {
-    /**
-     * Leading indicator for the selectable state (SW-2445). `"dot"` shows a
-     * faint dotted ring when off that cross-fades to a check when on — a resting
-     * affordance so an item reads as "selectable" and stays legible when every
-     * option is selected.
-     *
-     * Defaults by content: **label-only** items (text, no icon) get `"dot"`;
-     * **icon-only** and **icon + label** items get `"none"` (the icon carries
-     * the state and there's no room for a ring). Pass the prop to override.
-     */
-    selectedIndicator?: "dot" | "none"
-  }) {
+  VariantProps<typeof toggleVariants>) {
   const context = React.useContext(ToggleGroupContext)
-
-  // Content-aware default: only plain-text (label-only) items show the ring.
-  const childArray = React.Children.toArray(children)
-  const hasIcon = childArray.some((child) => React.isValidElement(child))
-  const hasText = childArray.some(
-    (child) =>
-      (typeof child === "string" && child.trim() !== "") ||
-      typeof child === "number",
-  )
-  const showIndicator =
-    (selectedIndicator ?? (hasText && !hasIcon ? "dot" : "none")) === "dot"
 
   return (
     <ToggleGroupPrimitive.Item
@@ -95,30 +70,19 @@ function ToggleGroupItem({
       data-size={context.size || size}
       data-spacing={context.spacing}
       className={cn(
-        "shrink-0 group-data-[spacing=0]/toggle-group:rounded-none group-data-[spacing=0]/toggle-group:px-2 focus:z-10 focus-visible:z-10 group-data-horizontal/toggle-group:data-[spacing=0]:first:rounded-l-lg group-data-vertical/toggle-group:data-[spacing=0]:first:rounded-t-lg group-data-horizontal/toggle-group:data-[spacing=0]:last:rounded-r-lg group-data-vertical/toggle-group:data-[spacing=0]:last:rounded-b-lg",
+        "shrink-0 group-data-[spacing=0]/toggle-group:rounded-none group-data-[spacing=0]/toggle-group:px-2 focus:z-10 focus-visible:z-10 group-data-horizontal/toggle-group:data-[spacing=0]:first:rounded-l-lg group-data-vertical/toggle-group:data-[spacing=0]:first:rounded-t-lg group-data-horizontal/toggle-group:data-[spacing=0]:last:rounded-r-lg group-data-vertical/toggle-group:data-[spacing=0]:last:rounded-b-lg group-data-horizontal/toggle-group:data-[spacing=0]:data-[variant=outline]:border-l-0 group-data-vertical/toggle-group:data-[spacing=0]:data-[variant=outline]:border-t-0 group-data-horizontal/toggle-group:data-[spacing=0]:data-[variant=outline]:first:border-l group-data-vertical/toggle-group:data-[spacing=0]:data-[variant=outline]:first:border-t",
         toggleVariants({
           variant: context.variant || variant,
           size: context.size || size,
         }),
-        // SW-2445: every segmented item is bordered (not only variant=outline),
-        // so the group always reads as outlined and stays countable when all are
-        // selected. Non-first items drop their shared (leading) edge so adjacent
-        // borders collapse to a single divider. Border + rounded corners live on
-        // the same element, so the selected fill always aligns with the outline.
-        "group-data-[spacing=0]/toggle-group:border group-data-[spacing=0]/toggle-group:border-input group-data-horizontal/toggle-group:data-[spacing=0]:[&:not(:first-child)]:border-l-0 group-data-vertical/toggle-group:data-[spacing=0]:[&:not(:first-child)]:border-t-0",
+        // SW-2292: selected group items use a high-contrast primary fill (the
+        // shared toggle `on` state is the subtle bg-accent). twMerge drops the
+        // inherited accent so this wins; standalone Toggle is unaffected.
+        "aria-pressed:bg-primary aria-pressed:text-primary-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground",
         className
       )}
       {...props}
     >
-      {showIndicator && (
-        <span
-          aria-hidden
-          className="grid size-4 shrink-0 place-items-center [&>svg]:[grid-area:1/1]"
-        >
-          <CircleDashed className="size-3.5 text-muted-foreground/50 transition-opacity group-data-[state=on]/toggle:opacity-0" />
-          <Check className="size-3.5 opacity-0 transition-opacity group-data-[state=on]/toggle:opacity-100" />
-        </span>
-      )}
       {children}
     </ToggleGroupPrimitive.Item>
   )

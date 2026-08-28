@@ -177,7 +177,7 @@ export const Spaced: Story = {
 export const SelectedIndicator: Story = {
   name: "Selected indicator (SW-2445)",
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5647" },
   },
   render: () => (
     <ToggleGroup

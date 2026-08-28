@@ -1,3 +1,4 @@
+import {NOOP_SPAN} from "@tetrascience-npm/request/telemetry";
 import {StrictMode, act, useEffect, useRef, useState} from "react";
 import {afterEach, beforeEach, describe, expect, test, vi} from "vitest";
 
@@ -9,15 +10,18 @@ import {
 	useTelemetryClient,
 	useTetraEvents,
 } from "..";
-import {__resetTelemetryWarningForTests} from "../use-tetra-events";
-import {NOOP_SPAN} from "@tetrascience-npm/request/telemetry";
-import type {Telemetry, TetraSpan} from "@tetrascience-npm/request/telemetry";
-import {readHostFlag, resolveArtifact} from "../telemetry-provider";
 import {createTelemetryFacade} from "../facade";
+import {readHostFlag, resolveArtifact} from "../telemetry-provider";
+import {__resetTelemetryWarningForTests} from "../use-tetra-events";
+
 import {ARTIFACT, RecordingProcessor, renderTree} from "./helpers";
 
+import type {Telemetry, TetraSpan} from "@tetrascience-npm/request/telemetry";
+
+
+
 declare global {
-	// eslint-disable-next-line no-var
+	 
 	var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -147,7 +151,7 @@ describe("enable / disable", () => {
 	});
 
 	test("reads the host-provided config flag when the prop is omitted", () => {
-		vi.stubGlobal("env", undefined);
+		vi.stubGlobal("env");
 		(window as {env?: Record<string, unknown>}).env = {TELEMETRY_ENABLED: "false"};
 
 		renderTree(
@@ -186,8 +190,8 @@ describe("createTelemetryFacade", () => {
 			// it would change application control flow, so the mock must not hide
 			// that by being a bare stub.
 			withSpan: vi.fn((_name: string, fn: (span: TetraSpan) => unknown) => fn(NOOP_SPAN)),
-			flush: vi.fn(async () => undefined),
-			shutdown: vi.fn(async () => undefined),
+			flush: vi.fn(async () => {}),
+			shutdown: vi.fn(async () => {}),
 		};
 		// `vi.fn` cannot express withSpan's generic <T>, so the object is not
 		// structurally assignable to Telemetry even though every member is right.
@@ -357,11 +361,11 @@ describe("resolveArtifact", () => {
 		["version missing", {namespace: "n", slug: "s"}],
 		["nothing at all", {}],
 	])("returns undefined when %s", (_label, partial) => {
-		expect(resolveArtifact(partial, undefined)).toBeUndefined();
+		expect(resolveArtifact(partial)).toBeUndefined();
 	});
 
 	test("returns undefined when both sides are undefined", () => {
-		expect(resolveArtifact(undefined, undefined)).toBeUndefined();
+		expect(resolveArtifact()).toBeUndefined();
 	});
 
 	test("falls back to the manifest entirely when no host props are given", () => {
@@ -410,7 +414,7 @@ describe("provider with only the minimum configuration", () => {
 
 describe("debug exporter mode", () => {
 	test("debug routes records to the stock console exporter as well as the pipeline", () => {
-		const dir = vi.spyOn(console, "dir").mockImplementation(() => undefined);
+		const dir = vi.spyOn(console, "dir").mockImplementation(() => {});
 
 		renderTree(
 			<Provider debug>
@@ -425,7 +429,7 @@ describe("debug exporter mode", () => {
 	});
 
 	test("is off by default", () => {
-		const dir = vi.spyOn(console, "dir").mockImplementation(() => undefined);
+		const dir = vi.spyOn(console, "dir").mockImplementation(() => {});
 
 		renderTree(
 			<Provider>
@@ -437,7 +441,7 @@ describe("debug exporter mode", () => {
 	});
 
 	test("reads the host-provided debug flag", () => {
-		const dir = vi.spyOn(console, "dir").mockImplementation(() => undefined);
+		const dir = vi.spyOn(console, "dir").mockImplementation(() => {});
 		(window as {env?: Record<string, unknown>}).env = {TELEMETRY_DEBUG: "true"};
 
 		renderTree(
@@ -496,7 +500,7 @@ describe("useTetraEvents", () => {
 	});
 
 	test("outside a provider it no-ops with a single development warning", () => {
-		const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
 		expect(() =>
 			renderTree(
@@ -520,7 +524,7 @@ describe("TSErrorBoundary", () => {
 
 	beforeEach(() => {
 		// React logs caught render errors; keep the suite output readable.
-		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		vi.spyOn(console, "error").mockImplementation(() => {});
 	});
 
 	test("emits a stable-named error event with the component stack and renders the fallback", () => {
@@ -883,8 +887,8 @@ describe("installGlobalErrorHandlers", () => {
 			trackError: vi.fn(),
 			startSpan: vi.fn(() => NOOP_SPAN),
 			withSpan: vi.fn((_name: string, fn: (span: TetraSpan) => unknown) => fn(NOOP_SPAN)),
-			flush: async () => undefined,
-			shutdown: async () => undefined,
+			flush: async () => {},
+			shutdown: async () => {},
 		} as unknown as Telemetry & {trackError: ReturnType<typeof vi.fn>};
 		const original = globalThis.window;
 		// @ts-expect-error deliberately simulating a non-browser runtime
@@ -901,7 +905,7 @@ describe("installGlobalErrorHandlers", () => {
 
 describe("useTetraEvents outside a provider", () => {
 	test("suppresses the development warning in production builds", () => {
-		const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 		vi.stubEnv("NODE_ENV", "production");
 		__resetTelemetryWarningForTests();
 
@@ -925,7 +929,7 @@ describe("useTetraEvents outside a provider", () => {
 			}, [trackEvent, trackError]);
 			return <span>ok</span>;
 		}
-		vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		vi.spyOn(console, "warn").mockImplementation(() => {});
 
 		const tree = renderTree(<Bare />);
 
@@ -936,7 +940,7 @@ describe("useTetraEvents outside a provider", () => {
 
 describe("no client-side user identity", () => {
 	test("no emitted attribute carries user identity, from any capture path", () => {
-		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		vi.spyOn(console, "error").mockImplementation(() => {});
 		function Boom(): JSX.Element {
 			throw new Error("render exploded");
 		}

@@ -1,12 +1,13 @@
-import {act, useEffect} from "react";
-import {afterEach, beforeEach, describe, expect, test} from "vitest";
 import {
 	AggregationTemporality,
 	InMemoryMetricExporter,
 	PeriodicExportingMetricReader,
 } from "@opentelemetry/sdk-metrics";
+import {act, useEffect} from "react";
+import {afterEach, beforeEach, describe, expect, test} from "vitest";
 
 import {TelemetryProvider, useTetraEvents} from "..";
+
 import {ARTIFACT, RecordingProcessor, renderTree} from "./helpers";
 
 /**
@@ -25,7 +26,7 @@ import {ARTIFACT, RecordingProcessor, renderTree} from "./helpers";
  */
 
 declare global {
-	// eslint-disable-next-line no-var
+	 
 	var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;

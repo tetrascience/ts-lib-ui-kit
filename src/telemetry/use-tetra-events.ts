@@ -1,9 +1,10 @@
 import {useCallback, useContext, useMemo} from "react";
 
-import type {StartSpanOptions, Telemetry, TetraSpan, TrackErrorContext} from "@tetrascience-npm/request/telemetry";
 import {TelemetryContext} from "./context";
 import {NOOP_TELEMETRY} from "./facade";
+
 import type {TetraEvents} from "./types";
+import type {StartSpanOptions, Telemetry, TetraSpan, TrackErrorContext} from "@tetrascience-npm/request/telemetry";
 
 let warned = false;
 
@@ -19,7 +20,7 @@ function warnOnce(): void {
 	if (warned) return;
 	warned = true;
 	if (typeof process !== "undefined" && process.env?.NODE_ENV === "production") return;
-	// eslint-disable-next-line no-console
+	 
 	console.warn("[telemetry] useTetraEvents() called outside <TelemetryProvider> — events are dropped.");
 }
 

@@ -1,5 +1,6 @@
-import type {Telemetry} from "@tetrascience-npm/request/telemetry";
 import {TelemetryEvent} from "./events";
+
+import type {Telemetry} from "@tetrascience-npm/request/telemetry";
 
 /** Options for {@link installGlobalErrorHandlers}. */
 export interface GlobalErrorHandlerOptions {

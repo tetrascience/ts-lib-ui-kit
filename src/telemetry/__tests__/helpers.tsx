@@ -1,7 +1,8 @@
-import type {LogRecordProcessor, SdkLogRecord} from "@opentelemetry/sdk-logs";
-import type {ReactNode} from "react";
 import {act} from "react";
 import {createRoot} from "react-dom/client";
+
+import type {LogRecordProcessor, SdkLogRecord} from "@opentelemetry/sdk-logs";
+import type {ReactNode} from "react";
 
 /**
  * Test seam: the bindings are asserted at the processor boundary — the records

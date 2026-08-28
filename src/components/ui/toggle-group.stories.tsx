@@ -169,10 +169,11 @@ export const Spaced: Story = {
 }
 
 /**
- * SW-2445: labelled multi-select with the `selectedIndicator="dot"` resting
- * affordance. Even with every option selected the items stay countable — each
- * shows a check and the segments keep their dividers + container outline, so
- * "all selected" never collapses into one solid button.
+ * SW-2445: labelled multi-select. Label-only items show the dotted-ring→check
+ * indicator by default (no `selectedIndicator` prop needed), so even with every
+ * option selected the items stay countable — each shows a check and the segments
+ * keep their dividers + container outline, so "all selected" never collapses
+ * into one solid button.
  */
 export const SelectedIndicator: Story = {
   name: "Selected indicator (SW-2445)",
@@ -185,15 +186,9 @@ export const SelectedIndicator: Story = {
       variant="outline"
       defaultValue={["samples", "controls", "blanks"]}
     >
-      <ToggleGroupItem value="samples" selectedIndicator="dot">
-        Samples
-      </ToggleGroupItem>
-      <ToggleGroupItem value="controls" selectedIndicator="dot">
-        Controls
-      </ToggleGroupItem>
-      <ToggleGroupItem value="blanks" selectedIndicator="dot">
-        Blanks
-      </ToggleGroupItem>
+      <ToggleGroupItem value="samples">Samples</ToggleGroupItem>
+      <ToggleGroupItem value="controls">Controls</ToggleGroupItem>
+      <ToggleGroupItem value="blanks">Blanks</ToggleGroupItem>
     </ToggleGroup>
   ),
   play: async ({ canvasElement, step }) => {

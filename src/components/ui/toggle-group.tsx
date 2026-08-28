@@ -63,7 +63,7 @@ function ToggleGroupItem({
   children,
   variant = "default",
   size = "default",
-  selectedIndicator = "none",
+  selectedIndicator,
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
   VariantProps<typeof toggleVariants> & {
@@ -71,12 +71,26 @@ function ToggleGroupItem({
      * Leading indicator for the selectable state (SW-2445). `"dot"` shows a
      * faint dotted ring when off that cross-fades to a check when on — a resting
      * affordance so an item reads as "selectable" and stays legible when every
-     * option is selected. `"none"` (default) suits icon-only groups, where the
-     * tint + pressed + dividers carry the state.
+     * option is selected.
+     *
+     * Defaults by content: **label-only** items (text, no icon) get `"dot"`;
+     * **icon-only** and **icon + label** items get `"none"` (the icon carries
+     * the state and there's no room for a ring). Pass the prop to override.
      */
     selectedIndicator?: "dot" | "none"
   }) {
   const context = React.useContext(ToggleGroupContext)
+
+  // Content-aware default: only plain-text (label-only) items show the ring.
+  const childArray = React.Children.toArray(children)
+  const hasIcon = childArray.some((child) => React.isValidElement(child))
+  const hasText = childArray.some(
+    (child) =>
+      (typeof child === "string" && child.trim() !== "") ||
+      typeof child === "number",
+  )
+  const showIndicator =
+    (selectedIndicator ?? (hasText && !hasIcon ? "dot" : "none")) === "dot"
 
   return (
     <ToggleGroupPrimitive.Item
@@ -98,7 +112,7 @@ function ToggleGroupItem({
       )}
       {...props}
     >
-      {selectedIndicator === "dot" && (
+      {showIndicator && (
         <span
           aria-hidden
           className="grid size-4 shrink-0 place-items-center [&>svg]:[grid-area:1/1]"

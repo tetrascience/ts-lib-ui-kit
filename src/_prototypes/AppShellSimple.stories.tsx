@@ -52,14 +52,23 @@ export const Sidebar: Story = {
       expect(shell).toHaveAttribute("data-nav-state", "rail");
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5644" },
+  },
 };
 
 /** Icon-only rail (48px). Next toggle click hides the nav. */
 export const IconRail: Story = {
   args: { defaultNav: "rail" },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5645" },
+  },
 };
 
 /** Nav hidden — only the top bar. Next toggle click restores the sidebar. */
 export const Hidden: Story = {
   args: { defaultNav: "hidden" },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5646" },
+  },
 };

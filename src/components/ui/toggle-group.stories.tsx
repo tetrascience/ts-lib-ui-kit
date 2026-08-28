@@ -207,9 +207,9 @@ export const SelectedIndicator: Story = {
       })
     })
 
-    await step("the segmented group is always outlined (container border)", async () => {
-      const border = getComputedStyle(canvas.getByRole("group")).borderTopWidth
-      expect(border).not.toBe("0px")
+    await step("the segmented items are outlined (per-item borders)", async () => {
+      const item = canvas.getAllByRole("button")[0]
+      expect(getComputedStyle(item).borderTopWidth).not.toBe("0px")
     })
   },
 }

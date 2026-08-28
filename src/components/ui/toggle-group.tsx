@@ -41,10 +41,6 @@ function ToggleGroup({
       style={{ "--gap": spacing } as React.CSSProperties}
       className={cn(
         "group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] rounded-lg data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-vertical:flex-col data-vertical:items-stretch",
-        // SW-2445: a segmented group (spacing=0) is always outlined — a single
-        // container border — so the segments read in every variant and in every
-        // state (none / some / all selected), not only variant="outline".
-        "data-[spacing=0]:border data-[spacing=0]:border-input",
         className
       )}
       {...props}
@@ -104,10 +100,12 @@ function ToggleGroupItem({
           variant: context.variant || variant,
           size: context.size || size,
         }),
-        // SW-2445: in a segmented group the container draws the outer border;
-        // each item drops its own border and instead draws a divider on its
-        // leading edge, so the segments stay countable even when all are on.
-        "group-data-[spacing=0]/toggle-group:border-0 group-data-[spacing=0]/toggle-group:border-input group-data-horizontal/toggle-group:data-[spacing=0]:[&:not(:first-child)]:border-l group-data-vertical/toggle-group:data-[spacing=0]:[&:not(:first-child)]:border-t",
+        // SW-2445: every segmented item is bordered (not only variant=outline),
+        // so the group always reads as outlined and stays countable when all are
+        // selected. Non-first items drop their shared (leading) edge so adjacent
+        // borders collapse to a single divider. Border + rounded corners live on
+        // the same element, so the selected fill always aligns with the outline.
+        "group-data-[spacing=0]/toggle-group:border group-data-[spacing=0]/toggle-group:border-input group-data-horizontal/toggle-group:data-[spacing=0]:[&:not(:first-child)]:border-l-0 group-data-vertical/toggle-group:data-[spacing=0]:[&:not(:first-child)]:border-t-0",
         className
       )}
       {...props}

@@ -1,10 +1,10 @@
-import {useCallback, useContext, useMemo} from "react";
+import { useCallback, useContext, useMemo } from "react";
 
-import {TelemetryContext} from "./context";
-import {NOOP_TELEMETRY} from "./facade";
+import { TelemetryContext } from "./context";
+import { NOOP_TELEMETRY } from "./facade";
 
-import type {TetraEvents} from "./types";
-import type {StartSpanOptions, Telemetry, TetraSpan, TrackErrorContext} from "@tetrascience-npm/request/telemetry";
+import type { TetraEvents } from "./types";
+import type { StartSpanOptions, Telemetry, TetraSpan, TrackErrorContext } from "@tetrascience-npm/request/telemetry";
 
 let warned = false;
 
@@ -17,23 +17,23 @@ let warned = false;
  * is asserted in tests.
  */
 function warnOnce(): void {
-	if (warned) return;
-	warned = true;
-	if (typeof process !== "undefined" && process.env?.NODE_ENV === "production") return;
-	 
-	console.warn("[telemetry] useTetraEvents() called outside <TelemetryProvider> — events are dropped.");
+  if (warned) return;
+  warned = true;
+  if (typeof process !== "undefined" && process.env?.NODE_ENV === "production") return;
+
+  console.warn("[telemetry] useTetraEvents() called outside <TelemetryProvider> — events are dropped.");
 }
 
 /** @internal test seam: reset the once-per-module warning latch. */
 export function __resetTelemetryWarningForTests(): void {
-	warned = false;
+  warned = false;
 }
 
 /** Access the raw context client — e.g. to wire {@link installGlobalErrorHandlers}. */
 export function useTelemetryClient(): Telemetry {
-	const client = useContext(TelemetryContext);
-	if (!client) warnOnce();
-	return client ?? NOOP_TELEMETRY;
+  const client = useContext(TelemetryContext);
+  if (!client) warnOnce();
+  return client ?? NOOP_TELEMETRY;
 }
 
 /**
@@ -49,56 +49,61 @@ export function useTelemetryClient(): Telemetry {
  * ```
  */
 export function useTetraEvents(): TetraEvents {
-	const client = useTelemetryClient();
+  const client = useTelemetryClient();
 
-	const trackEvent = useCallback(
-		(name: string, attributes?: Record<string, unknown>, body?: unknown) => {
-			client.trackEvent(name, attributes, body);
-		},
-		[client],
-	);
+  const trackEvent = useCallback(
+    (name: string, attributes?: Record<string, unknown>, body?: unknown) => {
+      client.trackEvent(name, attributes, body);
+    },
+    [client],
+  );
 
-	const trackError = useCallback(
-		(error: unknown, context?: TrackErrorContext) => {
-			client.trackError(error, context);
-		},
-		[client],
-	);
+  const trackError = useCallback(
+    (error: unknown, context?: TrackErrorContext) => {
+      client.trackError(error, context);
+    },
+    [client],
+  );
 
-	// SW-2478. Every method here delegates to the core rather than
-	// re-implementing anything, so React and non-React consumers cannot drift.
-	const startSpan = useCallback(
-		(name: string, options?: StartSpanOptions) => client.startSpan(name, options),
-		[client],
-	);
+  // SW-2478. Every method here delegates to the core rather than
+  // re-implementing anything, so React and non-React consumers cannot drift.
+  const startSpan = useCallback(
+    (name: string, options?: StartSpanOptions) => client.startSpan(name, options),
+    [client],
+  );
 
-	// SW-2478 metrics. Same delegation rule as startSpan: the
-	// instrument caching, the value guards and the publishable-name warning all
-	// live in the core client, so re-implementing any of it here would give
-	// React apps different behaviour from Node ones for the same call.
-	const gauge = useCallback(
-		(name: string, value: number, attributes?: Record<string, unknown>) => client.gauge(name, value, attributes),
-		[client],
-	);
+  // SW-2478 metrics. Same delegation rule as startSpan: the
+  // instrument caching, the value guards and the publishable-name warning all
+  // live in the core client, so re-implementing any of it here would give
+  // React apps different behaviour from Node ones for the same call.
+  const counter = useCallback(
+    (name: string, delta?: number, attributes?: Record<string, unknown>) => client.counter(name, delta, attributes),
+    [client],
+  );
 
-	const histogram = useCallback(
-		(name: string, value: number, attributes?: Record<string, unknown>) => client.histogram(name, value, attributes),
-		[client],
-	);
+  const gauge = useCallback(
+    (name: string, value: number, attributes?: Record<string, unknown>) => client.gauge(name, value, attributes),
+    [client],
+  );
 
-	const upDownCounter = useCallback(
-		(name: string, delta: number, attributes?: Record<string, unknown>) =>
-			client.upDownCounter(name, delta, attributes),
-		[client],
-	);
+  const histogram = useCallback(
+    (name: string, value: number, attributes?: Record<string, unknown>) => client.histogram(name, value, attributes),
+    [client],
+  );
 
-	const withSpan = useCallback(
-		<T>(name: string, fn: (span: TetraSpan) => T, options?: StartSpanOptions) => client.withSpan(name, fn, options),
-		[client],
-	);
+  const upDownCounter = useCallback(
+    (name: string, delta: number, attributes?: Record<string, unknown>) =>
+      client.upDownCounter(name, delta, attributes),
+    [client],
+  );
 
-	return useMemo(
-		() => ({trackEvent, trackError, startSpan, withSpan, gauge, histogram, upDownCounter}),
-		[trackEvent, trackError, startSpan, withSpan, gauge, histogram, upDownCounter],
-	);
+  const withSpan = useCallback(
+    <T>(name: string, fn: (span: TetraSpan) => T, options?: StartSpanOptions) => client.withSpan(name, fn, options),
+    [client],
+  );
+
+  return useMemo(
+    () => ({ trackEvent, trackError, startSpan, withSpan, counter, gauge, histogram, upDownCounter }),
+    [trackEvent, trackError, startSpan, withSpan, counter, gauge, histogram, upDownCounter],
+  );
 }

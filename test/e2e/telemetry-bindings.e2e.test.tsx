@@ -194,7 +194,18 @@ describe("the React bindings deliver through the real pipeline", () => {
     // the facade and still missing from the hook's returned object, so "the
     // core implements it" has already proven insufficient once in this file's
     // own subject matter.
+    // The span is started AFTER mount, not inside the child effect.
+    //
+    // React runs child effects BEFORE the parent's, so a `withSpan` called from
+    // this component's own effect runs while the provider has not yet attached
+    // a client — and the facade deliberately does NOT buffer spans (a replayed
+    // span would invent a duration that never happened; see facade.ts). It
+    // returns NOOP_SPAN and nothing is ever exported. The first version of this
+    // test did exactly that and timed out after 180s against a healthy
+    // pipeline. Emitting post-mount is also the shape real apps trace: a click
+    // or a fetch, not the mount itself.
     const spanName = `E2eUiKitSpan-${RUN_ID}`;
+    let emit: (() => void) | undefined;
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -202,7 +213,7 @@ describe("the React bindings deliver through the real pipeline", () => {
     function Spanner() {
       const { withSpan } = useTetraEvents();
       useEffect(() => {
-        withSpan(spanName, () => undefined);
+        emit = () => withSpan(spanName, () => undefined);
       }, [withSpan]);
       return null;
     }
@@ -226,7 +237,15 @@ describe("the React bindings deliver through the real pipeline", () => {
         </TelemetryProvider>,
       );
     });
-    // Unmount flushes the span processor on the way out.
+    // Now the client is attached: this span is real and has a real duration.
+    await act(async () => {
+      emit!();
+    });
+
+    // Unmount flushes the span processor on the way out — the provider's
+    // cleanup calls shutdown(), and that path is what a real app relies on when
+    // the user navigates away. Nothing here calls flush() explicitly, so a
+    // shutdown that failed to drain traces would surface as a timeout below.
     await act(async () => {
       root.unmount();
       await new Promise((resolve) => setTimeout(resolve, 3_000));

@@ -107,7 +107,8 @@
     "lint:fix": "eslint . --fix --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": ">=3.0.0 <4.0.0",
@@ -188,6 +189,9 @@
   },
   "devDependencies": {
     "@aws-sdk/client-athena": "^3.975.0",
+    "@aws-sdk/client-cloudwatch": "^3.699.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.699.0",
+    "@aws-sdk/client-ssm": "^3.699.0",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@databricks/sql": "^1.12.0",

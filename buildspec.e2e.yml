@@ -1,0 +1,45 @@
+version: 0.2
+
+# Run by the shared `tdp-e2e` CodeBuild project via
+# ts-ci-cd-lib/.github/workflows/e2e-codebuild.yml.
+#
+# Two things force this into CodeBuild rather than a GitHub runner: predev5 is
+# only reachable inside the VPC, and the CodeBuild role's ambient credentials
+# cover the SSM read (ADMIN_PASSWORD) and the CloudWatch reads the assertions
+# need. The shared workflow supplies the JFrog npm credentials, which this repo
+# needs because .yarnrc.yml resolves the @tetrascience-npm scope from JFrog.
+phases:
+  install:
+    runtime-versions:
+      nodejs: 24
+    commands:
+      - corepack enable
+      - |
+        if [ -n "$JFROG_ARTIFACTORY_URL" ]; then
+          yarn config set npmScopes.tetrascience-npm.npmRegistryServer "$JFROG_ARTIFACTORY_URL"
+          yarn config set npmScopes.tetrascience-npm.npmAuthIdent "$JFROG_ARTIFACTORY_AUTH"
+          yarn config set npmScopes.tetrascience-npm.npmAlwaysAuth true
+        fi
+      - yarn install --immutable
+  build:
+    commands:
+      # The shared workflow injects E2E_ENVIRONMENT and nothing base-URL-shaped,
+      # so derive the rest. CF_ENVIRONMENT is NOT the same value: it is the
+      # CloudFormation environment the SSM path is keyed on, and for predev5
+      # that is "development".
+      - |
+        case "${E2E_ENVIRONMENT:-predev5}" in
+          dev)
+            export TDP_ENDPOINT="https://api.tetrascience-dev.com"
+            export INFRA_NAME="ts-platform"
+            ;;
+          *)
+            export TDP_ENDPOINT="https://api.ts-${E2E_ENVIRONMENT}.tetrascience.com"
+            export INFRA_NAME="ts-${E2E_ENVIRONMENT}"
+            ;;
+        esac
+        export CF_ENVIRONMENT="development"
+      - export CUSTOMER_EVENTS_LOG_GROUP="${CUSTOMER_EVENTS_LOG_GROUP:-/tdp/${INFRA_NAME}/customer-events}"
+      - export TDP_ORG_SLUG="${TDP_ORG_SLUG:-tetrascience}"
+      - echo "ui-kit e2e target ${E2E_ENVIRONMENT:-predev5} -> $TDP_ENDPOINT"
+      - yarn test:e2e

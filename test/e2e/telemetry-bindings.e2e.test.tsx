@@ -118,16 +118,62 @@ describe("the React bindings deliver through the real pipeline", () => {
 
   test("a counter from the bindings publishes datapoints", async () => {
     const slug = `${env.artifact.slug}-uikit`;
-    // Three emits with the provider remounted between them: awsemf drops the
-    // first datapoint of a cumulative series, so a single mount could never
-    // publish anything.
-    for (let i = 0; i < 3; i++) {
-      await mountAndEmit((events) => events.counter("app.errors", 1, { "exception.type": "UiKitProbe" }), {
-        artifact: { ...env.artifact, slug },
-        metrics: { enabled: true, metricsUrl: `${env.tdpEndpoint}/v1/otlp/metrics`, exportIntervalMillis: 10_000 },
-      });
-      await new Promise((resolve) => setTimeout(resolve, 15_000));
+
+    // ONE mount, incremented over time — NOT three mounts.
+    //
+    // Each mount builds a fresh client with a fresh cumulative series, so
+    // emitting once per mount makes every export the FIRST datapoint of a new
+    // series — and awsemf drops exactly that when converting cumulative sums to
+    // deltas. Three mounts therefore publish nothing at all, which is how the
+    // first version of this test failed: a 180s timeout with no datapoints,
+    // indistinguishable from a broken lane.
+    let emit: ((n: number) => void) | undefined;
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    function Counter() {
+      const { counter } = useTetraEvents();
+      useEffect(() => {
+        emit = (n) => counter("app.errors", n, { "exception.type": "UiKitProbe" });
+      }, [counter]);
+      return null;
     }
+
+    await act(async () => {
+      root.render(
+        <TelemetryProvider
+          artifact={{ ...env.artifact, slug }}
+          orgSlug={env.orgSlug}
+          logsUrl={`${env.tdpEndpoint}/v1/otlp/logs`}
+          getAuthToken={() => token}
+          enabled
+          metrics={{
+            enabled: true,
+            metricsUrl: `${env.tdpEndpoint}/v1/otlp/metrics`,
+            // The hook exposes no flush, so the periodic reader is what drives
+            // export here. Shortened so several exports land inside the run.
+            exportIntervalMillis: 10_000,
+          }}
+        >
+          <Counter />
+        </TelemetryProvider>,
+      );
+    });
+
+    // Increment across several reader intervals so the collector sees a series
+    // that ADVANCES: the first export establishes it, later ones yield deltas.
+    for (let i = 0; i < 3; i++) {
+      await act(async () => {
+        emit!(1);
+        await new Promise((resolve) => setTimeout(resolve, 15_000));
+      });
+    }
+    await act(async () => {
+      root.unmount();
+      await new Promise((resolve) => setTimeout(resolve, 3_000));
+    });
+    container.remove();
 
     const total = await waitForMetricDatapoints(
       "app.errors",

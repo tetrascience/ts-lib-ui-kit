@@ -14,12 +14,13 @@ phases:
       nodejs: 24
     commands:
       - corepack enable
-      - |
-        if [ -n "$JFROG_ARTIFACTORY_URL" ]; then
-          yarn config set npmScopes.tetrascience-npm.npmRegistryServer "$JFROG_ARTIFACTORY_URL"
-          yarn config set npmScopes.tetrascience-npm.npmAuthIdent "$JFROG_ARTIFACTORY_AUTH"
-          yarn config set npmScopes.tetrascience-npm.npmAlwaysAuth true
-        fi
+      # .yarnrc.yml already declares the @tetrascience-npm scope and reads its
+      # credential from JFROG_ARTIFACTORY_READ_NPM_AUTH. The shared e2e workflow
+      # injects the same secret under a DIFFERENT name (JFROG_ARTIFACTORY_AUTH),
+      # so the interpolation resolved empty and every JFrog package 401'd with
+      # "Invalid authentication (as an anonymous user)". Bridge the names rather
+      # than re-declaring the scope, so there is one source of truth for it.
+      - export JFROG_ARTIFACTORY_READ_NPM_AUTH="${JFROG_ARTIFACTORY_AUTH:-}"
       - yarn install --immutable
   build:
     commands:

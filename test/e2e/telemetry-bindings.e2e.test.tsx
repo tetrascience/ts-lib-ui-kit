@@ -186,4 +186,126 @@ describe("the React bindings deliver through the real pipeline", () => {
     );
     expect(total).toBeGreaterThan(0);
   });
+
+  test("a span started through the bindings reaches aws/spans", async () => {
+    // The bindings expose startSpan/withSpan, and the traces lane is a third
+    // destination that neither of the assertions above touches. Worth its own
+    // check here rather than trusting delegation: `counter` WAS delegated by
+    // the facade and still missing from the hook's returned object, so "the
+    // core implements it" has already proven insufficient once in this file's
+    // own subject matter.
+    const spanName = `E2eUiKitSpan-${RUN_ID}`;
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    function Spanner() {
+      const { withSpan } = useTetraEvents();
+      useEffect(() => {
+        withSpan(spanName, () => undefined);
+      }, [withSpan]);
+      return null;
+    }
+
+    await act(async () => {
+      root.render(
+        <TelemetryProvider
+          artifact={env.artifact}
+          orgSlug={env.orgSlug}
+          logsUrl={`${env.tdpEndpoint}/v1/otlp/logs`}
+          getAuthToken={() => token}
+          enabled
+          tracing={{
+            enabled: true,
+            tracesUrl: `${env.tdpEndpoint}/v1/otlp/traces`,
+            // Every span, so the assertion never races the sampler.
+            sampleRatio: 1,
+          }}
+        >
+          <Spanner />
+        </TelemetryProvider>,
+      );
+    });
+    // Unmount flushes the span processor on the way out.
+    await act(async () => {
+      root.unmount();
+      await new Promise((resolve) => setTimeout(resolve, 3_000));
+    });
+    container.remove();
+
+    const record = await waitForSpanNamed(spanName, windowStart.getTime());
+    expect(record).toContain(spanName);
+    expect(record).toContain(env.orgSlug);
+  });
+
+  // The other three instruments. `counter` was missing from the hook entirely
+  // while these three were present, so the inverse omission is just as
+  // possible — and awsemf treats the kinds differently (a gauge is a LastValue
+  // that publishes immediately; a histogram carries buckets; an upDownCounter
+  // is a non-monotonic Sum subject to the same delta conversion as counter).
+  for (const [instrument, metricName] of [
+    ["gauge", "app.queue_depth"],
+    ["histogram", "app.request_duration"],
+    ["upDownCounter", "app.active_sessions"],
+  ] as const) {
+    test(`${instrument} from the bindings publishes datapoints`, async () => {
+      const slug = `${env.artifact.slug}-${instrument.toLowerCase()}`;
+      let emit: ((n: number) => void) | undefined;
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const root = createRoot(container);
+
+      function Emitter() {
+        const events = useTetraEvents();
+        useEffect(() => {
+          emit = (n) => events[instrument](metricName, n, { phase: "e2e" });
+        }, [events]);
+        return null;
+      }
+
+      await act(async () => {
+        root.render(
+          <TelemetryProvider
+            artifact={{ ...env.artifact, slug }}
+            orgSlug={env.orgSlug}
+            logsUrl={`${env.tdpEndpoint}/v1/otlp/logs`}
+            getAuthToken={() => token}
+            enabled
+            metrics={{
+              enabled: true,
+              metricsUrl: `${env.tdpEndpoint}/v1/otlp/metrics`,
+              exportIntervalMillis: 10_000,
+            }}
+          >
+            <Emitter />
+          </TelemetryProvider>,
+        );
+      });
+
+      // One mount, a value that changes across reader intervals — same reason
+      // as the counter test: a series that does not advance publishes nothing.
+      for (let i = 1; i <= 3; i++) {
+        await act(async () => {
+          emit!(i);
+          await new Promise((resolve) => setTimeout(resolve, 15_000));
+        });
+      }
+      await act(async () => {
+        root.unmount();
+        await new Promise((resolve) => setTimeout(resolve, 3_000));
+      });
+      container.remove();
+
+      const total = await waitForMetricDatapoints(
+        metricName,
+        {
+          "ts.org": env.orgSlug,
+          "service.namespace": env.artifact.namespace,
+          "ts.artifact.slug": slug,
+        },
+        windowStart,
+      );
+      expect(total).not.toBeUndefined();
+    });
+  }
 });

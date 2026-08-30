@@ -15,6 +15,9 @@ const cw = new CloudWatchClient({ region: env.awsRegion });
 
 /** Telemetry is async end to end: batch queue -> gateway -> collector -> EMF. */
 const DEFAULT_TIMEOUT_MS = 180_000;
+/** EMF timestamps come from the producer, so a small clock skew must not put a
+ * datapoint outside the query window. */
+const CLOCK_SKEW_MARGIN_MS = 300_000;
 const POLL_INTERVAL_MS = 5_000;
 
 async function poll<T>(
@@ -95,13 +98,14 @@ export async function waitForMetricDatapoints(
         StartTime: startTime,
         // Comfortably ahead of now: EMF timestamps come from the producer,
         // and a small clock skew must not put the point outside the window.
-        EndTime: new Date(Date.now() + 5 * 60_000),
+        EndTime: new Date(Date.now() + CLOCK_SKEW_MARGIN_MS),
         Period: 60,
         Statistics: ["Sum"],
       }),
     );
     const points = out.Datapoints ?? [];
-    if (points.length === 0) return undefined;
+    // Bare return: `poll` reads undefined as "not yet" and keeps polling.
+    if (points.length === 0) return;
     return points.reduce((total, p) => total + (p.Sum ?? 0), 0);
   });
 }

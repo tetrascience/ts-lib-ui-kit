@@ -1072,18 +1072,20 @@ describe("TelemetryProvider tracing wiring", () => {
     // span has a real duration anyway.
     const started: string[] = [];
     const spanProcessor = {
-      onStart: (span: { name: string }) => void started.push(span.name),
-      onEnd: () => undefined,
-      forceFlush: async () => undefined,
-      shutdown: async () => undefined,
+      onStart: (span: { name: string }) => {
+        started.push(span.name);
+      },
+      onEnd: () => {},
+      forceFlush: async () => {},
+      shutdown: async () => {},
     };
 
     let emitLater: (() => void) | undefined;
     function TraceOnMount() {
       const { withSpan } = useTetraEvents();
       useEffect(() => {
-        withSpan("App:Mount", () => undefined);
-        emitLater = () => withSpan("App:Click", () => undefined);
+        withSpan("App:Mount", () => {});
+        emitLater = () => withSpan("App:Click", () => {});
       }, [withSpan]);
       return null;
     }

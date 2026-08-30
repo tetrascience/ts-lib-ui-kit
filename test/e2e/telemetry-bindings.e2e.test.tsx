@@ -16,9 +16,8 @@
  * VPC-attached tdp-e2e CodeBuild project because predev5 is unreachable from a
  * GitHub-hosted runner.
  */
-import { act } from "react";
+import { act, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { useEffect } from "react";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { TelemetryProvider, useTetraEvents } from "../../src/telemetry";
@@ -28,7 +27,6 @@ import { waitForEventContaining, waitForMetricDatapoints, waitForSpanNamed } fro
 import { env, RUN_ID } from "./env";
 
 declare global {
-  // eslint-disable-next-line no-var
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -213,7 +211,7 @@ describe("the React bindings deliver through the real pipeline", () => {
     function Spanner() {
       const { withSpan } = useTetraEvents();
       useEffect(() => {
-        emit = () => withSpan(spanName, () => undefined);
+        emit = () => withSpan(spanName, () => {});
       }, [withSpan]);
       return null;
     }

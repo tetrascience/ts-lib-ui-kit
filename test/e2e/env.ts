@@ -75,4 +75,6 @@ export const env = {
  * match a PREVIOUS run's data and the assertion would pass while this run
  * emitted nothing at all.
  */
-export const RUN_ID = `e2e-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+/** Base-36 keeps the id short while staying filter-pattern safe. */
+const BASE36 = 36;
+export const RUN_ID = `e2e-${Date.now().toString(BASE36)}-${Math.random().toString(BASE36).slice(2, 8)}`;

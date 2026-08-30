@@ -24,7 +24,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { TelemetryProvider, useTetraEvents } from "../../src/telemetry";
 
 import { resolveAuthToken } from "./auth";
-import { waitForEventContaining, waitForMetricDatapoints } from "./cloudwatch";
+import { waitForEventContaining, waitForMetricDatapoints, waitForSpanNamed } from "./cloudwatch";
 import { env, RUN_ID } from "./env";
 
 declare global {

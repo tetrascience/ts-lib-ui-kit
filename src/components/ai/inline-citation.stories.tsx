@@ -21,7 +21,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta = {
-  title: "AI Elements/Inline Citation",
+  title: "AI Elements/Attribution/Inline Citation",
   parameters: {
     layout: "padded",
   },

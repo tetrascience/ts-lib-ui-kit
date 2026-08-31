@@ -6,7 +6,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta<typeof Shimmer> = {
-  title: "AI Elements/Shimmer",
+  title: "AI Elements/Status & Effects/Shimmer",
   component: Shimmer,
   parameters: {
     layout: "centered",

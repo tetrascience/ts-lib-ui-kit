@@ -119,6 +119,7 @@ import {
 | `DataTable`              | Data Display       | —                          | TanStack Table wrapper, pagination, column toggle  | In Dev |
 | `Item`                   | Data Display       | —                          | Generic list/menu item                             | Stable |
 | `Kbd`                    | Data Display       | —                          | Keyboard shortcut indicator                        | Stable |
+| `Snippet`                | Data Display       | —                          | Copy-to-clipboard command box, built on InputGroup | Stable |
 | `Table`                  | Data Display       | `table`                    | —                                                  | Stable |
 | `TetraScienceIcon`       | Data Display       | —                          | Brand icon component                               | Stable |
 | `AppLayout`              | Composed           | —                          | Full app shell with sidebar                        | Stable |

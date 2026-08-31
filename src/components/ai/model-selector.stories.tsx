@@ -27,7 +27,7 @@ import { Command } from "@/components/ui/command"
 
 
 const meta: Meta = {
-  title: "AI Elements/Model Selector",
+  title: "AI Elements/Input/Model Selector",
   parameters: {
     layout: "padded",
   },

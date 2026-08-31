@@ -93,7 +93,7 @@ function getDataset(args: Record<string, unknown>) {
 // ---------------------------------------------------------------------------
 
 const meta: Meta<typeof DataTable> = {
-  title: "Components/Data Table",
+  title: "Components/Data Display/Data Table",
   component: DataTable,
   parameters: {
     layout: "padded",

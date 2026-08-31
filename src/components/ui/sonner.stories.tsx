@@ -7,7 +7,7 @@ import { Toaster } from "./sonner"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof Toaster> = {
-  title: "Components/Sonner",
+  title: "Components/Feedback & Status/Sonner",
   component: Toaster,
   parameters: {
     layout: "centered",

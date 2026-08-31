@@ -12,7 +12,7 @@ import { Button } from "./button"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof Alert> = {
-  title: "Components/Alert",
+  title: "Components/Feedback & Status/Alert",
   component: Alert,
   parameters: {
     layout: "centered",

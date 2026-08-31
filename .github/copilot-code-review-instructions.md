@@ -51,9 +51,25 @@ This is a React 19 + TypeScript UI component library published as `@tetrascience
 
 ## PR & Commit Conventions
 
-- PR titles must match: `^[A-Z]+-[1-9][0-9]*: ` (e.g., `SW-1234: Add Button component`).
+- PR titles need BOTH a Conventional Commit type and a Jira key:
+  `<type>: <JIRA-KEY> <description>` (e.g. `feat: SW-1234 Add Button component`).
+  Enforced by `.github/workflows/pr-title-checker.yml` — the type prefix and the
+  space-separated (not colon-separated) Jira key are both required.
 - Ensure new components have a corresponding Storybook story.
 - Ensure `src/index.ts` exports are updated when adding/removing components.
+- Ensure a new component is added to the DESIGN.md §3 component inventory table,
+  and that its `Category` there matches the sub-category in its story `title`.
+- Story `title` placement (see DESIGN.md §3.1): titles under `Components/` and
+  `AI Elements/` must include a sub-category — `Components/Thing` is wrong,
+  `Components/Data Display/Thing` is right. Valid `Components/` categories are
+  Actions, Forms & Inputs, Navigation & Menus, Layout & Structure, Overlays,
+  Feedback & Status, Data Display; valid `AI Elements/` categories are
+  Conversation, Input, Agent Activity, Attribution, Status & Effects. Flag any
+  new top-level section. Note the `title` deliberately does not have to match the
+  source directory.
+- Do not flag a story `title` change as a Zephyr risk unless the **last** segment
+  changed — the Zephyr scripts read only that segment and the source directory,
+  not the category path.
 
 ## Security
 

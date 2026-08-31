@@ -72,7 +72,7 @@ const mockSource: AttachmentData = {
 }
 
 const meta: Meta = {
-  title: "AI Elements/Attachments",
+  title: "AI Elements/Input/Attachments",
   parameters: {
     layout: "padded",
     backgrounds: {

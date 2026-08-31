@@ -12,7 +12,7 @@ const mockSources = [
 ]
 
 const meta: Meta = {
-  title: "AI Elements/Sources",
+  title: "AI Elements/Attribution/Sources",
   parameters: {
     layout: "padded",
   },

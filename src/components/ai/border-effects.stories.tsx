@@ -97,7 +97,7 @@ const GradientBrainTrigger = () => {
 
 
 const meta: Meta = {
-  title: "AI Elements/Border Effects",
+  title: "AI Elements/Status & Effects/Border Effects",
   parameters: {
     layout: "padded",
   },

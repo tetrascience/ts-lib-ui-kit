@@ -108,7 +108,7 @@ function buildServer(catalog: Catalog): McpServer {
         name: z
           .string()
           .describe(
-            'Component name or Storybook title, e.g. "Button" or "Components/Button".',
+            'Component name or Storybook title, e.g. "Button" or "Components/Actions/Button".',
           ),
       },
     },

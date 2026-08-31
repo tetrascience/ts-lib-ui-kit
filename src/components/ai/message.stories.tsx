@@ -27,7 +27,7 @@ import {
 
 
 const meta: Meta = {
-  title: "AI Elements/Message",
+  title: "AI Elements/Conversation/Message",
   parameters: {
     layout: "padded",
   },

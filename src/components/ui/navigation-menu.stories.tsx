@@ -32,7 +32,7 @@ const menuLinks = [
 ] as const
 
 const meta: Meta<typeof NavigationMenu> = {
-  title: "Components/Navigation Menu",
+  title: "Components/Navigation & Menus/Navigation Menu",
   component: NavigationMenu,
   parameters: {
     layout: "centered",

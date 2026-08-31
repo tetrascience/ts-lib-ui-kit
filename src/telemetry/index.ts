@@ -7,8 +7,13 @@
  * import {TelemetryProvider, TSErrorBoundary, useTetraEvents} from '@tetrascience-npm/tetrascience-react-ui/telemetry';
  * ```
  *
- * React is an optional peer dependency — importing the package root or
- * `/telemetry` never pulls React in.
+ * This entry IS the React layer — it exports a provider, a hook and an error
+ * boundary — so importing it pulls React in, and `react` is a required peer of
+ * this package (it carries no `peerDependenciesMeta.optional`).
+ *
+ * If you want telemetry without React, import the framework-agnostic core
+ * directly: `@tetrascience-npm/request/telemetry`. That is what these bindings
+ * wrap, and it is re-exported below so a consumer never needs both imports.
  */
 export * from "./types";
 export * from "./events";

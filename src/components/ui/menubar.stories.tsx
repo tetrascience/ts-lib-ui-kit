@@ -23,7 +23,7 @@ import {
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof MenubarItem> = {
-  title: "Components/Menubar",
+  title: "Components/Navigation & Menus/Menubar",
   component: MenubarItem,
   parameters: {
     layout: "centered",

@@ -23,7 +23,7 @@ const plans = [
 ] as const
 
 const meta: Meta<typeof RadioGroup> = {
-  title: "Components/Radio Group",
+  title: "Components/Forms & Inputs/Radio Group",
   component: RadioGroup,
   parameters: {
     layout: "centered",

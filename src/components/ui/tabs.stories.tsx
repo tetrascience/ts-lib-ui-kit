@@ -6,7 +6,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta<typeof Tabs> = {
-  title: "Components/Tabs",
+  title: "Components/Navigation & Menus/Tabs",
   component: Tabs,
   parameters: {
     layout: "centered",

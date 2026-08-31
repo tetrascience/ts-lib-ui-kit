@@ -13,7 +13,7 @@ import {
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof SheetContent> = {
-  title: "Components/Sheet",
+  title: "Components/Overlays/Sheet",
   component: SheetContent,
   parameters: {
     layout: "centered",

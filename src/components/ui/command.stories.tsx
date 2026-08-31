@@ -21,7 +21,7 @@ import {
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof Command> = {
-  title: "Components/Command",
+  title: "Components/Navigation & Menus/Command",
   component: Command,
   parameters: {
     layout: "centered",

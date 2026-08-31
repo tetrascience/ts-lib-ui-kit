@@ -18,7 +18,7 @@ import {
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Item> = {
-  title: "Components/Item",
+  title: "Components/Data Display/Item",
   component: Item,
   parameters: {
     layout: "centered",

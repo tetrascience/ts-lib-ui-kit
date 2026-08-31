@@ -101,6 +101,7 @@ import {
 | `Sidebar`                | Navigation   | `sidebar`             | App-level sidebar pattern                         | Stable |
 | `Alert`                  | Feedback     | `alert`               | —                                                 | Stable |
 | `Badge`                  | Feedback     | `badge`               | —                                                 | Stable |
+| `Progress`               | Feedback     | `progress`            | Determinate + indeterminate progress bar          | Stable |
 | `Skeleton`               | Feedback     | `skeleton`            | —                                                 | Stable |
 | `Spinner`                | Feedback     | —                     | Loading indicator                                 | Stable |
 | `Sonner`                 | Feedback     | `sonner`              | Toast notifications                               | Stable |
@@ -113,6 +114,7 @@ import {
 | `Carousel`               | Data Display | `carousel`            | —                                                 | Stable |
 | `Item`                   | Data Display | —                     | Generic list/menu item                            | Stable |
 | `Kbd`                    | Data Display | —                     | Keyboard shortcut indicator                       | Stable |
+| `Snippet`                | Data Display | —                     | Read-only code field with copy button             | Stable |
 | `TetraScienceIcon`       | Data Display | —                     | Brand icon component                              | Stable |
 | `ScrollArea`             | Layout       | `scroll-area`         | —                                                 | Stable |
 | `Resizable`              | Layout       | `resizable`           | —                                                 | Stable |
@@ -215,6 +217,13 @@ Every component must:
 - Maintain visible focus rings (never `outline: none` without a replacement)
 - Work with screen readers (tested with VoiceOver + NVDA)
 - Honor `prefers-reduced-motion` for any animations
+
+Some components cannot supply their own accessible name and require one from
+the consumer. `Progress` is the current example: it renders
+`role="progressbar"`, which WCAG requires to be named, but the bar has no
+inherent label — pass `aria-label` (or `aria-labelledby` pointing at a visible
+caption) at every call site. Storybook's axe check (`a11y: { test: "error" }`)
+fails the story if you don't.
 
 ---
 

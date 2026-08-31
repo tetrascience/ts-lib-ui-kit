@@ -108,7 +108,7 @@ import {
 | `Sheet`                  | Overlays           | `sheet`                    | —                                                  | Stable |
 | `Tooltip`                | Overlays           | `tooltip`                  | —                                                  | Stable |
 | `Alert`                  | Feedback & Status  | `alert`                    | —                                                  | Stable |
-| `Banner`                 | Feedback & Status  | `alert`                    | Full-width dismissible page-level banner           | Stable |
+| `Banner`                 | Feedback & Status  | —                          | Full-width dismissible page-level banner           | Stable |
 | `Skeleton`               | Feedback & Status  | `skeleton`                 | —                                                  | Stable |
 | `Sonner`                 | Feedback & Status  | `sonner`                   | Toast notifications                                | Stable |
 | `Spinner`                | Feedback & Status  | —                          | Loading indicator                                  | Stable |

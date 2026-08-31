@@ -153,6 +153,59 @@ import {
 
 ---
 
+### 3.1 Where a new component goes
+
+Two independent decisions. Getting them confused is how the kit ended up with a
+two-story `Composed/` section and a clipboard widget filed under AI Elements.
+
+**1. Source directory** — how the code is organised. See
+[`CONTRIBUTING.md`](./CONTRIBUTING.md#component-patterns) for file layout.
+
+| If it is…                                                | Directory                                      |
+| -------------------------------------------------------- | ---------------------------------------------- |
+| A thin wrapper over a Radix / Base UI primitive          | `src/components/ui/` (single `kebab-case.tsx`) |
+| A composition of several primitives, or app-shell chrome | `src/components/composed/<PascalCase>/`        |
+| A Plotly visualization                                   | `src/components/charts/<PascalCase>/`          |
+| A chat / agent surface                                   | `src/components/ai/` (single `kebab-case.tsx`) |
+
+**2. Storybook `title`** — how consumers _find_ it. This is a separate question,
+and the directory does not decide it: `Snippet` lives in `ui/` and `Chat` lives
+in `composed/`, but they are titled `Components/Data Display/Snippet` and
+`AI Elements/Conversation/Chat` respectively. Title by **what a consumer is
+shopping for**, not by where the file sits.
+
+| Section               | Contains                                 | Sub-categories                                                                                                   |
+| --------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `Foundations/`        | Tokens, type, spacing, elevation, icons  | — (flat)                                                                                                         |
+| `Components/`         | Reusable primitives                      | Actions · Forms & Inputs · Navigation & Menus · Layout & Structure · Overlays · Feedback & Status · Data Display |
+| `AI Elements/`        | Chat & agent UI                          | Conversation · Input · Agent Activity · Attribution · Status & Effects                                           |
+| `Design Patterns/`    | Multi-primitive compositions, app shells | — (flat)                                                                                                         |
+| `Data Viz/`           | Charts and scientific plots              | — (flat)                                                                                                         |
+| `TetraData Platform/` | TDP-specific, not reusable outside TDP   | — (flat)                                                                                                         |
+
+Rules:
+
+- **A `Components/` or `AI Elements/` story must name a sub-category.**
+  `Components/MyThing` is wrong; `Components/Data Display/MyThing` is right.
+  There is no "Other" bucket — if nothing fits, that is a signal the taxonomy
+  needs a new category, so raise it rather than inventing a section.
+- **The sub-category must match this component's `Category` column above.**
+  That column is the single source of truth; the two drifting apart is a real
+  defect this table has had before.
+- **Add a row to the §3 inventory** in the same PR. A component absent from the
+  table is invisible to anyone planning work against the kit.
+- **Never create a new top-level section** for one or two stories. `Composed/`
+  was exactly that mistake.
+- **Ordering is explicit, not alphabetical.** New sub-categories must be added
+  to `storySort.order` in [`.storybook/preview.ts`](./.storybook/preview.ts) or
+  they sort alphabetically and land in an arbitrary spot.
+
+Renaming or re-nesting an existing story is safe for Zephyr — both
+`scripts/zephyr/*` read only the **last** title segment (the component name) and
+the source directory, never the category path. Changing the last segment is what
+breaks the mapping. Story _IDs_ do change with the category path, so external
+deep links do not survive a move.
+
 ## 4. Component API Conventions
 
 ### Prop Naming

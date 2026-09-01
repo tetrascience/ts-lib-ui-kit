@@ -322,7 +322,10 @@ describe("the React bindings deliver through the real pipeline", () => {
         },
         windowStart,
       );
-      expect(total).not.toBeUndefined();
+      // Non-zero, not merely defined: each instrument emits rising values 1..3,
+      // so a healthy series cannot sum to zero. The weaker form restated what
+      // waitForMetricDatapoints already guarantees by throwing.
+      expect(total).toBeGreaterThan(0);
     });
   }
 });

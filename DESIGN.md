@@ -133,6 +133,7 @@ import {
 | `PythonEditorModal`      | Composed     | `dialog` + CodeEditor | Python script editor                              | Stable |
 | `TdpSearch`              | Composed     | `command`             | TetraScience data platform search                 | Stable |
 | `TdpLink`                | Composed     | —                     | TDP-aware link component                          | Stable |
+| `PageHeader`             | Composed     | —                     | Page title + subtitle + trailing action slot      | Beta   |
 | `TopBar`                 | Composed     | —                     | Sticky 3-slot header (left/center/right)          | Stable |
 | `UserMenu`               | Composed     | `avatar` + `dropdown-menu` | Avatar + account dropdown                    | Stable |
 | `AreaPlot`               | Chart        | —                     | Plotly area chart                                 | Stable |

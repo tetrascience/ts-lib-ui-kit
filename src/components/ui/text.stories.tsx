@@ -2,7 +2,6 @@ import { Beaker, CircleAlert, FlaskConical, Info } from "lucide-react";
 import { expect, within } from "storybook/test";
 
 import { Badge } from "./badge";
-import { Button } from "./button";
 import { Text, type TextVariant } from "./text";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -268,99 +267,15 @@ export const Truncation: Story = {
 };
 
 /**
- * Title + subtitle is a **composition**, not a slot — two `Text` calls with a
- * documented rhythm. The subtitle renders as a `p`, never a heading tag: a
- * subtitle inside an `h3` reads to a screen reader as a section that does not
- * exist.
- */
-export const TitleWithSubtitle: Story = {
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-  render: () => (
-    <div className="space-y-0.5">
-      <Text as="h2" variant="title" icon={FlaskConical}>
-        Peptide mapping
-      </Text>
-      <Text as="p" variant="body" tone="muted">
-        14 samples across 3 plates · last run 12 minutes ago
-      </Text>
-    </div>
-  ),
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Only the title is a heading", async () => {
-      expect(canvas.getAllByRole("heading")).toHaveLength(1);
-      expect(canvas.getByRole("heading", { level: 2 })).toHaveAccessibleName("Peptide mapping");
-    });
-
-    await step("Subtitle is a paragraph, not a heading", async () => {
-      const subtitle = canvas.getByText(/14 samples across 3 plates/);
-      expect(subtitle.tagName).toBe("P");
-    });
-  },
-};
-
-/**
- * **Interactive trailing content must sit outside the heading element.** A
- * button nested inside an `h2` is announced as part of the heading. Keep it a
- * sibling, as below.
- *
- * A non-interactive badge *may* sit inside the heading — but then it joins the
- * accessible name, so only do it when that reads correctly.
- */
-export const TrailingContent: Story = {
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-  render: () => (
-    <div className="max-w-xl space-y-6">
-      <div className="flex items-baseline gap-2">
-        <Text as="h2" variant="title" truncate>
-          Interactive trailing content lives outside the heading
-        </Text>
-        <Button size="sm" variant="outline" className="shrink-0">
-          Configure
-        </Button>
-      </div>
-
-      <div>
-        <Text as="h2" variant="title">
-          Batch 4471{" "}
-          <Badge variant="info" className="align-middle">
-            Draft
-          </Badge>
-        </Text>
-        <Text variant="caption" tone="muted">
-          Non-interactive badge inside the heading — it joins the accessible name.
-        </Text>
-      </div>
-    </div>
-  ),
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Button is a sibling of the heading, not a descendant", async () => {
-      const heading = canvas.getByRole("heading", {
-        name: "Interactive trailing content lives outside the heading",
-      });
-      const button = canvas.getByRole("button", { name: "Configure" });
-      expect(heading.contains(button)).toBe(false);
-      expect(heading).toHaveAccessibleName("Interactive trailing content lives outside the heading");
-    });
-
-    await step("Non-interactive badge inside a heading joins its accessible name", async () => {
-      expect(canvas.getByRole("heading", { name: "Batch 4471 Draft" })).toBeInTheDocument();
-    });
-  },
-};
-
-/**
  * When *not* to reach for `Text`: text that belongs to a component keeps that
  * component's own styling. `CardTitle`, `DataAppShell`'s app name, and
  * `EmptyState`'s title are component-internal — retrofitting `Text` onto them
  * would create a second source of truth for the same pixels.
+ *
+ * For a page's title row — title, subtitle, and trailing actions — reach for
+ * `PageHeader` (`Design Patterns/Page Header`) rather than assembling it from
+ * `Text` by hand. It owns the vertical rhythm and, critically, keeps
+ * interactive trailing content outside the heading element.
  */
 export const WhenNotToUse: Story = {
   parameters: {
@@ -379,6 +294,10 @@ export const WhenNotToUse: Story = {
       <Text variant="body" tone="muted">
         Do not use `as` to pick a size. Pick the `variant` for the size you want, then set `as` to whatever the document
         outline actually needs.
+      </Text>
+      <Text variant="body" tone="muted">
+        Do not hand-assemble a page title row from `Text` calls — use `PageHeader`. Interactive trailing content has to
+        sit outside the heading element, and that is a structure, not a prop.
       </Text>
     </div>
   ),

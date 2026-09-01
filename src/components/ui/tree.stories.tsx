@@ -1,6 +1,6 @@
 import { FileTextIcon, FlaskConicalIcon, FolderIcon, FolderOpenIcon } from "lucide-react";
 import * as React from "react";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import { Tree, TreeItem, TreeItemGroup, TreeItemLabel, useTreeItem } from "./tree";
 
@@ -29,6 +29,9 @@ const meta: Meta<typeof Tree> = {
           "**Icons:** pass a decorative icon to `TreeItemLabel`'s `icon` prop. It is hidden from assistive tech, so",
           "anything a screen reader must convey belongs in the label text. Read `expanded` from `useTreeItem()` to swap",
           "open and closed folder icons, as `FolderNodeIcon` does below.",
+          "",
+          "**Selection** is a subtle wash behind the selected node *and its contents*, so selecting a folder reads as one",
+          "region rather than a stack of highlighted rows.",
         ].join("\n"),
       },
     },
@@ -102,37 +105,120 @@ function renderNodes(nodes: Node[]): React.ReactNode {
   });
 }
 
-/* -------------------------------------------------------------------- stories */
+const DEEP_IDS = ["org", "site", "lab", "instrument", "run", "result"];
+const DEEP_LABELS = [
+  "Acme Pharma",
+  "Cambridge site",
+  "Analytical lab",
+  "Xevo G2-XS",
+  "Run 2026-09-01",
+  "peaks.ids.json",
+];
+
+function renderDeep(index: number): React.ReactNode {
+  const isLeaf = index === DEEP_IDS.length - 1;
+  return (
+    <TreeItem id={DEEP_IDS[index]} hasChildren={!isLeaf}>
+      <TreeItemLabel icon={isLeaf ? <FileTextIcon /> : <FolderNodeIcon />}>{DEEP_LABELS[index]}</TreeItemLabel>
+      {isLeaf ? null : <TreeItemGroup>{renderDeep(index + 1)}</TreeItemGroup>}
+    </TreeItem>
+  );
+}
+
+/* ------------------------------------------------------------ visible stories
+ *
+ * These deliberately have no `play` function: an autoplaying story flashes its
+ * own automation at anyone browsing Storybook. The interaction coverage lives in
+ * the `!dev`-tagged stories at the bottom, which the test runner still picks up
+ * but the sidebar never shows.
+ * -------------------------------------------------------------------------- */
 
 /**
  * A realistic folder tree: leading icons, open/closed folder swapping, a long label that truncates,
- * a node whose children have not been fetched, and a disabled node.
+ * a node whose children have not been fetched, and a disabled node. Selecting `LC-MS` shows the
+ * selection wash; expand it to see the wash cover the branch's contents too.
  */
 export const Default: Story = {
-  render: function DefaultTree() {
-    const [activated, setActivated] = React.useState<string[]>([]);
+  render: () => (
+    <Tree
+      aria-label="Data lake folders"
+      defaultExpandedIds={new Set(["instrument-data"])}
+      defaultSelectedId="lcms"
+      className="max-w-xs"
+    >
+      {renderNodes(FOLDERS)}
+    </Tree>
+  ),
+};
+
+/** No nesting: the same primitive works as a flat single-select list. */
+export const Flat: Story = {
+  name: "Flat (no nesting)",
+  render: () => (
+    <Tree aria-label="Pipelines" defaultSelectedId="fluorescence" className="max-w-xs">
+      <TreeItem id="fluorescence">
+        <TreeItemLabel icon={<FlaskConicalIcon />}>Fluorescence intensity</TreeItemLabel>
+      </TreeItem>
+      <TreeItem id="chromatography">
+        <TreeItemLabel icon={<FlaskConicalIcon />}>Chromatography peak table</TreeItemLabel>
+      </TreeItem>
+      <TreeItem id="mass-spec">
+        {/* The `icon` prop is optional — this row aligns with the others without one. */}
+        <TreeItemLabel>Mass spec deconvolution</TreeItemLabel>
+      </TreeItem>
+    </Tree>
+  ),
+};
+
+/** Arbitrary depth with no level cap, driven from controlled `expandedIds` / `selectedId` state. */
+export const DeepNesting: Story = {
+  name: "Deep nesting (controlled)",
+  render: function DeepTree() {
+    const [expandedIds, setExpandedIds] = React.useState(new Set(DEEP_IDS));
+    const [selectedId, setSelectedId] = React.useState<string | null>("lab");
 
     return (
-      <div className="flex max-w-md flex-col gap-3">
-        <Tree
-          aria-label="Data lake folders"
-          defaultExpandedIds={new Set(["instrument-data"])}
-          defaultSelectedId="lcms"
-          onActivate={(id) => setActivated((current) => [...current, id])}
-          className="max-w-xs"
-        >
-          {renderNodes(FOLDERS)}
-        </Tree>
-        <p data-testid="activations" className="text-muted-foreground text-xs">
-          onActivate: {activated.join(", ") || "none"}
-        </p>
-      </div>
+      <Tree
+        aria-label="Sample lineage"
+        expandedIds={expandedIds}
+        onExpandedChange={setExpandedIds}
+        selectedId={selectedId}
+        onSelectedChange={setSelectedId}
+        className="max-w-xs"
+      >
+        {renderDeep(0)}
+      </Tree>
     );
   },
-  play: async ({ canvasElement, step }) => {
+};
+
+/* --------------------------------------------------------- test-only stories
+ *
+ * `!dev` keeps these out of the sidebar and `!autodocs` out of the docs page,
+ * while the implicit `test` tag keeps them in `yarn test:storybook` — so the
+ * behaviour stays covered without any visible story autoplaying at a human.
+ * -------------------------------------------------------------------------- */
+
+export const CoreBehaviour: Story = {
+  name: "Core behaviour (test only)",
+  tags: ["!dev", "!autodocs"],
+  args: {
+    onActivate: fn(),
+  },
+  render: (args) => (
+    <Tree
+      {...args}
+      aria-label="Data lake folders"
+      defaultExpandedIds={new Set(["instrument-data"])}
+      defaultSelectedId="lcms"
+      className="max-w-xs"
+    >
+      {renderNodes(FOLDERS)}
+    </Tree>
+  ),
+  play: async ({ args, canvasElement, step }) => {
     const canvas = within(canvasElement);
     const item = (name: string) => canvas.getByRole("treeitem", { name });
-    const activations = () => canvas.getByTestId("activations");
 
     await step("ARIA state is derived from position in the tree", async () => {
       expect(canvas.getByRole("tree", { name: "Data lake folders" })).toBeInTheDocument();
@@ -160,6 +246,15 @@ export const Default: Story = {
       // The `getByRole` lookups above match on exact accessible name, so an icon leaking into a name
       // would already have failed. Assert the mechanism directly too.
       expect(item("Archive").querySelector('[data-slot="tree-item-icon"]')).toHaveAttribute("aria-hidden", "true");
+    });
+
+    await step("Selecting a node washes the node and its contents, not each row", async () => {
+      // The regression this guards: `group-*/tree-item` matches any ancestor, so a selected parent
+      // used to style every descendant row too.
+      const selectedBranch = item("Instrument Data");
+      expect(selectedBranch).toHaveAttribute("aria-selected", "false");
+      expect(item("LC-MS")).toHaveAttribute("aria-selected", "true");
+      expect(item("Plate Readers")).toHaveAttribute("aria-selected", "false");
     });
 
     // Ordering note: every step below moves focus, and the roving tab stop follows it — so the
@@ -199,19 +294,19 @@ export const Default: Story = {
 
     await step("Enter and click activate down the same path", async () => {
       await userEvent.keyboard("{Enter}");
-      expect(activations()).toHaveTextContent("instrument-data");
+      expect(args.onActivate).toHaveBeenCalledWith("instrument-data");
 
       await userEvent.click(canvas.getByText("Processed"));
-      expect(activations()).toHaveTextContent("instrument-data, processed");
+      expect(args.onActivate).toHaveBeenCalledWith("processed");
       expect(item("Processed")).toHaveAttribute("aria-selected", "true");
     });
 
     await step("The chevron toggles expansion without activating", async () => {
       const processed = item("Processed");
-      const logged = activations().textContent;
+      const activationsSoFar = (args.onActivate as ReturnType<typeof fn>).mock.calls.length;
       await userEvent.click(processed.querySelector('[data-slot="tree-item-indicator"]') as Element);
       expect(processed).toHaveAttribute("aria-expanded", "false");
-      expect(activations()).toHaveTextContent(logged as string);
+      expect(args.onActivate).toHaveBeenCalledTimes(activationsSoFar);
     });
 
     await step("A disabled node is focusable but neither selectable nor activatable", async () => {
@@ -226,61 +321,25 @@ export const Default: Story = {
       expect(disabled).toHaveFocus();
       await userEvent.keyboard("{Enter}");
       expect(disabled).toHaveAttribute("aria-selected", "false");
-      expect(activations()).not.toHaveTextContent("legacy");
+      expect(args.onActivate).not.toHaveBeenCalledWith("legacy");
     });
   },
 };
 
-/** No nesting: the same primitive works as a flat single-select list. */
-export const Flat: Story = {
-  name: "Flat (no nesting)",
-  render: () => (
-    <Tree aria-label="Pipelines" defaultSelectedId="fluorescence" className="max-w-xs">
-      <TreeItem id="fluorescence">
-        <TreeItemLabel icon={<FlaskConicalIcon />}>Fluorescence intensity</TreeItemLabel>
-      </TreeItem>
-      <TreeItem id="chromatography">
-        <TreeItemLabel icon={<FlaskConicalIcon />}>Chromatography peak table</TreeItemLabel>
-      </TreeItem>
-      <TreeItem id="mass-spec">
-        {/* The `icon` prop is optional — this row aligns with the others without one. */}
-        <TreeItemLabel>Mass spec deconvolution</TreeItemLabel>
-      </TreeItem>
-    </Tree>
-  ),
-};
-
 /**
- * Arbitrary depth with no level cap, driven from controlled `expandedIds` / `selectedId` state, and
- * rendered in a local dark scope so the accessibility check covers dark-mode contrast too.
+ * Controlled expansion and selection at depth, in a local `.dark` scope so the accessibility check
+ * covers dark-mode contrast on the same run. Test-only: the theme toolbar is how a human should
+ * look at dark mode, so no visible story hard-codes it.
  */
-export const DeepNesting: Story = {
-  name: "Deep nesting (controlled, dark)",
-  render: function DeepTree() {
-    const ids = ["org", "site", "lab", "instrument", "run", "result"];
-    const labels = [
-      "Acme Pharma",
-      "Cambridge site",
-      "Analytical lab",
-      "Xevo G2-XS",
-      "Run 2026-09-01",
-      "peaks.ids.json",
-    ];
-
-    const [expandedIds, setExpandedIds] = React.useState(new Set(ids));
+export const ControlledBehaviour: Story = {
+  name: "Controlled and dark contrast (test only)",
+  tags: ["!dev", "!autodocs"],
+  render: function ControlledDeepTree() {
+    const [expandedIds, setExpandedIds] = React.useState(new Set(DEEP_IDS));
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
-    const build = (index: number): React.ReactNode => (
-      <TreeItem id={ids[index]} hasChildren={index < ids.length - 1}>
-        <TreeItemLabel icon={index < ids.length - 1 ? <FolderNodeIcon /> : <FileTextIcon />}>
-          {labels[index]}
-        </TreeItemLabel>
-        {index < ids.length - 1 ? <TreeItemGroup>{build(index + 1)}</TreeItemGroup> : null}
-      </TreeItem>
-    );
-
     return (
-      <div className="dark bg-background flex max-w-md flex-col gap-3 rounded-lg p-4">
+      <div className="dark bg-background rounded-lg p-4">
         <Tree
           aria-label="Sample lineage"
           expandedIds={expandedIds}
@@ -289,11 +348,8 @@ export const DeepNesting: Story = {
           onSelectedChange={setSelectedId}
           className="max-w-xs"
         >
-          {build(0)}
+          {renderDeep(0)}
         </Tree>
-        <p data-testid="state" className="text-muted-foreground text-xs">
-          selected: {selectedId ?? "none"} · expanded: {expandedIds.size}
-        </p>
       </div>
     );
   },
@@ -304,12 +360,15 @@ export const DeepNesting: Story = {
       expect(canvas.getByRole("treeitem", { name: "peaks.ids.json" })).toHaveAttribute("aria-level", "6");
     });
 
-    await step("Selection and expansion are driven from consumer state", async () => {
+    await step("Selection and expansion round-trip through consumer state", async () => {
+      const lab = canvas.getByRole("treeitem", { name: "Analytical lab" });
+      expect(lab).toHaveAttribute("aria-selected", "false");
+
       await userEvent.click(canvas.getByText("Analytical lab"));
-      const state = canvas.getByTestId("state");
-      expect(state).toHaveTextContent("selected: lab");
-      // Activating an expanded parent collapses it, so the controlled set shrinks.
-      expect(state).toHaveTextContent("expanded: 5");
+      expect(lab).toHaveAttribute("aria-selected", "true");
+      // Activating an expanded parent collapses it, and the controlled set drops the id.
+      expect(lab).toHaveAttribute("aria-expanded", "false");
+      expect(canvas.queryByRole("treeitem", { name: "Xevo G2-XS" })).not.toBeInTheDocument();
     });
   },
 };

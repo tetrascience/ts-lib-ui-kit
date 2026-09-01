@@ -1,3 +1,190 @@
+# Migration Guides
+
+- **[v0.7.x → v1.0.0](#migrating-from-v07x-to-v100)** — current release. Chart renames, removed
+  components, optional peer dependencies, per-component imports.
+- [Legacy: atom/molecule/organism → shadcn/Radix UI](#migration-guide-ts-lib-ui-kit-v2-shadcnradix-ui)
+  — the older restructure, kept for apps still on the pre-shadcn architecture.
+
+---
+
+## Migrating from v0.7.x to v1.0.0
+
+> **Jira:** [SW-2244](https://tetrascience.atlassian.net/browse/SW-2244) (renames) ·
+> [SW-2007](https://tetrascience.atlassian.net/browse/SW-2007) (optional peers, per-component entries) ·
+> [SW-1917](https://tetrascience.atlassian.net/browse/SW-1917) (deprecated removals)
+
+v1.0.0 is the first stable major. Three things break, in rough order of how likely they are to hit you:
+
+1. **Chart components were renamed** — every `*Graph` name is gone.
+2. **Heavy dependencies are no longer installed for you** — they are optional peers you install per feature.
+3. **Four components were removed** — two deliberately deprecated, two with no successor.
+
+Nothing else in the public API changed. React 19, Node 18+ and the TDP v4.x requirement are unchanged.
+
+### Upgrade checklist
+
+```bash
+# 1. Upgrade
+yarn add @tetrascience-npm/tetrascience-react-ui@^1.0.0
+
+# 2. Install only the optional peers your app actually uses (see table below)
+yarn add plotly.js-dist                        # if you render any chart
+yarn add @streamdown/math @streamdown/mermaid  # if you import from the package root (see note)
+yarn add @rdkit/rdkit                          # if you use MoleculeStructure
+
+# 3. Rename chart imports (see table below), then typecheck — TypeScript finds the rest
+npx tsc --noEmit
+```
+
+### 1. Renamed components
+
+| v0.7.0              | v1.0.0                | Notes                                          |
+| ------------------- | --------------------- | ---------------------------------------------- |
+| `AreaGraph`         | `AreaPlot`            | Props unchanged                                |
+| `BarGraph`          | `BarChart`            | Props unchanged                                |
+| `Boxplot`           | `BoxPlot`             | Capital `P` — props unchanged                  |
+| `LineGraph`         | `LinePlot`            | Props unchanged                                |
+| `ScatterGraph`      | `ScatterPlot`         | Props unchanged                                |
+| `ChromatogramChart` | `StackedChromatogram` | The single-trace `Chromatogram` keeps its name |
+
+Exported prop types follow the component name (`AreaGraphProps` → `AreaPlotProps`, and so on).
+
+TypeScript flags all of these with a suggestion, so a `tsc --noEmit` pass after the upgrade is the
+fastest way to find every call site:
+
+```
+TS2724: no exported member named 'Boxplot'. Did you mean 'BoxPlot'?
+```
+
+### 2. Removed components
+
+| v0.7.0     | Replacement                                                                      | Why                                                                                                          |
+| ---------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `Drawer`   | `Sheet`                                                                          | Long deprecated ([SW-1917](https://tetrascience.atlassian.net/browse/SW-1917))                               |
+| `InputOTP` | `Input` (or your own composition)                                                | Long deprecated ([SW-1917](https://tetrascience.atlassian.net/browse/SW-1917))                               |
+| `DotPlot`  | **None.** Closest is `ScatterPlot`                                               | Dropped in the chart cleanup ([SW-2244](https://tetrascience.atlassian.net/browse/SW-2244)) — see note below |
+| `Heatmap`  | **None.** Closest is `PlateMap` for plate-shaped data, otherwise Plotly directly | Dropped in the chart cleanup ([SW-2244](https://tetrascience.atlassian.net/browse/SW-2244)) — see note below |
+
+`DotPlot` and `Heatmap` have no drop-in successor, and unlike `Drawer`/`InputOTP` they were never
+formally deprecated — they disappeared as part of a Storybook rename cleanup. Whether that removal
+was intended is still being confirmed under
+[SW-2472](https://tetrascience.atlassian.net/browse/SW-2472); this guide will be updated with the
+decision. If you depend on either, pin to `0.7.x` while you port and tell the UI kit team — that
+demand is exactly what the decision turns on.
+
+These two produce a bare `TS2305: no exported member` with no suggestion, which is how you can tell a
+removal from a rename.
+
+### 3. New in v1.0.0
+
+| Component                | Area     | Notes                                                 |
+| ------------------------ | -------- | ----------------------------------------------------- |
+| `Electropherogram`       | charts   | New scientific visualisation                          |
+| `ScatterPlotInteractive` | charts   | Selection/brushing scatter; was internal-only before  |
+| `MoleculeStructure`      | composed | SMILES → 2D structure. **Needs extra setup — see §5** |
+| `TetraMoleculeIcon`      | ui       | Icon primitive                                        |
+| `AssistantLayout`        | composed | Dockable AI assistant panel                           |
+| `TopBar`, `UserMenu`     | composed | Extracted from `DataAppShell`, now usable standalone  |
+
+`DataAppShell` also gained `PrimaryNav`, `SecondaryNav` and `RightPanel` subcomponents.
+
+### 4. Optional peer dependencies
+
+Heavy dependencies are no longer regular dependencies — installing the kit no longer drags Plotly,
+RDKit or the markdown plugin stack into your `node_modules`. Install what you use:
+
+| You use…                                                                         | Install                                                          |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Any `charts/` component                                                          | `plotly.js-dist`                                                 |
+| `MessageResponse` / `Reasoning` (AI markdown)                                    | `@streamdown/math`, `@streamdown/mermaid`                        |
+| `MoleculeStructure`                                                              | `@rdkit/rdkit` (**plus a served WASM — see §5**)                 |
+| **Any import from the package root** (`@tetrascience-npm/tetrascience-react-ui`) | `@streamdown/math`, `@streamdown/mermaid` — see the caveat below |
+| `/server` Athena provider                                                        | `@aws-sdk/client-athena`                                         |
+| `/server` Snowflake provider                                                     | `snowflake-sdk`                                                  |
+| `/server` Databricks provider                                                    | `@databricks/sql`                                                |
+
+> **Caveat — root-entry imports need the streamdown peers regardless of what you use.**
+> The AI markdown plugins are only ever reached through a dynamic import, but a dynamic-import target
+> is still part of the bundler's module graph, and its _named_ static imports must resolve. With
+> `@streamdown/math` absent, a root-entry build fails even if your only kit import is `AreaPlot`:
+>
+> ```
+> dist/components/ai/streamdown-plugins.js (2:9): "math" is not exported by
+> "__vite-optional-peer-dep:@streamdown/math:@tetrascience-npm/tetrascience-react-ui"
+> ```
+>
+> Two ways out: install the two packages, or import via per-component subpaths (§6), which sidesteps
+> the barrel entirely. This fails loudly at build time, so it can never reach production silently.
+> Tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
+
+A missing peer that _is_ only reached dynamically — `plotly.js-dist` — does **not** fail the build.
+Under Vite/Rollup it resolves to an empty stub and surfaces at runtime as a console error from the
+loader (`Failed to load 'plotly.js-dist' …`) with the chart never rendering. If your charts render
+blank after upgrading, check that `plotly.js-dist` is installed.
+
+### 5. `MoleculeStructure` also needs the RDKit WASM served
+
+Installing `@rdkit/rdkit` is **not sufficient**. RDKit is a ~6.6 MB WebAssembly module that the
+package does not place anywhere your app serves it, so the loader's fetch for `RDKit_minimal.wasm`
+falls through to your dev server's SPA fallback and returns `index.html`. The component then renders
+its `errorContent` — by default the text **"Invalid structure"** — for a perfectly valid SMILES.
+
+Point the loader at a served copy once, at app startup:
+
+```ts
+import { configureRDKit } from "@tetrascience-npm/tetrascience-react-ui";
+
+// Option A — let your bundler emit and fingerprint it (Vite):
+import wasmSrc from "@rdkit/rdkit/dist/RDKit_minimal.wasm?url";
+configureRDKit({ wasmSrc });
+
+// Option B — copy node_modules/@rdkit/rdkit/dist/RDKit_minimal.wasm into public/
+configureRDKit({ wasmSrc: "/RDKit_minimal.wasm" });
+```
+
+Verify it worked: the network request for `RDKit_minimal.wasm` should return
+`Content-Type: application/wasm` and ~6.9 MB, not `text/html` and a few hundred bytes.
+
+> **Diagnosing:** "Invalid structure" currently means _either_ a bad SMILES _or_ RDKit failing to
+> load. If a SMILES you trust renders as invalid, suspect the WASM first. Splitting these two
+> messages is tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
+
+### 6. Per-component imports (new, optional)
+
+Every root export now also ships at its own subpath. Nothing you have breaks — the root barrel still
+works — but subpath imports cut what your bundler and Jest have to evaluate, and they avoid the
+streamdown caveat in §4 entirely.
+
+```ts
+// Root barrel — still supported
+import { Button, AreaPlot } from "@tetrascience-npm/tetrascience-react-ui";
+
+// Per-component — smaller graph, no optional-peer pull-through
+import { Button } from "@tetrascience-npm/tetrascience-react-ui/ui/button";
+import { AreaPlot } from "@tetrascience-npm/tetrascience-react-ui/charts/AreaPlot";
+```
+
+Subpath shape follows the source tree: `./ui/<kebab-case>`, `./composed/<PascalCase>`,
+`./charts/<PascalCase>`, `./ai/<kebab-case>`, `./utils/colors`, `./lib/shiki`.
+
+QE measured a subpath-only consumer building at 90.70 kB with zero optional peers installed, against
+a 114.68 kB main chunk for a root-barrel consumer (both with Plotly code-split into its own lazy
+chunk). Your numbers will differ with how much of the kit you use.
+
+### Known issues in v1.0.0
+
+Found by QE review after the tag was cut, tracked in
+[SW-2472](https://tetrascience.atlassian.net/browse/SW-2472). None block adoption.
+
+| Issue                                                                                                                                                                                            | Impact                                                                                                                                                       | Workaround                                                                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `./ui/progress` and `./ui/snippet` resolve **types but no runtime module** — `dist/components/ui/` has 54 `.d.ts`, `dist/ui/` has 53 `.js`. An import typechecks clean and then fails the build. | Neither component is exported from the root barrel either (nor was `progress` in v0.7.0), so nothing regressed — but the subpath makes them look importable. | Don't import them. Use your own progress/snippet component until they are either built or de-advertised. |
+| Root-entry builds require the streamdown peers (§4).                                                                                                                                             | Build fails loudly; nothing ships broken.                                                                                                                    | Install the two packages, or use subpath imports.                                                        |
+| `MoleculeStructure` reports a WASM load failure as "Invalid structure" (§5).                                                                                                                     | Misleading — points at your input rather than at the asset.                                                                                                  | Configure `wasmSrc`; pass a custom `errorContent` if you want to distinguish.                            |
+| A missing `plotly.js-dist` does not fail the build under Vite/Rollup, contrary to what the loader's source comment used to claim.                                                                | Charts silently don't render; the loader logs an error at runtime.                                                                                           | Install `plotly.js-dist` whenever you use charts.                                                        |
+
+---
+
 # Migration Guide: ts-lib-ui-kit v2 (shadcn/Radix UI)
 
 > **Jira:** [SW-1430](https://tetrascience.atlassian.net/browse/SW-1430) — Define migration strategy for component layers
@@ -30,9 +217,10 @@ import { Button, Badge, Card } from "@tetrascience-npm/tetrascience-react-ui";
 ```
 
 **Internal path aliases changed (repo contributors only)**  
-If you are working *inside this repository* and were using the old `@atoms/@molecules/@organisms` aliases, use the new `@/components/...` aliases instead.  
+If you are working _inside this repository_ and were using the old `@atoms/@molecules/@organisms` aliases, use the new `@/components/...` aliases instead.  
 **Note:** These `@/` aliases are **not** available to consuming applications; external apps should continue to import only from the package root (as in the example above), not via deep paths.
 
+```ts
 import { Button } from "@/components/ui/button";
 import { Table } from "@/components/ui/table";
 ```

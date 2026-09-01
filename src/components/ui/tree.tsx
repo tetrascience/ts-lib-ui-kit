@@ -452,9 +452,18 @@ const treeItemLabelVariants = cva(
   },
 );
 
-type TreeItemLabelProps = React.ComponentProps<"div"> & VariantProps<typeof treeItemLabelVariants>;
+type TreeItemLabelProps = React.ComponentProps<"div"> &
+  VariantProps<typeof treeItemLabelVariants> & {
+    /**
+     * Decorative leading icon, rendered between the chevron and the label text. Hidden from
+     * assistive tech — the node's accessible name comes from the label text alone, so anything a
+     * screen reader must convey belongs in the text, not here. Swap it on expansion (open/closed
+     * folders) by reading `expanded` from `useTreeItem()` inside your own icon component.
+     */
+    icon?: React.ReactNode;
+  };
 
-function TreeItemLabel({ className, children, size, style, ...props }: TreeItemLabelProps) {
+function TreeItemLabel({ className, children, size, style, icon, ...props }: TreeItemLabelProps) {
   const { labelId, level, expanded, hasChildren, selected, toggle } = useTreeItemContext("TreeItemLabel");
 
   return (
@@ -494,6 +503,15 @@ function TreeItemLabel({ className, children, size, style, ...props }: TreeItemL
       ) : (
         <span data-slot="tree-item-indicator-spacer" aria-hidden="true" className="size-3.5 shrink-0" />
       )}
+      {icon ? (
+        <span
+          data-slot="tree-item-icon"
+          aria-hidden="true"
+          className="text-muted-foreground group-aria-selected/tree-item:text-accent-foreground flex size-4 shrink-0 items-center justify-center [&_svg]:size-4 [&_svg]:shrink-0"
+        >
+          {icon}
+        </span>
+      ) : null}
       <span className="min-w-0 flex-1 truncate">{children}</span>
     </div>
   );

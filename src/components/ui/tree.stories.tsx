@@ -1,7 +1,8 @@
+import { FileTextIcon, FlaskConicalIcon, FolderIcon, FolderOpenIcon } from "lucide-react";
 import * as React from "react";
 import { expect, userEvent, within } from "storybook/test";
 
-import { Tree, TreeItem, TreeItemGroup, TreeItemLabel } from "./tree";
+import { Tree, TreeItem, TreeItemGroup, TreeItemLabel, useTreeItem } from "./tree";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
@@ -24,6 +25,10 @@ const meta: Meta<typeof Tree> = {
           "",
           "**Keyboard:** `↓`/`↑` move between visible nodes across levels · `→` expands, then moves to the first child ·",
           "`←` collapses, then moves to the parent · `Home`/`End` jump to the first/last visible node · `Enter` activates.",
+          "",
+          "**Icons:** pass a decorative icon to `TreeItemLabel`'s `icon` prop. It is hidden from assistive tech, so",
+          "anything a screen reader must convey belongs in the label text. Read `expanded` from `useTreeItem()` to swap",
+          "open and closed folder icons, as `FolderNodeIcon` does below.",
         ].join("\n"),
       },
     },
@@ -37,7 +42,21 @@ type Story = StoryObj<typeof Tree>;
 
 /* ------------------------------------------------------------------ fixtures */
 
-type Node = { id: string; label: string; children?: Node[] };
+/** Reads its own node's state from context to swap open/closed folder icons. */
+function FolderNodeIcon() {
+  const { expanded } = useTreeItem();
+  return expanded ? <FolderOpenIcon /> : <FolderIcon />;
+}
+
+type Node = {
+  id: string;
+  label: string;
+  icon?: React.ReactNode;
+  children?: Node[];
+  /** Set on a node whose children exist but have not been fetched yet. */
+  unloaded?: boolean;
+  disabled?: boolean;
+};
 
 const FOLDERS: Node[] = [
   {
@@ -48,99 +67,196 @@ const FOLDERS: Node[] = [
         id: "lcms",
         label: "LC-MS",
         children: [
-          { id: "lcms-2026-08", label: "2026-08" },
-          { id: "lcms-2026-09", label: "2026-09" },
+          { id: "lcms-2026-08", label: "2026-08", icon: <FileTextIcon /> },
+          {
+            id: "lcms-long",
+            label: "Batch-QC-2026-09-01_plate-01_fluorescence-intensity_replicate-03_operator-initials.rawdata",
+            icon: <FileTextIcon />,
+          },
         ],
       },
-      {
-        id: "plate-readers",
-        label: "Plate Readers",
-        children: [{ id: "envision", label: "EnVision 2105" }],
-      },
+      { id: "plate-readers", label: "Plate Readers", unloaded: true },
+      { id: "legacy", label: "Legacy (read-only)", disabled: true, icon: <FlaskConicalIcon /> },
     ],
   },
   {
     id: "processed",
     label: "Processed",
     children: [
-      { id: "ids", label: "IDS Documents" },
-      { id: "decorated", label: "Decorated Files" },
+      { id: "ids", label: "IDS Documents", icon: <FileTextIcon /> },
+      { id: "decorated", label: "Decorated Files", icon: <FileTextIcon /> },
     ],
   },
-  { id: "archive", label: "Archive" },
+  { id: "archive", label: "Archive", icon: <FlaskConicalIcon /> },
 ];
 
 function renderNodes(nodes: Node[]): React.ReactNode {
-  return nodes.map((node) => (
-    <TreeItem key={node.id} id={node.id} hasChildren={Boolean(node.children?.length)}>
-      <TreeItemLabel>{node.label}</TreeItemLabel>
-      {node.children ? <TreeItemGroup>{renderNodes(node.children)}</TreeItemGroup> : null}
-    </TreeItem>
-  ));
+  return nodes.map((node) => {
+    const hasChildren = Boolean(node.children?.length) || Boolean(node.unloaded);
+    return (
+      <TreeItem key={node.id} id={node.id} hasChildren={hasChildren} disabled={node.disabled}>
+        <TreeItemLabel icon={node.icon ?? (hasChildren ? <FolderNodeIcon /> : undefined)}>{node.label}</TreeItemLabel>
+        {node.children ? <TreeItemGroup>{renderNodes(node.children)}</TreeItemGroup> : null}
+      </TreeItem>
+    );
+  });
 }
 
 /* -------------------------------------------------------------------- stories */
 
+/**
+ * A realistic folder tree: leading icons, open/closed folder swapping, a long label that truncates,
+ * a node whose children have not been fetched, and a disabled node.
+ */
 export const Default: Story = {
-  render: () => (
-    <Tree
-      aria-label="Data lake folders"
-      defaultExpandedIds={new Set(["instrument-data"])}
-      defaultSelectedId="lcms"
-      className="max-w-xs"
-    >
-      {renderNodes(FOLDERS)}
-    </Tree>
-  ),
+  render: function DefaultTree() {
+    const [activated, setActivated] = React.useState<string[]>([]);
+
+    return (
+      <div className="flex max-w-md flex-col gap-3">
+        <Tree
+          aria-label="Data lake folders"
+          defaultExpandedIds={new Set(["instrument-data"])}
+          defaultSelectedId="lcms"
+          onActivate={(id) => setActivated((current) => [...current, id])}
+          className="max-w-xs"
+        >
+          {renderNodes(FOLDERS)}
+        </Tree>
+        <p data-testid="activations" className="text-muted-foreground text-xs">
+          onActivate: {activated.join(", ") || "none"}
+        </p>
+      </div>
+    );
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
+    const item = (name: string) => canvas.getByRole("treeitem", { name });
+    const activations = () => canvas.getByTestId("activations");
 
     await step("ARIA state is derived from position in the tree", async () => {
-      const root = canvas.getByRole("tree", { name: "Data lake folders" });
-      expect(root).toBeInTheDocument();
+      expect(canvas.getByRole("tree", { name: "Data lake folders" })).toBeInTheDocument();
 
-      const instrumentData = canvas.getByRole("treeitem", { name: "Instrument Data" });
+      const instrumentData = item("Instrument Data");
       expect(instrumentData).toHaveAttribute("aria-level", "1");
       expect(instrumentData).toHaveAttribute("aria-posinset", "1");
       expect(instrumentData).toHaveAttribute("aria-setsize", "3");
       expect(instrumentData).toHaveAttribute("aria-expanded", "true");
 
-      const lcms = canvas.getByRole("treeitem", { name: "LC-MS" });
+      const lcms = item("LC-MS");
       expect(lcms).toHaveAttribute("aria-level", "2");
-      expect(lcms).toHaveAttribute("aria-setsize", "2");
+      expect(lcms).toHaveAttribute("aria-setsize", "3");
       expect(lcms).toHaveAttribute("aria-selected", "true");
     });
 
-    await step("A leaf node reports no expanded state", async () => {
-      expect(canvas.getByRole("treeitem", { name: "Archive" })).not.toHaveAttribute("aria-expanded");
+    await step("Leaves report no expanded state, and collapsed subtrees are absent entirely", async () => {
+      expect(item("Archive")).not.toHaveAttribute("aria-expanded");
+      expect(canvas.queryByRole("treeitem", { name: "IDS Documents" })).not.toBeInTheDocument();
+      // Children exist but have not been fetched — still an expandable node.
+      expect(item("Plate Readers")).toHaveAttribute("aria-expanded", "false");
     });
 
-    await step("Collapsed subtrees are absent from the accessibility tree", async () => {
-      expect(canvas.queryByRole("treeitem", { name: "IDS Documents" })).not.toBeInTheDocument();
+    await step("Icons are decorative, so they stay out of every node's accessible name", async () => {
+      // The `getByRole` lookups above match on exact accessible name, so an icon leaking into a name
+      // would already have failed. Assert the mechanism directly too.
+      expect(item("Archive").querySelector('[data-slot="tree-item-icon"]')).toHaveAttribute("aria-hidden", "true");
+    });
+
+    // Ordering note: every step below moves focus, and the roving tab stop follows it — so the
+    // single-tab-stop assertion has to come before the first interaction, and the disabled node
+    // (which legitimately becomes the tab stop once focused) has to come last.
+    await step("The tree is a single tab stop, entered at the first root node", async () => {
+      await userEvent.tab();
+      expect(item("Instrument Data")).toHaveFocus();
+      expect(item("Instrument Data")).toHaveAttribute("tabindex", "0");
+      expect(item("Processed")).toHaveAttribute("tabindex", "-1");
+    });
+
+    await step("Arrow keys expand, descend and cross depth levels", async () => {
+      await userEvent.keyboard("{ArrowRight}");
+      expect(item("LC-MS")).toHaveFocus();
+
+      await userEvent.keyboard("{ArrowDown}");
+      expect(item("Plate Readers")).toHaveFocus();
+
+      // Expanding a node whose children are not rendered leaves it with no group.
+      await userEvent.keyboard("{ArrowRight}");
+      expect(item("Plate Readers")).toHaveAttribute("aria-expanded", "true");
+      expect(item("Plate Readers").querySelector('[role="group"]')).toBeNull();
+
+      await userEvent.keyboard("{ArrowLeft}");
+      expect(item("Plate Readers")).toHaveAttribute("aria-expanded", "false");
+      await userEvent.keyboard("{ArrowLeft}");
+      expect(item("Instrument Data")).toHaveFocus();
+    });
+
+    await step("Home and End jump to the first and last visible node", async () => {
+      await userEvent.keyboard("{End}");
+      expect(item("Archive")).toHaveFocus();
+      await userEvent.keyboard("{Home}");
+      expect(item("Instrument Data")).toHaveFocus();
+    });
+
+    await step("Enter and click activate down the same path", async () => {
+      await userEvent.keyboard("{Enter}");
+      expect(activations()).toHaveTextContent("instrument-data");
+
+      await userEvent.click(canvas.getByText("Processed"));
+      expect(activations()).toHaveTextContent("instrument-data, processed");
+      expect(item("Processed")).toHaveAttribute("aria-selected", "true");
+    });
+
+    await step("The chevron toggles expansion without activating", async () => {
+      const processed = item("Processed");
+      const logged = activations().textContent;
+      await userEvent.click(processed.querySelector('[data-slot="tree-item-indicator"]') as Element);
+      expect(processed).toHaveAttribute("aria-expanded", "false");
+      expect(activations()).toHaveTextContent(logged as string);
+    });
+
+    await step("A disabled node is focusable but neither selectable nor activatable", async () => {
+      // Activating `Instrument Data` above collapsed it, taking its children with it.
+      const parent = item("Instrument Data");
+      expect(parent).toHaveAttribute("aria-expanded", "false");
+      await userEvent.click(parent.querySelector('[data-slot="tree-item-indicator"]') as Element);
+
+      const disabled = item("Legacy (read-only)");
+      expect(disabled).toHaveAttribute("aria-disabled", "true");
+      disabled.focus();
+      expect(disabled).toHaveFocus();
+      await userEvent.keyboard("{Enter}");
+      expect(disabled).toHaveAttribute("aria-selected", "false");
+      expect(activations()).not.toHaveTextContent("legacy");
     });
   },
 };
 
+/** No nesting: the same primitive works as a flat single-select list. */
 export const Flat: Story = {
   name: "Flat (no nesting)",
   render: () => (
     <Tree aria-label="Pipelines" defaultSelectedId="fluorescence" className="max-w-xs">
       <TreeItem id="fluorescence">
-        <TreeItemLabel>Fluorescence intensity</TreeItemLabel>
+        <TreeItemLabel icon={<FlaskConicalIcon />}>Fluorescence intensity</TreeItemLabel>
       </TreeItem>
       <TreeItem id="chromatography">
-        <TreeItemLabel>Chromatography peak table</TreeItemLabel>
+        <TreeItemLabel icon={<FlaskConicalIcon />}>Chromatography peak table</TreeItemLabel>
       </TreeItem>
       <TreeItem id="mass-spec">
+        {/* The `icon` prop is optional — this row aligns with the others without one. */}
         <TreeItemLabel>Mass spec deconvolution</TreeItemLabel>
       </TreeItem>
     </Tree>
   ),
 };
 
+/**
+ * Arbitrary depth with no level cap, driven from controlled `expandedIds` / `selectedId` state, and
+ * rendered in a local dark scope so the accessibility check covers dark-mode contrast too.
+ */
 export const DeepNesting: Story = {
-  name: "Deep nesting (six levels)",
-  render: () => {
+  name: "Deep nesting (controlled, dark)",
+  render: function DeepTree() {
     const ids = ["org", "site", "lab", "instrument", "run", "result"];
     const labels = [
       "Acme Pharma",
@@ -151,17 +267,34 @@ export const DeepNesting: Story = {
       "peaks.ids.json",
     ];
 
+    const [expandedIds, setExpandedIds] = React.useState(new Set(ids));
+    const [selectedId, setSelectedId] = React.useState<string | null>(null);
+
     const build = (index: number): React.ReactNode => (
       <TreeItem id={ids[index]} hasChildren={index < ids.length - 1}>
-        <TreeItemLabel>{labels[index]}</TreeItemLabel>
+        <TreeItemLabel icon={index < ids.length - 1 ? <FolderNodeIcon /> : <FileTextIcon />}>
+          {labels[index]}
+        </TreeItemLabel>
         {index < ids.length - 1 ? <TreeItemGroup>{build(index + 1)}</TreeItemGroup> : null}
       </TreeItem>
     );
 
     return (
-      <Tree aria-label="Sample lineage" defaultExpandedIds={new Set(ids)} className="max-w-xs">
-        {build(0)}
-      </Tree>
+      <div className="dark bg-background flex max-w-md flex-col gap-3 rounded-lg p-4">
+        <Tree
+          aria-label="Sample lineage"
+          expandedIds={expandedIds}
+          onExpandedChange={setExpandedIds}
+          selectedId={selectedId}
+          onSelectedChange={setSelectedId}
+          className="max-w-xs"
+        >
+          {build(0)}
+        </Tree>
+        <p data-testid="state" className="text-muted-foreground text-xs">
+          selected: {selectedId ?? "none"} · expanded: {expandedIds.size}
+        </p>
+      </div>
     );
   },
   play: async ({ canvasElement, step }) => {
@@ -170,266 +303,13 @@ export const DeepNesting: Story = {
     await step("Depth is unbounded and aria-level keeps counting", async () => {
       expect(canvas.getByRole("treeitem", { name: "peaks.ids.json" })).toHaveAttribute("aria-level", "6");
     });
-  },
-};
-
-export const EmptyGroup: Story = {
-  name: "Empty group (children not loaded)",
-  render: () => (
-    <Tree aria-label="Folders" className="max-w-xs">
-      <TreeItem id="unknown-contents" hasChildren>
-        <TreeItemLabel>Not fetched yet</TreeItemLabel>
-      </TreeItem>
-      <TreeItem id="known-empty" hasChildren>
-        <TreeItemLabel>Fetched, and empty</TreeItemLabel>
-        <TreeItemGroup />
-      </TreeItem>
-    </Tree>
-  ),
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("hasChildren with nothing rendered still reports aria-expanded=false", async () => {
-      const node = canvas.getByRole("treeitem", { name: "Not fetched yet" });
-      expect(node).toHaveAttribute("aria-expanded", "false");
-
-      await userEvent.click(canvas.getByText("Not fetched yet"));
-      expect(node).toHaveAttribute("aria-expanded", "true");
-      expect(canvas.queryByRole("group")).not.toBeInTheDocument();
-    });
-  },
-};
-
-export const LongLabels: Story = {
-  render: () => (
-    <Tree aria-label="Files" defaultExpandedIds={new Set(["batch"])} className="max-w-[260px]">
-      <TreeItem id="batch" hasChildren>
-        <TreeItemLabel>
-          Batch-QC-2026-09-01_plate-01_fluorescence-intensity_replicate-03_operator-initials.rawdata
-        </TreeItemLabel>
-        <TreeItemGroup>
-          <TreeItem id="batch-child">
-            <TreeItemLabel>
-              nested-and-also-far-too-long-to-fit-in-the-available-width_normalised_v4.ids.json
-            </TreeItemLabel>
-          </TreeItem>
-        </TreeItemGroup>
-      </TreeItem>
-    </Tree>
-  ),
-};
-
-export const DarkTheme: Story = {
-  name: "Dark theme",
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Rendered inside a local `.dark` scope so the accessibility check covers dark-mode contrast on the same run as the light-mode stories.",
-      },
-    },
-  },
-  render: () => (
-    <div className="dark bg-background rounded-lg p-4">
-      <Tree
-        aria-label="Data lake folders"
-        defaultExpandedIds={new Set(["instrument-data", "lcms"])}
-        defaultSelectedId="lcms-2026-09"
-        className="max-w-xs"
-      >
-        {renderNodes(FOLDERS)}
-      </Tree>
-    </div>
-  ),
-};
-
-export const DisabledNode: Story = {
-  name: "Disabled node",
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "A disabled node stays reachable by keyboard — the WAI-ARIA pattern keeps disabled nodes in the traversal order so they can be read rather than silently skipped — but cannot be selected or activated.",
-      },
-    },
-  },
-  render: () => (
-    <Tree aria-label="Folders" className="max-w-xs">
-      <TreeItem id="available">
-        <TreeItemLabel>Available</TreeItemLabel>
-      </TreeItem>
-      <TreeItem id="restricted" disabled hasChildren>
-        <TreeItemLabel>Restricted (no access)</TreeItemLabel>
-        <TreeItemGroup>
-          <TreeItem id="restricted-child">
-            <TreeItemLabel>Hidden until expanded</TreeItemLabel>
-          </TreeItem>
-        </TreeItemGroup>
-      </TreeItem>
-    </Tree>
-  ),
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-    const restricted = canvas.getByRole("treeitem", { name: "Restricted (no access)" });
-
-    await step("A disabled node reports aria-disabled and resists clicks", async () => {
-      expect(restricted).toHaveAttribute("aria-disabled", "true");
-      // The row is already `pointer-events: none`, so the check is deliberately bypassed to prove
-      // the state guard holds too and not just the styling.
-      await userEvent.click(canvas.getByText("Restricted (no access)"), { pointerEventsCheck: 0 });
-      expect(restricted).toHaveAttribute("aria-selected", "false");
-    });
-
-    await step("It is still reachable by keyboard, but Enter does not activate it", async () => {
-      // Clicking it did move focus — a disabled node is focusable, it just isn't selectable.
-      expect(restricted).toHaveFocus();
-
-      await userEvent.keyboard("{ArrowUp}");
-      expect(canvas.getByRole("treeitem", { name: "Available" })).toHaveFocus();
-      await userEvent.keyboard("{ArrowDown}");
-      expect(restricted).toHaveFocus();
-
-      await userEvent.keyboard("{Enter}");
-      expect(restricted).toHaveAttribute("aria-selected", "false");
-      expect(restricted).toHaveAttribute("aria-expanded", "false");
-    });
-  },
-};
-
-export const Keyboard: Story = {
-  name: "Keyboard navigation",
-  render: () => (
-    <Tree aria-label="Data lake folders" className="max-w-xs">
-      {renderNodes(FOLDERS)}
-    </Tree>
-  ),
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-    const item = (name: string) => canvas.getByRole("treeitem", { name });
-
-    await step("The tree is a single tab stop, entered at the first root node", async () => {
-      await userEvent.tab();
-      expect(item("Instrument Data")).toHaveFocus();
-      expect(item("Instrument Data")).toHaveAttribute("tabindex", "0");
-      expect(item("Processed")).toHaveAttribute("tabindex", "-1");
-    });
-
-    await step("Right expands, then moves to the first child", async () => {
-      await userEvent.keyboard("{ArrowRight}");
-      expect(item("Instrument Data")).toHaveAttribute("aria-expanded", "true");
-      expect(item("Instrument Data")).toHaveFocus();
-
-      await userEvent.keyboard("{ArrowRight}");
-      expect(item("LC-MS")).toHaveFocus();
-    });
-
-    await step("Down and up cross depth levels", async () => {
-      await userEvent.keyboard("{ArrowDown}");
-      expect(item("Plate Readers")).toHaveFocus();
-      await userEvent.keyboard("{ArrowDown}");
-      expect(item("Processed")).toHaveFocus();
-      await userEvent.keyboard("{ArrowUp}");
-      expect(item("Plate Readers")).toHaveFocus();
-    });
-
-    await step("Left collapses, then moves to the parent", async () => {
-      await userEvent.keyboard("{ArrowLeft}");
-      expect(item("Instrument Data")).toHaveFocus();
-      await userEvent.keyboard("{ArrowLeft}");
-      expect(item("Instrument Data")).toHaveAttribute("aria-expanded", "false");
-    });
-
-    await step("End and Home jump to the last and first visible node", async () => {
-      await userEvent.keyboard("{End}");
-      expect(item("Archive")).toHaveFocus();
-      await userEvent.keyboard("{Home}");
-      expect(item("Instrument Data")).toHaveFocus();
-    });
-
-    await step("Enter activates the focused node", async () => {
-      await userEvent.keyboard("{ArrowDown}{Enter}");
-      expect(item("Processed")).toHaveAttribute("aria-selected", "true");
-    });
-  },
-};
-
-export const Activation: Story = {
-  name: "Activation (click and Enter)",
-  render: function ActivationTree() {
-    const [log, setLog] = React.useState<string[]>([]);
-
-    return (
-      <div className="flex max-w-md flex-col gap-3">
-        <Tree
-          aria-label="Data lake folders"
-          defaultExpandedIds={new Set(["processed"])}
-          onActivate={(id) => setLog((current) => [...current, id])}
-        >
-          {renderNodes(FOLDERS)}
-        </Tree>
-        <p data-testid="activations" className="text-muted-foreground text-xs">
-          onActivate: {log.join(", ") || "none"}
-        </p>
-      </div>
-    );
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-    const activations = () => canvas.getByTestId("activations");
-
-    // Regression guard: `onActivate` used to fire from `Enter` only, so a consumer wiring
-    // navigation to it saw clicks silently do nothing.
-    await step("Clicking a node activates it", async () => {
-      await userEvent.click(canvas.getByText("IDS Documents"));
-      expect(activations()).toHaveTextContent("onActivate: ids");
-    });
-
-    await step("Enter activates the focused node down the same path", async () => {
-      await userEvent.keyboard("{Enter}");
-      expect(activations()).toHaveTextContent("onActivate: ids, ids");
-    });
-
-    await step("The chevron toggles expansion without activating", async () => {
-      const archive = canvas.getByRole("treeitem", { name: "Instrument Data" });
-      const chevron = archive.querySelector('[data-slot="tree-item-indicator"]');
-      expect(chevron).not.toBeNull();
-      await userEvent.click(chevron as Element);
-      expect(archive).toHaveAttribute("aria-expanded", "true");
-      expect(activations()).toHaveTextContent("onActivate: ids, ids");
-    });
-  },
-};
-
-export const Controlled: Story = {
-  render: function ControlledTree() {
-    const [expandedIds, setExpandedIds] = React.useState(new Set(["instrument-data"]));
-    const [selectedId, setSelectedId] = React.useState<string | null>(null);
-
-    return (
-      <div className="flex max-w-md flex-col gap-3">
-        <Tree
-          aria-label="Data lake folders"
-          expandedIds={expandedIds}
-          onExpandedChange={setExpandedIds}
-          selectedId={selectedId}
-          onSelectedChange={setSelectedId}
-        >
-          {renderNodes(FOLDERS)}
-        </Tree>
-        <p data-testid="state" className="text-muted-foreground text-xs">
-          selected: {selectedId ?? "none"} · expanded: {[...expandedIds].join(", ") || "none"}
-        </p>
-      </div>
-    );
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
 
     await step("Selection and expansion are driven from consumer state", async () => {
-      await userEvent.click(canvas.getByText("Processed"));
+      await userEvent.click(canvas.getByText("Analytical lab"));
       const state = canvas.getByTestId("state");
-      expect(state).toHaveTextContent("selected: processed");
-      expect(state).toHaveTextContent("instrument-data, processed");
+      expect(state).toHaveTextContent("selected: lab");
+      // Activating an expanded parent collapses it, so the controlled set shrinks.
+      expect(state).toHaveTextContent("expanded: 5");
     });
   },
 };

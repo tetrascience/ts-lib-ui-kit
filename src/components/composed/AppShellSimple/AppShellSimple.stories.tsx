@@ -93,9 +93,20 @@ function SampleContent() {
   );
 }
 
-function AppShellSimpleDemo({ defaultNav = "sidebar" }: { defaultNav?: AppShellSimpleNavState }) {
+function AppShellSimpleDemo({
+  defaultNav = "sidebar",
+  showNav = true,
+}: {
+  defaultNav?: AppShellSimpleNavState;
+  showNav?: boolean;
+}) {
   return (
-    <AppShellSimple navGroups={NAV_GROUPS} breadcrumbs={BREADCRUMBS} defaultNav={defaultNav}>
+    <AppShellSimple
+      showNav={showNav}
+      navGroups={NAV_GROUPS}
+      breadcrumbs={BREADCRUMBS}
+      defaultNav={defaultNav}
+    >
       <SampleContent />
     </AppShellSimple>
   );
@@ -163,5 +174,40 @@ export const Hidden: Story = {
   args: { defaultNav: "hidden" },
   parameters: {
     zephyr: { testCaseId: "SW-T5646" },
+  },
+};
+
+/**
+ * `showNav={false}` — the app opts out of a side nav entirely. No nav zone and
+ * no top-bar toggle; the body fills the full width. Unlike the runtime `hidden`
+ * state, there's nothing for the user to toggle back open.
+ */
+export const NoSideNav: Story = {
+  args: { showNav: false },
+  play: async ({ canvasElement, step }) => {
+    const shell = canvasElement.querySelector('[data-slot="app-shell-simple"]');
+    if (!(shell instanceof HTMLElement)) {
+      throw new Error("shell not found");
+    }
+
+    await step("no side nav zone is rendered", async () => {
+      expect(canvasElement.querySelector('[data-slot="app-shell-simple-nav"]')).toBeNull();
+    });
+
+    await step("no top-bar nav toggle is rendered", async () => {
+      expect(
+        canvasElement.querySelector('[data-slot="app-shell-simple-nav-toggle"]')
+      ).toBeNull();
+    });
+
+    await step("the breadcrumb name still shows in the top bar", async () => {
+      // Scope to the breadcrumb's current-page crumb — the content <h1> repeats
+      // the same text, and with the nav gone this is the only aria-current node.
+      const crumb = canvasElement.querySelector('[aria-current="page"]');
+      expect(crumb).toHaveTextContent("Run 4821 overview");
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
   },
 };

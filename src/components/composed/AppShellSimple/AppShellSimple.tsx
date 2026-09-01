@@ -102,8 +102,16 @@ const NAV_TOGGLE_LABEL: Record<AppShellSimpleNavState, string> = {
 };
 
 export interface AppShellSimpleProps {
-  /** Nav groups rendered in the side nav */
-  navGroups: NavGroup[];
+  /**
+   * Whether the app has a side nav at all (default `true`). When `false`, the
+   * shell renders as a top bar + full-width body: no nav zone, and no top-bar
+   * toggle. This is the app-level switch — distinct from the runtime `hidden`
+   * nav state, which the end user can toggle back open. `navGroups` is ignored
+   * when `showNav` is `false`.
+   */
+  showNav?: boolean;
+  /** Nav groups rendered in the side nav (ignored when `showNav` is `false`) */
+  navGroups?: NavGroup[];
   /** Breadcrumb trail — the top bar name */
   breadcrumbs: AppShellSimpleCrumb[];
   /** Right-side top bar actions (e.g. notifications, user menu) */
@@ -190,7 +198,8 @@ function SideNavToggle({ label, onCycle }: { label: string; onCycle: () => void 
 // =============================================================================
 
 export function AppShellSimple({
-  navGroups,
+  showNav = true,
+  navGroups = [],
   breadcrumbs,
   headerActions,
   userMenu,
@@ -230,7 +239,7 @@ export function AppShellSimple({
         <TopBar
           left={
             <>
-              <SideNavToggle label={nextLabel} onCycle={cycleNav} />
+              {showNav && <SideNavToggle label={nextLabel} onCycle={cycleNav} />}
               <ShellBreadcrumb items={breadcrumbs} />
             </>
           }
@@ -239,8 +248,9 @@ export function AppShellSimple({
       </div>
 
       {/* Side nav — sidebar (labels) or rail (icons); the toggle ping-pongs and
-          the border drag snaps between states */}
-      {navState !== "hidden" && (
+          the border drag snaps between states. Omitted entirely when the app
+          opts out of a side nav (`showNav={false}`). */}
+      {showNav && navState !== "hidden" && (
         <div
           ref={navRef}
           data-slot="app-shell-simple-nav"

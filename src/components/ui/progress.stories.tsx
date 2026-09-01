@@ -126,12 +126,12 @@ export const SemanticColors: Story = {
     <div className="space-y-4">
       <Progress
         value={90}
-        className="bg-green-500/20 [&_[data-slot=progress-indicator]]:bg-green-500"
+        className="bg-positive/20 [&_[data-slot=progress-indicator]]:bg-positive"
         aria-label="Healthy"
       />
       <Progress
         value={70}
-        className="bg-orange-500/20 [&_[data-slot=progress-indicator]]:bg-orange-500"
+        className="bg-warning/20 [&_[data-slot=progress-indicator]]:bg-warning"
         aria-label="Caution"
       />
       <Progress

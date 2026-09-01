@@ -220,10 +220,10 @@ import { Button, Badge, Card } from "@tetrascience-npm/tetrascience-react-ui";
 If you are working _inside this repository_ and were using the old `@atoms/@molecules/@organisms` aliases, use the new `@/components/...` aliases instead.  
 **Note:** These `@/` aliases are **not** available to consuming applications; external apps should continue to import only from the package root (as in the example above), not via deep paths.
 
+```ts
 import { Button } from "@/components/ui/button";
 import { Table } from "@/components/ui/table";
-
-````
+```
 
 ## Component Migration Matrix
 
@@ -331,7 +331,7 @@ These shadcn components are new additions with no prior equivalent:
   padding: $spacing-md;
   border-radius: $radius-sm;
 }
-````
+```
 
 ### After: Tailwind CSS
 

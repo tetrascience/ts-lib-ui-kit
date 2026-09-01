@@ -114,6 +114,7 @@ import {
 | `Tree`                   | Data Display | —                     | WAI-ARIA tree view, recursive, icons, guides, controlled | Beta   |
 | `Item`                   | Data Display | —                     | Generic list/menu item                            | Stable |
 | `Kbd`                    | Data Display | —                     | Keyboard shortcut indicator                       | Stable |
+| `Text`                   | Data Display | —                     | Preset type scale, `as` + `variant` independent   | Beta   |
 | `TetraScienceIcon`       | Data Display | —                     | Brand icon component                              | Stable |
 | `ScrollArea`             | Layout       | `scroll-area`         | —                                                 | Stable |
 | `Resizable`              | Layout       | `resizable`           | —                                                 | Stable |

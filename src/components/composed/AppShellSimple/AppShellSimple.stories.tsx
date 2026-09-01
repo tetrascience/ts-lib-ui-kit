@@ -208,6 +208,6 @@ export const NoSideNav: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5650" },
   },
 };

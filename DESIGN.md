@@ -111,6 +111,7 @@ import {
 | `Accordion`              | Data Display | `accordion`           | —                                                 | Stable |
 | `Collapsible`            | Data Display | `collapsible`         | —                                                 | Stable |
 | `Carousel`               | Data Display | `carousel`            | —                                                 | Stable |
+| `Tree`                   | Data Display | —                     | WAI-ARIA tree view, recursive, controlled state   | Beta   |
 | `Item`                   | Data Display | —                     | Generic list/menu item                            | Stable |
 | `Kbd`                    | Data Display | —                     | Keyboard shortcut indicator                       | Stable |
 | `TetraScienceIcon`       | Data Display | —                     | Brand icon component                              | Stable |

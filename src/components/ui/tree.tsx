@@ -424,7 +424,16 @@ function TreeItem({
           onFocus?.(event);
           if (event.target === event.currentTarget) setFocusedId(id);
         }}
-        className={cn("group/tree-item outline-none", className)}
+        className={cn(
+          // Selection is a wash behind the whole branch — the node's row *and* its rendered
+          // contents — rather than a band on the row alone.
+          "rounded-md outline-none aria-selected:bg-accent",
+          // Direct-child selectors, deliberately not `group-*/tree-item`: tree items nest, and a
+          // group variant matches *any* ancestor, so a focused or selected parent painted its focus
+          // ring and accent text onto every descendant row.
+          "focus-visible:[&>[data-slot=tree-item-label]]:border-ring focus-visible:[&>[data-slot=tree-item-label]]:shadow-focus",
+          className,
+        )}
       >
         {children}
       </div>
@@ -437,7 +446,7 @@ function TreeItem({
  * -----------------------------------------------------------------------------------------------*/
 
 const treeItemLabelVariants = cva(
-  "flex w-full min-w-0 cursor-default items-center gap-1.5 rounded-md pr-2 text-left transition-colors select-none group-aria-disabled/tree-item:pointer-events-none group-aria-disabled/tree-item:opacity-50",
+  "flex w-full min-w-0 cursor-default items-center gap-1.5 rounded-md pr-2 text-left transition-colors select-none",
   {
     variants: {
       size: {
@@ -464,7 +473,7 @@ type TreeItemLabelProps = React.ComponentProps<"div"> &
   };
 
 function TreeItemLabel({ className, children, size, style, icon, ...props }: TreeItemLabelProps) {
-  const { labelId, level, expanded, hasChildren, selected, toggle } = useTreeItemContext("TreeItemLabel");
+  const { labelId, level, expanded, hasChildren, selected, disabled, toggle } = useTreeItemContext("TreeItemLabel");
 
   return (
     <div
@@ -478,8 +487,11 @@ function TreeItemLabel({ className, children, size, style, icon, ...props }: Tre
       style={{ paddingInlineStart: `calc(var(--tree-indent) * ${level - 1} + 0.25rem)`, ...style }}
       className={cn(
         treeItemLabelVariants({ size }),
-        "group-focus-visible/tree-item:border-ring group-focus-visible/tree-item:shadow-focus border border-transparent",
-        selected ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted",
+        "border border-transparent",
+        selected ? "text-accent-foreground font-medium" : "hover:bg-muted",
+        // From this node's own state, not an ancestor selector: `aria-disabled` is per-node, so a
+        // disabled folder must not dim the contents underneath it.
+        disabled && "pointer-events-none opacity-50",
         className,
       )}
     >
@@ -507,7 +519,10 @@ function TreeItemLabel({ className, children, size, style, icon, ...props }: Tre
         <span
           data-slot="tree-item-icon"
           aria-hidden="true"
-          className="text-muted-foreground group-aria-selected/tree-item:text-accent-foreground flex size-4 shrink-0 items-center justify-center [&_svg]:size-4 [&_svg]:shrink-0"
+          className={cn(
+            "flex size-4 shrink-0 items-center justify-center [&_svg]:size-4 [&_svg]:shrink-0",
+            selected ? "text-accent-foreground" : "text-muted-foreground",
+          )}
         >
           {icon}
         </span>

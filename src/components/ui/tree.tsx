@@ -1,0 +1,519 @@
+import { useControllableState } from "@radix-ui/react-use-controllable-state";
+import { cva, type VariantProps } from "class-variance-authority";
+import { ChevronRightIcon } from "lucide-react";
+import * as React from "react";
+
+import { cn } from "@/lib/utils";
+
+/* -------------------------------------------------------------------------------------------------
+ * Contexts
+ *
+ * The tree is intentionally headless about *data*: it never fetches, never owns a node array, and
+ * derives every ARIA attribute from where a `TreeItem` sits in the React tree. Four contexts carry
+ * that positional information down:
+ *
+ *   TreeContext       — per-tree state (expansion, selection, roving focus) and the key handler
+ *   TreeLevelContext  — the current depth; `Tree` seeds 1, each `TreeItemGroup` increments
+ *   TreeIndexContext  — `aria-posinset` / `aria-setsize`, injected by whichever container renders
+ *                       the item (`Tree` for roots, `TreeItemGroup` for children)
+ *   TreeItemContext   — the nearest enclosing item, read by `TreeItemLabel` / `TreeItemGroup`
+ * -----------------------------------------------------------------------------------------------*/
+
+type TreeContextValue = {
+  expandedIds: Set<string>;
+  setExpanded: (id: string, expanded: boolean) => void;
+  selectedId: string | null;
+  selectItem: (id: string) => void;
+  focusedId: string | null;
+  setFocusedId: (id: string) => void;
+  expandOnSelect: boolean;
+  /** Attached to each `TreeItem` rather than to the tree root, so the node is its own key target. */
+  onItemKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
+};
+
+const TreeContext = React.createContext<TreeContextValue | null>(null);
+
+function useTreeContext(component: string) {
+  const context = React.useContext(TreeContext);
+  if (!context) {
+    throw new Error(`\`${component}\` must be rendered inside a \`Tree\`.`);
+  }
+  return context;
+}
+
+const TreeLevelContext = React.createContext(1);
+
+type TreeIndexContextValue = { posinset: number; setsize: number };
+
+const TreeIndexContext = React.createContext<TreeIndexContextValue>({ posinset: 1, setsize: 1 });
+
+type TreeItemContextValue = {
+  id: string;
+  labelId: string;
+  level: number;
+  expanded: boolean;
+  hasChildren: boolean;
+  selected: boolean;
+  disabled: boolean;
+  toggle: () => void;
+  select: () => void;
+};
+
+const TreeItemContext = React.createContext<TreeItemContextValue | null>(null);
+
+function useTreeItemContext(component: string) {
+  const context = React.useContext(TreeItemContext);
+  if (!context) {
+    throw new Error(`\`${component}\` must be rendered inside a \`TreeItem\`.`);
+  }
+  return context;
+}
+
+/**
+ * Reads the item's position among its siblings and whether it is currently expanded. Exposed for
+ * consumers composing their own row content (badges, action buttons, counts) inside a `TreeItem`.
+ */
+function useTreeItem() {
+  return useTreeItemContext("useTreeItem");
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Sibling indexing
+ *
+ * `aria-setsize` / `aria-posinset` need sibling counts, which only the container knows. Rather than
+ * a mount-order registry (two render passes, StrictMode-sensitive, wrong under conditional
+ * rendering) each container walks its own children and wraps them in an index provider. Purely
+ * positional, so it is correct on the first render and under SSR.
+ *
+ * Caveat: every valid element child occupies a set slot, so non-item children of a group (a "Load
+ * more" control, for instance) would be counted. That placement question is deliberately deferred
+ * to SW-2542.
+ * -----------------------------------------------------------------------------------------------*/
+
+function useIndexedTreeChildren(children: React.ReactNode) {
+  return React.useMemo(() => {
+    const array = React.Children.toArray(children);
+    const setsize = array.filter(React.isValidElement).length;
+    let posinset = 0;
+
+    return array.map((child, index) => {
+      if (!React.isValidElement(child)) return child;
+      posinset += 1;
+      return (
+        <TreeIndexContext.Provider key={child.key ?? index} value={{ posinset, setsize }}>
+          {child}
+        </TreeIndexContext.Provider>
+      );
+    });
+  }, [children]);
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Keyboard navigation
+ *
+ * Visible-node order is read from the DOM instead of a JS registry: collapsed groups are not
+ * rendered at all, so `querySelectorAll('[role="treeitem"]')` in document order *is* the visible
+ * node sequence, and ancestor/descendant lookups are one `closest()` call. This keeps the traversal
+ * correct for arbitrary consumer markup between the levels.
+ * -----------------------------------------------------------------------------------------------*/
+
+const ITEM_SELECTOR = '[role="treeitem"]';
+
+function getVisibleItems(root: HTMLElement | null) {
+  if (!root) return [];
+  return [...root.querySelectorAll<HTMLElement>(ITEM_SELECTOR)];
+}
+
+function moveFocus(element: HTMLElement | null | undefined, setFocusedId: (id: string) => void) {
+  const id = element?.dataset.treeItemId;
+  if (!element || !id) return;
+  setFocusedId(id);
+  element.focus();
+}
+
+type TreeKeyEvent = {
+  event: React.KeyboardEvent<HTMLElement>;
+  root: HTMLElement;
+  /** The `role="treeitem"` element the key was pressed on. */
+  current: HTMLElement;
+  id: string;
+  hasChildren: boolean;
+  expanded: boolean;
+  disabled: boolean;
+  setExpanded: (id: string, expanded: boolean) => void;
+  setFocusedId: (id: string) => void;
+  activate: (id: string, hasChildren: boolean, expanded: boolean) => void;
+};
+
+/** Moves focus to `element`, if there is one, and claims the key press. */
+function navigateTo({ event, setFocusedId }: TreeKeyEvent, element: HTMLElement | null | undefined) {
+  event.preventDefault();
+  moveFocus(element, setFocusedId);
+}
+
+function stepBy(context: TreeKeyEvent, offset: number) {
+  const items = getVisibleItems(context.root);
+  navigateTo(context, items[items.indexOf(context.current) + offset]);
+}
+
+/**
+ * `Space` is deliberately unbound: the WAI-ARIA pattern reserves it for multi-select trees, which
+ * are out of scope here but should not be precluded.
+ */
+const TREE_KEY_HANDLERS: Record<string, (context: TreeKeyEvent) => void> = {
+  ArrowDown: (context) => stepBy(context, 1),
+  ArrowUp: (context) => stepBy(context, -1),
+  ArrowRight: (context) => {
+    const { event, current, id, hasChildren, expanded, setExpanded } = context;
+    if (hasChildren && !expanded) {
+      event.preventDefault();
+      setExpanded(id, true);
+      return;
+    }
+    if (expanded) navigateTo(context, current.querySelector<HTMLElement>(ITEM_SELECTOR));
+  },
+  ArrowLeft: (context) => {
+    const { event, current, id, expanded, setExpanded } = context;
+    if (expanded) {
+      event.preventDefault();
+      setExpanded(id, false);
+      return;
+    }
+    navigateTo(context, current.parentElement?.closest<HTMLElement>(ITEM_SELECTOR));
+  },
+  Home: (context) => navigateTo(context, getVisibleItems(context.root)[0]),
+  End: (context) => {
+    const items = getVisibleItems(context.root);
+    navigateTo(context, items[items.length - 1]);
+  },
+  Enter: (context) => {
+    if (context.disabled) return;
+    context.event.preventDefault();
+    context.activate(context.id, context.hasChildren, context.expanded);
+  },
+};
+
+/* -------------------------------------------------------------------------------------------------
+ * Tree
+ * -----------------------------------------------------------------------------------------------*/
+
+type TreeProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
+  /** Expanded node ids (controlled). */
+  expandedIds?: Set<string>;
+  /** Initially expanded node ids (uncontrolled). */
+  defaultExpandedIds?: Set<string>;
+  onExpandedChange?: (expandedIds: Set<string>) => void;
+  /** Selected node id (controlled). Pass `null` for "nothing selected". */
+  selectedId?: string | null;
+  /** Initially selected node id (uncontrolled). */
+  defaultSelectedId?: string | null;
+  onSelectedChange?: (selectedId: string) => void;
+  /** Fired by `Enter` and by clicking a label — the node's default action. */
+  onActivate?: (id: string) => void;
+  /** Whether selecting a parent node also toggles its expansion. */
+  expandOnSelect?: boolean;
+};
+
+function Tree({
+  className,
+  children,
+  expandedIds: expandedIdsProp,
+  defaultExpandedIds,
+  onExpandedChange,
+  selectedId: selectedIdProp,
+  defaultSelectedId = null,
+  onSelectedChange,
+  onActivate,
+  expandOnSelect = true,
+  ...props
+}: TreeProps) {
+  const treeRef = React.useRef<HTMLDivElement>(null);
+
+  const [expandedIds, setExpandedIds] = useControllableState<Set<string>>({
+    prop: expandedIdsProp,
+    defaultProp: defaultExpandedIds ?? new Set<string>(),
+    onChange: onExpandedChange,
+  });
+  const [selectedId, setSelectedId] = useControllableState<string | null>({
+    prop: selectedIdProp,
+    defaultProp: defaultSelectedId,
+    onChange: (id) => {
+      if (id != null) onSelectedChange?.(id);
+    },
+  });
+  const [focusedId, setFocusedId] = React.useState<string | null>(null);
+
+  const setExpanded = React.useCallback(
+    (id: string, expanded: boolean) => {
+      setExpandedIds((current) => {
+        const next = new Set(current);
+        if (expanded) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+    },
+    [setExpandedIds],
+  );
+
+  const handleItemKeyDown = React.useCallback(
+    (event: React.KeyboardEvent<HTMLElement>) => {
+      const root = treeRef.current;
+      const current = (event.target as HTMLElement | null)?.closest<HTMLElement>(ITEM_SELECTOR);
+      const id = current?.dataset.treeItemId;
+      if (!root || !current || !id || !root.contains(current)) return;
+
+      const handler = TREE_KEY_HANDLERS[event.key];
+      if (!handler) return;
+
+      handler({
+        event,
+        root,
+        current,
+        id,
+        hasChildren: current.dataset.treeHasChildren === "true",
+        expanded: current.getAttribute("aria-expanded") === "true",
+        disabled: current.getAttribute("aria-disabled") === "true",
+        setExpanded,
+        setFocusedId,
+        activate: (activatedId, hasChildren, expanded) => {
+          setSelectedId(activatedId);
+          if (expandOnSelect && hasChildren) setExpanded(activatedId, !expanded);
+          onActivate?.(activatedId);
+        },
+      });
+    },
+    [setExpanded, setSelectedId, expandOnSelect, onActivate],
+  );
+
+  const context = React.useMemo<TreeContextValue>(
+    () => ({
+      expandedIds: expandedIds ?? new Set<string>(),
+      setExpanded,
+      selectedId: selectedId ?? null,
+      selectItem: setSelectedId,
+      focusedId,
+      setFocusedId,
+      expandOnSelect,
+      onItemKeyDown: handleItemKeyDown,
+    }),
+    [expandedIds, setExpanded, selectedId, setSelectedId, focusedId, expandOnSelect, handleItemKeyDown],
+  );
+
+  return (
+    <TreeContext.Provider value={context}>
+      <TreeLevelContext.Provider value={1}>
+        <div
+          ref={treeRef}
+          data-slot="tree"
+          role="tree"
+          tabIndex={-1}
+          className={cn("text-foreground flex w-full flex-col text-sm [--tree-indent:1rem]", className)}
+          {...props}
+        >
+          <TreeItemsContainer>{children}</TreeItemsContainer>
+        </div>
+      </TreeLevelContext.Provider>
+    </TreeContext.Provider>
+  );
+}
+
+function TreeItemsContainer({ children }: { children: React.ReactNode }) {
+  return useIndexedTreeChildren(children);
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * TreeItem
+ * -----------------------------------------------------------------------------------------------*/
+
+type TreeItemProps = React.ComponentProps<"div"> & {
+  id: string;
+  /**
+   * Whether the node can be expanded. Kept explicit rather than inferred from rendered children so
+   * a node whose children have not been fetched yet still reports `aria-expanded="false"`.
+   */
+  hasChildren?: boolean;
+  disabled?: boolean;
+};
+
+function TreeItem({
+  className,
+  children,
+  id,
+  hasChildren = false,
+  disabled = false,
+  onClick,
+  onFocus,
+  onKeyDown,
+  ...props
+}: TreeItemProps) {
+  const { expandedIds, setExpanded, selectedId, selectItem, focusedId, setFocusedId, expandOnSelect, onItemKeyDown } =
+    useTreeContext("TreeItem");
+  const level = React.useContext(TreeLevelContext);
+  const { posinset, setsize } = React.useContext(TreeIndexContext);
+  const labelId = `${React.useId()}-label`;
+
+  const expanded = hasChildren && expandedIds.has(id);
+  const selected = selectedId === id;
+
+  const toggle = React.useCallback(() => {
+    if (hasChildren) setExpanded(id, !expanded);
+  }, [hasChildren, setExpanded, id, expanded]);
+
+  const select = React.useCallback(() => {
+    if (disabled) return;
+    selectItem(id);
+    setFocusedId(id);
+    if (expandOnSelect) toggle();
+  }, [disabled, selectItem, id, setFocusedId, expandOnSelect, toggle]);
+
+  // Roving tabindex, minimal form: the focused node is the single tab stop, falling back to the
+  // first root node before the tree has been entered. SW-2541 extends this (selection-aware entry
+  // point, focus retention across collapse and lazy load).
+  const tabbable = focusedId ? focusedId === id : level === 1 && posinset === 1;
+
+  const itemContext = React.useMemo<TreeItemContextValue>(
+    () => ({ id, labelId, level, expanded, hasChildren, selected, disabled, toggle, select }),
+    [id, labelId, level, expanded, hasChildren, selected, disabled, toggle, select],
+  );
+
+  return (
+    <TreeItemContext.Provider value={itemContext}>
+      <div
+        data-slot="tree-item"
+        data-tree-item-id={id}
+        data-tree-has-children={hasChildren}
+        data-state={expanded ? "expanded" : "collapsed"}
+        role="treeitem"
+        // The accessible name comes from the label alone. Without this, name-from-content would
+        // sweep in every descendant node's text once a branch is expanded.
+        aria-labelledby={labelId}
+        aria-expanded={hasChildren ? expanded : undefined}
+        aria-level={level}
+        aria-posinset={posinset}
+        aria-setsize={setsize}
+        aria-selected={selected}
+        aria-disabled={disabled || undefined}
+        tabIndex={tabbable ? 0 : -1}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          if (event.defaultPrevented) return;
+          onItemKeyDown(event);
+        }}
+        onClick={(event) => {
+          onClick?.(event);
+          if (event.defaultPrevented) return;
+          // Clicks on a descendant node are that node's business — every treeitem in the ancestor
+          // chain sees the bubbled event.
+          if ((event.target as HTMLElement).closest(ITEM_SELECTOR) !== event.currentTarget) return;
+          select();
+        }}
+        onFocus={(event) => {
+          onFocus?.(event);
+          if (event.target === event.currentTarget) setFocusedId(id);
+        }}
+        className={cn("group/tree-item outline-none", className)}
+        {...props}
+      >
+        {children}
+      </div>
+    </TreeItemContext.Provider>
+  );
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * TreeItemLabel
+ * -----------------------------------------------------------------------------------------------*/
+
+const treeItemLabelVariants = cva(
+  "flex w-full min-w-0 cursor-default items-center gap-1.5 rounded-md pr-2 text-left transition-colors select-none group-aria-disabled/tree-item:pointer-events-none group-aria-disabled/tree-item:opacity-50",
+  {
+    variants: {
+      size: {
+        sm: "h-6 text-xs",
+        default: "h-7 text-sm",
+        lg: "h-9 text-sm",
+      },
+    },
+    defaultVariants: {
+      size: "default",
+    },
+  },
+);
+
+type TreeItemLabelProps = React.ComponentProps<"div"> & VariantProps<typeof treeItemLabelVariants>;
+
+function TreeItemLabel({ className, children, size, style, ...props }: TreeItemLabelProps) {
+  const { labelId, level, expanded, hasChildren, selected, toggle } = useTreeItemContext("TreeItemLabel");
+
+  return (
+    <div
+      id={labelId}
+      data-slot="tree-item-label"
+      // The row is a passive label, not a control: the parent `role="treeitem"` owns focus, click
+      // handling, keyboard handling and the accessible name, so a nested control would fight it.
+      style={{ paddingInlineStart: `calc(var(--tree-indent) * ${level - 1} + 0.25rem)`, ...style }}
+      className={cn(
+        treeItemLabelVariants({ size }),
+        "group-focus-visible/tree-item:border-ring group-focus-visible/tree-item:shadow-focus border border-transparent",
+        selected ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted",
+        className,
+      )}
+      {...props}
+    >
+      {hasChildren ? (
+        // A pointer-only affordance: expansion is reachable from the keyboard through the parent
+        // treeitem's arrow keys, so this is hidden from assistive tech and kept out of the tab order
+        // rather than becoming a second focus stop inside a single-tab-stop widget.
+        <button
+          type="button"
+          data-slot="tree-item-indicator"
+          aria-hidden="true"
+          tabIndex={-1}
+          onClick={(event) => {
+            // Toggle from the chevron alone, without changing the selection.
+            event.stopPropagation();
+            toggle();
+          }}
+          className="flex size-3.5 shrink-0 items-center justify-center text-muted-foreground"
+        >
+          <ChevronRightIcon className={cn("size-3.5 transition-transform", expanded && "rotate-90")} />
+        </button>
+      ) : (
+        <span data-slot="tree-item-indicator-spacer" aria-hidden="true" className="size-3.5 shrink-0" />
+      )}
+      <span className="min-w-0 flex-1 truncate">{children}</span>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * TreeItemGroup
+ * -----------------------------------------------------------------------------------------------*/
+
+function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"div">) {
+  const { expanded, level } = useTreeItemContext("TreeItemGroup");
+
+  // Not rendered while collapsed: keeps collapsed subtrees out of the accessibility tree entirely,
+  // and makes DOM order equal visible order for keyboard traversal.
+  if (!expanded) return null;
+
+  return (
+    <TreeLevelContext.Provider value={level + 1}>
+      <div data-slot="tree-item-group" role="group" className={cn("flex flex-col", className)} {...props}>
+        <TreeItemsContainer>{children}</TreeItemsContainer>
+      </div>
+    </TreeLevelContext.Provider>
+  );
+}
+
+export {
+  Tree,
+  TreeItem,
+  TreeItemGroup,
+  TreeItemLabel,
+  treeItemLabelVariants,
+  useTreeItem,
+  type TreeItemLabelProps,
+  type TreeItemProps,
+  type TreeProps,
+};

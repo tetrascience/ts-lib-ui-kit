@@ -23,7 +23,11 @@ type TreeContextValue = {
   expandedIds: Set<string>;
   setExpanded: (id: string, expanded: boolean) => void;
   selectedId: string | null;
-  selectItem: (id: string) => void;
+  /**
+   * The one activation path: selection, optional expansion and `onActivate`, shared by `Enter` and
+   * by clicking a node so the two never diverge.
+   */
+  activateItem: (id: string, hasChildren: boolean, expanded: boolean) => void;
   focusedId: string | null;
   setFocusedId: (id: string) => void;
   expandOnSelect: boolean;
@@ -255,6 +259,15 @@ function Tree({
     [setExpandedIds],
   );
 
+  const activateItem = React.useCallback(
+    (activatedId: string, hasChildren: boolean, expanded: boolean) => {
+      setSelectedId(activatedId);
+      if (expandOnSelect && hasChildren) setExpanded(activatedId, !expanded);
+      onActivate?.(activatedId);
+    },
+    [setSelectedId, expandOnSelect, setExpanded, onActivate],
+  );
+
   const handleItemKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLElement>) => {
       const root = treeRef.current;
@@ -275,14 +288,10 @@ function Tree({
         disabled: current.getAttribute("aria-disabled") === "true",
         setExpanded,
         setFocusedId,
-        activate: (activatedId, hasChildren, expanded) => {
-          setSelectedId(activatedId);
-          if (expandOnSelect && hasChildren) setExpanded(activatedId, !expanded);
-          onActivate?.(activatedId);
-        },
+        activate: activateItem,
       });
     },
-    [setExpanded, setSelectedId, expandOnSelect, onActivate],
+    [setExpanded, activateItem],
   );
 
   const context = React.useMemo<TreeContextValue>(
@@ -290,13 +299,13 @@ function Tree({
       expandedIds: expandedIds ?? new Set<string>(),
       setExpanded,
       selectedId: selectedId ?? null,
-      selectItem: setSelectedId,
+      activateItem,
       focusedId,
       setFocusedId,
       expandOnSelect,
       onItemKeyDown: handleItemKeyDown,
     }),
-    [expandedIds, setExpanded, selectedId, setSelectedId, focusedId, expandOnSelect, handleItemKeyDown],
+    [expandedIds, setExpanded, selectedId, activateItem, focusedId, expandOnSelect, handleItemKeyDown],
   );
 
   return (
@@ -346,7 +355,7 @@ function TreeItem({
   onKeyDown,
   ...props
 }: TreeItemProps) {
-  const { expandedIds, setExpanded, selectedId, selectItem, focusedId, setFocusedId, expandOnSelect, onItemKeyDown } =
+  const { expandedIds, setExpanded, selectedId, activateItem, focusedId, setFocusedId, onItemKeyDown } =
     useTreeContext("TreeItem");
   const level = React.useContext(TreeLevelContext);
   const { posinset, setsize } = React.useContext(TreeIndexContext);
@@ -359,12 +368,13 @@ function TreeItem({
     if (hasChildren) setExpanded(id, !expanded);
   }, [hasChildren, setExpanded, id, expanded]);
 
+  // Routed through the tree's `activateItem` so a click and `Enter` are the same code path —
+  // notably, both fire `onActivate`.
   const select = React.useCallback(() => {
     if (disabled) return;
-    selectItem(id);
     setFocusedId(id);
-    if (expandOnSelect) toggle();
-  }, [disabled, selectItem, id, setFocusedId, expandOnSelect, toggle]);
+    activateItem(id, hasChildren, expanded);
+  }, [disabled, setFocusedId, id, activateItem, hasChildren, expanded]);
 
   // Roving tabindex, minimal form: the focused node is the single tab stop, falling back to the
   // first root node before the tree has been entered. SW-2541 extends this (selection-aware entry
@@ -379,6 +389,9 @@ function TreeItem({
   return (
     <TreeItemContext.Provider value={itemContext}>
       <div
+        // Spread first, for the same reason as `TreeItemLabel`: every ARIA attribute below is
+        // maintained by the tree and must not be overridable from props.
+        {...props}
         data-slot="tree-item"
         data-tree-item-id={id}
         data-tree-has-children={hasChildren}
@@ -412,7 +425,6 @@ function TreeItem({
           if (event.target === event.currentTarget) setFocusedId(id);
         }}
         className={cn("group/tree-item outline-none", className)}
-        {...props}
       >
         {children}
       </div>
@@ -447,6 +459,9 @@ function TreeItemLabel({ className, children, size, style, ...props }: TreeItemL
 
   return (
     <div
+      // Spread first: the derived ARIA wiring below is authoritative. A consumer-supplied `id` would
+      // otherwise break the `TreeItem` → `aria-labelledby` link that names the node.
+      {...props}
       id={labelId}
       data-slot="tree-item-label"
       // The row is a passive label, not a control: the parent `role="treeitem"` owns focus, click
@@ -458,17 +473,15 @@ function TreeItemLabel({ className, children, size, style, ...props }: TreeItemL
         selected ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted",
         className,
       )}
-      {...props}
     >
       {hasChildren ? (
-        // A pointer-only affordance: expansion is reachable from the keyboard through the parent
-        // treeitem's arrow keys, so this is hidden from assistive tech and kept out of the tab order
-        // rather than becoming a second focus stop inside a single-tab-stop widget.
-        <button
-          type="button"
+        // A pointer-only affordance, deliberately not a `<button>`: expansion is reachable from the
+        // keyboard through the parent treeitem's arrow keys, so this stays non-focusable. A focusable
+        // element hidden from assistive tech is a contradiction, and inside a single-tab-stop widget
+        // it would also be a second focus stop reachable by pointer.
+        <span
           data-slot="tree-item-indicator"
           aria-hidden="true"
-          tabIndex={-1}
           onClick={(event) => {
             // Toggle from the chevron alone, without changing the selection.
             event.stopPropagation();
@@ -477,7 +490,7 @@ function TreeItemLabel({ className, children, size, style, ...props }: TreeItemL
           className="flex size-3.5 shrink-0 items-center justify-center text-muted-foreground"
         >
           <ChevronRightIcon className={cn("size-3.5 transition-transform", expanded && "rotate-90")} />
-        </button>
+        </span>
       ) : (
         <span data-slot="tree-item-indicator-spacer" aria-hidden="true" className="size-3.5 shrink-0" />
       )}
@@ -499,7 +512,7 @@ function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"
 
   return (
     <TreeLevelContext.Provider value={level + 1}>
-      <div data-slot="tree-item-group" role="group" className={cn("flex flex-col", className)} {...props}>
+      <div {...props} data-slot="tree-item-group" role="group" className={cn("flex flex-col", className)}>
         <TreeItemsContainer>{children}</TreeItemsContainer>
       </div>
     </TreeLevelContext.Provider>

@@ -353,6 +353,53 @@ export const Keyboard: Story = {
   },
 };
 
+export const Activation: Story = {
+  name: "Activation (click and Enter)",
+  render: function ActivationTree() {
+    const [log, setLog] = React.useState<string[]>([]);
+
+    return (
+      <div className="flex max-w-md flex-col gap-3">
+        <Tree
+          aria-label="Data lake folders"
+          defaultExpandedIds={new Set(["processed"])}
+          onActivate={(id) => setLog((current) => [...current, id])}
+        >
+          {renderNodes(FOLDERS)}
+        </Tree>
+        <p data-testid="activations" className="text-muted-foreground text-xs">
+          onActivate: {log.join(", ") || "none"}
+        </p>
+      </div>
+    );
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const activations = () => canvas.getByTestId("activations");
+
+    // Regression guard: `onActivate` used to fire from `Enter` only, so a consumer wiring
+    // navigation to it saw clicks silently do nothing.
+    await step("Clicking a node activates it", async () => {
+      await userEvent.click(canvas.getByText("IDS Documents"));
+      expect(activations()).toHaveTextContent("onActivate: ids");
+    });
+
+    await step("Enter activates the focused node down the same path", async () => {
+      await userEvent.keyboard("{Enter}");
+      expect(activations()).toHaveTextContent("onActivate: ids, ids");
+    });
+
+    await step("The chevron toggles expansion without activating", async () => {
+      const archive = canvas.getByRole("treeitem", { name: "Instrument Data" });
+      const chevron = archive.querySelector('[data-slot="tree-item-indicator"]');
+      expect(chevron).not.toBeNull();
+      await userEvent.click(chevron as Element);
+      expect(archive).toHaveAttribute("aria-expanded", "true");
+      expect(activations()).toHaveTextContent("onActivate: ids, ids");
+    });
+  },
+};
+
 export const Controlled: Story = {
   render: function ControlledTree() {
     const [expandedIds, setExpandedIds] = React.useState(new Set(["instrument-data"]));

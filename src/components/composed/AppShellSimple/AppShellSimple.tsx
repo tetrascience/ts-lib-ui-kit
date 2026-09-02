@@ -15,7 +15,11 @@
 import { PanelLeft } from "lucide-react";
 import * as React from "react";
 
-import { DataAppShellPrimaryNav, type NavGroup } from "@/components/composed/DataAppShell";
+import {
+  DataAppShellPrimaryNav,
+  type NavGroup,
+  type NavPage,
+} from "@/components/composed/DataAppShell";
 import { TopBar } from "@/components/composed/TopBar";
 import {
   Breadcrumb,
@@ -70,6 +74,8 @@ const LAST_NAV = NAV_ORDER.length - 1;
 // ends so the next toggle keeps the ping-pong moving (middle defaults forward).
 const dirFor = (index: number): 1 | -1 => (index >= LAST_NAV ? -1 : 1);
 
+const indexOfNav = (state: AppShellSimpleNavState) => Math.max(0, NAV_ORDER.indexOf(state));
+
 // Fixed widths per state — the border drag snaps between these; it never sets
 // an in-between width.
 const RAIL_WIDTH = 48;
@@ -77,6 +83,12 @@ const SIDEBAR_WIDTH = 220;
 // Snap thresholds: midpoints between the fixed widths.
 const RAIL_SNAP = (RAIL_WIDTH + SIDEBAR_WIDTH) / 2;
 const HIDE_SNAP = RAIL_WIDTH / 2;
+
+const NAV_WIDTH: Record<AppShellSimpleNavState, number> = {
+  sidebar: SIDEBAR_WIDTH,
+  rail: RAIL_WIDTH,
+  hidden: 0,
+};
 
 /** Map a dragged pixel width to the nearest nav state. */
 function snapNav(width: number): NavCursor {
@@ -94,12 +106,21 @@ function nextNav({ index, dir }: NavCursor): NavCursor {
   return { index: forward, dir };
 }
 
-// Label describes the destination the next click moves to.
-const NAV_TOGGLE_LABEL: Record<AppShellSimpleNavState, string> = {
-  sidebar: "Expand navigation to labels",
-  rail: "Collapse navigation to icons",
-  hidden: "Hide navigation",
-};
+/**
+ * Label for the toggle, describing the transition the next click performs.
+ * `rail` is reachable from both directions, so it can't be keyed on the
+ * destination alone — arriving from `hidden` is an expand, not a collapse.
+ */
+function navToggleLabel(from: number, to: number): string {
+  switch (NAV_ORDER[to]) {
+    case "sidebar":
+      return "Expand navigation to labels";
+    case "hidden":
+      return "Hide navigation";
+    default:
+      return to > from ? "Collapse navigation to icons" : "Expand navigation to icons";
+  }
+}
 
 export interface AppShellSimpleProps {
   /**
@@ -112,6 +133,10 @@ export interface AppShellSimpleProps {
   showNav?: boolean;
   /** Nav groups rendered in the side nav (ignored when `showNav` is `false`) */
   navGroups?: NavGroup[];
+  /** Controlled active page id — takes precedence over per-page `isActive` */
+  activeKey?: string;
+  /** Called with the selected page id after the page's own `onClick` */
+  onSelect?: (key: string, page: NavPage) => void;
   /** Breadcrumb trail — the top bar name */
   breadcrumbs: AppShellSimpleCrumb[];
   /** Right-side top bar actions (e.g. notifications, user menu) */
@@ -120,9 +145,15 @@ export interface AppShellSimpleProps {
   userMenu?: React.ReactNode;
   /** Uncontrolled initial nav state (default `sidebar`) */
   defaultNav?: AppShellSimpleNavState;
+  /** Controlled nav state — pair with `onNavChange`; overrides `defaultNav` */
+  nav?: AppShellSimpleNavState;
+  /** Fired whenever the nav state changes (toggle, drag, or keyboard resize) */
+  onNavChange?: (nav: AppShellSimpleNavState) => void;
   /** Main content */
   children: React.ReactNode;
 }
+
+const EMPTY_NAV_GROUPS: NavGroup[] = [];
 
 // =============================================================================
 // Breadcrumb trail — the top bar name
@@ -142,21 +173,17 @@ function ShellBreadcrumb({ items }: { items: AppShellSimpleCrumb[] }) {
                 {isLast ? (
                   <BreadcrumbPage className="truncate font-medium">{item.label}</BreadcrumbPage>
                 ) : isClickable && item.href ? (
-                  <BreadcrumbLink href={item.href} className="whitespace-nowrap">
+                  <BreadcrumbLink href={item.href} className="whitespace-nowrap text-primary">
                     {item.label}
                   </BreadcrumbLink>
                 ) : isClickable && item.onClick ? (
-                  <button
-                    type="button"
-                    className="text-sm text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal whitespace-nowrap"
-                    onClick={item.onClick}
-                  >
-                    {item.label}
-                  </button>
+                  <BreadcrumbLink asChild className="whitespace-nowrap text-primary">
+                    <button type="button" className="cursor-pointer" onClick={item.onClick}>
+                      {item.label}
+                    </button>
+                  </BreadcrumbLink>
                 ) : (
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    {item.label}
-                  </span>
+                  <span className="whitespace-nowrap">{item.label}</span>
                 )}
               </BreadcrumbItem>
             </React.Fragment>
@@ -199,29 +226,77 @@ function SideNavToggle({ label, onCycle }: { label: string; onCycle: () => void 
 
 export function AppShellSimple({
   showNav = true,
-  navGroups = [],
+  navGroups = EMPTY_NAV_GROUPS,
+  activeKey,
+  onSelect,
   breadcrumbs,
   headerActions,
   userMenu,
   defaultNav = "sidebar",
+  nav: navProp,
+  onNavChange,
   children,
 }: AppShellSimpleProps) {
-  const [nav, setNav] = React.useState<NavCursor>(() => {
-    const index = Math.max(0, NAV_ORDER.indexOf(defaultNav));
+  // The cursor is always local: `index` is only authoritative while
+  // uncontrolled, but `dir` (which way the ping-pong is travelling) has no
+  // prop equivalent and is tracked here in both modes.
+  const [cursor, setCursor] = React.useState<NavCursor>(() => {
+    const index = indexOfNav(navProp ?? defaultNav);
     return { index, dir: dirFor(index) };
   });
-  const navState = NAV_ORDER[nav.index];
-  const cycleNav = () => setNav(nextNav);
-  // Label describes where the next click lands.
-  const nextLabel = NAV_TOGGLE_LABEL[NAV_ORDER[nextNav(nav).index]];
+
+  const index = navProp === undefined ? cursor.index : indexOfNav(navProp);
+  // A controlled index moved by the parent invalidates our stored direction.
+  const dir = cursor.index === index ? cursor.dir : dirFor(index);
+  const navState = NAV_ORDER[index];
+
+  const applyNav = React.useCallback(
+    (next: NavCursor) => {
+      setCursor(next);
+      if (next.index !== index) onNavChange?.(NAV_ORDER[next.index]);
+    },
+    [index, onNavChange]
+  );
+
+  const nextCursor = nextNav({ index, dir });
+  const cycleNav = () => applyNav(nextCursor);
+  // Label describes the transition the next click performs.
+  const nextLabel = navToggleLabel(index, nextCursor.index);
 
   // Drag the border to snap between the three states (widest → slimmest:
   // icon + text → icon rail → fully closed). Pointer capture keeps the drag
   // scoped to the handle — no window listeners to leak.
+  //
+  // The nav zone stays mounted at `width: 0` in the `hidden` state rather than
+  // unmounting: unmounting mid-drag destroyed the element holding pointer
+  // capture, so `pointerup` never came back and `resizing` stuck on. Keeping it
+  // mounted also makes the handle draggable back out of `hidden`.
+  const navId = React.useId();
   const navRef = React.useRef<HTMLDivElement>(null);
   const [resizing, setResizing] = React.useState(false);
   const snapToPointer = (clientX: number) =>
-    setNav(snapNav(clientX - (navRef.current?.getBoundingClientRect().left ?? 0)));
+    applyNav(snapNav(clientX - (navRef.current?.getBoundingClientRect().left ?? 0)));
+
+  const stepNav = (delta: 1 | -1) => {
+    const target = Math.min(LAST_NAV, Math.max(0, index + delta));
+    if (target !== index) applyNav({ index: target, dir: dirFor(target) });
+  };
+
+  const onHandleKeyDown = (e: React.KeyboardEvent) => {
+    // Wider ← → narrower, matching the on-screen direction of the drag.
+    const move: Record<string, () => void> = {
+      ArrowLeft: () => stepNav(1),
+      ArrowRight: () => stepNav(-1),
+      Home: () => applyNav({ index: 0, dir: dirFor(0) }),
+      End: () => applyNav({ index: LAST_NAV, dir: dirFor(LAST_NAV) }),
+    };
+    const action = move[e.key];
+    if (!action) return;
+    e.preventDefault();
+    action();
+  };
+
+  const isHidden = navState === "hidden";
 
   return (
     <div
@@ -247,39 +322,72 @@ export function AppShellSimple({
         />
       </div>
 
-      {/* Side nav — sidebar (labels) or rail (icons); the toggle ping-pongs and
-          the border drag snaps between states. Omitted entirely when the app
-          opts out of a side nav (`showNav={false}`). */}
-      {showNav && navState !== "hidden" && (
+      {/* Side nav — sidebar (labels), rail (icons), or collapsed to zero width
+          when hidden; the toggle ping-pongs and the border drag snaps between
+          states. Omitted entirely when the app opts out (`showNav={false}`). */}
+      {showNav && (
         <div
           ref={navRef}
+          id={navId}
           data-slot="app-shell-simple-nav"
-          className="[grid-area:nav] relative min-h-0 flex flex-col shrink-0 bg-sidebar border-r border-sidebar-border h-full transition-[width] duration-200"
-          style={{ width: navState === "rail" ? RAIL_WIDTH : SIDEBAR_WIDTH }}
+          data-nav-state={navState}
+          className={cn(
+            "[grid-area:nav] relative min-h-0 flex flex-col shrink-0 bg-sidebar h-full transition-[width] duration-200",
+            isHidden ? "overflow-hidden" : "border-r border-sidebar-border"
+          )}
+          style={{ width: NAV_WIDTH[navState] }}
         >
-          <DataAppShellPrimaryNav
-            variant={navState === "rail" ? "rail" : "sidebar"}
-            aria-label="Application navigation"
-            navGroups={navGroups}
-            user={userMenu}
-            className="h-full w-full"
-          />
-          {/* Drag handle on the right border — snaps between the nav states */}
+          {/* `inert` keeps the collapsed nav out of the tab order and the
+              accessibility tree while it stays mounted for the drag handle. */}
+          <div
+            data-slot="app-shell-simple-nav-content"
+            className="h-full w-full overflow-hidden"
+            inert={isHidden}
+          >
+            <DataAppShellPrimaryNav
+              variant={navState === "rail" ? "rail" : "sidebar"}
+              aria-label="Application navigation"
+              navGroups={navGroups}
+              activeKey={activeKey}
+              onSelect={onSelect}
+              user={userMenu}
+              className="h-full w-full"
+            />
+          </div>
+          {/* Drag handle on the right border — snaps between the nav states.
+              Also a keyboard-operable window splitter (arrows / Home / End). */}
           <div
             role="separator"
+            tabIndex={0}
             aria-orientation="vertical"
             aria-label="Resize navigation"
+            aria-controls={navId}
+            aria-valuemin={0}
+            aria-valuemax={SIDEBAR_WIDTH}
+            aria-valuenow={NAV_WIDTH[navState]}
+            aria-valuetext={navState}
+            onKeyDown={onHandleKeyDown}
             onPointerDown={(e) => {
               e.preventDefault();
               e.currentTarget.setPointerCapture(e.pointerId);
               setResizing(true);
             }}
             onPointerMove={(e) => {
-              if (resizing) snapToPointer(e.clientX);
+              if (!resizing) return;
+              // Defensive: a lost capture can strand `resizing` on, which would
+              // otherwise turn a plain hover into a resize.
+              if (e.buttons === 0) {
+                setResizing(false);
+                return;
+              }
+              snapToPointer(e.clientX);
             }}
             onPointerUp={() => setResizing(false)}
+            onPointerCancel={() => setResizing(false)}
+            onLostPointerCapture={() => setResizing(false)}
             className={cn(
-              "absolute top-0 right-0 z-10 h-full w-1.5 translate-x-1/2 cursor-col-resize transition-colors hover:bg-primary/40",
+              "absolute top-0 right-0 z-10 h-full translate-x-1/2 cursor-col-resize transition-colors hover:bg-primary/40 focus-visible:outline-none focus-visible:bg-primary/60 focus-visible:ring-2 focus-visible:ring-ring",
+              isHidden ? "w-3" : "w-1.5",
               resizing && "bg-primary/60"
             )}
           />

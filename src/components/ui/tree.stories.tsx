@@ -1,4 +1,4 @@
-import { FileTextIcon, FlaskConicalIcon, FolderIcon, FolderOpenIcon } from "lucide-react";
+import { FileTextIcon, FolderIcon, FolderOpenIcon } from "lucide-react";
 import * as React from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
@@ -74,41 +74,41 @@ type Node = {
   loading?: boolean;
 };
 
-const LONG_LABEL = "Batch-QC-2026-09-01_plate-01_fluorescence-intensity_replicate-03_operator-initials.rawdata";
+const LONG_LABEL = "a-very-long-file-name-that-will-not-fit-in-the-available-width-and-has-to-be-clipped.txt";
 
 const FOLDERS: Node[] = [
   {
-    id: "instrument-data",
-    label: "Instrument Data",
+    id: "documents",
+    label: "Documents",
     count: 14,
     children: [
       {
-        id: "lcms",
-        label: "LC-MS",
+        id: "reports",
+        label: "Reports",
         count: 2,
         children: [
-          { id: "lcms-2026-08", label: "2026-08", icon: <FileTextIcon /> },
+          { id: "reports-summary", label: "summary.txt", icon: <FileTextIcon /> },
           {
-            id: "lcms-long",
+            id: "reports-long",
             label: LONG_LABEL,
             icon: <FileTextIcon />,
           },
         ],
       },
-      { id: "plate-readers", label: "Plate Readers", unloaded: true, loading: true },
-      { id: "legacy", label: "Legacy (read-only)", disabled: true, icon: <FlaskConicalIcon /> },
+      { id: "drafts", label: "Drafts", unloaded: true, loading: true },
+      { id: "locked", label: "Locked folder", disabled: true, icon: <FolderIcon /> },
     ],
   },
   {
-    id: "processed",
-    label: "Processed",
+    id: "shared",
+    label: "Shared",
     count: 2,
     children: [
-      { id: "ids", label: "IDS Documents", icon: <FileTextIcon />, count: 128 },
-      { id: "decorated", label: "Decorated Files", icon: <FileTextIcon /> },
+      { id: "shared-notes", label: "notes.md", icon: <FileTextIcon />, count: 128 },
+      { id: "shared-image", label: "diagram.svg", icon: <FileTextIcon /> },
     ],
   },
-  { id: "archive", label: "Archive", icon: <FlaskConicalIcon /> },
+  { id: "archive", label: "Archive", icon: <FolderIcon /> },
 ];
 
 function nodeTrailing(node: Node): React.ReactNode {
@@ -144,15 +144,8 @@ function renderNodes(nodes: Node[]): React.ReactNode {
   });
 }
 
-const DEEP_IDS = ["org", "site", "lab", "instrument", "run", "result"];
-const DEEP_LABELS = [
-  "Acme Pharma",
-  "Cambridge site",
-  "Analytical lab",
-  "Xevo G2-XS",
-  "Run 2026-09-01",
-  "peaks.ids.json",
-];
+const DEEP_IDS = ["level-1", "level-2", "level-3", "level-4", "level-5", "level-6"];
+const DEEP_LABELS = ["First level", "Second level", "Third level", "Fourth level", "Fifth level", "leaf.txt"];
 
 function renderDeep(index: number): React.ReactNode {
   const isLeaf = index === DEEP_IDS.length - 1;
@@ -175,15 +168,15 @@ function renderDeep(index: number): React.ReactNode {
 /**
  * A realistic folder tree: leading icons, open/closed folder swapping, count badges and a spinner in
  * the `trailing` slot, a node whose children have not been fetched, and a disabled node. Hover
- * anywhere over the tree to reveal the indent guides, and hover the clipped `Batch-QC…` label to
+ * anywhere over the tree to reveal the indent guides, and hover the clipped `a-very-long-file-name…` label to
  * see its full text.
  */
 export const Default: Story = {
   render: () => (
     <Tree
-      aria-label="Data lake folders"
-      defaultExpandedIds={new Set(["instrument-data", "lcms"])}
-      defaultSelectedId="lcms"
+      aria-label="Files"
+      defaultExpandedIds={new Set(["documents", "reports"])}
+      defaultSelectedId="reports"
       className="max-w-xs"
     >
       {renderNodes(FOLDERS)}
@@ -195,16 +188,16 @@ export const Default: Story = {
 export const Flat: Story = {
   name: "Flat (no nesting)",
   render: () => (
-    <Tree aria-label="Pipelines" defaultSelectedId="fluorescence" className="max-w-xs">
-      <TreeItem id="fluorescence">
-        <TreeItemLabel icon={<FlaskConicalIcon />}>Fluorescence intensity</TreeItemLabel>
+    <Tree aria-label="Items" defaultSelectedId="first" className="max-w-xs">
+      <TreeItem id="first">
+        <TreeItemLabel icon={<FileTextIcon />}>First item</TreeItemLabel>
       </TreeItem>
-      <TreeItem id="chromatography">
-        <TreeItemLabel icon={<FlaskConicalIcon />}>Chromatography peak table</TreeItemLabel>
+      <TreeItem id="second">
+        <TreeItemLabel icon={<FileTextIcon />}>Second item</TreeItemLabel>
       </TreeItem>
-      <TreeItem id="mass-spec">
+      <TreeItem id="third">
         {/* The `icon` prop is optional — this row aligns with the others without one. */}
-        <TreeItemLabel>Mass spec deconvolution</TreeItemLabel>
+        <TreeItemLabel>Third item, with no icon</TreeItemLabel>
       </TreeItem>
     </Tree>
   ),
@@ -215,11 +208,11 @@ export const DeepNesting: Story = {
   name: "Deep nesting (controlled)",
   render: function DeepTree() {
     const [expandedIds, setExpandedIds] = React.useState(new Set(DEEP_IDS));
-    const [selectedId, setSelectedId] = React.useState<string | null>("lab");
+    const [selectedId, setSelectedId] = React.useState<string | null>("level-3");
 
     return (
       <Tree
-        aria-label="Sample lineage"
+        aria-label="Nested folders"
         expandedIds={expandedIds}
         onExpandedChange={setExpandedIds}
         selectedId={selectedId}
@@ -241,7 +234,7 @@ export const Guides: Story = {
         <div key={guides} className="flex flex-col gap-2">
           <p className="text-muted-foreground font-mono text-xs">guides=&quot;{guides}&quot;</p>
           <Tree
-            aria-label={`Sample lineage, guides ${guides}`}
+            aria-label={`Nested folders, guides ${guides}`}
             guides={guides}
             defaultExpandedIds={new Set(DEEP_IDS)}
             className="w-[240px]"
@@ -270,9 +263,9 @@ export const CoreBehaviour: Story = {
   render: (args) => (
     <Tree
       {...args}
-      aria-label="Data lake folders"
-      defaultExpandedIds={new Set(["instrument-data"])}
-      defaultSelectedId="lcms"
+      aria-label="Files"
+      defaultExpandedIds={new Set(["documents"])}
+      defaultSelectedId="reports"
       className="max-w-xs"
     >
       {renderNodes(FOLDERS)}
@@ -285,15 +278,15 @@ export const CoreBehaviour: Story = {
     const item = (label: string) => canvas.getByText(label).closest('[role="treeitem"]') as HTMLElement;
 
     await step("ARIA state is derived from position in the tree", async () => {
-      expect(canvas.getByRole("tree", { name: "Data lake folders" })).toBeInTheDocument();
+      expect(canvas.getByRole("tree", { name: "Files" })).toBeInTheDocument();
 
-      const instrumentData = item("Instrument Data");
+      const instrumentData = item("Documents");
       expect(instrumentData).toHaveAttribute("aria-level", "1");
       expect(instrumentData).toHaveAttribute("aria-posinset", "1");
       expect(instrumentData).toHaveAttribute("aria-setsize", "3");
       expect(instrumentData).toHaveAttribute("aria-expanded", "true");
 
-      const lcms = item("LC-MS");
+      const lcms = item("Reports");
       expect(lcms).toHaveAttribute("aria-level", "2");
       expect(lcms).toHaveAttribute("aria-setsize", "3");
       expect(lcms).toHaveAttribute("aria-selected", "true");
@@ -301,16 +294,16 @@ export const CoreBehaviour: Story = {
 
     await step("Leaves report no expanded state, and collapsed subtrees are absent entirely", async () => {
       expect(item("Archive")).not.toHaveAttribute("aria-expanded");
-      expect(canvas.queryByRole("treeitem", { name: "IDS Documents" })).not.toBeInTheDocument();
+      expect(canvas.queryByRole("treeitem", { name: "notes.md" })).not.toBeInTheDocument();
       // Children exist but have not been fetched — still an expandable node.
-      expect(item("Plate Readers")).toHaveAttribute("aria-expanded", "false");
+      expect(item("Drafts")).toHaveAttribute("aria-expanded", "false");
     });
 
     await step("The trailing slot joins the accessible name, unless the consumer hides it", async () => {
       // A count is information a screen reader user wants; a spinner is not, so the story hides it.
-      expect(canvas.getByRole("treeitem", { name: "Instrument Data 14" })).toBe(item("Instrument Data"));
-      expect(canvas.getByRole("treeitem", { name: "Plate Readers" })).toBe(item("Plate Readers"));
-      expect(item("Plate Readers").querySelector('[data-slot="tree-item-trailing"]')).toBeInTheDocument();
+      expect(canvas.getByRole("treeitem", { name: "Documents 14" })).toBe(item("Documents"));
+      expect(canvas.getByRole("treeitem", { name: "Drafts" })).toBe(item("Drafts"));
+      expect(item("Drafts").querySelector('[data-slot="tree-item-trailing"]')).toBeInTheDocument();
     });
 
     await step("Icons are decorative, so they stay out of every node's accessible name", async () => {
@@ -322,10 +315,10 @@ export const CoreBehaviour: Story = {
     await step("Selecting a node washes the node and its contents, not each row", async () => {
       // The regression this guards: `group-*/tree-item` matches any ancestor, so a selected parent
       // used to style every descendant row too.
-      const selectedBranch = item("Instrument Data");
+      const selectedBranch = item("Documents");
       expect(selectedBranch).toHaveAttribute("aria-selected", "false");
-      expect(item("LC-MS")).toHaveAttribute("aria-selected", "true");
-      expect(item("Plate Readers")).toHaveAttribute("aria-selected", "false");
+      expect(item("Reports")).toHaveAttribute("aria-selected", "true");
+      expect(item("Drafts")).toHaveAttribute("aria-selected", "false");
     });
 
     // Ordering note: every step below moves focus, and the roving tab stop follows it — so the
@@ -333,47 +326,47 @@ export const CoreBehaviour: Story = {
     // (which legitimately becomes the tab stop once focused) has to come last.
     await step("The tree is a single tab stop, entered at the first root node", async () => {
       await userEvent.tab();
-      expect(item("Instrument Data")).toHaveFocus();
-      expect(item("Instrument Data")).toHaveAttribute("tabindex", "0");
-      expect(item("Processed")).toHaveAttribute("tabindex", "-1");
+      expect(item("Documents")).toHaveFocus();
+      expect(item("Documents")).toHaveAttribute("tabindex", "0");
+      expect(item("Shared")).toHaveAttribute("tabindex", "-1");
     });
 
     await step("Arrow keys expand, descend and cross depth levels", async () => {
       await userEvent.keyboard("{ArrowRight}");
-      expect(item("LC-MS")).toHaveFocus();
+      expect(item("Reports")).toHaveFocus();
 
       await userEvent.keyboard("{ArrowDown}");
-      expect(item("Plate Readers")).toHaveFocus();
+      expect(item("Drafts")).toHaveFocus();
 
       // Expanding a node whose children are not rendered leaves it with no group.
       await userEvent.keyboard("{ArrowRight}");
-      expect(item("Plate Readers")).toHaveAttribute("aria-expanded", "true");
-      expect(item("Plate Readers").querySelector('[role="group"]')).toBeNull();
+      expect(item("Drafts")).toHaveAttribute("aria-expanded", "true");
+      expect(item("Drafts").querySelector('[role="group"]')).toBeNull();
 
       await userEvent.keyboard("{ArrowLeft}");
-      expect(item("Plate Readers")).toHaveAttribute("aria-expanded", "false");
+      expect(item("Drafts")).toHaveAttribute("aria-expanded", "false");
       await userEvent.keyboard("{ArrowLeft}");
-      expect(item("Instrument Data")).toHaveFocus();
+      expect(item("Documents")).toHaveFocus();
     });
 
     await step("Home and End jump to the first and last visible node", async () => {
       await userEvent.keyboard("{End}");
       expect(item("Archive")).toHaveFocus();
       await userEvent.keyboard("{Home}");
-      expect(item("Instrument Data")).toHaveFocus();
+      expect(item("Documents")).toHaveFocus();
     });
 
     await step("Enter and click activate down the same path", async () => {
       await userEvent.keyboard("{Enter}");
-      expect(args.onActivate).toHaveBeenCalledWith("instrument-data");
+      expect(args.onActivate).toHaveBeenCalledWith("documents");
 
-      await userEvent.click(canvas.getByText("Processed"));
-      expect(args.onActivate).toHaveBeenCalledWith("processed");
-      expect(item("Processed")).toHaveAttribute("aria-selected", "true");
+      await userEvent.click(canvas.getByText("Shared"));
+      expect(args.onActivate).toHaveBeenCalledWith("shared");
+      expect(item("Shared")).toHaveAttribute("aria-selected", "true");
     });
 
     await step("The chevron toggles expansion without activating", async () => {
-      const processed = item("Processed");
+      const processed = item("Shared");
       const activationsSoFar = (args.onActivate as ReturnType<typeof fn>).mock.calls.length;
       await userEvent.click(processed.querySelector('[data-slot="tree-item-indicator"]') as Element);
       expect(processed).toHaveAttribute("aria-expanded", "false");
@@ -381,18 +374,18 @@ export const CoreBehaviour: Story = {
     });
 
     await step("A disabled node is focusable but neither selectable nor activatable", async () => {
-      // Activating `Instrument Data` above collapsed it, taking its children with it.
-      const parent = item("Instrument Data");
+      // Activating `Documents` above collapsed it, taking its children with it.
+      const parent = item("Documents");
       expect(parent).toHaveAttribute("aria-expanded", "false");
       await userEvent.click(parent.querySelector('[data-slot="tree-item-indicator"]') as Element);
 
-      const disabled = item("Legacy (read-only)");
+      const disabled = item("Locked folder");
       expect(disabled).toHaveAttribute("aria-disabled", "true");
       disabled.focus();
       expect(disabled).toHaveFocus();
       await userEvent.keyboard("{Enter}");
       expect(disabled).toHaveAttribute("aria-selected", "false");
-      expect(args.onActivate).not.toHaveBeenCalledWith("legacy");
+      expect(args.onActivate).not.toHaveBeenCalledWith("locked");
     });
 
   },
@@ -412,7 +405,7 @@ export const TruncationBehaviour: Story = {
         <TreeItemLabel icon={<FileTextIcon />}>{LONG_LABEL}</TreeItemLabel>
       </TreeItem>
       <TreeItem id="short">
-        <TreeItemLabel icon={<FileTextIcon />}>peaks.ids.json</TreeItemLabel>
+        <TreeItemLabel icon={<FileTextIcon />}>short-name.txt</TreeItemLabel>
       </TreeItem>
     </Tree>
   ),
@@ -430,7 +423,7 @@ export const TruncationBehaviour: Story = {
     });
 
     await step("A label that fits gets no tooltip", async () => {
-      await userEvent.hover(canvas.getByText("peaks.ids.json"));
+      await userEvent.hover(canvas.getByText("short-name.txt"));
       // Comfortably past the provider's open delay, so this is a real negative rather than a race.
       await new Promise((resolve) => setTimeout(resolve, 900));
       expect(body.queryByRole("tooltip")).not.toBeInTheDocument();
@@ -453,7 +446,7 @@ export const ControlledBehaviour: Story = {
     return (
       <div className="dark bg-background rounded-lg p-4">
         <Tree
-          aria-label="Sample lineage"
+          aria-label="Nested folders"
           expandedIds={expandedIds}
           onExpandedChange={setExpandedIds}
           selectedId={selectedId}
@@ -469,18 +462,18 @@ export const ControlledBehaviour: Story = {
     const canvas = within(canvasElement);
 
     await step("Depth is unbounded and aria-level keeps counting", async () => {
-      expect(canvas.getByRole("treeitem", { name: "peaks.ids.json" })).toHaveAttribute("aria-level", "6");
+      expect(canvas.getByRole("treeitem", { name: "leaf.txt" })).toHaveAttribute("aria-level", "6");
     });
 
     await step("Selection and expansion round-trip through consumer state", async () => {
-      const lab = canvas.getByRole("treeitem", { name: "Analytical lab" });
+      const lab = canvas.getByRole("treeitem", { name: "Third level" });
       expect(lab).toHaveAttribute("aria-selected", "false");
 
-      await userEvent.click(canvas.getByText("Analytical lab"));
+      await userEvent.click(canvas.getByText("Third level"));
       expect(lab).toHaveAttribute("aria-selected", "true");
       // Activating an expanded parent collapses it, and the controlled set drops the id.
       expect(lab).toHaveAttribute("aria-expanded", "false");
-      expect(canvas.queryByRole("treeitem", { name: "Xevo G2-XS" })).not.toBeInTheDocument();
+      expect(canvas.queryByRole("treeitem", { name: "Fourth level" })).not.toBeInTheDocument();
     });
   },
 };

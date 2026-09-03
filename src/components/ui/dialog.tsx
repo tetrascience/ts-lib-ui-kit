@@ -60,6 +60,14 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           "fixed top-1/2 left-1/2 z-50 flex flex-col w-[calc(100%-2rem)] max-w-lg max-h-[90svh] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-card/90 dark:bg-background text-sm shadow-elevation-5 ring-1 ring-foreground/10 duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          // Safeguard: DialogContent itself has no padding (so the footer can
+          // bleed full-width). Any content dropped straight in — i.e. not one of
+          // the dialog-* slots (header/body/footer/close) — is inset with mx-4 /
+          // my-2 so raw content is never flush to the edges or butted onto the
+          // footer (SW-2528). Margin (not padding) insets an element that has its
+          // own background as a whole; w-auto overrides a child's w-full so the
+          // margins actually shrink it instead of overflowing.
+          "[&>*:not([data-slot^=dialog-])]:mx-4 [&>*:not([data-slot^=dialog-])]:my-2 [&>*:not([data-slot^=dialog-])]:w-auto",
           className
         )}
         {...props}
@@ -68,6 +76,9 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close data-slot="dialog-close" asChild>
             <Button
+              // explicit dialog-close slot (overrides Button's own data-slot) so
+              // the DialogContent padding safeguard above skips this button
+              data-slot="dialog-close"
               variant="ghost"
               className="absolute top-2 right-2"
               size="icon-sm"

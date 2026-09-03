@@ -343,6 +343,25 @@ export const Variations: Story = {
       expect(canvasElement.querySelector(".lucide-check")).not.toBeNull()
     })
 
+    await step("the selected tint actually resolves to a paint", async () => {
+      // Guards the --selected tokens. Tailwind emits NO css for bg-selected /
+      // text-selected-foreground when those theme keys are missing, and it does
+      // not warn — so without this assertion the selected state silently
+      // renders as nothing while every check stays green.
+      const items = canvasElement.querySelectorAll<HTMLElement>(
+        '[data-slot="toggle-group-item"]',
+      )
+      const on = [...items].find((el) => el.dataset.state === "on")
+      const off = [...items].find((el) => el.dataset.state === "off")
+      expect(on).toBeDefined()
+      expect(off).toBeDefined()
+
+      const tint = getComputedStyle(on!).backgroundColor
+      expect(tint).not.toBe("")
+      expect(tint).not.toBe("rgba(0, 0, 0, 0)")
+      expect(tint).not.toBe(getComputedStyle(off!).backgroundColor)
+    })
+
     await step("a consumer's className still wins over the item border", async () => {
       // The segmented border must stay at plain-utility specificity, or a
       // group-scoped selector silently beats `border-r-0` passed by a consumer

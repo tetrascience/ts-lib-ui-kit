@@ -61,7 +61,9 @@ const headerAreaVariants = cva("shrink-0 flex", {
   variants: {
     variant: {
       rail: "justify-center py-2",
-      sidebar: "px-3 py-2.5 border-b border-sidebar-border",
+      // pl-0 so a header logo can sit in the same 48px icon gutter as the nav
+      // items below it (SW-2578); keep the right inset for a collapse control.
+      sidebar: "pr-3 py-2.5 border-b border-sidebar-border",
       top: "items-center",
     },
   },
@@ -72,10 +74,10 @@ const itemsAreaVariants = cva("flex min-h-0", {
   variants: {
     variant: {
       rail: "flex-1 flex-col items-center gap-1 px-2 pt-2 overflow-y-auto",
-      // px-1 — the inset previously lived on each row as `mx-1` alongside
-      // `w-full`, which made every row 8px wider than its container and got
-      // clipped by this scroll area (SW-2118 sidebar row cut-off).
-      sidebar: "flex-1 flex-col px-1 py-2 overflow-y-auto",
+      // px-0 so the active/hover row highlight runs edge-to-edge as a full-width
+      // bar (SW-2578). Rows are `w-full` with no negative margins, so nothing is
+      // clipped by this scroll area (the earlier SW-2118 mx-1 cut-off is gone).
+      sidebar: "flex-1 flex-col px-0 py-2 overflow-y-auto",
       top: "flex-1 flex-row items-center gap-1 min-w-0 overflow-x-auto",
     },
   },
@@ -121,7 +123,9 @@ const dataAppShellPrimaryNavItemVariants = cva(
     variants: {
       variant: {
         rail: "flex flex-col items-center p-0 w-full",
-        sidebar: "flex items-center gap-3 w-full px-3 py-2 text-sm text-left rounded-md",
+        // Icon sits in a fixed 48px gutter (see NavItem); the row highlight is a
+        // full-width square bar, so no px / rounded here (SW-2578).
+        sidebar: "flex items-center w-full py-2 pr-3 text-sm text-left",
         // ring-inset — the items row is an overflow-x-auto scroll container,
         // which would clip an outset ring at the row's edges
         top: "flex items-center gap-2 h-7 px-2.5 text-sm rounded-md whitespace-nowrap focus-visible:ring-inset",
@@ -135,7 +139,7 @@ const dataAppShellPrimaryNavItemVariants = cva(
       {
         variant: "sidebar",
         active: true,
-        class: "bg-sidebar-accent text-sidebar-foreground font-medium",
+        class: "bg-sidebar-accent text-primary font-medium",
       },
       {
         variant: "sidebar",
@@ -166,8 +170,10 @@ const pageIconVariants = cva(
         false: "bg-transparent",
       },
       variant: {
-        rail: "w-[30px] h-[30px] hover:bg-accent",
-        sidebar: "w-8 h-8",
+        // 32px box everywhere so the rail, sidebar and top-bar toggle boxes all
+        // match; sidebar-accent hover to match the rest of the sidebar surface.
+        rail: "size-8 hover:bg-sidebar-accent/60",
+        sidebar: "size-8",
         top: "",
       },
     },
@@ -212,6 +218,37 @@ interface NavItemProps {
   onSelect?: (key: string, page: NavPage) => void;
 }
 
+// The horizontal `top` variant is self-contained (no icon box / gutter styling),
+// so it lives in its own component to keep `NavItem` focused on rail/sidebar.
+function TopNavItem({
+  page,
+  active,
+  onClick,
+}: {
+  page: NavPage;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const Icon = page.icon;
+  return (
+    <button
+      type="button"
+      data-slot="data-app-shell-primary-nav-item"
+      aria-current={active ? "page" : undefined}
+      className={cn(dataAppShellPrimaryNavItemVariants({ variant: "top", active }))}
+      onClick={onClick}
+    >
+      {Icon && <Icon className="w-4 h-4" />}
+      <span>{page.label}</span>
+      {page.badge != null && (
+        <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+          {page.badge}
+        </Badge>
+      )}
+    </button>
+  );
+}
+
 function NavItem({ page, variant, active, onSelect }: NavItemProps) {
   const Icon = page.icon;
 
@@ -221,23 +258,7 @@ function NavItem({ page, variant, active, onSelect }: NavItemProps) {
   };
 
   if (variant === "top") {
-    return (
-      <button
-        type="button"
-        data-slot="data-app-shell-primary-nav-item"
-        aria-current={active ? "page" : undefined}
-        className={cn(dataAppShellPrimaryNavItemVariants({ variant, active }))}
-        onClick={handleClick}
-      >
-        {Icon && <Icon className="w-4 h-4" />}
-        <span>{page.label}</span>
-        {page.badge != null && (
-          <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
-            {page.badge}
-          </Badge>
-        )}
-      </button>
-    );
+    return <TopNavItem page={page} active={active} onClick={handleClick} />;
   }
 
   const iconEl = Icon ? (
@@ -284,7 +305,7 @@ function NavItem({ page, variant, active, onSelect }: NavItemProps) {
     );
   }
 
-  // sidebar — icon + label row
+  // sidebar — icon (in a 48px gutter) + label row
   return (
     <button
       type="button"
@@ -293,7 +314,7 @@ function NavItem({ page, variant, active, onSelect }: NavItemProps) {
       className={cn(dataAppShellPrimaryNavItemVariants({ variant, active }))}
       onClick={handleClick}
     >
-      {iconBox}
+      <span className="flex w-12 shrink-0 justify-center">{iconBox}</span>
       <span className="truncate">{page.label}</span>
       {page.badge != null && (
         <Badge variant="secondary" className="ml-auto h-4 px-1.5 text-[10px]">
@@ -366,7 +387,7 @@ function DataAppShellPrimaryNav({
                 <div className={cn(groupSeparatorVariants({ variant: resolvedVariant }))} />
               )}
               {resolvedVariant === "sidebar" && group.label && (
-                <span className="px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">
+                <span className="pl-12 pr-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">
                   {group.label}
                 </span>
               )}

@@ -183,6 +183,12 @@ function AppHeaderMenu({
   compact,
   menuSide = "right",
 }: AppHeaderMenuProps) {
+  const logo = (
+    <span className="flex items-center justify-center rounded-lg bg-sidebar-accent border border-sidebar-border font-bold text-foreground shrink-0 size-8 text-[10px]">
+      {appIcon ?? appName}
+    </span>
+  );
+
   return (
     <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
@@ -190,17 +196,12 @@ function AppHeaderMenu({
               type="button"
               className={cn(
                 "cursor-pointer bg-transparent border-none p-0",
-                !compact && "flex items-center gap-3 w-full text-left"
+                !compact && "flex items-center w-full text-left"
               )}
             >
-              {/* Icon */}
-              <span
-                className={cn(
-                  "flex items-center justify-center rounded-lg bg-sidebar-accent border border-sidebar-border font-bold text-foreground shrink-0 w-8 h-8 text-[10px]"
-                )}
-              >
-                {appIcon ?? appName}
-              </span>
+              {/* Icon — expanded: centered in the 48px gutter so it lines up with
+                  the nav icons below; compact: bare, centered by the rail header */}
+              {compact ? logo : <span className="flex w-12 shrink-0 justify-center">{logo}</span>}
 
               {/* Name (expanded only — no version here) */}
               {!compact && (

@@ -144,13 +144,22 @@ export const Variations: Story = {
           <Button variant="outline">Bottom</Button>
         </ButtonGroup>
       </VariationRow>
+
+      <VariationRow label="Vertical with separator">
+        <ButtonGroup orientation="vertical" className="w-fit">
+          <Button variant="outline">Rename</Button>
+          <Button variant="outline">Duplicate</Button>
+          <ButtonGroupSeparator orientation="horizontal" />
+          <Button variant="outline">Delete</Button>
+        </ButtonGroup>
+      </VariationRow>
     </div>
   ),
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
     await step("all variation groups render", async () => {
-      expect(canvas.getAllByRole("group").length).toBeGreaterThanOrEqual(5)
+      expect(canvas.getAllByRole("group").length).toBeGreaterThanOrEqual(6)
     })
 
     await step("the active button is aria-pressed", async () => {
@@ -158,6 +167,28 @@ export const Variations: Story = {
         "aria-pressed",
         "true",
       )
+    })
+
+    await step("aria-pressed carries the selected treatment", async () => {
+      const selected = canvas.getByRole("button", { name: "Week" })
+      const unselected = canvas.getByRole("button", { name: "Day" })
+      const tint = getComputedStyle(selected).backgroundColor
+
+      // The --selected tint must actually resolve to a paint, and must differ
+      // from an unpressed sibling — this fails if the tokens go missing.
+      expect(tint).not.toBe("")
+      expect(tint).not.toBe("rgba(0, 0, 0, 0)")
+      expect(tint).not.toBe(getComputedStyle(unselected).backgroundColor)
+    })
+
+    await step("a separator in a vertical group still draws a divider", async () => {
+      const separator = canvasElement.querySelector(
+        '[data-slot="button-group-separator"]',
+      )
+      expect(separator).not.toBeNull()
+      // ButtonGroup strips the preceding button's bottom border, so the
+      // separator is the only thing left drawing that line: it needs height.
+      expect(separator!.getBoundingClientRect().height).toBeGreaterThan(0)
     })
   },
 }

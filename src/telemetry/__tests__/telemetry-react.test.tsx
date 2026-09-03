@@ -347,6 +347,7 @@ describe("resolveArtifact", () => {
       namespace: "common",
       slug: "sandbox",
       version: "1.2.3",
+      type: "data-app",
     });
   });
 
@@ -366,7 +367,35 @@ describe("resolveArtifact", () => {
   });
 
   test("falls back to the manifest entirely when no host props are given", () => {
-    expect(resolveArtifact(undefined, manifest)).toEqual(manifest);
+    expect(resolveArtifact(undefined, manifest)).toEqual({
+      ...manifest,
+      type: "data-app",
+    });
+  });
+
+  // The core distro REFUSES to guess the kind: it serves data apps and
+  // connectors alike, and labelling one as the other is worse than emitting no
+  // kind at all. These bindings can supply it, because a React browser mount on
+  // this platform IS a data app — but only as a default something else can
+  // override, never as a value that wins over what the host declared.
+  test("declares data-app when nothing else says otherwise", () => {
+    expect(resolveArtifact(undefined, manifest)?.type).toBe("data-app");
+  });
+
+  test.each([
+    ["host props", { ...manifest, type: "connector" as const }, manifest, undefined],
+    ["the manifest", undefined, { ...manifest, type: "connector" as const }, undefined],
+    ["the explicit prop", undefined, manifest, "connector" as const],
+  ])("takes the kind from %s over the default", (_label, artifact, mf, explicit) => {
+    expect(resolveArtifact(artifact, mf, explicit)?.type).toBe("connector");
+  });
+
+  // Precedence has to match the other three fields, or an app that sets the
+  // prop globally would silently override the identity its host passed in.
+  test("host props beat the manifest, which beats the explicit prop", () => {
+    expect(
+      resolveArtifact({ ...manifest, type: "data-app" }, { ...manifest, type: "connector" }, "connector")?.type,
+    ).toBe("data-app");
   });
 });
 

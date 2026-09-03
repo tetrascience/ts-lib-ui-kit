@@ -8019,9 +8019,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tetrascience-npm/request@npm:0.4.0-alpha.259.1":
-  version: 0.4.0-alpha.259.1
-  resolution: "@tetrascience-npm/request@npm:0.4.0-alpha.259.1::__archiveUrl=https%3A%2F%2Ftetrascience.jfrog.io%2Fartifactory%2Fapi%2Fnpm%2Fts-npm-virtual%2F%40tetrascience-npm%2Frequest%2F-%2F%40tetrascience-npm%2Frequest-0.4.0-alpha.259.1.tgz"
+"@tetrascience-npm/request@npm:0.4.0-beta.265.1":
+  version: 0.4.0-beta.265.1
+  resolution: "@tetrascience-npm/request@npm:0.4.0-beta.265.1::__archiveUrl=https%3A%2F%2Ftetrascience.jfrog.io%2Fartifactory%2Fapi%2Fnpm%2Fts-npm-virtual%2F%40tetrascience-npm%2Frequest%2F-%2F%40tetrascience-npm%2Frequest-0.4.0-beta.265.1.tgz"
   dependencies:
     "@opentelemetry/api": "npm:^1.9.1"
     "@opentelemetry/api-logs": "npm:^0.221.0"
@@ -8043,7 +8043,7 @@ __metadata:
       optional: true
   bin:
     generate-service-client: dist/cli/generate-client.js
-  checksum: 10c0/71234c32551b040c30c0230249a56c408cb951843ea5c54952403b076b9781a37ff9e90b63bc2ee2d3f1173f8b8613131d313bc2cca6bb5bb270a345264a99e2
+  checksum: 10c0/2827c134ddf642b31db316a42cf890af126a77dc7ffc480767550cf817abc2cf50ecfca3129f0aef36086469b59ca7927817ca4d12f41a9bc01a297b8ed904be
   languageName: node
   linkType: hard
 
@@ -8093,7 +8093,7 @@ __metadata:
     "@streamdown/mermaid": "npm:^1.0.2"
     "@tailwindcss/vite": "npm:^4.2.2"
     "@tanstack/react-table": "npm:^8.21.3"
-    "@tetrascience-npm/request": "npm:0.4.0-alpha.259.1"
+    "@tetrascience-npm/request": "npm:0.4.0-beta.265.1"
     "@tetrascience-npm/ts-connectors-sdk": "npm:^3.2.0"
     "@types/eslint-plugin-jsx-a11y": "npm:^6"
     "@types/jsdom": "npm:^27"

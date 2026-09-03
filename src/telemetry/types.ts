@@ -1,10 +1,11 @@
 import type { LogRecordProcessor } from "@opentelemetry/sdk-logs";
 import type { RequestTrackingLogger } from "@tetrascience-npm/request";
 import type {
-  ArtifactIdentity,
+  ArtifactType,
   MetricsOptions,
   StartSpanOptions,
   Telemetry,
+  TelemetryArtifact,
   TelemetryTracingOptions,
   TetraSpan,
   TrackErrorContext,
@@ -17,12 +18,25 @@ export interface TelemetryProviderProps {
    * Artifact identity from the host mount props (`hostProps.artifact`).
    * Fields missing here fall back to {@link TelemetryProviderProps.manifest}.
    */
-  artifact?: Partial<ArtifactIdentity>;
+  artifact?: Partial<TelemetryArtifact>;
   /**
    * Manifest fallback for standalone dev, e.g. `import manifest from './manifest.json'`.
    * Used field-by-field wherever `artifact` is incomplete.
    */
-  manifest?: Partial<ArtifactIdentity>;
+  manifest?: Partial<TelemetryArtifact>;
+  /**
+   * What KIND of artifact is mounting this — `"data-app"` unless stated.
+   *
+   * The core distro refuses to guess this (it serves data apps and connectors
+   * alike, and mislabelling one as the other is worse than emitting no kind at
+   * all). This kit can: it is React bindings for a browser mount, and on this
+   * platform that is a data app. The default is a DECLARATION by a component
+   * only data apps mount, not a fallback for producers that do not know what
+   * they are — and anything else mounting it says so here.
+   *
+   * `artifact.type` / `manifest.type` win over this when present.
+   */
+  artifactType?: ArtifactType;
   /**
    * Org slug hint. Producer-asserted only — the gateway stamps the
    * authenticated org server-side and that value wins (SW-2319).

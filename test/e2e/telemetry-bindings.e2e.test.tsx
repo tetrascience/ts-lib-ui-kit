@@ -99,6 +99,11 @@ describe("the React bindings deliver through the real pipeline", () => {
     expect(record).toContain(marker);
     expect(record).toContain(env.orgSlug);
     expect(record).toContain(env.artifact.slug);
+    // The KIND, too: the core distro requires it and refuses to guess, so
+    // these bindings supply it (see resolveArtifact). Its unit test proves the
+    // value is chosen; only this proves it survives the exporter, the gateway's
+    // identity stamping and the collector to land on the stored record.
+    expect(record).toContain('"ts.artifact.type":"data-app"');
   });
 
   test("identity attached at the binding layer never survives the boundary", async () => {

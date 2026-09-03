@@ -248,3 +248,58 @@ export const CloseViaHeaderButton: Story = {
     zephyr: { testCaseId: "SW-T1479" },
   },
 }
+
+// SW-2528 — content placed straight into DialogContent (no DialogBody) must still
+// be inset from the edges and not butt onto the footer.
+export const RawContentPadding: Story = {
+  render: () => (
+    <Dialog open>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete run 4821?</DialogTitle>
+          <DialogDescription>
+            This permanently removes the run and its results.
+          </DialogDescription>
+        </DialogHeader>
+        {/* Deliberately NOT wrapped in DialogBody — DialogContent's safeguard
+            insets it and keeps a gap before the footer. `w-full` proves the
+            safeguard shrinks a full-width child instead of letting it overflow. */}
+        <div
+          data-testid="raw-block"
+          className="w-full rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground"
+        >
+          This block sits directly in DialogContent, yet stays inset from the side edges and off
+          the footer.
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button variant="destructive">Delete</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  ),
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const body = within(canvasElement.ownerDocument.body)
+    const dialog = body.getByRole("dialog")
+    const raw = dialog.querySelector('[data-testid="raw-block"]') as HTMLElement
+    const footer = dialog.querySelector('[data-slot="dialog-footer"]') as HTMLElement
+
+    await step("raw content is inset from both side edges (not flush)", async () => {
+      const dr = dialog.getBoundingClientRect()
+      const rr = raw.getBoundingClientRect()
+      expect(Math.round(rr.left - dr.left)).toBeGreaterThanOrEqual(12)
+      expect(Math.round(dr.right - rr.right)).toBeGreaterThanOrEqual(12)
+    })
+
+    await step("raw content is not butted onto the footer", async () => {
+      const rr = raw.getBoundingClientRect()
+      const fr = footer.getBoundingClientRect()
+      expect(Math.round(fr.top - rr.bottom)).toBeGreaterThan(0)
+    })
+  },
+}

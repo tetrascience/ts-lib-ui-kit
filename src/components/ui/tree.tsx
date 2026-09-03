@@ -529,6 +529,13 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
           paddingInlineStart: `calc(var(--tree-indent) * ${level - 1} + 0.25rem)`,
           // Aligned to the parent's chevron centre, one indent step to the left of this row's own.
           "--tree-guide-left": `calc(var(--tree-indent) * ${level - 2} + 0.6875rem)`,
+          // How far the elbow reaches right: up to this row's own leading glyph. A folder's chevron
+          // sits at the start of the content box, but a leaf has an invisible chevron-width spacer
+          // there, so its connector has to cross that spacer to arrive at the icon instead of
+          // stopping short in empty space.
+          "--tree-elbow-run": hasChildren
+            ? "calc(var(--tree-indent) - 0.4375rem)"
+            : "calc(var(--tree-indent) + 0.8125rem)",
           ...style,
         } as React.CSSProperties
       }
@@ -541,13 +548,16 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
         // From this node's own state, not an ancestor selector: `aria-disabled` is per-node, so a
         // disabled folder must not dim the contents underneath it.
         disabled && "pointer-events-none opacity-50",
-        // `::before` is the elbow: down the row's top half at the guide line, then a rounded turn
-        // to the right, pointing into this row. `::after` continues the trunk through the bottom
-        // half — omitted on the last child, so the line terminates in the curve rather than running
-        // past it. Consecutive rows chain into one continuous trunk.
+        // `::before` is the elbow: down the guide line, then a rounded turn right, arriving at this
+        // row's leading glyph. It starts 0.4375rem (half a chevron) above the row so the trunk
+        // emerges from just under the parent's chevron instead of leaving a half-row gap below it —
+        // and stops short of the glyph itself rather than striking through it. `::after` continues
+        // the trunk from the curve to the row's bottom, omitted on the last child so the line
+        // terminates in the curve. Together, consecutive rows chain into one continuous trunk.
         showGuides && [
-          "before:border-muted-foreground/40 before:absolute before:top-0 before:left-[var(--tree-guide-left)]",
-          "before:pointer-events-none before:h-1/2 before:w-2 before:rounded-bl-[0.5rem] before:border-b before:border-l before:content-['']",
+          "before:border-muted-foreground/40 before:absolute before:top-[-0.4375rem] before:left-[var(--tree-guide-left)]",
+          "before:pointer-events-none before:h-[calc(50%+0.4375rem)] before:w-[var(--tree-elbow-run)]",
+          "before:rounded-bl-[0.5rem] before:border-b before:border-l before:content-['']",
           !isLastChild && [
             "after:bg-muted-foreground/40 after:absolute after:top-1/2 after:bottom-0",
             "after:left-[var(--tree-guide-left)] after:pointer-events-none after:w-px after:content-['']",

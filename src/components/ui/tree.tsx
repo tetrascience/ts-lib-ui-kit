@@ -31,6 +31,7 @@ type TreeContextValue = {
   focusedId: string | null;
   setFocusedId: (id: string) => void;
   expandOnSelect: boolean;
+  guides: TreeGuides;
   /** Attached to each `TreeItem` rather than to the tree root, so the node is its own key target. */
   onItemKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
 };
@@ -201,6 +202,8 @@ const TREE_KEY_HANDLERS: Record<string, (context: TreeKeyEvent) => void> = {
  * Tree
  * -----------------------------------------------------------------------------------------------*/
 
+type TreeGuides = "none" | "hover" | "always";
+
 type TreeProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
   /** Expanded node ids (controlled). */
   expandedIds?: Set<string>;
@@ -216,6 +219,12 @@ type TreeProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
   onActivate?: (id: string) => void;
   /** Whether selecting a parent node also toggles its expansion. */
   expandOnSelect?: boolean;
+  /**
+   * Vertical indent guides joining each level to its parent. `"hover"` reveals them while the
+   * pointer is anywhere over the tree, which keeps a dense tree quiet at rest but still lets you
+   * trace a deep branch; `"always"` pins them on; `"none"` turns them off.
+   */
+  guides?: TreeGuides;
 };
 
 function Tree({
@@ -229,6 +238,7 @@ function Tree({
   onSelectedChange,
   onActivate,
   expandOnSelect = true,
+  guides = "hover",
   ...props
 }: TreeProps) {
   const treeRef = React.useRef<HTMLDivElement>(null);
@@ -303,9 +313,10 @@ function Tree({
       focusedId,
       setFocusedId,
       expandOnSelect,
+      guides,
       onItemKeyDown: handleItemKeyDown,
     }),
-    [expandedIds, setExpanded, selectedId, activateItem, focusedId, expandOnSelect, handleItemKeyDown],
+    [expandedIds, setExpanded, selectedId, activateItem, focusedId, expandOnSelect, guides, handleItemKeyDown],
   );
 
   return (
@@ -314,9 +325,12 @@ function Tree({
         <div
           ref={treeRef}
           data-slot="tree"
+          data-guides={guides}
           role="tree"
           tabIndex={-1}
-          className={cn("text-foreground flex w-full flex-col text-sm [--tree-indent:1rem]", className)}
+          // `group/tree` is what the `"hover"` guide mode hangs off: hovering anywhere in the tree
+          // reveals every guide at once, so you can trace a branch without hunting row by row.
+          className={cn("group/tree text-foreground flex w-full flex-col text-sm [--tree-indent:1rem]", className)}
           {...props}
         >
           <TreeItemsContainer>{children}</TreeItemsContainer>
@@ -425,12 +439,11 @@ function TreeItem({
           if (event.target === event.currentTarget) setFocusedId(id);
         }}
         className={cn(
-          // Selection is a wash behind the whole branch — the node's row *and* its rendered
-          // contents — rather than a band on the row alone.
-          "rounded-md outline-none aria-selected:bg-accent",
+          "outline-none",
           // Direct-child selectors, deliberately not `group-*/tree-item`: tree items nest, and a
           // group variant matches *any* ancestor, so a focused or selected parent painted its focus
-          // ring and accent text onto every descendant row.
+          // ring onto every descendant row. Backgrounds live on the label for the same reason —
+          // anything painted here would spread behind the whole subtree.
           "focus-visible:[&>[data-slot=tree-item-label]]:border-ring focus-visible:[&>[data-slot=tree-item-label]]:shadow-focus",
           className,
         )}
@@ -470,9 +483,16 @@ type TreeItemLabelProps = React.ComponentProps<"div"> &
      * folders) by reading `expanded` from `useTreeItem()` inside your own icon component.
      */
     icon?: React.ReactNode;
+    /**
+     * Right-aligned slot for per-node adornments — a count `Badge`, a `Spinner`, a status dot. It
+     * sits inside the label, so its text joins the node's accessible name: a count reads as
+     * "Onboarding 3", which is usually what you want. Wrap it in `aria-hidden` yourself for purely
+     * decorative content such as a spinner.
+     */
+    trailing?: React.ReactNode;
   };
 
-function TreeItemLabel({ className, children, size, style, icon, ...props }: TreeItemLabelProps) {
+function TreeItemLabel({ className, children, size, style, icon, trailing, ...props }: TreeItemLabelProps) {
   const { labelId, level, expanded, hasChildren, selected, disabled, toggle } = useTreeItemContext("TreeItemLabel");
 
   return (
@@ -488,7 +508,10 @@ function TreeItemLabel({ className, children, size, style, icon, ...props }: Tre
       className={cn(
         treeItemLabelVariants({ size }),
         "border border-transparent",
-        selected ? "text-accent-foreground font-medium" : "hover:bg-muted",
+        // Backgrounds hug this row only. An open folder carries a quiet tint so the branch you have
+        // drilled into stays findable; selection is the stronger accent and wins the `bg-*` merge.
+        expanded && "bg-muted/40",
+        selected ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted",
         // From this node's own state, not an ancestor selector: `aria-disabled` is per-node, so a
         // disabled folder must not dim the contents underneath it.
         disabled && "pointer-events-none opacity-50",
@@ -528,6 +551,14 @@ function TreeItemLabel({ className, children, size, style, icon, ...props }: Tre
         </span>
       ) : null}
       <span className="min-w-0 flex-1 truncate">{children}</span>
+      {trailing ? (
+        <span
+          data-slot="tree-item-trailing"
+          className="ml-auto flex shrink-0 items-center gap-1 [&_svg]:size-3.5"
+        >
+          {trailing}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -536,8 +567,9 @@ function TreeItemLabel({ className, children, size, style, icon, ...props }: Tre
  * TreeItemGroup
  * -----------------------------------------------------------------------------------------------*/
 
-function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"div">) {
+function TreeItemGroup({ className, children, style, ...props }: React.ComponentProps<"div">) {
   const { expanded, level } = useTreeItemContext("TreeItemGroup");
+  const { guides } = useTreeContext("TreeItemGroup");
 
   // Not rendered while collapsed: keeps collapsed subtrees out of the accessibility tree entirely,
   // and makes DOM order equal visible order for keyboard traversal.
@@ -545,7 +577,22 @@ function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"
 
   return (
     <TreeLevelContext.Provider value={level + 1}>
-      <div {...props} data-slot="tree-item-group" role="group" className={cn("flex flex-col", className)}>
+      <div
+        {...props}
+        data-slot="tree-item-group"
+        role="group"
+        // One guide per group spans exactly its children's block, so the line stops at the last
+        // child instead of running past it. Aligned to the parent's chevron centre.
+        style={{ "--tree-guide-left": `calc(var(--tree-indent) * ${level - 1} + 0.6875rem)`, ...style } as React.CSSProperties}
+        className={cn(
+          "relative flex flex-col",
+          guides !== "none" &&
+            "before:bg-muted-foreground/40 before:absolute before:inset-y-0 before:left-[var(--tree-guide-left)] before:w-px before:content-['']",
+          guides === "hover" &&
+            "before:opacity-0 before:transition-opacity group-hover/tree:before:opacity-100 motion-reduce:before:transition-none",
+          className,
+        )}
+      >
         <TreeItemsContainer>{children}</TreeItemsContainer>
       </div>
     </TreeLevelContext.Provider>
@@ -559,6 +606,7 @@ export {
   TreeItemLabel,
   treeItemLabelVariants,
   useTreeItem,
+  type TreeGuides,
   type TreeItemLabelProps,
   type TreeItemProps,
   type TreeProps,

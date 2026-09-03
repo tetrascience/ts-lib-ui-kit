@@ -2,6 +2,8 @@ import { FileTextIcon, FlaskConicalIcon, FolderIcon, FolderOpenIcon } from "luci
 import * as React from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 
+import { Badge } from "./badge";
+import { Spinner } from "./spinner";
 import { Tree, TreeItem, TreeItemGroup, TreeItemLabel, useTreeItem } from "./tree";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -30,8 +32,11 @@ const meta: Meta<typeof Tree> = {
           "anything a screen reader must convey belongs in the label text. Read `expanded` from `useTreeItem()` to swap",
           "open and closed folder icons, as `FolderNodeIcon` does below.",
           "",
-          "**Selection** is a subtle wash behind the selected node *and its contents*, so selecting a folder reads as one",
-          "region rather than a stack of highlighted rows.",
+          "**Trailing slot:** `TreeItemLabel`'s `trailing` prop right-aligns per-node adornments — a count badge, a",
+          "spinner, a status dot. Its text joins the node's accessible name, so hide purely decorative content yourself.",
+          "",
+          "**Guides:** `guides` draws vertical lines joining each level to its parent — `\"hover\"` (the default) reveals",
+          "them while the pointer is over the tree, `\"always\"` pins them on, `\"none\"` turns them off.",
         ].join("\n"),
       },
     },
@@ -59,16 +64,22 @@ type Node = {
   /** Set on a node whose children exist but have not been fetched yet. */
   unloaded?: boolean;
   disabled?: boolean;
+  /** Rendered in the label's `trailing` slot as a count badge. */
+  count?: number;
+  /** Rendered in the label's `trailing` slot as a spinner instead of a count. */
+  loading?: boolean;
 };
 
 const FOLDERS: Node[] = [
   {
     id: "instrument-data",
     label: "Instrument Data",
+    count: 14,
     children: [
       {
         id: "lcms",
         label: "LC-MS",
+        count: 2,
         children: [
           { id: "lcms-2026-08", label: "2026-08", icon: <FileTextIcon /> },
           {
@@ -78,27 +89,49 @@ const FOLDERS: Node[] = [
           },
         ],
       },
-      { id: "plate-readers", label: "Plate Readers", unloaded: true },
+      { id: "plate-readers", label: "Plate Readers", unloaded: true, loading: true },
       { id: "legacy", label: "Legacy (read-only)", disabled: true, icon: <FlaskConicalIcon /> },
     ],
   },
   {
     id: "processed",
     label: "Processed",
+    count: 2,
     children: [
-      { id: "ids", label: "IDS Documents", icon: <FileTextIcon /> },
+      { id: "ids", label: "IDS Documents", icon: <FileTextIcon />, count: 128 },
       { id: "decorated", label: "Decorated Files", icon: <FileTextIcon /> },
     ],
   },
   { id: "archive", label: "Archive", icon: <FlaskConicalIcon /> },
 ];
 
+function nodeTrailing(node: Node): React.ReactNode {
+  // A spinner conveys nothing to a screen reader, so it is hidden; the count is left audible, and
+  // reads as part of the node's name ("Processed 2").
+  if (node.loading) {
+    return <Spinner aria-hidden="true" className="text-muted-foreground" />;
+  }
+  if (node.count !== undefined) {
+    return (
+      <Badge variant="secondary" className="px-1.5 tabular-nums">
+        {node.count}
+      </Badge>
+    );
+  }
+  return undefined;
+}
+
 function renderNodes(nodes: Node[]): React.ReactNode {
   return nodes.map((node) => {
     const hasChildren = Boolean(node.children?.length) || Boolean(node.unloaded);
     return (
       <TreeItem key={node.id} id={node.id} hasChildren={hasChildren} disabled={node.disabled}>
-        <TreeItemLabel icon={node.icon ?? (hasChildren ? <FolderNodeIcon /> : undefined)}>{node.label}</TreeItemLabel>
+        <TreeItemLabel
+          icon={node.icon ?? (hasChildren ? <FolderNodeIcon /> : undefined)}
+          trailing={nodeTrailing(node)}
+        >
+          {node.label}
+        </TreeItemLabel>
         {node.children ? <TreeItemGroup>{renderNodes(node.children)}</TreeItemGroup> : null}
       </TreeItem>
     );
@@ -134,9 +167,9 @@ function renderDeep(index: number): React.ReactNode {
  * -------------------------------------------------------------------------- */
 
 /**
- * A realistic folder tree: leading icons, open/closed folder swapping, a long label that truncates,
- * a node whose children have not been fetched, and a disabled node. Selecting `LC-MS` shows the
- * selection wash; expand it to see the wash cover the branch's contents too.
+ * A realistic folder tree: leading icons, open/closed folder swapping, count badges and a spinner in
+ * the `trailing` slot, a long label that truncates, a node whose children have not been fetched, and
+ * a disabled node. Hover anywhere over the tree to reveal the indent guides.
  */
 export const Default: Story = {
   render: () => (
@@ -192,6 +225,28 @@ export const DeepNesting: Story = {
   },
 };
 
+/** The three `guides` modes side by side. Hover the middle tree to reveal its guides. */
+export const Guides: Story = {
+  name: "Indent guides",
+  render: () => (
+    <div className="flex flex-wrap gap-8">
+      {(["none", "hover", "always"] as const).map((guides) => (
+        <div key={guides} className="flex flex-col gap-2">
+          <p className="text-muted-foreground font-mono text-xs">guides=&quot;{guides}&quot;</p>
+          <Tree
+            aria-label={`Sample lineage, guides ${guides}`}
+            guides={guides}
+            defaultExpandedIds={new Set(DEEP_IDS)}
+            className="w-[240px]"
+          >
+            {renderDeep(0)}
+          </Tree>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
 /* --------------------------------------------------------- test-only stories
  *
  * `!dev` keeps these out of the sidebar and `!autodocs` out of the docs page,
@@ -218,7 +273,9 @@ export const CoreBehaviour: Story = {
   ),
   play: async ({ args, canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const item = (name: string) => canvas.getByRole("treeitem", { name });
+    // Found via the label text rather than the accessible name: the `trailing` slot deliberately
+    // contributes to the name (see the step below), and these lookups should not be coupled to it.
+    const item = (label: string) => canvas.getByText(label).closest('[role="treeitem"]') as HTMLElement;
 
     await step("ARIA state is derived from position in the tree", async () => {
       expect(canvas.getByRole("tree", { name: "Data lake folders" })).toBeInTheDocument();
@@ -240,6 +297,13 @@ export const CoreBehaviour: Story = {
       expect(canvas.queryByRole("treeitem", { name: "IDS Documents" })).not.toBeInTheDocument();
       // Children exist but have not been fetched — still an expandable node.
       expect(item("Plate Readers")).toHaveAttribute("aria-expanded", "false");
+    });
+
+    await step("The trailing slot joins the accessible name, unless the consumer hides it", async () => {
+      // A count is information a screen reader user wants; a spinner is not, so the story hides it.
+      expect(canvas.getByRole("treeitem", { name: "Instrument Data 14" })).toBe(item("Instrument Data"));
+      expect(canvas.getByRole("treeitem", { name: "Plate Readers" })).toBe(item("Plate Readers"));
+      expect(item("Plate Readers").querySelector('[data-slot="tree-item-trailing"]')).toBeInTheDocument();
     });
 
     await step("Icons are decorative, so they stay out of every node's accessible name", async () => {

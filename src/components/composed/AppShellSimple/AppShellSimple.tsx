@@ -283,7 +283,8 @@ export function AppShellSimple({
   };
 
   const onHandleKeyDown = (e: React.KeyboardEvent) => {
-    // Wider ← → narrower, matching the on-screen direction of the drag.
+    // ← narrower · → wider, matching the on-screen direction of the drag
+    // (the arrow moves the nav's right border the same way).
     const move: Record<string, () => void> = {
       ArrowLeft: () => stepNav(1),
       ArrowRight: () => stepNav(-1),

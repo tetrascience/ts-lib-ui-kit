@@ -60,6 +60,8 @@ type TreeItemContextValue = {
   hasChildren: boolean;
   selected: boolean;
   disabled: boolean;
+  /** Last among its siblings — the connector elbow terminates instead of continuing down. */
+  isLastChild: boolean;
   toggle: () => void;
   select: () => void;
 };
@@ -396,8 +398,19 @@ function TreeItem({
   const tabbable = focusedId ? focusedId === id : level === 1 && posinset === 1;
 
   const itemContext = React.useMemo<TreeItemContextValue>(
-    () => ({ id, labelId, level, expanded, hasChildren, selected, disabled, toggle, select }),
-    [id, labelId, level, expanded, hasChildren, selected, disabled, toggle, select],
+    () => ({
+      id,
+      labelId,
+      level,
+      expanded,
+      hasChildren,
+      selected,
+      disabled,
+      isLastChild: posinset === setsize,
+      toggle,
+      select,
+    }),
+    [id, labelId, level, expanded, hasChildren, selected, disabled, posinset, setsize, toggle, select],
   );
 
   return (
@@ -493,7 +506,14 @@ type TreeItemLabelProps = React.ComponentProps<"div"> &
   };
 
 function TreeItemLabel({ className, children, size, style, icon, trailing, ...props }: TreeItemLabelProps) {
-  const { labelId, level, expanded, hasChildren, selected, disabled, toggle } = useTreeItemContext("TreeItemLabel");
+  const { labelId, level, expanded, hasChildren, selected, disabled, isLastChild, toggle } =
+    useTreeItemContext("TreeItemLabel");
+  const { guides } = useTreeContext("TreeItemLabel");
+
+  // Connectors are drawn per row rather than per group: the label element *is* the row, so the
+  // elbow can be sized in halves of it. A group box also wraps its descendants' rows, which makes
+  // percentage heights meaningless there.
+  const showGuides = guides !== "none" && level > 1;
 
   return (
     <div
@@ -504,17 +524,40 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
       data-slot="tree-item-label"
       // The row is a passive label, not a control: the parent `role="treeitem"` owns focus, click
       // handling, keyboard handling and the accessible name, so a nested control would fight it.
-      style={{ paddingInlineStart: `calc(var(--tree-indent) * ${level - 1} + 0.25rem)`, ...style }}
+      style={
+        {
+          paddingInlineStart: `calc(var(--tree-indent) * ${level - 1} + 0.25rem)`,
+          // Aligned to the parent's chevron centre, one indent step to the left of this row's own.
+          "--tree-guide-left": `calc(var(--tree-indent) * ${level - 2} + 0.6875rem)`,
+          ...style,
+        } as React.CSSProperties
+      }
       className={cn(
         treeItemLabelVariants({ size }),
-        "border border-transparent",
-        // Backgrounds hug this row only. An open folder carries a quiet tint so the branch you have
-        // drilled into stays findable; selection is the stronger accent and wins the `bg-*` merge.
-        expanded && "bg-muted/40",
+        "relative border border-transparent",
+        // Only selection paints a background — an open folder is already marked by its rotated
+        // chevron, open-folder icon and the connectors running down from it.
         selected ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted",
         // From this node's own state, not an ancestor selector: `aria-disabled` is per-node, so a
         // disabled folder must not dim the contents underneath it.
         disabled && "pointer-events-none opacity-50",
+        // `::before` is the elbow: down the row's top half at the guide line, then a rounded turn
+        // to the right, pointing into this row. `::after` continues the trunk through the bottom
+        // half — omitted on the last child, so the line terminates in the curve rather than running
+        // past it. Consecutive rows chain into one continuous trunk.
+        showGuides && [
+          "before:border-muted-foreground/40 before:absolute before:top-0 before:left-[var(--tree-guide-left)]",
+          "before:pointer-events-none before:h-1/2 before:w-2 before:rounded-bl-[0.5rem] before:border-b before:border-l before:content-['']",
+          !isLastChild && [
+            "after:bg-muted-foreground/40 after:absolute after:top-1/2 after:bottom-0",
+            "after:left-[var(--tree-guide-left)] after:pointer-events-none after:w-px after:content-['']",
+          ],
+          guides === "hover" && [
+            "before:opacity-0 before:transition-opacity group-hover/tree:before:opacity-100",
+            "after:opacity-0 after:transition-opacity group-hover/tree:after:opacity-100",
+            "motion-reduce:before:transition-none motion-reduce:after:transition-none",
+          ],
+        ],
         className,
       )}
     >
@@ -567,9 +610,8 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
  * TreeItemGroup
  * -----------------------------------------------------------------------------------------------*/
 
-function TreeItemGroup({ className, children, style, ...props }: React.ComponentProps<"div">) {
+function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"div">) {
   const { expanded, level } = useTreeItemContext("TreeItemGroup");
-  const { guides } = useTreeContext("TreeItemGroup");
 
   // Not rendered while collapsed: keeps collapsed subtrees out of the accessibility tree entirely,
   // and makes DOM order equal visible order for keyboard traversal.
@@ -577,22 +619,7 @@ function TreeItemGroup({ className, children, style, ...props }: React.Component
 
   return (
     <TreeLevelContext.Provider value={level + 1}>
-      <div
-        {...props}
-        data-slot="tree-item-group"
-        role="group"
-        // One guide per group spans exactly its children's block, so the line stops at the last
-        // child instead of running past it. Aligned to the parent's chevron centre.
-        style={{ "--tree-guide-left": `calc(var(--tree-indent) * ${level - 1} + 0.6875rem)`, ...style } as React.CSSProperties}
-        className={cn(
-          "relative flex flex-col",
-          guides !== "none" &&
-            "before:bg-muted-foreground/40 before:absolute before:inset-y-0 before:left-[var(--tree-guide-left)] before:w-px before:content-['']",
-          guides === "hover" &&
-            "before:opacity-0 before:transition-opacity group-hover/tree:before:opacity-100 motion-reduce:before:transition-none",
-          className,
-        )}
-      >
+      <div {...props} data-slot="tree-item-group" role="group" className={cn("flex flex-col", className)}>
         <TreeItemsContainer>{children}</TreeItemsContainer>
       </div>
     </TreeLevelContext.Provider>

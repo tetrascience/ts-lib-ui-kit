@@ -113,6 +113,7 @@ import {
 | `Carousel`               | Data Display | `carousel`            | —                                                 | Stable |
 | `Item`                   | Data Display | —                     | Generic list/menu item                            | Stable |
 | `Kbd`                    | Data Display | —                     | Keyboard shortcut indicator                       | Stable |
+| `Text`                   | Data Display | —                     | Preset type scale, `as` + `variant` independent   | Beta   |
 | `TetraScienceIcon`       | Data Display | —                     | Brand icon component                              | Stable |
 | `ScrollArea`             | Layout       | `scroll-area`         | —                                                 | Stable |
 | `Resizable`              | Layout       | `resizable`           | —                                                 | Stable |

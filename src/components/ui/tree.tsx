@@ -332,7 +332,13 @@ function Tree({
           tabIndex={-1}
           // `group/tree` is what the `"hover"` guide mode hangs off: hovering anywhere in the tree
           // reveals every guide at once, so you can trace a branch without hunting row by row.
-          className={cn("group/tree text-foreground flex w-full flex-col text-sm [--tree-indent:1rem]", className)}
+          //
+          // `--tree-indent` is 1.25rem so that a child's chevron lands exactly on its parent's
+          // icon: the icon sits 1.5rem into the content box (chevron 0.875 + gap 0.375 + the
+          // 0.25rem lead-in), and the chevron sits at the lead-in, so one step must be
+          // 1.5rem - 0.25rem. Indentation, the guide offsets and the elbow reach are all derived
+          // from this one value — override it and the connectors follow.
+          className={cn("group/tree text-foreground flex w-full flex-col text-sm [--tree-indent:1.25rem]", className)}
           {...props}
         >
           <TreeItemsContainer>{children}</TreeItemsContainer>

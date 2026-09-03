@@ -132,11 +132,21 @@ function Text({
   ...props
 }: TextProps) {
   const resolvedVariant: TextVariant = variant ?? "body";
-  const Comp: React.ElementType = as ?? DEFAULT_ELEMENT[resolvedVariant];
+  const resolvedElement: TextElement = as ?? DEFAULT_ELEMENT[resolvedVariant];
+  const Comp: React.ElementType = resolvedElement;
 
   // An icon or a truncating label needs a flex root and a wrapper it can
   // shrink; plain text keeps the bare element so inline flow is untouched.
   const isComposite = Boolean(Icon) || truncate;
+
+  const compositeDisplay =
+    resolvedElement === "span" ||
+    resolvedElement === "strong" ||
+    resolvedElement === "em" ||
+    resolvedElement === "small" ||
+    resolvedElement === "label"
+      ? "inline-flex"
+      : "flex";
 
   return (
     <Comp
@@ -144,7 +154,7 @@ function Text({
       data-variant={resolvedVariant}
       className={cn(
         textVariants({ variant: resolvedVariant, tone }),
-        isComposite && "inline-flex max-w-full items-baseline",
+        isComposite && cn(compositeDisplay, "max-w-full items-baseline"),
         className,
       )}
       {...props}

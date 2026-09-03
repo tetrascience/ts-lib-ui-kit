@@ -88,6 +88,18 @@ function ToggleGroupItem({
   const showIndicator =
     (selectedIndicator ?? (hasText && !hasIcon ? "dot" : "none")) === "dot"
 
+  // Segmented (spacing=0) items carry their own border. Applied as plain
+  // `border` rather than a `group-data-*:` variant on purpose: a group-scoped
+  // selector compiles to specificity (0,2,0) and would silently beat a
+  // consumer's own `border-r-0`/`border-l-0` in `className` (0,1,0). Plain
+  // utilities stay at (0,1,0), so `className` keeps winning — which is the
+  // contract every other component here follows.
+  const segmented = (context.spacing ?? 0) === 0
+  const collapseLeadingEdge =
+    context.orientation === "vertical"
+      ? "[&:not(:first-child)]:border-t-0"
+      : "[&:not(:first-child)]:border-l-0"
+
   return (
     <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
@@ -105,7 +117,8 @@ function ToggleGroupItem({
         // selected. Non-first items drop their shared (leading) edge so adjacent
         // borders collapse to a single divider. Border + rounded corners live on
         // the same element, so the selected fill always aligns with the outline.
-        "group-data-[spacing=0]/toggle-group:border group-data-[spacing=0]/toggle-group:border-input group-data-horizontal/toggle-group:data-[spacing=0]:[&:not(:first-child)]:border-l-0 group-data-vertical/toggle-group:data-[spacing=0]:[&:not(:first-child)]:border-t-0",
+        segmented && "border border-input",
+        segmented && collapseLeadingEdge,
         className
       )}
       {...props}

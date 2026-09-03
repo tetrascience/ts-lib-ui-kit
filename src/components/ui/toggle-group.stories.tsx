@@ -1,7 +1,8 @@
-import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon } from "lucide-react"
+import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon, XIcon } from "lucide-react"
 import { type ReactNode } from "react"
 import { expect, within } from "storybook/test"
 
+import { Button } from "./button"
 import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
@@ -292,6 +293,29 @@ export const Variations: Story = {
         </ToggleGroup>
       </VariationRow>
 
+      <VariationRow label="Joined to an adjacent control (consumer border override)">
+        <ToggleGroup type="single" variant="outline" size="sm" defaultValue="plate-1">
+          <div className="inline-flex items-stretch">
+            <ToggleGroupItem
+              value="plate-1"
+              data-testid="joined-item"
+              className="rounded-r-none border-r-0"
+            >
+              <span className="truncate">Plate 1</span>
+            </ToggleGroupItem>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              aria-label="Remove Plate 1"
+              className="rounded-l-none"
+            >
+              <XIcon />
+            </Button>
+          </div>
+        </ToggleGroup>
+      </VariationRow>
+
       <VariationRow label="Sizes — sm / default / lg">
         <ToggleGroup type="single" size="sm" defaultValue="board">
           <ToggleGroupItem value="board">Board</ToggleGroupItem>
@@ -317,6 +341,17 @@ export const Variations: Story = {
 
     await step("label-only selected items show a check", async () => {
       expect(canvasElement.querySelector(".lucide-check")).not.toBeNull()
+    })
+
+    await step("a consumer's className still wins over the item border", async () => {
+      // The segmented border must stay at plain-utility specificity, or a
+      // group-scoped selector silently beats `border-r-0` passed by a consumer
+      // and the item no longer sits flush against its adjacent control.
+      const joined = canvasElement.querySelector<HTMLElement>(
+        '[data-testid="joined-item"]',
+      )
+      expect(joined).not.toBeNull()
+      expect(getComputedStyle(joined!).borderRightWidth).toBe("0px")
     })
   },
 }

@@ -253,7 +253,7 @@ export const Truncation: Story = {
 
     await step("Truncating text wraps its children in a shrinkable node", async () => {
       const title = canvas.getByTestId("truncating-title");
-      expect(title).toHaveClass("inline-flex");
+      expect(title).toHaveClass("flex");
       const inner = title.querySelector("span");
       expect(inner).toHaveClass("truncate");
       expect(inner).toHaveClass("min-w-0");

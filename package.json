@@ -216,7 +216,7 @@
     "@streamdown/math": "^1.0.2",
     "@streamdown/mermaid": "^1.0.2",
     "@tailwindcss/vite": "^4.2.2",
-    "@tetrascience-npm/request": "0.4.0-beta.265.1",
+    "@tetrascience-npm/request": "0.4.0",
     "@types/eslint-plugin-jsx-a11y": "^6",
     "@types/jsdom": "^27",
     "@types/node": "^25.3.3",

@@ -303,10 +303,11 @@ export function AppShellSimple({
     <div
       data-slot="app-shell-simple"
       data-nav-state={navState}
-      // Full-width top bar spans both columns; the side nav sits below it on the
-      // left. The toggle in the top bar's far-left cell aligns over the nav.
       className={cn(
-        "grid h-screen w-full overflow-hidden [grid-template-columns:auto_minmax(0,1fr)] [grid-template-rows:auto_minmax(0,1fr)] [grid-template-areas:'top_top'_'nav_body']",
+        "grid h-screen w-full overflow-hidden [grid-template-rows:auto_minmax(0,1fr)]",
+        showNav
+          ? "[grid-template-columns:auto_minmax(0,1fr)] [grid-template-areas:'top_top'_'nav_body']"
+          : "[grid-template-columns:minmax(0,1fr)] [grid-template-areas:'top'_'body']",
         resizing && "select-none cursor-col-resize"
       )}
     >

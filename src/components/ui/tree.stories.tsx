@@ -1,6 +1,6 @@
 import { FileTextIcon, FlaskConicalIcon, FolderIcon, FolderOpenIcon } from "lucide-react";
 import * as React from "react";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { Badge } from "./badge";
 import { Spinner } from "./spinner";
@@ -31,6 +31,9 @@ const meta: Meta<typeof Tree> = {
           "**Icons:** pass a decorative icon to `TreeItemLabel`'s `icon` prop. It is hidden from assistive tech, so",
           "anything a screen reader must convey belongs in the label text. Read `expanded` from `useTreeItem()` to swap",
           "open and closed folder icons, as `FolderNodeIcon` does below.",
+          "",
+          "**Clipped labels** reveal themselves in a tooltip on hover, and only when the text is actually cut off —",
+          "the row is measured at the moment the tooltip would open.",
           "",
           "**Trailing slot:** `TreeItemLabel`'s `trailing` prop right-aligns per-node adornments — a count badge, a",
           "spinner, a status dot. Its text joins the node's accessible name, so hide purely decorative content yourself.",
@@ -71,6 +74,8 @@ type Node = {
   loading?: boolean;
 };
 
+const LONG_LABEL = "Batch-QC-2026-09-01_plate-01_fluorescence-intensity_replicate-03_operator-initials.rawdata";
+
 const FOLDERS: Node[] = [
   {
     id: "instrument-data",
@@ -85,7 +90,7 @@ const FOLDERS: Node[] = [
           { id: "lcms-2026-08", label: "2026-08", icon: <FileTextIcon /> },
           {
             id: "lcms-long",
-            label: "Batch-QC-2026-09-01_plate-01_fluorescence-intensity_replicate-03_operator-initials.rawdata",
+            label: LONG_LABEL,
             icon: <FileTextIcon />,
           },
         ],
@@ -169,14 +174,15 @@ function renderDeep(index: number): React.ReactNode {
 
 /**
  * A realistic folder tree: leading icons, open/closed folder swapping, count badges and a spinner in
- * the `trailing` slot, a long label that truncates, a node whose children have not been fetched, and
- * a disabled node. Hover anywhere over the tree to reveal the indent guides.
+ * the `trailing` slot, a node whose children have not been fetched, and a disabled node. Hover
+ * anywhere over the tree to reveal the indent guides, and hover the clipped `Batch-QC…` label to
+ * see its full text.
  */
 export const Default: Story = {
   render: () => (
     <Tree
       aria-label="Data lake folders"
-      defaultExpandedIds={new Set(["instrument-data"])}
+      defaultExpandedIds={new Set(["instrument-data", "lcms"])}
       defaultSelectedId="lcms"
       className="max-w-xs"
     >
@@ -387,6 +393,47 @@ export const CoreBehaviour: Story = {
       await userEvent.keyboard("{Enter}");
       expect(disabled).toHaveAttribute("aria-selected", "false");
       expect(args.onActivate).not.toHaveBeenCalledWith("legacy");
+    });
+
+  },
+};
+
+/**
+ * The truncation tooltip, both directions. Its own story rather than more steps on
+ * `CoreBehaviour`: the open delay makes these slow, and a play function long enough to outlast the
+ * story's own mount asserts against a torn-down DOM.
+ */
+export const TruncationBehaviour: Story = {
+  name: "Truncation tooltip (test only)",
+  tags: ["!dev", "!autodocs"],
+  render: () => (
+    <Tree aria-label="Files" className="w-[220px]">
+      <TreeItem id="long">
+        <TreeItemLabel icon={<FileTextIcon />}>{LONG_LABEL}</TreeItemLabel>
+      </TreeItem>
+      <TreeItem id="short">
+        <TreeItemLabel icon={<FileTextIcon />}>peaks.ids.json</TreeItemLabel>
+      </TreeItem>
+    </Tree>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    // The content is portalled out of the canvas, so it is queried from the document.
+    const body = within(document.body);
+
+    await step("A clipped label reveals its full text on hover", async () => {
+      await userEvent.hover(canvas.getByText(LONG_LABEL));
+      await waitFor(() => expect(body.getByRole("tooltip")).toHaveTextContent(LONG_LABEL), { timeout: 2000 });
+
+      await userEvent.unhover(canvas.getByText(LONG_LABEL));
+      await waitFor(() => expect(body.queryByRole("tooltip")).not.toBeInTheDocument(), { timeout: 2000 });
+    });
+
+    await step("A label that fits gets no tooltip", async () => {
+      await userEvent.hover(canvas.getByText("peaks.ids.json"));
+      // Comfortably past the provider's open delay, so this is a real negative rather than a race.
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      expect(body.queryByRole("tooltip")).not.toBeInTheDocument();
     });
   },
 };

@@ -3,6 +3,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { ChevronRightIcon } from "lucide-react";
 import * as React from "react";
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
+
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------------------------------
@@ -341,7 +343,16 @@ function Tree({
           className={cn("group/tree text-foreground flex w-full flex-col text-sm [--tree-indent:1.25rem]", className)}
           {...props}
         >
-          <TreeItemsContainer>{children}</TreeItemsContainer>
+          {/*
+            Radix requires a `Tooltip.Provider` above any `Tooltip`, and the labels mount one each
+            to reveal truncated text. Providing it here rather than asking consumers to wrap their
+            app keeps `Tree` self-contained; nesting inside a consumer's own provider is supported,
+            and the longer delay is deliberate — instant tooltips while sweeping the pointer down a
+            dense tree are noise.
+          */}
+          <TooltipProvider delayDuration={500}>
+            <TreeItemsContainer>{children}</TreeItemsContainer>
+          </TooltipProvider>
         </div>
       </TreeLevelContext.Provider>
     </TreeContext.Provider>
@@ -521,6 +532,17 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
   // percentage heights meaningless there.
   const showGuides = guides !== "none" && level > 1;
 
+  const textRef = React.useRef<HTMLSpanElement>(null);
+  const [tooltipOpen, setTooltipOpen] = React.useState(false);
+
+  // Truncation is measured when the tooltip would open, not tracked continuously: a
+  // `ResizeObserver` per row would cost every row in a large tree for a hint almost none of them
+  // need, and this answers the same question at the only moment it matters.
+  const handleTooltipOpenChange = (next: boolean) => {
+    const text = textRef.current;
+    setTooltipOpen(next && !!text && text.scrollWidth > text.clientWidth);
+  };
+
   return (
     <div
       // Spread first: the derived ARIA wiring below is authoritative. A consumer-supplied `id` would
@@ -609,7 +631,19 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
           {icon}
         </span>
       ) : null}
-      <span className="min-w-0 flex-1 truncate">{children}</span>
+      <Tooltip open={tooltipOpen} onOpenChange={handleTooltipOpenChange}>
+        <TooltipTrigger asChild>
+          <span ref={textRef} className="min-w-0 flex-1 truncate">
+            {children}
+          </span>
+        </TooltipTrigger>
+        {/*
+          A purely visual repair for clipped text. The trigger is a plain `span`, so it never takes
+          focus and this only ever opens on hover — and the node's accessible name already carries
+          the label in full, so a screen reader is not relying on it.
+        */}
+        <TooltipContent>{children}</TooltipContent>
+      </Tooltip>
       {trailing ? (
         <span
           data-slot="tree-item-trailing"

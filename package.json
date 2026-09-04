@@ -30,6 +30,16 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./telemetry": {
+      "import": {
+        "types": "./dist/telemetry/index.d.ts",
+        "default": "./dist/telemetry.js"
+      },
+      "require": {
+        "types": "./dist/telemetry/index.d.ts",
+        "default": "./dist/telemetry.cjs"
+      }
+    },
     "./server": {
       "import": {
         "types": "./dist/server/index.d.ts",
@@ -200,7 +210,9 @@
     "lint:fix": "eslint . --fix --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "typecheck:e2e": "tsc --noEmit -p tsconfig.e2e.json"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": ">=3.0.0 <4.0.0",
@@ -250,6 +262,7 @@
     "@rdkit/rdkit": "2025.3.4-1.0.0",
     "@streamdown/math": "^1.0.2",
     "@streamdown/mermaid": "^1.0.2",
+    "@tetrascience-npm/request": ">=0.4.0",
     "plotly.js-dist": "^2.35.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -280,6 +293,9 @@
   },
   "devDependencies": {
     "@aws-sdk/client-athena": "^3.975.0",
+    "@aws-sdk/client-cloudwatch": "^3.699.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.699.0",
+    "@aws-sdk/client-ssm": "^3.699.0",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@databricks/sql": "^1.12.0",
@@ -303,6 +319,7 @@
     "@streamdown/math": "^1.0.2",
     "@streamdown/mermaid": "^1.0.2",
     "@tailwindcss/vite": "^4.2.2",
+    "@tetrascience-npm/request": "0.4.0",
     "@types/eslint-plugin-jsx-a11y": "^6",
     "@types/jsdom": "^27",
     "@types/node": "^25.3.3",

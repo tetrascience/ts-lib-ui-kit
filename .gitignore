@@ -40,5 +40,18 @@ license-compliance.txt
 table-comparison-googledoc.md
 dependency-licenses.csv
 
-# Filled-in e2e credentials — never commit
-test/e2e/.env.e2e
+# Any .env, anywhere — never commit. Broad on purpose: the e2e suite's
+# .env.e2e was the file that prompted this, but the rule that actually protects
+# us is the one nobody has to remember to extend when the next tool picks its
+# own name (.env.local, .env.test, an app's .env.production).
+#
+# `.env*` rather than `.env`: the secrets live in the SUFFIXED variants, which
+# a bare `.env` entry does not match at all.
+.env*
+# ...except templates, which exist to be committed and hold no real values.
+# Matched by SUFFIX, not by exact name: the file this suite actually tells you
+# to copy is `test/e2e/.env.e2e.example`, which an `!.env.example` entry does
+# not match — the negation has to be as broad as the rule it is carving out of.
+!*.example
+!*.sample
+!*.template

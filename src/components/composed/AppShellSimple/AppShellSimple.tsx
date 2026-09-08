@@ -206,12 +206,16 @@ function SideNavToggle({ label, onCycle }: { label: string; onCycle: () => void 
           <Button
             data-slot="app-shell-simple-nav-toggle"
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             aria-label={label}
-            className="shrink-0 text-muted-foreground"
+            // size-8 (32px) so the hover highlight box matches the nav icon box;
+            // -ml-1 centers the icon on the nav's 24px gutter (TopBar has px-3);
+            // hover uses sidebar-accent (not the ghost default accent) to match the
+            // nav-row hover on the shared sidebar surface; no press inset.
+            className="-ml-1 shrink-0 text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground active:translate-y-0"
             onClick={onCycle}
           >
-            <PanelLeft className="w-4 h-4" />
+            <PanelLeft className="size-4" />
           </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom">{label}</TooltipContent>

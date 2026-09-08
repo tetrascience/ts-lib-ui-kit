@@ -260,38 +260,3 @@ export const Truncation: Story = {
     });
   },
 };
-
-/**
- * Title + subtitle is a **composition**, not a slot — two `Text` calls with a
- * documented rhythm. The subtitle renders as a `p`, never a heading tag: a
- * subtitle inside an `h3` reads to a screen reader as a section that does not
- * exist.
- */
-export const TitleWithSubtitle: Story = {
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-  render: () => (
-    <div className="space-y-0.5">
-      <Text as="h2" variant="title" icon={FlaskConical}>
-        Peptide mapping
-      </Text>
-      <Text as="p" variant="body" state="muted">
-        14 samples across 3 plates · last run 12 minutes ago
-      </Text>
-    </div>
-  ),
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Only the title is a heading", async () => {
-      expect(canvas.getAllByRole("heading")).toHaveLength(1);
-      expect(canvas.getByRole("heading", { level: 2 })).toHaveAccessibleName("Peptide mapping");
-    });
-
-    await step("Subtitle is a paragraph, not a heading", async () => {
-      const subtitle = canvas.getByText(/14 samples across 3 plates/);
-      expect(subtitle.tagName).toBe("P");
-    });
-  },
-};

@@ -182,6 +182,9 @@ export const Default: Story = {
       {renderNodes(FOLDERS)}
     </Tree>
   ),
+  parameters: {
+    zephyr: { testCaseId: "SW-T5655" },
+  },
 };
 
 /** No nesting: the same primitive works as a flat single-select list. */
@@ -201,6 +204,9 @@ export const Flat: Story = {
       </TreeItem>
     </Tree>
   ),
+  parameters: {
+    zephyr: { testCaseId: "SW-T5656" },
+  },
 };
 
 /** Arbitrary depth with no level cap, driven from controlled `expandedIds` / `selectedId` state. */
@@ -222,6 +228,9 @@ export const DeepNesting: Story = {
         {renderDeep(0)}
       </Tree>
     );
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5657" },
   },
 };
 
@@ -245,6 +254,9 @@ export const Guides: Story = {
       ))}
     </div>
   ),
+  parameters: {
+    zephyr: { testCaseId: "SW-T5658" },
+  },
 };
 
 /* --------------------------------------------------------- test-only stories
@@ -389,6 +401,9 @@ export const CoreBehaviour: Story = {
     });
 
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5659" },
+  },
 };
 
 /**
@@ -428,6 +443,9 @@ export const TruncationBehaviour: Story = {
       await new Promise((resolve) => setTimeout(resolve, 900));
       expect(body.queryByRole("tooltip")).not.toBeInTheDocument();
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5660" },
   },
 };
 
@@ -475,5 +493,8 @@ export const ControlledBehaviour: Story = {
       expect(lab).toHaveAttribute("aria-expanded", "false");
       expect(canvas.queryByRole("treeitem", { name: "Fourth level" })).not.toBeInTheDocument();
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5661" },
   },
 };

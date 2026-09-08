@@ -122,6 +122,7 @@ import {
 | `Snippet`                | Data Display       | —                          | Copy-to-clipboard command box, built on InputGroup       | Stable |
 | `Table`                  | Data Display       | `table`                    | —                                                        | Stable |
 | `TetraScienceIcon`       | Data Display       | —                          | Brand icon component                                     | Stable |
+| `Text`                   | Data Display       | —                          | Preset type scale, `as` + `variant` independent          | Beta   |
 | `Tree`                   | Data Display       | —                          | WAI-ARIA tree view, recursive, icons, guides, controlled | Beta   |
 | `AppLayout`              | Composed           | —                          | Full app shell with sidebar                              | Stable |
 | `AppHeader`              | Composed           | —                          | Top nav with avatar/actions                              | Stable |

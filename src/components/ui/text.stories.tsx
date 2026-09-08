@@ -1,7 +1,6 @@
-import { Beaker, CircleAlert, FlaskConical, Info } from "lucide-react";
+import { Beaker, CircleAlert, CircleCheck, FlaskConical, Info, TriangleAlert } from "lucide-react";
 import { expect, within } from "storybook/test";
 
-import { Badge } from "./badge";
 import { Text, type TextVariant } from "./text";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -26,7 +25,8 @@ const meta: Meta<typeof Text> = {
     },
     state: {
       control: "inline-radio",
-      options: ["default", "muted", "destructive"],
+      options: ["default", "muted", "active", "positive", "warning", "destructive"],
+      description: "Semantic colour — sets no colour on `default` so `Text` inherits.",
     },
   },
 };
@@ -183,16 +183,50 @@ export const States: Story = {
       <Text variant="body" state="muted">
         Muted — subtitles, metadata, helper text
       </Text>
-      <Text variant="body" state="destructive">
+      <Text variant="body" state="active" icon={Info}>
+        Active — the current selection, or a link-like emphasis
+      </Text>
+      <Text variant="body" state="positive" icon={CircleCheck}>
+        Positive — a run that passed, a completed step
+      </Text>
+      <Text variant="body" state="warning" icon={TriangleAlert}>
+        Warning — the caution slot: nearing a limit, needs review
+      </Text>
+      <Text variant="body" state="destructive" icon={CircleAlert}>
         Destructive — validation and failure messages
       </Text>
     </div>
   ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Each state maps to its semantic token, and default sets none", async () => {
+      const expected: [RegExp, string | null][] = [
+        [/^Default —/, null],
+        [/^Muted —/, "text-muted-foreground"],
+        [/^Active —/, "text-primary"],
+        [/^Positive —/, "text-positive"],
+        [/^Warning —/, "text-warning"],
+        [/^Destructive —/, "text-destructive"],
+      ];
+
+      for (const [pattern, cls] of expected) {
+        // `icon` wraps children in a span, so walk up to the `data-slot` root.
+        const root = canvas.getByText(pattern).closest("[data-slot='text']");
+        expect(root).not.toBeNull();
+        if (cls === null) {
+          expect(root!.className).not.toMatch(/\btext-(muted-foreground|primary|positive|warning|destructive)\b/);
+        } else {
+          expect(root).toHaveClass(cls);
+        }
+      }
+    });
+  },
 };
 
 /**
- * Truncation needs a bounded parent. The title truncates; anything trailing is
- * marked `shrink-0` so it never gives up space.
+ * Truncation needs a bounded parent — `truncate` switches the root to a flex
+ * box and shrinks the inner text node, but something has to cap the width.
  */
 export const Truncation: Story = {
   parameters: {
@@ -200,16 +234,11 @@ export const Truncation: Story = {
   },
   render: () => (
     <div className="max-w-md space-y-4 rounded-lg border border-border p-4">
-      <div className="flex items-baseline gap-2">
-        <Text as="h2" variant="title-sm" truncate icon={FlaskConical} data-testid="truncating-title">
-          UPLC-MS peptide mapping — lot 4471-B qualification run, replicate 3
-        </Text>
-        <Badge variant="positive" className="shrink-0">
-          Passed
-        </Badge>
-      </div>
+      <Text as="h2" variant="title-sm" truncate icon={FlaskConical} data-testid="truncating-title">
+        UPLC-MS peptide mapping — lot 4471-B qualification run, replicate 3
+      </Text>
       <Text variant="caption" state="muted">
-        The title truncates; the badge keeps its width.
+        The title truncates at the container edge; the leading icon is never clipped.
       </Text>
     </div>
   ),

@@ -1,7 +1,6 @@
-import { Beaker, CircleAlert, FlaskConical, Info } from "lucide-react";
+import { Beaker, CircleAlert, CircleCheck, FlaskConical, Info, TriangleAlert } from "lucide-react";
 import { expect, within } from "storybook/test";
 
-import { Badge } from "./badge";
 import { Text, type TextVariant } from "./text";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -24,9 +23,10 @@ const meta: Meta<typeof Text> = {
       options: ["display", "title-lg", "title", "title-sm", "title-xs", "body", "label", "caption", "overline"],
       description: "Visual scale — controls size/weight/tracking only.",
     },
-    tone: {
+    state: {
       control: "inline-radio",
-      options: ["default", "muted", "destructive"],
+      options: ["default", "muted", "active", "positive", "warning", "destructive"],
+      description: "Semantic colour — sets no colour on `default` so `Text` inherits.",
     },
   },
 };
@@ -71,7 +71,7 @@ export const Scale: Story = {
         <div key={variant} className="space-y-1 border-b border-border pb-4 last:border-b-0">
           <div className="flex items-center gap-2">
             <code className="rounded bg-muted px-1 py-0.5 text-xs">variant=&quot;{variant}&quot;</code>
-            <Text variant="caption" tone="muted">
+            <Text variant="caption" state="muted">
               defaults to &lt;{defaultAs}&gt; — {usage}
             </Text>
           </div>
@@ -80,40 +80,6 @@ export const Scale: Story = {
       ))}
     </div>
   ),
-};
-
-/**
- * The same scale in both themes side by side, so muted tones and heading
- * contrast can be compared without toggling the toolbar.
- */
-export const BothThemes: Story = {
-  parameters: {
-    layout: "fullscreen",
-    zephyr: { testCaseId: "" },
-  },
-  render: () => {
-    const panel = (
-      <div className="flex-1 space-y-4 bg-background p-8 text-foreground">
-        {SCALE.map(({ variant }) => (
-          <div key={variant} className="space-y-0.5">
-            <Text variant={variant}>Chromatography run summary</Text>
-            {/* `as="p"` so the subtitle blocks onto its own line even under the
-                variants that default to an inline `span`. */}
-            <Text as="p" variant="caption" tone="muted">
-              Subtitle at caption / muted — the kit&apos;s most common contrast failure
-            </Text>
-          </div>
-        ))}
-      </div>
-    );
-
-    return (
-      <div className="flex min-h-screen">
-        {panel}
-        <div className="dark flex flex-1">{panel}</div>
-      </div>
-    );
-  },
 };
 
 /**
@@ -176,10 +142,10 @@ export const WithLeadingIcon: Story = {
       <Text as="h3" variant="title-sm" icon={Beaker}>
         Sample preparation
       </Text>
-      <Text variant="body" icon={Info} tone="muted">
+      <Text variant="body" icon={Info} state="muted">
         Icon size derives from the type step, not a fixed pixel value
       </Text>
-      <Text variant="caption" icon={CircleAlert} tone="destructive">
+      <Text variant="caption" icon={CircleAlert} state="destructive">
         Two wells failed QC
       </Text>
     </div>
@@ -207,26 +173,60 @@ export const WithLeadingIcon: Story = {
   },
 };
 
-export const Tones: Story = {
+export const States: Story = {
   parameters: {
     zephyr: { testCaseId: "" },
   },
   render: () => (
     <div className="space-y-2">
       <Text variant="body">Default — inherits its colour from the container</Text>
-      <Text variant="body" tone="muted">
+      <Text variant="body" state="muted">
         Muted — subtitles, metadata, helper text
       </Text>
-      <Text variant="body" tone="destructive">
+      <Text variant="body" state="active" icon={Info}>
+        Active — the current selection, or a link-like emphasis
+      </Text>
+      <Text variant="body" state="positive" icon={CircleCheck}>
+        Positive — a run that passed, a completed step
+      </Text>
+      <Text variant="body" state="warning" icon={TriangleAlert}>
+        Warning — the caution slot: nearing a limit, needs review
+      </Text>
+      <Text variant="body" state="destructive" icon={CircleAlert}>
         Destructive — validation and failure messages
       </Text>
     </div>
   ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Each state maps to its semantic token, and default sets none", async () => {
+      const expected: [RegExp, string | null][] = [
+        [/^Default —/, null],
+        [/^Muted —/, "text-muted-foreground"],
+        [/^Active —/, "text-primary"],
+        [/^Positive —/, "text-positive"],
+        [/^Warning —/, "text-warning"],
+        [/^Destructive —/, "text-destructive"],
+      ];
+
+      for (const [pattern, cls] of expected) {
+        // `icon` wraps children in a span, so walk up to the `data-slot` root.
+        const root = canvas.getByText(pattern).closest("[data-slot='text']");
+        expect(root).not.toBeNull();
+        if (cls === null) {
+          expect(root!.className).not.toMatch(/\btext-(muted-foreground|primary|positive|warning|destructive)\b/);
+        } else {
+          expect(root).toHaveClass(cls);
+        }
+      }
+    });
+  },
 };
 
 /**
- * Truncation needs a bounded parent. The title truncates; anything trailing is
- * marked `shrink-0` so it never gives up space.
+ * Truncation needs a bounded parent — `truncate` switches the root to a flex
+ * box and shrinks the inner text node, but something has to cap the width.
  */
 export const Truncation: Story = {
   parameters: {
@@ -234,16 +234,11 @@ export const Truncation: Story = {
   },
   render: () => (
     <div className="max-w-md space-y-4 rounded-lg border border-border p-4">
-      <div className="flex items-baseline gap-2">
-        <Text as="h2" variant="title-sm" truncate icon={FlaskConical} data-testid="truncating-title">
-          UPLC-MS peptide mapping — lot 4471-B qualification run, replicate 3
-        </Text>
-        <Badge variant="positive" className="shrink-0">
-          Passed
-        </Badge>
-      </div>
-      <Text variant="caption" tone="muted">
-        The title truncates; the badge keeps its width.
+      <Text as="h2" variant="title-sm" truncate icon={FlaskConical} data-testid="truncating-title">
+        UPLC-MS peptide mapping — lot 4471-B qualification run, replicate 3
+      </Text>
+      <Text variant="caption" state="muted">
+        The title truncates at the container edge; the leading icon is never clipped.
       </Text>
     </div>
   ),
@@ -252,7 +247,7 @@ export const Truncation: Story = {
 
     await step("Truncating text wraps its children in a shrinkable node", async () => {
       const title = canvas.getByTestId("truncating-title");
-      expect(title).toHaveClass("inline-flex");
+      expect(title).toHaveClass("flex");
       const inner = title.querySelector("span");
       expect(inner).toHaveClass("truncate");
       expect(inner).toHaveClass("min-w-0");
@@ -264,41 +259,4 @@ export const Truncation: Story = {
       expect(inner!.scrollWidth).toBeGreaterThan(inner!.clientWidth);
     });
   },
-};
-
-/**
- * When *not* to reach for `Text`: text that belongs to a component keeps that
- * component's own styling. `CardTitle`, `DataAppShell`'s app name, and
- * `EmptyState`'s title are component-internal — retrofitting `Text` onto them
- * would create a second source of truth for the same pixels.
- *
- * For a page's title row — title, subtitle, and trailing actions — reach for
- * `PageHeader` (`Design Patterns/Page Header`) rather than assembling it from
- * `Text` by hand. It owns the vertical rhythm and, critically, keeps
- * interactive trailing content outside the heading element.
- */
-export const WhenNotToUse: Story = {
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-  render: () => (
-    <div className="max-w-xl space-y-3">
-      <Text as="h2" variant="title-sm">
-        Use `Text` for page and section copy you own
-      </Text>
-      <Text variant="body" tone="muted">
-        Do not retrofit it onto component-internal text — card titles, shell chrome, empty-state copy, table headers.
-        Those components already own their scale, and replacing it there gives the kit two sources of truth for one set
-        of pixels.
-      </Text>
-      <Text variant="body" tone="muted">
-        Do not use `as` to pick a size. Pick the `variant` for the size you want, then set `as` to whatever the document
-        outline actually needs.
-      </Text>
-      <Text variant="body" tone="muted">
-        Do not hand-assemble a page title row from `Text` calls — use `PageHeader`. Interactive trailing content has to
-        sit outside the heading element, and that is a structure, not a prop.
-      </Text>
-    </div>
-  ),
 };

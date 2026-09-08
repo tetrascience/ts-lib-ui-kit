@@ -42,7 +42,7 @@ type TextElement =
  * Tailwind's size-paired defaults rather than overridden.
  *
  * The `gap-*` in each variant is inert until an `icon` or `truncate` switches
- * the root to `inline-flex`; keeping it on the variant is what makes the
+ * the root to a flex box; keeping it on the variant is what makes the
  * icon/text gap scale with the type step.
  */
 const textVariants = cva("", {
@@ -58,18 +58,32 @@ const textVariants = cva("", {
       caption: "gap-1 text-xs",
       overline: "gap-1 text-2xs font-semibold tracking-widest uppercase",
     },
-    tone: {
+    state: {
       // `default` intentionally sets no colour so `Text` inherits from its
       // container — setting `text-foreground` here would fight every consumer
       // that colours a subtree.
       default: "",
       muted: "text-muted-foreground",
+      // Semantic states follow the kit's colour contract (DESIGN.md): blue =
+      // action, green = success, orange = caution, red = error. `warning` is
+      // the kit-wide name for the caution slot (Badge/Alert/Banner all use it).
+      //
+      // Contrast against `--background`, measured in both themes:
+      //   active 7.66 / 11.12 · positive 4.83 / 8.02 · destructive 4.82 / 10.07
+      // all clear AA 4.5 for body text. `warning` is the exception at
+      // 4.44 / 8.41 — it clears AA in dark mode but lands just under in light,
+      // because `--warning` was tuned to 4.6:1 on pure white while the kit's
+      // actual surface is a tinted off-white. That shortfall lives in the token,
+      // not here; see SW-2581.
+      active: "text-primary",
+      positive: "text-positive",
+      warning: "text-warning",
       destructive: "text-destructive",
     },
   },
   defaultVariants: {
     variant: "body",
-    tone: "default",
+    state: "default",
   },
 });
 
@@ -113,10 +127,11 @@ interface TextProps extends React.HTMLAttributes<HTMLElement>, VariantProps<type
    */
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   /**
-   * Truncate to a single line with an ellipsis. Switches the root to
-   * `inline-flex`, so the parent has to bound the width for it to engage —
-   * e.g. `<div className="flex"><Text truncate … /></div>` with the sibling
-   * marked `shrink-0`.
+   * Truncate to a single line with an ellipsis. Switches the root to a flex
+   * box — `flex` for block elements, `inline-flex` for inline ones such as
+   * `span` — so the parent has to bound the width for it to engage, e.g.
+   * `<div className="flex"><Text truncate … /></div>` with the sibling marked
+   * `shrink-0`.
    */
   truncate?: boolean;
 }
@@ -124,7 +139,7 @@ interface TextProps extends React.HTMLAttributes<HTMLElement>, VariantProps<type
 function Text({
   className,
   variant = "body",
-  tone = "default",
+  state = "default",
   as,
   icon: Icon,
   truncate = false,
@@ -132,19 +147,29 @@ function Text({
   ...props
 }: TextProps) {
   const resolvedVariant: TextVariant = variant ?? "body";
-  const Comp: React.ElementType = as ?? DEFAULT_ELEMENT[resolvedVariant];
+  const resolvedElement: TextElement = as ?? DEFAULT_ELEMENT[resolvedVariant];
+  const Comp: React.ElementType = resolvedElement;
 
   // An icon or a truncating label needs a flex root and a wrapper it can
   // shrink; plain text keeps the bare element so inline flow is untouched.
   const isComposite = Boolean(Icon) || truncate;
+
+  const compositeDisplay =
+    resolvedElement === "span" ||
+    resolvedElement === "strong" ||
+    resolvedElement === "em" ||
+    resolvedElement === "small" ||
+    resolvedElement === "label"
+      ? "inline-flex"
+      : "flex";
 
   return (
     <Comp
       data-slot="text"
       data-variant={resolvedVariant}
       className={cn(
-        textVariants({ variant: resolvedVariant, tone }),
-        isComposite && "inline-flex max-w-full items-baseline",
+        textVariants({ variant: resolvedVariant, state }),
+        isComposite && cn(compositeDisplay, "max-w-full items-baseline"),
         className,
       )}
       {...props}

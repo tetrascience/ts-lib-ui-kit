@@ -146,7 +146,7 @@ function PageHeader({
       </div>
 
       {subtitle ? (
-        <Text as="p" variant="body" tone="muted" className={subtitleClassName} data-slot="page-header-subtitle">
+        <Text as="p" variant="body" state="muted" className={subtitleClassName} data-slot="page-header-subtitle">
           {subtitle}
         </Text>
       ) : null}

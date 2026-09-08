@@ -58,7 +58,7 @@ const textVariants = cva("", {
       caption: "gap-1 text-xs",
       overline: "gap-1 text-2xs font-semibold tracking-widest uppercase",
     },
-    tone: {
+    state: {
       // `default` intentionally sets no colour so `Text` inherits from its
       // container — setting `text-foreground` here would fight every consumer
       // that colours a subtree.
@@ -69,7 +69,7 @@ const textVariants = cva("", {
   },
   defaultVariants: {
     variant: "body",
-    tone: "default",
+    state: "default",
   },
 });
 
@@ -124,7 +124,7 @@ interface TextProps extends React.HTMLAttributes<HTMLElement>, VariantProps<type
 function Text({
   className,
   variant = "body",
-  tone = "default",
+  state = "default",
   as,
   icon: Icon,
   truncate = false,
@@ -153,7 +153,7 @@ function Text({
       data-slot="text"
       data-variant={resolvedVariant}
       className={cn(
-        textVariants({ variant: resolvedVariant, tone }),
+        textVariants({ variant: resolvedVariant, state }),
         isComposite && cn(compositeDisplay, "max-w-full items-baseline"),
         className,
       )}

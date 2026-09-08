@@ -2,7 +2,6 @@ import { Beaker, CircleAlert, FlaskConical, Info } from "lucide-react";
 import { expect, within } from "storybook/test";
 
 import { Badge } from "./badge";
-import { Button } from "./button";
 import { Text, type TextVariant } from "./text";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -25,7 +24,7 @@ const meta: Meta<typeof Text> = {
       options: ["display", "title-lg", "title", "title-sm", "title-xs", "body", "label", "caption", "overline"],
       description: "Visual scale — controls size/weight/tracking only.",
     },
-    tone: {
+    state: {
       control: "inline-radio",
       options: ["default", "muted", "destructive"],
     },
@@ -72,7 +71,7 @@ export const Scale: Story = {
         <div key={variant} className="space-y-1 border-b border-border pb-4 last:border-b-0">
           <div className="flex items-center gap-2">
             <code className="rounded bg-muted px-1 py-0.5 text-xs">variant=&quot;{variant}&quot;</code>
-            <Text variant="caption" tone="muted">
+            <Text variant="caption" state="muted">
               defaults to &lt;{defaultAs}&gt; — {usage}
             </Text>
           </div>
@@ -81,40 +80,6 @@ export const Scale: Story = {
       ))}
     </div>
   ),
-};
-
-/**
- * The same scale in both themes side by side, so muted tones and heading
- * contrast can be compared without toggling the toolbar.
- */
-export const BothThemes: Story = {
-  parameters: {
-    layout: "fullscreen",
-    zephyr: { testCaseId: "" },
-  },
-  render: () => {
-    const panel = (
-      <div className="flex-1 space-y-4 bg-background p-8 text-foreground">
-        {SCALE.map(({ variant }) => (
-          <div key={variant} className="space-y-0.5">
-            <Text variant={variant}>Chromatography run summary</Text>
-            {/* `as="p"` so the subtitle blocks onto its own line even under the
-                variants that default to an inline `span`. */}
-            <Text as="p" variant="caption" tone="muted">
-              Subtitle at caption / muted — the kit&apos;s most common contrast failure
-            </Text>
-          </div>
-        ))}
-      </div>
-    );
-
-    return (
-      <div className="flex min-h-screen">
-        {panel}
-        <div className="dark flex flex-1">{panel}</div>
-      </div>
-    );
-  },
 };
 
 /**
@@ -177,10 +142,10 @@ export const WithLeadingIcon: Story = {
       <Text as="h3" variant="title-sm" icon={Beaker}>
         Sample preparation
       </Text>
-      <Text variant="body" icon={Info} tone="muted">
+      <Text variant="body" icon={Info} state="muted">
         Icon size derives from the type step, not a fixed pixel value
       </Text>
-      <Text variant="caption" icon={CircleAlert} tone="destructive">
+      <Text variant="caption" icon={CircleAlert} state="destructive">
         Two wells failed QC
       </Text>
     </div>
@@ -208,17 +173,17 @@ export const WithLeadingIcon: Story = {
   },
 };
 
-export const Tones: Story = {
+export const States: Story = {
   parameters: {
     zephyr: { testCaseId: "" },
   },
   render: () => (
     <div className="space-y-2">
       <Text variant="body">Default — inherits its colour from the container</Text>
-      <Text variant="body" tone="muted">
+      <Text variant="body" state="muted">
         Muted — subtitles, metadata, helper text
       </Text>
-      <Text variant="body" tone="destructive">
+      <Text variant="body" state="destructive">
         Destructive — validation and failure messages
       </Text>
     </div>
@@ -243,7 +208,7 @@ export const Truncation: Story = {
           Passed
         </Badge>
       </div>
-      <Text variant="caption" tone="muted">
+      <Text variant="caption" state="muted">
         The title truncates; the badge keeps its width.
       </Text>
     </div>
@@ -282,7 +247,7 @@ export const TitleWithSubtitle: Story = {
       <Text as="h2" variant="title" icon={FlaskConical}>
         Peptide mapping
       </Text>
-      <Text as="p" variant="body" tone="muted">
+      <Text as="p" variant="body" state="muted">
         14 samples across 3 plates · last run 12 minutes ago
       </Text>
     </div>
@@ -300,86 +265,4 @@ export const TitleWithSubtitle: Story = {
       expect(subtitle.tagName).toBe("P");
     });
   },
-};
-
-/**
- * **Interactive trailing content must sit outside the heading element.** A
- * button nested inside an `h2` is announced as part of the heading. Keep it a
- * sibling, as below.
- *
- * A non-interactive badge *may* sit inside the heading — but then it joins the
- * accessible name, so only do it when that reads correctly.
- */
-export const TrailingContent: Story = {
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-  render: () => (
-    <div className="max-w-xl space-y-6">
-      <div className="flex items-baseline gap-2">
-        <Text as="h2" variant="title" truncate>
-          Interactive trailing content lives outside the heading
-        </Text>
-        <Button size="sm" variant="outline" className="shrink-0">
-          Configure
-        </Button>
-      </div>
-
-      <div>
-        <Text as="h2" variant="title">
-          Batch 4471{" "}
-          <Badge variant="info" className="align-middle">
-            Draft
-          </Badge>
-        </Text>
-        <Text variant="caption" tone="muted">
-          Non-interactive badge inside the heading — it joins the accessible name.
-        </Text>
-      </div>
-    </div>
-  ),
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Button is a sibling of the heading, not a descendant", async () => {
-      const heading = canvas.getByRole("heading", {
-        name: "Interactive trailing content lives outside the heading",
-      });
-      const button = canvas.getByRole("button", { name: "Configure" });
-      expect(heading.contains(button)).toBe(false);
-      expect(heading).toHaveAccessibleName("Interactive trailing content lives outside the heading");
-    });
-
-    await step("Non-interactive badge inside a heading joins its accessible name", async () => {
-      expect(canvas.getByRole("heading", { name: "Batch 4471 Draft" })).toBeInTheDocument();
-    });
-  },
-};
-
-/**
- * When *not* to reach for `Text`: text that belongs to a component keeps that
- * component's own styling. `CardTitle`, `DataAppShell`'s app name, and
- * `EmptyState`'s title are component-internal — retrofitting `Text` onto them
- * would create a second source of truth for the same pixels.
- */
-export const WhenNotToUse: Story = {
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-  render: () => (
-    <div className="max-w-xl space-y-3">
-      <Text as="h2" variant="title-sm">
-        Use `Text` for page and section copy you own
-      </Text>
-      <Text variant="body" tone="muted">
-        Do not retrofit it onto component-internal text — card titles, shell chrome, empty-state copy, table headers.
-        Those components already own their scale, and replacing it there gives the kit two sources of truth for one set
-        of pixels.
-      </Text>
-      <Text variant="body" tone="muted">
-        Do not use `as` to pick a size. Pick the `variant` for the size you want, then set `as` to whatever the document
-        outline actually needs.
-      </Text>
-    </div>
-  ),
 };

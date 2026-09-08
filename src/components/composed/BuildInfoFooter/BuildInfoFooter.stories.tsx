@@ -24,7 +24,7 @@ type Story = StoryObj<typeof meta>;
 /** App version + commit SHA. */
 export const Default: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5653" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -43,6 +43,6 @@ export const VersionOnly: Story = {
     commitSha: undefined,
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5654" },
   },
 };

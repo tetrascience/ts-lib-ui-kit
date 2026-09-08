@@ -64,6 +64,20 @@ const textVariants = cva("", {
       // that colours a subtree.
       default: "",
       muted: "text-muted-foreground",
+      // Semantic states follow the kit's colour contract (DESIGN.md): blue =
+      // action, green = success, orange = caution, red = error. `warning` is
+      // the kit-wide name for the caution slot (Badge/Alert/Banner all use it).
+      //
+      // Contrast against `--background`, measured in both themes:
+      //   active 7.66 / 11.12 · positive 4.83 / 8.02 · destructive 4.82 / 10.07
+      // all clear AA 4.5 for body text. `warning` is the exception at
+      // 4.44 / 8.41 — it clears AA in dark mode but lands just under in light,
+      // because `--warning` was tuned to 4.6:1 on pure white while the kit's
+      // actual surface is a tinted off-white. That shortfall lives in the token,
+      // not here; see SW-2581.
+      active: "text-primary",
+      positive: "text-positive",
+      warning: "text-warning",
       destructive: "text-destructive",
     },
   },

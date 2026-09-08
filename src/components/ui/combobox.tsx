@@ -220,9 +220,16 @@ function ComboboxSeparator({
 
 function ComboboxChips({
   className,
+  children,
+  showTrigger = true,
   ...props
 }: React.ComponentPropsWithRef<typeof ComboboxPrimitive.Chips> &
-  ComboboxPrimitive.Chips.Props) {
+  ComboboxPrimitive.Chips.Props & {
+    /** Show the dropdown-toggle chevron at the inline end (default `true`) —
+     *  mirrors `ComboboxInput`'s `showTrigger` so single- and multi-select
+     *  share the same affordance */
+    showTrigger?: boolean
+  }) {
   return (
     <ComboboxPrimitive.Chips
       data-slot="combobox-chips"
@@ -231,7 +238,12 @@ function ComboboxChips({
         className
       )}
       {...props}
-    />
+    >
+      {children}
+      {showTrigger && (
+        <ComboboxTrigger className="ml-auto shrink-0 self-center text-muted-foreground" />
+      )}
+    </ComboboxPrimitive.Chips>
   )
 }
 

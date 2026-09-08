@@ -1114,3 +1114,71 @@ export const ChipWithoutRemove: Story = {
     zephyr: { testCaseId: "SW-T4712" },
   },
 }
+
+// ---------------------------------------------------------------------------
+// Radius consistency (SW-2583) — the single-select input and the multi-select
+// chips container must share one corner-radius token so they read as the same
+// control family.
+// ---------------------------------------------------------------------------
+
+function RadiusConsistencyExample() {
+  const anchorRef = useComboboxAnchor()
+  const [value, setValue] = useState<string[]>(["Next.js", "Remix"])
+  return (
+    <div className="flex w-[280px] flex-col gap-3">
+      <Combobox items={frameworks}>
+        <ComboboxInput placeholder="Single-select" />
+        <ComboboxContent>
+          <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
+          <ComboboxList>
+            {(item: string) => (
+              <ComboboxItem key={item} value={item}>
+                {item}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+      <Combobox multiple items={frameworks} value={value} onValueChange={setValue}>
+        <ComboboxChips ref={anchorRef}>
+          <ComboboxValue>
+            {(items: string[]) =>
+              items.map((item) => <ComboboxChip key={item}>{item}</ComboboxChip>)
+            }
+          </ComboboxValue>
+          <ComboboxChipsInput placeholder="Multi-select" />
+        </ComboboxChips>
+        <ComboboxContent anchor={anchorRef}>
+          <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
+          <ComboboxList>
+            {(item: string) => (
+              <ComboboxItem key={item} value={item}>
+                {item}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+    </div>
+  )
+}
+
+export const RadiusConsistency: Story = {
+  name: "Radius / Single vs multi",
+  render: () => <RadiusConsistencyExample />,
+  play: async ({ canvasElement, step }) => {
+    await step("single-select input and multi-select chips share one corner radius", async () => {
+      const input = canvasElement.querySelector('[data-slot="input-group"]')
+      const chips = canvasElement.querySelector('[data-slot="combobox-chips"]')
+      if (!(input instanceof HTMLElement) || !(chips instanceof HTMLElement)) {
+        throw new Error("combobox input-group or chips not found")
+      }
+      expect(getComputedStyle(chips).borderTopLeftRadius).toBe(
+        getComputedStyle(input).borderTopLeftRadius,
+      )
+    })
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+}

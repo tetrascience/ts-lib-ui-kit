@@ -35,9 +35,14 @@ export function installGlobalErrorHandlers(client: Telemetry, options: GlobalErr
 	const existing = installed.get(client);
 	if (existing) return existing;
 	if (typeof window === "undefined") {
-		return () => {
+		// Recorded in the map like any other install, so the documented
+		// once-per-client contract holds here too: without this, every call in an
+		// SSR/non-browser runtime handed back a different uninstall function.
+		const noop = (): void => {
 			// nothing was installed (SSR / non-browser runtime)
 		};
+		installed.set(client, noop);
+		return noop;
 	}
 
 	const onError = (event: ErrorEvent): void => {

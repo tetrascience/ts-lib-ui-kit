@@ -38,12 +38,17 @@ let warnSpy: ReturnType<typeof vi.fn>;
 let fetchSpy: ReturnType<typeof vi.fn>;
 let beaconSpy: ReturnType<typeof vi.fn>;
 let xhrSendSpy: ReturnType<typeof vi.spyOn>;
+// jsdom does not implement sendBeacon, so it cannot be vi.spyOn'd — it has to
+// be assigned. Neither unstubAllGlobals (stubGlobal only) nor restoreAllMocks
+// (spies only) undoes an assignment, so capture the original and put it back.
+let originalSendBeacon: typeof navigator.sendBeacon | undefined;
 
 beforeEach(() => {
 	warnSpy = vi.fn();
 	fetchSpy = vi.fn(async () => new Response("{}", {status: 200}));
 	beaconSpy = vi.fn(() => true);
 	vi.stubGlobal("fetch", fetchSpy);
+	originalSendBeacon = navigator.sendBeacon;
 	navigator.sendBeacon = beaconSpy as unknown as typeof navigator.sendBeacon;
 	xhrSendSpy = vi.spyOn(XMLHttpRequest.prototype, "send").mockImplementation(() => {});
 });
@@ -51,6 +56,11 @@ beforeEach(() => {
 afterEach(() => {
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
+	if (originalSendBeacon === undefined) {
+		delete (navigator as {sendBeacon?: typeof navigator.sendBeacon}).sendBeacon;
+	} else {
+		navigator.sendBeacon = originalSendBeacon;
+	}
 	document.body.innerHTML = "";
 });
 

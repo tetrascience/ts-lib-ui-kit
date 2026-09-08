@@ -1,11 +1,15 @@
-import { createTelemetry } from "@tetrascience-npm/request/telemetry";
+import {
+	createTelemetry,
+	type ArtifactType,
+	type TelemetryArtifact,
+	type TelemetryOptions,
+} from "@tetrascience-npm/request/telemetry";
 import { useEffect, useRef, useState } from "react";
 
 import { TelemetryContext } from "./context";
 import { NOOP_TELEMETRY, createTelemetryFacade } from "./facade";
 
 import type { TelemetryProviderProps } from "./types";
-import type { ArtifactType, TelemetryArtifact, TelemetryOptions } from "@tetrascience-npm/request/telemetry";
 
 /**
  * Read a boolean flag from the host-provided browser config (`window.env`) —

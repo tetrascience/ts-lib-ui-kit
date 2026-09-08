@@ -8021,7 +8021,7 @@ __metadata:
 
 "@tetrascience-npm/request@npm:0.4.0":
   version: 0.4.0
-  resolution: "@tetrascience-npm/request@npm:0.4.0::__archiveUrl=https%3A%2F%2Ftetrascience.jfrog.io%2Fartifactory%2Fapi%2Fnpm%2Fts-npm-virtual%2F%40tetrascience-npm%2Frequest%2F-%2F%40tetrascience-npm%2Frequest-0.4.0.tgz"
+  resolution: "@tetrascience-npm/request@npm:0.4.0"
   dependencies:
     "@opentelemetry/api": "npm:^1.9.1"
     "@opentelemetry/api-logs": "npm:^0.221.0"
@@ -8043,7 +8043,7 @@ __metadata:
       optional: true
   bin:
     generate-service-client: dist/cli/generate-client.js
-  checksum: 10c0/783dac9c24b57188f0cdd34dc37f51105b94ce574ee9221e7436ac534a0dfd300048480af9c5c3e81c561999def0caeb80f8aab78c89dbebc179b2bb845ca0be
+  checksum: 10c0/83eae8debc79d31a1fffe06f05b0e8fa65b3824197b326fd85bda5c0e292a4ffa9e359ea7b75c8c941ddf8d35f6755ce5da262548acaade3b5db91fd6aeeafa2
   languageName: node
   linkType: hard
 
@@ -8211,7 +8211,7 @@ __metadata:
     "@aws-sdk/client-ssm": ">=3.0.0 <4.0.0"
     "@aws-sdk/lib-storage": ">=3.0.0 <4.0.0"
     axios: ">=1.5.0 <2.0.0"
-  checksum: 10c0/0b8f3cf27a4642674a6f2feb8c595b690ddfc3658826c684f5f49df5386d9489459bd2160b4801fa3fffc96868803c13df3f960303bec1bafbcefdb9b12f1a69
+  checksum: 10c0/5642835b55a01eec9a8d7f6c1b1be20c26c7b044da497d43dadf770cf90e724235384df39ab510af79170cb97fa5059edb4c778e606cc88d85498081e6584861
   languageName: node
   linkType: hard
 

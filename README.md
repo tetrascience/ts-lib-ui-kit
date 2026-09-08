@@ -6,7 +6,7 @@ React component library for building TetraScience applications.
 
 ## Version
 
-v0.7.0
+v1.0.0
 
 This library provides:
 
@@ -26,6 +26,7 @@ This library provides:
 
 | Library version | React | Node.js | TDP (server utilities) |
 | --------------- | ----- | ------- | ---------------------- |
+| v1.0.x          | 19+   | 18+     | v4.x+                  |
 | v0.7.x          | 19+   | 18+     | v4.x+                  |
 | v0.6.x          | 19+   | 18+     | v4.x+                  |
 | v0.5.x          | 19+   | 18+     | v4.x+                  |
@@ -35,7 +36,7 @@ This library provides:
 > The `/server` utilities (JWT auth, provider helpers) require a running TDP instance of v4.x or later.
 > Browser support follows React 19's matrix (modern evergreen browsers).
 >
-> As of v0.7.0, heavy dependencies are **optional peer dependencies**: install `plotly.js-dist` if you use the chart components, `@streamdown/mermaid` / `@streamdown/math` if you use the AI markdown components, `@rdkit/rdkit` if you use `MoleculeStructure`, and the provider SDKs (`@aws-sdk/client-athena`, `@databricks/sql`, `snowflake-sdk`) only for the `/server` utilities you use. Apps that don't use these components don't need to install them.
+> As of v1.0.0, heavy dependencies are **optional peer dependencies**: install `plotly.js-dist` if you use the chart components, `@streamdown/mermaid` / `@streamdown/math` if you use the AI markdown components, `@rdkit/rdkit` if you use `MoleculeStructure`, and the provider SDKs (`@aws-sdk/client-athena`, `@databricks/sql`, `snowflake-sdk`) only for the `/server` utilities you use. Apps that don't use these components don't need to install them.
 
 ## Installation
 
@@ -64,6 +65,33 @@ function App() {
   );
 }
 ```
+
+Only need a handful of components? Every one is also importable individually — see [Per-Component Imports](#per-component-imports) below.
+
+### Per-Component Imports
+
+Every component is also reachable at its own subpath, grouped by category:
+`ui/*`, `composed/*`, `charts/*`, `ai/*`, `utils/*`:
+
+```tsx
+import { Button } from "@tetrascience-npm/tetrascience-react-ui/ui/button";
+import { StatCard } from "@tetrascience-npm/tetrascience-react-ui/composed/StatCard";
+import { AreaPlot } from "@tetrascience-npm/tetrascience-react-ui/charts/AreaPlot";
+```
+
+Importing this way only pulls in that component's own module graph — the main
+`@tetrascience-npm/tetrascience-react-ui` import still works exactly as
+before and pulls in everything. The difference matters most for **Jest**,
+which has no tree-shaking and re-evaluates the full import graph on every
+test file: a full-barrel import costs ~1.2s of module evaluation per test
+file; a single-component subpath costs ~0.1s. For a production bundler
+(Vite, webpack 5) the difference is smaller since unused components are
+already tree-shaken from the main import.
+
+The subpath name always matches the component's directory/file under
+`src/components/<category>/` — check [DESIGN.md](./DESIGN.md) or the
+[Storybook](https://ts-lib-ui-kit-storybook.vercel.app/) sidebar for the
+exact name.
 
 ## Styling & CSS
 
@@ -369,6 +397,28 @@ Full TypeScript support with exported types:
 import { Button } from "@tetrascience-npm/tetrascience-react-ui";
 import type { ButtonProps, BarChartProps, BarDataSeries } from "@tetrascience-npm/tetrascience-react-ui";
 ```
+
+## Testing your app with Jest
+
+The kit ships dual ESM + CJS output, so Jest's CommonJS runtime can load every component directly — no need to mock the package. What Jest *can't* load are a few third-party dependencies that publish ESM-only (the streamdown/markdown stack, shiki, `use-stick-to-bottom`, `react-resizable-panels`) and optional peers you may not have installed (`plotly.js-dist`, `@rdkit/rdkit`). The kit ships a single setup file that stubs exactly those, plus the jsdom shims Radix-based components need (ResizeObserver, matchMedia, pointer capture, …).
+
+Add one line to `jest.config.js`:
+
+```js
+module.exports = {
+  testEnvironment: "jsdom",
+  setupFiles: ["@tetrascience-npm/tetrascience-react-ui/jest-setup"],
+};
+```
+
+Requires Jest ≥ 28 (package `exports` support) and `jest-environment-jsdom`. To override any stub, register your own mock — `jest.mock("<module>", …)` in a test file or a later setup file replaces the kit's registration. If Jest runs with `injectGlobals: false`, import `installUiKitJestMocks` / `installUiKitDomShims` from the same module and call them from your own setup file with the `jest` object.
+
+What the stubs do:
+
+- **Charts** render their containers; Plotly calls resolve against an inert stub (jsdom has no WebGL). Assert on props/behavior, not pixels — visual assertions belong in a real browser.
+- **`MessageResponse` / `Reasoning`** render the markdown source as plain text, so text-content assertions work without transpiling the markdown ecosystem.
+- **`CodeBlock`** renders unhighlighted code lines. Only the languages the kit ships by default are covered — a grammar you add yourself via `registerCodeBlockLanguage` isn't mockable by this setup file, since it isn't known ahead of time.
+- **`MoleculeStructure`** resolves against a stub that always returns a valid, empty-SVG molecule. For real assertions (invalid-SMILES handling, actual rendered markup), use the kit's own override hook instead of relying on the stub: `configureRDKit({ importFactory: () => Promise.resolve(myFakeRDKitModule) })`, exported alongside `MoleculeStructure`.
 
 ## Examples
 

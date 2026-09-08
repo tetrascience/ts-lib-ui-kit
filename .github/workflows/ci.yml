@@ -48,6 +48,9 @@ jobs:
       - name: Build
         run: yarn build
 
+      - name: Verify Jest consumer support
+        run: yarn verify:jest-consumer
+
       - name: Type Check
         run: yarn typecheck
 

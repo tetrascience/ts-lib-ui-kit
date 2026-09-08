@@ -12,7 +12,7 @@ import {
   Settings,
   Table2,
 } from "lucide-react";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import { AppShellSimple, type AppShellSimpleCrumb } from "./AppShellSimple";
 
@@ -260,6 +260,18 @@ export const DragToResize: Story = {
       await settle();
       expect(shell).toHaveAttribute("data-nav-state", "rail");
     });
+
+    await step("losing the button mid-drag clears the resize instead of snapping", async () => {
+      // Press to start a drag (resizing = true), then a move whose `buttons`
+      // reports no button held — the OS silently dropped the capture. The
+      // handle's guard must bail out rather than snap to x=200 (sidebar).
+      drag("pointerdown", 60, 1);
+      await settle();
+      drag("pointermove", 200, 0);
+      await settle();
+      expect(shell).toHaveAttribute("data-nav-state", "rail");
+      expect(shell).not.toHaveClass("cursor-col-resize");
+    });
   },
   parameters: {
     zephyr: { testCaseId: "" },
@@ -343,5 +355,56 @@ export const NoSideNav: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5650" },
+  },
+};
+
+const onCrumbClick = fn();
+
+/**
+ * Breadcrumb crumbs support three forms: a link (`href`), a button (`onClick`
+ * with no `href`), and plain static text (neither). The last crumb is always
+ * the current page.
+ */
+export const BreadcrumbNavigation: Story = {
+  args: {
+    // A single unlabelled nav group — this story is about the breadcrumb forms,
+    // and a labelled group header would pull in an unrelated pre-existing
+    // low-contrast a11y finding on the shared nav's section label.
+    navGroups: [
+      {
+        pages: [
+          { id: "overview", label: "Overview", icon: LayoutDashboard, isActive: true },
+          { id: "datasets", label: "Datasets", icon: Database },
+        ],
+      },
+    ],
+    breadcrumbs: [
+      { label: "Home", onClick: onCrumbClick },
+      { label: "Section" },
+      { label: "Run 4821 overview" },
+    ],
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("an onClick crumb renders as a button and fires its handler", async () => {
+      const home = canvas.getByRole("button", { name: "Home" });
+      await userEvent.click(home);
+      expect(onCrumbClick).toHaveBeenCalled();
+    });
+
+    await step("a crumb with no href/onClick renders as static text", async () => {
+      expect(canvas.queryByRole("link", { name: "Section" })).toBeNull();
+      expect(canvas.queryByRole("button", { name: "Section" })).toBeNull();
+      expect(canvas.getByText("Section")).toBeInTheDocument();
+    });
+
+    await step("the last crumb is the current page", async () => {
+      const current = canvasElement.querySelector('[aria-current="page"]');
+      expect(current).toHaveTextContent("Run 4821 overview");
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
   },
 };

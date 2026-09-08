@@ -1179,6 +1179,6 @@ export const RadiusConsistency: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5652" },
   },
 }

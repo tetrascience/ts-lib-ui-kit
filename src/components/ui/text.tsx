@@ -42,7 +42,7 @@ type TextElement =
  * Tailwind's size-paired defaults rather than overridden.
  *
  * The `gap-*` in each variant is inert until an `icon` or `truncate` switches
- * the root to `inline-flex`; keeping it on the variant is what makes the
+ * the root to a flex box; keeping it on the variant is what makes the
  * icon/text gap scale with the type step.
  */
 const textVariants = cva("", {
@@ -113,10 +113,11 @@ interface TextProps extends React.HTMLAttributes<HTMLElement>, VariantProps<type
    */
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   /**
-   * Truncate to a single line with an ellipsis. Switches the root to
-   * `inline-flex`, so the parent has to bound the width for it to engage —
-   * e.g. `<div className="flex"><Text truncate … /></div>` with the sibling
-   * marked `shrink-0`.
+   * Truncate to a single line with an ellipsis. Switches the root to a flex
+   * box — `flex` for block elements, `inline-flex` for inline ones such as
+   * `span` — so the parent has to bound the width for it to engage, e.g.
+   * `<div className="flex"><Text truncate … /></div>` with the sibling marked
+   * `shrink-0`.
    */
   truncate?: boolean;
 }

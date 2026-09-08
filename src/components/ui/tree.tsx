@@ -75,11 +75,19 @@ type TreeItemContextValue = {
   hasChildren: boolean;
   selected: boolean;
   disabled: boolean;
+  /**
+   * Parent levels whose trunk passes through this row. The row draws one vertical segment per
+   * entry, so a trunk survives crossing an expanded branch's descendant rows.
+   */
+  trunkLevels: readonly number[];
   toggle: () => void;
   select: () => void;
 };
 
 const TreeItemContext = React.createContext<TreeItemContextValue | null>(null);
+
+/** Stable empty set, so inheriting "no trunks" doesn't remake the item context every render. */
+const NO_TRUNKS: readonly number[] = [];
 
 function useTreeItemContext(component: string) {
   const context = React.useContext(TreeItemContext);
@@ -360,7 +368,18 @@ function Tree({
           // 0.25rem lead-in), and the chevron sits at the lead-in, so one step must be
           // 1.5rem - 0.25rem. Indentation, the guide offsets and the elbow reach are all derived
           // from this one value — override it and the connectors follow.
-          className={cn("group/tree text-foreground flex w-full flex-col text-sm [--tree-indent:1.25rem]", className)}
+          //
+          // `--tree-guide-color` is deliberately *opaque*, via `color-mix`, even though it is meant
+          // to look like a 40% tint. Guide segments necessarily overlap — each row's line overshoots
+          // into the row above so the two meet across the label's border, and an elbow shares its
+          // column with the trunk it branches from. With a semi-transparent colour every overlap
+          // composites twice and shows up as a darker stretch of line. Mixing to an opaque value up
+          // front makes overlapping draws idempotent, so the tree reads as one uniform hairline.
+          className={cn(
+            "group/tree text-foreground flex w-full flex-col text-sm",
+            "[--tree-indent:1.25rem] [--tree-guide-color:color-mix(in_oklch,var(--muted-foreground)_40%,var(--background))]",
+            className,
+          )}
           {...props}
         >
           {/*
@@ -409,7 +428,7 @@ function TreeItem({
   style,
   ...props
 }: TreeItemProps) {
-  const { expandedIds, setExpanded, selectedId, activateItem, focusedId, setFocusedId, guides, onItemKeyDown } =
+  const { expandedIds, setExpanded, selectedId, activateItem, focusedId, setFocusedId, onItemKeyDown } =
     useTreeContext("TreeItem");
   const level = React.useContext(TreeLevelContext);
   const { posinset, setsize, lastBranchPos } = React.useContext(TreeIndexContext);
@@ -435,11 +454,16 @@ function TreeItem({
   // point, focus retention across collapse and lazy load).
   const tabbable = focusedId ? focusedId === id : level === 1 && posinset === 1;
 
-  // The trunk is drawn here, not on the label, because a `TreeItem` box wraps its own row *and*
-  // all of its rendered descendants. A per-row trunk cannot bridge a branch's descendants: those
-  // rows sit one level deeper and would have to paint a line in their grandparent's column.
-  const guidesOn = guides !== "none" && level > 1;
-  const showTrunk = guidesOn && posinset < lastBranchPos;
+  // Guides are drawn on the row (see `TreeItemLabel`), so a row has to know every ancestor trunk
+  // crossing it, not just its own parent's. The set is threaded down the tree: inherit the parent's
+  // and add this row's own parent level when a later sibling folder needs the line to continue past
+  // this entire subtree.
+  const parentItem = React.useContext(TreeItemContext);
+  const inheritedTrunkLevels = parentItem?.trunkLevels ?? NO_TRUNKS;
+  const trunkLevels = React.useMemo(
+    () => (level > 1 && posinset < lastBranchPos ? [...inheritedTrunkLevels, level - 1] : inheritedTrunkLevels),
+    [inheritedTrunkLevels, level, posinset, lastBranchPos],
+  );
 
   const itemContext = React.useMemo<TreeItemContextValue>(
     () => ({
@@ -450,10 +474,11 @@ function TreeItem({
       hasChildren,
       selected,
       disabled,
+      trunkLevels,
       toggle,
       select,
     }),
-    [id, labelId, level, expanded, hasChildren, selected, disabled, toggle, select],
+    [id, labelId, level, expanded, hasChildren, selected, disabled, trunkLevels, toggle, select],
   );
 
   return (
@@ -501,21 +526,14 @@ function TreeItem({
             // Stops 0.25rem short of the row's chevron rather than touching it, so the connector
             // reads as pointing at the row instead of welded to the glyph.
             "--tree-elbow-run": "calc(var(--tree-indent) - 0.6875rem)",
+            // Shared by the elbow's corner and by where the same-column trunk picks up, so the two
+            // meet exactly instead of overlapping or leaving a gap.
+            "--tree-elbow-radius": "0.5rem",
             ...style,
           } as React.CSSProperties
         }
         className={cn(
           "relative outline-none",
-          // The trunk passing this row on its way to a later sibling folder. Spans the item, so it
-          // covers this row plus every descendant row beneath it, and starts half a chevron high so
-          // it meets the parent's chevron instead of leaving a gap.
-          showTrunk && [
-            "before:border-muted-foreground/40 before:absolute before:top-[-0.4375rem] before:w-0",
-            "before:left-[var(--tree-guide-left)] before:pointer-events-none before:border-l before:content-['']",
-            "before:h-[calc(100%+0.4375rem)]",
-            guides === "hover" &&
-              "before:opacity-0 before:transition-opacity group-hover/tree:before:opacity-100 motion-reduce:before:transition-none",
-          ],
           // Direct-child selectors, deliberately not `group-*/tree-item`: tree items nest, and a
           // group variant matches *any* ancestor, so a focused or selected parent painted its focus
           // ring onto every descendant row. Backgrounds live on the label for the same reason —
@@ -569,14 +587,15 @@ type TreeItemLabelProps = React.ComponentProps<"div"> &
   };
 
 function TreeItemLabel({ className, children, size, style, icon, trailing, ...props }: TreeItemLabelProps) {
-  const { labelId, level, expanded, hasChildren, selected, disabled, toggle } =
+  const { labelId, level, expanded, hasChildren, selected, disabled, trunkLevels, toggle } =
     useTreeItemContext("TreeItemLabel");
   const { guides } = useTreeContext("TreeItemLabel");
 
-  // The elbow lives on the label because the label element *is* the row, so it can be sized in
-  // halves of it — the curve has to land on the row's vertical centre. The trunk is the `TreeItem`'s
-  // job (see there). A connector joins a folder to its subfolders, so only a branch row gets one.
+  // The elbow lives on the row because the label element *is* the row, so it can be sized in
+  // halves of it — the curve has to land on the row's vertical centre. A connector joins a folder
+  // to its subfolders, so only a branch row gets one.
   const showElbow = guides !== "none" && level > 1 && hasChildren;
+  const showGuides = guides !== "none" && (showElbow || trunkLevels.length > 0);
 
   const textRef = React.useRef<HTMLSpanElement>(null);
   const [tooltipOpen, setTooltipOpen] = React.useState(false);
@@ -609,28 +628,59 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
         // From this node's own state, not an ancestor selector: `aria-disabled` is per-node, so a
         // disabled folder must not dim the contents underneath it.
         disabled && "pointer-events-none opacity-50",
-        // `::before` is the elbow: down the guide line, then a rounded turn right, stopping just
-        // short of this row's leading glyph. It starts 0.4375rem (half a chevron) above the row so
-        // the line emerges from under the parent's chevron rather than leaving a half-row gap.
-        //
-        // `::after` is the trunk passing through to the next sibling, and spans the *whole* row
-        // rather than resuming at the curve: `rounded-bl` peels the elbow's left border away
-        // 0.5rem before its bottom edge, so a trunk starting at the curve leaves a visible gap at
-        // every branch point. It is omitted on the last child, where the line ends in the curve.
-        //
-        // Both are 1px *borders* on purpose. A 1px background box and a 1px border land on
-        // different rasterisation paths, and at fractional offsets the two anti-alias to visibly
-        // different greys even from the same colour token — which read as a two-tone tree.
-        showElbow && [
-          "before:border-muted-foreground/40 before:absolute before:top-[-0.4375rem] before:left-[var(--tree-guide-left)]",
-          "before:pointer-events-none before:h-[calc(50%+0.4375rem)] before:w-[var(--tree-elbow-run)]",
-          "before:rounded-bl-[0.5rem] before:border-b before:border-l before:content-['']",
-          guides === "hover" &&
-            "before:opacity-0 before:transition-opacity group-hover/tree:before:opacity-100 motion-reduce:before:transition-none",
-        ],
         className,
       )}
     >
+      {showGuides ? (
+        // One absolutely-positioned layer owns every guide on this row, fixing two bugs at once.
+        //
+        // Paint order: the trunk used to be drawn by the `TreeItem`, an *ancestor* of every
+        // descendant row. Those rows are positioned and paint an opaque hover/selected background
+        // over anything an ancestor drew, so the trunk vanished behind whichever row you pointed
+        // at. Drawn here it belongs to the row's own box, so it paints above that row's background
+        // — and no sibling row can cover it, because every row draws its own segments.
+        //
+        // One coordinate system: `left` resolves against the nearest positioned ancestor's
+        // *padding* box. The label carries `border border-transparent` for its focus ring while the
+        // `TreeItem` carries none, so one `--tree-guide-left` landed 1px apart on the two elements
+        // and the elbow/trunk overlap read as a 2px line. Both now share this container.
+        <span
+          data-slot="tree-item-guides"
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute inset-0",
+            // The fade lives on the container, not on each line. Opacity on the parent renders the
+            // whole layer into one buffer and composites it once, so a seam between two segments
+            // can never double-expose mid-transition.
+            guides === "hover" &&
+              "opacity-0 transition-opacity group-hover/tree:opacity-100 motion-reduce:transition-none",
+          )}
+        >
+          {trunkLevels.map((trunkLevel) => (
+            <span
+              key={trunkLevel}
+              data-slot="tree-item-guide-trunk"
+              style={{ left: `calc(var(--tree-indent) * ${trunkLevel - 1} + 0.6875rem)` }}
+              // Overshoots upward by half a chevron to cross the label's border into the row above,
+              // so consecutive rows tile into one unbroken line.
+              className="absolute top-[-0.4375rem] bottom-0 w-0 border-l border-[var(--tree-guide-color)]"
+            />
+          ))}
+          {showElbow ? (
+            // Down the guide line, then a rounded turn right, stopping just short of this row's
+            // chevron. Starts half a chevron above the row so the line emerges from under the
+            // parent's chevron instead of leaving a half-row gap.
+            <span
+              data-slot="tree-item-guide-elbow"
+              className={cn(
+                "absolute top-[-0.4375rem] left-[var(--tree-guide-left)] border-[var(--tree-guide-color)]",
+                "h-[calc(50%+0.4375rem)] w-[var(--tree-elbow-run)] border-b border-l",
+                "rounded-bl-[var(--tree-elbow-radius)]",
+              )}
+            />
+          ) : null}
+        </span>
+      ) : null}
       {hasChildren ? (
         // A pointer-only affordance, deliberately not a `<button>`: expansion is reachable from the
         // keyboard through the parent treeitem's arrow keys, so this stays non-focusable. A focusable

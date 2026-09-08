@@ -53,7 +53,7 @@ export const Default: Story = {
     children: "Sample run completed in 4 minutes 12 seconds.",
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5662" },
   },
 };
 
@@ -63,7 +63,7 @@ export const Default: Story = {
  */
 export const Scale: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5663" },
   },
   render: () => (
     <div className="space-y-6">
@@ -88,7 +88,7 @@ export const Scale: Story = {
  */
 export const SemanticsIndependentOfScale: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5664" },
   },
   render: () => (
     <div className="space-y-4">
@@ -132,7 +132,7 @@ export const SemanticsIndependentOfScale: Story = {
  */
 export const WithLeadingIcon: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5665" },
   },
   render: () => (
     <div className="space-y-4">
@@ -175,7 +175,7 @@ export const WithLeadingIcon: Story = {
 
 export const States: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5666" },
   },
   render: () => (
     <div className="space-y-2">
@@ -230,7 +230,7 @@ export const States: Story = {
  */
 export const Truncation: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5667" },
   },
   render: () => (
     <div className="max-w-md space-y-4 rounded-lg border border-border p-4">

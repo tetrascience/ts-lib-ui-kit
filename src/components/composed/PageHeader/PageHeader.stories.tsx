@@ -1,4 +1,4 @@
-import { Beaker, FlaskConical, MoreHorizontal } from "lucide-react";
+import { FlaskConical, MoreHorizontal } from "lucide-react";
 import { expect, within } from "storybook/test";
 
 import { PageHeader } from "./PageHeader";
@@ -45,6 +45,29 @@ export default meta;
 
 type Story = StoryObj<typeof PageHeader>;
 
+/**
+ * Default — a page's own title row: the title, an optional subtitle beneath it,
+ * and an optional trailing slot for actions. The title is a real heading whose
+ * level you choose with `as`; the subtitle is always a `p`, and anything in
+ * `trailing` renders as a sibling of the heading rather than inside it.
+ *
+ * Reach for it for the title of the page content you own. Do **not** reach for
+ * it in these cases:
+ *
+ * - **Component-internal titles keep their own styling.** `CardTitle`,
+ *   `EmptyState`'s title, `DataAppShell`'s sidebar and panel headings, and
+ *   `AppShellSimple`'s top-bar breadcrumb are owned by those components;
+ *   replacing their scale here would give the kit two sources of truth for one
+ *   set of pixels.
+ * - **Full-width chrome is the shell's job.** `PageHeader` sits inside the page
+ *   content and is not a title bar — which is why it is not called `TitleBar`.
+ * - **A title-scaled node that is not a heading** is a `Text` with `as="span"`.
+ *   `PageHeader`'s title is always a heading by construction.
+ * - **Multi-line titles** are out of scope: there is no line-clamp prop. A clamp
+ *   would need `Text` to grow a `lines` prop, and "baseline-aligned with the
+ *   title" stops being well-defined once a title wraps. Long titles truncate;
+ *   pass `truncate={false}` if you would rather they wrap.
+ */
 export const Default: Story = {
   args: {
     title: "Peptide mapping",
@@ -62,9 +85,6 @@ export const Default: Story = {
  *
  * The vertical rhythm (`space-y-0.5`) lives on the component so consumers stop
  * hand-tuning margins.
- *
- * Folded in from `Text`'s `TitleWithSubtitle` story, which was the spec for this
- * behaviour before `PageHeader` existed.
  */
 export const WithSubtitle: Story = {
   args: {
@@ -106,16 +126,22 @@ export const WithSubtitle: Story = {
  * renders as a *sibling* of the heading element, never a descendant — a button
  * or menu trigger nested inside an `h2` is announced as part of the heading.
  *
- * Folded in from `Text`'s `TrailingContent` story.
+ * The same row also carries the two layout rules that depend on that structure,
+ * shown here in a bounded container so both engage: the title truncates rather
+ * than pushing the actions out, and the actions sit on the title's baseline
+ * rather than centred against the title+subtitle block — which is what happens
+ * if all three go in one flex container. The play function measures both
+ * numerically.
  */
 export const WithTrailingAction: Story = {
   args: {
     as: "h2",
     variant: "title",
-    title: "Interactive trailing content lives outside the heading",
-    subtitle: "The button below is a sibling of the h2, not a child of it.",
+    title: "UPLC-MS peptide mapping — lot 4471-B qualification run, replicate 3 of 3",
+    subtitle: "Actions are siblings of the h2; the title gives up space, they never do.",
     trailing: (
       <>
+        <Badge variant="positive">Passed</Badge>
         <Button size="sm" variant="outline">
           Configure
         </Button>
@@ -133,73 +159,9 @@ export const WithTrailingAction: Story = {
       </>
     ),
   },
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-    const heading = canvas.getByRole("heading", { level: 2 });
-
-    await step("Button is a sibling of the heading, not a descendant", async () => {
-      const button = canvas.getByRole("button", { name: "Configure" });
-      expect(heading.contains(button)).toBe(false);
-      expect(button.parentElement?.parentElement).toBe(heading.parentElement);
-    });
-
-    await step("Menu trigger is also outside the heading", async () => {
-      const trigger = canvas.getByRole("button", { name: "More actions" });
-      expect(heading.contains(trigger)).toBe(false);
-    });
-
-    await step("Heading's accessible name is its text alone", async () => {
-      expect(heading).toHaveAccessibleName("Interactive trailing content lives outside the heading");
-    });
-
-    await step("Trailing slot is pinned right and does not shrink", async () => {
-      const row = canvasElement.querySelector('[data-slot="page-header-row"]') as HTMLElement;
-      const trailing = canvasElement.querySelector('[data-slot="page-header-trailing"]') as HTMLElement;
-      expect(trailing).not.toBeNull();
-
-      // Assert the *used* layout, not the declaration: `margin-left: auto`
-      // computes to a resolved pixel value, so checking for the string "auto"
-      // would pass only by accident. Flush to the row's right edge is the
-      // behaviour that actually matters.
-      const rowRect = row.getBoundingClientRect();
-      const trailingRect = trailing.getBoundingClientRect();
-      expect(Math.abs(trailingRect.right - rowRect.right)).toBeLessThan(1);
-
-      // And the title, not the trailing slot, is the item that gives up space.
-      expect(getComputedStyle(trailing).flexShrink).toBe("0");
-      expect(trailingRect.left).toBeGreaterThan(rowRect.left);
-    });
-  },
-};
-
-/**
- * A long title truncates; the trailing element keeps its full width. The title
- * is the flex item that gives up space (`min-w-0` + `Text`'s `truncate`), which
- * is the only arrangement where a pinned-right action can never be pushed out
- * of the row.
- */
-export const TruncatingTitle: Story = {
-  args: {
-    as: "h2",
-    variant: "title",
-    icon: Beaker,
-    title: "UPLC-MS peptide mapping — lot 4471-B qualification run, replicate 3 of 3, operator J. Okafor",
-    subtitle: "The title truncates; the badge and button keep their width.",
-    trailing: (
-      <>
-        <Badge variant="positive">Passed</Badge>
-        <Button size="sm" variant="outline">
-          Configure
-        </Button>
-      </>
-    ),
-  },
   decorators: [
     (Story) => (
-      <div className="max-w-xl rounded-lg border border-border p-4">
+      <div className="max-w-2xl rounded-lg border border-border p-4">
         <Story />
       </div>
     ),
@@ -210,105 +172,79 @@ export const TruncatingTitle: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const heading = canvas.getByRole("heading", { level: 2 });
+    const button = canvas.getByRole("button", { name: "Configure" });
+    const root = canvasElement.querySelector('[data-slot="page-header"]') as HTMLElement;
+    const row = canvasElement.querySelector('[data-slot="page-header-row"]') as HTMLElement;
+    const trailing = canvasElement.querySelector('[data-slot="page-header-trailing"]') as HTMLElement;
 
-    await step("Title text overflows and is clipped to one line", async () => {
+    await step("Interactive trailing content is a sibling of the heading", async () => {
+      expect(heading.contains(button)).toBe(false);
+      expect(button.parentElement?.parentElement).toBe(heading.parentElement);
+
+      const trigger = canvas.getByRole("button", { name: "More actions" });
+      expect(heading.contains(trigger)).toBe(false);
+    });
+
+    await step("Heading's accessible name is its text alone", async () => {
+      expect(heading).toHaveAccessibleName("UPLC-MS peptide mapping — lot 4471-B qualification run, replicate 3 of 3");
+      // The badge lives in `trailing`, so it stays out of the name. Put a badge
+      // in `title` instead and it joins the name — both are legitimate; pick
+      // whichever reads correctly when announced.
+      expect(heading.contains(canvas.getByText("Passed"))).toBe(false);
+    });
+
+    await step("Trailing slot is pinned right and does not shrink", async () => {
+      // Assert the *used* layout, not the declaration: `margin-left: auto`
+      // computes to a resolved pixel value, so checking for the string "auto"
+      // would pass only by accident.
+      const rowRect = row.getBoundingClientRect();
+      const trailingRect = trailing.getBoundingClientRect();
+      expect(Math.abs(trailingRect.right - rowRect.right)).toBeLessThan(1);
+      expect(getComputedStyle(trailing).flexShrink).toBe("0");
+    });
+
+    await step("Title truncates; trailing content keeps its full width", async () => {
       const inner = heading.querySelector("span");
       expect(inner).not.toBeNull();
       expect(inner).toHaveClass("truncate");
       expect(inner!.scrollWidth).toBeGreaterThan(inner!.clientWidth);
-    });
 
-    await step("Trailing content is not clipped — it keeps its full width", async () => {
-      const button = canvas.getByRole("button", { name: "Configure" });
-      const badge = canvas.getByText("Passed");
-      // scrollWidth === clientWidth means nothing overflowed, i.e. it never
+      // scrollWidth === clientWidth means nothing overflowed, i.e. these never
       // gave up space to the title.
       expect(button.scrollWidth).toBe(button.clientWidth);
+      const badge = canvas.getByText("Passed");
       expect(badge.scrollWidth).toBe(badge.clientWidth);
     });
 
-    await step("Trailing stays inside the row, not pushed out of it", async () => {
-      const row = canvasElement.querySelector('[data-slot="page-header-row"]') as HTMLElement;
-      const button = canvas.getByRole("button", { name: "Configure" });
-      const rowRect = row.getBoundingClientRect();
-      const buttonRect = button.getBoundingClientRect();
-      expect(buttonRect.right).toBeLessThanOrEqual(Math.ceil(rowRect.right));
-    });
-  },
-};
-
-/**
- * Trailing content is baseline-aligned with the **title**, not vertically
- * centred against the title+subtitle block. This works because the subtitle
- * renders *outside* the title row — put all three in one flex container and the
- * trailing element drifts toward the middle of the block.
- *
- * The play function measures this numerically rather than trusting the eye.
- */
-export const BaselineAlignment: Story = {
-  args: {
-    as: "h2",
-    variant: "title-lg",
-    title: "Run 4821 overview",
-    subtitle: "Started 09:14 · completed 09:31 · 17 minutes elapsed",
-    trailing: (
-      <Button size="sm" variant="outline">
-        Configure
-      </Button>
-    ),
-  },
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-    const heading = canvas.getByRole("heading", { level: 2 });
-    const button = canvas.getByRole("button", { name: "Configure" });
-    const root = canvasElement.querySelector('[data-slot="page-header"]') as HTMLElement;
-    const row = canvasElement.querySelector('[data-slot="page-header-row"]') as HTMLElement;
-
-    await step("The row aligns its items on the baseline", async () => {
+    await step("Trailing is baseline-aligned with the title, not centred on the block", async () => {
       expect(getComputedStyle(row).alignItems).toBe("baseline");
-    });
 
-    await step("Subtitle is outside the title row, so it cannot affect alignment", async () => {
-      const subtitle = canvas.getByText(/17 minutes elapsed/);
+      // The subtitle sits outside the row, so it cannot influence alignment.
+      const subtitle = canvas.getByText(/they never do/);
       expect(row.contains(subtitle)).toBe(false);
       expect(root.contains(subtitle)).toBe(true);
-    });
 
-    await step("Trailing tracks the title's centre, not the whole block's", async () => {
-      const headingRect = heading.getBoundingClientRect();
-      const rootRect = root.getBoundingClientRect();
-      const buttonRect = button.getBoundingClientRect();
+      const mid = (r: DOMRect) => r.top + r.height / 2;
+      const titleMid = mid(heading.getBoundingClientRect());
+      const blockMid = mid(root.getBoundingClientRect());
+      const buttonMid = mid(button.getBoundingClientRect());
 
-      const buttonMid = buttonRect.top + buttonRect.height / 2;
-      const titleMid = headingRect.top + headingRect.height / 2;
-      const blockMid = rootRect.top + rootRect.height / 2;
-
-      // The subtitle makes the block meaningfully taller than the title, so
-      // these two midpoints are genuinely distinguishable — otherwise this
-      // assertion would prove nothing.
+      // Guard: the subtitle makes the block meaningfully taller than the title,
+      // so these midpoints are genuinely distinguishable — otherwise the
+      // comparison below would prove nothing.
       expect(Math.abs(titleMid - blockMid)).toBeGreaterThan(4);
       expect(Math.abs(buttonMid - titleMid)).toBeLessThan(Math.abs(buttonMid - blockMid));
-    });
 
-    await step("Button's text baseline sits within a few px of the title's", async () => {
-      // Measure the text itself, not the boxes: the button has padding and a
-      // border, so its box bottom is not its baseline. A Range over the text
-      // node gives the line box, whose bottom is baseline + descender — and the
-      // descender difference between text-sm and text-2xl is the only slack
-      // here, hence the 5px tolerance rather than an exact match.
-      const measureTextBottom = (node: Node) => {
+      // Measure the text, not the boxes: the button has padding and a border,
+      // so its box bottom is not its baseline. A Range over the text node gives
+      // the line box, whose bottom is baseline + descender — and the descender
+      // difference between text-sm and text-xl is the only slack here.
+      const textBottom = (node: Node) => {
         const range = document.createRange();
         range.selectNodeContents(node);
         return range.getBoundingClientRect().bottom;
       };
-
-      const titleTextBottom = measureTextBottom(heading.querySelector("span") ?? heading);
-      const buttonTextBottom = measureTextBottom(button);
-
-      expect(Math.abs(titleTextBottom - buttonTextBottom)).toBeLessThan(5);
+      expect(Math.abs(textBottom(heading.querySelector("span")!) - textBottom(button))).toBeLessThan(5);
     });
   },
 };
@@ -317,9 +253,10 @@ export const BaselineAlignment: Story = {
  * `as` and `variant` are independent, and `as` is **never** inferred from the
  * visual size — unlike `Text`, which picks a default element per variant,
  * `PageHeader` always defaults to `h1` regardless of scale. Set `as` to what the
- * document outline needs; set `variant` to the size you want.
+ * document outline actually needs; set `variant` to the size you want.
  */
-export const HeadingLevelIsCallerControlled: Story = {
+export const HeadingLevel: Story = {
+  name: "Heading level",
   parameters: {
     zephyr: { testCaseId: "" },
   },
@@ -350,100 +287,10 @@ export const HeadingLevelIsCallerControlled: Story = {
     });
 
     await step("Neither level was inferred from the scale", async () => {
-      // display defaults to h1 on `Text`; here it is an h2 purely because `as`
-      // said so.
+      // `display` defaults to h1 on `Text`; here it is an h2 purely because
+      // `as` said so.
       expect(canvas.queryByRole("heading", { level: 1 })).toBeNull();
     });
-  },
-};
-
-/**
- * Where to put a status chip decides whether it joins the heading's accessible
- * name. In `title` it does; in `trailing` it does not. Both are legitimate —
- * pick the one that reads correctly when announced.
- */
-export const BadgePlacementAndAccessibleName: Story = {
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-  render: () => (
-    <div className="space-y-8">
-      <PageHeader
-        as="h2"
-        variant="title"
-        title={
-          <>
-            Batch 4471 <Badge variant="info">Draft</Badge>
-          </>
-        }
-        subtitle="Badge in `title` — it joins the accessible name."
-      />
-      <PageHeader
-        as="h2"
-        variant="title"
-        title="Batch 4472"
-        subtitle="Badge in `trailing` — it stays out of the accessible name."
-        trailing={<Badge variant="positive">Complete</Badge>}
-      />
-    </div>
-  ),
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("A badge inside the title joins the heading's accessible name", async () => {
-      expect(canvas.getByRole("heading", { name: "Batch 4471 Draft" })).toBeInTheDocument();
-    });
-
-    await step("A badge in the trailing slot does not", async () => {
-      const heading = canvas.getByRole("heading", { name: "Batch 4472" });
-      expect(heading).toHaveAccessibleName("Batch 4472");
-      expect(heading.contains(canvas.getByText("Complete"))).toBe(false);
-    });
-  },
-};
-
-/**
- * Both themes side by side, so the muted subtitle's contrast can be compared
- * without toggling the toolbar. The subtitle uses the existing
- * `--muted-foreground` token, which is defined for both `:root` and `.dark`.
- */
-export const BothThemes: Story = {
-  parameters: {
-    layout: "fullscreen",
-    zephyr: { testCaseId: "" },
-  },
-  render: () => {
-    const panel = (
-      <div className="flex-1 space-y-8 bg-background p-8 text-foreground">
-        <PageHeader
-          as="h2"
-          variant="title-lg"
-          icon={FlaskConical}
-          title="Run 4821 overview"
-          subtitle="Started 09:14 · completed 09:31 · 17 minutes elapsed"
-          trailing={
-            <Button size="sm" variant="outline">
-              Configure
-            </Button>
-          }
-        />
-        <PageHeader as="h2" variant="title" title="Section without a subtitle" />
-        <PageHeader
-          as="h2"
-          variant="title-sm"
-          title="Dense panel title"
-          subtitle="Muted subtitle at the smallest title scale — the kit's most common contrast failure."
-          trailing={<Badge variant="warning">Review</Badge>}
-        />
-      </div>
-    );
-
-    return (
-      <div className="flex min-h-screen">
-        {panel}
-        <div className="dark flex flex-1">{panel}</div>
-      </div>
-    );
   },
 };
 
@@ -474,53 +321,6 @@ export const Scale: Story = {
           />
         </div>
       ))}
-    </div>
-  ),
-};
-
-/**
- * When *not* to reach for `PageHeader`.
- *
- * - **Component-internal titles keep their own styling.** `CardTitle`,
- *   `EmptyState`'s title, `DataAppShell`'s sidebar and panel headings
- *   (`text-sm font-semibold` chrome) and `AppShellSimple`'s top-bar breadcrumb
- *   are owned by those components. Retrofitting `PageHeader` onto them gives the
- *   kit two sources of truth for one set of pixels.
- * - **Full-width chrome is the shell's job.** `PageHeader` sits *inside* the
- *   page content; it is not a title bar. That is why it is not called
- *   `TitleBar`.
- * - **A title-scaled node that is not a heading** is a `Text` with
- *   `as="span"`, not a `PageHeader` — `PageHeader`'s title is always a heading
- *   by construction.
- * - **Multi-line titles** are out of scope today: there is no line-clamp prop.
- *   A clamp would need `Text` to grow a `lines` prop, and "baseline-aligned with
- *   the title" stops being well-defined once the title has more than one line.
- *   Long titles truncate; set `truncate={false}` if you would rather they wrap.
- */
-export const WhenNotToUse: Story = {
-  parameters: {
-    zephyr: { testCaseId: "" },
-  },
-  render: () => (
-    <div className="max-w-2xl space-y-6">
-      <PageHeader
-        as="h2"
-        variant="title-sm"
-        title="Use PageHeader for the page's own title row"
-        subtitle="Title, optional subtitle, optional actions — inside the page content, not as full-width chrome."
-      />
-      <PageHeader
-        as="h2"
-        variant="title-sm"
-        title="Wrapping instead of truncating"
-        subtitle="With truncate={false} a long title wraps, and trailing aligns to the first line's baseline."
-        truncate={false}
-        trailing={
-          <Button size="sm" variant="outline">
-            Configure
-          </Button>
-        }
-      />
     </div>
   ),
 };

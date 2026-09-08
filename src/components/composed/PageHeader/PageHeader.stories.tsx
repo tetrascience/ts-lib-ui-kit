@@ -73,7 +73,7 @@ export const Default: Story = {
     title: "Peptide mapping",
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5668" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -107,7 +107,7 @@ export const WithSubtitle: Story = {
     subtitle: "14 samples across 3 plates · last run 12 minutes ago",
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5669" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -179,7 +179,7 @@ export const WithTrailingAction: Story = {
     ),
   ],
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5670" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -270,7 +270,7 @@ export const WithTrailingAction: Story = {
 export const HeadingLevel: Story = {
   name: "Heading level",
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5671" },
   },
   render: () => (
     <div className="space-y-8">
@@ -313,7 +313,7 @@ export const HeadingLevel: Story = {
  */
 export const Scale: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5672" },
   },
   render: () => (
     <div className="space-y-8">

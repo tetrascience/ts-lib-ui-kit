@@ -78,6 +78,7 @@ export default defineConfig({
           new Set([
             "index",
             "server",
+            "telemetry",
             "providers/athena",
             "providers/snowflake",
             "providers/databricks",

@@ -46,10 +46,10 @@ export default meta;
 type Story = StoryObj<typeof PageHeader>;
 
 /**
- * Default — a page's own title row: the title, an optional subtitle beneath it,
- * and an optional trailing slot for actions. The title is a real heading whose
- * level you choose with `as`; the subtitle is always a `p`, and anything in
- * `trailing` renders as a sibling of the heading rather than inside it.
+ * Default — a page's own title row at its simplest: just the title, which is a
+ * real heading whose level you choose with `as`. Add an optional subtitle
+ * beneath it (always a `p`) and an optional `trailing` slot for actions, which
+ * renders as a sibling of the heading rather than inside it.
  *
  * Reach for it for the title of the page content you own. Do **not** reach for
  * it in these cases:
@@ -71,10 +71,22 @@ type Story = StoryObj<typeof PageHeader>;
 export const Default: Story = {
   args: {
     title: "Peptide mapping",
-    subtitle: "14 samples across 3 plates · last run 12 minutes ago",
   },
   parameters: {
     zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Title is an h1 by default", async () => {
+      const heading = canvas.getByRole("heading", { level: 1, name: "Peptide mapping" });
+      expect(heading.tagName).toBe("H1");
+    });
+
+    await step("With no subtitle, no paragraph is rendered", async () => {
+      expect(canvasElement.querySelector('[data-slot="page-header-subtitle"]')).toBeNull();
+      expect(canvasElement.querySelector('[data-slot="page-header-trailing"]')).toBeNull();
+    });
   },
 };
 

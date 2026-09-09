@@ -116,6 +116,35 @@ describe("transformStorySource", () => {
     );
   });
 
+  it("presents a named function-expression render under its own name", () => {
+    const source = `{
+  name: "Deep nesting (controlled)",
+  render: function DeepTree() {
+    const [expandedIds, setExpandedIds] = React.useState(new Set(DEEP_IDS));
+
+    return (
+      <Tree expandedIds={expandedIds} onExpandedChange={setExpandedIds}>
+        {renderDeep(0)}
+      </Tree>
+    );
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5657" },
+  },
+}`;
+    expect(transformStorySource(source)).toBe(
+      `function DeepTree() {
+  const [expandedIds, setExpandedIds] = React.useState(new Set(DEEP_IDS));
+
+  return (
+    <Tree expandedIds={expandedIds} onExpandedChange={setExpandedIds}>
+      {renderDeep(0)}
+    </Tree>
+  );
+}`,
+    );
+  });
+
   it("extracts a single-line story object", () => {
     expect(transformStorySource("{ render: () => <Skeleton /> }")).toBe(
       "<Skeleton />",

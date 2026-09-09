@@ -97,15 +97,19 @@ const unwrapParens = (text: string): string => {
 };
 
 /**
- * Normalize an extracted zero-arity arrow function into presentable code:
+ * Normalize an extracted zero-arity render function into presentable code:
  * expression bodies become the bare expression; block bodies (stateful
  * demos using hooks) are presented as a `function Example()` component,
- * which is how a consumer would actually write them.
+ * which is how a consumer would actually write them. Named function
+ * expressions (`render: function DeepTree() { … }`) keep their own name.
  */
-const presentArrowFunction = (source: string): string | null => {
-  const match = source.match(/^(?:async\s+)?\(\)\s*=>\s*/);
-  if (!match) return null;
-  const body = source.slice(match[0].length).trim();
+const presentRenderFunction = (source: string): string | null => {
+  const arrow = source.match(/^(?:async\s+)?\(\)\s*=>\s*/);
+  const namedFn = arrow
+    ? null
+    : source.match(/^(?:async\s+)?function\s*([A-Za-z_$][\w$]*)?\s*\(\)\s*/);
+  if (!arrow && !namedFn) return null;
+  const body = source.slice((arrow ?? namedFn!)[0].length).trim();
   if (body === "") return null;
   if (body.startsWith("{") && body.endsWith("}")) {
     const inner = dedent(body.slice(1, -1).split("\n"))
@@ -116,8 +120,11 @@ const presentArrowFunction = (source: string): string | null => {
       .split("\n")
       .map((line) => (line === "" ? "" : `  ${line}`))
       .join("\n");
-    return `function Example() {\n${indented}\n}`;
+    const name = namedFn?.[1] ?? "Example";
+    return `function ${name}() {\n${indented}\n}`;
   }
+  // A `function` needs a block body; a bare expression after it is malformed.
+  if (namedFn) return null;
   return unwrapParens(dedent(body.split("\n")).join("\n").trim());
 };
 
@@ -229,12 +236,12 @@ export const transformStorySource = (code: string): string => {
 
   // CSF2 function story (`export const X = () => …`).
   if (/^(?:async\s+)?\(\)\s*=>/.test(trimmed)) {
-    return presentArrowFunction(trimmed) ?? code;
+    return presentRenderFunction(trimmed) ?? code;
   }
 
   if (!trimmed.startsWith("{")) return code;
 
   const renderValue = extractRenderValue(trimmed);
   if (renderValue === null) return code;
-  return presentArrowFunction(renderValue) ?? code;
+  return presentRenderFunction(renderValue) ?? code;
 };

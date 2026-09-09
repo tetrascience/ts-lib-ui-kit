@@ -208,7 +208,7 @@ function contrast(el: HTMLElement): number {
 /** Every variant, disabled, must read as clearly off yet stay legible (SW-2443). */
 export const DisabledContrast: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5676" },
   },
   render: () => (
     <div className="flex flex-wrap gap-3">

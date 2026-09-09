@@ -140,6 +140,8 @@ import {
 | `TdpLink`                | Composed           | —                          | TDP-aware link component                                 | Stable |
 | `TopBar`                 | Composed           | —                          | Sticky 3-slot header (left/center/right)                 | Stable |
 | `UserMenu`               | Composed           | `avatar` + `dropdown-menu` | Avatar + account dropdown                                | Stable |
+| `PageHeader`             | Composed           | —                          | Page title + subtitle + trailing action slot             | Beta   |
+| `AppShellSimple`         | Composed           | —                          | Top bar + tri-state side nav; lighter than DataAppShell  | Beta   |
 | `AreaPlot`               | Chart              | —                          | Plotly area chart                                        | Stable |
 | `BarChart`               | Chart              | —                          | Plotly bar chart (grouped/stacked)                       | Stable |
 | `LinePlot`               | Chart              | —                          | Plotly line chart                                        | Stable |

@@ -46,26 +46,26 @@ Visit http://localhost:6006 to view the component library in Storybook.
 
 ## Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `yarn storybook` | Run Storybook development server on port 6006 |
-| `yarn build` | Build the library for production (using Vite) |
-| `yarn build-storybook` | Build Storybook for deployment |
-| `yarn test` | Run unit tests only |
-| `yarn test:all` | Run unit tests + Storybook component tests |
-| `yarn lint` | Run ESLint |
-| `yarn typecheck` | Run TypeScript type checking |
-| `yarn prepare` | Set up Husky git hooks |
-| `yarn prepublishOnly` | Build the package before publishing |
-| `yarn release` | Run semantic-release (CI use only) |
+| Command                | Description                                                  |
+| ---------------------- | ------------------------------------------------------------ |
+| `yarn storybook`       | Run Storybook development server on port 6006                |
+| `yarn build`           | Build the library for production (using Vite)                |
+| `yarn build-storybook` | Build Storybook for deployment                               |
+| `yarn test`            | Run unit tests only                                          |
+| `yarn test:all`        | Run unit tests + Storybook component tests                   |
+| `yarn lint`            | Run ESLint                                                   |
+| `yarn typecheck`       | Run TypeScript type checking                                 |
+| `yarn prepare`         | Set up Husky git hooks                                       |
+| `yarn prepublishOnly`  | Build the package before publishing                          |
+| `yarn release`         | Run semantic-release (CI use only)                           |
 | `yarn release:dry-run` | Preview the next release locally without publishing anything |
 
 ## Path Aliases
 
 The project uses path aliases for cleaner imports (configured in `tsconfig.json` and `vite.config.ts`):
 
-| Alias | Path |
-|-------|------|
+| Alias | Path    |
+| ----- | ------- |
 | `@/*` | `src/*` |
 
 ## Build System
@@ -110,32 +110,29 @@ ComponentName/
 New `ui/` components follow the shadcn/ui pattern with Tailwind CSS and CVA:
 
 ```tsx
-import { cva, type VariantProps } from "class-variance-authority"
-import { Slot } from "radix-ui"
-import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority";
+import { Slot } from "radix-ui";
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-const myComponentVariants = cva(
-  "inline-flex items-center rounded-lg text-sm font-medium transition-all",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground",
-        outline: "border-border bg-background hover:bg-muted",
-      },
-      size: {
-        default: "h-8 px-2.5",
-        sm: "h-7 px-2 text-xs",
-        lg: "h-9 px-3",
-      },
+const myComponentVariants = cva("inline-flex items-center rounded-lg text-sm font-medium transition-all", {
+  variants: {
+    variant: {
+      default: "bg-primary text-primary-foreground",
+      outline: "border-border bg-background hover:bg-muted",
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
+    size: {
+      default: "h-8 px-2.5",
+      sm: "h-7 px-2 text-xs",
+      lg: "h-9 px-3",
     },
-  }
-)
+  },
+  defaultVariants: {
+    variant: "default",
+    size: "default",
+  },
+});
 
 function MyComponent({
   className,
@@ -145,20 +142,14 @@ function MyComponent({
   ...props
 }: React.ComponentProps<"div"> &
   VariantProps<typeof myComponentVariants> & {
-    asChild?: boolean
+    asChild?: boolean;
   }) {
-  const Comp = asChild ? Slot.Root : "div"
+  const Comp = asChild ? Slot.Root : "div";
 
-  return (
-    <Comp
-      data-slot="my-component"
-      className={cn(myComponentVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
+  return <Comp data-slot="my-component" className={cn(myComponentVariants({ variant, size, className }))} {...props} />;
 }
 
-export { MyComponent, myComponentVariants }
+export { MyComponent, myComponentVariants };
 ```
 
 **Note:** This library prefers the ref-as-prop pattern. Avoid `React.forwardRef` in new components — existing usages are being migrated.
@@ -168,8 +159,50 @@ export { MyComponent, myComponentVariants }
 1. For `ui/` primitives: create a `kebab-case.tsx` file in `src/components/ui/`
 2. For composed/chart components: create a PascalCase directory under the appropriate category (`composed/` or `charts/`)
 3. Implement the component following the patterns above
-4. Add a Storybook story for documentation
-5. Export from `src/index.ts`
+4. Add a Storybook story for documentation, and **pick its `title` deliberately** — see below
+5. Add a row to the component inventory in [`DESIGN.md`](./DESIGN.md) §3
+6. Export from `src/index.ts`
+
+### Choosing a Storybook `title`
+
+The story `title` is **not** derived from the source directory — the two
+intentionally differ. `Snippet` lives in `ui/` but is titled
+`Components/Data Display/Snippet`; `Chat` lives in `composed/` but is titled
+`AI Elements/Conversation/Chat`. Title by what a consumer is shopping for, not
+by where you put the file.
+
+| Section               | For                                     | Sub-category required?                                                                                               |
+| --------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `Foundations/`        | Tokens, type, spacing, elevation, icons | No                                                                                                                   |
+| `Components/`         | Reusable primitives                     | **Yes** — Actions, Forms & Inputs, Navigation & Menus, Layout & Structure, Overlays, Feedback & Status, Data Display |
+| `AI Elements/`        | Chat and agent UI                       | **Yes** — Conversation, Input, Agent Activity, Attribution, Status & Effects                                         |
+| `Design Patterns/`    | Compositions, app shells                | No                                                                                                                   |
+| `Data Viz/`           | Charts and scientific plots             | No                                                                                                                   |
+| `TetraData Platform/` | TDP-specific, not reusable outside TDP  | No                                                                                                                   |
+
+```ts
+const meta: Meta<typeof MyComponent> = {
+  title: "Components/Data Display/My Component", // section / category / name
+  component: MyComponent,
+  tags: ["autodocs"],
+};
+```
+
+The sub-category must match the component's `Category` in DESIGN.md §3 — that
+column is the source of truth. There is no "Other" bucket: if nothing fits,
+raise it rather than inventing a section, and never create a new top-level
+section for one or two stories.
+
+Adding a new sub-category also means adding it to `storySort.order` in
+[`.storybook/preview.ts`](./.storybook/preview.ts), or it sorts alphabetically
+into an arbitrary position.
+
+**Moving an existing story** is safe for Zephyr — the scripts read only the last
+title segment (the component name) and the source directory, never the category
+path. Changing the last segment _does_ break the mapping. Story IDs change with
+the category path, so external deep links won't survive a move.
+
+See [`DESIGN.md`](./DESIGN.md) §3.1 for the full rationale.
 
 ### Styling Guidelines
 
@@ -185,9 +218,9 @@ export { MyComponent, myComponentVariants }
 
 The project uses [Husky](https://typicode.github.io/husky/) to run two git hooks automatically:
 
-| Hook | Trigger | What it does |
-|------|---------|--------------|
-| `pre-commit` | Before every commit | Runs `lint-staged` — auto-fixes ESLint issues on staged `*.{js,jsx,ts,tsx}` files |
+| Hook         | Trigger                         | What it does                                                                                          |
+| ------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `pre-commit` | Before every commit             | Runs `lint-staged` — auto-fixes ESLint issues on staged `*.{js,jsx,ts,tsx}` files                     |
 | `commit-msg` | After you type a commit message | Runs `commitlint` — rejects messages that don't follow [Conventional Commits](#commit-message-format) |
 
 If a hook fails, the commit is aborted. Fix the reported issue and try again.
@@ -208,18 +241,18 @@ All commit messages must follow the [Conventional Commits](https://www.conventio
 
 **Types and their effect on the release version:**
 
-| Type | Description | Version bump |
-|------|-------------|--------------|
-| `feat` | A new feature | `minor` (0.x.0) |
-| `fix` | A bug fix | `patch` (0.0.x) |
-| `feat!` or `fix!` | Breaking change (via `!`) | `major` (x.0.0) |
-| `docs` | Documentation only | none |
-| `style` | Formatting, whitespace | none |
-| `refactor` | Code restructuring, no behaviour change | none |
-| `test` | Adding or fixing tests | none |
-| `chore` | Build process, tooling, dependencies | none |
-| `ci` | CI/CD configuration | none |
-| `perf` | Performance improvement | `patch` (0.0.x) |
+| Type              | Description                             | Version bump    |
+| ----------------- | --------------------------------------- | --------------- |
+| `feat`            | A new feature                           | `minor` (0.x.0) |
+| `fix`             | A bug fix                               | `patch` (0.0.x) |
+| `feat!` or `fix!` | Breaking change (via `!`)               | `major` (x.0.0) |
+| `docs`            | Documentation only                      | none            |
+| `style`           | Formatting, whitespace                  | none            |
+| `refactor`        | Code restructuring, no behaviour change | none            |
+| `test`            | Adding or fixing tests                  | none            |
+| `chore`           | Build process, tooling, dependencies    | none            |
+| `ci`              | CI/CD configuration                     | none            |
+| `perf`            | Performance improvement                 | `patch` (0.0.x) |
 
 **Breaking changes** can be declared in two ways:
 
@@ -304,14 +337,14 @@ export const MyStory: Story = {
 
 - **Workaround for jarring auto-play**: For interactive tests, add delays between actions to make the auto-play less jarring for users browsing Storybook:
 
-   ```typescript
-   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  ```typescript
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-   play: async ({ canvasElement }) => {
-     await sleep(1000); // Delay before action
-     await userEvent.click(button);
-   };
-   ```
+  play: async ({ canvasElement }) => {
+    await sleep(1000); // Delay before action
+    await userEvent.click(button);
+  };
+  ```
 
 ## Release Process
 
@@ -332,12 +365,12 @@ Separate publish workflows then handle distributing the built package to npm and
 
 ### Version bump rules
 
-| Commits since last release | Next version |
-|---------------------------|--------------|
-| Only `fix`, `perf`, `refactor` | Patch — `1.0.0` → `1.0.1` |
-| At least one `feat` | Minor — `1.0.0` → `1.1.0` |
+| Commits since last release                      | Next version              |
+| ----------------------------------------------- | ------------------------- |
+| Only `fix`, `perf`, `refactor`                  | Patch — `1.0.0` → `1.0.1` |
+| At least one `feat`                             | Minor — `1.0.0` → `1.1.0` |
 | Any commit with `!` or `BREAKING CHANGE` footer | Major — `1.0.0` → `2.0.0` |
-| Only `chore`, `docs`, `style`, `test`, `ci` | No release |
+| Only `chore`, `docs`, `style`, `test`, `ci`     | No release                |
 
 ### Dry-run locally
 

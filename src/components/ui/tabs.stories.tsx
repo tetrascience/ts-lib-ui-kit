@@ -6,10 +6,13 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta<typeof Tabs> = {
-  title: "Components/Tabs",
+  title: "Components/Navigation & Menus/Tabs",
   component: Tabs,
   parameters: {
     layout: "centered",
+    // Docs "Show code": stories render via a local helper, so serialize the
+    // rendered JSX tree instead of printing the helper call / story source.
+    docs: { source: { type: "dynamic" } },
   },
   tags: ["autodocs"],
 }

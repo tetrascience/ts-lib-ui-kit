@@ -36,13 +36,43 @@ This library provides:
 > The `/server` utilities (JWT auth, provider helpers) require a running TDP instance of v4.x or later.
 > Browser support follows React 19's matrix (modern evergreen browsers).
 >
-> As of v1.0.0, heavy dependencies are **optional peer dependencies**: install `plotly.js-dist` if you use the chart components, `@streamdown/mermaid` / `@streamdown/math` if you use the AI markdown components, `@rdkit/rdkit` if you use `MoleculeStructure`, and the provider SDKs (`@aws-sdk/client-athena`, `@databricks/sql`, `snowflake-sdk`) only for the `/server` utilities you use. Apps that don't use these components don't need to install them.
+> As of v1.0.0, heavy dependencies are **optional peer dependencies** — see [Optional peer dependencies](#optional-peer-dependencies) below for what to install and when. Upgrading from v0.7.x? Chart components were renamed and four components were removed: read the [v0.7.x → v1.0.0 migration guide](./MIGRATION.md#migrating-from-v07x-to-v100) first.
 
 ## Installation
 
 ```bash
 yarn add @tetrascience-npm/tetrascience-react-ui
 ```
+
+### Optional peer dependencies
+
+The kit does not install heavy dependencies for you. Add only the ones your app uses:
+
+| You use…                                           | Install                                                                                               |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Any `charts/` component                            | `plotly.js-dist`                                                                                      |
+| `MessageResponse` / `Reasoning` (AI markdown)      | `@streamdown/math`, `@streamdown/mermaid`                                                             |
+| `MoleculeStructure`                                | `@rdkit/rdkit` — **plus a served WASM, [see below](#moleculestructure-requires-a-served-rdkit-wasm)** |
+| **Any import from the package root**               | `@streamdown/math`, `@streamdown/mermaid` — see the caveat below                                      |
+| `/server` Athena / Snowflake / Databricks provider | `@aws-sdk/client-athena` / `snowflake-sdk` / `@databricks/sql`                                        |
+
+> **Root-entry imports pull in the streamdown peers whether or not you use them.**
+> The AI markdown plugins are loaded through a dynamic import, but a dynamic-import target is still
+> part of your bundler's module graph and its _named_ static imports must resolve. With
+> `@streamdown/math` absent, a root-entry build fails even when your only kit import is `AreaPlot`:
+>
+> ```
+> dist/components/ai/streamdown-plugins.js (2:9): "math" is not exported by
+> "__vite-optional-peer-dep:@streamdown/math:@tetrascience-npm/tetrascience-react-ui"
+> ```
+>
+> Install the two packages, or use [per-component imports](#per-component-imports), which avoid the
+> barrel entirely. This fails at build time, so it can never reach production unnoticed.
+> Tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
+
+A missing `plotly.js-dist` behaves differently: it does **not** fail the build under Vite/Rollup — it
+resolves to an empty stub and the chart fails at runtime with a console error from the loader
+(`Failed to load 'plotly.js-dist' …`). If your charts render blank after upgrading, check this first.
 
 ## Quick Start
 
@@ -93,6 +123,12 @@ The subpath name always matches the component's directory/file under
 [Storybook](https://ts-lib-ui-kit-storybook.vercel.app/) sidebar for the
 exact name.
 
+> **Known gap in v1.0.0:** `./ui/progress` and `./ui/snippet` resolve their _types_ but ship no
+> runtime module, so importing either typechecks cleanly and then fails your build. Neither component
+> is exported from the package root either, so nothing regressed — but the subpath makes them look
+> available. Don't import them.
+> Tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
+
 ## Styling & CSS
 
 This library uses **Tailwind CSS 4** with design tokens defined as CSS custom properties (oklch color space). All CSS files are declared as [`sideEffects`](https://webpack.js.org/guides/tree-shaking/#mark-the-file-as-side-effect-free) in `package.json`, so bundlers will preserve them while still tree-shaking unused JavaScript.
@@ -132,7 +168,34 @@ Accordion, Alert, AlertDialog, AspectRatio, Avatar, Badge, Breadcrumb, Button, B
 
 TetraScience-specific compositions built from UI primitives:
 
-AppHeader, AppLayout, AssistantModal, CodeScriptEditorButton, LaunchContent, Main, Navbar, ProcessFlow, ProtocolConfiguration, ProtocolYamlCard, PythonEditorModal, Sidebar, TdpLink, TdpSearch, TdpUrl
+AssistantLayout, Chat, ConfirmDialog, DataAppShell (with PrimaryNav, SecondaryNav, RightPanel), EmptyState, FormPatterns, MoleculeStructure, PlateMapEditor, ProcessFlow, RichListItem, StatCard, TdpLink, TdpSearch, TdpUrl, TopBar, UserMenu
+
+#### `MoleculeStructure` requires a served RDKit WASM
+
+Installing `@rdkit/rdkit` is **not sufficient**. RDKit is a ~6.6 MB WebAssembly module that the
+package does not place anywhere your app serves it, so the loader's fetch for `RDKit_minimal.wasm`
+falls through to your dev server's SPA fallback and gets `index.html` back. The component then
+renders its `errorContent` — by default **"Invalid structure"** — for a perfectly valid SMILES.
+
+Point the loader at a served copy once, at app startup:
+
+```ts
+import { configureRDKit } from "@tetrascience-npm/tetrascience-react-ui";
+
+// Option A — let your bundler emit and fingerprint it (Vite):
+import wasmSrc from "@rdkit/rdkit/dist/RDKit_minimal.wasm?url";
+configureRDKit({ wasmSrc });
+
+// Option B — copy node_modules/@rdkit/rdkit/dist/RDKit_minimal.wasm into public/
+configureRDKit({ wasmSrc: "/RDKit_minimal.wasm" });
+```
+
+To confirm it worked, the request for `RDKit_minimal.wasm` should return `Content-Type:
+application/wasm` at ~6.9 MB — not `text/html` at a few hundred bytes.
+
+> `errorContent` currently covers both an invalid SMILES **and** a failed RDKit load, so a molecule
+> you trust showing as invalid almost always means the WASM isn't being served. Splitting the two
+> messages is tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
 
 #### ProcessFlow
 
@@ -400,7 +463,7 @@ import type { ButtonProps, BarChartProps, BarDataSeries } from "@tetrascience-np
 
 ## Testing your app with Jest
 
-The kit ships dual ESM + CJS output, so Jest's CommonJS runtime can load every component directly — no need to mock the package. What Jest *can't* load are a few third-party dependencies that publish ESM-only (the streamdown/markdown stack, shiki, `use-stick-to-bottom`, `react-resizable-panels`) and optional peers you may not have installed (`plotly.js-dist`, `@rdkit/rdkit`). The kit ships a single setup file that stubs exactly those, plus the jsdom shims Radix-based components need (ResizeObserver, matchMedia, pointer capture, …).
+The kit ships dual ESM + CJS output, so Jest's CommonJS runtime can load every component directly — no need to mock the package. What Jest _can't_ load are a few third-party dependencies that publish ESM-only (the streamdown/markdown stack, shiki, `use-stick-to-bottom`, `react-resizable-panels`) and optional peers you may not have installed (`plotly.js-dist`, `@rdkit/rdkit`). The kit ships a single setup file that stubs exactly those, plus the jsdom shims Radix-based components need (ResizeObserver, matchMedia, pointer capture, …).
 
 Add one line to `jest.config.js`:
 
@@ -442,7 +505,8 @@ Visit <http://localhost:6006>.
 
 - [Storybook – Live Component Demos](https://ts-lib-ui-kit-storybook.vercel.app/) - Browse all components with interactive examples
 - [NPM Package](https://www.npmjs.com/package/@tetrascience-npm/tetrascience-react-ui) - Installation and version info
-- [Migration Guide](./MIGRATION.md) - Migrating from the old atom/molecule/organism architecture
+- [Migration Guide](./MIGRATION.md#migrating-from-v07x-to-v100) - Upgrading from v0.7.x to v1.0.0 (chart renames, removed components, optional peers)
+- [Changelog](./CHANGELOG.md) - What changed in each release, including v1.0.0's breaking changes
 - [Theming Guide](./THEMING.md) - Customise the design system
 - [Contributing](./CONTRIBUTING.md#development-setup) - Clone the repo and run `yarn storybook`
 
@@ -455,10 +519,10 @@ reducing hallucinated component APIs when scaffolding a data app.
 
 There are two endpoints. Pick whichever fits; you can add both.
 
-| Endpoint | URL | Tools |
-| --- | --- | --- |
-| **Deployed** (no local checkout needed) | `https://ts-lib-ui-kit-storybook.vercel.app/api/mcp` | docs: `list_components`, `get_component`, `search_components` |
-| **Local** (needs `yarn storybook` running) | `http://localhost:6006/mcp` | full set: docs **+** write/preview/test stories |
+| Endpoint                                   | URL                                                  | Tools                                                         |
+| ------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------------------- |
+| **Deployed** (no local checkout needed)    | `https://ts-lib-ui-kit-storybook.vercel.app/api/mcp` | docs: `list_components`, `get_component`, `search_components` |
+| **Local** (needs `yarn storybook` running) | `http://localhost:6006/mcp`                          | full set: docs **+** write/preview/test stories               |
 
 ### Add the connection
 
@@ -497,8 +561,8 @@ client's MCP config (e.g. Cursor's `.cursor/mcp.json`, or Claude Desktop's
 npx mcp-add --type http --url "https://ts-lib-ui-kit-storybook.vercel.app/api/mcp"
 ```
 
-Then ask your agent something like *"using the ts-ui-kit MCP, list the available
-components"* or *"build a form using ts-ui-kit primitives"* to confirm it's wired
+Then ask your agent something like _"using the ts-ui-kit MCP, list the available
+components"_ or _"build a form using ts-ui-kit primitives"_ to confirm it's wired
 up.
 
 ## Tech Stack

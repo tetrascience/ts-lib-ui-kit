@@ -2,6 +2,7 @@
 import "@/index.css";
 
 // Composed
+export * from "@/components/composed/AppShellSimple";
 export * from "@/components/composed/BuildInfoFooter";
 export * from "@/components/composed/FormPatterns";
 export * from "@/components/composed/StatCard";
@@ -16,6 +17,7 @@ export * from "@/components/composed/EmptyState";
 export * from "@/components/composed/ProcessFlow";
 export * from "@/components/composed/AssistantLayout";
 export * from "@/components/composed/MoleculeStructure";
+export * from "@/components/composed/PageHeader";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";
@@ -83,10 +85,12 @@ export * from "@/components/ui/spinner";
 export * from "@/components/ui/switch";
 export * from "@/components/ui/table";
 export * from "@/components/ui/tabs";
+export * from "@/components/ui/text";
 export * from "@/components/ui/textarea";
 export * from "@/components/ui/toggle";
 export * from "@/components/ui/toggle-group";
 export * from "@/components/ui/tooltip";
+export * from "@/components/ui/tree";
 export * from "@/components/ui/code-editor";
 export * from "@/components/ui/tetra-molecule-icon";
 export * from "@/components/ui/tetrascience-icon";

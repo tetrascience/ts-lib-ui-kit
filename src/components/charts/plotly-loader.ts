@@ -13,9 +13,24 @@
  *
  * `plotly.js-dist` is an *optional* peer dependency (SW-2007): consumers that
  * use the kit's charts must add it to their own app; consumers that don't
- * never install its ~4.7 MB. A missing peer surfaces at build time as an
- * unresolved-import error from the consumer's bundler; the runtime guard below
- * covers the rarer case where the import resolves but fails to evaluate.
+ * never install its ~4.7 MB.
+ *
+ * A missing peer does **not** fail the consumer's build (SW-2472). Because this
+ * is a dynamic, default-only import, Vite/Rollup resolve it to an empty
+ * optional-peer stub and exit 0 — so the runtime guard below is the *primary*
+ * failure path, not a fallback for the rarer case.
+ *
+ * TODO(SW-2472): that guard is currently incomplete. `.catch()` covers a module
+ * that won't resolve, but a module that *resolves to a stub* with no `newPlot`
+ * is cached as-is and surfaces later as a `TypeError` from the first draw call
+ * rather than as MISSING_PLOTLY_MESSAGE. Closing it means shape-checking the
+ * resolved module before caching it:
+ *
+ *     const candidate = withDefault.default ?? withDefault;
+ *     if (typeof candidate?.newPlot !== "function") throw new Error(MISSING_PLOTLY_MESSAGE);
+ *
+ * Deliberately not done here — this was a docs-only change and the fix wants a
+ * test that builds against an absent peer.
  */
 
 type PlotlyModule = typeof import("plotly.js-dist");
@@ -54,9 +69,7 @@ export function loadPlotly(): Promise<PlotlyModule> {
  */
 export function getLoadedPlotly(): PlotlyModule {
   if (!loadedPlotly) {
-    throw new Error(
-      "Plotly accessed before loadPlotly() resolved. Call loadPlotly() and draw the plot first.",
-    );
+    throw new Error("Plotly accessed before loadPlotly() resolved. Call loadPlotly() and draw the plot first.");
   }
   return loadedPlotly;
 }

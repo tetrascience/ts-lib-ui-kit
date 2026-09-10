@@ -9,7 +9,7 @@ import { Tree, TreeItem, TreeItemGroup, TreeItemLabel, useTreeItem } from "./tre
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Tree> = {
-  title: "Components/Tree",
+  title: "Components/Data Display/Tree",
   component: Tree,
   parameters: {
     layout: "padded",

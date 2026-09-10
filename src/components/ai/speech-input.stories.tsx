@@ -6,7 +6,7 @@ import { SpeechInput } from "./speech-input";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof SpeechInput> = {
-  title: "AI Elements/Speech Input",
+  title: "AI Elements/Input/Speech Input",
   component: SpeechInput,
   parameters: {
     layout: "centered",

@@ -34,6 +34,12 @@ jobs:
         run: corepack enable
 
       - name: Install
+        # .yarnrc.yml resolves the @tetrascience-npm scope from JFrog, so the
+        # install needs this read token or yarn hits the archive anonymously and
+        # fails with "YN0041: Invalid authentication (as an anonymous user)".
+        # The publish workflow already supplies it; this job did not.
+        env:
+          JFROG_ARTIFACTORY_READ_NPM_AUTH: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
         run: yarn install --immutable
 
       - name: Lint

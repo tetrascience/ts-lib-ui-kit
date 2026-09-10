@@ -23,7 +23,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta = {
-  title: "AI Elements/Queue",
+  title: "AI Elements/Agent Activity/Queue",
   parameters: {
     layout: "padded",
   },

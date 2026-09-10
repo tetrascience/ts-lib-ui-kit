@@ -109,6 +109,7 @@ import {
 | `Tooltip`                | Overlays           | `tooltip`                  | —                                                        | Stable |
 | `Alert`                  | Feedback & Status  | `alert`                    | —                                                        | Stable |
 | `Banner`                 | Feedback & Status  | —                          | Full-width dismissible page-level banner                 | Stable |
+| `Progress`               | Feedback & Status  | `progress`                 | Determinate + indeterminate progress bar                 | Stable |
 | `Skeleton`               | Feedback & Status  | `skeleton`                 | —                                                        | Stable |
 | `Sonner`                 | Feedback & Status  | `sonner`                   | Toast notifications                                      | Stable |
 | `Spinner`                | Feedback & Status  | —                          | Loading indicator                                        | Stable |
@@ -276,6 +277,13 @@ Every component must:
 - Maintain visible focus rings (never `outline: none` without a replacement)
 - Work with screen readers (tested with VoiceOver + NVDA)
 - Honor `prefers-reduced-motion` for any animations
+
+Some components cannot supply their own accessible name and require one from
+the consumer. `Progress` is the current example: it renders
+`role="progressbar"`, which WCAG requires to be named, but the bar has no
+inherent label — pass `aria-label` (or `aria-labelledby` pointing at a visible
+caption) at every call site. Storybook's axe check (`a11y: { test: "error" }`)
+fails the story if you don't.
 
 ---
 

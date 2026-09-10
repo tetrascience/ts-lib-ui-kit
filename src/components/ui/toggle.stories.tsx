@@ -78,7 +78,7 @@ export const ExtraSmall: Story = {
   },
   render: renderToggle,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5685" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

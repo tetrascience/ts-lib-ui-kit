@@ -105,7 +105,7 @@ export const ExtraSmall: Story = {
     </RadioGroup>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5695" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -126,7 +126,7 @@ export const Large: Story = {
     </RadioGroup>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5696" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

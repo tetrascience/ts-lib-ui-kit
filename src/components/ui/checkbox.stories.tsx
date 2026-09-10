@@ -84,7 +84,7 @@ export const Disabled: Story = {
 export const ExtraSmall: Story = {
   render: () => renderCheckbox({ size: "xs", defaultChecked: true }),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5693" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -100,7 +100,7 @@ export const ExtraSmall: Story = {
 export const Large: Story = {
   render: () => renderCheckbox({ size: "lg", defaultChecked: true }),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5694" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

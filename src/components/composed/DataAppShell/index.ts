@@ -14,6 +14,7 @@ export type {
   DataAppShellRightPanelProps,
   DataAppShellRightPanelTriggerProps,
   DataAppShellRightPanelVariant,
+  DataAppShellPanelSide,
 } from "./RightPanel";
 export type {
   DataAppShellPrimaryNavProps,

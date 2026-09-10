@@ -6,6 +6,7 @@ import { DataAppShellPrimaryNav } from "./PrimaryNav";
 import { DataAppShellProvider, type DataAppShellNavVariant } from "./ShellContext";
 
 import type { NavGroup } from "./PrimaryNav";
+import type { DataAppShellPanelSide } from "./RightPanel";
 
 import { TDPLink } from "@/components/composed/tdp-link";
 import { TopBar } from "@/components/composed/TopBar";
@@ -517,6 +518,13 @@ function DataAppShell({
 }: DataAppShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
 
+  // Read the docked panel's `side` off the element passed to the slot so the body
+  // can arrange around it (flex direction + before/after the content). Defaults
+  // to "right" — the legacy behavior — for any non-element or side-less panel.
+  const panelSide: DataAppShellPanelSide = React.isValidElement(rightPanel)
+    ? ((rightPanel.props as { side?: DataAppShellPanelSide }).side ?? "right")
+    : "right";
+
   // ── Single collapse toggle (controlled/uncontrolled) ───────────────────────
   const [internalCollapsed, setInternalCollapsed] = React.useState(defaultCollapsed);
   const collapsed = collapsedProp ?? internalCollapsed;
@@ -683,9 +691,17 @@ function DataAppShell({
           {/* Secondary bar zone — e.g. a horizontal DataAppShellSecondaryNav */}
           {secondaryBar && <div className="[grid-area:sub] min-w-0">{secondaryBar}</div>}
 
-          {/* Body zone: content + right panel. relative — anchors the right
-              panel's floating FAB trigger */}
-          <div className="[grid-area:body] relative flex min-h-0 min-w-0 overflow-hidden">
+          {/* Body zone: content + docked panel. relative — anchors the panel's
+              floating FAB trigger. The panel's `side` drives the flex direction
+              and whether it renders before (left) or after (right/bottom) the
+              content. */}
+          <div
+            className={cn(
+              "[grid-area:body] relative flex min-h-0 min-w-0 overflow-hidden",
+              panelSide === "bottom" && "flex-col",
+            )}
+          >
+            {panelSide === "left" && rightPanel}
             <main
               data-slot="data-app-shell-content"
               className="flex-1 min-w-0 overflow-auto bg-background"
@@ -693,8 +709,8 @@ function DataAppShell({
               {children}
             </main>
 
-            {/* Right panel slot (e.g. DataAppShellRightPanel) */}
-            {rightPanel}
+            {/* Panel slot (e.g. DataAppShellRightPanel) — right & bottom render here */}
+            {panelSide !== "left" && rightPanel}
           </div>
         </div>
       </Sheet>

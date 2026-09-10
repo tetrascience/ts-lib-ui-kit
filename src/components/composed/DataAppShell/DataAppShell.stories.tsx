@@ -534,6 +534,8 @@ interface ShellDemoProps {
   secondary?: "off" | "menu" | "workflow-vertical" | "workflow-horizontal";
   /** Right panel zone. */
   rightPanel?: "off" | "docked" | "overlay";
+  /** Which edge the panel docks to. */
+  panelSide?: "right" | "left" | "bottom";
   /** Collapse hides the primary rail — one icon rail remains. */
   hideNavOnCollapse?: boolean;
   /** Zone visibility switches (pass false to hide a zone). */
@@ -551,6 +553,7 @@ const ShellDemo = ({
   navVariant = "vertical",
   secondary = "off",
   rightPanel = "off",
+  panelSide = "right",
   hideNavOnCollapse = false,
   showNavRail = true,
   showTopBar = true,
@@ -658,6 +661,7 @@ const ShellDemo = ({
           <DataAppShellRightPanel
             id="hts-details"
             variant={rightPanel}
+            side={panelSide}
             open={detailsOpen}
             onOpenChange={setDetailsOpen}
             title="Details"
@@ -1019,9 +1023,85 @@ export const WithRightPanel: Story = {
       const panel = await canvas.findByRole("complementary", { name: "Details" });
       await waitFor(() => expect(panel).toBeVisible());
     });
+
+    await step("Raised surface: the panel reads as a surface on the page, not part of it (SW-2592)", async () => {
+      const panel = canvas.getByRole("complementary", { name: "Details" });
+      const main = canvasElement.querySelector("main");
+      // The docked panel (bg-card) must not share the page ground (bg-background).
+      expect(main).not.toBeNull();
+      expect(getComputedStyle(panel).backgroundColor).not.toBe(getComputedStyle(main!).backgroundColor);
+      // Header carries the tinted accent cap, distinct again from the panel body.
+      const header = panel.querySelector('[data-slot="data-app-shell-right-panel-header"]') as HTMLElement;
+      expect(header).not.toBeNull();
+      expect(getComputedStyle(header).backgroundColor).not.toBe(getComputedStyle(panel).backgroundColor);
+    });
   },
   parameters: {
       zephyr: { testCaseId: "SW-T5535" },
+    docs: { source: { code: RIGHT_PANEL_CODE, language: "tsx" } },
+  },
+};
+
+export const WithLeftPanel: Story = {
+  name: "With Left Panel",
+  loaders: [
+    () => {
+      window.localStorage.removeItem("ts-ui.right-panel.hts-details.width");
+    },
+  ],
+  render: () => <ShellDemo rightPanel="docked" panelSide="left" />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    await step("Left-docked panel is raised and mirrors the resize handle", async () => {
+      const panel = await canvas.findByRole("complementary", { name: "Details" });
+      await waitFor(() => expect(panel).toBeVisible());
+      expect(panel.getAttribute("data-side")).toBe("left");
+      // Raised surface, distinct from the page ground.
+      const main = canvasElement.querySelector("main");
+      expect(getComputedStyle(panel).backgroundColor).not.toBe(getComputedStyle(main!).backgroundColor);
+      // Handle mirrors to the right edge; ArrowRight now grows the panel.
+      const handle = canvas.getByRole("separator", { name: "Resize panel" });
+      handle.focus();
+      await userEvent.keyboard("{End}");
+      expect(panel.style.width).toBe("560px");
+      await userEvent.keyboard("{Home}");
+      expect(panel.style.width).toBe("240px");
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+    docs: { source: { code: RIGHT_PANEL_CODE, language: "tsx" } },
+  },
+};
+
+export const WithBottomPanel: Story = {
+  name: "With Bottom Panel",
+  loaders: [
+    () => {
+      window.localStorage.removeItem("ts-ui.right-panel.hts-details.width");
+    },
+  ],
+  render: () => <ShellDemo rightPanel="docked" panelSide="bottom" />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    await step("Bottom-docked panel is a raised tray and resizes its height", async () => {
+      const panel = await canvas.findByRole("complementary", { name: "Details" });
+      await waitFor(() => expect(panel).toBeVisible());
+      expect(panel.getAttribute("data-side")).toBe("bottom");
+      const main = canvasElement.querySelector("main");
+      expect(getComputedStyle(panel).backgroundColor).not.toBe(getComputedStyle(main!).backgroundColor);
+      // Vertical resize: the separator is horizontal and drives height.
+      const handle = canvas.getByRole("separator", { name: "Resize panel" });
+      expect(handle.getAttribute("aria-orientation")).toBe("horizontal");
+      handle.focus();
+      await userEvent.keyboard("{End}");
+      expect(panel.style.height).toBe("560px");
+      await userEvent.keyboard("{Home}");
+      expect(panel.style.height).toBe("240px");
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
     docs: { source: { code: RIGHT_PANEL_CODE, language: "tsx" } },
   },
 };

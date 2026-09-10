@@ -128,31 +128,46 @@ function DataAppShellRightPanelTrigger({
 const KEYBOARD_RESIZE_STEP = 16;
 
 interface DragHandleProps {
-  width: number;
-  minWidth: number;
-  maxWidth: number;
-  /** Live width updates while dragging (not yet persisted). */
-  onResize: (width: number) => void;
-  /** Final width once the interaction ends — persist here. */
-  onCommit: (width: number) => void;
+  /** Resize axis: "x" for left/right docks (width), "y" for bottom (height). */
+  axis: "x" | "y";
+  /** Which panel edge the handle sits on. */
+  edge: "left" | "right" | "top";
+  /** Current panel size along the resize axis (width for x, height for y), px. */
+  size: number;
+  min: number;
+  max: number;
+  /** Live size updates while dragging (not yet persisted). */
+  onResize: (size: number) => void;
+  /** Final size once the interaction ends — persist here. */
+  onCommit: (size: number) => void;
   onDraggingChange: (dragging: boolean) => void;
 }
 
 /**
- * Vertical resize handle docked on the panel's left edge. Pointer-driven
- * (px-based, unlike the percentage-based `Resizable` group primitive) so the
- * panel keeps an absolute width that can be persisted per `id`. Also a
- * keyboard-operable ARIA separator: arrows resize, Home/End jump to min/max.
+ * Resize handle on the panel's inner edge. Pointer-driven (px-based, unlike the
+ * percentage-based `Resizable` group primitive) so the panel keeps an absolute
+ * size that can be persisted per `id`. Also a keyboard-operable ARIA separator:
+ * arrows resize, Home/End jump to min/max.
+ *
+ * - right dock → handle on the left edge, horizontal resize
+ * - left dock → handle on the right edge, horizontal resize
+ * - bottom dock → handle on the top edge, vertical resize
  */
-function DragHandle({ width, minWidth, maxWidth, onResize, onCommit, onDraggingChange }: DragHandleProps) {
-  const dragState = React.useRef<{ startX: number; startWidth: number; liveWidth: number } | null>(null);
-  const widthRef = React.useRef(width);
-  widthRef.current = width;
+function DragHandle({ axis, edge, size, min, max, onResize, onCommit, onDraggingChange }: DragHandleProps) {
+  const dragState = React.useRef<{ start: number; startSize: number; liveSize: number } | null>(null);
+  const sizeRef = React.useRef(size);
+  sizeRef.current = size;
+
+  const pointerPos = (e: React.PointerEvent<HTMLDivElement>) => (axis === "x" ? e.clientX : e.clientY);
+  // The panel grows as the pointer moves toward its outer side: the left/top
+  // edges grow on a decreasing coordinate, the right edge on an increasing one.
+  const deltaFor = (start: number, current: number) => (edge === "right" ? current - start : start - current);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     // Primary button / touch only
     if (e.button !== 0) return;
-    dragState.current = { startX: e.clientX, startWidth: widthRef.current, liveWidth: widthRef.current };
+    const pos = pointerPos(e);
+    dragState.current = { start: pos, startSize: sizeRef.current, liveSize: sizeRef.current };
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
@@ -164,62 +179,62 @@ function DragHandle({ width, minWidth, maxWidth, onResize, onCommit, onDraggingC
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragState.current) return;
-    // Handle sits on the left edge — dragging left grows the panel.
-    const delta = dragState.current.startX - e.clientX;
-    const next = clampWidth(dragState.current.startWidth + delta, minWidth, maxWidth);
-    dragState.current.liveWidth = next;
+    const delta = deltaFor(dragState.current.start, pointerPos(e));
+    const next = clampWidth(dragState.current.startSize + delta, min, max);
+    dragState.current.liveSize = next;
     onResize(next);
   };
 
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragState.current) return;
-    // Commit the drag state's own width — pointermove renders lazily, so the
-    // width prop can be one frame stale when pointerup lands.
-    const finalWidth = dragState.current.liveWidth;
+    // Commit the drag state's own size — pointermove renders lazily, so the
+    // size prop can be one frame stale when pointerup lands.
+    const finalSize = dragState.current.liveSize;
     dragState.current = null;
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
     onDraggingChange(false);
-    onCommit(finalWidth);
+    onCommit(finalSize);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // The key that grows the panel points toward its outer side.
+    const growKey = edge === "right" ? "ArrowRight" : edge === "top" ? "ArrowUp" : "ArrowLeft";
+    const shrinkKey = edge === "right" ? "ArrowLeft" : edge === "top" ? "ArrowDown" : "ArrowRight";
     let next: number | null = null;
-    switch (e.key) {
-      case "ArrowLeft": // handle moves left → panel grows
-        next = clampWidth(widthRef.current + KEYBOARD_RESIZE_STEP, minWidth, maxWidth);
-        break;
-      case "ArrowRight":
-        next = clampWidth(widthRef.current - KEYBOARD_RESIZE_STEP, minWidth, maxWidth);
-        break;
-      case "Home":
-        next = minWidth;
-        break;
-      case "End":
-        next = maxWidth;
-        break;
-    }
+    if (e.key === growKey) next = clampWidth(sizeRef.current + KEYBOARD_RESIZE_STEP, min, max);
+    else if (e.key === shrinkKey) next = clampWidth(sizeRef.current - KEYBOARD_RESIZE_STEP, min, max);
+    else if (e.key === "Home") next = min;
+    else if (e.key === "End") next = max;
     if (next == null) return;
     e.preventDefault();
     onResize(next);
     onCommit(next);
   };
 
+  // Full literal class strings per edge (Tailwind can't see interpolated names).
+  const positionClass =
+    edge === "left"
+      ? "inset-y-0 left-0 w-px cursor-col-resize after:inset-y-0 after:left-1/2 after:w-3 after:-translate-x-1/2"
+      : edge === "right"
+        ? "inset-y-0 right-0 w-px cursor-col-resize after:inset-y-0 after:left-1/2 after:w-3 after:-translate-x-1/2"
+        : "inset-x-0 top-0 h-px cursor-row-resize after:inset-x-0 after:top-1/2 after:h-3 after:-translate-y-1/2";
+
   return (
     <div
       data-slot="data-app-shell-right-panel-drag-handle"
       role="separator"
-      aria-orientation="vertical"
+      aria-orientation={axis === "x" ? "vertical" : "horizontal"}
       aria-label="Resize panel"
-      aria-valuemin={minWidth}
-      aria-valuemax={maxWidth}
-      aria-valuenow={Math.round(width)}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={Math.round(size)}
       tabIndex={0}
       className={cn(
-        // 1px seam over the panel's left border; wide invisible grab area via ::after
-        "absolute inset-y-0 left-0 z-10 w-px cursor-col-resize touch-none select-none bg-transparent transition-colors",
-        "after:absolute after:inset-y-0 after:left-1/2 after:w-3 after:-translate-x-1/2",
+        // 1px seam over the panel's inner border; wide invisible grab area via ::after
+        "absolute z-10 touch-none select-none bg-transparent transition-colors after:absolute",
+        positionClass,
         // reveal on hover / drag (border color) and keyboard focus (ring color)
         "hover:bg-border active:bg-border focus-visible:outline-none focus-visible:bg-ring",
         // centered grip dots, revealed with the seam
@@ -232,9 +247,60 @@ function DragHandle({ width, minWidth, maxWidth, onResize, onCommit, onDraggingC
       onPointerCancel={endDrag}
       onKeyDown={handleKeyDown}
     >
-      <div className="z-10 h-6 w-1 shrink-0 rounded-lg bg-muted-foreground/40 transition-opacity" />
+      <div
+        className={cn(
+          "z-10 shrink-0 rounded-lg bg-muted-foreground/40 transition-opacity",
+          axis === "x" ? "h-6 w-1" : "h-1 w-6",
+        )}
+      />
     </div>
   );
+}
+
+// =============================================================================
+// Side geometry — the per-side class strings + resize axis, as full literals so
+// Tailwind emits them. Extracted so the component stays flat.
+// =============================================================================
+
+interface PanelGeometry {
+  axis: "x" | "y";
+  handleEdge: "left" | "right" | "top";
+  dimClass: string;
+  borderClass: string;
+  enterClass: string;
+  transitionClass: string;
+}
+
+function panelGeometry(side: DataAppShellPanelSide): PanelGeometry {
+  switch (side) {
+    case "left":
+      return {
+        axis: "x",
+        handleEdge: "right",
+        dimClass: "h-full",
+        borderClass: "border-r border-border",
+        enterClass: "motion-safe:slide-in-from-left-4",
+        transitionClass: "motion-safe:transition-[width]",
+      };
+    case "bottom":
+      return {
+        axis: "y",
+        handleEdge: "top",
+        dimClass: "w-full",
+        borderClass: "border-t border-border",
+        enterClass: "motion-safe:slide-in-from-bottom-4",
+        transitionClass: "motion-safe:transition-[height]",
+      };
+    default:
+      return {
+        axis: "x",
+        handleEdge: "left",
+        dimClass: "h-full",
+        borderClass: "border-l border-border",
+        enterClass: "motion-safe:slide-in-from-right-4",
+        transitionClass: "motion-safe:transition-[width]",
+      };
+  }
 }
 
 // =============================================================================
@@ -242,6 +308,9 @@ function DragHandle({ width, minWidth, maxWidth, onResize, onCommit, onDraggingC
 // =============================================================================
 
 export type DataAppShellRightPanelVariant = "docked" | "overlay";
+
+/** Which edge the panel docks to. `right` is the default and the legacy behavior. */
+export type DataAppShellPanelSide = "right" | "left" | "bottom";
 
 export interface DataAppShellRightPanelProps extends Omit<React.ComponentProps<"aside">, "id" | "title"> {
   /** Unique panel id — keys the persisted width in localStorage. */
@@ -255,6 +324,23 @@ export interface DataAppShellRightPanelProps extends Omit<React.ComponentProps<"
    * `overlay` — reuses the design-system `Sheet`: slides in over content with a scrim, no reflow.
    */
   variant?: DataAppShellRightPanelVariant;
+  /**
+   * Which edge the panel docks to (SW-2592). `right` (default) keeps the legacy
+   * behavior. `left` mirrors it (border + drag handle on the opposite edge);
+   * `bottom` docks it as a horizontal tray and resizes its height. The shell
+   * arranges the body layout from this — see `DataAppShell`.
+   */
+  side?: DataAppShellPanelSide;
+  /**
+   * Panel surface (SW-2592):
+   * - `raised` (default) — a `bg-card` surface distinct from the page ground, with
+   *   a tinted (`bg-accent`) header cap. Reads as a surface *on* the page, not a
+   *   column *of* it. `bg-card` is the only surface token that stays raised in both
+   *   light and dark (`bg-sidebar` collapses to the body colour in dark).
+   * - `flat` — the legacy look: `bg-background` body and a plain bordered header,
+   *   for a panel that should read as part of the page ground.
+   */
+  surface?: "raised" | "flat";
   /** Show the drag handle and allow resizing. Defaults to `true`. Docked only — the overlay has a fixed width. */
   resizable?: boolean;
   /** Width in px when nothing is persisted yet. */
@@ -314,6 +400,8 @@ function DataAppShellRightPanel({
   open,
   onOpenChange,
   variant = "docked",
+  side = "right",
+  surface = "raised",
   resizable = true,
   defaultWidth = 320,
   minWidth = 240,
@@ -364,11 +452,26 @@ function DataAppShellRightPanel({
 
   const accessibleName = typeof title === "string" ? title : "Side panel";
 
+  const raised = surface === "raised";
+  // `bg-card` is raised in both themes (`--surface-bright`); `bg-background` is
+  // the page ground (the legacy, indistinct look).
+  const surfaceClass = raised ? "bg-card" : "bg-background";
+  // Raised panels get a tinted header cap so the top of the panel brands it;
+  // flat panels keep the plain bordered header.
+  const headerClass = raised ? "border-b border-primary/15 bg-accent" : "border-b border-border";
+
+  // Side-derived geometry (left/right resize width; bottom resizes height).
+  const { axis, handleEdge, dimClass, borderClass, enterClass, transitionClass } = panelGeometry(side);
+  const sizeStyle: React.CSSProperties = axis === "x" ? { width } : { height: width };
+
   const fab = showTrigger ? (
     <DataAppShellRightPanelTrigger
       ref={fabRef}
       aria-label={triggerLabel}
       aria-expanded={false}
+      // Anchor the FAB to the docked edge: bottom-left for a left dock, else the
+      // default bottom-right.
+      className={side === "left" ? "left-4 right-auto" : undefined}
       onClick={() => onOpenChange?.(true)}
     >
       {triggerIcon}
@@ -378,7 +481,7 @@ function DataAppShellRightPanel({
   const header = (
     <div
       data-slot="data-app-shell-right-panel-header"
-      className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2"
+      className={cn("flex shrink-0 items-center gap-2 px-3 py-2", headerClass)}
     >
       {icon != null && <span className="flex shrink-0 items-center justify-center">{icon}</span>}
       {title != null && <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{title}</span>}
@@ -410,18 +513,26 @@ function DataAppShellRightPanel({
       <>
         <Sheet open={open} onOpenChange={onOpenChange}>
           <SheetContent
-            side="right"
+            side={side}
             showCloseButton={false}
             data-slot="data-app-shell-right-panel"
             data-variant="overlay"
+            data-side={side}
             // The FAB remounts on close, so radix's default "restore previous
             // focus" targets a dead node — send focus to the new FAB instead.
             onCloseAutoFocus={(e) => {
               e.preventDefault();
               closeFocusRef?.current?.focus({ preventScroll: true });
             }}
-            style={{ width }}
-            className={cn("gap-0 data-[side=right]:sm:max-w-none", className)}
+            style={sizeStyle}
+            // Sheet defaults to bg-background — override so the overlay variant
+            // matches the docked variant's surface (SW-2592). For left/right the
+            // width is driven by `style`, so lift Sheet's responsive max-width.
+            className={cn(
+              "gap-0 data-[side=right]:sm:max-w-none data-[side=left]:sm:max-w-none",
+              surfaceClass,
+              className,
+            )}
             {...props}
           >
             <SheetTitle className="sr-only">{accessibleName}</SheetTitle>
@@ -442,12 +553,17 @@ function DataAppShellRightPanel({
       ref={ref}
       data-slot="data-app-shell-right-panel"
       data-variant="docked"
+      data-side={side}
       aria-label={accessibleName}
-      style={{ width }}
+      style={sizeStyle}
       className={cn(
-        "relative flex h-full shrink-0 flex-col overflow-hidden border-l border-border bg-background",
-        "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-right-4",
-        !dragging && "motion-safe:transition-[width] motion-safe:duration-200",
+        "relative flex shrink-0 flex-col overflow-hidden",
+        dimClass,
+        borderClass,
+        surfaceClass,
+        "motion-safe:animate-in motion-safe:fade-in-0",
+        enterClass,
+        !dragging && cn(transitionClass, "motion-safe:duration-200"),
         className,
       )}
       onKeyDown={(e) => {
@@ -457,9 +573,11 @@ function DataAppShellRightPanel({
     >
       {resizable && (
         <DragHandle
-          width={width}
-          minWidth={minWidth}
-          maxWidth={maxWidth}
+          axis={axis}
+          edge={handleEdge}
+          size={width}
+          min={minWidth}
+          max={maxWidth}
           onResize={setWidth}
           onCommit={commitWidth}
           onDraggingChange={setDragging}

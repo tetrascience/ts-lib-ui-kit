@@ -44,6 +44,9 @@ export const Default: Story = {
       expect(bar).toHaveAttribute("data-state", "loading")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5677" },
+  },
 }
 
 export const Empty: Story = {
@@ -54,6 +57,9 @@ export const Empty: Story = {
     await step("Zero progress still exposes a value", async () => {
       expect(canvas.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "0")
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5678" },
   },
 }
 
@@ -68,6 +74,9 @@ export const Complete: Story = {
       expect(bar).toHaveAttribute("data-state", "complete")
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5679" },
+  },
 }
 
 export const Indeterminate: Story = {
@@ -80,6 +89,9 @@ export const Indeterminate: Story = {
       expect(bar).toHaveAttribute("data-state", "indeterminate")
       expect(bar).not.toHaveAttribute("aria-valuenow")
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5680" },
   },
 }
 
@@ -102,6 +114,9 @@ export const WithLabel: Story = {
       expect(canvas.getByText("42%")).toBeInTheDocument()
     })
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5681" },
+  },
 }
 
 export const Sizes: Story = {
@@ -118,6 +133,9 @@ export const Sizes: Story = {
     await step("All three height overrides render", async () => {
       expect(canvas.getAllByRole("progressbar")).toHaveLength(3)
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5682" },
   },
 }
 
@@ -149,5 +167,8 @@ export const SemanticColors: Story = {
       expect(canvas.getByRole("progressbar", { name: "Caution" })).toBeInTheDocument()
       expect(canvas.getByRole("progressbar", { name: "Error" })).toBeInTheDocument()
     })
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5683" },
   },
 }

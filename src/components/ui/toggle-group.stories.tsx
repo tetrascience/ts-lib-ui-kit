@@ -299,6 +299,7 @@ export const Variations: Story = {
             <ToggleGroupItem
               value="plate-1"
               data-testid="joined-item"
+              selectedIndicator="none"
               className="rounded-r-none border-r-0"
             >
               <span className="truncate">Plate 1</span>
@@ -313,6 +314,23 @@ export const Variations: Story = {
               <XIcon />
             </Button>
           </div>
+        </ToggleGroup>
+      </VariationRow>
+
+      <VariationRow label="Indicator default is content-aware (wrapped label keeps ring, icon drops it)">
+        <ToggleGroup type="multiple" defaultValue={["wrapped"]}>
+          <ToggleGroupItem value="plain">Plain</ToggleGroupItem>
+          <ToggleGroupItem value="wrapped" data-testid="wrapped-label-item">
+            <span>Wrapped</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="icon-label" data-testid="icon-label-item">
+            <AlignLeftIcon />
+            Icon + label
+          </ToggleGroupItem>
+          <ToggleGroupItem value="forced" data-testid="forced-dot-item" selectedIndicator="dot">
+            <AlignRightIcon />
+            Forced dot
+          </ToggleGroupItem>
         </ToggleGroup>
       </VariationRow>
 
@@ -360,6 +378,28 @@ export const Variations: Story = {
       expect(tint).not.toBe("")
       expect(tint).not.toBe("rgba(0, 0, 0, 0)")
       expect(tint).not.toBe(getComputedStyle(off!).backgroundColor)
+    })
+
+    await step("indicator default follows rendered content, not React children", async () => {
+      const indicator = (testId: string) =>
+        canvasElement.querySelector<HTMLElement>(
+          `[data-testid="${testId}"] [data-slot="toggle-group-indicator"]`,
+        )
+
+      // A label wrapped in a <span> is still label-only: it keeps its ring.
+      const wrapped = indicator("wrapped-label-item")
+      expect(wrapped).not.toBeNull()
+      expect(getComputedStyle(wrapped!).display).not.toBe("none")
+
+      // An item that renders an icon drops the ring (the icon carries the state).
+      const iconLabel = indicator("icon-label-item")
+      expect(iconLabel).not.toBeNull()
+      expect(getComputedStyle(iconLabel!).display).toBe("none")
+
+      // An explicit selectedIndicator="dot" overrides the icon auto-hide.
+      const forced = indicator("forced-dot-item")
+      expect(forced).not.toBeNull()
+      expect(getComputedStyle(forced!).display).not.toBe("none")
     })
 
     await step("a consumer's className still wins over the item border", async () => {

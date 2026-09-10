@@ -69,24 +69,16 @@ function ToggleGroupItem({
      * affordance so an item reads as "selectable" and stays legible when every
      * option is selected.
      *
-     * Defaults by content: **label-only** items (text, no icon) get `"dot"`;
-     * **icon-only** and **icon + label** items get `"none"` (the icon carries
-     * the state and there's no room for a ring). Pass the prop to override.
+     * Defaults by content: **label-only** items get `"dot"`; items that render
+     * an **icon** (icon-only or icon + label) get `"none"` — the icon carries
+     * the state and there's no room for a ring. The default is decided in CSS
+     * from the rendered DOM (`:has(svg)`), not from the React children, so a
+     * label wrapped in a `<span>`, a translation component or a tooltip still
+     * keeps its ring. Pass the prop to override either way.
      */
     selectedIndicator?: "dot" | "none"
   }) {
   const context = React.useContext(ToggleGroupContext)
-
-  // Content-aware default: only plain-text (label-only) items show the ring.
-  const childArray = React.Children.toArray(children)
-  const hasIcon = childArray.some((child) => React.isValidElement(child))
-  const hasText = childArray.some(
-    (child) =>
-      (typeof child === "string" && child.trim() !== "") ||
-      typeof child === "number",
-  )
-  const showIndicator =
-    (selectedIndicator ?? (hasText && !hasIcon ? "dot" : "none")) === "dot"
 
   // Segmented (spacing=0) items carry their own border. Applied as plain
   // `border` rather than a `group-data-*:` variant on purpose: a group-scoped
@@ -123,10 +115,21 @@ function ToggleGroupItem({
       )}
       {...props}
     >
-      {showIndicator && (
+      {selectedIndicator !== "none" && (
         <span
           aria-hidden
-          className="grid size-4 shrink-0 place-items-center [&>svg]:[grid-area:1/1]"
+          data-slot="toggle-group-indicator"
+          className={cn(
+            "grid size-4 shrink-0 place-items-center [&>svg]:[grid-area:1/1]",
+            // Content-aware default, decided in CSS rather than by inspecting
+            // React children: hide the ring when the item renders any *other*
+            // svg (an icon carries the state). Inspecting children would treat
+            // a `<span>`-wrapped or translated label as "has icon" and silently
+            // drop the ring — misaligning a group that mixes plain and wrapped
+            // labels. `display:none` also drops the slot, so no layout shift.
+            selectedIndicator === undefined &&
+              "group-has-[svg:not([data-slot=toggle-group-indicator]_svg)]/toggle:hidden"
+          )}
         >
           <CircleDashed className="size-3.5 text-muted-foreground/50 transition-opacity group-data-[state=on]/toggle:opacity-0" />
           <Check className="size-3.5 opacity-0 transition-opacity group-data-[state=on]/toggle:opacity-100" />

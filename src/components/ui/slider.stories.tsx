@@ -104,7 +104,7 @@ export const ExtraSmall: Story = {
   },
   render: renderSlider,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5697" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -124,7 +124,7 @@ export const Large: Story = {
   },
   render: renderSlider,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5698" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

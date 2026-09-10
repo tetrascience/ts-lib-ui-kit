@@ -241,15 +241,21 @@ function ComboboxChips({
       data-size={size}
       className={cn(
         // min-height matches Select/Combobox per size (24 / 28 / 32 / 36) and
-        // grows as chips wrap; radius 8 at xs/sm, 10 at default/lg.
-        "group/chips flex flex-wrap items-center gap-1 border border-input bg-card bg-clip-padding px-4 py-1 text-sm transition-colors data-[size=xs]:min-h-6 data-[size=xs]:rounded-md data-[size=sm]:min-h-7 data-[size=sm]:rounded-md data-[size=default]:min-h-8 data-[size=default]:rounded-lg data-[size=lg]:min-h-9 data-[size=lg]:rounded-lg has-[[data-slot=combobox-chip-input]:focus-visible]:border-ring has-[[data-slot=combobox-chip-input]:focus-visible]:shadow-focus has-aria-invalid:border-destructive has-aria-invalid:shadow-focus has-data-[slot=combobox-chip]:px-1 dark:bg-input/30 dark:has-aria-invalid:border-destructive/50",
+        // grows as chips wrap; radius 8 at xs/sm, 10 at default/lg. `relative`
+        // so the toggle chevron can pin to the top-right (see below); left
+        // padding tightens once chips are present, right side reserves space
+        // for the chevron.
+        "group/chips relative flex flex-wrap items-center gap-1 border border-input bg-card bg-clip-padding py-1 pl-4 text-sm transition-colors data-[size=xs]:min-h-6 data-[size=xs]:rounded-md data-[size=sm]:min-h-7 data-[size=sm]:rounded-md data-[size=default]:min-h-8 data-[size=default]:rounded-lg data-[size=lg]:min-h-9 data-[size=lg]:rounded-lg has-[[data-slot=combobox-chip-input]:focus-visible]:border-ring has-[[data-slot=combobox-chip-input]:focus-visible]:shadow-focus has-aria-invalid:border-destructive has-aria-invalid:shadow-focus has-data-[slot=combobox-chip]:pl-1 dark:bg-input/30 dark:has-aria-invalid:border-destructive/50",
+        showTrigger ? "pr-8" : "pr-4",
         className
       )}
       {...props}
     >
       {children}
       {showTrigger && (
-        <ComboboxTrigger className="ml-auto shrink-0 self-center text-muted-foreground" />
+        // Pinned to the top-right and sized to the first row, so it stays put
+        // (aligned with the input row) as chips wrap to multiple lines (SW-2583).
+        <ComboboxTrigger className="absolute top-0 right-1 flex shrink-0 items-center text-muted-foreground group-data-[size=xs]/chips:h-6 group-data-[size=sm]/chips:h-7 group-data-[size=default]/chips:h-8 group-data-[size=lg]/chips:h-9" />
       )}
     </ComboboxPrimitive.Chips>
   )

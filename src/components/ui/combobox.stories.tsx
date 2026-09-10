@@ -1201,5 +1201,9 @@ export const MultiExtraSmall: Story = {
       expect(chip).not.toBeNull()
       expect(Math.round(chip.getBoundingClientRect().height)).toBe(16)
     })
+
+    await step("multi-select shows the default dropdown chevron (SW-2583)", async () => {
+      expect(chips.querySelector('[data-slot="combobox-trigger"]')).not.toBeNull()
+    })
   },
 }

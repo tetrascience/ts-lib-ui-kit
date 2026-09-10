@@ -223,12 +223,17 @@ function ComboboxSeparator({
 
 function ComboboxChips({
   className,
+  children,
   size = "default",
+  showTrigger = true,
   ...props
 }: React.ComponentPropsWithRef<typeof ComboboxPrimitive.Chips> &
   ComboboxPrimitive.Chips.Props & {
     /** Shared control scale (SW-2591): base height + chip/remove scale via group-data. */
     size?: "xs" | "sm" | "default" | "lg"
+    /** Dropdown-toggle chevron at the inline end (default `true`) — mirrors
+     *  `ComboboxInput` so single- and multi-select share the affordance (SW-2583). */
+    showTrigger?: boolean
   }) {
   return (
     <ComboboxPrimitive.Chips
@@ -241,7 +246,12 @@ function ComboboxChips({
         className
       )}
       {...props}
-    />
+    >
+      {children}
+      {showTrigger && (
+        <ComboboxTrigger className="ml-auto shrink-0 self-center text-muted-foreground" />
+      )}
+    </ComboboxPrimitive.Chips>
   )
 }
 

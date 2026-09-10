@@ -78,6 +78,7 @@ export default defineConfig({
           new Set([
             "index",
             "server",
+            "telemetry",
             "providers/athena",
             "providers/snowflake",
             "providers/databricks",
@@ -86,6 +87,7 @@ export default defineConfig({
         ),
         index: path.resolve(__dirname, "src/index.ts"),
         server: path.resolve(__dirname, "src/server/index.ts"),
+        telemetry: path.resolve(__dirname, "src/telemetry/index.ts"),
         "providers/athena": path.resolve(__dirname, "src/server/providers/entries/athena.ts"),
         "providers/snowflake": path.resolve(__dirname, "src/server/providers/entries/snowflake.ts"),
         "providers/databricks": path.resolve(__dirname, "src/server/providers/entries/databricks.ts"),

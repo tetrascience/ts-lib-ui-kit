@@ -6,10 +6,13 @@ import { ScrollArea, ScrollBar } from "./scroll-area"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof ScrollBar> = {
-  title: "Components/Scroll Area",
+  title: "Components/Layout & Structure/Scroll Area",
   component: ScrollBar,
   parameters: {
     layout: "centered",
+    // Docs "Show code": stories render via a local helper, so serialize the
+    // rendered JSX tree instead of printing the helper call / story source.
+    docs: { source: { type: "dynamic" } },
   },
   tags: ["autodocs"],
   argTypes: {

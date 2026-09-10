@@ -120,7 +120,7 @@ function getTableProps(args: Record<string, unknown>) {
 // ---------------------------------------------------------------------------
 
 const meta: Meta<typeof Table> = {
-  title: "Components/Table",
+  title: "Components/Data Display/Table",
   component: Table,
   parameters: {
     layout: "padded",

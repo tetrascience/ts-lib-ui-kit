@@ -12,7 +12,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta<typeof Carousel> = {
-  title: "Components/Carousel",
+  title: "Components/Data Display/Carousel",
   component: Carousel,
   parameters: {
     layout: "centered",

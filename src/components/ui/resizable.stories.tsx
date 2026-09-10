@@ -15,7 +15,7 @@ type DemoArgs = ComponentProps<typeof ResizablePanelGroup> & {
 }
 
 const meta: Meta<DemoArgs> = {
-  title: "Components/Resizable",
+  title: "Components/Layout & Structure/Resizable",
   component: ResizablePanelGroup,
   parameters: {
     layout: "centered",

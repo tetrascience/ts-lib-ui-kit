@@ -38,24 +38,6 @@ export default meta
 
 type Story = StoryObj
 
-const MemoizedResponseHarness = () => {
-  const [renderCount, setRenderCount] = useState(0)
-
-  return (
-    <div className="w-full max-w-2xl">
-      <button type="button" onClick={() => setRenderCount((count) => count + 1)}>
-        Re-render parent
-      </button>
-      <span>Render count: {renderCount}</span>
-      <Message from="assistant">
-        <MessageContent>
-          <MessageResponse isAnimating={false}>Stable memoized response</MessageResponse>
-        </MessageContent>
-      </Message>
-    </div>
-  )
-}
-
 export const UserMessage: Story = {
   render: () => (
     <div className="w-full max-w-2xl">
@@ -357,7 +339,23 @@ export const SingleBranchControls: Story = {
 }
 
 export const MemoizedResponse: Story = {
-  render: () => <MemoizedResponseHarness />,
+  render: () => {
+    const [renderCount, setRenderCount] = useState(0)
+
+    return (
+      <div className="w-full max-w-2xl">
+        <button type="button" onClick={() => setRenderCount((count) => count + 1)}>
+          Re-render parent
+        </button>
+        <span>Render count: {renderCount}</span>
+        <Message from="assistant">
+          <MessageContent>
+            <MessageResponse isAnimating={false}>Stable memoized response</MessageResponse>
+          </MessageContent>
+        </Message>
+      </div>
+    )
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 

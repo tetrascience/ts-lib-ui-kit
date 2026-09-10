@@ -550,10 +550,56 @@ const ReasoningCitationsQueueDemo = () => {
   )
 }
 
+// Docs "Show code": the story renders a timer-driven local demo, so
+// hand-written usage code is shown instead (same approach as DataAppShell).
+const REASONING_CITATIONS_QUEUE_CODE = `<Message from="user">
+  <MessageContent>
+    <MessageResponse>How does photosynthesis work?</MessageResponse>
+  </MessageContent>
+</Message>
+
+<Reasoning defaultOpen isStreaming={isThinking}>
+  <ReasoningTrigger />
+  <ReasoningContent>{reasoningText}</ReasoningContent>
+</Reasoning>
+
+<Queue isStreaming={isWorking}>
+  <QueueList>
+    {steps.map((item) => (
+      <QueueItem key={item.id}>
+        <QueueItemIndicator status={item.status} />
+        <QueueItemContent completed={item.status === "done"}>{item.title}</QueueItemContent>
+      </QueueItem>
+    ))}
+  </QueueList>
+</Queue>
+
+<Message from="assistant">
+  <MessageContent>
+    <InlineCitation>
+      <InlineCitationText>{answerText}</InlineCitationText>
+      <InlineCitationCard>
+        <InlineCitationCardTrigger sources={sources} />
+        <InlineCitationCardBody>{/* carousel of sources */}</InlineCitationCardBody>
+      </InlineCitationCard>
+    </InlineCitation>
+  </MessageContent>
+</Message>
+
+<Sources>
+  <SourcesTrigger count={sources.length} />
+  <SourcesContent>
+    {sources.map((href) => (
+      <Source href={href} key={href} title={new URL(href).hostname} />
+    ))}
+  </SourcesContent>
+</Sources>`
+
 export const WithReasoningCitationsAndQueue: Story = {
   name: "With Reasoning, Citations & Queue",
   render: () => <ReasoningCitationsQueueDemo />,
   parameters: {
+    docs: { source: { code: REASONING_CITATIONS_QUEUE_CODE, language: "tsx" } },
     zephyr: { testCaseId: "SW-T4660" },
   },
 }
@@ -648,10 +694,45 @@ const TaskAndToolsDemo = () => {
   )
 }
 
+// Docs "Show code": timer-driven local demo — hand-written usage code instead.
+const TASK_AND_TOOLS_CODE = `<Reasoning defaultOpen isStreaming={isThinking}>
+  <ReasoningTrigger />
+  <ReasoningContent>{reasoningText}</ReasoningContent>
+</Reasoning>
+
+<Task defaultOpen isStreaming={isRunning}>
+  <TaskTrigger title="Plan and execute weather lookup" />
+  <TaskContent>
+    <TaskItem>
+      Resolved location to <TaskItemFile>San Francisco, CA</TaskItemFile>
+    </TaskItem>
+    <TaskItem>
+      Selected tool: <TaskItemFile>get_weather</TaskItemFile>
+    </TaskItem>
+  </TaskContent>
+</Task>
+
+<Tool defaultOpen isStreaming={toolState !== "output-available"}>
+  <ToolHeader state={toolState} type="tool-get_weather" />
+  <ToolContent>
+    <ToolInput input={{ location: "San Francisco, CA", unit: "fahrenheit" }} />
+    {toolState === "output-available" && (
+      <ToolOutput errorText={undefined} output={{ temperature: 68, condition: "Partly cloudy" }} />
+    )}
+  </ToolContent>
+</Tool>
+
+<Message from="assistant">
+  <MessageContent>
+    <MessageResponse>It's 68°F and partly cloudy in San Francisco.</MessageResponse>
+  </MessageContent>
+</Message>`
+
 export const WithTaskAndTools: Story = {
   name: "With Task & Tool Calling",
   render: () => <TaskAndToolsDemo />,
   parameters: {
+    docs: { source: { code: TASK_AND_TOOLS_CODE, language: "tsx" } },
     zephyr: { testCaseId: "SW-T4661" },
   },
 }
@@ -879,10 +960,35 @@ const HumanInTheLoopDemo = () => {
   )
 }
 
+// Docs "Show code": timer-driven local demo — hand-written usage code instead.
+const HUMAN_IN_LOOP_CODE = `<Tool defaultOpen isStreaming={toolState !== "output-available"}>
+  <ToolHeader state={toolState} type="tool-run_shell" />
+  <ToolContent>
+    <ToolInput input={{ command: "rm -rf /tmp/build-cache", cwd: "/" }} />
+    {approved && <ToolOutput errorText={undefined} output={{ status: "ok" }} />}
+  </ToolContent>
+</Tool>
+
+<Confirmation approval={approval} state={confirmationState}>
+  <ConfirmationTitle>Allow assistant to run this command?</ConfirmationTitle>
+  <ConfirmationRequest>
+    <ConfirmationCode>rm -rf /tmp/build-cache</ConfirmationCode>
+  </ConfirmationRequest>
+  <ConfirmationActions>
+    <ConfirmationAction onClick={onDeny} variant="outline">
+      Deny <ConfirmationShortcut>esc</ConfirmationShortcut>
+    </ConfirmationAction>
+    <ConfirmationAction onClick={onApprove} variant="default">
+      Allow once <ConfirmationShortcut>⌘⇧↩</ConfirmationShortcut>
+    </ConfirmationAction>
+  </ConfirmationActions>
+</Confirmation>`
+
 export const WithHumanInTheLoop: Story = {
   name: "With Human-in-the-Loop Confirmation",
   render: () => <HumanInTheLoopDemo />,
   parameters: {
+    docs: { source: { code: HUMAN_IN_LOOP_CODE, language: "tsx" } },
     zephyr: { testCaseId: "SW-T4663" },
   },
 }
@@ -1533,9 +1639,34 @@ const InteractiveFullDemo = () => {
   )
 }
 
+// Docs "Show code": the full interactive demo is a story-local app — show
+// the idiomatic Chat composition it demonstrates instead.
+const INTERACTIVE_CODE = `<Chat>
+  <ChatMessages>
+    {turns.map((turn) => (
+      <Message from={turn.role} key={turn.id}>
+        <MessageContent>
+          <MessageResponse isAnimating={turn.isStreaming}>{turn.text}</MessageResponse>
+        </MessageContent>
+      </Message>
+    ))}
+  </ChatMessages>
+  <ChatPromptInput
+    models={models}
+    model={model}
+    onModelChange={setModel}
+    onSubmit={handleSubmit}
+    placeholder="Ask anything..."
+  />
+</Chat>`
+
 export const Interactive: Story = {
   name: "Interactive — Full demo",
   render: () => InteractiveFullDemo(),
+  parameters: {
+    docs: { source: { code: INTERACTIVE_CODE, language: "tsx" } },
+    zephyr: { testCaseId: "SW-T4664" },
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     await step("Prompt input is present", async () => {
@@ -1555,8 +1686,5 @@ export const Interactive: Story = {
       await userEvent.type(canvas.getByPlaceholderText("Ask anything..."), "Hello")
       await expect(canvas.getByRole("button", { name: /send|submit/i })).not.toBeDisabled()
     })
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T4664" },
   },
 }

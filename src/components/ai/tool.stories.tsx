@@ -33,28 +33,6 @@ const expectCollapsedChevronConfiguredForHoverReveal = async (
   await expect(chevron).toHaveClass("group-hover:opacity-100")
 }
 
-const StreamingToolDemo = () => {
-  const [isStreaming, setIsStreaming] = useState(true)
-
-  return (
-    <div className="w-full max-w-lg space-y-2">
-      <button type="button" onClick={() => setIsStreaming(false)}>
-        Finish tool
-      </button>
-      <Tool defaultOpen isStreaming={isStreaming}>
-        <ToolHeader
-          state={isStreaming ? "input-available" : "output-available"}
-          type="tool-search_web"
-        />
-        <ToolContent>
-          <ToolInput input={{ query: "lab notebook entries" }} />
-          {!isStreaming && <ToolOutput errorText={undefined} output={{ matches: 3 }} />}
-        </ToolContent>
-      </Tool>
-    </div>
-  )
-}
-
 export const InputStreaming: Story = {
   render: () => (
     <div className="w-full max-w-lg">
@@ -209,7 +187,27 @@ export const Collapsed: Story = {
 }
 
 export const StreamingAutoClose: Story = {
-  render: () => <StreamingToolDemo />,
+  render: () => {
+    const [isStreaming, setIsStreaming] = useState(true)
+
+    return (
+      <div className="w-full max-w-lg space-y-2">
+        <button type="button" onClick={() => setIsStreaming(false)}>
+          Finish tool
+        </button>
+        <Tool defaultOpen isStreaming={isStreaming}>
+          <ToolHeader
+            state={isStreaming ? "input-available" : "output-available"}
+            type="tool-search_web"
+          />
+          <ToolContent>
+            <ToolInput input={{ query: "lab notebook entries" }} />
+            {!isStreaming && <ToolOutput errorText={undefined} output={{ matches: 3 }} />}
+          </ToolContent>
+        </Tool>
+      </div>
+    )
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     const toolTrigger = canvas.getByText("search_web").closest("button")

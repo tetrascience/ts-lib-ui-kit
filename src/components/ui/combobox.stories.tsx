@@ -344,38 +344,36 @@ export const TopAlignedEnd: Story = {
 // New stories
 // ---------------------------------------------------------------------------
 
-function MultipleSelectionExample() {
-  const anchorRef = useComboboxAnchor()
-  const [value, setValue] = useState<string[]>([])
-
-  return (
-    <Combobox multiple items={frameworks} value={value} onValueChange={setValue}>
-      <ComboboxChips ref={anchorRef} className="w-[280px]">
-        <ComboboxValue>
-          {(items: string[]) =>
-            items.map((item) => (
-              <ComboboxChip key={item}>{item}</ComboboxChip>
-            ))
-          }
-        </ComboboxValue>
-        <ComboboxChipsInput placeholder="Select frameworks..." />
-      </ComboboxChips>
-      <ComboboxContent anchor={anchorRef}>
-        <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
-        <ComboboxList>
-          {(item) => (
-            <ComboboxItem key={item} value={item}>
-              {item}
-            </ComboboxItem>
-          )}
-        </ComboboxList>
-      </ComboboxContent>
-    </Combobox>
-  )
-}
-
 export const MultipleSelection: Story = {
-  render: () => <MultipleSelectionExample />,
+  render: () => {
+    const anchorRef = useComboboxAnchor()
+    const [value, setValue] = useState<string[]>([])
+
+    return (
+      <Combobox multiple items={frameworks} value={value} onValueChange={setValue}>
+        <ComboboxChips ref={anchorRef} className="w-[280px]">
+          <ComboboxValue>
+            {(items: string[]) =>
+              items.map((item) => (
+                <ComboboxChip key={item}>{item}</ComboboxChip>
+              ))
+            }
+          </ComboboxValue>
+          <ComboboxChipsInput placeholder="Select frameworks..." />
+        </ComboboxChips>
+        <ComboboxContent anchor={anchorRef}>
+          <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
+          <ComboboxList>
+            {(item) => (
+              <ComboboxItem key={item} value={item}>
+                {item}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+    )
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     const input = canvas.getByRole("combobox")
@@ -1013,41 +1011,37 @@ export const EmptyState: Story = {
   },
 }
 
-function ChipPrePopulatedExample({ showRemove = true }: { showRemove?: boolean }) {
-  const anchorRef = useComboboxAnchor()
-  const [value, setValue] = useState<string[]>(["Next.js", "Remix"])
-
-  return (
-    <Combobox multiple items={frameworks} value={value} onValueChange={setValue}>
-      <ComboboxChips ref={anchorRef} className="w-[280px]">
-        <ComboboxValue>
-          {(items: string[]) =>
-            items.map((item) => (
-              <ComboboxChip key={item} showRemove={showRemove}>
-                {item}
-              </ComboboxChip>
-            ))
-          }
-        </ComboboxValue>
-        <ComboboxChipsInput placeholder="Select..." />
-      </ComboboxChips>
-      <ComboboxContent anchor={anchorRef}>
-        <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
-        <ComboboxList>
-          {(item) => (
-            <ComboboxItem key={item} value={item}>
-              {item}
-            </ComboboxItem>
-          )}
-        </ComboboxList>
-      </ComboboxContent>
-    </Combobox>
-  )
-}
-
 export const ChipDefault: Story = {
   name: "Chip / Default",
-  render: () => <ChipPrePopulatedExample />,
+  render: () => {
+    const anchorRef = useComboboxAnchor()
+    const [value, setValue] = useState<string[]>(["Next.js", "Remix"])
+
+    return (
+      <Combobox multiple items={frameworks} value={value} onValueChange={setValue}>
+        <ComboboxChips ref={anchorRef} className="w-[280px]">
+          <ComboboxValue>
+            {(items: string[]) =>
+              items.map((item) => (
+                <ComboboxChip key={item}>{item}</ComboboxChip>
+              ))
+            }
+          </ComboboxValue>
+          <ComboboxChipsInput placeholder="Select..." />
+        </ComboboxChips>
+        <ComboboxContent anchor={anchorRef}>
+          <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
+          <ComboboxList>
+            {(item) => (
+              <ComboboxItem key={item} value={item}>
+                {item}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+    )
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
@@ -1098,7 +1092,37 @@ export const ChipDefault: Story = {
 
 export const ChipWithoutRemove: Story = {
   name: "Chip / Without remove button",
-  render: () => <ChipPrePopulatedExample showRemove={false} />,
+  render: () => {
+    const anchorRef = useComboboxAnchor()
+    const [value, setValue] = useState<string[]>(["Next.js", "Remix"])
+
+    return (
+      <Combobox multiple items={frameworks} value={value} onValueChange={setValue}>
+        <ComboboxChips ref={anchorRef} className="w-[280px]">
+          <ComboboxValue>
+            {(items: string[]) =>
+              items.map((item) => (
+                <ComboboxChip key={item} showRemove={false}>
+                  {item}
+                </ComboboxChip>
+              ))
+            }
+          </ComboboxValue>
+          <ComboboxChipsInput placeholder="Select..." />
+        </ComboboxChips>
+        <ComboboxContent anchor={anchorRef}>
+          <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
+          <ComboboxList>
+            {(item) => (
+              <ComboboxItem key={item} value={item}>
+                {item}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+    )
+  },
   play: async ({ canvasElement, step }) => {
     await step("Chips render without remove buttons", async () => {
       const chips = canvasElement.querySelectorAll('[data-slot="combobox-chip"]')

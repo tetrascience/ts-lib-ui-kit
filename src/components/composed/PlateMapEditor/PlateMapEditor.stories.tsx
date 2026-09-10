@@ -508,6 +508,64 @@ function PlateMapEditorDragDrop() {
   );
 }
 
+/**
+ * Docs "Show code": these stories render through story-local stateful
+ * harnesses, so hand-written usage code is shown instead (same approach as
+ * DataAppShell). PlateMapEditor is a controlled component — the sample shows
+ * the canonical state wiring.
+ */
+const plateMapEditorUsageCode = (format: PlateFormat) => `function PlateMapScreen() {
+  const [values, setValues] = useState<Map<WellId, DemoWell>>(new Map())
+  const [selection, setSelection] = useState<Set<WellId>>(new Set())
+
+  return (
+    <PlateMapEditor<DemoWell>
+      format="${format}"
+      values={values}
+      onChange={setValues}
+      selection={selection}
+      onSelectionChange={setSelection}
+      fields={FIELDS}
+      tableColumns={COLUMNS}
+      colorForWell={colorForWell}
+      emptyEntry={emptyEntry}
+      isPopulated={isPopulated}
+      title="Plate map editor"
+      wellShape="circle"
+      framedPlate
+      plates={plateOptions}
+      activePlateId={activePlateId}
+      onPlateChange={setActivePlateId}
+      plateSelectorVariant="tabs"
+      manifestFilterable
+      manifestGroupable
+      legend={<WellLegend items={legendItems} />}
+      plateToolbar={<PlateZoomControl zoom={zoom} onZoomChange={setZoom} />}
+    />
+  )
+}`
+
+const manifestTableUsageCode = (
+  editable: boolean,
+) => `function ManifestScreen() {
+  const [values, setValues] = useState<Map<WellId, RichManifestWell>>(seedValues)${
+    editable ? "\n  const [selection, setSelection] = useState<Set<WellId>>(new Set())" : ""
+  }
+
+  return (
+    <WellManifestTable<RichManifestWell>
+      values={values}
+      columns={RICH_MANIFEST_COLUMNS}
+      fields={${editable ? "RICH_MANIFEST_FIELDS" : "RICH_MANIFEST_FIELDS_READONLY"}}${
+    editable ? "\n      selection={selection}\n      onSelectionChange={setSelection}" : ""
+  }
+      onChange={setValues}
+      emptyEntry={emptyEntry}
+      isPopulated={isPopulated}${editable ? "\n      filterable\n      groupable" : ""}
+    />
+  )
+}`
+
 const meta: Meta<typeof PlateMapEditor<DemoWell>> = {
   title: "Design Patterns/Plate Map Editor",
   component: PlateMapEditor,
@@ -523,6 +581,7 @@ export const Default: Story = {
   name: "Default (96-well)",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
+    docs: { source: { code: plateMapEditorUsageCode("96"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5206" },
   },
   play: async ({ canvasElement, step }) => {
@@ -552,6 +611,7 @@ export const Default384: Story = {
   name: "Default (384-well)",
   render: () => <PlateMapEditorDefault format="384" />,
   parameters: {
+    docs: { source: { code: plateMapEditorUsageCode("384"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5207" },
   },
   play: async ({ canvasElement, step }) => {
@@ -572,6 +632,7 @@ export const DragAndDrop: Story = {
   name: "Drag-and-drop palette",
   render: () => <PlateMapEditorDragDrop />,
   parameters: {
+    docs: { source: { code: plateMapEditorUsageCode("96"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5208" },
   },
   play: async ({ canvasElement, step }) => {
@@ -599,6 +660,7 @@ export const FormApplyAndClear: Story = {
   name: "Form apply + clear",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
+    docs: { source: { code: plateMapEditorUsageCode("96"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5268" },
   },
   play: async ({ canvasElement, step }) => {
@@ -642,6 +704,7 @@ export const Filtering: Story = {
   name: "Manifest filtering",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
+    docs: { source: { code: plateMapEditorUsageCode("96"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5269" },
   },
   play: async ({ canvasElement, step }) => {
@@ -678,6 +741,7 @@ export const FilteringIsEmpty: Story = {
   name: "Manifest filter — operator switch",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
+    docs: { source: { code: plateMapEditorUsageCode("96"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5270" },
   },
   play: async ({ canvasElement, step }) => {
@@ -720,6 +784,7 @@ export const GroupingAndPaging: Story = {
   name: "Grouping + page size",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
+    docs: { source: { code: plateMapEditorUsageCode("96"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5271" },
   },
   play: async ({ canvasElement, step }) => {
@@ -770,6 +835,7 @@ export const ZoomControls: Story = {
   name: "Plate zoom buttons",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
+    docs: { source: { code: plateMapEditorUsageCode("96"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5272" },
   },
   play: async ({ canvasElement, step }) => {
@@ -960,6 +1026,7 @@ export const MultiPlateTabs: Story = {
   name: "Tabs: add + remove plates",
   render: () => <PlateMapEditorDefault format="96" />,
   parameters: {
+    docs: { source: { code: plateMapEditorUsageCode("96"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5275" },
   },
   play: async ({ canvasElement, step }) => {
@@ -1129,6 +1196,7 @@ export const ManifestEditableCells: Story = {
   name: "Manifest editable cells (multiselect, switch, number)",
   render: () => <RichManifestEditableHarness />,
   parameters: {
+    docs: { source: { code: manifestTableUsageCode(true), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5277" },
   },
   play: async ({ canvasElement, step }) => {
@@ -1205,6 +1273,7 @@ export const ManifestReadonlyCells: Story = {
   name: "Manifest readonly cells (badges, switches, dashes)",
   render: () => <RichManifestReadonlyHarness />,
   parameters: {
+    docs: { source: { code: manifestTableUsageCode(false), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5278" },
   },
   play: async ({ canvasElement, step }) => {
@@ -1517,6 +1586,7 @@ export const GridDragSelection: Story = {
   name: "Grid drag selection: replace / shift-add / alt-remove / double-click",
   render: () => <PlateMapEditorRectNoPlates />,
   parameters: {
+    docs: { source: { code: plateMapEditorUsageCode("96"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5280" },
   },
   play: async ({ canvasElement, step }) => {
@@ -1649,6 +1719,7 @@ export const GroupsAndHoverFields: Story = {
     </div>
   ),
   parameters: {
+    docs: { source: { code: plateMapEditorUsageCode("96"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5282" },
   },
   play: async ({ canvasElement, step }) => {
@@ -1685,6 +1756,7 @@ export const CsvImportSwapsPlates: Story = {
   name: "CSV import switches the active plate",
   render: () => <PlateMapEditorImportCsv />,
   parameters: {
+    docs: { source: { code: plateMapEditorUsageCode("96"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5283" },
   },
   play: async ({ canvasElement, step }) => {
@@ -1729,6 +1801,7 @@ export const ManifestFillDownAndKeyboardGroup: Story = {
   name: "Manifest fill-down button + group keyboard toggle",
   render: () => <RichManifestEditableHarness />,
   parameters: {
+    docs: { source: { code: manifestTableUsageCode(true), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5284" },
   },
   play: async ({ canvasElement, step }) => {

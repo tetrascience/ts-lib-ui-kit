@@ -11,6 +11,9 @@ const meta: Meta<typeof Checkbox> = {
   component: Checkbox,
   parameters: {
     layout: "centered",
+    // Docs "Show code": stories render via a local helper, so serialize the
+    // rendered JSX tree instead of printing the helper call / story source.
+    docs: { source: { type: "dynamic" } },
   },
   tags: ["autodocs"],
 }
@@ -19,7 +22,7 @@ export default meta
 
 type Story = StoryObj<typeof Checkbox>
 
-function CheckboxExample(props: React.ComponentProps<typeof Checkbox>) {
+function renderCheckbox(props: React.ComponentProps<typeof Checkbox> = {}) {
   return (
     <div className="flex items-center gap-3">
       <Checkbox id="storybook-checkbox" {...props} />
@@ -29,7 +32,7 @@ function CheckboxExample(props: React.ComponentProps<typeof Checkbox>) {
 }
 
 export const Default: Story = {
-  render: () => <CheckboxExample />,
+  render: () => renderCheckbox(),
   parameters: {
     zephyr: { testCaseId: "SW-T1216" },
   },
@@ -44,7 +47,7 @@ export const Default: Story = {
 }
 
 export const Checked: Story = {
-  render: () => <CheckboxExample defaultChecked />,
+  render: () => renderCheckbox({ defaultChecked: true }),
   parameters: {
     zephyr: { testCaseId: "SW-T1217" },
   },
@@ -62,7 +65,7 @@ export const Checked: Story = {
 }
 
 export const Disabled: Story = {
-  render: () => <CheckboxExample disabled />,
+  render: () => renderCheckbox({ disabled: true }),
   parameters: {
     zephyr: { testCaseId: "SW-T1218" },
   },

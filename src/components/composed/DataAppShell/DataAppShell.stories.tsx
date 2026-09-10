@@ -1069,7 +1069,7 @@ export const WithLeftPanel: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5701" },
     docs: { source: { code: RIGHT_PANEL_CODE, language: "tsx" } },
   },
 };
@@ -1101,7 +1101,7 @@ export const WithBottomPanel: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5702" },
     docs: { source: { code: RIGHT_PANEL_CODE, language: "tsx" } },
   },
 };

@@ -78,7 +78,7 @@ export const ExtraSmall: Story = {
   },
   render: renderTextarea,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5690" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

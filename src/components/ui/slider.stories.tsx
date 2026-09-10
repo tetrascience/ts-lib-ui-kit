@@ -16,6 +16,10 @@ const meta: Meta<typeof Slider> = {
       control: { type: "select" },
       options: ["horizontal", "vertical"],
     },
+    size: {
+      control: { type: "select" },
+      options: ["xs", "sm", "default", "lg"],
+    },
   },
   args: {
     defaultValue: [60],
@@ -92,4 +96,42 @@ export const Vertical: Story = {
     zephyr: { testCaseId: "SW-T1300" },
   },
   play: playSliderSingleThumb,
+}
+
+export const ExtraSmall: Story = {
+  args: {
+    size: "xs",
+  },
+  render: renderSlider,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("xs slider thumb is 10px", async () => {
+      const root = canvasElement.querySelector('[data-slot="slider"]')
+      expect(root).toHaveAttribute("data-size", "xs")
+      const thumb = canvas.getByRole("slider")
+      expect(Math.round(thumb.getBoundingClientRect().height)).toBe(10)
+    })
+  },
+}
+
+export const Large: Story = {
+  args: {
+    size: "lg",
+  },
+  render: renderSlider,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("lg slider thumb is 14px", async () => {
+      const thumb = canvas.getByRole("slider")
+      expect(Math.round(thumb.getBoundingClientRect().height)).toBe(14)
+    })
+  },
 }

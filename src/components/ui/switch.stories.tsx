@@ -15,7 +15,7 @@ const meta: Meta<typeof Switch> = {
   argTypes: {
     size: {
       control: { type: "select" },
-      options: ["default", "sm"],
+      options: ["xs", "sm", "default", "lg"],
     },
   },
   args: {
@@ -88,6 +88,41 @@ export const Disabled: Story = {
 
     await step("Disabled switch renders", async () => {
       expect(canvas.getByRole("switch")).toBeDisabled()
+    })
+  },
+}
+
+export const ExtraSmall: Story = {
+  args: {
+    size: "xs",
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("xs switch track is 12px tall", async () => {
+      const sw = canvas.getByRole("switch")
+      expect(sw).toHaveAttribute("data-size", "xs")
+      expect(Math.round(sw.getBoundingClientRect().height)).toBe(12)
+    })
+  },
+}
+
+export const Large: Story = {
+  args: {
+    size: "lg",
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("lg switch track is 22px tall", async () => {
+      const sw = canvas.getByRole("switch")
+      expect(Math.round(sw.getBoundingClientRect().height)).toBe(22)
     })
   },
 }

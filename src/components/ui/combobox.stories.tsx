@@ -1149,7 +1149,7 @@ export const ExtraSmall: Story = {
   },
   render: (args) => renderCombobox(args),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5691" },
   },
   play: async ({ canvasElement, step }) => {
     const group = canvasElement.querySelector('[data-slot="input-group"]') as HTMLElement
@@ -1190,7 +1190,7 @@ export const MultiExtraSmall: Story = {
     )
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5692" },
   },
   play: async ({ canvasElement, step }) => {
     const chips = canvasElement.querySelector('[data-slot="combobox-chips"]') as HTMLElement

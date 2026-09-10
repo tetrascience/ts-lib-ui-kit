@@ -81,3 +81,33 @@ export const Disabled: Story = {
     })
   },
 }
+export const ExtraSmall: Story = {
+  render: () => renderCheckbox({ size: "xs", defaultChecked: true }),
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("xs checkbox box is 14px", async () => {
+      const cb = canvas.getByRole("checkbox")
+      expect(cb).toHaveAttribute("data-size", "xs")
+      expect(Math.round(cb.getBoundingClientRect().height)).toBe(14)
+    })
+  },
+}
+
+export const Large: Story = {
+  render: () => renderCheckbox({ size: "lg", defaultChecked: true }),
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("lg checkbox box is 20px", async () => {
+      const cb = canvas.getByRole("checkbox")
+      expect(Math.round(cb.getBoundingClientRect().height)).toBe(20)
+    })
+  },
+}

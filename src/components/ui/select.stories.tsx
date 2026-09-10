@@ -27,7 +27,7 @@ const meta: Meta<typeof SelectTrigger> = {
   argTypes: {
     size: {
       control: { type: "select" },
-      options: ["default", "sm"],
+      options: ["xs", "sm", "default", "lg"],
     },
   },
   args: {
@@ -120,6 +120,44 @@ export const Default: Story = {
 // ---------------------------------------------------------------------------
 // Small
 // ---------------------------------------------------------------------------
+
+export const ExtraSmall: Story = {
+  args: {
+    size: "xs",
+  },
+  render: renderSelect,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole("combobox")
+
+    await step("xs select trigger renders at 24px, matching Button xs", async () => {
+      expect(trigger).toHaveAttribute("data-size", "xs")
+      expect(Math.round(trigger.getBoundingClientRect().height)).toBe(24)
+    })
+  },
+}
+
+export const Large: Story = {
+  args: {
+    size: "lg",
+  },
+  render: renderSelect,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole("combobox")
+
+    await step("lg select trigger renders at 36px", async () => {
+      expect(trigger).toHaveAttribute("data-size", "lg")
+      expect(Math.round(trigger.getBoundingClientRect().height)).toBe(36)
+    })
+  },
+}
 
 export const Small: Story = {
   args: {

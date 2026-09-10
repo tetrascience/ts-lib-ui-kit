@@ -12,6 +12,12 @@ const meta: Meta<typeof Input> = {
     layout: "centered",
   },
   tags: ["autodocs"],
+  argTypes: {
+    size: {
+      control: { type: "select" },
+      options: ["xs", "sm", "default", "lg"],
+    },
+  },
   args: {
     placeholder: "Enter a value",
     type: "text",
@@ -73,6 +79,43 @@ export const File: Story = {
     await step("File input renders", async () => {
       const fileInput = canvasElement.querySelector('input[type="file"]')
       expect(fileInput).toBeInTheDocument()
+    })
+  },
+}
+
+export const ExtraSmall: Story = {
+  args: {
+    size: "xs",
+  },
+  render: renderInput,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("xs input renders at 24px, matching Button xs", async () => {
+      const input = canvas.getByRole("textbox")
+      expect(input).toHaveAttribute("data-size", "xs")
+      expect(Math.round(input.getBoundingClientRect().height)).toBe(24)
+    })
+  },
+}
+
+export const Large: Story = {
+  args: {
+    size: "lg",
+  },
+  render: renderInput,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("lg input renders at 36px", async () => {
+      const input = canvas.getByRole("textbox")
+      expect(Math.round(input.getBoundingClientRect().height)).toBe(36)
     })
   },
 }

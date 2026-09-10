@@ -6,7 +6,7 @@ import { StreamStatus } from "./stream-status"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof StreamStatus> = {
-  title: "AI Elements/Stream Status",
+  title: "AI Elements/Status & Effects/Stream Status",
   component: StreamStatus,
   parameters: {
     layout: "centered",

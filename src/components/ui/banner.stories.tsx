@@ -7,7 +7,7 @@ import { Button } from "./button";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Banner> = {
-  title: "Components/Banner",
+  title: "Components/Feedback & Status/Banner",
   component: Banner,
   parameters: {
     layout: "fullscreen",

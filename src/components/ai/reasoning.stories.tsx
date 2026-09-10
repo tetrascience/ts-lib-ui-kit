@@ -25,7 +25,7 @@ The time complexity for balanced BST operations is O(log n), but can degrade to 
 I should also consider edge cases: empty tree, single node, duplicate values.`
 
 const meta: Meta = {
-  title: "AI Elements/Reasoning",
+  title: "AI Elements/Agent Activity/Reasoning",
   parameters: {
     layout: "padded",
   },

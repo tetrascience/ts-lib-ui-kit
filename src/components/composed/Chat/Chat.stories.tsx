@@ -92,7 +92,7 @@ import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "@/componen
 import { cn } from "@/lib/utils"
 
 const meta: Meta<typeof Chat> = {
-  title: "AI Elements/Chat",
+  title: "AI Elements/Conversation/Chat",
   component: Chat,
   parameters: {
     layout: "fullscreen",

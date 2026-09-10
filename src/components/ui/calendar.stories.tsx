@@ -13,7 +13,7 @@ const selectedRange = {
 }
 
 const meta: Meta<typeof Calendar> = {
-  title: "Components/Calendar",
+  title: "Components/Forms & Inputs/Calendar",
   component: Calendar,
   parameters: {
     layout: "centered",

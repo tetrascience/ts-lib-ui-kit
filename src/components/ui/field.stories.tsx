@@ -16,7 +16,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta<typeof Field> = {
-  title: "Components/Field",
+  title: "Components/Forms & Inputs/Field",
   component: Field,
   parameters: {
     layout: "centered",

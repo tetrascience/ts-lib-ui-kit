@@ -16,7 +16,7 @@ import {
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof DialogContent> = {
-  title: "Components/Dialog",
+  title: "Components/Overlays/Dialog",
   component: DialogContent,
   parameters: {
     layout: "centered",

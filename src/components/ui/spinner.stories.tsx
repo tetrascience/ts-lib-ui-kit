@@ -7,7 +7,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta<typeof Spinner> = {
-  title: "Components/Spinner",
+  title: "Components/Feedback & Status/Spinner",
   component: Spinner,
   parameters: {
     layout: "centered",

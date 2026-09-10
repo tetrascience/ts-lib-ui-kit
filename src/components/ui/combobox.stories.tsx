@@ -64,7 +64,7 @@ const isTestRunner = () =>
   typeof import.meta !== "undefined" && !!(import.meta as Record<string, any>).env?.VITEST
 
 const meta: Meta<typeof ComboboxInput> = {
-  title: "Components/Combobox",
+  title: "Components/Forms & Inputs/Combobox",
   component: ComboboxInput,
   parameters: {
     layout: "centered",

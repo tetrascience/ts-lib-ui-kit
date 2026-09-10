@@ -77,6 +77,10 @@ const meta: Meta<typeof ComboboxInput> = {
     showClear: {
       control: { type: "boolean" },
     },
+    size: {
+      control: { type: "select" },
+      options: ["xs", "sm", "default", "lg"],
+    },
   },
   args: {
     showTrigger: true,
@@ -1136,5 +1140,66 @@ export const ChipWithoutRemove: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4712" },
+  },
+}
+
+export const ExtraSmall: Story = {
+  args: {
+    size: "xs",
+  },
+  render: (args) => renderCombobox(args),
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const group = canvasElement.querySelector('[data-slot="input-group"]') as HTMLElement
+
+    await step("xs combobox input renders at 24px, matching Button xs", async () => {
+      expect(group).toHaveAttribute("data-size", "xs")
+      expect(Math.round(group.getBoundingClientRect().height)).toBe(24)
+    })
+  },
+}
+
+export const MultiExtraSmall: Story = {
+  render: () => {
+    const anchorRef = useComboboxAnchor()
+    const [value, setValue] = useState<string[]>(["Next.js", "Nuxt"])
+
+    return (
+      <Combobox multiple items={frameworks} value={value} onValueChange={setValue}>
+        <ComboboxChips ref={anchorRef} size="xs" className="w-[280px]">
+          <ComboboxValue>
+            {(items: string[]) =>
+              items.map((item) => <ComboboxChip key={item}>{item}</ComboboxChip>)
+            }
+          </ComboboxValue>
+          <ComboboxChipsInput placeholder="Select frameworks..." />
+        </ComboboxChips>
+        <ComboboxContent anchor={anchorRef}>
+          <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
+          <ComboboxList>
+            {(item) => (
+              <ComboboxItem key={item} value={item}>
+                {item}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+    )
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const chips = canvasElement.querySelector('[data-slot="combobox-chips"]') as HTMLElement
+    const chip = canvasElement.querySelector('[data-slot="combobox-chip"]') as HTMLElement
+
+    await step("xs multi-select scales the chip pill to 16px", async () => {
+      expect(chips).toHaveAttribute("data-size", "xs")
+      expect(chip).not.toBeNull()
+      expect(Math.round(chip.getBoundingClientRect().height)).toBe(16)
+    })
   },
 }

@@ -58,13 +58,16 @@ function ComboboxInput({
   disabled = false,
   showTrigger = true,
   showClear = false,
+  size,
   ...props
 }: ComboboxPrimitive.Input.Props & {
   showTrigger?: boolean
   showClear?: boolean
+  /** Shared control scale (SW-2591): xs 24 / sm 28 / default 32 / lg 36. */
+  size?: "xs" | "sm" | "default" | "lg"
 }) {
   return (
-    <InputGroup className={cn("w-auto bg-card", className)}>
+    <InputGroup size={size} className={cn("w-auto bg-card", className)}>
       <ComboboxPrimitive.Input
         render={<InputGroupInput disabled={disabled} />}
         {...props}
@@ -220,14 +223,21 @@ function ComboboxSeparator({
 
 function ComboboxChips({
   className,
+  size = "default",
   ...props
 }: React.ComponentPropsWithRef<typeof ComboboxPrimitive.Chips> &
-  ComboboxPrimitive.Chips.Props) {
+  ComboboxPrimitive.Chips.Props & {
+    /** Shared control scale (SW-2591): base height + chip/remove scale via group-data. */
+    size?: "xs" | "sm" | "default" | "lg"
+  }) {
   return (
     <ComboboxPrimitive.Chips
       data-slot="combobox-chips"
+      data-size={size}
       className={cn(
-        "group/chips flex min-h-12 flex-wrap items-center gap-1 rounded-md border border-input bg-card bg-clip-padding px-4 py-1 text-sm transition-colors has-[[data-slot=combobox-chip-input]:focus-visible]:border-ring has-[[data-slot=combobox-chip-input]:focus-visible]:shadow-focus has-aria-invalid:border-destructive has-aria-invalid:shadow-focus has-data-[slot=combobox-chip]:px-1 dark:bg-input/30 dark:has-aria-invalid:border-destructive/50",
+        // min-height matches Select/Combobox per size (24 / 28 / 32 / 36) and
+        // grows as chips wrap; radius 8 at xs/sm, 10 at default/lg.
+        "group/chips flex flex-wrap items-center gap-1 border border-input bg-card bg-clip-padding px-4 py-1 text-sm transition-colors data-[size=xs]:min-h-6 data-[size=xs]:rounded-md data-[size=sm]:min-h-7 data-[size=sm]:rounded-md data-[size=default]:min-h-8 data-[size=default]:rounded-lg data-[size=lg]:min-h-9 data-[size=lg]:rounded-lg has-[[data-slot=combobox-chip-input]:focus-visible]:border-ring has-[[data-slot=combobox-chip-input]:focus-visible]:shadow-focus has-aria-invalid:border-destructive has-aria-invalid:shadow-focus has-data-[slot=combobox-chip]:px-1 dark:bg-input/30 dark:has-aria-invalid:border-destructive/50",
         className
       )}
       {...props}
@@ -247,7 +257,9 @@ function ComboboxChip({
     <ComboboxPrimitive.Chip
       data-slot="combobox-chip"
       className={cn(
-        "flex h-[calc(--spacing(6.25))] w-fit items-center justify-center gap-1 rounded-sm bg-muted px-1.5 text-xs font-medium whitespace-nowrap text-foreground has-disabled:pointer-events-none has-disabled:cursor-not-allowed has-disabled:opacity-50 has-data-[slot=combobox-chip-remove]:pr-0",
+        // Pill scales with the chips container (SW-2591): height / radius / text
+        // step per group size; radius is concentric with the container (4/4/6/6).
+        "flex w-fit items-center justify-center gap-1 bg-muted font-medium whitespace-nowrap text-foreground has-disabled:pointer-events-none has-disabled:cursor-not-allowed has-disabled:opacity-50 has-data-[slot=combobox-chip-remove]:pr-0 group-data-[size=xs]/chips:h-4 group-data-[size=xs]/chips:rounded-[4px] group-data-[size=xs]/chips:px-1 group-data-[size=xs]/chips:text-[10px] group-data-[size=sm]/chips:h-5 group-data-[size=sm]/chips:rounded-[4px] group-data-[size=sm]/chips:px-1.5 group-data-[size=sm]/chips:text-[11px] group-data-[size=default]/chips:h-6 group-data-[size=default]/chips:rounded-[6px] group-data-[size=default]/chips:px-1.5 group-data-[size=default]/chips:text-xs group-data-[size=lg]/chips:h-7 group-data-[size=lg]/chips:rounded-[6px] group-data-[size=lg]/chips:px-2 group-data-[size=lg]/chips:text-sm",
         className
       )}
       {...props}
@@ -257,7 +269,7 @@ function ComboboxChip({
         <ComboboxPrimitive.ChipRemove
           aria-label="Remove"
           render={<Button variant="ghost" size="icon-xs" />}
-          className="-ml-1 opacity-50 hover:opacity-100"
+          className="-ml-1 opacity-50 hover:opacity-100 group-data-[size=xs]/chips:size-3.5 group-data-[size=xs]/chips:[&>svg]:size-2.5 group-data-[size=sm]/chips:size-4 group-data-[size=sm]/chips:[&>svg]:size-3 group-data-[size=default]/chips:size-5 group-data-[size=default]/chips:[&>svg]:size-3.5 group-data-[size=lg]/chips:size-6 group-data-[size=lg]/chips:[&>svg]:size-3.5"
           data-slot="combobox-chip-remove"
         >
           <XIcon className="pointer-events-none" />

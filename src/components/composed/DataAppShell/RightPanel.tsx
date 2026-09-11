@@ -255,6 +255,16 @@ export interface DataAppShellRightPanelProps extends Omit<React.ComponentProps<"
    * `overlay` — reuses the design-system `Sheet`: slides in over content with a scrim, no reflow.
    */
   variant?: DataAppShellRightPanelVariant;
+  /**
+   * Panel surface (SW-2592):
+   * - `raised` (default) — a `bg-card` surface distinct from the page ground, with
+   *   a tinted (`bg-accent`) header cap. Reads as a surface *on* the page, not a
+   *   column *of* it. `bg-card` is the only surface token that stays raised in both
+   *   light and dark (`bg-sidebar` collapses to the body colour in dark).
+   * - `flat` — the legacy look: `bg-background` body and a plain bordered header,
+   *   for a panel that should read as part of the page ground.
+   */
+  surface?: "raised" | "flat";
   /** Show the drag handle and allow resizing. Defaults to `true`. Docked only — the overlay has a fixed width. */
   resizable?: boolean;
   /** Width in px when nothing is persisted yet. */
@@ -314,6 +324,7 @@ function DataAppShellRightPanel({
   open,
   onOpenChange,
   variant = "docked",
+  surface = "raised",
   resizable = true,
   defaultWidth = 320,
   minWidth = 240,
@@ -364,6 +375,14 @@ function DataAppShellRightPanel({
 
   const accessibleName = typeof title === "string" ? title : "Side panel";
 
+  const raised = surface === "raised";
+  // `bg-card` is raised in both themes (`--surface-bright`); `bg-background` is
+  // the page ground (the legacy, indistinct look).
+  const surfaceClass = raised ? "bg-card" : "bg-background";
+  // Raised panels get a tinted header cap so the top of the panel brands it;
+  // flat panels keep the plain bordered header.
+  const headerClass = raised ? "border-b border-primary/15 bg-accent" : "border-b border-border";
+
   const fab = showTrigger ? (
     <DataAppShellRightPanelTrigger
       ref={fabRef}
@@ -378,7 +397,7 @@ function DataAppShellRightPanel({
   const header = (
     <div
       data-slot="data-app-shell-right-panel-header"
-      className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2"
+      className={cn("flex shrink-0 items-center gap-2 px-3 py-2", headerClass)}
     >
       {icon != null && <span className="flex shrink-0 items-center justify-center">{icon}</span>}
       {title != null && <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{title}</span>}
@@ -421,7 +440,9 @@ function DataAppShellRightPanel({
               closeFocusRef?.current?.focus({ preventScroll: true });
             }}
             style={{ width }}
-            className={cn("gap-0 data-[side=right]:sm:max-w-none", className)}
+            // Sheet defaults to bg-background — override so the overlay variant
+            // matches the docked variant's surface (SW-2592).
+            className={cn("gap-0 data-[side=right]:sm:max-w-none", surfaceClass, className)}
             {...props}
           >
             <SheetTitle className="sr-only">{accessibleName}</SheetTitle>
@@ -445,7 +466,8 @@ function DataAppShellRightPanel({
       aria-label={accessibleName}
       style={{ width }}
       className={cn(
-        "relative flex h-full shrink-0 flex-col overflow-hidden border-l border-border bg-background",
+        "relative flex h-full shrink-0 flex-col overflow-hidden border-l border-border",
+        surfaceClass,
         "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-right-4",
         !dragging && "motion-safe:transition-[width] motion-safe:duration-200",
         className,

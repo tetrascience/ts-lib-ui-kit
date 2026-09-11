@@ -18,7 +18,7 @@ const isTestRunner = () =>
   typeof import.meta !== "undefined" && !!(import.meta as Record<string, any>).env?.VITEST
 
 const meta: Meta<typeof SelectTrigger> = {
-  title: "Components/Select",
+  title: "Components/Forms & Inputs/Select",
   component: SelectTrigger,
   parameters: {
     layout: "centered",

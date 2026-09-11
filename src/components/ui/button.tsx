@@ -15,11 +15,11 @@ const buttonVariants = cva(
         default:
           "bg-primary text-primary-foreground hover:bg-[color-mix(in_oklab,var(--primary),var(--primary-foreground)_15%)] disabled:bg-muted disabled:text-muted-foreground",
         outline:
-          "border-border bg-transparent hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground dark:border-input disabled:border-border disabled:bg-muted/40 disabled:text-muted-foreground",
+          "border-border bg-transparent hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground dark:border-input aria-pressed:bg-selected aria-pressed:text-selected-foreground aria-pressed:shadow-(--shadow-inset-pressed) disabled:border-border disabled:bg-muted/40 disabled:text-muted-foreground",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklab,var(--secondary),var(--secondary-foreground)_15%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground disabled:bg-muted disabled:text-muted-foreground",
         ghost:
-          "hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground disabled:text-muted-foreground",
+          "hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground aria-pressed:bg-selected aria-pressed:text-selected-foreground aria-pressed:shadow-(--shadow-inset-pressed) disabled:text-muted-foreground",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:border-destructive/40 disabled:bg-muted disabled:text-muted-foreground",
         link: "text-primary underline-offset-4 hover:underline disabled:text-muted-foreground disabled:no-underline",

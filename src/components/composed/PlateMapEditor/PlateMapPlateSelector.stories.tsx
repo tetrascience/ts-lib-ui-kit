@@ -65,10 +65,31 @@ export default meta;
 
 type Story = StoryObj<typeof PlateMapPlateSelector>;
 
+/**
+ * Docs "Show code": stories render through the stateful harness above, so
+ * hand-written usage code is shown instead (same approach as DataAppShell).
+ */
+const selectorUsageCode = (variant: "dropdown" | "tabs") => `function PlateSelectorScreen() {
+  const [plates, setPlates] = useState<PlateMapPlateOption[]>(initialPlates)
+  const [activeId, setActiveId] = useState<string | undefined>(initialPlates[0]?.id)
+
+  return (
+    <PlateMapPlateSelector
+      plates={plates}
+      activePlateId={activeId}
+      variant="${variant}"
+      onPlateChange={setActiveId}
+      onAddPlate={handleAdd}
+      onRemovePlate={handleRemove}
+    />
+  )
+}`
+
 export const DropdownDefault: Story = {
   name: "Dropdown: select a plate",
   render: () => <StatefulSelector initialPlates={BASE_PLATES} variant="dropdown" />,
   parameters: {
+    docs: { source: { code: selectorUsageCode("dropdown"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5286" },
   },
   play: async ({ canvasElement, step }) => {
@@ -119,6 +140,7 @@ export const DropdownEmpty: Story = {
   name: "Dropdown: empty state add",
   render: () => <StatefulSelector initialPlates={[]} variant="dropdown" />,
   parameters: {
+    docs: { source: { code: selectorUsageCode("dropdown"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5287" },
   },
   play: async ({ canvasElement, step }) => {
@@ -159,6 +181,7 @@ export const TabsAddAndRemove: Story = {
   name: "Tabs: add + remove + select",
   render: () => <StatefulSelector initialPlates={BASE_PLATES} variant="tabs" />,
   parameters: {
+    docs: { source: { code: selectorUsageCode("tabs"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5289" },
   },
   play: async ({ canvasElement, step }) => {
@@ -204,6 +227,7 @@ export const TabsSinglePlateNoRemove: Story = {
     />
   ),
   parameters: {
+    docs: { source: { code: selectorUsageCode("tabs"), language: "tsx" } },
     zephyr: { testCaseId: "SW-T5290" },
   },
   play: async ({ canvasElement, step }) => {

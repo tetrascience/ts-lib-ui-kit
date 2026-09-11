@@ -6,7 +6,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "./hover-card"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof HoverCardContent> = {
-  title: "Components/Hover Card",
+  title: "Components/Overlays/Hover Card",
   component: HoverCardContent,
   parameters: {
     layout: "centered",

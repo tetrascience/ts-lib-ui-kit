@@ -1,3 +1,5 @@
+import type { Band, ReferenceLine } from "@/utils/chart-annotations";
+
 /**
  * A single data point in the scatter plot
  */
@@ -245,6 +247,18 @@ export interface ScatterPlotInteractiveProps {
    * Custom CSS class name
    */
   className?: string;
+
+  /**
+   * Opt-in threshold / reference lines (e.g. a hit cutoff) drawn across the
+   * plot. Rendered as themed Plotly shapes with optional labels.
+   */
+  referenceLines?: ReferenceLine[];
+
+  /**
+   * Opt-in shaded from–to bands (e.g. a pass/fail region or ±3σ envelope)
+   * drawn behind the points. Rendered as themed Plotly shapes.
+   */
+  bands?: Band[];
 }
 
 /**

@@ -575,7 +575,7 @@ export const PersistentRowActions: Story = {
     })
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5703" },
   },
 }
 

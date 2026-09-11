@@ -3,6 +3,7 @@ import "@/index.css";
 
 // Composed
 export * from "@/components/composed/AppShellSimple";
+export * from "@/components/composed/BuildInfoFooter";
 export * from "@/components/composed/FormPatterns";
 export * from "@/components/composed/StatCard";
 export * from "@/components/composed/DataAppShell";

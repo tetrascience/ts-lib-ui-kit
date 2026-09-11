@@ -131,3 +131,109 @@ export const Link: Story = {
     })
   },
 }
+
+// --- Disabled contrast (SW-2443) --------------------------------------------
+
+const DISABLED_VARIANTS = [
+  "default",
+  "secondary",
+  "destructive",
+  "outline",
+  "ghost",
+  "link",
+] as const
+
+type RGB = [number, number, number]
+
+// Resolve rgb()/oklch()/oklab() computed colors to straight RGBA.
+function parseColor(s: string): [number, number, number, number] {
+  const inner = s.slice(s.indexOf("(") + 1, s.lastIndexOf(")"))
+  const p = inner.split(/[,/\s]+/).filter(Boolean)
+  const n = (x: string) => parseFloat(x) * (x.includes("%") ? 0.01 : 1)
+  const a = p.length > 3 ? n(p[3]) : 1
+  if (s.startsWith("rgb")) return [+p[0], +p[1], +p[2], a]
+  const lin = (c: number) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055)
+  const toRGB = (L: number, aa: number, bb: number): RGB => {
+    const l = (L + 0.3963377774 * aa + 0.2158037573 * bb) ** 3
+    const m = (L - 0.1055613458 * aa - 0.0638541728 * bb) ** 3
+    const s2 = (L - 0.0894841775 * aa - 1.291485548 * bb) ** 3
+    return [
+      4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s2,
+      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s2,
+      -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s2,
+    ].map((c) => Math.min(255, Math.max(0, lin(c) * 255))) as RGB
+  }
+  if (s.startsWith("oklch")) {
+    const [L, C, H] = p.map(n)
+    return [...toRGB(L, C * Math.cos((H * Math.PI) / 180), C * Math.sin((H * Math.PI) / 180)), a]
+  }
+  if (s.startsWith("oklab")) {
+    const [L, aa, bb] = p.map(n)
+    return [...toRGB(L, aa, bb), a]
+  }
+  return [255, 255, 255, 1]
+}
+
+const over = (
+  [r, g, b, a]: [number, number, number, number],
+  bg: RGB
+): RGB => [r * a + bg[0] * (1 - a), g * a + bg[1] * (1 - a), b * a + bg[2] * (1 - a)]
+
+function lum([r, g, b]: RGB): number {
+  const f = (v: number) => {
+    const c = v / 255
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  }
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
+}
+
+function contrast(el: HTMLElement): number {
+  let node = el.parentElement
+  let page: RGB = [255, 255, 255]
+  while (node) {
+    const c = parseColor(getComputedStyle(node).backgroundColor)
+    if (c[3] > 0) {
+      page = [c[0], c[1], c[2]]
+      break
+    }
+    node = node.parentElement
+  }
+  const cs = getComputedStyle(el)
+  const fill = over(parseColor(cs.backgroundColor), page)
+  const text = over(parseColor(cs.color), fill)
+  const [hi, lo] = [lum(text), lum(fill)].sort((a, b) => b - a)
+  return (hi + 0.05) / (lo + 0.05)
+}
+
+/** Every variant, disabled, must read as clearly off yet stay legible (SW-2443). */
+export const DisabledContrast: Story = {
+  parameters: {
+    zephyr: { testCaseId: "SW-T5676" },
+  },
+  render: () => (
+    <div className="flex flex-wrap gap-3">
+      {DISABLED_VARIANTS.map((v) => (
+        <Button key={v} variant={v} disabled>
+          {v}
+        </Button>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("disabled no longer relies on a blanket opacity fade", async () => {
+      for (const v of DISABLED_VARIANTS) {
+        const btn = canvas.getByRole("button", { name: v })
+        expect(getComputedStyle(btn).opacity).toBe("1")
+      }
+    })
+
+    await step("every disabled variant meets AA text contrast (>= 4.5:1)", async () => {
+      for (const v of DISABLED_VARIANTS) {
+        const btn = canvas.getByRole("button", { name: v })
+        expect(contrast(btn)).toBeGreaterThanOrEqual(4.5)
+      }
+    })
+  },
+}

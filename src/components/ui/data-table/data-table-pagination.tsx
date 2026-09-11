@@ -22,6 +22,24 @@ interface DataTablePaginationProps {
 const DEFAULT_PAGE_SIZE_SMALL = 5
 const DEFAULT_PAGE_SIZE_MEDIUM = 10
 const DEFAULT_PAGE_SIZE_LARGE = 25
+const MAX_VISIBLE_PAGE_ITEMS = 7
+
+function getPageItems(pageCount: number, pageIndex: number): Array<number | "ellipsis"> {
+  if (pageCount <= MAX_VISIBLE_PAGE_ITEMS) {
+    return Array.from({ length: pageCount }, (_, index) => index)
+  }
+
+  const currentPage = pageIndex + 1
+  if (currentPage <= 4) {
+    return [0, 1, 2, 3, 4, "ellipsis", pageCount - 1]
+  }
+
+  if (currentPage >= pageCount - 3) {
+    return [0, "ellipsis", pageCount - 5, pageCount - 4, pageCount - 3, pageCount - 2, pageCount - 1]
+  }
+
+  return [0, "ellipsis", pageIndex - 1, pageIndex, pageIndex + 1, "ellipsis", pageCount - 1]
+}
 
 function DataTablePagination({
   pageSizeOptions = [DEFAULT_PAGE_SIZE_SMALL, DEFAULT_PAGE_SIZE_MEDIUM, DEFAULT_PAGE_SIZE_LARGE],
@@ -32,6 +50,7 @@ function DataTablePagination({
   const pageCount = table.getPageCount()
   const { pageIndex, pageSize } = table.getState().pagination
   const totalRows = table.getFilteredRowModel().rows.length
+  const pageItems = getPageItems(pageCount, pageIndex)
 
   if (totalRows === 0) return null
   if (enableGrouping && grouping) return null
@@ -43,11 +62,11 @@ function DataTablePagination({
     <div
       data-slot="data-table-pagination"
       className={cn(
-        "flex items-center justify-between gap-4 text-sm text-muted-foreground",
+        "flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground",
         className,
       )}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         <span className="whitespace-nowrap">Rows per page:</span>
         <Select
           value={String(pageSize)}
@@ -70,7 +89,7 @@ function DataTablePagination({
       </div>
 
       {pageCount > 1 && (
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           <Button
             variant="ghost"
             size="icon-sm"
@@ -81,18 +100,24 @@ function DataTablePagination({
             <ChevronLeftIcon />
           </Button>
 
-          {Array.from({ length: pageCount }, (_, i) => (
-            <Button
-              key={i}
-              variant={i === pageIndex ? "default" : "link"}
-              size="icon-xs"
-              onClick={() => table.setPageIndex(i)}
-              aria-label={`Page ${i + 1}`}
-              aria-current={i === pageIndex ? "page" : undefined}
-            >
-              {i + 1}
-            </Button>
-          ))}
+          {pageItems.map((item, index) =>
+            item === "ellipsis" ? (
+              <span key={`ellipsis-${index}`} className="px-1" aria-hidden="true">
+                ...
+              </span>
+            ) : (
+              <Button
+                key={item}
+                variant={item === pageIndex ? "default" : "link"}
+                size="icon-xs"
+                onClick={() => table.setPageIndex(item)}
+                aria-label={`Page ${item + 1}`}
+                aria-current={item === pageIndex ? "page" : undefined}
+              >
+                {item + 1}
+              </Button>
+            ),
+          )}
 
           <Button
             variant="ghost"

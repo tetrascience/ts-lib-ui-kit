@@ -474,6 +474,14 @@ describe("DataTable enablePagination", () => {
     score: i * 10,
   }))
 
+  // 100 rows at a page size of 5 => 20 pages, enough to exercise the
+  // bounded page-number window (MAX_VISIBLE_PAGE_ITEMS is 7).
+  const manyPageRows = Array.from({ length: 100 }, (_, i) => ({
+    id: i,
+    name: `Person ${i}`,
+    score: i * 10,
+  }))
+
   it("renders data-table-pagination when enablePagination with enough rows", () => {
     render(
       <DataTable columns={personColumns} data={manyRows} enablePagination defaultPageSize={5}>
@@ -481,6 +489,71 @@ describe("DataTable enablePagination", () => {
       </DataTable>,
     )
     expect(container.querySelector("[data-slot='data-table-pagination']")).toBeTruthy()
+  })
+
+  it("collapses distant pages when there are many pages", () => {
+    render(
+      <DataTable columns={personColumns} data={manyPageRows} enablePagination defaultPageSize={5}>
+        <DataTablePagination />
+      </DataTable>,
+    )
+
+    expect(container.querySelector("button[aria-label='Page 20']")).toBeTruthy()
+    expect(container.querySelector("button[aria-label='Page 6']")).toBeNull()
+  })
+
+  it("windows page numbers around the current page in the middle of the range", () => {
+    render(
+      <DataTable columns={personColumns} data={manyPageRows} enablePagination defaultPageSize={5}>
+        <DataTablePagination />
+      </DataTable>,
+    )
+
+    const page5Btn = container.querySelector("button[aria-label='Page 5']") as HTMLButtonElement
+    flushSync(() => page5Btn.click())
+
+    // First, last, and the pages adjacent to the current one stay reachable
+    for (const label of ["Page 1", "Page 4", "Page 5", "Page 6", "Page 20"]) {
+      expect(container.querySelector(`button[aria-label='${label}']`)).toBeTruthy()
+    }
+    // Everything else collapses behind an ellipsis on both sides
+    expect(container.querySelector("button[aria-label='Page 2']")).toBeNull()
+    expect(container.querySelector("button[aria-label='Page 10']")).toBeNull()
+    expect(container.querySelectorAll("[data-slot='data-table-pagination'] span[aria-hidden='true']")).toHaveLength(2)
+  })
+
+  it("shows a trailing run of pages when the current page is near the end", () => {
+    render(
+      <DataTable columns={personColumns} data={manyPageRows} enablePagination defaultPageSize={5}>
+        <DataTablePagination />
+      </DataTable>,
+    )
+
+    const lastPageBtn = container.querySelector("button[aria-label='Page 20']") as HTMLButtonElement
+    flushSync(() => lastPageBtn.click())
+
+    for (const label of ["Page 1", "Page 16", "Page 17", "Page 18", "Page 19", "Page 20"]) {
+      expect(container.querySelector(`button[aria-label='${label}']`)).toBeTruthy()
+    }
+    expect(container.querySelector("button[aria-label='Page 15']")).toBeNull()
+    // Only the leading gap needs an ellipsis
+    expect(container.querySelectorAll("[data-slot='data-table-pagination'] span[aria-hidden='true']")).toHaveLength(1)
+    expect(container.querySelector("button[aria-label='Page 20']")?.getAttribute("aria-current")).toBe("page")
+  })
+
+  it("renders every page number when the count fits the visible window", () => {
+    const sevenPages = Array.from({ length: 35 }, (_, i) => ({ id: i, name: `Person ${i}`, score: i * 10 }))
+
+    render(
+      <DataTable columns={personColumns} data={sevenPages} enablePagination defaultPageSize={5}>
+        <DataTablePagination />
+      </DataTable>,
+    )
+
+    for (let page = 1; page <= 7; page++) {
+      expect(container.querySelector(`button[aria-label='Page ${page}']`)).toBeTruthy()
+    }
+    expect(container.querySelectorAll("[data-slot='data-table-pagination'] span[aria-hidden='true']")).toHaveLength(0)
   })
 
   it("pages through data — only first page shown", () => {

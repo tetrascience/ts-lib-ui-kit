@@ -2116,7 +2116,7 @@ export const SlotsAndRegionStyling: Story = {
           wellShape="circle"
           hideManifest
           formWidth={460}
-          plateCardClassName="bg-transparent ring-0 shadow-none"
+          classNames={{ plateCard: "bg-transparent ring-0 shadow-none" }}
           plateBanner={
             <div className="rounded-md bg-primary/10 px-3 py-2 text-xs text-primary">
               Plate-scoped banner — renders above the toolbar, inside the plate card only.
@@ -2263,8 +2263,7 @@ export const MinimalRequiredProps: Story = {
           fields={FIELDS}
           tableColumns={COLUMNS}
           manifestTitle="Wells"
-          manifestGroupable
-          manifestDefaultGroupBy="role"
+          manifest={{ groupable: true, defaultGroupBy: "role" }}
         />
       );
     }
@@ -2731,7 +2730,7 @@ export const FormPlacementBottom: Story = {
 };
 
 export const CardFooterAndPlateLegend: Story = {
-  name: 'Slots: footerPlacement="plate-card" + legendPlacement="plate"',
+  name: 'Slots: plateFooter (card footer) + legendPlacement="plate"',
   render: () => {
     function Demo() {
       const [values, setValues] = React.useState<Map<WellId, DemoWell>>(seedPlate);
@@ -2759,9 +2758,9 @@ export const CardFooterAndPlateLegend: Story = {
               ]}
             />
           }
-          footerPlacement="plate-card"
-          footer={
+          plateFooter={
             <>
+              <span className="mr-auto text-xs text-muted-foreground">Plate 1 of 1</span>
               <Button size="sm" variant="outline">
                 Back
               </Button>
@@ -2779,7 +2778,7 @@ export const CardFooterAndPlateLegend: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
-    await step("Footer renders as a real CardFooter inside the plate card", async () => {
+    await step("plateFooter renders as a real CardFooter inside the plate card", async () => {
       const cardFooter = canvasElement.querySelector('[data-slot="card-footer"]') as HTMLElement;
       expect(cardFooter).not.toBeNull();
       expect(within(cardFooter).getByRole("button", { name: "Save plate" })).toBeInTheDocument();
@@ -2787,11 +2786,9 @@ export const CardFooterAndPlateLegend: Story = {
       expect(plate.contains(cardFooter)).toBe(true);
     });
 
-    await step("Footer is no longer a standalone row at the editor bottom", async () => {
-      const editor = canvasElement.querySelector('[data-slot="plate-map-editor"]') as HTMLElement;
-      const saveButtons = canvas.getAllByRole("button", { name: "Save plate" });
-      expect(saveButtons).toHaveLength(1);
-      expect(editor.lastElementChild?.getAttribute("data-slot")).not.toBe(null);
+    await step("It is the only bottom slot — no duplicate standalone row", async () => {
+      expect(canvas.getAllByRole("button", { name: "Save plate" })).toHaveLength(1);
+      expect(canvasElement.querySelectorAll('[data-slot="card-footer"]')).toHaveLength(1);
     });
 
     await step("Legend moves into the plate card, not the form", async () => {

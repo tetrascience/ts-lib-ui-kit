@@ -292,20 +292,23 @@ stamping — you only take over layout. Do not re-implement staged edits by hand
 - **Layout** — `formPlacement` (`start` / `end` / `top` / `bottom`), `stackAt`,
   `formWidth`, `hideForm`, `hideManifest`.
 - **Slots** — `banner` (whole editor), `plateBanner` (plate card only),
-  `plateToolbar` (above grid), `plateFooter` (below grid), `footer` +
-  `footerPlacement`, `legend` + `legendPlacement`, `formExtras`, `formSlot`,
-  `manifestSlot`.
+  `plateToolbar` (above grid), `plateFooter` (the plate card's footer),
+  `footer` (editor-wide action row), `legend` + `legendPlacement`,
+  `formExtras`, `formSlot`, `manifestSlot`.
 - **Edit state** — `staged` / `onStagedChange` for a controlled staged record,
   `mergeOnApply` for custom merge semantics, `applyScope="all-plates"` to write
   across every plate at once.
+- **Manifest** — one `manifest` object: `{ filterable, filterColumns, groupable,
+  defaultGroupBy, pageSize, pageSizeOptions, enableFillDown }`. Structural bits
+  stay top-level: `hideManifest`, `manifestTitle`, `manifestSlot`.
 - **Labels** — one `labels` object covers every string the editor and its
   manifest render. `plateTitle` / `manifestTitle` and the import/export menu
   labels are separate props (they take `ReactNode`, not plain text).
-- **Styling** — `className` / `style` on the root, `layoutClassName`, and
-  per-region `formCardClassName` / `plateCardClassName` /
-  `manifestCardClassName` plus `formClassName` / `gridClassName` /
-  `manifestClassName`. Each card also carries
-  `data-plate-map-region="form|plate|manifest"` for CSS targeting.
+- **Styling** — `className` / `style` on the root, plus one `classNames` map for
+  the regions: `{ layout, formCard, plateCard, manifestCard, form, grid,
+  manifest }`. Each card also carries
+  `data-plate-map-region="form|plate|manifest"`, so plain CSS can target the
+  same regions without threading props.
 
 ##### Rendering the form outside the editor
 
@@ -349,9 +352,11 @@ Everything below is additive; existing code keeps working unchanged.
   replace that with `formPlacement` / `stackAt` / `formWidth` and the slots, or
   with `usePlateMapEditorState` if you still need custom structure. Hand-rolled
   staged/apply logic should be deleted in favour of the hook.
-- If you worked around the hardcoded 360px form column with `formCardClassName`
-  width utilities, switch to `formWidth` — it is the supported path and applies
-  only at and above `stackAt`.
+- If you worked around the hardcoded 360px form column with a width utility,
+  switch to `formWidth` — it is the supported path and applies only at and above
+  `stackAt`.
+- `manifestFilterable` and `manifestGroupable` still work but are deprecated in
+  favour of `manifest={{ filterable, groupable }}`.
 
 ### Charts (`charts/`)
 

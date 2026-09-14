@@ -18,9 +18,7 @@ const LABEL_TEXT_INSET = 9;
 const LABEL_BASELINE_OFFSET = 5;
 const WELL_INSET = 1;
 const STROKE_DEFAULT = 4;
-const STROKE_SELECTED = 3;
-/** Background-coloured ring drawn under the selection stroke to separate it from the well fill. */
-const STROKE_SELECTED_INNER = 6;
+const STROKE_SELECTED = 4;
 const STROKE_HIGHLIGHT = 3;
 const STROKE_FLASH = 5;
 const FLASH_DURATION_MS = 650;
@@ -372,32 +370,14 @@ function buildWellOverlay<T extends WellRecord>(
 
   return (
     <g key={`overlay-${id}`}>
-      {isSelected ? (
-        <>
-          {/* Background-coloured inner ring first: it separates the bright
-              selection stroke from the well's own fill, so selection stays
-              legible on a dark blue well as well as on an empty one. */}
-          {renderShape(
-            {
-              fill: "none",
-              stroke: "var(--color-background)",
-              strokeWidth: STROKE_SELECTED_INNER,
-            },
-            undefined,
-            `${id}-selection-inner`,
-          )}
-          {renderShape(
-            {
-              fill: "none",
-              stroke: selectedBorderColor,
-              strokeWidth: STROKE_SELECTED,
-              "data-well-selection": id,
-            },
-            undefined,
-            `${id}-selection`,
-          )}
-        </>
-      ) : null}
+      {isSelected
+        ? renderShape({
+            fill: "none",
+            stroke: selectedBorderColor,
+            strokeWidth: STROKE_SELECTED,
+            "data-well-selection": id,
+          })
+        : null}
       {isHighlighted
         ? renderShape({
             fill: "none",
@@ -458,11 +438,14 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   maxCellSize,
   borderColor = PLATE_MAP_CELL_BORDER,
   // Every blue in the palette shares one hue family (265-271), and wells are
-  // routinely filled from that same ramp (`--chart-1` is TS Blue 500, #2F45B5).
-  // So no swatch separates a selected blue well on hue alone — the separation
-  // has to come from the treatment. This is the brightest on-brand blue
-  // (#6C8DDB, L 0.65 vs the well's 0.45), drawn *outside* a background-coloured
-  // inner ring so the selection reads against any fill the consumer chooses.
+  // routinely filled from that same ramp (`--chart-1` is TS Blue 500, #2F45B5),
+  // so the selection separates on lightness rather than hue: #6C8DDB at L 0.65
+  // against the well's 0.45.
+  //
+  // An earlier attempt drew a background-coloured ring underneath for extra
+  // separation. SVG strokes centre on the path, so a wider under-stroke bleeds
+  // outside the selection ring as a white halo — which made adjacent wells look
+  // like they were floating apart rather than sitting on a plate. One stroke only.
   selectedBorderColor = "var(--color-chart-seq-blue-06)",
   selectedFillColor = "var(--color-chart-seq-blue-06)",
   selectedFillOpacity = 0.26,

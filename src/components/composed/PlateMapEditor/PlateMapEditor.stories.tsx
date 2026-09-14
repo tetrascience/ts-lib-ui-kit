@@ -3159,19 +3159,19 @@ export const KeyboardSelectionAndLiveFeedback: Story = {
       });
     });
 
-    await step("Selection reads as a bright ring over a background-coloured ring", async () => {
+    await step("Selection reads as a single bright ring, no halo", async () => {
       const ring = canvasElement.querySelector('[data-well-selection="A01"]') as SVGElement;
       expect(ring).not.toBeNull();
       // The bright selection blue, not --primary/--chart-1 (both #2F45B5, which
       // is also the default well fill and so invisible as a selection).
       expect(ring.getAttribute("stroke")).toBe("var(--color-chart-seq-blue-06)");
 
-      // A background-coloured ring sits under it so the selection separates
-      // from the well's own fill whatever colour the consumer chose.
-      const rings = [...canvasElement.querySelectorAll('[role="row"] ~ g > *, g > *')].filter(
+      // Exactly one stroke: a wider background-coloured ring underneath would
+      // bleed outside it as a halo and make adjacent wells look detached.
+      const halos = [...canvasElement.querySelectorAll("g > *")].filter(
         (el) => el.getAttribute("stroke") === "var(--color-background)",
       );
-      expect(rings.length).toBeGreaterThan(0);
+      expect(halos.length).toBe(0);
     });
 
     await step("Escape clears the selection", async () => {

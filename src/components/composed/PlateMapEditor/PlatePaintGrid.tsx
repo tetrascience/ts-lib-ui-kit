@@ -19,6 +19,10 @@ const LABEL_BASELINE_OFFSET = 5;
 const WELL_INSET = 1;
 const STROKE_DEFAULT = 4;
 const STROKE_SELECTED = 4;
+/** Gap between the quick-paint strip and the selection edge it points at. */
+const QUICK_PAINT_TAIL = 8;
+/** Keeps the tail from reaching the strip's rounded corners when clamped. */
+const QUICK_PAINT_TAIL_INSET = 10;
 const STROKE_HIGHLIGHT = 3;
 const STROKE_FLASH = 5;
 const FLASH_DURATION_MS = 650;
@@ -239,6 +243,126 @@ function buildWellCell<T extends WellRecord>(
       data-well={id}
       data-selected={isSelected ? "true" : undefined}
     />
+  );
+}
+
+type GridKeyAction =
+  | { kind: "move"; dr: number; dc: number; extend: boolean }
+  | { kind: "toggle" }
+  | { kind: "clear" }
+  | { kind: "selectAll" };
+
+/** Maps a keypress on the grid to an action, or null when it is not ours. */
+function resolveGridKeyAction(e: React.KeyboardEvent, columns: number): GridKeyAction | null {
+  const extend = e.shiftKey;
+  switch (e.key) {
+    case "ArrowUp":
+      return { kind: "move", dr: -1, dc: 0, extend };
+    case "ArrowDown":
+      return { kind: "move", dr: 1, dc: 0, extend };
+    case "ArrowLeft":
+      return { kind: "move", dr: 0, dc: -1, extend };
+    case "ArrowRight":
+      return { kind: "move", dr: 0, dc: 1, extend };
+    case "Home":
+      return { kind: "move", dr: 0, dc: -columns, extend };
+    case "End":
+      return { kind: "move", dr: 0, dc: columns, extend };
+    case " ":
+    case "Enter":
+      return { kind: "toggle" };
+    case "Escape":
+      return { kind: "clear" };
+    case "a":
+    case "A":
+      return e.metaKey || e.ctrlKey ? { kind: "selectAll" } : null;
+    default:
+      return null;
+  }
+}
+
+interface QuickPaintBounds {
+  anchorX: number;
+  topY: number;
+  bottomY: number;
+}
+
+interface QuickPaintPlacement {
+  left: number;
+  top: number;
+  below: boolean;
+  tailOffset: number;
+  ready: boolean;
+}
+
+/**
+ * Places the quick-paint strip against the selection: above when it fits,
+ * flipped below when the selection is too near the top, and clamped inside the
+ * plate horizontally with the tail pointing back at the anchor rather than at
+ * the card's centre.
+ */
+function resolveQuickPaintPlacement(
+  bounds: QuickPaintBounds | null,
+  size: { w: number; h: number } | undefined,
+  plateWidth: number,
+): QuickPaintPlacement | null {
+  if (!bounds) return null;
+
+  const { w, h } = size ?? { w: 0, h: 0 };
+  const needed = h + QUICK_PAINT_TAIL;
+  const below = bounds.topY < needed;
+  const top = below ? bounds.bottomY + QUICK_PAINT_TAIL : bounds.topY - needed;
+
+  // Before the first measurement there is nothing to clamp against; the strip
+  // is rendered hidden for that paint, so the provisional values never show.
+  if (w === 0) {
+    return { left: bounds.anchorX, top, below, tailOffset: 0, ready: false };
+  }
+
+  const left = Math.min(Math.max(bounds.anchorX - w / 2, 0), Math.max(0, plateWidth - w));
+  const tailOffset = Math.min(Math.max(bounds.anchorX - left, QUICK_PAINT_TAIL_INSET), Math.max(QUICK_PAINT_TAIL_INSET, w - QUICK_PAINT_TAIL_INSET));
+  return { left, top, below, tailOffset, ready: true };
+}
+
+function QuickPaintLayer({
+  placement,
+  children,
+  layerRef,
+}: {
+  placement: QuickPaintPlacement | null;
+  children: React.ReactNode;
+  layerRef: React.Ref<HTMLDivElement>;
+}) {
+  if (!placement) return null;
+
+  return (
+    <div
+      ref={layerRef}
+      data-slot="plate-quick-paint-anchor"
+      data-placement={placement.below ? "below" : "above"}
+      className="pointer-events-none absolute z-10 w-max"
+      style={{
+        left: placement.left,
+        top: placement.top,
+        // Hidden for the first paint only, while the strip is measured, so it
+        // never flashes in the wrong place.
+        visibility: placement.ready ? undefined : "hidden",
+      }}
+    >
+      <div className="pointer-events-auto relative">
+        {children}
+        {/* Tail pointing back at the leftmost selected cell. */}
+        <span
+          aria-hidden
+          data-slot="plate-quick-paint-tail"
+          className={cn(
+            "absolute size-2 rotate-45 bg-popover",
+            placement.below ? "-top-1 border-t border-l" : "-bottom-1 border-r border-b",
+          )}
+          style={{ left: placement.tailOffset - 4 }}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -591,47 +715,16 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   }, [dims.columns, focusedCell, onSelectionChange, selection]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    const extend = e.shiftKey;
-    switch (e.key) {
-      case "ArrowUp":
-        e.preventDefault();
-        moveFocus(-1, 0, extend);
-        return;
-      case "ArrowDown":
-        e.preventDefault();
-        moveFocus(1, 0, extend);
-        return;
-      case "ArrowLeft":
-        e.preventDefault();
-        moveFocus(0, -1, extend);
-        return;
-      case "ArrowRight":
-        e.preventDefault();
-        moveFocus(0, 1, extend);
-        return;
-      case "Home":
-        e.preventDefault();
-        moveFocus(0, -dims.columns, extend);
-        return;
-      case "End":
-        e.preventDefault();
-        moveFocus(0, dims.columns, extend);
-        return;
-      case " ":
-      case "Enter":
-        e.preventDefault();
-        toggleFocusedCell();
-        return;
-      case "Escape":
-        e.preventDefault();
-        keyboardAnchor.current = null;
-        onSelectionChange(new Set());
-        return;
-      default:
-        if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
-          e.preventDefault();
-          onSelectionChange(new Set(allPositions(dims)));
-        }
+    const action = resolveGridKeyAction(e, dims.columns);
+    if (!action) return;
+    e.preventDefault();
+
+    if (action.kind === "move") moveFocus(action.dr, action.dc, action.extend);
+    else if (action.kind === "toggle") toggleFocusedCell();
+    else if (action.kind === "selectAll") onSelectionChange(new Set(allPositions(dims)));
+    else {
+      keyboardAnchor.current = null;
+      onSelectionChange(new Set());
     }
   };
 
@@ -683,25 +776,52 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   const isScrollable = containerWidth !== undefined && frameOuterWidth > containerWidth + 1;
   const scrollRegionLabel = `${dims.rows} by ${dims.columns} plate map, horizontally scrollable.`;
   // Anchor for the quick-paint strip: horizontally over the LEFTMOST selected
-  // column, vertically on the selection's top edge. `top` is clamped to 0 so a
-  // selection in row A puts the strip over the column labels rather than having
-  // it clipped by the scroll container.
-  const quickPaintAnchor = React.useMemo(() => {
+  // column, vertically on the selection's top edge (with the bottom edge kept
+  // for the flip-below case).
+  const quickPaintBounds = React.useMemo(() => {
     if (!quickPaint || selection.size === 0) return null;
     let minRow = Infinity;
+    let maxRow = -Infinity;
     let minCol = Infinity;
     for (const wellId of selection) {
       const cell = parsePos(wellId, dims);
       if (!cell) continue;
       if (cell.row < minRow) minRow = cell.row;
+      if (cell.row > maxRow) maxRow = cell.row;
       if (cell.col < minCol) minCol = cell.col;
     }
     if (!Number.isFinite(minRow) || !Number.isFinite(minCol)) return null;
     return {
-      left: LABEL_PAD + minCol * resolvedCellSize + resolvedCellSize / 2,
-      top: Math.max(0, LABEL_PAD + minRow * resolvedCellSize),
+      anchorX: LABEL_PAD + minCol * resolvedCellSize + resolvedCellSize / 2,
+      topY: LABEL_PAD + minRow * resolvedCellSize,
+      bottomY: LABEL_PAD + (maxRow + 1) * resolvedCellSize,
     };
   }, [dims, quickPaint, selection, resolvedCellSize]);
+
+  // Measured so the strip can flip below when there is no room above, and be
+  // clamped horizontally at the plate edges — a fixed estimate clips on the
+  // top-left selection, which is exactly where users start.
+  const quickPaintRef = React.useRef<HTMLDivElement>(null);
+  const [quickPaintSize, setQuickPaintSize] = React.useState<{ w: number; h: number }>();
+
+  React.useLayoutEffect(() => {
+    const node = quickPaintRef.current;
+    if (!node) {
+      setQuickPaintSize(undefined);
+      return;
+    }
+    const measure = () => setQuickPaintSize({ w: node.offsetWidth, h: node.offsetHeight });
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [quickPaint]);
+
+  const quickPaintPlacement = React.useMemo(
+    () => resolveQuickPaintPlacement(quickPaintBounds, quickPaintSize, width),
+    [quickPaintBounds, quickPaintSize, width],
+  );
 
   const gridLabel =
     `${dims.rows} row by ${dims.columns} column plate map. ` +
@@ -851,20 +971,9 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
           {gridLines}
           {wellOverlays}
         </svg>
-        {quickPaintAnchor ? (
-          <div
-            data-slot="plate-quick-paint-anchor"
-            className="pointer-events-none absolute z-10 flex -translate-x-1/2 -translate-y-full flex-col items-start pb-1"
-            style={{ left: quickPaintAnchor.left, top: quickPaintAnchor.top }}
-          >
-            <div className="pointer-events-auto">{quickPaint}</div>
-            {/* Tail pointing down at the leftmost selected cell. */}
-            <span
-              aria-hidden
-              className="-mt-px ml-[calc(50%-0.25rem)] size-2 rotate-45 border-r border-b bg-popover"
-            />
-          </div>
-        ) : null}
+        <QuickPaintLayer placement={quickPaintPlacement} layerRef={quickPaintRef}>
+          {quickPaint}
+        </QuickPaintLayer>
         {wrapWell ? (
           <div
             className="pointer-events-none absolute"

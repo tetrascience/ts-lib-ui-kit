@@ -3259,28 +3259,56 @@ export const QuickPaintOnSelection: Story = {
       });
     });
 
-    await step("The applied value reads back as pressed", async () => {
-      await waitFor(() => {
-        expect(within(strip() as HTMLElement).getByRole("button", { name: "Control" })).toHaveAttribute(
-          "aria-pressed",
-          "true",
-        );
-      });
+    await step("Hides after a pick, so it is out of the way once used", async () => {
+      await waitFor(() => expect(strip()).toBeNull());
     });
 
-    await step("The strip is anchored above the leftmost selected column", async () => {
-      const anchor = canvasElement.querySelector('[data-slot="plate-quick-paint-anchor"]') as HTMLElement;
-      const a01 = canvasElement.querySelector('[data-well="A01"]') as SVGElement;
-      expect(anchor).not.toBeNull();
-      // Bottom of the strip sits at or above the top of the first selected row.
-      expect(anchor.getBoundingClientRect().bottom).toBeLessThanOrEqual(
-        a01.getBoundingClientRect().bottom + 1,
+    await step("Comes back on the next selection, showing the applied value as pressed", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Deselect all" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      await waitFor(() => expect(strip()).not.toBeNull());
+      expect(within(strip() as HTMLElement).getByRole("button", { name: "Control" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
       );
     });
 
-    await step("Disappears again when the selection is cleared", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Deselect all" }));
+    await step("Any pointerdown that is not a well cell dismisses it", async () => {
+      // Inside the plate card but not on a cell — the label gutter.
+      const gridEl = canvasElement.querySelector('[data-slot="plate-paint-grid"]') as HTMLElement;
+      fireEvent.pointerDown(gridEl, { bubbles: true, pointerId: 1 });
       await waitFor(() => expect(strip()).toBeNull());
+    });
+
+    await step("And so does a click well away from the editor", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Deselect all" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      await waitFor(() => expect(strip()).not.toBeNull());
+      fireEvent.pointerDown(canvasElement.ownerDocument.body, { bubbles: true, pointerId: 1 });
+      await waitFor(() => expect(strip()).toBeNull());
+    });
+
+    await step("Wraps at six columns", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Deselect all" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      await waitFor(() => expect(strip()).not.toBeNull());
+      const grid = (await waitFor(() => strip() as HTMLElement)).querySelector("div.grid") as HTMLElement;
+      const columns = grid.style.gridTemplateColumns.split(" ").length;
+      expect(columns).toBeLessThanOrEqual(6);
+    });
+
+    await step("Flips below when the selection starts at the top row", async () => {
+      const anchor = canvasElement.querySelector('[data-slot="plate-quick-paint-anchor"]') as HTMLElement;
+      // Row A is selected, so there is no room above — it must flip.
+      expect(anchor.getAttribute("data-placement")).toBe("below");
+    });
+
+    await step("Stays inside the plate horizontally", async () => {
+      const anchor = canvasElement.querySelector('[data-slot="plate-quick-paint-anchor"]') as HTMLElement;
+      const gridEl = canvasElement.querySelector('[data-slot="plate-paint-grid"]') as HTMLElement;
+      expect(anchor.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+        gridEl.getBoundingClientRect().left - 1,
+      );
     });
   },
 };

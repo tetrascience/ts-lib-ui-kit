@@ -635,8 +635,31 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
     tableColumns,
   ]);
 
+  // The strip is dismissed once it has been used, and restored whenever the
+  // selection changes — a new drag, or clicking the next cell. Painting changes
+  // `values`, not `selection`, so a pick alone leaves it dismissed.
+  const [quickPaintDismissed, setQuickPaintDismissed] = React.useState(false);
+  React.useEffect(() => setQuickPaintDismissed(false), [selection]);
+
+  // Anything that is not a well cell or the strip itself dismisses it — the
+  // label gutter, the toolbar, elsewhere on the page. One rule rather than a
+  // list of places, so there is no gap where a click leaves it stranded.
+  // Clicks on a cell are excluded because they change the selection, which
+  // restores the strip through the effect above.
+  React.useEffect(() => {
+    if (!quickPaintField) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (target?.closest?.("[data-well]")) return;
+      if (target?.closest?.('[data-slot="well-quick-paint"]')) return;
+      setQuickPaintDismissed(true);
+    };
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+  }, [quickPaintField]);
+
   const quickPaint = React.useMemo(() => {
-    if (!quickPaintField || selection.size === 0) return;
+    if (!quickPaintField || selection.size === 0 || quickPaintDismissed) return;
     const field = fields.find((f) => f.key === quickPaintField);
     if (field?.kind !== "select" || !field.options?.length) return;
 
@@ -660,10 +683,13 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
         options={field.options}
         activeValue={shared}
         selectionSize={selection.size}
-        onPick={(value) => state.applyToSelection({ [quickPaintField]: value } as Partial<T>)}
+        onPick={(value) => {
+          state.applyToSelection({ [quickPaintField]: value } as Partial<T>);
+          setQuickPaintDismissed(true);
+        }}
       />
     );
-  }, [fields, quickPaintField, selection, state]);
+  }, [fields, quickPaintDismissed, quickPaintField, selection, state]);
 
   const showPlateSelector = shouldShowPlateSelector(state.availablePlates.length, onAddPlate);
 

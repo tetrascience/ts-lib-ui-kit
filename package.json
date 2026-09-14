@@ -212,7 +212,12 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
-    "typecheck:e2e": "tsc --noEmit -p tsconfig.e2e.json"
+    "typecheck:e2e": "tsc --noEmit -p tsconfig.e2e.json",
+    "jira-zephyr:audit": "tsx scripts/jira-zephyr/audit/audit.ts",
+    "jira-zephyr:apply": "tsx scripts/jira-zephyr/apply/apply.ts",
+    "jira-zephyr:approve": "tsx scripts/jira-zephyr/approve.ts",
+    "jira-zephyr:report": "tsx scripts/jira-zephyr/report.ts",
+    "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": ">=3.0.0 <4.0.0",

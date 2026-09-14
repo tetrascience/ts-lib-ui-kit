@@ -63,3 +63,8 @@ dependency-licenses.csv
 !*.example
 !*.sample
 !*.template
+
+# Jira ↔ Zephyr audit/apply artifacts (scripts/jira-zephyr). They carry Jira
+# summaries and internal ticket state, and this repository is public, so they
+# stay local: review them in place, then run the apply script against them.
+artifacts/

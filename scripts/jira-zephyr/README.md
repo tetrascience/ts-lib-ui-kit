@@ -1,0 +1,252 @@
+# Jira ↔ Zephyr coverage-link audit & apply
+
+Two independent, read-mostly scripts that reconcile **which Zephyr Scale test
+cases are linked to which Jira stories**, using this repository as the source of
+truth for what _should_ be linked.
+
+```
+Jira + repo + Zephyr  →  audit  →  artifacts/zephyr-audit-*.json  →  human review / approval  →  apply  →  Zephyr COVERAGE links
+```
+
+- `yarn jira-zephyr:audit` is **read-only**. It never writes to Jira or Zephyr;
+  its Zephyr client throws on any non-GET call.
+- `yarn jira-zephyr:apply` executes **only** changes already recorded and approved
+  in an audit artifact. It is a dry run unless `--execute` is passed.
+
+> **Audit determines what should happen. Apply only executes an approved audit.**
+
+## The mapping model this tool relies on
+
+Found by inspecting the repo, its CI, the shared `ts-lib-zephyr-nodejs` library
+and the live Jira/Zephyr configuration (September 2026). Nothing here is a new
+convention — the tool only reads what already exists.
+
+| Question                                   | Answer                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| How are Jira keys represented?             | `SW-1234` in commit subjects (`feat: SW-1234 …`, enforced by the PR-title check), in branch names (`SW-1234-…`, `feat/SW-1234-…` — visible in merge-commit subjects), and occasionally in story-source comments (`// SW-2528 — …` above an export, `Regression coverage for SW-1474` in a story's docs description).                                                                                       |
+| How are Zephyr IDs represented?            | `SW-T1234` test case keys, **only** in `parameters.zephyr.testCaseId` on each CSF3 story export (`src/**/*.stories.tsx`). One ID per story; comma-separated lists are accepted. Legacy `[SW-T1,SW-T2] Story name` naming is recognised by the old scripts but no longer used.                                                                                                                              |
+| Where does Jira → Zephyr live in Zephyr?   | As **COVERAGE issue links** on the test case (`GET /issuelinks/{issueKey}/testcases`, `POST /testcases/{key}/links/issues` with the numeric Jira `issueId`). Jira itself holds nothing: no remote links, no custom field, no issue-link type (verified on SW-2540).                                                                                                                                        |
+| Where does Jira → Zephyr live in the repo? | Nowhere directly. The repo maps **indirectly**: Jira key → the commit(s) keyed to it → the story exports those commits introduced → their `testCaseId`s. The ID line itself is written later by the sync workflow's keyless `chore: add Zephyr test case IDs` commit (or lands inside an unrelated squash), so the reliable anchor is the **blame of the `export const … : Story` line**, not the ID line. |
+| Cardinality                                | One Jira story → many stories → many Zephyr IDs (SW-2540 "Tree A" → 7 IDs). Bug fixes usually add one regression story → one ID (SW-2528). Cross-cutting tickets (SW-2305 Storybook regroup, SW-2139 a11y sweep) touch every story file without owning any story and must **not** be mapped — the blame rule handles this.                                                                                 |
+| Epic membership                            | Company-managed project: children carry `parent` **and** the legacy Epic Link; `parent = SW-2301` and `"Epic Link" = SW-2301` both return the same 68 issues. The tool uses `parent in (…)`.                                                                                                                                                                                                               |
+| Fix Version                                | Standard `fixVersions`, project-scoped, namespaced names such as `ts-lib-ui-kit:v1.1.0`. Resolved to the version **id** so the JQL cannot drift.                                                                                                                                                                                                                                                           |
+| Existing clients                           | No Jira client existed anywhere. Zephyr HTTP normally goes through the JFrog-only `ts-lib-zephyr-nodejs`; this tool uses it when installed and otherwise a 40-line built-in fetch transport with the same semantics. The library's own `linkTestCaseToIssue` posts `issueKey` (the API requires `issueId`) and swallows errors, so it is deliberately not used for writes.                                 |
+
+## Usage
+
+Credentials (never logged):
+
+| Variable                                | Purpose                                                                     |
+| --------------------------------------- | --------------------------------------------------------------------------- |
+| `JIRA_EMAIL`, `JIRA_API_TOKEN`          | Jira Cloud Basic auth (`ATLASSIAN_EMAIL` / `ATLASSIAN_API_TOKEN` also work) |
+| `JIRA_BASE_URL`                         | Optional, default `https://tetrascience.atlassian.net`                      |
+| `ZEPHYR_TOKEN` (or `ZEPHYR_API_TOKEN`)  | Zephyr Scale Cloud bearer token — same name the existing scripts use        |
+| `ZEPHYR_BASE_URL`, `ZEPHYR_PROJECT_KEY` | Optional, default `https://api.zephyrscale.smartbear.com/v2` and `SW`       |
+
+### 1. Audit (read-only)
+
+```bash
+yarn jira-zephyr:audit --epic SW-2301
+yarn jira-zephyr:audit --fix-version "ts-lib-ui-kit:v1.1.0"
+yarn jira-zephyr:audit SW-2540 SW-2528 SW-2445
+yarn jira-zephyr:audit --jql 'project = SW AND sprint in openSprints()'
+yarn jira-zephyr:audit --epic SW-2301 --epic SW-2061            # union, deduplicated
+yarn jira-zephyr:audit --epic SW-2301 --fix-version "v4.7.0" --intersect
+```
+
+`--epic` with `--fix-version` is **rejected** unless `--intersect` is given;
+explicit keys and `--jql` cannot be mixed with other selectors. Issue types
+audited by default: Story, Task, Bug, Defect, Spike (`--issue-types` overrides);
+everything else the scope returns is listed under `skipped` rather than dropped.
+
+The audit:
+
+1. Verifies each `--epic` really is an Epic and each `--fix-version` exists (exact name), then runs one JQL query.
+2. **Freezes** the resolved issue keys into `scopeSnapshot.issueKeys` (with `resolvedJql`).
+3. Indexes the repo once: every story export, its Zephyr IDs, the git history of story files, and (lazily) `git blame` per file.
+4. For each issue derives evidence, fetches the live Zephyr links, checks that expected-but-missing test cases still exist in Zephyr, and classifies the ticket.
+5. Writes `artifacts/zephyr-audit-<scope>.json` (gitignored — this repo is public) and prints:
+
+```
+Zephyr Audit
+Epic: SW-2301 ([React UI Kit v1.1.0] Upcoming Release)
+Resolved JQL: parent in (SW-2301) ORDER BY key ASC
+Issues resolved: 68 (68 audited, 0 skipped by issue type)
+Repo: main@13a643f
+
+JIRA     EXISTING  EXPECTED                       MISSING                        CONFIDENCE  ACTION
+SW-2528  -         SW-T5651                       SW-T5651                       exact       ADD
+SW-2540  -         SW-T5655,SW-T5656,SW-T5657,+4  SW-T5655,SW-T5656,SW-T5657,+4  exact       ADD
+SW-2549  -         SW-T4698,SW-T4711,SW-T4717,+3  SW-T4698,SW-T4711,SW-T4717,+3  medium      REVIEW
+SW-2563  -         SW-T5647,SW-T5649              SW-T5647,SW-T5649              high        ADD
+SW-2573  -         -                              -                              low         REVIEW
+…
+Summary
+  Tickets scanned: 68
+  Correct: 0
+  Needs changes: 7
+  Manual review: 18
+  No mapping: 43
+```
+
+### 2. Review and approve
+
+Every entry starts with `"approved": false`. Either edit the JSON (optionally
+adding `"reviewNote"`), or:
+
+```bash
+yarn jira-zephyr:approve artifacts/zephyr-audit-epic-SW-2301.json SW-2540 SW-2528 --note "QE reviewed 2026-09-10"
+yarn jira-zephyr:approve artifacts/zephyr-audit-epic-SW-2301.json --recommended   # every entry the audit recommends ADD
+```
+
+The helper refuses to approve entries with nothing to add or with `low`
+confidence. `--recommended` selects every entry the audit itself recommends
+`add` — confidence ≥ high, nothing unexpected, every test case exists — which
+is what the GitHub workflow's `approve: recommended` input uses.
+
+### 3. Apply (dry run by default)
+
+```bash
+yarn jira-zephyr:apply artifacts/zephyr-audit-epic-SW-2301.json              # dry run: re-checks live state, writes nothing
+yarn jira-zephyr:apply artifacts/zephyr-audit-epic-SW-2301.json --execute    # creates the approved links
+yarn jira-zephyr:apply … --min-confidence medium --only SW-2540              # widen threshold / restrict to a subset
+```
+
+For every key in the **frozen** `scopeSnapshot.issueKeys` (never the live Epic /
+Fix Version — an issue added to the epic after the audit is ignored until the
+next audit) the apply script:
+
+1. Checks `approved` and the confidence threshold (default `high`; `low` is never applied, whatever the flag).
+2. Re-fetches the Jira issue and requires the same numeric issue id.
+3. Re-fetches the live Zephyr links and compares them with `existingZephyrIdsAtAudit`.
+4. Adds only the still-missing `missingZephyrIds`, skipping duplicates. It never removes links and never invents new mappings.
+5. Writes `<audit>.apply-<timestamp>.json` with one outcome per issue.
+
+| Outcome                                                                 | Meaning                                                                                              |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `applied` / `would-apply`                                               | Links created (execute) / would be created (dry run)                                                 |
+| `already-correct`                                                       | Everything expected is already linked — someone applied it first; nothing written                    |
+| `stale`                                                                 | Links were removed or added by someone else since the audit, or the Jira issue id changed → re-audit |
+| `manual-review`                                                         | Issue vanished, or a test case to link no longer exists in Zephyr                                    |
+| `skipped-not-approved`, `skipped-below-threshold`, `skipped-no-changes` | Gated out before any network call                                                                    |
+| `error`                                                                 | An API call failed; partial progress is recorded in `added`                                          |
+
+### 4. Report (Markdown, no credentials)
+
+```bash
+yarn jira-zephyr:report artifacts/zephyr-audit-epic-SW-2301.json                                   # Markdown to stdout
+yarn jira-zephyr:report <audit.json> --apply <audit>.apply-<timestamp>.json --out report.md          # with the apply result
+```
+
+Renders the audit — and the apply result written against it — as GitHub-flavoured
+Markdown: the GitHub Actions job summary below, or something to paste into a PR.
+Jira ticket titles are omitted unless `--with-summaries` is passed;
+`--redacted-copy <file>` writes a copy of the audit with titles blanked that is
+still a valid input for the apply script.
+
+## Running it from GitHub Actions (no personal Zephyr token needed)
+
+[`.github/workflows/zephyr-coverage-audit.yml`](../../.github/workflows/zephyr-coverage-audit.yml)
+runs the same scripts with the repository's `ZEPHYR_TOKEN` secret. Actions →
+**Jira ↔ Zephyr coverage audit** → _Run workflow_:
+
+| Input            | Meaning                                                                                                                 |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `mode`           | `audit` (report only) · `dry-run` (approve + re-check live state, write nothing) · `write` (create the approved links)  |
+| `scope_type`     | `epic` · `fix-version` · `keys` · `jql`                                                                                 |
+| `scope`          | Epic key(s), Fix Version name(s), issue keys (comma or space separated) or raw JQL. Ignored when `audit_run_id` is set. |
+| `audit_run_id`   | dry-run / write only: apply the frozen audit uploaded by that earlier run instead of auditing again                     |
+| `approve`        | dry-run / write only: `recommended` (default — every ticket the audit recommends ADD) or a list of issue keys           |
+| `min_confidence` | dry-run / write only: `high` (default), `exact` or `medium`; `low` is never applied                                     |
+
+The reviewable path is two runs. Run `audit` first: the job summary is the
+report, and the frozen audit is uploaded as the `zephyr-audit` artifact (kept
+30 days). Then run `write` with that run's id as `audit_run_id`: it applies
+exactly the frozen issue keys after the usual live re-check, and issues added to
+the Epic / Fix Version in between are never touched. A one-shot `write` without
+`audit_run_id` audits and applies in the same run — convenient for an Epic you
+have just looked at, but nobody reviews the artifact between the two steps, so
+prefer the two-run path for anything broad. Nothing is ever approved in `audit`
+mode, `approve: recommended` never touches medium- or low-confidence entries,
+and the apply step still refuses `stale` entries.
+
+Secrets: `ZEPHYR_TOKEN` (already configured), `JIRA_EMAIL` and `JIRA_API_TOKEN`
+— any Atlassian account with read access to project SW; API tokens come from
+<https://id.atlassian.com/manage-profile/security/api-tokens>. The run fails
+fast, pointing at _Settings → Secrets and variables → Actions_, when one is missing.
+
+**Public repository caveat.** Job summaries, logs and uploaded artifacts are
+world-readable. The workflow therefore never prints Jira ticket titles: the
+summary shows keys, Zephyr IDs, confidence, actions and outcomes (all already
+public via commit subjects and story files), the terminal report is kept out of
+the log, and the uploaded audit is the `--redacted-copy` described above. To
+read a report with titles, run the audit locally.
+
+## Evidence and confidence
+
+Evidence is derived in this order and every recommendation carries it:
+
+| Evidence type                | Confidence                                           | Meaning                                                                                                          |
+| ---------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `story-reference`            | exact                                                | The Jira key is written in the story's own source (leading comment, JSDoc, docs description).                    |
+| `story-introduced-by-commit` | exact if the same commit created the file, else high | `git blame` of the `export const …` line is a commit keyed to the issue.                                         |
+| `story-modified-by-commit`   | medium                                               | A keyed commit last changed lines inside a pre-existing story (the auto-generated `testCaseId` line is ignored). |
+| `file-reference`             | medium (single-story file) / low                     | The key appears in the file outside any story.                                                                   |
+| `file-touched-by-commit`     | low, no IDs                                          | A keyed commit touched the file but none of its story lines survive — informational only.                        |
+| `summary-similarity`         | low                                                  | The Jira summary names the component (fallback; ≤ 3 files or it is dropped as too generic).                      |
+| `zephyr-attribution`         | —                                                    | Explains an _unexpected_ link: which story owns that ID and which ticket the repo attributes it to.              |
+
+Two different medium signals for the same ID promote it to high. Two guards keep
+cross-cutting tickets from claiming every story they brushed against: lines the
+sync workflow writes (`parameters: { zephyr: { testCaseId } }`) and bare
+punctuation never count as edits, and a commit whose story-level evidence spans
+more than five files is treated as a sweep (introduced → medium, modified → low)
+— so a docs pass or an a11y sweep surfaces for review instead of as 50 expected
+IDs. Similarity runs only when no medium-or-better evidence exists at all.
+`expectedZephyrIds` contains only IDs backed by **medium or better** evidence;
+low-confidence candidates appear in `evidence` and `notes` only. A ticket's
+confidence is the weakest among its missing IDs. Recommended actions:
+
+- `add` — missing IDs, confidence ≥ high, nothing unexpected, all test cases exist.
+- `none` — Zephyr already links exactly the expected IDs (`status: correct`).
+- `review` — anything else: medium/low evidence, unexpected links, vanished test cases, or `no-mapping`.
+
+Zephyr links the repo knows nothing about (e.g. manual test cases) are listed as
+`unmanagedZephyrIds` and never count against a ticket; links the repo attributes
+to a **different** ticket are `unexpectedZephyrIds` and force review — this tool
+never removes a link.
+
+## Artifact schema
+
+Defined with zod in [`shared/audit-schema.ts`](./shared/audit-schema.ts)
+(`schemaVersion: 1`); the apply script validates the file, its internal
+consistency (tickets ⊆ snapshot, missing ⊆ expected, …) and refuses anything
+else. Key fields per ticket: `jira`, `jiraIssueId`, `existingZephyrIdsAtAudit`,
+`expectedZephyrIds`, `missingZephyrIds`, `unexpectedZephyrIds`,
+`unmanagedZephyrIds`, `confidence`, `recommendedAction`, `status`, `approved`,
+`evidence[]`, `notes[]`. The artifact also records `scope`, `scopeSnapshot`,
+`skipped`, and the repo `head`/`branch`/`dirty` state the evidence was derived from.
+
+## Layout
+
+```
+scripts/jira-zephyr/
+├── audit/      audit.ts (CLI) · scope.ts · repo-scanner.ts · mapper.ts · reporter.ts
+├── apply/      apply.ts (CLI) · validator.ts · writer.ts
+├── approve.ts  optional approval helper (--recommended is what the workflow uses)
+├── report.ts   Markdown / job-summary renderer + redacted upload copy
+├── clients/    jira-client.ts · zephyr-client.ts · env.ts
+├── shared/     audit-schema.ts (zod) · confidence.ts · keys.ts · markdown.ts · redact.ts · table.ts · types.ts
+└── __tests__/  vitest unit + git-integration tests (run with `yarn test`)
+```
+
+`yarn typecheck:scripts` type-checks this directory (the root `tsconfig.json`
+covers `src/` only). `yarn test` runs the tests; the scanner test builds a real
+temporary git repository.
+
+## Known limits
+
+- Stories whose export line was rewritten by a later ticket blame to that ticket; the original ticket then only gets `story-modified-by-commit`/`file-touched` evidence.
+- ~50 % of commits carry no Jira key (chores, e2e work, sync commits); stories introduced by those have no attribution and surface as `no-mapping` or low-confidence candidates.
+- The audit needs both Jira and Zephyr credentials; there is deliberately no offline mode, so an artifact always reflects real Zephyr state.
+- Only Zephyr COVERAGE links are managed. Removing links, editing test cases and Jira fields are out of scope by design.

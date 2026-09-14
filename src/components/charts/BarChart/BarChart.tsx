@@ -1,5 +1,12 @@
 import React, { useEffect, useRef, useMemo } from "react";
 
+import {
+  REGULAR_SCALE,
+  Y_TICK_LABEL_SPACING,
+  maxTickCount,
+  resolveChartScale,
+  thinTicks,
+} from "../chart-scale";
 import { useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 
@@ -23,9 +30,21 @@ interface BarDataSeries {
 
 type BarChartVariant = "group" | "stack" | "overlay";
 
-/** Top margin reserving room for the 32px title; reduced when no title is set */
-const TITLE_MARGIN_TOP = 60;
-const NO_TITLE_MARGIN_TOP = 30;
+/** Full-size chrome: the bar chart runs a larger legend and tighter top margin */
+const BAR_REGULAR_SCALE = {
+  ...REGULAR_SCALE,
+  axisTitleStandoff: 30,
+  legendFontSize: 16,
+  legendLineHeight: 21,
+  margin: { ...REGULAR_SCALE.margin, r: 30, tTitle: 60, tNoTitle: 30 },
+};
+
+/**
+ * Default bar width as a fraction of the smallest gap between x positions. A
+ * fixed data-unit width (formerly 24) only suited x spaced by ~100 and swamped
+ * the axis for index-style x such as 0..6 (SW-2298).
+ */
+const DEFAULT_BAR_WIDTH_FRACTION = 0.24;
 
 interface BarChartProps {
   dataSeries: BarDataSeries[];
@@ -45,6 +64,11 @@ interface BarChartProps {
   xTitle?: string;
   yTitle?: string;
   title?: string;
+  /**
+   * Bar width in x-axis data units. Defaults to about a quarter of the
+   * smallest gap between x positions, so bars keep the same visual weight
+   * whether x runs 0..6 or 200..1000.
+   */
   barWidth?: number;
   /**
    * Categorical labels for the x-axis ticks. When provided, the x data values
@@ -65,7 +89,7 @@ const BarChart: React.FC<BarChartProps> = ({
   xTitle,
   yTitle,
   title,
-  barWidth = 24,
+  barWidth,
   xTickText,
 }) => {
   const plotRef = useRef<HTMLDivElement>(null);
@@ -82,6 +106,9 @@ const BarChart: React.FC<BarChartProps> = ({
   // to fill its height (so e.g. a fixed width with a container-driven height works).
   const fillWidth = width === undefined;
   const fillHeight = height === undefined;
+  // Fonts, tick length and margins step down on small canvases so the plot
+  // area (not the chrome) gets the pixels (SW-2298).
+  const scale = resolveChartScale(resolvedWidth, resolvedHeight, BAR_REGULAR_SCALE);
   const sizeRef = useRef({ width: resolvedWidth, height: resolvedHeight });
   sizeRef.current = { width: resolvedWidth, height: resolvedHeight };
   const plotInitedRef = useRef(false);
@@ -131,6 +158,16 @@ const BarChart: React.FC<BarChartProps> = ({
   // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
   const useCategoricalX = !!xTickText && xTickText.length === xTicks.length;
 
+  const resolvedBarWidth = useMemo(() => {
+    if (barWidth !== undefined) return barWidth;
+    let minGap = Number.POSITIVE_INFINITY;
+    for (let i = 1; i < xTicks.length; i++) {
+      minGap = Math.min(minGap, xTicks[i] - xTicks[i - 1]);
+    }
+    // A single x position has no gap to scale from; let Plotly size the bar.
+    return Number.isFinite(minGap) ? minGap * DEFAULT_BAR_WIDTH_FRACTION : undefined;
+  }, [barWidth, xTicks]);
+
   const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
     let step = Math.pow(10, Math.floor(Math.log10(range)));
@@ -162,11 +199,11 @@ const BarChart: React.FC<BarChartProps> = ({
   const tickOptions = useMemo(
     () => ({
       tickcolor: theme.tickColor,
-      ticklen: 12,
+      ticklen: scale.ticklen,
       tickwidth: 1,
       ticks: "outside" as const,
       tickfont: {
-        size: 16,
+        size: scale.tickFontSize,
         color: theme.textColor,
         family: CHART_FONT_FAMILY,
         weight: 400,
@@ -176,11 +213,20 @@ const BarChart: React.FC<BarChartProps> = ({
       position: 0,
       zeroline: false,
     }),
-    [theme],
+    [theme, scale],
   );
 
   useEffect(() => {
     if (!plotRef.current || !hasSize) return;
+
+    const marginTop = title ? scale.margin.tTitle : scale.margin.tNoTitle;
+    // Drop y ticks that would not fit the plot height instead of letting the
+    // labels overlap (SW-2298).
+    const plotHeight = sizeRef.current.height - marginTop - scale.margin.b;
+    const yTickVals = thinTicks(
+      yTicks,
+      maxTickCount(plotHeight, scale.tickFontSize * Y_TICK_LABEL_SPACING),
+    );
 
     const data = dataSeries.map((series, index) => ({
       x: series.x,
@@ -191,7 +237,7 @@ const BarChart: React.FC<BarChartProps> = ({
       marker: {
         color: seriesColor(index, series.color),
       },
-      width: barWidth,
+      ...(resolvedBarWidth === undefined ? {} : { width: resolvedBarWidth }),
       error_y: series.error_y,
     }));
 
@@ -201,7 +247,7 @@ const BarChart: React.FC<BarChartProps> = ({
             title: {
               text: title,
               font: {
-                size: 32,
+                size: scale.titleFontSize,
                 family: CHART_FONT_FAMILY,
                 color: theme.textColor,
               },
@@ -211,12 +257,12 @@ const BarChart: React.FC<BarChartProps> = ({
       width: sizeRef.current.width,
       height: sizeRef.current.height,
       margin: {
-        l: 80,
-        r: 30,
+        l: scale.margin.l,
+        r: scale.margin.r,
         // Reserve room for tick labels, the x-axis title, and the
         // container-anchored bottom legend stacked beneath them.
-        b: 96,
-        t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+        b: scale.margin.b,
+        t: marginTop,
         pad: 0,
       },
       paper_bgcolor: theme.paperBg,
@@ -231,12 +277,12 @@ const BarChart: React.FC<BarChartProps> = ({
         title: {
           text: xTitle,
           font: {
-            size: 16,
+            size: scale.axisTitleFontSize,
             color: theme.textSecondary,
             family: CHART_FONT_FAMILY,
             weight: 400,
           },
-          standoff: 32,
+          standoff: scale.axisTitleStandoff,
         },
         gridcolor: theme.gridColor,
         range: xRange,
@@ -254,18 +300,18 @@ const BarChart: React.FC<BarChartProps> = ({
         title: {
           text: yTitle,
           font: {
-            size: 16,
+            size: scale.axisTitleFontSize,
             color: theme.textSecondary,
             family: CHART_FONT_FAMILY,
             weight: 400,
           },
-          standoff: 30,
+          standoff: scale.axisTitleStandoff,
         },
         gridcolor: theme.gridColor,
         range: yRange,
         autorange: !yRange,
         tickmode: "array" as const,
-        tickvals: yTicks,
+        tickvals: yTickVals,
         showgrid: true,
         automargin: true,
         ...tickOptions,
@@ -281,10 +327,11 @@ const BarChart: React.FC<BarChartProps> = ({
         yref: "container" as const,
         orientation: "h" as const,
         font: {
-          size: 16,
+          size: scale.legendFontSize,
           color: theme.legendColor,
           family: CHART_FONT_FAMILY,
           weight: 500,
+          lineheight: scale.legendLineHeight,
         },
       },
       showlegend: dataSeries.length > 1,
@@ -320,7 +367,7 @@ const BarChart: React.FC<BarChartProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, hasSize, xRange, yRange, xTitle, yTitle, title, barWidth, barMode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, theme, bindTooltip]);
+  }, [dataSeries, hasSize, xRange, yRange, xTitle, yTitle, title, resolvedBarWidth, barMode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, theme, scale, bindTooltip]);
 
   // Resize in place when the measured/overridden size changes — cheaper than
   // recreating the plot, and it preserves tooltip/event bindings.

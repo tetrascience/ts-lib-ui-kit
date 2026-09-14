@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { Y_TICK_LABEL_SPACING, maxTickCount, resolveChartScale, thinTicks } from "../chart-scale";
 import { useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 
@@ -16,6 +17,10 @@ interface BoxDataSeries {
   name: string;
   /** Optional color override (auto-assigned from CHART_COLORS if not provided) */
   color?: string;
+  /**
+   * Category per sample, aligned with `y`. A single entry labels the whole
+   * box (one category per series) and is applied to every sample.
+   */
   x?: string[] | number[];
   boxpoints?: "all" | "outliers" | "suspectedoutliers" | false;
   jitter?: number;
@@ -67,6 +72,9 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
   // to fill its height (so e.g. a fixed width with a container-driven height works).
   const fillWidth = width === undefined;
   const fillHeight = height === undefined;
+  // Fonts, tick length and margins step down on small canvases so the plot
+  // area (not the chrome) gets the pixels (SW-2298).
+  const scale = resolveChartScale(resolvedWidth, resolvedHeight);
   const sizeRef = useRef({ width: resolvedWidth, height: resolvedHeight });
   sizeRef.current = { width: resolvedWidth, height: resolvedHeight };
   const plotInitedRef = useRef(false);
@@ -117,11 +125,11 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
   const tickOptions = useMemo(
     () => ({
       tickcolor: theme.tickColor,
-      ticklen: 12,
+      ticklen: scale.ticklen,
       tickwidth: 1,
       ticks: "outside" as const,
       tickfont: {
-        size: 16,
+        size: scale.tickFontSize,
         color: theme.textColor,
         family: CHART_FONT_FAMILY,
         weight: 400,
@@ -131,7 +139,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
       position: 0,
       zeroline: false,
     }),
-    [theme],
+    [theme, scale],
   );
 
   const titleOptions = useMemo(
@@ -142,7 +150,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
       xanchor: "center" as const,
       yanchor: "top" as const,
       font: {
-        size: 32,
+        size: scale.titleFontSize,
         weight: 600,
         family: CHART_FONT_FAMILY,
         color: theme.textColor,
@@ -150,17 +158,32 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         standoff: 30,
       },
     }),
-    [title, theme],
+    [title, theme, scale],
   );
 
   useEffect(() => {
     if (!plotRef.current || !hasSize) return;
 
+    // Drop y ticks that would not fit the plot height instead of letting the
+    // labels overlap (SW-2298).
+    const plotHeight = sizeRef.current.height - scale.margin.tTitle - scale.margin.b;
+    const yTickVals = thinTicks(
+      yTicks,
+      maxTickCount(plotHeight, scale.tickFontSize * Y_TICK_LABEL_SPACING),
+    );
+
     const data = dataSeries.map((series, index) => {
       const color = seriesColor(index, series.color);
+      // A single x entry names the whole box. Plotly pairs x and y by index, so
+      // left as-is it would keep only the first sample and draw a flat line
+      // instead of a box (SW-2298) — broadcast it across every sample.
+      const x =
+        series.x && series.x.length === 1 && series.y.length > 1
+          ? (Array.from({ length: series.y.length }, () => series.x![0]) as string[] | number[])
+          : series.x;
       return {
         y: series.y,
-        x: series.x,
+        x,
         type: "box" as const,
         name: series.name,
         hoverinfo: "none" as const,
@@ -188,7 +211,13 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
       title: titleOptions,
       // Bottom margin reserves room for tick labels, the x-axis title, and the
       // container-anchored bottom legend stacked beneath them.
-      margin: { l: 80, r: 40, b: 96, t: 80, pad: 0 },
+      margin: {
+        l: scale.margin.l,
+        r: scale.margin.r,
+        b: scale.margin.b,
+        t: scale.margin.tTitle,
+        pad: 0,
+      },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
@@ -199,12 +228,12 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         title: {
           text: xTitle,
           font: {
-            size: 16,
+            size: scale.axisTitleFontSize,
             color: theme.textSecondary,
             family: CHART_FONT_FAMILY,
             weight: 400,
           },
-          standoff: 15,
+          standoff: scale.axisTitleStandoff,
         },
         gridcolor: theme.gridColor,
         range: xRange,
@@ -219,18 +248,18 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         title: {
           text: yTitle,
           font: {
-            size: 16,
+            size: scale.axisTitleFontSize,
             color: theme.textSecondary,
             family: CHART_FONT_FAMILY,
             weight: 400,
           },
-          standoff: 15,
+          standoff: scale.axisTitleStandoff,
         },
         gridcolor: theme.gridColor,
         range: yRange,
         autorange: !yRange,
         tickmode: "array" as const,
-        tickvals: yTicks,
+        tickvals: yTickVals,
         showgrid: true,
         automargin: true,
         ...tickOptions,
@@ -246,11 +275,11 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         yref: "container" as const,
         orientation: "h" as const,
         font: {
-          size: 13,
+          size: scale.legendFontSize,
           color: theme.legendColor,
           family: CHART_FONT_FAMILY,
           weight: 500,
-          lineheight: 18,
+          lineheight: scale.legendLineHeight,
         },
       },
       showlegend: true,
@@ -286,7 +315,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, hasSize, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks, theme, bindTooltip]);
+  }, [dataSeries, hasSize, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks, theme, scale, bindTooltip]);
 
   // Resize in place when the measured/overridden size changes — cheaper than
   // recreating the plot, and it preserves tooltip/event bindings.

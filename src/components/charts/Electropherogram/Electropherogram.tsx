@@ -9,8 +9,11 @@ import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { CHART_COLORS } from "@/utils/colors";
 import "./Electropherogram.scss";
 
-/** Height offset for the plot area in pixels */
-const PLOT_HEIGHT_OFFSET = 75;
+/**
+ * Height of the sequence header above the plot (see Electropherogram.scss:
+ * 12 + 6 padding, 35 + 6 letters row, 30 numbers row). The plot gets the rest.
+ */
+const PLOT_HEIGHT_OFFSET = 89;
 /** Scale factor for y-axis range to add padding above max value */
 const Y_AXIS_PADDING_FACTOR = 1.05;
 
@@ -144,6 +147,20 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
     [peakA, peakT, peakG, peakC],
   );
 
+  // The plot has no side margins, so an x-range that ends exactly on the first
+  // and last sample clips the outermost peaks and pushes their base letters
+  // half off the canvas (SW-2298). Pad by half a sample step on each side; the
+  // header letters/numbers share this mapping so they stay aligned to peaks.
+  const { xMin, xMax } = useMemo(() => {
+    if (positions.length === 0) return { xMin: 0, xMax: 1 };
+    const min = Math.min(...positions);
+    const max = Math.max(...positions);
+    const step = positions.length > 1 ? (max - min) / (positions.length - 1) : 1;
+    const pad = step / 2;
+    return { xMin: min - pad, xMax: max + pad };
+  }, [positions]);
+  const xToPx = (position: number) => ((position - xMin) / (xMax - xMin)) * width;
+
   useEffect(() => {
     if (!plotRef.current || data.length === 0) return;
 
@@ -164,7 +181,7 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
         zeroline: false,
         showticklabels: false,
         showline: false,
-        range: [Math.min(...positions), Math.max(...positions)],
+        range: [xMin, xMax],
         fixedrange: true,
       },
       yaxis: {
@@ -203,7 +220,7 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
         getLoadedPlotly().purge(plotElement);
       }
     };
-  }, [data, width, height, aTrace, tTrace, gTrace, cTrace, maxValue, positions, theme, bindTooltip]);
+  }, [data, width, height, aTrace, tTrace, gTrace, cTrace, maxValue, xMin, xMax, theme, bindTooltip]);
 
   if (data.length === 0) {
     return <div className="chart-container">No data available</div>;
@@ -211,10 +228,6 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
 
   const renderSequence = () => {
     const renderSequenceLetters = () => {
-      const minPosition = Math.min(...positions);
-      const maxPosition = Math.max(...positions);
-      const chartWidth = width;
-
       return (
         <div className="sequence-letters-container">
           {sequence.map((base, index) => {
@@ -230,9 +243,7 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
                 ? colorC
                 : theme.textColor;
 
-            const span = maxPosition - minPosition || 1;
-            const percentage = (position - minPosition) / span;
-            const leftPosition = percentage * chartWidth;
+            const leftPosition = xToPx(position);
 
             return (
               <span
@@ -254,7 +265,6 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
     const renderPositionNumbers = () => {
       const minPosition = Math.min(...positions);
       const maxPosition = Math.max(...positions);
-      const chartWidth = width;
 
       const startPos =
         Math.ceil(minPosition / positionInterval) * positionInterval;
@@ -272,9 +282,7 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
       return (
         <div className="position-numbers-container">
           {regularPositionLabels.map((label) => {
-            const span = maxPosition - minPosition || 1;
-            const percentage = (label.position - minPosition) / span;
-            const leftPosition = percentage * chartWidth;
+            const leftPosition = xToPx(label.position);
 
             return (
               <span

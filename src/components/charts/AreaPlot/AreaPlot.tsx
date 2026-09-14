@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { Y_TICK_LABEL_SPACING, maxTickCount, resolveChartScale, thinTicks } from "../chart-scale";
 import { chartTooltipLines, useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 
@@ -18,10 +19,6 @@ interface AreaDataSeries {
 }
 
 type AreaPlotVariant = "normal" | "stacked";
-
-/** Top margin reserving room for the 32px title; reduced when no title is set */
-const TITLE_MARGIN_TOP = 80;
-const NO_TITLE_MARGIN_TOP = 40;
 
 interface AreaPlotProps {
   dataSeries: AreaDataSeries[];
@@ -76,6 +73,9 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
   // to fill its height (so e.g. a fixed width with a container-driven height works).
   const fillWidth = width === undefined;
   const fillHeight = height === undefined;
+  // Fonts, tick length and margins step down on small canvases so the plot
+  // area (not the chrome) gets the pixels (SW-2298).
+  const scale = resolveChartScale(resolvedWidth, resolvedHeight);
 
   // Hold the latest resolved size in a ref so the newPlot effect can read it
   // without listing it as a dependency — size changes are handled by a
@@ -184,11 +184,11 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
   const tickOptions = useMemo(
     () => ({
       tickcolor: theme.tickColor,
-      ticklen: 12,
+      ticklen: scale.ticklen,
       tickwidth: 1,
       ticks: "outside" as const,
       tickfont: {
-        size: 16,
+        size: scale.tickFontSize,
         color: theme.textColor,
         family: CHART_FONT_FAMILY,
         weight: 400,
@@ -198,7 +198,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
       position: 0,
       zeroline: false,
     }),
-    [theme],
+    [theme, scale],
   );
 
   const titleOptions = useMemo(
@@ -211,7 +211,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
             xanchor: "center" as const,
             yanchor: "top" as const,
             font: {
-              size: 32,
+              size: scale.titleFontSize,
               weight: 600,
               family: CHART_FONT_FAMILY,
               color: theme.textColor,
@@ -220,11 +220,20 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
             },
           }
         : undefined,
-    [title, theme],
+    [title, theme, scale],
   );
 
   useEffect(() => {
     if (!plotRef.current || !hasSize) return;
+
+    const marginTop = title ? scale.margin.tTitle : scale.margin.tNoTitle;
+    // Drop y ticks that would not fit the plot height instead of letting the
+    // labels overlap (they piled up at 200px tall — SW-2298).
+    const plotHeight = sizeRef.current.height - marginTop - scale.margin.b;
+    const yTickVals = thinTicks(
+      yTicks,
+      maxTickCount(plotHeight, scale.tickFontSize * Y_TICK_LABEL_SPACING),
+    );
 
     let data;
 
@@ -284,12 +293,12 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
       height: sizeRef.current.height,
       ...(titleOptions ? { title: titleOptions } : {}),
       margin: {
-        l: 80,
-        r: 40,
+        l: scale.margin.l,
+        r: scale.margin.r,
         // Reserve room for tick labels, the x-axis title, and the
         // container-anchored bottom legend stacked beneath them.
-        b: 96,
-        t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+        b: scale.margin.b,
+        t: marginTop,
         pad: 0,
       },
       paper_bgcolor: theme.paperBg,
@@ -302,12 +311,12 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
         title: {
           text: xTitle,
           font: {
-            size: 16,
+            size: scale.axisTitleFontSize,
             color: theme.textSecondary,
             family: CHART_FONT_FAMILY,
             weight: 400,
           },
-          standoff: 15,
+          standoff: scale.axisTitleStandoff,
         },
         gridcolor: theme.gridColor,
         range: xRange,
@@ -325,18 +334,18 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
         title: {
           text: yTitle,
           font: {
-            size: 16,
+            size: scale.axisTitleFontSize,
             color: theme.textSecondary,
             family: CHART_FONT_FAMILY,
             weight: 400,
           },
-          standoff: 15,
+          standoff: scale.axisTitleStandoff,
         },
         gridcolor: theme.gridColor,
         range: yRange,
         autorange: !yRange,
         tickmode: "array" as const,
-        tickvals: yTicks,
+        tickvals: yTickVals,
         showgrid: true,
         automargin: true,
         ...tickOptions,
@@ -352,11 +361,11 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
         yref: "container" as const,
         orientation: "h" as const,
         font: {
-          size: 13,
+          size: scale.legendFontSize,
           color: theme.legendColor,
           family: CHART_FONT_FAMILY,
           weight: 500,
-          lineheight: 18,
+          lineheight: scale.legendLineHeight,
         },
       },
       showlegend: true,
@@ -392,7 +401,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, hasSize, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, bindTooltip]);
+  }, [dataSeries, hasSize, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, scale, bindTooltip]);
 
   // Resize in place when the measured/overridden size changes — far cheaper
   // than recreating the plot (and it preserves tooltip/event bindings).

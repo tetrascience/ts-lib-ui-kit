@@ -849,3 +849,14 @@
     cursor: pointer;
   }
 }
+
+/* ==========================================================================
+   Plotly modebar
+   Tailwind's preflight makes every <svg> `display: block`, which puts each
+   modebar button's icon on its own line and folds the toolbar into a cramped
+   grid in the chart's top-right corner. Restore the inline icons Plotly's own
+   stylesheet assumes (SW-2298).
+   ========================================================================== */
+.js-plotly-plot .plotly .modebar-btn svg {
+  display: inline;
+}

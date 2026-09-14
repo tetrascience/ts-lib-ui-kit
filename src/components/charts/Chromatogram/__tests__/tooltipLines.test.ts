@@ -19,6 +19,13 @@ describe("htmlToTooltipLines", () => {
     ]);
   });
 
+  it("decodes entities and drops nested or unclosed tags", () => {
+    expect(htmlToTooltipLines("S/N: 42 &amp; up<br><span style=\"color:red\">FAIL<script>x()</script></span>")).toEqual([
+      "S/N: 42 & up",
+      "FAILx()",
+    ]);
+  });
+
   it("returns nothing for empty input", () => {
     expect(htmlToTooltipLines()).toEqual([]);
     expect(htmlToTooltipLines("")).toEqual([]);

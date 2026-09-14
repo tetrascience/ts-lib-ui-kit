@@ -152,13 +152,19 @@ const formatTooltipNumber = (value: number | string): string =>
 
 /**
  * The ChartTooltip renders plain text, so `hoverText` written for Plotly's
- * hovertemplate is normalised: `<br>` splits lines, every other tag is dropped.
+ * hovertemplate is normalised for display: `<br>` splits lines and the rest is
+ * reduced to its text content via the HTML parser (entities decoded, tags
+ * dropped). This is presentation clean-up, not security sanitisation — the
+ * lines are rendered as React text nodes, never as markup.
  */
 export function htmlToTooltipLines(text?: string): string[] {
   if (!text) return [];
-  return text
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
+  const withBreaks = text.replace(/<br\s*\/?>/gi, "\n");
+  const plain =
+    typeof DOMParser === "undefined"
+      ? withBreaks
+      : (new DOMParser().parseFromString(withBreaks, "text/html").body.textContent ?? "");
+  return plain
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);

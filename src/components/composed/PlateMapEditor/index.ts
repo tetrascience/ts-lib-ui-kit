@@ -40,6 +40,9 @@ export { plateOptionsFromCsvTriage, triagePlateMapCsvByBarcode, triagePlateMapCs
 export { ManifestFilterPopover } from "./ManifestFilterPopover";
 export type { ManifestFilterPopoverProps } from "./ManifestFilterPopover";
 
+export { WellQuickPaint } from "./WellQuickPaint";
+export type { WellQuickPaintProps } from "./WellQuickPaint";
+
 export { WellLegend } from "./WellLegend";
 export type { WellLegendItem, WellLegendProps } from "./WellLegend";
 

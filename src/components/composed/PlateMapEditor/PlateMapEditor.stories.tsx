@@ -3197,3 +3197,90 @@ export const KeyboardSelectionAndLiveFeedback: Story = {
     });
   },
 };
+
+export const QuickPaintOnSelection: Story = {
+  name: "Quick paint: swatch strip above the selection",
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(new Map());
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      return (
+        <PlateMapEditor<DemoWell>
+          format="96"
+          values={values}
+          onChange={setValues}
+          selection={selection}
+          onSelectionChange={setSelection}
+          fields={FIELDS}
+          tableColumns={COLUMNS}
+          colorForWell={colorForWell}
+          emptyEntry={emptyEntry}
+          quickPaintField="role"
+          wellShape="circle"
+          hideManifest
+        />
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const strip = () => canvasElement.querySelector('[data-slot="well-quick-paint"]');
+    const fillOf = (id: string) =>
+      (canvasElement.querySelector(`[data-well="${id}"]`) as SVGElement).getAttribute("fill");
+
+    await step("Hidden while nothing is selected", async () => {
+      expect(strip()).toBeNull();
+    });
+
+    await step("Appears once a selection exists", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      await waitFor(() => expect(strip()).not.toBeNull());
+      expect(canvas.getByText("96 wells")).toBeInTheDocument();
+    });
+
+    await step("One swatch per select option, each labelled", async () => {
+      const group = within(strip() as HTMLElement);
+      expect(group.getByRole("button", { name: "Sample" })).toBeInTheDocument();
+      expect(group.getByRole("button", { name: "Control" })).toBeInTheDocument();
+      expect(group.getByRole("button", { name: "Blank" })).toBeInTheDocument();
+    });
+
+    await step("Clicking a swatch paints the whole selection immediately", async () => {
+      const before = fillOf("A01");
+      await userEvent.click(within(strip() as HTMLElement).getByRole("button", { name: "Control" }));
+      await waitFor(() => {
+        expect(fillOf("A01")).not.toBe(before);
+        expect(fillOf("A01")).toBe(ROLE_COLOR.control);
+        expect(fillOf("H12")).toBe(ROLE_COLOR.control);
+      });
+    });
+
+    await step("The applied value reads back as pressed", async () => {
+      await waitFor(() => {
+        expect(within(strip() as HTMLElement).getByRole("button", { name: "Control" })).toHaveAttribute(
+          "aria-pressed",
+          "true",
+        );
+      });
+    });
+
+    await step("The strip is anchored above the leftmost selected column", async () => {
+      const anchor = canvasElement.querySelector('[data-slot="plate-quick-paint-anchor"]') as HTMLElement;
+      const a01 = canvasElement.querySelector('[data-well="A01"]') as SVGElement;
+      expect(anchor).not.toBeNull();
+      // Bottom of the strip sits at or above the top of the first selected row.
+      expect(anchor.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        a01.getBoundingClientRect().bottom + 1,
+      );
+    });
+
+    await step("Disappears again when the selection is cleared", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Deselect all" }));
+      await waitFor(() => expect(strip()).toBeNull());
+    });
+  },
+};

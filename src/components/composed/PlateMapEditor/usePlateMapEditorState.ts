@@ -154,6 +154,11 @@ export interface PlateMapEditorState<T extends WellRecord = WellRecord> {
   applyStagedToSelection: (scope?: PlateMapApplyScope) => void;
   /** Clears the selected wells. Same scope-override rules as Apply. */
   clearWells: (scope?: PlateMapApplyScope) => void;
+  /**
+   * Applies an arbitrary patch across the selection, bypassing the staged
+   * record — used for one-click actions like quick-paint.
+   */
+  applyToSelection: (patch: Partial<T>, scope?: PlateMapApplyScope) => void;
 
   availablePlates: PlateMapPlateOption[];
   activePlate: PlateMapPlateOption | undefined;
@@ -328,8 +333,12 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
     [availablePlates.length, isPlateScoped],
   );
 
-  const applyStagedToSelection = React.useCallback(
-    (scope?: PlateMapApplyScope) => {
+  /**
+   * Applies an arbitrary patch across the selection. `applyStagedToSelection`
+   * is this with the staged record; quick-paint uses it with a single field.
+   */
+  const applyToSelection = React.useCallback(
+    (patch: Partial<T>, scope?: PlateMapApplyScope) => {
       if (selection.size === 0) return;
 
       if (appliesToEveryPlate(resolveScope(scope))) {
@@ -338,7 +347,7 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
           selection.forEach((wellId) => {
             const key = getPlateMapScopedWellId(plate.barcode, wellId);
             const base = next.get(key) ?? emptyEntry(wellId);
-            const merged = merge(base, staged, wellId) as Record<string, unknown>;
+            const merged = merge(base, patch, wellId) as Record<string, unknown>;
             next.set(key, { ...merged, [barcodeField]: plate.barcode } as T);
           });
         });
@@ -350,7 +359,7 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
       selection.forEach((wellId) => {
         const existing = next.get(wellId);
         const base = existing ?? emptyEntry(wellId);
-        const merged = stampActivePlateBarcode(merge(base, staged, wellId));
+        const merged = stampActivePlateBarcode(merge(base, patch, wellId));
         next.set(wellId, merged);
       });
       commitScopedValues(next);
@@ -366,10 +375,14 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
       resolveScope,
       scopedValues,
       selection,
-      staged,
       stampActivePlateBarcode,
       values,
     ],
+  );
+
+  const applyStagedToSelection = React.useCallback(
+    (scope?: PlateMapApplyScope) => applyToSelection(staged, scope),
+    [applyToSelection, staged],
   );
 
   const clearWells = React.useCallback(
@@ -431,6 +444,7 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
     scopedValues,
     commitScopedValues,
     applyStagedToSelection,
+    applyToSelection,
     clearWells,
     availablePlates,
     activePlate,
@@ -446,6 +460,7 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
     }),
     [
       applyStagedToSelection,
+      applyToSelection,
       availablePlates,
       activePlate,
       canChangePlate,

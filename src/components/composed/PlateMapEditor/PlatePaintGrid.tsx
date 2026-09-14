@@ -92,6 +92,11 @@ export interface PlatePaintGridProps<T extends WellRecord = WellRecord> {
    * to set `pointer-events: auto` on their own element while a drag is active.
    */
   wrapWell?: (wellId: WellId, cellSize: number) => React.ReactNode;
+  /**
+   * Swatch strip anchored above the selection, for painting a value across it
+   * in one click. Rendered only while something is selected.
+   */
+  quickPaint?: React.ReactNode;
   className?: string;
 }
 
@@ -462,6 +467,7 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   onWellHover,
   onWellDoubleClick,
   wrapWell,
+  quickPaint,
   className,
 }: PlatePaintGridProps<T>) {
   const dims = resolveDimensions(format, rows, columns);
@@ -676,6 +682,27 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   const frameOuterWidth = width + (framed ? (FRAME_PADDING_PX + FRAME_BORDER_PX) * 2 : 0);
   const isScrollable = containerWidth !== undefined && frameOuterWidth > containerWidth + 1;
   const scrollRegionLabel = `${dims.rows} by ${dims.columns} plate map, horizontally scrollable.`;
+  // Anchor for the quick-paint strip: horizontally over the LEFTMOST selected
+  // column, vertically on the selection's top edge. `top` is clamped to 0 so a
+  // selection in row A puts the strip over the column labels rather than having
+  // it clipped by the scroll container.
+  const quickPaintAnchor = React.useMemo(() => {
+    if (!quickPaint || selection.size === 0) return null;
+    let minRow = Infinity;
+    let minCol = Infinity;
+    for (const wellId of selection) {
+      const cell = parsePos(wellId, dims);
+      if (!cell) continue;
+      if (cell.row < minRow) minRow = cell.row;
+      if (cell.col < minCol) minCol = cell.col;
+    }
+    if (!Number.isFinite(minRow) || !Number.isFinite(minCol)) return null;
+    return {
+      left: LABEL_PAD + minCol * resolvedCellSize + resolvedCellSize / 2,
+      top: Math.max(0, LABEL_PAD + minRow * resolvedCellSize),
+    };
+  }, [dims, quickPaint, selection, resolvedCellSize]);
+
   const gridLabel =
     `${dims.rows} row by ${dims.columns} column plate map. ` +
     "Drag to select wells, or use arrow keys to move and Space to toggle a well.";
@@ -824,6 +851,20 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
           {gridLines}
           {wellOverlays}
         </svg>
+        {quickPaintAnchor ? (
+          <div
+            data-slot="plate-quick-paint-anchor"
+            className="pointer-events-none absolute z-10 flex -translate-x-1/2 -translate-y-full flex-col items-start pb-1"
+            style={{ left: quickPaintAnchor.left, top: quickPaintAnchor.top }}
+          >
+            <div className="pointer-events-auto">{quickPaint}</div>
+            {/* Tail pointing down at the leftmost selected cell. */}
+            <span
+              aria-hidden
+              className="-mt-px ml-[calc(50%-0.25rem)] size-2 rotate-45 border-r border-b bg-popover"
+            />
+          </div>
+        ) : null}
         {wrapWell ? (
           <div
             className="pointer-events-none absolute"

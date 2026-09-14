@@ -6,6 +6,7 @@ import { PlateMapGrid } from "./PlateMapGrid";
 import { PlateMapManifest } from "./PlateMapManifest";
 import { PlateMapPlateSelector } from "./PlateMapPlateSelector";
 import { defaultColorForWell, getPlateMapScopedWellId, usePlateMapEditorState } from "./usePlateMapEditorState";
+import { WellQuickPaint } from "./WellQuickPaint";
 
 
 import type { PlateMapActionsMenuProps } from "./PlateMapActionsMenu";
@@ -171,6 +172,15 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   isPopulated?: (row: T) => boolean;
   /** Select field cycled when double-clicking a single well, e.g. role painting. */
   cycleFieldOnWellDoubleClick?: keyof T & string;
+  /**
+   * Names a `select` field whose options appear as a swatch strip anchored above
+   * the selection, so a value can be painted across it in one click without a
+   * trip to the form. Swatch colours come from each option's `swatch`.
+   *
+   * Applies immediately — this is a shortcut for the common case, not a staged
+   * edit. Off unless set.
+   */
+  quickPaintField?: keyof T & string;
 
   /**
    * Controlled staged form record. Pair with `onStagedChange` to prefill the
@@ -480,6 +490,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   mergeOnApply,
   isPopulated,
   cycleFieldOnWellDoubleClick,
+  quickPaintField,
   staged: controlledStaged,
   onStagedChange,
   title,
@@ -624,6 +635,36 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
     tableColumns,
   ]);
 
+  const quickPaint = React.useMemo(() => {
+    if (!quickPaintField || selection.size === 0) return;
+    const field = fields.find((f) => f.key === quickPaintField);
+    if (field?.kind !== "select" || !field.options?.length) return;
+
+    // Show the current value only when every selected well agrees on it.
+    let shared: string | undefined;
+    let first = true;
+    for (const wellId of selection) {
+      const value = state.scopedValues.get(wellId)?.[quickPaintField];
+      const asString = typeof value === "string" ? value : undefined;
+      if (first) {
+        shared = asString;
+        first = false;
+      } else if (shared !== asString) {
+        shared = undefined;
+        break;
+      }
+    }
+
+    return (
+      <WellQuickPaint
+        options={field.options}
+        activeValue={shared}
+        selectionSize={selection.size}
+        onPick={(value) => state.applyToSelection({ [quickPaintField]: value } as Partial<T>)}
+      />
+    );
+  }, [fields, quickPaintField, selection, state]);
+
   const showPlateSelector = shouldShowPlateSelector(state.availablePlates.length, onAddPlate);
 
   // The legend rides with the grid when `legendPlacement="plate"`, stacked
@@ -744,6 +785,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
           wellShape={wellShape}
           framed={framedPlate}
           wrapWell={wrapWell}
+          quickPaint={quickPaint}
           highlightedWellIds={highlightedWellIds}
           onWellDoubleClick={state.cycleWellField}
           selectionFillMode={selectionFillMode}

@@ -70,6 +70,8 @@ export interface PlateMapGridProps<T extends WellRecord = WellRecord> {
   framed?: boolean;
   /** Render-prop that places a node inside each absolute-positioned well cell. */
   wrapWell?: (wellId: WellId, cellSize: number) => React.ReactNode;
+  /** Swatch strip anchored above the selection for one-click painting. */
+  quickPaint?: React.ReactNode;
   /** Wells to highlight (e.g. when hovering a legend item externally). */
   highlightedWellIds?: ReadonlySet<WellId>;
   onWellDoubleClick?: (wellId: WellId) => void;
@@ -123,6 +125,7 @@ export function PlateMapGrid<T extends WellRecord = WellRecord>({
   wellShape,
   framed,
   wrapWell,
+  quickPaint,
   highlightedWellIds,
   onWellDoubleClick,
   selectionFillMode,
@@ -194,6 +197,7 @@ export function PlateMapGrid<T extends WellRecord = WellRecord>({
         wellShape={wellShape}
         framed={framed}
         wrapWell={wrapWell}
+        quickPaint={quickPaint}
         highlightedWellIds={highlightedWellIds}
         onWellHover={(wellId) => {
           if (!isHoverControlled) setInternalHoverPos(wellId);

@@ -1,15 +1,6 @@
-import {
-  BellIcon,
-  FolderIcon,
-  HomeIcon,
-  InboxIcon,
-  PlusIcon,
-  SettingsIcon,
-  StarIcon,
-  UsersIcon,
-} from "lucide-react"
-import React from "react"
-import { expect, userEvent, within } from "storybook/test"
+import { BellIcon, FolderIcon, HomeIcon, InboxIcon, PlusIcon, SettingsIcon, StarIcon, UsersIcon } from "lucide-react";
+import React from "react";
+import { expect, userEvent, within } from "storybook/test";
 
 import {
   Sidebar,
@@ -35,57 +26,150 @@ import {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
-} from "./sidebar"
+} from "./sidebar";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-const meta: Meta<typeof Sidebar> = {
+/**
+ * SW-2304: the Sidebar's Storybook surface is deliberately three stories —
+ * `Default`, `WithSubMenu`, `MultipleGroups`. Everything else the component can
+ * do is an orthogonal prop axis or a composition toggle, so it lives on the
+ * `Default` playground's controls panel instead of as a standalone story:
+ *
+ *   Enum axes        `variant` (sidebar · floating · inset), `side` (left · right),
+ *                    `collapsible` (offcanvas · icon · none), menu-button
+ *                    `variant` (default · outline) and `size` (sm · default · lg)
+ *   Composition      open/collapsed start state, rail, badges + actions, footer
+ *
+ * The remaining stories at the bottom of this file are tagged `!dev` /
+ * `!autodocs`: hidden from the sidebar and the docs page, but still run by
+ * `yarn test:storybook` and still mapped to their Zephyr test cases.
+ */
+type SidebarStoryArgs = React.ComponentProps<typeof Sidebar> & {
+  /** Starting open state of the `SidebarProvider` (uncontrolled). */
+  defaultOpen?: boolean;
+  /** `SidebarMenuButton` `variant` applied to every menu button. */
+  menuButtonVariant?: "default" | "outline";
+  /** `SidebarMenuButton` `size` applied to every menu button. */
+  menuButtonSize?: "default" | "sm" | "lg";
+  /** Render a `SidebarRail` (click-to-toggle edge strip). */
+  showRail?: boolean;
+  /** Render `SidebarMenuBadge` / `SidebarMenuAction` on menu items. */
+  showBadges?: boolean;
+  /** Render the `SidebarFooter` block. */
+  showFooter?: boolean;
+};
+
+const PLAYGROUND_ARG_KEYS = [
+  "defaultOpen",
+  "menuButtonVariant",
+  "menuButtonSize",
+  "showRail",
+  "showBadges",
+  "showFooter",
+] as const satisfies ReadonlyArray<keyof SidebarStoryArgs>;
+
+/**
+ * Strip the playground-only controls so only real `Sidebar` props reach the DOM.
+ */
+function toSidebarProps(args: SidebarStoryArgs | undefined): React.ComponentProps<typeof Sidebar> {
+  const rest = { ...(args ?? {}) };
+  for (const key of PLAYGROUND_ARG_KEYS) delete rest[key];
+  return rest;
+}
+
+const meta: Meta<SidebarStoryArgs> = {
   title: "Components/Navigation & Menus/Sidebar",
   component: Sidebar,
   parameters: {
     layout: "fullscreen",
+    docs: {
+      description: {
+        component:
+          "Composable app-level navigation sidebar. Use the **Default** playground's controls to explore the " +
+          "prop axes (`variant`, `side`, `collapsible`, menu-button `variant`/`size`) and composition toggles " +
+          "(start state, rail, badges & actions, footer). **With Sub Menu** and **Multiple Groups** show the two " +
+          "content-composition patterns that can't be expressed as a prop.",
+      },
+    },
   },
   tags: ["autodocs"],
   argTypes: {
     side: {
       control: { type: "select" },
       options: ["left", "right"],
+      table: { category: "Sidebar" },
     },
     variant: {
       control: { type: "select" },
       options: ["sidebar", "floating", "inset"],
+      table: { category: "Sidebar" },
     },
     collapsible: {
       control: { type: "select" },
       options: ["offcanvas", "icon", "none"],
+      table: { category: "Sidebar" },
+    },
+    defaultOpen: {
+      control: { type: "boolean" },
+      table: { category: "Playground" },
+    },
+    menuButtonVariant: {
+      control: { type: "select" },
+      options: ["default", "outline"],
+      table: { category: "Playground" },
+    },
+    menuButtonSize: {
+      control: { type: "select" },
+      options: ["sm", "default", "lg"],
+      table: { category: "Playground" },
+    },
+    showRail: {
+      control: { type: "boolean" },
+      table: { category: "Playground" },
+    },
+    showBadges: {
+      control: { type: "boolean" },
+      table: { category: "Playground" },
+    },
+    showFooter: {
+      control: { type: "boolean" },
+      table: { category: "Playground" },
     },
   },
   args: {
     side: "left",
     variant: "sidebar",
     collapsible: "offcanvas",
+    defaultOpen: true,
+    menuButtonVariant: "default",
+    menuButtonSize: "default",
+    showRail: false,
+    showBadges: false,
+    showFooter: true,
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Sidebar>
+type Story = StoryObj<SidebarStoryArgs>;
 
-function renderSidebar(
-  args: Story["args"],
-  options?: {
-    open?: boolean
-    menuButtonVariant?: "default" | "outline"
-    menuButtonSize?: "default" | "sm" | "lg"
-  }
-) {
-  const providerProps =
-    typeof options?.open === "boolean" ? { open: options.open } : { defaultOpen: true }
+function renderSidebar(args: SidebarStoryArgs) {
+  const {
+    defaultOpen = true,
+    menuButtonVariant = "default",
+    menuButtonSize = "default",
+    showRail = false,
+    showBadges = false,
+    showFooter = true,
+  } = args;
+  const sidebarProps = toSidebarProps(args);
 
   return (
     <div className="min-h-[520px] bg-muted/30">
-      <SidebarProvider {...providerProps}>
-        <Sidebar {...args}>
+      {/* `key` remounts the provider when the uncontrolled start state changes via controls. */}
+      <SidebarProvider key={String(defaultOpen)} defaultOpen={defaultOpen}>
+        <Sidebar {...sidebarProps}>
           <SidebarHeader>
             <SidebarInput placeholder="Search navigation" />
           </SidebarHeader>
@@ -99,62 +183,56 @@ function renderSidebar(
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive
-                      size={options?.menuButtonSize ?? "default"}
-                      tooltip="Overview"
-                      variant={options?.menuButtonVariant ?? "default"}
-                    >
+                    <SidebarMenuButton isActive size={menuButtonSize} tooltip="Overview" variant={menuButtonVariant}>
                       <HomeIcon />
                       <span>Overview</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton
-                      size={options?.menuButtonSize ?? "default"}
-                      tooltip="Projects"
-                      variant={options?.menuButtonVariant ?? "default"}
-                    >
+                    <SidebarMenuButton size={menuButtonSize} tooltip="Projects" variant={menuButtonVariant}>
                       <FolderIcon />
                       <span>Projects</span>
                     </SidebarMenuButton>
+                    {showBadges && <SidebarMenuBadge>12</SidebarMenuBadge>}
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton
-                      size={options?.menuButtonSize ?? "default"}
-                      tooltip="Team"
-                      variant={options?.menuButtonVariant ?? "default"}
-                    >
+                    <SidebarMenuButton size={menuButtonSize} tooltip="Team" variant={menuButtonVariant}>
                       <UsersIcon />
                       <span>Team</span>
                     </SidebarMenuButton>
+                    {showBadges && (
+                      <>
+                        <SidebarMenuBadge>3</SidebarMenuBadge>
+                        <SidebarMenuAction showOnHover aria-label="Invite teammate">
+                          <PlusIcon />
+                        </SidebarMenuAction>
+                      </>
+                    )}
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <SidebarFooter>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  size={options?.menuButtonSize ?? "default"}
-                  variant={options?.menuButtonVariant ?? "default"}
-                >
-                  <SettingsIcon />
-                  <span>Settings</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarFooter>
+          {showFooter && (
+            <SidebarFooter>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton size={menuButtonSize} variant={menuButtonVariant}>
+                    <SettingsIcon />
+                    <span>Settings</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarFooter>
+          )}
+          {showRail && <SidebarRail />}
         </Sidebar>
         <SidebarInset>
           <div className="flex items-center gap-2 border-b p-4">
             <SidebarTrigger />
             <div>
               <div className="font-medium">Dashboard</div>
-              <div className="text-sm text-muted-foreground">
-                Example layout using the sidebar primitives.
-              </div>
+              <div className="text-sm text-muted-foreground">Example layout using the sidebar primitives.</div>
             </div>
           </div>
           <div className="grid gap-4 p-4 md:grid-cols-3">
@@ -167,35 +245,49 @@ function renderSidebar(
         </SidebarInset>
       </SidebarProvider>
     </div>
-  )
+  );
 }
 
 const playSidebar: Story["play"] = async ({ canvasElement, step }) => {
-  const canvas = within(canvasElement)
+  const canvas = within(canvasElement);
 
   await step("Layout renders", async () => {
-    expect(canvas.getByText("Dashboard")).toBeInTheDocument()
-    expect(canvas.getByRole("button", { name: /toggle sidebar/i })).toBeInTheDocument()
-  })
+    expect(canvas.getByText("Dashboard")).toBeInTheDocument();
+    expect(canvas.getByRole("button", { name: /toggle sidebar/i })).toBeInTheDocument();
+  });
 
   await step("Sidebar navigation", async () => {
-    expect(canvas.getByPlaceholderText("Search navigation")).toBeInTheDocument()
-    expect(canvas.getByText("Workspace")).toBeInTheDocument()
-    expect(canvas.getByText("Overview")).toBeInTheDocument()
-    expect(canvas.getByText("Projects")).toBeInTheDocument()
-    expect(canvas.getByText("Settings")).toBeInTheDocument()
-  })
-}
+    expect(canvas.getByPlaceholderText("Search navigation")).toBeInTheDocument();
+    expect(canvas.getByText("Workspace")).toBeInTheDocument();
+    expect(canvas.getByText("Overview")).toBeInTheDocument();
+    expect(canvas.getByText("Projects")).toBeInTheDocument();
+    expect(canvas.getByText("Settings")).toBeInTheDocument();
+  });
+};
 
+/**
+ * The playground. Every enum axis and composition toggle is a control here —
+ * see the file header for the mapping from the hidden stories to these args.
+ */
 export const Default: Story = {
   render: renderSidebar,
   parameters: {
     zephyr: { testCaseId: "SW-T1288" },
   },
   play: playSidebar,
-}
+};
+
+/* ---------------------------------------------------- hidden (test-only) stories
+ *
+ * SW-2304: each of these is a single point in the Default playground's control
+ * space (or a collapse-driver variant of the same layout). `!dev` keeps them out
+ * of the Storybook sidebar and `!autodocs` out of the docs page, while the
+ * implicit `test` tag keeps them in `yarn test:storybook` and their Zephyr IDs
+ * intact. Do NOT delete them — CI coverage depends on them.
+ * ---------------------------------------------------------------------------- */
 
 export const Floating: Story = {
+  tags: ["!dev", "!autodocs"],
   args: {
     variant: "floating",
   },
@@ -204,9 +296,10 @@ export const Floating: Story = {
     zephyr: { testCaseId: "SW-T1289" },
   },
   play: playSidebar,
-}
+};
 
 export const Inset: Story = {
+  tags: ["!dev", "!autodocs"],
   args: {
     variant: "inset",
   },
@@ -215,9 +308,10 @@ export const Inset: Story = {
     zephyr: { testCaseId: "SW-T1290" },
   },
   play: playSidebar,
-}
+};
 
 export const RightSide: Story = {
+  tags: ["!dev", "!autodocs"],
   args: {
     side: "right",
   },
@@ -226,32 +320,35 @@ export const RightSide: Story = {
     zephyr: { testCaseId: "SW-T1291" },
   },
   play: playSidebar,
-}
+};
 
 export const CollapsedIcon: Story = {
+  tags: ["!dev", "!autodocs"],
   args: {
     collapsible: "icon",
+    defaultOpen: false,
   },
-  render: (args) => renderSidebar(args, { open: false }),
+  render: renderSidebar,
   parameters: {
     zephyr: { testCaseId: "SW-T1292" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Layout renders", async () => {
-      expect(canvas.getByText("Dashboard")).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: /toggle sidebar/i })).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Dashboard")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: /toggle sidebar/i })).toBeInTheDocument();
+    });
 
     await step("Collapsed sidebar shell", async () => {
-      expect(canvasElement.querySelector('[data-sidebar="sidebar"]')).toBeTruthy()
-      expect(canvas.getByPlaceholderText("Search navigation")).toBeInTheDocument()
-    })
+      expect(canvasElement.querySelector('[data-sidebar="sidebar"]')).toBeTruthy();
+      expect(canvas.getByPlaceholderText("Search navigation")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const NonCollapsible: Story = {
+  tags: ["!dev", "!autodocs"],
   args: {
     collapsible: "none",
   },
@@ -260,64 +357,72 @@ export const NonCollapsible: Story = {
     zephyr: { testCaseId: "SW-T1293" },
   },
   play: playSidebar,
-}
+};
 
 export const OutlineMenuButtons: Story = {
-  render: (args) => renderSidebar(args, { menuButtonVariant: "outline" }),
+  tags: ["!dev", "!autodocs"],
+  args: {
+    menuButtonVariant: "outline",
+  },
+  render: renderSidebar,
   parameters: {
     zephyr: { testCaseId: "SW-T1294" },
   },
   play: playSidebar,
-}
+};
 
 export const LargeMenuButtons: Story = {
-  render: (args) => renderSidebar(args, { menuButtonSize: "lg" }),
+  tags: ["!dev", "!autodocs"],
+  args: {
+    menuButtonSize: "lg",
+  },
+  render: renderSidebar,
   parameters: {
     zephyr: { testCaseId: "SW-T1295" },
   },
   play: playSidebar,
-}
-
-// --- New stories for expanded test coverage ---
+};
 
 export const ToggleSidebar: Story = {
+  tags: ["!dev", "!autodocs"],
   args: {
     collapsible: "icon",
   },
-  render: (args) => renderSidebar(args),
+  render: renderSidebar,
   parameters: {
     zephyr: { testCaseId: "SW-T4724" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Sidebar starts expanded", async () => {
-      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]')
-      expect(sidebarSlot).toBeTruthy()
-      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded")
-    })
+      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]');
+      expect(sidebarSlot).toBeTruthy();
+      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded");
+    });
 
     await step("Click trigger collapses sidebar", async () => {
-      const trigger = canvas.getByRole("button", { name: /toggle sidebar/i })
-      await userEvent.click(trigger)
-      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]')
-      expect(sidebarSlot?.getAttribute("data-state")).toBe("collapsed")
-    })
+      const trigger = canvas.getByRole("button", { name: /toggle sidebar/i });
+      await userEvent.click(trigger);
+      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]');
+      expect(sidebarSlot?.getAttribute("data-state")).toBe("collapsed");
+    });
 
     await step("Click trigger again expands sidebar", async () => {
-      const trigger = canvas.getByRole("button", { name: /toggle sidebar/i })
-      await userEvent.click(trigger)
-      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]')
-      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded")
-    })
+      const trigger = canvas.getByRole("button", { name: /toggle sidebar/i });
+      await userEvent.click(trigger);
+      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]');
+      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded");
+    });
   },
-}
+};
 
-function renderRailSidebar(args: Story["args"]) {
+function renderRailSidebar(args: SidebarStoryArgs) {
+  const sidebarProps = toSidebarProps(args);
   return (
     <div className="min-h-[520px] bg-muted/30">
       <SidebarProvider defaultOpen>
-        <Sidebar {...args} collapsible="icon">
+        <Sidebar {...sidebarProps} collapsible="icon">
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Navigation</SidebarGroupLabel>
@@ -349,49 +454,51 @@ function renderRailSidebar(args: Story["args"]) {
         </SidebarInset>
       </SidebarProvider>
     </div>
-  )
+  );
 }
 
 export const WithRail: Story = {
+  tags: ["!dev", "!autodocs"],
   render: renderRailSidebar,
   parameters: {
     zephyr: { testCaseId: "SW-T4725" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Rail element renders", async () => {
-      const rail = canvasElement.querySelector('[data-sidebar="rail"]')
-      expect(rail).toBeTruthy()
-      expect(rail?.getAttribute("aria-label")).toBe("Toggle Sidebar")
-    })
+      const rail = canvasElement.querySelector('[data-sidebar="rail"]');
+      expect(rail).toBeTruthy();
+      expect(rail?.getAttribute("aria-label")).toBe("Toggle Sidebar");
+    });
 
     await step("Sidebar content renders with rail", async () => {
-      expect(canvas.getByText("Home")).toBeInTheDocument()
-      expect(canvas.getByText("Inbox")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Home")).toBeInTheDocument();
+      expect(canvas.getByText("Inbox")).toBeInTheDocument();
+    });
 
     await step("Rail click collapses sidebar", async () => {
-      const rail = canvasElement.querySelector('[data-sidebar="rail"]') as HTMLElement
-      await userEvent.click(rail)
-      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]')
-      expect(sidebarSlot?.getAttribute("data-state")).toBe("collapsed")
-    })
+      const rail = canvasElement.querySelector('[data-sidebar="rail"]') as HTMLElement;
+      await userEvent.click(rail);
+      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]');
+      expect(sidebarSlot?.getAttribute("data-state")).toBe("collapsed");
+    });
 
     await step("Rail click expands sidebar again", async () => {
-      const rail = canvasElement.querySelector('[data-sidebar="rail"]') as HTMLElement
-      await userEvent.click(rail)
-      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]')
-      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded")
-    })
+      const rail = canvasElement.querySelector('[data-sidebar="rail"]') as HTMLElement;
+      await userEvent.click(rail);
+      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]');
+      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded");
+    });
   },
-}
+};
 
-function renderSubMenuSidebar(args: Story["args"]) {
+function renderSubMenuSidebar(args: SidebarStoryArgs) {
+  const sidebarProps = toSidebarProps(args);
   return (
     <div className="min-h-[520px] bg-muted/30">
       <SidebarProvider defaultOpen>
-        <Sidebar {...args}>
+        <Sidebar {...sidebarProps}>
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -436,7 +543,7 @@ function renderSubMenuSidebar(args: Story["args"]) {
         </SidebarInset>
       </SidebarProvider>
     </div>
-  )
+  );
 }
 
 export const WithSubMenu: Story = {
@@ -445,40 +552,39 @@ export const WithSubMenu: Story = {
     zephyr: { testCaseId: "SW-T4726" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Parent menu items render", async () => {
-      expect(canvas.getByText("Projects")).toBeInTheDocument()
-      expect(canvas.getByText("Settings")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Projects")).toBeInTheDocument();
+      expect(canvas.getByText("Settings")).toBeInTheDocument();
+    });
 
     await step("Sub-menu items render", async () => {
-      expect(canvas.getByText("Alpha")).toBeInTheDocument()
-      expect(canvas.getByText("Beta")).toBeInTheDocument()
-      expect(canvas.getByText("Gamma (small)")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Alpha")).toBeInTheDocument();
+      expect(canvas.getByText("Beta")).toBeInTheDocument();
+      expect(canvas.getByText("Gamma (small)")).toBeInTheDocument();
+    });
 
     await step("Sub-menu structure uses correct slots", async () => {
-      const subMenu = canvasElement.querySelector('[data-slot="sidebar-menu-sub"]')
-      expect(subMenu).toBeTruthy()
-      const subItems = canvasElement.querySelectorAll('[data-slot="sidebar-menu-sub-item"]')
-      expect(subItems.length).toBe(3)
-    })
+      const subMenu = canvasElement.querySelector('[data-slot="sidebar-menu-sub"]');
+      expect(subMenu).toBeTruthy();
+      const subItems = canvasElement.querySelectorAll('[data-slot="sidebar-menu-sub-item"]');
+      expect(subItems.length).toBe(3);
+    });
 
     await step("Active sub-item has data-active attribute", async () => {
-      const activeSubButton = canvasElement.querySelector(
-        '[data-slot="sidebar-menu-sub-button"][data-active="true"]'
-      )
-      expect(activeSubButton).toBeTruthy()
-    })
+      const activeSubButton = canvasElement.querySelector('[data-slot="sidebar-menu-sub-button"][data-active="true"]');
+      expect(activeSubButton).toBeTruthy();
+    });
   },
-}
+};
 
-function renderBadgesAndActionsSidebar(args: Story["args"]) {
+function renderBadgesAndActionsSidebar(args: SidebarStoryArgs) {
+  const sidebarProps = toSidebarProps(args);
   return (
     <div className="min-h-[520px] bg-muted/30">
       <SidebarProvider defaultOpen>
-        <Sidebar {...args}>
+        <Sidebar {...sidebarProps}>
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Inbox</SidebarGroupLabel>
@@ -511,44 +617,46 @@ function renderBadgesAndActionsSidebar(args: Story["args"]) {
         </SidebarInset>
       </SidebarProvider>
     </div>
-  )
+  );
 }
 
 export const WithBadgesAndActions: Story = {
+  tags: ["!dev", "!autodocs"],
   render: renderBadgesAndActionsSidebar,
   parameters: {
     zephyr: { testCaseId: "SW-T4727" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Badge counts render", async () => {
-      expect(canvas.getByText("12")).toBeInTheDocument()
-      expect(canvas.getByText("3")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("12")).toBeInTheDocument();
+      expect(canvas.getByText("3")).toBeInTheDocument();
+    });
 
     await step("Badge uses correct data slot", async () => {
-      const badges = canvasElement.querySelectorAll('[data-slot="sidebar-menu-badge"]')
-      expect(badges.length).toBe(2)
-    })
+      const badges = canvasElement.querySelectorAll('[data-slot="sidebar-menu-badge"]');
+      expect(badges.length).toBe(2);
+    });
 
     await step("Menu action renders", async () => {
-      const action = canvas.getByRole("button", { name: "Mark all read" })
-      expect(action).toBeInTheDocument()
-    })
+      const action = canvas.getByRole("button", { name: "Mark all read" });
+      expect(action).toBeInTheDocument();
+    });
 
     await step("Menu action has correct data slot", async () => {
-      const actions = canvasElement.querySelectorAll('[data-slot="sidebar-menu-action"]')
-      expect(actions.length).toBe(1)
-    })
+      const actions = canvasElement.querySelectorAll('[data-slot="sidebar-menu-action"]');
+      expect(actions.length).toBe(1);
+    });
   },
-}
+};
 
-function renderSkeletonSidebar(args: Story["args"]) {
+function renderSkeletonSidebar(args: SidebarStoryArgs) {
+  const sidebarProps = toSidebarProps(args);
   return (
     <div className="min-h-[520px] bg-muted/30">
       <SidebarProvider defaultOpen>
-        <Sidebar {...args}>
+        <Sidebar {...sidebarProps}>
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Loading…</SidebarGroupLabel>
@@ -573,41 +681,39 @@ function renderSkeletonSidebar(args: Story["args"]) {
         </SidebarInset>
       </SidebarProvider>
     </div>
-  )
+  );
 }
 
 export const SkeletonLoading: Story = {
+  tags: ["!dev", "!autodocs"],
   render: renderSkeletonSidebar,
   parameters: {
     zephyr: { testCaseId: "SW-T4728" },
   },
   play: async ({ canvasElement, step }) => {
     await step("Skeleton items render", async () => {
-      const skeletons = canvasElement.querySelectorAll('[data-slot="sidebar-menu-skeleton"]')
-      expect(skeletons.length).toBe(3)
-    })
+      const skeletons = canvasElement.querySelectorAll('[data-slot="sidebar-menu-skeleton"]');
+      expect(skeletons.length).toBe(3);
+    });
 
     await step("Icon skeletons render for showIcon items", async () => {
-      const iconSkeletons = canvasElement.querySelectorAll(
-        '[data-sidebar="menu-skeleton-icon"]'
-      )
-      expect(iconSkeletons.length).toBe(2)
-    })
+      const iconSkeletons = canvasElement.querySelectorAll('[data-sidebar="menu-skeleton-icon"]');
+      expect(iconSkeletons.length).toBe(2);
+    });
 
     await step("Text skeletons render for all items", async () => {
-      const textSkeletons = canvasElement.querySelectorAll(
-        '[data-sidebar="menu-skeleton-text"]'
-      )
-      expect(textSkeletons.length).toBe(3)
-    })
+      const textSkeletons = canvasElement.querySelectorAll('[data-sidebar="menu-skeleton-text"]');
+      expect(textSkeletons.length).toBe(3);
+    });
   },
-}
+};
 
-function renderMultiGroupSidebar(args: Story["args"]) {
+function renderMultiGroupSidebar(args: SidebarStoryArgs) {
+  const sidebarProps = toSidebarProps(args);
   return (
     <div className="min-h-[520px] bg-muted/30">
       <SidebarProvider defaultOpen>
-        <Sidebar {...args}>
+        <Sidebar {...sidebarProps}>
           <SidebarHeader>
             <SidebarInput placeholder="Quick search…" />
           </SidebarHeader>
@@ -664,7 +770,7 @@ function renderMultiGroupSidebar(args: Story["args"]) {
         </SidebarInset>
       </SidebarProvider>
     </div>
-  )
+  );
 }
 
 export const MultipleGroups: Story = {
@@ -673,75 +779,78 @@ export const MultipleGroups: Story = {
     zephyr: { testCaseId: "SW-T4729" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Header with search input renders", async () => {
-      expect(canvas.getByPlaceholderText("Quick search…")).toBeInTheDocument()
-      const header = canvasElement.querySelector('[data-sidebar="header"]')
-      expect(header).toBeTruthy()
-    })
+      expect(canvas.getByPlaceholderText("Quick search…")).toBeInTheDocument();
+      const header = canvasElement.querySelector('[data-sidebar="header"]');
+      expect(header).toBeTruthy();
+    });
 
     await step("Multiple groups render", async () => {
-      const groups = canvasElement.querySelectorAll('[data-sidebar="group"]')
-      expect(groups.length).toBe(2)
-      expect(canvas.getByText("Main")).toBeInTheDocument()
-      expect(canvas.getByText("Resources")).toBeInTheDocument()
-    })
+      const groups = canvasElement.querySelectorAll('[data-sidebar="group"]');
+      expect(groups.length).toBe(2);
+      expect(canvas.getByText("Main")).toBeInTheDocument();
+      expect(canvas.getByText("Resources")).toBeInTheDocument();
+    });
 
     await step("Group action button renders", async () => {
-      const addButton = canvas.getByRole("button", { name: "Add resource" })
-      expect(addButton).toBeInTheDocument()
-    })
+      const addButton = canvas.getByRole("button", { name: "Add resource" });
+      expect(addButton).toBeInTheDocument();
+    });
 
     await step("Separators render between sections", async () => {
-      const separators = canvasElement.querySelectorAll('[data-slot="sidebar-separator"]')
-      expect(separators.length).toBeGreaterThanOrEqual(2)
-    })
+      const separators = canvasElement.querySelectorAll('[data-slot="sidebar-separator"]');
+      expect(separators.length).toBeGreaterThanOrEqual(2);
+    });
 
     await step("Footer renders", async () => {
-      const footer = canvasElement.querySelector('[data-sidebar="footer"]')
-      expect(footer).toBeTruthy()
-      expect(canvas.getByText("Preferences")).toBeInTheDocument()
-    })
+      const footer = canvasElement.querySelector('[data-sidebar="footer"]');
+      expect(footer).toBeTruthy();
+      expect(canvas.getByText("Preferences")).toBeInTheDocument();
+    });
 
     await step("Active item has data-active attribute", async () => {
-      const activeButton = canvasElement.querySelector(
-        '[data-slot="sidebar-menu-button"][data-active="true"]'
-      )
-      expect(activeButton).toBeTruthy()
-    })
+      const activeButton = canvasElement.querySelector('[data-slot="sidebar-menu-button"][data-active="true"]');
+      expect(activeButton).toBeTruthy();
+    });
   },
-}
+};
 
 export const SmallMenuButtons: Story = {
-  render: (args) => renderSidebar(args, { menuButtonSize: "sm" }),
+  tags: ["!dev", "!autodocs"],
+  args: {
+    menuButtonSize: "sm",
+  },
+  render: renderSidebar,
   parameters: {
     zephyr: { testCaseId: "SW-T4730" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Menu buttons render at small size", async () => {
-      const buttons = canvasElement.querySelectorAll('[data-slot="sidebar-menu-button"]')
-      expect(buttons.length).toBeGreaterThan(0)
+      const buttons = canvasElement.querySelectorAll('[data-slot="sidebar-menu-button"]');
+      expect(buttons.length).toBeGreaterThan(0);
       for (const btn of buttons) {
-        expect(btn.getAttribute("data-size")).toBe("sm")
+        expect(btn.getAttribute("data-size")).toBe("sm");
       }
-    })
+    });
 
     await step("Sidebar content is intact", async () => {
-      expect(canvas.getByText("Overview")).toBeInTheDocument()
-      expect(canvas.getByText("Projects")).toBeInTheDocument()
-      expect(canvas.getByText("Team")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Overview")).toBeInTheDocument();
+      expect(canvas.getByText("Projects")).toBeInTheDocument();
+      expect(canvas.getByText("Team")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const WithShowOnHover: Story = {
+  tags: ["!dev", "!autodocs"],
   render: (args) => (
     <div className="min-h-[520px] bg-muted/30">
       <SidebarProvider defaultOpen>
-        <Sidebar {...args}>
+        <Sidebar {...toSidebarProps(args)}>
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Notifications</SidebarGroupLabel>
@@ -781,30 +890,31 @@ export const WithShowOnHover: Story = {
     zephyr: { testCaseId: "SW-T5509" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Menu items render", async () => {
-      expect(canvas.getByText("Alerts")).toBeInTheDocument()
-      expect(canvas.getByText("Inbox")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Alerts")).toBeInTheDocument();
+      expect(canvas.getByText("Inbox")).toBeInTheDocument();
+    });
 
     await step("showOnHover action has opacity-0 class on desktop", async () => {
-      const hoverAction = canvas.getByRole("button", { name: "Mark all read" })
-      expect(hoverAction).toBeInTheDocument()
-      expect(hoverAction.className).toContain("md:opacity-0")
-    })
+      const hoverAction = canvas.getByRole("button", { name: "Mark all read" });
+      expect(hoverAction).toBeInTheDocument();
+      expect(hoverAction.className).toContain("md:opacity-0");
+    });
 
     await step("Always-visible action does not have opacity-0 class", async () => {
-      const visibleAction = canvas.getByRole("button", { name: "View inbox" })
-      expect(visibleAction).toBeInTheDocument()
-      expect(visibleAction.className).not.toContain("md:opacity-0")
-    })
+      const visibleAction = canvas.getByRole("button", { name: "View inbox" });
+      expect(visibleAction).toBeInTheDocument();
+      expect(visibleAction.className).not.toContain("md:opacity-0");
+    });
   },
-}
+};
 
 export const ControlledSidebar: Story = {
+  tags: ["!dev", "!autodocs"],
   render: () => {
-    const [open, setOpen] = React.useState(true)
+    const [open, setOpen] = React.useState(true);
 
     return (
       <div className="min-h-[520px] bg-muted/30">
@@ -833,58 +943,59 @@ export const ControlledSidebar: Story = {
           </SidebarInset>
         </SidebarProvider>
       </div>
-    )
+    );
   },
   parameters: {
     // Auto-generated by sync-storybook-zephyr - do not add manually
     zephyr: { testCaseId: "SW-T5510" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Sidebar starts open via controlled prop", async () => {
-      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]')
-      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded")
-    })
+      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]');
+      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded");
+    });
 
     await step("Toggle button collapses the sidebar", async () => {
-      const trigger = canvas.getByRole("button", { name: /toggle sidebar/i })
-      await userEvent.click(trigger)
-      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]')
-      expect(sidebarSlot?.getAttribute("data-state")).toBe("collapsed")
-    })
+      const trigger = canvas.getByRole("button", { name: /toggle sidebar/i });
+      await userEvent.click(trigger);
+      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]');
+      expect(sidebarSlot?.getAttribute("data-state")).toBe("collapsed");
+    });
 
     await step("Toggle button re-expands the sidebar", async () => {
-      const trigger = canvas.getByRole("button", { name: /toggle sidebar/i })
-      await userEvent.click(trigger)
-      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]')
-      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded")
-    })
+      const trigger = canvas.getByRole("button", { name: /toggle sidebar/i });
+      await userEvent.click(trigger);
+      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]');
+      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded");
+    });
   },
-}
+};
 
 export const KeyboardShortcutToggle: Story = {
-  render: (args) => renderSidebar(args),
+  tags: ["!dev", "!autodocs"],
+  render: renderSidebar,
   parameters: {
     // Auto-generated by sync-storybook-zephyr - do not add manually
     zephyr: { testCaseId: "SW-T5511" },
   },
   play: async ({ canvasElement, step }) => {
     await step("Sidebar starts expanded", async () => {
-      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]')
-      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded")
-    })
+      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]');
+      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded");
+    });
 
     await step("Ctrl+B collapses sidebar via keyboard shortcut", async () => {
-      await userEvent.keyboard("{Control>}b{/Control}")
-      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]')
-      expect(sidebarSlot?.getAttribute("data-state")).toBe("collapsed")
-    })
+      await userEvent.keyboard("{Control>}b{/Control}");
+      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]');
+      expect(sidebarSlot?.getAttribute("data-state")).toBe("collapsed");
+    });
 
     await step("Ctrl+B again expands sidebar", async () => {
-      await userEvent.keyboard("{Control>}b{/Control}")
-      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]')
-      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded")
-    })
+      await userEvent.keyboard("{Control>}b{/Control}");
+      const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]');
+      expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded");
+    });
   },
-}
+};

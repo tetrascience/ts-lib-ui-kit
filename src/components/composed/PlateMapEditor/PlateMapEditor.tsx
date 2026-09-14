@@ -7,6 +7,7 @@ import { PlateMapManifest } from "./PlateMapManifest";
 import { PlateMapPlateSelector } from "./PlateMapPlateSelector";
 import { defaultColorForWell, getPlateMapScopedWellId, usePlateMapEditorState } from "./usePlateMapEditorState";
 
+
 import type { PlateMapActionsMenuProps } from "./PlateMapActionsMenu";
 import type { PlateMapPlateSelectorVariant } from "./PlateMapPlateSelector";
 import type { WellShape } from "./PlatePaintGrid";
@@ -20,6 +21,7 @@ import type {
   WellId,
   WellRecord,
 } from "./types";
+import type { PlateMapApplyScope } from "./usePlateMapEditorState";
 import type { FilterColumnConfig } from "@/components/ui/data-table/data-table";
 
 import { Badge } from "@/components/ui/badge";
@@ -189,6 +191,15 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   plateSelectorVariant?: PlateMapPlateSelectorVariant;
   /** Row field used to stamp the active user-provided barcode onto edited wells. Defaults to `plateBarcode`. */
   plateBarcodeField?: keyof T & string;
+  /**
+   * Which plates Apply/Clear write to. `"active-plate"` (default) touches only
+   * the plate on screen; `"all-plates"` writes the same well positions on every
+   * plate in `plates`, each row stamped with its own barcode.
+   *
+   * For a UI offering both side by side, use `usePlateMapEditorState` directly —
+   * `applyStagedToSelection("all-plates")` takes a per-call override.
+   */
+  applyScope?: PlateMapApplyScope;
   /** Header for the automatic manifest barcode column. */
   plateBarcodeColumnHeader?: string;
   /** Hide the automatic manifest barcode column when plate-scoped editing is active. */
@@ -459,6 +470,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   plateSelectorLabel,
   plateSelectorVariant,
   plateBarcodeField,
+  applyScope,
   plateBarcodeColumnHeader = DEFAULT_PLATE_BARCODE_HEADER,
   hidePlateBarcodeColumn = false,
   groups,
@@ -529,6 +541,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
     activePlateId,
     onPlateChange,
     plateBarcodeField,
+    applyScope,
     onImportCsv,
   });
 

@@ -2802,3 +2802,111 @@ export const CardFooterAndPlateLegend: Story = {
     });
   },
 };
+
+export const ApplyAcrossAllPlates: Story = {
+  name: 'Multi-plate: applyScope="all-plates"',
+  render: () => {
+    function Demo() {
+      const PLATES = [
+        { id: "PLATE-A", barcode: "PLATE-A" },
+        { id: "PLATE-B", barcode: "PLATE-B" },
+        { id: "PLATE-C", barcode: "PLATE-C" },
+      ];
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(new Map());
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      const [activePlateId, setActivePlateId] = React.useState("PLATE-A");
+
+      const perPlateCounts = PLATES.map((plate) => ({
+        barcode: plate.barcode,
+        count: countPlateEntries(values, plate.id),
+        // The barcode actually stamped onto this plate's A01 row — proves each
+        // plate got its OWN barcode, not the active plate's.
+        stamped: values.get(getPlateMapScopedWellId(plate.barcode, "A01"))?.plateBarcode ?? "—",
+      }));
+
+      return (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-3 rounded-md border p-3 text-xs" data-testid="plate-counts">
+            {perPlateCounts.map((p) => (
+              <span key={p.barcode} data-testid={`count-${p.barcode}`}>
+                {p.barcode}: <strong>{p.count}</strong> wells · stamped{" "}
+                <em data-testid={`stamped-${p.barcode}`}>{p.stamped}</em>
+              </span>
+            ))}
+          </div>
+          <PlateMapEditor<DemoWell>
+            format="96"
+            values={values}
+            onChange={setValues}
+            selection={selection}
+            onSelectionChange={setSelection}
+            fields={FIELDS}
+            tableColumns={COLUMNS}
+            colorForWell={colorForWell}
+            emptyEntry={emptyEntry}
+            plates={PLATES}
+            activePlateId={activePlateId}
+            onPlateChange={setActivePlateId}
+            plateSelectorVariant="tabs"
+            applyScope="all-plates"
+            wellShape="circle"
+            hideManifest
+          />
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const countFor = (barcode: string) =>
+      Number(
+        (canvasElement.querySelector(`[data-testid="count-${barcode}"] strong`) as HTMLElement).textContent,
+      );
+
+    await step("All three plates start empty", async () => {
+      for (const b of ["PLATE-A", "PLATE-B", "PLATE-C"]) expect(countFor(b)).toBe(0);
+    });
+
+    await step("Applying on the active plate writes to every plate", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      const sampleId = canvasElement.querySelector("#field-sampleId") as HTMLInputElement;
+      await userEvent.type(sampleId, "BATCH-7");
+      await userEvent.click(canvas.getByRole("button", { name: "Apply" }));
+
+      await waitFor(() => {
+        for (const b of ["PLATE-A", "PLATE-B", "PLATE-C"]) expect(countFor(b)).toBe(96);
+      });
+    });
+
+    await step("Each plate's rows carry their own barcode, not the active one", async () => {
+      for (const b of ["PLATE-A", "PLATE-B", "PLATE-C"]) {
+        const stamped = canvasElement.querySelector(`[data-testid="stamped-${b}"]`) as HTMLElement;
+        expect(stamped.textContent).toBe(b);
+      }
+    });
+
+    await step("Switching plates keeps the applied data", async () => {
+      const plateTab = [...canvasElement.querySelectorAll('[data-slot="toggle-group-item"]')].find((el) =>
+        el.textContent?.includes("PLATE-C"),
+      ) as HTMLElement;
+      expect(plateTab).toBeTruthy();
+      await userEvent.click(plateTab);
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll("[data-well]").length).toBe(96);
+      });
+      expect(countFor("PLATE-C")).toBe(96);
+    });
+
+    await step("Clearing also spans every plate", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Clear wells" }));
+      await waitFor(() => {
+        for (const b of ["PLATE-A", "PLATE-B", "PLATE-C"]) expect(countFor(b)).toBe(0);
+      });
+    });
+  },
+};

@@ -78,6 +78,16 @@ function resolveImportedPlateSelection({
   return importedPlates.some((plate) => plate.id === selectedPlateId) ? undefined : firstImportedPlateId;
 }
 
+/**
+ * Which plates Apply/Clear write to.
+ *
+ * - `"active-plate"` (default) — only the plate currently shown.
+ * - `"all-plates"` — the same well positions on every plate in `plates`, each
+ *   row stamped with its own plate's barcode. Falls back to `"active-plate"`
+ *   when the editor isn't plate-scoped.
+ */
+export type PlateMapApplyScope = "active-plate" | "all-plates";
+
 export interface UsePlateMapEditorStateOptions<T extends WellRecord = WellRecord> {
   values: Map<WellId, T>;
   onChange: (next: Map<WellId, T>) => void;
@@ -111,6 +121,12 @@ export interface UsePlateMapEditorStateOptions<T extends WellRecord = WellRecord
   onPlateChange?: (plateId: string) => void;
   /** Row field used to stamp the active barcode onto edited wells. Defaults to `plateBarcode`. */
   plateBarcodeField?: keyof T & string;
+  /**
+   * Default scope for Apply/Clear. Defaults to `"active-plate"`.
+   * Both functions accept a per-call override, so a host can offer
+   * "Apply" and "Apply to all plates" side by side without changing this.
+   */
+  applyScope?: PlateMapApplyScope;
   onImportCsv?: (file: File, triage?: PlateMapCsvTriage) => void | Promise<void>;
 }
 
@@ -122,8 +138,16 @@ export interface PlateMapEditorState<T extends WellRecord = WellRecord> {
   scopedValues: Map<WellId, T>;
   /** Writes plate-scoped values back through `onChange`, re-scoping keys. */
   commitScopedValues: (next: Map<WellId, T>) => void;
-  applyStagedToSelection: () => void;
-  clearWells: () => void;
+  /**
+   * Applies the staged record across the selection. Pass a scope to override
+   * `applyScope` for this call.
+   *
+   * Safe to wire straight to `onClick` — a non-scope argument (such as the
+   * click event React passes) is ignored and the default scope is used.
+   */
+  applyStagedToSelection: (scope?: PlateMapApplyScope) => void;
+  /** Clears the selected wells. Same scope-override rules as Apply. */
+  clearWells: (scope?: PlateMapApplyScope) => void;
 
   availablePlates: PlateMapPlateOption[];
   activePlate: PlateMapPlateOption | undefined;
@@ -165,6 +189,7 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
   activePlateId,
   onPlateChange,
   plateBarcodeField,
+  applyScope = "active-plate",
   onImportCsv,
 }: UsePlateMapEditorStateOptions<T>): PlateMapEditorState<T> {
   const [internalStaged, setInternalStaged] = React.useState<Partial<T>>({});
@@ -283,24 +308,92 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
     return field;
   }, [cycleFieldOnWellDoubleClick, fields]);
 
-  const applyStagedToSelection = React.useCallback(() => {
-    if (selection.size === 0) return;
-    const next = new Map(scopedValues);
-    selection.forEach((wellId) => {
-      const existing = next.get(wellId);
-      const base = existing ?? emptyEntry(wellId);
-      const merged = stampActivePlateBarcode(merge(base, staged, wellId));
-      next.set(wellId, merged);
-    });
-    commitScopedValues(next);
-  }, [commitScopedValues, emptyEntry, merge, scopedValues, selection, staged, stampActivePlateBarcode]);
+  // `onApply`/`onClear` are wired straight to `onClick` by `WellMetadataForm`,
+  // so these receive a MouseEvent as their first argument. Only accept the two
+  // literal scopes; anything else means "no override".
+  const resolveScope = React.useCallback(
+    (override?: unknown): PlateMapApplyScope =>
+      override === "all-plates" || override === "active-plate" ? override : applyScope,
+    [applyScope],
+  );
 
-  const clearWells = React.useCallback(() => {
-    if (selection.size === 0) return;
-    const next = new Map(scopedValues);
-    selection.forEach((wellId) => next.delete(wellId));
-    commitScopedValues(next);
-  }, [commitScopedValues, scopedValues, selection]);
+  const appliesToEveryPlate = React.useCallback(
+    (scope: PlateMapApplyScope) => scope === "all-plates" && isPlateScoped && availablePlates.length > 0,
+    [availablePlates.length, isPlateScoped],
+  );
+
+  const applyStagedToSelection = React.useCallback(
+    (scope?: PlateMapApplyScope) => {
+      if (selection.size === 0) return;
+
+      if (appliesToEveryPlate(resolveScope(scope))) {
+        const next = new Map(values);
+        availablePlates.forEach((plate) => {
+          selection.forEach((wellId) => {
+            const key = getPlateMapScopedWellId(plate.barcode, wellId);
+            const base = next.get(key) ?? emptyEntry(wellId);
+            const merged = merge(base, staged, wellId) as Record<string, unknown>;
+            next.set(key, { ...merged, [barcodeField]: plate.barcode } as T);
+          });
+        });
+        onChange(next);
+        return;
+      }
+
+      const next = new Map(scopedValues);
+      selection.forEach((wellId) => {
+        const existing = next.get(wellId);
+        const base = existing ?? emptyEntry(wellId);
+        const merged = stampActivePlateBarcode(merge(base, staged, wellId));
+        next.set(wellId, merged);
+      });
+      commitScopedValues(next);
+    },
+    [
+      appliesToEveryPlate,
+      availablePlates,
+      barcodeField,
+      commitScopedValues,
+      emptyEntry,
+      merge,
+      onChange,
+      resolveScope,
+      scopedValues,
+      selection,
+      staged,
+      stampActivePlateBarcode,
+      values,
+    ],
+  );
+
+  const clearWells = React.useCallback(
+    (scope?: PlateMapApplyScope) => {
+      if (selection.size === 0) return;
+
+      if (appliesToEveryPlate(resolveScope(scope))) {
+        const next = new Map(values);
+        availablePlates.forEach((plate) => {
+          selection.forEach((wellId) => next.delete(getPlateMapScopedWellId(plate.barcode, wellId)));
+        });
+        onChange(next);
+        return;
+      }
+
+      const next = new Map(scopedValues);
+      selection.forEach((wellId) => next.delete(wellId));
+      commitScopedValues(next);
+    },
+    [
+      appliesToEveryPlate,
+      availablePlates,
+      commitScopedValues,
+      onChange,
+      resolveScope,
+      scopedValues,
+      selection,
+      values,
+    ],
+  );
 
   const cycleWellField = React.useCallback(
     (wellId: WellId) => {

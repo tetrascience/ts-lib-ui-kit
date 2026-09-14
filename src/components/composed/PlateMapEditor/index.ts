@@ -1,5 +1,5 @@
 export { PlateMapEditor, getPlateMapScopedWellId } from "./PlateMapEditor";
-export type { PlateMapEditorProps } from "./PlateMapEditor";
+export type { PlateMapEditorProps, PlateMapEditorHandle } from "./PlateMapEditor";
 
 export { usePlateMapEditorState, defaultColorForWell, defaultEmptyEntry } from "./usePlateMapEditorState";
 export type {

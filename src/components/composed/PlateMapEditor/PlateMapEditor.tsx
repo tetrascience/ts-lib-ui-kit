@@ -72,6 +72,35 @@ const FORM_WIDTH_AT: Record<PlateMapEditorStackAt, string> = {
 
 export { getPlateMapScopedWellId };
 
+/**
+ * Imperative handle for driving the editor's staged-edit state from outside —
+ * the supported way to render the metadata form somewhere the editor can't
+ * reach (a host sidebar, a drawer, a toolbar) while keeping the editor's
+ * selection and apply behaviour.
+ *
+ * Pair with `hideForm` and your own form:
+ *
+ * ```tsx
+ * const editor = React.useRef<PlateMapEditorHandle<MyWell>>(null);
+ * <PlateMapEditor ref={editor} hideForm … />
+ * <MySidebarForm
+ *   onChange={(next) => editor.current?.setStaged(next)}
+ *   onApply={() => editor.current?.apply()}
+ *   onClear={() => editor.current?.clear()}
+ * />
+ * ```
+ */
+export interface PlateMapEditorHandle<T extends WellRecord = WellRecord> {
+  /** Applies the staged record across the current selection. */
+  apply: (scope?: PlateMapApplyScope) => void;
+  /** Clears the current selection's wells. */
+  clear: (scope?: PlateMapApplyScope) => void;
+  /** Replaces the staged record. */
+  setStaged: (next: Partial<T>) => void;
+  /** Reads the staged record. */
+  getStaged: () => Partial<T>;
+}
+
 export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends Omit<
   PlateMapActionsMenuProps,
   "hasEntries" | "className"
@@ -266,6 +295,13 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   maxCellSize?: number;
 
   className?: string;
+  /** Inline styles for the editor root. */
+  style?: React.CSSProperties;
+  /**
+   * Imperative handle for driving staged edits from outside the editor.
+   * See {@link PlateMapEditorHandle}.
+   */
+  ref?: React.Ref<PlateMapEditorHandle<T>>;
   /** Applied to the row holding the form and plate columns. */
   layoutClassName?: string;
   /**
@@ -500,6 +536,8 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   minCellSize,
   maxCellSize,
   className,
+  style,
+  ref,
   layoutClassName,
   formCardClassName,
   plateCardClassName,
@@ -544,6 +582,17 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
     applyScope,
     onImportCsv,
   });
+
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      apply: (scope?: PlateMapApplyScope) => state.applyStagedToSelection(scope),
+      clear: (scope?: PlateMapApplyScope) => state.clearWells(scope),
+      setStaged: (next: Partial<T>) => state.setStaged(next),
+      getStaged: () => state.staged,
+    }),
+    [state],
+  );
 
   const barcodeField = (plateBarcodeField ?? DEFAULT_PLATE_BARCODE_FIELD) as keyof T & string;
   const activePlateBarcode = state.activePlate?.barcode;
@@ -719,7 +768,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   const columnsInOrder = isFormFirst ? [formColumn, plateColumn] : [plateColumn, formColumn];
 
   return (
-    <div data-slot="plate-map-editor" className={cn("flex w-full min-w-0 flex-col gap-4", className)}>
+    <div data-slot="plate-map-editor" className={cn("flex w-full min-w-0 flex-col gap-4", className)} style={style}>
       <PlateMapEditorTitleBar title={title} badges={badges} />
 
       {banner}

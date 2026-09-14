@@ -23,6 +23,7 @@ import { WellLegend } from "./WellLegend";
 import { WellManifestTable } from "./WellManifestTable";
 import { WellMetadataForm } from "./WellMetadataForm";
 
+import type { PlateMapEditorHandle } from "./PlateMapEditor";
 import type {
   PlateFormat,
   PlateMapCsvTriage,
@@ -2907,6 +2908,106 @@ export const ApplyAcrossAllPlates: Story = {
       await waitFor(() => {
         for (const b of ["PLATE-A", "PLATE-B", "PLATE-C"]) expect(countFor(b)).toBe(0);
       });
+    });
+  },
+};
+
+export const ExternalizedFormViaHandle: Story = {
+  name: "Externalized form: host sidebar drives the editor via ref",
+  render: () => {
+    function Demo() {
+      const editor = React.useRef<PlateMapEditorHandle<DemoWell>>(null);
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(new Map());
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      const [sampleId, setSampleId] = React.useState("");
+
+      return (
+        <div className="flex gap-4">
+          {/* The form lives entirely outside PlateMapEditor, in the host's own
+              chrome, yet stays wired to the editor's selection + apply. */}
+          <aside className="w-64 shrink-0 rounded-lg border bg-muted/30 p-4" data-testid="host-sidebar">
+            <div className="mb-3 text-sm font-semibold">Host sidebar form</div>
+            <label className="mb-1 block text-xs text-muted-foreground" htmlFor="host-sample-id">
+              Sample ID
+            </label>
+            <Input
+              id="host-sample-id"
+              value={sampleId}
+              onChange={(e) => {
+                setSampleId(e.target.value);
+                editor.current?.setStaged({ sampleId: e.target.value, role: "sample" });
+              }}
+            />
+            <div className="mt-3 flex gap-2">
+              <Button size="sm" onClick={() => editor.current?.apply()}>
+                Apply
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => editor.current?.clear()}>
+                Clear
+              </Button>
+            </div>
+            <div className="mt-3 text-xs text-muted-foreground">
+              {selection.size} selected · <span data-testid="well-count">{values.size}</span> filled
+            </div>
+          </aside>
+
+          <div className="min-w-0 flex-1">
+            <PlateMapEditor<DemoWell>
+              ref={editor}
+              format="96"
+              values={values}
+              onChange={setValues}
+              selection={selection}
+              onSelectionChange={setSelection}
+              fields={FIELDS}
+              tableColumns={COLUMNS}
+              colorForWell={colorForWell}
+              emptyEntry={emptyEntry}
+              hideForm
+              hideManifest
+              wellShape="circle"
+              style={{ outline: "1px dashed var(--color-border)", outlineOffset: 4 }}
+            />
+          </div>
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const wellCount = () =>
+      Number((canvasElement.querySelector('[data-testid="well-count"]') as HTMLElement).textContent);
+
+    await step("The editor renders no form of its own", async () => {
+      expect(canvasElement.querySelector('[data-plate-map-region="form"]')).toBeNull();
+      expect(canvasElement.querySelector('[data-slot="plate-map-form"]')).toBeNull();
+    });
+
+    await step("The host's form sits outside the editor subtree", async () => {
+      const editor = canvasElement.querySelector('[data-slot="plate-map-editor"]') as HTMLElement;
+      const sidebar = canvasElement.querySelector('[data-testid="host-sidebar"]') as HTMLElement;
+      expect(editor.contains(sidebar)).toBe(false);
+    });
+
+    await step("style is accepted on the root", async () => {
+      const editor = canvasElement.querySelector('[data-slot="plate-map-editor"]') as HTMLElement;
+      expect(editor.style.outlineOffset).toBe("4px");
+    });
+
+    await step("setStaged + apply() from outside writes through the editor", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      await userEvent.type(canvas.getByLabelText("Sample ID"), "EXT-1");
+      await userEvent.click(canvas.getByRole("button", { name: "Apply" }));
+      await waitFor(() => expect(wellCount()).toBe(96));
+    });
+
+    await step("clear() from outside empties them again", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Clear" }));
+      await waitFor(() => expect(wellCount()).toBe(0));
     });
   },
 };

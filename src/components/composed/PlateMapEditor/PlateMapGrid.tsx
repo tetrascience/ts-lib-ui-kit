@@ -52,8 +52,12 @@ export interface PlateMapGridProps<T extends WellRecord = WellRecord> {
    * summary with external state (e.g. resetting it on a plate switch).
    */
   hoveredWellId?: WellId | null;
+  /** Slot rendered above the toolbar row, inside the grid panel. */
+  banner?: React.ReactNode;
   /** Controls rendered to the left of the built-in select/deselect links. */
   toolbar?: React.ReactNode;
+  /** Slot rendered below the grid (and below any group shortcuts). */
+  footer?: React.ReactNode;
   /** Hide the built-in "Select all" / "Deselect all" links. */
   hideSelectionControls?: boolean;
   selectAllLabel?: string;
@@ -104,7 +108,9 @@ export function PlateMapGrid<T extends WellRecord = WellRecord>({
   renderHoverSummary,
   onHoveredWellChange,
   hoveredWellId,
+  banner,
   toolbar,
+  footer,
   hideSelectionControls = false,
   selectAllLabel = "Select all",
   deselectAllLabel = "Deselect all",
@@ -144,7 +150,8 @@ export function PlateMapGrid<T extends WellRecord = WellRecord>({
   const showToolbarRow = !!toolbar || showSelectionControls;
 
   return (
-    <div data-slot="plate-map-grid" className={cn("flex flex-col gap-1.5", className)}>
+    <div data-slot="plate-map-grid" className={cn("flex w-full min-w-0 flex-col gap-1.5", className)}>
+      {banner}
       {showToolbarRow ? (
         <div className="flex flex-wrap items-center justify-start gap-3">
           {toolbar}
@@ -169,7 +176,7 @@ export function PlateMapGrid<T extends WellRecord = WellRecord>({
           ) : null}
         </div>
       ) : null}
-      <div className="h-5 text-xs text-muted-foreground">{hoverSummary}</div>
+      <div className="h-5 truncate text-xs text-muted-foreground">{hoverSummary}</div>
       <PlatePaintGrid
         format={format}
         rows={rows}
@@ -235,6 +242,7 @@ export function PlateMapGrid<T extends WellRecord = WellRecord>({
           </div>
         </>
       ) : null}
+      {footer}
     </div>
   );
 }

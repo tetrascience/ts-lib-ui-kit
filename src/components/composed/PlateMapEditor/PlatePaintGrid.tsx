@@ -306,9 +306,7 @@ function buildWellOverlay<T extends WellRecord>(
   const isCircle = wellShape === "circle";
 
   type WellShapeProps = Record<string, string | number | undefined>;
-  const shapeProps: WellShapeProps = isCircle
-    ? { cx, cy, r }
-    : { x, y, width: size, height: size };
+  const shapeProps: WellShapeProps = isCircle ? { cx, cy, r } : { x, y, width: size, height: size };
 
   const renderShape = (
     extraProps: Record<string, string | number | undefined>,
@@ -428,9 +426,12 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   const [drag, setDrag] = React.useState<DragState | null>(null);
   const [containerWidth, setContainerWidth] = React.useState<number>();
 
+  // Tracked unconditionally — auto-scaling uses it to fit the grid, and the
+  // scroll container uses it to decide whether it needs to be keyboard
+  // focusable (an unreachable scrollable region is a WCAG failure).
   React.useLayoutEffect(() => {
     const node = containerRef.current;
-    if (!node || !autoScale || cellSize !== undefined) return;
+    if (!node) return;
 
     const update = () => setContainerWidth(node.clientWidth);
     update();
@@ -440,7 +441,7 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
     const observer = new ResizeObserver(update);
     observer.observe(node);
     return () => observer.disconnect();
-  }, [autoScale, cellSize]);
+  }, []);
 
   const resolvedCellSize = React.useMemo(() => {
     if (!autoScale || cellSize !== undefined || !containerWidth) {
@@ -520,6 +521,9 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   const edgeStrokePadding = STROKE_DEFAULT;
   const width = dims.columns * resolvedCellSize + LABEL_PAD + edgeStrokePadding;
   const height = dims.rows * resolvedCellSize + LABEL_PAD + edgeStrokePadding;
+  const frameOuterWidth = width + (framed ? (FRAME_PADDING_PX + FRAME_BORDER_PX) * 2 : 0);
+  const isScrollable = containerWidth !== undefined && frameOuterWidth > containerWidth + 1;
+  const scrollRegionLabel = `${dims.rows} by ${dims.columns} plate map, horizontally scrollable. Use arrow keys to scroll.`;
 
   const colLabels = buildColumnLabels(dims.columns, resolvedCellSize);
   const rowLabels = buildRowLabels(dims.rows, resolvedCellSize);
@@ -576,14 +580,27 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   return (
     <div
       ref={containerRef}
-      className={cn("relative w-full select-none", className)}
+      className={cn(
+        // `overflow-x-auto` is load-bearing in narrow containers: once
+        // auto-scaling hits `minCellSize` the SVG stops shrinking, and a dense
+        // plate (384/1536) is wider than a phone. Without it the whole page
+        // scrolls sideways instead.
+        "relative w-full max-w-full select-none overflow-x-auto",
+        // Only a region that actually scrolls becomes a tab stop, so we don't
+        // add a dead stop to the tab order on roomy layouts.
+        isScrollable && "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        className,
+      )}
       data-slot="plate-paint-grid"
+      data-scrollable={isScrollable || undefined}
+      tabIndex={isScrollable ? 0 : undefined}
+      // `group`, not `region`: `region` is a landmark, and two scrollable
+      // plates on one page would then trip axe's `landmark-unique` rule.
+      role={isScrollable ? "group" : undefined}
+      aria-label={isScrollable ? scrollRegionLabel : undefined}
     >
       <div
-        className={cn(
-          "relative inline-block",
-          framed && "rounded-xl border bg-card p-3 shadow-elevation-3",
-        )}
+        className={cn("relative inline-block", framed && "rounded-xl border bg-card p-3 shadow-elevation-3")}
         data-slot="plate-paint-grid-frame"
       >
         <svg

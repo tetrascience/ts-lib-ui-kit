@@ -1,18 +1,18 @@
 import * as React from "react";
 
-import { plateOptionsFromCsvTriage } from "./csvPlateTriage";
 import { PlateMapActionsMenu } from "./PlateMapActionsMenu";
 import { PlateMapForm } from "./PlateMapForm";
 import { PlateMapGrid } from "./PlateMapGrid";
 import { PlateMapManifest } from "./PlateMapManifest";
 import { PlateMapPlateSelector } from "./PlateMapPlateSelector";
+import { defaultColorForWell, getPlateMapScopedWellId, usePlateMapEditorState } from "./usePlateMapEditorState";
 
 import type { PlateMapActionsMenuProps } from "./PlateMapActionsMenu";
 import type { PlateMapPlateSelectorVariant } from "./PlateMapPlateSelector";
 import type { WellShape } from "./PlatePaintGrid";
 import type {
   PlateFormat,
-  PlateMapCsvTriage,
+  PlateMapEditorLabels,
   PlateMapGroupOption,
   PlateMapPlateOption,
   WellColumn,
@@ -20,23 +20,55 @@ import type {
   WellId,
   WellRecord,
 } from "./types";
+import type { FilterColumnConfig } from "@/components/ui/data-table/data-table";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-const PLATE_WELL_KEY_SEPARATOR = "::";
 const DEFAULT_PLATE_BARCODE_FIELD = "plateBarcode";
 const DEFAULT_PLATE_BARCODE_HEADER = "Plate Barcode";
+const DEFAULT_MANIFEST_TITLE = "Sample manifest";
+const DEFAULT_FORM_WIDTH = "360px";
 
-export function getPlateMapScopedWellId(plateBarcode: string, wellId: WellId): WellId {
-  return `${plateBarcode}${PLATE_WELL_KEY_SEPARATOR}${wellId}`;
-}
+/**
+ * Width at which the form and plate stop stacking and sit side by side.
+ *
+ * These are **container** widths, not viewport widths — the editor measures the
+ * space it is actually given, so it lays out correctly inside a narrow panel,
+ * split pane, or drawer on a wide monitor, not just on a small device. Below
+ * the chosen width both regions are full-width and stacked.
+ *
+ * `"sm"` 640px · `"md"` 768px (default) · `"lg"` 1024px · `"xl"` 1280px ·
+ * `"never"` always stacked.
+ */
+export type PlateMapEditorStackAt = "sm" | "md" | "lg" | "xl" | "never";
 
-function wellIdFromPlateWellKey(plateId: string, key: WellId): WellId | undefined {
-  const prefix = `${plateId}${PLATE_WELL_KEY_SEPARATOR}`;
-  return key.startsWith(prefix) ? key.slice(prefix.length) : undefined;
-}
+/** Where the metadata form sits relative to the plate grid. */
+export type PlateMapEditorFormPlacement = "start" | "end" | "top" | "bottom";
+
+/**
+ * Static container-query class maps. Tailwind scans source text, so these
+ * cannot be built by interpolation — every class that ships must appear here
+ * verbatim.
+ */
+const SIDE_BY_SIDE_AT: Record<PlateMapEditorStackAt, string> = {
+  sm: "@min-[640px]:flex-row @min-[640px]:items-start",
+  md: "@min-[768px]:flex-row @min-[768px]:items-start",
+  lg: "@min-[1024px]:flex-row @min-[1024px]:items-start",
+  xl: "@min-[1280px]:flex-row @min-[1280px]:items-start",
+  never: "",
+};
+
+const FORM_WIDTH_AT: Record<PlateMapEditorStackAt, string> = {
+  sm: "@min-[640px]:w-[var(--plate-map-form-width)] @min-[640px]:shrink-0",
+  md: "@min-[768px]:w-[var(--plate-map-form-width)] @min-[768px]:shrink-0",
+  lg: "@min-[1024px]:w-[var(--plate-map-form-width)] @min-[1024px]:shrink-0",
+  xl: "@min-[1280px]:w-[var(--plate-map-form-width)] @min-[1280px]:shrink-0",
+  never: "",
+};
+
+export { getPlateMapScopedWellId };
 
 export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends Omit<
   PlateMapActionsMenuProps,
@@ -53,10 +85,14 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   fields: WellField<T>[];
   tableColumns: WellColumn<T>[];
 
-  /** Resolves the SVG fill color for a well. */
-  colorForWell: (well: T | undefined, wellId: WellId) => string;
-  /** Builds an empty record when a well is freshly created. */
-  emptyEntry: (wellId: WellId) => T;
+  /**
+   * Resolves the SVG fill color for a well. Optional — defaults to a filled
+   * swatch for populated wells and the empty-well token for the rest, which is
+   * enough for read-only or single-category views.
+   */
+  colorForWell?: (well: T | undefined, wellId: WellId) => string;
+  /** Builds an empty record when a well is freshly created. Defaults to `{}`. */
+  emptyEntry?: (wellId: WellId) => T;
   /**
    * Merges the staged form record onto an existing well record on Apply.
    * Defaults to a shallow merge (form keys overwrite existing keys when set).
@@ -67,14 +103,29 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   /** Select field cycled when double-clicking a single well, e.g. role painting. */
   cycleFieldOnWellDoubleClick?: keyof T & string;
 
+  /**
+   * Controlled staged form record. Pair with `onStagedChange` to prefill the
+   * form, read what's staged, or drive Apply from outside. When omitted the
+   * editor owns staged state internally.
+   */
+  staged?: Partial<T>;
+  onStagedChange?: (next: Partial<T>) => void;
+
   /** Optional header title (e.g. plate set name). */
   title?: string;
   /** Optional badges shown in the header next to the title. */
   badges?: React.ReactNode;
-  /** Optional banner (e.g. import/error alert) shown above the layout. */
+  /** Optional banner (e.g. import/error alert) shown above the whole layout. */
   banner?: React.ReactNode;
-  /** Legend block rendered under the form column. */
+  /** Legend block. Position controlled by `legendPlacement`. */
   legend?: React.ReactNode;
+  /**
+   * Where `legend` renders. `"form"` (default) puts it under the form column,
+   * separated by a divider. `"plate"` puts it under the grid inside the plate
+   * card, stacked above anything in `plateFooter`. With `hideForm`, `"form"`
+   * drops the legend entirely — use `"plate"` there.
+   */
+  legendPlacement?: "form" | "plate";
   /** Form helper slot rendered between fields and the action row. */
   formExtras?: React.ReactNode;
   /**
@@ -83,12 +134,46 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
    * source palette. The legend slot still renders beneath the replacement.
    */
   formSlot?: React.ReactNode;
-  /** Footer actions (e.g. Save, Back). */
+  /** Hides the form column entirely, leaving grid (+ manifest). */
+  hideForm?: boolean;
+
+  /* ---------------------------------------------------------------- Layout */
+
+  /**
+   * Where the metadata form sits relative to the plate grid. `"start"` /
+   * `"end"` put it beside the grid (subject to `stackAt`); `"top"` / `"bottom"`
+   * stack it full-width at every breakpoint. Defaults to `"start"`.
+   */
+  formPlacement?: PlateMapEditorFormPlacement;
+  /**
+   * Viewport width at which the form and grid sit side by side. Below it they
+   * always stack full-width. Ignored when `formPlacement` is `"top"`/`"bottom"`.
+   * Defaults to `"md"`.
+   */
+  stackAt?: PlateMapEditorStackAt;
+  /**
+   * Width of the form column at and above `stackAt`. Any CSS length (`"420px"`,
+   * `"28rem"`, `"30%"`) or a number treated as px. Defaults to `"360px"`.
+   * Below `stackAt` the form is always full-width regardless of this value.
+   */
+  formWidth?: number | string;
+  /** Footer actions (e.g. Save, Back). Position controlled by `footerPlacement`. */
   footer?: React.ReactNode;
+  /**
+   * Where `footer` renders. `"editor"` (default) keeps it as a standalone row
+   * at the very bottom, below the manifest. `"plate-card"` renders it as a real
+   * `CardFooter` inside the plate card, which is what the card's
+   * `has-data-[slot=card-footer]` styling is there for.
+   */
+  footerPlacement?: "editor" | "plate-card";
   /** Title for the plate grid panel. */
   plateTitle?: React.ReactNode;
-  /** Optional controls shown next to the built-in actions menu. */
+  /** Optional controls shown above the grid, inside the plate card. */
   plateToolbar?: React.ReactNode;
+  /** Slot rendered above the grid's toolbar, scoped to the plate card only. */
+  plateBanner?: React.ReactNode;
+  /** Slot rendered below the grid, inside the plate card. */
+  plateFooter?: React.ReactNode;
   /** User-provided plates available for this editor. Barcodes are never generated by the editor. */
   plates?: PlateMapPlateOption[];
   activePlateId?: string;
@@ -132,73 +217,65 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   highlightedWellIds?: ReadonlySet<WellId>;
   /** Fires whenever the currently hovered well changes (null on leave). */
   onHoveredWellChange?: (wellId: WellId | null) => void;
+  /** Hides the grid's built-in "Select all" / "Deselect all" links. */
+  hideSelectionControls?: boolean;
+  /**
+   * Overrides every user-facing string the editor and its manifest render —
+   * the single place to localise. Omitted keys fall back to English defaults.
+   *
+   * Does not cover `plateTitle` / `manifestTitle` (own props, `ReactNode`) or
+   * the import/export menu's labels (`importCsvLabel` and friends, inherited
+   * from `PlateMapActionsMenuProps`).
+   */
+  labels?: PlateMapEditorLabels;
+  /** Hides the sample manifest panel entirely. */
+  hideManifest?: boolean;
+  /**
+   * Fully replaces the manifest panel's body, keeping the card and heading.
+   * Use for a bespoke summary table; pair with `hideManifest` to drop the
+   * region altogether.
+   */
+  manifestSlot?: React.ReactNode;
+  /** Adds the manifest's copy-first-value-downward column action. Defaults to true. */
+  manifestEnableFillDown?: boolean;
+  /** Heading for the manifest card. Defaults to `"Sample manifest"`. */
+  manifestTitle?: React.ReactNode;
   /** Enables the filter popover on the manifest table. */
   manifestFilterable?: boolean;
+  /** Overrides which manifest columns are filterable and how. */
+  manifestFilterColumns?: FilterColumnConfig[];
   /** Enables the group-by selector on the manifest table. */
   manifestGroupable?: boolean;
+  /** Field the manifest groups by on first render. Requires `manifestGroupable`. */
+  manifestDefaultGroupBy?: string;
+  manifestPageSize?: number;
+  manifestPageSizeOptions?: number[];
   autoScaleGrid?: boolean;
   minCellSize?: number;
   maxCellSize?: number;
 
   className?: string;
-}
-
-function defaultMerge<T extends WellRecord>(existing: T | undefined, staged: Partial<T>): T {
-  return { ...(existing ?? ({} as T)), ...staged };
-}
-
-function mergePlateOptions(
-  importedPlates: PlateMapPlateOption[],
-  providedPlates: PlateMapPlateOption[] | undefined,
-): PlateMapPlateOption[] {
-  const merged = new Map<string, PlateMapPlateOption>();
-  importedPlates.forEach((plate) => merged.set(plate.id, plate));
-  (providedPlates ?? []).forEach((plate) => merged.set(plate.id, plate));
-  return [...merged.values()];
-}
-
-function resolveActivePlate(
-  plates: PlateMapPlateOption[],
-  selectedPlateId: string | undefined,
-): PlateMapPlateOption | undefined {
-  const matchingPlate = plates.find((plate) => plate.id === selectedPlateId);
-  if (matchingPlate) return matchingPlate;
-  return selectedPlateId ? undefined : plates[0];
-}
-
-function buildScopedValues<T extends WellRecord>(values: Map<WellId, T>, plateKey: string | undefined) {
-  if (!plateKey) return values;
-
-  const next = new Map<WellId, T>();
-  values.forEach((row, key) => {
-    const wellId = wellIdFromPlateWellKey(plateKey, key);
-    if (wellId) next.set(wellId, row);
-  });
-  return next;
-}
-
-function resolveImportedPlateSelection({
-  importedPlates,
-  selectedPlateId,
-  isControlled,
-  providedPlateCount,
-}: {
-  importedPlates: PlateMapPlateOption[];
-  selectedPlateId?: string;
-  isControlled: boolean;
-  providedPlateCount: number;
-}): string | null | undefined {
-  const firstImportedPlateId = importedPlates[0]?.id;
-  if (!firstImportedPlateId) return !isControlled && providedPlateCount === 0 ? null : undefined;
-  return importedPlates.some((plate) => plate.id === selectedPlateId) ? undefined : firstImportedPlateId;
+  /** Applied to the row holding the form and plate columns. */
+  layoutClassName?: string;
+  /**
+   * Applied to the form column `Card`. Merged after the default width clamp,
+   * so `max-w-*` / `min-w-*` / `basis-*` utilities here win.
+   */
+  formCardClassName?: string;
+  /** Applied to the plate column `Card`. */
+  plateCardClassName?: string;
+  /** Applied to the manifest `Card`. */
+  manifestCardClassName?: string;
+  /** Applied to the `PlateMapForm` panel inside the form card. */
+  formClassName?: string;
+  /** Applied to the `PlateMapGrid` panel inside the plate card. */
+  gridClassName?: string;
+  /** Applied to the `PlateMapManifest` panel inside the manifest card. */
+  manifestClassName?: string;
 }
 
 function shouldShowPlateSelector(plateCount: number, onAddPlate: PlateMapEditorProps["onAddPlate"]): boolean {
   return plateCount > 0 || !!onAddPlate;
-}
-
-function canUpdatePlateSelection(isControlled: boolean, onPlateChange: PlateMapEditorProps["onPlateChange"]): boolean {
-  return !isControlled || !!onPlateChange;
 }
 
 function PlateMapEditorTitleBar({ title, badges }: { title?: string; badges?: React.ReactNode }) {
@@ -212,6 +289,132 @@ function PlateMapEditorTitleBar({ title, badges }: { title?: string; badges?: Re
   );
 }
 
+function resolvePlateGridFooter(plateLegend: React.ReactNode, plateFooter: React.ReactNode): React.ReactNode {
+  if (!plateLegend && !plateFooter) return undefined;
+  return (
+    <>
+      {plateLegend ? <div className="mt-3 border-t pt-3">{plateLegend}</div> : null}
+      {plateFooter}
+    </>
+  );
+}
+
+function PlateMapEditorFooterRow({
+  footer,
+  placement,
+}: {
+  footer: React.ReactNode;
+  placement: "editor" | "plate-card";
+}) {
+  if (!footer || placement !== "editor") return null;
+  return <div className="flex flex-wrap justify-end gap-2 pt-2">{footer}</div>;
+}
+
+function PlateMapEditorPlateSelectorSlot({
+  visible,
+  ...selectorProps
+}: { visible: boolean } & React.ComponentProps<typeof PlateMapPlateSelector>) {
+  if (!visible) return null;
+  return <PlateMapPlateSelector {...selectorProps} />;
+}
+
+function PlateMapEditorManifestCard({
+  hidden,
+  title,
+  cardClassName,
+  slot,
+  manifest,
+}: {
+  hidden: boolean;
+  title: React.ReactNode;
+  cardClassName?: string;
+  slot?: React.ReactNode;
+  manifest: React.ReactNode;
+}) {
+  if (hidden) return null;
+
+  return (
+    <Card size="sm" data-plate-map-region="manifest" className={cn("w-full min-w-0", cardClassName)}>
+      {title ? (
+        <CardHeader className="border-b">
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+      ) : null}
+      <CardContent className="min-w-0">{slot ?? manifest}</CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Turnkey plate-map editing surface: a metadata form, an interactive plate
+ * grid, and a sample manifest, wired together with the staged-edit controller
+ * in {@link usePlateMapEditorState}.
+ *
+ * ## Choosing a level
+ *
+ * | You need | Use |
+ * | --- | --- |
+ * | The standard surface, tuned by props | `PlateMapEditor` (this) |
+ * | A layout these props can't express | {@link usePlateMapEditorState} + `PlateMapForm` / `PlateMapGrid` / `PlateMapManifest` |
+ * | One region only, wired yourself | The primitives directly |
+ *
+ * Dropping to the hook keeps the apply/clear semantics, plate scoping, and
+ * barcode stamping — you only take over layout.
+ *
+ * ## Customization map
+ *
+ * - **Layout** — `formPlacement` (`start`/`end`/`top`/`bottom`), `stackAt`,
+ *   `formWidth`, `hideForm`, `hideManifest`.
+ * - **Slots** — `title`, `badges`, `banner` (whole editor), `plateBanner`
+ *   (plate card only), `plateToolbar` (above grid), `plateFooter` (below
+ *   grid), `footer` + `footerPlacement`, `legend` + `legendPlacement`,
+ *   `formExtras`, `formSlot` (replaces the form), `manifestSlot` (replaces the
+ *   manifest body).
+ * - **Edit semantics** — `mergeOnApply`, `emptyEntry`, `isPopulated`,
+ *   `cycleFieldOnWellDoubleClick`, and `staged` / `onStagedChange` to make the
+ *   staged record controlled.
+ * - **Labels** — one `labels` object covers every string the editor and its
+ *   manifest render. `plateTitle` / `manifestTitle` and the import/export menu
+ *   labels stay separate (they are `ReactNode` slots, not plain text).
+ * - **Styling** — `className`, `layoutClassName`, and per-region
+ *   `formCardClassName` / `plateCardClassName` / `manifestCardClassName` plus
+ *   `formClassName` / `gridClassName` / `manifestClassName`. Each card also
+ *   carries `data-plate-map-region="form|plate|manifest"` for CSS targeting.
+ *
+ * ## Responsiveness
+ *
+ * The editor responds to **its container's** width, not the viewport's, so it
+ * lays out correctly inside a narrow panel, split pane, or drawer on a wide
+ * screen. `stackAt` names a container width (`sm` 640 / `md` 768 / `lg` 1024 /
+ * `xl` 1280 / `never`); below it the form and grid stack full-width. A plate
+ * too dense to fit scrolls inside its own container rather than widening the
+ * page.
+ *
+ * @example Default surface
+ * ```tsx
+ * <PlateMapEditor
+ *   format="96"
+ *   values={values}
+ *   onChange={setValues}
+ *   selection={selection}
+ *   onSelectionChange={setSelection}
+ *   fields={FIELDS}
+ *   tableColumns={COLUMNS}
+ * />
+ * ```
+ *
+ * @example Grid-only, form on the right, localised
+ * ```tsx
+ * <PlateMapEditor
+ *   {...base}
+ *   formPlacement="end"
+ *   stackAt="lg"
+ *   formWidth="22rem"
+ *   hideManifest
+ *   labels={{ apply: "Appliquer", clearWells: "Vider les puits" }}
+ * />
+ * ```
+ */
 export function PlateMapEditor<T extends WellRecord = WellRecord>({
   format,
   rows,
@@ -222,20 +425,30 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   onSelectionChange,
   fields,
   tableColumns,
-  colorForWell,
+  colorForWell = defaultColorForWell,
   emptyEntry,
   mergeOnApply,
   isPopulated,
   cycleFieldOnWellDoubleClick,
+  staged: controlledStaged,
+  onStagedChange,
   title,
   badges,
   banner,
   legend,
+  legendPlacement = "form",
   formExtras,
   formSlot,
+  hideForm = false,
+  formPlacement = "start",
+  stackAt = "md",
+  formWidth = DEFAULT_FORM_WIDTH,
   footer,
+  footerPlacement = "editor",
   plateTitle = "Plate",
   plateToolbar,
+  plateBanner,
+  plateFooter,
   plates,
   activePlateId,
   onPlateChange,
@@ -259,12 +472,29 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   wrapWell,
   highlightedWellIds,
   onHoveredWellChange,
+  hideSelectionControls,
+  labels,
+  hideManifest = false,
+  manifestSlot,
+  manifestEnableFillDown,
+  manifestTitle = DEFAULT_MANIFEST_TITLE,
   manifestFilterable,
+  manifestFilterColumns,
   manifestGroupable,
+  manifestDefaultGroupBy,
+  manifestPageSize,
+  manifestPageSizeOptions,
   autoScaleGrid,
   minCellSize,
   maxCellSize,
   className,
+  layoutClassName,
+  formCardClassName,
+  plateCardClassName,
+  manifestCardClassName,
+  formClassName,
+  gridClassName,
+  manifestClassName,
   templates,
   templateId,
   onTemplateChange,
@@ -284,152 +514,29 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   exportCsvLabel,
   clearLabel,
 }: PlateMapEditorProps<T>) {
-  const [staged, setStaged] = React.useState<Partial<T>>({});
-  const [hoverPos, setHoverPos] = React.useState<WellId | null>(null);
-  const [flashWell, setFlashWell] = React.useState<{ wellId: WellId; key: number }>();
-  const [csvPlates, setCsvPlates] = React.useState<PlateMapPlateOption[]>([]);
-  const [internalActivePlateId, setInternalActivePlateId] = React.useState<string>();
+  const state = usePlateMapEditorState<T>({
+    values,
+    onChange,
+    selection,
+    onSelectionChange,
+    emptyEntry,
+    mergeOnApply,
+    staged: controlledStaged,
+    onStagedChange,
+    fields,
+    cycleFieldOnWellDoubleClick,
+    plates,
+    activePlateId,
+    onPlateChange,
+    plateBarcodeField,
+    onImportCsv,
+  });
 
-  const merge = mergeOnApply ?? defaultMerge<T>;
-  const availablePlates = React.useMemo(() => mergePlateOptions(csvPlates, plates), [csvPlates, plates]);
-  const isPlateSelectionControlled = activePlateId !== undefined;
-  const selectedPlateId = activePlateId ?? internalActivePlateId;
-  const activePlate = React.useMemo(
-    () => resolveActivePlate(availablePlates, selectedPlateId),
-    [availablePlates, selectedPlateId],
-  );
-  const activePlateBarcode = activePlate?.barcode;
-  const activePlateKey = activePlateBarcode;
-  const isPlateScoped = !!activePlateKey;
   const barcodeField = (plateBarcodeField ?? DEFAULT_PLATE_BARCODE_FIELD) as keyof T & string;
-  const previousActivePlateKey = React.useRef<string | undefined>(activePlateKey);
-
-  const scopedValues = React.useMemo(() => buildScopedValues(values, activePlateKey), [activePlateKey, values]);
-
-  const toStoredWellKey = React.useCallback(
-    (wellId: WellId): WellId => {
-      if (!isPlateScoped || !activePlateKey) return wellId;
-      return getPlateMapScopedWellId(activePlateKey, wellId);
-    },
-    [activePlateKey, isPlateScoped],
-  );
-
-  const handlePlateChange = React.useCallback(
-    (plateId: string) => {
-      if (!isPlateSelectionControlled) setInternalActivePlateId(plateId);
-      onPlateChange?.(plateId);
-    },
-    [isPlateSelectionControlled, onPlateChange],
-  );
-
-  const handleImportCsv = React.useCallback(
-    async (file: File, triage?: PlateMapCsvTriage) => {
-      if (triage) {
-        const nextCsvPlates = plateOptionsFromCsvTriage(triage);
-        setCsvPlates(nextCsvPlates);
-        const nextSelection = resolveImportedPlateSelection({
-          importedPlates: nextCsvPlates,
-          selectedPlateId,
-          isControlled: isPlateSelectionControlled,
-          providedPlateCount: plates?.length ?? 0,
-        });
-
-        if (nextSelection !== undefined) {
-          if (!isPlateSelectionControlled) setInternalActivePlateId(nextSelection ?? undefined);
-          if (nextSelection) onPlateChange?.(nextSelection);
-        }
-      }
-
-      await onImportCsv?.(file, triage);
-    },
-    [isPlateSelectionControlled, onImportCsv, onPlateChange, plates, selectedPlateId],
-  );
-
-  const stampActivePlateBarcode = React.useCallback(
-    (row: T): T => {
-      if (!isPlateScoped || !activePlateBarcode) return row;
-      return { ...(row as Record<string, unknown>), [barcodeField]: activePlateBarcode } as T;
-    },
-    [activePlateBarcode, barcodeField, isPlateScoped],
-  );
-
-  const commitScopedValues = React.useCallback(
-    (nextScopedValues: Map<WellId, T>) => {
-      if (!isPlateScoped || !activePlateKey) {
-        onChange(nextScopedValues);
-        return;
-      }
-
-      const next = new Map(values);
-      [...next.keys()].forEach((key) => {
-        if (wellIdFromPlateWellKey(activePlateKey, key)) {
-          next.delete(key);
-        }
-      });
-      nextScopedValues.forEach((row, wellId) => {
-        next.set(toStoredWellKey(wellId), stampActivePlateBarcode(row));
-      });
-      onChange(next);
-    },
-    [activePlateKey, isPlateScoped, onChange, stampActivePlateBarcode, toStoredWellKey, values],
-  );
-
-  React.useEffect(() => {
-    if (previousActivePlateKey.current === activePlateKey) return;
-    previousActivePlateKey.current = activePlateKey;
-    setStaged({});
-    setHoverPos(null);
-    setFlashWell(undefined);
-    if (selection.size > 0) onSelectionChange(new Set());
-  }, [activePlateKey, onSelectionChange, selection.size]);
-
-  const doubleClickCycleField = React.useMemo(() => {
-    if (!cycleFieldOnWellDoubleClick) return;
-    const field = fields.find((f) => f.key === cycleFieldOnWellDoubleClick);
-    if (field?.kind !== "select" || !field.options?.length) return;
-    return field;
-  }, [cycleFieldOnWellDoubleClick, fields]);
-
-  const applyStagedToSelection = () => {
-    if (selection.size === 0) return;
-    const next = new Map(scopedValues);
-    selection.forEach((wellId) => {
-      const existing = next.get(wellId);
-      const base = existing ?? emptyEntry(wellId);
-      const merged = stampActivePlateBarcode(merge(base, staged, wellId));
-      next.set(wellId, merged);
-    });
-    commitScopedValues(next);
-  };
-
-  const clearWells = () => {
-    if (selection.size === 0) return;
-    const next = new Map(scopedValues);
-    selection.forEach((wellId) => next.delete(wellId));
-    commitScopedValues(next);
-  };
-
-  const cycleWellField = React.useCallback(
-    (wellId: WellId) => {
-      if (!doubleClickCycleField?.options?.length) return;
-
-      const next = new Map(scopedValues);
-      const existing = next.get(wellId);
-      const currentValue = existing?.[doubleClickCycleField.key];
-      const currentIndex = doubleClickCycleField.options.findIndex((opt) => opt.value === currentValue);
-      const nextOption = doubleClickCycleField.options[(currentIndex + 1) % doubleClickCycleField.options.length];
-      if (!nextOption) return;
-
-      const base = existing ?? emptyEntry(wellId);
-      next.set(wellId, stampActivePlateBarcode({ ...base, [doubleClickCycleField.key]: nextOption.value } as T));
-      commitScopedValues(next);
-      setFlashWell((current) => ({ wellId, key: (current?.key ?? 0) + 1 }));
-    },
-    [commitScopedValues, doubleClickCycleField, emptyEntry, scopedValues, stampActivePlateBarcode],
-  );
+  const activePlateBarcode = state.activePlate?.barcode;
 
   const manifestColumns = React.useMemo(() => {
-    if (!isPlateScoped || !activePlateBarcode || hidePlateBarcodeColumn) return tableColumns;
+    if (!state.isPlateScoped || !activePlateBarcode || hidePlateBarcodeColumn) return tableColumns;
     const alreadyHasBarcodeColumn = tableColumns.some(
       (column) => column.field === barcodeField || column.id === barcodeField,
     );
@@ -445,123 +552,200 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
       },
     };
     return [barcodeColumn, ...tableColumns];
-  }, [activePlateBarcode, barcodeField, hidePlateBarcodeColumn, isPlateScoped, plateBarcodeColumnHeader, tableColumns]);
-  const showPlateSelector = shouldShowPlateSelector(availablePlates.length, onAddPlate);
-  const canChangePlate = canUpdatePlateSelection(isPlateSelectionControlled, onPlateChange);
+  }, [
+    activePlateBarcode,
+    barcodeField,
+    hidePlateBarcodeColumn,
+    state.isPlateScoped,
+    plateBarcodeColumnHeader,
+    tableColumns,
+  ]);
+
+  const showPlateSelector = shouldShowPlateSelector(state.availablePlates.length, onAddPlate);
+
+  // The legend rides with the grid when `legendPlacement="plate"`, stacked
+  // above whatever the caller put in `plateFooter`.
+  const plateGridFooter = resolvePlateGridFooter(legendPlacement === "plate" ? legend : null, plateFooter);
+  const showPlateCardFooter = footerPlacement === "plate-card" && !!footer;
+
+  const isStackedPlacement = formPlacement === "top" || formPlacement === "bottom";
+  const isFormFirst = formPlacement === "start" || formPlacement === "top";
+  const resolvedFormWidth = typeof formWidth === "number" ? `${formWidth}px` : formWidth;
+
+  const formColumn = hideForm ? null : (
+    <Card
+      key="form"
+      data-plate-map-region="form"
+      className={cn(
+        // Full-width and free to shrink by default; the fixed column width only
+        // applies from `stackAt` up, which is what keeps narrow viewports clean.
+        "flex w-full min-w-0 flex-col",
+        !isStackedPlacement && FORM_WIDTH_AT[stackAt],
+        formCardClassName,
+      )}
+      size="sm"
+    >
+      <CardContent className="flex h-full flex-1 flex-col gap-3">
+        <PlateMapForm
+          fields={fields}
+          value={state.staged}
+          onChange={state.setStaged}
+          selectionSize={selection.size}
+          onApply={state.applyStagedToSelection}
+          onClear={state.clearWells}
+          applyLabel={labels?.apply}
+          clearLabel={labels?.clearWells}
+          selectionEmptyLabel={labels?.selectionEmpty}
+          selectionCountLabel={labels?.selectionCount}
+          extras={formExtras}
+          legend={legendPlacement === "form" ? legend : undefined}
+          formSlot={formSlot}
+          className={formClassName}
+        />
+      </CardContent>
+    </Card>
+  );
+
+  const plateColumn = (
+    <Card
+      key="plate"
+      data-plate-map-region="plate"
+      // `min-w-0` rather than a px floor: this flex child must be allowed to
+      // shrink below its content width so the grid's own horizontal scroller
+      // absorbs the overflow instead of the page doing it.
+      className={cn("flex w-full min-w-0 flex-1 flex-col", plateCardClassName)}
+      size="sm"
+    >
+      <CardHeader className="border-b">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <CardTitle className="min-w-0">{plateTitle}</CardTitle>
+          <PlateMapEditorPlateSelectorSlot
+            visible={showPlateSelector}
+            plates={state.availablePlates}
+            activePlateId={state.activePlate?.id}
+            onPlateChange={state.canChangePlate ? state.handlePlateChange : undefined}
+            onAddPlate={onAddPlate}
+            onRemovePlate={onRemovePlate}
+            addPlateLabel={addPlateLabel}
+            removePlateLabel={removePlateLabel}
+            label={plateSelectorLabel}
+            variant={plateSelectorVariant}
+          />
+        </div>
+        <CardAction className="flex flex-wrap items-center gap-2">
+          <PlateMapActionsMenu
+            templates={templates}
+            templateId={templateId}
+            onTemplateChange={onTemplateChange}
+            onClearTemplate={onClearTemplate}
+            hasEntries={values.size > 0}
+            onImportCsv={onImportCsv ? state.handleImportCsv : undefined}
+            onExportCsv={onExportCsv}
+            onImportTemplate={onImportTemplate}
+            onExportTemplate={onExportTemplate}
+            csvAccept={csvAccept}
+            templateAccept={templateAccept}
+            label={label}
+            align={align}
+            side={side}
+            importTemplateLabel={importTemplateLabel}
+            exportTemplateLabel={exportTemplateLabel}
+            importCsvLabel={importCsvLabel}
+            exportCsvLabel={exportCsvLabel}
+            clearLabel={clearLabel}
+          />
+        </CardAction>
+      </CardHeader>
+      <CardContent className="min-w-0">
+        <PlateMapGrid
+          format={format}
+          rows={rows}
+          columns={columns}
+          values={state.scopedValues}
+          selection={selection}
+          onSelectionChange={onSelectionChange}
+          colorForWell={colorForWell}
+          fields={fields}
+          renderHoverSummary={renderHoverSummary}
+          hoveredWellId={state.hoveredWellId}
+          onHoveredWellChange={(wellId) => {
+            state.setHoveredWellId(wellId);
+            onHoveredWellChange?.(wellId);
+          }}
+          banner={plateBanner}
+          toolbar={plateToolbar}
+          footer={plateGridFooter}
+          hideSelectionControls={hideSelectionControls}
+          selectAllLabel={labels?.selectAll}
+          deselectAllLabel={labels?.deselectAll}
+          emptyWellFillColor={emptyWellFillColor}
+          wellShape={wellShape}
+          framed={framedPlate}
+          wrapWell={wrapWell}
+          highlightedWellIds={highlightedWellIds}
+          onWellDoubleClick={state.cycleWellField}
+          selectionFillMode={state.cycleWellField ? "well" : "selection"}
+          flashWellId={state.flashWell?.wellId}
+          flashWellKey={state.flashWell?.key}
+          cellSize={cellSize}
+          autoScale={autoScaleGrid}
+          minCellSize={minCellSize}
+          maxCellSize={maxCellSize}
+          groups={groups}
+          activeGroupId={activeGroupId}
+          onGroupClick={onGroupClick}
+          className={gridClassName}
+        />
+      </CardContent>
+      {showPlateCardFooter ? (
+        <CardFooter className="flex flex-wrap justify-end gap-2 border-t">{footer}</CardFooter>
+      ) : null}
+    </Card>
+  );
+
+  const columnsInOrder = isFormFirst ? [formColumn, plateColumn] : [plateColumn, formColumn];
 
   return (
-    <div data-slot="plate-map-editor" className={cn("flex flex-col gap-4", className)}>
+    <div data-slot="plate-map-editor" className={cn("flex w-full min-w-0 flex-col gap-4", className)}>
       <PlateMapEditorTitleBar title={title} badges={badges} />
 
       {banner}
 
-      <div className="flex flex-wrap gap-3 md:flex-nowrap">
-        {/* Form column */}
-        <Card className="flex w-full max-w-[360px] min-w-[300px] basis-[360px] flex-col" size="sm">
-          <CardContent className="flex h-full flex-1 flex-col gap-3">
-            <PlateMapForm
-              fields={fields}
-              value={staged}
-              onChange={setStaged}
-              selectionSize={selection.size}
-              onApply={applyStagedToSelection}
-              onClear={clearWells}
-              extras={formExtras}
-              legend={legend}
-              formSlot={formSlot}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Plate column */}
-        <Card className="flex min-w-[360px] flex-1 flex-col" size="sm">
-          <CardHeader className="border-b">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <CardTitle className="min-w-0">{plateTitle}</CardTitle>
-              {showPlateSelector ? (
-                <PlateMapPlateSelector
-                  plates={availablePlates}
-                  activePlateId={activePlate?.id}
-                  onPlateChange={canChangePlate ? handlePlateChange : undefined}
-                  onAddPlate={onAddPlate}
-                  onRemovePlate={onRemovePlate}
-                  addPlateLabel={addPlateLabel}
-                  removePlateLabel={removePlateLabel}
-                  label={plateSelectorLabel}
-                  variant={plateSelectorVariant}
-                />
-              ) : null}
-            </div>
-            <CardAction className="flex flex-wrap items-center gap-2">
-              <PlateMapActionsMenu
-                templates={templates}
-                templateId={templateId}
-                onTemplateChange={onTemplateChange}
-                onClearTemplate={onClearTemplate}
-                hasEntries={values.size > 0}
-                onImportCsv={onImportCsv ? handleImportCsv : undefined}
-                onExportCsv={onExportCsv}
-                onImportTemplate={onImportTemplate}
-                onExportTemplate={onExportTemplate}
-                csvAccept={csvAccept}
-                templateAccept={templateAccept}
-                label={label}
-                align={align}
-                side={side}
-                importTemplateLabel={importTemplateLabel}
-                exportTemplateLabel={exportTemplateLabel}
-                importCsvLabel={importCsvLabel}
-                exportCsvLabel={exportCsvLabel}
-                clearLabel={clearLabel}
-              />
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <PlateMapGrid
-              format={format}
-              rows={rows}
-              columns={columns}
-              values={scopedValues}
-              selection={selection}
-              onSelectionChange={onSelectionChange}
-              colorForWell={colorForWell}
-              fields={fields}
-              renderHoverSummary={renderHoverSummary}
-              hoveredWellId={hoverPos}
-              onHoveredWellChange={(wellId) => {
-                setHoverPos(wellId);
-                onHoveredWellChange?.(wellId);
-              }}
-              toolbar={plateToolbar}
-              emptyWellFillColor={emptyWellFillColor}
-              wellShape={wellShape}
-              framed={framedPlate}
-              wrapWell={wrapWell}
-              highlightedWellIds={highlightedWellIds}
-              onWellDoubleClick={doubleClickCycleField ? cycleWellField : undefined}
-              selectionFillMode={doubleClickCycleField ? "well" : "selection"}
-              flashWellId={flashWell?.wellId}
-              flashWellKey={flashWell?.key}
-              cellSize={cellSize}
-              autoScale={autoScaleGrid}
-              minCellSize={minCellSize}
-              maxCellSize={maxCellSize}
-              groups={groups}
-              activeGroupId={activeGroupId}
-              onGroupClick={onGroupClick}
-            />
-          </CardContent>
-        </Card>
+      {/*
+       * `container-type` establishes a query context for DESCENDANTS — an
+       * element cannot query its own width — so the `@container` marker and the
+       * `@min-[…]` variants it drives must live on different elements. Querying
+       * the container rather than the viewport is what lets the editor lay out
+       * correctly inside a narrow panel on a wide screen.
+       */}
+      <div
+        data-slot="plate-map-editor-container"
+        className="@container w-full min-w-0"
+        style={{ "--plate-map-form-width": resolvedFormWidth } as React.CSSProperties}
+      >
+        <div
+          data-slot="plate-map-editor-layout"
+          // Mobile-first: a plain stacked column, promoted to a row only once
+          // the container is wide enough (never, for top/bottom placement).
+          className={cn(
+            "flex w-full min-w-0 flex-col gap-3",
+            !isStackedPlacement && SIDE_BY_SIDE_AT[stackAt],
+            layoutClassName,
+          )}
+        >
+          {columnsInOrder}
+        </div>
       </div>
 
-      <Card size="sm">
-        <CardHeader className="border-b">
-          <CardTitle>Sample manifest</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <PlateMapEditorManifestCard
+        hidden={hideManifest}
+        title={manifestTitle}
+        cardClassName={manifestCardClassName}
+        slot={manifestSlot}
+        manifest={
           <PlateMapManifest
-            values={scopedValues}
-            onChange={commitScopedValues}
+            values={state.scopedValues}
+            onChange={state.commitScopedValues}
             columns={manifestColumns}
             fields={fields}
             selection={selection}
@@ -569,12 +753,19 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
             emptyEntry={emptyEntry}
             isPopulated={isPopulated}
             filterable={manifestFilterable}
+            filterColumns={manifestFilterColumns}
             groupable={manifestGroupable}
+            defaultGroupBy={manifestDefaultGroupBy}
+            pageSize={manifestPageSize}
+            pageSizeOptions={manifestPageSizeOptions}
+            enableFillDown={manifestEnableFillDown}
+            labels={labels}
+            className={manifestClassName}
           />
-        </CardContent>
-      </Card>
+        }
+      />
 
-      {footer ? <div className="flex justify-end gap-2 pt-2">{footer}</div> : null}
+      <PlateMapEditorFooterRow footer={footer} placement={footerPlacement} />
     </div>
   );
 }

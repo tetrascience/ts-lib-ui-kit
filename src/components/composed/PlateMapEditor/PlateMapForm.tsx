@@ -17,6 +17,10 @@ export interface PlateMapFormProps<T extends WellRecord = WellRecord> {
   onClear: () => void;
   applyLabel?: string;
   clearLabel?: string;
+  /** Heading shown when nothing is selected. */
+  selectionEmptyLabel?: string;
+  /** Heading shown with a selection. */
+  selectionCountLabel?: (selectionSize: number) => string;
   /** Helper slot rendered between the fields and the action row. */
   extras?: React.ReactNode;
   /** Legend block rendered beneath the form, separated by a divider. */
@@ -44,6 +48,8 @@ export function PlateMapForm<T extends WellRecord = WellRecord>({
   onClear,
   applyLabel,
   clearLabel,
+  selectionEmptyLabel,
+  selectionCountLabel,
   extras,
   legend,
   formSlot,
@@ -61,6 +67,8 @@ export function PlateMapForm<T extends WellRecord = WellRecord>({
           onClear={onClear}
           applyLabel={applyLabel}
           clearLabel={clearLabel}
+          selectionEmptyLabel={selectionEmptyLabel}
+          selectionCountLabel={selectionCountLabel}
           extras={extras}
         />
       )}

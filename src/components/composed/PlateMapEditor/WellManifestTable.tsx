@@ -3,7 +3,7 @@ import * as React from "react";
 
 import { ManifestFilterPopover } from "./ManifestFilterPopover";
 
-import type { WellColumn, WellField, WellId, WellRecord, WellSelectOption } from "./types";
+import type { WellColumn, WellField, WellId, WellManifestTableLabels, WellRecord, WellSelectOption } from "./types";
 import type { FilterColumnConfig, FilterCondition } from "@/components/ui/data-table/data-table";
 
 import { Badge } from "@/components/ui/badge";
@@ -156,19 +156,48 @@ export interface WellManifestTableProps<T extends WellRecord = WellRecord> {
   filterColumns?: FilterColumnConfig[];
   /** Enables an inline group-by selector. Defaults to false. */
   groupable?: boolean;
+  /** Overrides any user-facing string in the table. Omitted keys use English defaults. */
+  labels?: WellManifestTableLabels;
+  /** Field grouped by on first render. Requires `groupable`. */
+  defaultGroupBy?: string;
   className?: string;
 }
+
+const MANIFEST_LABEL_DEFAULTS = {
+  showAllWells: "Show all wells",
+  hideEmptyWells: "Hide empty wells",
+  groupBy: "Group by",
+  groupByPlaceholder: "Group by…",
+  noGrouping: "No grouping",
+  selectedColumn: "Selected",
+  wellColumn: "Well",
+  emptyRows: "No rows. Paint wells on the plate.",
+  rowsPerPage: "Rows per page",
+  previousPage: "Prev",
+  nextPage: "Next",
+  blankGroup: "(blank)",
+  filter: "Filter",
+  filterValuePlaceholder: "Value…",
+  clearFilters: "Clear all",
+  rowSummary: (total: number, selected: number) => `${total} rows · ${selected} selected`,
+  groupRowCount: (count: number) => `(${count} ${count === 1 ? "row" : "rows"})`,
+  pageRange: (from: number, to: number, total: number) => (total === 0 ? "0 of 0" : `${from}–${to} of ${total}`),
+} satisfies Required<WellManifestTableLabels>;
 
 interface GroupedRow<T> {
   key: string;
   rows: Array<{ id: WellId; row: T }>;
 }
 
-function groupRowsBy<T extends WellRecord>(rows: Array<{ id: WellId; row: T }>, field: string): GroupedRow<T>[] {
+function groupRowsBy<T extends WellRecord>(
+  rows: Array<{ id: WellId; row: T }>,
+  field: string,
+  blankLabel: string,
+): GroupedRow<T>[] {
   const map = new Map<string, GroupedRow<T>>();
   for (const entry of rows) {
     const raw = (entry.row as Record<string, unknown>)[field];
-    const key = raw === undefined || raw === null || raw === "" ? "(blank)" : String(raw);
+    const key = raw === undefined || raw === null || raw === "" ? blankLabel : String(raw);
     const existing = map.get(key);
     if (existing) existing.rows.push(entry);
     else map.set(key, { key, rows: [entry] });
@@ -196,13 +225,16 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
   filterable = false,
   filterColumns,
   groupable = false,
+  defaultGroupBy = "",
+  labels,
   className,
 }: WellManifestTableProps<T>) {
+  const t = { ...MANIFEST_LABEL_DEFAULTS, ...labels };
   const [showAll, setShowAll] = React.useState(false);
   const [page, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(initialPageSize);
   const [filters, setFilters] = React.useState<FilterCondition[]>([]);
-  const [groupByField, setGroupByField] = React.useState<string>("");
+  const [groupByField, setGroupByField] = React.useState<string>(defaultGroupBy);
   const [collapsedGroups, setCollapsedGroups] = React.useState<Set<string>>(new Set());
 
   React.useEffect(() => {
@@ -282,11 +314,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
 
     const selectionActive = !!selection && selection.size > 0;
     const groupingActive = groupable && !!groupByField;
-    const sourceRows = selectionActive
-      ? rows.filter(({ id }) => selection.has(id))
-      : groupingActive
-        ? rows
-        : pagedRows;
+    const sourceRows = selectionActive ? rows.filter(({ id }) => selection.has(id)) : groupingActive ? rows : pagedRows;
     const sourceIndex = sourceRows.findIndex(({ row }) => hasFillValue(row[col.field!]));
     if (sourceIndex < 0) return null;
 
@@ -540,8 +568,8 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
   const groupableColumns = React.useMemo(() => columns.filter((col) => !!col.field), [columns]);
   const activeGroupField = groupable && groupByField ? groupByField : "";
   const grouped = React.useMemo(
-    () => (activeGroupField ? groupRowsBy(rows, activeGroupField) : null),
-    [activeGroupField, rows],
+    () => (activeGroupField ? groupRowsBy(rows, activeGroupField, t.blankGroup) : null),
+    [activeGroupField, rows, t.blankGroup],
   );
 
   const totalRows = rows.length;
@@ -591,20 +619,27 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
     <div data-slot="well-manifest-table" className={cn("flex flex-col gap-2", className)}>
       <div className="flex flex-wrap items-center gap-2">
         <Button variant="outline" size="sm" onClick={() => setShowAll((v) => !v)}>
-          {showAll ? "Hide empty wells" : "Show all wells"}
+          {showAll ? t.hideEmptyWells : t.showAllWells}
         </Button>
         {filterable ? (
-          <ManifestFilterPopover columns={resolvedFilterColumns} filters={filters} onFiltersChange={setFilters} />
+          <ManifestFilterPopover
+            columns={resolvedFilterColumns}
+            filters={filters}
+            onFiltersChange={setFilters}
+            triggerLabel={t.filter}
+            valuePlaceholder={t.filterValuePlaceholder}
+            clearAllLabel={t.clearFilters}
+          />
         ) : null}
         {groupable ? (
           <div className="inline-flex items-center gap-1.5">
             <Layers aria-hidden className="size-3.5 text-muted-foreground" />
             <Select value={groupByField || "__none"} onValueChange={(v) => setGroupByField(v === "__none" ? "" : v)}>
-              <SelectTrigger size="sm" className="h-7 min-w-40" aria-label="Group by">
-                <SelectValue placeholder="Group by…" />
+              <SelectTrigger size="sm" className="h-7 min-w-40" aria-label={t.groupBy}>
+                <SelectValue placeholder={t.groupByPlaceholder} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none">No grouping</SelectItem>
+                <SelectItem value="__none">{t.noGrouping}</SelectItem>
                 {groupableColumns.map((col) => (
                   <SelectItem key={col.id ?? col.field} value={col.field ?? ""}>
                     {col.header}
@@ -614,9 +649,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
             </Select>
           </div>
         ) : null}
-        <span className="text-xs text-muted-foreground">
-          {totalRows} rows · {selSize} selected
-        </span>
+        <span className="text-xs text-muted-foreground">{t.rowSummary(totalRows, selSize)}</span>
       </div>
 
       <TooltipProvider>
@@ -627,11 +660,11 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
                 <TableHead className="w-10 text-center">
                   <span className="inline-flex items-center justify-center text-muted-foreground [&_svg]:size-3.5">
                     <Check aria-hidden />
-                    <span className="sr-only">Selected</span>
+                    <span className="sr-only">{t.selectedColumn}</span>
                   </span>
                 </TableHead>
               ) : null}
-              <TableHead style={{ minWidth: 60 }}>Well</TableHead>
+              <TableHead style={{ minWidth: 60 }}>{t.wellColumn}</TableHead>
               {columns.map((col) => (
                 <TableHead
                   key={col.id ?? col.field ?? col.header}
@@ -671,9 +704,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
                             <span>
                               {groupHeaderLabel}: {group.key}
                             </span>
-                            <span className="text-muted-foreground">
-                              ({group.rows.length} {group.rows.length === 1 ? "row" : "rows"})
-                            </span>
+                            <span className="text-muted-foreground">{t.groupRowCount(group.rows.length)}</span>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -685,7 +716,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
             {(grouped ? grouped.length === 0 : pagedRows.length === 0) ? (
               <TableRow>
                 <TableCell colSpan={totalColSpan} className="text-xs text-muted-foreground">
-                  No rows. Paint wells on the plate.
+                  {t.emptyRows}
                 </TableCell>
               </TableRow>
             ) : null}
@@ -695,7 +726,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
 
       {grouped ? null : (
         <div className="flex items-center justify-end gap-3 text-xs text-muted-foreground">
-          <span className="text-muted-foreground">Rows per page</span>
+          <span className="text-muted-foreground">{t.rowsPerPage}</span>
           <Select
             value={String(pageSize)}
             onValueChange={(v) => {
@@ -703,7 +734,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
               setPage(0);
             }}
           >
-            <SelectTrigger size="sm" className="h-7 w-18" aria-label="Rows per page">
+            <SelectTrigger size="sm" className="h-7 w-18" aria-label={t.rowsPerPage}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -715,12 +746,14 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
             </SelectContent>
           </Select>
           <span>
-            {totalRows === 0
-              ? "0 of 0"
-              : `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, totalRows)} of ${totalRows}`}
+            {t.pageRange(
+              totalRows === 0 ? 0 : page * pageSize + 1,
+              Math.min((page + 1) * pageSize, totalRows),
+              totalRows,
+            )}
           </span>
           <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
-            Prev
+            {t.previousPage}
           </Button>
           <Button
             variant="outline"
@@ -728,7 +761,7 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
             disabled={page >= lastPage}
             onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
           >
-            Next
+            {t.nextPage}
           </Button>
         </div>
       )}

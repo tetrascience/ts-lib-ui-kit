@@ -73,6 +73,11 @@ export interface PlateMapGridProps<T extends WellRecord = WellRecord> {
   /** Wells to highlight (e.g. when hovering a legend item externally). */
   highlightedWellIds?: ReadonlySet<WellId>;
   onWellDoubleClick?: (wellId: WellId) => void;
+  /**
+   * How a selected well is filled. `"well"` (default) keeps the well's own
+   * colour and shows selection via the ring, so an applied edit is visible
+   * immediately. `"selection"` replaces the fill with the selection tint.
+   */
   selectionFillMode?: "selection" | "well";
   flashWellId?: WellId;
   flashWellKey?: number;

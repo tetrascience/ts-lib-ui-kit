@@ -1460,10 +1460,17 @@ function dispatchSvgMouse(
     bubbles: true,
     cancelable: true,
   };
-  if (type === "mousedown") fireEvent.mouseDown(svg, init);
-  else if (type === "mousemove") fireEvent.mouseMove(svg, init);
-  else if (type === "mouseup") fireEvent.mouseUp(svg, init);
-  else if (type === "mouseleave") fireEvent.mouseLeave(svg, init);
+  // The grid listens for pointer events (so touch and pen work too). A real
+  // mouse emits both, but `fireEvent.mouseDown` does not synthesise a
+  // pointerdown — these must be dispatched as pointer events.
+  const pointerInit = { ...init, pointerId: 1, pointerType: "mouse", isPrimary: true };
+  if (type === "mousedown") fireEvent.pointerDown(svg, pointerInit);
+  else if (type === "mousemove") fireEvent.pointerMove(svg, pointerInit);
+  else if (type === "mouseup") fireEvent.pointerUp(svg, pointerInit);
+  else if (type === "mouseleave") {
+    fireEvent.pointerOut(svg, pointerInit);
+    fireEvent.pointerLeave(svg, pointerInit);
+  }
   else fireEvent.doubleClick(svg, init);
 }
 
@@ -1530,8 +1537,10 @@ export const RectShapeAndGroups: Story = {
 
     await step("Mouse-leave clears hover state", async () => {
       const svg = getActiveSvg(canvasElement);
-      fireEvent.mouseOut(svg, { relatedTarget: canvasElement.ownerDocument.body });
-      fireEvent.mouseLeave(svg, { relatedTarget: canvasElement.ownerDocument.body });
+      // React synthesises the non-bubbling `pointerleave` from `pointerout`,
+      // so both are needed for `onPointerLeave` to fire.
+      fireEvent.pointerOut(svg, { relatedTarget: canvasElement.ownerDocument.body });
+      fireEvent.pointerLeave(svg, { relatedTarget: canvasElement.ownerDocument.body });
       await waitFor(() => expect(canvas.getByTestId("hovered-readout").textContent).toMatch(/\(none\)/));
     });
 
@@ -1584,16 +1593,19 @@ export const GridDragSelection: Story = {
       const cellSize = getCellSize(svg);
       dispatchSvgMouse(svg, "mousedown", { row: 5, column: 0, cellSize });
       dispatchSvgMouse(svg, "mousemove", { row: 5, column: 2, cellSize });
-      fireEvent.mouseOut(svg, { relatedTarget: canvasElement.ownerDocument.body });
-      fireEvent.mouseLeave(svg, { relatedTarget: canvasElement.ownerDocument.body });
+      // React synthesises the non-bubbling `pointerleave` from `pointerout`,
+      // so both are needed for `onPointerLeave` to fire.
+      fireEvent.pointerOut(svg, { relatedTarget: canvasElement.ownerDocument.body });
+      fireEvent.pointerLeave(svg, { relatedTarget: canvasElement.ownerDocument.body });
       await waitFor(() => expect(canvas.getByText(/Apply to 3 wells/)).toBeInTheDocument());
     });
 
     await step("Mousedown outside the well area is ignored (cellAt returns null)", async () => {
       const svg = getActiveSvg(canvasElement);
       // Far off the grid origin — clientX/Y land before LABEL_PAD.
-      fireEvent.mouseDown(svg, { clientX: 0, clientY: 0, bubbles: true, cancelable: true });
-      fireEvent.mouseUp(svg, { clientX: 0, clientY: 0, bubbles: true, cancelable: true });
+      const outsideInit = { clientX: 0, clientY: 0, bubbles: true, cancelable: true, pointerId: 1 };
+      fireEvent.pointerDown(svg, outsideInit);
+      fireEvent.pointerUp(svg, outsideInit);
       // Still 3 from the previous step.
       await waitFor(() => expect(canvas.getByText(/Apply to 3 wells/)).toBeInTheDocument());
     });
@@ -3062,6 +3074,100 @@ export const LegendTolerantOfMissingInput: Story = {
     await step("Labelled entries still show their text", async () => {
       expect(canvas.getByText("Unassigned role")).toBeInTheDocument();
       expect(canvas.getByText("Pending role")).toBeInTheDocument();
+    });
+  },
+};
+
+export const KeyboardSelectionAndLiveFeedback: Story = {
+  name: "A11y: keyboard selection + colour feedback while selected",
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(new Map());
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      return (
+        <PlateMapEditor<DemoWell>
+          format="96"
+          values={values}
+          onChange={setValues}
+          selection={selection}
+          onSelectionChange={setSelection}
+          fields={FIELDS}
+          tableColumns={COLUMNS}
+          colorForWell={colorForWell}
+          emptyEntry={emptyEntry}
+          hideManifest
+        />
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const grid = () => canvasElement.querySelector('[role="grid"]') as SVGSVGElement;
+    const wellFill = (id: string) =>
+      (canvasElement.querySelector(`[data-well="${id}"]`) as SVGElement).getAttribute("fill");
+
+    await step("The grid is a single tab stop with grid semantics", async () => {
+      expect(grid()).toHaveAttribute("tabindex", "0");
+      expect(grid()).toHaveAttribute("aria-rowcount", "8");
+      expect(grid()).toHaveAttribute("aria-colcount", "12");
+      expect(canvasElement.querySelectorAll('[role="row"]').length).toBe(8);
+    });
+
+    await step("Arrow keys move an active descendant without a pointer", async () => {
+      grid().focus();
+      await waitFor(() => expect(grid()).toHaveAttribute("aria-activedescendant"));
+      const first = grid().getAttribute("aria-activedescendant");
+      fireEvent.keyDown(grid(), { key: "ArrowRight" });
+      await waitFor(() => expect(grid().getAttribute("aria-activedescendant")).not.toBe(first));
+    });
+
+    await step("Space toggles the focused well into the selection", async () => {
+      fireEvent.keyDown(grid(), { key: " " });
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll('[data-selected="true"]').length).toBe(1);
+      });
+      expect(canvas.getByText(/Apply to 1 well/)).toBeInTheDocument();
+    });
+
+    await step("Shift+Arrow extends the selection", async () => {
+      fireEvent.keyDown(grid(), { key: "ArrowDown", shiftKey: true });
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll('[data-selected="true"]').length).toBeGreaterThan(1);
+      });
+    });
+
+    await step("Applying a role shows its colour while the wells stay selected", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      const roleTrigger = canvasElement.querySelector("#field-role") as HTMLElement;
+      await userEvent.click(roleTrigger);
+      // The Select renders its listbox in a portal on document.body.
+      const listbox = await within(document.body).findByRole("listbox");
+      await userEvent.click(within(listbox).getByRole("option", { name: "Control" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Apply" }));
+
+      await waitFor(() => {
+        // Still selected...
+        expect((canvasElement.querySelector('[data-well="A01"]') as SVGElement).getAttribute("data-selected")).toBe(
+          "true",
+        );
+        // ...and already showing the applied role colour, not the selection tint.
+        expect(wellFill("A01")).toBe(ROLE_COLOR.control);
+      });
+    });
+
+    await step("Selection is still visible via the ring overlay", async () => {
+      expect(canvasElement.querySelector('[data-well-selection="A01"]')).not.toBeNull();
+    });
+
+    await step("Escape clears the selection", async () => {
+      fireEvent.keyDown(grid(), { key: "Escape" });
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll('[data-selected="true"]').length).toBe(0);
+      });
     });
   },
 };

@@ -281,6 +281,13 @@ export interface PlateMapEditorProps<T extends WellRecord = WellRecord> extends 
   emptyWellFillColor?: string | null;
   /** Well shape forwarded to `PlatePaintGrid`. Defaults to `"rect"`. */
   wellShape?: WellShape;
+  /**
+   * How a selected well is filled. `"well"` (default) keeps the well's own
+   * colour and shows selection via the ring, so the result of an Apply is
+   * visible while the wells are still selected. `"selection"` replaces the
+   * fill with the selection tint.
+   */
+  selectionFillMode?: "selection" | "well";
   /** When true, wraps the grid in a card-like plate frame (rounded + border + soft shadow). */
   framedPlate?: boolean;
   /**
@@ -511,6 +518,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
   cellSize,
   emptyWellFillColor,
   wellShape,
+  selectionFillMode,
   framedPlate,
   wrapWell,
   highlightedWellIds,
@@ -738,7 +746,7 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
           wrapWell={wrapWell}
           highlightedWellIds={highlightedWellIds}
           onWellDoubleClick={state.cycleWellField}
-          selectionFillMode={state.cycleWellField ? "well" : "selection"}
+          selectionFillMode={selectionFillMode}
           flashWellId={state.flashWell?.wellId}
           flashWellKey={state.flashWell?.key}
           cellSize={cellSize}

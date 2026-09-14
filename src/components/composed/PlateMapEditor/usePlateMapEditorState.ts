@@ -23,7 +23,13 @@ export function defaultColorForWell(well: unknown): string {
   return well === undefined ? PLATE_MAP_EMPTY_WELL_FILL : "var(--color-chart-1)";
 }
 
-/** Default `emptyEntry` — a blank record, sufficient when wells carry no required keys. */
+/**
+ * Default `emptyEntry`, used when the caller supplies none.
+ *
+ * Only sound for a `T` whose properties are all optional — which is the case it
+ * exists for (read-only or single-category views). Supply your own `emptyEntry`
+ * when `T` has required fields; this cannot construct them.
+ */
 export function defaultEmptyEntry<T extends WellRecord>(): T {
   return {} as T;
 }
@@ -395,6 +401,8 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
     ],
   );
 
+  const canChangePlate = !isPlateSelectionControlled || !!onPlateChange;
+
   const cycleWellField = React.useCallback(
     (wellId: WellId) => {
       if (!doubleClickCycleField?.options?.length) return;
@@ -414,7 +422,10 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
     [commitScopedValues, doubleClickCycleField, emptyEntry, scopedValues, stampActivePlateBarcode],
   );
 
-  return {
+  // Memoised so the object identity is stable across renders: consumers put
+  // this in effect and `useImperativeHandle` dependency lists.
+  return React.useMemo(
+    () => ({
     staged,
     setStaged,
     scopedValues,
@@ -425,12 +436,32 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
     activePlate,
     isPlateScoped,
     isPlateSelectionControlled,
-    canChangePlate: !isPlateSelectionControlled || !!onPlateChange,
+    canChangePlate,
     handlePlateChange,
     handleImportCsv,
     cycleWellField: doubleClickCycleField ? cycleWellField : undefined,
     flashWell,
     hoveredWellId,
     setHoveredWellId,
-  };
+    }),
+    [
+      applyStagedToSelection,
+      availablePlates,
+      activePlate,
+      canChangePlate,
+      clearWells,
+      commitScopedValues,
+      cycleWellField,
+      doubleClickCycleField,
+      flashWell,
+      handleImportCsv,
+      handlePlateChange,
+      hoveredWellId,
+      isPlateScoped,
+      isPlateSelectionControlled,
+      scopedValues,
+      setStaged,
+      staged,
+    ],
+  );
 }

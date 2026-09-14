@@ -184,6 +184,16 @@ const MANIFEST_LABEL_DEFAULTS = {
   pageRange: (from: number, to: number, total: number) => (total === 0 ? "0 of 0" : `${from}–${to} of ${total}`),
 } satisfies Required<WellManifestTableLabels>;
 
+/** Merges overrides over defaults, ignoring keys explicitly set to `undefined`. */
+function resolveLabels<D extends object>(defaults: D, overrides: object | undefined): D {
+  if (!overrides) return defaults;
+  const merged = { ...defaults };
+  for (const [key, value] of Object.entries(overrides)) {
+    if (value !== undefined) (merged as Record<string, unknown>)[key] = value;
+  }
+  return merged;
+}
+
 interface GroupedRow<T> {
   key: string;
   rows: Array<{ id: WellId; row: T }>;
@@ -229,7 +239,10 @@ export function WellManifestTable<T extends WellRecord = WellRecord>({
   labels,
   className,
 }: WellManifestTableProps<T>) {
-  const t = { ...MANIFEST_LABEL_DEFAULTS, ...labels };
+  // Plain spread would let an explicit `undefined` clobber the default —
+  // exactly what `labels={{ apply: t("apply") }}` produces when the lookup
+  // misses, blanking the UI instead of falling back to English.
+  const t = React.useMemo(() => resolveLabels(MANIFEST_LABEL_DEFAULTS, labels), [labels]);
   const [showAll, setShowAll] = React.useState(false);
   const [page, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(initialPageSize);

@@ -145,8 +145,11 @@ Most consumers only need `index.css`.
 
 #### What the stylesheet does — and does not — claim
 
-Every rule the kit authors itself ships inside a `ts-ui-kit` cascade layer, and nothing the kit
-publishes is unlayered. That has two consequences worth knowing:
+Every selector rule the kit writes itself — its design tokens and its component CSS — ships
+inside a `ts-ui-kit` cascade layer, and no published stylesheet contains an unlayered rule.
+(Tailwind utilities land in Tailwind's `utilities` layer; `@font-face`, `@keyframes` and
+`@property` are not selector-matched and stay top-level, with kit keyframes `ts-`-prefixed.)
+That has two consequences worth knowing:
 
 - **Your CSS always wins.** An unlayered rule outranks a layered one regardless of specificity or
   load order, so a plain `:root { --primary: … }` in your app overrides the kit's token whether it
@@ -180,8 +183,9 @@ mounted into the TetraScience platform shell, a widget dropped into a legacy pag
 the kit's claims to make, even layered: a host that never declared `--surface-bright` would still
 pick the kit's value up document-wide.
 
-`index.scoped.css` is the same stylesheet with every kit-authored rule confined to an element
-carrying `data-ts-ui-root`. Import it instead of `index.css` and mark your shell:
+`index.scoped.css` is the same stylesheet with every rule in the `ts-ui-kit` and `base` layers
+— tokens, component CSS, preflight — confined to an element carrying `data-ts-ui-root`. Import
+it instead of `index.css` and mark your shell:
 
 ```tsx
 import "@tetrascience-npm/tetrascience-react-ui/index.scoped.css";

@@ -1,17 +1,21 @@
+/* Cascade-layer order, declared before anything introduces a layer: a layer's
+   position is fixed by its first appearance, so this must precede the
+   `layer(theme)` / `layer(utilities)` imports below. Every selector rule the
+   kit writes itself — the design-token blocks and the component .scss — lives
+   in `ts-ui-kit` (SW-2596). Layered rules never outrank a consumer's own
+   unlayered CSS, so the kit cannot restyle a host document, and the scoped
+   entry (dist/index.scoped.css) confines exactly this layer plus `base` to
+   `[data-ts-ui-root]`. `@utility` definitions are emitted by Tailwind into
+   `utilities`; `@font-face` / `@keyframes` / `@property` are not selector-
+   matched and stay top-level. `properties` (Tailwind's @property fallback for
+   older browsers) must stay lowest or it would reset `--tw-*` on every element
+   above the utilities that set them. See AGENTS.md › Styling. */
+@layer properties, theme, base, components, utilities, ts-ui-kit;
+
 @import "tailwindcss/theme" layer(theme);
 @import "tailwindcss/utilities" layer(utilities);
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-
-/* Every rule the kit authors itself lives in the `ts-ui-kit` cascade layer
-   (SW-2596). Layered rules never outrank a consumer's own unlayered CSS, so
-   the kit cannot restyle a host document — and the scoped entry
-   (dist/index.scoped.css) confines exactly this layer plus `base` to
-   `[data-ts-ui-root]`. Pin the order here so the layer sits above Tailwind's
-   regardless of where a chunk lands in the bundle — `properties` (Tailwind's
-   @property fallback for older browsers) must stay lowest or it would reset
-   `--tw-*` on every element above the utilities that set them. See AGENTS.md. */
-@layer properties, theme, base, components, utilities, ts-ui-kit;
 
 /* inter-latin-wght-normal */
 @font-face {
@@ -108,7 +112,7 @@
   }
 }
 
-@keyframes shimmer {
+@keyframes ts-shimmer {
   0% {
     transform: translateX(-100%);
   }

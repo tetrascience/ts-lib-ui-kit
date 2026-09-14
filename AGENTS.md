@@ -179,16 +179,21 @@ Module Federation remote in the TetraScience platform shell, where a remote's
 other TDP page until a reload (PUI-5962). The rules, enforced by
 `yarn check:css-leaks` (runs in `yarn build`, fails CI):
 
-- **Every rule the kit authors lives in `@layer ts-ui-kit`** — the token blocks
-  in `src/index.tailwind.css` and every component `.scss`. Layered rules never
-  outrank a consumer's unlayered CSS. Utilities go through `@utility` (Tailwind
-  emits them into `utilities`); `@keyframes` / `@font-face` / `@property` are
-  fine at the top level (not selector-matched).
-- **Start every `.scss` with the order statement**
-  `@layer properties, theme, base, components, utilities, ts-ui-kit;` — a
-  layer's position is fixed by its first appearance, and Vite concatenates the
-  `.scss` chunks _before_ Tailwind's output. `properties` (Tailwind's
-  `@property` fallback for older browsers) must stay lowest.
+- **Every selector rule the kit writes itself lives in `@layer ts-ui-kit`** —
+  the token blocks in `src/index.tailwind.css` and every component `.scss`.
+  Layered rules never outrank a consumer's unlayered CSS. The two intentional
+  exceptions: utilities go through `@utility` (Tailwind emits them into
+  `utilities`), and `@keyframes` / `@font-face` / `@property` stay top-level
+  because they are not selector-matched — so kit keyframes are `ts-`-prefixed
+  (`ts-shimmer`), never generic names a host might also define.
+- **Start every `.scss` — and `src/index.tailwind.css`, before its imports —
+  with the order statement**
+  `@layer properties, theme, base, components, utilities, ts-ui-kit;`. A
+  layer's position is fixed by its first appearance: Vite concatenates the
+  `.scss` chunks _before_ Tailwind's output, and the `layer(theme)` /
+  `layer(utilities)` imports would otherwise fix those two first. `properties`
+  (Tailwind's `@property` fallback for older browsers) must stay lowest;
+  `yarn check:css-leaks` asserts the emitted order of every published file.
 - **Namespace component class names by component** (`.histogram-legend-divider`,
   not `.divider`; `.platemap-legend__item`, not `.legend-item`). Layering does
   not help when the host has _no_ competing declaration — the kit's value then

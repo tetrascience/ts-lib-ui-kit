@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 
 import postcss, { type ChildNode, type Container } from "postcss";
 
-import { SCOPED_LAYERS, SCOPE_SELECTOR, UNSCOPABLE_AT_RULES } from "./scope-kit-css";
+import { KIT_LAYER, SCOPED_LAYERS, SCOPE_SELECTOR, UNSCOPABLE_AT_RULES } from "./scope-kit-css";
 
 export type AuditMode = "global" | "scoped";
 
@@ -66,6 +66,43 @@ export function collectLeaks(css: string, mode: AuditMode): Leak[] {
   return leaks;
 }
 
+/**
+ * The cascade-layer order every published stylesheet must end up with.
+ * `properties` (Tailwind's @property fallback) lowest, then Tailwind's four,
+ * then the kit's own layer on top so component CSS keeps outranking utilities
+ * the way the unlayered original did.
+ */
+export const EXPECTED_LAYER_ORDER: readonly string[] = [
+  "properties",
+  "theme",
+  "base",
+  "components",
+  "utilities",
+  KIT_LAYER,
+];
+
+/**
+ * The order the browser will give the top-level layers of `css`: each name's
+ * position is fixed by its first appearance, in a statement or a block.
+ */
+export function effectiveLayerOrder(css: string): string[] {
+  const order: string[] = [];
+  postcss.parse(css).each((node) => {
+    if (node.type !== "atrule" || node.name.toLowerCase() !== "layer") return;
+    for (const name of node.params.split(",").map((part) => part.trim())) {
+      if (name && !order.includes(name)) order.push(name);
+    }
+  });
+  return order;
+}
+
+/** Layers of `EXPECTED_LAYER_ORDER` that `css` places out of sequence (relative to the others). */
+export function layerOrderViolations(css: string): string[] {
+  const actual = effectiveLayerOrder(css).filter((name) => EXPECTED_LAYER_ORDER.includes(name));
+  const expected = EXPECTED_LAYER_ORDER.filter((name) => actual.includes(name));
+  return actual.filter((name, i) => name !== expected[i]);
+}
+
 /** The stylesheets the package publishes, and the bar each is held to. */
 export const AUDITED_STYLESHEETS: ReadonlyArray<{ file: string; mode: AuditMode }> = [
   { file: "index.css", mode: "global" },
@@ -73,10 +110,24 @@ export const AUDITED_STYLESHEETS: ReadonlyArray<{ file: string; mode: AuditMode 
   { file: "index.scoped.css", mode: "scoped" },
 ];
 
-export function auditDist(distDir: string): Array<{ file: string; mode: AuditMode; leaks: Leak[] }> {
+export interface AuditResult {
+  file: string;
+  mode: AuditMode;
+  leaks: Leak[];
+  layerOrder: string[];
+  misorderedLayers: string[];
+}
+
+export function auditDist(distDir: string): AuditResult[] {
   return AUDITED_STYLESHEETS.map(({ file, mode }) => {
     const css = fs.readFileSync(path.join(distDir, file), "utf8");
-    return { file, mode, leaks: collectLeaks(css, mode) };
+    return {
+      file,
+      mode,
+      leaks: collectLeaks(css, mode),
+      layerOrder: effectiveLayerOrder(css),
+      misorderedLayers: layerOrderViolations(css),
+    };
   });
 }
 
@@ -85,16 +136,25 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const distDir = path.resolve(process.argv[2] ?? "dist");
   const results = auditDist(distDir);
   let failed = false;
-  for (const { file, mode, leaks } of results) {
-    if (leaks.length === 0) {
-      console.log(`✓ ${file} (${mode}): no document-level rules`);
+  for (const { file, mode, leaks, layerOrder, misorderedLayers } of results) {
+    const order = layerOrder.join(" < ");
+    if (leaks.length === 0 && misorderedLayers.length === 0) {
+      console.log(`✓ ${file} (${mode}): no document-level rules; layers ${order}`);
       continue;
     }
     failed = true;
-    console.log(`✗ ${file} (${mode}): ${leaks.length} selector(s) can match outside the kit's subtree:`);
-    for (const { selector, layer } of leaks) {
-      const where = layer === null ? "unlayered" : `@layer ${layer}`;
-      console.log(`    ${where}  ${selector}`);
+    if (leaks.length > 0) {
+      console.log(`✗ ${file} (${mode}): ${leaks.length} selector(s) can match outside the kit's subtree:`);
+      for (const { selector, layer } of leaks) {
+        const where = layer === null ? "unlayered" : `@layer ${layer}`;
+        console.log(`    ${where}  ${selector}`);
+      }
+    }
+    if (misorderedLayers.length > 0) {
+      console.log(
+        `✗ ${file} (${mode}): cascade layers out of order — got ${order}, ` +
+          `expected ${EXPECTED_LAYER_ORDER.join(" < ")} (misplaced: ${misorderedLayers.join(", ")})`,
+      );
     }
   }
   if (failed) {

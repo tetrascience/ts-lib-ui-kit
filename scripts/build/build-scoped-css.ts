@@ -12,8 +12,9 @@ import { fileURLToPath } from "node:url";
 import { SCOPE_ATTRIBUTE, scopeCss } from "./scope-kit-css";
 
 export const SCOPED_CSS_BANNER = `/* tetrascience-react-ui — scoped entry (SW-2596).
- * Every kit-authored rule is confined to an element carrying \`${SCOPE_ATTRIBUTE}\`.
- * Mark your app shell — and any surface the kit portals to <body> — with it.
+ * Every rule in the ts-ui-kit and base layers (tokens, component CSS, preflight) is
+ * confined to an element carrying \`${SCOPE_ATTRIBUTE}\`. Mark your app shell — and any
+ * surface the kit portals to <body> — with it. Tailwind's own layers stay global.
  * Generated from index.css by scripts/build/build-scoped-css.ts; do not edit. */
 `;
 

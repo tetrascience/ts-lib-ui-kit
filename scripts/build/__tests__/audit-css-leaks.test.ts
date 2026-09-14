@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { auditDist, collectLeaks } from "../audit-css-leaks";
+import { auditDist, collectLeaks, effectiveLayerOrder, layerOrderViolations } from "../audit-css-leaks";
 import { buildScopedCss, SCOPED_CSS_BANNER } from "../build-scoped-css";
 import { SCOPE_SELECTOR } from "../scope-kit-css";
 
@@ -58,6 +58,32 @@ describe("collectLeaks", () => {
   });
 });
 
+describe("layer order", () => {
+  it("fixes each layer's position at its first appearance, statement or block", () => {
+    expect(effectiveLayerOrder("@layer a,b;@layer c{}@layer b{}@layer a{}")).toEqual(["a", "b", "c"]);
+  });
+
+  it("accepts the expected order and ignores layers it does not know", () => {
+    expect(layerOrderViolations("@layer properties,theme,base,components,utilities,ts-ui-kit;@layer host{}")).toEqual(
+      [],
+    );
+    expect(layerOrderViolations("@layer theme{}@layer utilities{}@layer ts-ui-kit{}")).toEqual([]);
+  });
+
+  it("reports the layers that end up out of sequence", () => {
+    // The pre-fix index.tailwind.css shape: `layer(theme)` / `layer(utilities)` imports
+    // came before the order statement, leaving `base` above `utilities`.
+    expect(layerOrderViolations("@layer theme{}@layer utilities{}@layer base{}")).toEqual(["utilities", "base"]);
+    expect(layerOrderViolations("@layer theme,base,components,utilities;@layer properties{}")).toEqual([
+      "theme",
+      "base",
+      "components",
+      "utilities",
+      "properties",
+    ]);
+  });
+});
+
 describe("buildScopedCss + auditDist", () => {
   const dirs: string[] = [];
   afterEach(() => {
@@ -83,11 +109,13 @@ describe("buildScopedCss + auditDist", () => {
     const scoped = fs.readFileSync(target, "utf8");
 
     expect(scoped.startsWith(SCOPED_CSS_BANNER)).toBe(true);
-    expect(scoped).toContain(`@layer ts-ui-kit{${S}{--a:1}.dark ${S}{--a:2}${S} .histogram-title{font-size:32px}}`);
-    expect(auditDist(dist).map((r) => [r.file, r.leaks.length])).toEqual([
-      ["index.css", 0],
-      ["index.tailwind.css", 0],
-      ["index.scoped.css", 0],
+    expect(scoped).toContain(
+      `@layer ts-ui-kit{${S}{--a:1}.dark ${S},${S}.dark{--a:2}${S} .histogram-title{font-size:32px}}`,
+    );
+    expect(auditDist(dist).map((r) => [r.file, r.leaks.length, r.misorderedLayers.length])).toEqual([
+      ["index.css", 0, 0],
+      ["index.tailwind.css", 0, 0],
+      ["index.scoped.css", 0, 0],
     ]);
   });
 

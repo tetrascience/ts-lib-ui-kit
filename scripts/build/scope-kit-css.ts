@@ -33,7 +33,15 @@ export const KIT_LAYER = "ts-ui-kit";
 /** Layers whose rules the scoped entry must confine: the kit's own, and preflight. */
 export const SCOPED_LAYERS: ReadonlySet<string> = new Set(["base", KIT_LAYER]);
 
-/** At-rules whose contents are not selector-matched; scoping them only breaks them. */
+/**
+ * At-rules whose contents are not selector-matched; scoping them only breaks
+ * them. `@keyframes` and `@font-face` names are therefore still global in the
+ * scoped entry — which is why every kit-authored keyframe is `ts-`-prefixed
+ * (`ts-shimmer`, `ts-border-sweep`, …) and the `Inter Variable` face keeps its
+ * vendor name. The remaining unprefixed names (`spin`, `pulse`, `enter`,
+ * `accordion-down`, …) are Tailwind's and tw-animate-css's own, shared by any
+ * host running the same libraries.
+ */
 export const UNSCOPABLE_AT_RULES: ReadonlySet<string> = new Set([
   "font-face",
   "keyframes",
@@ -73,14 +81,15 @@ export function scopeSelector(selector: string, scope: string = SCOPE_SELECTOR):
   const documentToken = LEADING_DOCUMENT_TOKEN.exec(trimmed);
   if (documentToken) return [`${scope}${trimmed.slice(documentToken[0].length)}`];
 
-  // Dark mode is keyed off a `.dark` ancestor, which consumers set on <html> —
-  // outside the marker. Keep `.dark` where it is and insert the scope beneath it.
+  // Dark mode is keyed off `.dark`, which consumers set on <html> (an ancestor
+  // of the marker) or on the marked shell itself. Cover both: keep `.dark`
+  // above the marker, and also fold it onto the marker as a compound.
   if (trimmed.startsWith(DARK) && !/^[\w-]/u.test(trimmed.slice(DARK.length))) {
     const rest = trimmed.slice(DARK.length);
-    if (rest === "") return [`${DARK} ${scope}`];
-    if (LEADING_COMBINATOR.test(rest)) return [`${DARK} ${scope}${rest}`];
-    // A compound on `.dark` itself (`.dark:hover`) — the scope follows it.
-    return [`${DARK}${rest} ${scope}`];
+    if (rest === "") return [`${DARK} ${scope}`, `${scope}${DARK}`];
+    if (LEADING_COMBINATOR.test(rest)) return [`${DARK} ${scope}${rest}`, `${scope}${DARK}${rest}`];
+    // A compound on `.dark` itself (`.dark:hover`) — the scope follows it, or carries it.
+    return [`${DARK}${rest} ${scope}`, `${scope}${DARK}${rest}`];
   }
 
   // A bare pseudo (`::before`, `::placeholder`, `:-moz-focusring`) is

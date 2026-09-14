@@ -3011,3 +3011,60 @@ export const ExternalizedFormViaHandle: Story = {
     });
   },
 };
+
+export const LegendTolerantOfMissingInput: Story = {
+  name: "Legend: optional items and colours",
+  render: () => (
+    <div className="flex flex-col gap-6">
+      <div>
+        <div className="mb-2 text-xs font-medium text-muted-foreground">
+          No <code>items</code> at all — renders the empty label
+        </div>
+        <div data-testid="legend-none">
+          <WellLegend />
+        </div>
+      </div>
+      <div>
+        <div className="mb-2 text-xs font-medium text-muted-foreground">
+          Well roles with no colour assigned yet — falls back to the empty-well token
+        </div>
+        <div data-testid="legend-uncoloured">
+          <WellLegend
+            items={[
+              { id: "sample", label: "Sample", color: ROLE_COLOR.sample },
+              { id: "unassigned", label: "Unassigned role" },
+              { id: "pending", label: "Pending role", meta: "no colour yet" },
+            ]}
+          />
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Renders with no items prop at all", async () => {
+      const none = canvasElement.querySelector('[data-testid="legend-none"]') as HTMLElement;
+      expect(none.querySelector('[data-slot="well-legend-empty"]')).not.toBeNull();
+      expect(canvas.getByText("No items")).toBeInTheDocument();
+    });
+
+    await step("Items without a colour still render a swatch", async () => {
+      const wrap = canvasElement.querySelector('[data-testid="legend-uncoloured"]') as HTMLElement;
+      const items = wrap.querySelectorAll('[data-slot="well-legend-item"]');
+      expect(items.length).toBe(3);
+      for (const item of items) {
+        const swatch = item.querySelector("span[aria-hidden]") as HTMLElement;
+        expect(swatch.style.backgroundColor).not.toBe("");
+      }
+    });
+
+    await step("Labelled entries still show their text", async () => {
+      expect(canvas.getByText("Unassigned role")).toBeInTheDocument();
+      expect(canvas.getByText("Pending role")).toBeInTheDocument();
+    });
+  },
+};

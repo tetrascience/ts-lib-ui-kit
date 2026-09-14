@@ -121,6 +121,47 @@ Exposes the UI kit to AI coding agents (component lists, props/variants, usage e
 - [`vercel.json`](./vercel.json) is **required**, doing two things the deploy can't work without: (1) pins `buildCommand` to `yarn build-storybook` so the metadata step generates the catalog, and (2) bundles that catalog into the function via `functions.includeFiles` (it isn't part of the function's source tree) and declares the function. Without `vercel.json` the deployed function 404s (build reverts to dashboard settings, catalog never generated). Do **not** load the catalog via a JSON `import` — in this `"type": "module"` package that hit native-ESM import-attribute errors and 500'd on Vercel; the disk read is the verified-working approach.
 - Do not break the `build-storybook` → metadata chain; the deployed `/api/mcp` depends on the generated `storybook-static/mcp/components.json`. Not published in the npm package (`files` ships only `dist`).
 
+## Responsive layout: container queries, not viewport breakpoints
+
+A component in this kit does not own the viewport — consumers drop it into
+sidebars, split panes, drawers and data-app panels. A `md:` breakpoint asks
+"how wide is the _screen_", which is the wrong question: the component lays
+out as "desktop" inside a 380px panel on a 27" monitor. Use Tailwind 4
+container queries so a component responds to the space it is actually given.
+`PlateMapEditor` is the reference implementation.
+
+Two things are load-bearing and easy to get wrong:
+
+- **`@container` and the `@min-[…]` variants it drives must be on different
+  elements.** `container-type` establishes a query context for _descendants_;
+  an element cannot query its own width. Putting both on one element silently
+  does nothing — no error, no warning, the layout just never changes. Split
+  them: an outer `@container` wrapper, the variants on the inner element.
+- **Breakpoint class maps must be static.** Tailwind scans source text, so
+  `` `@min-[${n}px]:flex-row` `` produces no CSS. Write a `Record` with every
+  class spelled out verbatim (see `SIDE_BY_SIDE_AT` / `FORM_WIDTH_AT`), and
+  drive the variable part through a CSS custom property set in `style` instead.
+
+A related pairing: when content can exceed its container (a dense plate grid,
+a wide table), the overflow belongs in a scroll container on the component, not
+on the page. Axe's `scrollable-region-focusable` then requires that container
+to be keyboard-reachable — make it focusable **only when it actually scrolls**,
+so roomy layouts don't collect dead tab stops, and use `role="group"` rather
+than `role="region"` (`region` is a landmark, and two instances on one page
+trip `landmark-unique`).
+
+## Localisation: one label bag per component
+
+Components render no hardcoded user-facing English. Past components grew a
+flat `xxxLabel` prop per string, which stops scaling around a dozen; prefer a
+single optional `labels` object typed against an exported interface, merged
+over a `satisfies Required<…>` defaults table so a missing key is a type error
+rather than a blank UI. `PlateMapEditorLabels` / `WellManifestTableLabels` in
+`components/composed/PlateMapEditor/types.ts` are the pattern. Structural
+`ReactNode` slots (a title, a heading) stay as their own props — they are
+content, not strings. Guard it with a story asserting no English survives in
+the rendered subtree, not just that the replacements appear.
+
 ## Component Patterns
 
 **`ui/` components**: Single `kebab-case.tsx` file. shadcn/ui pattern — wraps radix-ui or @base-ui/react with CVA variants and Tailwind classes via `cn()`.
@@ -262,7 +303,7 @@ Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) fo
   `SW-1234-short-kebab-description` (e.g. `SW-2352-v1-release-prep`). Create
   the Jira issue first if none exists. PR titles must follow
   `type: SW-1234 Description` (e.g. `docs: SW-2549 Audit Storybook code
-  panels`) — the `check` CI job (semantic PR title) rejects anything else.
+panels`) — the `check` CI job (semantic PR title) rejects anything else.
 
 - Zephyr HTTP is handled by a shared internal `ts-lib-zephyr-nodejs` library (`ZephyrClient` + helpers). The repo's scripts are thin wrappers around it — JUnit parsing, story parsing/write-back, cycle resolution, and folder mapping stay local.
 - Test results reported to Zephyr Scale via `scripts/zephyr/report-zephyr-results.ts`.

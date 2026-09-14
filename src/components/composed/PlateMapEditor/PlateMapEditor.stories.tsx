@@ -1613,10 +1613,25 @@ export const GridDragSelection: Story = {
     await step("Double-click a well cycles the role (covers cycleWellField + flash)", async () => {
       const svg = getActiveSvg(canvasElement);
       const cellSize = getCellSize(svg);
+      const fillOf = (id: string) =>
+        (canvasElement.querySelector(`[data-well="${id}"]`) as SVGElement).getAttribute("fill");
+
       // Already populated A01 so the cycle moves to the next role and flashes.
+      // Drive the FULL sequence a real double-click produces (two pointer
+      // down/up pairs, then dblclick) — firing dblclick alone bypasses the
+      // pointer path and would not catch a regression there.
+      const beforeA01 = fillOf("A01");
+      dispatchSvgMouse(svg, "mousedown", { row: 0, column: 0, cellSize });
+      dispatchSvgMouse(svg, "mouseup", { row: 0, column: 0, cellSize });
+      dispatchSvgMouse(svg, "mousedown", { row: 0, column: 0, cellSize });
+      dispatchSvgMouse(svg, "mouseup", { row: 0, column: 0, cellSize });
       dispatchSvgMouse(svg, "dblclick", { row: 0, column: 0, cellSize });
+      await waitFor(() => expect(fillOf("A01")).not.toBe(beforeA01));
+
       // Empty well also exercises the empty-entry branch of cycleWellField.
+      const beforeH08 = fillOf("H08");
       dispatchSvgMouse(svg, "dblclick", { row: 7, column: 7, cellSize });
+      await waitFor(() => expect(fillOf("H08")).not.toBe(beforeH08));
       // Out-of-bounds double-click is a no-op (cellAt returns null).
       fireEvent.doubleClick(svg, { clientX: 0, clientY: 0, bubbles: true, cancelable: true });
     });

@@ -62,8 +62,6 @@ describe("buildTraceData", () => {
       allPeaksForInteraction: [],
       showMarkers: false,
       markerSize: 4,
-      xAxisTitle: "Time",
-      yAxisTitle: "Signal",
       boundaryMarkers: "none",
     });
 
@@ -80,8 +78,6 @@ describe("buildTraceData", () => {
       allPeaksForInteraction: [],
       showMarkers: true,
       markerSize: 6,
-      xAxisTitle: "Time",
-      yAxisTitle: "Signal",
       boundaryMarkers: "none",
     });
 
@@ -103,8 +99,6 @@ describe("buildTraceData", () => {
       allPeaksForInteraction: [],
       showMarkers: false,
       markerSize: 4,
-      xAxisTitle: "Time",
-      yAxisTitle: "Signal",
       boundaryMarkers: "enabled",
     });
 
@@ -119,8 +113,6 @@ describe("buildTraceData", () => {
       allPeaksForInteraction: [],
       showMarkers: false,
       markerSize: 4,
-      xAxisTitle: "Time",
-      yAxisTitle: "Signal",
       boundaryMarkers: "none",
     });
 
@@ -135,8 +127,6 @@ describe("buildTraceData", () => {
       allPeaksForInteraction: [],
       showMarkers: false,
       markerSize: 4,
-      xAxisTitle: "Time",
-      yAxisTitle: "Signal",
       boundaryMarkers: "none",
     });
 
@@ -153,8 +143,6 @@ describe("buildTraceData", () => {
       allPeaksForInteraction: [],
       showMarkers: false,
       markerSize: 4,
-      xAxisTitle: "Time",
-      yAxisTitle: "Signal",
       boundaryMarkers: "none",
     });
 
@@ -171,8 +159,6 @@ describe("buildTraceData", () => {
       ],
       showMarkers: false,
       markerSize: 4,
-      xAxisTitle: "Time",
-      yAxisTitle: "Signal",
       boundaryMarkers: "none",
     });
 
@@ -182,7 +168,7 @@ describe("buildTraceData", () => {
     expect(hitArea.marker.opacity).toBe(0);
   });
 
-  it("uses per-point hovertemplate array when any peak has hoverText", () => {
+  it("suppresses Plotly's native hover on every trace and carries peak hoverText in customdata", () => {
     const result = buildTraceData({
       processedSeries: [baseSeries],
       processedAnnotations: [],
@@ -193,36 +179,17 @@ describe("buildTraceData", () => {
       ],
       showMarkers: false,
       markerSize: 4,
-      xAxisTitle: "Time",
-      yAxisTitle: "Signal",
       boundaryMarkers: "none",
     });
 
-    const hitArea = result[result.length - 1] as { hovertemplate: unknown };
-    expect(Array.isArray(hitArea.hovertemplate)).toBe(true);
-    const templates = hitArea.hovertemplate as string[];
-    expect(templates[0]).toContain("Peak A");
-    expect(templates[1]).toBe("<extra></extra>");
-  });
-
-  it("uses a single string hovertemplate when no peak has hoverText", () => {
-    const result = buildTraceData({
-      processedSeries: [baseSeries],
-      processedAnnotations: [],
-      allDetectedPeaks: [],
-      allPeaksForInteraction: [
-        { peak: { x: 2, y: 20, id: "peak-0-0" }, seriesIndex: 0, seriesName: "S", isAutoDetected: true },
-      ],
-      showMarkers: false,
-      markerSize: 4,
-      xAxisTitle: "Time",
-      yAxisTitle: "Signal",
-      boundaryMarkers: "none",
-    });
-
-    const hitArea = result[result.length - 1] as { hovertemplate: unknown };
-    expect(typeof hitArea.hovertemplate).toBe("string");
-    expect(hitArea.hovertemplate).toBe("<extra></extra>");
+    // The shared ChartTooltip is the only hover UI (SW-2298): the series line
+    // and the hit-area trace both opt out of Plotly's label but keep events.
+    const [line, hitArea] = result as Array<{ hoverinfo?: string; hovertemplate?: unknown; customdata?: Array<{ peak: { hoverText?: string } }> }>;
+    expect(line.hoverinfo).toBe("none");
+    expect(line.hovertemplate).toBeUndefined();
+    expect(hitArea.hoverinfo).toBe("none");
+    expect(hitArea.hovertemplate).toBeUndefined();
+    expect(hitArea.customdata?.[0].peak.hoverText).toBe("Peak A");
   });
 });
 

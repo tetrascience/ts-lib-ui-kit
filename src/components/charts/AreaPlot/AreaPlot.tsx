@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { Y_TICK_LABEL_SPACING, maxTickCount, resolveChartScale, thinTicks } from "../chart-scale";
 import { chartTooltipLines, useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+
+import type Plotly from "plotly.js-dist";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
@@ -18,10 +21,6 @@ interface AreaDataSeries {
 }
 
 type AreaPlotVariant = "normal" | "stacked";
-
-/** Top margin reserving room for the 32px title; reduced when no title is set */
-const TITLE_MARGIN_TOP = 80;
-const NO_TITLE_MARGIN_TOP = 40;
 
 interface AreaPlotProps {
   dataSeries: AreaDataSeries[];
@@ -76,6 +75,10 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
   // to fill its height (so e.g. a fixed width with a container-driven height works).
   const fillWidth = width === undefined;
   const fillHeight = height === undefined;
+  // Fonts, tick length and margins step down on small canvases so the plot
+  // area (not the chrome) gets the pixels (SW-2298).
+  const scale = resolveChartScale(resolvedWidth, resolvedHeight);
+  const marginTop = title ? scale.margin.tTitle : scale.margin.tNoTitle;
 
   // Hold the latest resolved size in a ref so the newPlot effect can read it
   // without listing it as a dependency — size changes are handled by a
@@ -181,14 +184,32 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
   // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
   const useCategoricalX = !!xTickText && xTickText.length === xDataValues.length;
 
+  // Y ticks thinned to what fits the plot height. Derived from the resolved
+  // (not last-plotted) height so an in-place resize also updates them via the
+  // relayout effect below, instead of only when the scale bucket flips.
+  const yTickVals = useMemo(
+    () =>
+      thinTicks(
+        yTicks,
+        maxTickCount(
+          resolvedHeight - marginTop - scale.margin.b,
+          scale.tickFontSize * Y_TICK_LABEL_SPACING,
+        ),
+      ),
+    [yTicks, resolvedHeight, marginTop, scale],
+  );
+  const yTickKey = yTickVals.join(",");
+  const yTickValsRef = useRef(yTickVals);
+  yTickValsRef.current = yTickVals;
+
   const tickOptions = useMemo(
     () => ({
       tickcolor: theme.tickColor,
-      ticklen: 12,
+      ticklen: scale.ticklen,
       tickwidth: 1,
       ticks: "outside" as const,
       tickfont: {
-        size: 16,
+        size: scale.tickFontSize,
         color: theme.textColor,
         family: CHART_FONT_FAMILY,
         weight: 400,
@@ -198,7 +219,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
       position: 0,
       zeroline: false,
     }),
-    [theme],
+    [theme, scale],
   );
 
   const titleOptions = useMemo(
@@ -211,7 +232,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
             xanchor: "center" as const,
             yanchor: "top" as const,
             font: {
-              size: 32,
+              size: scale.titleFontSize,
               weight: 600,
               family: CHART_FONT_FAMILY,
               color: theme.textColor,
@@ -220,7 +241,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
             },
           }
         : undefined,
-    [title, theme],
+    [title, theme, scale],
   );
 
   useEffect(() => {
@@ -284,12 +305,12 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
       height: sizeRef.current.height,
       ...(titleOptions ? { title: titleOptions } : {}),
       margin: {
-        l: 80,
-        r: 40,
+        l: scale.margin.l,
+        r: scale.margin.r,
         // Reserve room for tick labels, the x-axis title, and the
         // container-anchored bottom legend stacked beneath them.
-        b: 96,
-        t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
+        b: scale.margin.b,
+        t: marginTop,
         pad: 0,
       },
       paper_bgcolor: theme.paperBg,
@@ -302,12 +323,12 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
         title: {
           text: xTitle,
           font: {
-            size: 16,
+            size: scale.axisTitleFontSize,
             color: theme.textSecondary,
             family: CHART_FONT_FAMILY,
             weight: 400,
           },
-          standoff: 15,
+          standoff: scale.axisTitleStandoff,
         },
         gridcolor: theme.gridColor,
         range: xRange,
@@ -325,18 +346,18 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
         title: {
           text: yTitle,
           font: {
-            size: 16,
+            size: scale.axisTitleFontSize,
             color: theme.textSecondary,
             family: CHART_FONT_FAMILY,
             weight: 400,
           },
-          standoff: 15,
+          standoff: scale.axisTitleStandoff,
         },
         gridcolor: theme.gridColor,
         range: yRange,
         autorange: !yRange,
         tickmode: "array" as const,
-        tickvals: yTicks,
+        tickvals: yTickValsRef.current,
         showgrid: true,
         automargin: true,
         ...tickOptions,
@@ -352,11 +373,11 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
         yref: "container" as const,
         orientation: "h" as const,
         font: {
-          size: 13,
+          size: scale.legendFontSize,
           color: theme.legendColor,
           family: CHART_FONT_FAMILY,
           weight: 500,
-          lineheight: 18,
+          lineheight: scale.legendLineHeight,
         },
       },
       showlegend: true,
@@ -392,7 +413,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, hasSize, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, bindTooltip]);
+  }, [dataSeries, hasSize, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, scale, marginTop, bindTooltip]);
 
   // Resize in place when the measured/overridden size changes — far cheaper
   // than recreating the plot (and it preserves tooltip/event bindings).
@@ -413,9 +434,15 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
     // Swallow rejections from a relayout that races an unmount/purge.
     // plotInitedRef guarantees Plotly finished loading, so sync access is safe.
     void getLoadedPlotly()
-      .relayout(plotElement, { width: resolvedWidth, height: resolvedHeight })
+      .relayout(plotElement, {
+        width: resolvedWidth,
+        height: resolvedHeight,
+        // Re-thin the y ticks for the new plot height (SW-2298). The flattened
+        // key is valid relayout input but not part of the Layout type.
+        "yaxis.tickvals": yTickValsRef.current,
+      } as Partial<Plotly.Layout>)
       .catch(() => {});
-  }, [resolvedWidth, resolvedHeight]);
+  }, [resolvedWidth, resolvedHeight, yTickKey]);
 
   return (
     <div

@@ -7,6 +7,7 @@ import { buildHoverExtraContent, collectPeaksWithBoundaryData } from "./dataProc
 import { createRegionOverlayTraces } from "./regionOverlays";
 
 import type { ChromatogramSeries, PeakAnnotation, BoundaryMarkerStyle, PeakSelectEvent } from "./types";
+import type { ChartTooltipHoverPoint } from "../ChartTooltip";
 import type Plotly from "plotly.js-dist";
 
 import { CHART_FONT_FAMILY, type PlotlyThemeColors } from "@/hooks/use-plotly-theme";
@@ -25,8 +26,6 @@ type BuildTraceDataParams = {
   allPeaksForInteraction: PeakForInteraction[];
   showMarkers: boolean;
   markerSize: number;
-  xAxisTitle: string;
-  yAxisTitle: string;
   boundaryMarkers: BoundaryMarkerStyle;
 };
 
@@ -65,14 +64,11 @@ export function buildTraceData(params: BuildTraceDataParams): Plotly.Data[] {
     allPeaksForInteraction,
     showMarkers,
     markerSize,
-    xAxisTitle,
-    yAxisTitle,
     boundaryMarkers,
   } = params;
 
   const plotData: Plotly.Data[] = processedSeries.map((s, index) => {
     const traceColor = s.color || CHART_COLORS[index % CHART_COLORS.length];
-    const extraContent = buildHoverExtraContent(s.name, s.metadata);
 
     const trace: Plotly.Data = {
       x: s.x,
@@ -84,7 +80,10 @@ export function buildTraceData(params: BuildTraceDataParams): Plotly.Data[] {
         color: traceColor,
         width: CHROMATOGRAM_TRACE.BASE_LINE_WIDTH,
       },
-      hovertemplate: `%{x:.2f} ${xAxisTitle}<br>%{y:.2f} ${yAxisTitle}<extra>${extraContent}</extra>`,
+      // Hover is rendered by the shared ChartTooltip (bound in Chromatogram);
+      // "none" keeps plotly_hover firing without also drawing Plotly's own
+      // label on top of it (SW-2298).
+      hoverinfo: "none" as const,
     };
     if (showMarkers) {
       trace.marker = { size: markerSize, color: traceColor };
@@ -115,7 +114,6 @@ export function buildTraceData(params: BuildTraceDataParams): Plotly.Data[] {
   });
 
   if (allPeaksForInteraction.length > 0) {
-    const anyHoverText = allPeaksForInteraction.some((p) => p.peak.hoverText);
     const hitAreaTrace: Plotly.Data = {
       x: allPeaksForInteraction.map((p) => p.peak.x),
       y: allPeaksForInteraction.map((p) => p.peak.y),
@@ -131,18 +129,102 @@ export function buildTraceData(params: BuildTraceDataParams): Plotly.Data[] {
         seriesName: p.seriesName,
         isAutoDetected: p.isAutoDetected,
       })) as unknown as Plotly.Datum[],
-      ...(anyHoverText
-        ? {
-            hovertemplate: allPeaksForInteraction.map((p) =>
-              p.peak.hoverText ? `${p.peak.hoverText}<extra></extra>` : "<extra></extra>"
-            ),
-          }
-        : { hovertemplate: "<extra></extra>" }),
+      // Peak hoverText reaches the shared ChartTooltip through customdata
+      // (see buildChromatogramTooltipLines), not Plotly's native label.
+      hoverinfo: "none" as const,
     };
     plotData.push(hitAreaTrace);
   }
 
   return plotData;
+}
+
+type ChromatogramTooltipPoint = ChartTooltipHoverPoint & { curveNumber?: number };
+
+type ChromatogramTooltipParams = {
+  series: ChromatogramSeries[];
+  xAxisTitle: string;
+  yAxisTitle: string;
+};
+
+const formatTooltipNumber = (value: number | string): string =>
+  typeof value === "number" ? value.toFixed(2) : String(value);
+
+/**
+ * The ChartTooltip renders plain text, so `hoverText` written for Plotly's
+ * hovertemplate is normalised for display: `<br>` splits lines and the rest is
+ * reduced to its text content via the HTML parser (entities decoded, tags
+ * dropped). This is presentation clean-up, not security sanitisation — the
+ * lines are rendered as React text nodes, never as markup.
+ */
+export function htmlToTooltipLines(text?: string): string[] {
+  if (!text) return [];
+  const withBreaks = text.replace(/<br\s*\/?>/gi, "\n");
+  const plain =
+    typeof DOMParser === "undefined"
+      ? withBreaks
+      : (new DOMParser().parseFromString(withBreaks, "text/html").body.textContent ?? "");
+  return plain
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+/** "Signal (mAU)" → "mAU"; an axis title without a parenthesised unit yields "" */
+const unitFromAxisTitle = (axisTitle: string): string =>
+  /\(([^()]+)\)\s*$/.exec(axisTitle)?.[1]?.trim() ?? "";
+
+/** "<name>: <y> <unit>" followed by the series metadata lines */
+function seriesTooltipLines(
+  seriesEntry: ChromatogramSeries,
+  y: number | string,
+  unit: string
+): string[] {
+  // buildHoverExtraContent yields "<name><br>Key: value…"; keep only the metadata
+  const metadata = buildHoverExtraContent(seriesEntry.name, seriesEntry.metadata).split("<br>").slice(1);
+  const value = unit ? `${formatTooltipNumber(y)} ${unit}` : formatTooltipNumber(y);
+  return [`${seriesEntry.name}: ${value}`, ...metadata];
+}
+
+/** Peak text for a hit-area point (customdata) or a region overlay (trace text) */
+function peakTooltipLines(point: ChromatogramTooltipPoint): string[] {
+  const peak = (point.customdata as { peak?: PeakAnnotation } | null | undefined)?.peak;
+  if (peak) return htmlToTooltipLines(peak.hoverText ?? peak.text);
+  return typeof point.text === "string" ? htmlToTooltipLines(point.text) : [];
+}
+
+/**
+ * Lines for the shared ChartTooltip: the shared x value, one line per hovered
+ * series (plus its metadata), then any peak text/hoverText the cursor is on —
+ * peaks arrive as the invisible hit-area trace's customdata, overlays carry
+ * their text on the trace. The same peak can be reported by both in one
+ * "x unified" hover, so identical peak blocks are emitted once.
+ */
+export function buildChromatogramTooltipLines(
+  points: ChromatogramTooltipPoint[],
+  params: ChromatogramTooltipParams
+): string[] {
+  const { series, xAxisTitle, yAxisTitle } = params;
+  const unit = unitFromAxisTitle(yAxisTitle);
+  const lines: string[] = [];
+  const first = points.find((p) => p.x !== undefined);
+  if (first?.x !== undefined) lines.push(`${xAxisTitle}: ${formatTooltipNumber(first.x)}`);
+
+  const seenPeakBlocks = new Set<string>();
+  for (const point of points) {
+    const seriesEntry = point.curveNumber === undefined ? undefined : series[point.curveNumber];
+    if (seriesEntry) {
+      if (point.y !== undefined) lines.push(...seriesTooltipLines(seriesEntry, point.y, unit));
+      continue;
+    }
+    const peakLines = peakTooltipLines(point);
+    const key = peakLines.join("\n");
+    if (peakLines.length > 0 && !seenPeakBlocks.has(key)) {
+      seenPeakBlocks.add(key);
+      lines.push(...peakLines);
+    }
+  }
+  return lines;
 }
 
 export function buildLayout(params: BuildLayoutParams): Partial<Plotly.Layout> {

@@ -113,11 +113,15 @@ describe("Tree roving tabindex", () => {
     expect(tabStops().map((el) => el.dataset.treeItemId)).toEqual(["reports"]);
   });
 
-  it("falls back to the first root node when the selected node is hidden", () => {
+  it("falls back to the first root node while the selected node is hidden, and back again", () => {
     // `summary` is selected but its parent `Reports` is collapsed, so it is not rendered.
-    render(<Fixture defaultSelectedId="summary" />);
+    render(<Fixture defaultSelectedId="summary" expandedIds={new Set(["documents"])} />);
     expect(item("summary")).toBeNull();
     expect(tabStops().map((el) => el.dataset.treeItemId)).toEqual(["documents"]);
+
+    // Once the branch opens (a lazy subtree arriving, say) entry returns to the selected node.
+    render(<Fixture defaultSelectedId="summary" expandedIds={new Set(["documents", "reports"])} />);
+    expect(tabStops().map((el) => el.dataset.treeItemId)).toEqual(["summary"]);
   });
 });
 
@@ -160,6 +164,47 @@ describe("Tree typeahead", () => {
     expect(document.activeElement).toBe(item("archive"));
   });
 
+  it("matches only what a screen reader announces, not aria-hidden text", () => {
+    vi.useFakeTimers();
+    render(
+      <Tree aria-label="Files">
+        <TreeItem id="first">
+          <TreeItemLabel trailing={<span aria-hidden="true">zzz</span>}>First</TreeItemLabel>
+        </TreeItem>
+        <TreeItem id="second">
+          <TreeItemLabel trailing={<span>zzz</span>}>Second</TreeItemLabel>
+        </TreeItem>
+        <TreeItem id="zeta">
+          <TreeItemLabel>Zeta</TreeItemLabel>
+        </TreeItem>
+      </Tree>,
+    );
+    focus("second");
+    press("z");
+    expect(document.activeElement).toBe(item("zeta"));
+
+    // A fresh query: `First` is announced as "First", so "fi" finds it, and `Second`'s visible
+    // "zzz" is the only trailing text that took part in the search above.
+    vi.advanceTimersByTime(1000);
+    press("f");
+    press("i");
+    expect(document.activeElement).toBe(item("first"));
+  });
+
+  it("claims a printable key even when nothing matches", () => {
+    render(<Fixture expandedIds={new Set(["documents", "reports"])} />);
+    focus("summary");
+    let unhandled = true;
+    flushSync(() => {
+      unhandled = item("summary")!.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "x", bubbles: true, cancelable: true }),
+      );
+    });
+    // Claimed on the node it was pressed on, so the ancestors it bubbles through leave it alone.
+    expect(unhandled).toBe(false);
+    expect(document.activeElement).toBe(item("summary"));
+  });
+
   it("ignores space and modified keys", () => {
     render(<Fixture />);
     focus("documents");
@@ -185,12 +230,18 @@ describe("Tree * (expand siblings)", () => {
   });
 
   it("works at a nested level, and round-trips through controlled state", () => {
-    const onExpandedChange = vi.fn();
-    render(<Fixture expandedIds={new Set(["documents"])} onExpandedChange={onExpandedChange} />);
+    function Controlled() {
+      const [expandedIds, setExpandedIds] = React.useState(new Set(["documents"]));
+      return <Fixture expandedIds={expandedIds} onExpandedChange={setExpandedIds} />;
+    }
+    render(<Controlled />);
     focus("reports");
     press("*");
-    const [next] = onExpandedChange.mock.calls.at(-1) as [Set<string>];
-    expect([...next].sort()).toEqual(["documents", "drafts", "reports"]);
+    expect(item("reports")?.getAttribute("aria-expanded")).toBe("true");
+    expect(item("drafts")?.getAttribute("aria-expanded")).toBe("true");
+    expect(item("summary")).not.toBeNull();
+    // Level 1 is untouched: `Shared` stays collapsed.
+    expect(item("shared")?.getAttribute("aria-expanded")).toBe("false");
   });
 });
 

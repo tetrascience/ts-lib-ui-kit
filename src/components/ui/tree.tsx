@@ -34,6 +34,11 @@ type TreeContextValue = {
   activateItem: (id: string, hasChildren: boolean, expanded: boolean) => void;
   focusedId: string | null;
   setFocusedId: (id: string) => void;
+  /**
+   * Where `Tab` enters the tree before any node has been focused, when the default (the selected
+   * node, else the first root) is not currently rendered. `null` means the default stands.
+   */
+  entryId: string | null;
   expandOnSelect: boolean;
   guides: TreeGuides;
   /** Attached to each `TreeItem` rather than to the tree root, so the node is its own key target. */
@@ -184,15 +189,24 @@ function getAncestorIds(item: HTMLElement) {
   return ids;
 }
 
+/** Text content with `aria-hidden` subtrees left out — the part of a label a screen reader reads. */
+function getAnnouncedText(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
+  if (!(node instanceof HTMLElement) || node.getAttribute("aria-hidden") === "true") return "";
+  let text = "";
+  for (const child of node.childNodes) text += getAnnouncedText(child);
+  return text;
+}
+
 /**
- * The text typeahead matches against: the node's label, resolved through `aria-labelledby` so it
- * is exactly what a screen reader announces, and so a consumer's `trailing` badge text joins in the
- * same way it joins the accessible name.
+ * The text typeahead matches against: the node's label, resolved through `aria-labelledby` and
+ * with hidden descendants dropped, so it is what a screen reader announces — a `trailing` count
+ * badge joins in, an `aria-hidden` spinner or icon does not.
  */
 function getItemText(item: HTMLElement) {
   const labelId = item.getAttribute("aria-labelledby");
   const label = labelId ? item.ownerDocument.getElementById(labelId) : null;
-  return (label?.textContent ?? "").trim().toLowerCase();
+  return (label ? getAnnouncedText(label) : "").trim().toLowerCase();
 }
 
 /**
@@ -310,6 +324,8 @@ function isTypeaheadKey(event: React.KeyboardEvent) {
  */
 function typeaheadTo(context: TreeKeyEvent) {
   const { event, root, current, typeahead } = context;
+  // Claimed whether or not anything matches: a letter typed into a tree is never meant for the page.
+  event.preventDefault();
   clearTimeout(typeahead.timer);
   typeahead.buffer += event.key.toLowerCase();
   typeahead.timer = setTimeout(() => {
@@ -393,6 +409,7 @@ function Tree({
     },
   });
   const [focusedId, setFocusedId] = React.useState<string | null>(null);
+  const [entryId, setEntryId] = React.useState<string | null>(null);
   // Ancestor trail of the focused node, captured when it takes focus. If a later render removes the
   // node (an ancestor collapsed, a lazy fetch swapped the subtree) this is how focus knows where to
   // retreat to instead of dropping to `body`.
@@ -442,6 +459,9 @@ function Tree({
       const current = (event.target as HTMLElement | null)?.closest<HTMLElement>(ITEM_SELECTOR);
       const id = current?.dataset.treeItemId;
       if (!root || !current || !id || !root.contains(current)) return;
+      // Every ancestor `TreeItem` sees the bubbled event too; only the node it was pressed on acts
+      // on it, or an unclaimed key would be handled once per level of nesting.
+      if (current !== event.currentTarget) return;
 
       const handler = TREE_KEY_HANDLERS[event.key] ?? (isTypeaheadKey(event) ? typeaheadTo : undefined);
       if (!handler) return;
@@ -472,12 +492,12 @@ function Tree({
 
     if (focusedId == null) {
       // Before the tree has been entered the tab stop is the selected node — unless it is hidden
-      // inside a collapsed branch, in which case the first root node has to take over or the tree
-      // would have no tab stop at all.
-      if (selectedId != null && !findItem(root, selectedId)) {
-        const first = getVisibleItems(root)[0]?.dataset.treeItemId;
-        if (first) setFocusedId(first);
-      }
+      // inside a collapsed branch, in which case the first root node stands in or the tree would
+      // have no tab stop at all. Kept apart from `focusedId` so the stand-in lapses the moment the
+      // selected node is rendered again.
+      const hidden = selectedId != null && !findItem(root, selectedId);
+      const next = hidden ? (getVisibleItems(root)[0]?.dataset.treeItemId ?? null) : null;
+      if (next !== entryId) setEntryId(next);
       return;
     }
 
@@ -491,7 +511,7 @@ function Tree({
     // elsewhere must move the tab stop, not steal focus.
     const active = root.ownerDocument.activeElement;
     if (hasFocusRef.current && (!root.contains(active) || active === root)) target.focus();
-  }, [focusedId, selectedId]);
+  }, [focusedId, selectedId, entryId]);
 
   // Deliberately no dependency list: whether the focused node is still rendered depends on
   // `children`, which any parent render can change, so this has to check after every commit.
@@ -506,6 +526,7 @@ function Tree({
       activateItem,
       focusedId,
       setFocusedId,
+      entryId,
       expandOnSelect,
       guides,
       onItemKeyDown: handleItemKeyDown,
@@ -517,6 +538,7 @@ function Tree({
       selectedId,
       activateItem,
       focusedId,
+      entryId,
       expandOnSelect,
       guides,
       handleItemKeyDown,
@@ -608,7 +630,7 @@ function TreeItem({
   style,
   ...props
 }: TreeItemProps) {
-  const { expandedIds, setExpanded, selectedId, activateItem, focusedId, setFocusedId, onItemKeyDown } =
+  const { expandedIds, setExpanded, selectedId, activateItem, focusedId, setFocusedId, entryId, onItemKeyDown } =
     useTreeContext("TreeItem");
   const level = React.useContext(TreeLevelContext);
   const { posinset, setsize, lastBranchPos } = React.useContext(TreeIndexContext);
@@ -633,7 +655,8 @@ function TreeItem({
   // is the selected node, per the WAI-ARIA pattern, or else the first root node. `Tree`'s layout
   // effect keeps this pointing at a rendered node when the focused or selected one disappears.
   const isFirstRoot = level === 1 && posinset === 1;
-  const tabbable = focusedId ? focusedId === id : selectedId == null ? isFirstRoot : selectedId === id;
+  const defaultEntry = selectedId == null ? isFirstRoot : selectedId === id;
+  const tabbable = focusedId ? focusedId === id : entryId ? entryId === id : defaultEntry;
 
   // Guides are drawn on the row (see `TreeItemLabel`), so a row has to know every ancestor trunk
   // crossing it, not just its own parent's. The set is threaded down the tree: inherit the parent's

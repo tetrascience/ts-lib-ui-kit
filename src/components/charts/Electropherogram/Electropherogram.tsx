@@ -206,7 +206,7 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
   }, [data, width, height, aTrace, tTrace, gTrace, cTrace, maxValue, positions, theme, bindTooltip]);
 
   if (data.length === 0) {
-    return <div className="chart-container">No data available</div>;
+    return <div className="electropherogram-empty">No data available</div>;
   }
 
   const renderSequence = () => {
@@ -216,7 +216,7 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
       const chartWidth = width;
 
       return (
-        <div className="sequence-letters-container">
+        <div className="electropherogram-sequence-letters">
           {sequence.map((base, index) => {
             const position = positions[index];
             const color =
@@ -237,7 +237,7 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
             return (
               <span
                 key={`base-${index}`}
-                className="sequence-letter"
+                className="electropherogram-sequence-letter"
                 style={{
                   left: `${leftPosition}px`,
                   color,
@@ -270,7 +270,7 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
       }
 
       return (
-        <div className="position-numbers-container">
+        <div className="electropherogram-position-numbers">
           {regularPositionLabels.map((label) => {
             const span = maxPosition - minPosition || 1;
             const percentage = (label.position - minPosition) / span;
@@ -279,7 +279,7 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
             return (
               <span
                 key={`pos-${label.position}`}
-                className="position-number"
+                className="electropherogram-position-number"
                 style={{
                   left: `${leftPosition}px`,
                 }}
@@ -293,7 +293,7 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
     };
 
     return (
-      <div className="sequence-header">
+      <div className="electropherogram-sequence-header">
         {renderSequenceLetters()}
         {renderPositionNumbers()}
       </div>

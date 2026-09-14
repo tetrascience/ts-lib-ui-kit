@@ -19,4 +19,6 @@ exclude = [
   "^http://127\\.0\\.0\\.1",
   "^https?://example\\.com",
   "^https://www\\.npmjs\\.com",
+  # Atlassian account pages sit behind a bot challenge that answers 202 to non-browsers
+  "^https://id\\.atlassian\\.com",
 ]

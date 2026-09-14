@@ -10,6 +10,8 @@ import {
 import { useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 
+import type Plotly from "plotly.js-dist";
+
 import { useElementSize } from "@/hooks/use-element-size";
 import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { cn } from "@/lib/utils";
@@ -109,6 +111,7 @@ const BarChart: React.FC<BarChartProps> = ({
   // Fonts, tick length and margins step down on small canvases so the plot
   // area (not the chrome) gets the pixels (SW-2298).
   const scale = resolveChartScale(resolvedWidth, resolvedHeight, BAR_REGULAR_SCALE);
+  const marginTop = title ? scale.margin.tTitle : scale.margin.tNoTitle;
   const sizeRef = useRef({ width: resolvedWidth, height: resolvedHeight });
   sizeRef.current = { width: resolvedWidth, height: resolvedHeight };
   const plotInitedRef = useRef(false);
@@ -196,6 +199,24 @@ const BarChart: React.FC<BarChartProps> = ({
     }
   }, [variant]);
 
+  // Y ticks thinned to what fits the plot height. Derived from the resolved
+  // (not last-plotted) height so an in-place resize also updates them via the
+  // relayout effect below, instead of only when the scale bucket flips.
+  const yTickVals = useMemo(
+    () =>
+      thinTicks(
+        yTicks,
+        maxTickCount(
+          resolvedHeight - marginTop - scale.margin.b,
+          scale.tickFontSize * Y_TICK_LABEL_SPACING,
+        ),
+      ),
+    [yTicks, resolvedHeight, marginTop, scale],
+  );
+  const yTickKey = yTickVals.join(",");
+  const yTickValsRef = useRef(yTickVals);
+  yTickValsRef.current = yTickVals;
+
   const tickOptions = useMemo(
     () => ({
       tickcolor: theme.tickColor,
@@ -218,15 +239,6 @@ const BarChart: React.FC<BarChartProps> = ({
 
   useEffect(() => {
     if (!plotRef.current || !hasSize) return;
-
-    const marginTop = title ? scale.margin.tTitle : scale.margin.tNoTitle;
-    // Drop y ticks that would not fit the plot height instead of letting the
-    // labels overlap (SW-2298).
-    const plotHeight = sizeRef.current.height - marginTop - scale.margin.b;
-    const yTickVals = thinTicks(
-      yTicks,
-      maxTickCount(plotHeight, scale.tickFontSize * Y_TICK_LABEL_SPACING),
-    );
 
     const data = dataSeries.map((series, index) => ({
       x: series.x,
@@ -311,7 +323,7 @@ const BarChart: React.FC<BarChartProps> = ({
         range: yRange,
         autorange: !yRange,
         tickmode: "array" as const,
-        tickvals: yTickVals,
+        tickvals: yTickValsRef.current,
         showgrid: true,
         automargin: true,
         ...tickOptions,
@@ -367,7 +379,7 @@ const BarChart: React.FC<BarChartProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, hasSize, xRange, yRange, xTitle, yTitle, title, resolvedBarWidth, barMode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, theme, scale, bindTooltip]);
+  }, [dataSeries, hasSize, xRange, yRange, xTitle, yTitle, title, resolvedBarWidth, barMode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, theme, scale, marginTop, bindTooltip]);
 
   // Resize in place when the measured/overridden size changes — cheaper than
   // recreating the plot, and it preserves tooltip/event bindings.
@@ -388,9 +400,15 @@ const BarChart: React.FC<BarChartProps> = ({
     // Swallow rejections from a relayout that races an unmount/purge.
     // plotInitedRef guarantees Plotly finished loading, so sync access is safe.
     void getLoadedPlotly()
-      .relayout(plotElement, { width: resolvedWidth, height: resolvedHeight })
+      .relayout(plotElement, {
+        width: resolvedWidth,
+        height: resolvedHeight,
+        // Re-thin the y ticks for the new plot height (SW-2298). The flattened
+        // key is valid relayout input but not part of the Layout type.
+        "yaxis.tickvals": yTickValsRef.current,
+      } as Partial<Plotly.Layout>)
       .catch(() => {});
-  }, [resolvedWidth, resolvedHeight]);
+  }, [resolvedWidth, resolvedHeight, yTickKey]);
 
   return (
     <div

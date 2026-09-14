@@ -144,49 +144,78 @@ type ChromatogramTooltipPoint = ChartTooltipHoverPoint & { curveNumber?: number 
 type ChromatogramTooltipParams = {
   series: ChromatogramSeries[];
   xAxisTitle: string;
+  yAxisTitle: string;
 };
 
 const formatTooltipNumber = (value: number | string): string =>
   typeof value === "number" ? value.toFixed(2) : String(value);
 
-const splitHtmlLines = (text: string | undefined): string[] =>
-  text ? text.split("<br>").filter(Boolean) : [];
+/**
+ * The ChartTooltip renders plain text, so `hoverText` written for Plotly's
+ * hovertemplate is normalised: `<br>` splits lines, every other tag is dropped.
+ */
+export function htmlToTooltipLines(text?: string): string[] {
+  if (!text) return [];
+  return text
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
 
-/** "<name>: <y>" followed by the series metadata lines */
-function seriesTooltipLines(seriesEntry: ChromatogramSeries, y: number | string): string[] {
+/** "Signal (mAU)" → "mAU"; an axis title without a parenthesised unit yields "" */
+const unitFromAxisTitle = (axisTitle: string): string =>
+  /\(([^()]+)\)\s*$/.exec(axisTitle)?.[1]?.trim() ?? "";
+
+/** "<name>: <y> <unit>" followed by the series metadata lines */
+function seriesTooltipLines(
+  seriesEntry: ChromatogramSeries,
+  y: number | string,
+  unit: string
+): string[] {
   // buildHoverExtraContent yields "<name><br>Key: value…"; keep only the metadata
   const metadata = buildHoverExtraContent(seriesEntry.name, seriesEntry.metadata).split("<br>").slice(1);
-  return [`${seriesEntry.name}: ${formatTooltipNumber(y)}`, ...metadata];
+  const value = unit ? `${formatTooltipNumber(y)} ${unit}` : formatTooltipNumber(y);
+  return [`${seriesEntry.name}: ${value}`, ...metadata];
 }
 
 /** Peak text for a hit-area point (customdata) or a region overlay (trace text) */
 function peakTooltipLines(point: ChromatogramTooltipPoint): string[] {
   const peak = (point.customdata as { peak?: PeakAnnotation } | null | undefined)?.peak;
-  if (peak) return splitHtmlLines(peak.hoverText ?? peak.text);
-  return typeof point.text === "string" ? splitHtmlLines(point.text) : [];
+  if (peak) return htmlToTooltipLines(peak.hoverText ?? peak.text);
+  return typeof point.text === "string" ? htmlToTooltipLines(point.text) : [];
 }
 
 /**
  * Lines for the shared ChartTooltip: the shared x value, one line per hovered
  * series (plus its metadata), then any peak text/hoverText the cursor is on —
  * peaks arrive as the invisible hit-area trace's customdata, overlays carry
- * their text on the trace.
+ * their text on the trace. The same peak can be reported by both in one
+ * "x unified" hover, so identical peak blocks are emitted once.
  */
 export function buildChromatogramTooltipLines(
   points: ChromatogramTooltipPoint[],
   params: ChromatogramTooltipParams
 ): string[] {
-  const { series, xAxisTitle } = params;
+  const { series, xAxisTitle, yAxisTitle } = params;
+  const unit = unitFromAxisTitle(yAxisTitle);
   const lines: string[] = [];
   const first = points.find((p) => p.x !== undefined);
   if (first?.x !== undefined) lines.push(`${xAxisTitle}: ${formatTooltipNumber(first.x)}`);
 
+  const seenPeakBlocks = new Set<string>();
   for (const point of points) {
     const seriesEntry = point.curveNumber === undefined ? undefined : series[point.curveNumber];
     if (seriesEntry) {
-      if (point.y !== undefined) lines.push(...seriesTooltipLines(seriesEntry, point.y));
-    } else {
-      lines.push(...peakTooltipLines(point));
+      if (point.y !== undefined) lines.push(...seriesTooltipLines(seriesEntry, point.y, unit));
+      continue;
+    }
+    const peakLines = peakTooltipLines(point);
+    const key = peakLines.join("\n");
+    if (peakLines.length > 0 && !seenPeakBlocks.has(key)) {
+      seenPeakBlocks.add(key);
+      lines.push(...peakLines);
     }
   }
   return lines;

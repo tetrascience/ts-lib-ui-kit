@@ -4,6 +4,8 @@ import { Y_TICK_LABEL_SPACING, maxTickCount, resolveChartScale, thinTicks } from
 import { chartTooltipLines, useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 
+import type Plotly from "plotly.js-dist";
+
 import { useElementSize } from "@/hooks/use-element-size";
 import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { cn } from "@/lib/utils";
@@ -76,6 +78,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
   // Fonts, tick length and margins step down on small canvases so the plot
   // area (not the chrome) gets the pixels (SW-2298).
   const scale = resolveChartScale(resolvedWidth, resolvedHeight);
+  const marginTop = title ? scale.margin.tTitle : scale.margin.tNoTitle;
 
   // Hold the latest resolved size in a ref so the newPlot effect can read it
   // without listing it as a dependency — size changes are handled by a
@@ -181,6 +184,24 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
   // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
   const useCategoricalX = !!xTickText && xTickText.length === xDataValues.length;
 
+  // Y ticks thinned to what fits the plot height. Derived from the resolved
+  // (not last-plotted) height so an in-place resize also updates them via the
+  // relayout effect below, instead of only when the scale bucket flips.
+  const yTickVals = useMemo(
+    () =>
+      thinTicks(
+        yTicks,
+        maxTickCount(
+          resolvedHeight - marginTop - scale.margin.b,
+          scale.tickFontSize * Y_TICK_LABEL_SPACING,
+        ),
+      ),
+    [yTicks, resolvedHeight, marginTop, scale],
+  );
+  const yTickKey = yTickVals.join(",");
+  const yTickValsRef = useRef(yTickVals);
+  yTickValsRef.current = yTickVals;
+
   const tickOptions = useMemo(
     () => ({
       tickcolor: theme.tickColor,
@@ -225,15 +246,6 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
 
   useEffect(() => {
     if (!plotRef.current || !hasSize) return;
-
-    const marginTop = title ? scale.margin.tTitle : scale.margin.tNoTitle;
-    // Drop y ticks that would not fit the plot height instead of letting the
-    // labels overlap (they piled up at 200px tall — SW-2298).
-    const plotHeight = sizeRef.current.height - marginTop - scale.margin.b;
-    const yTickVals = thinTicks(
-      yTicks,
-      maxTickCount(plotHeight, scale.tickFontSize * Y_TICK_LABEL_SPACING),
-    );
 
     let data;
 
@@ -345,7 +357,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
         range: yRange,
         autorange: !yRange,
         tickmode: "array" as const,
-        tickvals: yTickVals,
+        tickvals: yTickValsRef.current,
         showgrid: true,
         automargin: true,
         ...tickOptions,
@@ -401,7 +413,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, hasSize, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, scale, bindTooltip]);
+  }, [dataSeries, hasSize, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, scale, marginTop, bindTooltip]);
 
   // Resize in place when the measured/overridden size changes — far cheaper
   // than recreating the plot (and it preserves tooltip/event bindings).
@@ -422,9 +434,15 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
     // Swallow rejections from a relayout that races an unmount/purge.
     // plotInitedRef guarantees Plotly finished loading, so sync access is safe.
     void getLoadedPlotly()
-      .relayout(plotElement, { width: resolvedWidth, height: resolvedHeight })
+      .relayout(plotElement, {
+        width: resolvedWidth,
+        height: resolvedHeight,
+        // Re-thin the y ticks for the new plot height (SW-2298). The flattened
+        // key is valid relayout input but not part of the Layout type.
+        "yaxis.tickvals": yTickValsRef.current,
+      } as Partial<Plotly.Layout>)
       .catch(() => {});
-  }, [resolvedWidth, resolvedHeight]);
+  }, [resolvedWidth, resolvedHeight, yTickKey]);
 
   return (
     <div

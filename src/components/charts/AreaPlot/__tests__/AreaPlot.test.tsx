@@ -164,7 +164,7 @@ describe("AreaPlot sizing", () => {
 
     // Still a single newPlot; the size change went through relayout.
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { width: 640, height: 300 });
+    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 640, height: 300 }));
   });
 
   it("re-checks the applied size in place when only the height changes", async () => {
@@ -182,7 +182,7 @@ describe("AreaPlot sizing", () => {
       triggerResize(320, 260);
     });
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { width: 320, height: 260 });
+    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 320, height: 260 }));
   });
 
   it("purges the plot on unmount", async () => {

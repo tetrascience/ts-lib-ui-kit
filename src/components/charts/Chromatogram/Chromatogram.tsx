@@ -99,7 +99,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
   // are built from the series points, their metadata, and any hovered peak.
   const { bindTooltip, tooltipElement } = useChartTooltip({
     getLines: (points) =>
-      buildChromatogramTooltipLines(points, { series, xAxisTitle }),
+      buildChromatogramTooltipLines(points, { series, xAxisTitle, yAxisTitle }),
   });
   // Stable refs for callbacks — avoids including them in effect dep arrays
   // (consumers often pass arrow functions that change identity every render).

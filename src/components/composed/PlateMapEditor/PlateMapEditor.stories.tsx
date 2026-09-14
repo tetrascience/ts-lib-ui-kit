@@ -2138,7 +2138,7 @@ export const SlotsAndRegionStyling: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5704" },
   },
   play: async ({ canvasElement, step }) => {
     await step("Plate banner renders inside the plate card, above the grid", async () => {
@@ -2215,7 +2215,7 @@ export const ControlledStagedRecord: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5705" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -2270,7 +2270,7 @@ export const MinimalRequiredProps: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5706" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -2357,7 +2357,7 @@ export const ComposedWithControllerHook: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5707" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -2451,7 +2451,7 @@ export const ResponsiveNarrowViewport: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5708" },
   },
   play: async ({ canvasElement, step }) => {
     const phone = canvasElement.querySelector('[data-testid="phone-frame"]') as HTMLElement;
@@ -2520,7 +2520,7 @@ export const FormPlacementTop: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5709" },
   },
   play: async ({ canvasElement, step }) => {
     await step("Form stacks full-width above the grid", async () => {
@@ -2566,7 +2566,7 @@ export const FormPlacementEnd: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5710" },
   },
   play: async ({ canvasElement, step }) => {
     await step("Form renders to the right of the grid", async () => {
@@ -2630,7 +2630,7 @@ export const RelabelledSurface: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5711" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -2705,7 +2705,7 @@ export const FormPlacementBottom: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5712" },
   },
   play: async ({ canvasElement, step }) => {
     await step("Form stacks full-width below the grid", async () => {
@@ -2773,7 +2773,7 @@ export const CardFooterAndPlateLegend: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5713" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);

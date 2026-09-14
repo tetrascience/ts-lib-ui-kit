@@ -18,7 +18,9 @@ const LABEL_TEXT_INSET = 9;
 const LABEL_BASELINE_OFFSET = 5;
 const WELL_INSET = 1;
 const STROKE_DEFAULT = 4;
-const STROKE_SELECTED = 4;
+const STROKE_SELECTED = 3;
+/** Background-coloured ring drawn under the selection stroke to separate it from the well fill. */
+const STROKE_SELECTED_INNER = 6;
 const STROKE_HIGHLIGHT = 3;
 const STROKE_FLASH = 5;
 const FLASH_DURATION_MS = 650;
@@ -370,14 +372,32 @@ function buildWellOverlay<T extends WellRecord>(
 
   return (
     <g key={`overlay-${id}`}>
-      {isSelected
-        ? renderShape({
-            fill: "none",
-            stroke: selectedBorderColor,
-            strokeWidth: STROKE_SELECTED,
-            "data-well-selection": id,
-          })
-        : null}
+      {isSelected ? (
+        <>
+          {/* Background-coloured inner ring first: it separates the bright
+              selection stroke from the well's own fill, so selection stays
+              legible on a dark blue well as well as on an empty one. */}
+          {renderShape(
+            {
+              fill: "none",
+              stroke: "var(--color-background)",
+              strokeWidth: STROKE_SELECTED_INNER,
+            },
+            undefined,
+            `${id}-selection-inner`,
+          )}
+          {renderShape(
+            {
+              fill: "none",
+              stroke: selectedBorderColor,
+              strokeWidth: STROKE_SELECTED,
+              "data-well-selection": id,
+            },
+            undefined,
+            `${id}-selection`,
+          )}
+        </>
+      ) : null}
       {isHighlighted
         ? renderShape({
             fill: "none",
@@ -437,12 +457,15 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   minCellSize = DEFAULT_MIN_AUTO_CELL,
   maxCellSize,
   borderColor = PLATE_MAP_CELL_BORDER,
-  // `--ring`, not `--primary`: primary is a deep indigo (#2F45B5) that reads
-  // muted as a selection, and the ring token (#4E6AD4 light / #B5C4FF dark) is
-  // the brighter interaction blue already decoupled for this purpose (SW-2015).
-  selectedBorderColor = "var(--color-ring)",
-  selectedFillColor = "var(--color-ring)",
-  selectedFillOpacity = 0.22,
+  // Every blue in the palette shares one hue family (265-271), and wells are
+  // routinely filled from that same ramp (`--chart-1` is TS Blue 500, #2F45B5).
+  // So no swatch separates a selected blue well on hue alone — the separation
+  // has to come from the treatment. This is the brightest on-brand blue
+  // (#6C8DDB, L 0.65 vs the well's 0.45), drawn *outside* a background-coloured
+  // inner ring so the selection reads against any fill the consumer chooses.
+  selectedBorderColor = "var(--color-chart-seq-blue-06)",
+  selectedFillColor = "var(--color-chart-seq-blue-06)",
+  selectedFillOpacity = 0.26,
   // "well" by default: a selected well keeps its own colour and the selection
   // reads from the ring overlay instead. Replacing the fill hid the result of
   // an Apply until the user deselected — no feedback on the action they just

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { defaultProjectKey, jiraEnv, zephyrEnv } from "../clients/env";
+import { resolveProjectKey, jiraEnv, zephyrEnv } from "../clients/env";
 import { JiraClient, JiraHttpError, jqlString } from "../clients/jira-client";
 import { createZephyrTransport, ReadOnlyViolationError, ZephyrClient, ZephyrHttpError } from "../clients/zephyr-client";
 
@@ -39,7 +39,10 @@ describe("env", () => {
       projectKey: "SW",
       baseUrl: "https://api.zephyrscale.smartbear.com/v2",
     });
-    expect(defaultProjectKey({ ZEPHYR_PROJECT_KEY: "QE" })).toBe("QE");
+    expect(resolveProjectKey({ ZEPHYR_PROJECT_KEY: "QE" })).toBe("QE");
+    expect(resolveProjectKey({ JIRA_PROJECT_KEY: "qe" })).toBe("QE");
+    expect(zephyrEnv({ ZEPHYR_API_TOKEN: "z", JIRA_PROJECT_KEY: "qe" }).projectKey).toBe("QE");
+    expect(() => resolveProjectKey({ JIRA_PROJECT_KEY: "QE", ZEPHYR_PROJECT_KEY: "SW" })).toThrow(/disagree/);
   });
 });
 
@@ -51,7 +54,7 @@ describe("JiraClient", () => {
       status: 200,
       body:
         index === 0
-          ? { issues: [{ id: "1", key: "SW-1", fields: {} }], nextPageToken: "p2", isLast: false }
+          ? { issues: [{ id: "1", key: "SW-1", fields: {} }], nextPageToken: "p2" } // no isLast: must keep paging
           : { issues: [{ id: "2", key: "SW-2", fields: {} }], isLast: true },
     }));
     const client = new JiraClient({ ...options, fetchImpl });
@@ -70,6 +73,19 @@ describe("JiraClient", () => {
       maxResults: 100,
     });
     expect(JSON.parse(String(calls[1].init.body))).toMatchObject({ nextPageToken: "p2" });
+  });
+
+  it("stops paging on a repeated token so a misbehaving server cannot loop it forever", async () => {
+    const { fetchImpl, calls } = fakeFetch(() => ({
+      status: 200,
+      body: { issues: [{ id: "1", key: "SW-1", fields: {} }], nextPageToken: "same", isLast: false },
+    }));
+    const client = new JiraClient({ ...options, fetchImpl });
+
+    const issues = await client.searchAll("project = SW");
+
+    expect(calls).toHaveLength(2);
+    expect(issues).toHaveLength(2);
   });
 
   it("returns null for a missing issue and throws a typed error otherwise", async () => {
@@ -131,6 +147,20 @@ describe("ZephyrClient", () => {
     expect(await client.getLinkedTestCaseKeys("SW-1")).toEqual([]);
     expect(await client.getTestCase("SW-T404")).toBeNull();
     expect((calls[0].init.headers as Record<string, string>).Authorization).toBe("Bearer tok");
+  });
+
+  it("treats an empty payload as no links but rejects unexpected shapes", async () => {
+    const { fetchImpl } = fakeFetch((call) => {
+      if (call.url.endsWith("/issuelinks/SW-1/testcases")) return { status: 200, body: {} };
+      if (call.url.endsWith("/issuelinks/SW-2/testcases")) return { status: 200, body: { values: [{ key: "SW-T1" }] } };
+      return { status: 200, body: [{ id: 7 }] };
+    });
+    const { transport } = await createZephyrTransport({ ...transportOptions, fetchImpl });
+    const client = new ZephyrClient(transport, { readOnly: true });
+
+    expect(await client.getLinkedTestCaseKeys("SW-1")).toEqual([]);
+    await expect(client.getLinkedTestCaseKeys("SW-2")).rejects.toThrow(/unexpected payload/);
+    await expect(client.getLinkedTestCaseKeys("SW-3")).rejects.toThrow(/unexpected payload/);
   });
 
   it("creates COVERAGE links with a numeric issueId and recognises duplicates", async () => {

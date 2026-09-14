@@ -112,6 +112,21 @@ describe("renderAuditMarkdown", () => {
     expect(withTitles).toContain("| Secret title one |");
   });
 
+  it("names only the scope type for raw JQL audits, whose criterion may quote Jira text", () => {
+    const jql = makeArtifact([artifact.tickets[0]], {
+      scope: {
+        type: "jql",
+        values: ['summary ~ "Secret feature"'],
+        resolvedJql: 'summary ~ "Secret feature"',
+        issueTypes: ["Story"],
+      },
+    });
+    const markdown = renderAuditMarkdown(jql);
+    expect(markdown).toContain("## Zephyr coverage audit — JQL: (raw JQL — see the audit artifact)");
+    expect(markdown).not.toContain("Secret feature");
+    expect(markdown).not.toContain("Resolved JQL");
+  });
+
   it("says so when nothing is actionable", () => {
     const quiet = makeArtifact([artifact.tickets[2]]);
     expect(renderAuditMarkdown(quiet)).toContain("None — every audited ticket is either already correct");
@@ -122,6 +137,7 @@ describe("renderAuditMarkdown", () => {
 describe("escapeCell", () => {
   it("neutralises pipes and line breaks so cells cannot break the table", () => {
     expect(escapeCell(" a|b\r\nc\nd ")).toBe("a\\|b c d");
+    expect(escapeCell("a\\b|c")).toBe("a\\\\b\\|c");
   });
 });
 
@@ -216,6 +232,18 @@ describe("approve --recommended", () => {
     expect(updated.tickets[0].reviewNote).toBe("ci");
   });
 
+  it("--exclusive resets every approval outside the selection", () => {
+    const previously = {
+      ...artifact,
+      tickets: artifact.tickets.map((ticket) => ({ ...ticket, approved: true, reviewNote: "old" })),
+    };
+    const updated = applyApproval(previously, { keys: ["SW-1"], approve: true, exclusive: true, note: "new" });
+    expect(updated.tickets.map((ticket) => ticket.approved)).toEqual([true, false, false, false]);
+    expect(updated.tickets[0].reviewNote).toBe("new");
+    expect(updated.tickets[1].reviewNote).toBeUndefined();
+    expect(() => applyApproval(previously, { keys: ["SW-1"], approve: false, exclusive: true })).toThrow(/--exclusive/);
+  });
+
   it("combines with explicit keys and still refuses inapplicable explicit keys", () => {
     const updated = applyApproval(artifact, { keys: ["sw-1"], approve: true, recommended: true });
     expect(updated.tickets[0].approved).toBe(true);
@@ -284,6 +312,13 @@ describe("report and approve CLIs", () => {
     expect(() => runReport([auditPath, "--out", "x.md", "--github-summary"], { out: quiet, log: quiet })).toThrow(
       /mutually exclusive/,
     );
+    expect(() =>
+      runReport([auditPath, "--github-summary", "--with-summaries"], {
+        env: { GITHUB_STEP_SUMMARY: path.join(dir, "never-written.md") },
+        out: quiet,
+        log: quiet,
+      }),
+    ).toThrow(/must not carry Jira titles/);
     expect(() => runReport([auditPath, "--github-summary"], { env: {}, out: quiet, log: quiet })).toThrow(
       /GITHUB_STEP_SUMMARY/,
     );
@@ -307,6 +342,15 @@ describe("report and approve CLIs", () => {
     expect(messages[1]).toMatch(/No ticket has an ADD recommendation .*; nothing to approve$/);
     expect(fs.readFileSync(reviewOnlyPath, "utf8")).toBe(before);
 
+    const staleApprovalsPath = path.join(dir, "stale-approvals.json");
+    fs.writeFileSync(
+      staleApprovalsPath,
+      JSON.stringify({ ...artifact, tickets: artifact.tickets.map((ticket) => ({ ...ticket, approved: true })) }),
+    );
+    runApprove([staleApprovalsPath, "--recommended", "--exclusive"], (message) => messages.push(message));
+    expect(messages[2]).toMatch(/^Approved SW-1; cleared prior approval of SW-2, SW-3, SW-4 in /);
+    const exclusive = parseAuditArtifact(JSON.parse(fs.readFileSync(staleApprovalsPath, "utf8")));
+    expect(exclusive.tickets.map((ticket) => ticket.approved)).toEqual([true, false, false, false]);
     expect(() => runApprove([auditPath], quiet)).toThrow(/at least one issue key \(or --recommended\)/);
   });
 });

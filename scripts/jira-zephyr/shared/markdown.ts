@@ -25,7 +25,8 @@ const NEEDS_ATTENTION: ReadonlySet<ApplyOutcome> = new Set<ApplyOutcome>(["stale
 
 /** Makes arbitrary text safe inside a GFM table cell (pipes, line breaks). */
 export function escapeCell(text: string): string {
-  return text.replace(/\r?\n/g, " ").replace(/\|/g, "\\|").trim();
+  // Backslashes first, or an input backslash before a pipe would neutralise the pipe escape.
+  return text.replace(/\r?\n/g, " ").replace(/\\/g, "\\\\").replace(/\|/g, "\\|").trim();
 }
 
 function code(text: string): string {
@@ -66,11 +67,12 @@ function plural(count: number, noun: string): string {
 
 export function renderAuditMarkdown(artifact: AuditArtifact, options: MarkdownOptions = {}): string {
   const { scope, summary, jira, repo } = artifact;
-  const lines: string[] = [
-    `## Zephyr coverage audit — ${SCOPE_TYPE_LABELS[scope.type]}: ${scope.values.map(code).join(", ")}`,
-    "",
-  ];
-  if (scope.resolvedJql) lines.push(`- **Resolved JQL:** ${code(scope.resolvedJql)}`);
+  // Raw JQL is user-written and may quote Jira text, so a JQL scope shows only its type here;
+  // the JQL derived for the other scope types contains nothing but keys and version ids.
+  const isRawJql = scope.type === "jql";
+  const scopeValues = isRawJql ? "(raw JQL — see the audit artifact)" : scope.values.map(code).join(", ");
+  const lines: string[] = [`## Zephyr coverage audit — ${SCOPE_TYPE_LABELS[scope.type]}: ${scopeValues}`, ""];
+  if (scope.resolvedJql && !isRawJql) lines.push(`- **Resolved JQL:** ${code(scope.resolvedJql)}`);
   lines.push(
     `- **Issues:** ${artifact.scopeSnapshot.issueKeys.length} audited · ${artifact.skipped.length} skipped by issue type (audited types: ${scope.issueTypes.join(", ")})`,
     `- **Repository:** ${code(repo.branch)} @ ${code(repo.head.slice(0, 7))}${repo.dirty ? " (dirty working tree)" : ""}`,

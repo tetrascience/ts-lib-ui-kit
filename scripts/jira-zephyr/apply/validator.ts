@@ -101,3 +101,42 @@ export function gateEntry(entry: AuditEntry, minConfidence: Confidence): GateDec
   }
   return { proceed: true, toAdd: [...entry.missingZephyrIds] };
 }
+
+export interface LiveTargets {
+  jiraBaseUrl: string;
+  zephyrBaseUrl: string;
+  zephyrProjectKey: string;
+}
+
+function normalizeUrl(url: string): string {
+  return url.trim().replace(/\/+$/, "").toLowerCase();
+}
+
+/**
+ * The apply script must talk to the same Jira site, Zephyr API and Zephyr
+ * project the audit recorded; otherwise the Jira-id re-check could pass on one
+ * instance while the write lands on another. Pure; throws listing every mismatch.
+ */
+export function assertTargetsMatch(artifact: AuditArtifact, live: LiveTargets): void {
+  const problems: string[] = [];
+  if (normalizeUrl(live.jiraBaseUrl) !== normalizeUrl(artifact.jira.baseUrl)) {
+    problems.push(`Jira base URL: audit recorded ${artifact.jira.baseUrl}, environment resolves ${live.jiraBaseUrl}`);
+  }
+  if (normalizeUrl(live.zephyrBaseUrl) !== normalizeUrl(artifact.zephyr.baseUrl)) {
+    problems.push(
+      `Zephyr base URL: audit recorded ${artifact.zephyr.baseUrl}, environment resolves ${live.zephyrBaseUrl}`,
+    );
+  }
+  if (live.zephyrProjectKey.trim().toUpperCase() !== artifact.zephyr.projectKey.trim().toUpperCase()) {
+    problems.push(
+      `Zephyr project: audit recorded ${artifact.zephyr.projectKey}, environment resolves ${live.zephyrProjectKey}`,
+    );
+  }
+  if (problems.length > 0) {
+    const list = problems.map((problem) => `  - ${problem}`).join("\n");
+    throw new AuditValidationError(
+      `Refusing to apply: the live targets do not match the audit artifact\n${list}\n` +
+        "Point JIRA_BASE_URL / ZEPHYR_BASE_URL / ZEPHYR_PROJECT_KEY at the audited targets, or re-audit against the new ones.",
+    );
+  }
+}

@@ -298,7 +298,7 @@ yarn jira-zephyr:apply   artifacts/zephyr-audit-epic-SW-2301.json --execute   # 
   [`scripts/jira-zephyr/README.md`](./scripts/jira-zephyr/README.md).
 - No personal Zephyr token? Actions → **Jira ↔ Zephyr coverage audit**
   ([`zephyr-coverage-audit.yml`](./.github/workflows/zephyr-coverage-audit.yml))
-  runs the same scripts with the repo's `ZEPHYR_TOKEN`: `mode: audit` writes the
+  runs the same scripts with the repo's `ZEPHYR_TOKEN` (default branch only): `mode: audit` writes the
   report to the job summary and uploads the frozen audit; `mode: write` with that
   run's `audit_run_id` applies it (`approve: recommended` = only ADD
   recommendations). Needs `JIRA_EMAIL` + `JIRA_API_TOKEN` secrets. Because the

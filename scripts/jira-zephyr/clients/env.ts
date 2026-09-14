@@ -44,10 +44,23 @@ export function zephyrEnv(env: NodeJS.ProcessEnv = process.env): ZephyrEnv {
   return {
     baseUrl: trimTrailingSlash(env.ZEPHYR_BASE_URL?.trim() || DEFAULT_ZEPHYR_BASE_URL),
     apiToken: required(env, ["ZEPHYR_TOKEN", "ZEPHYR_API_TOKEN"], "Zephyr Scale API access requires a token"),
-    projectKey: env.ZEPHYR_PROJECT_KEY?.trim() || env.JIRA_PROJECT_KEY?.trim() || DEFAULT_PROJECT_KEY,
+    projectKey: resolveProjectKey(env),
   };
 }
 
-export function defaultProjectKey(env: NodeJS.ProcessEnv = process.env): string {
-  return env.JIRA_PROJECT_KEY?.trim() || env.ZEPHYR_PROJECT_KEY?.trim() || DEFAULT_PROJECT_KEY;
+/**
+ * The one project key both clients use. Zephyr Scale projects *are* Jira
+ * projects, so `JIRA_PROJECT_KEY` and `ZEPHYR_PROJECT_KEY` are two spellings of
+ * the same value; two different values are rejected rather than letting the
+ * Jira scope and the Zephyr client point at different projects.
+ */
+export function resolveProjectKey(env: NodeJS.ProcessEnv = process.env): string {
+  const jira = env.JIRA_PROJECT_KEY?.trim().toUpperCase();
+  const zephyr = env.ZEPHYR_PROJECT_KEY?.trim().toUpperCase();
+  if (jira && zephyr && jira !== zephyr) {
+    throw new Error(
+      `JIRA_PROJECT_KEY (${jira}) and ZEPHYR_PROJECT_KEY (${zephyr}) disagree; they name the same project — set one value`,
+    );
+  }
+  return jira || zephyr || DEFAULT_PROJECT_KEY;
 }

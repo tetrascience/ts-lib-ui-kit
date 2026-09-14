@@ -32,6 +32,7 @@ export const USAGE = `Usage:
 
 Options:
   --recommended   Also select every entry the audit recommends ADD (confidence ≥ high)
+  --exclusive     Make the selection the complete set of approvals (every other entry is reset)
   --note <text>   Free-text review note stored on each approved entry
   --unapprove     Revoke approval instead of granting it
   -h, --help      Show this help`;
@@ -42,6 +43,12 @@ export interface ApproveOptions {
   note?: string;
   /** Also (un)approve every entry whose `recommendedAction` is `add`. */
   recommended?: boolean;
+  /**
+   * Reset every entry outside the selection to `approved: false`, so an artifact
+   * that already carries approvals (e.g. downloaded from an earlier workflow run)
+   * ends up approving exactly the current selection. Approving only.
+   */
+  exclusive?: boolean;
 }
 
 /** Keys of the entries the audit recommends adding links to — applicable by construction. */
@@ -72,21 +79,30 @@ export function applyApproval(artifact: AuditArtifact, options: ApproveOptions):
   }
   if (problems.length > 0) throw new AuditValidationError(problems.map((p) => `  - ${p}`).join("\n"));
 
+  if (options.exclusive && !options.approve) {
+    throw new AuditValidationError("--exclusive only applies when approving; it cannot be combined with --unapprove");
+  }
+
   const keys = new Set([
     ...options.keys.map((key) => key.toUpperCase()),
     ...(options.recommended ? recommendedKeys(artifact) : []),
   ]);
   return {
     ...artifact,
-    tickets: artifact.tickets.map((ticket) =>
-      keys.has(ticket.jira)
-        ? {
-            ...ticket,
-            approved: options.approve,
-            ...(options.note && options.approve ? { reviewNote: options.note } : {}),
-          }
-        : ticket,
-    ),
+    tickets: artifact.tickets.map((ticket) => {
+      if (keys.has(ticket.jira)) {
+        return {
+          ...ticket,
+          approved: options.approve,
+          ...(options.note && options.approve ? { reviewNote: options.note } : {}),
+        };
+      }
+      if (options.exclusive && ticket.approved) {
+        const { reviewNote: _, ...rest } = ticket;
+        return { ...rest, approved: false };
+      }
+      return ticket;
+    }),
   };
 }
 
@@ -96,6 +112,7 @@ export function runApprove(argv: string[], out: (message: string) => void = cons
     allowPositionals: true,
     options: {
       recommended: { type: "boolean" },
+      exclusive: { type: "boolean" },
       unapprove: { type: "boolean" },
       note: { type: "string" },
       help: { type: "boolean", short: "h" },
@@ -107,7 +124,8 @@ export function runApprove(argv: string[], out: (message: string) => void = cons
   }
   const [file, ...keys] = positionals;
   const recommended = values.recommended === true;
-  if (!file || (keys.length === 0 && !recommended)) {
+  const exclusive = values.exclusive === true;
+  if (!file || (keys.length === 0 && !recommended && !exclusive)) {
     throw new AuditValidationError(`Expected an audit file and at least one issue key (or --recommended)\n\n${USAGE}`);
   }
 
@@ -118,17 +136,25 @@ export function runApprove(argv: string[], out: (message: string) => void = cons
     ...keys.map((key) => key.toUpperCase()),
     ...(recommended ? recommendedKeys(artifact) : []),
   ]);
-  if (targets.length === 0) {
+  const cleared = exclusive
+    ? artifact.tickets
+        .filter((ticket) => ticket.approved && !targets.includes(ticket.jira))
+        .map((ticket) => ticket.jira)
+    : [];
+  if (targets.length === 0 && cleared.length === 0) {
     out(
       `No ticket has an ADD recommendation in ${displayPath(auditPath)}; nothing to ${approve ? "approve" : "unapprove"}`,
     );
     return;
   }
 
-  const updated = applyApproval(artifact, { keys, approve, note: values.note, recommended });
+  const updated = applyApproval(artifact, { keys, approve, note: values.note, recommended, exclusive });
   validateAuditArtifact(updated);
   fs.writeFileSync(auditPath, `${JSON.stringify(updated, null, 2)}\n`, "utf8");
-  out(`${approve ? "Approved" : "Unapproved"} ${targets.join(", ")} in ${displayPath(auditPath)}`);
+  const clearedNote = cleared.length > 0 ? `; cleared prior approval of ${cleared.join(", ")}` : "";
+  out(
+    `${approve ? "Approved" : "Unapproved"} ${targets.join(", ") || "nothing"}${clearedNote} in ${displayPath(auditPath)}`,
+  );
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -140,6 +140,18 @@ interface LinkedTestCase {
   self?: string;
 }
 
+/** Both transports turn an empty 200 body into `{}`. */
+function isEmptyPayload(value: unknown): boolean {
+  if (value === null || value === undefined) return true;
+  return typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0;
+}
+
+function isLinkedTestCase(value: unknown): value is LinkedTestCase {
+  if (typeof value !== "object" || value === null) return false;
+  const key = (value as { key?: unknown }).key;
+  return typeof key === "string" && key.length > 0;
+}
+
 export interface LinkResult {
   linkId: number | null;
   alreadyExisted: boolean;
@@ -166,13 +178,21 @@ export class ZephyrClient {
    */
   async getLinkedTestCaseKeys(issueKey: string): Promise<string[]> {
     const path = `/issuelinks/${encodeURIComponent(issueKey)}/testcases`;
+    let linked: unknown;
     try {
-      const linked = await this.transport.request<LinkedTestCase[]>("GET", path);
-      return [...new Set((Array.isArray(linked) ? linked : []).map((item) => item.key).filter(Boolean))];
+      linked = await this.transport.request<unknown>("GET", path);
     } catch (error) {
       if (error instanceof ZephyrHttpError && error.status === 404) return [];
       throw error;
     }
+    // Anything that is not an array of `{ key }` items is a contract change and
+    // must not be mistaken for "no links" — that would make every expected ID
+    // look missing and, on apply, invite duplicate COVERAGE links.
+    if (isEmptyPayload(linked)) return [];
+    if (!Array.isArray(linked) || !linked.every(isLinkedTestCase)) {
+      throw new Error(`GET ${path} returned an unexpected payload; expected an array of { key } test case links`);
+    }
+    return [...new Set(linked.map((item) => item.key))];
   }
 
   /** Fetches a test case, or null when it does not exist. */

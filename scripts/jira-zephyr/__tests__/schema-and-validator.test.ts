@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { gateEntry, parseMinConfidence, validateAuditArtifact } from "../apply/validator";
+import { assertTargetsMatch, gateEntry, parseMinConfidence, validateAuditArtifact } from "../apply/validator";
 import { parseAuditArtifact } from "../shared/audit-schema";
 
 import { makeArtifact, makeEntry } from "./fixtures";
@@ -88,5 +88,27 @@ describe("gateEntry", () => {
       proceed: true,
       toAdd: ["SW-T1"],
     });
+  });
+});
+
+describe("assertTargetsMatch", () => {
+  const artifact = makeArtifact([makeEntry()]);
+  const live = {
+    jiraBaseUrl: "https://example.atlassian.net/",
+    zephyrBaseUrl: "https://api.zephyrscale.smartbear.com/v2",
+    zephyrProjectKey: "sw",
+  };
+
+  it("accepts the recorded targets, ignoring trailing slashes and key case", () => {
+    expect(() => assertTargetsMatch(artifact, live)).not.toThrow();
+  });
+
+  it("lists every mismatch and refuses", () => {
+    expect(() =>
+      assertTargetsMatch(artifact, { ...live, jiraBaseUrl: "https://other.atlassian.net", zephyrProjectKey: "QE" }),
+    ).toThrow(/Jira base URL[\s\S]*Zephyr project/);
+    expect(() => assertTargetsMatch(artifact, { ...live, zephyrBaseUrl: "https://zephyr.example/v2" })).toThrow(
+      /Zephyr base URL/,
+    );
   });
 });

@@ -33,6 +33,11 @@ name: Jira ↔ Zephyr coverage audit
 # Atlassian account email and its API token from
 # https://id.atlassian.com/manage-profile/security/api-tokens; read access to
 # project SW is enough, the scripts never write to Jira.
+#
+# Trusted code only: the first step refuses to run unless the selected ref is
+# the default branch, so these secrets only ever meet workflow and script code
+# that went through PR review. Test changes to this workflow by merging them,
+# not by dispatching a branch.
 
 on:
   workflow_dispatch:
@@ -201,12 +206,14 @@ jobs:
           rm -f "$APPLY_FILE" # never report a previous run's apply result as this run's
           read -r approve <<<"$APPROVE"
           note="approved via GitHub Actions run $GITHUB_RUN_ID by $GITHUB_ACTOR"
+          # --exclusive: an audit downloaded from an earlier dry-run/write run carries that
+          # run's approvals; this run's selection must replace them, not add to them.
           if [ -z "$approve" ] || [ "$approve" = "recommended" ]; then
-            yarn jira-zephyr:approve "$AUDIT_FILE" --recommended --note "$note"
+            yarn jira-zephyr:approve "$AUDIT_FILE" --recommended --exclusive --note "$note"
           else
             keys=()
             for key in $(tr ',' ' ' <<<"$approve"); do keys+=("$key"); done
-            yarn jira-zephyr:approve "$AUDIT_FILE" "${keys[@]}" --note "$note"
+            yarn jira-zephyr:approve "$AUDIT_FILE" "${keys[@]}" --exclusive --note "$note"
           fi
 
       - name: ${{ inputs.mode == 'write' && 'Apply — EXECUTE, creates the approved links' || 'Apply — dry run, writes nothing' }}

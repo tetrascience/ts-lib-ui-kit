@@ -96,7 +96,9 @@ export class JiraClient {
         ...(nextPageToken ? { nextPageToken } : {}),
       });
       issues.push(...(page.issues ?? []));
-      if (page.isLast !== false || !page.nextPageToken || page.nextPageToken === nextPageToken) break;
+      // Stop only on an explicit last page, a missing token or a repeated token —
+      // never on a merely absent `isLast`, which would silently truncate the scope.
+      if (page.isLast === true || !page.nextPageToken || page.nextPageToken === nextPageToken) break;
       nextPageToken = page.nextPageToken;
     }
     return issues;

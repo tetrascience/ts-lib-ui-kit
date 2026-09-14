@@ -25,10 +25,10 @@ import { applyArtifactSchema, APPLY_TOOL_NAME, AUDIT_SCHEMA_VERSION, formatZodIs
 import { displayPath } from "../shared/paths";
 import { formatIdList, renderTable } from "../shared/table";
 
-import { AuditValidationError, parseMinConfidence, validateAuditArtifact } from "./validator";
+import { assertTargetsMatch, AuditValidationError, parseMinConfidence, validateAuditArtifact } from "./validator";
 import { runApply, summarizeResults, type ApplyClients } from "./writer";
 
-import type { ApplyArtifact, ApplyResult } from "../shared/types";
+import type { ApplyArtifact, ApplyResult, AuditArtifact } from "../shared/types";
 
 export const USAGE = `Usage:
   yarn jira-zephyr:apply <audit.json> [--execute] [--min-confidence exact|high|medium] [--only SW-1,SW-2] [--result <file>]
@@ -57,6 +57,11 @@ export interface ApplyRunResult {
   artifact: ApplyArtifact;
   resultPath: string;
   hadErrors: boolean;
+}
+
+/** Raw JQL is user-written and may quote Jira text; public workflow logs get only its type. */
+function describeScope(scope: AuditArtifact["scope"]): string {
+  return scope.type === "jql" ? "jql: (raw JQL — see the artifact)" : `${scope.type}: ${scope.values.join(", ")}`;
 }
 
 function renderResults(results: ApplyResult[]): string {
@@ -99,7 +104,7 @@ export async function runApplyCli(argv: string[], deps: ApplyDeps = {}): Promise
   const artifact = validateAuditArtifact(JSON.parse(fs.readFileSync(auditPath, "utf8")));
   const ageDays = (now().getTime() - Date.parse(artifact.generatedAt)) / MS_PER_DAY;
   log(
-    `[INFO] Audit: ${path.basename(auditPath)} (${artifact.scope.type}: ${artifact.scope.values.join(", ")}; generated ${artifact.generatedAt})`,
+    `[INFO] Audit: ${path.basename(auditPath)} (${describeScope(artifact.scope)}; generated ${artifact.generatedAt})`,
   );
   log(
     `[INFO] Frozen scope: ${artifact.scopeSnapshot.issueKeys.length} issue(s); approved entries: ${artifact.tickets.filter((t) => t.approved).length}`,
@@ -113,13 +118,20 @@ export async function runApplyCli(argv: string[], deps: ApplyDeps = {}): Promise
 
   let clients = deps.clients;
   if (!clients) {
+    const jiraConfig = jiraEnv();
     const zephyrConfig = zephyrEnv();
+    // Never let a frozen audit be replayed against a different Jira site, Zephyr API or project.
+    assertTargetsMatch(artifact, {
+      jiraBaseUrl: jiraConfig.baseUrl,
+      zephyrBaseUrl: zephyrConfig.baseUrl,
+      zephyrProjectKey: zephyrConfig.projectKey,
+    });
     const { transport, source } = await createZephyrTransport(zephyrConfig);
     clients = {
-      jira: new JiraClient(jiraEnv()),
+      jira: new JiraClient(jiraConfig),
       zephyr: new ZephyrClient(transport, { readOnly: !execute }),
     };
-    log(`[INFO] Zephyr transport: ${source} (${execute ? "read-write" : "read-only"})`);
+    log(`[INFO] Zephyr transport: ${source} (${execute ? "read-write" : "read-only"}); targets match the audit`);
   }
 
   const results = await runApply(artifact, clients, { execute, minConfidence, only, log });

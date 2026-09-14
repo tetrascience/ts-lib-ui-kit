@@ -101,8 +101,7 @@ yarn jira-zephyr:approve artifacts/zephyr-audit-epic-SW-2301.json --recommended 
 
 The helper refuses to approve entries with nothing to add or with `low`
 confidence. `--recommended` selects every entry the audit itself recommends
-`add` — confidence ≥ high, nothing unexpected, every test case exists — which
-is what the GitHub workflow's `approve: recommended` input uses.
+`add` — confidence ≥ high, nothing unexpected, every test case exists — which is what the GitHub workflow's `approve: recommended` input uses. `--exclusive` makes the selection the complete set of approvals — every other entry is reset to `approved: false` — so re-approving an artifact that already carries approvals cannot drag stale ones along; the workflow always passes it.
 
 ### 3. Apply (dry run by default)
 
@@ -116,7 +115,7 @@ For every key in the **frozen** `scopeSnapshot.issueKeys` (never the live Epic /
 Fix Version — an issue added to the epic after the audit is ignored until the
 next audit) the apply script:
 
-1. Checks `approved` and the confidence threshold (default `high`; `low` is never applied, whatever the flag).
+1. Refuses to start unless the live Jira site, Zephyr API URL and Zephyr project match the ones the audit recorded (`JIRA_BASE_URL` / `ZEPHYR_BASE_URL` / `ZEPHYR_PROJECT_KEY`), then checks `approved` and the confidence threshold (default `high`; `low` is never applied, whatever the flag).
 2. Re-fetches the Jira issue and requires the same numeric issue id.
 3. Re-fetches the live Zephyr links and compares them with `existingZephyrIdsAtAudit`.
 4. Adds only the still-missing `missingZephyrIds`, skipping duplicates. It never removes links and never invents new mappings.
@@ -172,15 +171,15 @@ and the apply step still refuses `stale` entries.
 
 Secrets: `ZEPHYR_TOKEN` (already configured), `JIRA_EMAIL` and `JIRA_API_TOKEN`
 — any Atlassian account with read access to project SW; API tokens come from
-<https://id.atlassian.com/manage-profile/security/api-tokens>. The run fails
-fast, pointing at _Settings → Secrets and variables → Actions_, when one is missing.
+<https://id.atlassian.com/manage-profile/security/api-tokens>. The run fails fast, pointing at _Settings → Secrets and variables → Actions_, when one is missing.
+
+Two more rails: the first step refuses to run from any ref but the default branch, so the secrets only ever meet workflow and script code that went through PR review (test workflow changes by merging them); and approvals are always applied with `--exclusive`, so a frozen audit downloaded from an earlier dry-run or write run cannot carry that run's approvals into this one.
 
 **Public repository caveat.** Job summaries, logs and uploaded artifacts are
 world-readable. The workflow therefore never prints Jira ticket titles: the
 summary shows keys, Zephyr IDs, confidence, actions and outcomes (all already
 public via commit subjects and story files), the terminal report is kept out of
-the log, and the uploaded audit is the `--redacted-copy` described above. To
-read a report with titles, run the audit locally.
+the log, and the uploaded audit is the `--redacted-copy` described above. For `--jql` scopes the summary names only the scope type, because raw JQL can quote Jira text. To read a report with titles, run the audit locally.
 
 ## Evidence and confidence
 

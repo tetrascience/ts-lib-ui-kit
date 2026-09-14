@@ -184,6 +184,18 @@ describe("audit → approve → apply, end to end with injected clients", () => 
     expect(linked).toHaveLength(1);
   });
 
+  it("refuses to apply when the environment points at a different Jira/Zephyr target than the audit", async () => {
+    vi.stubEnv("JIRA_EMAIL", "me@example.com");
+    vi.stubEnv("JIRA_API_TOKEN", "t");
+    vi.stubEnv("ZEPHYR_TOKEN", "z");
+    vi.stubEnv("JIRA_BASE_URL", "https://someone-else.atlassian.net");
+    try {
+      await expect(runApplyCli([auditPath], { log: quiet, out: quiet })).rejects.toThrow(/live targets do not match/);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("rejects an unreadable or invalid artifact before contacting anything", async () => {
     fs.writeFileSync(path.join(dir, "bad.json"), JSON.stringify({ schemaVersion: 1 }));
     const clients = applyClients(true);

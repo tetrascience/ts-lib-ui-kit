@@ -21,7 +21,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
-import { defaultProjectKey, jiraEnv, zephyrEnv } from "../clients/env";
+import { jiraEnv, resolveProjectKey, zephyrEnv } from "../clients/env";
 import { JiraClient } from "../clients/jira-client";
 import { createZephyrTransport, ZephyrClient } from "../clients/zephyr-client";
 import { AUDIT_SCHEMA_VERSION, AUDIT_TOOL_NAME, parseAuditArtifact } from "../shared/audit-schema";
@@ -91,15 +91,18 @@ async function verifyMissingExist(zephyr: ZephyrReadClient, entry: AuditEntry): 
 async function connectZephyr(
   deps: AuditDeps,
   log: (message: string) => void,
+  projectKey: string,
 ): Promise<{ client: ZephyrReadClient; baseUrl: string; projectKey: string }> {
   if (deps.zephyr) return deps.zephyr;
   const config = zephyrEnv();
-  const { transport, source } = await createZephyrTransport(config);
+  // `--project` (or the shared env key) names the Jira project; a Zephyr Scale
+  // project key is the same value, so the Zephyr connection follows it too.
+  const { transport, source } = await createZephyrTransport({ ...config, projectKey });
   log(`[INFO] Zephyr transport: ${source} (read-only)`);
   return {
     client: new ZephyrClient(transport, { readOnly: true }),
     baseUrl: config.baseUrl,
-    projectKey: config.projectKey,
+    projectKey,
   };
 }
 
@@ -136,11 +139,11 @@ export async function runAudit(argv: string[], deps: AuditDeps = {}): Promise<Au
     jql: values.jql,
     intersect: values.intersect === true,
   });
-  const projectKey = values.project?.trim() || defaultProjectKey();
+  const projectKey = values.project?.trim().toUpperCase() || resolveProjectKey();
   const issueTypes = values["issue-types"] ? splitList(values["issue-types"]) : DEFAULT_ISSUE_TYPES;
 
   const jira = deps.jira ?? new JiraClient(jiraEnv());
-  const zephyr = await connectZephyr(deps, log);
+  const zephyr = await connectZephyr(deps, log, projectKey);
   if (!zephyr.client.readOnly) throw new Error("The audit requires a read-only Zephyr client");
 
   log(`[INFO] Resolving scope (${selector.type}) in project ${projectKey}…`);

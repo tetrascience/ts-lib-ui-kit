@@ -67,6 +67,11 @@ export function runReport(argv: string[], deps: ReportDeps = {}): { markdown: st
   if (values.out && values["github-summary"]) {
     throw new AuditValidationError("--out and --github-summary are mutually exclusive");
   }
+  if (values["with-summaries"] && values["github-summary"]) {
+    throw new AuditValidationError(
+      "--with-summaries cannot be combined with --github-summary: the job summary of this public repository must not carry Jira titles",
+    );
+  }
 
   const auditPath = path.resolve(positionals[0]);
   const audit = validateAuditArtifact(JSON.parse(fs.readFileSync(auditPath, "utf8")));

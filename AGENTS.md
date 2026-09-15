@@ -14,7 +14,7 @@ yarn test              # Unit tests only (Vitest, jsdom)
 yarn test:storybook    # Storybook play function tests (Playwright)
 yarn test:all          # Both unit + storybook tests
 yarn format            # Prettier
-yarn typecheck:scripts # Type-check scripts/jira-zephyr (root typecheck covers src/ only)
+yarn typecheck:scripts # Type-check scripts/ via scripts/tsconfig.json (root typecheck covers src/ only)
 ```
 
 ## Pre-commit Checks

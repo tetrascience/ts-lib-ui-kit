@@ -1,0 +1,22 @@
+{
+  // `yarn typecheck:scripts` — type-checks the repo's scripts. The root tsconfig
+  // has `include: ["src"]`, so `yarn typecheck` never sees anything under
+  // scripts/; at run time tsx and Vitest only strip types, they do not check
+  // them. Same gap tsconfig.e2e.json closes for the e2e suite.
+  "extends": "../tsconfig.json",
+  "include": ["."],
+  "exclude": [
+    // A separate Jest project with its own package.json / node_modules (JSX tests).
+    "verify-jest-consumer",
+    // Imports (types included) the JFrog-only ts-lib-zephyr-nodejs, which is never
+    // installed here or in CI's public `yarn install`; its tests import it too, so
+    // it cannot be checked without that package. scripts/jira-zephyr has no such
+    // dependency: it loads the library lazily and falls back to fetch.
+    "zephyr",
+    "**/node_modules"
+  ],
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  }
+}

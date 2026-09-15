@@ -52,7 +52,7 @@ jobs:
         run: yarn verify:jest-consumer
 
       - name: Type Check
-        # The root tsconfig covers src/ only; the second command covers scripts/jira-zephyr.
+        # The root tsconfig covers src/ only; the second command covers scripts/ (scripts/tsconfig.json).
         run: yarn typecheck && yarn typecheck:scripts
 
       - name: Run Tests with Coverage

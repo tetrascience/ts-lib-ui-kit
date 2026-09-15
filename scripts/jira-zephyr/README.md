@@ -239,8 +239,7 @@ scripts/jira-zephyr/
 └── __tests__/  vitest unit + git-integration tests (run with `yarn test`)
 ```
 
-`yarn typecheck:scripts` type-checks this directory (the root `tsconfig.json`
-covers `src/` only). `yarn test` runs the tests; the scanner test builds a real
+`yarn typecheck:scripts` type-checks all of `scripts/` through `scripts/tsconfig.json` (the root `tsconfig.json` covers `src/` only). `yarn test` runs the tests; the scanner test builds a real
 temporary git repository.
 
 ## Known limits

@@ -205,6 +205,31 @@ describe("Tree typeahead", () => {
     expect(document.activeElement).toBe(item("summary"));
   });
 
+  it("highlights the typed prefix on every matching label while the buffer is live", () => {
+    vi.useFakeTimers();
+    render(<Fixture expandedIds={new Set(["documents"])} />);
+    focus("archive");
+    press("d");
+    const matches = () =>
+      [...container.querySelectorAll<HTMLElement>('[data-slot="tree-item-typeahead-match"]')].map((el) => [
+        el.closest<HTMLElement>('[role="treeitem"]')?.dataset.treeItemId,
+        el.textContent,
+      ]);
+    expect(matches()).toEqual([
+      ["documents", "D"],
+      ["drafts", "D"],
+    ]);
+    // The label's accessible name is unchanged by the split.
+    expect(item("documents")?.querySelector('[data-slot="tree-item-label"]')?.textContent).toBe("Documents");
+
+    press("r");
+    expect(matches()).toEqual([["drafts", "Dr"]]);
+
+    // The lapse clears the highlight from a timer, outside any React event, so flush it explicitly.
+    flushSync(() => vi.advanceTimersByTime(1000));
+    expect(matches()).toEqual([]);
+  });
+
   it("ignores space and modified keys", () => {
     render(<Fixture />);
     focus("documents");

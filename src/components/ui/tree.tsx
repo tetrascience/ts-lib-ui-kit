@@ -39,6 +39,8 @@ type TreeContextValue = {
    * node, else the first root) is not currently rendered. `null` means the default stands.
    */
   entryId: string | null;
+  /** The live typeahead query, lower-cased, or `null` once the buffer has lapsed. */
+  typeaheadQuery: string | null;
   expandOnSelect: boolean;
   guides: TreeGuides;
   /** Attached to each `TreeItem` rather than to the tree root, so the node is its own key target. */
@@ -250,6 +252,7 @@ type TreeKeyEvent = {
   setFocusedId: (id: string) => void;
   activate: (id: string, hasChildren: boolean, expanded: boolean) => void;
   typeahead: TypeaheadState;
+  setTypeaheadQuery: (query: string | null) => void;
 };
 
 /** Moves focus to `element`, if there is one, and claims the key press. */
@@ -323,18 +326,21 @@ function isTypeaheadKey(event: React.KeyboardEvent) {
  * of looking for a label that begins with `"ss"`.
  */
 function typeaheadTo(context: TreeKeyEvent) {
-  const { event, root, current, typeahead } = context;
+  const { event, root, current, typeahead, setTypeaheadQuery } = context;
   // Claimed whether or not anything matches: a letter typed into a tree is never meant for the page.
   event.preventDefault();
   clearTimeout(typeahead.timer);
   typeahead.buffer += event.key.toLowerCase();
   typeahead.timer = setTimeout(() => {
     typeahead.buffer = "";
+    setTypeaheadQuery(null);
   }, TYPEAHEAD_TIMEOUT_MS);
 
   const { buffer } = typeahead;
   const isRepeatedChar = buffer.length > 1 && [...buffer].every((char) => char === buffer[0]);
   const query = isRepeatedChar ? buffer[0] : buffer;
+  // Published so every matching label can highlight the typed prefix while the buffer is live.
+  setTypeaheadQuery(query);
 
   // Search starts at the node after the current one and wraps, so the current node is only matched
   // as a last resort — that is what makes a repeated letter move on rather than stay put.
@@ -410,6 +416,7 @@ function Tree({
   });
   const [focusedId, setFocusedId] = React.useState<string | null>(null);
   const [entryId, setEntryId] = React.useState<string | null>(null);
+  const [typeaheadQuery, setTypeaheadQuery] = React.useState<string | null>(null);
   // Ancestor trail of the focused node, captured when it takes focus. If a later render removes the
   // node (an ancestor collapsed, a lazy fetch swapped the subtree) this is how focus knows where to
   // retreat to instead of dropping to `body`.
@@ -479,6 +486,7 @@ function Tree({
         setFocusedId,
         activate: activateItem,
         typeahead: typeaheadRef.current,
+        setTypeaheadQuery,
       });
     },
     [setExpanded, expandIds, activateItem],
@@ -527,6 +535,7 @@ function Tree({
       focusedId,
       setFocusedId,
       entryId,
+      typeaheadQuery,
       expandOnSelect,
       guides,
       onItemKeyDown: handleItemKeyDown,
@@ -539,6 +548,7 @@ function Tree({
       activateItem,
       focusedId,
       entryId,
+      typeaheadQuery,
       expandOnSelect,
       guides,
       handleItemKeyDown,
@@ -793,7 +803,7 @@ type TreeItemLabelProps = React.ComponentProps<"div"> &
 function TreeItemLabel({ className, children, size, style, icon, trailing, ...props }: TreeItemLabelProps) {
   const { labelId, level, expanded, hasChildren, selected, disabled, trunkLevels, toggle } =
     useTreeItemContext("TreeItemLabel");
-  const { guides } = useTreeContext("TreeItemLabel");
+  const { guides, typeaheadQuery } = useTreeContext("TreeItemLabel");
 
   // The elbow lives on the row because the label element *is* the row, so it can be sized in
   // halves of it — the curve has to land on the row's vertical centre. A connector joins a folder
@@ -919,8 +929,8 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
       ) : null}
       <Tooltip open={tooltipOpen} onOpenChange={handleTooltipOpenChange}>
         <TooltipTrigger asChild>
-          <span ref={textRef} className="min-w-0 flex-1 truncate">
-            {children}
+          <span ref={textRef} data-slot="tree-item-text" className="min-w-0 flex-1 truncate">
+            <TreeItemText query={typeaheadQuery}>{children}</TreeItemText>
           </span>
         </TooltipTrigger>
         {/*
@@ -936,6 +946,30 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
         </span>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * The label text, with the live typeahead prefix highlighted when it matches. Only a plain-string
+ * label can be split; a composed label still matches for navigation, it just gets no highlight.
+ */
+function TreeItemText({ query, children }: { query: string | null; children: React.ReactNode }) {
+  if (!query || typeof children !== "string" || !children.toLowerCase().startsWith(query)) {
+    return children;
+  }
+  return (
+    <>
+      <span
+        data-slot="tree-item-typeahead-match"
+        // The SW-2445 selected-state tokens: a primary tint that reads as "this is the match" on a
+        // resting, hovered or selected row, in both themes. Plain spans, not `<mark>`, so the
+        // label's accessible name is unchanged.
+        className="bg-selected text-selected-foreground ring-selected-border rounded-sm ring-1"
+      >
+        {children.slice(0, query.length)}
+      </span>
+      {children.slice(query.length)}
+    </>
   );
 }
 

@@ -29,7 +29,8 @@ const meta: Meta<typeof Tree> = {
           "**Keyboard:** the tree is a single tab stop; `Tab` lands on the selected node, or the first one. `↓`/`↑` move",
           "between visible nodes across levels · `→` expands, then moves to the first child · `←` collapses, then moves to",
           "the parent · `Home`/`End` jump to the first/last visible node · `Enter` activates · `*` expands every sibling",
-          "at the current level · typing letters jumps to the next node whose label starts with them. Collapsing a branch",
+          "at the current level · typing letters jumps to the next node whose label starts with them, and the typed prefix",
+          "is highlighted on every matching label while the buffer is live. Collapsing a branch",
           "that contains the focused node moves focus to the branch, and focus survives a lazily loaded subtree swapping in.",
           "",
           "**Icons:** pass a decorative icon to `TreeItemLabel`'s `icon` prop. It is hidden from assistive tech, so",
@@ -329,7 +330,14 @@ export const CoreBehaviour: Story = {
     const canvas = within(canvasElement);
     // Found via the label text rather than the accessible name: the `trailing` slot deliberately
     // contributes to the name (see the step below), and these lookups should not be coupled to it.
-    const item = (label: string) => canvas.getByText(label).closest('[role="treeitem"]') as HTMLElement;
+    // Matched on the text slot's full content, not `getByText`, because a live typeahead highlight
+    // splits the text across two spans.
+    const item = (label: string) => {
+      const text = [...canvasElement.querySelectorAll<HTMLElement>('[data-slot="tree-item-text"]')].find(
+        (element) => element.textContent === label,
+      );
+      return text?.closest('[role="treeitem"]') as HTMLElement;
+    };
 
     await step("ARIA state is derived from position in the tree", async () => {
       expect(canvas.getByRole("tree", { name: "Files" })).toBeInTheDocument();
@@ -417,6 +425,7 @@ export const CoreBehaviour: Story = {
     await step("Typeahead, * and focus retention (covered in depth by tree.test.tsx)", async () => {
       await userEvent.keyboard("s");
       expect(item("Shared")).toHaveFocus();
+      expect(item("Shared").querySelector('[data-slot="tree-item-typeahead-match"]')).toHaveTextContent("S");
 
       await userEvent.keyboard("*");
       expect(item("Shared")).toHaveAttribute("aria-expanded", "true");
@@ -437,7 +446,7 @@ export const CoreBehaviour: Story = {
       await userEvent.keyboard("{Enter}");
       expect(args.onActivate).toHaveBeenCalledWith("documents");
 
-      await userEvent.click(canvas.getByText("Shared"));
+      await userEvent.click(item("Shared"));
       expect(args.onActivate).toHaveBeenCalledWith("shared");
       expect(item("Shared")).toHaveAttribute("aria-selected", "true");
     });

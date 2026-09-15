@@ -39,8 +39,11 @@ type TreeContextValue = {
    * node, else the first root) is not currently rendered. `null` means the default stands.
    */
   entryId: string | null;
-  /** The live typeahead query, lower-cased, or `null` once the buffer has lapsed. */
-  typeaheadQuery: string | null;
+  /**
+   * The typeahead highlight to show: the lower-cased query, and whether the buffer has lapsed and
+   * the highlight is fading out. `null` once the fade has finished.
+   */
+  typeaheadMatch: TypeaheadMatch | null;
   expandOnSelect: boolean;
   guides: TreeGuides;
   /** Attached to each `TreeItem` rather than to the tree root, so the node is its own key target. */
@@ -235,8 +238,12 @@ function moveFocus(element: HTMLElement | null | undefined, setFocusedId: (id: s
 
 /** How long the typeahead buffer keeps accumulating characters before it resets. */
 const TYPEAHEAD_TIMEOUT_MS = 600;
+/** How long the highlight lingers after the buffer lapses, fading out, before it is removed. */
+const TYPEAHEAD_FADE_MS = 700;
 
-type TypeaheadState = { buffer: string; timer: ReturnType<typeof setTimeout> | undefined };
+type Timer = ReturnType<typeof setTimeout> | undefined;
+type TypeaheadState = { buffer: string; timer: Timer; fadeTimer: Timer };
+type TypeaheadMatch = { query: string; fading: boolean };
 
 type TreeKeyEvent = {
   event: React.KeyboardEvent<HTMLElement>;
@@ -252,7 +259,7 @@ type TreeKeyEvent = {
   setFocusedId: (id: string) => void;
   activate: (id: string, hasChildren: boolean, expanded: boolean) => void;
   typeahead: TypeaheadState;
-  setTypeaheadQuery: (query: string | null) => void;
+  setTypeaheadMatch: (match: TypeaheadMatch | null) => void;
 };
 
 /** Moves focus to `element`, if there is one, and claims the key press. */
@@ -326,21 +333,25 @@ function isTypeaheadKey(event: React.KeyboardEvent) {
  * of looking for a label that begins with `"ss"`.
  */
 function typeaheadTo(context: TreeKeyEvent) {
-  const { event, root, current, typeahead, setTypeaheadQuery } = context;
+  const { event, root, current, typeahead, setTypeaheadMatch } = context;
   // Claimed whether or not anything matches: a letter typed into a tree is never meant for the page.
   event.preventDefault();
   clearTimeout(typeahead.timer);
+  clearTimeout(typeahead.fadeTimer);
   typeahead.buffer += event.key.toLowerCase();
-  typeahead.timer = setTimeout(() => {
-    typeahead.buffer = "";
-    setTypeaheadQuery(null);
-  }, TYPEAHEAD_TIMEOUT_MS);
 
   const { buffer } = typeahead;
   const isRepeatedChar = buffer.length > 1 && [...buffer].every((char) => char === buffer[0]);
   const query = isRepeatedChar ? buffer[0] : buffer;
-  // Published so every matching label can highlight the typed prefix while the buffer is live.
-  setTypeaheadQuery(query);
+  // Published so every matching label can highlight the typed prefix while the buffer is live. When
+  // the buffer lapses the highlight is not yanked away: it lingers, fading, so a glance after the
+  // last keystroke still shows what was matched.
+  setTypeaheadMatch({ query, fading: false });
+  typeahead.timer = setTimeout(() => {
+    typeahead.buffer = "";
+    setTypeaheadMatch({ query, fading: true });
+    typeahead.fadeTimer = setTimeout(() => setTypeaheadMatch(null), TYPEAHEAD_FADE_MS);
+  }, TYPEAHEAD_TIMEOUT_MS);
 
   // Search starts at the node after the current one and wraps, so the current node is only matched
   // as a last resort — that is what makes a repeated letter move on rather than stay put.
@@ -416,7 +427,7 @@ function Tree({
   });
   const [focusedId, setFocusedId] = React.useState<string | null>(null);
   const [entryId, setEntryId] = React.useState<string | null>(null);
-  const [typeaheadQuery, setTypeaheadQuery] = React.useState<string | null>(null);
+  const [typeaheadMatch, setTypeaheadMatch] = React.useState<TypeaheadMatch | null>(null);
   // Ancestor trail of the focused node, captured when it takes focus. If a later render removes the
   // node (an ancestor collapsed, a lazy fetch swapped the subtree) this is how focus knows where to
   // retreat to instead of dropping to `body`.
@@ -424,9 +435,15 @@ function Tree({
   // Whether DOM focus is inside the tree. Removing a focused element fires no `blur`, so this stays
   // `true` through a removal — which is exactly the case where focus has to be restored.
   const hasFocusRef = React.useRef(false);
-  const typeaheadRef = React.useRef<TypeaheadState>({ buffer: "", timer: undefined });
+  const typeaheadRef = React.useRef<TypeaheadState>({ buffer: "", timer: undefined, fadeTimer: undefined });
 
-  React.useEffect(() => () => clearTimeout(typeaheadRef.current.timer), []);
+  React.useEffect(
+    () => () => {
+      clearTimeout(typeaheadRef.current.timer);
+      clearTimeout(typeaheadRef.current.fadeTimer);
+    },
+    [],
+  );
 
   const setExpanded = React.useCallback(
     (id: string, expanded: boolean) => {
@@ -486,7 +503,7 @@ function Tree({
         setFocusedId,
         activate: activateItem,
         typeahead: typeaheadRef.current,
-        setTypeaheadQuery,
+        setTypeaheadMatch,
       });
     },
     [setExpanded, expandIds, activateItem],
@@ -535,7 +552,7 @@ function Tree({
       focusedId,
       setFocusedId,
       entryId,
-      typeaheadQuery,
+      typeaheadMatch,
       expandOnSelect,
       guides,
       onItemKeyDown: handleItemKeyDown,
@@ -548,7 +565,7 @@ function Tree({
       activateItem,
       focusedId,
       entryId,
-      typeaheadQuery,
+      typeaheadMatch,
       expandOnSelect,
       guides,
       handleItemKeyDown,
@@ -803,7 +820,7 @@ type TreeItemLabelProps = React.ComponentProps<"div"> &
 function TreeItemLabel({ className, children, size, style, icon, trailing, ...props }: TreeItemLabelProps) {
   const { labelId, level, expanded, hasChildren, selected, disabled, trunkLevels, toggle } =
     useTreeItemContext("TreeItemLabel");
-  const { guides, typeaheadQuery } = useTreeContext("TreeItemLabel");
+  const { guides, typeaheadMatch } = useTreeContext("TreeItemLabel");
 
   // The elbow lives on the row because the label element *is* the row, so it can be sized in
   // halves of it — the curve has to land on the row's vertical centre. A connector joins a folder
@@ -930,7 +947,7 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
       <Tooltip open={tooltipOpen} onOpenChange={handleTooltipOpenChange}>
         <TooltipTrigger asChild>
           <span ref={textRef} data-slot="tree-item-text" className="min-w-0 flex-1 truncate">
-            <TreeItemText query={typeaheadQuery}>{children}</TreeItemText>
+            <TreeItemText match={typeaheadMatch}>{children}</TreeItemText>
           </span>
         </TooltipTrigger>
         {/*
@@ -953,18 +970,31 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
  * The label text, with the live typeahead prefix highlighted when it matches. Only a plain-string
  * label can be split; a composed label still matches for navigation, it just gets no highlight.
  */
-function TreeItemText({ query, children }: { query: string | null; children: React.ReactNode }) {
-  if (!query || typeof children !== "string" || !children.toLowerCase().startsWith(query)) {
+function TreeItemText({ match, children }: { match: TypeaheadMatch | null; children: React.ReactNode }) {
+  if (!match || typeof children !== "string" || !children.toLowerCase().startsWith(match.query)) {
     return children;
   }
+  const { query, fading } = match;
   return (
     <>
       <span
         data-slot="tree-item-typeahead-match"
-        // The SW-2445 selected-state tokens: a primary tint that reads as "this is the match" on a
-        // resting, hovered or selected row, in both themes. Plain spans, not `<mark>`, so the
-        // label's accessible name is unchanged.
-        className="bg-selected text-selected-foreground ring-selected-border rounded-sm ring-1"
+        data-state={fading ? "fading" : "active"}
+        className={cn(
+          // The SW-2445 selected-state tokens: a primary tint that reads as "this is the match" on
+          // a resting, hovered or selected row, in both themes. Plain spans, not `<mark>`, so the
+          // label's accessible name is unchanged.
+          "rounded-sm ring-1",
+          // Padding either side so the ring does not hug the glyphs, with a matching negative
+          // margin so the rest of the label stays put while the highlight comes and goes.
+          "-mx-0.5 px-0.5",
+          // Eased out over the fade window rather than snapped off; the span itself is removed
+          // only once the transition has finished.
+          "transition-[color,background-color,box-shadow] duration-700 ease-out motion-reduce:transition-none",
+          fading
+            ? "bg-transparent text-inherit ring-transparent"
+            : "bg-selected text-selected-foreground ring-selected-border",
+        )}
       >
         {children.slice(0, query.length)}
       </span>

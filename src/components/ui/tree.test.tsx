@@ -225,7 +225,11 @@ describe("Tree typeahead", () => {
     press("r");
     expect(matches()).toEqual([["drafts", "Dr"]]);
 
-    // The lapse clears the highlight from a timer, outside any React event, so flush it explicitly.
+    // Timer-driven updates happen outside any React event, so each is flushed explicitly. When the
+    // buffer lapses the highlight lingers in a fading state, and is removed once the fade is over.
+    flushSync(() => vi.advanceTimersByTime(650));
+    expect(matches()).toEqual([["drafts", "Dr"]]);
+    expect(container.querySelector('[data-slot="tree-item-typeahead-match"]')?.dataset.state).toBe("fading");
     flushSync(() => vi.advanceTimersByTime(1000));
     expect(matches()).toEqual([]);
   });

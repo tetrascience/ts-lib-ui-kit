@@ -946,7 +946,14 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
       ) : null}
       <Tooltip open={tooltipOpen} onOpenChange={handleTooltipOpenChange}>
         <TooltipTrigger asChild>
-          <span ref={textRef} data-slot="tree-item-text" className="min-w-0 flex-1 truncate">
+          <span
+            ref={textRef}
+            data-slot="tree-item-text"
+            // `truncate` clips at this span's padding box, so the typeahead pill — 2px of padding plus a
+            // 1px ring outside the glyphs — needs room inside it: 4px of padding either side, with the
+            // matching negative margin so the text itself does not move.
+            className="-mx-1 min-w-0 flex-1 truncate px-1"
+          >
             <TreeItemText match={typeaheadMatch}>{children}</TreeItemText>
           </span>
         </TooltipTrigger>

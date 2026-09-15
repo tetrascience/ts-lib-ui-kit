@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.59.0-noble
-    timeout-minutes: 30 
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
@@ -52,10 +52,11 @@ jobs:
         run: yarn verify:jest-consumer
 
       - name: Type Check
-        run: yarn typecheck
+        # The root tsconfig covers src/ only; the second command covers scripts/ (scripts/tsconfig.json).
+        run: yarn typecheck && yarn typecheck:scripts
 
       - name: Run Tests with Coverage
         run: yarn run test:all:coverage
 
       - name: Coverage
-        uses: tetrascience/ts-ci-cd-lib/coverage-check@main
+        uses: tetrascience/ts-ci-cd-lib/coverage-check@0b54de9e101854ae3c2c72a69037223246f98e6c # main

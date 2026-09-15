@@ -14,6 +14,7 @@ yarn test              # Unit tests only (Vitest, jsdom)
 yarn test:storybook    # Storybook play function tests (Playwright)
 yarn test:all          # Both unit + storybook tests
 yarn format            # Prettier
+yarn typecheck:scripts # Type-check scripts/ via scripts/tsconfig.json (root typecheck covers src/ only)
 ```
 
 ## Pre-commit Checks
@@ -262,7 +263,7 @@ Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) fo
   `SW-1234-short-kebab-description` (e.g. `SW-2352-v1-release-prep`). Create
   the Jira issue first if none exists. PR titles must follow
   `type: SW-1234 Description` (e.g. `docs: SW-2549 Audit Storybook code
-  panels`) — the `check` CI job (semantic PR title) rejects anything else.
+panels`) — the `check` CI job (semantic PR title) rejects anything else.
 
 - Zephyr HTTP is handled by a shared internal `ts-lib-zephyr-nodejs` library (`ZephyrClient` + helpers). The repo's scripts are thin wrappers around it — JUnit parsing, story parsing/write-back, cycle resolution, and folder mapping stay local.
 - Test results reported to Zephyr Scale via `scripts/zephyr/report-zephyr-results.ts`.
@@ -274,3 +275,32 @@ Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) fo
 - Generate/backfill IDs by applying the `zephyr_sync` label to the PR. Confirm the workflow commits the generated IDs back to the branch.
 - After Zephyr sync changes, verify there are no duplicate non-empty IDs before merging.
 - Multiple IDs in legacy test names may appear as `[SW-T100,SW-T101]`; prefer `parameters.zephyr.testCaseId` for story metadata.
+
+### Jira ↔ Zephyr coverage-link audit (`scripts/jira-zephyr/`)
+
+Reconciles which Zephyr test cases are linked (COVERAGE links, stored in Zephyr,
+not Jira) to which Jira stories, using this repo as the source of truth:
+Jira key → keyed commit → the story exports it introduced (blame of the
+`export const … : Story` line, never the sync-written `testCaseId` line) →
+their Zephyr IDs. Two scripts, deliberately separate:
+
+```bash
+yarn jira-zephyr:audit --epic SW-2301            # or --fix-version "ts-lib-ui-kit:v1.1.0", explicit keys, --jql
+yarn jira-zephyr:approve artifacts/zephyr-audit-epic-SW-2301.json SW-2540
+yarn jira-zephyr:apply   artifacts/zephyr-audit-epic-SW-2301.json --execute   # dry run without --execute
+```
+
+- The audit is read-only and freezes the resolved issue keys into the artifact;
+  the apply script only ever touches that frozen set and only the approved,
+  still-valid additions (re-checked live; `stale` if anything moved).
+- Artifacts live in `artifacts/` (gitignored — this repo is public and they
+  carry Jira summaries). Full model, confidence rules and outcomes:
+  [`scripts/jira-zephyr/README.md`](./scripts/jira-zephyr/README.md).
+- No personal Zephyr token? Actions → **Jira ↔ Zephyr coverage audit**
+  ([`zephyr-coverage-audit.yml`](./.github/workflows/zephyr-coverage-audit.yml))
+  runs the same scripts with the repo's `ZEPHYR_TOKEN` (default branch only): `mode: audit` writes the
+  report to the job summary and uploads the frozen audit; `mode: write` with that
+  run's `audit_run_id` applies it (`approve: recommended` = only ADD
+  recommendations). Needs `JIRA_EMAIL` + `JIRA_API_TOKEN` secrets. Because the
+  repo is public, the summary and the uploaded artifact never carry Jira titles
+  (`yarn jira-zephyr:report --redacted-copy`).

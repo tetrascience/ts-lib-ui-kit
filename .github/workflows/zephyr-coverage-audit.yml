@@ -1,0 +1,268 @@
+name: Jira ↔ Zephyr coverage audit
+
+# Reconciles the Zephyr Scale COVERAGE links of Jira stories with what this
+# repository attributes to them (scripts/jira-zephyr — see its README). It runs
+# with the repository's ZEPHYR_TOKEN secret, so nobody needs a personal Zephyr
+# token. Manual trigger only; pick a mode:
+#
+#   audit    read-only. The job summary is the report; the frozen audit is
+#            uploaded as the `zephyr-audit` artifact so a later run can apply
+#            exactly it.
+#   dry-run  audit (or reuse an earlier run's frozen audit via audit_run_id),
+#            approve, re-check live Jira/Zephyr state and show what `write`
+#            would do — nothing is written.
+#   write    the same, then create the approved COVERAGE links in Zephyr.
+#
+# Approval model: the audit never approves anything by itself. In dry-run/write,
+# `approve: recommended` approves only tickets the audit recommends ADD
+# (confidence ≥ high, nothing unexpected, every test case exists); listing issue
+# keys approves exactly those. Low confidence is never applied. The apply step
+# only ever touches the issue keys frozen in the audit and refuses ("stale")
+# anything whose Zephyr links or Jira id changed since — so the reviewable path
+# is: run `audit`, read the summary, then run `write` with that run's id as
+# audit_run_id.
+#
+# This repository is PUBLIC: job summaries, logs and uploaded artifacts are
+# world-readable. The summary never prints Jira ticket titles, the terminal
+# report (whose header can carry an epic title) is kept out of the log, and the
+# uploaded audit is a redacted copy (titles blanked) that the apply step can
+# still consume. Jira keys and Zephyr test case keys are already public in this
+# repository's commit history and story files.
+#
+# Secrets: ZEPHYR_TOKEN (already present), JIRA_EMAIL + JIRA_API_TOKEN — an
+# Atlassian account email and its API token from
+# https://id.atlassian.com/manage-profile/security/api-tokens; read access to
+# project SW is enough, the scripts never write to Jira.
+#
+# Trusted code only: the first step refuses to run unless the selected ref is
+# the default branch, so these secrets only ever meet workflow and script code
+# that went through PR review. Test changes to this workflow by merging them,
+# not by dispatching a branch.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "audit = report only · dry-run = show exactly what write would do · write = create the approved links in Zephyr"
+        type: choice
+        options: [audit, dry-run, write]
+        default: audit
+        required: true
+      scope_type:
+        description: "How `scope` is read"
+        type: choice
+        options: [epic, fix-version, keys, jql]
+        default: epic
+        required: true
+      scope:
+        description: "Epic key(s) · Fix Version name(s), e.g. ts-lib-ui-kit:v1.1.0 · issue keys — comma or space separated · or raw JQL. Ignored when audit_run_id is set."
+        type: string
+        required: false
+        default: ""
+      audit_run_id:
+        description: "dry-run / write only: apply the frozen audit uploaded by this earlier run instead of auditing again (the id is in that run's URL and in its summary's next steps)"
+        type: string
+        required: false
+        default: ""
+      approve:
+        description: "dry-run / write only: `recommended` approves every ticket the audit recommends ADD; or list issue keys (SW-1 SW-2) to approve exactly those"
+        type: string
+        required: false
+        default: recommended
+      min_confidence:
+        description: "dry-run / write only: lowest confidence to apply (low is never applied)"
+        type: choice
+        options: [high, exact, medium]
+        default: high
+        required: true
+
+permissions:
+  contents: read
+  actions: read # download the frozen audit from an earlier run of this workflow
+
+# Serialise runs: two applies racing on the same tickets would trip each other's
+# stale-state check (harmless but noisy), and one audit at a time is plenty.
+concurrency:
+  group: zephyr-coverage-audit
+  cancel-in-progress: false
+
+env:
+  ARTIFACT_NAME: zephyr-audit
+  AUDIT_FILE: artifacts/zephyr-audit.json
+  APPLY_FILE: artifacts/zephyr-apply.json
+  UPLOAD_DIR: artifacts/upload
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Restrict execution to default branch ref
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          if [ "$REF_NAME" != "$DEFAULT_BRANCH" ]; then
+            echo "::error::This workflow can run only from the default branch ref '$DEFAULT_BRANCH' (got '$REF_NAME')."
+            exit 1
+          fi
+
+      - name: Validate inputs and secrets
+        env:
+          MODE: ${{ inputs.mode }}
+          SCOPE: ${{ inputs.scope }}
+          AUDIT_RUN_ID: ${{ inputs.audit_run_id }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+          missing=()
+          [ -n "$JIRA_EMAIL" ] || missing+=(JIRA_EMAIL)
+          [ -n "$JIRA_API_TOKEN" ] || missing+=(JIRA_API_TOKEN)
+          [ -n "$ZEPHYR_TOKEN" ] || missing+=(ZEPHYR_TOKEN)
+          if [ "${#missing[@]}" -gt 0 ]; then
+            fail "Missing repository secret(s): ${missing[*]}. Add them under Settings → Secrets and variables → Actions. JIRA_EMAIL is the Atlassian account email; JIRA_API_TOKEN is its API token (https://id.atlassian.com/manage-profile/security/api-tokens)."
+          fi
+          if [ -n "$AUDIT_RUN_ID" ]; then
+            [ "$MODE" != "audit" ] || fail "audit_run_id only applies to mode dry-run or write; mode audit always audits afresh"
+            [[ "$AUDIT_RUN_ID" =~ ^[0-9]+$ ]] || fail "audit_run_id must be a numeric GitHub Actions run id (got '$AUDIT_RUN_ID')"
+          elif [ -z "${SCOPE//[[:space:]]/}" ]; then
+            fail "scope is required unless audit_run_id is given"
+          fi
+
+      - name: Checkout repository (full history — the audit blames story files)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: "yarn"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # The Zephyr client falls back to its built-in fetch transport when the
+      # JFrog-only ts-lib-zephyr-nodejs is absent (same endpoints, same auth), so
+      # this workflow deliberately needs no Artifactory credential.
+      - name: Run audit (read-only)
+        if: inputs.audit_run_id == ''
+        env:
+          SCOPE_TYPE: ${{ inputs.scope_type }}
+          SCOPE: ${{ inputs.scope }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
+        run: |
+          set -euo pipefail
+          set -f # no globbing while splitting user input
+          args=()
+          case "$SCOPE_TYPE" in
+            epic)
+              for key in $(tr ',' ' ' <<<"$SCOPE"); do args+=(--epic "$key"); done ;;
+            keys)
+              for key in $(tr ',' ' ' <<<"$SCOPE"); do args+=("$key"); done ;;
+            fix-version)
+              IFS=',' read -r -a names <<<"$SCOPE"
+              for raw in "${names[@]}"; do
+                read -r name <<<"$raw" # trims surrounding whitespace
+                if [ -n "$name" ]; then args+=(--fix-version "$name"); fi
+              done ;;
+            jql)
+              args+=(--jql "$SCOPE") ;;
+            *)
+              echo "::error::unknown scope_type '$SCOPE_TYPE'"; exit 1 ;;
+          esac
+          mkdir -p artifacts
+          # The terminal report goes to a file, not the log: its header can carry
+          # an epic title and this repository is public. The job summary is the report.
+          yarn jira-zephyr:audit "${args[@]}" --out "$AUDIT_FILE" >artifacts/audit-report.txt
+
+      - name: Download the frozen audit from run ${{ inputs.audit_run_id }}
+        if: inputs.audit_run_id != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: artifacts/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.audit_run_id }}
+
+      - name: Approve entries (${{ inputs.approve }})
+        if: inputs.mode != 'audit'
+        env:
+          APPROVE: ${{ inputs.approve }}
+        run: |
+          set -euo pipefail
+          set -f
+          rm -f "$APPLY_FILE" # never report a previous run's apply result as this run's
+          read -r approve <<<"$APPROVE"
+          note="approved via GitHub Actions run $GITHUB_RUN_ID by $GITHUB_ACTOR"
+          # --exclusive: an audit downloaded from an earlier dry-run/write run carries that
+          # run's approvals; this run's selection must replace them, not add to them.
+          if [ -z "$approve" ] || [ "$approve" = "recommended" ]; then
+            yarn jira-zephyr:approve "$AUDIT_FILE" --recommended --exclusive --note "$note"
+          else
+            keys=()
+            for key in $(tr ',' ' ' <<<"$approve"); do keys+=("$key"); done
+            yarn jira-zephyr:approve "$AUDIT_FILE" "${keys[@]}" --exclusive --note "$note"
+          fi
+
+      - name: ${{ inputs.mode == 'write' && 'Apply — EXECUTE, creates the approved links' || 'Apply — dry run, writes nothing' }}
+        if: inputs.mode != 'audit'
+        id: apply
+        continue-on-error: true # the summary and upload below must still run; the last step fails the job
+        env:
+          MODE: ${{ inputs.mode }}
+          MIN_CONFIDENCE: ${{ inputs.min_confidence }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
+        run: |
+          set -euo pipefail
+          flags=(--min-confidence "$MIN_CONFIDENCE" --result "$APPLY_FILE")
+          if [ "$MODE" = "write" ]; then flags+=(--execute); fi
+          yarn jira-zephyr:apply "$AUDIT_FILE" "${flags[@]}"
+
+      - name: Write the job summary and a redacted upload copy
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ ! -f "$AUDIT_FILE" ]; then
+            {
+              echo "## Zephyr coverage audit"
+              echo
+              echo "No audit artifact was produced — see the failed step's log (inputs, credentials, scope resolution or download)."
+            } >>"$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          mkdir -p "$UPLOAD_DIR"
+          args=("$AUDIT_FILE" --github-summary --run-id "$GITHUB_RUN_ID" --redacted-copy "$UPLOAD_DIR/zephyr-audit.json")
+          if [ -f "$APPLY_FILE" ]; then
+            args+=(--apply "$APPLY_FILE")
+            cp "$APPLY_FILE" "$UPLOAD_DIR/zephyr-apply.json"
+          fi
+          yarn jira-zephyr:report "${args[@]}"
+
+      - name: Upload the frozen audit (redacted copy) and apply result
+        if: always() && hashFiles('artifacts/upload/zephyr-audit.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: artifacts/upload/
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Fail the job if the apply step reported errors
+        if: steps.apply.outcome == 'failure'
+        run: |
+          echo "::error::The apply step reported at least one error outcome — see the job summary and the uploaded zephyr-apply.json"
+          exit 1

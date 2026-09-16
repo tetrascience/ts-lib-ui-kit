@@ -10,6 +10,8 @@
  * Which types are audited at all is a separate, CLI-level decision
  * (`--issue-types`, default `DEFAULT_ISSUE_TYPES` in audit/scope.ts).
  */
+import type { TypeReview, TypeSignal } from "./audit-schema";
+
 export const COVERAGE_EXPECTED_ISSUE_TYPES = ["Story", "Bug", "Defect"] as const;
 
 /** Short label for report headings, e.g. "Story/Bug/Defect". */
@@ -23,4 +25,17 @@ export function expectsCoverage(issueType: string): boolean {
 /** Tickets whose type expects coverage but which the repository maps to nothing. */
 export function coverageGaps<T extends { issueType: string; status: string }>(tickets: readonly T[]): T[] {
   return tickets.filter((ticket) => ticket.status === "no-mapping" && expectsCoverage(ticket.issueType));
+}
+
+/** What each advisory type signal is asking a human to do. */
+export const TYPE_SIGNAL_ACTIONS: Record<TypeSignal, string> = {
+  "retype-to-story-or-bug": "Re-type to Story/Bug",
+  "missing-coverage": "Add coverage, or re-type to Task",
+};
+
+/** Entries carrying an advisory type signal, narrowed so `typeReview` is defined. */
+export function typeReviews<T extends { typeReview?: TypeReview }>(
+  tickets: readonly T[],
+): Array<T & { typeReview: TypeReview }> {
+  return tickets.flatMap((ticket) => (ticket.typeReview ? [{ ...ticket, typeReview: ticket.typeReview }] : []));
 }

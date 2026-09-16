@@ -138,6 +138,28 @@ plenty of them do — `SW-2528`, `SW-2549` and `SW-2563` above are all Tasks tha
 introduced stories. Which types are audited **at all** is the separate
 `--issue-types` flag.
 
+#### Issue type review (advisory)
+
+The audit also reports where the Jira **issue type** disagrees with the
+repository, in both directions:
+
+| Signal                   | Raised when                                                              | Suggests                         |
+| ------------------------ | ------------------------------------------------------------------------ | -------------------------------- |
+| `retype-to-story-or-bug` | A `Task`/`Spike` the repository **does** attribute test cases to         | Re-type to Story/Bug             |
+| `missing-coverage`       | A `Story`/`Bug`/`Defect` the repository maps to **nothing** (no-mapping) | Add coverage, or re-type to Task |
+
+It earns its place: across this repo's whole history, 16 of the 43 issues that
+introduced a story carrying a Zephyr ID are typed `Task`, and most are plainly
+feature work (`Add PageHeader component`, `Add Text typography primitive`) or a
+bug fix (`pad content placed directly in DialogContent`). Those own only 70 of
+611 test cases, so the type is wrong far more often than the convention is.
+
+It appears as its own `Issue type review` section in both reports, as
+`typeReview: { signal, detail }` on the entry, and as a note. It is **advisory**:
+the tool never edits Jira, the apply script never reads it, and a flagged `Task`
+is still recommended and still applied exactly as before. Cross-cutting tickets
+can pick up story attribution they don't deserve, so confirm before re-typing.
+
 ### 2. Review and approve
 
 Every entry starts with `"approved": false`. Either edit the JSON (optionally

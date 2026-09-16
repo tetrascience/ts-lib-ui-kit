@@ -295,8 +295,11 @@ yarn jira-zephyr:apply   artifacts/zephyr-audit-epic-SW-2301.json --execute   # 
   still-valid additions (re-checked live; `stale` if anything moved).
 - Reports carry a `TYPE` column, and the **Coverage gaps** count only counts
   `Story`/`Bug`/`Defect` (marked `·`) — a `Task`/`Spike` without a mapping is
-  routine. This affects counting only: a Task that owns stories is still
-  recommended and still applied.
+  routine. An **Issue type review** section additionally flags both directions of
+  type/repo disagreement: a `Task` that ships test cases (`retype-to-story-or-bug`)
+  and a `Story`/`Bug` mapped to nothing (`missing-coverage`). All of this is
+  advisory — counting and reporting only. A flagged Task is still recommended,
+  still applied, and the tool never edits Jira.
 - Artifacts live in `artifacts/` (gitignored — this repo is public and they
   carry Jira summaries). Full model, confidence rules and outcomes:
   [`scripts/jira-zephyr/README.md`](./scripts/jira-zephyr/README.md).

@@ -119,6 +119,34 @@ describe("renderAuditReport issue types", () => {
     expect(report).toContain("Coverage gaps: 1 of 1 Story/Bug/Defect (·) issue(s) map to no story: SW-2");
   });
 });
+describe("renderAuditReport issue type review", () => {
+  it("prints both advisory signals, or nothing when the types agree", () => {
+    const flagged = renderAuditReport(
+      makeArtifact([
+        makeEntry({
+          jira: "SW-1",
+          issueType: "Task",
+          typeReview: { signal: "retype-to-story-or-bug", detail: "Task with 5 test case(s) attributed" },
+        }),
+        makeEntry({
+          jira: "SW-2",
+          issueType: "Story",
+          expectedZephyrIds: [],
+          missingZephyrIds: [],
+          status: "no-mapping",
+          recommendedAction: "review",
+          typeReview: { signal: "missing-coverage", detail: "Story that no story is attributed to" },
+        }),
+      ]),
+    );
+    expect(flagged).toContain("Issue type review (advisory — the audit never edits Jira):");
+    expect(flagged).toMatch(/SW-1\s+Re-type to Story\/Bug/);
+    expect(flagged).toContain("Task with 5 test case(s) attributed");
+    expect(flagged).toMatch(/SW-2\s+Add coverage, or re-type to Task/);
+
+    expect(renderAuditReport(makeArtifact([makeEntry({})]))).not.toContain("Issue type review");
+  });
+});
 describe("applyApproval", () => {
   const artifact = makeArtifact([
     makeEntry({ jira: "SW-1" }),

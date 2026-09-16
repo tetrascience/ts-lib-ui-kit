@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildAuditEntry, deriveEvidence, summaryTokens } from "../audit/mapper";
+import { buildAuditEntry, deriveEvidence, summaryTokens, reviewIssueType } from "../audit/mapper";
 
 import { blameStory, makeCommit, makeFile, makeIndex, makeIssue, makeStory, mergeBlame } from "./fixtures";
 
@@ -309,5 +309,31 @@ describe("buildAuditEntry", () => {
       index: pendingIndex,
     });
     expect(entry.notes.join("\n")).toMatch(/"Pending".*has no Zephyr ID yet/);
+  });
+});
+
+describe("reviewIssueType", () => {
+  it("suggests re-typing a Task that the repository gives test cases to", () => {
+    const review = reviewIssueType("Task", 5, "needs-changes");
+    expect(review).toMatchObject({ signal: "retype-to-story-or-bug" });
+    expect(review?.detail).toContain("Task with 5 test case(s)");
+    expect(review?.detail).toMatch(/usually a Story or a Bug/);
+  });
+
+  it("stays quiet for a Task the repository maps to nothing", () => {
+    expect(reviewIssueType("Task", 0, "no-mapping")).toBeUndefined();
+    expect(reviewIssueType("Spike", 0, "manual-review")).toBeUndefined();
+  });
+
+  it("flags a Story or Bug the repository maps to nothing", () => {
+    expect(reviewIssueType("Story", 0, "no-mapping")).toMatchObject({ signal: "missing-coverage" });
+    expect(reviewIssueType("Bug", 0, "no-mapping")?.detail).toMatch(/needs test coverage, or it is really a Task/);
+    expect(reviewIssueType("Defect", 0, "no-mapping")?.signal).toBe("missing-coverage");
+  });
+
+  it("stays quiet when a Story has coverage, whatever its status", () => {
+    expect(reviewIssueType("Story", 3, "needs-changes")).toBeUndefined();
+    expect(reviewIssueType("Story", 1, "correct")).toBeUndefined();
+    expect(reviewIssueType("Story", 0, "manual-review")).toBeUndefined();
   });
 });

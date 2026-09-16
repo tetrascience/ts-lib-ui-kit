@@ -23,6 +23,24 @@ export const recommendedActionSchema = z.enum(["none", "add", "review"]);
 export const ticketStatusSchema = z.enum(["correct", "needs-changes", "manual-review", "no-mapping"]);
 export const scopeTypeSchema = z.enum(["epic", "fix-version", "keys", "jql", "intersection"]);
 
+/**
+ * Advisory signal about the Jira **issue type**, raised when the type disagrees
+ * with what the repository shows. Purely informational: it never feeds the apply
+ * gate, and the tool never edits Jira.
+ *
+ *   retype-to-story-or-bug — a type not expected to carry coverage (Task, Spike)
+ *                            that the repository does attribute test cases to.
+ *   missing-coverage       — a Story/Bug/Defect the repository maps to nothing:
+ *                            it needs test coverage, or it is really a Task.
+ */
+export const typeSignalSchema = z.enum(["retype-to-story-or-bug", "missing-coverage"]);
+
+export const typeReviewSchema = z.object({
+  signal: typeSignalSchema,
+  /** Short, report-ready explanation of what the repository shows. */
+  detail: z.string().min(1),
+});
+
 export const evidenceSchema = z.object({
   type: z.enum(EVIDENCE_TYPES),
   confidence: confidenceSchema,
@@ -60,6 +78,11 @@ export const auditEntrySchema = z.object({
   approved: z.boolean(),
   /** Free-text a reviewer may add when approving; never read by the apply script. */
   reviewNote: z.string().optional(),
+  /**
+   * Advisory issue-type signal; absent when the type and the repository agree.
+   * Optional, so artifacts written before this existed still parse unchanged.
+   */
+  typeReview: typeReviewSchema.optional(),
   evidence: z.array(evidenceSchema),
   notes: z.array(z.string()),
 });
@@ -147,6 +170,8 @@ export type TicketStatus = z.infer<typeof ticketStatusSchema>;
 export type ApplyOutcome = z.infer<typeof applyOutcomeSchema>;
 export type ApplyResult = z.infer<typeof applyResultSchema>;
 export type ApplyArtifact = z.infer<typeof applyArtifactSchema>;
+export type TypeSignal = z.infer<typeof typeSignalSchema>;
+export type TypeReview = z.infer<typeof typeReviewSchema>;
 
 export function formatZodIssues(error: z.ZodError): string {
   return error.issues.map((issue) => `  - ${issue.path.join(".") || "(root)"}: ${issue.message}`).join("\n");

@@ -4,7 +4,13 @@
  * reads first.
  */
 import { SCOPE_TYPE_LABELS } from "../shared/audit-schema";
-import { COVERAGE_EXPECTED_LABEL, coverageGaps, expectsCoverage } from "../shared/issue-types";
+import {
+  COVERAGE_EXPECTED_LABEL,
+  coverageGaps,
+  expectsCoverage,
+  TYPE_SIGNAL_ACTIONS,
+  typeReviews,
+} from "../shared/issue-types";
 import { formatIdList, renderTable } from "../shared/table";
 
 import type { AuditArtifact, AuditScope } from "../shared/types";
@@ -64,6 +70,15 @@ export function renderAuditReport(artifact: AuditArtifact, context: ReportContex
   if (flagged.length > 0) {
     lines.push("", "Unexpected links (linked in Zephyr, attributed elsewhere by the repo):");
     for (const ticket of flagged) lines.push(`  ${ticket.jira}: ${ticket.unexpectedZephyrIds.join(", ")}`);
+  }
+
+  const flaggedTypes = typeReviews(artifact.tickets);
+  if (flaggedTypes.length > 0) {
+    lines.push("", "Issue type review (advisory — the audit never edits Jira):");
+    for (const ticket of flaggedTypes) {
+      lines.push(`  ${ticket.jira.padEnd(9)} ${TYPE_SIGNAL_ACTIONS[ticket.typeReview.signal]}`);
+      lines.push(`  ${" ".repeat(9)} ${ticket.typeReview.detail}`);
+    }
   }
 
   if (artifact.skipped.length > 0) {

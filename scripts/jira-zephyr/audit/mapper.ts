@@ -20,7 +20,7 @@ import { expectsCoverage } from "../shared/issue-types";
 import { uniqueSorted } from "../shared/keys";
 
 import type { CommitInfo, RepoIndex, StoryFileRecord, StoryRecord } from "./repo-scanner";
-import type { AuditEntry, Evidence, JiraIssue, RecommendedAction, TicketStatus } from "../shared/types";
+import type { AuditEntry, Evidence, JiraIssue, RecommendedAction, TicketStatus, TypeReview } from "../shared/types";
 
 export interface EvidenceOptions {
   /** A summary/component-name match spanning more files than this is too generic to report. */
@@ -426,6 +426,9 @@ export function buildAuditEntry(inputs: EntryInputs): AuditEntry {
     recommendedAction = "review";
   }
 
+  const typeReview = reviewIssueType(issue.fields.issuetype.name, expected.length, status);
+  if (typeReview) notes.push(typeReview.detail);
+
   return {
     jira: issue.key,
     jiraIssueId: issue.id,
@@ -443,6 +446,37 @@ export function buildAuditEntry(inputs: EntryInputs): AuditEntry {
     approved: false,
     evidence,
     notes,
+    ...(typeReview ? { typeReview } : {}),
+  };
+}
+
+/**
+ * Advisory check on the Jira issue type, in both directions:
+ *
+ *  - a Task/Spike the repository gives test cases to is usually mistyped work that
+ *    should be a Story or a Bug (in this repo, feature tickets are routinely filed
+ *    as Tasks — "add the PageHeader component", "pad DialogContent");
+ *  - a Story/Bug/Defect the repository maps to nothing either needs test coverage
+ *    or was never really a Story.
+ *
+ * Advisory only: the apply script never reads it, and nothing here edits Jira.
+ */
+export function reviewIssueType(
+  issueType: string,
+  expectedCount: number,
+  status: TicketStatus,
+): TypeReview | undefined {
+  if (!expectsCoverage(issueType)) {
+    if (expectedCount === 0) return undefined;
+    return {
+      signal: "retype-to-story-or-bug",
+      detail: `${issueType} with ${expectedCount} test case(s) attributed by the repository — work that ships test cases is usually a Story or a Bug, so check the issue type`,
+    };
+  }
+  if (status !== "no-mapping") return undefined;
+  return {
+    signal: "missing-coverage",
+    detail: `${issueType} that no story in the repository is attributed to — it either still needs test coverage, or it is really a Task`,
   };
 }
 

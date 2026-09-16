@@ -16,6 +16,8 @@ export type {
   RecommendedAction,
   ScopeType,
   TicketStatus,
+  TypeReview,
+  TypeSignal,
 } from "./audit-schema";
 export type { Confidence, EvidenceType } from "./confidence";
 

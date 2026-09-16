@@ -10,7 +10,13 @@
  * unless `includeSummaries` is switched on deliberately (private consumers).
  */
 import { SCOPE_TYPE_LABELS } from "./audit-schema";
-import { COVERAGE_EXPECTED_LABEL, coverageGaps, expectsCoverage } from "./issue-types";
+import {
+  COVERAGE_EXPECTED_LABEL,
+  coverageGaps,
+  expectsCoverage,
+  TYPE_SIGNAL_ACTIONS,
+  typeReviews,
+} from "./issue-types";
 import { compareIssueKeys } from "./keys";
 
 import type { ApplyArtifact, ApplyOutcome, AuditArtifact, AuditEntry } from "./types";
@@ -135,6 +141,28 @@ export function renderAuditMarkdown(artifact: AuditArtifact, options: MarkdownOp
           ticket.confidence,
           ticket.recommendedAction.toUpperCase(),
           ticket.approved ? "yes" : "-",
+        ]),
+      ),
+    );
+  }
+
+  // Advisory, and deliberately its own section rather than a column: it asks a human
+  // to change the Jira issue type, which this tool never does and apply never reads.
+  const flaggedTypes = typeReviews(artifact.tickets);
+  if (flaggedTypes.length > 0) {
+    lines.push(
+      "",
+      `### Issue type review (${flaggedTypes.length})`,
+      "",
+      "Advisory only. The audit never edits Jira, and none of this changes what apply writes.",
+      "",
+      table(
+        ["Jira", "Type", "Suggests", "What the repository shows"],
+        flaggedTypes.map((ticket) => [
+          jiraLink(jira.baseUrl, ticket.jira),
+          ticket.issueType,
+          TYPE_SIGNAL_ACTIONS[ticket.typeReview.signal],
+          escapeCell(ticket.typeReview.detail),
         ]),
       ),
     );

@@ -147,6 +147,34 @@ describe("renderAuditMarkdown", () => {
     );
   });
 
+  it("renders the advisory issue type review as its own table, and omits it when empty", () => {
+    expect(markdown).not.toContain("### Issue type review");
+
+    const flagged = renderAuditMarkdown(
+      makeArtifact([
+        makeEntry({
+          jira: "SW-1",
+          issueType: "Task",
+          typeReview: { signal: "retype-to-story-or-bug", detail: "Task with 5 test case(s) attributed" },
+        }),
+        makeEntry({
+          jira: "SW-2",
+          issueType: "Story",
+          expectedZephyrIds: [],
+          missingZephyrIds: [],
+          status: "no-mapping",
+          recommendedAction: "review",
+          typeReview: { signal: "missing-coverage", detail: "Story that no story is attributed to" },
+        }),
+      ]),
+    );
+    expect(flagged).toContain("### Issue type review (2)");
+    expect(flagged).toContain("Advisory only. The audit never edits Jira");
+    expect(flagged).toContain("| Jira | Type | Suggests | What the repository shows |");
+    expect(flagged).toContain("| Task | Re-type to Story/Bug | Task with 5 test case(s) attributed |");
+    expect(flagged).toContain("| Story | Add coverage, or re-type to Task | Story that no story is attributed to |");
+  });
+
   it("never prints Jira ticket titles unless asked (this repository is public)", () => {
     expect(markdown).not.toContain("Secret title");
     const withTitles = renderAuditMarkdown(artifact, { includeSummaries: true });

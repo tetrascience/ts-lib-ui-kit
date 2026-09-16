@@ -50,10 +50,12 @@ export class JiraHttpError extends Error {
 export class JiraAuthError extends Error {
   constructor(detail: string) {
     super(
-      `Jira rejected the credentials (${detail}). Check JIRA_EMAIL and JIRA_API_TOKEN: the token must be a classic ` +
-        "(unscoped) Atlassian API token belonging to that exact account. API tokens *with scopes* only work against " +
-        "the api.atlassian.com gateway — create an unscoped token, or set JIRA_BASE_URL to " +
-        "https://api.atlassian.com/ex/jira/<cloudId>.",
+      `Jira rejected the credentials (${detail}). JIRA_API_TOKEN must belong to the JIRA_EMAIL account and must ` +
+        "not have expired — Atlassian API tokens expire (one year by default, 365 days maximum), and tokens made " +
+        'before 2024-12-15 all expired by May 2026. A token created with "Create API token with scopes" also ' +
+        'works ONLY against the gateway: either create an unscoped token ("Create API token") for this site, or ' +
+        "set JIRA_BASE_URL to https://api.atlassian.com/ex/jira/<cloudId>. Tokens are at " +
+        "https://id.atlassian.com/manage-profile/security/api-tokens",
     );
     this.name = "JiraAuthError";
   }

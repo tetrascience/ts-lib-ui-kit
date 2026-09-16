@@ -43,14 +43,36 @@ Credentials (never logged):
 | `ZEPHYR_TOKEN` (or `ZEPHYR_API_TOKEN`)  | Zephyr Scale Cloud bearer token — same name the existing scripts use        |
 | `ZEPHYR_BASE_URL`, `ZEPHYR_PROJECT_KEY` | Optional, default `https://api.zephyrscale.smartbear.com/v2` and `SW`       |
 
-`JIRA_API_TOKEN` must be a **classic** Atlassian API token — created with _Create
-API token_, not _Create API token with scopes_ — for the `JIRA_EMAIL` account.
-Scoped tokens only work against the `api.atlassian.com` gateway; to use one, set
-`JIRA_BASE_URL=https://api.atlassian.com/ex/jira/<cloudId>` (the cloud id is
-shown at `https://tetrascience.atlassian.net/_edge/tenant_info`). Both scripts
-verify the credentials first via `/rest/api/3/myself` and fail with the real
-reason, because Jira Cloud otherwise downgrades rejected credentials to an
-anonymous request and every issue then looks like `404 not found`.
+[`JIRA_API_TOKEN`](https://id.atlassian.com/manage-profile/security/api-tokens) must
+belong to the `JIRA_EMAIL` account, and Atlassian offers two kinds — which one you
+pick decides `JIRA_BASE_URL`:
+
+| Token                              | Created with                   | Works against                                                                         |
+| ---------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------- |
+| Unscoped (**use this by default**) | _Create API token_             | The site URL — the default `https://tetrascience.atlassian.net`                       |
+| Scoped                             | _Create API token with scopes_ | **Only** the gateway: set `JIRA_BASE_URL=https://api.atlassian.com/ex/jira/<cloudId>` |
+
+A scoped token against the site URL always fails, whatever its scopes. This
+tenant's cloud id is `42dbe661-2c94-4acb-ac0d-93666170efa9` (any site serves its
+own at `/_edge/tenant_info`), so the scoped form is
+`JIRA_BASE_URL=https://api.atlassian.com/ex/jira/42dbe661-2c94-4acb-ac0d-93666170efa9`.
+Tokens also **expire** — one year by default, 365 days maximum, and every token
+created before 2024-12-15 expired by May 2026 — so a token that used to work may
+simply be dead.
+
+Both scripts verify the credentials first via `/rest/api/3/myself` and fail with
+the real reason. Without that check Jira Cloud is actively misleading: it answers
+rejected Basic auth by downgrading the call to an _anonymous_ request rather than
+returning 401, and anonymous users get `404` for every issue — so bad credentials
+used to surface as `Epic SW-2301 was not found`. Verify yours with:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+  "${JIRA_BASE_URL:-https://tetrascience.atlassian.net}/rest/api/3/myself"   # 200 = good
+```
+
+Run it in the **same shell** as the audit: `export`ed variables do not reach other
+terminal tabs, and an empty variable makes the request anonymous — which is also a 401.
 
 ### 1. Audit (read-only)
 

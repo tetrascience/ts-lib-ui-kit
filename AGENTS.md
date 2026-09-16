@@ -293,6 +293,10 @@ yarn jira-zephyr:apply   artifacts/zephyr-audit-epic-SW-2301.json --execute   # 
 - The audit is read-only and freezes the resolved issue keys into the artifact;
   the apply script only ever touches that frozen set and only the approved,
   still-valid additions (re-checked live; `stale` if anything moved).
+- Reports carry a `TYPE` column, and the **Coverage gaps** count only counts
+  `Story`/`Bug`/`Defect` (marked `·`) — a `Task`/`Spike` without a mapping is
+  routine. This affects counting only: a Task that owns stories is still
+  recommended and still applied.
 - Artifacts live in `artifacts/` (gitignored — this repo is public and they
   carry Jira summaries). Full model, confidence rules and outcomes:
   [`scripts/jira-zephyr/README.md`](./scripts/jira-zephyr/README.md).

@@ -10,6 +10,7 @@
  * unless `includeSummaries` is switched on deliberately (private consumers).
  */
 import { SCOPE_TYPE_LABELS } from "./audit-schema";
+import { COVERAGE_EXPECTED_LABEL, coverageGaps, expectsCoverage } from "./issue-types";
 import { compareIssueKeys } from "./keys";
 
 import type { ApplyArtifact, ApplyOutcome, AuditArtifact, AuditEntry } from "./types";
@@ -53,7 +54,7 @@ function byKey(a: { jira: string }, b: { jira: string }): number {
 function keyLinks(baseUrl: string, entries: readonly AuditEntry[]): string {
   return [...entries]
     .sort(byKey)
-    .map((entry) => jiraLink(baseUrl, entry.jira))
+    .map((entry) => `${jiraLink(baseUrl, entry.jira)} (${entry.issueType})`)
     .join(", ");
 }
 
@@ -88,6 +89,19 @@ export function renderAuditMarkdown(artifact: AuditArtifact, options: MarkdownOp
     ),
   );
 
+  // Only some issue types are expected to carry test cases, so lead with that count:
+  // a Task or Spike without a mapping is normal, a Story or Bug without one is a gap.
+  const gaps = coverageGaps(artifact.tickets);
+  const expectCoverage = artifact.tickets.filter((ticket) => expectsCoverage(ticket.issueType));
+  const gapLinks = gaps.map((ticket) => jiraLink(jira.baseUrl, ticket.jira)).join(", ");
+  const gapSuffix = gaps.length > 0 ? `: ${gapLinks}.` : ".";
+  const otherTypes = scope.issueTypes.filter((type) => !expectsCoverage(type)).join(", ") || "none";
+  lines.push(
+    "",
+    `**Coverage gaps: ${gaps.length} of ${expectCoverage.length} ${COVERAGE_EXPECTED_LABEL} issue(s)** map to no story in this repository${gapSuffix}`,
+    `Other audited types (${otherTypes}) are reported but not expected to carry test cases.`,
+  );
+
   const actionable = artifact.tickets
     .filter((ticket) => ticket.status === "needs-changes" || ticket.status === "manual-review")
     .sort(byKey);
@@ -100,6 +114,7 @@ export function renderAuditMarkdown(artifact: AuditArtifact, options: MarkdownOp
       table(
         [
           "Jira",
+          "Type",
           ...(withSummary ? ["Summary"] : []),
           "Existing",
           "Expected",
@@ -111,6 +126,7 @@ export function renderAuditMarkdown(artifact: AuditArtifact, options: MarkdownOp
         ],
         actionable.map((ticket) => [
           jiraLink(jira.baseUrl, ticket.jira),
+          ticket.issueType,
           ...(withSummary ? [escapeCell(ticket.summary) || "-"] : []),
           idList(ticket.existingZephyrIdsAtAudit),
           idList(ticket.expectedZephyrIds),
@@ -136,11 +152,23 @@ export function renderAuditMarkdown(artifact: AuditArtifact, options: MarkdownOp
       ),
     );
   }
-  if (noMapping.length > 0) {
+  // Split by whether the type is expected to carry coverage: the first list is
+  // the actual backlog of gaps, the second is routine and only here for completeness.
+  const noMappingExpected = noMapping.filter((ticket) => expectsCoverage(ticket.issueType));
+  const noMappingOther = noMapping.filter((ticket) => !expectsCoverage(ticket.issueType));
+  if (noMappingExpected.length > 0) {
     sections.push(
       details(
-        `No repository mapping — no Jira-keyed commit introduced or modified a story, and no story source references the key (${noMapping.length})`,
-        keyLinks(jira.baseUrl, noMapping),
+        `Coverage gaps — ${COVERAGE_EXPECTED_LABEL} issues no story in this repository is attributed to (${noMappingExpected.length})`,
+        keyLinks(jira.baseUrl, noMappingExpected),
+      ),
+    );
+  }
+  if (noMappingOther.length > 0) {
+    sections.push(
+      details(
+        `No repository mapping, but not expected to carry test cases (${noMappingOther.length})`,
+        keyLinks(jira.baseUrl, noMappingOther),
       ),
     );
   }

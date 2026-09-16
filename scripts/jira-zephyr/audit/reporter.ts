@@ -4,6 +4,7 @@
  * reads first.
  */
 import { SCOPE_TYPE_LABELS } from "../shared/audit-schema";
+import { COVERAGE_EXPECTED_LABEL, coverageGaps, expectsCoverage } from "../shared/issue-types";
 import { formatIdList, renderTable } from "../shared/table";
 
 import type { AuditArtifact, AuditScope } from "../shared/types";
@@ -46,15 +47,18 @@ export function renderAuditReport(artifact: AuditArtifact, context: ReportContex
   );
   lines.push("");
 
+  // A trailing "·" marks the types that are expected to carry coverage, so a
+  // missing mapping on one of those rows reads as a gap rather than as noise.
   const rows = artifact.tickets.map((ticket) => [
     ticket.jira,
+    `${ticket.issueType}${expectsCoverage(ticket.issueType) ? " ·" : ""}`,
     formatIdList(ticket.existingZephyrIdsAtAudit),
     formatIdList(ticket.expectedZephyrIds),
     formatIdList(ticket.missingZephyrIds),
     ticket.confidence,
     ticket.recommendedAction.toUpperCase(),
   ]);
-  lines.push(renderTable(["JIRA", "EXISTING", "EXPECTED", "MISSING", "CONFIDENCE", "ACTION"], rows));
+  lines.push(renderTable(["JIRA", "TYPE", "EXISTING", "EXPECTED", "MISSING", "CONFIDENCE", "ACTION"], rows));
 
   const flagged = artifact.tickets.filter((ticket) => ticket.unexpectedZephyrIds.length > 0);
   if (flagged.length > 0) {
@@ -76,6 +80,13 @@ export function renderAuditReport(artifact: AuditArtifact, context: ReportContex
     `  Needs changes: ${summary.needsChanges}`,
     `  Manual review: ${summary.manualReview}`,
     `  No mapping: ${summary.noMapping}`,
+  );
+  const gaps = coverageGaps(artifact.tickets);
+  const expectCoverage = artifact.tickets.filter((ticket) => expectsCoverage(ticket.issueType));
+  const gapKeys = gaps.map((ticket) => ticket.jira).join(", ");
+  const gapSuffix = gaps.length > 0 ? `: ${gapKeys}` : "";
+  lines.push(
+    `  Coverage gaps: ${gaps.length} of ${expectCoverage.length} ${COVERAGE_EXPECTED_LABEL} (·) issue(s) map to no story${gapSuffix}`,
   );
   if (context.artifactPath) {
     lines.push(

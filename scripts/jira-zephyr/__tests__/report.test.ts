@@ -27,6 +27,7 @@ const artifact = makeArtifact(
     }),
     makeEntry({
       jira: "SW-2",
+      issueType: "Bug",
       summary: "Secret title two",
       expectedZephyrIds: ["SW-T3"],
       missingZephyrIds: ["SW-T3"],
@@ -47,6 +48,7 @@ const artifact = makeArtifact(
     }),
     makeEntry({
       jira: "SW-4",
+      issueType: "Task",
       summary: "Secret title four",
       expectedZephyrIds: [],
       missingZephyrIds: [],
@@ -89,8 +91,12 @@ describe("renderAuditMarkdown", () => {
 
   it("tabulates only the tickets needing changes or review, with Jira links and full id lists", () => {
     expect(markdown).toContain("### Tickets needing changes or review (2)");
-    expect(markdown).toContain(`| [SW-1](${JIRA}/browse/SW-1) | SW-T1 | SW-T1, SW-T2 | SW-T2 | - | exact | ADD | - |`);
-    expect(markdown).toContain(`| [SW-2](${JIRA}/browse/SW-2) | - | SW-T3 | SW-T3 | SW-T9 | medium | REVIEW | - |`);
+    expect(markdown).toContain(
+      `| [SW-1](${JIRA}/browse/SW-1) | Story | SW-T1 | SW-T1, SW-T2 | SW-T2 | - | exact | ADD | - |`,
+    );
+    expect(markdown).toContain(
+      `| [SW-2](${JIRA}/browse/SW-2) | Bug | - | SW-T3 | SW-T3 | SW-T9 | medium | REVIEW | - |`,
+    );
     expect(markdown).not.toMatch(/^\| \[SW-3\]/m);
     expect(markdown).not.toMatch(/^\| \[SW-4\]/m);
   });
@@ -98,17 +104,53 @@ describe("renderAuditMarkdown", () => {
   it("folds correct, unmapped, unmanaged and skipped tickets into collapsed sections", () => {
     expect(markdown).toContain("<summary>Correct — Zephyr already links exactly the expected IDs (1)</summary>");
     expect(markdown).toContain(`[SW-3](${JIRA}/browse/SW-3)`);
-    expect(markdown).toMatch(/<summary>No repository mapping — [^<]*\(1\)<\/summary>\n\n\[SW-4\]/);
+    expect(markdown).toMatch(
+      /<summary>No repository mapping, but not expected to carry test cases \(1\)<\/summary>\n\n\[SW-4\]\([^)]*\) \(Task\)/,
+    );
     expect(markdown).toMatch(
       /<summary>Linked in Zephyr but not managed[^<]*\(1\)<\/summary>\n\n- \[SW-2\][^\n]*: SW-T50/,
     );
     expect(markdown).toMatch(/<summary>Skipped by issue type \(1\)<\/summary>\n\n- \[SW-5\][^\n]*\(Epic\)/);
   });
 
+  it("leads with the coverage gaps that matter and separates the types that need no test case", () => {
+    expect(markdown).toContain(
+      "**Coverage gaps: 0 of 3 Story/Bug/Defect issue(s)** map to no story in this repository.",
+    );
+    expect(markdown).toContain("are reported but not expected to carry test cases.");
+
+    const gap = makeArtifact([
+      makeEntry({
+        jira: "SW-7",
+        issueType: "Bug",
+        expectedZephyrIds: [],
+        missingZephyrIds: [],
+        status: "no-mapping",
+        recommendedAction: "review",
+      }),
+      makeEntry({
+        jira: "SW-8",
+        issueType: "Spike",
+        expectedZephyrIds: [],
+        missingZephyrIds: [],
+        status: "no-mapping",
+        recommendedAction: "review",
+      }),
+    ]);
+    const gapMarkdown = renderAuditMarkdown(gap);
+    expect(gapMarkdown).toContain("**Coverage gaps: 1 of 1 Story/Bug/Defect issue(s)** map to no story");
+    expect(gapMarkdown).toMatch(
+      /<summary>Coverage gaps — Story\/Bug\/Defect issues no story in this repository is attributed to \(1\)<\/summary>/,
+    );
+    expect(gapMarkdown).toMatch(
+      /<summary>No repository mapping, but not expected to carry test cases \(1\)<\/summary>/,
+    );
+  });
+
   it("never prints Jira ticket titles unless asked (this repository is public)", () => {
     expect(markdown).not.toContain("Secret title");
     const withTitles = renderAuditMarkdown(artifact, { includeSummaries: true });
-    expect(withTitles).toContain("| Jira | Summary | Existing |");
+    expect(withTitles).toContain("| Jira | Type | Summary | Existing |");
     expect(withTitles).toContain("| Secret title one |");
   });
 

@@ -44,6 +44,7 @@ describe("renderAuditReport", () => {
         }),
         makeEntry({
           jira: "SW-2",
+          issueType: "Bug",
           existingZephyrIdsAtAudit: ["SW-T9"],
           expectedZephyrIds: ["SW-T3"],
           missingZephyrIds: ["SW-T3"],
@@ -62,14 +63,15 @@ describe("renderAuditReport", () => {
     });
     expect(report).toContain("Epic: SW-100 (Release epic)");
     expect(report).toContain("Issues resolved: 3 (2 audited, 1 skipped by issue type)");
-    expect(report).toMatch(/JIRA\s+EXISTING\s+EXPECTED\s+MISSING\s+CONFIDENCE\s+ACTION/);
-    expect(report).toMatch(/SW-1\s+SW-T1\s+SW-T1,SW-T2\s+SW-T2\s+exact\s+ADD/);
-    expect(report).toMatch(/SW-2\s+SW-T9\s+SW-T3\s+SW-T3\s+medium\s+REVIEW/);
+    expect(report).toMatch(/JIRA\s+TYPE\s+EXISTING\s+EXPECTED\s+MISSING\s+CONFIDENCE\s+ACTION/);
+    expect(report).toMatch(/SW-1\s+Story\s+·\s+SW-T1\s+SW-T1,SW-T2\s+SW-T2\s+exact\s+ADD/);
+    expect(report).toMatch(/SW-2\s+Bug\s+·\s+SW-T9\s+SW-T3\s+SW-T3\s+medium\s+REVIEW/);
     expect(report).toContain("SW-2: SW-T9");
     expect(report).toContain("SW-3 (Epic)");
     expect(report).toContain("Tickets scanned: 2");
     expect(report).toContain("Needs changes: 1");
     expect(report).toContain("Manual review: 1");
+    expect(report).toContain("Coverage gaps: 0 of 2 Story/Bug/Defect (·) issue(s) map to no story");
     expect(report).toContain("Artifact: artifacts/x.json");
   });
 });
@@ -82,6 +84,41 @@ describe("table helpers", () => {
   });
 });
 
+describe("renderAuditReport issue types", () => {
+  it("marks only coverage-expected types and names the unmapped ones", () => {
+    const report = renderAuditReport(
+      makeArtifact([
+        makeEntry({
+          jira: "SW-1",
+          issueType: "Task",
+          expectedZephyrIds: [],
+          missingZephyrIds: [],
+          status: "no-mapping",
+          recommendedAction: "review",
+        }),
+        makeEntry({
+          jira: "SW-2",
+          issueType: "Bug",
+          expectedZephyrIds: [],
+          missingZephyrIds: [],
+          status: "no-mapping",
+          recommendedAction: "review",
+        }),
+        makeEntry({
+          jira: "SW-3",
+          issueType: "Spike",
+          expectedZephyrIds: [],
+          missingZephyrIds: [],
+          status: "no-mapping",
+          recommendedAction: "review",
+        }),
+      ]),
+    );
+    expect(report).toMatch(/SW-1\s+Task\s+-/);
+    expect(report).toMatch(/SW-2\s+Bug\s+·\s+-/);
+    expect(report).toContain("Coverage gaps: 1 of 1 Story/Bug/Defect (·) issue(s) map to no story: SW-2");
+  });
+});
 describe("applyApproval", () => {
   const artifact = makeArtifact([
     makeEntry({ jira: "SW-1" }),

@@ -96,7 +96,7 @@ The audit:
 2. **Freezes** the resolved issue keys into `scopeSnapshot.issueKeys` (with `resolvedJql`).
 3. Indexes the repo once: every story export, its Zephyr IDs, the git history of story files, and (lazily) `git blame` per file.
 4. For each issue derives evidence, fetches the live Zephyr links, checks that expected-but-missing test cases still exist in Zephyr, and classifies the ticket.
-5. Writes `artifacts/zephyr-audit-<scope>.json` (gitignored — this repo is public) and prints:
+5. Writes `artifacts/zephyr-audit-<scope>.json` (gitignored — this repo is public) and prints a report like:
 
 ```
 Zephyr Audit
@@ -105,12 +105,12 @@ Resolved JQL: parent in (SW-2301) ORDER BY key ASC
 Issues resolved: 68 (68 audited, 0 skipped by issue type)
 Repo: main@13a643f
 
-JIRA     EXISTING  EXPECTED                       MISSING                        CONFIDENCE  ACTION
-SW-2528  -         SW-T5651                       SW-T5651                       exact       ADD
-SW-2540  -         SW-T5655,SW-T5656,SW-T5657,+4  SW-T5655,SW-T5656,SW-T5657,+4  exact       ADD
-SW-2549  -         SW-T4698,SW-T4711,SW-T4717,+3  SW-T4698,SW-T4711,SW-T4717,+3  medium      REVIEW
-SW-2563  -         SW-T5647,SW-T5649              SW-T5647,SW-T5649              high        ADD
-SW-2573  -         -                              -                              low         REVIEW
+JIRA     TYPE     EXISTING  EXPECTED                       MISSING                        CONFIDENCE  ACTION
+SW-2528  Task     -         SW-T5651                       SW-T5651                       exact       ADD
+SW-2540  Story ·  -         SW-T5655,SW-T5656,SW-T5657,+4  SW-T5655,SW-T5656,SW-T5657,+4  exact       ADD
+SW-2549  Task     -         SW-T4698,SW-T4711,SW-T4717,+3  SW-T4698,SW-T4711,SW-T4717,+3  medium      REVIEW
+SW-2563  Task     -         SW-T5647,SW-T5649              SW-T5647,SW-T5649              high        ADD
+SW-2573  Story ·  -         -                              -                              low         REVIEW
 …
 Summary
   Tickets scanned: 68
@@ -118,7 +118,25 @@ Summary
   Needs changes: 7
   Manual review: 18
   No mapping: 43
+  Coverage gaps: 12 of 24 Story/Bug/Defect (·) issue(s) map to no story: SW-2573, …
 ```
+
+#### Issue types, and which gaps are worth chasing
+
+Every audited type gets a row — nothing is hidden — but only some types are
+_expected_ to carry test cases. `Story`, `Bug` and `Defect`
+(`COVERAGE_EXPECTED_ISSUE_TYPES` in [`shared/issue-types.ts`](./shared/issue-types.ts))
+are marked `·` in the `TYPE` column, and only those count toward the
+**Coverage gaps** line. A `Task` or `Spike` with no mapping is routine here —
+tooling, docs and refactors ship no test case of their own — and burying a dozen
+real gaps among forty of those is how the number stops being read.
+
+This classification **only** affects counting and grouping. It never changes what
+the audit recommends or what apply writes: a `Task` that does own stories still
+shows its IDs, still gets `ADD`, and is still applied. That matters here, because
+plenty of them do — `SW-2528`, `SW-2549` and `SW-2563` above are all Tasks that
+introduced stories. Which types are audited **at all** is the separate
+`--issue-types` flag.
 
 ### 2. Review and approve
 

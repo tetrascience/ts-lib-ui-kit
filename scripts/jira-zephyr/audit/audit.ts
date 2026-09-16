@@ -172,7 +172,9 @@ export async function runAudit(argv: string[], deps: AuditDeps = {}): Promise<Au
       entry = buildAuditEntry({ issue, evidence, existingZephyrIds, index, missingNotFoundInZephyr });
     }
     tickets.push(entry);
-    log(`  ${issue.key.padEnd(9)} ${entry.status.padEnd(14)} ${entry.confidence.padEnd(7)} ${entry.recommendedAction}`);
+    log(
+      `  ${issue.key.padEnd(9)} ${entry.issueType.padEnd(7)} ${entry.status.padEnd(14)} ${entry.confidence.padEnd(7)} ${entry.recommendedAction}`,
+    );
   }
 
   const generatedAt = now().toISOString();

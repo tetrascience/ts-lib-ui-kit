@@ -90,7 +90,7 @@ describe("audit → approve → apply, end to end with injected clients", () => 
     expect(written.tickets.every((t: { approved: boolean }) => t.approved === false)).toBe(true);
     expect(written.summary).toEqual({ ticketsScanned: 2, correct: 0, needsChanges: 1, manualReview: 0, noMapping: 1 });
     expect(out.join("\n")).toMatch(/Epic: SW-100 \(Release epic\)/);
-    expect(out.join("\n")).toMatch(/SW-1\s+-\s+SW-T1\s+SW-T1\s+exact\s+ADD/);
+    expect(out.join("\n")).toMatch(/SW-1\s+Story\s+·\s+-\s+SW-T1\s+SW-T1\s+exact\s+ADD/);
     expect(zephyrClient.getTestCase).toHaveBeenCalledWith("SW-T1");
   });
 

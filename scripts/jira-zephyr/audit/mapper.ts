@@ -16,6 +16,7 @@ import {
   weakest,
   type Confidence,
 } from "../shared/confidence";
+import { expectsCoverage } from "../shared/issue-types";
 import { uniqueSorted } from "../shared/keys";
 
 import type { CommitInfo, RepoIndex, StoryFileRecord, StoryRecord } from "./repo-scanner";
@@ -404,6 +405,11 @@ export function buildAuditEntry(inputs: EntryInputs): AuditEntry {
     notes.unshift(
       `No story in the repository is attributed to this issue (Jira status: ${issue.fields.status.name}): no Jira-keyed commit introduced or modified a story, and no story source references the key`,
     );
+    if (!expectsCoverage(issue.fields.issuetype.name)) {
+      notes.push(
+        `${issue.fields.issuetype.name} issues are not expected to carry Zephyr coverage here, so this is reported for completeness rather than as a gap`,
+      );
+    }
   } else if (missing.length === 0 && unexpected.length === 0 && expected.length > 0) {
     status = "correct";
     recommendedAction = "none";

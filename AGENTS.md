@@ -206,6 +206,21 @@ Consumer contract: apps that use these components must install the matching peer
 - Unit tests (`*.test.ts` / `*.test.tsx`) for pure utilities, hooks, and non-visual logic only
 - Do not manually assign `parameters.zephyr.testCaseId` values — generate or repair them through `sync-storybook-zephyr`
 
+### Driving a `Select` from a play function
+
+Use `selectOption(trigger, name)` / `openSelect(trigger)` from
+[`.storybook/select-interactions.ts`](./.storybook/select-interactions.ts) —
+never `userEvent.click(trigger)` followed by a bare
+`body.findByRole("option", …)`. `SelectContent` is portal-rendered and
+positioned in a layout effect, so the option is not in the DOM on the next
+tick; Testing Library's default 1000 ms `asyncUtilTimeout` is enough locally
+but not on a loaded CI runner under coverage instrumentation — the
+`Unable to find role="option"` flake SW-2624 fixed. The helpers wait for
+the listbox first and then scope the option query to it, which is strictly
+*more* specific than querying the whole document — so no assertion is weakened
+by adopting them. The same reasoning applies to any portal + entry-animation
+pattern; see also the `waitFor` rule for `toBeVisible` on animated elements.
+
 ### Docs "Show code" must show component code
 
 Storybook prints the raw story-object source (play function, zephyr ids and

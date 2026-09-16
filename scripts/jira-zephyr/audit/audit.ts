@@ -59,7 +59,7 @@ export type ZephyrReadClient = Pick<ZephyrClient, "getLinkedTestCaseKeys" | "get
 
 export interface AuditDeps {
   cwd?: string;
-  jira?: JiraReader & { baseUrl: string };
+  jira?: JiraReader & { baseUrl: string; verifyCredentials?: () => Promise<unknown> };
   zephyr?: { client: ZephyrReadClient; baseUrl: string; projectKey: string };
   index?: RepoIndex;
   repoState?: RepoState;
@@ -143,6 +143,12 @@ export async function runAudit(argv: string[], deps: AuditDeps = {}): Promise<Au
   const issueTypes = values["issue-types"] ? splitList(values["issue-types"]) : DEFAULT_ISSUE_TYPES;
 
   const jira = deps.jira ?? new JiraClient(jiraEnv());
+  if (jira.verifyCredentials) {
+    // Rejected credentials would otherwise surface as "Epic … not found": Jira
+    // downgrades them to an anonymous request, and anonymous users get 404s.
+    await jira.verifyCredentials();
+    log("[INFO] Jira: credentials accepted");
+  }
   const zephyr = await connectZephyr(deps, log, projectKey);
   if (!zephyr.client.readOnly) throw new Error("The audit requires a read-only Zephyr client");
 

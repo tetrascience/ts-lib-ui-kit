@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { resolveProjectKey, jiraEnv, zephyrEnv } from "../clients/env";
-import { JiraClient, JiraHttpError, jqlString } from "../clients/jira-client";
+import { JiraAuthError, JiraClient, JiraHttpError, jqlString } from "../clients/jira-client";
 import { createZephyrTransport, ReadOnlyViolationError, ZephyrClient, ZephyrHttpError } from "../clients/zephyr-client";
 
 type FetchCall = { url: string; init: RequestInit };
@@ -86,6 +86,27 @@ describe("JiraClient", () => {
 
     expect(calls).toHaveLength(2);
     expect(issues).toHaveLength(2);
+  });
+
+  it("verifies credentials up front and unmasks Jira's anonymous downgrade", async () => {
+    const accepted = new JiraClient({
+      ...options,
+      fetchImpl: fakeFetch(() => ({ status: 200, body: { accountType: "atlassian", active: true } })).fetchImpl,
+    });
+    await expect(accepted.verifyCredentials()).resolves.toEqual({ accountType: "atlassian" });
+
+    const rejected = new JiraClient({ ...options, fetchImpl: fakeFetch(() => ({ status: 401, body: {} })).fetchImpl });
+    await expect(rejected.verifyCredentials()).rejects.toThrow(JiraAuthError);
+
+    const downgraded = new JiraClient({
+      ...options,
+      fetchImpl: fakeFetch(() => ({
+        status: 404,
+        body: {},
+        headers: { "x-seraph-loginreason": "AUTHENTICATED_FAILED" },
+      })).fetchImpl,
+    });
+    await expect(downgraded.getIssue("SW-2301")).rejects.toThrow(/rejected the credentials/);
   });
 
   it("returns null for a missing issue and throws a typed error otherwise", async () => {

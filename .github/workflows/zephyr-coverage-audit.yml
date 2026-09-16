@@ -124,7 +124,7 @@ jobs:
           [ -n "$JIRA_API_TOKEN" ] || missing+=(JIRA_API_TOKEN)
           [ -n "$ZEPHYR_TOKEN" ] || missing+=(ZEPHYR_TOKEN)
           if [ "${#missing[@]}" -gt 0 ]; then
-            fail "Missing repository secret(s): ${missing[*]}. Add them under Settings → Secrets and variables → Actions. JIRA_EMAIL is the Atlassian account email; JIRA_API_TOKEN is its API token (https://id.atlassian.com/manage-profile/security/api-tokens)."
+            fail "Missing repository secret(s): ${missing[*]}. Add them under Settings → Secrets and variables → Actions. JIRA_EMAIL is the Atlassian account email; JIRA_API_TOKEN is a classic (unscoped) API token for that account (https://id.atlassian.com/manage-profile/security/api-tokens)."
           fi
           if [ -n "$AUDIT_RUN_ID" ]; then
             [ "$MODE" != "audit" ] || fail "audit_run_id only applies to mode dry-run or write; mode audit always audits afresh"

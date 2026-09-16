@@ -109,7 +109,8 @@ async function verifyEpics(jira: JiraReader, epics: string[]): Promise<string[]>
   const labels: string[] = [];
   for (const key of epics) {
     const issue = await jira.getIssue(key);
-    if (!issue) throw new ScopeError(`Epic ${key} was not found (or is not visible to this account)`);
+    if (!issue)
+      throw new ScopeError(`Epic ${key} was not found, or this account cannot see it (Jira answers 404 for both)`);
     const type = issue.fields.issuetype;
     if (type.name !== "Epic" && type.hierarchyLevel !== 1) {
       throw new ScopeError(`${key} is a ${type.name}, not an Epic — pass it as an explicit key instead`);

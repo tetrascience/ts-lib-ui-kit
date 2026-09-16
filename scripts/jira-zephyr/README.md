@@ -43,6 +43,15 @@ Credentials (never logged):
 | `ZEPHYR_TOKEN` (or `ZEPHYR_API_TOKEN`)  | Zephyr Scale Cloud bearer token — same name the existing scripts use        |
 | `ZEPHYR_BASE_URL`, `ZEPHYR_PROJECT_KEY` | Optional, default `https://api.zephyrscale.smartbear.com/v2` and `SW`       |
 
+`JIRA_API_TOKEN` must be a **classic** Atlassian API token — created with _Create
+API token_, not _Create API token with scopes_ — for the `JIRA_EMAIL` account.
+Scoped tokens only work against the `api.atlassian.com` gateway; to use one, set
+`JIRA_BASE_URL=https://api.atlassian.com/ex/jira/<cloudId>` (the cloud id is
+shown at `https://tetrascience.atlassian.net/_edge/tenant_info`). Both scripts
+verify the credentials first via `/rest/api/3/myself` and fail with the real
+reason, because Jira Cloud otherwise downgrades rejected credentials to an
+anonymous request and every issue then looks like `404 not found`.
+
 ### 1. Audit (read-only)
 
 ```bash

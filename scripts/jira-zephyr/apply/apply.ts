@@ -126,9 +126,12 @@ export async function runApplyCli(argv: string[], deps: ApplyDeps = {}): Promise
       zephyrBaseUrl: zephyrConfig.baseUrl,
       zephyrProjectKey: zephyrConfig.projectKey,
     });
+    const jira = new JiraClient(jiraConfig);
+    await jira.verifyCredentials(); // rejected credentials would otherwise read as "issue not found"
+    log("[INFO] Jira: credentials accepted");
     const { transport, source } = await createZephyrTransport(zephyrConfig);
     clients = {
-      jira: new JiraClient(jiraConfig),
+      jira,
       zephyr: new ZephyrClient(transport, { readOnly: !execute }),
     };
     log(`[INFO] Zephyr transport: ${source} (${execute ? "read-write" : "read-only"}); targets match the audit`);

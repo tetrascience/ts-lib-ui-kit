@@ -43,6 +43,22 @@ export class JiraHttpError extends Error {
   }
 }
 
+/**
+ * Jira rejected the credentials — or, Jira Cloud's quirk, silently downgraded the
+ * call to an anonymous request, which makes every issue look like a 404.
+ */
+export class JiraAuthError extends Error {
+  constructor(detail: string) {
+    super(
+      `Jira rejected the credentials (${detail}). Check JIRA_EMAIL and JIRA_API_TOKEN: the token must be a classic ` +
+        "(unscoped) Atlassian API token belonging to that exact account. API tokens *with scopes* only work against " +
+        "the api.atlassian.com gateway — create an unscoped token, or set JIRA_BASE_URL to " +
+        "https://api.atlassian.com/ex/jira/<cloudId>.",
+    );
+    this.name = "JiraAuthError";
+  }
+}
+
 const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export class JiraClient {
@@ -71,6 +87,12 @@ export class JiraClient {
         body: body === undefined ? undefined : JSON.stringify(body),
         signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
       });
+      // Jira Cloud answers rejected Basic auth by treating the request as anonymous
+      // instead of returning 401; this header is the only trace (issues then 404).
+      const loginReason = response.headers.get("x-seraph-loginreason");
+      if (loginReason && /FAILED|DENIED/i.test(loginReason)) {
+        throw new JiraAuthError(`X-Seraph-LoginReason: ${loginReason} on ${method} ${path}`);
+      }
       if (response.ok) {
         const text = await response.text();
         return (text ? JSON.parse(text) : {}) as T;
@@ -81,6 +103,22 @@ export class JiraClient {
       }
       const retryAfter = Number(response.headers.get("retry-after"));
       await this.sleep(retryAfter > 0 ? retryAfter * 1000 : 500 * 2 ** (attempt - 1));
+    }
+  }
+
+  /**
+   * Fails fast on bad credentials. `/myself` is the one endpoint Jira Cloud never
+   * serves anonymously, so it answers 401 where an issue lookup would answer 404.
+   */
+  async verifyCredentials(): Promise<{ accountType?: string }> {
+    try {
+      const me = await this.request<{ accountType?: string }>("GET", "/rest/api/3/myself");
+      return { accountType: me.accountType };
+    } catch (error) {
+      if (error instanceof JiraHttpError && (error.status === 401 || error.status === 403)) {
+        throw new JiraAuthError(`${error.status} from GET /rest/api/3/myself`);
+      }
+      throw error;
     }
   }
 

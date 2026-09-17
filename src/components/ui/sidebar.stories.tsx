@@ -39,7 +39,12 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
  *   Enum axes        `variant` (sidebar · floating · inset), `side` (left · right),
  *                    `collapsible` (offcanvas · icon · none), menu-button
  *                    `variant` (default · outline) and `size` (sm · default · lg)
- *   Composition      open/collapsed start state, rail, badges + actions, footer
+ *   Composition      open/collapsed start state, rail, badges + actions, footer,
+ *                    skeleton loading group
+ *
+ * The only Sidebar behaviour that is *not* a point in that control space is the
+ * controlled form (`open` / `onOpenChange` on `SidebarProvider`); it is called
+ * out in the docs description and exercised by the hidden `ControlledSidebar`.
  *
  * The remaining stories at the bottom of this file are tagged `!dev` /
  * `!autodocs`: hidden from the sidebar and the docs page, but still run by
@@ -58,6 +63,8 @@ type SidebarStoryArgs = React.ComponentProps<typeof Sidebar> & {
   showBadges?: boolean;
   /** Render the `SidebarFooter` block. */
   showFooter?: boolean;
+  /** Render a second group whose items are still loading (`SidebarMenuSkeleton`). */
+  showSkeleton?: boolean;
 };
 
 const PLAYGROUND_ARG_KEYS = [
@@ -67,15 +74,25 @@ const PLAYGROUND_ARG_KEYS = [
   "showRail",
   "showBadges",
   "showFooter",
+  "showSkeleton",
 ] as const satisfies ReadonlyArray<keyof SidebarStoryArgs>;
 
 /**
  * Strip the playground-only controls so only real `Sidebar` props reach the DOM.
+ * A destructure (rather than a `delete` loop) lets the return type prove it.
  */
-function toSidebarProps(args: SidebarStoryArgs | undefined): React.ComponentProps<typeof Sidebar> {
-  const rest = { ...(args ?? {}) };
-  for (const key of PLAYGROUND_ARG_KEYS) delete rest[key];
-  return rest;
+function toSidebarProps(args: SidebarStoryArgs): React.ComponentProps<typeof Sidebar> {
+  const {
+    defaultOpen: _defaultOpen,
+    menuButtonVariant: _menuButtonVariant,
+    menuButtonSize: _menuButtonSize,
+    showRail: _showRail,
+    showBadges: _showBadges,
+    showFooter: _showFooter,
+    showSkeleton: _showSkeleton,
+    ...sidebarProps
+  } = args;
+  return sidebarProps;
 }
 
 const meta: Meta<SidebarStoryArgs> = {
@@ -88,8 +105,10 @@ const meta: Meta<SidebarStoryArgs> = {
         component:
           "Composable app-level navigation sidebar. Use the **Default** playground's controls to explore the " +
           "prop axes (`variant`, `side`, `collapsible`, menu-button `variant`/`size`) and composition toggles " +
-          "(start state, rail, badges & actions, footer). **With Sub Menu** and **Multiple Groups** show the two " +
-          "content-composition patterns that can't be expressed as a prop.",
+          "(start state, rail, badges & actions, footer, skeleton loading group). **With Sub Menu** and " +
+          "**Multiple Groups** show the two content-composition patterns that can't be expressed as a prop.\n\n" +
+          "The playground is uncontrolled (`defaultOpen`). For a controlled sidebar pass `open` and " +
+          "`onOpenChange` to `SidebarProvider` instead — the contract is the same as any controlled input.",
       },
     },
   },
@@ -136,6 +155,10 @@ const meta: Meta<SidebarStoryArgs> = {
       control: { type: "boolean" },
       table: { category: "Playground" },
     },
+    showSkeleton: {
+      control: { type: "boolean" },
+      table: { category: "Playground" },
+    },
   },
   args: {
     side: "left",
@@ -147,6 +170,7 @@ const meta: Meta<SidebarStoryArgs> = {
     showRail: false,
     showBadges: false,
     showFooter: true,
+    showSkeleton: false,
   },
 };
 
@@ -155,14 +179,8 @@ export default meta;
 type Story = StoryObj<SidebarStoryArgs>;
 
 function renderSidebar(args: SidebarStoryArgs) {
-  const {
-    defaultOpen = true,
-    menuButtonVariant = "default",
-    menuButtonSize = "default",
-    showRail = false,
-    showBadges = false,
-    showFooter = true,
-  } = args;
+  // Defaults live in `meta.args` (merged into every story) — don't re-declare them here.
+  const { defaultOpen, menuButtonVariant, menuButtonSize, showRail, showBadges, showFooter, showSkeleton } = args;
   const sidebarProps = toSidebarProps(args);
 
   return (
@@ -212,6 +230,24 @@ function renderSidebar(args: SidebarStoryArgs) {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
+            {showSkeleton && (
+              <SidebarGroup>
+                <SidebarGroupLabel>Recent</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuSkeleton showIcon />
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuSkeleton showIcon />
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuSkeleton />
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
           </SidebarContent>
           {showFooter && (
             <SidebarFooter>
@@ -248,7 +284,7 @@ function renderSidebar(args: SidebarStoryArgs) {
   );
 }
 
-const playSidebar: Story["play"] = async ({ canvasElement, step }) => {
+const playSidebar: Story["play"] = async ({ args, canvasElement, step }) => {
   const canvas = within(canvasElement);
 
   await step("Layout renders", async () => {
@@ -261,7 +297,14 @@ const playSidebar: Story["play"] = async ({ canvasElement, step }) => {
     expect(canvas.getByText("Workspace")).toBeInTheDocument();
     expect(canvas.getByText("Overview")).toBeInTheDocument();
     expect(canvas.getByText("Projects")).toBeInTheDocument();
-    expect(canvas.getByText("Settings")).toBeInTheDocument();
+  });
+
+  await step("Footer follows the showFooter control", async () => {
+    if (args.showFooter) {
+      expect(canvas.getByText("Settings")).toBeInTheDocument();
+    } else {
+      expect(canvas.queryByText("Settings")).not.toBeInTheDocument();
+    }
   });
 };
 
@@ -549,6 +592,8 @@ function renderSubMenuSidebar(args: SidebarStoryArgs) {
 export const WithSubMenu: Story = {
   render: renderSubMenuSidebar,
   parameters: {
+    // Only the real Sidebar props pass through here; hide the inert playground toggles.
+    controls: { exclude: [...PLAYGROUND_ARG_KEYS] },
     zephyr: { testCaseId: "SW-T4726" },
   },
   play: async ({ canvasElement, step }) => {
@@ -776,6 +821,8 @@ function renderMultiGroupSidebar(args: SidebarStoryArgs) {
 export const MultipleGroups: Story = {
   render: renderMultiGroupSidebar,
   parameters: {
+    // Only the real Sidebar props pass through here; hide the inert playground toggles.
+    controls: { exclude: [...PLAYGROUND_ARG_KEYS] },
     zephyr: { testCaseId: "SW-T4729" },
   },
   play: async ({ canvasElement, step }) => {
@@ -996,6 +1043,61 @@ export const KeyboardShortcutToggle: Story = {
       await userEvent.keyboard("{Control>}b{/Control}");
       const sidebarSlot = canvasElement.querySelector('[data-slot="sidebar"]');
       expect(sidebarSlot?.getAttribute("data-state")).toBe("expanded");
+    });
+  },
+};
+
+/**
+ * Exercises every composition toggle the playground adds (`showRail`,
+ * `showBadges`, `showSkeleton`, `showFooter: false`) so a regression in those
+ * branches can't hide behind the meta defaults `Default` runs with.
+ */
+export const PlaygroundToggles: Story = {
+  tags: ["!dev", "!autodocs"],
+  args: {
+    showRail: true,
+    showBadges: true,
+    showSkeleton: true,
+    showFooter: false,
+  },
+  render: renderSidebar,
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    // Not `playSidebar`: with a rail there are two "Toggle Sidebar" buttons
+    // (trigger + rail), so its single-button lookup is ambiguous here.
+    await step("Layout and navigation render", async () => {
+      expect(canvas.getByText("Dashboard")).toBeInTheDocument();
+      expect(canvas.getAllByRole("button", { name: /toggle sidebar/i }).length).toBe(2);
+      expect(canvas.getByText("Overview")).toBeInTheDocument();
+      expect(canvas.getByText("Projects")).toBeInTheDocument();
+    });
+
+    await step("Rail renders and toggles", async () => {
+      const rail = canvasElement.querySelector('[data-sidebar="rail"]') as HTMLElement;
+      expect(rail).toBeTruthy();
+      await userEvent.click(rail);
+      expect(canvasElement.querySelector('[data-slot="sidebar"]')?.getAttribute("data-state")).toBe("collapsed");
+      await userEvent.click(rail);
+      expect(canvasElement.querySelector('[data-slot="sidebar"]')?.getAttribute("data-state")).toBe("expanded");
+    });
+
+    await step("Badges and hover action render", async () => {
+      expect(canvasElement.querySelectorAll('[data-slot="sidebar-menu-badge"]').length).toBe(2);
+      const action = canvas.getByRole("button", { name: "Invite teammate" });
+      expect(action.className).toContain("md:opacity-0");
+    });
+
+    await step("Skeleton loading group renders", async () => {
+      expect(canvas.getByText("Recent")).toBeInTheDocument();
+      expect(canvasElement.querySelectorAll('[data-slot="sidebar-menu-skeleton"]').length).toBe(3);
+    });
+
+    await step("Footer is omitted", async () => {
+      expect(canvasElement.querySelector('[data-sidebar="footer"]')).toBeNull();
     });
   },
 };

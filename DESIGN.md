@@ -124,7 +124,7 @@ import {
 | `Table`                  | Data Display       | `table`                    | —                                                        | Stable |
 | `TetraScienceIcon`       | Data Display       | —                          | Brand icon component                                     | Stable |
 | `Text`                   | Data Display       | —                          | Preset type scale, `as` + `variant` independent          | Beta   |
-| `Tree`                   | Data Display       | —                          | WAI-ARIA tree view, recursive, icons, guides, controlled | Beta   |
+| `Tree`                   | Data Display       | —                          | WAI-ARIA tree view, roving focus, typeahead, `*`, guides | Beta   |
 | `AppLayout`              | Composed           | —                          | Full app shell with sidebar                              | Stable |
 | `AppHeader`              | Composed           | —                          | Top nav with avatar/actions                              | Stable |
 | `Main`                   | Composed           | —                          | Main content area with navbar, sidebar, tab bar          | Stable |

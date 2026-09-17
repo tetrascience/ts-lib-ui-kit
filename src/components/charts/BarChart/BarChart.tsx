@@ -42,9 +42,11 @@ const BAR_REGULAR_SCALE = {
 };
 
 /**
- * Default bar width as a fraction of the smallest gap between x positions. A
+ * Default bar width as a fraction of the median gap between x positions. A
  * fixed data-unit width (formerly 24) only suited x spaced by ~100 and swamped
- * the axis for index-style x such as 0..6 (SW-2298).
+ * the axis for index-style x such as 0..6 (SW-2298). The median (not the
+ * minimum) keeps one tight pair in otherwise wide-spaced data from shrinking
+ * every bar to a hairline.
  */
 const DEFAULT_BAR_WIDTH_FRACTION = 0.24;
 /**
@@ -72,10 +74,11 @@ interface BarChartProps {
   yTitle?: string;
   title?: string;
   /**
-   * Bar width in x-axis data units. Defaults to about a quarter of the
-   * smallest gap between x positions (narrower when four or more grouped
-   * series must share a slot), so bars keep the same visual weight whether x
-   * runs 0..6 or 200..1000.
+   * Bar width in x-axis data units. Defaults to about a quarter of the median
+   * gap between x positions (narrower when four or more grouped series must
+   * share a slot), so bars keep the same visual weight whether x runs 0..6 or
+   * 200..1000. With very uneven spacing the closest bars can still overlap or
+   * the widest gaps look sparse — pass an explicit width in that case.
    */
   barWidth?: number;
   /**
@@ -169,15 +172,15 @@ const BarChart: React.FC<BarChartProps> = ({
 
   const resolvedBarWidth = useMemo(() => {
     if (barWidth !== undefined) return barWidth;
-    let minGap = Number.POSITIVE_INFINITY;
-    for (let i = 1; i < xTicks.length; i++) {
-      minGap = Math.min(minGap, xTicks[i] - xTicks[i - 1]);
-    }
+    // xTicks is the sorted, de-duplicated data x, so every gap is > 0
+    const gaps = xTicks.slice(1).map((x, i) => x - xTicks[i]).sort((a, b) => a - b);
     // A single x position has no gap to scale from; let Plotly size the bar.
-    if (!Number.isFinite(minGap)) return;
+    if (gaps.length === 0) return;
+    const mid = Math.floor(gaps.length / 2);
+    const medianGap = gaps.length % 2 === 1 ? gaps[mid] : (gaps[mid - 1] + gaps[mid]) / 2;
     const groupedSeries = variant === "group" ? Math.max(1, dataSeries.length) : 1;
     const fraction = Math.min(DEFAULT_BAR_WIDTH_FRACTION, MAX_GROUP_WIDTH_FRACTION / groupedSeries);
-    return minGap * fraction;
+    return medianGap * fraction;
   }, [barWidth, xTicks, variant, dataSeries.length]);
 
   const yTicks = useMemo(() => {

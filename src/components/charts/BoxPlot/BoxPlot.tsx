@@ -203,15 +203,18 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
     [title, theme, scale],
   );
 
+  // Resolved once per data change so a length-mismatch warning fires once,
+  // not on every theme- or size-driven re-plot.
+  const resolvedX = useMemo(() => dataSeries.map(resolveBoxX), [dataSeries]);
+
   useEffect(() => {
     if (!plotRef.current || !hasSize) return;
 
     const data = dataSeries.map((series, index) => {
       const color = seriesColor(index, series.color);
-      const x = resolveBoxX(series);
       return {
         y: series.y,
-        x,
+        x: resolvedX[index],
         type: "box" as const,
         name: series.name,
         hoverinfo: "none" as const,
@@ -343,7 +346,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, hasSize, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks, theme, scale, marginTop, bindTooltip]);
+  }, [dataSeries, resolvedX, hasSize, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks, theme, scale, marginTop, bindTooltip]);
 
   // Resize in place when the measured/overridden size changes — cheaper than
   // recreating the plot, and it preserves tooltip/event bindings.

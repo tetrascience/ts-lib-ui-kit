@@ -24,6 +24,33 @@ describe("chart-scale", () => {
     expect(resolveChartScale(300, 200, custom)).toBe(COMPACT_SCALE);
   });
 
+  it("compacts vertical chrome for a short-but-wide canvas and keeps side margins", () => {
+    const scale = resolveChartScale(1200, 300);
+    expect(scale.tickFontSize).toBe(COMPACT_SCALE.tickFontSize);
+    expect(scale.titleFontSize).toBe(COMPACT_SCALE.titleFontSize);
+    expect(scale.margin.b).toBe(COMPACT_SCALE.margin.b);
+    expect(scale.margin.tTitle).toBe(COMPACT_SCALE.margin.tTitle);
+    expect(scale.margin.l).toBe(REGULAR_SCALE.margin.l);
+    expect(scale.margin.r).toBe(REGULAR_SCALE.margin.r);
+  });
+
+  it("compacts only side margins for a narrow-but-tall canvas", () => {
+    const custom = { ...REGULAR_SCALE, legendFontSize: 16 };
+    const scale = resolveChartScale(400, 600, custom);
+    expect(scale.tickFontSize).toBe(custom.tickFontSize);
+    expect(scale.legendFontSize).toBe(16);
+    expect(scale.margin.b).toBe(custom.margin.b);
+    expect(scale.margin.l).toBe(COMPACT_SCALE.margin.l);
+    expect(scale.margin.r).toBe(COMPACT_SCALE.margin.r);
+  });
+
+  it("returns the same object for the same inputs so effect deps stay stable", () => {
+    const custom = { ...REGULAR_SCALE, legendFontSize: 16 };
+    expect(resolveChartScale(1200, 300)).toBe(resolveChartScale(1200, 300));
+    expect(resolveChartScale(400, 600, custom)).toBe(resolveChartScale(400, 600, custom));
+    expect(resolveChartScale(400, 600, custom)).not.toBe(resolveChartScale(400, 600));
+  });
+
   it("computes how many labels fit, never fewer than two", () => {
     expect(maxTickCount(100, 25)).toBe(4);
     expect(maxTickCount(10, 25)).toBe(2);
@@ -35,6 +62,9 @@ describe("chart-scale", () => {
     expect(thinTicks([0, 1, 2, 3, 4, 5, 6, 7], 4)).toEqual([0, 2, 4, 7]);
     expect(thinTicks([0, 1, 2, 3, 4, 5, 6], 3)).toEqual([0, 3, 6]);
     expect(thinTicks([10, 20, 30, 40, 50], 2)).toEqual([10, 50]);
+    // maxCount below 2 is treated as 2 rather than dropping the first tick
+    expect(thinTicks([10, 20, 30, 40, 50], 1)).toEqual([10, 50]);
+    expect(thinTicks([10, 20, 30], 0)).toEqual([10, 30]);
     expect(thinTicks([0, 1, 2], 4)).toEqual([0, 1, 2]);
   });
 

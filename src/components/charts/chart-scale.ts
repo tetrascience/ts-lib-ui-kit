@@ -56,21 +56,56 @@ export const COMPACT_SCALE: ChartScale = {
   margin: { l: 48, r: 16, b: 76, tTitle: 36, tNoTitle: 12 },
 };
 
+export const isCompactHeight = (height: number): boolean => height < COMPACT_HEIGHT_PX;
+export const isCompactWidth = (width: number): boolean => width < COMPACT_WIDTH_PX;
+
+/** True when either dimension is below its compact threshold */
 export function isCompactChart(width: number, height: number): boolean {
-  return height < COMPACT_HEIGHT_PX || width < COMPACT_WIDTH_PX;
+  return isCompactHeight(height) || isCompactWidth(width);
 }
+
+// Mixed scales are cached per `regular` so repeated calls return the same
+// object: charts list the scale in effect dependencies, and a fresh object
+// every render would re-plot every render.
+const mixedScaleCache = new WeakMap<ChartScale, Map<"short" | "narrow", ChartScale>>();
 
 /**
  * Pick the scale for a canvas size. `regular` lets a chart keep its own
  * full-size values (e.g. BarChart's larger legend) while sharing the compact
  * fallback.
+ *
+ * Short and narrow are judged separately: a 1200×300 dashboard strip is short
+ * but not narrow, so it gets compact fonts and top/bottom margins while keeping
+ * the full left/right margins — vertical chrome follows height, horizontal
+ * chrome follows width.
  */
 export function resolveChartScale(
   width: number,
   height: number,
   regular: ChartScale = REGULAR_SCALE,
 ): ChartScale {
-  return isCompactChart(width, height) ? COMPACT_SCALE : regular;
+  const short = isCompactHeight(height);
+  const narrow = isCompactWidth(width);
+  if (!short && !narrow) return regular;
+  if (short && narrow) return COMPACT_SCALE;
+
+  const key = short ? "short" : "narrow";
+  let cache = mixedScaleCache.get(regular);
+  if (!cache) {
+    cache = new Map();
+    mixedScaleCache.set(regular, cache);
+  }
+  let scale = cache.get(key);
+  if (!scale) {
+    const vertical = short ? COMPACT_SCALE : regular;
+    const horizontal = narrow ? COMPACT_SCALE : regular;
+    scale = {
+      ...vertical,
+      margin: { ...vertical.margin, l: horizontal.margin.l, r: horizontal.margin.r },
+    };
+    cache.set(key, scale);
+  }
+  return scale;
 }
 
 /**
@@ -91,8 +126,10 @@ export function maxTickCount(extentPx: number, labelPx: number): number {
  * from stacking on top of each other when the plot area is short.
  */
 export function thinTicks<T>(ticks: T[], maxCount: number): T[] {
-  if (ticks.length <= maxCount) return ticks;
-  const stride = Math.ceil(ticks.length / Math.max(1, maxCount));
+  // Both ends are always kept, so fewer than two makes no sense
+  const limit = Math.max(2, maxCount);
+  if (ticks.length <= limit) return ticks;
+  const stride = Math.ceil(ticks.length / limit);
   const kept = ticks.filter((_, index) => index % stride === 0);
   const last = ticks[ticks.length - 1];
   // Swap the final kept tick for the true maximum (count stays ≤ maxCount)

@@ -856,7 +856,16 @@
    modebar button's icon on its own line and folds the toolbar into a cramped
    grid in the chart's top-right corner. Restore the inline icons Plotly's own
    stylesheet assumes (SW-2298).
+
+   Layered and anchored to kit-owned wrapper classes (the two charts that show
+   a modebar) so it never restyles a host page's own Plotly instances when the
+   kit's stylesheet is appended to someone else's document (SW-2596).
    ========================================================================== */
-.js-plotly-plot .plotly .modebar-btn svg {
-  display: inline;
+@layer properties, theme, base, components, utilities, ts-ui-kit;
+
+@layer ts-ui-kit {
+  .chromatogram-chart-container .modebar-btn svg,
+  .scatter-plot-interactive .modebar-btn svg {
+    display: inline;
+  }
 }

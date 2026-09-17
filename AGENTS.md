@@ -166,9 +166,56 @@ See [`DESIGN.md`](./DESIGN.md) for the full design document — tokens, componen
 
 - Tailwind CSS 4 utility classes via `cn()` from `src/lib/utils.ts`
 - CVA (`class-variance-authority`) for variant definitions
-- Design tokens as CSS custom properties in `src/index.css` (oklch color space)
+- Design tokens as CSS custom properties in `src/index.tailwind.css` (oklch color space)
 - Icons from `lucide-react`
-- Dark mode via `.dark` class on `<html>` — all tokens redefined under `.dark { }` in `src/index.css`
+- Dark mode via `.dark` class on `<html>` — all tokens redefined under `.dark { }` in `src/index.tailwind.css`
+
+#### Kit CSS must not make document-level claims (SW-2596)
+
+The kit is consumed as a library inside someone else's document — including as a
+Module Federation remote in the TetraScience platform shell, where a remote's
+`<style>` is appended after the host's and never removed. Unlayered
+`:root { --border: … }` or `.divider { width: 2px }` therefore restyled every
+other TDP page until a reload (PUI-5962). The rules, enforced by
+`yarn check:css-leaks` (runs in `yarn build`, fails CI):
+
+- **Every selector rule the kit writes itself lives in `@layer ts-ui-kit`** —
+  the token blocks in `src/index.tailwind.css` and every component `.scss`.
+  Layered rules never outrank a consumer's unlayered CSS. The two intentional
+  exceptions: utilities go through `@utility` (Tailwind emits them into
+  `utilities`), and `@keyframes` / `@font-face` / `@property` stay top-level
+  because they are not selector-matched — so kit keyframes are `ts-`-prefixed
+  (`ts-shimmer`), never generic names a host might also define.
+- **Start every `.scss` — and `src/index.tailwind.css`, before its imports —
+  with the order statement**
+  `@layer properties, theme, base, components, utilities, ts-ui-kit;`. A
+  layer's position is fixed by its first appearance: Vite concatenates the
+  `.scss` chunks _before_ Tailwind's output, and the `layer(theme)` /
+  `layer(utilities)` imports would otherwise fix those two first. `properties`
+  (Tailwind's `@property` fallback for older browsers) must stay lowest;
+  `yarn check:css-leaks` asserts the emitted order of every published file.
+- **Namespace component class names by component** (`.histogram-legend-divider`,
+  not `.divider`; `.platemap-legend__item`, not `.legend-item`). Layering does
+  not help when the host has _no_ competing declaration — the kit's value then
+  applies to any host element that happens to share the class name. The gate
+  enforces this too: every selector inside `ts-ui-kit` must name something the
+  kit owns — `[data-slot=…]`, `[data-ts-…]`, a `ts-`-prefixed class, or a
+  component prefix registered in `KIT_CLASS_PREFIXES`
+  ([`scripts/build/audit-css-leaks.ts`](./scripts/build/audit-css-leaks.ts)).
+  A new component `.scss` with its own prefix registers it there.
+- **Never select `html`, `body`, `:root` or `*` outside `@layer base`** and add
+  to that layer only what a preflight legitimately owns.
+
+`dist/index.scoped.css` is generated from `dist/index.css` by
+[`scripts/build/build-scoped-css.ts`](./scripts/build/build-scoped-css.ts): every
+unlayered rule plus the `ts-ui-kit` and `base` layers is confined to
+`[data-ts-ui-root]` (`:root`/`html`/`body` → the marker, `.dark` → `.dark [marker]`,
+`*` and bare pseudos cover the marker itself). Tailwind's `theme` / `properties` /
+`components` / `utilities` are left global on purpose — see the header of
+[`scope-kit-css.ts`](./scripts/build/scope-kit-css.ts). Consumers of the scoped
+entry mark their shell and any portaled `*Content` surface with the attribute;
+the kit does **not** stamp it on its own portals, because in the global entry that
+would shadow a consumer's `:root` token overrides inside every dialog.
 
 ### Key Design Principles
 
@@ -262,7 +309,7 @@ Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) fo
   `SW-1234-short-kebab-description` (e.g. `SW-2352-v1-release-prep`). Create
   the Jira issue first if none exists. PR titles must follow
   `type: SW-1234 Description` (e.g. `docs: SW-2549 Audit Storybook code
-  panels`) — the `check` CI job (semantic PR title) rejects anything else.
+panels`) — the `check` CI job (semantic PR title) rejects anything else.
 
 - Zephyr HTTP is handled by a shared internal `ts-lib-zephyr-nodejs` library (`ZephyrClient` + helpers). The repo's scripts are thin wrappers around it — JUnit parsing, story parsing/write-back, cycle resolution, and folder mapping stay local.
 - Test results reported to Zephyr Scale via `scripts/zephyr/report-zephyr-results.ts`.

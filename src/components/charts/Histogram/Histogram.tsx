@@ -362,10 +362,10 @@ const Histogram: React.FC<HistogramProps> = ({
   }> = ({ series }) => {
     const items = series.map((item, i) => (
       <React.Fragment key={item.name}>
-        <div className="legend-item">
-          <span className="color-box" style={{ background: item.color }} />
+        <div className="histogram-legend-item">
+          <span className="histogram-legend-swatch" style={{ background: item.color }} />
           {item.name}
-          {i < series.length - 1 && <span className="divider" />}
+          {i < series.length - 1 && <span className="histogram-legend-divider" />}
         </div>
       </React.Fragment>
     ));
@@ -374,13 +374,13 @@ const Histogram: React.FC<HistogramProps> = ({
     const rowSize = 6;
     for (let i = 0; i < items.length; i += rowSize) {
       rows.push(
-        <div className="legend-row" key={i}>
+        <div className="histogram-legend-row" key={i}>
           {items.slice(i, i + rowSize)}
         </div>
       );
     }
 
-    return <div className="legend-container">{rows}</div>;
+    return <div className="histogram-legend">{rows}</div>;
   };
 
   return (
@@ -388,10 +388,10 @@ const Histogram: React.FC<HistogramProps> = ({
       className={cn("histogram-container relative", fillWidth && "w-full", fillHeight && "h-full")}
       style={width === undefined ? undefined : { width }}
     >
-      <div className={cn("chart-container", fillHeight && "flex h-full flex-col")}>
+      <div className={cn("histogram-chart", fillHeight && "flex h-full flex-col")}>
         {title && (
-          <div className="title-container">
-            <h2 className="title">{title}</h2>
+          <div className="histogram-title-container">
+            <h2 className="histogram-title">{title}</h2>
           </div>
         )}
         {/* Measured plot area — flexes to fill the space left by the title and

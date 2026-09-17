@@ -29,11 +29,11 @@ describe("scopeSelector", () => {
     expect(scopeSelector(":-moz-focusring")).toEqual([`${S} :-moz-focusring`, `${S}:-moz-focusring`]);
   });
 
-  it("covers `.dark` on an ancestor (<html>) and on the marked shell itself", () => {
-    expect(scopeSelector(".dark")).toEqual([`.dark ${S}`, `${S}.dark`]);
-    expect(scopeSelector(".dark .foo")).toEqual([`.dark ${S} .foo`, `${S}.dark .foo`]);
-    expect(scopeSelector(".dark > .foo")).toEqual([`.dark ${S} > .foo`, `${S}.dark > .foo`]);
-    expect(scopeSelector(".dark:hover")).toEqual([`.dark:hover ${S}`, `${S}.dark:hover`]);
+  it("covers `.dark` above the marker, on the marked shell itself, and nested inside it", () => {
+    expect(scopeSelector(".dark")).toEqual([`.dark ${S}`, `${S}.dark`, `${S} .dark`]);
+    expect(scopeSelector(".dark .foo")).toEqual([`.dark ${S} .foo`, `${S}.dark .foo`, `${S} .dark .foo`]);
+    expect(scopeSelector(".dark > .foo")).toEqual([`.dark ${S} > .foo`, `${S}.dark > .foo`, `${S} .dark > .foo`]);
+    expect(scopeSelector(".dark:hover")).toEqual([`.dark:hover ${S}`, `${S}.dark:hover`, `${S} .dark:hover`]);
   });
 
   it("prefixes ordinary selectors and leaves already-scoped ones alone", () => {
@@ -59,7 +59,7 @@ describe("scopeCss", () => {
 
   it("scopes the kit's own layer and preflight, deduplicating merged selectors", () => {
     expect(scopeCss("@layer ts-ui-kit{:root{--a:1}.dark{--a:2}}")).toBe(
-      `@layer ts-ui-kit{${S}{--a:1}.dark ${S},${S}.dark{--a:2}}`,
+      `@layer ts-ui-kit{${S}{--a:1}.dark ${S},${S}.dark,${S} .dark{--a:2}}`,
     );
     expect(scopeCss("@layer base{*,::after{margin:0}body{color:red}}")).toBe(
       `@layer base{${S},${S} *,${S} ::after,${S}::after{margin:0}${S}{color:red}}`,

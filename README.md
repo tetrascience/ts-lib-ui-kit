@@ -205,8 +205,10 @@ Two things to know when you use it:
   other overlay components render their content into `document.body`, outside your shell. Put
   `data-ts-ui-root` on their `*Content` element as well (a thin wrapper component around each one
   you use is the usual pattern), or they render with the host's tokens instead of the kit's.
-- **Dark mode still keys off `.dark`.** `.dark` on `<html>`, on the marked element itself, or on
-  anything in between all work — the scoped rules are `.dark [data-ts-ui-root] { … }`.
+- **Dark mode still keys off `.dark`.** `.dark` on `<html>` (or anything above the marker), on the
+  marked element itself, or on a dark panel nested inside a light shell all work — the scoped
+  rules are emitted as `.dark [data-ts-ui-root]`, `[data-ts-ui-root].dark` and
+  `[data-ts-ui-root] .dark`.
 
 Tailwind's own `theme`, `properties`, `components` and `utilities` layers are left global in the
 scoped build: they are keyed on Tailwind class names, your unlayered CSS already outranks them,

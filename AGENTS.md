@@ -197,7 +197,12 @@ other TDP page until a reload (PUI-5962). The rules, enforced by
 - **Namespace component class names by component** (`.histogram-legend-divider`,
   not `.divider`; `.platemap-legend__item`, not `.legend-item`). Layering does
   not help when the host has _no_ competing declaration — the kit's value then
-  applies to any host element that happens to share the class name.
+  applies to any host element that happens to share the class name. The gate
+  enforces this too: every selector inside `ts-ui-kit` must name something the
+  kit owns — `[data-slot=…]`, `[data-ts-…]`, a `ts-`-prefixed class, or a
+  component prefix registered in `KIT_CLASS_PREFIXES`
+  ([`scripts/build/audit-css-leaks.ts`](./scripts/build/audit-css-leaks.ts)).
+  A new component `.scss` with its own prefix registers it there.
 - **Never select `html`, `body`, `:root` or `*` outside `@layer base`** and add
   to that layer only what a preflight legitimately owns.
 

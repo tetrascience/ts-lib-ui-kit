@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { auditDist, collectLeaks, effectiveLayerOrder, layerOrderViolations } from "../audit-css-leaks";
+import { auditDist, collectLeaks, effectiveLayerOrder, isKitAnchored, layerOrderViolations } from "../audit-css-leaks";
 import { buildScopedCss, SCOPED_CSS_BANNER } from "../build-scoped-css";
 import { SCOPE_SELECTOR } from "../scope-kit-css";
 
@@ -24,12 +24,34 @@ describe("collectLeaks", () => {
     ]);
   });
 
-  it("accepts any layered rule in a global entry", () => {
+  it("accepts any layered rule in a global entry, when the kit layer's selectors are anchored", () => {
     const css =
       "@layer theme{:root{--a:1}}@layer base{body{margin:0}}" +
-      "@layer ts-ui-kit{:root{--b:2}.histogram-title{font-size:32px}}" +
+      "@layer ts-ui-kit{:root{--b:2}.dark{--b:3}.histogram-title{font-size:32px}" +
+      "[data-slot=process-flow] [data-slot=process-flow-label]{gap:0}.dark .scatter-plot-interactive path{x:1}}" +
       "@layer utilities{.flex{display:flex}}";
     expect(collectLeaks(css, "global")).toEqual([]);
+  });
+
+  it("rejects a generic class name inside the kit layer — layering alone does not stop a name collision", () => {
+    // PUI-5962 verbatim: a layered `.divider { width: 2px }` still collapses a host's
+    // `<div class="divider">` when the host has no competing declaration.
+    const css = "@layer ts-ui-kit{.divider{width:2px}.title,.histogram-title{margin:0}.dark .legend-item{x:1}}";
+    expect(collectLeaks(css, "global")).toEqual([
+      { selector: ".divider", layer: "ts-ui-kit", kind: "unanchored" },
+      { selector: ".title", layer: "ts-ui-kit", kind: "unanchored" },
+      { selector: ".dark .legend-item", layer: "ts-ui-kit", kind: "unanchored" },
+    ]);
+    // The scoped entry holds the same bar, on top of requiring the marker.
+    expect(collectLeaks("@layer ts-ui-kit{[data-ts-ui-root] .divider{width:2px}}", "scoped")).toEqual([
+      { selector: "[data-ts-ui-root] .divider", layer: "ts-ui-kit", kind: "unanchored" },
+    ]);
+  });
+
+  it("tracks nested layers by their full dotted name", () => {
+    expect(collectLeaks("@layer a{@layer ts-ui-kit{.divider{x:1}}}", "global")).toEqual([]);
+    expect(collectLeaks("@layer ts-ui-kit{@layer inner{.divider{x:1}}}", "global")).toEqual([]);
+    expect(collectLeaks("@layer x{@layer y{.divider{x:1}}}", "scoped").map((l) => l.layer)).toEqual([]);
   });
 
   it("holds a scoped entry to the kit-authored layers too, but not Tailwind's", () => {
@@ -39,8 +61,8 @@ describe("collectLeaks", () => {
       `@layer ts-ui-kit{${S}{--a:1}.dark{--a:2}}` +
       "@layer utilities{.flex{display:flex}}";
     expect(collectLeaks(css, "scoped")).toEqual([
-      { selector: "body", layer: "base" },
-      { selector: ".dark", layer: "ts-ui-kit" },
+      { selector: "body", layer: "base", kind: "unscoped" },
+      { selector: ".dark", layer: "ts-ui-kit", kind: "unscoped" },
     ]);
   });
 
@@ -55,6 +77,31 @@ describe("collectLeaks", () => {
 
   it("does not count a layer-order statement as a layer", () => {
     expect(collectLeaks("@layer a,b;.x{color:red}", "global").map((l) => l.selector)).toEqual([".x"]);
+  });
+});
+
+describe("isKitAnchored", () => {
+  it("accepts kit-owned attributes, prefixes and token hooks", () => {
+    for (const sel of [
+      "[data-slot=process-flow]",
+      "[data-ts-ui-root] .x",
+      ".ts-border-glow",
+      ".histogram-legend-divider",
+      ".platemap-legend__item--horizontal",
+      ".tdp-search__filter-label",
+      ":root",
+      ".dark",
+      ".dark:hover",
+      "html .electropherogram-chart",
+    ]) {
+      expect(isKitAnchored(sel), sel).toBe(true);
+    }
+  });
+
+  it("rejects selectors that name nothing the kit owns", () => {
+    for (const sel of [".divider", ".title", "h2", ".dark-mode", ".darkroom .x", "[data-state=open]", ".legend-item"]) {
+      expect(isKitAnchored(sel), sel).toBe(false);
+    }
   });
 });
 
@@ -110,7 +157,7 @@ describe("buildScopedCss + auditDist", () => {
 
     expect(scoped.startsWith(SCOPED_CSS_BANNER)).toBe(true);
     expect(scoped).toContain(
-      `@layer ts-ui-kit{${S}{--a:1}.dark ${S},${S}.dark{--a:2}${S} .histogram-title{font-size:32px}}`,
+      `@layer ts-ui-kit{${S}{--a:1}.dark ${S},${S}.dark,${S} .dark{--a:2}${S} .histogram-title{font-size:32px}}`,
     );
     expect(auditDist(dist).map((r) => [r.file, r.leaks.length, r.misorderedLayers.length])).toEqual([
       ["index.css", 0, 0],
@@ -124,7 +171,9 @@ describe("buildScopedCss + auditDist", () => {
     buildScopedCss(dist);
     const results = auditDist(dist);
 
-    expect(results.find((r) => r.file === "index.css")?.leaks).toEqual([{ selector: ".divider", layer: null }]);
+    expect(results.find((r) => r.file === "index.css")?.leaks).toEqual([
+      { selector: ".divider", layer: null, kind: "unscoped" },
+    ]);
     // The scoped build confines the leak, so the scoped entry itself is clean —
     // the gate fails on the global entries, where the fix belongs.
     expect(results.find((r) => r.file === "index.scoped.css")?.leaks).toEqual([]);

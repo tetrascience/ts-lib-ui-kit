@@ -11,6 +11,14 @@
  * bar is higher: rules in the layers the kit authors (`ts-ui-kit`, `base`)
  * must also carry `[data-ts-ui-root]` in every selector.
  *
+ * Layering alone is not enough, though. A layered `.divider { width: 2px }`
+ * still collapses a host's `<div class="divider">` whenever the host has no
+ * competing declaration — the cascade never runs, the kit's value simply
+ * applies. So every selector inside `ts-ui-kit` must also be *anchored* to
+ * something the kit owns: a `[data-slot=…]` / `[data-ts-…]` attribute, a
+ * `ts-`-prefixed class, one of the registered component class prefixes, or
+ * the token hooks `:root` / `:host` / `.dark`.
+ *
  * Run after `yarn build`: `yarn tsx scripts/build/audit-css-leaks.ts`.
  */
 import fs from "node:fs";
@@ -23,11 +31,65 @@ import { KIT_LAYER, SCOPED_LAYERS, SCOPE_SELECTOR, UNSCOPABLE_AT_RULES } from ".
 
 export type AuditMode = "global" | "scoped";
 
+export type LeakKind =
+  /** The rule can match host markup: unlayered, or (scoped mode) in a kit layer without the marker. */
+  | "unscoped"
+  /** The rule sits in the kit's layer but its selector names nothing the kit owns. */
+  | "unanchored";
+
 export interface Leak {
   /** The offending selector, verbatim. */
   selector: string;
-  /** `null` for an unlayered rule, else the enclosing layer's name. */
+  /** `null` for an unlayered rule, else the enclosing layer's name (`a.b` for nested layers). */
   layer: string | null;
+  kind: LeakKind;
+}
+
+/**
+ * Class-name prefixes each component stylesheet owns. Adding a component
+ * `.scss` with a new prefix means registering it here — the audit fails
+ * otherwise, which is the point: an unprefixed `.title` or `.divider` inside
+ * the kit layer is exactly the PUI-5962 collision.
+ */
+export const KIT_CLASS_PREFIXES: readonly string[] = [
+  "ts-",
+  "histogram-",
+  "electropherogram-",
+  "platemap-",
+  "scatter-plot-interactive",
+  "tdp-search",
+];
+
+/** Attribute selectors the kit owns outright. */
+const KIT_ATTRIBUTE = /\[data-(?:slot|ts-)[\w-]*[=\]]/u;
+
+/**
+ * The kit's document-level token hooks — allowed in the kit layer (the scoped
+ * build rewrites them) only as a *bare* compound: `:root`, `.dark`,
+ * `:root:not(.dark)`. `.dark .divider` is not a hook, it is a namespaced-class
+ * question about `.divider`.
+ */
+const TOKEN_HOOK = /^(?::root|:host|\.dark)(?![\w-])[^\s>+~]*$/u;
+
+const CLASS_NAME = /\.((?:[\w-]|\\.)+)/gu;
+
+/**
+ * The scoped build prefixes every selector with the marker, which would
+ * trivially satisfy the attribute anchor. Judge the selector the marker was
+ * added to instead; the bare marker (a rewritten `:root`) counts as `:root`.
+ */
+function withoutScopeMarker(selector: string): string {
+  const stripped = selector.split(SCOPE_SELECTOR).join(" ").trim();
+  return stripped === "" ? ":root" : stripped;
+}
+
+/** Whether `selector` names something only the kit renders. */
+export function isKitAnchored(selector: string): boolean {
+  if (KIT_ATTRIBUTE.test(selector) || TOKEN_HOOK.test(selector)) return true;
+  for (const [, className] of selector.matchAll(CLASS_NAME)) {
+    if (KIT_CLASS_PREFIXES.some((prefix) => className.startsWith(prefix))) return true;
+  }
+  return false;
 }
 
 /**
@@ -48,9 +110,12 @@ export function collectLeaks(css: string, mode: AuditMode): Leak[] {
   const visit = (container: Container<ChildNode>, layer: string | null): void => {
     container.each((node) => {
       if (node.type === "rule") {
-        if (!mustBeScoped(layer)) return;
         for (const selector of node.selectors) {
-          if (!selector.includes(SCOPE_SELECTOR)) leaks.push({ selector, layer });
+          if (mustBeScoped(layer) && !selector.includes(SCOPE_SELECTOR)) {
+            leaks.push({ selector, layer, kind: "unscoped" });
+          } else if (layer === KIT_LAYER && !isKitAnchored(withoutScopeMarker(selector))) {
+            leaks.push({ selector, layer, kind: "unanchored" });
+          }
         }
         return;
       }
@@ -58,7 +123,13 @@ export function collectLeaks(css: string, mode: AuditMode): Leak[] {
 
       const name = node.name.toLowerCase();
       if (UNSCOPABLE_AT_RULES.has(name)) return;
-      visit(node, name === "layer" ? node.params.trim() : layer);
+      if (name !== "layer") {
+        visit(node, layer);
+        return;
+      }
+      // A nested `@layer b` inside `@layer a` is the layer `a.b`.
+      const inner = node.params.trim();
+      visit(node, layer === null ? inner : `${layer}.${inner}`);
     });
   };
 
@@ -145,9 +216,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     failed = true;
     if (leaks.length > 0) {
       console.log(`✗ ${file} (${mode}): ${leaks.length} selector(s) can match outside the kit's subtree:`);
-      for (const { selector, layer } of leaks) {
+      for (const { selector, layer, kind } of leaks) {
         const where = layer === null ? "unlayered" : `@layer ${layer}`;
-        console.log(`    ${where}  ${selector}`);
+        console.log(`    ${where}  ${selector}  (${kind})`);
       }
     }
     if (misorderedLayers.length > 0) {
@@ -159,8 +230,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   }
   if (failed) {
     console.log(
-      "\nKit-authored CSS must live in `@layer ts-ui-kit` (tokens, component .scss) — see AGENTS.md › CSS. " +
-        "Utilities go through `@utility`; never emit an unlayered rule.",
+      "\nKit-authored CSS must live in `@layer ts-ui-kit` (tokens, component .scss) and every selector there " +
+        "must name something the kit owns (a registered component prefix, `ts-`, `[data-slot]`, `[data-ts-*]`) — " +
+        "see AGENTS.md › Styling. Utilities go through `@utility`; never emit an unlayered rule.",
     );
     process.exitCode = 1;
   }

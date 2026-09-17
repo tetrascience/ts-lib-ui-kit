@@ -81,15 +81,16 @@ export function scopeSelector(selector: string, scope: string = SCOPE_SELECTOR):
   const documentToken = LEADING_DOCUMENT_TOKEN.exec(trimmed);
   if (documentToken) return [`${scope}${trimmed.slice(documentToken[0].length)}`];
 
-  // Dark mode is keyed off `.dark`, which consumers set on <html> (an ancestor
-  // of the marker) or on the marked shell itself. Cover both: keep `.dark`
-  // above the marker, and also fold it onto the marker as a compound.
+  // Dark mode is keyed off `.dark`, which a consumer may set on <html> (an
+  // ancestor of the marker), on the marked shell itself, or on a dark panel
+  // nested inside a light shell. Cover all three: `.dark` above the marker,
+  // folded onto the marker as a compound, and beneath the marker.
   if (trimmed.startsWith(DARK) && !/^[\w-]/u.test(trimmed.slice(DARK.length))) {
     const rest = trimmed.slice(DARK.length);
-    if (rest === "") return [`${DARK} ${scope}`, `${scope}${DARK}`];
-    if (LEADING_COMBINATOR.test(rest)) return [`${DARK} ${scope}${rest}`, `${scope}${DARK}${rest}`];
-    // A compound on `.dark` itself (`.dark:hover`) — the scope follows it, or carries it.
-    return [`${DARK}${rest} ${scope}`, `${scope}${DARK}${rest}`];
+    // A compound on `.dark` itself (`.dark:hover`) has no leading combinator;
+    // the scope then follows the whole compound in the ancestor form.
+    const above = LEADING_COMBINATOR.test(rest) || rest === "" ? `${DARK} ${scope}${rest}` : `${DARK}${rest} ${scope}`;
+    return [above, `${scope}${DARK}${rest}`, `${scope} ${DARK}${rest}`];
   }
 
   // A bare pseudo (`::before`, `::placeholder`, `:-moz-focusring`) is

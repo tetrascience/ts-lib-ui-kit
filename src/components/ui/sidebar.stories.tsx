@@ -1062,7 +1062,7 @@ export const PlaygroundToggles: Story = {
   },
   render: renderSidebar,
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5714" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);

@@ -47,6 +47,11 @@ const BAR_REGULAR_SCALE = {
  * the axis for index-style x such as 0..6 (SW-2298).
  */
 const DEFAULT_BAR_WIDTH_FRACTION = 0.24;
+/**
+ * Grouped bars share one slot per x position; cap the group at this fraction
+ * of the gap so four or more series no longer overflow into the neighbour.
+ */
+const MAX_GROUP_WIDTH_FRACTION = 0.8;
 
 interface BarChartProps {
   dataSeries: BarDataSeries[];
@@ -68,8 +73,9 @@ interface BarChartProps {
   title?: string;
   /**
    * Bar width in x-axis data units. Defaults to about a quarter of the
-   * smallest gap between x positions, so bars keep the same visual weight
-   * whether x runs 0..6 or 200..1000.
+   * smallest gap between x positions (narrower when four or more grouped
+   * series must share a slot), so bars keep the same visual weight whether x
+   * runs 0..6 or 200..1000.
    */
   barWidth?: number;
   /**
@@ -168,8 +174,11 @@ const BarChart: React.FC<BarChartProps> = ({
       minGap = Math.min(minGap, xTicks[i] - xTicks[i - 1]);
     }
     // A single x position has no gap to scale from; let Plotly size the bar.
-    return Number.isFinite(minGap) ? minGap * DEFAULT_BAR_WIDTH_FRACTION : undefined;
-  }, [barWidth, xTicks]);
+    if (!Number.isFinite(minGap)) return;
+    const groupedSeries = variant === "group" ? Math.max(1, dataSeries.length) : 1;
+    const fraction = Math.min(DEFAULT_BAR_WIDTH_FRACTION, MAX_GROUP_WIDTH_FRACTION / groupedSeries);
+    return minGap * fraction;
+  }, [barWidth, xTicks, variant, dataSeries.length]);
 
   const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];

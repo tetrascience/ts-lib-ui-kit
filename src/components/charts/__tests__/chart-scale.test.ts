@@ -30,9 +30,23 @@ describe("chart-scale", () => {
     expect(maxTickCount(100, 0)).toBe(2);
   });
 
-  it("thins ticks evenly and keeps the first one", () => {
-    expect(thinTicks([0, 1, 2, 3, 4, 5, 6, 7], 4)).toEqual([0, 2, 4, 6]);
+  it("thins ticks evenly while keeping both the first and the last", () => {
+    // Even stride would land on 6; the axis maximum (7) must stay labelled
+    expect(thinTicks([0, 1, 2, 3, 4, 5, 6, 7], 4)).toEqual([0, 2, 4, 7]);
     expect(thinTicks([0, 1, 2, 3, 4, 5, 6], 3)).toEqual([0, 3, 6]);
+    expect(thinTicks([10, 20, 30, 40, 50], 2)).toEqual([10, 50]);
     expect(thinTicks([0, 1, 2], 4)).toEqual([0, 1, 2]);
+  });
+
+  it("never returns more than maxCount ticks", () => {
+    for (let n = 1; n <= 20; n++) {
+      for (let max = 2; max <= 6; max++) {
+        const ticks = Array.from({ length: n }, (_, i) => i);
+        const out = thinTicks(ticks, max);
+        expect(out.length).toBeLessThanOrEqual(Math.max(max, Math.min(n, max)));
+        expect(out[0]).toBe(0);
+        expect(out[out.length - 1]).toBe(n - 1);
+      }
+    }
   });
 });

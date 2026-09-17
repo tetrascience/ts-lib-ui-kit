@@ -20,6 +20,8 @@ export interface ChartTooltipHoverPoint {
   data?: { name?: string };
   /** Per-point custom data attached to the trace */
   customdata?: unknown;
+  /** Index of the trace the point belongs to (Plotly always supplies it) */
+  curveNumber?: number;
   /** Hovered point bounds in plot-div pixels (provided by Plotly) */
   bbox?: { x0: number; x1: number; y0: number; y1: number };
   /**

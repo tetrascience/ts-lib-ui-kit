@@ -14,6 +14,26 @@ import { seriesColor } from "@/utils/colors";
 /** Default point position offset from the box edge */
 const DEFAULT_POINT_POSITION = -1.8;
 
+/**
+ * Plotly pairs `x[i]` with `y[i]` and silently drops the samples past the
+ * shorter array — a one-entry `x` therefore drew a flat line instead of a box
+ * (SW-2298). A single x names the whole box and is broadcast to every sample;
+ * any other length mismatch is a data bug, so warn rather than guess.
+ */
+function resolveBoxX(series: BoxDataSeries): BoxDataSeries["x"] {
+  const { x, y, name } = series;
+  if (!x || x.length === y.length) return x;
+  if (x.length === 1) {
+    return Array.from({ length: y.length }, () => x[0]) as string[] | number[];
+  }
+  console.warn(
+    `[BoxPlot] Series "${name}" has ${x.length} x values for ${y.length} y values; ` +
+      `Plotly will only plot the first ${Math.min(x.length, y.length)} samples. ` +
+      "Pass one x per sample, or a single x to label the whole box.",
+  );
+  return x;
+}
+
 interface BoxDataSeries {
   y: number[];
   name: string;
@@ -188,13 +208,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
 
     const data = dataSeries.map((series, index) => {
       const color = seriesColor(index, series.color);
-      // A single x entry names the whole box. Plotly pairs x and y by index, so
-      // left as-is it would keep only the first sample and draw a flat line
-      // instead of a box (SW-2298) — broadcast it across every sample.
-      const x =
-        series.x && series.x.length === 1 && series.y.length > 1
-          ? (Array.from({ length: series.y.length }, () => series.x![0]) as string[] | number[])
-          : series.x;
+      const x = resolveBoxX(series);
       return {
         y: series.y,
         x,

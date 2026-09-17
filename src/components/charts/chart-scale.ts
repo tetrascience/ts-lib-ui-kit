@@ -86,12 +86,15 @@ export function maxTickCount(extentPx: number, labelPx: number): number {
 }
 
 /**
- * Evenly drop ticks so at most `maxCount` remain, always keeping the first.
- * Used to stop "nice" tick arrays from stacking on top of each other when the
- * plot area is short.
+ * Evenly drop ticks so at most `maxCount` remain, keeping both the first and
+ * the last so the axis extremes stay labelled. Used to stop "nice" tick arrays
+ * from stacking on top of each other when the plot area is short.
  */
 export function thinTicks<T>(ticks: T[], maxCount: number): T[] {
   if (ticks.length <= maxCount) return ticks;
   const stride = Math.ceil(ticks.length / Math.max(1, maxCount));
-  return ticks.filter((_, index) => index % stride === 0);
+  const kept = ticks.filter((_, index) => index % stride === 0);
+  const last = ticks[ticks.length - 1];
+  // Swap the final kept tick for the true maximum (count stays ≤ maxCount)
+  return kept[kept.length - 1] === last ? kept : [...kept.slice(0, -1), last];
 }

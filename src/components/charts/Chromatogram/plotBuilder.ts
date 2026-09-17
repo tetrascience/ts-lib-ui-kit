@@ -139,7 +139,7 @@ export function buildTraceData(params: BuildTraceDataParams): Plotly.Data[] {
   return plotData;
 }
 
-type ChromatogramTooltipPoint = ChartTooltipHoverPoint & { curveNumber?: number };
+type ChromatogramTooltipPoint = ChartTooltipHoverPoint;
 
 type ChromatogramTooltipParams = {
   series: ChromatogramSeries[];
@@ -170,9 +170,18 @@ export function htmlToTooltipLines(text?: string): string[] {
     .filter(Boolean);
 }
 
-/** "Signal (mAU)" → "mAU"; an axis title without a parenthesised unit yields "" */
-const unitFromAxisTitle = (axisTitle: string): string =>
-  /\(([^()]+)\)\s*$/.exec(axisTitle)?.[1]?.trim() ?? "";
+/**
+ * Split "Signal (mAU)" into { label: "Signal", unit: "mAU" } so values read
+ * "Signal: 12.00 mAU"; a title without a trailing parenthesised unit keeps
+ * its full text as the label and an empty unit.
+ */
+export function splitAxisTitle(axisTitle: string): { label: string; unit: string } {
+  const match = /^(.*?)\s*\(([^()]+)\)\s*$/.exec(axisTitle);
+  if (!match || !match[1].trim()) return { label: axisTitle.trim(), unit: "" };
+  return { label: match[1].trim(), unit: match[2].trim() };
+}
+
+const withUnit = (value: string, unit: string): string => (unit ? `${value} ${unit}` : value);
 
 /** "<name>: <y> <unit>" followed by the series metadata lines */
 function seriesTooltipLines(
@@ -182,8 +191,7 @@ function seriesTooltipLines(
 ): string[] {
   // buildHoverExtraContent yields "<name><br>Key: value…"; keep only the metadata
   const metadata = buildHoverExtraContent(seriesEntry.name, seriesEntry.metadata).split("<br>").slice(1);
-  const value = unit ? `${formatTooltipNumber(y)} ${unit}` : formatTooltipNumber(y);
-  return [`${seriesEntry.name}: ${value}`, ...metadata];
+  return [`${seriesEntry.name}: ${withUnit(formatTooltipNumber(y), unit)}`, ...metadata];
 }
 
 /** Peak text for a hit-area point (customdata) or a region overlay (trace text) */
@@ -205,10 +213,15 @@ export function buildChromatogramTooltipLines(
   params: ChromatogramTooltipParams
 ): string[] {
   const { series, xAxisTitle, yAxisTitle } = params;
-  const unit = unitFromAxisTitle(yAxisTitle);
+  // Both axes are split the same way so the x and y lines read alike:
+  // "Retention Time: 5.80 min" over "Sample A: 420.00 mAU".
+  const xAxis = splitAxisTitle(xAxisTitle);
+  const { unit } = splitAxisTitle(yAxisTitle);
   const lines: string[] = [];
   const first = points.find((p) => p.x !== undefined);
-  if (first?.x !== undefined) lines.push(`${xAxisTitle}: ${formatTooltipNumber(first.x)}`);
+  if (first?.x !== undefined) {
+    lines.push(`${xAxis.label}: ${withUnit(formatTooltipNumber(first.x), xAxis.unit)}`);
+  }
 
   const seenPeakBlocks = new Set<string>();
   for (const point of points) {

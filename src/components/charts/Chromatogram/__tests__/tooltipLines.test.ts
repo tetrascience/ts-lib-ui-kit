@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildChromatogramTooltipLines, htmlToTooltipLines } from "../plotBuilder";
+import { buildChromatogramTooltipLines, htmlToTooltipLines, splitAxisTitle } from "../plotBuilder";
 
 import type { ChromatogramSeries } from "../types";
 
@@ -32,6 +32,18 @@ describe("htmlToTooltipLines", () => {
   });
 });
 
+describe("splitAxisTitle", () => {
+  it("separates a trailing parenthesised unit from the label", () => {
+    expect(splitAxisTitle("Signal (mAU)")).toEqual({ label: "Signal", unit: "mAU" });
+    expect(splitAxisTitle("Retention Time (min)")).toEqual({ label: "Retention Time", unit: "min" });
+  });
+
+  it("keeps the whole title as the label when there is no unit", () => {
+    expect(splitAxisTitle("Intensity")).toEqual({ label: "Intensity", unit: "" });
+    expect(splitAxisTitle("(mAU)")).toEqual({ label: "(mAU)", unit: "" });
+  });
+});
+
 describe("buildChromatogramTooltipLines", () => {
   it("lists the shared x, then each series value with its unit and metadata", () => {
     const lines = buildChromatogramTooltipLines(
@@ -42,7 +54,7 @@ describe("buildChromatogramTooltipLines", () => {
       params
     );
     expect(lines).toEqual([
-      "Retention Time (min): 1.23",
+      "Retention Time: 1.23 min",
       "Sample A: 10.00 mAU",
       "Sample Name: Std 1",
       "Vial: 3",
@@ -50,12 +62,13 @@ describe("buildChromatogramTooltipLines", () => {
     ]);
   });
 
-  it("omits the unit when the y-axis title has no parenthesised unit", () => {
+  it("omits units when an axis title has no parenthesised unit", () => {
     const lines = buildChromatogramTooltipLines([{ curveNumber: 0, x: 1, y: 2 }], {
       ...params,
+      xAxisTitle: "Time",
       yAxisTitle: "Intensity",
     });
-    expect(lines[1]).toBe("Sample A: 2.00");
+    expect(lines).toEqual(["Time: 1.00", "Sample A: 2.00", "Sample Name: Std 1", "Vial: 3"]);
   });
 
   it("appends hit-area peak hoverText as plain text, falling back to peak text", () => {
@@ -63,13 +76,13 @@ describe("buildChromatogramTooltipLines", () => {
       [{ curveNumber: 2, x: 5.8, y: 420, customdata: { peak: { x: 5.8, y: 420, hoverText: "<b>Caffeine</b><br>Area: 1" } } }],
       params
     );
-    expect(withHoverText).toEqual(["Retention Time (min): 5.80", "Caffeine", "Area: 1"]);
+    expect(withHoverText).toEqual(["Retention Time: 5.80 min", "Caffeine", "Area: 1"]);
 
     const withText = buildChromatogramTooltipLines(
       [{ curveNumber: 2, x: 5.8, y: 420, customdata: { peak: { x: 5.8, y: 420, text: "Caffeine" } } }],
       params
     );
-    expect(withText).toEqual(["Retention Time (min): 5.80", "Caffeine"]);
+    expect(withText).toEqual(["Retention Time: 5.80 min", "Caffeine"]);
   });
 
   it("reads region-overlay trace text and de-duplicates a peak reported twice", () => {
@@ -83,7 +96,7 @@ describe("buildChromatogramTooltipLines", () => {
       params
     );
     expect(lines).toEqual([
-      "Retention Time (min): 5.80",
+      "Retention Time: 5.80 min",
       "Sample A: 420.00 mAU",
       "Sample Name: Std 1",
       "Vial: 3",
@@ -101,7 +114,7 @@ describe("buildChromatogramTooltipLines", () => {
       ],
       params
     );
-    expect(lines).toEqual(["Retention Time (min): 1.00"]);
+    expect(lines).toEqual(["Retention Time: 1.00 min"]);
   });
 
   it("returns no lines when no point carries an x", () => {

@@ -1,53 +1,58 @@
+// Kit-authored CSS lives in the `ts-ui-kit` cascade layer and is namespaced by
+// component, so it can never restyle a host document by accident (SW-2596).
+@layer properties, theme, base, components, utilities, ts-ui-kit;
 
-.electropherogram-container {
-  overflow: hidden;
-  display: flex;
-  width: 100%;
-  height: 100%;
-  flex-direction: column;
-  box-sizing: border-box;
-  padding: 0 !important;
-}
+@layer ts-ui-kit {
+  .electropherogram-container {
+    overflow: hidden;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 0 !important;
+  }
 
-.sequence-header {
-  padding: 12px 0 6px;
-  box-sizing: border-box;
-  width: 100%;
-  overflow: hidden;
-}
+  .electropherogram-sequence-header {
+    padding: 12px 0 6px;
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden;
+  }
 
-.electropherogram-chart {
-  flex: 1;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0;
-  overflow: hidden;
-}
+  .electropherogram-chart {
+    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0;
+    overflow: hidden;
+  }
 
-.sequence-letters-container {
-  position: relative;
-  height: 35px;
-  padding: 0;
-  margin-bottom: 6px;
-}
+  .electropherogram-sequence-letters {
+    position: relative;
+    height: 35px;
+    padding: 0;
+    margin-bottom: 6px;
+  }
 
-.sequence-letter {
-  position: absolute;
-  font-weight: bold;
-  font-size: 22px;
-  font-family: monospace;
-  transform: translateX(-50%);
-}
+  .electropherogram-sequence-letter {
+    position: absolute;
+    font-weight: bold;
+    font-size: 22px;
+    font-family: monospace;
+    transform: translateX(-50%);
+  }
 
-.position-numbers-container {
-  position: relative;
-  height: 30px;
-  padding: 0;
-}
+  .electropherogram-position-numbers {
+    position: relative;
+    height: 30px;
+    padding: 0;
+  }
 
-.position-number {
-  position: absolute;
-  font-size: 18px;
-  font-weight: 500;
-  transform: translateX(-50%);
+  .electropherogram-position-number {
+    position: absolute;
+    font-size: 18px;
+    font-weight: 500;
+    transform: translateX(-50%);
+  }
 }

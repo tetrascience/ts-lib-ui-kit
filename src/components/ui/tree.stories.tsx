@@ -3,6 +3,7 @@ import * as React from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { Badge } from "./badge";
+import { Kbd } from "./kbd";
 import { Spinner } from "./spinner";
 import { Tree, TreeItem, TreeItemGroup, TreeItemLabel, useTreeItem } from "./tree";
 
@@ -25,8 +26,12 @@ const meta: Meta<typeof Tree> = {
           "Data loading stays with the consumer; the component never fetches. Mark a node whose children have not",
           'arrived yet with `hasChildren` so it still reports `aria-expanded="false"`.',
           "",
-          "**Keyboard:** `↓`/`↑` move between visible nodes across levels · `→` expands, then moves to the first child ·",
-          "`←` collapses, then moves to the parent · `Home`/`End` jump to the first/last visible node · `Enter` activates.",
+          "**Keyboard:** the tree is a single tab stop; `Tab` lands on the selected node, or the first one. `↓`/`↑` move",
+          "between visible nodes across levels · `→` expands, then moves to the first child · `←` collapses, then moves to",
+          "the parent · `Home`/`End` jump to the first/last visible node · `Enter` activates · `*` expands every sibling",
+          "at the current level · typing letters jumps to the next node whose label starts with them, and the typed prefix",
+          "is highlighted on every matching label while the buffer is live. Collapsing a branch",
+          "that contains the focused node moves focus to the branch, and focus survives a lazily loaded subtree swapping in.",
           "",
           "**Icons:** pass a decorative icon to `TreeItemLabel`'s `icon` prop. It is hidden from assistive tech, so",
           "anything a screen reader must convey belongs in the label text. Read `expanded` from `useTreeItem()` to swap",
@@ -38,8 +43,8 @@ const meta: Meta<typeof Tree> = {
           "**Trailing slot:** `TreeItemLabel`'s `trailing` prop right-aligns per-node adornments — a count badge, a",
           "spinner, a status dot. Its text joins the node's accessible name, so hide purely decorative content yourself.",
           "",
-          "**Guides:** `guides` draws curved connectors joining each row to its parent — `\"hover\"` (the default)",
-          "reveals them while the pointer is over the tree, `\"always\"` pins them on, `\"none\"` turns them off. The",
+          '**Guides:** `guides` draws curved connectors joining each row to its parent — `"hover"` (the default)',
+          'reveals them while the pointer is over the tree, `"always"` pins them on, `"none"` turns them off. The',
           "trunk terminates in the curve at the last child rather than running past it.",
         ].join("\n"),
       },
@@ -132,10 +137,7 @@ function renderNodes(nodes: Node[]): React.ReactNode {
     const hasChildren = Boolean(node.children?.length) || Boolean(node.unloaded);
     return (
       <TreeItem key={node.id} id={node.id} hasChildren={hasChildren} disabled={node.disabled}>
-        <TreeItemLabel
-          icon={node.icon ?? (hasChildren ? <FolderNodeIcon /> : undefined)}
-          trailing={nodeTrailing(node)}
-        >
+        <TreeItemLabel icon={node.icon ?? (hasChildren ? <FolderNodeIcon /> : undefined)} trailing={nodeTrailing(node)}>
           {node.label}
         </TreeItemLabel>
         {node.children ? <TreeItemGroup>{renderNodes(node.children)}</TreeItemGroup> : null}
@@ -259,6 +261,47 @@ export const Guides: Story = {
   },
 };
 
+const KEY_MAP: [key: string, action: string][] = [
+  ["Tab", "Enter the tree at the selected node, or the first"],
+  ["↓ / ↑", "Next / previous visible node, across levels"],
+  ["→", "Expand; if already expanded, move to the first child"],
+  ["←", "Collapse; if already collapsed, move to the parent"],
+  ["Home / End", "First / last visible node"],
+  ["Enter", "Activate: select, toggle expansion, fire onActivate"],
+  ["*", "Expand every sibling at the current level"],
+  ["a–z", "Typeahead: next node whose label starts with what you type"],
+];
+
+/** Every key the tree binds, next to a tree to try them on. Click a node first, or `Tab` into it. */
+export const Keyboard: Story = {
+  name: "Keyboard walkthrough",
+  render: () => (
+    <div className="flex flex-wrap items-start gap-8">
+      <Tree
+        aria-label="Files"
+        defaultExpandedIds={new Set(["documents"])}
+        defaultSelectedId="reports"
+        className="max-w-xs"
+      >
+        {renderNodes(FOLDERS)}
+      </Tree>
+      <dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">
+        {KEY_MAP.map(([key, action]) => (
+          <React.Fragment key={key}>
+            <dt>
+              <Kbd>{key}</Kbd>
+            </dt>
+            <dd className="text-muted-foreground">{action}</dd>
+          </React.Fragment>
+        ))}
+      </dl>
+    </div>
+  ),
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};
+
 /* --------------------------------------------------------- test-only stories
  *
  * `!dev` keeps these out of the sidebar and `!autodocs` out of the docs page,
@@ -287,7 +330,14 @@ export const CoreBehaviour: Story = {
     const canvas = within(canvasElement);
     // Found via the label text rather than the accessible name: the `trailing` slot deliberately
     // contributes to the name (see the step below), and these lookups should not be coupled to it.
-    const item = (label: string) => canvas.getByText(label).closest('[role="treeitem"]') as HTMLElement;
+    // Matched on the text slot's full content, not `getByText`, because a live typeahead highlight
+    // splits the text across two spans.
+    const item = (label: string) => {
+      const text = [...canvasElement.querySelectorAll<HTMLElement>('[data-slot="tree-item-text"]')].find(
+        (element) => element.textContent === label,
+      );
+      return text?.closest('[role="treeitem"]') as HTMLElement;
+    };
 
     await step("ARIA state is derived from position in the tree", async () => {
       expect(canvas.getByRole("tree", { name: "Files" })).toBeInTheDocument();
@@ -336,11 +386,15 @@ export const CoreBehaviour: Story = {
     // Ordering note: every step below moves focus, and the roving tab stop follows it — so the
     // single-tab-stop assertion has to come before the first interaction, and the disabled node
     // (which legitimately becomes the tab stop once focused) has to come last.
-    await step("The tree is a single tab stop, entered at the first root node", async () => {
+    await step("The tree is a single tab stop, entered at the selected node", async () => {
       await userEvent.tab();
-      expect(item("Documents")).toHaveFocus();
-      expect(item("Documents")).toHaveAttribute("tabindex", "0");
+      expect(item("Reports")).toHaveFocus();
+      expect(item("Reports")).toHaveAttribute("tabindex", "0");
+      expect(item("Documents")).toHaveAttribute("tabindex", "-1");
       expect(item("Shared")).toHaveAttribute("tabindex", "-1");
+
+      await userEvent.keyboard("{Home}");
+      expect(item("Documents")).toHaveFocus();
     });
 
     await step("Arrow keys expand, descend and cross depth levels", async () => {
@@ -368,11 +422,31 @@ export const CoreBehaviour: Story = {
       expect(item("Documents")).toHaveFocus();
     });
 
+    await step("Typeahead, * and focus retention (covered in depth by tree.test.tsx)", async () => {
+      await userEvent.keyboard("s");
+      expect(item("Shared")).toHaveFocus();
+      expect(item("Shared").querySelector('[data-slot="tree-item-typeahead-match"]')).toHaveTextContent("S");
+
+      await userEvent.keyboard("*");
+      expect(item("Shared")).toHaveAttribute("aria-expanded", "true");
+      expect(item("Documents")).toHaveAttribute("aria-expanded", "true");
+
+      // Collapsing the parent of the focused node from the pointer lands focus on the parent.
+      await userEvent.keyboard("{ArrowRight}");
+      expect(item("notes.md")).toHaveFocus();
+      await userEvent.click(item("Shared").querySelector('[data-slot="tree-item-indicator"]') as Element);
+      expect(item("Shared")).toHaveFocus();
+      expect(item("Shared")).toHaveAttribute("tabindex", "0");
+
+      await userEvent.keyboard("{Home}");
+      expect(item("Documents")).toHaveFocus();
+    });
+
     await step("Enter and click activate down the same path", async () => {
       await userEvent.keyboard("{Enter}");
       expect(args.onActivate).toHaveBeenCalledWith("documents");
 
-      await userEvent.click(canvas.getByText("Shared"));
+      await userEvent.click(item("Shared"));
       expect(args.onActivate).toHaveBeenCalledWith("shared");
       expect(item("Shared")).toHaveAttribute("aria-selected", "true");
     });
@@ -399,7 +473,6 @@ export const CoreBehaviour: Story = {
       expect(disabled).toHaveAttribute("aria-selected", "false");
       expect(args.onActivate).not.toHaveBeenCalledWith("locked");
     });
-
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5659" },

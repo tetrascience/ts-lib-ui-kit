@@ -24,6 +24,8 @@ import { cn } from "@/lib/utils";
 type TreeContextValue = {
   expandedIds: Set<string>;
   setExpanded: (id: string, expanded: boolean) => void;
+  /** Expands several nodes in one state update — what `*` needs for a whole sibling set. */
+  expandIds: (ids: string[]) => void;
   selectedId: string | null;
   /**
    * The one activation path: selection, optional expansion and `onActivate`, shared by `Enter` and
@@ -32,6 +34,11 @@ type TreeContextValue = {
   activateItem: (id: string, hasChildren: boolean, expanded: boolean) => void;
   focusedId: string | null;
   setFocusedId: (id: string) => void;
+  /**
+   * Where `Tab` enters the tree before any node has been focused, when the default (the selected
+   * node, else the first root) is not currently rendered. `null` means the default stands.
+   */
+  entryId: string | null;
   expandOnSelect: boolean;
   guides: TreeGuides;
   /** Attached to each `TreeItem` rather than to the tree root, so the node is its own key target. */
@@ -39,6 +46,14 @@ type TreeContextValue = {
 };
 
 const TreeContext = React.createContext<TreeContextValue | null>(null);
+
+/**
+ * The typeahead highlight to show: the lower-cased query, and whether the buffer has lapsed and the
+ * highlight is fading out. `null` once the fade has finished. Its own context, apart from
+ * `TreeContext`, so a keystroke (and the two timer-driven fade updates after it) re-renders only the
+ * labels that draw the highlight, not every `TreeItem` with its ARIA wiring.
+ */
+const TreeTypeaheadContext = React.createContext<TypeaheadMatch | null>(null);
 
 function useTreeContext(component: string) {
   const context = React.useContext(TreeContext);
@@ -161,12 +176,80 @@ function getVisibleItems(root: HTMLElement | null) {
   return [...root.querySelectorAll<HTMLElement>(ITEM_SELECTOR)];
 }
 
+const CONTAINER_SELECTOR = '[role="group"], [role="tree"]';
+
+function findItem(root: HTMLElement, id: string) {
+  return getVisibleItems(root).find((element) => element.dataset.treeItemId === id);
+}
+
+/** The `role="group"` (or the tree itself) that directly contains `item`. */
+function getContainer(item: HTMLElement) {
+  return item.parentElement?.closest<HTMLElement>(CONTAINER_SELECTOR) ?? null;
+}
+
+/** Ids of every treeitem enclosing `item`, outermost first — the trail focus retreats along. */
+function getAncestorIds(item: HTMLElement) {
+  const ids: string[] = [];
+  for (let ancestor = item.parentElement?.closest<HTMLElement>(ITEM_SELECTOR); ancestor; ) {
+    if (ancestor.dataset.treeItemId) ids.unshift(ancestor.dataset.treeItemId);
+    ancestor = ancestor.parentElement?.closest<HTMLElement>(ITEM_SELECTOR);
+  }
+  return ids;
+}
+
+/** Text content with `aria-hidden` subtrees left out — the part of a label a screen reader reads. */
+function getAnnouncedText(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
+  if (!(node instanceof HTMLElement) || node.getAttribute("aria-hidden") === "true") return "";
+  let text = "";
+  for (const child of node.childNodes) text += getAnnouncedText(child);
+  return text;
+}
+
+/**
+ * The text typeahead matches against: the node's label, resolved through `aria-labelledby` and
+ * with hidden descendants dropped, so it is what a screen reader announces — a `trailing` count
+ * badge joins in, an `aria-hidden` spinner or icon does not.
+ */
+function getItemText(item: HTMLElement) {
+  const labelId = item.getAttribute("aria-labelledby");
+  const label = labelId ? item.ownerDocument.getElementById(labelId) : null;
+  return (label ? getAnnouncedText(label) : "").trim().toLowerCase();
+}
+
+/**
+ * Where the tab stop belongs once `focusedId` may have left the DOM: the node itself if it is still
+ * rendered, else its nearest surviving ancestor (collapsing a branch lands on the branch, as the
+ * WAI-ARIA pattern asks), else the first visible node.
+ */
+function resolveFocusTarget(root: HTMLElement, focusedId: string, ancestorIds: readonly string[]) {
+  const target = findItem(root, focusedId);
+  if (target) return target;
+  for (let index = ancestorIds.length - 1; index >= 0; index -= 1) {
+    const ancestor = findItem(root, ancestorIds[index]);
+    if (ancestor) return ancestor;
+  }
+  return getVisibleItems(root)[0];
+}
+
 function moveFocus(element: HTMLElement | null | undefined, setFocusedId: (id: string) => void) {
   const id = element?.dataset.treeItemId;
   if (!element || !id) return;
   setFocusedId(id);
   element.focus();
 }
+
+/** How long the typeahead buffer keeps accumulating characters before it resets. */
+const TYPEAHEAD_TIMEOUT_MS = 600;
+/**
+ * How long the highlight lingers after the buffer lapses before it is removed. Deliberately past the
+ * 700ms CSS transition on the pill, so removal never races the end of its own fade.
+ */
+const TYPEAHEAD_FADE_MS = 800;
+
+type Timer = ReturnType<typeof setTimeout> | undefined;
+type TypeaheadState = { buffer: string; timer: Timer; fadeTimer: Timer };
+type TypeaheadMatch = { query: string; fading: boolean };
 
 type TreeKeyEvent = {
   event: React.KeyboardEvent<HTMLElement>;
@@ -178,8 +261,11 @@ type TreeKeyEvent = {
   expanded: boolean;
   disabled: boolean;
   setExpanded: (id: string, expanded: boolean) => void;
+  expandIds: (ids: string[]) => void;
   setFocusedId: (id: string) => void;
   activate: (id: string, hasChildren: boolean, expanded: boolean) => void;
+  typeahead: TypeaheadState;
+  setTypeaheadMatch: (match: TypeaheadMatch | null) => void;
 };
 
 /** Moves focus to `element`, if there is one, and claims the key press. */
@@ -228,7 +314,63 @@ const TREE_KEY_HANDLERS: Record<string, (context: TreeKeyEvent) => void> = {
     context.event.preventDefault();
     context.activate(context.id, context.hasChildren, context.expanded);
   },
+  /** Expands every collapsed branch among the focused node's siblings, the node itself included. */
+  "*": (context) => {
+    const { event, root, current, expandIds } = context;
+    event.preventDefault();
+    const container = getContainer(current) ?? root;
+    const ids = getVisibleItems(container)
+      .filter((item) => getContainer(item) === container)
+      .filter((item) => item.dataset.treeHasChildren === "true" && item.getAttribute("aria-expanded") !== "true")
+      .map((item) => item.dataset.treeItemId)
+      .filter((id): id is string => Boolean(id));
+    if (ids.length) expandIds(ids);
+  },
 };
+
+/** A printable character: what feeds the typeahead buffer. (Modifiers are screened at dispatch.) */
+function isTypeaheadKey(event: React.KeyboardEvent) {
+  return event.key.length === 1 && event.key !== " ";
+}
+
+/**
+ * Focuses the next visible node whose label starts with the characters typed so far. The buffer
+ * resets after a pause; repeating one character cycles through the nodes starting with it instead
+ * of looking for a label that begins with `"ss"`.
+ */
+function typeaheadTo(context: TreeKeyEvent) {
+  const { event, root, current, typeahead, setTypeaheadMatch } = context;
+  // Claimed whether or not anything matches: a letter typed into a tree is never meant for the page.
+  event.preventDefault();
+  clearTimeout(typeahead.timer);
+  clearTimeout(typeahead.fadeTimer);
+  typeahead.buffer += event.key.toLowerCase();
+
+  const { buffer } = typeahead;
+  const isRepeatedChar = buffer.length > 1 && [...buffer].every((char) => char === buffer[0]);
+  const query = isRepeatedChar ? buffer[0] : buffer;
+  // Published so every matching label can highlight the typed prefix while the buffer is live. When
+  // the buffer lapses the highlight is not yanked away: it lingers, fading, so a glance after the
+  // last keystroke still shows what was matched.
+  setTypeaheadMatch({ query, fading: false });
+  typeahead.timer = setTimeout(() => {
+    typeahead.buffer = "";
+    setTypeaheadMatch({ query, fading: true });
+    typeahead.fadeTimer = setTimeout(() => setTypeaheadMatch(null), TYPEAHEAD_FADE_MS);
+  }, TYPEAHEAD_TIMEOUT_MS);
+
+  // Search starts at the node after the current one and wraps, so the current node is only matched
+  // as a last resort — that is what makes a repeated letter move on rather than stay put.
+  const items = getVisibleItems(root);
+  const start = items.indexOf(current);
+  for (let offset = 1; offset <= items.length; offset += 1) {
+    const candidate = items[(start + offset) % items.length];
+    if (getItemText(candidate).startsWith(query)) {
+      navigateTo(context, candidate);
+      return;
+    }
+  }
+}
 
 /* -------------------------------------------------------------------------------------------------
  * Tree
@@ -271,6 +413,8 @@ function Tree({
   onActivate,
   expandOnSelect = true,
   guides = "hover",
+  onFocus,
+  onBlur,
   ...props
 }: TreeProps) {
   const treeRef = React.useRef<HTMLDivElement>(null);
@@ -288,6 +432,24 @@ function Tree({
     },
   });
   const [focusedId, setFocusedId] = React.useState<string | null>(null);
+  const [entryId, setEntryId] = React.useState<string | null>(null);
+  const [typeaheadMatch, setTypeaheadMatch] = React.useState<TypeaheadMatch | null>(null);
+  // Ancestor trail of the focused node, captured when it takes focus. If a later render removes the
+  // node (an ancestor collapsed, a lazy fetch swapped the subtree) this is how focus knows where to
+  // retreat to instead of dropping to `body`.
+  const focusedPathRef = React.useRef<string[]>([]);
+  // Whether DOM focus is inside the tree. Removing a focused element fires no `blur`, so this stays
+  // `true` through a removal — which is exactly the case where focus has to be restored.
+  const hasFocusRef = React.useRef(false);
+  const typeaheadRef = React.useRef<TypeaheadState>({ buffer: "", timer: undefined, fadeTimer: undefined });
+
+  React.useEffect(
+    () => () => {
+      clearTimeout(typeaheadRef.current.timer);
+      clearTimeout(typeaheadRef.current.fadeTimer);
+    },
+    [],
+  );
 
   const setExpanded = React.useCallback(
     (id: string, expanded: boolean) => {
@@ -295,6 +457,17 @@ function Tree({
         const next = new Set(current);
         if (expanded) next.add(id);
         else next.delete(id);
+        return next;
+      });
+    },
+    [setExpandedIds],
+  );
+
+  const expandIds = React.useCallback(
+    (ids: string[]) => {
+      setExpandedIds((current) => {
+        const next = new Set(current);
+        for (const id of ids) next.add(id);
         return next;
       });
     },
@@ -316,8 +489,14 @@ function Tree({
       const current = (event.target as HTMLElement | null)?.closest<HTMLElement>(ITEM_SELECTOR);
       const id = current?.dataset.treeItemId;
       if (!root || !current || !id || !root.contains(current)) return;
+      // Every ancestor `TreeItem` sees the bubbled event too; only the node it was pressed on acts
+      // on it, or an unclaimed key would be handled once per level of nesting.
+      if (current !== event.currentTarget) return;
 
-      const handler = TREE_KEY_HANDLERS[event.key];
+      // A chord with Ctrl, Meta or Alt belongs to the browser or the OS (`Ctrl+ArrowDown`,
+      // `Alt+Home`); the tree binds unmodified keys only. Shift is not screened — `*` needs it.
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      const handler = TREE_KEY_HANDLERS[event.key] ?? (isTypeaheadKey(event) ? typeaheadTo : undefined);
       if (!handler) return;
 
       handler({
@@ -329,71 +508,130 @@ function Tree({
         expanded: current.getAttribute("aria-expanded") === "true",
         disabled: current.getAttribute("aria-disabled") === "true",
         setExpanded,
+        expandIds,
         setFocusedId,
         activate: activateItem,
+        typeahead: typeaheadRef.current,
+        setTypeaheadMatch,
       });
     },
-    [setExpanded, activateItem],
+    [setExpanded, expandIds, activateItem],
   );
+
+  // Keeps the single tab stop pointing at a node that exists. Runs before paint so no frame is ever
+  // committed with zero (or a vanished) `tabindex="0"` node.
+  const reconcileTabStop = React.useCallback(() => {
+    const root = treeRef.current;
+    if (!root) return;
+
+    if (focusedId == null) {
+      // Before the tree has been entered the tab stop is the selected node — unless it is hidden
+      // inside a collapsed branch, in which case the first root node stands in or the tree would
+      // have no tab stop at all. Kept apart from `focusedId` so the stand-in lapses the moment the
+      // selected node is rendered again.
+      const hidden = selectedId != null && !findItem(root, selectedId);
+      const next = hidden ? (getVisibleItems(root)[0]?.dataset.treeItemId ?? null) : null;
+      if (next !== entryId) setEntryId(next);
+      return;
+    }
+
+    const target = resolveFocusTarget(root, focusedId, focusedPathRef.current);
+    const targetId = target?.dataset.treeItemId;
+    if (!target || !targetId) return;
+    if (targetId === focusedId) focusedPathRef.current = getAncestorIds(target);
+    else setFocusedId(targetId);
+
+    // Only reclaim DOM focus if the tree had it: a programmatic collapse while the user is typing
+    // elsewhere must move the tab stop, not steal focus.
+    const active = root.ownerDocument.activeElement;
+    if (hasFocusRef.current && (!root.contains(active) || active === root)) target.focus();
+  }, [focusedId, selectedId, entryId]);
+
+  // Deliberately no dependency list: whether the focused node is still rendered depends on
+  // `children`, which any parent render can change, so this has to check after every commit.
+  React.useLayoutEffect(reconcileTabStop);
 
   const context = React.useMemo<TreeContextValue>(
     () => ({
       expandedIds: expandedIds ?? new Set<string>(),
       setExpanded,
+      expandIds,
       selectedId: selectedId ?? null,
       activateItem,
       focusedId,
       setFocusedId,
+      entryId,
       expandOnSelect,
       guides,
       onItemKeyDown: handleItemKeyDown,
     }),
-    [expandedIds, setExpanded, selectedId, activateItem, focusedId, expandOnSelect, guides, handleItemKeyDown],
+    [
+      expandedIds,
+      setExpanded,
+      expandIds,
+      selectedId,
+      activateItem,
+      focusedId,
+      entryId,
+      expandOnSelect,
+      guides,
+      handleItemKeyDown,
+    ],
   );
 
   return (
     <TreeContext.Provider value={context}>
-      <TreeLevelContext.Provider value={1}>
-        <div
-          ref={treeRef}
-          data-slot="tree"
-          data-guides={guides}
-          role="tree"
-          tabIndex={-1}
-          // `group/tree` is what the `"hover"` guide mode hangs off: hovering anywhere in the tree
-          // reveals every guide at once, so you can trace a branch without hunting row by row.
-          //
-          // `--tree-indent` is 1.25rem so that a child's chevron lands exactly on its parent's
-          // icon: the icon sits 1.5rem into the content box (chevron 0.875 + gap 0.375 + the
-          // 0.25rem lead-in), and the chevron sits at the lead-in, so one step must be
-          // 1.5rem - 0.25rem. Indentation, the guide offsets and the elbow reach are all derived
-          // from this one value — override it and the connectors follow.
-          //
-          // `--tree-guide-color` is deliberately *opaque*, via `color-mix`, even though it is meant
-          // to look like a 40% tint. Guide segments necessarily overlap — each row's line overshoots
-          // into the row above so the two meet across the label's border, and an elbow shares its
-          // column with the trunk it branches from. With a semi-transparent colour every overlap
-          // composites twice and shows up as a darker stretch of line. Mixing to an opaque value up
-          // front makes overlapping draws idempotent, so the tree reads as one uniform hairline.
-          className={cn(
-            "group/tree text-foreground flex w-full flex-col text-sm",
-            "[--tree-indent:1.25rem] [--tree-guide-color:color-mix(in_oklch,var(--muted-foreground)_40%,var(--background))]",
-            className,
-          )}
-          {...props}
-        >
-          {/*
+      <TreeTypeaheadContext.Provider value={typeaheadMatch}>
+        <TreeLevelContext.Provider value={1}>
+          <div
+            ref={treeRef}
+            data-slot="tree"
+            data-guides={guides}
+            role="tree"
+            tabIndex={-1}
+            onFocus={(event) => {
+              onFocus?.(event);
+              hasFocusRef.current = true;
+            }}
+            onBlur={(event) => {
+              onBlur?.(event);
+              if (!event.currentTarget.contains(event.relatedTarget)) hasFocusRef.current = false;
+            }}
+            // `group/tree` is what the `"hover"` guide mode hangs off: hovering anywhere in the tree
+            // reveals every guide at once, so you can trace a branch without hunting row by row.
+            //
+            // `--tree-indent` is 1.25rem so that a child's chevron lands exactly on its parent's
+            // icon: the icon sits 1.5rem into the content box (chevron 0.875 + gap 0.375 + the
+            // 0.25rem lead-in), and the chevron sits at the lead-in, so one step must be
+            // 1.5rem - 0.25rem. Indentation, the guide offsets and the elbow reach are all derived
+            // from this one value — override it and the connectors follow.
+            //
+            // `--tree-guide-color` is deliberately *opaque*, via `color-mix`, even though it is meant
+            // to look like a 40% tint. Guide segments necessarily overlap — each row's line overshoots
+            // into the row above so the two meet across the label's border, and an elbow shares its
+            // column with the trunk it branches from. With a semi-transparent colour every overlap
+            // composites twice and shows up as a darker stretch of line. Mixing to an opaque value up
+            // front makes overlapping draws idempotent, so the tree reads as one uniform hairline.
+            className={cn(
+              "group/tree text-foreground flex w-full flex-col text-sm",
+              "[--tree-indent:1.25rem] [--tree-guide-color:color-mix(in_oklch,var(--muted-foreground)_40%,var(--background))]",
+              className,
+            )}
+            {...props}
+          >
+            {/*
             Radix requires a `Tooltip.Provider` above any `Tooltip`, and the labels mount one each
             to reveal truncated text. Providing it here rather than asking consumers to wrap their
             app keeps `Tree` self-contained; nesting inside a consumer's own provider is supported,
             and the longer delay is deliberate — instant tooltips while sweeping the pointer down a
             dense tree are noise.
           */}
-          <TooltipProvider delayDuration={500}>
-            <TreeItemsContainer>{children}</TreeItemsContainer>
-          </TooltipProvider>
-        </div>
-      </TreeLevelContext.Provider>
+            <TooltipProvider delayDuration={500}>
+              <TreeItemsContainer>{children}</TreeItemsContainer>
+            </TooltipProvider>
+          </div>
+        </TreeLevelContext.Provider>
+      </TreeTypeaheadContext.Provider>
     </TreeContext.Provider>
   );
 }
@@ -428,7 +666,7 @@ function TreeItem({
   style,
   ...props
 }: TreeItemProps) {
-  const { expandedIds, setExpanded, selectedId, activateItem, focusedId, setFocusedId, onItemKeyDown } =
+  const { expandedIds, setExpanded, selectedId, activateItem, focusedId, setFocusedId, entryId, onItemKeyDown } =
     useTreeContext("TreeItem");
   const level = React.useContext(TreeLevelContext);
   const { posinset, setsize, lastBranchPos } = React.useContext(TreeIndexContext);
@@ -449,10 +687,12 @@ function TreeItem({
     activateItem(id, hasChildren, expanded);
   }, [disabled, setFocusedId, id, activateItem, hasChildren, expanded]);
 
-  // Roving tabindex, minimal form: the focused node is the single tab stop, falling back to the
-  // first root node before the tree has been entered. SW-2541 extends this (selection-aware entry
-  // point, focus retention across collapse and lazy load).
-  const tabbable = focusedId ? focusedId === id : level === 1 && posinset === 1;
+  // Roving tabindex: the focused node is the single tab stop. Before the tree has been entered it
+  // is the selected node, per the WAI-ARIA pattern, or else the first root node. `Tree`'s layout
+  // effect keeps this pointing at a rendered node when the focused or selected one disappears.
+  const isFirstRoot = level === 1 && posinset === 1;
+  const defaultEntry = selectedId == null ? isFirstRoot : selectedId === id;
+  const tabbable = focusedId ? focusedId === id : entryId ? entryId === id : defaultEntry;
 
   // Guides are drawn on the row (see `TreeItemLabel`), so a row has to know every ancestor trunk
   // crossing it, not just its own parent's. The set is threaded down the tree: inherit the parent's
@@ -590,6 +830,7 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
   const { labelId, level, expanded, hasChildren, selected, disabled, trunkLevels, toggle } =
     useTreeItemContext("TreeItemLabel");
   const { guides } = useTreeContext("TreeItemLabel");
+  const typeaheadMatch = React.useContext(TreeTypeaheadContext);
 
   // The elbow lives on the row because the label element *is* the row, so it can be sized in
   // halves of it — the curve has to land on the row's vertical centre. A connector joins a folder
@@ -715,8 +956,15 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
       ) : null}
       <Tooltip open={tooltipOpen} onOpenChange={handleTooltipOpenChange}>
         <TooltipTrigger asChild>
-          <span ref={textRef} className="min-w-0 flex-1 truncate">
-            {children}
+          <span
+            ref={textRef}
+            data-slot="tree-item-text"
+            // `truncate` clips at this span's padding box, so the typeahead pill — 2px of padding plus a
+            // 1px ring outside the glyphs — needs room inside it: 4px of padding either side, with the
+            // matching negative margin so the text itself does not move.
+            className="-mx-1 min-w-0 flex-1 truncate px-1"
+          >
+            <TreeItemText match={typeaheadMatch}>{children}</TreeItemText>
           </span>
         </TooltipTrigger>
         {/*
@@ -727,14 +975,48 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
         <TooltipContent>{children}</TooltipContent>
       </Tooltip>
       {trailing ? (
-        <span
-          data-slot="tree-item-trailing"
-          className="ml-auto flex shrink-0 items-center gap-1 [&_svg]:size-3.5"
-        >
+        <span data-slot="tree-item-trailing" className="ml-auto flex shrink-0 items-center gap-1 [&_svg]:size-3.5">
           {trailing}
         </span>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * The label text, with the live typeahead prefix highlighted when it matches. Only a plain-string
+ * label can be split; a composed label still matches for navigation, it just gets no highlight.
+ */
+function TreeItemText({ match, children }: { match: TypeaheadMatch | null; children: React.ReactNode }) {
+  if (!match || typeof children !== "string" || !children.toLowerCase().startsWith(match.query)) {
+    return children;
+  }
+  const { query, fading } = match;
+  return (
+    <>
+      <span
+        data-slot="tree-item-typeahead-match"
+        data-state={fading ? "fading" : "active"}
+        className={cn(
+          // The SW-2445 selected-state tokens: a primary tint that reads as "this is the match" on
+          // a resting, hovered or selected row, in both themes. Plain spans, not `<mark>`, so the
+          // label's accessible name is unchanged.
+          "rounded-sm ring-1",
+          // Padding either side so the ring does not hug the glyphs, with a matching negative
+          // margin so the rest of the label stays put while the highlight comes and goes.
+          "-mx-0.5 px-0.5",
+          // Eased out over the fade window rather than snapped off; the span itself is removed
+          // only once the transition has finished.
+          "transition-[color,background-color,box-shadow] duration-700 ease-out motion-reduce:transition-none",
+          fading
+            ? "bg-transparent text-inherit ring-transparent"
+            : "bg-selected text-selected-foreground ring-selected-border",
+        )}
+      >
+        {children.slice(0, query.length)}
+      </span>
+      {children.slice(query.length)}
+    </>
   );
 }
 

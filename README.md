@@ -135,16 +135,35 @@ This library uses **Tailwind CSS 4** with design tokens defined as CSS custom pr
 
 ### CSS Import Options
 
-| Import path                                                  | Use case                                                                                             |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `@tetrascience-npm/tetrascience-react-ui/index.css`          | **Pre-built CSS** — use this for most apps. Import once at your app root.                            |
-| `@tetrascience-npm/tetrascience-react-ui/index.tailwind.css` | **Tailwind source** — for apps that run their own Tailwind build and want to extend/override tokens. |
+| Import path                                                  | Use case                                                                                                                                                                            |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@tetrascience-npm/tetrascience-react-ui/index.css`          | **Pre-built CSS** — for an app that owns its document. Import once at your app root.                                                                                                |
+| `@tetrascience-npm/tetrascience-react-ui/index.tailwind.css` | **Tailwind source** — for apps that run their own Tailwind build and want to extend/override tokens.                                                                                |
+| `@tetrascience-npm/tetrascience-react-ui/index.scoped.css`   | **Scoped CSS** — for code that renders inside a document it does _not_ own (a microfrontend remote, an embedded widget). See [Embedding in a host page](#embedding-in-a-host-page). |
 
-Most consumers only need `index.css`:
+Most consumers only need `index.css`.
+
+#### What the stylesheet does — and does not — claim
+
+Every selector rule the kit writes itself — its design tokens and its component CSS — ships
+inside a `ts-ui-kit` cascade layer, and no published stylesheet contains an unlayered rule.
+(Tailwind utilities land in Tailwind's `utilities` layer; `@font-face`, `@keyframes` and
+`@property` are not selector-matched and stay top-level, with kit keyframes `ts-`-prefixed.)
+That has two consequences worth knowing:
+
+- **Your CSS always wins.** An unlayered rule outranks a layered one regardless of specificity or
+  load order, so a plain `:root { --primary: … }` in your app overrides the kit's token whether it
+  is written before or after the import. There is no ordering dance.
+- **The kit never restyles your page by accident.** Its component class names are namespaced
+  (`.histogram-legend-divider`, `.platemap-legend__item`, …), and its tokens and Tailwind's
+  preflight reset are layered beneath anything you write. A CI gate
+  (`yarn check:css-leaks`) fails the build if any published stylesheet regains an unlayered rule.
 
 ### Theming
 
-The design system is controlled via CSS custom properties in `index.css`. Override them to customise colours, spacing, and radii:
+The design system is controlled via CSS custom properties. Override them anywhere in your own CSS
+to customise colours, spacing, and radii — because the kit's tokens are layered, your unlayered
+declaration wins in any order:
 
 ```css
 :root {
@@ -155,6 +174,45 @@ The design system is controlled via CSS custom properties in `index.css`. Overri
 ```
 
 Dark mode is supported via the `.dark` class on a parent element. See [THEMING.md](./THEMING.md) for details.
+
+### Embedding in a host page
+
+`index.css` is written for an app that owns its document: tokens on `:root` / `.dark`, Tailwind's
+preflight on `html` / `body` / `*`. Inside someone else's document — a Module Federation remote
+mounted into the TetraScience platform shell, a widget dropped into a legacy page — those are not
+the kit's claims to make, even layered: a host that never declared `--surface-bright` would still
+pick the kit's value up document-wide.
+
+`index.scoped.css` is the same stylesheet with every rule in the `ts-ui-kit` and `base` layers
+— tokens, component CSS, preflight — confined to an element carrying `data-ts-ui-root`. Import
+it instead of `index.css` and mark your shell:
+
+```tsx
+import "@tetrascience-npm/tetrascience-react-ui/index.scoped.css";
+
+export function App() {
+  return (
+    <div data-ts-ui-root className="dark">
+      {/* kit components render with their own tokens and reset in here… */}
+    </div>
+  );
+}
+```
+
+Two things to know when you use it:
+
+- **Portaled surfaces need the marker too.** `Dialog`, `Popover`, `Select`, `Tooltip` and the
+  other overlay components render their content into `document.body`, outside your shell. Put
+  `data-ts-ui-root` on their `*Content` element as well (a thin wrapper component around each one
+  you use is the usual pattern), or they render with the host's tokens instead of the kit's.
+- **Dark mode still keys off `.dark`.** `.dark` on `<html>` (or anything above the marker), on the
+  marked element itself, or on a dark panel nested inside a light shell all work — the scoped
+  rules are emitted as `.dark [data-ts-ui-root]`, `[data-ts-ui-root].dark` and
+  `[data-ts-ui-root] .dark`.
+
+Tailwind's own `theme`, `properties`, `components` and `utilities` layers are left global in the
+scoped build: they are keyed on Tailwind class names, your unlayered CSS already outranks them,
+and confining `theme` would strip `--spacing` / `--radius-*` from portaled content.
 
 ## Components
 

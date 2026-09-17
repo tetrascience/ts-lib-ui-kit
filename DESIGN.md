@@ -19,7 +19,7 @@
 | Background  | `--color-background`  | `oklch(0.9665 0.0045 258.32)` | Page background               |
 | Muted       | `--color-muted`       | —                             | Subtle fills, disabled states |
 
-> Dark mode is handled via the `.dark` class on `<html>`. All variables are redefined under `.dark { }` in `src/index.css` — no separate stylesheet needed.
+> Dark mode is handled via the `.dark` class on `<html>`. All variables are redefined under `.dark { }` in `src/index.tailwind.css` — no separate stylesheet needed.
 
 ### Typography
 
@@ -39,7 +39,7 @@ Spacing uses Tailwind's default scale. No custom spacing tokens.
 
 ### Token → Tailwind Mapping
 
-Tokens live in `src/index.css` as CSS custom properties under `:root` / `.dark`. Tailwind 4 reads them automatically via `@theme inline`. Override them in your app's CSS before importing the library stylesheet:
+Tokens live in `src/index.tailwind.css` as CSS custom properties under `:root` / `.dark`, inside the `ts-ui-kit` cascade layer (see §9, _Document-level CSS_). Tailwind 4 reads them automatically via `@theme inline`. Override them in your app's CSS — your unlayered declaration wins regardless of import order:
 
 ```css
 /* your-app/globals.css */
@@ -124,7 +124,7 @@ import {
 | `Table`                  | Data Display       | `table`                    | —                                                        | Stable |
 | `TetraScienceIcon`       | Data Display       | —                          | Brand icon component                                     | Stable |
 | `Text`                   | Data Display       | —                          | Preset type scale, `as` + `variant` independent          | Beta   |
-| `Tree`                   | Data Display       | —                          | WAI-ARIA tree view, recursive, icons, guides, controlled | Beta   |
+| `Tree`                   | Data Display       | —                          | WAI-ARIA tree view, roving focus, typeahead, `*`, guides | Beta   |
 | `AppLayout`              | Composed           | —                          | Full app shell with sidebar                              | Stable |
 | `AppHeader`              | Composed           | —                          | Top nav with avatar/actions                              | Stable |
 | `Main`                   | Composed           | —                          | Main content area with navbar, sidebar, tab bar          | Stable |
@@ -409,6 +409,7 @@ export function ProtocolForm() {
 - **Consistent color semantics** — green = success, orange = caution, red = error, blue = action. Never repurpose semantic colors for decoration.
 - **Motion is purposeful** — transitions only where they communicate state change (e.g., dialog open, toast appear). No decorative animations that slow down power users.
 - **Dark mode is first-class** — every token is defined for both `:root` and `.dark`. Components are tested in both modes; chart palettes are contrast-checked in both.
+- **The stylesheet makes no document-level claims** — every kit-authored rule is layered (`@layer ts-ui-kit`) and namespaced, so a host's own CSS always outranks it, and `index.scoped.css` confines it to `[data-ts-ui-root]` for code embedded in a page it does not own (SW-2596). `yarn check:css-leaks` enforces this on every build.
 - **Accessibility is non-negotiable** — Radix primitives handle the hard parts (focus traps, ARIA, keyboard nav). Custom components must meet the same bar. WCAG AA contrast is the floor.
 
 ---

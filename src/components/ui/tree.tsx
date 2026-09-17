@@ -39,11 +39,6 @@ type TreeContextValue = {
    * node, else the first root) is not currently rendered. `null` means the default stands.
    */
   entryId: string | null;
-  /**
-   * The typeahead highlight to show: the lower-cased query, and whether the buffer has lapsed and
-   * the highlight is fading out. `null` once the fade has finished.
-   */
-  typeaheadMatch: TypeaheadMatch | null;
   expandOnSelect: boolean;
   guides: TreeGuides;
   /** Attached to each `TreeItem` rather than to the tree root, so the node is its own key target. */
@@ -51,6 +46,14 @@ type TreeContextValue = {
 };
 
 const TreeContext = React.createContext<TreeContextValue | null>(null);
+
+/**
+ * The typeahead highlight to show: the lower-cased query, and whether the buffer has lapsed and the
+ * highlight is fading out. `null` once the fade has finished. Its own context, apart from
+ * `TreeContext`, so a keystroke (and the two timer-driven fade updates after it) re-renders only the
+ * labels that draw the highlight, not every `TreeItem` with its ARIA wiring.
+ */
+const TreeTypeaheadContext = React.createContext<TypeaheadMatch | null>(null);
 
 function useTreeContext(component: string) {
   const context = React.useContext(TreeContext);
@@ -238,8 +241,11 @@ function moveFocus(element: HTMLElement | null | undefined, setFocusedId: (id: s
 
 /** How long the typeahead buffer keeps accumulating characters before it resets. */
 const TYPEAHEAD_TIMEOUT_MS = 600;
-/** How long the highlight lingers after the buffer lapses, fading out, before it is removed. */
-const TYPEAHEAD_FADE_MS = 700;
+/**
+ * How long the highlight lingers after the buffer lapses before it is removed. Deliberately past the
+ * 700ms CSS transition on the pill, so removal never races the end of its own fade.
+ */
+const TYPEAHEAD_FADE_MS = 800;
 
 type Timer = ReturnType<typeof setTimeout> | undefined;
 type TypeaheadState = { buffer: string; timer: Timer; fadeTimer: Timer };
@@ -322,9 +328,9 @@ const TREE_KEY_HANDLERS: Record<string, (context: TreeKeyEvent) => void> = {
   },
 };
 
-/** A printable character with no modifier: what feeds the typeahead buffer. */
+/** A printable character: what feeds the typeahead buffer. (Modifiers are screened at dispatch.) */
 function isTypeaheadKey(event: React.KeyboardEvent) {
-  return event.key.length === 1 && event.key !== " " && !event.ctrlKey && !event.metaKey && !event.altKey;
+  return event.key.length === 1 && event.key !== " ";
 }
 
 /**
@@ -487,6 +493,9 @@ function Tree({
       // on it, or an unclaimed key would be handled once per level of nesting.
       if (current !== event.currentTarget) return;
 
+      // A chord with Ctrl, Meta or Alt belongs to the browser or the OS (`Ctrl+ArrowDown`,
+      // `Alt+Home`); the tree binds unmodified keys only. Shift is not screened — `*` needs it.
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
       const handler = TREE_KEY_HANDLERS[event.key] ?? (isTypeaheadKey(event) ? typeaheadTo : undefined);
       if (!handler) return;
 
@@ -552,7 +561,6 @@ function Tree({
       focusedId,
       setFocusedId,
       entryId,
-      typeaheadMatch,
       expandOnSelect,
       guides,
       onItemKeyDown: handleItemKeyDown,
@@ -565,7 +573,6 @@ function Tree({
       activateItem,
       focusedId,
       entryId,
-      typeaheadMatch,
       expandOnSelect,
       guides,
       handleItemKeyDown,
@@ -574,55 +581,57 @@ function Tree({
 
   return (
     <TreeContext.Provider value={context}>
-      <TreeLevelContext.Provider value={1}>
-        <div
-          ref={treeRef}
-          data-slot="tree"
-          data-guides={guides}
-          role="tree"
-          tabIndex={-1}
-          onFocus={(event) => {
-            onFocus?.(event);
-            hasFocusRef.current = true;
-          }}
-          onBlur={(event) => {
-            onBlur?.(event);
-            if (!event.currentTarget.contains(event.relatedTarget)) hasFocusRef.current = false;
-          }}
-          // `group/tree` is what the `"hover"` guide mode hangs off: hovering anywhere in the tree
-          // reveals every guide at once, so you can trace a branch without hunting row by row.
-          //
-          // `--tree-indent` is 1.25rem so that a child's chevron lands exactly on its parent's
-          // icon: the icon sits 1.5rem into the content box (chevron 0.875 + gap 0.375 + the
-          // 0.25rem lead-in), and the chevron sits at the lead-in, so one step must be
-          // 1.5rem - 0.25rem. Indentation, the guide offsets and the elbow reach are all derived
-          // from this one value — override it and the connectors follow.
-          //
-          // `--tree-guide-color` is deliberately *opaque*, via `color-mix`, even though it is meant
-          // to look like a 40% tint. Guide segments necessarily overlap — each row's line overshoots
-          // into the row above so the two meet across the label's border, and an elbow shares its
-          // column with the trunk it branches from. With a semi-transparent colour every overlap
-          // composites twice and shows up as a darker stretch of line. Mixing to an opaque value up
-          // front makes overlapping draws idempotent, so the tree reads as one uniform hairline.
-          className={cn(
-            "group/tree text-foreground flex w-full flex-col text-sm",
-            "[--tree-indent:1.25rem] [--tree-guide-color:color-mix(in_oklch,var(--muted-foreground)_40%,var(--background))]",
-            className,
-          )}
-          {...props}
-        >
-          {/*
+      <TreeTypeaheadContext.Provider value={typeaheadMatch}>
+        <TreeLevelContext.Provider value={1}>
+          <div
+            ref={treeRef}
+            data-slot="tree"
+            data-guides={guides}
+            role="tree"
+            tabIndex={-1}
+            onFocus={(event) => {
+              onFocus?.(event);
+              hasFocusRef.current = true;
+            }}
+            onBlur={(event) => {
+              onBlur?.(event);
+              if (!event.currentTarget.contains(event.relatedTarget)) hasFocusRef.current = false;
+            }}
+            // `group/tree` is what the `"hover"` guide mode hangs off: hovering anywhere in the tree
+            // reveals every guide at once, so you can trace a branch without hunting row by row.
+            //
+            // `--tree-indent` is 1.25rem so that a child's chevron lands exactly on its parent's
+            // icon: the icon sits 1.5rem into the content box (chevron 0.875 + gap 0.375 + the
+            // 0.25rem lead-in), and the chevron sits at the lead-in, so one step must be
+            // 1.5rem - 0.25rem. Indentation, the guide offsets and the elbow reach are all derived
+            // from this one value — override it and the connectors follow.
+            //
+            // `--tree-guide-color` is deliberately *opaque*, via `color-mix`, even though it is meant
+            // to look like a 40% tint. Guide segments necessarily overlap — each row's line overshoots
+            // into the row above so the two meet across the label's border, and an elbow shares its
+            // column with the trunk it branches from. With a semi-transparent colour every overlap
+            // composites twice and shows up as a darker stretch of line. Mixing to an opaque value up
+            // front makes overlapping draws idempotent, so the tree reads as one uniform hairline.
+            className={cn(
+              "group/tree text-foreground flex w-full flex-col text-sm",
+              "[--tree-indent:1.25rem] [--tree-guide-color:color-mix(in_oklch,var(--muted-foreground)_40%,var(--background))]",
+              className,
+            )}
+            {...props}
+          >
+            {/*
             Radix requires a `Tooltip.Provider` above any `Tooltip`, and the labels mount one each
             to reveal truncated text. Providing it here rather than asking consumers to wrap their
             app keeps `Tree` self-contained; nesting inside a consumer's own provider is supported,
             and the longer delay is deliberate — instant tooltips while sweeping the pointer down a
             dense tree are noise.
           */}
-          <TooltipProvider delayDuration={500}>
-            <TreeItemsContainer>{children}</TreeItemsContainer>
-          </TooltipProvider>
-        </div>
-      </TreeLevelContext.Provider>
+            <TooltipProvider delayDuration={500}>
+              <TreeItemsContainer>{children}</TreeItemsContainer>
+            </TooltipProvider>
+          </div>
+        </TreeLevelContext.Provider>
+      </TreeTypeaheadContext.Provider>
     </TreeContext.Provider>
   );
 }
@@ -820,7 +829,8 @@ type TreeItemLabelProps = React.ComponentProps<"div"> &
 function TreeItemLabel({ className, children, size, style, icon, trailing, ...props }: TreeItemLabelProps) {
   const { labelId, level, expanded, hasChildren, selected, disabled, trunkLevels, toggle } =
     useTreeItemContext("TreeItemLabel");
-  const { guides, typeaheadMatch } = useTreeContext("TreeItemLabel");
+  const { guides } = useTreeContext("TreeItemLabel");
+  const typeaheadMatch = React.useContext(TreeTypeaheadContext);
 
   // The elbow lives on the row because the label element *is* the row, so it can be sized in
   // halves of it — the curve has to land on the row's vertical centre. A connector joins a folder

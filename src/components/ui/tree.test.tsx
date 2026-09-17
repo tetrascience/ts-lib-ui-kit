@@ -234,6 +234,25 @@ describe("Tree typeahead", () => {
     expect(matches()).toEqual([]);
   });
 
+  it("leaves modified chords to the browser", () => {
+    render(<Fixture />);
+    focus("documents");
+    for (const init of [
+      { key: "ArrowDown", ctrlKey: true },
+      { key: "End", altKey: true },
+      { key: "Home", metaKey: true },
+    ]) {
+      let claimed = false;
+      flushSync(() => {
+        claimed = !item("documents")!.dispatchEvent(
+          new KeyboardEvent("keydown", { ...init, bubbles: true, cancelable: true }),
+        );
+      });
+      expect(claimed).toBe(false);
+      expect(document.activeElement).toBe(item("documents"));
+    }
+  });
+
   it("ignores space and modified keys", () => {
     render(<Fixture />);
     focus("documents");

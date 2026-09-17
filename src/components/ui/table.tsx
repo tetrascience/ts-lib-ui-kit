@@ -118,10 +118,19 @@ function TableCell({
   className,
   variant,
   truncate,
+  alwaysVisible,
   ...props
 }: React.ComponentProps<"td"> & {
   variant?: "default" | "numeric" | "action"
   truncate?: boolean
+  /**
+   * For `variant="action"` only: keep the cell's contents visible at rest on
+   * every device, instead of the default reveal-on-row-hover (SW-2535). The
+   * default already shows action cells at rest on coarse pointers (touch); use
+   * `alwaysVisible` to also show them at rest on hover-capable (mouse) devices.
+   * No effect on other variants.
+   */
+  alwaysVisible?: boolean
 }) {
   return (
     <td
@@ -130,8 +139,13 @@ function TableCell({
         "p-4 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
         "in-data-[density=compact]:py-2 in-data-[density=relaxed]:py-5",
         variant === "numeric" && "text-right tabular-nums",
+        // Action cells reveal on row hover/focus by default. On a coarse pointer
+        // (touch: no hover to reveal them) they always show, so they stay
+        // discoverable on tablets/phones (SW-2535). `alwaysVisible` opts out of
+        // the fade entirely, showing the actions at rest on every device.
         variant === "action" &&
-          "opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 focus-within:opacity-100 transition-opacity",
+          !alwaysVisible &&
+          "opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100 transition-opacity",
         truncate && "truncate",
         className,
       )}

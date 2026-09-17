@@ -6,7 +6,7 @@ import { Toggle } from "./toggle"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof Toggle> = {
-  title: "Components/Toggle",
+  title: "Components/Actions/Toggle",
   component: Toggle,
   parameters: {
     layout: "centered",

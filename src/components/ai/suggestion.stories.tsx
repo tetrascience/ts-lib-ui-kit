@@ -14,7 +14,7 @@ const defaultSuggestions = [
 ]
 
 const meta: Meta = {
-  title: "AI Elements/Suggestion",
+  title: "AI Elements/Input/Suggestion",
   parameters: {
     layout: "padded",
   },

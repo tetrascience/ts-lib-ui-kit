@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 // =============================================================================
 
 const topBarVariants = cva(
-  "flex items-center h-10 px-3 bg-sidebar border-b border-sidebar-border w-full gap-2 z-40",
+  "flex items-center h-11 px-3 bg-sidebar border-b border-sidebar-border w-full gap-2 z-40",
   {
     variants: {
       sticky: {
@@ -66,7 +66,7 @@ function TopBar({ left, center, right, sticky, className, ...props }: TopBarProp
 
       <div
         data-slot="top-bar-right"
-        className="flex items-center gap-2 shrink-0 flex-1 justify-end"
+        className="flex items-center gap-2 shrink-0 justify-end"
       >
         {right}
       </div>

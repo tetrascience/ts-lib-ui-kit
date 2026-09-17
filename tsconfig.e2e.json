@@ -1,0 +1,14 @@
+{
+  // The root tsconfig has `include: ["src"]` and excludes `**/*.test.tsx`, so
+  // `yarn typecheck` never sees the e2e suite. A missing import in it therefore
+  // survived to a five-minute live CodeBuild run and failed there as a runtime
+  // ReferenceError. This config exists so that class of mistake is caught in
+  // seconds instead.
+  "extends": "./tsconfig.json",
+  "include": ["test/e2e"],
+  "exclude": ["node_modules", "dist"],
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node", "vitest/globals"]
+  }
+}

@@ -17,7 +17,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta = {
-  title: "AI Elements/Context",
+  title: "AI Elements/Conversation/Context",
   parameters: {
     layout: "centered",
   },

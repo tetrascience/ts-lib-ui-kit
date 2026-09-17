@@ -400,7 +400,7 @@ const Histogram: React.FC<HistogramProps> = ({
       ...series.map((s) => ({
         key: `series-${s.name}`,
         label: s.name,
-        swatch: <span className="color-box" style={{ background: s.color }} />,
+        swatch: <span className="histogram-legend-swatch" style={{ background: s.color }} />,
       })),
       ...annotations.map((a, i) => ({
         key: `annotation-${i}-${a.label}`,
@@ -408,7 +408,7 @@ const Histogram: React.FC<HistogramProps> = ({
         swatch:
           a.kind === "band" ? (
             <span
-              className="color-box"
+              className="histogram-legend-swatch"
               style={{
                 background: a.color,
                 opacity: Math.max(a.opacity ?? DEFAULT_BAND_OPACITY, LEGEND_BAND_SWATCH_MIN_OPACITY),
@@ -416,7 +416,7 @@ const Histogram: React.FC<HistogramProps> = ({
             />
           ) : (
             <span
-              className="line-swatch"
+              className="histogram-legend-line-swatch"
               style={{
                 borderTopColor: a.color,
                 borderTopStyle: dashToCssBorderStyle(a.dash),
@@ -429,10 +429,10 @@ const Histogram: React.FC<HistogramProps> = ({
 
     const items = entries.map((entry, i) => (
       <React.Fragment key={entry.key}>
-        <div className="legend-item">
+        <div className="histogram-legend-item">
           {entry.swatch}
           {entry.label}
-          {i < entries.length - 1 && <span className="divider" />}
+          {i < entries.length - 1 && <span className="histogram-legend-divider" />}
         </div>
       </React.Fragment>
     ));
@@ -441,13 +441,13 @@ const Histogram: React.FC<HistogramProps> = ({
     const rowSize = 6;
     for (let i = 0; i < items.length; i += rowSize) {
       rows.push(
-        <div className="legend-row" key={i}>
+        <div className="histogram-legend-row" key={i}>
           {items.slice(i, i + rowSize)}
         </div>
       );
     }
 
-    return <div className="legend-container">{rows}</div>;
+    return <div className="histogram-legend">{rows}</div>;
   };
 
   return (
@@ -455,10 +455,10 @@ const Histogram: React.FC<HistogramProps> = ({
       className={cn("histogram-container relative", fillWidth && "w-full", fillHeight && "h-full")}
       style={width === undefined ? undefined : { width }}
     >
-      <div className={cn("chart-container", fillHeight && "flex h-full flex-col")}>
+      <div className={cn("histogram-chart", fillHeight && "flex h-full flex-col")}>
         {title && (
-          <div className="title-container">
-            <h2 className="title">{title}</h2>
+          <div className="histogram-title-container">
+            <h2 className="histogram-title">{title}</h2>
           </div>
         )}
         {/* Measured plot area — flexes to fill the space left by the title and

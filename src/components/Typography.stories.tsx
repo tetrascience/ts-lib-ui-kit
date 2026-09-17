@@ -200,6 +200,8 @@ type Story = StoryObj
 export const Overview: Story = {
   render: () => <TypographyPage />,
   parameters: {
+    // Full-page foundations showcase — a code snippet is meaningless here.
+    docs: { canvas: { sourceState: "none" } },
     zephyr: { testCaseId: "SW-T1471" },
   },
 }

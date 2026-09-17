@@ -25,7 +25,7 @@ The time complexity for balanced BST operations is O(log n), but can degrade to 
 I should also consider edge cases: empty tree, single node, duplicate values.`
 
 const meta: Meta = {
-  title: "AI Elements/Reasoning",
+  title: "AI Elements/Agent Activity/Reasoning",
   parameters: {
     layout: "padded",
   },
@@ -49,27 +49,6 @@ const expectCollapsedChevronConfiguredForHoverReveal = async (
 
   await expect(chevron).toHaveClass("opacity-0")
   await expect(chevron).toHaveClass("group-hover:opacity-100")
-}
-
-const ReasoningLifecycleDemo = () => {
-  const [isStreaming, setIsStreaming] = useState(false)
-
-  return (
-    <div className="w-full max-w-2xl space-y-3">
-      <div className="flex gap-2">
-        <button type="button" onClick={() => setIsStreaming(true)}>
-          Start reasoning
-        </button>
-        <button type="button" onClick={() => setIsStreaming(false)}>
-          Finish reasoning
-        </button>
-      </div>
-      <Reasoning isStreaming={isStreaming}>
-        <ReasoningTrigger />
-        <ReasoningContent>Auto opened reasoning content</ReasoningContent>
-      </Reasoning>
-    </div>
-  )
 }
 
 export const Default: Story = {
@@ -158,7 +137,26 @@ export const Collapsed: Story = {
 }
 
 export const StreamingLifecycle: Story = {
-  render: () => <ReasoningLifecycleDemo />,
+  render: () => {
+    const [isStreaming, setIsStreaming] = useState(false)
+
+    return (
+      <div className="w-full max-w-2xl space-y-3">
+        <div className="flex gap-2">
+          <button type="button" onClick={() => setIsStreaming(true)}>
+            Start reasoning
+          </button>
+          <button type="button" onClick={() => setIsStreaming(false)}>
+            Finish reasoning
+          </button>
+        </div>
+        <Reasoning isStreaming={isStreaming}>
+          <ReasoningTrigger />
+          <ReasoningContent>Auto opened reasoning content</ReasoningContent>
+        </Reasoning>
+      </div>
+    )
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     const reasoningTrigger = canvas.getByRole("button", {

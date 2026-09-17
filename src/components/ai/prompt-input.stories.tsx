@@ -198,7 +198,7 @@ const MODELS = [
 // ---------------------------------------------------------------------------
 
 const meta: Meta = {
-  title: "AI Elements/Prompt Input",
+  title: "AI Elements/Input/Prompt Input",
   parameters: {
     layout: "padded",
   },

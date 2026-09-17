@@ -424,7 +424,7 @@ export const WithReferenceLineAndBand: Story = {
     });
 
     await step("Labeled line and band appear as legend items", async () => {
-      const legend = canvasElement.querySelector(".legend-container") as HTMLElement;
+      const legend = canvasElement.querySelector(".histogram-legend") as HTMLElement;
       expect(legend).toBeInTheDocument();
       const legendText = within(legend);
       expect(legendText.getByText("cutoff")).toBeInTheDocument();

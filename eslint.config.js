@@ -13,7 +13,16 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ["dist/**/*", "node_modules/**/*", "examples/**/*", "storybook-static/**/*"],
+    ignores: [
+      "dist/**/*",
+      "node_modules/**/*",
+      "examples/**/*",
+      "storybook-static/**/*",
+      // A separate, self-contained npm project (own package.json, own
+      // node_modules, deliberately outside the Yarn workspace) — see
+      // AGENTS.md's "Shipped Jest support" section.
+      "scripts/verify-jest-consumer/**/*",
+    ],
   },
   // Main TypeScript/React configuration
   {

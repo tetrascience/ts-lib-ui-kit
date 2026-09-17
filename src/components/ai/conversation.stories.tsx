@@ -19,7 +19,7 @@ import type { UIMessage } from "ai"
 import type { ComponentProps } from "react"
 
 const meta: Meta = {
-  title: "AI Elements/Conversation",
+  title: "AI Elements/Conversation/Conversation",
   parameters: {
     layout: "fullscreen",
   },

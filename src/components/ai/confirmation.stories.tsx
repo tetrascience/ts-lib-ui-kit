@@ -18,7 +18,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta = {
-  title: "AI Elements/Confirmation",
+  title: "AI Elements/Status & Effects/Confirmation",
   parameters: {
     layout: "padded",
   },

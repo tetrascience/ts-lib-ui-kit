@@ -5,7 +5,7 @@ import CodeEditor from "./code-editor";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof CodeEditor> = {
-  title: "Components/Code Editor",
+  title: "Components/Forms & Inputs/Code Editor",
   component: CodeEditor,
   parameters: {
     layout: "centered",

@@ -6,7 +6,7 @@ React component library for building TetraScience applications.
 
 ## Version
 
-v0.5.0
+v1.0.0
 
 This library provides:
 
@@ -26,18 +26,53 @@ This library provides:
 
 | Library version | React | Node.js | TDP (server utilities) |
 | --------------- | ----- | ------- | ---------------------- |
+| v1.0.x          | 19+   | 18+     | v4.x+                  |
+| v0.7.x          | 19+   | 18+     | v4.x+                  |
+| v0.6.x          | 19+   | 18+     | v4.x+                  |
 | v0.5.x          | 19+   | 18+     | v4.x+                  |
 | v0.4.x          | 19+   | 18+     | v4.x+                  |
 
 > **Note:** The client-side components have no TDP version dependency.
 > The `/server` utilities (JWT auth, provider helpers) require a running TDP instance of v4.x or later.
 > Browser support follows React 19's matrix (modern evergreen browsers).
+>
+> As of v1.0.0, heavy dependencies are **optional peer dependencies** — see [Optional peer dependencies](#optional-peer-dependencies) below for what to install and when. Upgrading from v0.7.x? Chart components were renamed and four components were removed: read the [v0.7.x → v1.0.0 migration guide](./MIGRATION.md#migrating-from-v07x-to-v100) first.
 
 ## Installation
 
 ```bash
 yarn add @tetrascience-npm/tetrascience-react-ui
 ```
+
+### Optional peer dependencies
+
+The kit does not install heavy dependencies for you. Add only the ones your app uses:
+
+| You use…                                           | Install                                                                                               |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Any `charts/` component                            | `plotly.js-dist`                                                                                      |
+| `MessageResponse` / `Reasoning` (AI markdown)      | `@streamdown/math`, `@streamdown/mermaid`                                                             |
+| `MoleculeStructure`                                | `@rdkit/rdkit` — **plus a served WASM, [see below](#moleculestructure-requires-a-served-rdkit-wasm)** |
+| **Any import from the package root**               | `@streamdown/math`, `@streamdown/mermaid` — see the caveat below                                      |
+| `/server` Athena / Snowflake / Databricks provider | `@aws-sdk/client-athena` / `snowflake-sdk` / `@databricks/sql`                                        |
+
+> **Root-entry imports pull in the streamdown peers whether or not you use them.**
+> The AI markdown plugins are loaded through a dynamic import, but a dynamic-import target is still
+> part of your bundler's module graph and its _named_ static imports must resolve. With
+> `@streamdown/math` absent, a root-entry build fails even when your only kit import is `AreaPlot`:
+>
+> ```
+> dist/components/ai/streamdown-plugins.js (2:9): "math" is not exported by
+> "__vite-optional-peer-dep:@streamdown/math:@tetrascience-npm/tetrascience-react-ui"
+> ```
+>
+> Install the two packages, or use [per-component imports](#per-component-imports), which avoid the
+> barrel entirely. This fails at build time, so it can never reach production unnoticed.
+> Tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
+
+A missing `plotly.js-dist` behaves differently: it does **not** fail the build under Vite/Rollup — it
+resolves to an empty stub and the chart fails at runtime with a console error from the loader
+(`Failed to load 'plotly.js-dist' …`). If your charts render blank after upgrading, check this first.
 
 ## Quick Start
 
@@ -61,22 +96,74 @@ function App() {
 }
 ```
 
+Only need a handful of components? Every one is also importable individually — see [Per-Component Imports](#per-component-imports) below.
+
+### Per-Component Imports
+
+Every component is also reachable at its own subpath, grouped by category:
+`ui/*`, `composed/*`, `charts/*`, `ai/*`, `utils/*`:
+
+```tsx
+import { Button } from "@tetrascience-npm/tetrascience-react-ui/ui/button";
+import { StatCard } from "@tetrascience-npm/tetrascience-react-ui/composed/StatCard";
+import { AreaPlot } from "@tetrascience-npm/tetrascience-react-ui/charts/AreaPlot";
+```
+
+Importing this way only pulls in that component's own module graph — the main
+`@tetrascience-npm/tetrascience-react-ui` import still works exactly as
+before and pulls in everything. The difference matters most for **Jest**,
+which has no tree-shaking and re-evaluates the full import graph on every
+test file: a full-barrel import costs ~1.2s of module evaluation per test
+file; a single-component subpath costs ~0.1s. For a production bundler
+(Vite, webpack 5) the difference is smaller since unused components are
+already tree-shaken from the main import.
+
+The subpath name always matches the component's directory/file under
+`src/components/<category>/` — check [DESIGN.md](./DESIGN.md) or the
+[Storybook](https://ts-lib-ui-kit-storybook.vercel.app/) sidebar for the
+exact name.
+
+> **Known gap in v1.0.0:** `./ui/progress` and `./ui/snippet` resolve their _types_ but ship no
+> runtime module, so importing either typechecks cleanly and then fails your build. Neither component
+> is exported from the package root either, so nothing regressed — but the subpath makes them look
+> available. Don't import them.
+> Tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
+
 ## Styling & CSS
 
 This library uses **Tailwind CSS 4** with design tokens defined as CSS custom properties (oklch color space). All CSS files are declared as [`sideEffects`](https://webpack.js.org/guides/tree-shaking/#mark-the-file-as-side-effect-free) in `package.json`, so bundlers will preserve them while still tree-shaking unused JavaScript.
 
 ### CSS Import Options
 
-| Import path                                                  | Use case                                                                                             |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `@tetrascience-npm/tetrascience-react-ui/index.css`          | **Pre-built CSS** — use this for most apps. Import once at your app root.                            |
-| `@tetrascience-npm/tetrascience-react-ui/index.tailwind.css` | **Tailwind source** — for apps that run their own Tailwind build and want to extend/override tokens. |
+| Import path                                                  | Use case                                                                                                                                                                            |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@tetrascience-npm/tetrascience-react-ui/index.css`          | **Pre-built CSS** — for an app that owns its document. Import once at your app root.                                                                                                |
+| `@tetrascience-npm/tetrascience-react-ui/index.tailwind.css` | **Tailwind source** — for apps that run their own Tailwind build and want to extend/override tokens.                                                                                |
+| `@tetrascience-npm/tetrascience-react-ui/index.scoped.css`   | **Scoped CSS** — for code that renders inside a document it does _not_ own (a microfrontend remote, an embedded widget). See [Embedding in a host page](#embedding-in-a-host-page). |
 
-Most consumers only need `index.css`:
+Most consumers only need `index.css`.
+
+#### What the stylesheet does — and does not — claim
+
+Every selector rule the kit writes itself — its design tokens and its component CSS — ships
+inside a `ts-ui-kit` cascade layer, and no published stylesheet contains an unlayered rule.
+(Tailwind utilities land in Tailwind's `utilities` layer; `@font-face`, `@keyframes` and
+`@property` are not selector-matched and stay top-level, with kit keyframes `ts-`-prefixed.)
+That has two consequences worth knowing:
+
+- **Your CSS always wins.** An unlayered rule outranks a layered one regardless of specificity or
+  load order, so a plain `:root { --primary: … }` in your app overrides the kit's token whether it
+  is written before or after the import. There is no ordering dance.
+- **The kit never restyles your page by accident.** Its component class names are namespaced
+  (`.histogram-legend-divider`, `.platemap-legend__item`, …), and its tokens and Tailwind's
+  preflight reset are layered beneath anything you write. A CI gate
+  (`yarn check:css-leaks`) fails the build if any published stylesheet regains an unlayered rule.
 
 ### Theming
 
-The design system is controlled via CSS custom properties in `index.css`. Override them to customise colours, spacing, and radii:
+The design system is controlled via CSS custom properties. Override them anywhere in your own CSS
+to customise colours, spacing, and radii — because the kit's tokens are layered, your unlayered
+declaration wins in any order:
 
 ```css
 :root {
@@ -87,6 +174,45 @@ The design system is controlled via CSS custom properties in `index.css`. Overri
 ```
 
 Dark mode is supported via the `.dark` class on a parent element. See [THEMING.md](./THEMING.md) for details.
+
+### Embedding in a host page
+
+`index.css` is written for an app that owns its document: tokens on `:root` / `.dark`, Tailwind's
+preflight on `html` / `body` / `*`. Inside someone else's document — a Module Federation remote
+mounted into the TetraScience platform shell, a widget dropped into a legacy page — those are not
+the kit's claims to make, even layered: a host that never declared `--surface-bright` would still
+pick the kit's value up document-wide.
+
+`index.scoped.css` is the same stylesheet with every rule in the `ts-ui-kit` and `base` layers
+— tokens, component CSS, preflight — confined to an element carrying `data-ts-ui-root`. Import
+it instead of `index.css` and mark your shell:
+
+```tsx
+import "@tetrascience-npm/tetrascience-react-ui/index.scoped.css";
+
+export function App() {
+  return (
+    <div data-ts-ui-root className="dark">
+      {/* kit components render with their own tokens and reset in here… */}
+    </div>
+  );
+}
+```
+
+Two things to know when you use it:
+
+- **Portaled surfaces need the marker too.** `Dialog`, `Popover`, `Select`, `Tooltip` and the
+  other overlay components render their content into `document.body`, outside your shell. Put
+  `data-ts-ui-root` on their `*Content` element as well (a thin wrapper component around each one
+  you use is the usual pattern), or they render with the host's tokens instead of the kit's.
+- **Dark mode still keys off `.dark`.** `.dark` on `<html>` (or anything above the marker), on the
+  marked element itself, or on a dark panel nested inside a light shell all work — the scoped
+  rules are emitted as `.dark [data-ts-ui-root]`, `[data-ts-ui-root].dark` and
+  `[data-ts-ui-root] .dark`.
+
+Tailwind's own `theme`, `properties`, `components` and `utilities` layers are left global in the
+scoped build: they are keyed on Tailwind class names, your unlayered CSS already outranks them,
+and confining `theme` would strip `--spacing` / `--radius-*` from portaled content.
 
 ## Components
 
@@ -100,7 +226,34 @@ Accordion, Alert, AlertDialog, AspectRatio, Avatar, Badge, Breadcrumb, Button, B
 
 TetraScience-specific compositions built from UI primitives:
 
-AppHeader, AppLayout, AssistantModal, CodeScriptEditorButton, LaunchContent, Main, Navbar, ProcessFlow, ProtocolConfiguration, ProtocolYamlCard, PythonEditorModal, Sidebar, TdpLink, TdpSearch, TdpUrl
+AssistantLayout, Chat, ConfirmDialog, DataAppShell (with PrimaryNav, SecondaryNav, RightPanel), EmptyState, FormPatterns, MoleculeStructure, PlateMapEditor, ProcessFlow, RichListItem, StatCard, TdpLink, TdpSearch, TdpUrl, TopBar, UserMenu
+
+#### `MoleculeStructure` requires a served RDKit WASM
+
+Installing `@rdkit/rdkit` is **not sufficient**. RDKit is a ~6.6 MB WebAssembly module that the
+package does not place anywhere your app serves it, so the loader's fetch for `RDKit_minimal.wasm`
+falls through to your dev server's SPA fallback and gets `index.html` back. The component then
+renders its `errorContent` — by default **"Invalid structure"** — for a perfectly valid SMILES.
+
+Point the loader at a served copy once, at app startup:
+
+```ts
+import { configureRDKit } from "@tetrascience-npm/tetrascience-react-ui";
+
+// Option A — let your bundler emit and fingerprint it (Vite):
+import wasmSrc from "@rdkit/rdkit/dist/RDKit_minimal.wasm?url";
+configureRDKit({ wasmSrc });
+
+// Option B — copy node_modules/@rdkit/rdkit/dist/RDKit_minimal.wasm into public/
+configureRDKit({ wasmSrc: "/RDKit_minimal.wasm" });
+```
+
+To confirm it worked, the request for `RDKit_minimal.wasm` should return `Content-Type:
+application/wasm` at ~6.9 MB — not `text/html` at a few hundred bytes.
+
+> `errorContent` currently covers both an invalid SMILES **and** a failed RDKit load, so a molecule
+> you trust showing as invalid almost always means the WASM isn't being served. Splitting the two
+> messages is tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
 
 #### ProcessFlow
 
@@ -366,6 +519,28 @@ import { Button } from "@tetrascience-npm/tetrascience-react-ui";
 import type { ButtonProps, BarChartProps, BarDataSeries } from "@tetrascience-npm/tetrascience-react-ui";
 ```
 
+## Testing your app with Jest
+
+The kit ships dual ESM + CJS output, so Jest's CommonJS runtime can load every component directly — no need to mock the package. What Jest _can't_ load are a few third-party dependencies that publish ESM-only (the streamdown/markdown stack, shiki, `use-stick-to-bottom`, `react-resizable-panels`) and optional peers you may not have installed (`plotly.js-dist`, `@rdkit/rdkit`). The kit ships a single setup file that stubs exactly those, plus the jsdom shims Radix-based components need (ResizeObserver, matchMedia, pointer capture, …).
+
+Add one line to `jest.config.js`:
+
+```js
+module.exports = {
+  testEnvironment: "jsdom",
+  setupFiles: ["@tetrascience-npm/tetrascience-react-ui/jest-setup"],
+};
+```
+
+Requires Jest ≥ 28 (package `exports` support) and `jest-environment-jsdom`. To override any stub, register your own mock — `jest.mock("<module>", …)` in a test file or a later setup file replaces the kit's registration. If Jest runs with `injectGlobals: false`, import `installUiKitJestMocks` / `installUiKitDomShims` from the same module and call them from your own setup file with the `jest` object.
+
+What the stubs do:
+
+- **Charts** render their containers; Plotly calls resolve against an inert stub (jsdom has no WebGL). Assert on props/behavior, not pixels — visual assertions belong in a real browser.
+- **`MessageResponse` / `Reasoning`** render the markdown source as plain text, so text-content assertions work without transpiling the markdown ecosystem.
+- **`CodeBlock`** renders unhighlighted code lines. Only the languages the kit ships by default are covered — a grammar you add yourself via `registerCodeBlockLanguage` isn't mockable by this setup file, since it isn't known ahead of time.
+- **`MoleculeStructure`** resolves against a stub that always returns a valid, empty-SVG molecule. For real assertions (invalid-SMILES handling, actual rendered markup), use the kit's own override hook instead of relying on the stub: `configureRDKit({ importFactory: () => Promise.resolve(myFakeRDKitModule) })`, exported alongside `MoleculeStructure`.
+
 ## Examples
 
 This repository uses component driven development with Storybook. To see the examples run the following.
@@ -388,7 +563,8 @@ Visit <http://localhost:6006>.
 
 - [Storybook – Live Component Demos](https://ts-lib-ui-kit-storybook.vercel.app/) - Browse all components with interactive examples
 - [NPM Package](https://www.npmjs.com/package/@tetrascience-npm/tetrascience-react-ui) - Installation and version info
-- [Migration Guide](./MIGRATION.md) - Migrating from the old atom/molecule/organism architecture
+- [Migration Guide](./MIGRATION.md#migrating-from-v07x-to-v100) - Upgrading from v0.7.x to v1.0.0 (chart renames, removed components, optional peers)
+- [Changelog](./CHANGELOG.md) - What changed in each release, including v1.0.0's breaking changes
 - [Theming Guide](./THEMING.md) - Customise the design system
 - [Contributing](./CONTRIBUTING.md#development-setup) - Clone the repo and run `yarn storybook`
 
@@ -401,10 +577,10 @@ reducing hallucinated component APIs when scaffolding a data app.
 
 There are two endpoints. Pick whichever fits; you can add both.
 
-| Endpoint | URL | Tools |
-| --- | --- | --- |
-| **Deployed** (no local checkout needed) | `https://ts-lib-ui-kit-storybook.vercel.app/api/mcp` | docs: `list_components`, `get_component`, `search_components` |
-| **Local** (needs `yarn storybook` running) | `http://localhost:6006/mcp` | full set: docs **+** write/preview/test stories |
+| Endpoint                                   | URL                                                  | Tools                                                         |
+| ------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------------------- |
+| **Deployed** (no local checkout needed)    | `https://ts-lib-ui-kit-storybook.vercel.app/api/mcp` | docs: `list_components`, `get_component`, `search_components` |
+| **Local** (needs `yarn storybook` running) | `http://localhost:6006/mcp`                          | full set: docs **+** write/preview/test stories               |
 
 ### Add the connection
 
@@ -443,8 +619,8 @@ client's MCP config (e.g. Cursor's `.cursor/mcp.json`, or Claude Desktop's
 npx mcp-add --type http --url "https://ts-lib-ui-kit-storybook.vercel.app/api/mcp"
 ```
 
-Then ask your agent something like *"using the ts-ui-kit MCP, list the available
-components"* or *"build a form using ts-ui-kit primitives"* to confirm it's wired
+Then ask your agent something like _"using the ts-ui-kit MCP, list the available
+components"_ or _"build a form using ts-ui-kit primitives"_ to confirm it's wired
 up.
 
 ## Tech Stack

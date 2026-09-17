@@ -6,7 +6,7 @@ import { Label } from "./label"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof Label> = {
-  title: "Components/Label",
+  title: "Components/Forms & Inputs/Label",
   component: Label,
   parameters: {
     layout: "centered",

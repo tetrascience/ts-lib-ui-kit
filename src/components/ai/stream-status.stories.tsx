@@ -6,7 +6,7 @@ import { StreamStatus } from "./stream-status"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof StreamStatus> = {
-  title: "AI Elements/Stream Status",
+  title: "AI Elements/Status & Effects/Stream Status",
   component: StreamStatus,
   parameters: {
     layout: "centered",
@@ -17,27 +17,6 @@ const meta: Meta<typeof StreamStatus> = {
 export default meta
 
 type Story = StoryObj<typeof StreamStatus>
-
-const StreamingTransitionDemo = () => {
-  const [isStreaming, setIsStreaming] = useState(true)
-  const [startTime] = useState(() => Date.now() - 65 * 1000)
-
-  return (
-    <div className="flex flex-col gap-3 p-4 min-w-72">
-      <button type="button" onClick={() => setIsStreaming(false)}>
-        Finish stream
-      </button>
-      <StreamStatus
-        icon={null}
-        isStreaming={isStreaming}
-        showIndicator
-        startTime={startTime}
-        tokenCount={1_200_000}
-        tokenLabel={null}
-      />
-    </div>
-  )
-}
 
 // ---------------------------------------------------------------------------
 // Default — time + tokens, no icon, no indicator
@@ -285,7 +264,26 @@ export const TimeOnly: Story = {
 }
 
 export const FinishRipple: Story = {
-  render: () => <StreamingTransitionDemo />,
+  render: () => {
+    const [isStreaming, setIsStreaming] = useState(true)
+    const [startTime] = useState(() => Date.now() - 65 * 1000)
+
+    return (
+      <div className="flex flex-col gap-3 p-4 min-w-72">
+        <button type="button" onClick={() => setIsStreaming(false)}>
+          Finish stream
+        </button>
+        <StreamStatus
+          icon={null}
+          isStreaming={isStreaming}
+          showIndicator
+          startTime={startTime}
+          tokenCount={1_200_000}
+          tokenLabel={null}
+        />
+      </div>
+    )
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 

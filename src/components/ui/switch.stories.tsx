@@ -6,7 +6,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta<typeof Switch> = {
-  title: "Components/Switch",
+  title: "Components/Forms & Inputs/Switch",
   component: Switch,
   parameters: {
     layout: "centered",

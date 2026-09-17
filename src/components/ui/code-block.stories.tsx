@@ -23,7 +23,7 @@ import type { BundledLanguage } from "shiki"
 
 
 const meta: Meta = {
-  title: "Components/Code Block",
+  title: "Components/Data Display/Code Block",
   parameters: {
     layout: "padded",
   },

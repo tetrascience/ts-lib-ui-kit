@@ -7,7 +7,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta = {
-  title: "AI Elements/Task",
+  title: "AI Elements/Agent Activity/Task",
   parameters: {
     layout: "padded",
   },
@@ -31,24 +31,6 @@ const expectCollapsedChevronConfiguredForHoverReveal = async (
 
   await expect(chevron).toHaveClass("opacity-0")
   await expect(chevron).toHaveClass("group-hover:opacity-100")
-}
-
-const StreamingTaskDemo = () => {
-  const [isStreaming, setIsStreaming] = useState(true)
-
-  return (
-    <div className="w-full max-w-lg space-y-2">
-      <button type="button" onClick={() => setIsStreaming(false)}>
-        Finish task
-      </button>
-      <Task defaultOpen isStreaming={isStreaming}>
-        <TaskTrigger title="Search knowledge base" />
-        <TaskContent>
-          <TaskItem>Reading indexed results</TaskItem>
-        </TaskContent>
-      </Task>
-    </div>
-  )
 }
 
 export const Default: Story = {
@@ -199,7 +181,23 @@ export const Collapsed: Story = {
 }
 
 export const StreamingAutoClose: Story = {
-  render: () => <StreamingTaskDemo />,
+  render: () => {
+    const [isStreaming, setIsStreaming] = useState(true)
+
+    return (
+      <div className="w-full max-w-lg space-y-2">
+        <button type="button" onClick={() => setIsStreaming(false)}>
+          Finish task
+        </button>
+        <Task defaultOpen isStreaming={isStreaming}>
+          <TaskTrigger title="Search knowledge base" />
+          <TaskContent>
+            <TaskItem>Reading indexed results</TaskItem>
+          </TaskContent>
+        </Task>
+      </div>
+    )
+  },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
     const taskTrigger = canvas.getByText("Search knowledge base").closest("[aria-expanded]")

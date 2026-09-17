@@ -11,7 +11,7 @@ import {
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta = {
-  title: "AI Elements/Snippet",
+  title: "Components/Data Display/Snippet",
   parameters: {
     layout: "centered",
   },

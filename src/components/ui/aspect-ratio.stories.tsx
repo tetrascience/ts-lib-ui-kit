@@ -6,7 +6,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 
 const meta: Meta<typeof AspectRatio> = {
-  title: "Components/Aspect Ratio",
+  title: "Components/Layout & Structure/Aspect Ratio",
   component: AspectRatio,
   parameters: {
     layout: "centered",

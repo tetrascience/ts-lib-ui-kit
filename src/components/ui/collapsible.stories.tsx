@@ -7,10 +7,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./collapsib
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof Collapsible> = {
-  title: "Components/Collapsible",
+  title: "Components/Layout & Structure/Collapsible",
   component: Collapsible,
   parameters: {
     layout: "centered",
+    // Docs "Show code": stories render via a local helper, so serialize the
+    // rendered JSX tree instead of printing the helper call / story source.
+    docs: { source: { type: "dynamic" } },
   },
   tags: ["autodocs"],
 }

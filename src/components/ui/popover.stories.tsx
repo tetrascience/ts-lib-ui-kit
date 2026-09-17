@@ -6,7 +6,7 @@ import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "./popove
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 const meta: Meta<typeof PopoverContent> = {
-  title: "Components/Popover",
+  title: "Components/Overlays/Popover",
   component: PopoverContent,
   parameters: {
     layout: "centered",

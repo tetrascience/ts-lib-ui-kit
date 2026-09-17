@@ -45,6 +45,54 @@ src/
 └── index.ts         # All client-side exports
 ```
 
+## Per-Component Entries
+
+Every public export of `src/index.ts` also ships at its own subpath
+(`./ui/button`, `./composed/StatCard`, `./charts/AreaPlot`, `./ai/message`,
+`./utils/colors`, `./lib/shiki`), so consumers who only need a handful of
+components — and especially Jest, which has no tree-shaking and
+re-evaluates the whole import graph per test file — don't pay for the full
+~150-module barrel. Entries are derived automatically by
+[`scripts/build/component-entries.ts`](./scripts/build/component-entries.ts),
+which parses `src/index.ts`'s `export * from "@/..."` lines (the single
+source of truth for the public API) rather than hand-maintaining a parallel
+manifest that could drift. **Adding a component to `src/index.ts` is
+sufficient** — its subpath entry appears on the next build with no other
+change required, _provided_ its file shape matches its category's dominant
+form (see below).
+
+Gotchas, both load-bearing for correctness:
+
+- **`rollupTypes` is off** (`vite.config.ts`'s `dts()` call). It was on
+  before this many entries existed; with `preserveModules` + this many
+  simultaneous `build.lib.entry` keys, vite-plugin-dts@4's rollup-dts pass
+  only fully bundles one entry's type graph — every other entry (this
+  already silently affected the pre-existing `providers/*` entries at only
+  5 total entries) gets a broken `export * from '<relative path>'` pointing
+  at a file that's never written. With it off, every source file gets a
+  self-contained `.d.ts` mirroring its `src/`-relative path instead — which
+  means the exports map's `"types"` condition points at
+  `./dist/components/<category>/<Name>[/index].d.ts` (the mirrored path),
+  while `"import"`/`"require"` point at `./dist/<category>/<Name>.js`/`.cjs`
+  (the entry-key path, which Rollup — independent of the dts setting —
+  canonicalizes correctly regardless of `rollupTypes`). These are
+  deliberately different paths; don't try to unify them.
+- **Two categories mix file shapes.** Most `composed/` and all `charts/`
+  components are directories with a barrel `index.ts` (mirrored `.d.ts`
+  lands at `<Name>/index.d.ts`); most `ui/` and all `ai/`/`utils/`/`lib/`
+  entries are single files (mirrored `.d.ts` lands at `<Name>.d.ts`). Where
+  a category has an exception to its own dominant shape —
+  `ui/data-table` (a directory) and `composed/tdp-link` /
+  `composed/tdp-url` (flat legacy files) today — the wildcard
+  `"./composed/*"` / `"./ui/*"` pattern in `package.json`'s `exports` map
+  can't resolve both shapes with one pattern, so those three have their own
+  literal (non-wildcard) entries listed before the pattern. Adding a new
+  component whose shape doesn't match its category's dominant form needs
+  the same treatment, or its subpath's types will 404 while the runtime
+  import still works (import/require aren't shape-sensitive the way types
+  are) — a mismatch that's easy to miss unless you typecheck against the
+  new subpath, not just run it.
+
 ## Server Utilities (`./server` sub-export)
 
 Import path for consumers: `@tetrascience-npm/tetrascience-react-ui/server`
@@ -79,6 +127,37 @@ Exposes the UI kit to AI coding agents (component lists, props/variants, usage e
 
 **`composed/` and `charts/` components**: Prefer a PascalCase directory with `ComponentName.tsx`, `ComponentName.stories.tsx`, and `index.ts` for new components. Some legacy composed components exist as single `kebab-case.tsx` files (e.g. `tdp-link.tsx`).
 
+### Storybook placement (`title`) is a separate decision from the directory
+
+Do not derive the story `title` from the source directory — they intentionally
+differ. `Snippet` lives in `ui/` but is titled `Components/Data Display/Snippet`;
+`Chat` lives in `composed/` but is titled `AI Elements/Conversation/Chat`. Title
+by what a consumer is shopping for, not by where the file sits.
+
+| Section               | For                                     | Sub-categories (required where listed)                                                                           |
+| --------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `Foundations/`        | Tokens, type, spacing, elevation, icons | —                                                                                                                |
+| `Components/`         | Reusable primitives                     | Actions · Forms & Inputs · Navigation & Menus · Layout & Structure · Overlays · Feedback & Status · Data Display |
+| `AI Elements/`        | Chat & agent UI                         | Conversation · Input · Agent Activity · Attribution · Status & Effects                                           |
+| `Design Patterns/`    | Compositions, app shells                | —                                                                                                                |
+| `Data Viz/`           | Charts, scientific plots                | —                                                                                                                |
+| `TetraData Platform/` | TDP-specific, not reusable outside TDP  | —                                                                                                                |
+
+- A `Components/` or `AI Elements/` title **must** include a sub-category —
+  `Components/MyThing` is wrong, `Components/Data Display/MyThing` is right.
+- The sub-category must match that component's row in [`DESIGN.md`](./DESIGN.md)
+  §3, which is the source of truth. Add the row in the same change.
+- There is no "Other" bucket, and do not invent a new top-level section for one
+  or two stories — surface it instead. A new sub-category also needs adding to
+  `storySort.order` in `.storybook/preview.ts`, or it sorts alphabetically into
+  an arbitrary position.
+- **Zephyr safety:** the scripts read only the **last** title segment and the
+  source directory, so re-nesting a story preserves its test case IDs; changing
+  the last segment does not. Story IDs (and therefore external deep links) do
+  change when the category path changes.
+
+Full rationale and the taxonomy's provenance: [`DESIGN.md`](./DESIGN.md) §3.1.
+
 ## Design System
 
 See [`DESIGN.md`](./DESIGN.md) for the full design document — tokens, component inventory, API conventions, theming guide, and architectural decisions.
@@ -87,9 +166,56 @@ See [`DESIGN.md`](./DESIGN.md) for the full design document — tokens, componen
 
 - Tailwind CSS 4 utility classes via `cn()` from `src/lib/utils.ts`
 - CVA (`class-variance-authority`) for variant definitions
-- Design tokens as CSS custom properties in `src/index.css` (oklch color space)
+- Design tokens as CSS custom properties in `src/index.tailwind.css` (oklch color space)
 - Icons from `lucide-react`
-- Dark mode via `.dark` class on `<html>` — all tokens redefined under `.dark { }` in `src/index.css`
+- Dark mode via `.dark` class on `<html>` — all tokens redefined under `.dark { }` in `src/index.tailwind.css`
+
+#### Kit CSS must not make document-level claims (SW-2596)
+
+The kit is consumed as a library inside someone else's document — including as a
+Module Federation remote in the TetraScience platform shell, where a remote's
+`<style>` is appended after the host's and never removed. Unlayered
+`:root { --border: … }` or `.divider { width: 2px }` therefore restyled every
+other TDP page until a reload (PUI-5962). The rules, enforced by
+`yarn check:css-leaks` (runs in `yarn build`, fails CI):
+
+- **Every selector rule the kit writes itself lives in `@layer ts-ui-kit`** —
+  the token blocks in `src/index.tailwind.css` and every component `.scss`.
+  Layered rules never outrank a consumer's unlayered CSS. The two intentional
+  exceptions: utilities go through `@utility` (Tailwind emits them into
+  `utilities`), and `@keyframes` / `@font-face` / `@property` stay top-level
+  because they are not selector-matched — so kit keyframes are `ts-`-prefixed
+  (`ts-shimmer`), never generic names a host might also define.
+- **Start every `.scss` — and `src/index.tailwind.css`, before its imports —
+  with the order statement**
+  `@layer properties, theme, base, components, utilities, ts-ui-kit;`. A
+  layer's position is fixed by its first appearance: Vite concatenates the
+  `.scss` chunks _before_ Tailwind's output, and the `layer(theme)` /
+  `layer(utilities)` imports would otherwise fix those two first. `properties`
+  (Tailwind's `@property` fallback for older browsers) must stay lowest;
+  `yarn check:css-leaks` asserts the emitted order of every published file.
+- **Namespace component class names by component** (`.histogram-legend-divider`,
+  not `.divider`; `.platemap-legend__item`, not `.legend-item`). Layering does
+  not help when the host has _no_ competing declaration — the kit's value then
+  applies to any host element that happens to share the class name. The gate
+  enforces this too: every selector inside `ts-ui-kit` must name something the
+  kit owns — `[data-slot=…]`, `[data-ts-…]`, a `ts-`-prefixed class, or a
+  component prefix registered in `KIT_CLASS_PREFIXES`
+  ([`scripts/build/audit-css-leaks.ts`](./scripts/build/audit-css-leaks.ts)).
+  A new component `.scss` with its own prefix registers it there.
+- **Never select `html`, `body`, `:root` or `*` outside `@layer base`** and add
+  to that layer only what a preflight legitimately owns.
+
+`dist/index.scoped.css` is generated from `dist/index.css` by
+[`scripts/build/build-scoped-css.ts`](./scripts/build/build-scoped-css.ts): every
+unlayered rule plus the `ts-ui-kit` and `base` layers is confined to
+`[data-ts-ui-root]` (`:root`/`html`/`body` → the marker, `.dark` → `.dark [marker]`,
+`*` and bare pseudos cover the marker itself). Tailwind's `theme` / `properties` /
+`components` / `utilities` are left global on purpose — see the header of
+[`scope-kit-css.ts`](./scripts/build/scope-kit-css.ts). Consumers of the scoped
+entry mark their shell and any portaled `*Content` surface with the attribute;
+the kit does **not** stamp it on its own portals, because in the global entry that
+would shadow a consumer's `:root` token overrides inside every dialog.
 
 ### Key Design Principles
 
@@ -119,13 +245,46 @@ The lazy paths above keep heavy deps out of a consumer's **bundle** when the com
 - `plotly.js-dist` — required only by `charts/` components.
 - `@streamdown/mermaid`, `@streamdown/math` — required only by `MessageResponse` / `Reasoning` (markdown).
 
-Consumer contract: apps that use these components must install the matching peer themselves; apps that don't never pull it. A missing peer surfaces as an unresolved-import build error from the consumer's bundler (not a silent runtime failure) — because the importing module is tree-shaken away when the component is unused, non-users never hit it. `shiki` / `@shikijs/*` / `@streamdown/cjk` stay regular `dependencies` (the `CodeBlock` primitive is broadly used and their install size is modest). When adding a component that pulls a new heavy dep, decide deliberately between hard dep (broadly used) and optional peer (heavy + narrow), and keep the loader's runtime guard message pointing at the install command.
+Consumer contract: apps that use these components must install the matching peer themselves; apps that don't never pull it. **How a missing peer surfaces depends on the import shape (SW-2472), so don't assume the bundler catches it.** A _named_ static import from an optional-peer stub is a hard Rollup error, which is why a root-entry build fails without `@streamdown/math`/`@streamdown/mermaid` even when no AI component is used — `streamdown-plugins.ts` is only reached dynamically, but a dynamic-import target is still in the module graph and its named imports must resolve. A _default-only dynamic_ import — `plotly.js-dist` via `plotly-loader.ts` — resolves to an empty stub, the build exits 0, and the only signal is the loader's runtime guard. When adding an optional peer, know which of the two you have; if it's the second, the runtime guard is the whole safety net and must reject a stub, not just a rejected import. `shiki` / `@shikijs/*` / `@streamdown/cjk` stay regular `dependencies` (the `CodeBlock` primitive is broadly used and their install size is modest). When adding a component that pulls a new heavy dep, decide deliberately between hard dep (broadly used) and optional peer (heavy + narrow), and keep the loader's runtime guard message pointing at the install command.
 
 ## Testing
 
 - **Prefer Storybook play function tests** for React components — real browser via Playwright, more realistic than jsdom
 - Unit tests (`*.test.ts` / `*.test.tsx`) for pure utilities, hooks, and non-visual logic only
 - Do not manually assign `parameters.zephyr.testCaseId` values — generate or repair them through `sync-storybook-zephyr`
+
+### Docs "Show code" must show component code
+
+Storybook prints the raw story-object source (play function, zephyr ids and
+all) for stories it can't derive a snippet for. Two things keep the docs code
+panels clean, and a unit test
+([`scripts/storybook-docs/__tests__/audit-story-sources.test.ts`](./scripts/storybook-docs/__tests__/audit-story-sources.test.ts))
+fails CI when a story regresses:
+
+- A global `docs.source.transform` (`.storybook/source-transform.ts`, wired
+  in `preview.ts`) extracts just the `render` body from the static story
+  source — zero-arity inline renders (JSX or hooks-demo block bodies) work
+  with no extra parameters.
+- Stories whose render is a **local helper call** need
+  `docs: { source: { type: "dynamic" } }` (usually at meta level) so the
+  rendered tree is serialized; stories rendering **file-local wrapper
+  components** must either inline the wrapper into the render or hand-write
+  `docs: { source: { code: …, language: "tsx" } }` usage (see DataAppShell,
+  AssistantLayout, PlateMapEditor). Full-page showcases may hide the panel
+  with `docs: { canvas: { sourceState: "none" } }`.
+
+Run the audit directly with `yarn tsx scripts/storybook-docs/audit-story-sources.ts`
+— its output names the offending story and the fix.
+
+### Shipped Jest support for consumers (`./jest-setup` sub-export)
+
+[`src/jest-setup.tsx`](./src/jest-setup.tsx) is a single self-registering setup file — consumers add it to Jest's `setupFiles`. On import (guarded on the module-scoped `jest` wrapper variable — it is NOT a real global, so read it as a free variable behind `typeof`) it calls `jest.mock(id, factory)` for every dep Jest's CJS runtime can't load — ESM-only packages (streamdown, shiki/@shikijs subpaths, use-stick-to-bottom, react-resizable-panels) and optional peers (plotly.js-dist, @rdkit/rdkit, @streamdown/math|mermaid) — and installs jsdom shims (ResizeObserver, matchMedia, pointer capture; verified against this repo's jsdom ^28, which implements none of them natively — these are load-bearing, not defensive). Mock registration is non-virtual when the module resolves (Jest keys it by real path) with a `{ virtual: true }` fallback when it doesn't (`import`-only exports or uninstalled peers; virtual bare-specifier mocks are keyed by the specifier and intercept globally — verified empirically against real Jest, both directions). **When adding a dependency, check whether it's ESM-only (`"type": "module"` with no `require` export condition); if a kit module imports it — statically or via the lazy loaders — add a registration there**, or Jest consumers regress to `ERR_REQUIRE_ESM`. Registrations use exact module ids (including each `@shikijs/langs/<lang>` the `CodeBlock` highlighter loads), so extending `src/lib/shiki.ts`'s language set means extending `KIT_SHIKI_LANGUAGES` there too — a test asserts they stay equal. Entry basename must not be `index` — vite-plugin-dts emits a flat `<basename>.d.ts` per entry and a second `index` clobbers the root `dist/index.d.ts`.
+
+**Dynamic-import gotcha (load-bearing):** several of these deps (plotly, the shiki subpaths) are reached via dynamic `import()`, not a static `import`. Rollup's CJS output keeps an external dynamic `import()` as a _native_ `import()` by default — invisible to `jest.mock`, and Jest throws `ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG` the moment it's reached. `vite.config.ts`'s `output.dynamicImportInCjs: false` rewrites these to an interop-wrapped `require()` instead, which Jest _can_ mock — but that interop helper unconditionally does `namespace.default = <raw factory return>` with **no `__esModule` check**. A mock factory for one of these must return the value the consuming code expects at `.default` **directly** — `() => []`, not `() => ({ default: [] })` — or the double-wrap surfaces as a runtime `TypeError` the first time the "mocked" path is actually exercised, not at registration time. `@rdkit/rdkit` also has a supported, more accurate escape hatch for real behavioral tests: `configureRDKit({ importFactory })` (exported from `composed/MoleculeStructure`) injects a fake module directly, bypassing the dynamic import entirely — see `src/components/composed/MoleculeStructure/__tests__/rdkit-loader.test.ts` for a fuller fake to model one on.
+
+**Verification:** unit tests of `jest-setup.tsx`'s exported helpers (`src/__tests__/jest-setup.test.tsx`) run under Vitest against fake APIs — they can't exercise Jest's actual module system, Rollup's real interop output, or the `jest`-wrapper-variable self-activation path. [`scripts/verify-jest-consumer/`](./scripts/verify-jest-consumer) is a real-Jest (not Vitest) project that packs the kit and renders `CodeBlock`/chart/`MoleculeStructure` through the actual compiled dist and the shipped `jest-setup` — this is what would have caught the dynamic-import and interop-shape bugs above. It runs on every CI build (`.github/workflows/ci.yml`'s "Verify Jest consumer support" step) unconditionally rather than path-gated on `src/jest-setup.tsx`/`vite.config.ts` — a change to a _mocked source file_ itself (e.g. `src/lib/shiki.ts`, `src/components/charts/plotly-loader.ts`) can just as easily break what needs mocking, and the check is cheap enough (well under a minute) that gating it isn't worth the blind spot. Run `yarn verify:jest-consumer` locally too before a release or when iterating on this file, for a faster feedback loop than waiting on CI.
+
+It deliberately does **not** install the packed tarball as a normal npm dependency (`link-kit.js` extracts it directly into `node_modules` instead, via a `pretest` hook). A real dependency install would also install the kit's _own_ declared dependencies — including the AWS SDK packages `src/server/**` uses, which this project never touches (it only renders client components) but which transitively pull in versions of `protobufjs`/`fast-xml-parser` that dependency scanning flags, with no way to fix them here since the code path is never exercised. Its `devDependencies` are a deliberately explicit, minimal set — derived by `grep -o 'require("[^"]*")'` against the built `.cjs` for each tested subpath — covering exactly what those subpaths need at runtime (`lucide-react`, `radix-ui`, `class-variance-authority`, React). **Testing a new subpath here that needs a different real dependency means adding it explicitly** — resist the temptation to widen this by depending on the kit as a whole again.
 
 ## Code Style
 
@@ -144,6 +303,13 @@ yarn release:dry-run  # Validate what would be published without actually publis
 Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) for versioning — `feat:` → minor bump, `fix:` → patch bump, `feat!:` / `BREAKING CHANGE:` → major bump.
 
 ## Zephyr Integration
+
+- **Branch and PR naming compliance (required for Zephyr automation):** every
+  working branch must be named with its Jira issue key as the prefix —
+  `SW-1234-short-kebab-description` (e.g. `SW-2352-v1-release-prep`). Create
+  the Jira issue first if none exists. PR titles must follow
+  `type: SW-1234 Description` (e.g. `docs: SW-2549 Audit Storybook code
+panels`) — the `check` CI job (semantic PR title) rejects anything else.
 
 - Zephyr HTTP is handled by a shared internal `ts-lib-zephyr-nodejs` library (`ZephyrClient` + helpers). The repo's scripts are thin wrappers around it — JUnit parsing, story parsing/write-back, cycle resolution, and folder mapping stay local.
 - Test results reported to Zephyr Scale via `scripts/zephyr/report-zephyr-results.ts`.

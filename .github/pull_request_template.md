@@ -1,4 +1,5 @@
-<!-- PR title must follow: JIRA-1234 Description (e.g., SW-1234 Add Button component) -->
+<!-- PR title must follow: <type>: JIRA-1234 Description (e.g., feat: SW-1234 Add Button component) -->
+<!-- The Conventional Commit type prefix is required; the Jira key is space-separated, not colon-separated. -->
 
 ## Summary
 

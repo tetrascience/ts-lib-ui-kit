@@ -2,6 +2,7 @@
 import "@/index.css";
 
 // Composed
+export * from "@/components/composed/AppShellSimple";
 export * from "@/components/composed/FormPatterns";
 export * from "@/components/composed/StatCard";
 export * from "@/components/composed/DataAppShell";
@@ -14,6 +15,8 @@ export * from "@/components/composed/RichListItem";
 export * from "@/components/composed/EmptyState";
 export * from "@/components/composed/ProcessFlow";
 export * from "@/components/composed/AssistantLayout";
+export * from "@/components/composed/MoleculeStructure";
+export * from "@/components/composed/PageHeader";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";
@@ -67,6 +70,7 @@ export * from "@/components/ui/label";
 export * from "@/components/ui/menubar";
 export * from "@/components/ui/navigation-menu";
 export * from "@/components/ui/popover";
+export * from "@/components/ui/progress";
 export * from "@/components/ui/radio-group";
 export * from "@/components/ui/resizable";
 export * from "@/components/ui/scroll-area";
@@ -76,15 +80,18 @@ export * from "@/components/ui/sheet";
 export * from "@/components/ui/sidebar";
 export * from "@/components/ui/skeleton";
 export * from "@/components/ui/slider";
+export * from "@/components/ui/snippet";
 export * from "@/components/ui/sonner";
 export * from "@/components/ui/spinner";
 export * from "@/components/ui/switch";
 export * from "@/components/ui/table";
 export * from "@/components/ui/tabs";
+export * from "@/components/ui/text";
 export * from "@/components/ui/textarea";
 export * from "@/components/ui/toggle";
 export * from "@/components/ui/toggle-group";
 export * from "@/components/ui/tooltip";
+export * from "@/components/ui/tree";
 export * from "@/components/ui/code-editor";
 export * from "@/components/ui/tetra-molecule-icon";
 export * from "@/components/ui/tetrascience-icon";

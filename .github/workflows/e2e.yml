@@ -1,0 +1,47 @@
+name: Telemetry E2E
+
+# Not on every push: this emits real telemetry and writes CloudWatch custom
+# metrics, which cannot be deleted. Runs on PRs carrying the `e2e` label, and on
+# manual dispatch.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: false
+        default: "predev5"
+        type: choice
+        options:
+          - predev5
+          - dev
+
+permissions:
+  id-token: write
+  contents: read
+  # The reusable workflow's deploy job polls runs with the built-in token, and a
+  # reusable workflow's token is capped by the caller.
+  actions: read
+
+concurrency:
+  group: uikit-telemetry-e2e-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    # Label-gated so an unrelated PR does not pay for a 5-minute live run.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'e2e')
+    uses: tetrascience/ts-ci-cd-lib/.github/workflows/e2e-codebuild.yml@main
+    with:
+      environment: ${{ inputs.environment || 'predev5' }}
+      buildspec: buildspec.e2e.yml
+      # Empty = never deploy. This is a library: there is nothing to roll out,
+      # and the suite asserts against whatever is already running.
+      deploy_paths: ""
+    secrets:
+      JFROG_ARTIFACTORY_NPM_VIRTUAL_URL: ${{ secrets.JFROG_ARTIFACTORY_NPM_VIRTUAL_URL }}
+      JFROG_ARTIFACTORY_READ_NPM_AUTH: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
+      GITHUB_PAT: ${{ secrets.ARTIFACT_BUILD_GITHUB_TS_DEVOPS_PAT }}

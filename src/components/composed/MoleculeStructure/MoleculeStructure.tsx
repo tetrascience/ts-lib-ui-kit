@@ -1,0 +1,159 @@
+import { AlertTriangleIcon } from "lucide-react"
+import * as React from "react"
+
+import { moleculeToSvg } from "./rdkit-loader"
+import { useRDKit } from "./use-rdkit"
+
+import { Skeleton } from "@/components/ui/skeleton"
+import { useIsDark } from "@/hooks/use-is-dark"
+import { cn } from "@/lib/utils"
+
+export interface MoleculeStructureProps
+  extends Omit<React.ComponentProps<"div">, "children" | "onError"> {
+  /** SMILES string to render as a 2D structure. */
+  smiles: string
+  /** Optional caption drawn beneath the structure by RDKit. */
+  label?: string
+  /**
+   * Force dark/light drawing colours. Defaults to following the active theme
+   * (the `.dark` class on the document root).
+   */
+  dark?: boolean
+  /**
+   * Accessible label for the structure. Defaults to the SMILES string.
+   * Rendered as the SVG group's `aria-label` and the wrapper's title.
+   */
+  alt?: string
+  /**
+   * Extra RDKit MolDraw2D options. Pass a stable (memoised or module-level)
+   * reference — a new object each render re-parses the SMILES through RDKit.
+   */
+  drawOptions?: Record<string, unknown>
+  /** Rendered while the WASM module and structure are being prepared. */
+  loadingContent?: React.ReactNode
+  /** Rendered when the SMILES is invalid or RDKit fails to load. */
+  errorContent?: React.ReactNode
+  /** Called once when the SMILES cannot be parsed into a valid molecule. */
+  onError?: (smiles: string) => void
+}
+
+/**
+ * Internal draw resolution. The structure is vector and scales to fill the
+ * wrapper (see {@link makeResponsive}); a square viewBox keeps it centred in
+ * containers of any shape without distortion.
+ */
+const DRAW_SIZE = 300
+
+/** Make an RDKit SVG fluid: fill the wrapper and scale with its aspect ratio. */
+function makeResponsive(svg: string): string {
+  return svg
+    .replace(/width=(['"])[^'"]*\1/, `width='100%'`)
+    .replace(/height=(['"])[^'"]*\1/, `height='100%'`)
+}
+
+/**
+ * Core cheminformatics primitive: render a 2D chemical structure from a SMILES
+ * string. RDKit's WASM module is loaded lazily on first mount (see
+ * {@link loadRDKit}), so pages that never render a molecule pay nothing for it.
+ *
+ * The output is a vector SVG that fills this component's box — size it with
+ * `className` (e.g. `className="size-32"`). Invalid SMILES render a fallback
+ * rather than throwing.
+ *
+ * @example
+ * ```tsx
+ * <MoleculeStructure smiles="CC(=O)Oc1ccccc1C(=O)O" className="size-40" />
+ * ```
+ */
+export function MoleculeStructure({
+  smiles,
+  label,
+  dark,
+  alt,
+  drawOptions,
+  loadingContent,
+  errorContent,
+  onError,
+  className,
+  ...props
+}: MoleculeStructureProps) {
+  const { rdkit, status } = useRDKit()
+  const isDark = useIsDark()
+  const useDark = dark ?? isDark
+
+  const accessibleName = alt ?? label ?? smiles
+  const onErrorRef = React.useRef(onError)
+  React.useEffect(() => {
+    onErrorRef.current = onError
+  })
+
+  // Kept pure: the memo only computes the SVG (or null on a parse failure) and
+  // never has side effects, so a render React discards (concurrent / offscreen)
+  // can't fire onError.
+  const svg = React.useMemo(() => {
+    if (!rdkit) return null
+    const drawn = moleculeToSvg(rdkit, smiles, {
+      width: DRAW_SIZE,
+      height: DRAW_SIZE,
+      dark: useDark,
+      legend: label,
+      drawOptions,
+    })
+    return drawn === null ? null : makeResponsive(drawn)
+  }, [rdkit, smiles, useDark, label, drawOptions])
+
+  const parseFailed = status === "ready" && svg === null
+  const failed = status === "error" || parseFailed
+
+  // Report a parse failure as an effect keyed on the outcome, so onError fires
+  // once per bad input rather than on every (possibly discarded) render.
+  React.useEffect(() => {
+    if (parseFailed) onErrorRef.current?.(smiles)
+  }, [parseFailed, smiles])
+
+  return (
+    <div
+      data-slot="molecule-structure"
+      className={cn("relative flex items-center justify-center", className)}
+      title={accessibleName}
+      aria-busy={status === "loading"}
+      {...props}
+    >
+      {status === "loading" &&
+        (loadingContent ?? (
+          <Skeleton
+            role="img"
+            aria-label={`Loading structure: ${accessibleName}`}
+            className="size-full rounded-md"
+          />
+        ))}
+
+      {failed &&
+        (errorContent ?? (
+          <div
+            role="img"
+            aria-label={`Unable to render structure: ${accessibleName}`}
+            className="flex size-full flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border p-2 text-center text-muted-foreground"
+          >
+            <AlertTriangleIcon className="size-4 shrink-0" aria-hidden />
+            <span className="text-2xs leading-tight break-all">
+              Invalid structure
+            </span>
+          </div>
+        ))}
+
+      {status === "ready" && svg !== null && (
+        <div
+          // RDKit emits the SVG markup itself; the SMILES is only ever parsed
+          // into a molecule, never echoed into the DOM. The consumer-supplied
+          // `label` is drawn by RDKit as vector glyph paths (not live text), so
+          // it can't carry markup into the DOM either — this is trusted.
+          role="img"
+          aria-label={accessibleName}
+          className="size-full [&>svg]:size-full"
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+      )}
+    </div>
+  )
+}

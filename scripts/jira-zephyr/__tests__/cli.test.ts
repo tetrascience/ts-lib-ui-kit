@@ -196,6 +196,25 @@ describe("audit → approve → apply, end to end with injected clients", () => 
     }
   });
 
+  it("refuses to apply an artifact produced by a different workflow run", async () => {
+    const clients = applyClients(true);
+    await expect(
+      runApplyCli([auditPath, "--expect-origin-run", "4242"], { clients, log: quiet, out: quiet }),
+    ).rejects.toThrow(/no GitHub Actions origin/);
+    expect(clients.jira.getIssue).not.toHaveBeenCalled();
+
+    const fromRun = path.join(dir, "from-run.json");
+    const audited = JSON.parse(fs.readFileSync(auditPath, "utf8")) as { origin?: { runId: string } };
+    audited.origin = { runId: "777" };
+    fs.writeFileSync(fromRun, JSON.stringify(audited));
+    await expect(
+      runApplyCli([fromRun, "--expect-origin-run", "4242"], { clients, log: quiet, out: quiet }),
+    ).rejects.toThrow(/produced by run 777, not 4242/);
+    await expect(
+      runApplyCli([fromRun, "--expect-origin-run", "777"], { clients, log: quiet, out: quiet }),
+    ).resolves.toBeTruthy();
+  });
+
   it("rejects an unreadable or invalid artifact before contacting anything", async () => {
     fs.writeFileSync(path.join(dir, "bad.json"), JSON.stringify({ schemaVersion: 1 }));
     const clients = applyClients(true);

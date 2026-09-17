@@ -115,6 +115,22 @@ export const auditArtifactSchema = z.object({
     branch: z.string().min(1),
     dirty: z.boolean(),
   }),
+  /**
+   * Where this artifact was produced. Recorded when the audit runs in GitHub
+   * Actions, so the apply step can prove that the audit a human reviewed is the
+   * audit being applied — `audit_run_id` is otherwise just an operator-typed
+   * number, and a wrong-but-valid one would silently apply a different audit.
+   * Absent for a local audit. Optional, so older artifacts still parse.
+   */
+  origin: z
+    .object({
+      runId: z.string().min(1),
+      runAttempt: z.string().optional(),
+      workflow: z.string().optional(),
+      ref: z.string().optional(),
+      repository: z.string().optional(),
+    })
+    .optional(),
   jira: z.object({ baseUrl: z.string().url(), projectKey: z.string().min(1) }),
   zephyr: z.object({ baseUrl: z.string().url(), projectKey: z.string().min(1) }),
   tickets: z.array(auditEntrySchema),

@@ -97,14 +97,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Restrict execution to default branch ref
+      # Compares the FULL ref, not github.ref_name: the short name is "main" both for
+      # refs/heads/main and for a tag named "main", so a ref_name check could be
+      # satisfied by pushing such a tag and dispatching against it — running arbitrary
+      # code with ZEPHYR_TOKEN and JIRA_API_TOKEN in the environment, which is exactly
+      # what this step exists to prevent.
+      - name: Restrict execution to the default branch
         env:
-          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
-          if [ "$REF_NAME" != "$DEFAULT_BRANCH" ]; then
-            echo "::error::This workflow can run only from the default branch ref '$DEFAULT_BRANCH' (got '$REF_NAME')."
+          if [ "$REF" != "refs/heads/$DEFAULT_BRANCH" ]; then
+            echo "::error::This workflow can run only from refs/heads/$DEFAULT_BRANCH (got '$REF')."
             exit 1
           fi
 
@@ -223,12 +228,15 @@ jobs:
         env:
           MODE: ${{ inputs.mode }}
           MIN_CONFIDENCE: ${{ inputs.min_confidence }}
+          # Binds the artifact to the run whose summary was reviewed: the audit either
+          # came from this run, or from the run the operator named in audit_run_id.
+          EXPECT_RUN_ID: ${{ inputs.audit_run_id || github.run_id }}
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
         run: |
           set -euo pipefail
-          flags=(--min-confidence "$MIN_CONFIDENCE" --result "$APPLY_FILE")
+          flags=(--min-confidence "$MIN_CONFIDENCE" --result "$APPLY_FILE" --expect-origin-run "$EXPECT_RUN_ID")
           if [ "$MODE" = "write" ]; then flags+=(--execute); fi
           yarn jira-zephyr:apply "$AUDIT_FILE" "${flags[@]}"
 

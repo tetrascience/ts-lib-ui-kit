@@ -25,7 +25,13 @@ import { applyArtifactSchema, APPLY_TOOL_NAME, AUDIT_SCHEMA_VERSION, formatZodIs
 import { displayPath } from "../shared/paths";
 import { formatIdList, renderTable } from "../shared/table";
 
-import { assertTargetsMatch, AuditValidationError, parseMinConfidence, validateAuditArtifact } from "./validator";
+import {
+  assertOriginRun,
+  assertTargetsMatch,
+  AuditValidationError,
+  parseMinConfidence,
+  validateAuditArtifact,
+} from "./validator";
 import { runApply, summarizeResults, type ApplyClients } from "./writer";
 
 import type { ApplyArtifact, ApplyResult, AuditArtifact } from "../shared/types";
@@ -39,6 +45,7 @@ decision is printed, but nothing is written. Add --execute to create the links.
 Options:
   --execute                 Create the approved COVERAGE links in Zephyr
   --min-confidence <level>  Lowest confidence to apply (default: high; low is never allowed)
+  --expect-origin-run <id>  Refuse unless the artifact was produced by this GitHub Actions run
   --only <keys>             Comma-separated subset of the frozen scope to process
   --result <file>           Where to write the apply-result JSON (default: next to the audit file)
   -h, --help                Show this help`;
@@ -82,6 +89,7 @@ export async function runApplyCli(argv: string[], deps: ApplyDeps = {}): Promise
     options: {
       execute: { type: "boolean" },
       "min-confidence": { type: "string" },
+      "expect-origin-run": { type: "string" },
       only: { type: "string" },
       result: { type: "string" },
       help: { type: "boolean", short: "h" },
@@ -106,9 +114,19 @@ export async function runApplyCli(argv: string[], deps: ApplyDeps = {}): Promise
   log(
     `[INFO] Audit: ${path.basename(auditPath)} (${describeScope(artifact.scope)}; generated ${artifact.generatedAt})`,
   );
+  const expectOriginRun = values["expect-origin-run"]?.trim();
+  if (expectOriginRun) {
+    assertOriginRun(artifact, expectOriginRun);
+    log(`[INFO] Origin verified: produced by GitHub Actions run ${expectOriginRun}`);
+  } else if (artifact.origin) {
+    log(`[INFO] Artifact origin: GitHub Actions run ${artifact.origin.runId} (not verified — no --expect-origin-run)`);
+  }
+  // Printed before any write, so a mis-pasted run id is visible in the log rather
+  // than only in the results.
   log(
-    `[INFO] Frozen scope: ${artifact.scopeSnapshot.issueKeys.length} issue(s); approved entries: ${artifact.tickets.filter((t) => t.approved).length}`,
+    `[INFO] Frozen scope: ${artifact.scopeSnapshot.issueKeys.length} issue(s) — ${artifact.scopeSnapshot.issueKeys.join(", ")}`,
   );
+  log(`[INFO] Approved entries: ${artifact.tickets.filter((t) => t.approved).length}`);
   if (ageDays > STALE_AUDIT_WARNING_DAYS) {
     log(`[WARN] This audit is ${Math.floor(ageDays)} days old; consider re-auditing before applying`);
   }

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { assertTargetsMatch, gateEntry, parseMinConfidence, validateAuditArtifact } from "../apply/validator";
+import {
+  assertOriginRun,
+  assertTargetsMatch,
+  gateEntry,
+  parseMinConfidence,
+  validateAuditArtifact,
+} from "../apply/validator";
 import { parseAuditArtifact } from "../shared/audit-schema";
 
 import { makeArtifact, makeEntry } from "./fixtures";
@@ -110,5 +116,21 @@ describe("assertTargetsMatch", () => {
     expect(() => assertTargetsMatch(artifact, { ...live, zephyrBaseUrl: "https://zephyr.example/v2" })).toThrow(
       /Zephyr base URL/,
     );
+  });
+});
+
+describe("assertOriginRun", () => {
+  const fromRun = (runId: string) => makeArtifact([makeEntry()], { origin: { runId } });
+
+  it("accepts the run that produced the artifact", () => {
+    expect(() => assertOriginRun(fromRun("123"), "123")).not.toThrow();
+  });
+
+  it("refuses an artifact produced by a different run", () => {
+    expect(() => assertOriginRun(fromRun("999"), "123")).toThrow(/produced by run 999, not 123/);
+  });
+
+  it("refuses a locally produced artifact, which has no origin to verify", () => {
+    expect(() => assertOriginRun(makeArtifact([makeEntry()]), "123")).toThrow(/no GitHub Actions origin/);
   });
 });

@@ -38,6 +38,12 @@ export interface ZephyrTransportOptions {
 }
 
 /** Same message shape as ts-lib-zephyr-nodejs' ZephyrClient.request(). */
+/**
+ * The `message` deliberately carries only method, path and status: it becomes
+ * `ApplyResult.detail`, which is rendered into the GitHub job summary and the
+ * uploaded artifact of a PUBLIC repository. The vendor response stays on `body`
+ * for local inspection and is never interpolated into the message.
+ */
 export class ZephyrHttpError extends Error {
   constructor(
     readonly method: string,
@@ -45,7 +51,7 @@ export class ZephyrHttpError extends Error {
     readonly status: number,
     readonly body: string,
   ) {
-    super(`${method} ${path} → ${status}: ${body.slice(0, 300)}`);
+    super(`${method} ${path} → ${status}`);
     this.name = "ZephyrHttpError";
   }
 }
@@ -75,7 +81,10 @@ export function createFetchTransport(options: ZephyrTransportOptions): ZephyrTra
         if (!RETRYABLE_STATUSES.has(response.status) || attempt >= maxAttempts) {
           throw new ZephyrHttpError(method, path, response.status, text);
         }
-        await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** (attempt - 1)));
+        // Prefer the server's own Retry-After over blind exponential backoff (429s).
+        const retryAfter = Number(response.headers.get("retry-after"));
+        const waitMs = retryAfter > 0 ? retryAfter * 1000 : 500 * 2 ** (attempt - 1);
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
       }
     },
   };
@@ -126,7 +135,16 @@ export async function createZephyrTransport(
   return { transport: createFetchTransport(options), source: "built-in fetch" };
 }
 
-/** The library throws plain Errors ("GET /x → 404: ..."); recover the status so callers can branch on it. */
+/**
+ * The library throws plain Errors ("GET /x → 404: ..."); recover the status so
+ * callers can branch on it.
+ *
+ * NOTE: this regex is coupled to `ts-lib-zephyr-nodejs`'s message shape, and is the
+ * only way the library path recovers a status code. If that wording ever changes, a
+ * 404 stops becoming `[]` / `null` and starts throwing instead. CI never installs the
+ * JFrog package, so the fetch transport below is what is actually exercised there and
+ * the divergence would first appear on a developer's machine. Keep them in step.
+ */
 function normalizeLibraryError(error: unknown, method: string, path: string): Error {
   if (error instanceof ZephyrHttpError) return error;
   const message = error instanceof Error ? error.message : String(error);
@@ -157,16 +175,40 @@ export interface LinkResult {
   alreadyExisted: boolean;
 }
 
+/**
+ * Wraps a transport so a read-only client cannot issue a non-GET request, whatever
+ * the caller does. Enforcing it here rather than in each write method means a write
+ * method added later is covered without anyone remembering to guard it.
+ */
+function readOnlyTransport(transport: ZephyrTransport): ZephyrTransport {
+  return {
+    // `async` so a refusal is a rejected promise, never a synchronous throw: every
+    // caller treats `request` as promise-returning.
+    async request<T>(method: HttpMethod, path: string, body?: unknown): Promise<T> {
+      if (method !== "GET") throw new ReadOnlyViolationError(method, path);
+      return transport.request<T>(method, path, body);
+    },
+  };
+}
+
 export class ZephyrClient {
+  private readonly transport: ZephyrTransport;
+
   constructor(
-    private readonly transport: ZephyrTransport,
+    transport: ZephyrTransport,
     private readonly options: { readOnly: boolean },
-  ) {}
+  ) {
+    this.transport = options.readOnly ? readOnlyTransport(transport) : transport;
+  }
 
   get readOnly(): boolean {
     return this.options.readOnly;
   }
 
+  /**
+   * Kept alongside the transport wrapper: it fails before a write method does any
+   * argument work, so the error names the refused call rather than an invalid id.
+   */
   private guardWrite(method: HttpMethod, path: string): void {
     if (this.options.readOnly && method !== "GET") throw new ReadOnlyViolationError(method, path);
   }
@@ -220,6 +262,9 @@ export class ZephyrClient {
       const created = await this.transport.request<{ id?: number }>("POST", path, { issueId });
       return { linkId: created?.id ?? null, alreadyExisted: false };
     } catch (error) {
+      // Matching vendor prose is a backstop only: `writer.ts` already filters out ids
+      // present in the live link list, so a reworded message degrades to an `error`
+      // outcome on a genuine duplicate, never to a wrong write.
       if (error instanceof ZephyrHttpError && error.status === 400 && /already has a .*link/i.test(error.body)) {
         return { linkId: null, alreadyExisted: true };
       }

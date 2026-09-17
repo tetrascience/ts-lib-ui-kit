@@ -140,3 +140,23 @@ export function assertTargetsMatch(artifact: AuditArtifact, live: LiveTargets): 
     );
   }
 }
+
+/**
+ * Binds the artifact to the workflow run that produced it. Without this,
+ * `audit_run_id` is only an operator-typed number: a wrong-but-valid run id would
+ * download a different audit and, with `approve: recommended`, apply *its*
+ * recommendations while the human believed they had reviewed something else.
+ */
+export function assertOriginRun(artifact: AuditArtifact, expectedRunId: string): void {
+  const actual = artifact.origin?.runId;
+  if (!actual) {
+    throw new AuditValidationError(
+      `Refusing to apply: --expect-origin-run ${expectedRunId} was given, but this artifact records no GitHub Actions origin (it was produced locally). Re-run the audit in the workflow, or drop the flag.`,
+    );
+  }
+  if (actual !== expectedRunId) {
+    throw new AuditValidationError(
+      `Refusing to apply: this artifact was produced by run ${actual}, not ${expectedRunId}. The audit that was reviewed and the audit about to be applied are different runs — check audit_run_id.`,
+    );
+  }
+}

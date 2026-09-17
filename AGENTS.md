@@ -308,6 +308,8 @@ yarn jira-zephyr:apply   artifacts/zephyr-audit-epic-SW-2301.json --execute   # 
   runs the same scripts with the repo's `ZEPHYR_TOKEN` (default branch only): `mode: audit` writes the
   report to the job summary and uploads the frozen audit; `mode: write` with that
   run's `audit_run_id` applies it (`approve: recommended` = only ADD
-  recommendations). Needs `JIRA_EMAIL` + `JIRA_API_TOKEN` secrets. Because the
+  recommendations; `--expect-origin-run` makes a mistyped `audit_run_id` fail
+  loudly rather than apply a different audit). Needs `JIRA_EMAIL` +
+  `JIRA_API_TOKEN` secrets — prefer a read-only Jira service account. Because the
   repo is public, the summary and the uploaded artifact never carry Jira titles
   (`yarn jira-zephyr:report --redacted-copy`).

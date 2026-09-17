@@ -59,6 +59,7 @@ export type ZephyrReadClient = Pick<ZephyrClient, "getLinkedTestCaseKeys" | "get
 
 export interface AuditDeps {
   cwd?: string;
+  env?: NodeJS.ProcessEnv;
   jira?: JiraReader & { baseUrl: string; verifyCredentials?: () => Promise<unknown> };
   zephyr?: { client: ZephyrReadClient; baseUrl: string; projectKey: string };
   index?: RepoIndex;
@@ -71,6 +72,22 @@ export interface AuditDeps {
 export interface AuditRunResult {
   artifact: AuditArtifact;
   artifactPath: string;
+}
+
+/**
+ * GitHub Actions provenance for the artifact. Absent when the audit is run
+ * locally, which is what `--expect-origin-run` then refuses to accept.
+ */
+export function describeOrigin(env: NodeJS.ProcessEnv): AuditArtifact["origin"] {
+  const runId = env.GITHUB_RUN_ID?.trim();
+  if (!runId) return undefined;
+  return {
+    runId,
+    runAttempt: env.GITHUB_RUN_ATTEMPT?.trim() || undefined,
+    workflow: env.GITHUB_WORKFLOW?.trim() || undefined,
+    ref: env.GITHUB_REF?.trim() || undefined,
+    repository: env.GITHUB_REPOSITORY?.trim() || undefined,
+  };
 }
 
 function splitList(value: string | undefined): string[] {
@@ -177,6 +194,8 @@ export async function runAudit(argv: string[], deps: AuditDeps = {}): Promise<Au
     );
   }
 
+  const origin = describeOrigin(deps.env ?? process.env);
+  if (origin) log(`[INFO] Recording GitHub Actions origin: run ${origin.runId}`);
   const generatedAt = now().toISOString();
   const artifact: AuditArtifact = {
     schemaVersion: AUDIT_SCHEMA_VERSION,
@@ -186,6 +205,7 @@ export async function runAudit(argv: string[], deps: AuditDeps = {}): Promise<Au
     scopeSnapshot: { resolvedAt: generatedAt, issueKeys: resolved.audited.map((issue) => issue.key) },
     skipped: resolved.skipped,
     repo: deps.repoState ?? describeRepoState(cwd),
+    ...(origin ? { origin } : {}),
     jira: { baseUrl: jira.baseUrl, projectKey },
     zephyr: { baseUrl: zephyr.baseUrl, projectKey: zephyr.projectKey },
     tickets,

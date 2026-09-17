@@ -2,7 +2,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import { resolveProjectKey, jiraEnv, zephyrEnv } from "../clients/env";
 import { JiraAuthError, JiraClient, JiraHttpError, jqlString } from "../clients/jira-client";
-import { createZephyrTransport, ReadOnlyViolationError, ZephyrClient, ZephyrHttpError } from "../clients/zephyr-client";
+import {
+  createZephyrTransport,
+  ReadOnlyViolationError,
+  ZephyrClient,
+  ZephyrHttpError,
+  type ZephyrTransport,
+} from "../clients/zephyr-client";
 
 type FetchCall = { url: string; init: RequestInit };
 
@@ -182,6 +188,47 @@ describe("ZephyrClient", () => {
     expect(await client.getLinkedTestCaseKeys("SW-1")).toEqual([]);
     await expect(client.getLinkedTestCaseKeys("SW-2")).rejects.toThrow(/unexpected payload/);
     await expect(client.getLinkedTestCaseKeys("SW-3")).rejects.toThrow(/unexpected payload/);
+  });
+
+  it("keeps the vendor response body out of the error message (public job summaries)", async () => {
+    const secret = "internal detail that must not reach a public summary";
+    const { fetchImpl } = fakeFetch(() => ({ status: 500, body: secret }));
+    const { transport } = await createZephyrTransport({ ...transportOptions, fetchImpl });
+    const client = new ZephyrClient(transport, { readOnly: true });
+
+    const error = await client.getTestCase("SW-T1").catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(ZephyrHttpError);
+    expect((error as Error).message).toBe("GET /testcases/SW-T1 → 500");
+    expect((error as Error).message).not.toContain(secret);
+    expect((error as ZephyrHttpError).body).toContain(secret);
+  });
+
+  it("waits the server's Retry-After before retrying a 429", async () => {
+    let calls = 0;
+    const { fetchImpl } = fakeFetch(() => {
+      calls += 1;
+      return calls === 1
+        ? { status: 429, body: "slow down", headers: { "retry-after": "0" } }
+        : { status: 200, body: { key: "SW-T1", name: "n" } };
+    });
+    const { transport } = await createZephyrTransport({ ...transportOptions, fetchImpl });
+    const client = new ZephyrClient(transport, { readOnly: true });
+
+    await expect(client.getTestCase("SW-T1")).resolves.toMatchObject({ key: "SW-T1" });
+    expect(calls).toBe(2);
+  });
+
+  it("refuses a non-GET at the transport, so a future write method is covered too", async () => {
+    const spy = vi.fn(async () => ({}));
+    const inner: ZephyrTransport = { request: <T>() => spy() as Promise<T> };
+    const client = new ZephyrClient(inner, { readOnly: true });
+
+    // Reaches the transport directly, bypassing every per-method guard.
+    const transport = (client as unknown as { transport: { request: (m: string, p: string) => Promise<unknown> } })
+      .transport;
+    await expect(transport.request("POST", "/anything")).rejects.toThrow(ReadOnlyViolationError);
+    await expect(transport.request("GET", "/testcases/SW-T1")).resolves.toEqual({});
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   it("creates COVERAGE links with a numeric issueId and recognises duplicates", async () => {

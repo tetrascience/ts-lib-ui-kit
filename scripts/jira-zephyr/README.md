@@ -186,7 +186,7 @@ For every key in the **frozen** `scopeSnapshot.issueKeys` (never the live Epic /
 Fix Version — an issue added to the epic after the audit is ignored until the
 next audit) the apply script:
 
-1. Refuses to start unless the live Jira site, Zephyr API URL and Zephyr project match the ones the audit recorded (`JIRA_BASE_URL` / `ZEPHYR_BASE_URL` / `ZEPHYR_PROJECT_KEY`), then checks `approved` and the confidence threshold (default `high`; `low` is never applied, whatever the flag).
+1. Refuses to start unless the live Jira site, Zephyr API URL and Zephyr project match the ones the audit recorded (`JIRA_BASE_URL` / `ZEPHYR_BASE_URL` / `ZEPHYR_PROJECT_KEY`), and — when `--expect-origin-run <id>` is given — unless the artifact was produced by that GitHub Actions run. Then checks `approved` and the confidence threshold (default `high`; `low` is never applied, whatever the flag).
 2. Re-fetches the Jira issue and requires the same numeric issue id.
 3. Re-fetches the live Zephyr links and compares them with `existingZephyrIdsAtAudit`.
 4. Adds only the still-missing `missingZephyrIds`, skipping duplicates. It never removes links and never invents new mappings.
@@ -240,11 +240,23 @@ prefer the two-run path for anything broad. Nothing is ever approved in `audit`
 mode, `approve: recommended` never touches medium- or low-confidence entries,
 and the apply step still refuses `stale` entries.
 
-Secrets: `ZEPHYR_TOKEN` (already configured), `JIRA_EMAIL` and `JIRA_API_TOKEN`
-— any Atlassian account with read access to project SW; API tokens come from
-<https://id.atlassian.com/manage-profile/security/api-tokens>. The run fails fast, pointing at _Settings → Secrets and variables → Actions_, when one is missing.
+Secrets: `ZEPHYR_TOKEN` (already configured), plus `JIRA_EMAIL` and
+`JIRA_API_TOKEN`. The run fails fast, pointing at _Settings → Secrets and
+variables → Actions_, when one is missing.
 
-Two more rails: the first step refuses to run from any ref but the default branch, so the secrets only ever meet workflow and script code that went through PR review (test workflow changes by merging them); and approvals are always applied with `--exclusive`, so a frozen audit downloaded from an earlier dry-run or write run cannot carry that run's approvals into this one.
+**Prefer a dedicated read-only service account for the repository secret.** An
+unscoped personal token is a full-account Atlassian credential, and because
+`scope_type: jql` accepts an arbitrary query, anyone who can dispatch this
+workflow can read anything that account can see. The audit never writes to Jira,
+so a service account with read-only Jira scopes is enough. Service-account tokens
+are always scoped, so set `JIRA_BASE_URL` to the gateway form above. Keep the
+unscoped personal token for local runs, where it only ever sees your own access.
+
+Three more rails:
+
+- The first step compares the **full** `github.ref` against `refs/heads/<default branch>`, so the secrets only ever meet workflow and script code that went through PR review. It deliberately does not use `github.ref_name`, which is `main` for a _tag_ named `main` as well as for the branch. Test workflow changes by merging them.
+- Approvals are always applied with `--exclusive`, so a frozen audit downloaded from an earlier dry-run or write run cannot carry that run's approvals into this one.
+- The audit records the run that produced it (`origin.runId`), and the apply step passes `--expect-origin-run`, so a mistyped `audit_run_id` fails loudly instead of silently applying a different audit's recommendations. The frozen issue keys are also printed before any write.
 
 **Public repository caveat.** Job summaries, logs and uploaded artifacts are
 world-readable. The workflow therefore never prints Jira ticket titles: the

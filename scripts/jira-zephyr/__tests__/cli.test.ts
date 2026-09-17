@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { runApplyCli } from "../apply/apply";
 import { runApprove } from "../approve";
-import { runAudit } from "../audit/audit";
+import { describeOrigin, runAudit } from "../audit/audit";
 import { displayPath } from "../shared/paths";
 
 import { blameStory, makeCommit, makeFile, makeIndex, makeIssue, makeStory } from "./fixtures";
@@ -58,6 +58,9 @@ describe("audit → approve → apply, end to end with injected clients", () => 
     };
     const result = await runAudit(["--epic", "sw-100", "--out", auditPath], {
       cwd: dir,
+      // Explicit: CI sets GITHUB_RUN_ID, and an ambient one would stamp a real
+      // origin onto this fixture and change what the origin tests below assert.
+      env: {},
       jira: fakeJira(),
       zephyr: { client: zephyrClient, baseUrl: "https://zephyr.example/v2", projectKey: "SW" },
       index: fakeIndex(),
@@ -194,6 +197,26 @@ describe("audit → approve → apply, end to end with injected clients", () => 
     } finally {
       vi.unstubAllEnvs();
     }
+  });
+
+  it("records GitHub Actions provenance only when the runner supplies it", () => {
+    expect(describeOrigin({})).toBeUndefined();
+    expect(describeOrigin({ GITHUB_RUN_ID: "   " })).toBeUndefined();
+    expect(
+      describeOrigin({
+        GITHUB_RUN_ID: "4242",
+        GITHUB_RUN_ATTEMPT: "2",
+        GITHUB_WORKFLOW: "Jira ↔ Zephyr coverage audit",
+        GITHUB_REF: "refs/heads/main",
+        GITHUB_REPOSITORY: "tetrascience/ts-lib-ui-kit",
+      }),
+    ).toEqual({
+      runId: "4242",
+      runAttempt: "2",
+      workflow: "Jira ↔ Zephyr coverage audit",
+      ref: "refs/heads/main",
+      repository: "tetrascience/ts-lib-ui-kit",
+    });
   });
 
   it("refuses to apply an artifact produced by a different workflow run", async () => {

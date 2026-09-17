@@ -302,11 +302,14 @@ stamping — you only take over layout. Do not re-implement staged edits by hand
   defaultGroupBy, pageSize, pageSizeOptions, enableFillDown }`. Structural bits
   stay top-level: `hideManifest`, `manifestTitle`, `manifestSlot`.
 - **Labels** — one `labels` object covers every string the editor and its
-  manifest render. `plateTitle` / `manifestTitle` and the import/export menu
-  labels are separate props (they take `ReactNode`, not plain text).
+  manifest render, typed as the exported `PlateMapEditorLabels`, so an app's
+  translation table is a type error away from going stale:
+  `const fr: PlateMapEditorLabels = { … }`. `plateTitle` / `manifestTitle` and
+  the import/export menu labels are separate props (they take `ReactNode`, not
+  plain text).
 - **Styling** — `className` / `style` on the root, plus one `classNames` map for
-  the regions: `{ layout, formCard, plateCard, manifestCard, form, grid,
-  manifest }`. Each card also carries
+  the regions (`PlateMapEditorClassNames`): `{ layout, formCard, plateCard,
+  manifestCard, form, grid, manifest }`. Each card also carries
   `data-plate-map-region="form|plate|manifest"`, so plain CSS can target the
   same regions without threading props.
 

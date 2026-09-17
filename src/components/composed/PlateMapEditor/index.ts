@@ -1,5 +1,12 @@
 export { PlateMapEditor, getPlateMapScopedWellId } from "./PlateMapEditor";
-export type { PlateMapEditorProps, PlateMapEditorHandle } from "./PlateMapEditor";
+export type {
+  PlateMapEditorProps,
+  PlateMapEditorHandle,
+  PlateMapEditorClassNames,
+  PlateMapEditorFormPlacement,
+  PlateMapEditorManifestOptions,
+  PlateMapEditorStackAt,
+} from "./PlateMapEditor";
 
 export { usePlateMapEditorState, defaultColorForWell, defaultEmptyEntry } from "./usePlateMapEditorState";
 export type {
@@ -68,6 +75,8 @@ export type {
   ImportExportHandlers,
   PlateMapGroupOption,
   PlateMapPlateOption,
+  PlateMapEditorLabels,
+  WellManifestTableLabels,
 } from "./types";
 
 export { resolveDimensions, rowLabel, parseRowLabel, pos, parsePos, rectPositions, allPositions } from "./wellGrid";

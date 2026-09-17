@@ -176,9 +176,17 @@ export function htmlToTooltipLines(text?: string): string[] {
  * its full text as the label and an empty unit.
  */
 export function splitAxisTitle(axisTitle: string): { label: string; unit: string } {
-  const match = /^(.*?)\s*\(([^()]+)\)\s*$/.exec(axisTitle);
-  if (!match || !match[1].trim()) return { label: axisTitle.trim(), unit: "" };
-  return { label: match[1].trim(), unit: match[2].trim() };
+  // Plain string scanning rather than a regex: the title is consumer input and
+  // a backtracking pattern over its whitespace was flagged by CodeQL.
+  const trimmed = axisTitle.trim();
+  const fallback = { label: trimmed, unit: "" };
+  if (!trimmed.endsWith(")")) return fallback;
+  const open = trimmed.lastIndexOf("(");
+  if (open <= 0) return fallback;
+  const unit = trimmed.slice(open + 1, -1).trim();
+  const label = trimmed.slice(0, open).trim();
+  if (!unit || !label || unit.includes("(") || unit.includes(")")) return fallback;
+  return { label, unit };
 }
 
 const withUnit = (value: string, unit: string): string => (unit ? `${value} ${unit}` : value);

@@ -41,6 +41,9 @@ describe("splitAxisTitle", () => {
   it("keeps the whole title as the label when there is no unit", () => {
     expect(splitAxisTitle("Intensity")).toEqual({ label: "Intensity", unit: "" });
     expect(splitAxisTitle("(mAU)")).toEqual({ label: "(mAU)", unit: "" });
+    expect(splitAxisTitle("Signal ()")).toEqual({ label: "Signal ()", unit: "" });
+    expect(splitAxisTitle("Signal (a (b))")).toEqual({ label: "Signal (a (b))", unit: "" });
+    expect(splitAxisTitle("  Signal   (mAU)  ")).toEqual({ label: "Signal", unit: "mAU" });
   });
 });
 

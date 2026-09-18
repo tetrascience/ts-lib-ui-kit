@@ -14,6 +14,8 @@ import * as React from "react";
 import { useState } from "react";
 import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 
+import { selectOption } from "../../../../.storybook/select-interactions";
+
 import { DataAppShell } from "./DataAppShell";
 import { DataAppShellRightPanel, DataAppShellRightPanelTrigger } from "./RightPanel";
 import { DataAppShellSecondaryNav } from "./SecondaryNav";
@@ -910,7 +912,6 @@ export const SecondaryNavigationHorizontal: Story = {
   render: () => <ShellDemo secondary="workflow-horizontal" />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const body = within(document.body);
 
     await step("Horizontal stepper bar renders under the top bar", async () => {
       const nav = canvasElement.querySelector(
@@ -934,8 +935,7 @@ export const SecondaryNavigationHorizontal: Story = {
     });
 
     await step("The dropdown changes the active step", async () => {
-      await userEvent.click(canvas.getByRole("combobox", { name: "Current step" }));
-      await userEvent.click(await body.findByRole("option", { name: "Step 3 · Step 3 Name" }));
+      await selectOption(canvas.getByRole("combobox", { name: "Current step" }), "Step 3 · Step 3 Name");
       await waitFor(() =>
         expect(canvas.getByRole("combobox", { name: "Current step" })).toHaveTextContent(
           "Step 3 · Step 3 Name",

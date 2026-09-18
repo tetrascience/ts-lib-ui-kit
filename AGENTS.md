@@ -214,12 +214,7 @@ never `userEvent.click(trigger)` followed by a bare
 `body.findByRole("option", …)`. `SelectContent` is portal-rendered and
 positioned in a layout effect, so the option is not in the DOM on the next
 tick; Testing Library's default 1000 ms `asyncUtilTimeout` is enough locally
-but not on a loaded CI runner under coverage instrumentation — the
-`Unable to find role="option"` flake SW-2624 fixed. The helpers wait for
-the listbox first and then scope the option query to it, which is strictly
-*more* specific than querying the whole document — so no assertion is weakened
-by adopting them. The same reasoning applies to any portal + entry-animation
-pattern; see also the `waitFor` rule for `toBeVisible` on animated elements.
+but not on a loaded CI runner under coverage instrumentation
 
 ### Docs "Show code" must show component code
 

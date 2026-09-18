@@ -24,7 +24,7 @@ type Story = StoryObj<typeof Checkbox>
 
 function renderCheckbox(props: React.ComponentProps<typeof Checkbox> = {}) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2">
       <Checkbox id="storybook-checkbox" {...props} />
       <Label htmlFor="storybook-checkbox">Email me when the build completes</Label>
     </div>

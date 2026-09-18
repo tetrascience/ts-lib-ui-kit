@@ -21,7 +21,7 @@ const meta: Meta<typeof ToggleGroup> = {
     },
     size: {
       control: { type: "select" },
-      options: ["default", "sm", "lg"],
+      options: ["default", "xs", "sm", "lg"],
     },
     orientation: {
       control: { type: "select" },
@@ -93,6 +93,25 @@ export const Outline: Story = {
     await step("Outline toggle group renders", async () => {
       expect(canvas.getByRole("group")).toBeInTheDocument()
       expect(canvas.getByRole("button", { name: "Align left" })).toBeInTheDocument()
+    })
+  },
+}
+
+export const ExtraSmall: Story = {
+  args: {
+    size: "xs",
+  },
+  render: renderToggleGroup,
+  parameters: {
+    zephyr: { testCaseId: "SW-T5684" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("xs group items are 24px with 8px end corners (match Button xs)", async () => {
+      const first = canvas.getByRole("button", { name: "Align left" })
+      expect(Math.round(first.getBoundingClientRect().height)).toBe(24)
+      expect(Math.round(parseFloat(getComputedStyle(first).borderTopLeftRadius))).toBe(8)
     })
   },
 }

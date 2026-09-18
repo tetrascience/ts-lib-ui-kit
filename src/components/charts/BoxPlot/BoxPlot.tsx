@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useMemo } from "react";
 
+import { Y_TICK_LABEL_SPACING, maxTickCount, resolveChartScale, thinTicks } from "../chart-scale";
 import { useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+
+import type Plotly from "plotly.js-dist";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
@@ -11,11 +14,35 @@ import { seriesColor } from "@/utils/colors";
 /** Default point position offset from the box edge */
 const DEFAULT_POINT_POSITION = -1.8;
 
+/**
+ * Plotly pairs `x[i]` with `y[i]` and silently drops the samples past the
+ * shorter array — a one-entry `x` therefore drew a flat line instead of a box
+ * (SW-2298). A single x names the whole box and is broadcast to every sample;
+ * any other length mismatch is a data bug, so warn rather than guess.
+ */
+function resolveBoxX(series: BoxDataSeries): BoxDataSeries["x"] {
+  const { x, y, name } = series;
+  if (!x || x.length === y.length) return x;
+  if (x.length === 1) {
+    return Array.from({ length: y.length }, () => x[0]) as string[] | number[];
+  }
+  console.warn(
+    `[BoxPlot] Series "${name}" has ${x.length} x values for ${y.length} y values; ` +
+      `Plotly will only plot the first ${Math.min(x.length, y.length)} samples. ` +
+      "Pass one x per sample, or a single x to label the whole box.",
+  );
+  return x;
+}
+
 interface BoxDataSeries {
   y: number[];
   name: string;
   /** Optional color override (auto-assigned from CHART_COLORS if not provided) */
   color?: string;
+  /**
+   * Category per sample, aligned with `y`. A single entry labels the whole
+   * box (one category per series) and is applied to every sample.
+   */
   x?: string[] | number[];
   boxpoints?: "all" | "outliers" | "suspectedoutliers" | false;
   jitter?: number;
@@ -67,6 +94,11 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
   // to fill its height (so e.g. a fixed width with a container-driven height works).
   const fillWidth = width === undefined;
   const fillHeight = height === undefined;
+  // Fonts, tick length and margins step down on small canvases so the plot
+  // area (not the chrome) gets the pixels (SW-2298).
+  const scale = resolveChartScale(resolvedWidth, resolvedHeight);
+  // `title` defaults to "Box Plot"; an explicit "" drops it and its margin.
+  const marginTop = title ? scale.margin.tTitle : scale.margin.tNoTitle;
   const sizeRef = useRef({ width: resolvedWidth, height: resolvedHeight });
   sizeRef.current = { width: resolvedWidth, height: resolvedHeight };
   const plotInitedRef = useRef(false);
@@ -114,14 +146,32 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
     return ticks;
   }, [effectiveYRange]);
 
+  // Y ticks thinned to what fits the plot height. Derived from the resolved
+  // (not last-plotted) height so an in-place resize also updates them via the
+  // relayout effect below, instead of only when the scale bucket flips.
+  const yTickVals = useMemo(
+    () =>
+      thinTicks(
+        yTicks,
+        maxTickCount(
+          resolvedHeight - marginTop - scale.margin.b,
+          scale.tickFontSize * Y_TICK_LABEL_SPACING,
+        ),
+      ),
+    [yTicks, resolvedHeight, marginTop, scale],
+  );
+  const yTickKey = yTickVals.join(",");
+  const yTickValsRef = useRef(yTickVals);
+  yTickValsRef.current = yTickVals;
+
   const tickOptions = useMemo(
     () => ({
       tickcolor: theme.tickColor,
-      ticklen: 12,
+      ticklen: scale.ticklen,
       tickwidth: 1,
       ticks: "outside" as const,
       tickfont: {
-        size: 16,
+        size: scale.tickFontSize,
         color: theme.textColor,
         family: CHART_FONT_FAMILY,
         weight: 400,
@@ -131,7 +181,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
       position: 0,
       zeroline: false,
     }),
-    [theme],
+    [theme, scale],
   );
 
   const titleOptions = useMemo(
@@ -142,7 +192,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
       xanchor: "center" as const,
       yanchor: "top" as const,
       font: {
-        size: 32,
+        size: scale.titleFontSize,
         weight: 600,
         family: CHART_FONT_FAMILY,
         color: theme.textColor,
@@ -150,8 +200,12 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         standoff: 30,
       },
     }),
-    [title, theme],
+    [title, theme, scale],
   );
+
+  // Resolved once per data change so a length-mismatch warning fires once,
+  // not on every theme- or size-driven re-plot.
+  const resolvedX = useMemo(() => dataSeries.map(resolveBoxX), [dataSeries]);
 
   useEffect(() => {
     if (!plotRef.current || !hasSize) return;
@@ -160,7 +214,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
       const color = seriesColor(index, series.color);
       return {
         y: series.y,
-        x: series.x,
+        x: resolvedX[index],
         type: "box" as const,
         name: series.name,
         hoverinfo: "none" as const,
@@ -188,7 +242,13 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
       title: titleOptions,
       // Bottom margin reserves room for tick labels, the x-axis title, and the
       // container-anchored bottom legend stacked beneath them.
-      margin: { l: 80, r: 40, b: 96, t: 80, pad: 0 },
+      margin: {
+        l: scale.margin.l,
+        r: scale.margin.r,
+        b: scale.margin.b,
+        t: marginTop,
+        pad: 0,
+      },
       paper_bgcolor: theme.paperBg,
       plot_bgcolor: theme.plotBg,
       font: {
@@ -199,12 +259,12 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         title: {
           text: xTitle,
           font: {
-            size: 16,
+            size: scale.axisTitleFontSize,
             color: theme.textSecondary,
             family: CHART_FONT_FAMILY,
             weight: 400,
           },
-          standoff: 15,
+          standoff: scale.axisTitleStandoff,
         },
         gridcolor: theme.gridColor,
         range: xRange,
@@ -219,18 +279,18 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         title: {
           text: yTitle,
           font: {
-            size: 16,
+            size: scale.axisTitleFontSize,
             color: theme.textSecondary,
             family: CHART_FONT_FAMILY,
             weight: 400,
           },
-          standoff: 15,
+          standoff: scale.axisTitleStandoff,
         },
         gridcolor: theme.gridColor,
         range: yRange,
         autorange: !yRange,
         tickmode: "array" as const,
-        tickvals: yTicks,
+        tickvals: yTickValsRef.current,
         showgrid: true,
         automargin: true,
         ...tickOptions,
@@ -246,11 +306,11 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         yref: "container" as const,
         orientation: "h" as const,
         font: {
-          size: 13,
+          size: scale.legendFontSize,
           color: theme.legendColor,
           family: CHART_FONT_FAMILY,
           weight: 500,
-          lineheight: 18,
+          lineheight: scale.legendLineHeight,
         },
       },
       showlegend: true,
@@ -286,7 +346,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, hasSize, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks, theme, bindTooltip]);
+  }, [dataSeries, resolvedX, hasSize, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks, theme, scale, marginTop, bindTooltip]);
 
   // Resize in place when the measured/overridden size changes — cheaper than
   // recreating the plot, and it preserves tooltip/event bindings.
@@ -307,9 +367,15 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
     // Swallow rejections from a relayout that races an unmount/purge.
     // plotInitedRef guarantees Plotly finished loading, so sync access is safe.
     void getLoadedPlotly()
-      .relayout(plotElement, { width: resolvedWidth, height: resolvedHeight })
+      .relayout(plotElement, {
+        width: resolvedWidth,
+        height: resolvedHeight,
+        // Re-thin the y ticks for the new plot height (SW-2298). The flattened
+        // key is valid relayout input but not part of the Layout type.
+        "yaxis.tickvals": yTickValsRef.current,
+      } as Partial<Plotly.Layout>)
       .catch(() => {});
-  }, [resolvedWidth, resolvedHeight]);
+  }, [resolvedWidth, resolvedHeight, yTickKey]);
 
   return (
     <div

@@ -311,6 +311,8 @@ export const ContainerFilled: Story = {
         expect(plot.clientWidth).toBeGreaterThanOrEqual(420);
         expect(plot.clientWidth).toBeLessThanOrEqual(460);
       });
+      // Leave the story showing the full container, not the 440px test size.
+      wrapper.style.width = "";
     });
   },
 };

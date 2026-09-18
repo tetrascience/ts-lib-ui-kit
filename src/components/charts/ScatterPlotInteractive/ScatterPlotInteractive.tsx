@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import "./ScatterPlotInteractive.scss";
 import { useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 
@@ -173,8 +172,8 @@ const ScatterPlotInteractive: React.FC<ScatterPlotInteractiveProps> = ({
     const config: Partial<Plotly.PlotMarker> = {
       size: sizes,
       symbol: shapes,
-      // Points carry no outline; depth comes from a CSS drop-shadow
-      // (see ScatterPlotInteractive.scss). Selected points re-add a line below.
+      // Points carry no outline — a flat fill (SW-2298 dropped the earlier CSS
+      // drop-shadow). Selected points re-add a line below.
       line: {
         width: 0,
       },

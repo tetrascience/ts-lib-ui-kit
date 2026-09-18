@@ -32,8 +32,8 @@ const plotly = vi.hoisted(() => ({
 }));
 vi.mock("plotly.js-dist", () => ({ default: plotly }));
 
-const lastTraces = (): Array<{ fillcolor?: string }> =>
-  (plotly.newPlot.mock.calls.at(-1)?.[1] as Array<{ fillcolor?: string }>) ?? [];
+const lastTraces = (): Array<{ fillcolor?: string; x?: unknown[] }> =>
+  (plotly.newPlot.mock.calls.at(-1)?.[1] as Array<{ fillcolor?: string; x?: unknown[] }>) ?? [];
 
 const dataSeries: BoxPlotProps["dataSeries"] = [
   { name: "Series 1", y: [10, 18, 14, 22, 9] },
@@ -80,6 +80,32 @@ describe("BoxPlot", () => {
     expect(lastTraces()[0]?.fillcolor).toBe("rgb(10, 20, 30)");
   });
 
+  it("broadcasts a single x label across every sample", async () => {
+    await render({
+      dataSeries: [{ name: "G1", y: [1, 2, 3, 4], x: ["Group 1"] }],
+      width: 600,
+      height: 400,
+    });
+    expect(lastTraces()[0]?.x).toEqual(["Group 1", "Group 1", "Group 1", "Group 1"]);
+  });
+
+  it("passes an aligned x through untouched and warns on any other length mismatch", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await render({
+      dataSeries: [
+        { name: "Aligned", y: [1, 2], x: ["a", "b"] },
+        { name: "Short", y: [1, 2, 3, 4], x: ["a", "b"] },
+      ],
+      width: 600,
+      height: 400,
+    });
+    expect(lastTraces()[0]?.x).toEqual(["a", "b"]);
+    expect(lastTraces()[1]?.x).toEqual(["a", "b"]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain(`Series "Short" has 2 x values for 4 y values`);
+    warn.mockRestore();
+  });
+
   it("re-checks the applied size in place when only the height changes", async () => {
     await render({ dataSeries });
 
@@ -94,6 +120,6 @@ describe("BoxPlot", () => {
       triggerResize(320, 260);
     });
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { width: 320, height: 260 });
+    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 320, height: 260 }));
   });
 });

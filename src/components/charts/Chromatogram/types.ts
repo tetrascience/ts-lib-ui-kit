@@ -84,8 +84,10 @@ export interface PeakAnnotation {
   /** Line width for the region overlay (default: 3.5) */
   regionOverlayWidth?: number;
   /**
-   * Plotly hovertemplate HTML string used by the region overlay and the invisible
-   * hit-area marker for this peak. Falls back to a default summary when omitted.
+   * Text shown in the chart tooltip when hovering this peak (via the region
+   * overlay or the invisible hit-area marker). `<br>` starts a new line; other
+   * HTML tags are stripped, since the tooltip renders plain text. Falls back to
+   * `text` when omitted.
    */
   hoverText?: string;
   /**

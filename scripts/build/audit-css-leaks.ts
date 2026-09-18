@@ -53,6 +53,9 @@ export interface Leak {
  */
 export const KIT_CLASS_PREFIXES: readonly string[] = [
   "ts-",
+  // Chromatogram has no .scss of its own; its wrapper class anchors the
+  // Plotly modebar rule in src/index.tailwind.css (SW-2298).
+  "chromatogram-",
   "histogram-",
   "electropherogram-",
   "platemap-",

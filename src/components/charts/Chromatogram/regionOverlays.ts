@@ -27,8 +27,10 @@ export function createRegionOverlayTraces(
 
     const color = peak.color ?? seriesColor;
     const lineWidth = peak.regionOverlayWidth ?? DEFAULT_REGION_OVERLAY_WIDTH;
+    // Overlays with hoverText feed the shared ChartTooltip through `text`
+    // (Plotly's own label stays off — SW-2298); the rest are decorative.
     const hoverProps = peak.hoverText
-      ? { hovertemplate: `${peak.hoverText}<extra></extra>` }
+      ? { text: peak.hoverText, hoverinfo: "none" as const }
       : { hoverinfo: "skip" as const };
 
     traces.push({

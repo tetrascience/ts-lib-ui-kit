@@ -35,6 +35,9 @@ vi.mock("plotly.js-dist", () => ({ default: plotly }));
 const lastLayout = (): { barmode?: string; width?: number; height?: number } =>
   (plotly.newPlot.mock.calls.at(-1)?.[2] as { barmode?: string; width?: number; height?: number }) ?? {};
 
+const lastTraces = (): Array<{ width?: number }> =>
+  (plotly.newPlot.mock.calls.at(-1)?.[1] as Array<{ width?: number }>) ?? [];
+
 const dataSeries: BarChartProps["dataSeries"] = [
   { name: "Series 1", x: [0, 1, 2], y: [10, 18, 14] },
 ];
@@ -70,6 +73,38 @@ afterEach(() => {
 });
 
 describe("BarChart", () => {
+  it("sizes bars to about a quarter of the median x gap by default", async () => {
+    await render({ dataSeries, width: 600, height: 400 });
+    expect(lastTraces()[0]?.width).toBeCloseTo(0.24);
+  });
+
+  it("uses the median gap so one tight pair does not shrink every bar", async () => {
+    await render({
+      dataSeries: [{ name: "S", x: [0, 1, 100], y: [1, 2, 3] }],
+      width: 600,
+      height: 400,
+    });
+    // gaps [1, 99] → median 50 → 0.24 × 50
+    expect(lastTraces()[0]?.width).toBeCloseTo(12);
+  });
+
+  it("narrows grouped bars so four or more series fit their slot", async () => {
+    const five = ["A", "B", "C", "D", "E"].map((name) => ({ name, x: [0, 1, 2], y: [1, 2, 3] }));
+    await render({ dataSeries: five, variant: "group", width: 600, height: 400 });
+    // min(0.24, 0.8 / 5) = 0.16
+    expect(lastTraces()[0]?.width).toBeCloseTo(0.16);
+    // stacked bars share the slot, so the default fraction applies
+    await render({ dataSeries: five, variant: "stack", width: 600, height: 400 });
+    expect(lastTraces()[0]?.width).toBeCloseTo(0.24);
+  });
+
+  it("honours an explicit barWidth and leaves a single bar to Plotly", async () => {
+    await render({ dataSeries, barWidth: 0.5, width: 600, height: 400 });
+    expect(lastTraces()[0]?.width).toBe(0.5);
+    await render({ dataSeries: [{ name: "S", x: [7], y: [1] }], width: 600, height: 400 });
+    expect(lastTraces()[0]?.width).toBeUndefined();
+  });
+
   it("maps the overlay variant to Plotly's overlay barmode", async () => {
     await render({ dataSeries, variant: "overlay", width: 600, height: 400 });
     expect(lastLayout().barmode).toBe("overlay");
@@ -89,6 +124,6 @@ describe("BarChart", () => {
       triggerResize(320, 260);
     });
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { width: 320, height: 260 });
+    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 320, height: 260 }));
   });
 });

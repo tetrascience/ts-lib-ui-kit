@@ -306,6 +306,119 @@ For AI-assisted consuming apps, add a short instruction like this to the app's `
 Use `ProcessFlow` from `@tetrascience-npm/tetrascience-react-ui` for multi-step workflow visualization. Do not build a custom stepper for upload, validation, review, approval, processing, or setup flows. Parent components own the workflow state and pass `steps: ProcessFlowStep[]`; each step status must be one of `PROCESS_FLOW_STEP_STATUSES`. Use `selectedStepId` only for the viewed/selected step. Keep completion/error side effects in the parent workflow code, not inside `ProcessFlow`.
 ```
 
+#### PlateMapEditor
+
+`PlateMapEditor` is the standard plate-map editing surface — a metadata form, an
+interactive plate grid, and a sample manifest, wired together by a staged-edit
+controller. Use it as-is for the default layout; tune it with props; and drop to
+`usePlateMapEditorState` only when you need a layout the props can't express.
+
+```tsx
+import { PlateMapEditor } from "@tetrascience-npm/tetrascience-react-ui";
+
+function PlateScreen() {
+  const [values, setValues] = React.useState(new Map());
+  const [selection, setSelection] = React.useState(new Set());
+
+  return (
+    <PlateMapEditor
+      format="96"
+      values={values}
+      onChange={setValues}
+      selection={selection}
+      onSelectionChange={setSelection}
+      fields={FIELDS}
+      tableColumns={COLUMNS}
+    />
+  );
+}
+```
+
+##### Choosing a level
+
+| You need | Use |
+| --- | --- |
+| The standard surface, tuned by props | `PlateMapEditor` |
+| The form somewhere the editor can't reach | `PlateMapEditor` + `hideForm` + the imperative handle |
+| A layout no prop combination expresses | `usePlateMapEditorState` + `PlateMapForm` / `PlateMapGrid` / `PlateMapManifest` |
+
+Dropping to the hook keeps the apply/clear semantics, plate scoping, and barcode
+stamping — you only take over layout. Do not re-implement staged edits by hand.
+
+##### Customization
+
+- **Layout** — `formPlacement` (`start` / `end` / `top` / `bottom`), `stackAt`,
+  `formWidth`, `hideForm`, `hideManifest`.
+- **Slots** — `banner` (whole editor), `plateBanner` (plate card only),
+  `plateToolbar` (above grid), `plateFooter` (the plate card's footer),
+  `footer` (editor-wide action row), `legend` + `legendPlacement`,
+  `formExtras`, `formSlot`, `manifestSlot`.
+- **Edit state** — `staged` / `onStagedChange` for a controlled staged record,
+  `mergeOnApply` for custom merge semantics, `applyScope="all-plates"` to write
+  across every plate at once.
+- **Manifest** — one `manifest` object: `{ filterable, filterColumns, groupable,
+  defaultGroupBy, pageSize, pageSizeOptions, enableFillDown }`. Structural bits
+  stay top-level: `hideManifest`, `manifestTitle`, `manifestSlot`.
+- **Labels** — one `labels` object covers every string the editor and its
+  manifest render, typed as the exported `PlateMapEditorLabels`, so an app's
+  translation table is a type error away from going stale:
+  `const fr: PlateMapEditorLabels = { … }`. `plateTitle` / `manifestTitle` and
+  the import/export menu labels are separate props (they take `ReactNode`, not
+  plain text).
+- **Styling** — `className` / `style` on the root, plus one `classNames` map for
+  the regions (`PlateMapEditorClassNames`): `{ layout, formCard, plateCard,
+  manifestCard, form, grid, manifest }`. Each card also carries
+  `data-plate-map-region="form|plate|manifest"`, so plain CSS can target the
+  same regions without threading props.
+
+##### Rendering the form outside the editor
+
+Hide the built-in form and drive the staged state through the imperative handle.
+The editor keeps owning selection and apply; your form just feeds it.
+
+```tsx
+const editor = React.useRef<PlateMapEditorHandle<MyWell>>(null);
+
+<>
+  <MySidebarForm
+    onChange={(next) => editor.current?.setStaged(next)}
+    onApply={() => editor.current?.apply()}
+    onClear={() => editor.current?.clear()}
+  />
+  <PlateMapEditor ref={editor} hideForm {...rest} />
+</>;
+```
+
+##### Responsiveness
+
+The editor responds to **its container's** width, not the viewport's, so it lays
+out correctly inside a narrow panel, split pane, or drawer on a wide screen.
+`stackAt` names a container width — `sm` 640 / `md` 768 (default) / `lg` 1024 /
+`xl` 1280 / `never` — below which the form and grid stack full-width. A plate too
+dense to fit scrolls inside its own container rather than widening the page.
+
+##### Migration notes
+
+Everything below is additive; existing code keeps working unchanged.
+
+- **Layout now tracks container width, not viewport width.** This is the one
+  behavioural change. If your editor is full-width the result is effectively the
+  same; if it sits in a narrow panel on a wide screen it will now correctly
+  stack instead of rendering a cramped two-column layout. Tune with `stackAt`.
+- `colorForWell` and `emptyEntry` are now **optional** — delete them for
+  read-only or single-category views and sensible defaults apply.
+- `className` on the root always worked despite reports otherwise; `style` is
+  new.
+- If you previously forked or re-assembled the primitives to change layout,
+  replace that with `formPlacement` / `stackAt` / `formWidth` and the slots, or
+  with `usePlateMapEditorState` if you still need custom structure. Hand-rolled
+  staged/apply logic should be deleted in favour of the hook.
+- If you worked around the hardcoded 360px form column with a width utility,
+  switch to `formWidth` — it is the supported path and applies only at and above
+  `stackAt`.
+- `manifestFilterable` and `manifestGroupable` still work but are deprecated in
+  favour of `manifest={{ filterable, groupable }}`.
+
 ### Charts (`charts/`)
 
 Plotly.js-based data visualisations:

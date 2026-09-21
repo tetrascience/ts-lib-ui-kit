@@ -150,17 +150,36 @@ so roomy layouts don't collect dead tab stops, and use `role="group"` rather
 than `role="region"` (`region` is a landmark, and two instances on one page
 trip `landmark-unique`).
 
-## Localisation: one label bag per component
+## Localisation: every user-facing string is overridable
 
-Components render no hardcoded user-facing English. Past components grew a
-flat `xxxLabel` prop per string, which stops scaling around a dozen; prefer a
-single optional `labels` object typed against an exported interface, merged
-over a `satisfies Required<…>` defaults table so a missing key is a type error
-rather than a blank UI. `PlateMapEditorLabels` / `WellManifestTableLabels` in
-`components/composed/PlateMapEditor/types.ts` are the pattern. Structural
-`ReactNode` slots (a title, a heading) stay as their own props — they are
-content, not strings. Guard it with a story asserting no English survives in
-the rendered subtree, not just that the replacements appear.
+Components render no hardcoded user-facing English — each string a consumer
+might translate or reword has an optional prop with an English default. The
+_shape_ of that prop follows the size of the component; do not reach for a
+`labels` object by default:
+
+- **A flat optional `xxxLabel` prop per string is the default.** It is the
+  simplest API, autocompletes at the top level, and is what the kit's own
+  leaf components do (`confirmLabel` / `cancelLabel` on `ConfirmDialog`, the
+  four form strings on `WellMetadataForm`, the five menu items on
+  `PlateMapActionsMenu`).
+- **Switch to a single `labels` object only when flat props stop paying for
+  themselves**: a component that composes several others and would otherwise
+  have to re-declare and forward each of their label props one by one, or
+  whose own string count has clearly outgrown a prop list (more than about
+  eight). `PlateMapEditor` is the worked example — it forwards two dozen
+  strings into its form, grid and manifest sub-components, so it takes one
+  `labels` typed as the exported `PlateMapEditorLabels`, while those
+  sub-components keep their flat props. Type the object against an exported
+  interface and merge it over a `satisfies Required<…>` defaults table so a
+  missing default is a type error rather than a blank UI
+  (`WellManifestTableLabels` in `components/composed/PlateMapEditor/types.ts`).
+- **Never offer both shapes for the same string** on one component.
+
+Whichever shape: treat an explicitly `undefined` override as absent (the value
+i18n lookups produce for a missing key), keep structural `ReactNode` slots (a
+title, a heading) as their own props — they are content, not strings — and
+guard the work with a story asserting no English survives in the rendered
+subtree, not just that the replacements appear.
 
 ## Component Patterns
 

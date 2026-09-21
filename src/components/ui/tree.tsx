@@ -128,28 +128,27 @@ function useTreeItem() {
  * rendering) each container walks its own children and wraps them in an index provider. Purely
  * positional, so it is correct on the first render and under SSR.
  *
- * Caveat: every valid element child occupies a set slot, so non-item children of a group (a "Load
- * more" control, for instance) would be counted. That placement question is deliberately deferred
- * to SW-2542.
+ * Only `TreeItem` elements take part: a non-item child (a "Load more" control, a `TreeEmpty`
+ * placeholder for a group whose children are empty or failed to load) passes through untouched
+ * instead of costing a real sibling a set slot — SW-2542.
  * -----------------------------------------------------------------------------------------------*/
 
 function useIndexedTreeChildren(children: React.ReactNode) {
   return React.useMemo(() => {
     const array = React.Children.toArray(children);
-    const elements = array.filter(React.isValidElement);
-    const setsize = elements.length;
+    const items = array.filter(
+      (child): child is React.ReactElement => React.isValidElement(child) && child.type === TreeItem,
+    );
+    const setsize = items.length;
 
-    // Which siblings are branches is read off `hasChildren` in the element's own props. A child
-    // wrapped in a consumer's own component reads as a leaf, which costs a connector rather than
-    // breaking anything — the alternative is a mount-order registry, and the whole point of doing
-    // this positionally is to stay correct on the first render.
+    // Which siblings are branches is read off `hasChildren` in the element's own props.
     const isBranch = (child: React.ReactElement) => (child.props as TreeItemProps)?.hasChildren === true;
-    const lastBranchPos = elements.reduce((last, child, index) => (isBranch(child) ? index + 1 : last), 0);
+    const lastBranchPos = items.reduce((last, child, index) => (isBranch(child) ? index + 1 : last), 0);
 
     let posinset = 0;
 
     return array.map((child, index) => {
-      if (!React.isValidElement(child)) return child;
+      if (!React.isValidElement(child) || child.type !== TreeItem) return child;
       posinset += 1;
       return (
         <TreeIndexContext.Provider key={child.key ?? index} value={{ posinset, setsize, lastBranchPos }}>
@@ -169,7 +168,11 @@ function useIndexedTreeChildren(children: React.ReactNode) {
  * correct for arbitrary consumer markup between the levels.
  * -----------------------------------------------------------------------------------------------*/
 
-const ITEM_SELECTOR = '[role="treeitem"]';
+// `[data-tree-item-id]` excludes `TreeEmpty`: it carries `role="treeitem"` too (so an empty
+// `Tree`/`TreeItemGroup` still satisfies `aria-required-children`), but it is a placeholder, not a
+// node — without this, arrow-key traversal would step onto it and, having no id to focus, stall
+// there instead of moving past it to the next real item.
+const ITEM_SELECTOR = '[role="treeitem"][data-tree-item-id]';
 
 function getVisibleItems(root: HTMLElement | null) {
   if (!root) return [];
@@ -1040,8 +1043,50 @@ function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"
   );
 }
 
+/* -------------------------------------------------------------------------------------------------
+ * TreeEmpty
+ * -----------------------------------------------------------------------------------------------*/
+
+/**
+ * Placeholder row for a `Tree` (no root nodes) or a `TreeItemGroup` (a branch whose children came
+ * back empty, or whose fetch failed) with nothing to show. Renders as a disabled `treeitem` rather
+ * than a plain `<div>`: `role="tree"` and `role="group"` both require treeitem/group children per
+ * WAI-ARIA's `aria-required-children`, so a bare paragraph would leave the container structurally
+ * invalid — and some screen readers skip an invalid container's content entirely — the moment it is
+ * the only child. Excluded from sibling indexing (`useIndexedTreeChildren` only counts `TreeItem`
+ * elements) and from keyboard traversal (`ITEM_SELECTOR` requires `data-tree-item-id`, which this
+ * does not carry): there is nothing here to navigate to.
+ *
+ * Content is entirely up to the caller — a short message for an empty branch, or an icon, message
+ * and retry action for one that failed to load. Deliberately *not* `aria-disabled`: Chromium's
+ * accessibility tree treats that as inherited by descendants (mirrored by Playwright's
+ * actionability checks, which is how this was caught), so it would have made a nested retry button
+ * unreachable by keyboard and screen readers, not just visually inert. A retry (or any other) button
+ * inside it must still stop its click from bubbling: it sits inside the enclosing `TreeItem`, whose
+ * click handler walks up to the nearest treeitem and treats any unclaimed click as that node's
+ * select/toggle.
+ */
+function TreeEmpty({ className, children, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      {...props}
+      data-slot="tree-empty"
+      role="treeitem"
+      aria-selected="false"
+      tabIndex={-1}
+      className={cn(
+        "text-muted-foreground flex min-h-9 w-full flex-col items-center justify-center gap-2 px-2 py-4 text-center text-sm",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 export {
   Tree,
+  TreeEmpty,
   TreeItem,
   TreeItemGroup,
   TreeItemLabel,

@@ -1,11 +1,12 @@
-import { FileTextIcon, FolderIcon, FolderOpenIcon } from "lucide-react";
+import { FileTextIcon, FolderIcon, FolderOpenIcon, RotateCwIcon, TriangleAlertIcon } from "lucide-react";
 import * as React from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { Badge } from "./badge";
+import { Button } from "./button";
 import { Kbd } from "./kbd";
 import { Spinner } from "./spinner";
-import { Tree, TreeItem, TreeItemGroup, TreeItemLabel, useTreeItem } from "./tree";
+import { Tree, TreeEmpty, TreeItem, TreeItemGroup, TreeItemLabel, useTreeItem } from "./tree";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
@@ -258,6 +259,74 @@ export const Guides: Story = {
   ),
   parameters: {
     zephyr: { testCaseId: "SW-T5658" },
+  },
+};
+
+/**
+ * `TreeEmpty` fills in for a `Tree` with no root nodes, or a `TreeItemGroup` whose children came
+ * back empty or failed to load. It renders as a disabled `treeitem` so the container stays
+ * structurally valid, and it never claims a set slot: the errored `Shared` branch below sits next
+ * to `Documents` and `Archive` without perturbing their `aria-setsize`. Click "Retry" to swap the
+ * error for a loaded child.
+ */
+export const EmptyAndErrorStates: Story = {
+  name: "Empty and error states",
+  render: function EmptyAndErrorTrees() {
+    const [failed, setFailed] = React.useState(true);
+
+    return (
+      <div className="flex flex-wrap items-start gap-8">
+        <div className="flex flex-col gap-2">
+          <p className="text-muted-foreground font-mono text-xs">No root nodes</p>
+          <Tree aria-label="Files" className="w-[240px]">
+            <TreeEmpty>No files yet.</TreeEmpty>
+          </Tree>
+        </div>
+        <div className="flex flex-col gap-2">
+          <p className="text-muted-foreground font-mono text-xs">A branch failed to load</p>
+          <Tree aria-label="Files" defaultExpandedIds={new Set(["shared"])} className="w-[240px]">
+            <TreeItem id="documents">
+              <TreeItemLabel icon={<FolderIcon />}>Documents</TreeItemLabel>
+            </TreeItem>
+            <TreeItem id="shared" hasChildren>
+              <TreeItemLabel icon={<FolderNodeIcon />}>Shared</TreeItemLabel>
+              <TreeItemGroup>
+                {failed ? (
+                  <TreeEmpty>
+                    <TriangleAlertIcon className="text-destructive size-4" aria-hidden="true" />
+                    Couldn&apos;t load this folder.
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      // Stopped here, not left to bubble: `TreeItem`'s click handler walks up to the
+                      // nearest treeitem and treats any unclaimed click inside it as a select/toggle,
+                      // which would collapse "Shared" the instant the retry it just asked for lands.
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setFailed(false);
+                      }}
+                    >
+                      <RotateCwIcon />
+                      Retry
+                    </Button>
+                  </TreeEmpty>
+                ) : (
+                  <TreeItem id="shared-notes">
+                    <TreeItemLabel icon={<FileTextIcon />}>notes.md</TreeItemLabel>
+                  </TreeItem>
+                )}
+              </TreeItemGroup>
+            </TreeItem>
+            <TreeItem id="archive">
+              <TreeItemLabel icon={<FolderIcon />}>Archive</TreeItemLabel>
+            </TreeItem>
+          </Tree>
+        </div>
+      </div>
+    );
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
   },
 };
 

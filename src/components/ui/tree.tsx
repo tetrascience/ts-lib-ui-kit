@@ -128,27 +128,33 @@ function useTreeItem() {
  * rendering) each container walks its own children and wraps them in an index provider. Purely
  * positional, so it is correct on the first render and under SSR.
  *
- * Only `TreeItem` elements take part: a non-item child (a "Load more" control, a `TreeEmpty`
- * placeholder for a group whose children are empty or failed to load) passes through untouched
- * instead of costing a real sibling a set slot — SW-2542.
+ * Every valid element counts as a sibling for indexing, *except* `TreeEmpty`: a consumer routinely
+ * wraps `TreeItem` in their own component (a row that also wires up drag-and-drop, say), and that
+ * wrapper still needs a real posinset/setsize, so indexing can't be gated on the element's `type`
+ * being `TreeItem` literally — only `TreeEmpty` opts out, explicitly, by identity. A non-item,
+ * non-`TreeEmpty` child (a "Load more" control) is still counted, per the caveat this only partly
+ * closes — SW-2542.
  * -----------------------------------------------------------------------------------------------*/
 
 function useIndexedTreeChildren(children: React.ReactNode) {
   return React.useMemo(() => {
     const array = React.Children.toArray(children);
-    const items = array.filter(
-      (child): child is React.ReactElement => React.isValidElement(child) && child.type === TreeItem,
+    const elements = array.filter(
+      (child): child is React.ReactElement => React.isValidElement(child) && child.type !== TreeEmpty,
     );
-    const setsize = items.length;
+    const setsize = elements.length;
 
-    // Which siblings are branches is read off `hasChildren` in the element's own props.
+    // Which siblings are branches is read off `hasChildren` in the element's own props. A child
+    // wrapped in a consumer's own component reads as a leaf unless that wrapper forwards the prop,
+    // which costs a connector rather than breaking anything — the alternative is a mount-order
+    // registry, and the whole point of doing this positionally is to stay correct on first render.
     const isBranch = (child: React.ReactElement) => (child.props as TreeItemProps)?.hasChildren === true;
-    const lastBranchPos = items.reduce((last, child, index) => (isBranch(child) ? index + 1 : last), 0);
+    const lastBranchPos = elements.reduce((last, child, index) => (isBranch(child) ? index + 1 : last), 0);
 
     let posinset = 0;
 
     return array.map((child, index) => {
-      if (!React.isValidElement(child) || child.type !== TreeItem) return child;
+      if (!React.isValidElement(child) || child.type === TreeEmpty) return child;
       posinset += 1;
       return (
         <TreeIndexContext.Provider key={child.key ?? index} value={{ posinset, setsize, lastBranchPos }}>
@@ -163,8 +169,8 @@ function useIndexedTreeChildren(children: React.ReactNode) {
  * Keyboard navigation
  *
  * Visible-node order is read from the DOM instead of a JS registry: collapsed groups are not
- * rendered at all, so `querySelectorAll('[role="treeitem"]')` in document order *is* the visible
- * node sequence, and ancestor/descendant lookups are one `closest()` call. This keeps the traversal
+ * rendered at all, so `querySelectorAll(ITEM_SELECTOR)` in document order *is* the visible node
+ * sequence, and ancestor/descendant lookups are one `closest()` call. This keeps the traversal
  * correct for arbitrary consumer markup between the levels.
  * -----------------------------------------------------------------------------------------------*/
 
@@ -1049,13 +1055,13 @@ function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"
 
 /**
  * Placeholder row for a `Tree` (no root nodes) or a `TreeItemGroup` (a branch whose children came
- * back empty, or whose fetch failed) with nothing to show. Renders as a disabled `treeitem` rather
- * than a plain `<div>`: `role="tree"` and `role="group"` both require treeitem/group children per
- * WAI-ARIA's `aria-required-children`, so a bare paragraph would leave the container structurally
- * invalid — and some screen readers skip an invalid container's content entirely — the moment it is
- * the only child. Excluded from sibling indexing (`useIndexedTreeChildren` only counts `TreeItem`
- * elements) and from keyboard traversal (`ITEM_SELECTOR` requires `data-tree-item-id`, which this
- * does not carry): there is nothing here to navigate to.
+ * back empty, or whose fetch failed) with nothing to show. Renders as a non-indexed, non-navigable
+ * `treeitem` rather than a plain `<div>`: `role="tree"` and `role="group"` both require treeitem/
+ * group children per WAI-ARIA's `aria-required-children`, so a bare paragraph would leave the
+ * container structurally invalid — and some screen readers skip an invalid container's content
+ * entirely — the moment it is the only child. Excluded from sibling indexing
+ * (`useIndexedTreeChildren` opts it out by identity) and from keyboard traversal (`ITEM_SELECTOR`
+ * requires `data-tree-item-id`, which this does not carry): there is nothing here to navigate to.
  *
  * Content is entirely up to the caller — a short message for an empty branch, or an icon, message
  * and retry action for one that failed to load. Deliberately *not* `aria-disabled`: Chromium's

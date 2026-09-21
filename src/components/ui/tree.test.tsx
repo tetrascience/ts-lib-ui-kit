@@ -368,6 +368,30 @@ describe("Tree empty and error states (SW-2542)", () => {
     press("ArrowDown");
     expect(document.activeElement).toBe(item("archive"));
   });
+
+  it("still indexes a `TreeItem` wrapped in a consumer's own component", () => {
+    // A row that wires up drag-and-drop, say — the wrapper's identity is not `TreeItem`, but it
+    // still renders one and needs a real posinset/setsize among its siblings, not the
+    // `TreeIndexContext` default. Only `TreeEmpty` opts out of indexing by identity.
+    function WrappedItem(props: React.ComponentProps<typeof TreeItem>) {
+      return <TreeItem {...props} />;
+    }
+    render(
+      <Tree aria-label="Files">
+        <TreeItem id="documents">
+          <TreeItemLabel>Documents</TreeItemLabel>
+        </TreeItem>
+        <WrappedItem id="shared">
+          <TreeItemLabel>Shared</TreeItemLabel>
+        </WrappedItem>
+        <TreeItem id="archive">
+          <TreeItemLabel>Archive</TreeItemLabel>
+        </TreeItem>
+      </Tree>,
+    );
+    expect(item("shared")?.getAttribute("aria-posinset")).toBe("2");
+    expect(item("shared")?.getAttribute("aria-setsize")).toBe("3");
+  });
 });
 
 describe("Tree focus retention", () => {

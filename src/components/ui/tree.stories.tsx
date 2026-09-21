@@ -264,10 +264,10 @@ export const Guides: Story = {
 
 /**
  * `TreeEmpty` fills in for a `Tree` with no root nodes, or a `TreeItemGroup` whose children came
- * back empty or failed to load. It renders as a disabled `treeitem` so the container stays
- * structurally valid, and it never claims a set slot: the errored `Shared` branch below sits next
- * to `Documents` and `Archive` without perturbing their `aria-setsize`. Click "Retry" to swap the
- * error for a loaded child.
+ * back empty or failed to load. It renders as a non-indexed, non-navigable `treeitem` so the
+ * container stays structurally valid, and it never claims a set slot: the errored `Shared` branch
+ * below sits next to `Documents` and `Archive` without perturbing their `aria-setsize`. Click
+ * "Retry" to swap the error for a loaded child.
  */
 export const EmptyAndErrorStates: Story = {
   name: "Empty and error states",
@@ -306,7 +306,7 @@ export const EmptyAndErrorStates: Story = {
                         setFailed(false);
                       }}
                     >
-                      <RotateCwIcon />
+                      <RotateCwIcon data-icon="inline-start" />
                       Retry
                     </Button>
                   </TreeEmpty>

@@ -1054,23 +1054,25 @@ function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"
  * -----------------------------------------------------------------------------------------------*/
 
 /**
- * Placeholder row for a `Tree` (no root nodes) or a `TreeItemGroup` (a branch whose children came
- * back empty, or whose fetch failed) with nothing to show. Renders as a non-indexed, non-navigable
- * `treeitem` rather than a plain `<div>`: `role="tree"` and `role="group"` both require treeitem/
- * group children per WAI-ARIA's `aria-required-children`, so a bare paragraph would leave the
- * container structurally invalid — and some screen readers skip an invalid container's content
- * entirely — the moment it is the only child. Excluded from sibling indexing
- * (`useIndexedTreeChildren` opts it out by identity) and from keyboard traversal (`ITEM_SELECTOR`
- * requires `data-tree-item-id`, which this does not carry): there is nothing here to navigate to.
+ * Placeholder row for a `Tree` (no root nodes) or a `TreeItemGroup` (a branch that is loading, came
+ * back empty, or whose fetch failed) with nothing real to show — including a "Load more" control
+ * appended as the last child of an otherwise-populated group (SW-2542; see the Storybook docs for
+ * the full placement rationale). Renders as a non-indexed, non-navigable `treeitem` rather than a
+ * plain `<div>`: `role="tree"` and `role="group"` both require treeitem/group children per
+ * WAI-ARIA's `aria-required-children`, so a bare paragraph would leave the container structurally
+ * invalid — and some screen readers skip an invalid container's content entirely — the moment it is
+ * the only child. Excluded from sibling indexing (`useIndexedTreeChildren` opts it out by identity)
+ * and from keyboard traversal (`ITEM_SELECTOR` requires `data-tree-item-id`, which this does not
+ * carry): there is nothing here to navigate to.
  *
- * Content is entirely up to the caller — a short message for an empty branch, or an icon, message
- * and retry action for one that failed to load. Deliberately *not* `aria-disabled`: Chromium's
+ * Content is entirely up to the caller — the shared `EmptyState` component for an empty branch or a
+ * failed one (see its `action` prop for a refresh/retry control), a `Skeleton` row for one still
+ * loading, or a real button for "Load more". Deliberately *not* `aria-disabled`: Chromium's
  * accessibility tree treats that as inherited by descendants (mirrored by Playwright's
- * actionability checks, which is how this was caught), so it would have made a nested retry button
- * unreachable by keyboard and screen readers, not just visually inert. A retry (or any other) button
- * inside it must still stop its click from bubbling: it sits inside the enclosing `TreeItem`, whose
- * click handler walks up to the nearest treeitem and treats any unclaimed click as that node's
- * select/toggle.
+ * actionability checks, which is how this was caught), so it would have made a nested button
+ * unreachable by keyboard and screen readers, not just visually inert. A button inside it must still
+ * stop its click from bubbling: it sits inside the enclosing `TreeItem`, whose click handler walks
+ * up to the nearest treeitem and treats any unclaimed click as that node's select/toggle.
  */
 function TreeEmpty({ className, children, ...props }: React.ComponentProps<"div">) {
   return (

@@ -10,8 +10,11 @@
  *            both introduced by a commit keyed to the issue.
  *   high   — the story export was introduced by a commit keyed to the issue
  *            (file pre-existed), or two independent medium signals agree.
- *   medium — indirect: a keyed commit modified lines inside the story, or the
- *            key is referenced at file level in a single-story file.
+ *   medium — indirect: a keyed commit modified lines inside the story, the key
+ *            is referenced at file level in a single-story file, or a PR named
+ *            for the key changed a source file whose sibling story owns the ID.
+ *            Also a live COVERAGE link that the repository independently
+ *            attributes to this same issue (see `existing-coverage-link`).
  *   low    — weak or ambiguous: file-level reference in a multi-story file,
  *            a keyed commit touched the file without surviving story lines, or
  *            summary/component-name similarity. Never auto-applied.
@@ -26,6 +29,8 @@ export const EVIDENCE_TYPES = [
   "story-modified-by-commit",
   "file-reference",
   "file-touched-by-commit",
+  "pr-changed-file",
+  "existing-coverage-link",
   "summary-similarity",
   "zephyr-attribution",
 ] as const;

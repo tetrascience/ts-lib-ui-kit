@@ -265,11 +265,63 @@ describe("buildAuditEntry", () => {
   });
 
   it("reports no-mapping (with the Jira status) when the repo has no signal at all", () => {
-    const entry = buildAuditEntry({ issue: makeIssue("SW-1"), evidence: [], existingZephyrIds: [], index });
+    const issue = makeIssue("SW-1", { status: { name: "Verification" } });
+    const entry = buildAuditEntry({ issue, evidence: [], existingZephyrIds: [], index });
     expect(entry.status).toBe("no-mapping");
     expect(entry.recommendedAction).toBe("review");
     expect(entry.expectedZephyrIds).toEqual([]);
-    expect(entry.notes[0]).toMatch(/No story in the repository is attributed to this issue \(Jira status: Open\)/);
+    expect(entry.notes[0]).toMatch(
+      /No story in the repository is attributed to this issue \(Jira status: Verification\)/,
+    );
+  });
+
+  /**
+   * Other repos link at provisioning time via `jiraTicket` (ts-lib-zephyr-nodejs),
+   * which this audit's git/PR evidence cannot see. A live link therefore
+   * corroborates — but only ever promotes evidence the repo already found.
+   */
+  it("treats an existing COVERAGE link as corroboration of repo-attributed evidence", () => {
+    const story = makeStory(FILE, "Default", { zephyrIds: ["SW-T1"] });
+    const commit = makeCommit("abc", "feat: SW-1 Add it", ["SW-1"]);
+    const local = makeIndex([makeFile(FILE, [story])], {
+      commits: { [FILE]: [commit] },
+      blame: { [FILE]: blameStory(story, commit) },
+      origin: { [FILE]: commit },
+    });
+    const issue = makeIssue("SW-1");
+    const evidence = deriveEvidence(local, issue);
+
+    const entry = buildAuditEntry({ issue, evidence, existingZephyrIds: ["SW-T1"], index: local });
+    const corroboration = entry.evidence.filter((item) => item.type === "existing-coverage-link");
+    expect(corroboration).toHaveLength(1);
+    expect(corroboration[0].zephyrIds).toEqual(["SW-T1"]);
+    expect(corroboration[0].confidence).toBe("medium");
+  });
+
+  /**
+   * The anti-circularity rule. `existingZephyrIds` comes from Zephyr, so if a
+   * link could create expectation, every link would justify its own existence
+   * and the audit could never report a wrong one.
+   */
+  it("never lets a link the repository does not recognise justify itself", () => {
+    const story = makeStory(FILE, "Default", { zephyrIds: ["SW-T1"] });
+    const commit = makeCommit("abc", "feat: SW-1 Add it", ["SW-1"]);
+    const local = makeIndex([makeFile(FILE, [story])], {
+      commits: { [FILE]: [commit] },
+      blame: { [FILE]: blameStory(story, commit) },
+      origin: { [FILE]: commit },
+    });
+    const issue = makeIssue("SW-1");
+    const entry = buildAuditEntry({
+      issue,
+      evidence: deriveEvidence(local, issue),
+      existingZephyrIds: ["SW-T1", "SW-T999"],
+      index: local,
+    });
+
+    expect(entry.expectedZephyrIds).not.toContain("SW-T999");
+    expect(entry.unmanagedZephyrIds).toContain("SW-T999");
+    expect(entry.evidence.some((item) => item.zephyrIds.includes("SW-T999"))).toBe(false);
   });
 
   it("keeps low-only candidates out of expectedZephyrIds, asks for review and caps long id lists", () => {

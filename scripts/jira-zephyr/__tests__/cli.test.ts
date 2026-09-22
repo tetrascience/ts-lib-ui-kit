@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { runApplyCli } from "../apply/apply";
 import { runApprove } from "../approve";
 import { describeOrigin, runAudit } from "../audit/audit";
+import { NO_GITHUB } from "../clients/github-client";
 import { displayPath } from "../shared/paths";
 
 import { blameStory, makeCommit, makeFile, makeIndex, makeIssue, makeStory } from "./fixtures";
@@ -49,6 +50,39 @@ describe("audit → approve → apply, end to end with injected clients", () => 
   });
   afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
 
+  it("--skip-story-only drops issues whose commits changed no shipped code", async () => {
+    const out: string[] = [];
+    const zephyrClient = {
+      readOnly: true,
+      getLinkedTestCaseKeys: vi.fn(async () => []),
+      getTestCase: vi.fn(async (key: string) => ({ key, name: key })),
+    };
+    const storyOnlyPath = path.join(dir, "story-only.json");
+    const result = await runAudit(["--epic", "sw-100", "--skip-story-only", "--out", storyOnlyPath], {
+      cwd: dir,
+      env: {},
+      jira: fakeJira(),
+      zephyr: { client: zephyrClient, baseUrl: "https://zephyr.example/v2", projectKey: "SW" },
+      index: makeIndex([makeFile(FILE, [makeStory(FILE, "Default", { zephyrIds: ["SW-T1"] })])], {
+        commits: { [FILE]: [featCommit] },
+        // SW-1 touched only the story file; SW-2 also changed a component.
+        allFiles: { "SW-1": [FILE], "SW-2": [FILE, "src/components/ui/button.tsx"] },
+      }),
+      github: NO_GITHUB,
+      repoState: { head: "b".repeat(40), branch: "main", dirty: false },
+      now: () => new Date("2026-09-10T18:00:00.000Z"),
+      log: quiet,
+      out: (message) => out.push(message),
+    });
+
+    expect(result?.artifact.scopeSnapshot.issueKeys).toEqual(["SW-2"]);
+    expect(result?.artifact.scope.skipStoryOnly).toBe(true);
+    expect(result?.artifact.skipped).toEqual([
+      expect.objectContaining({ jira: "SW-1", reason: expect.stringContaining("only story files") }),
+    ]);
+    expect(out.join("\n")).toContain("Story-only issues: skipped (--skip-story-only)");
+  });
+
   it("audits an epic into a frozen, schema-valid artifact and prints the report", async () => {
     const out: string[] = [];
     const zephyrClient = {
@@ -64,6 +98,7 @@ describe("audit → approve → apply, end to end with injected clients", () => 
       jira: fakeJira(),
       zephyr: { client: zephyrClient, baseUrl: "https://zephyr.example/v2", projectKey: "SW" },
       index: fakeIndex(),
+      github: NO_GITHUB,
       repoState: { head: "b".repeat(40), branch: "main", dirty: false },
       now: () => new Date("2026-09-10T18:00:00.000Z"),
       log: quiet,
@@ -77,6 +112,7 @@ describe("audit → approve → apply, end to end with injected clients", () => 
       values: ["SW-100"],
       resolvedJql: "parent in (SW-100) ORDER BY key ASC",
       issueTypes: ["Story", "Task", "Bug", "Defect", "Spike"],
+      statuses: ["Code review", "Verification", "Closed"],
     });
     expect(written.scopeSnapshot.issueKeys).toEqual(["SW-1", "SW-2"]);
     expect(

@@ -54,7 +54,12 @@ describe("renderAuditReport", () => {
           status: "manual-review",
         }),
       ],
-      { skipped: [{ jira: "SW-3", issueType: "Epic", reason: "not audited" }] },
+      {
+        skipped: [
+          { jira: "SW-3", issueType: "Epic", status: "Closed", reason: "not audited" },
+          { jira: "SW-4", issueType: "Story", status: "Open", reason: 'status "Open" is earlier than code review' },
+        ],
+      },
     );
     const report = renderAuditReport(artifact, {
       labels: ["SW-100 (Release epic)"],
@@ -62,12 +67,14 @@ describe("renderAuditReport", () => {
       totalResolved: 3,
     });
     expect(report).toContain("Epic: SW-100 (Release epic)");
-    expect(report).toContain("Issues resolved: 3 (2 audited, 1 skipped by issue type)");
+    expect(report).toContain("Issues resolved: 3 (2 audited, 2 skipped by issue type or status)");
+    expect(report).toContain("Statuses audited: Code review, Verification, Closed");
     expect(report).toMatch(/JIRA\s+TYPE\s+EXISTING\s+EXPECTED\s+MISSING\s+CONFIDENCE\s+ACTION/);
     expect(report).toMatch(/SW-1\s+Story\s+·\s+SW-T1\s+SW-T1,SW-T2\s+SW-T2\s+exact\s+ADD/);
     expect(report).toMatch(/SW-2\s+Bug\s+·\s+SW-T9\s+SW-T3\s+SW-T3\s+medium\s+REVIEW/);
     expect(report).toContain("SW-2: SW-T9");
-    expect(report).toContain("SW-3 (Epic)");
+    expect(report).toContain("SW-3      (Epic, Closed) not audited");
+    expect(report).toContain('SW-4      (Story, Open) status "Open" is earlier than code review');
     expect(report).toContain("Tickets scanned: 2");
     expect(report).toContain("Needs changes: 1");
     expect(report).toContain("Manual review: 1");

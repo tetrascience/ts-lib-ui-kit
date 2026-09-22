@@ -57,7 +57,12 @@ const artifact = makeArtifact(
       status: "no-mapping",
     }),
   ],
-  { skipped: [{ jira: "SW-5", issueType: "Epic", reason: "not audited" }] },
+  {
+    skipped: [
+      { jira: "SW-5", issueType: "Epic", status: "Closed", reason: "not audited" },
+      { jira: "SW-6", issueType: "Story", status: "Open", reason: 'status "Open" is earlier than code review' },
+    ],
+  },
 );
 
 function makeApply(overrides: Partial<ApplyArtifact> = {}): ApplyArtifact {
@@ -84,7 +89,10 @@ describe("renderAuditMarkdown", () => {
   it("leads with the scope, the resolved JQL and the summary counts", () => {
     expect(markdown).toContain("## Zephyr coverage audit — Epic: `SW-100`");
     expect(markdown).toContain("- **Resolved JQL:** `parent in (SW-100) ORDER BY key ASC`");
-    expect(markdown).toContain("- **Issues:** 4 audited · 1 skipped by issue type (audited types: Story, Task)");
+    expect(markdown).toContain(
+      "- **Issues:** 4 audited · 2 skipped by issue type or status (audited types: Story, Task)",
+    );
+    expect(markdown).toContain("- **Statuses audited:** Code review, Verification, Closed");
     expect(markdown).toContain("| Tickets scanned | Correct | Needs changes | Manual review | No mapping |");
     expect(markdown).toContain("| 4 | 1 | 1 | 1 | 1 |");
   });
@@ -110,7 +118,10 @@ describe("renderAuditMarkdown", () => {
     expect(markdown).toMatch(
       /<summary>Linked in Zephyr but not managed[^<]*\(1\)<\/summary>\n\n- \[SW-2\][^\n]*: SW-T50/,
     );
-    expect(markdown).toMatch(/<summary>Skipped by issue type \(1\)<\/summary>\n\n- \[SW-5\][^\n]*\(Epic\)/);
+    expect(markdown).toMatch(
+      /<summary>Skipped by issue type or status \(2\)<\/summary>\n\n- \[SW-5\][^\n]*\(Epic, Closed\) — not audited/,
+    );
+    expect(markdown).toContain('(Story, Open) — status "Open" is earlier than code review');
   });
 
   it("leads with the coverage gaps that matter and separates the types that need no test case", () => {

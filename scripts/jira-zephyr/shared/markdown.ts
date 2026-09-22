@@ -81,7 +81,9 @@ export function renderAuditMarkdown(artifact: AuditArtifact, options: MarkdownOp
   const lines: string[] = [`## Zephyr coverage audit — ${SCOPE_TYPE_LABELS[scope.type]}: ${scopeValues}`, ""];
   if (scope.resolvedJql && !isRawJql) lines.push(`- **Resolved JQL:** ${code(scope.resolvedJql)}`);
   lines.push(
-    `- **Issues:** ${artifact.scopeSnapshot.issueKeys.length} audited · ${artifact.skipped.length} skipped by issue type (audited types: ${scope.issueTypes.join(", ")})`,
+    `- **Issues:** ${artifact.scopeSnapshot.issueKeys.length} audited · ${artifact.skipped.length} skipped by issue type or status (audited types: ${scope.issueTypes.join(", ")})`,
+    ...(scope.statuses ? [`- **Statuses audited:** ${scope.statuses.join(", ")}`] : []),
+    ...(scope.skipStoryOnly ? ["- **Story-only issues:** skipped (`--skip-story-only`)"] : []),
     `- **Repository:** ${code(repo.branch)} @ ${code(repo.head.slice(0, 7))}${repo.dirty ? " (dirty working tree)" : ""}`,
     `- **Generated:** ${artifact.generatedAt}`,
     "",
@@ -213,10 +215,13 @@ export function renderAuditMarkdown(artifact: AuditArtifact, options: MarkdownOp
   if (artifact.skipped.length > 0) {
     sections.push(
       details(
-        `Skipped by issue type (${artifact.skipped.length})`,
+        `Skipped by issue type or status (${artifact.skipped.length})`,
         [...artifact.skipped]
           .sort(byKey)
-          .map((skipped) => `- ${jiraLink(jira.baseUrl, skipped.jira)} (${skipped.issueType})`)
+          .map((skipped) => {
+            const status = skipped.status ? `, ${skipped.status}` : "";
+            return `- ${jiraLink(jira.baseUrl, skipped.jira)} (${skipped.issueType}${status}) — ${skipped.reason}`;
+          })
           .join("\n"),
       ),
     );

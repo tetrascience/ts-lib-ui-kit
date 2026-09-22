@@ -88,7 +88,10 @@ yarn jira-zephyr:audit --epic SW-2301 --fix-version "v4.7.0" --intersect
 `--epic` with `--fix-version` is **rejected** unless `--intersect` is given;
 explicit keys and `--jql` cannot be mixed with other selectors. Issue types
 audited by default: Story, Task, Bug, Defect, Spike (`--issue-types` overrides);
-everything else the scope returns is listed under `skipped` rather than dropped.
+workflow statuses audited by default: Code review, Verification, Closed
+(`--statuses` overrides, `--all-statuses` disables the filter);
+`--skip-story-only` additionally skips issues that changed no shipped code.
+Everything else the scope returns is listed under `skipped` rather than dropped.
 
 The audit:
 
@@ -102,7 +105,8 @@ The audit:
 Zephyr Audit
 Epic: SW-2301 ([React UI Kit v1.1.0] Upcoming Release)
 Resolved JQL: parent in (SW-2301) ORDER BY key ASC
-Issues resolved: 68 (68 audited, 0 skipped by issue type)
+Issues resolved: 68 (47 audited, 21 skipped by issue type or status)
+Statuses audited: Code review, Verification, Closed
 Repo: main@13a643f
 
 JIRA     TYPE     EXISTING  EXPECTED                       MISSING                        CONFIDENCE  ACTION
@@ -137,6 +141,155 @@ shows its IDs, still gets `ADD`, and is still applied. That matters here, becaus
 plenty of them do — `SW-2528`, `SW-2549` and `SW-2563` above are all Tasks that
 introduced stories. Which types are audited **at all** is the separate
 `--issue-types` flag.
+
+#### Workflow status, and why the filter is by name
+
+Only issues that have reached **code review** are audited; `Open` and
+`In Progress` are recorded under `skipped` with their status and the reason. A
+ticket still in flight has no settled coverage — its stories may not be written
+and the sync workflow may not have generated its Zephyr IDs yet — so counting it
+as a coverage gap reports normal work-in-progress as a problem. Override with
+`--statuses "Code review,Verification,Closed,Done"`, or audit everything with
+`--all-statuses`.
+
+The filter matches **status names**, not Jira status categories, and that is
+forced rather than chosen. Jira sorts every status into one of three categories,
+which in the SW workflow fall out like this:
+
+| Category    | Statuses                               |
+| ----------- | -------------------------------------- |
+| To Do       | Open                                   |
+| In Progress | In Progress, Code review, Verification |
+| Done        | Closed                                 |
+
+The cutoff we want falls _inside_ the In Progress category, so no category
+predicate can express it: `category = Done` drops Code review and Verification,
+and anything wider lets plain In Progress back in. Names have the resolution the
+categories lack.
+
+What names cost is rename-safety — a renamed status would simply stop matching
+and quietly shrink the audited set. The audit buys that back explicitly: before
+partitioning, it reads the project's real statuses
+(`GET /rest/api/3/project/{key}/statuses`) and fails if a configured name is not
+among them, listing what does exist:
+
+```
+[ERROR] Status "Code review" does not exist in project SW — it was probably
+renamed, which would otherwise silently shrink the audited set.
+
+  Valid statuses:
+    Open (To Do)
+    In Progress (In Progress)
+    In Review (In Progress)
+    Verification (In Progress)
+    Closed (Done)
+
+  Pass --statuses to override the audited set, or --all-statuses to audit every status.
+```
+
+If that endpoint is not readable (a 403/404 on the project's workflow scheme),
+validation no-ops rather than failing the run closed.
+
+#### Pull-request evidence (on by default)
+
+The repo scanner reads `git log` from **HEAD**, so it can only see a ticket whose
+commits are ancestors of the current checkout. That misses a real case: a PR
+squash-merged into a **feature branch that was later deleted**. Its commit is
+then unreachable from every local ref, and the audit — finding no git evidence —
+falls through to name similarity.
+
+`SW-2578` is the worked example, and it produced a wrong answer. PR #204 merged
+into `SW-2410-app-shell-simple-prototype`, since deleted. With no git evidence,
+the summary _"Align **icons** on the side nav"_ matched `ui/icons.stories.tsx`
+by name — the wrong component. The PR had actually changed `DataAppShell.tsx`,
+`PrimaryNav.tsx` and `AppShellSimple.tsx`.
+
+So when git yields nothing at medium confidence or better, the audit asks GitHub
+(via the `gh` CLI) which PRs name the key, maps each **changed source file to the
+story file beside it**, and takes those stories' Zephyr IDs:
+
+```
+SW-2578  Story ·  -  SW-T5532,SW-T5533,SW-T5534,+8  medium  REVIEW
+
+  pr-changed-file (medium)
+    PR #204 (fix: SW-2578 align side-nav icons to a shared gutter) changed
+    DataAppShell.tsx; its sibling DataAppShell.stories.tsx owns
+    SW-T5532, SW-T5533, SW-T5534, SW-T5535
+```
+
+Design points, each load-bearing:
+
+- **Sibling matching, never name similarity.** A changed `Foo.tsx` maps to
+  `Foo.stories.tsx` in the same directory. Where there is no same-named sibling
+  (`PrimaryNav.tsx`), it falls back to the story named for the **component
+  directory** — and only there. A flat directory of unrelated components like
+  `ui/` gets no fallback, or `button.tsx` would drag in every story beside it,
+  reproducing the very over-reach that made the icons match wrong.
+- **Medium confidence.** It shows as EXPECTED and is reviewed, but never
+  auto-applies at the default `--min-confidence high`. "This PR changed the
+  component, so these are its test cases" is a sound inference, still an
+  inference.
+- **PR evidence outranks similarity.** Once a PR is found, the name-similarity
+  fallback is suppressed entirely — that is what removes the wrong `icons` row
+  rather than merely ranking it lower.
+- **Sweeps are downgraded.** A PR spanning more than `sweepFileThreshold` (5)
+  story files is a lint pass or repo-wide refactor, not those stories' origin.
+  `SW-2305`'s PR changed 135 files and would otherwise claim ~400 test cases; it
+  is reported at low confidence, which keeps it out of `expectedZephyrIds`. This
+  mirrors `downgradeSweeps` for commits. The threshold counts **story** files,
+  not changed files — `SW-2591` touched 17 files but only 9 stories and stays
+  medium.
+- **Git wins when it has something.** GitHub is consulted only when git found
+  nothing at medium or better, so the network cost is paid per unmapped key.
+- **Never fatal.** No `gh`, no auth, or a network failure degrades to git-only
+  evidence with an `[INFO]` line. `--no-pr-evidence` disables it outright.
+
+#### Existing COVERAGE links as corroboration
+
+Other repos in the org link at **provisioning** time, not retroactively:
+`ts-lib-zephyr-nodejs` takes a single `jiraTicket` for a whole run and links
+every test case it creates to it (`provisioner.ts`, `storybook.ts`). Those links
+are deliberate statements of intent, and nothing in the repository records them —
+git and PR evidence cannot see them at all.
+
+So when Zephyr already links an ID to the issue _and_ the repository
+independently attributes that ID to the same issue, the audit records an
+`existing-coverage-link` evidence row at medium confidence: two independent
+mechanisms agreeing.
+
+**It only ever promotes evidence the repository already found.** Three rules keep
+this from becoming circular — `existingZephyrIds` comes from Zephyr, so if a link
+could _create_ expectation, every link would justify its own existence and the
+audit could never report a wrong one:
+
+| Repo says                   | Zephyr says | Result                                                                           |
+| --------------------------- | ----------- | -------------------------------------------------------------------------------- |
+| attributes ID to this issue | linked here | corroborated, medium floor                                                       |
+| attributes ID **elsewhere** | linked here | still `unexpectedZephyrIds` — a stale `jiraTicket` is exactly the error to catch |
+| knows nothing about the ID  | linked here | stays `unmanagedZephyrIds`, no evidence row created                              |
+
+#### Story-only issues (`--skip-story-only`, opt-in)
+
+`--skip-story-only` skips any issue whose keyed commits touched **only**
+`*.stories.tsx` files, on the reasoning that such a ticket changed no shipped
+code and so needs no review. Skipped issues appear under `skipped` with the file
+count, exactly like a status skip.
+
+**Read the trade-off before turning this on.** Stories are the only thing this
+tool derives Zephyr IDs from, so a story-only ticket is usually _pure test
+coverage work_ — often the best-attributed row in the report. On `SW-2301` the
+flag skips `SW-2305` (76 story files, the most-covered ticket in the epic) and
+`SW-2465`. It is therefore **off by default**, and it never changes the
+**Coverage gaps** count: a gap is a ticket with no stories at all, so a ticket
+skipped for having only stories was never a gap.
+
+An issue with **no keyed commits** is never skipped by this flag. An empty
+history means "cannot tell", not "changed nothing" — skipping there would hide
+precisely the unmapped tickets the audit exists to surface.
+
+The file list comes from one repo-wide `git log --name-only` bucketed by the
+Jira keys in each commit subject, computed lazily so runs without the flag do
+not pay for it.
 
 #### Issue type review (advisory)
 
@@ -213,6 +366,84 @@ Markdown: the GitHub Actions job summary below, or something to paste into a PR.
 Jira ticket titles are omitted unless `--with-summaries` is passed;
 `--redacted-copy <file>` writes a copy of the audit with titles blanked that is
 still a valid input for the apply script.
+
+## Cap'n Bugsby, the Jira coverage bot
+
+Posts the audit's suggestions as a Jira comment and applies them when someone
+replies. Same evidence, same safety rails as the CLI — it is a _front end_ to
+`runApply`, not a second way to write links.
+
+```bash
+yarn jira-zephyr:bot notify  artifacts/zephyr-audit-epic-SW-2301.json            # dry run: prints each comment
+yarn jira-zephyr:bot notify  artifacts/zephyr-audit-epic-SW-2301.json --execute  # posts them
+yarn jira-zephyr:bot respond artifacts/zephyr-audit-epic-SW-2301.json --execute  # reads replies, links, answers
+```
+
+What lands on the ticket:
+
+```
+🏴‍☠️ Cap'n Bugsby here. Sailed the whole commit history so you don't have to —
+SW-2443 looks to be missing 6 test case links.
+
+I charted these from the files the PR touched. Reasonable, but it isn't proof —
+give them a look.
+
+All of these: PR #209 changed code beside button.stories.tsx.
+
+|| Test case  || Title                                  ||
+| 🟡 SW-T1202 | Dialog traps focus while open           |
+| 🟡 SW-T1203 | Escape closes the dialog                |
+…
+
+🟡 fairly sure
+
+Reply `@bugsby apply` and I'll link all 6. Reply `@bugsby apply SW-T123 SW-T456`
+to take only some. If I've steered you wrong, ignore this — no hard feelings.
+```
+
+### Shape: a service, not a script
+
+This is built for the Forge app it will become. All behaviour lives in
+[`bot/service.ts`](./bot/service.ts), which takes **injected clients** and
+returns plain data — it never reads `process.argv`, prints, or touches disk.
+[`bot.ts`](../bot.ts) is argument parsing and printing over the top, and a Forge
+function or hosted API is simply a second caller. The renderer
+([`bot/comment.ts`](./bot/comment.ts)) is a pure `(entry, titles) → string`, so a
+UI can render the same suggestions without the comment path at all.
+
+| Module                           | Role                                                                                               |
+| -------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `bot/persona.ts`                 | Bugsby's voice and the confidence markers. No Jira/Zephyr types — tone changes touch nothing else. |
+| `bot/comment.ts`                 | Pure renderer: evidence → wiki-markup table.                                                       |
+| `bot/reply.ts`                   | Parses `@bugsby apply …`. The trust boundary.                                                      |
+| `bot/service.ts`                 | `notify` / `respond`, transport-free. **The future API surface.**                                  |
+| `clients/jira-comment-client.ts` | The only module in this toolchain that writes to Jira.                                             |
+
+### Safety
+
+- **Dry run by default.** Both verbs need `--execute`; without it the Jira
+  comment client is constructed read-only, so a write throws rather than slips
+  through.
+- **A reply cannot author links.** Explicit ids in a reply are a _filter_ over
+  what Bugsby already suggested; anything else is rejected and reported. The
+  reply chooses among suggestions, it does not invent them.
+- **Applying goes through `runApply`.** Approval gate, `--min-confidence`, frozen
+  scope and stale-state refusal all apply identically. There is no direct Zephyr
+  write in the bot.
+- **The mention must open the comment.** "I think @bugsby apply is wrong here" is
+  not a command. Anyone who can comment can trigger a write, so the parser is
+  strict on purpose.
+- **Idempotent.** `notify` skips issues it has already commented on (`--force`
+  overrides); `respond` records which comment id it answered and never answers
+  twice. Re-running on a cron is the expected mode.
+- **`JiraClient` stays read-only.** Comment writes live in a separate client so
+  "read-only by construction" remains true of the one every other module imports.
+
+### Not yet done
+
+The Forge app itself — a real **Apply button** needs a Forge UI, which cannot run
+`git`/`gh` and so must call a hosted evidence API. `bot/service.ts` is the piece
+that moves to that repo unchanged; the reply path is the interim trigger.
 
 ## Running it from GitHub Actions (no personal Zephyr token needed)
 

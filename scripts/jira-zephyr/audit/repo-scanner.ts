@@ -66,7 +66,13 @@ export interface RepoIndex {
   storiesByZephyrId: Map<string, StoryRecord[]>;
   /** Newest-first history of each story file (subject + Jira keys). */
   commitsByFile: Map<string, CommitInfo[]>;
+  /** Story files only, derived from the story-file history. */
   filesByJiraKey: Map<string, Set<string>>;
+  /**
+   * Every file each key's commits touched, story or not. Lazily computed: it
+   * costs a repo-wide `git log`, and only the story-only filter needs it.
+   */
+  allFilesByJiraKey(): Map<string, Set<string>>;
   /** Project keys used to filter key-like tokens (e.g. `UTF-8`) out of free text. */
   projectKeys: Set<string>;
   /** Lazily computed, cached per file. */
@@ -259,6 +265,63 @@ export function loadStoryFileHistory(
   return parseHistory(output, projectKeys);
 }
 
+/** True for a path that carries test cases rather than shipped library code. */
+export function isStoryPath(file: string): boolean {
+  return file.endsWith(".stories.tsx");
+}
+
+/**
+ * Every file each Jira key's commits touched, across the whole repository —
+ * not just story files, which is the point: it is what distinguishes a ticket
+ * that changed shipped code from one that only added stories.
+ *
+ * One `git log` over all of history, bucketed by the keys in each commit
+ * subject. Commits carrying no key are parsed and discarded; that is cheaper
+ * than one `git log --grep` per key, and it matches on the same parsed subject
+ * the rest of the scanner uses rather than a second, looser grep.
+ */
+export function loadFilesByJiraKey(cwd: string, projectKeys: ReadonlySet<string>): Map<string, Set<string>> {
+  const baseArgs = ["log", "--format=%x1e%H%x1f%s", "--name-only"];
+  let output: string;
+  try {
+    output = runGit(cwd, [...baseArgs, "--diff-merges=first-parent"]);
+  } catch {
+    output = runGit(cwd, baseArgs);
+  }
+  const byKey = new Map<string, Set<string>>();
+  for (const block of output.split(RECORD_SEP)) {
+    const lines = block.split("\n").map((line) => line.trimEnd());
+    const header = lines.shift();
+    if (!header) continue;
+    const [hash, subject = ""] = header.split(UNIT_SEP);
+    if (!SHA_RE.test(hash)) continue;
+    const { jiraKeys } = toCommitInfo(hash, subject, projectKeys);
+    if (jiraKeys.length === 0) continue;
+    const files = lines.filter((line) => line.length > 0);
+    for (const key of jiraKeys) {
+      const set = byKey.get(key) ?? new Set<string>();
+      for (const file of files) set.add(file);
+      byKey.set(key, set);
+    }
+  }
+  return byKey;
+}
+
+/**
+ * Whether a key's commits touched anything outside story files.
+ *
+ * `undefined` when the key has no keyed commits at all — "we cannot tell" is a
+ * different answer from "it changed only stories", and the caller must not skip
+ * a ticket on the strength of an empty history.
+ */
+export function touchesNonStoryFiles(files: ReadonlySet<string> | undefined): boolean | undefined {
+  if (!files || files.size === 0) return undefined;
+  for (const file of files) {
+    if (!isStoryPath(file)) return true;
+  }
+  return false;
+}
+
 export function parseHistory(output: string, projectKeys: ReadonlySet<string>): Map<string, CommitInfo[]> {
   const history = new Map<string, CommitInfo[]>();
   for (const block of output.split(RECORD_SEP)) {
@@ -334,6 +397,7 @@ export function buildRepoIndex(options: RepoIndexOptions): RepoIndex {
   }
 
   const commitsByFile = loadStoryFileHistory(cwd, srcDir, projectKeys);
+  let allFiles: Map<string, Set<string>> | undefined;
   const filesByJiraKey = new Map<string, Set<string>>();
   for (const [file, commits] of commitsByFile) {
     for (const commit of commits) {
@@ -353,6 +417,10 @@ export function buildRepoIndex(options: RepoIndexOptions): RepoIndex {
     storiesByZephyrId,
     commitsByFile,
     filesByJiraKey,
+    allFilesByJiraKey: () => {
+      allFiles ??= loadFilesByJiraKey(cwd, projectKeys);
+      return allFiles;
+    },
     projectKeys,
     blame(file) {
       let cached = blameCache.get(file);

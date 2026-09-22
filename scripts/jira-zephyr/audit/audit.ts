@@ -22,16 +22,25 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
 import { jiraEnv, resolveProjectKey, zephyrEnv } from "../clients/env";
+import { GitHubClient, NO_GITHUB, type GitHubReader } from "../clients/github-client";
 import { JiraClient } from "../clients/jira-client";
 import { createZephyrTransport, ZephyrClient } from "../clients/zephyr-client";
 import { AUDIT_SCHEMA_VERSION, AUDIT_TOOL_NAME, parseAuditArtifact } from "../shared/audit-schema";
-import { projectKeyOf } from "../shared/keys";
+import { compareIssueKeys, projectKeyOf } from "../shared/keys";
 import { displayPath } from "../shared/paths";
+import { DEFAULT_AUDITED_STATUSES, UnknownStatusError } from "../shared/statuses";
 
 import { buildAuditEntry, deriveEvidence, summarize } from "./mapper";
 import { buildRepoIndex, describeRepoState, type RepoIndex, type RepoState } from "./repo-scanner";
 import { auditArtifactFileName, renderAuditReport } from "./reporter";
-import { DEFAULT_ISSUE_TYPES, parseSelector, resolveScope, ScopeError, type JiraReader } from "./scope";
+import {
+  DEFAULT_ISSUE_TYPES,
+  parseSelector,
+  partitionStoryOnly,
+  resolveScope,
+  ScopeError,
+  type JiraReader,
+} from "./scope";
 
 import type { AuditArtifact, AuditEntry } from "../shared/types";
 
@@ -48,6 +57,10 @@ Options:
   --intersect             Required when --epic and --fix-version are both given (issues matching BOTH)
   --project <KEY>         Jira/Zephyr project key (default: $JIRA_PROJECT_KEY, $ZEPHYR_PROJECT_KEY, or SW)
   --issue-types <list>    Comma-separated issue types to audit (default: ${DEFAULT_ISSUE_TYPES.join(",")})
+  --statuses <list>       Comma-separated workflow statuses to audit (default: ${DEFAULT_AUDITED_STATUSES.join(",")})
+  --all-statuses          Audit every status, including work that has not reached code review
+  --skip-story-only       Skip issues whose commits touched only *.stories.tsx (no shipped code changed)
+  --no-pr-evidence        Do not consult GitHub pull requests for issues with no git evidence
   --out <file>            Artifact path (default: artifacts/zephyr-audit-<scope>.json)
   --artifacts-dir <dir>   Directory for the default artifact name (default: artifacts)
   -h, --help              Show this help
@@ -59,6 +72,7 @@ export type ZephyrReadClient = Pick<ZephyrClient, "getLinkedTestCaseKeys" | "get
 
 export interface AuditDeps {
   cwd?: string;
+  github?: GitHubReader;
   env?: NodeJS.ProcessEnv;
   jira?: JiraReader & { baseUrl: string; verifyCredentials?: () => Promise<unknown> };
   zephyr?: { client: ZephyrReadClient; baseUrl: string; projectKey: string };
@@ -139,6 +153,10 @@ export async function runAudit(argv: string[], deps: AuditDeps = {}): Promise<Au
       intersect: { type: "boolean" },
       project: { type: "string" },
       "issue-types": { type: "string" },
+      statuses: { type: "string" },
+      "all-statuses": { type: "boolean" },
+      "skip-story-only": { type: "boolean" },
+      "no-pr-evidence": { type: "boolean" },
       out: { type: "string" },
       "artifacts-dir": { type: "string" },
       help: { type: "boolean", short: "h" },
@@ -158,6 +176,16 @@ export async function runAudit(argv: string[], deps: AuditDeps = {}): Promise<Au
   });
   const projectKey = values.project?.trim().toUpperCase() || resolveProjectKey();
   const issueTypes = values["issue-types"] ? splitList(values["issue-types"]) : DEFAULT_ISSUE_TYPES;
+  if (values["all-statuses"] && values.statuses) {
+    throw new ScopeError("--statuses and --all-statuses are mutually exclusive; pass one or neither");
+  }
+  // Tickets before code review have no settled coverage yet, so they are skipped
+  // by default rather than reported as gaps. `null` means audit every status.
+  const statuses = values["all-statuses"]
+    ? null
+    : values.statuses
+      ? splitList(values.statuses)
+      : DEFAULT_AUDITED_STATUSES;
 
   const jira = deps.jira ?? new JiraClient(jiraEnv());
   if (jira.verifyCredentials) {
@@ -170,18 +198,38 @@ export async function runAudit(argv: string[], deps: AuditDeps = {}): Promise<Au
   if (!zephyr.client.readOnly) throw new Error("The audit requires a read-only Zephyr client");
 
   log(`[INFO] Resolving scope (${selector.type}) in project ${projectKey}…`);
-  const resolved = await resolveScope(jira, selector, { projectKey, issueTypes });
+  const resolved = await resolveScope(jira, selector, { projectKey, issueTypes, statuses });
   log(
-    `[INFO] Resolved ${resolved.issues.length} issue(s): ${resolved.audited.length} to audit, ${resolved.skipped.length} skipped by issue type`,
+    `[INFO] Resolved ${resolved.issues.length} issue(s): ${resolved.audited.length} to audit, ${resolved.skipped.length} skipped by issue type or status`,
   );
+  if (statuses) log(`[INFO] Auditing statuses: ${statuses.join(", ")} (--all-statuses to include everything)`);
 
   const projectKeys = new Set([projectKey, ...resolved.audited.map((issue) => projectKeyOf(issue.key))]);
   const index = deps.index ?? buildRepoIndex({ cwd, projectKeys });
   log(`[INFO] Indexed ${index.files.size} story files carrying ${index.storiesByZephyrId.size} Zephyr IDs`);
 
+  // Runs after indexing, not inside resolveScope: deciding this needs the repo's
+  // full per-key file list, which only the index can produce.
+  if (values["skip-story-only"]) {
+    const split = partitionStoryOnly(resolved.audited, index.allFilesByJiraKey());
+    if (split.skipped.length > 0) {
+      log(`[INFO] Skipping ${split.skipped.length} issue(s) whose commits touched only story files`);
+    }
+    resolved.audited = split.audited;
+    resolved.skipped = [...resolved.skipped, ...split.skipped].sort((a, b) => compareIssueKeys(a.jira, b.jira));
+    resolved.scope = { ...resolved.scope, skipStoryOnly: true };
+  }
+
+  // A PR merged into a since-deleted branch is invisible to `git log` from HEAD,
+  // so GitHub is the only source that can attribute it (see github-client.ts).
+  const github = deps.github ?? (values["no-pr-evidence"] ? NO_GITHUB : new GitHubClient(cwd));
+  if (github.available) log("[INFO] Pull-request evidence: enabled (gh CLI)");
+  else if (!values["no-pr-evidence"])
+    log("[INFO] Pull-request evidence: unavailable (gh not installed or not authenticated) — git-only");
+
   const tickets: AuditEntry[] = [];
   for (const issue of resolved.audited) {
-    const evidence = deriveEvidence(index, issue);
+    const evidence = deriveEvidence(index, issue, { github });
     const existingZephyrIds = await zephyr.client.getLinkedTestCaseKeys(issue.key);
     let entry = buildAuditEntry({ issue, evidence, existingZephyrIds, index });
     const missingNotFoundInZephyr = await verifyMissingExist(zephyr.client, entry);
@@ -232,7 +280,10 @@ export async function runAudit(argv: string[], deps: AuditDeps = {}): Promise<Au
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   runAudit(process.argv.slice(2)).catch((error: unknown) => {
-    if (error instanceof ScopeError) {
+    if (error instanceof UnknownStatusError) {
+      // Already names the valid statuses and the override flags; USAGE adds nothing.
+      console.error(`[ERROR] ${error.message}`);
+    } else if (error instanceof ScopeError) {
       console.error(`[ERROR] ${error.message}\n\n${USAGE}`);
     } else {
       console.error("[ERROR]", error instanceof Error ? error.message : error);

@@ -20,6 +20,7 @@ import { expectsCoverage } from "../shared/issue-types";
 import { uniqueSorted } from "../shared/keys";
 
 import type { CommitInfo, RepoIndex, StoryFileRecord, StoryRecord } from "./repo-scanner";
+import type { GitHubReader } from "../clients/github-client";
 import type { AuditEntry, Evidence, JiraIssue, RecommendedAction, TicketStatus, TypeReview } from "../shared/types";
 
 export interface EvidenceOptions {
@@ -27,6 +28,8 @@ export interface EvidenceOptions {
   maxSimilarityFiles?: number;
   /** Story-level evidence from one commit across more files than this is downgraded as a sweep. */
   sweepFileThreshold?: number;
+  /** Pull-request lookup; omitted or unavailable means git-only evidence. */
+  github?: GitHubReader;
 }
 
 const DEFAULT_MAX_SIMILARITY_FILES = 3;
@@ -222,6 +225,110 @@ function historyEvidenceForFile(index: RepoIndex, jira: string, record: StoryFil
   return evidence;
 }
 
+/**
+ * Story files that are the natural test cases for `file`.
+ *
+ * A component and its stories are co-located in this repo — `DataAppShell.tsx`
+ * sits beside `DataAppShell.stories.tsx`, and `ui/button.tsx` beside
+ * `ui/button.stories.tsx`. So the sibling stories of a changed source file are
+ * what exercises it. Matching is by directory + basename, never by name
+ * similarity, which is what produced the wrong `icons.stories.tsx` match.
+ *
+ * A changed file that IS a story file maps to itself.
+ */
+export function siblingStoryFiles(index: RepoIndex, file: string): StoryFileRecord[] {
+  const posix = file.split("\\").join("/");
+  const exact = index.files.get(posix);
+  if (exact) return [exact];
+
+  const slash = posix.lastIndexOf("/");
+  const dir = slash === -1 ? "" : posix.slice(0, slash);
+  const base = posix.slice(slash + 1).replace(/\.[^.]+$/, "");
+  const matches: StoryFileRecord[] = [];
+  for (const [storyFile, record] of index.files) {
+    const storySlash = storyFile.lastIndexOf("/");
+    const storyDir = storySlash === -1 ? "" : storyFile.slice(0, storySlash);
+    if (storyDir !== dir) continue;
+    // `<base>.stories.tsx` beside `<base>.tsx` — the co-location convention.
+    if (storyFile.slice(storySlash + 1) === `${base}.stories.tsx`) matches.push(record);
+  }
+  if (matches.length > 0) return matches;
+
+  // No same-named sibling — e.g. PrimaryNav.tsx, a part of the DataAppShell
+  // component whose stories live in that component's own directory.
+  //
+  // This only holds in a *component directory*, one named for the component it
+  // contains (`composed/DataAppShell/`), where every file is part of that one
+  // component. It must NOT apply to a flat directory of unrelated components
+  // like `ui/`, where `button.tsx` would otherwise drag in every story in the
+  // folder — the same over-reach that made the original icons mismatch wrong.
+  const dirName = dir.slice(dir.lastIndexOf("/") + 1);
+  const inDirectory = [...index.files.values()].filter((record) => {
+    const storySlash = record.file.lastIndexOf("/");
+    return (storySlash === -1 ? "" : record.file.slice(0, storySlash)) === dir;
+  });
+  return inDirectory.filter((record) => record.file.slice(dir.length + 1) === `${dirName}.stories.tsx`);
+}
+
+/**
+ * Evidence from the pull requests that name the issue.
+ *
+ * This is the answer to a PR merged into a branch that no longer exists: git
+ * cannot see those commits from HEAD, but GitHub still knows which files the PR
+ * changed. Each changed source file is mapped to its co-located story file, and
+ * those stories' Zephyr IDs become the expected set.
+ *
+ * Medium confidence: strong enough to appear as EXPECTED and be reviewed, not
+ * strong enough to auto-apply at the default `--min-confidence high`. The link
+ * from "this PR changed the component" to "these are its test cases" is a sound
+ * inference, but still an inference.
+ *
+ * A PR spanning more than `sweepFileThreshold` story files is a cross-cutting
+ * sweep — a lint pass, a token rename, a repo-wide refactor — and does not own
+ * the stories it happened to touch. `SW-2305`'s PR changed 135 files and would
+ * otherwise claim ~400 test cases. Those are reported as low confidence, which
+ * keeps them out of `expectedZephyrIds`, mirroring `downgradeSweeps` for commits.
+ */
+function pullRequestEvidence(
+  index: RepoIndex,
+  github: GitHubReader,
+  jira: string,
+  sweepFileThreshold: number,
+): Evidence[] {
+  const evidence: Evidence[] = [];
+  const seen = new Set<string>();
+  for (const pr of github.pullRequestsFor(jira)) {
+    const storyFilesTouched = new Set(
+      pr.files.flatMap((changed) => siblingStoryFiles(index, changed).map((record) => record.file)),
+    );
+    const sweep = storyFilesTouched.size > sweepFileThreshold;
+    for (const changed of pr.files) {
+      for (const record of siblingStoryFiles(index, changed)) {
+        const ids = fileZephyrIds(record);
+        if (ids.length === 0) continue;
+        const dedupeKey = `${pr.number}:${record.file}`;
+        if (seen.has(dedupeKey)) continue;
+        seen.add(dedupeKey);
+        const sameFile = record.file === changed.split("\\").join("/");
+        const base = sameFile
+          ? `PR #${pr.number} (${pr.title}) changed ${changed}, which defines ${ids.length} story/stories`
+          : `PR #${pr.number} (${pr.title}) changed ${changed}; its sibling ${record.file} owns ${listIds(ids)}`;
+        evidence.push({
+          type: "pr-changed-file",
+          confidence: sweep ? "low" : "medium",
+          jira,
+          file: record.file,
+          zephyrIds: ids,
+          detail: sweep
+            ? `${base} — downgraded: that PR spans ${storyFilesTouched.size} story files, so it is a cross-cutting sweep rather than these stories' origin`
+            : base,
+        });
+      }
+    }
+  }
+  return evidence;
+}
+
 export function summaryTokens(summary: string): Set<string> {
   const words = summary
     .replace(/\[[^\]]*\]/g, " ")
@@ -287,11 +394,24 @@ export function deriveEvidence(index: RepoIndex, issue: JiraIssue, options: Evid
   }
   const graded = downgradeSweeps(evidence, options.sweepFileThreshold ?? DEFAULT_SWEEP_FILE_THRESHOLD);
 
-  // Name similarity is a fallback only: never add candidates next to real evidence.
-  if (graded.some((item) => meetsThreshold(item.confidence, "medium"))) return graded;
-  const filesWithEvidence = new Set(graded.map((item) => item.file));
+  // Consulted only when git found nothing solid: an in-repo commit is always the
+  // better signal, and this costs a network call per key.
+  const withPr = graded.some((item) => meetsThreshold(item.confidence, "medium"))
+    ? graded
+    : [
+        ...graded,
+        ...(options.github
+          ? pullRequestEvidence(index, options.github, jira, options.sweepFileThreshold ?? DEFAULT_SWEEP_FILE_THRESHOLD)
+          : []),
+      ];
+
+  // Name similarity is a last resort: never add guesses next to real evidence.
+  // PR evidence counts as real, which is what keeps a summary mentioning
+  // "icons" from dragging in icons.stories.tsx once the PR is known.
+  if (withPr.some((item) => meetsThreshold(item.confidence, "medium"))) return withPr;
+  const filesWithEvidence = new Set(withPr.map((item) => item.file));
   return [
-    ...graded,
+    ...withPr,
     ...similarityEvidence(index, issue, filesWithEvidence, options.maxSimilarityFiles ?? DEFAULT_MAX_SIMILARITY_FILES),
   ];
 }
@@ -326,6 +446,47 @@ export interface EntryInputs {
   missingNotFoundInZephyr?: string[];
 }
 
+/**
+ * Evidence from a COVERAGE link that already exists in Zephyr.
+ *
+ * Other repos in the org link at *provisioning* time: `ts-lib-zephyr-nodejs`
+ * takes a single `jiraTicket` for a whole run and links every test case it
+ * creates to it (`provisioner.ts`, `storybook.ts`). Those links are deliberate
+ * human-configured statements of intent, and they are invisible to this audit's
+ * git/PR evidence — nothing in the repository records them.
+ *
+ * So a live link is corroboration worth recording. But it is **only ever a
+ * promotion of evidence the repository already found**, never a source of
+ * truth on its own:
+ *
+ *  - If the repo attributes an ID to this issue, an existing link raises the
+ *    floor to medium — two independent mechanisms agreeing.
+ *  - If the repo attributes it *elsewhere*, the link does NOT override that;
+ *    the ID stays in `unexpectedZephyrIds` for a human, because a stale or
+ *    mis-typed `jiraTicket` is exactly the error this audit exists to catch.
+ *  - If the repo knows nothing about the ID, it stays `unmanaged` — an existing
+ *    link cannot bootstrap itself into justifying its own existence.
+ *
+ * That last rule is what keeps this from being circular: `existing` comes from
+ * Zephyr, and if it could create expectation, every link would justify itself
+ * and the audit could never report a wrong one.
+ */
+function existingLinkEvidence(index: RepoIndex, jira: string, zephyrId: string): Evidence | null {
+  const story = index.storiesByZephyrId.get(zephyrId)?.[0];
+  if (!story) return null;
+  return {
+    type: "existing-coverage-link",
+    confidence: "medium",
+    jira,
+    file: story.file,
+    story: story.exportName,
+    storyName: story.storyName,
+    line: story.declarationLine,
+    zephyrIds: [zephyrId],
+    detail: `${zephyrId} is already linked to ${jira} in Zephyr, and the repository attributes it to story "${story.storyName}" — two independent signals agree`,
+  };
+}
+
 function idConfidences(evidence: Evidence[]): Map<string, Confidence> {
   const perId = new Map<string, Evidence[]>();
   for (const item of evidence) {
@@ -353,6 +514,16 @@ function awaitingSyncNotes(index: RepoIndex, evidence: Evidence[]): string[] {
 export function buildAuditEntry(inputs: EntryInputs): AuditEntry {
   const { issue, index } = inputs;
   const evidence = [...inputs.evidence];
+  // Corroborate before grading: an ID the repo attributes here AND Zephyr already
+  // links here is stronger than either signal alone. Restricted to IDs the repo
+  // already knows about, so a link can never justify itself (see the doc above).
+  const alreadyLinked = new Set(inputs.existingZephyrIds);
+  const repoAttributed = new Set(evidence.flatMap((item) => item.zephyrIds));
+  for (const id of alreadyLinked) {
+    if (!repoAttributed.has(id)) continue;
+    const corroboration = existingLinkEvidence(index, issue.key, id);
+    if (corroboration) evidence.push(corroboration);
+  }
   const confidences = idConfidences(evidence);
 
   const expected = uniqueSorted([...confidences].filter(([, c]) => meetsThreshold(c, "medium")).map(([id]) => id));

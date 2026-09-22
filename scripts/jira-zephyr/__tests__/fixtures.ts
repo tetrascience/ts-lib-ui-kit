@@ -15,7 +15,10 @@ export function makeIssue(key: string, overrides: Partial<JiraIssue["fields"]> &
     fields: {
       summary: `Summary for ${key}`,
       issuetype: { name: "Story", subtask: false, hierarchyLevel: 0 },
-      status: { name: "Open" },
+      // Default to an audited status so tests about *other* things are not
+      // silently filtered out by the workflow-status filter; tests that care
+      // about that filter override it explicitly.
+      status: { name: "Closed" },
       fixVersions: [],
       ...fields,
     },
@@ -78,6 +81,8 @@ export interface IndexOptions {
   blame?: Record<string, Map<number, BlameLine>>;
   origin?: Record<string, CommitInfo | null>;
   projectKeys?: string[];
+  /** Every file each key's commits touched; defaults to the story files alone. */
+  allFiles?: Record<string, string[]>;
 }
 
 export function makeIndex(files: StoryFileRecord[], options: IndexOptions = {}): RepoIndex {
@@ -101,6 +106,10 @@ export function makeIndex(files: StoryFileRecord[], options: IndexOptions = {}):
     storiesByZephyrId,
     commitsByFile,
     filesByJiraKey,
+    allFilesByJiraKey: () =>
+      options.allFiles
+        ? new Map(Object.entries(options.allFiles).map(([key, list]) => [key, new Set(list)]))
+        : filesByJiraKey,
     projectKeys: new Set(options.projectKeys ?? ["SW"]),
     blame: (file) => options.blame?.[file] ?? new Map(),
     originCommit: (file) => options.origin?.[file] ?? null,
@@ -140,6 +149,7 @@ export function makeArtifact(tickets: AuditEntry[], overrides: Partial<AuditArti
       values: ["SW-100"],
       resolvedJql: "parent in (SW-100) ORDER BY key ASC",
       issueTypes: ["Story", "Task"],
+      statuses: ["Code review", "Verification", "Closed"],
     },
     scopeSnapshot: { resolvedAt: generatedAt, issueKeys: tickets.map((ticket) => ticket.jira) },
     skipped: [],

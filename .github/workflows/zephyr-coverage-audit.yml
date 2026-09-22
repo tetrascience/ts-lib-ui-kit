@@ -59,6 +59,21 @@ on:
         type: string
         required: false
         default: ""
+      statuses:
+        description: "Workflow statuses to audit, comma separated (default: Code review,Verification,Closed). Use `all` to audit every status, including work before code review."
+        type: string
+        required: false
+        default: ""
+      pr_evidence:
+        description: "Consult GitHub PRs for issues with no git evidence (catches PRs merged into deleted branches). Uses the workflow's GITHUB_TOKEN."
+        type: boolean
+        required: false
+        default: true
+      skip_story_only:
+        description: "Skip issues whose commits touched only *.stories.tsx files (no shipped code changed). Note: story files are what test cases live in, so this also skips well-covered, test-only tickets."
+        type: boolean
+        required: false
+        default: false
       audit_run_id:
         description: "dry-run / write only: apply the frozen audit uploaded by this earlier run instead of auditing again (the id is in that run's URL and in its summary's next steps)"
         type: string
@@ -164,6 +179,10 @@ jobs:
         env:
           SCOPE_TYPE: ${{ inputs.scope_type }}
           SCOPE: ${{ inputs.scope }}
+          STATUSES: ${{ inputs.statuses }}
+          SKIP_STORY_ONLY: ${{ inputs.skip_story_only }}
+          PR_EVIDENCE: ${{ inputs.pr_evidence }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
@@ -187,6 +206,13 @@ jobs:
             *)
               echo "::error::unknown scope_type '$SCOPE_TYPE'"; exit 1 ;;
           esac
+          case "$(tr '[:upper:]' '[:lower:]' <<<"${STATUSES:-}")" in
+            "")    ;;                          # tool default: code review onwards
+            all)   args+=(--all-statuses) ;;
+            *)     args+=(--statuses "$STATUSES") ;;
+          esac
+          if [ "${SKIP_STORY_ONLY:-false}" = "true" ]; then args+=(--skip-story-only); fi
+          if [ "${PR_EVIDENCE:-true}" != "true" ]; then args+=(--no-pr-evidence); fi
           mkdir -p artifacts
           # The terminal report goes to a file, not the log: its header can carry
           # an epic title and this repository is public. The job summary is the report.

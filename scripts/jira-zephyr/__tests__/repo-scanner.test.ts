@@ -12,6 +12,7 @@ import {
   parseBlamePorcelain,
   parseHistory,
   parseStoryFile,
+  touchesNonStoryFiles,
 } from "../audit/repo-scanner";
 
 import { makeIssue } from "./fixtures";
@@ -114,6 +115,37 @@ describe("repo-scanner against a real git repository", () => {
     expect(state.branch).toBe("main");
     expect(state.dirty).toBe(false);
     expect(state.head).toMatch(/^[0-9a-f]{40}$/);
+  });
+
+  it("separates keys that touched shipped code from keys that touched only stories", () => {
+    const index = buildRepoIndex({ cwd, projectKeys: ["SW"] });
+    const allFiles = index.allFilesByJiraKey();
+
+    // Both keyed commits in this repo changed the story file and nothing else.
+    expect([...(allFiles.get("SW-100") ?? [])]).toEqual([STORY_FILE]);
+    expect(touchesNonStoryFiles(allFiles.get("SW-100"))).toBe(false);
+    expect(touchesNonStoryFiles(allFiles.get("SW-200"))).toBe(false);
+
+    // A key with no commits at all is "cannot tell", not "changed nothing".
+    expect(touchesNonStoryFiles(allFiles.get("SW-999"))).toBeUndefined();
+  });
+
+  it("sees a non-story file once a keyed commit changes one", () => {
+    const local = fs.mkdtempSync(path.join(os.tmpdir(), "jira-zephyr-scanner-mixed-"));
+    try {
+      git(local, "init", "-q", "-b", "main");
+      fs.mkdirSync(path.join(local, "src/components/ui"), { recursive: true });
+      fs.writeFileSync(path.join(local, STORY_FILE), INITIAL);
+      commitAll(local, "feat: SW-300 Stories only");
+      fs.writeFileSync(path.join(local, "src/components/ui/widget.tsx"), "export const Widget = () => null;\n");
+      commitAll(local, "feat: SW-400 Ship the component");
+
+      const allFiles = buildRepoIndex({ cwd: local, projectKeys: ["SW"] }).allFilesByJiraKey();
+      expect(touchesNonStoryFiles(allFiles.get("SW-300"))).toBe(false);
+      expect(touchesNonStoryFiles(allFiles.get("SW-400"))).toBe(true);
+    } finally {
+      fs.rmSync(local, { recursive: true, force: true });
+    }
   });
 
   it("derives exact evidence for the ticket that created the file and high for a later story, ignoring the sync chore", () => {

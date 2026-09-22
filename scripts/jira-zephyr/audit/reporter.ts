@@ -46,8 +46,10 @@ export function renderAuditReport(artifact: AuditArtifact, context: ReportContex
   if (artifact.scope.resolvedJql) lines.push(`Resolved JQL: ${artifact.scope.resolvedJql}`);
   const resolved = context.totalResolved ?? artifact.scopeSnapshot.issueKeys.length + artifact.skipped.length;
   lines.push(
-    `Issues resolved: ${resolved} (${artifact.scopeSnapshot.issueKeys.length} audited, ${artifact.skipped.length} skipped by issue type)`,
+    `Issues resolved: ${resolved} (${artifact.scopeSnapshot.issueKeys.length} audited, ${artifact.skipped.length} skipped by issue type or status)`,
   );
+  if (artifact.scope.statuses) lines.push(`Statuses audited: ${artifact.scope.statuses.join(", ")}`);
+  if (artifact.scope.skipStoryOnly) lines.push("Story-only issues: skipped (--skip-story-only)");
   lines.push(
     `Repo: ${artifact.repo.branch}@${artifact.repo.head.slice(0, 7)}${artifact.repo.dirty ? " (dirty working tree)" : ""}`,
   );
@@ -82,8 +84,11 @@ export function renderAuditReport(artifact: AuditArtifact, context: ReportContex
   }
 
   if (artifact.skipped.length > 0) {
-    lines.push("", "Skipped (issue type not audited):");
-    for (const skipped of artifact.skipped) lines.push(`  ${skipped.jira} (${skipped.issueType})`);
+    lines.push("", "Skipped (issue type or status not audited):");
+    for (const skipped of artifact.skipped) {
+      const status = skipped.status ? `, ${skipped.status}` : "";
+      lines.push(`  ${skipped.jira.padEnd(9)} (${skipped.issueType}${status}) ${skipped.reason}`);
+    }
   }
 
   const { summary } = artifact;

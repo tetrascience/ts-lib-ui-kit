@@ -5,10 +5,12 @@
  *   - POST /rest/api/3/search/jql          (paginated JQL; the old /search is deprecated)
  *   - GET  /rest/api/3/issue/{key}
  *   - GET  /rest/api/3/project/{key}/versions
+ *   - GET  /rest/api/3/project/{key}/statuses
  *
  * Read-only by construction: there is no method that writes to Jira. Auth is
  * Basic (email + API token), the documented mechanism for Jira Cloud scripts.
  */
+import { type ProjectStatus } from "../shared/statuses";
 import { JIRA_ISSUE_FIELDS, type JiraIssue, type JiraVersion } from "../shared/types";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
@@ -23,6 +25,11 @@ export interface JiraClientOptions {
   fetchImpl?: typeof globalThis.fetch;
   /** Injected for tests; defaults to setTimeout-based backoff. */
   sleep?: (ms: number) => Promise<void>;
+}
+
+/** Shape of `/rest/api/3/project/{key}/statuses`: statuses grouped per issue type. */
+interface IssueTypeStatuses {
+  statuses?: Array<{ name: string; statusCategory?: { name?: string } }>;
 }
 
 interface SearchPage {
@@ -157,6 +164,37 @@ export class JiraClient {
 
   async getProjectVersions(projectKey: string): Promise<JiraVersion[]> {
     return this.request<JiraVersion[]>("GET", `/rest/api/3/project/${encodeURIComponent(projectKey)}/versions`);
+  }
+
+  /**
+   * Every status reachable in the project's workflows, used to validate the
+   * configured status filter. `/statuses` returns statuses grouped per issue
+   * type, so the same status appears repeatedly and is deduped by name here.
+   *
+   * Returns [] when the account cannot read the project's workflow scheme
+   * (a 403/404 on this endpoint is a permission quirk, not a broken audit) —
+   * validation then no-ops rather than failing the whole run.
+   */
+  async getProjectStatuses(projectKey: string): Promise<ProjectStatus[]> {
+    let groups: IssueTypeStatuses[];
+    try {
+      groups = await this.request<IssueTypeStatuses[]>(
+        "GET",
+        `/rest/api/3/project/${encodeURIComponent(projectKey)}/statuses`,
+      );
+    } catch (error) {
+      if (error instanceof JiraHttpError && (error.status === 403 || error.status === 404)) return [];
+      throw error;
+    }
+    const byName = new Map<string, ProjectStatus>();
+    for (const group of groups) {
+      for (const status of group.statuses ?? []) {
+        if (!byName.has(status.name)) {
+          byName.set(status.name, { name: status.name, category: status.statusCategory?.name });
+        }
+      }
+    }
+    return [...byName.values()];
   }
 
   /** Human-readable issue URL for reports. */

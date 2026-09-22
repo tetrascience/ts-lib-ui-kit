@@ -97,6 +97,14 @@ export const auditArtifactSchema = z.object({
     resolvedJql: z.string().optional(),
     /** Issue types that participated; everything else in scope is listed under `skipped`. */
     issueTypes: z.array(z.string().min(1)),
+    /**
+     * Workflow statuses that participated. Absent means no status filter was
+     * applied (`--all-statuses`), and also keeps artifacts written before this
+     * existed parsing unchanged.
+     */
+    statuses: z.array(z.string().min(1)).optional(),
+    /** True when `--skip-story-only` excluded issues that changed no shipped code. */
+    skipStoryOnly: z.boolean().optional(),
   }),
   scopeSnapshot: z.object({
     resolvedAt: z.string().datetime(),
@@ -107,6 +115,8 @@ export const auditArtifactSchema = z.object({
     z.object({
       jira: jiraKeySchema,
       issueType: z.string(),
+      /** Optional so artifacts written before status filtering existed still parse. */
+      status: z.string().optional(),
       reason: z.string(),
     }),
   ),

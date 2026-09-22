@@ -1,8 +1,6 @@
-import { FileTextIcon, FolderIcon, FolderOpenIcon, RotateCwIcon } from "lucide-react";
+import { FileTextIcon, FolderIcon, FolderOpenIcon, RotateCwIcon, TriangleAlertIcon } from "lucide-react";
 import * as React from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
-
-import { EmptyState } from "../composed/EmptyState";
 
 import { Badge } from "./badge";
 import { Button } from "./button";
@@ -60,12 +58,15 @@ const meta: Meta<typeof Tree> = {
           "traversal (so the single-tab-stop model never stalls on it), but ordinary Tab order and any interactive",
           "content inside it — a Retry button, a Load-more button — stay fully reachable, because it deliberately does",
           '*not* carry `aria-disabled` (Chromium treats that as inherited by descendants, which would break exactly',
-          "that). Concretely: an empty root uses `<TreeEmpty>` in place of `Tree`'s children; a branch that came back",
-          "empty or failed to load uses it in place of that branch's `TreeItemGroup` children; a branch still loading",
-          "swaps in a `Skeleton` as `TreeEmpty`'s content; and \"Load more\" is `<TreeEmpty>` appended as the *last*",
-          "child of an otherwise-populated `TreeItemGroup`, holding a real button. It is never a sibling of the group",
-          "(that would sit outside `aria-level`/`aria-setsize` for content that is conceptually still part of the",
-          "branch) and never an indexed `TreeItem` (a click on \"Load more\" is not selecting or activating a node).",
+          'that). `TreeEmpty` is styled as a single row — an icon and a short message, matching a real',
+          "`TreeItemLabel`'s height and depth-correct indent — so it reads as one more row rather than a standalone",
+          "empty-page block. Concretely: an empty root uses `<TreeEmpty>` in place of `Tree`'s children; a branch that",
+          "came back empty or failed to load uses it in place of that branch's `TreeItemGroup` children; a branch",
+          "still loading swaps in a `Skeleton` pair as `TreeEmpty`'s content; and \"Load more\" is `<TreeEmpty>`",
+          "appended as the *last* child of an otherwise-populated `TreeItemGroup`, holding a real button. It is never",
+          'a sibling of the group (that would sit outside `aria-level`/`aria-setsize` for content that is conceptually',
+          'still part of the branch) and never an indexed `TreeItem` (a click on "Load more" is not selecting or',
+          "activating a node).",
         ].join("\n"),
       },
     },
@@ -281,20 +282,24 @@ export const Guides: Story = {
   },
 };
 
-/** A skeleton row standing in for an unloaded node's label, sized to match a real `TreeItemLabel`. */
+/**
+ * A skeleton pair standing in for an unloaded node's icon and label, matching `TreeItemLabel`'s own
+ * icon slot and text sizing — rendered directly as `TreeEmpty`'s children, so it inherits the
+ * placeholder row's height and depth-correct indent rather than carrying its own.
+ */
 function TreeItemSkeleton() {
   return (
-    <div className="flex h-7 w-full items-center gap-1.5 py-1" aria-hidden="true">
-      <Skeleton className="size-3.5 shrink-0 rounded-sm" />
-      <Skeleton className="h-4 w-full max-w-32" />
-    </div>
+    <>
+      <Skeleton aria-hidden="true" className="size-4 shrink-0 rounded-sm" />
+      <Skeleton aria-hidden="true" className="h-4 min-w-0 max-w-32 flex-1" />
+    </>
   );
 }
 
 /**
- * `TreeEmpty` wraps the shared `EmptyState` component for a `Tree` with no root nodes. Pass
- * `EmptyState`'s `action` prop for a refresh control when the empty result came back from an async
- * fetch that might just need retrying — click "Refresh" below to see the tree populate.
+ * `TreeEmpty` styled as a single row — a muted icon and a short message, the same height and inset
+ * as a real `TreeItemLabel` — for a `Tree` with no root nodes. Click "Refresh" to see it move through
+ * a loading skeleton to a populated tree, for the case where an empty result just needs retrying.
  */
 export const EmptyStateStory: Story = {
   name: "Empty state",
@@ -308,27 +313,32 @@ export const EmptyStateStory: Story = {
     }, [status]);
 
     return (
-      <Tree aria-label="Files" className="w-[240px]">
+      <Tree aria-label="Files" aria-busy={status === "loading" || undefined} className="w-[240px]">
         {status === "loaded" ? (
           <TreeItem id="reports">
             <TreeItemLabel icon={<FileTextIcon />}>reports.csv</TreeItemLabel>
           </TreeItem>
         ) : status === "loading" ? (
-          <TreeEmpty aria-label="Loading files" className="items-stretch">
+          <TreeEmpty>
             <TreeItemSkeleton />
           </TreeEmpty>
         ) : (
           <TreeEmpty>
-            <EmptyState
-              variant="empty-folder"
-              className="gap-2 px-0 py-6"
-              action={
-                <Button size="sm" variant="outline" onClick={() => setStatus("loading")}>
-                  <RotateCwIcon data-icon="inline-start" />
-                  Refresh
+            <FolderIcon aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate">No files</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Refresh"
+                  onClick={() => setStatus("loading")}
+                >
+                  <RotateCwIcon />
                 </Button>
-              }
-            />
+              </TooltipTrigger>
+              <TooltipContent>Refresh</TooltipContent>
+            </Tooltip>
           </TreeEmpty>
         )}
       </Tree>
@@ -341,10 +351,11 @@ export const EmptyStateStory: Story = {
 
 /**
  * A branch whose children failed to load uses `TreeEmpty` in place of that branch's
- * `TreeItemGroup` children, with the shared `EmptyState`'s `"server-error"` variant for the icon and
- * copy. Retry sits in `TreeItemLabel`'s `trailing` slot as an icon button with a tooltip, not inside
- * the error content itself — it's an action on the "Shared" node, not part of the placeholder. Click
- * it to see the branch move through a loading skeleton to its real children.
+ * `TreeItemGroup` children — the same single-row look as the empty state above, just a
+ * destructive-toned icon and "Failed to load" in place of the muted one. Retry sits in
+ * `TreeItemLabel`'s `trailing` slot as an icon button with a tooltip, not inside the error content
+ * itself — it's an action on the "Shared" node, not part of the placeholder. Click it to see the
+ * branch move through a loading skeleton to its real children.
  */
 export const ErrorStateStory: Story = {
   name: "Error state",
@@ -394,13 +405,18 @@ export const ErrorStateStory: Story = {
           <TreeItemGroup>
             {status === "error" ? (
               <TreeEmpty>
-                <EmptyState variant="server-error" className="gap-2 px-0 py-6" />
+                <TriangleAlertIcon aria-hidden="true" className="text-destructive" />
+                <span className="text-destructive min-w-0 flex-1 truncate">Failed to load</span>
               </TreeEmpty>
             ) : status === "loading" ? (
-              <TreeEmpty aria-label="Loading Shared" className="items-stretch">
-                <TreeItemSkeleton />
-                <TreeItemSkeleton />
-              </TreeEmpty>
+              <>
+                <TreeEmpty>
+                  <TreeItemSkeleton />
+                </TreeEmpty>
+                <TreeEmpty aria-hidden="true">
+                  <TreeItemSkeleton />
+                </TreeEmpty>
+              </>
             ) : (
               <TreeItem id="shared-notes">
                 <TreeItemLabel icon={<FileTextIcon />}>notes.md</TreeItemLabel>
@@ -443,11 +459,11 @@ export const LoadMoreStory: Story = {
               </TreeItem>
             ))}
             {count < total ? (
-              <TreeEmpty className="items-stretch p-0">
+              <TreeEmpty className="p-0">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 w-full justify-start gap-1.5 rounded-md px-2 font-normal text-muted-foreground"
+                  className="h-7 w-full justify-start gap-1.5 rounded-md px-0 font-normal text-muted-foreground"
                   // See the Retry button above: an unclaimed click bubbles to `TreeItem`'s handler.
                   onClick={(event) => {
                     event.stopPropagation();

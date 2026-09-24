@@ -60,6 +60,16 @@
     margin-right: 6px;
   }
 
+  // Reference-line legend swatch: a short dashed rule instead of a filled box.
+  .histogram-legend-line-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 0;
+    border-top-width: 2px;
+    border-top-style: dashed;
+    margin-right: 6px;
+  }
+
   .histogram-legend-divider {
     display: inline-block;
     width: 2px;

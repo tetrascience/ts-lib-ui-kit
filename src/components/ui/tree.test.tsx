@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Tree, TreeItem, TreeItemGroup, TreeItemLabel } from "./tree";
+import { Tree, TreeEmpty, TreeItem, TreeItemGroup, TreeItemLabel } from "./tree";
 
 /*
  * SW-2541: the keyboard half of the WAI-ARIA tree pattern that has to be verified by test rather
@@ -290,6 +290,107 @@ describe("Tree * (expand siblings)", () => {
     expect(item("summary")).not.toBeNull();
     // Level 1 is untouched: `Shared` stays collapsed.
     expect(item("shared")?.getAttribute("aria-expanded")).toBe("false");
+  });
+});
+
+describe("Tree empty and error states (SW-2542)", () => {
+  it("renders a whole-tree placeholder as a treeitem, not a real, indexable node", () => {
+    render(
+      <Tree aria-label="Files">
+        <TreeEmpty>No files yet.</TreeEmpty>
+      </Tree>,
+    );
+    const placeholder = container.querySelector('[data-slot="tree-empty"]')!;
+    expect(placeholder.getAttribute("role")).toBe("treeitem");
+    expect(placeholder.getAttribute("aria-selected")).toBe("false");
+    // Not `aria-disabled`: Chromium (and Playwright's actionability checks with it) treats that as
+    // inherited by descendants, which would make a nested retry button unreachable.
+    expect(placeholder.hasAttribute("aria-disabled")).toBe(false);
+    expect(placeholder.hasAttribute("data-tree-item-id")).toBe(false);
+    expect(placeholder.hasAttribute("aria-posinset")).toBe(false);
+    expect(tabStops()).toEqual([]);
+  });
+
+  it("does not block a nested interactive control (e.g. a retry button) from receiving focus", () => {
+    render(
+      <Tree aria-label="Files">
+        <TreeEmpty>
+          Couldn&apos;t load this folder.
+          <button type="button">Retry</button>
+        </TreeEmpty>
+      </Tree>,
+    );
+    const button = container.querySelector("button")!;
+    button.focus();
+    expect(document.activeElement).toBe(button);
+  });
+
+  it("does not claim a set slot from real siblings when it stands in for a branch's failed load", () => {
+    render(
+      <Tree aria-label="Files" defaultExpandedIds={new Set(["shared"])}>
+        <TreeItem id="documents">
+          <TreeItemLabel>Documents</TreeItemLabel>
+        </TreeItem>
+        <TreeItem id="shared" hasChildren>
+          <TreeItemLabel>Shared</TreeItemLabel>
+          <TreeItemGroup>
+            <TreeEmpty>Couldn&apos;t load this folder.</TreeEmpty>
+          </TreeItemGroup>
+        </TreeItem>
+        <TreeItem id="archive">
+          <TreeItemLabel>Archive</TreeItemLabel>
+        </TreeItem>
+      </Tree>,
+    );
+    expect(item("documents")?.getAttribute("aria-setsize")).toBe("3");
+    expect(item("shared")?.getAttribute("aria-setsize")).toBe("3");
+    expect(item("archive")?.getAttribute("aria-setsize")).toBe("3");
+  });
+
+  it("is skipped over, not stalled on, by arrow-key traversal", () => {
+    render(
+      <Tree aria-label="Files" defaultExpandedIds={new Set(["shared"])}>
+        <TreeItem id="documents">
+          <TreeItemLabel>Documents</TreeItemLabel>
+        </TreeItem>
+        <TreeItem id="shared" hasChildren>
+          <TreeItemLabel>Shared</TreeItemLabel>
+          <TreeItemGroup>
+            <TreeEmpty>Couldn&apos;t load this folder.</TreeEmpty>
+          </TreeItemGroup>
+        </TreeItem>
+        <TreeItem id="archive">
+          <TreeItemLabel>Archive</TreeItemLabel>
+        </TreeItem>
+      </Tree>,
+    );
+    focus("shared");
+    press("ArrowDown");
+    expect(document.activeElement).toBe(item("archive"));
+  });
+
+  it("still indexes a `TreeItem` wrapped in a consumer's own component", () => {
+    // A row that wires up drag-and-drop, say — the wrapper's identity is not `TreeItem`, but it
+    // still renders one and needs a real posinset/setsize among its siblings, not the
+    // `TreeIndexContext` default. Only `TreeEmpty` opts out of indexing by identity.
+    function WrappedItem(props: React.ComponentProps<typeof TreeItem>) {
+      return <TreeItem {...props} />;
+    }
+    render(
+      <Tree aria-label="Files">
+        <TreeItem id="documents">
+          <TreeItemLabel>Documents</TreeItemLabel>
+        </TreeItem>
+        <WrappedItem id="shared">
+          <TreeItemLabel>Shared</TreeItemLabel>
+        </WrappedItem>
+        <TreeItem id="archive">
+          <TreeItemLabel>Archive</TreeItemLabel>
+        </TreeItem>
+      </Tree>,
+    );
+    expect(item("shared")?.getAttribute("aria-posinset")).toBe("2");
+    expect(item("shared")?.getAttribute("aria-setsize")).toBe("3");
   });
 });
 

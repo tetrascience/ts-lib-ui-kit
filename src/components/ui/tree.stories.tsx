@@ -1,11 +1,14 @@
-import { FileTextIcon, FolderIcon, FolderOpenIcon } from "lucide-react";
+import { FileTextIcon, FolderIcon, FolderOpenIcon, RotateCwIcon, TriangleAlertIcon } from "lucide-react";
 import * as React from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { Badge } from "./badge";
+import { Button } from "./button";
 import { Kbd } from "./kbd";
+import { Skeleton } from "./skeleton";
 import { Spinner } from "./spinner";
-import { Tree, TreeItem, TreeItemGroup, TreeItemLabel, useTreeItem } from "./tree";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
+import { Tree, TreeEmpty, TreeItem, TreeItemGroup, TreeItemLabel, useTreeItem } from "./tree";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
@@ -46,6 +49,24 @@ const meta: Meta<typeof Tree> = {
           '**Guides:** `guides` draws curved connectors joining each row to its parent — `"hover"` (the default)',
           'reveals them while the pointer is over the tree, `"always"` pins them on, `"none"` turns them off. The',
           "trunk terminates in the curve at the last child rather than running past it.",
+          "",
+          '**Empty, error, loading and "Load more" content — where it sits in the tree (SW-2542):** all four are',
+          "`TreeEmpty`. Both `role=\"tree\"` and `role=\"group\"` require treeitem/group children per WAI-ARIA's",
+          "`aria-required-children`, so any of these has to render as a `treeitem` — a bare `<div>` would leave the",
+          "container structurally invalid the moment it's the only child. `TreeEmpty` is that `treeitem`: excluded from",
+          "sibling indexing (so it never steals a real sibling's `aria-setsize`/`aria-posinset`) and from arrow-key",
+          "traversal (so the single-tab-stop model never stalls on it), but ordinary Tab order and any interactive",
+          "content inside it — a Retry button, a Load-more button — stay fully reachable, because it deliberately does",
+          '*not* carry `aria-disabled` (Chromium treats that as inherited by descendants, which would break exactly',
+          'that). `TreeEmpty` is styled as a single row — an icon and a short message, matching a real',
+          "`TreeItemLabel`'s height and depth-correct indent — so it reads as one more row rather than a standalone",
+          "empty-page block. Concretely: an empty root uses `<TreeEmpty>` in place of `Tree`'s children; a branch that",
+          "came back empty or failed to load uses it in place of that branch's `TreeItemGroup` children; a branch",
+          "still loading swaps in a `Skeleton` pair as `TreeEmpty`'s content; and \"Load more\" is `<TreeEmpty>`",
+          "appended as the *last* child of an otherwise-populated `TreeItemGroup`, holding a real button. It is never",
+          'a sibling of the group (that would sit outside `aria-level`/`aria-setsize` for content that is conceptually',
+          'still part of the branch) and never an indexed `TreeItem` (a click on "Load more" is not selecting or',
+          "activating a node).",
         ].join("\n"),
       },
     },
@@ -258,6 +279,209 @@ export const Guides: Story = {
   ),
   parameters: {
     zephyr: { testCaseId: "SW-T5658" },
+  },
+};
+
+/**
+ * A skeleton pair standing in for an unloaded node's icon and label, matching `TreeItemLabel`'s own
+ * icon slot and text sizing — rendered directly as `TreeEmpty`'s children, so it inherits the
+ * placeholder row's height and depth-correct indent rather than carrying its own.
+ */
+function TreeItemSkeleton() {
+  return (
+    <>
+      <Skeleton aria-hidden="true" className="size-4 shrink-0 rounded-sm" />
+      <Skeleton aria-hidden="true" className="h-4 min-w-0 max-w-32 flex-1" />
+    </>
+  );
+}
+
+/**
+ * `TreeEmpty` styled as a single row — a muted icon and a short message, the same height and inset
+ * as a real `TreeItemLabel` — for a `Tree` with no root nodes. Click "Refresh" to see it move through
+ * a loading skeleton to a populated tree, for the case where an empty result just needs retrying.
+ */
+export const EmptyStateStory: Story = {
+  name: "Empty state",
+  render: function EmptyTree() {
+    const [status, setStatus] = React.useState<"empty" | "loading" | "loaded">("empty");
+
+    React.useEffect(() => {
+      if (status !== "loading") return;
+      const timer = setTimeout(() => setStatus("loaded"), 900);
+      return () => clearTimeout(timer);
+    }, [status]);
+
+    return (
+      <Tree aria-label="Files" aria-busy={status === "loading" || undefined} className="w-[240px]">
+        {status === "loaded" ? (
+          <TreeItem id="reports">
+            <TreeItemLabel icon={<FileTextIcon />}>reports.csv</TreeItemLabel>
+          </TreeItem>
+        ) : status === "loading" ? (
+          <TreeEmpty>
+            <TreeItemSkeleton />
+          </TreeEmpty>
+        ) : (
+          <TreeEmpty>
+            <FolderIcon aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate">No files</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Refresh"
+                  onClick={() => setStatus("loading")}
+                >
+                  <RotateCwIcon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Refresh</TooltipContent>
+            </Tooltip>
+          </TreeEmpty>
+        )}
+      </Tree>
+    );
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};
+
+/**
+ * A branch whose children failed to load uses `TreeEmpty` in place of that branch's
+ * `TreeItemGroup` children — the same single-row look as the empty state above, just a
+ * destructive-toned icon and "Failed to load" in place of the muted one. Retry sits in
+ * `TreeItemLabel`'s `trailing` slot as an icon button with a tooltip, not inside the error content
+ * itself — it's an action on the "Shared" node, not part of the placeholder. Click it to see the
+ * branch move through a loading skeleton to its real children.
+ */
+export const ErrorStateStory: Story = {
+  name: "Error state",
+  render: function ErrorTree() {
+    const [status, setStatus] = React.useState<"error" | "loading" | "loaded">("error");
+
+    React.useEffect(() => {
+      if (status !== "loading") return;
+      const timer = setTimeout(() => setStatus("loaded"), 900);
+      return () => clearTimeout(timer);
+    }, [status]);
+
+    return (
+      <Tree aria-label="Files" defaultExpandedIds={new Set(["shared"])} className="w-[240px]">
+        <TreeItem id="documents">
+          <TreeItemLabel icon={<FolderIcon />}>Documents</TreeItemLabel>
+        </TreeItem>
+        <TreeItem id="shared" hasChildren aria-busy={status === "loading" || undefined}>
+          <TreeItemLabel
+            icon={<FolderNodeIcon />}
+            trailing={
+              status === "error" ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label="Retry loading Shared"
+                      // Stopped here, not left to bubble: `TreeItem`'s click handler walks up to the
+                      // nearest treeitem and treats any unclaimed click inside it as a select/toggle,
+                      // which would collapse "Shared" the instant the retry it just asked for lands.
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setStatus("loading");
+                      }}
+                    >
+                      <RotateCwIcon />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Retry</TooltipContent>
+                </Tooltip>
+              ) : undefined
+            }
+          >
+            Shared
+          </TreeItemLabel>
+          <TreeItemGroup>
+            {status === "error" ? (
+              <TreeEmpty>
+                <TriangleAlertIcon aria-hidden="true" className="text-destructive" />
+                <span className="text-destructive min-w-0 flex-1 truncate">Failed to load</span>
+              </TreeEmpty>
+            ) : status === "loading" ? (
+              <>
+                <TreeEmpty>
+                  <TreeItemSkeleton />
+                </TreeEmpty>
+                <TreeEmpty aria-hidden="true">
+                  <TreeItemSkeleton />
+                </TreeEmpty>
+              </>
+            ) : (
+              <TreeItem id="shared-notes">
+                <TreeItemLabel icon={<FileTextIcon />}>notes.md</TreeItemLabel>
+              </TreeItem>
+            )}
+          </TreeItemGroup>
+        </TreeItem>
+        <TreeItem id="archive">
+          <TreeItemLabel icon={<FolderIcon />}>Archive</TreeItemLabel>
+        </TreeItem>
+      </Tree>
+    );
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};
+
+/**
+ * SW-2542's "Load more" answer, made concrete: `TreeEmpty` appended as the *last* child of an
+ * otherwise-populated `TreeItemGroup`, holding a real button — a `treeitem` (so `aria-required-
+ * children` stays satisfied) that is excluded from sibling indexing (so it never claims a set slot
+ * from the real files around it) and from arrow-key treeitem traversal, but stays reachable by
+ * ordinary Tab order like any other button. Click it a few times to exhaust the list.
+ */
+export const LoadMoreStory: Story = {
+  name: "Load more",
+  render: function LoadMoreTree() {
+    const [count, setCount] = React.useState(2);
+    const total = 5;
+
+    return (
+      <Tree aria-label="Files" defaultExpandedIds={new Set(["documents"])} className="w-[240px]">
+        <TreeItem id="documents" hasChildren>
+          <TreeItemLabel icon={<FolderNodeIcon />}>Documents</TreeItemLabel>
+          <TreeItemGroup>
+            {Array.from({ length: count }, (_, index) => (
+              <TreeItem key={index} id={`file-${index}`}>
+                <TreeItemLabel icon={<FileTextIcon />}>{`file-${index + 1}.txt`}</TreeItemLabel>
+              </TreeItem>
+            ))}
+            {count < total ? (
+              <TreeEmpty className="p-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-full justify-start gap-1.5 rounded-md px-0 font-normal text-muted-foreground"
+                  // See the Retry button above: an unclaimed click bubbles to `TreeItem`'s handler.
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setCount((current) => Math.min(current + 2, total));
+                  }}
+                >
+                  <RotateCwIcon data-icon="inline-start" className="size-3.5" />
+                  Load more
+                </Button>
+              </TreeEmpty>
+            ) : null}
+          </TreeItemGroup>
+        </TreeItem>
+      </Tree>
+    );
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
   },
 };
 

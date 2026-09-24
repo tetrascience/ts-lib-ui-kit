@@ -19,7 +19,7 @@ const meta: Meta<typeof Toggle> = {
     },
     size: {
       control: { type: "select" },
-      options: ["default", "sm", "lg"],
+      options: ["default", "xs", "sm", "lg"],
     },
   },
   args: {
@@ -68,6 +68,24 @@ export const Outline: Story = {
 
     await step("Outline toggle renders", async () => {
       expect(canvas.getByRole("button", { name: /bold/i })).toBeInTheDocument()
+    })
+  },
+}
+
+export const ExtraSmall: Story = {
+  args: {
+    size: "xs",
+  },
+  render: renderToggle,
+  parameters: {
+    zephyr: { testCaseId: "SW-T5685" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("xs toggle renders at 24px, matching Button xs", async () => {
+      const btn = canvas.getByRole("button", { name: /bold/i })
+      expect(Math.round(btn.getBoundingClientRect().height)).toBe(24)
     })
   },
 }

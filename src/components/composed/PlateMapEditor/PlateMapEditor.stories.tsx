@@ -11,6 +11,8 @@ import { Barcode, Database, FileText, GripVertical, Plus, Tag, X } from "lucide-
 import * as React from "react";
 import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 
+import { selectOption } from "../../../../.storybook/select-interactions";
+
 import { PlateMapActionsMenu } from "./PlateMapActionsMenu";
 import { getPlateMapScopedWellId, PlateMapEditor } from "./PlateMapEditor";
 import { PlateMapForm } from "./PlateMapForm";
@@ -758,9 +760,7 @@ export const FilteringIsEmpty: Story = {
         '[role="dialog"]',
       ) as HTMLElement;
       const popoverComboboxes = popover.querySelectorAll('[role="combobox"]');
-      await userEvent.click(popoverComboboxes[1] as HTMLElement);
-      const option = await body.findByRole("option", { name: /is empty/i });
-      await userEvent.click(option);
+      await selectOption(popoverComboboxes[1] as HTMLElement, /is empty/i);
       await waitFor(() => {
         expect(
           canvasElement.ownerDocument.body.querySelector('input[placeholder="Value…"]'),
@@ -773,9 +773,7 @@ export const FilteringIsEmpty: Story = {
         '[role="dialog"]',
       ) as HTMLElement;
       const popoverComboboxes = popover.querySelectorAll('[role="combobox"]');
-      await userEvent.click(popoverComboboxes[0] as HTMLElement);
-      const option = await body.findByRole("option", { name: /Sample ID/i });
-      await userEvent.click(option);
+      await selectOption(popoverComboboxes[0] as HTMLElement, /Sample ID/i);
     });
   },
 };
@@ -789,7 +787,6 @@ export const GroupingAndPaging: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const body = within(canvasElement.ownerDocument.body);
 
     const manifestSummary = () => {
       const span = canvasElement.querySelector(
@@ -804,8 +801,7 @@ export const GroupingAndPaging: Story = {
     });
 
     await step("Group manifest rows by 'Well Role'", async () => {
-      await userEvent.click(canvas.getByRole("combobox", { name: /Group by/i }));
-      await userEvent.click(await body.findByRole("option", { name: /^Well Role$/ }));
+      await selectOption(canvas.getByRole("combobox", { name: /Group by/i }), /^Well Role$/);
       await waitFor(() => {
         const groupHeader = canvasElement.querySelector("tbody tr.bg-muted\\/40");
         expect(groupHeader).not.toBeNull();
@@ -821,11 +817,9 @@ export const GroupingAndPaging: Story = {
     });
 
     await step("Switch back to ungrouped and change rows-per-page", async () => {
-      await userEvent.click(canvas.getByRole("combobox", { name: /Group by/i }));
-      await userEvent.click(await body.findByRole("option", { name: /^No grouping$/ }));
+      await selectOption(canvas.getByRole("combobox", { name: /Group by/i }), /^No grouping$/);
 
-      await userEvent.click(canvas.getByRole("combobox", { name: /Rows per page/i }));
-      await userEvent.click(await body.findByRole("option", { name: "50" }));
+      await selectOption(canvas.getByRole("combobox", { name: /Rows per page/i }), "50");
       await waitFor(() => expect(canvasElement.textContent).toContain("1–50 of 96"));
     });
   },
@@ -1201,7 +1195,6 @@ export const ManifestEditableCells: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const body = within(canvasElement.ownerDocument.body);
 
     await step("Toggle a row selection checkbox to exercise add-to-selection path", async () => {
       const checkbox = canvas.getByRole("checkbox", { name: "Select A01" });
@@ -1261,9 +1254,7 @@ export const ManifestEditableCells: Story = {
 
     await step("Edit the select cell (exercises renderSelectCellEditable update)", async () => {
       const roleTrigger = canvas.getByRole("combobox", { name: "Role for B01" });
-      await userEvent.click(roleTrigger);
-      const option = await body.findByRole("option", { name: /^Sample$/ });
-      await userEvent.click(option);
+      await selectOption(roleTrigger, /^Sample$/);
       await waitFor(() => expect(roleTrigger.textContent).toMatch(/Sample/));
     });
   },
@@ -1806,7 +1797,6 @@ export const ManifestFillDownAndKeyboardGroup: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const body = within(canvasElement.ownerDocument.body);
 
     await step("Click the fill-down arrow on the Sample ID column", async () => {
       const fillBtn = canvas.getByRole("button", { name: /Fill down Sample ID/ });
@@ -1818,8 +1808,7 @@ export const ManifestFillDownAndKeyboardGroup: Story = {
     });
 
     await step("Group by Role and toggle the first group with the keyboard", async () => {
-      await userEvent.click(canvas.getByRole("combobox", { name: /Group by/i }));
-      await userEvent.click(await body.findByRole("option", { name: /^Role$/ }));
+      await selectOption(canvas.getByRole("combobox", { name: /Group by/i }), /^Role$/);
       const groupRow = canvasElement.querySelector("tbody tr.bg-muted\\/40") as HTMLElement | null;
       expect(groupRow).not.toBeNull();
       groupRow?.focus();

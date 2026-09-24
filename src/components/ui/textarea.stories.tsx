@@ -12,6 +12,12 @@ const meta: Meta<typeof Textarea> = {
     layout: "centered",
   },
   tags: ["autodocs"],
+  argTypes: {
+    size: {
+      control: { type: "select" },
+      options: ["xs", "sm", "default", "lg"],
+    },
+  },
   args: {
     placeholder: "Add any notes for reviewers",
     rows: 5,
@@ -62,6 +68,25 @@ export const Disabled: Story = {
       const field = canvas.getByRole("textbox")
       expect(field).toBeDisabled()
       expect(field).toHaveValue("Review complete. Changes approved.")
+    })
+  },
+}
+
+export const ExtraSmall: Story = {
+  args: {
+    size: "xs",
+  },
+  render: renderTextarea,
+  parameters: {
+    zephyr: { testCaseId: "SW-T5690" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("xs textarea uses the 48px min-height", async () => {
+      const textarea = canvas.getByRole("textbox")
+      expect(textarea).toHaveAttribute("data-size", "xs")
+      expect(getComputedStyle(textarea).minHeight).toBe("48px")
     })
   },
 }

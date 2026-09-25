@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { parsePos, pos, rectPositions, resolveDimensions, rowLabel } from "./wellGrid";
+import { allPositions, parsePos, pos, rectPositions, resolveDimensions, rowLabel } from "./wellGrid";
 
 import type { PlateDimensions, PlateFormat, WellId, WellRecord } from "./types";
 
@@ -19,10 +19,22 @@ const LABEL_BASELINE_OFFSET = 5;
 const WELL_INSET = 1;
 const STROKE_DEFAULT = 4;
 const STROKE_SELECTED = 4;
+/** Gap between the quick-paint strip and the selection edge it points at. */
+const QUICK_PAINT_TAIL = 8;
+/** Keeps the tail from reaching the strip's rounded corners when clamped. */
+const QUICK_PAINT_TAIL_INSET = 10;
 const STROKE_HIGHLIGHT = 3;
 const STROKE_FLASH = 5;
 const FLASH_DURATION_MS = 650;
 export const PLATE_MAP_EMPTY_WELL_FILL = "var(--surface-container)";
+
+/** Stable identity so memoised cell builders aren't invalidated every render. */
+const EMPTY_WELL_ID_SET: ReadonlySet<WellId> = new Set<WellId>();
+
+/** DOM id for a well cell, used by `aria-activedescendant`. */
+function wellCellDomId(instanceId: string, r: number, c: number): string {
+  return `${instanceId}-well-${r}-${c}`;
+}
 export const PLATE_MAP_CELL_BORDER = "var(--border)";
 
 export type WellShape = "rect" | "circle";
@@ -84,6 +96,11 @@ export interface PlatePaintGridProps<T extends WellRecord = WellRecord> {
    * to set `pointer-events: auto` on their own element while a drag is active.
    */
   wrapWell?: (wellId: WellId, cellSize: number) => React.ReactNode;
+  /**
+   * Swatch strip anchored above the selection, for painting a value across it
+   * in one click. Rendered only while something is selected.
+   */
+  quickPaint?: React.ReactNode;
   className?: string;
 }
 
@@ -151,6 +168,7 @@ interface BuildWellCellsArgs<T extends WellRecord> {
   highlightBorderColor: string;
   flashWellId?: WellId;
   flashWellKey?: number;
+  instanceId: string;
 }
 
 function buildWellCell<T extends WellRecord>(
@@ -170,12 +188,15 @@ function buildWellCell<T extends WellRecord>(
     selectedFillOpacity,
     selectionFillMode,
     wellShape,
+    instanceId,
   } = args;
   const id = pos(row, column, dims.columns);
   const entry = values.get(id);
   const isSelected = selection.has(id) || dragPositions.has(id);
   const wellFill = entry === undefined && emptyWellFillColor !== null ? emptyWellFillColor : colorForWell(entry, id);
   const usesWellFill = isSelected && selectionFillMode === "well" && entry !== undefined;
+  // `usesSelectionFill` therefore only kicks in for empty wells (or when the
+  // caller explicitly opts into `selectionFillMode="selection"`).
   const usesSelectionFill = isSelected && !usesWellFill;
   const fill = usesSelectionFill ? selectedFillColor : wellFill;
   const fillOpacity = usesSelectionFill ? selectedFillOpacity : undefined;
@@ -187,12 +208,17 @@ function buildWellCell<T extends WellRecord>(
     return (
       <circle
         key={id}
+        id={wellCellDomId(instanceId, row, column)}
         cx={cx}
         cy={cy}
         r={r}
         fill={fill}
         fillOpacity={fillOpacity}
         stroke="none"
+        role="gridcell"
+        aria-colindex={column + 1}
+        aria-label={id}
+        aria-selected={isSelected}
         data-well={id}
         data-selected={isSelected ? "true" : undefined}
       />
@@ -202,6 +228,7 @@ function buildWellCell<T extends WellRecord>(
   return (
     <rect
       key={id}
+      id={wellCellDomId(instanceId, row, column)}
       x={LABEL_PAD + column * cellSize}
       y={LABEL_PAD + row * cellSize}
       width={cellSize}
@@ -209,20 +236,152 @@ function buildWellCell<T extends WellRecord>(
       fill={fill}
       fillOpacity={fillOpacity}
       stroke="none"
+      role="gridcell"
+      aria-colindex={column + 1}
+      aria-label={id}
+      aria-selected={isSelected}
       data-well={id}
       data-selected={isSelected ? "true" : undefined}
     />
   );
 }
 
+type GridKeyAction =
+  | { kind: "move"; dr: number; dc: number; extend: boolean }
+  | { kind: "toggle" }
+  | { kind: "clear" }
+  | { kind: "selectAll" };
+
+/** Maps a keypress on the grid to an action, or null when it is not ours. */
+function resolveGridKeyAction(e: React.KeyboardEvent, columns: number): GridKeyAction | null {
+  const extend = e.shiftKey;
+  switch (e.key) {
+    case "ArrowUp":
+      return { kind: "move", dr: -1, dc: 0, extend };
+    case "ArrowDown":
+      return { kind: "move", dr: 1, dc: 0, extend };
+    case "ArrowLeft":
+      return { kind: "move", dr: 0, dc: -1, extend };
+    case "ArrowRight":
+      return { kind: "move", dr: 0, dc: 1, extend };
+    case "Home":
+      return { kind: "move", dr: 0, dc: -columns, extend };
+    case "End":
+      return { kind: "move", dr: 0, dc: columns, extend };
+    case " ":
+    case "Enter":
+      return { kind: "toggle" };
+    case "Escape":
+      return { kind: "clear" };
+    case "a":
+    case "A":
+      return e.metaKey || e.ctrlKey ? { kind: "selectAll" } : null;
+    default:
+      return null;
+  }
+}
+
+interface QuickPaintBounds {
+  anchorX: number;
+  topY: number;
+  bottomY: number;
+}
+
+interface QuickPaintPlacement {
+  left: number;
+  top: number;
+  below: boolean;
+  tailOffset: number;
+  ready: boolean;
+}
+
+/**
+ * Places the quick-paint strip against the selection: above when it fits,
+ * flipped below when the selection is too near the top, and clamped inside the
+ * plate horizontally with the tail pointing back at the anchor rather than at
+ * the card's centre.
+ */
+function resolveQuickPaintPlacement(
+  bounds: QuickPaintBounds | null,
+  size: { w: number; h: number } | undefined,
+  plateWidth: number,
+): QuickPaintPlacement | null {
+  if (!bounds) return null;
+
+  const { w, h } = size ?? { w: 0, h: 0 };
+  const needed = h + QUICK_PAINT_TAIL;
+  const below = bounds.topY < needed;
+  const top = below ? bounds.bottomY + QUICK_PAINT_TAIL : bounds.topY - needed;
+
+  // Before the first measurement there is nothing to clamp against; the strip
+  // is rendered hidden for that paint, so the provisional values never show.
+  if (w === 0) {
+    return { left: bounds.anchorX, top, below, tailOffset: 0, ready: false };
+  }
+
+  const left = Math.min(Math.max(bounds.anchorX - w / 2, 0), Math.max(0, plateWidth - w));
+  const tailOffset = Math.min(Math.max(bounds.anchorX - left, QUICK_PAINT_TAIL_INSET), Math.max(QUICK_PAINT_TAIL_INSET, w - QUICK_PAINT_TAIL_INSET));
+  return { left, top, below, tailOffset, ready: true };
+}
+
+function QuickPaintLayer({
+  placement,
+  children,
+  layerRef,
+}: {
+  placement: QuickPaintPlacement | null;
+  children: React.ReactNode;
+  layerRef: React.Ref<HTMLDivElement>;
+}) {
+  if (!placement) return null;
+
+  return (
+    <div
+      ref={layerRef}
+      data-slot="plate-quick-paint-anchor"
+      data-placement={placement.below ? "below" : "above"}
+      className="pointer-events-none absolute z-10 w-max"
+      style={{
+        left: placement.left,
+        top: placement.top,
+        // Hidden for the first paint only, while the strip is measured, so it
+        // never flashes in the wrong place.
+        visibility: placement.ready ? undefined : "hidden",
+      }}
+    >
+      <div className="pointer-events-auto relative">
+        {children}
+        {/* Tail pointing back at the leftmost selected cell. */}
+        <span
+          aria-hidden
+          data-slot="plate-quick-paint-tail"
+          className={cn(
+            "absolute size-2 rotate-45 bg-popover",
+            placement.below ? "-top-1 border-t border-l" : "-bottom-1 border-r border-b",
+          )}
+          style={{ left: placement.tailOffset - 4 }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function buildWellCells<T extends WellRecord>({ dims, ...args }: BuildWellCellsArgs<T>): React.ReactNode[] {
-  const cells: React.ReactNode[] = [];
+  // `role="grid"` requires `role="row"` between it and each `gridcell`, so the
+  // cells are grouped per row rather than emitted flat.
+  const rows: React.ReactNode[] = [];
   for (let r = 0; r < dims.rows; r++) {
+    const cells: React.ReactNode[] = [];
     for (let c = 0; c < dims.columns; c++) {
       cells.push(buildWellCell({ dims, ...args }, r, c));
     }
+    rows.push(
+      <g key={`row-${r}`} role="row" aria-rowindex={r + 1}>
+        {cells}
+      </g>,
+    );
   }
-  return cells;
+  return rows;
 }
 
 function buildGridLines(dims: PlateDimensions, cellSize: number, borderColor: string): React.ReactNode[] {
@@ -306,9 +465,7 @@ function buildWellOverlay<T extends WellRecord>(
   const isCircle = wellShape === "circle";
 
   type WellShapeProps = Record<string, string | number | undefined>;
-  const shapeProps: WellShapeProps = isCircle
-    ? { cx, cy, r }
-    : { x, y, width: size, height: size };
+  const shapeProps: WellShapeProps = isCircle ? { cx, cy, r } : { x, y, width: size, height: size };
 
   const renderShape = (
     extraProps: Record<string, string | number | undefined>,
@@ -409,10 +566,24 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   minCellSize = DEFAULT_MIN_AUTO_CELL,
   maxCellSize,
   borderColor = PLATE_MAP_CELL_BORDER,
-  selectedBorderColor = "var(--color-primary)",
-  selectedFillColor = "var(--color-primary)",
-  selectedFillOpacity = 0.18,
-  selectionFillMode = "selection",
+  // Every blue in the palette shares one hue family (265-271), and wells are
+  // routinely filled from that same ramp (`--chart-1` is TS Blue 500, #2F45B5),
+  // so the selection separates on lightness rather than hue: #6C8DDB at L 0.65
+  // against the well's 0.45.
+  //
+  // An earlier attempt drew a background-coloured ring underneath for extra
+  // separation. SVG strokes centre on the path, so a wider under-stroke bleeds
+  // outside the selection ring as a white halo — which made adjacent wells look
+  // like they were floating apart rather than sitting on a plate. One stroke only.
+  selectedBorderColor = "var(--color-chart-seq-blue-06)",
+  selectedFillColor = "var(--color-chart-seq-blue-06)",
+  selectedFillOpacity = 0.26,
+  // "well" by default: a selected well keeps its own colour and the selection
+  // reads from the ring overlay instead. Replacing the fill hid the result of
+  // an Apply until the user deselected — no feedback on the action they just
+  // took. Empty selected wells still get the tint, since they have no colour
+  // of their own to show.
+  selectionFillMode = "well",
   flashWellId,
   flashWellKey,
   highlightedWellIds,
@@ -420,17 +591,22 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   onWellHover,
   onWellDoubleClick,
   wrapWell,
+  quickPaint,
   className,
 }: PlatePaintGridProps<T>) {
   const dims = resolveDimensions(format, rows, columns);
+  const instanceId = React.useId();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const svgRef = React.useRef<SVGSVGElement>(null);
   const [drag, setDrag] = React.useState<DragState | null>(null);
   const [containerWidth, setContainerWidth] = React.useState<number>();
 
+  // Tracked unconditionally — auto-scaling uses it to fit the grid, and the
+  // scroll container uses it to decide whether it needs to be keyboard
+  // focusable (an unreachable scrollable region is a WCAG failure).
   React.useLayoutEffect(() => {
     const node = containerRef.current;
-    if (!node || !autoScale || cellSize !== undefined) return;
+    if (!node) return;
 
     const update = () => setContainerWidth(node.clientWidth);
     update();
@@ -440,7 +616,7 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
     const observer = new ResizeObserver(update);
     observer.observe(node);
     return () => observer.disconnect();
-  }, [autoScale, cellSize]);
+  }, []);
 
   const resolvedCellSize = React.useMemo(() => {
     if (!autoScale || cellSize !== undefined || !containerWidth) {
@@ -453,7 +629,7 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   }, [autoScale, cellSize, containerWidth, dims.columns, framed, maxCellSize, minCellSize]);
 
   const cellAt = React.useCallback(
-    (evt: React.MouseEvent): { r: number; c: number } | null => {
+    (evt: { clientX: number; clientY: number }): { r: number; c: number } | null => {
       const svg = svgRef.current;
       if (!svg) return null;
       const rect = svg.getBoundingClientRect();
@@ -467,20 +643,89 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
     [resolvedCellSize, dims.rows, dims.columns],
   );
 
-  const handleDown = (e: React.MouseEvent) => {
+  // Pointer events, not mouse events: one API covering mouse, touch and pen.
+  // Without this the plate is unusable on a tablet or phone — there is no
+  // touch fallback for drag-to-select.
+  const handleDown = (e: React.PointerEvent) => {
     const cell = cellAt(e);
     if (!cell) return;
+    // Capture so a drag that leaves the SVG (or scrolls under the finger) still
+    // delivers move/up to us. It throws for a pointer id the browser has no
+    // active record of — which synthetic test events produce — and capture is an
+    // optimisation, not a requirement, so a failure must not abort the drag.
+    try {
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    } catch {
+      // no capture available; the drag still works while the pointer stays over the grid
+    }
     const mode: DragMode = e.shiftKey ? "add" : e.altKey ? "remove" : "replace";
     setDrag({ start: cell, cur: cell, mode });
+    setFocusedCell(cell);
   };
 
-  const handleMove = (e: React.MouseEvent) => {
+  const handleMove = (e: React.PointerEvent) => {
     const cell = cellAt(e);
     if (cell && onWellHover) {
       onWellHover(pos(cell.r, cell.c, dims.columns));
     }
     if (!drag || !cell) return;
     setDrag({ ...drag, cur: cell });
+  };
+
+  // Roving focus cell for keyboard users. The SVG is the single tab stop and
+  // `aria-activedescendant` points at the focused well, so selection is
+  // reachable without a pointer (WCAG 2.1.1).
+  const [focusedCell, setFocusedCell] = React.useState<{ r: number; c: number } | null>(null);
+  const keyboardAnchor = React.useRef<{ r: number; c: number } | null>(null);
+
+  // Side effects must not live inside a `setState` updater — updaters run during
+  // render, and calling the parent's `onSelectionChange` from there triggers
+  // React's "cannot update a component while rendering a different component".
+  const moveFocus = React.useCallback(
+    (dr: number, dc: number, extend: boolean) => {
+      const from = focusedCell ?? { r: 0, c: 0 };
+      const next = {
+        r: Math.min(dims.rows - 1, Math.max(0, from.r + dr)),
+        c: Math.min(dims.columns - 1, Math.max(0, from.c + dc)),
+      };
+
+      if (extend) {
+        const anchorCell = keyboardAnchor.current ?? from;
+        keyboardAnchor.current = anchorCell;
+        onSelectionChange(new Set(rectPositions(anchorCell.r, anchorCell.c, next.r, next.c, dims.columns)));
+      } else {
+        keyboardAnchor.current = next;
+      }
+
+      setFocusedCell(next);
+      onWellHover?.(pos(next.r, next.c, dims.columns));
+    },
+    [dims.columns, dims.rows, focusedCell, onSelectionChange, onWellHover],
+  );
+
+  const toggleFocusedCell = React.useCallback(() => {
+    const cell = focusedCell ?? { r: 0, c: 0 };
+    const id = pos(cell.r, cell.c, dims.columns);
+    const next = new Set(selection);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+
+    setFocusedCell(cell);
+    onSelectionChange(next);
+  }, [dims.columns, focusedCell, onSelectionChange, selection]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const action = resolveGridKeyAction(e, dims.columns);
+    if (!action) return;
+    e.preventDefault();
+
+    if (action.kind === "move") moveFocus(action.dr, action.dc, action.extend);
+    else if (action.kind === "toggle") toggleFocusedCell();
+    else if (action.kind === "selectAll") onSelectionChange(new Set(allPositions(dims)));
+    else {
+      keyboardAnchor.current = null;
+      onSelectionChange(new Set());
+    }
   };
 
   const commitDrag = React.useCallback(() => {
@@ -500,7 +745,14 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
     setDrag(null);
   }, [drag, dims.columns, onSelectionChange, selection]);
 
-  const handleUp = () => commitDrag();
+  const handleUp = (e: React.PointerEvent) => {
+    try {
+      e.currentTarget.releasePointerCapture?.(e.pointerId);
+    } catch {
+      // never captured; nothing to release
+    }
+    commitDrag();
+  };
   const handleLeave = () => {
     commitDrag();
     onWellHover?.(null);
@@ -520,32 +772,122 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   const edgeStrokePadding = STROKE_DEFAULT;
   const width = dims.columns * resolvedCellSize + LABEL_PAD + edgeStrokePadding;
   const height = dims.rows * resolvedCellSize + LABEL_PAD + edgeStrokePadding;
+  const frameOuterWidth = width + (framed ? (FRAME_PADDING_PX + FRAME_BORDER_PX) * 2 : 0);
+  const isScrollable = containerWidth !== undefined && frameOuterWidth > containerWidth + 1;
+  const scrollRegionLabel = `${dims.rows} by ${dims.columns} plate map, horizontally scrollable.`;
+  // Anchor for the quick-paint strip: horizontally over the LEFTMOST selected
+  // column, vertically on the selection's top edge (with the bottom edge kept
+  // for the flip-below case).
+  const quickPaintBounds = React.useMemo(() => {
+    if (!quickPaint || selection.size === 0) return null;
+    let minRow = Infinity;
+    let maxRow = -Infinity;
+    let minCol = Infinity;
+    for (const wellId of selection) {
+      const cell = parsePos(wellId, dims);
+      if (!cell) continue;
+      if (cell.row < minRow) minRow = cell.row;
+      if (cell.row > maxRow) maxRow = cell.row;
+      if (cell.col < minCol) minCol = cell.col;
+    }
+    if (!Number.isFinite(minRow) || !Number.isFinite(minCol)) return null;
+    return {
+      anchorX: LABEL_PAD + minCol * resolvedCellSize + resolvedCellSize / 2,
+      topY: LABEL_PAD + minRow * resolvedCellSize,
+      bottomY: LABEL_PAD + (maxRow + 1) * resolvedCellSize,
+    };
+  }, [dims, quickPaint, selection, resolvedCellSize]);
 
-  const colLabels = buildColumnLabels(dims.columns, resolvedCellSize);
-  const rowLabels = buildRowLabels(dims.rows, resolvedCellSize);
-  const resolvedHighlightedWellIds: ReadonlySet<WellId> = highlightedWellIds ?? new Set();
-  const wellRenderArgs = {
-    dims,
-    cellSize: resolvedCellSize,
-    values,
-    selection,
-    dragPositions,
-    colorForWell,
-    emptyWellFillColor,
-    borderColor,
-    selectedBorderColor,
-    selectedFillColor,
-    selectedFillOpacity,
-    selectionFillMode,
-    wellShape,
-    highlightedWellIds: resolvedHighlightedWellIds,
-    highlightBorderColor,
-    flashWellId,
-    flashWellKey,
-  };
-  const wellCells = buildWellCells(wellRenderArgs);
-  const gridLines = wellShape === "circle" ? [] : buildGridLines(dims, resolvedCellSize, borderColor);
-  const wellOverlays = buildWellOverlays(wellRenderArgs);
+  // Measured so the strip can flip below when there is no room above, and be
+  // clamped horizontally at the plate edges — a fixed estimate clips on the
+  // top-left selection, which is exactly where users start.
+  const quickPaintRef = React.useRef<HTMLDivElement>(null);
+  const [quickPaintSize, setQuickPaintSize] = React.useState<{ w: number; h: number }>();
+
+  React.useLayoutEffect(() => {
+    const node = quickPaintRef.current;
+    if (!node) {
+      setQuickPaintSize(undefined);
+      return;
+    }
+    const measure = () => setQuickPaintSize({ w: node.offsetWidth, h: node.offsetHeight });
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [quickPaint]);
+
+  const quickPaintPlacement = React.useMemo(
+    () => resolveQuickPaintPlacement(quickPaintBounds, quickPaintSize, width),
+    [quickPaintBounds, quickPaintSize, width],
+  );
+
+  const gridLabel =
+    `${dims.rows} row by ${dims.columns} column plate map. ` +
+    "Drag to select wells, or use arrow keys to move and Space to toggle a well.";
+
+  const colLabels = React.useMemo(
+    () => buildColumnLabels(dims.columns, resolvedCellSize),
+    [dims.columns, resolvedCellSize],
+  );
+  const rowLabels = React.useMemo(
+    () => buildRowLabels(dims.rows, resolvedCellSize),
+    [dims.rows, resolvedCellSize],
+  );
+  const resolvedHighlightedWellIds: ReadonlySet<WellId> = highlightedWellIds ?? EMPTY_WELL_ID_SET;
+  // Hover state lives above this component, so every pointer move re-renders
+  // the grid. Without memoisation a 1536-well plate rebuilds every SVG node on
+  // each move; memoising on the actual inputs keeps dragging smooth.
+  const wellRenderArgs = React.useMemo(
+    () => ({
+      dims,
+      cellSize: resolvedCellSize,
+      values,
+      selection,
+      dragPositions,
+      colorForWell,
+      emptyWellFillColor,
+      borderColor,
+      selectedBorderColor,
+      selectedFillColor,
+      selectedFillOpacity,
+      selectionFillMode,
+      wellShape,
+      highlightedWellIds: resolvedHighlightedWellIds,
+      highlightBorderColor,
+      flashWellId,
+      flashWellKey,
+      instanceId,
+    }),
+    [
+      instanceId,
+      borderColor,
+      colorForWell,
+      dims,
+      dragPositions,
+      emptyWellFillColor,
+      flashWellId,
+      flashWellKey,
+      highlightBorderColor,
+      resolvedCellSize,
+      resolvedHighlightedWellIds,
+      selectedBorderColor,
+      selectedFillColor,
+      selectedFillOpacity,
+      selection,
+      selectionFillMode,
+      values,
+      wellShape,
+    ],
+  );
+
+  const wellCells = React.useMemo(() => buildWellCells(wellRenderArgs), [wellRenderArgs]);
+  const gridLines = React.useMemo(
+    () => (wellShape === "circle" ? [] : buildGridLines(dims, resolvedCellSize, borderColor)),
+    [wellShape, dims, resolvedCellSize, borderColor],
+  );
+  const wellOverlays = React.useMemo(() => buildWellOverlays(wellRenderArgs), [wellRenderArgs]);
 
   const overlayCells = React.useMemo<React.ReactNode[]>(() => {
     if (!wrapWell) return [];
@@ -576,14 +918,27 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
   return (
     <div
       ref={containerRef}
-      className={cn("relative w-full select-none", className)}
+      className={cn(
+        // `overflow-x-auto` is load-bearing in narrow containers: once
+        // auto-scaling hits `minCellSize` the SVG stops shrinking, and a dense
+        // plate (384/1536) is wider than a phone. Without it the whole page
+        // scrolls sideways instead.
+        "relative w-full max-w-full select-none overflow-x-auto",
+        // Only a region that actually scrolls becomes a tab stop, so we don't
+        // add a dead stop to the tab order on roomy layouts.
+        isScrollable && "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        className,
+      )}
       data-slot="plate-paint-grid"
+      data-scrollable={isScrollable || undefined}
+      tabIndex={isScrollable ? 0 : undefined}
+      // `group`, not `region`: `region` is a landmark, and two scrollable
+      // plates on one page would then trip axe's `landmark-unique` rule.
+      role={isScrollable ? "group" : undefined}
+      aria-label={isScrollable ? scrollRegionLabel : undefined}
     >
       <div
-        className={cn(
-          "relative inline-block",
-          framed && "rounded-xl border bg-card p-3 shadow-elevation-3",
-        )}
+        className={cn("relative inline-block", framed && "rounded-xl border bg-card p-3 shadow-elevation-3")}
         data-slot="plate-paint-grid-frame"
       >
         <svg
@@ -591,13 +946,24 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
           width={width}
           height={height}
           className="block cursor-crosshair"
-          onMouseDown={handleDown}
-          onMouseMove={handleMove}
-          onMouseUp={handleUp}
-          onMouseLeave={handleLeave}
+          onPointerDown={handleDown}
+          onPointerMove={handleMove}
+          onPointerUp={handleUp}
+          onPointerCancel={handleUp}
+          onPointerLeave={handleLeave}
           onDoubleClick={handleDoubleClick}
-          role="group"
-          aria-label={`${dims.rows} row by ${dims.columns} column plate map. Drag to select wells.`}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setFocusedCell((current) => current ?? { r: 0, c: 0 })}
+          // `touch-action: none` stops the browser claiming the gesture as a
+          // scroll/pinch before our drag sees it. The surrounding container
+          // still scrolls, because the gesture only starts on the SVG.
+          style={{ touchAction: "none" }}
+          tabIndex={0}
+          role="grid"
+          aria-label={gridLabel}
+          aria-rowcount={dims.rows}
+          aria-colcount={dims.columns}
+          aria-activedescendant={focusedCell ? wellCellDomId(instanceId, focusedCell.r, focusedCell.c) : undefined}
         >
           {colLabels}
           {rowLabels}
@@ -605,6 +971,9 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
           {gridLines}
           {wellOverlays}
         </svg>
+        <QuickPaintLayer placement={quickPaintPlacement} layerRef={quickPaintRef}>
+          {quickPaint}
+        </QuickPaintLayer>
         {wrapWell ? (
           <div
             className="pointer-events-none absolute"

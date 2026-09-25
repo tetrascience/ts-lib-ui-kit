@@ -121,6 +121,66 @@ Exposes the UI kit to AI coding agents (component lists, props/variants, usage e
 - [`vercel.json`](./vercel.json) is **required**, doing two things the deploy can't work without: (1) pins `buildCommand` to `yarn build-storybook` so the metadata step generates the catalog, and (2) bundles that catalog into the function via `functions.includeFiles` (it isn't part of the function's source tree) and declares the function. Without `vercel.json` the deployed function 404s (build reverts to dashboard settings, catalog never generated). Do **not** load the catalog via a JSON `import` — in this `"type": "module"` package that hit native-ESM import-attribute errors and 500'd on Vercel; the disk read is the verified-working approach.
 - Do not break the `build-storybook` → metadata chain; the deployed `/api/mcp` depends on the generated `storybook-static/mcp/components.json`. Not published in the npm package (`files` ships only `dist`).
 
+## Responsive layout: container queries, not viewport breakpoints
+
+A component in this kit does not own the viewport — consumers drop it into
+sidebars, split panes, drawers and data-app panels. A `md:` breakpoint asks
+"how wide is the _screen_", which is the wrong question: the component lays
+out as "desktop" inside a 380px panel on a 27" monitor. Use Tailwind 4
+container queries so a component responds to the space it is actually given.
+`PlateMapEditor` is the reference implementation.
+
+Two things are load-bearing and easy to get wrong:
+
+- **`@container` and the `@min-[…]` variants it drives must be on different
+  elements.** `container-type` establishes a query context for _descendants_;
+  an element cannot query its own width. Putting both on one element silently
+  does nothing — no error, no warning, the layout just never changes. Split
+  them: an outer `@container` wrapper, the variants on the inner element.
+- **Breakpoint class maps must be static.** Tailwind scans source text, so
+  `` `@min-[${n}px]:flex-row` `` produces no CSS. Write a `Record` with every
+  class spelled out verbatim (see `SIDE_BY_SIDE_AT` / `FORM_WIDTH_AT`), and
+  drive the variable part through a CSS custom property set in `style` instead.
+
+A related pairing: when content can exceed its container (a dense plate grid,
+a wide table), the overflow belongs in a scroll container on the component, not
+on the page. Axe's `scrollable-region-focusable` then requires that container
+to be keyboard-reachable — make it focusable **only when it actually scrolls**,
+so roomy layouts don't collect dead tab stops, and use `role="group"` rather
+than `role="region"` (`region` is a landmark, and two instances on one page
+trip `landmark-unique`).
+
+## Localisation: every user-facing string is overridable
+
+Components render no hardcoded user-facing English — each string a consumer
+might translate or reword has an optional prop with an English default. The
+_shape_ of that prop follows the size of the component; do not reach for a
+`labels` object by default:
+
+- **A flat optional `xxxLabel` prop per string is the default.** It is the
+  simplest API, autocompletes at the top level, and is what the kit's own
+  leaf components do (`confirmLabel` / `cancelLabel` on `ConfirmDialog`, the
+  four form strings on `WellMetadataForm`, the five menu items on
+  `PlateMapActionsMenu`).
+- **Switch to a single `labels` object only when flat props stop paying for
+  themselves**: a component that composes several others and would otherwise
+  have to re-declare and forward each of their label props one by one, or
+  whose own string count has clearly outgrown a prop list (more than about
+  eight). `PlateMapEditor` is the worked example — it forwards two dozen
+  strings into its form, grid and manifest sub-components, so it takes one
+  `labels` typed as the exported `PlateMapEditorLabels`, while those
+  sub-components keep their flat props. Type the object against an exported
+  interface and merge it over a `satisfies Required<…>` defaults table so a
+  missing default is a type error rather than a blank UI
+  (`WellManifestTableLabels` in `components/composed/PlateMapEditor/types.ts`).
+- **Never offer both shapes for the same string** on one component.
+
+Whichever shape: treat an explicitly `undefined` override as absent (the value
+i18n lookups produce for a missing key), keep structural `ReactNode` slots (a
+title, a heading) as their own props — they are content, not strings — and
+guard the work with a story asserting no English survives in the rendered
+subtree, not just that the replacements appear.
+
 ## Component Patterns
 
 **`ui/` components**: Single `kebab-case.tsx` file. shadcn/ui pattern — wraps radix-ui or @base-ui/react with CVA variants and Tailwind classes via `cn()`.

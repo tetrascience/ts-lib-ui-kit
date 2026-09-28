@@ -43,6 +43,10 @@ export interface ManifestFilterPopoverProps {
   filters: FilterCondition[];
   onFiltersChange: (next: FilterCondition[]) => void;
   triggerLabel?: string;
+  /** Placeholder for a condition's value input. Defaults to `"Value…"`. */
+  valuePlaceholder?: string;
+  /** Label for the clear-every-filter button. Defaults to `"Clear all"`. */
+  clearAllLabel?: string;
   className?: string;
 }
 
@@ -52,6 +56,8 @@ export function ManifestFilterPopover({
   filters,
   onFiltersChange,
   triggerLabel = "Filter",
+  valuePlaceholder = "Value…",
+  clearAllLabel = "Clear all",
   className,
 }: ManifestFilterPopoverProps) {
   const labelFor = (columnId: string): string => columnLabel?.(columnId) ?? columnId;
@@ -141,7 +147,7 @@ export function ManifestFilterPopover({
                   ) : (
                     <Input
                       className="w-40"
-                      placeholder="Value…"
+                      placeholder={valuePlaceholder}
                       value={condition.value}
                       onChange={(event) => updateFilter(condition.id, { value: event.target.value })}
                     />
@@ -180,7 +186,7 @@ export function ManifestFilterPopover({
                   className="text-muted-foreground"
                   onClick={clearAll}
                 >
-                  Clear all
+                  {clearAllLabel}
                 </Button>
               ) : null}
             </div>

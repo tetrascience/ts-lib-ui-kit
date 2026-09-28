@@ -9,9 +9,10 @@ let pluginsPromise: Promise<PluginConfig> | null = null;
 
 function loadStreamdownPlugins(): Promise<PluginConfig> {
   pluginsPromise ??= import("./streamdown-plugins")
-    .then((mod) => {
-      cachedPlugins = mod.streamdownPlugins;
-      return cachedPlugins;
+    .then((mod) => mod.getStreamdownPlugins())
+    .then((plugins) => {
+      cachedPlugins = plugins;
+      return plugins;
     })
     .catch((error) => {
       pluginsPromise = null;

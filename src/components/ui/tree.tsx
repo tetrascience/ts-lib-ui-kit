@@ -1065,18 +1065,20 @@ function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"
  * and from keyboard traversal (`ITEM_SELECTOR` requires `data-tree-item-id`, which this does not
  * carry): there is nothing here to navigate to.
  *
- * Styled as a single row — an icon and a short message, the same height and left inset as a real
- * `TreeItemLabel` at this depth (read off the ambient `TreeLevelContext`, since this isn't a
- * `TreeItem` and gets no `level` of its own) — so it reads as one more row in the tree rather than a
- * standalone empty-page block. Content is otherwise entirely up to the caller: a muted icon for an
- * empty branch, a destructive-toned one with "Failed to load" for an error, a `Skeleton` pair for
- * one still loading, or a real button for "Load more" (which inherits the row's height and inset for
- * free, so it only needs its own label). Deliberately *not* `aria-disabled`: Chromium's accessibility
- * tree treats that as inherited by descendants (mirrored by Playwright's actionability checks, which
- * is how this was caught), so it would have made a nested button unreachable by keyboard and screen
- * readers, not just visually inert. A button inside it must still stop its click from bubbling: it
- * sits inside the enclosing `TreeItem`, whose click handler walks up to the nearest treeitem and
- * treats any unclaimed click as that node's select/toggle.
+ * Styled as a leaf row at this depth (read off the ambient `TreeLevelContext`, since this isn't a
+ * `TreeItem` and gets no `level` of its own): the same height, inset, transparent border and
+ * chevron spacer as a leaf `TreeItemLabel`, so the first child passed in lands in the icon column
+ * and the next one in the text column — exactly where the node it stands in for would draw them.
+ * Content is otherwise entirely up to the caller: a muted icon for an empty branch, a
+ * destructive-toned one with "Failed to load" for an error, a `Skeleton` pair for one still loading,
+ * or a real button for "Load more". A skeleton-only placeholder has no text, so give it an
+ * `aria-label` ("Loading Shared") — a `treeitem` needs an accessible name. Deliberately *not*
+ * `aria-disabled`: Chromium's accessibility tree treats that as inherited by descendants (mirrored
+ * by Playwright's actionability checks, which is how this was caught), so it would have made a
+ * nested button unreachable by keyboard and screen readers, not just visually inert. A button inside
+ * it must still stop its click from bubbling: it sits inside the enclosing `TreeItem`, whose click
+ * handler walks up to the nearest treeitem and treats any unclaimed click as that node's
+ * select/toggle.
  */
 function TreeEmpty({ className, children, style, ...props }: React.ComponentProps<"div">) {
   const level = React.useContext(TreeLevelContext);
@@ -1088,14 +1090,16 @@ function TreeEmpty({ className, children, style, ...props }: React.ComponentProp
       role="treeitem"
       aria-selected="false"
       tabIndex={-1}
-      // Same formula as `TreeItemLabel`'s own `paddingInlineStart`, so a placeholder lines up with
-      // the real rows around or above it instead of sitting flush against the tree's edge.
+      // The inset, the transparent border and the spacer below all mirror `TreeItemLabel`: drop any
+      // one of them and the placeholder's icon lands in a sibling's chevron column instead of its
+      // icon column.
       style={{ paddingInlineStart: `calc(var(--tree-indent) * ${level - 1} + 0.25rem)`, ...style }}
       className={cn(
-        "text-muted-foreground flex h-7 w-full min-w-0 items-center gap-1.5 pr-2 text-left text-sm [&_svg]:size-4 [&_svg]:shrink-0",
+        "text-muted-foreground flex h-7 w-full min-w-0 items-center gap-1.5 rounded-md border border-transparent pr-2 text-left text-sm [&_svg]:size-4 [&_svg]:shrink-0",
         className,
       )}
     >
+      <span data-slot="tree-item-indicator-spacer" aria-hidden="true" className="size-3.5 shrink-0" />
       {children}
     </div>
   );

@@ -1,4 +1,11 @@
-import { FileTextIcon, FolderIcon, FolderOpenIcon, RotateCwIcon, TriangleAlertIcon } from "lucide-react";
+import {
+  FileQuestionMarkIcon,
+  FileTextIcon,
+  FolderIcon,
+  FolderOpenIcon,
+  RotateCwIcon,
+  TriangleAlertIcon,
+} from "lucide-react";
 import * as React from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
@@ -8,7 +15,7 @@ import { Kbd } from "./kbd";
 import { Skeleton } from "./skeleton";
 import { Spinner } from "./spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
-import { Tree, TreeEmpty, TreeItem, TreeItemGroup, TreeItemLabel, useTreeItem } from "./tree";
+import { Tree, TreeEmpty, TreeItem, TreeItemGroup, TreeItemLabel, TreeLoadMore, useTreeItem } from "./tree";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
@@ -50,23 +57,22 @@ const meta: Meta<typeof Tree> = {
           'reveals them while the pointer is over the tree, `"always"` pins them on, `"none"` turns them off. The',
           "trunk terminates in the curve at the last child rather than running past it.",
           "",
-          '**Empty, error, loading and "Load more" content — where it sits in the tree (SW-2542):** all four are',
-          '`TreeEmpty`. Both `role="tree"` and `role="group"` require treeitem/group children per WAI-ARIA\'s',
-          "`aria-required-children`, so any of these has to render as a `treeitem` — a bare `<div>` would leave the",
-          "container structurally invalid the moment it's the only child. `TreeEmpty` is that `treeitem`: excluded from",
-          "sibling indexing (so it never steals a real sibling's `aria-setsize`/`aria-posinset`) and from arrow-key",
-          "traversal (so the single-tab-stop model never stalls on it), but ordinary Tab order and any interactive",
-          "content inside it — a Retry button, a Load-more button — stay fully reachable, because it deliberately does",
-          "*not* carry `aria-disabled` (Chromium treats that as inherited by descendants, which would break exactly",
-          "that). `TreeEmpty` is styled as a single row — an icon and a short message, matching a real",
-          "`TreeItemLabel`'s height and depth-correct indent — so it reads as one more row rather than a standalone",
-          "empty-page block. Concretely: an empty root uses `<TreeEmpty>` in place of `Tree`'s children; a branch that",
-          "came back empty or failed to load uses it in place of that branch's `TreeItemGroup` children; a branch",
-          'still loading swaps in a `Skeleton` pair as `TreeEmpty`\'s content; and "Load more" is `<TreeEmpty>`',
-          "appended as the *last* child of an otherwise-populated `TreeItemGroup`, holding a real button. It is never",
-          "a sibling of the group (that would sit outside `aria-level`/`aria-setsize` for content that is conceptually",
-          'still part of the branch) and never an indexed `TreeItem` (a click on "Load more" is not selecting or',
-          "activating a node).",
+          '**Empty, error, loading and "Load more" rows — where they sit in the tree (SW-2542):** `TreeEmpty` and',
+          '`TreeLoadMore`. Both `role="tree"` and `role="group"` require treeitem/group children per WAI-ARIA\'s',
+          "`aria-required-children`, so a placeholder has to render as a `treeitem` — a bare `<div>` would leave the",
+          "container structurally invalid the moment it's the only child. Both components are that `treeitem`:",
+          "excluded from sibling indexing (so they never steal a real sibling's `aria-setsize`/`aria-posinset`) and from",
+          "arrow-key traversal (so the single-tab-stop model never stalls on one), while any button inside stays in",
+          "ordinary Tab order — neither carries `aria-disabled`, which Chromium treats as inherited by descendants.",
+          "Both draw as a leaf row at their depth: the same height, inset and chevron spacer as `TreeItemLabel`, so",
+          "the icon and text land in the columns of the node they stand in for. Concretely: a folder that came back",
+          "empty or failed to load, or an empty root, puts a `<TreeEmpty>` (icon plus a short message) in place of its",
+          "children; a branch still loading swaps in a `Skeleton` pair as `TreeEmpty`'s content (with an `aria-label`,",
+          'since it has no text); and "Load more" is `<TreeLoadMore>` appended as the *last* child of an',
+          "otherwise-populated `TreeItemGroup` — a full-row button with a leaf's hover, focus and pressed states. It is",
+          "never a sibling of the group (that would sit outside `aria-level`/`aria-setsize` for content that is",
+          'conceptually still part of the branch) and never an indexed `TreeItem` (a click on "Load more" is not',
+          "selecting or activating a node).",
         ].join("\n"),
       },
     },
@@ -297,9 +303,11 @@ function TreeItemSkeleton() {
 }
 
 /**
- * `TreeEmpty` styled as a single row — a muted icon and a short message, the same height and inset
- * as a real `TreeItemLabel` — for a `Tree` with no root nodes. Click "Refresh" to see it move through
- * a loading skeleton to a populated tree, for the case where an empty result just needs retrying.
+ * A top-level folder that came back empty: `TreeEmpty` stands in for its children as a leaf row — a
+ * file-question icon and "No files", in the same icon and text columns as the file it's missing.
+ * Refresh sits in the folder's own `trailing` slot, like Retry in the error state: it's an action on
+ * that node, not part of the placeholder. Click it to see the folder move through a loading skeleton
+ * to its contents, for the case where an empty result just needs re-fetching.
  */
 export const EmptyStateStory: Story = {
   name: "Empty state",
@@ -313,29 +321,54 @@ export const EmptyStateStory: Story = {
     }, [status]);
 
     return (
-      <Tree aria-label="Files" aria-busy={status === "loading" || undefined} className="w-[240px]">
-        {status === "loaded" ? (
-          <TreeItem id="reports">
-            <TreeItemLabel icon={<FileTextIcon />}>reports.csv</TreeItemLabel>
-          </TreeItem>
-        ) : status === "loading" ? (
-          <TreeEmpty aria-label="Loading files">
-            <TreeItemSkeleton />
-          </TreeEmpty>
-        ) : (
-          <TreeEmpty>
-            <FolderIcon aria-hidden="true" />
-            <span className="min-w-0 flex-1 truncate">No files</span>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon-xs" aria-label="Refresh" onClick={() => setStatus("loading")}>
-                  <RotateCwIcon />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Refresh</TooltipContent>
-            </Tooltip>
-          </TreeEmpty>
-        )}
+      <Tree aria-label="Files" defaultExpandedIds={new Set(["documents"])} className="w-[240px]">
+        <TreeItem id="documents" hasChildren aria-busy={status === "loading" || undefined}>
+          <TreeItemLabel
+            icon={<FolderNodeIcon />}
+            trailing={
+              status === "empty" ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label="Refresh Documents"
+                      // An unclaimed click bubbles to `TreeItem`'s handler and would collapse the folder.
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setStatus("loading");
+                      }}
+                    >
+                      <RotateCwIcon />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Refresh</TooltipContent>
+                </Tooltip>
+              ) : undefined
+            }
+          >
+            Documents
+          </TreeItemLabel>
+          <TreeItemGroup>
+            {status === "loaded" ? (
+              <TreeItem id="reports">
+                <TreeItemLabel icon={<FileTextIcon />}>reports.csv</TreeItemLabel>
+              </TreeItem>
+            ) : status === "loading" ? (
+              <TreeEmpty aria-label="Loading Documents">
+                <TreeItemSkeleton />
+              </TreeEmpty>
+            ) : (
+              <TreeEmpty>
+                <FileQuestionMarkIcon aria-hidden="true" />
+                <span className="min-w-0 flex-1 truncate">No files</span>
+              </TreeEmpty>
+            )}
+          </TreeItemGroup>
+        </TreeItem>
+        <TreeItem id="archive">
+          <TreeItemLabel icon={<FolderIcon />}>Archive</TreeItemLabel>
+        </TreeItem>
       </Tree>
     );
   },
@@ -346,7 +379,7 @@ export const EmptyStateStory: Story = {
 
 /**
  * A branch whose children failed to load uses `TreeEmpty` in place of that branch's
- * `TreeItemGroup` children — the same single-row look as the empty state above, just a
+ * `TreeItemGroup` children — the same leaf-row look as the empty state above, just a
  * destructive-toned icon and "Failed to load" in place of the muted one. Retry sits in
  * `TreeItemLabel`'s `trailing` slot as an icon button with a tooltip, not inside the error content
  * itself — it's an action on the "Shared" node, not part of the placeholder. Click it to see the
@@ -431,11 +464,11 @@ export const ErrorStateStory: Story = {
 };
 
 /**
- * SW-2542's "Load more" answer, made concrete: `TreeEmpty` appended as the *last* child of an
- * otherwise-populated `TreeItemGroup`, holding a real button — a `treeitem` (so `aria-required-
- * children` stays satisfied) that is excluded from sibling indexing (so it never claims a set slot
- * from the real files around it) and from arrow-key treeitem traversal, but stays reachable by
- * ordinary Tab order like any other button. Click it a few times to exhaust the list.
+ * SW-2542's "Load more" answer, made concrete: `TreeLoadMore` appended as the *last* child of an
+ * otherwise-populated `TreeItemGroup` — a `treeitem` excluded from sibling indexing (it never claims
+ * a set slot from the real files around it) and from arrow-key traversal, wrapping a real button in
+ * ordinary Tab order. It spans the full row and shares a leaf node's hover, focus and pressed
+ * states. Click it a few times to exhaust the list.
  */
 export const LoadMoreStory: Story = {
   name: "Load more",
@@ -454,25 +487,10 @@ export const LoadMoreStory: Story = {
               </TreeItem>
             ))}
             {count < total ? (
-              <TreeEmpty className="pr-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  // `TreeEmpty` already supplies the row's inset, border and chevron spacer, so the
-                  // button adds none of its own — no border, no padding, and no `data-icon` (which
-                  // would bring back `sm`'s icon padding) — or its icon drifts off the file icons'
-                  // column.
-                  className="text-muted-foreground h-7 min-w-0 flex-1 justify-start gap-1.5 border-0 px-0 font-normal"
-                  // See the Retry button above: an unclaimed click bubbles to `TreeItem`'s handler.
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setCount((current) => Math.min(current + 2, total));
-                  }}
-                >
-                  <RotateCwIcon aria-hidden="true" className="size-4" />
-                  Load more
-                </Button>
-              </TreeEmpty>
+              <TreeLoadMore
+                icon={<RotateCwIcon />}
+                onClick={() => setCount((current) => Math.min(current + 2, total))}
+              />
             ) : null}
           </TreeItemGroup>
         </TreeItem>
@@ -796,10 +814,11 @@ export const ControlledBehaviour: Story = {
 };
 
 /**
- * Every placeholder shape against the real row it stands in for, at the root and one level down.
- * `TreeEmpty` has to reproduce `TreeItemLabel`'s inset, border and chevron spacer by hand, so a
- * placeholder drifting a chevron's width off its siblings is easy to reintroduce and hard to spot in
- * review — measured here in a real browser rather than eyeballed.
+ * Every placeholder shape against the real row it stands in for, at the root and one level down,
+ * plus `TreeLoadMore`'s hit area and states against a leaf's. The placeholders reproduce
+ * `TreeItemLabel`'s inset, border and chevron spacer by hand, so a row drifting a chevron's width off
+ * its siblings — or a Load more that hovers or focuses differently — is easy to reintroduce and hard
+ * to spot in review. Measured here in a real browser rather than eyeballed.
  */
 export const PlaceholderAlignmentBehaviour: Story = {
   name: "Placeholder alignment (test only)",
@@ -810,7 +829,7 @@ export const PlaceholderAlignmentBehaviour: Story = {
         <TreeItemLabel icon={<FileTextIcon />}>root.txt</TreeItemLabel>
       </TreeItem>
       <TreeEmpty data-testid="root-empty">
-        <FolderIcon aria-hidden="true" />
+        <FileQuestionMarkIcon aria-hidden="true" />
         <span>No files</span>
       </TreeEmpty>
       <TreeItem id="folder" hasChildren>
@@ -826,16 +845,7 @@ export const PlaceholderAlignmentBehaviour: Story = {
           <TreeEmpty data-testid="child-loading" aria-label="Loading">
             <TreeItemSkeleton />
           </TreeEmpty>
-          <TreeEmpty data-testid="child-load-more" className="pr-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground h-7 min-w-0 flex-1 justify-start gap-1.5 border-0 px-0 font-normal"
-            >
-              <RotateCwIcon aria-hidden="true" className="size-4" />
-              Load more
-            </Button>
-          </TreeEmpty>
+          <TreeLoadMore icon={<RotateCwIcon />} />
         </TreeItemGroup>
       </TreeItem>
     </Tree>
@@ -852,6 +862,7 @@ export const PlaceholderAlignmentBehaviour: Story = {
       range.selectNodeContents(walker.nextNode()!);
       return range.getBoundingClientRect().left;
     };
+    const realLabel = (id: string) => query(`[data-tree-item-id="${id}"] > [data-slot="tree-item-label"]`);
     const realIcon = (id: string) => left(query(`[data-tree-item-id="${id}"] [data-slot="tree-item-icon"]`));
     const realText = (id: string) => textLeft(query(`[data-tree-item-id="${id}"] [data-slot="tree-item-text"]`));
     // The placeholder's leading icon or icon-sized skeleton — found by what it is, not by where it
@@ -859,6 +870,8 @@ export const PlaceholderAlignmentBehaviour: Story = {
     const placeholderIcon = (testId: string) =>
       left(query(`[data-testid="${testId}"] svg, [data-testid="${testId}"] [data-slot="skeleton"]`));
     const placeholderTextHost = (testId: string) => query(`[data-testid="${testId}"]`);
+    const loadMore = () => query('[data-slot="tree-load-more"] button');
+    const style = (element: Element) => getComputedStyle(element);
 
     await step("A root-level placeholder lines up with a root item", async () => {
       expect(placeholderIcon("root-empty")).toBeCloseTo(realIcon("root-file"), 0);
@@ -870,11 +883,42 @@ export const PlaceholderAlignmentBehaviour: Story = {
         expect(placeholderIcon(testId)).toBeCloseTo(realIcon("child-file"), 0);
       }
       expect(textLeft(placeholderTextHost("child-error"))).toBeCloseTo(realText("child-file"), 0);
+      expect(left(loadMore().querySelector("svg")!)).toBeCloseTo(realIcon("child-file"), 0);
+      expect(textLeft(loadMore())).toBeCloseTo(realText("child-file"), 0);
+    });
 
-      // Load more's icon and text sit inside its button, one element deeper.
-      const loadMore = query('[data-testid="child-load-more"] button');
-      expect(left(loadMore.querySelector("svg")!)).toBeCloseTo(realIcon("child-file"), 0);
-      expect(textLeft(loadMore)).toBeCloseTo(realText("child-file"), 0);
+    await step("Load more spans the full row, like a leaf label", async () => {
+      const row = realLabel("child-file").getBoundingClientRect();
+      const button = loadMore().getBoundingClientRect();
+      expect(button.left).toBeCloseTo(row.left, 0);
+      expect(button.width).toBeCloseTo(row.width, 0);
+      expect(button.height).toBeCloseTo(row.height, 0);
+    });
+
+    await step("Load more carries a leaf row's hover and pressed styles", async () => {
+      // Compared as rules, not computed colours: `userEvent.hover` dispatches synthetic pointer
+      // events, which never put an element into CSS `:hover`, so a computed-style comparison here
+      // would pass vacuously (verified: it did, with the hover class deleted). The focus ring below
+      // *can* be driven for real, so it is compared computed.
+      expect(realLabel("child-file")).toHaveClass("hover:bg-muted");
+      expect(loadMore()).toHaveClass("hover:bg-muted", "active:bg-accent", "active:text-accent-foreground");
+    });
+
+    await step("Load more takes the same keyboard focus ring as a leaf", async () => {
+      // `Tab` enters the tree at its first node; the next `Tab` leaves the single-tab-stop tree for
+      // the next tabbable element, which is Load more's button.
+      await userEvent.tab();
+      expect(query('[data-tree-item-id="root-file"]')).toHaveFocus();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const leafRing = style(realLabel("root-file"));
+      const [ringShadow, ringBorder] = [leafRing.boxShadow, leafRing.borderColor];
+
+      await userEvent.tab();
+      expect(loadMore()).toHaveFocus();
+      await waitFor(() => {
+        expect(style(loadMore()).boxShadow).toBe(ringShadow);
+        expect(style(loadMore()).borderColor).toBe(ringBorder);
+      });
     });
   },
   parameters: {

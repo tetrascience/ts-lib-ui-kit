@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Tree, TreeEmpty, TreeItem, TreeItemGroup, TreeItemLabel } from "./tree";
+import { Tree, TreeEmpty, TreeItem, TreeItemGroup, TreeItemLabel, TreeLoadMore } from "./tree";
 
 /*
  * SW-2541: the keyboard half of the WAI-ARIA tree pattern that has to be verified by test rather
@@ -391,6 +391,58 @@ describe("Tree empty and error states (SW-2542)", () => {
     );
     expect(item("shared")?.getAttribute("aria-posinset")).toBe("2");
     expect(item("shared")?.getAttribute("aria-setsize")).toBe("3");
+  });
+});
+
+describe("TreeLoadMore (SW-2542)", () => {
+  function LoadMoreFixture({ onLoadMore }: { onLoadMore: () => void }) {
+    return (
+      <Tree aria-label="Files" defaultExpandedIds={new Set(["documents"])}>
+        <TreeItem id="documents" hasChildren>
+          <TreeItemLabel>Documents</TreeItemLabel>
+          <TreeItemGroup>
+            <TreeItem id="first">
+              <TreeItemLabel>first.txt</TreeItemLabel>
+            </TreeItem>
+            <TreeItem id="second">
+              <TreeItemLabel>second.txt</TreeItemLabel>
+            </TreeItem>
+            <TreeLoadMore onClick={onLoadMore} />
+          </TreeItemGroup>
+        </TreeItem>
+        <TreeItem id="archive">
+          <TreeItemLabel>Archive</TreeItemLabel>
+        </TreeItem>
+      </Tree>
+    );
+  }
+  const loadMoreButton = () => container.querySelector<HTMLButtonElement>('[data-slot="tree-load-more"] button')!;
+
+  it("is a treeitem wrapping a real button, and claims no set slot from its siblings", () => {
+    render(<LoadMoreFixture onLoadMore={() => {}} />);
+    const row = container.querySelector('[data-slot="tree-load-more"]')!;
+    expect(row.getAttribute("role")).toBe("treeitem");
+    expect(row.hasAttribute("data-tree-item-id")).toBe(false);
+    expect(loadMoreButton().type).toBe("button");
+    expect(loadMoreButton().textContent).toBe("Load more");
+    expect(item("first")?.getAttribute("aria-setsize")).toBe("2");
+    expect(item("second")?.getAttribute("aria-posinset")).toBe("2");
+  });
+
+  it("is stepped past by the arrow keys", () => {
+    render(<LoadMoreFixture onLoadMore={() => {}} />);
+    focus("second");
+    press("ArrowDown");
+    expect(document.activeElement).toBe(item("archive"));
+  });
+
+  it("fires onClick without selecting or collapsing the branch it pages", () => {
+    const onLoadMore = vi.fn();
+    render(<LoadMoreFixture onLoadMore={onLoadMore} />);
+    flushSync(() => loadMoreButton().click());
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
+    expect(item("documents")?.getAttribute("aria-expanded")).toBe("true");
+    expect(item("documents")?.getAttribute("aria-selected")).toBe("false");
   });
 });
 

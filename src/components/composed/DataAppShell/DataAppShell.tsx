@@ -7,6 +7,7 @@ import { DataAppShellProvider, type DataAppShellNavVariant } from "./ShellContex
 
 import type { NavGroup } from "./PrimaryNav";
 
+import { WithBuildInfoFooter } from "@/components/composed/BuildInfoFooter/BuildInfoFooter";
 import { TDPLink } from "@/components/composed/tdp-link";
 import { TopBar } from "@/components/composed/TopBar";
 import {
@@ -60,6 +61,8 @@ export interface DataAppShellProps {
   appIcon?: React.ReactNode;
   /** Optional version string shown below the app name/icon in the sidebar header */
   version?: string;
+  /** Short commit SHA. When set, a build-info footer (version + SHA) renders below the content */
+  commitSha?: string;
   /** Navigation groups; each group contains one or more pages */
   navGroups: NavGroup[];
   /** Callback when the app name / icon is clicked in the dropdown */
@@ -491,6 +494,7 @@ function DataAppShell({
   appFullName,
   appIcon,
   version,
+  commitSha,
   navGroups,
   onAppNameClick,
   backToPlatformPath,
@@ -690,7 +694,9 @@ function DataAppShell({
               data-slot="data-app-shell-content"
               className="flex-1 min-w-0 overflow-auto bg-background"
             >
-              {children}
+              <WithBuildInfoFooter show={Boolean(commitSha)} version={version} commitSha={commitSha}>
+                {children}
+              </WithBuildInfoFooter>
             </main>
 
             {/* Right panel slot (e.g. DataAppShellRightPanel) */}

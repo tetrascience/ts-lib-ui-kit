@@ -153,3 +153,70 @@ export interface PlateMapGroupOption {
   borderColor?: string;
   disabled?: boolean;
 }
+
+/**
+ * Every user-facing string rendered by `WellManifestTable` (and the filter
+ * popover it owns). All optional — an omitted key falls back to the English
+ * default shown in its comment.
+ */
+export interface WellManifestTableLabels {
+  /** "Show all wells" — toggles off the hide-empty filter. */
+  showAllWells?: string;
+  /** "Hide empty wells" */
+  hideEmptyWells?: string;
+  /** "Group by" — accessible name of the group-by select. */
+  groupBy?: string;
+  /** "Group by…" — placeholder of the group-by select. */
+  groupByPlaceholder?: string;
+  /** "No grouping" */
+  noGrouping?: string;
+  /** "Selected" — screen-reader name of the selection column. */
+  selectedColumn?: string;
+  /** "Well" — header of the well-id column. */
+  wellColumn?: string;
+  /** "No rows. Paint wells on the plate." */
+  emptyRows?: React.ReactNode;
+  /** "Rows per page" */
+  rowsPerPage?: string;
+  /** "Prev" */
+  previousPage?: string;
+  /** "Next" */
+  nextPage?: string;
+  /** "(blank)" — group key for rows whose grouped field is empty. */
+  blankGroup?: string;
+  /** "Filter" — trigger for the filter popover. */
+  filter?: string;
+  /** "Value…" — placeholder for a filter condition's value input. */
+  filterValuePlaceholder?: string;
+  /** "Clear all" — clears every active filter. */
+  clearFilters?: string;
+  /** Defaults to `` `${total} rows · ${selected} selected` ``. */
+  rowSummary?: (total: number, selected: number) => string;
+  /** Defaults to `` `(${count} rows)` ``, singular `row` at 1. */
+  groupRowCount?: (count: number) => string;
+  /** Defaults to `` `${from}–${to} of ${total}` ``, or `"0 of 0"` when empty. */
+  pageRange?: (from: number, to: number, total: number) => string;
+}
+
+/**
+ * Every user-facing string the `PlateMapEditor` shell renders, on top of the
+ * manifest's own. All optional; omitted keys fall back to English defaults.
+ *
+ * Strings that are structural rather than incidental — `plateTitle`,
+ * `manifestTitle`, and the import/export menu's labels — stay as their own
+ * top-level props, because they are `ReactNode` slots rather than plain text.
+ */
+export interface PlateMapEditorLabels extends WellManifestTableLabels {
+  /** "Apply" */
+  apply?: string;
+  /** "Clear wells" */
+  clearWells?: string;
+  /** "Select wells to edit" — form heading with an empty selection. */
+  selectionEmpty?: string;
+  /** Defaults to `` `Apply to ${n} wells` ``, singular `well` at 1. */
+  selectionCount?: (selectionSize: number) => string;
+  /** "Select all" */
+  selectAll?: string;
+  /** "Deselect all" */
+  deselectAll?: string;
+}

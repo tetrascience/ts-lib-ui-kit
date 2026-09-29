@@ -51,7 +51,9 @@ afterEach(() => {
 describe("useStreamdownPlugins", () => {
   it("resolves the lazy plugin set and returns it after the effect runs", async () => {
     const fakePlugins = { code: {} } as unknown as PluginConfig;
-    vi.doMock("../streamdown-plugins", () => ({ streamdownPlugins: fakePlugins }));
+    vi.doMock("../streamdown-plugins", () => ({
+      getStreamdownPlugins: () => Promise.resolve(fakePlugins),
+    }));
     const { useStreamdownPlugins } = await import("../use-streamdown-plugins");
 
     const first = await mountHook(useStreamdownPlugins);

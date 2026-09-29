@@ -18,10 +18,12 @@ import { PlateMapGrid } from "./PlateMapGrid";
 import { PlateMapManifest } from "./PlateMapManifest";
 import { PLATE_MAP_EMPTY_WELL_FILL } from "./PlatePaintGrid";
 import { PlateZoomControl } from "./PlateZoomControl";
+import { usePlateMapEditorState } from "./usePlateMapEditorState";
 import { WellLegend } from "./WellLegend";
 import { WellManifestTable } from "./WellManifestTable";
 import { WellMetadataForm } from "./WellMetadataForm";
 
+import type { PlateMapEditorHandle } from "./PlateMapEditor";
 import type {
   PlateFormat,
   PlateMapCsvTriage,
@@ -228,11 +230,9 @@ function QueryLimsPanel({ onSubmit }: { onSubmit?: (plateIds: string[]) => void 
   const [open, setOpen] = React.useState(false);
   const [plateIds, setPlateIds] = React.useState<string[]>([""]);
 
-  const updateId = (idx: number, value: string) =>
-    setPlateIds((prev) => prev.map((v, i) => (i === idx ? value : v)));
+  const updateId = (idx: number, value: string) => setPlateIds((prev) => prev.map((v, i) => (i === idx ? value : v)));
   const addId = () => setPlateIds((prev) => [...prev, ""]);
-  const removeId = (idx: number) =>
-    setPlateIds((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
+  const removeId = (idx: number) => setPlateIds((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
 
   const handleSubmit = () => {
     const cleaned = plateIds.map((v) => v.trim()).filter(Boolean);
@@ -251,9 +251,7 @@ function QueryLimsPanel({ onSubmit }: { onSubmit?: (plateIds: string[]) => void 
       <PopoverContent align="start" className="w-72">
         <div className="flex flex-col gap-2">
           <div className="text-sm font-medium">Query LIMS</div>
-          <div className="text-xs text-muted-foreground">
-            Enter one or more plate IDs to populate from LIMS.
-          </div>
+          <div className="text-xs text-muted-foreground">Enter one or more plate IDs to populate from LIMS.</div>
           <div className="flex flex-col gap-1.5">
             {plateIds.map((value, idx) => (
               <div key={idx} className="flex items-center gap-1.5">
@@ -286,12 +284,7 @@ function QueryLimsPanel({ onSubmit }: { onSubmit?: (plateIds: string[]) => void 
             <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              disabled={!plateIds.some((v) => v.trim())}
-              onClick={handleSubmit}
-            >
+            <Button type="button" size="sm" disabled={!plateIds.some((v) => v.trim())} onClick={handleSubmit}>
               Query
             </Button>
           </div>
@@ -543,11 +536,9 @@ const plateMapEditorUsageCode = (format: PlateFormat) => `function PlateMapScree
       plateToolbar={<PlateZoomControl zoom={zoom} onZoomChange={setZoom} />}
     />
   )
-}`
+}`;
 
-const manifestTableUsageCode = (
-  editable: boolean,
-) => `function ManifestScreen() {
+const manifestTableUsageCode = (editable: boolean) => `function ManifestScreen() {
   const [values, setValues] = useState<Map<WellId, RichManifestWell>>(seedValues)${
     editable ? "\n  const [selection, setSelection] = useState<Set<WellId>>(new Set())" : ""
   }
@@ -557,14 +548,14 @@ const manifestTableUsageCode = (
       values={values}
       columns={RICH_MANIFEST_COLUMNS}
       fields={${editable ? "RICH_MANIFEST_FIELDS" : "RICH_MANIFEST_FIELDS_READONLY"}}${
-    editable ? "\n      selection={selection}\n      onSelectionChange={setSelection}" : ""
-  }
+        editable ? "\n      selection={selection}\n      onSelectionChange={setSelection}" : ""
+      }
       onChange={setValues}
       emptyEntry={emptyEntry}
       isPopulated={isPopulated}${editable ? "\n      filterable\n      groupable" : ""}
     />
   )
-}`
+}`;
 
 const meta: Meta<typeof PlateMapEditor<DemoWell>> = {
   title: "Design Patterns/Plate Map Editor",
@@ -668,32 +659,24 @@ export const FormApplyAndClear: Story = {
 
     await step("Select all wells via the link button", async () => {
       await userEvent.click(canvas.getByText("Select all"));
-      await waitFor(() =>
-        expect(canvas.getByText("Apply to 96 wells")).toBeInTheDocument(),
-      );
+      await waitFor(() => expect(canvas.getByText("Apply to 96 wells")).toBeInTheDocument());
     });
 
     await step("Stage a sample id, then apply it to the selection", async () => {
-      const sampleInput = canvasElement.querySelector(
-        'input[id="field-sampleId"]',
-      ) as HTMLInputElement;
+      const sampleInput = canvasElement.querySelector('input[id="field-sampleId"]') as HTMLInputElement;
       expect(sampleInput).not.toBeNull();
       await userEvent.clear(sampleInput);
       await userEvent.type(sampleInput, "SAMP-APPLY");
       await userEvent.click(canvas.getByRole("button", { name: "Apply" }));
       await waitFor(() => {
-        const cell = canvasElement.querySelector(
-          'input[aria-label="Sample ID for A01"]',
-        ) as HTMLInputElement | null;
+        const cell = canvasElement.querySelector('input[aria-label="Sample ID for A01"]') as HTMLInputElement | null;
         expect(cell?.value).toBe("SAMP-APPLY");
       });
     });
 
     await step("Deselect everything and confirm the form is disabled", async () => {
       await userEvent.click(canvas.getByText("Deselect all"));
-      await waitFor(() =>
-        expect(canvas.getByText("Select wells to edit")).toBeInTheDocument(),
-      );
+      await waitFor(() => expect(canvas.getByText("Select wells to edit")).toBeInTheDocument());
       const apply = canvas.getByRole("button", { name: "Apply" }) as HTMLButtonElement;
       expect(apply.disabled).toBe(true);
     });
@@ -726,13 +709,9 @@ export const Filtering: Story = {
 
     await step("Add a second filter row, then clear all", async () => {
       await userEvent.click(body.getByRole("button", { name: /Add filter/i }));
-      await waitFor(() =>
-        expect(canvas.getByRole("button", { name: /Filter \(2 active\)/ })).toBeInTheDocument(),
-      );
+      await waitFor(() => expect(canvas.getByRole("button", { name: /Filter \(2 active\)/ })).toBeInTheDocument());
       await userEvent.click(body.getByRole("button", { name: /Clear all/i }));
-      await waitFor(() =>
-        expect(canvas.getByRole("button", { name: /^Filter$/ })).toBeInTheDocument(),
-      );
+      await waitFor(() => expect(canvas.getByRole("button", { name: /^Filter$/ })).toBeInTheDocument());
     });
   },
 };
@@ -754,24 +733,18 @@ export const FilteringIsEmpty: Story = {
     });
 
     await step("Switch operator to a value-free operator", async () => {
-      const popover = canvasElement.ownerDocument.body.querySelector(
-        '[role="dialog"]',
-      ) as HTMLElement;
+      const popover = canvasElement.ownerDocument.body.querySelector('[role="dialog"]') as HTMLElement;
       const popoverComboboxes = popover.querySelectorAll('[role="combobox"]');
       await userEvent.click(popoverComboboxes[1] as HTMLElement);
       const option = await body.findByRole("option", { name: /is empty/i });
       await userEvent.click(option);
       await waitFor(() => {
-        expect(
-          canvasElement.ownerDocument.body.querySelector('input[placeholder="Value…"]'),
-        ).toBeNull();
+        expect(canvasElement.ownerDocument.body.querySelector('input[placeholder="Value…"]')).toBeNull();
       });
     });
 
     await step("Switch the column and confirm the operator falls back", async () => {
-      const popover = canvasElement.ownerDocument.body.querySelector(
-        '[role="dialog"]',
-      ) as HTMLElement;
+      const popover = canvasElement.ownerDocument.body.querySelector('[role="dialog"]') as HTMLElement;
       const popoverComboboxes = popover.querySelectorAll('[role="combobox"]');
       await userEvent.click(popoverComboboxes[0] as HTMLElement);
       const option = await body.findByRole("option", { name: /Sample ID/i });
@@ -981,39 +954,29 @@ export const RichForm: Story = {
     });
 
     await step("Type into the integer field", async () => {
-      const countInput = canvasElement.querySelector(
-        'input[id="field-count"]',
-      ) as HTMLInputElement;
+      const countInput = canvasElement.querySelector('input[id="field-count"]') as HTMLInputElement;
       await userEvent.clear(countInput);
       await userEvent.type(countInput, "7");
       expect(countInput.value).toBe("7");
     });
 
     await step("Open the tags multiselect and pick an option", async () => {
-      const chipsInput = canvasElement.querySelector(
-        'input[id="field-tags"]',
-      ) as HTMLInputElement;
+      const chipsInput = canvasElement.querySelector('input[id="field-tags"]') as HTMLInputElement;
       await userEvent.click(chipsInput);
       const option = await waitFor(() => {
-        const el = [
-          ...canvasElement.ownerDocument.body.querySelectorAll('[role="option"]'),
-        ].find((node) => node.textContent?.trim() === "Red");
+        const el = [...canvasElement.ownerDocument.body.querySelectorAll('[role="option"]')].find(
+          (node) => node.textContent?.trim() === "Red",
+        );
         if (!el) throw new Error("'Red' option missing");
         return el as HTMLElement;
       });
       await userEvent.click(option);
-      await waitFor(() =>
-        expect(canvasElement.querySelector('[data-slot="combobox-chip"]')).not.toBeNull(),
-      );
+      await waitFor(() => expect(canvasElement.querySelector('[data-slot="combobox-chip"]')).not.toBeNull());
     });
 
     await step("Close the multiselect to restore resting state", async () => {
       await userEvent.keyboard("{Escape}");
-      await waitFor(() =>
-        expect(
-          canvasElement.ownerDocument.body.querySelector('[role="option"]'),
-        ).toBeNull(),
-      );
+      await waitFor(() => expect(canvasElement.ownerDocument.body.querySelector('[role="option"]')).toBeNull());
     });
 
     await step("Apply to 3 wells label is shown", async () => {
@@ -1239,9 +1202,9 @@ export const ManifestEditableCells: Story = {
       const tagsInput = canvas.getByLabelText("Tags for B01") as HTMLInputElement;
       await userEvent.click(tagsInput);
       const option = await waitFor(() => {
-        const el = [
-          ...canvasElement.ownerDocument.body.querySelectorAll('[role="option"]'),
-        ].find((node) => node.textContent?.trim() === "Red");
+        const el = [...canvasElement.ownerDocument.body.querySelectorAll('[role="option"]')].find(
+          (node) => node.textContent?.trim() === "Red",
+        );
         if (!el) throw new Error("'Red' option missing");
         return el as HTMLElement;
       });
@@ -1458,12 +1421,9 @@ function PlateMapEditorHoverFieldKinds() {
 function PlateMapEditorImportCsv() {
   const [values, setValues] = React.useState<Map<WellId, DemoWell>>(() => new Map());
   const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
-  const handleImportCsv = React.useCallback(
-    (_file: File, _triage?: PlateMapCsvTriage) => {
-      // No-op; story only verifies that the editor swaps plates on import.
-    },
-    [],
-  );
+  const handleImportCsv = React.useCallback((_file: File, _triage?: PlateMapCsvTriage) => {
+    // No-op; story only verifies that the editor swaps plates on import.
+  }, []);
   return (
     <PlateMapEditor<DemoWell>
       format="96"
@@ -1500,10 +1460,17 @@ function dispatchSvgMouse(
     bubbles: true,
     cancelable: true,
   };
-  if (type === "mousedown") fireEvent.mouseDown(svg, init);
-  else if (type === "mousemove") fireEvent.mouseMove(svg, init);
-  else if (type === "mouseup") fireEvent.mouseUp(svg, init);
-  else if (type === "mouseleave") fireEvent.mouseLeave(svg, init);
+  // The grid listens for pointer events (so touch and pen work too). A real
+  // mouse emits both, but `fireEvent.mouseDown` does not synthesise a
+  // pointerdown — these must be dispatched as pointer events.
+  const pointerInit = { ...init, pointerId: 1, pointerType: "mouse", isPrimary: true };
+  if (type === "mousedown") fireEvent.pointerDown(svg, pointerInit);
+  else if (type === "mousemove") fireEvent.pointerMove(svg, pointerInit);
+  else if (type === "mouseup") fireEvent.pointerUp(svg, pointerInit);
+  else if (type === "mouseleave") {
+    fireEvent.pointerOut(svg, pointerInit);
+    fireEvent.pointerLeave(svg, pointerInit);
+  }
   else fireEvent.doubleClick(svg, init);
 }
 
@@ -1570,8 +1537,10 @@ export const RectShapeAndGroups: Story = {
 
     await step("Mouse-leave clears hover state", async () => {
       const svg = getActiveSvg(canvasElement);
-      fireEvent.mouseOut(svg, { relatedTarget: canvasElement.ownerDocument.body });
-      fireEvent.mouseLeave(svg, { relatedTarget: canvasElement.ownerDocument.body });
+      // React synthesises the non-bubbling `pointerleave` from `pointerout`,
+      // so both are needed for `onPointerLeave` to fire.
+      fireEvent.pointerOut(svg, { relatedTarget: canvasElement.ownerDocument.body });
+      fireEvent.pointerLeave(svg, { relatedTarget: canvasElement.ownerDocument.body });
       await waitFor(() => expect(canvas.getByTestId("hovered-readout").textContent).toMatch(/\(none\)/));
     });
 
@@ -1624,16 +1593,19 @@ export const GridDragSelection: Story = {
       const cellSize = getCellSize(svg);
       dispatchSvgMouse(svg, "mousedown", { row: 5, column: 0, cellSize });
       dispatchSvgMouse(svg, "mousemove", { row: 5, column: 2, cellSize });
-      fireEvent.mouseOut(svg, { relatedTarget: canvasElement.ownerDocument.body });
-      fireEvent.mouseLeave(svg, { relatedTarget: canvasElement.ownerDocument.body });
+      // React synthesises the non-bubbling `pointerleave` from `pointerout`,
+      // so both are needed for `onPointerLeave` to fire.
+      fireEvent.pointerOut(svg, { relatedTarget: canvasElement.ownerDocument.body });
+      fireEvent.pointerLeave(svg, { relatedTarget: canvasElement.ownerDocument.body });
       await waitFor(() => expect(canvas.getByText(/Apply to 3 wells/)).toBeInTheDocument());
     });
 
     await step("Mousedown outside the well area is ignored (cellAt returns null)", async () => {
       const svg = getActiveSvg(canvasElement);
       // Far off the grid origin — clientX/Y land before LABEL_PAD.
-      fireEvent.mouseDown(svg, { clientX: 0, clientY: 0, bubbles: true, cancelable: true });
-      fireEvent.mouseUp(svg, { clientX: 0, clientY: 0, bubbles: true, cancelable: true });
+      const outsideInit = { clientX: 0, clientY: 0, bubbles: true, cancelable: true, pointerId: 1 };
+      fireEvent.pointerDown(svg, outsideInit);
+      fireEvent.pointerUp(svg, outsideInit);
       // Still 3 from the previous step.
       await waitFor(() => expect(canvas.getByText(/Apply to 3 wells/)).toBeInTheDocument());
     });
@@ -1641,10 +1613,25 @@ export const GridDragSelection: Story = {
     await step("Double-click a well cycles the role (covers cycleWellField + flash)", async () => {
       const svg = getActiveSvg(canvasElement);
       const cellSize = getCellSize(svg);
+      const fillOf = (id: string) =>
+        (canvasElement.querySelector(`[data-well="${id}"]`) as SVGElement).getAttribute("fill");
+
       // Already populated A01 so the cycle moves to the next role and flashes.
+      // Drive the FULL sequence a real double-click produces (two pointer
+      // down/up pairs, then dblclick) — firing dblclick alone bypasses the
+      // pointer path and would not catch a regression there.
+      const beforeA01 = fillOf("A01");
+      dispatchSvgMouse(svg, "mousedown", { row: 0, column: 0, cellSize });
+      dispatchSvgMouse(svg, "mouseup", { row: 0, column: 0, cellSize });
+      dispatchSvgMouse(svg, "mousedown", { row: 0, column: 0, cellSize });
+      dispatchSvgMouse(svg, "mouseup", { row: 0, column: 0, cellSize });
       dispatchSvgMouse(svg, "dblclick", { row: 0, column: 0, cellSize });
+      await waitFor(() => expect(fillOf("A01")).not.toBe(beforeA01));
+
       // Empty well also exercises the empty-entry branch of cycleWellField.
+      const beforeH08 = fillOf("H08");
       dispatchSvgMouse(svg, "dblclick", { row: 7, column: 7, cellSize });
+      await waitFor(() => expect(fillOf("H08")).not.toBe(beforeH08));
       // Out-of-bounds double-click is a no-op (cellAt returns null).
       fireEvent.doubleClick(svg, { clientX: 0, clientY: 0, bubbles: true, cancelable: true });
     });
@@ -2132,6 +2119,1196 @@ export const FullWidthManifestLayout: Story = {
     await step("Manifest shows its optional heading", async () => {
       const canvas = within(canvasElement);
       expect(canvas.getByText("Sample manifest")).toBeInTheDocument();
+    });
+  },
+};
+
+export const SlotsAndRegionStyling: Story = {
+  name: "Slots: plate banner, below-grid, no manifest",
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(seedPlate);
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      return (
+        <PlateMapEditor<DemoWell>
+          format="96"
+          values={values}
+          onChange={setValues}
+          selection={selection}
+          onSelectionChange={setSelection}
+          fields={FIELDS}
+          tableColumns={COLUMNS}
+          colorForWell={colorForWell}
+          emptyEntry={emptyEntry}
+          wellShape="circle"
+          hideManifest
+          formWidth={460}
+          classNames={{ plateCard: "bg-transparent ring-0 shadow-none" }}
+          plateBanner={
+            <div className="rounded-md bg-primary/10 px-3 py-2 text-xs text-primary">
+              Plate-scoped banner — renders above the toolbar, inside the plate card only.
+            </div>
+          }
+          plateFooter={
+            <div className="mt-3 border-t pt-3">
+              <WellLegend
+                items={[
+                  { id: "sample", label: "Sample", color: ROLE_COLOR.sample },
+                  { id: "control", label: "Control", color: ROLE_COLOR.control },
+                  { id: "blank", label: "Blank", color: ROLE_COLOR.blank },
+                ]}
+              />
+            </div>
+          }
+        />
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5704" },
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Plate banner renders inside the plate card, above the grid", async () => {
+      const canvas = within(canvasElement);
+      const banner = canvas.getByText(/Plate-scoped banner/);
+      const grid = canvasElement.querySelector('[data-slot="plate-map-grid"]') as HTMLElement;
+      expect(banner.getBoundingClientRect().top).toBeLessThan(grid.getBoundingClientRect().bottom);
+    });
+
+    await step("Legend renders below the grid", async () => {
+      const legend = canvasElement.querySelector('[data-slot="well-legend"]') as HTMLElement;
+      const wells = canvasElement.querySelectorAll("[data-well]");
+      const lastWell = wells[wells.length - 1] as HTMLElement;
+      expect(legend).not.toBeNull();
+      expect(legend.getBoundingClientRect().top).toBeGreaterThan(lastWell.getBoundingClientRect().top);
+    });
+
+    await step("Manifest is hidden", async () => {
+      expect(canvasElement.querySelector('[data-slot="plate-map-manifest"]')).toBeNull();
+    });
+
+    await step("Form column honours the widened className", async () => {
+      const form = canvasElement.querySelector('[data-slot="plate-map-form"]') as HTMLElement;
+      const card = form.closest('[data-slot="card"]') as HTMLElement;
+      expect(card.getBoundingClientRect().width).toBeGreaterThan(380);
+    });
+  },
+};
+
+export const ControlledStagedRecord: Story = {
+  name: "Controlled staged record (prefill + external apply)",
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(seedPlate);
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      const [staged, setStaged] = React.useState<Partial<DemoWell>>({});
+
+      return (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2 rounded-md border p-3">
+            <span className="text-xs text-muted-foreground">Host controls:</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setStaged({ role: "control", sampleId: "COPIED-001", notes: "from A01" })}
+            >
+              Copy from A01
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setStaged({})}>
+              Reset staged
+            </Button>
+            <code className="ml-auto text-xs text-muted-foreground" data-testid="staged-readout">
+              {JSON.stringify(staged)}
+            </code>
+          </div>
+          <PlateMapEditor<DemoWell>
+            format="96"
+            values={values}
+            onChange={setValues}
+            selection={selection}
+            onSelectionChange={setSelection}
+            fields={FIELDS}
+            tableColumns={COLUMNS}
+            colorForWell={colorForWell}
+            emptyEntry={emptyEntry}
+            staged={staged}
+            onStagedChange={setStaged}
+            wellShape="circle"
+            hideManifest
+          />
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5705" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Staged record starts empty", async () => {
+      expect(canvas.getByTestId("staged-readout")).toHaveTextContent("{}");
+    });
+
+    await step("Host can prefill the staged record from outside", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Copy from A01" }));
+      await waitFor(() => {
+        expect(canvas.getByTestId("staged-readout")).toHaveTextContent("COPIED-001");
+      });
+    });
+
+    await step("Prefill is reflected in the editor's form inputs", async () => {
+      await waitFor(() => {
+        expect(canvas.getByDisplayValue("COPIED-001")).toBeInTheDocument();
+      });
+    });
+
+    await step("Host can reset the staged record", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Reset staged" }));
+      await waitFor(() => {
+        expect(canvas.getByTestId("staged-readout")).toHaveTextContent("{}");
+      });
+    });
+  },
+};
+
+export const MinimalRequiredProps: Story = {
+  name: "Minimal (default colorForWell + emptyEntry)",
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(seedPlate);
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      return (
+        <PlateMapEditor<DemoWell>
+          format="96"
+          values={values}
+          onChange={setValues}
+          selection={selection}
+          onSelectionChange={setSelection}
+          fields={FIELDS}
+          tableColumns={COLUMNS}
+          manifestTitle="Wells"
+          manifest={{ groupable: true, defaultGroupBy: "role" }}
+        />
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5706" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Renders without colorForWell or emptyEntry", async () => {
+      expect(canvasElement.querySelectorAll("[data-well]").length).toBe(96);
+    });
+
+    await step("Manifest heading is relabelled", async () => {
+      expect(canvas.getByText("Wells")).toBeInTheDocument();
+      expect(canvas.queryByText("Sample manifest")).toBeNull();
+    });
+
+    await step("Manifest groups by role on first render", async () => {
+      await waitFor(() => {
+        const groupHeaders = canvasElement.querySelectorAll("tr[aria-expanded]");
+        expect(groupHeaders.length).toBeGreaterThan(0);
+        expect(groupHeaders[0]?.textContent).toMatch(/Well Role: /);
+      });
+    });
+  },
+};
+
+export const ComposedWithControllerHook: Story = {
+  name: "Composed: custom layout via usePlateMapEditorState",
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(seedPlate);
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      const state = usePlateMapEditorState<DemoWell>({
+        values,
+        onChange: setValues,
+        selection,
+        onSelectionChange: setSelection,
+        emptyEntry,
+        fields: FIELDS,
+      });
+
+      return (
+        <div className="flex flex-col gap-4">
+          <div className="flex min-h-[420px] overflow-hidden rounded-lg ring-1 ring-foreground/10">
+            <div className="flex-1 p-4">
+              <PlateMapGrid<DemoWell>
+                format="96"
+                values={state.scopedValues}
+                selection={selection}
+                onSelectionChange={setSelection}
+                colorForWell={colorForWell}
+                fields={FIELDS}
+                wellShape="circle"
+                framed
+                footer={
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Grid on the left, form on the right — a layout PlateMapEditor can&apos;t express.
+                  </div>
+                }
+              />
+            </div>
+            <aside className="w-80 shrink-0 border-l bg-muted/30 p-4">
+              <div className="mb-3 text-sm font-semibold">Well metadata</div>
+              <PlateMapForm<DemoWell>
+                fields={FIELDS}
+                value={state.staged}
+                onChange={state.setStaged}
+                selectionSize={selection.size}
+                onApply={state.applyStagedToSelection}
+                onClear={state.clearWells}
+              />
+            </aside>
+          </div>
+          <PlateMapManifest<DemoWell>
+            title="Sample manifest"
+            values={state.scopedValues}
+            onChange={state.commitScopedValues}
+            columns={COLUMNS}
+            fields={FIELDS}
+            selection={selection}
+            onSelectionChange={setSelection}
+            isPopulated={isPopulated}
+          />
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5707" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Grid renders to the left of the form", async () => {
+      const grid = canvasElement.querySelector('[data-slot="plate-map-grid"]') as HTMLElement;
+      const form = canvasElement.querySelector('[data-slot="plate-map-form"]') as HTMLElement;
+      expect(grid.getBoundingClientRect().left).toBeLessThan(form.getBoundingClientRect().left);
+    });
+
+    await step("Hook's Apply writes staged values across the selection", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      const sampleIdInput = canvasElement.querySelector("#field-sampleId") as HTMLInputElement;
+      await userEvent.type(sampleIdInput, "BULK-42");
+      await userEvent.click(canvas.getByRole("button", { name: "Apply" }));
+      const manifest = canvasElement.querySelector('[data-slot="plate-map-manifest"]') as HTMLElement;
+      await waitFor(() => {
+        expect(within(manifest).getAllByDisplayValue("BULK-42").length).toBeGreaterThan(0);
+      });
+    });
+
+    await step("Hook's Clear empties the selection", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Clear wells" }));
+      const manifest = canvasElement.querySelector('[data-slot="plate-map-manifest"]') as HTMLElement;
+      await waitFor(() => {
+        expect(within(manifest).queryAllByDisplayValue("BULK-42").length).toBe(0);
+      });
+    });
+  },
+};
+
+export const ResponsiveNarrowViewport: Story = {
+  name: "Responsive: 390px viewport (384-well)",
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(seedPlate);
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      return (
+        <div className="flex flex-col gap-6 overflow-x-auto">
+          <div>
+            <div className="mb-2 text-xs font-medium text-muted-foreground">390px container — stacked</div>
+            <div className="w-[390px] overflow-hidden rounded-lg ring-1 ring-foreground/10" data-testid="phone-frame">
+              <div className="p-3">
+                <PlateMapEditor<DemoWell>
+                  format="384"
+                  values={values}
+                  onChange={setValues}
+                  selection={selection}
+                  onSelectionChange={setSelection}
+                  fields={FIELDS}
+                  tableColumns={COLUMNS}
+                  colorForWell={colorForWell}
+                  emptyEntry={emptyEntry}
+                  title="Plate map"
+                  wellShape="circle"
+                  footer={<Button size="sm">Save</Button>}
+                />
+              </div>
+            </div>
+          </div>
+          <div>
+            <div className="mb-2 text-xs font-medium text-muted-foreground">
+              900px container — side by side (identical props)
+            </div>
+            <div
+              className="overflow-hidden rounded-lg ring-1 ring-foreground/10"
+              style={{ width: 900 }}
+              data-testid="wide-frame"
+            >
+              <div className="p-3">
+                <PlateMapEditor<DemoWell>
+                  format="384"
+                  values={values}
+                  onChange={setValues}
+                  selection={selection}
+                  onSelectionChange={setSelection}
+                  fields={FIELDS}
+                  tableColumns={COLUMNS}
+                  colorForWell={colorForWell}
+                  emptyEntry={emptyEntry}
+                  title="Plate map"
+                  wellShape="circle"
+                  footer={<Button size="sm">Save</Button>}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5708" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const phone = canvasElement.querySelector('[data-testid="phone-frame"]') as HTMLElement;
+    const wide = canvasElement.querySelector('[data-testid="wide-frame"]') as HTMLElement;
+    const region = (root: HTMLElement, name: string) =>
+      root.querySelector(`[data-plate-map-region="${name}"]`) as HTMLElement;
+
+    await step("Editor root never exceeds the 390px frame", async () => {
+      const editor = phone.querySelector('[data-slot="plate-map-editor"]') as HTMLElement;
+      expect(editor.scrollWidth).toBeLessThanOrEqual(editor.clientWidth + 1);
+    });
+
+    await step("At 390px the form and plate stack full-width", async () => {
+      const form = region(phone, "form");
+      const plate = region(phone, "plate");
+      expect(form.getBoundingClientRect().bottom).toBeLessThanOrEqual(plate.getBoundingClientRect().top + 1);
+      expect(form.getBoundingClientRect().width).toBeCloseTo(plate.getBoundingClientRect().width, 0);
+    });
+
+    await step("Identical props at 900px put them side by side", async () => {
+      const form = region(wide, "form");
+      const plate = region(wide, "plate");
+      expect(form.getBoundingClientRect().top).toBeCloseTo(plate.getBoundingClientRect().top, 0);
+      expect(form.getBoundingClientRect().right).toBeLessThanOrEqual(plate.getBoundingClientRect().left + 1);
+    });
+
+    await step("Each region fits inside the 390px frame", async () => {
+      const frameRight = phone.getBoundingClientRect().right;
+      for (const name of ["form", "plate", "manifest"]) {
+        expect(region(phone, name).getBoundingClientRect().right).toBeLessThanOrEqual(frameRight + 1);
+      }
+    });
+
+    await step("A 384-well grid scrolls inside its own container, not the page", async () => {
+      const scroller = phone.querySelector('[data-slot="plate-paint-grid"]') as HTMLElement;
+      expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth);
+      expect(scroller).toHaveAttribute("tabindex", "0");
+      expect(region(phone, "plate").scrollWidth).toBeLessThanOrEqual(region(phone, "plate").clientWidth + 1);
+    });
+  },
+};
+
+export const FormPlacementTop: Story = {
+  name: 'Layout: formPlacement="top"',
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(seedPlate);
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      return (
+        <PlateMapEditor<DemoWell>
+          format="96"
+          values={values}
+          onChange={setValues}
+          selection={selection}
+          onSelectionChange={setSelection}
+          fields={FIELDS}
+          tableColumns={COLUMNS}
+          colorForWell={colorForWell}
+          emptyEntry={emptyEntry}
+          formPlacement="top"
+          wellShape="circle"
+          hideManifest
+        />
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5709" },
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Form stacks full-width above the grid", async () => {
+      const form = canvasElement.querySelector('[data-plate-map-region="form"]') as HTMLElement;
+      const plate = canvasElement.querySelector('[data-plate-map-region="plate"]') as HTMLElement;
+      expect(form.getBoundingClientRect().bottom).toBeLessThanOrEqual(plate.getBoundingClientRect().top + 1);
+      expect(form.getBoundingClientRect().width).toBeCloseTo(plate.getBoundingClientRect().width, 0);
+    });
+  },
+};
+
+export const FormPlacementEnd: Story = {
+  name: 'Layout: formPlacement="end" + stackAt="lg"',
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(seedPlate);
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      return (
+        // Fixed 1100px so the 1024px container query fires deterministically,
+        // independent of the canvas width.
+        <div className="overflow-x-auto">
+          <div style={{ width: 1100 }}>
+            <PlateMapEditor<DemoWell>
+              format="96"
+              values={values}
+              onChange={setValues}
+              selection={selection}
+              onSelectionChange={setSelection}
+              fields={FIELDS}
+              tableColumns={COLUMNS}
+              colorForWell={colorForWell}
+              emptyEntry={emptyEntry}
+              formPlacement="end"
+              stackAt="lg"
+              formWidth="22rem"
+              wellShape="circle"
+              hideManifest
+            />
+          </div>
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5710" },
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Form renders to the right of the grid", async () => {
+      const form = canvasElement.querySelector('[data-plate-map-region="form"]') as HTMLElement;
+      const plate = canvasElement.querySelector('[data-plate-map-region="plate"]') as HTMLElement;
+      expect(form.getBoundingClientRect().left).toBeGreaterThan(plate.getBoundingClientRect().left);
+    });
+  },
+};
+
+export const RelabelledSurface: Story = {
+  name: "Labels: full relabelling / i18n",
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(seedPlate);
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      return (
+        <PlateMapEditor<DemoWell>
+          format="96"
+          values={values}
+          onChange={setValues}
+          selection={selection}
+          onSelectionChange={setSelection}
+          fields={FIELDS}
+          tableColumns={COLUMNS}
+          colorForWell={colorForWell}
+          emptyEntry={emptyEntry}
+          wellShape="circle"
+          plateTitle="Plaque"
+          manifestTitle="Manifeste d'échantillons"
+          manifestGroupable
+          labels={{
+            apply: "Appliquer",
+            clearWells: "Vider les puits",
+            selectionEmpty: "Sélectionnez des puits à modifier",
+            selectionCount: (n) => `Appliquer à ${n} puits`,
+            selectAll: "Tout sélectionner",
+            deselectAll: "Tout désélectionner",
+            showAllWells: "Afficher tous les puits",
+            hideEmptyWells: "Masquer les puits vides",
+            groupBy: "Regrouper par",
+            groupByPlaceholder: "Regrouper par…",
+            noGrouping: "Aucun regroupement",
+            wellColumn: "Puits",
+            selectedColumn: "Sélectionné",
+            emptyRows: "Aucune ligne.",
+            rowsPerPage: "Lignes par page",
+            previousPage: "Précédent",
+            nextPage: "Suivant",
+            blankGroup: "(vide)",
+            rowSummary: (total, selected) => `${total} lignes · ${selected} sélectionnées`,
+            groupRowCount: (count) => `(${count} lignes)`,
+            pageRange: (from, to, total) => (total === 0 ? "0 sur 0" : `${from}–${to} sur ${total}`),
+          }}
+          label="Actions"
+          onExportCsv={() => {}}
+          exportCsvLabel="Exporter en CSV"
+        />
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5711" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Shell strings are caller-supplied", async () => {
+      expect(canvas.getByText("Plaque")).toBeInTheDocument();
+      expect(canvas.getByText("Manifeste d'échantillons")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Appliquer" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Vider les puits" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Tout sélectionner" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Tout désélectionner" })).toBeInTheDocument();
+      expect(canvas.getByText("Sélectionnez des puits à modifier")).toBeInTheDocument();
+    });
+
+    await step("Manifest chrome is caller-supplied too", async () => {
+      expect(canvas.getByRole("button", { name: "Afficher tous les puits" })).toBeInTheDocument();
+      expect(canvas.getByText("Lignes par page")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Précédent" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Suivant" })).toBeInTheDocument();
+      expect(canvas.getByText(/lignes · . sélectionnées/)).toBeInTheDocument();
+      expect(canvas.getByText("Puits")).toBeInTheDocument();
+    });
+
+    await step("No hardcoded English survives anywhere in the editor", async () => {
+      const editor = canvasElement.querySelector('[data-slot="plate-map-editor"]') as HTMLElement;
+      for (const leaked of [
+        "Sample manifest",
+        "Select all",
+        "Deselect all",
+        "Clear wells",
+        "Show all wells",
+        "Rows per page",
+        "Select wells to edit",
+      ]) {
+        expect(editor.textContent).not.toContain(leaked);
+      }
+    });
+  },
+};
+
+export const FormPlacementBottom: Story = {
+  name: 'Layout: formPlacement="bottom"',
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(seedPlate);
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      return (
+        <PlateMapEditor<DemoWell>
+          format="96"
+          values={values}
+          onChange={setValues}
+          selection={selection}
+          onSelectionChange={setSelection}
+          fields={FIELDS}
+          tableColumns={COLUMNS}
+          colorForWell={colorForWell}
+          emptyEntry={emptyEntry}
+          formPlacement="bottom"
+          wellShape="circle"
+          legend={
+            <WellLegend
+              items={[
+                { id: "sample", label: "Sample", color: ROLE_COLOR.sample },
+                { id: "control", label: "Control", color: ROLE_COLOR.control },
+                { id: "blank", label: "Blank", color: ROLE_COLOR.blank },
+              ]}
+            />
+          }
+        />
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5712" },
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("Form stacks full-width below the grid", async () => {
+      const form = canvasElement.querySelector('[data-plate-map-region="form"]') as HTMLElement;
+      const plate = canvasElement.querySelector('[data-plate-map-region="plate"]') as HTMLElement;
+      expect(plate.getBoundingClientRect().bottom).toBeLessThanOrEqual(form.getBoundingClientRect().top + 1);
+      expect(form.getBoundingClientRect().width).toBeCloseTo(plate.getBoundingClientRect().width, 0);
+    });
+
+    await step("Manifest still renders last", async () => {
+      const form = canvasElement.querySelector('[data-plate-map-region="form"]') as HTMLElement;
+      const manifest = canvasElement.querySelector('[data-plate-map-region="manifest"]') as HTMLElement;
+      expect(form.getBoundingClientRect().bottom).toBeLessThanOrEqual(manifest.getBoundingClientRect().top + 1);
+    });
+
+    await step("Legend rides along beneath the form", async () => {
+      const legend = canvasElement.querySelector('[data-slot="well-legend"]') as HTMLElement;
+      const form = canvasElement.querySelector('[data-plate-map-region="form"]') as HTMLElement;
+      expect(form.contains(legend)).toBe(true);
+    });
+  },
+};
+
+export const CardFooterAndPlateLegend: Story = {
+  name: 'Slots: plateFooter (card footer) + legendPlacement="plate"',
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(seedPlate);
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      return (
+        <PlateMapEditor<DemoWell>
+          format="96"
+          values={values}
+          onChange={setValues}
+          selection={selection}
+          onSelectionChange={setSelection}
+          fields={FIELDS}
+          tableColumns={COLUMNS}
+          colorForWell={colorForWell}
+          emptyEntry={emptyEntry}
+          wellShape="circle"
+          hideManifest
+          legendPlacement="plate"
+          legend={
+            <WellLegend
+              items={[
+                { id: "sample", label: "Sample", color: ROLE_COLOR.sample },
+                { id: "control", label: "Control", color: ROLE_COLOR.control },
+                { id: "blank", label: "Blank", color: ROLE_COLOR.blank },
+              ]}
+            />
+          }
+          plateFooter={
+            <>
+              <span className="mr-auto text-xs text-muted-foreground">Plate 1 of 1</span>
+              <Button size="sm" variant="outline">
+                Back
+              </Button>
+              <Button size="sm">Save plate</Button>
+            </>
+          }
+        />
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5713" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("plateFooter renders as a real CardFooter inside the plate card", async () => {
+      const cardFooter = canvasElement.querySelector('[data-slot="card-footer"]') as HTMLElement;
+      expect(cardFooter).not.toBeNull();
+      expect(within(cardFooter).getByRole("button", { name: "Save plate" })).toBeInTheDocument();
+      const plate = canvasElement.querySelector('[data-plate-map-region="plate"]') as HTMLElement;
+      expect(plate.contains(cardFooter)).toBe(true);
+    });
+
+    await step("It is the only bottom slot — no duplicate standalone row", async () => {
+      expect(canvas.getAllByRole("button", { name: "Save plate" })).toHaveLength(1);
+      expect(canvasElement.querySelectorAll('[data-slot="card-footer"]')).toHaveLength(1);
+    });
+
+    await step("Legend moves into the plate card, not the form", async () => {
+      const legend = canvasElement.querySelector('[data-slot="well-legend"]') as HTMLElement;
+      const plate = canvasElement.querySelector('[data-plate-map-region="plate"]') as HTMLElement;
+      const form = canvasElement.querySelector('[data-plate-map-region="form"]') as HTMLElement;
+      expect(plate.contains(legend)).toBe(true);
+      expect(form.contains(legend)).toBe(false);
+    });
+  },
+};
+
+export const ApplyAcrossAllPlates: Story = {
+  name: 'Multi-plate: applyScope="all-plates"',
+  render: () => {
+    function Demo() {
+      const PLATES = [
+        { id: "PLATE-A", barcode: "PLATE-A" },
+        { id: "PLATE-B", barcode: "PLATE-B" },
+        { id: "PLATE-C", barcode: "PLATE-C" },
+      ];
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(new Map());
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      const [activePlateId, setActivePlateId] = React.useState("PLATE-A");
+
+      const perPlateCounts = PLATES.map((plate) => ({
+        barcode: plate.barcode,
+        count: countPlateEntries(values, plate.id),
+        // The barcode actually stamped onto this plate's A01 row — proves each
+        // plate got its OWN barcode, not the active plate's.
+        stamped: values.get(getPlateMapScopedWellId(plate.barcode, "A01"))?.plateBarcode ?? "—",
+      }));
+
+      return (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-3 rounded-md border p-3 text-xs" data-testid="plate-counts">
+            {perPlateCounts.map((p) => (
+              <span key={p.barcode} data-testid={`count-${p.barcode}`}>
+                {p.barcode}: <strong>{p.count}</strong> wells · stamped{" "}
+                <em data-testid={`stamped-${p.barcode}`}>{p.stamped}</em>
+              </span>
+            ))}
+          </div>
+          <PlateMapEditor<DemoWell>
+            format="96"
+            values={values}
+            onChange={setValues}
+            selection={selection}
+            onSelectionChange={setSelection}
+            fields={FIELDS}
+            tableColumns={COLUMNS}
+            colorForWell={colorForWell}
+            emptyEntry={emptyEntry}
+            plates={PLATES}
+            activePlateId={activePlateId}
+            onPlateChange={setActivePlateId}
+            plateSelectorVariant="tabs"
+            applyScope="all-plates"
+            wellShape="circle"
+            hideManifest
+          />
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const countFor = (barcode: string) =>
+      Number(
+        (canvasElement.querySelector(`[data-testid="count-${barcode}"] strong`) as HTMLElement).textContent,
+      );
+
+    await step("All three plates start empty", async () => {
+      for (const b of ["PLATE-A", "PLATE-B", "PLATE-C"]) expect(countFor(b)).toBe(0);
+    });
+
+    await step("Applying on the active plate writes to every plate", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      const sampleId = canvasElement.querySelector("#field-sampleId") as HTMLInputElement;
+      await userEvent.type(sampleId, "BATCH-7");
+      await userEvent.click(canvas.getByRole("button", { name: "Apply" }));
+
+      await waitFor(() => {
+        for (const b of ["PLATE-A", "PLATE-B", "PLATE-C"]) expect(countFor(b)).toBe(96);
+      });
+    });
+
+    await step("Each plate's rows carry their own barcode, not the active one", async () => {
+      for (const b of ["PLATE-A", "PLATE-B", "PLATE-C"]) {
+        const stamped = canvasElement.querySelector(`[data-testid="stamped-${b}"]`) as HTMLElement;
+        expect(stamped.textContent).toBe(b);
+      }
+    });
+
+    await step("Switching plates keeps the applied data", async () => {
+      const plateTab = [...canvasElement.querySelectorAll('[data-slot="toggle-group-item"]')].find((el) =>
+        el.textContent?.includes("PLATE-C"),
+      ) as HTMLElement;
+      expect(plateTab).toBeTruthy();
+      await userEvent.click(plateTab);
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll("[data-well]").length).toBe(96);
+      });
+      expect(countFor("PLATE-C")).toBe(96);
+    });
+
+    await step("Clearing also spans every plate", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Clear wells" }));
+      await waitFor(() => {
+        for (const b of ["PLATE-A", "PLATE-B", "PLATE-C"]) expect(countFor(b)).toBe(0);
+      });
+    });
+  },
+};
+
+export const ExternalizedFormViaHandle: Story = {
+  name: "Externalized form: host sidebar drives the editor via ref",
+  render: () => {
+    function Demo() {
+      const editor = React.useRef<PlateMapEditorHandle<DemoWell>>(null);
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(new Map());
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      const [sampleId, setSampleId] = React.useState("");
+
+      return (
+        <div className="flex gap-4">
+          {/* The form lives entirely outside PlateMapEditor, in the host's own
+              chrome, yet stays wired to the editor's selection + apply. */}
+          <aside className="w-64 shrink-0 rounded-lg border bg-muted/30 p-4" data-testid="host-sidebar">
+            <div className="mb-3 text-sm font-semibold">Host sidebar form</div>
+            <label className="mb-1 block text-xs text-muted-foreground" htmlFor="host-sample-id">
+              Sample ID
+            </label>
+            <Input
+              id="host-sample-id"
+              value={sampleId}
+              onChange={(e) => {
+                setSampleId(e.target.value);
+                editor.current?.setStaged({ sampleId: e.target.value, role: "sample" });
+              }}
+            />
+            <div className="mt-3 flex gap-2">
+              <Button size="sm" onClick={() => editor.current?.apply()}>
+                Apply
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => editor.current?.clear()}>
+                Clear
+              </Button>
+            </div>
+            <div className="mt-3 text-xs text-muted-foreground">
+              {selection.size} selected · <span data-testid="well-count">{values.size}</span> filled
+            </div>
+          </aside>
+
+          <div className="min-w-0 flex-1">
+            <PlateMapEditor<DemoWell>
+              ref={editor}
+              format="96"
+              values={values}
+              onChange={setValues}
+              selection={selection}
+              onSelectionChange={setSelection}
+              fields={FIELDS}
+              tableColumns={COLUMNS}
+              colorForWell={colorForWell}
+              emptyEntry={emptyEntry}
+              hideForm
+              hideManifest
+              wellShape="circle"
+              style={{ outline: "1px dashed var(--color-border)", outlineOffset: 4 }}
+            />
+          </div>
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const wellCount = () =>
+      Number((canvasElement.querySelector('[data-testid="well-count"]') as HTMLElement).textContent);
+
+    await step("The editor renders no form of its own", async () => {
+      expect(canvasElement.querySelector('[data-plate-map-region="form"]')).toBeNull();
+      expect(canvasElement.querySelector('[data-slot="plate-map-form"]')).toBeNull();
+    });
+
+    await step("The host's form sits outside the editor subtree", async () => {
+      const editor = canvasElement.querySelector('[data-slot="plate-map-editor"]') as HTMLElement;
+      const sidebar = canvasElement.querySelector('[data-testid="host-sidebar"]') as HTMLElement;
+      expect(editor.contains(sidebar)).toBe(false);
+    });
+
+    await step("style is accepted on the root", async () => {
+      const editor = canvasElement.querySelector('[data-slot="plate-map-editor"]') as HTMLElement;
+      expect(editor.style.outlineOffset).toBe("4px");
+    });
+
+    await step("setStaged + apply() from outside writes through the editor", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      await userEvent.type(canvas.getByLabelText("Sample ID"), "EXT-1");
+      await userEvent.click(canvas.getByRole("button", { name: "Apply" }));
+      await waitFor(() => expect(wellCount()).toBe(96));
+    });
+
+    await step("clear() from outside empties them again", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Clear" }));
+      await waitFor(() => expect(wellCount()).toBe(0));
+    });
+  },
+};
+
+export const LegendTolerantOfMissingInput: Story = {
+  name: "Legend: optional items and colours",
+  render: () => (
+    <div className="flex flex-col gap-6">
+      <div>
+        <div className="mb-2 text-xs font-medium text-muted-foreground">
+          No <code>items</code> at all — renders the empty label
+        </div>
+        <div data-testid="legend-none">
+          <WellLegend />
+        </div>
+      </div>
+      <div>
+        <div className="mb-2 text-xs font-medium text-muted-foreground">
+          Well roles with no colour assigned yet — falls back to the empty-well token
+        </div>
+        <div data-testid="legend-uncoloured">
+          <WellLegend
+            items={[
+              { id: "sample", label: "Sample", color: ROLE_COLOR.sample },
+              { id: "unassigned", label: "Unassigned role" },
+              { id: "pending", label: "Pending role", meta: "no colour yet" },
+            ]}
+          />
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step("Renders with no items prop at all", async () => {
+      const none = canvasElement.querySelector('[data-testid="legend-none"]') as HTMLElement;
+      expect(none.querySelector('[data-slot="well-legend-empty"]')).not.toBeNull();
+      expect(canvas.getByText("No items")).toBeInTheDocument();
+    });
+
+    await step("Items without a colour still render a swatch", async () => {
+      const wrap = canvasElement.querySelector('[data-testid="legend-uncoloured"]') as HTMLElement;
+      const items = wrap.querySelectorAll('[data-slot="well-legend-item"]');
+      expect(items.length).toBe(3);
+      for (const item of items) {
+        const swatch = item.querySelector("span[aria-hidden]") as HTMLElement;
+        expect(swatch.style.backgroundColor).not.toBe("");
+      }
+    });
+
+    await step("Labelled entries still show their text", async () => {
+      expect(canvas.getByText("Unassigned role")).toBeInTheDocument();
+      expect(canvas.getByText("Pending role")).toBeInTheDocument();
+    });
+  },
+};
+
+export const KeyboardSelectionAndLiveFeedback: Story = {
+  name: "A11y: keyboard selection + colour feedback while selected",
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(new Map());
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      return (
+        <PlateMapEditor<DemoWell>
+          format="96"
+          values={values}
+          onChange={setValues}
+          selection={selection}
+          onSelectionChange={setSelection}
+          fields={FIELDS}
+          tableColumns={COLUMNS}
+          colorForWell={colorForWell}
+          emptyEntry={emptyEntry}
+          hideManifest
+        />
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const grid = () => canvasElement.querySelector('[role="grid"]') as SVGSVGElement;
+    const wellFill = (id: string) =>
+      (canvasElement.querySelector(`[data-well="${id}"]`) as SVGElement).getAttribute("fill");
+
+    await step("The grid is a single tab stop with grid semantics", async () => {
+      expect(grid()).toHaveAttribute("tabindex", "0");
+      expect(grid()).toHaveAttribute("aria-rowcount", "8");
+      expect(grid()).toHaveAttribute("aria-colcount", "12");
+      expect(canvasElement.querySelectorAll('[role="row"]').length).toBe(8);
+    });
+
+    await step("Arrow keys move an active descendant without a pointer", async () => {
+      grid().focus();
+      await waitFor(() => expect(grid()).toHaveAttribute("aria-activedescendant"));
+      const first = grid().getAttribute("aria-activedescendant");
+      fireEvent.keyDown(grid(), { key: "ArrowRight" });
+      await waitFor(() => expect(grid().getAttribute("aria-activedescendant")).not.toBe(first));
+    });
+
+    await step("Space toggles the focused well into the selection", async () => {
+      fireEvent.keyDown(grid(), { key: " " });
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll('[data-selected="true"]').length).toBe(1);
+      });
+      expect(canvas.getByText(/Apply to 1 well/)).toBeInTheDocument();
+    });
+
+    await step("Shift+Arrow extends the selection", async () => {
+      fireEvent.keyDown(grid(), { key: "ArrowDown", shiftKey: true });
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll('[data-selected="true"]').length).toBeGreaterThan(1);
+      });
+    });
+
+    await step("Applying a role shows its colour while the wells stay selected", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      const roleTrigger = canvasElement.querySelector("#field-role") as HTMLElement;
+      await userEvent.click(roleTrigger);
+      // The Select renders its listbox in a portal on document.body.
+      const listbox = await within(document.body).findByRole("listbox");
+      await userEvent.click(within(listbox).getByRole("option", { name: "Control" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Apply" }));
+
+      await waitFor(() => {
+        // Still selected...
+        expect((canvasElement.querySelector('[data-well="A01"]') as SVGElement).getAttribute("data-selected")).toBe(
+          "true",
+        );
+        // ...and already showing the applied role colour, not the selection tint.
+        expect(wellFill("A01")).toBe(ROLE_COLOR.control);
+      });
+    });
+
+    await step("Selection reads as a single bright ring, no halo", async () => {
+      const ring = canvasElement.querySelector('[data-well-selection="A01"]') as SVGElement;
+      expect(ring).not.toBeNull();
+      // The bright selection blue, not --primary/--chart-1 (both #2F45B5, which
+      // is also the default well fill and so invisible as a selection).
+      expect(ring.getAttribute("stroke")).toBe("var(--color-chart-seq-blue-06)");
+
+      // Exactly one stroke: a wider background-coloured ring underneath would
+      // bleed outside it as a halo and make adjacent wells look detached.
+      const halos = [...canvasElement.querySelectorAll("g > *")].filter(
+        (el) => el.getAttribute("stroke") === "var(--color-background)",
+      );
+      expect(halos.length).toBe(0);
+    });
+
+    await step("Escape clears the selection", async () => {
+      fireEvent.keyDown(grid(), { key: "Escape" });
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll('[data-selected="true"]').length).toBe(0);
+      });
+    });
+  },
+};
+
+export const QuickPaintOnSelection: Story = {
+  name: "Quick paint: swatch strip above the selection",
+  render: () => {
+    function Demo() {
+      const [values, setValues] = React.useState<Map<WellId, DemoWell>>(new Map());
+      const [selection, setSelection] = React.useState<Set<WellId>>(new Set());
+      return (
+        <PlateMapEditor<DemoWell>
+          format="96"
+          values={values}
+          onChange={setValues}
+          selection={selection}
+          onSelectionChange={setSelection}
+          fields={FIELDS}
+          tableColumns={COLUMNS}
+          colorForWell={colorForWell}
+          emptyEntry={emptyEntry}
+          quickPaintField="role"
+          wellShape="circle"
+          hideManifest
+        />
+      );
+    }
+    return <Demo />;
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const strip = () => canvasElement.querySelector('[data-slot="well-quick-paint"]');
+    const fillOf = (id: string) =>
+      (canvasElement.querySelector(`[data-well="${id}"]`) as SVGElement).getAttribute("fill");
+
+    await step("Hidden while nothing is selected", async () => {
+      expect(strip()).toBeNull();
+    });
+
+    await step("Appears once a selection exists", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      await waitFor(() => expect(strip()).not.toBeNull());
+      expect(canvas.getByText("96 wells")).toBeInTheDocument();
+    });
+
+    await step("One swatch per select option, each labelled", async () => {
+      const group = within(strip() as HTMLElement);
+      expect(group.getByRole("button", { name: "Sample" })).toBeInTheDocument();
+      expect(group.getByRole("button", { name: "Control" })).toBeInTheDocument();
+      expect(group.getByRole("button", { name: "Blank" })).toBeInTheDocument();
+    });
+
+    await step("Clicking a swatch paints the whole selection immediately", async () => {
+      const before = fillOf("A01");
+      await userEvent.click(within(strip() as HTMLElement).getByRole("button", { name: "Control" }));
+      await waitFor(() => {
+        expect(fillOf("A01")).not.toBe(before);
+        expect(fillOf("A01")).toBe(ROLE_COLOR.control);
+        expect(fillOf("H12")).toBe(ROLE_COLOR.control);
+      });
+    });
+
+    await step("Hides after a pick, so it is out of the way once used", async () => {
+      await waitFor(() => expect(strip()).toBeNull());
+    });
+
+    await step("Comes back on the next selection, showing the applied value as pressed", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Deselect all" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      await waitFor(() => expect(strip()).not.toBeNull());
+      expect(within(strip() as HTMLElement).getByRole("button", { name: "Control" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+    });
+
+    await step("Any pointerdown that is not a well cell dismisses it", async () => {
+      // Inside the plate card but not on a cell — the label gutter.
+      const gridEl = canvasElement.querySelector('[data-slot="plate-paint-grid"]') as HTMLElement;
+      fireEvent.pointerDown(gridEl, { bubbles: true, pointerId: 1 });
+      await waitFor(() => expect(strip()).toBeNull());
+    });
+
+    await step("And so does a click well away from the editor", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Deselect all" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      await waitFor(() => expect(strip()).not.toBeNull());
+      fireEvent.pointerDown(canvasElement.ownerDocument.body, { bubbles: true, pointerId: 1 });
+      await waitFor(() => expect(strip()).toBeNull());
+    });
+
+    await step("Wraps at six columns", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Deselect all" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Select all" }));
+      await waitFor(() => expect(strip()).not.toBeNull());
+      const grid = (await waitFor(() => strip() as HTMLElement)).querySelector("div.grid") as HTMLElement;
+      const columns = grid.style.gridTemplateColumns.split(" ").length;
+      expect(columns).toBeLessThanOrEqual(6);
+    });
+
+    await step("Flips below when the selection starts at the top row", async () => {
+      const anchor = canvasElement.querySelector('[data-slot="plate-quick-paint-anchor"]') as HTMLElement;
+      // Row A is selected, so there is no room above — it must flip.
+      expect(anchor.getAttribute("data-placement")).toBe("below");
+    });
+
+    await step("Stays inside the plate horizontally", async () => {
+      const anchor = canvasElement.querySelector('[data-slot="plate-quick-paint-anchor"]') as HTMLElement;
+      const gridEl = canvasElement.querySelector('[data-slot="plate-paint-grid"]') as HTMLElement;
+      expect(anchor.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+        gridEl.getBoundingClientRect().left - 1,
+      );
     });
   },
 };

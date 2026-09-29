@@ -143,6 +143,16 @@ import {
 | `UserMenu`               | Composed           | `avatar` + `dropdown-menu` | Avatar + account dropdown                                | Stable |
 | `PageHeader`             | Composed           | —                          | Page title + subtitle + trailing action slot             | Beta   |
 | `AppShellSimple`         | Composed           | —                          | Top bar + tri-state side nav; lighter than DataAppShell  | Beta   |
+| `PlateMapEditor`         | Composed           | `card` + `table`           | Plate-map editing surface (form + grid + manifest)       | Stable |
+| `PlateMapForm`           | Composed           | —                          | Card-agnostic well-metadata form panel                   | Stable |
+| `PlateMapGrid`           | Composed           | —                          | Card-agnostic plate grid panel (toolbar + hover + grid)  | Stable |
+| `PlateMapManifest`       | Composed           | `table`                    | Card-agnostic sample-manifest panel                      | Stable |
+| `PlatePaintGrid`         | Composed           | —                          | Drag-to-select SVG well grid                             | Stable |
+| `WellMetadataForm`       | Composed           | —                          | Staged-value field form driving Apply/Clear              | Stable |
+| `WellManifestTable`      | Composed           | `table` + `data-table`     | Per-well table with filter, group-by, fill-down          | Stable |
+| `WellLegend`             | Composed           | `card`                     | Colour-swatch legend for plate categories                | Stable |
+| `PlateMapPlateSelector`  | Composed           | `select` + `tabs`          | Plate chooser (dropdown or tabs variant)                 | Stable |
+| `PlateMapActionsMenu`    | Composed           | `dropdown-menu`            | CSV/template import + export menu                        | Stable |
 | `AreaPlot`               | Chart              | —                          | Plotly area chart                                        | Stable |
 | `BarChart`               | Chart              | —                          | Plotly bar chart (grouped/stacked)                       | Stable |
 | `LinePlot`               | Chart              | —                          | Plotly line chart                                        | Stable |

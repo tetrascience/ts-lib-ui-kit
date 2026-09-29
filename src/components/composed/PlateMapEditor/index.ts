@@ -1,5 +1,19 @@
 export { PlateMapEditor, getPlateMapScopedWellId } from "./PlateMapEditor";
-export type { PlateMapEditorProps } from "./PlateMapEditor";
+export type {
+  PlateMapEditorProps,
+  PlateMapEditorHandle,
+  PlateMapEditorClassNames,
+  PlateMapEditorFormPlacement,
+  PlateMapEditorManifestOptions,
+  PlateMapEditorStackAt,
+} from "./PlateMapEditor";
+
+export { usePlateMapEditorState, defaultColorForWell, defaultEmptyEntry } from "./usePlateMapEditorState";
+export type {
+  UsePlateMapEditorStateOptions,
+  PlateMapEditorState,
+  PlateMapApplyScope,
+} from "./usePlateMapEditorState";
 
 export { PlateMapForm } from "./PlateMapForm";
 export type { PlateMapFormProps } from "./PlateMapForm";
@@ -33,6 +47,9 @@ export { plateOptionsFromCsvTriage, triagePlateMapCsvByBarcode, triagePlateMapCs
 export { ManifestFilterPopover } from "./ManifestFilterPopover";
 export type { ManifestFilterPopoverProps } from "./ManifestFilterPopover";
 
+export { WellQuickPaint } from "./WellQuickPaint";
+export type { WellQuickPaintProps } from "./WellQuickPaint";
+
 export { WellLegend } from "./WellLegend";
 export type { WellLegendItem, WellLegendProps } from "./WellLegend";
 
@@ -58,6 +75,8 @@ export type {
   ImportExportHandlers,
   PlateMapGroupOption,
   PlateMapPlateOption,
+  PlateMapEditorLabels,
+  WellManifestTableLabels,
 } from "./types";
 
 export { resolveDimensions, rowLabel, parseRowLabel, pos, parsePos, rectPositions, allPositions } from "./wellGrid";

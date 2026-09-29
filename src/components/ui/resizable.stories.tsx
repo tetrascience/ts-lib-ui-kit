@@ -363,7 +363,7 @@ function CardPanel({ title, rows }: { title: string; rows: number }) {
 
 export const CardsInPanels: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5721" },
   },
   render: ({ withHandle, ...args }) => (
     <div className="h-[320px] w-[760px] rounded-xl border bg-muted/40 p-3">
@@ -405,7 +405,7 @@ export const CardsInPanels: Story = {
 
 export const ScrollablePanel: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5722" },
   },
   render: ({ withHandle, ...args }) => (
     <div className="h-[320px] w-[760px] overflow-hidden rounded-xl border bg-muted/40">
@@ -449,7 +449,7 @@ export const ScrollablePanel: Story = {
 
 export const CollapsedPanel: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5723" },
   },
   render: ({ withHandle, ...args }) => (
     <div className="h-[320px] w-[760px] overflow-hidden rounded-xl border bg-muted/40">

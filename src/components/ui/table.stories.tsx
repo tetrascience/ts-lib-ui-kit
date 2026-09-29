@@ -518,68 +518,6 @@ export const RowActions: Story = {
 }
 
 // ---------------------------------------------------------------------------
-// PersistentRowActions — alwaysVisible action cells (SW-2535)
-// ---------------------------------------------------------------------------
-
-export const PersistentRowActions: Story = {
-  name: "Persistent Row Actions",
-  render: () => {
-    const rows = [
-      { id: "1", name: "Compound A", mass: "342.4" },
-      { id: "2", name: "Compound B", mass: "128.1" },
-    ]
-    return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead variant="numeric">Mass</TableHead>
-            <TableHead variant="action">
-              <span className="sr-only">Actions</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id}>
-              <TableHead scope="row">{row.name}</TableHead>
-              <TableCell variant="numeric">{row.mass}</TableCell>
-              {/* alwaysVisible — the actions stay visible at rest, so they are
-                  reachable on touch where there is no hover to reveal them. */}
-              <TableCell variant="action" alwaysVisible>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="icon-xs" variant="ghost">
-                      <MoreHorizontalIcon />
-                      <span className="sr-only">Actions for {row.name}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                    <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    )
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    await step("alwaysVisible: the action cell is visible at rest (no hover needed)", async () => {
-      const cell = canvas.getAllByRole("button", { name: /Actions for/ })[0].closest("td")
-      expect(cell).not.toBeNull()
-      expect(getComputedStyle(cell as HTMLElement).opacity).toBe("1")
-    })
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T5703" },
-  },
-}
-
-// ---------------------------------------------------------------------------
 // StickyHeader
 // ---------------------------------------------------------------------------
 

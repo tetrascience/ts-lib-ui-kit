@@ -470,13 +470,16 @@ export const SelectionTogglesViaButton: StoryObj<typeof Chromatogram> = {
     return (
       <div style={{ fontFamily: CHART_FONT_FAMILY }}>
         <Chromatogram {...args} selectedPeakIds={selectedPeakIds} />
-        <div style={{ marginTop: 8 }}>
+        <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center", fontSize: 12 }}>
           <button data-testid="set-selection" onClick={() => setSelectedPeakIds(["theobromine"])}>
             Select Theobromine
-          </button>{" "}
+          </button>
           <button data-testid="clear-selection" onClick={() => setSelectedPeakIds([])}>
             Clear
           </button>
+          <span data-testid="selection-status" style={{ color: "#6b7280" }}>
+            Selected: <strong>{selectedPeakIds.length > 0 ? selectedPeakIds.join(", ") : "none"}</strong>
+          </span>
         </div>
       </div>
     );
@@ -497,13 +500,28 @@ export const SelectionTogglesViaButton: StoryObj<typeof Chromatogram> = {
     });
 
     await step("Switching selection triggers the relayout effect", async () => {
-      const setBtn = canvas.getByTestId("set-selection");
-      await userEvent.click(setBtn);
+      await userEvent.click(canvas.getByTestId("set-selection"));
+      await waitFor(() => {
+        expect(canvas.getByTestId("selection-status")).toHaveTextContent("Selected: theobromine");
+        // Selected labels render bold via a <b> wrapper inside the annotation text
+        expect(canvasElement.querySelector(".annotation-text tspan[style*=\"font-weight\"], .annotation-text b")).not.toBeNull();
+      });
     });
 
     await step("Clearing selection triggers the relayout effect again", async () => {
-      const clearBtn = canvas.getByTestId("clear-selection");
-      await userEvent.click(clearBtn);
+      await userEvent.click(canvas.getByTestId("clear-selection"));
+      await waitFor(() => {
+        expect(canvas.getByTestId("selection-status")).toHaveTextContent("Selected: none");
+      });
+    });
+
+    await step("Re-select so the story is left showing a highlighted peak", async () => {
+      // Without this the auto-played story ends with nothing selected, which
+      // read as "the button does nothing" (SW-2298).
+      await userEvent.click(canvas.getByTestId("set-selection"));
+      await waitFor(() => {
+        expect(canvas.getByTestId("selection-status")).toHaveTextContent("Selected: theobromine");
+      });
     });
   },
   parameters: {

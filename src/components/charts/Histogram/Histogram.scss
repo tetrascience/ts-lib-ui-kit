@@ -1,66 +1,70 @@
+// Kit-authored CSS lives in the `ts-ui-kit` cascade layer and is namespaced by
+// component, so it can never restyle a host document by accident (SW-2596).
+// The order statement pins the layer above Tailwind's, matching src/index.tailwind.css.
+@layer properties, theme, base, components, utilities, ts-ui-kit;
 
+@layer ts-ui-kit {
+  .histogram-container .histogram-chart {
+    width: 100%;
+    height: 100%;
+  }
 
-.histogram-container .chart-container {
-  width: 100%;
-  height: 100%;
-}
+  .histogram-title-container {
+    text-align: center;
+    padding: 0 40px;
+    justify-content: center;
+  }
 
-.title-container {
-  text-align: center;
-  padding: 0 40px;
-  justify-content: center;
-}
+  .histogram-title {
+    font-size: 32px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.2;
+  }
 
-.title {
-  font-size: 32px;
-  font-weight: 600;
-  margin: 0;
-  line-height: 1.2;
-}
+  .histogram-legend {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
 
-.legend-container {
-  display: flex;
-  flex-wrap: wrap;
-  margin: 0;
-  padding: 0;
-  width: 100%;
-}
+  .histogram-legend-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+    word-wrap: break-word;
+    max-width: 100%;
+    width: 100%;
+    padding: 0 40px;
+    row-gap: 12px;
+  }
 
-.legend-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-  word-wrap: break-word;
-  max-width: 100%;
-  width: 100%;
-  padding: 0 40px;
-  row-gap: 12px;
-}
+  .histogram-legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 18px;
+  }
 
-.legend-item {
-  display: flex;
-  align-items: center;
-  font-size: 24px;
-  font-size: 13px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 18px;
-}
+  .histogram-legend-swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    margin-right: 6px;
+  }
 
-.color-box {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 4px;
-  margin-right: 6px;
-}
-
-.divider {
-  display: inline-block;
-  width: 2px;
-  height: 24px;
-  background: var(--border);
-  margin: 0 12px;
+  .histogram-legend-divider {
+    display: inline-block;
+    width: 2px;
+    height: 24px;
+    background: var(--border);
+    margin: 0 12px;
+  }
 }

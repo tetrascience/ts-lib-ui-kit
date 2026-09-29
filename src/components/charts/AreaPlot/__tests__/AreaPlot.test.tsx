@@ -158,13 +158,33 @@ describe("AreaPlot sizing", () => {
     });
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
 
+    // Both sizes are short *and* narrow (same compact scale), so only the
+    // pixel size changes — a scale-bucket flip would legitimately re-plot.
     await act(async () => {
-      triggerResize(640, 300);
+      triggerResize(400, 300);
     });
 
     // Still a single newPlot; the size change went through relayout.
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { width: 640, height: 300 });
+    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 400, height: 300 }));
+  });
+
+  it("re-plots when a resize crosses a scale bucket (short → short-but-wide)", async () => {
+    await render({ dataSeries });
+
+    await act(async () => {
+      triggerResize(320, 200);
+    });
+    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      triggerResize(1200, 300);
+    });
+    // Side margins switch back to full size, so the chrome is redrawn.
+    expect(plotly.newPlot).toHaveBeenCalledTimes(2);
+    const layout = plotly.newPlot.mock.calls.at(-1)?.[2] as { margin: { l: number; b: number } };
+    expect(layout.margin.l).toBe(80);
+    expect(layout.margin.b).toBe(76);
   });
 
   it("re-checks the applied size in place when only the height changes", async () => {
@@ -182,7 +202,7 @@ describe("AreaPlot sizing", () => {
       triggerResize(320, 260);
     });
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { width: 320, height: 260 });
+    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 320, height: 260 }));
   });
 
   it("purges the plot on unmount", async () => {

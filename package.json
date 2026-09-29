@@ -8,6 +8,7 @@
   "sideEffects": [
     "./dist/index.css",
     "./dist/index.tailwind.css",
+    "./dist/index.scoped.css",
     "./dist/jest-setup.js",
     "./dist/jest-setup.cjs"
   ],
@@ -182,6 +183,7 @@
     },
     "./index.css": "./dist/index.css",
     "./index.tailwind.css": "./dist/index.tailwind.css",
+    "./index.scoped.css": "./dist/index.scoped.css",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -196,7 +198,10 @@
     "test:all": "vitest run",
     "test:all:coverage": "vitest run --coverage",
     "build": "vite build && yarn run postbuild",
-    "postbuild": "yarn dlx @tailwindcss/cli@4.2.2 -i ./src/index.tailwind.css -o ./dist/index.tailwind.css --minify",
+    "postbuild": "yarn build:css:tailwind && yarn build:css:scoped && yarn check:css-leaks",
+    "build:css:tailwind": "yarn dlx @tailwindcss/cli@4.2.2 -i ./src/index.tailwind.css -o ./dist/index.tailwind.css --minify",
+    "build:css:scoped": "tsx scripts/build/build-scoped-css.ts",
+    "check:css-leaks": "tsx scripts/build/audit-css-leaks.ts",
     "verify:jest-consumer": "yarn pack --out scripts/verify-jest-consumer/ui-kit.tgz && cd scripts/verify-jest-consumer && npm install && npm test",
     "dev": "yarn storybook",
     "storybook": "storybook dev -p 6006",
@@ -348,6 +353,7 @@
     "lint-staged": "^15.2.0",
     "playwright": "^1.58.2",
     "plotly.js-dist": "^2.35.2",
+    "postcss": "^8.5.8",
     "prettier": "^3.8.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

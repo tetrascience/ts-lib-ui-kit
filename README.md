@@ -135,16 +135,35 @@ This library uses **Tailwind CSS 4** with design tokens defined as CSS custom pr
 
 ### CSS Import Options
 
-| Import path                                                  | Use case                                                                                             |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `@tetrascience-npm/tetrascience-react-ui/index.css`          | **Pre-built CSS** — use this for most apps. Import once at your app root.                            |
-| `@tetrascience-npm/tetrascience-react-ui/index.tailwind.css` | **Tailwind source** — for apps that run their own Tailwind build and want to extend/override tokens. |
+| Import path                                                  | Use case                                                                                                                                                                            |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@tetrascience-npm/tetrascience-react-ui/index.css`          | **Pre-built CSS** — for an app that owns its document. Import once at your app root.                                                                                                |
+| `@tetrascience-npm/tetrascience-react-ui/index.tailwind.css` | **Tailwind source** — for apps that run their own Tailwind build and want to extend/override tokens.                                                                                |
+| `@tetrascience-npm/tetrascience-react-ui/index.scoped.css`   | **Scoped CSS** — for code that renders inside a document it does _not_ own (a microfrontend remote, an embedded widget). See [Embedding in a host page](#embedding-in-a-host-page). |
 
-Most consumers only need `index.css`:
+Most consumers only need `index.css`.
+
+#### What the stylesheet does — and does not — claim
+
+Every selector rule the kit writes itself — its design tokens and its component CSS — ships
+inside a `ts-ui-kit` cascade layer, and no published stylesheet contains an unlayered rule.
+(Tailwind utilities land in Tailwind's `utilities` layer; `@font-face`, `@keyframes` and
+`@property` are not selector-matched and stay top-level, with kit keyframes `ts-`-prefixed.)
+That has two consequences worth knowing:
+
+- **Your CSS always wins.** An unlayered rule outranks a layered one regardless of specificity or
+  load order, so a plain `:root { --primary: … }` in your app overrides the kit's token whether it
+  is written before or after the import. There is no ordering dance.
+- **The kit never restyles your page by accident.** Its component class names are namespaced
+  (`.histogram-legend-divider`, `.platemap-legend__item`, …), and its tokens and Tailwind's
+  preflight reset are layered beneath anything you write. A CI gate
+  (`yarn check:css-leaks`) fails the build if any published stylesheet regains an unlayered rule.
 
 ### Theming
 
-The design system is controlled via CSS custom properties in `index.css`. Override them to customise colours, spacing, and radii:
+The design system is controlled via CSS custom properties. Override them anywhere in your own CSS
+to customise colours, spacing, and radii — because the kit's tokens are layered, your unlayered
+declaration wins in any order:
 
 ```css
 :root {
@@ -155,6 +174,45 @@ The design system is controlled via CSS custom properties in `index.css`. Overri
 ```
 
 Dark mode is supported via the `.dark` class on a parent element. See [THEMING.md](./THEMING.md) for details.
+
+### Embedding in a host page
+
+`index.css` is written for an app that owns its document: tokens on `:root` / `.dark`, Tailwind's
+preflight on `html` / `body` / `*`. Inside someone else's document — a Module Federation remote
+mounted into the TetraScience platform shell, a widget dropped into a legacy page — those are not
+the kit's claims to make, even layered: a host that never declared `--surface-bright` would still
+pick the kit's value up document-wide.
+
+`index.scoped.css` is the same stylesheet with every rule in the `ts-ui-kit` and `base` layers
+— tokens, component CSS, preflight — confined to an element carrying `data-ts-ui-root`. Import
+it instead of `index.css` and mark your shell:
+
+```tsx
+import "@tetrascience-npm/tetrascience-react-ui/index.scoped.css";
+
+export function App() {
+  return (
+    <div data-ts-ui-root className="dark">
+      {/* kit components render with their own tokens and reset in here… */}
+    </div>
+  );
+}
+```
+
+Two things to know when you use it:
+
+- **Portaled surfaces need the marker too.** `Dialog`, `Popover`, `Select`, `Tooltip` and the
+  other overlay components render their content into `document.body`, outside your shell. Put
+  `data-ts-ui-root` on their `*Content` element as well (a thin wrapper component around each one
+  you use is the usual pattern), or they render with the host's tokens instead of the kit's.
+- **Dark mode still keys off `.dark`.** `.dark` on `<html>` (or anything above the marker), on the
+  marked element itself, or on a dark panel nested inside a light shell all work — the scoped
+  rules are emitted as `.dark [data-ts-ui-root]`, `[data-ts-ui-root].dark` and
+  `[data-ts-ui-root] .dark`.
+
+Tailwind's own `theme`, `properties`, `components` and `utilities` layers are left global in the
+scoped build: they are keyed on Tailwind class names, your unlayered CSS already outranks them,
+and confining `theme` would strip `--spacing` / `--radius-*` from portaled content.
 
 ## Components
 
@@ -247,6 +305,119 @@ For AI-assisted consuming apps, add a short instruction like this to the app's `
 ```md
 Use `ProcessFlow` from `@tetrascience-npm/tetrascience-react-ui` for multi-step workflow visualization. Do not build a custom stepper for upload, validation, review, approval, processing, or setup flows. Parent components own the workflow state and pass `steps: ProcessFlowStep[]`; each step status must be one of `PROCESS_FLOW_STEP_STATUSES`. Use `selectedStepId` only for the viewed/selected step. Keep completion/error side effects in the parent workflow code, not inside `ProcessFlow`.
 ```
+
+#### PlateMapEditor
+
+`PlateMapEditor` is the standard plate-map editing surface — a metadata form, an
+interactive plate grid, and a sample manifest, wired together by a staged-edit
+controller. Use it as-is for the default layout; tune it with props; and drop to
+`usePlateMapEditorState` only when you need a layout the props can't express.
+
+```tsx
+import { PlateMapEditor } from "@tetrascience-npm/tetrascience-react-ui";
+
+function PlateScreen() {
+  const [values, setValues] = React.useState(new Map());
+  const [selection, setSelection] = React.useState(new Set());
+
+  return (
+    <PlateMapEditor
+      format="96"
+      values={values}
+      onChange={setValues}
+      selection={selection}
+      onSelectionChange={setSelection}
+      fields={FIELDS}
+      tableColumns={COLUMNS}
+    />
+  );
+}
+```
+
+##### Choosing a level
+
+| You need | Use |
+| --- | --- |
+| The standard surface, tuned by props | `PlateMapEditor` |
+| The form somewhere the editor can't reach | `PlateMapEditor` + `hideForm` + the imperative handle |
+| A layout no prop combination expresses | `usePlateMapEditorState` + `PlateMapForm` / `PlateMapGrid` / `PlateMapManifest` |
+
+Dropping to the hook keeps the apply/clear semantics, plate scoping, and barcode
+stamping — you only take over layout. Do not re-implement staged edits by hand.
+
+##### Customization
+
+- **Layout** — `formPlacement` (`start` / `end` / `top` / `bottom`), `stackAt`,
+  `formWidth`, `hideForm`, `hideManifest`.
+- **Slots** — `banner` (whole editor), `plateBanner` (plate card only),
+  `plateToolbar` (above grid), `plateFooter` (the plate card's footer),
+  `footer` (editor-wide action row), `legend` + `legendPlacement`,
+  `formExtras`, `formSlot`, `manifestSlot`.
+- **Edit state** — `staged` / `onStagedChange` for a controlled staged record,
+  `mergeOnApply` for custom merge semantics, `applyScope="all-plates"` to write
+  across every plate at once.
+- **Manifest** — one `manifest` object: `{ filterable, filterColumns, groupable,
+  defaultGroupBy, pageSize, pageSizeOptions, enableFillDown }`. Structural bits
+  stay top-level: `hideManifest`, `manifestTitle`, `manifestSlot`.
+- **Labels** — one `labels` object covers every string the editor and its
+  manifest render, typed as the exported `PlateMapEditorLabels`, so an app's
+  translation table is a type error away from going stale:
+  `const fr: PlateMapEditorLabels = { … }`. `plateTitle` / `manifestTitle` and
+  the import/export menu labels are separate props (they take `ReactNode`, not
+  plain text).
+- **Styling** — `className` / `style` on the root, plus one `classNames` map for
+  the regions (`PlateMapEditorClassNames`): `{ layout, formCard, plateCard,
+  manifestCard, form, grid, manifest }`. Each card also carries
+  `data-plate-map-region="form|plate|manifest"`, so plain CSS can target the
+  same regions without threading props.
+
+##### Rendering the form outside the editor
+
+Hide the built-in form and drive the staged state through the imperative handle.
+The editor keeps owning selection and apply; your form just feeds it.
+
+```tsx
+const editor = React.useRef<PlateMapEditorHandle<MyWell>>(null);
+
+<>
+  <MySidebarForm
+    onChange={(next) => editor.current?.setStaged(next)}
+    onApply={() => editor.current?.apply()}
+    onClear={() => editor.current?.clear()}
+  />
+  <PlateMapEditor ref={editor} hideForm {...rest} />
+</>;
+```
+
+##### Responsiveness
+
+The editor responds to **its container's** width, not the viewport's, so it lays
+out correctly inside a narrow panel, split pane, or drawer on a wide screen.
+`stackAt` names a container width — `sm` 640 / `md` 768 (default) / `lg` 1024 /
+`xl` 1280 / `never` — below which the form and grid stack full-width. A plate too
+dense to fit scrolls inside its own container rather than widening the page.
+
+##### Migration notes
+
+Everything below is additive; existing code keeps working unchanged.
+
+- **Layout now tracks container width, not viewport width.** This is the one
+  behavioural change. If your editor is full-width the result is effectively the
+  same; if it sits in a narrow panel on a wide screen it will now correctly
+  stack instead of rendering a cramped two-column layout. Tune with `stackAt`.
+- `colorForWell` and `emptyEntry` are now **optional** — delete them for
+  read-only or single-category views and sensible defaults apply.
+- `className` on the root always worked despite reports otherwise; `style` is
+  new.
+- If you previously forked or re-assembled the primitives to change layout,
+  replace that with `formPlacement` / `stackAt` / `formWidth` and the slots, or
+  with `usePlateMapEditorState` if you still need custom structure. Hand-rolled
+  staged/apply logic should be deleted in favour of the hook.
+- If you worked around the hardcoded 360px form column with a width utility,
+  switch to `formWidth` — it is the supported path and applies only at and above
+  `stackAt`.
+- `manifestFilterable` and `manifestGroupable` still work but are deprecated in
+  favour of `manifest={{ filterable, groupable }}`.
 
 ### Charts (`charts/`)
 

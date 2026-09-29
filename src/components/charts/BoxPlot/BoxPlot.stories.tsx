@@ -191,6 +191,19 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
   ];
 };
 
+// Append samples beyond the 1.5×IQR fences so `boxpoints: "outliers"` has
+// points to draw; the base categorical data is too tight to produce any.
+const withOutliers = (series: BoxDataSeries, outliers: number[]): BoxDataSeries => ({
+  ...series,
+  y: [...series.y, ...outliers],
+  x: series.x ? ([...series.x, ...outliers.map(() => series.x![0])] as string[]) : undefined,
+});
+
+const generateOutlierBoxData = (): BoxDataSeries[] => {
+  const [a, b, c, d, e] = generateCategoricalBoxData();
+  return [withOutliers(a, [248, 62]), b, withOutliers(c, [142]), withOutliers(d, [128]), e];
+};
+
 export const Basic: Story = {
   name: "Basic",
   parameters: {
@@ -324,7 +337,7 @@ export const WithOutliers: Story = {
     zephyr: { testCaseId: "SW-T973" },
   },
   args: {
-    dataSeries: generateCategoricalBoxData(),
+    dataSeries: generateOutlierBoxData(),
     title: "Box Plot with Outliers",
     xTitle: "Columns",
     yTitle: "Rows",
@@ -355,9 +368,12 @@ export const WithOutliers: Story = {
       expect(traces.length).toBe(5);
     });
 
-    await step("Points are rendered with box traces", async () => {
-      const traces = canvasElement.querySelectorAll(".boxlayer .trace");
-      expect(traces.length).toBe(5);
+    await step("Outlier points are drawn beyond the whiskers", async () => {
+      await waitFor(() => {
+        const points = canvasElement.querySelectorAll(".boxlayer .trace .points path.point");
+        // 2 + 1 + 1 outliers across Categories A, C and D
+        expect(points.length).toBe(4);
+      });
     });
 
     await step("Legend shows all category names", async () => {
@@ -462,6 +478,8 @@ export const ContainerFilled: Story = {
         expect(plot.clientWidth).toBeGreaterThanOrEqual(420);
         expect(plot.clientWidth).toBeLessThanOrEqual(460);
       });
+      // Leave the story showing the full container, not the 440px test size.
+      wrapper.style.width = "";
     });
   },
 };

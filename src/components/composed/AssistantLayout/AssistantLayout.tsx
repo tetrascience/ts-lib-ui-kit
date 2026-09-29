@@ -1,6 +1,6 @@
 "use client"
 
-import { PanelBottom, PanelLeft, PanelRight } from "lucide-react"
+import { PanelBottom, PanelLeft, PanelRight, X } from "lucide-react"
 import * as React from "react"
 
 import { dockPanels, type AssistantDock } from "./dockLayout"
@@ -184,6 +184,20 @@ export interface AssistantLayoutProps {
   assistant: React.ReactNode
   /** The main content; fills the remaining space (and the whole body when the assistant is hidden). */
   children: React.ReactNode
+  /**
+   * Title for the assistant panel's header cap (SW-2592). When set, the panel
+   * renders a tinted (`bg-accent`) header band above `assistant` — the thing
+   * that makes the assistant panel read as distinct from the content panel
+   * (both are otherwise the same `bg-card` card). Omit to keep the panel a plain
+   * card whose chrome you supply inside `assistant` (backward compatible).
+   */
+  assistantTitle?: React.ReactNode
+  /** Optional element before the title in the header cap (e.g. an icon). */
+  assistantIcon?: React.ReactNode
+  /** Extra elements in the header cap, before the close button. */
+  assistantHeaderActions?: React.ReactNode
+  /** Render a close button in the header cap that hides the panel. Defaults to `true` when `assistantTitle` is set. */
+  showAssistantClose?: boolean
   /** Min assistant size as a percentage of the layout. */
   minSize?: number
   /** Max assistant size as a percentage of the layout. */
@@ -206,14 +220,44 @@ export interface AssistantLayoutProps {
 export function AssistantLayout({
   assistant,
   children,
+  assistantTitle,
+  assistantIcon,
+  assistantHeaderActions,
+  showAssistantClose,
   minSize = 20,
   maxSize = 70,
   className,
   assistantClassName,
   contentClassName,
 }: AssistantLayoutProps) {
-  const { dock, size, setSize, visible } = useAssistantLayout()
+  const { dock, size, setSize, visible, setVisible } = useAssistantLayout()
   const { orientation, assistantFirst } = dockPanels(dock)
+
+  // Accent header cap — the assistant panel's brand band. Only rendered when a
+  // title is provided; content panel never gets one, so the two panels read as
+  // distinct even though both are `bg-card` (SW-2592).
+  const showClose = showAssistantClose ?? assistantTitle != null
+  const assistantHeader = assistantTitle != null && (
+    <div
+      data-slot="assistant-layout-assistant-header"
+      className="flex shrink-0 items-center gap-2 border-b border-primary/15 bg-accent px-3 py-2"
+    >
+      {assistantIcon != null && <span className="flex shrink-0 items-center justify-center">{assistantIcon}</span>}
+      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{assistantTitle}</span>
+      {assistantHeaderActions}
+      {showClose && (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground"
+          aria-label="Hide assistant"
+          onClick={() => setVisible(false)}
+        >
+          <X />
+        </Button>
+      )}
+    </div>
+  )
 
   // Hidden: no resizable group, content fills the whole body.
   if (!visible) {
@@ -243,6 +287,7 @@ export function AssistantLayout({
       className={PANEL_PAD}
     >
       <div data-slot="assistant-layout-assistant" className={cn(CARD_CLASS, assistantClassName)}>
+        {assistantHeader}
         {assistant}
       </div>
     </ResizablePanel>

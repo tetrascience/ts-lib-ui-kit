@@ -80,6 +80,9 @@ export function PlateMapPlateSelector({
                   value={plate.id}
                   disabled={plate.disabled || !onPlateChange}
                   aria-label={plate.label ?? plate.barcode}
+                  // Plate tabs are navigation, not a multi-select: the active
+                  // tab reads from its tint alone, so opt out of the ring.
+                  selectedIndicator="none"
                   className={cn(canRemove && "rounded-r-none border-r-0")}
                 >
                   <span className="truncate">{plate.label ?? plate.barcode}</span>

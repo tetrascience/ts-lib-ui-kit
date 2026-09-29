@@ -18,6 +18,7 @@ import {
   buildTraceData,
   buildLayout,
   buildConfig,
+  buildChromatogramTooltipLines,
   createClickHandler,
   createHoverHandler,
   createUnhoverHandler,
@@ -93,9 +94,12 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
   const enablePeakDetection = peakDetectionOptions !== undefined;
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
+  // Every trace sets hoverinfo "none", so this is the only tooltip on hover
+  // (Plotly's unified label used to render alongside it — SW-2298). The lines
+  // are built from the series points, their metadata, and any hovered peak.
   const { bindTooltip, tooltipElement } = useChartTooltip({
-    xLabel: xAxisTitle,
-    yLabel: yAxisTitle,
+    getLines: (points) =>
+      buildChromatogramTooltipLines(points, { series, xAxisTitle, yAxisTitle }),
   });
   // Stable refs for callbacks — avoids including them in effect dep arrays
   // (consumers often pass arrow functions that change identity every render).
@@ -284,8 +288,6 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
       allPeaksForInteraction,
       showMarkers,
       markerSize,
-      xAxisTitle,
-      yAxisTitle,
       boundaryMarkers,
     });
 

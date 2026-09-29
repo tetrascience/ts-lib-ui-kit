@@ -274,7 +274,7 @@ export const DragToResize: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5673" },
   },
 };
 
@@ -319,7 +319,7 @@ export const ResizeWithKeyboard: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5674" },
   },
 };
 
@@ -405,6 +405,6 @@ export const BreadcrumbNavigation: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5675" },
   },
 };

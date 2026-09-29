@@ -1019,6 +1019,18 @@ export const WithRightPanel: Story = {
       const panel = await canvas.findByRole("complementary", { name: "Details" });
       await waitFor(() => expect(panel).toBeVisible());
     });
+
+    await step("Raised surface: the panel reads as a surface on the page, not part of it (SW-2592)", async () => {
+      const panel = canvas.getByRole("complementary", { name: "Details" });
+      const main = canvasElement.querySelector("main");
+      // The docked panel (bg-card) must not share the page ground (bg-background).
+      expect(main).not.toBeNull();
+      expect(getComputedStyle(panel).backgroundColor).not.toBe(getComputedStyle(main!).backgroundColor);
+      // Header carries the tinted accent cap, distinct again from the panel body.
+      const header = panel.querySelector('[data-slot="data-app-shell-right-panel-header"]') as HTMLElement;
+      expect(header).not.toBeNull();
+      expect(getComputedStyle(header).backgroundColor).not.toBe(getComputedStyle(panel).backgroundColor);
+    });
   },
   parameters: {
       zephyr: { testCaseId: "SW-T5535" },

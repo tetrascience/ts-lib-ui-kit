@@ -97,3 +97,43 @@ export const DisabledOption: Story = {
     })
   },
 }
+export const ExtraSmall: Story = {
+  render: () => (
+    <RadioGroup size="xs" defaultValue="team" aria-label="Plan">
+      <RadioGroupItem value="starter" aria-label="Starter" />
+      <RadioGroupItem value="team" aria-label="Team" />
+    </RadioGroup>
+  ),
+  parameters: {
+    zephyr: { testCaseId: "SW-T5695" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("xs radio box is 14px (group size flows to items)", async () => {
+      const item = canvas.getAllByRole("radio")[0]
+      expect(item).toHaveAttribute("data-size", "xs")
+      expect(Math.round(item.getBoundingClientRect().height)).toBe(14)
+    })
+  },
+}
+
+export const Large: Story = {
+  render: () => (
+    <RadioGroup size="lg" defaultValue="team" aria-label="Plan">
+      <RadioGroupItem value="starter" aria-label="Starter" />
+      <RadioGroupItem value="team" aria-label="Team" />
+    </RadioGroup>
+  ),
+  parameters: {
+    zephyr: { testCaseId: "SW-T5696" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("lg radio box is 20px", async () => {
+      const item = canvas.getAllByRole("radio")[0]
+      expect(Math.round(item.getBoundingClientRect().height)).toBe(20)
+    })
+  },
+}

@@ -88,6 +88,10 @@ export interface WellMetadataFormProps<T extends WellRecord = WellRecord> {
   onClear: () => void;
   applyLabel?: string;
   clearLabel?: string;
+  /** Heading shown when nothing is selected. Defaults to `"Select wells to edit"`. */
+  selectionEmptyLabel?: string;
+  /** Heading shown with a selection. Defaults to `` `Apply to ${n} wells` ``. */
+  selectionCountLabel?: (selectionSize: number) => string;
   /** Optional extra slot rendered between fields and action row. */
   extras?: React.ReactNode;
   className?: string;
@@ -127,6 +131,8 @@ export function WellMetadataForm<T extends WellRecord = WellRecord>({
   onClear,
   applyLabel = "Apply",
   clearLabel = "Clear wells",
+  selectionEmptyLabel = "Select wells to edit",
+  selectionCountLabel = (n: number) => `Apply to ${n} well${n === 1 ? "" : "s"}`,
   extras,
   className,
 }: WellMetadataFormProps<T>) {
@@ -201,11 +207,7 @@ export function WellMetadataForm<T extends WellRecord = WellRecord>({
       return (
         <div key={field.key} className="flex items-center justify-between gap-2">
           {renderLabel(field)}
-          <Switch
-            id={`field-${field.key}`}
-            checked={checked}
-            onCheckedChange={(c) => setField(field.key, c)}
-          />
+          <Switch id={`field-${field.key}`} checked={checked} onCheckedChange={(c) => setField(field.key, c)} />
         </div>
       );
     }
@@ -247,7 +249,7 @@ export function WellMetadataForm<T extends WellRecord = WellRecord>({
   return (
     <div data-slot="well-metadata-form" className={cn("flex flex-col gap-3", className)}>
       <div className="text-sm font-medium">
-        {selectionSize > 0 ? `Apply to ${selectionSize} well${selectionSize === 1 ? "" : "s"}` : "Select wells to edit"}
+        {selectionSize > 0 ? selectionCountLabel(selectionSize) : selectionEmptyLabel}
       </div>
 
       {fields.map(renderField)}

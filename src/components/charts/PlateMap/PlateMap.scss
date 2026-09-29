@@ -1,95 +1,100 @@
+// Kit-authored CSS lives in the `ts-ui-kit` cascade layer so it can never
+// restyle a host document by accident (SW-2596).
+@layer properties, theme, base, components, utilities, ts-ui-kit;
 
 // PlateMap-specific color variables
 $platemap-primary: #4575b4;
 $platemap-border-light: #ccc;
 $platemap-text-dark: #333;
 
-// Plot wrapper layouts for different legend positions
-.platemap-plot-wrapper {
-  display: flex;
-  align-items: flex-start;
+@layer ts-ui-kit {
+  // Plot wrapper layouts for different legend positions
+  .platemap-plot-wrapper {
+    display: flex;
+    align-items: flex-start;
 
-  &--vertical {
-    flex-direction: row;
-  }
-
-  &--horizontal {
-    flex-direction: column;
-    align-items: center;
-  }
-}
-
-// Plot content container
-.platemap-plot {
-  flex-shrink: 0;
-}
-
-// Legend placeholder (maintains width when legend is hidden)
-.platemap-legend-placeholder {
-  flex-shrink: 0;
-}
-
-// Layer selector tabs
-.platemap-layer-selector {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 8px;
-}
-
-// Legend container
-.platemap-legend {
-  display: flex;
-  flex-direction: column;
-  padding: 8px;
-  flex-shrink: 0;
-
-  &--horizontal {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  &--left {
-    margin-right: 8px;
-  }
-
-  &--right {
-    margin-left: 8px;
-  }
-
-  &__title {
-    font-weight: 600;
-    margin-bottom: 4px;
+    &--vertical {
+      flex-direction: row;
+    }
 
     &--horizontal {
-      width: 100%;
-      text-align: center;
+      flex-direction: column;
+      align-items: center;
     }
   }
 
-  &__item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  // Plot content container
+  .platemap-plot {
+    flex-shrink: 0;
   }
 
-  &__swatch {
-    border: 1px solid $platemap-border-light;
-    border-radius: 2px;
+  // Legend placeholder (maintains width when legend is hidden)
+  .platemap-legend-placeholder {
+    flex-shrink: 0;
+  }
+
+  // Layer selector tabs
+  .platemap-layer-selector {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  // Legend container
+  .platemap-legend {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
     flex-shrink: 0;
 
-    &--region {
-      box-sizing: border-box;
+    &--horizontal {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
     }
-  }
 
-  &__label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    &--left {
+      margin-right: 8px;
+    }
 
-    &--capitalize {
-      text-transform: capitalize;
+    &--right {
+      margin-left: 8px;
+    }
+
+    &__title {
+      font-weight: 600;
+      margin-bottom: 4px;
+
+      &--horizontal {
+        width: 100%;
+        text-align: center;
+      }
+    }
+
+    &__item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    &__swatch {
+      border: 1px solid $platemap-border-light;
+      border-radius: 2px;
+      flex-shrink: 0;
+
+      &--region {
+        box-sizing: border-box;
+      }
+    }
+
+    &__label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      &--capitalize {
+        text-transform: capitalize;
+      }
     }
   }
 }

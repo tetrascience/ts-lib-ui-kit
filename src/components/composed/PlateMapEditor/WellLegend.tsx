@@ -1,6 +1,8 @@
 import { X } from "lucide-react";
 import * as React from "react";
 
+import { PLATE_MAP_EMPTY_WELL_FILL } from "./PlatePaintGrid";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -8,14 +10,20 @@ import { cn } from "@/lib/utils";
 export interface WellLegendItem {
   id: string;
   label: React.ReactNode;
-  color: string;
+  /**
+   * Swatch colour. Optional — an item for a well role that has no colour
+   * assigned yet falls back to the empty-well token rather than rendering a
+   * transparent swatch.
+   */
+  color?: string;
   /** Optional secondary text shown beneath the label. */
   meta?: React.ReactNode;
   disabled?: boolean;
 }
 
 export interface WellLegendProps {
-  items: WellLegendItem[];
+  /** Legend entries. Optional — omit or pass `[]` to render `emptyLabel`. */
+  items?: WellLegendItem[];
   /** Render-prop for fully custom cards. Bypasses the default card layout. */
   renderItem?: (item: WellLegendItem) => React.ReactNode;
   onHoverEnter?: (id: string) => void;
@@ -27,7 +35,7 @@ export interface WellLegendProps {
 }
 
 export function WellLegend({
-  items,
+  items = [],
   renderItem,
   onHoverEnter,
   onHoverLeave,
@@ -65,7 +73,7 @@ export function WellLegend({
                   "mt-0.5 size-3.5 shrink-0 rounded-sm border border-foreground/20",
                   item.disabled && "opacity-50"
                 )}
-                style={{ backgroundColor: item.color }}
+                style={{ backgroundColor: item.color ?? PLATE_MAP_EMPTY_WELL_FILL }}
               />
               <div className="min-w-0 flex-1">
                 <div

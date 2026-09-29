@@ -99,13 +99,15 @@ describe("createRegionOverlayTraces", () => {
     expect(trace.line.width).toBe(6);
   });
 
-  it("uses hovertemplate when hoverText is set", () => {
+  it("carries hoverText as trace text for the shared tooltip, without a native label", () => {
     const peaks: PeakAnnotation[] = [
       { x: 2, y: 20, regionOverlay: true, hoverText: "Peak info", _computed: { startIndex: 1, endIndex: 3 } },
     ];
     const result = createRegionOverlayTraces(peaks, 0, makeSeries());
-    const trace = result[0] as { hovertemplate: string };
-    expect(trace.hovertemplate).toBe("Peak info<extra></extra>");
+    const trace = result[0] as { text?: string; hoverinfo?: string; hovertemplate?: string };
+    expect(trace.text).toBe("Peak info");
+    expect(trace.hoverinfo).toBe("none");
+    expect(trace.hovertemplate).toBeUndefined();
   });
 
   it("sets hoverinfo skip when hoverText is absent", () => {

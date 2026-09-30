@@ -298,7 +298,7 @@ export const Keyboard: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5715" },
   },
 };
 

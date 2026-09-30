@@ -1,5 +1,6 @@
 import { expect, within } from "storybook/test"
 
+import { Card, CardContent, CardHeader, CardTitle } from "./card"
 import {
   ResizableHandle,
   ResizablePanel,
@@ -168,8 +169,26 @@ export const Horizontal: Story = {
       expect(canvas.getByText("Selected leads")).toBeInTheDocument()
     })
 
-    await step("Divider footprint is 1px, on the panel seam", async () => {
-      expect(Math.round(handle.getBoundingClientRect().width)).toBe(1)
+    await step("Visible divider is 1px; with a grip the handle widens to contain it", async () => {
+      const box = handle.getBoundingClientRect()
+      const cs = getComputedStyle(handle)
+      const divider = box.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+      expect(Math.round(divider)).toBe(1)
+      const grip = handle.querySelector("div")
+      if (grip) {
+        expect(cs.backgroundClip).toBe("content-box")
+        const g = grip.getBoundingClientRect()
+        expect(g.left).toBeGreaterThanOrEqual(box.left - 0.01)
+        expect(g.right).toBeLessThanOrEqual(box.right + 0.01)
+      }
+    })
+
+    await step("Panels clip instead of scrolling, with a 4px clip margin (SW-2648)", async () => {
+      for (const panel of canvasElement.querySelectorAll("[data-panel]")) {
+        const cs = getComputedStyle(panel.firstElementChild as HTMLElement)
+        expect(cs.overflow).toBe("clip")
+        expect(cs.overflowClipMargin).toBe("4px")
+      }
     })
 
     await step("Divider is hidden until interaction", async () => {
@@ -312,6 +331,152 @@ export const AlwaysVisibleDivider: Story = {
       expect(getComputedStyle(handle).backgroundColor).not.toBe(
         "rgba(0, 0, 0, 0)"
       )
+    })
+  },
+}
+
+/* ---- SW-2648: Cards fill the panels — no seam scrollbar, ring intact ---- */
+
+function CardPanel({ title, rows }: { title: string; rows: number }) {
+  return (
+    <Card className="h-full gap-2">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      {/* the card scrolls its own content, so no scrollbar lands on the seam */}
+      <CardContent
+        className="min-h-0 flex-1 overflow-auto"
+        tabIndex={0}
+        aria-label={`${title} rows`}
+      >
+        <ul className="grid gap-1.5">
+          {Array.from({ length: rows }, (_, i) => (
+            <li key={i} className="rounded-md bg-muted/60 px-2 py-1.5">
+              Row {i + 1}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  )
+}
+
+export const CardsInPanels: Story = {
+  parameters: {
+    zephyr: { testCaseId: "SW-T5721" },
+  },
+  render: ({ withHandle, ...args }) => (
+    <div className="h-[320px] w-[760px] rounded-xl border bg-muted/40 p-3">
+      {/* p-px: the group clips at its own edge, so give the cards' ring 1px */}
+      <ResizablePanelGroup {...args} className="p-px">
+        <ResizablePanel defaultSize="40%" minSize="20%">
+          <CardPanel title="Summary" rows={3} />
+        </ResizablePanel>
+        <ResizableHandle withHandle={withHandle} />
+        <ResizablePanel defaultSize="60%">
+          <CardPanel title="Detail" rows={20} />
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const group = canvasElement.querySelector<HTMLElement>("[data-group]")
+    if (!group) throw new Error("panel group not found")
+    const cards = [...canvasElement.querySelectorAll<HTMLElement>('[data-slot="card"]')]
+
+    await step("The panel's clip margin leaves room for each card's ring", async () => {
+      for (const card of cards) {
+        const content = card.closest("[data-panel]")?.firstElementChild as HTMLElement
+        expect(getComputedStyle(content).overflow).toBe("clip")
+        expect(parseFloat(getComputedStyle(content).overflowClipMargin)).toBeGreaterThanOrEqual(1)
+        expect(group.contains(card)).toBe(true)
+      }
+    })
+
+    await step("Overflowing content scrolls inside the card, not the panel", async () => {
+      const content = cards[1].querySelector<HTMLElement>('[data-slot="card-content"]')
+      if (!content) throw new Error("card content not found")
+      expect(content.scrollHeight).toBeGreaterThan(content.clientHeight)
+    })
+  },
+}
+
+/* ---- SW-2648: opt back in to a scrolling panel ---- */
+
+export const ScrollablePanel: Story = {
+  parameters: {
+    zephyr: { testCaseId: "SW-T5722" },
+  },
+  render: ({ withHandle, ...args }) => (
+    <div className="h-[320px] w-[760px] overflow-hidden rounded-xl border bg-muted/40">
+      <ResizablePanelGroup {...args}>
+        <ResizablePanel defaultSize="40%" minSize="20%">
+          <SummaryPanel />
+        </ResizablePanel>
+        <ResizableHandle withHandle={withHandle} />
+        {/* `scrollable` — the panel itself scrolls this unwrapped list */}
+        <ResizablePanel defaultSize="60%" scrollable>
+          <ul className="grid gap-1.5 p-3 text-sm">
+            {Array.from({ length: 30 }, (_, i) => (
+              <li key={i}>
+                <button
+                  type="button"
+                  className="w-full rounded-md bg-card px-2 py-1.5 text-left"
+                >
+                  Row {i + 1}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const [plain, scrolling] = [...canvasElement.querySelectorAll("[data-panel]")].map(
+      (panel) => panel.firstElementChild as HTMLElement
+    )
+
+    await step("Only the `scrollable` panel is a scroll container", async () => {
+      expect(getComputedStyle(plain).overflow).toBe("clip")
+      expect(getComputedStyle(scrolling).overflow).toBe("auto")
+      expect(scrolling.scrollHeight).toBeGreaterThan(scrolling.clientHeight)
+    })
+  },
+}
+
+/* ---- SW-2648: a collapsed panel puts the handle on the group's edge ---- */
+
+export const CollapsedPanel: Story = {
+  parameters: {
+    zephyr: { testCaseId: "SW-T5723" },
+  },
+  render: ({ withHandle, ...args }) => (
+    <div className="h-[320px] w-[760px] overflow-hidden rounded-xl border bg-muted/40">
+      <ResizablePanelGroup {...args}>
+        <ResizablePanel defaultSize="100%" minSize="30%">
+          <SummaryPanel />
+        </ResizablePanel>
+        <ResizableHandle withHandle={withHandle} />
+        {/* starts collapsed, so the handle sits on the group's right edge */}
+        <ResizablePanel collapsible collapsedSize="0%" defaultSize="0%" minSize="25%">
+          <div className="h-full bg-card p-4 text-sm">Details</div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const group = canvasElement.querySelector<HTMLElement>("[data-group]")
+    const handle = canvasElement.querySelector<HTMLElement>('[data-slot="resizable-handle"]')
+    if (!group || !handle) throw new Error("group or handle not found")
+
+    await step("The grip stays inside the group, so it isn't clipped", async () => {
+      const grip = handle.querySelector("div")
+      if (!grip) return
+      const g = grip.getBoundingClientRect()
+      const box = group.getBoundingClientRect()
+      expect(g.left).toBeGreaterThanOrEqual(box.left - 0.01)
+      expect(g.right).toBeLessThanOrEqual(box.right + 0.01)
     })
   },
 }

@@ -4,6 +4,7 @@ import { expect, userEvent, within } from "storybook/test"
 import compoundsData from "../../../../.storybook/__fixtures__/compounds"
 import moleculesData from "../../../../.storybook/__fixtures__/molecules"
 import usersData from "../../../../.storybook/__fixtures__/users"
+import { openSelect, selectOption } from "../../../../.storybook/select-interactions"
 import { Badge } from "../badge"
 import { CodeBlock } from "../code-block"
 
@@ -586,11 +587,8 @@ export const Pagination: Story = {
     })
 
     await step("Changing page size updates rows per page", async () => {
-      const body = within(canvasElement.ownerDocument.body)
-      // Open the page-size select
-      await userEvent.click(canvas.getByRole("combobox"))
-      // Pick "10"
-      await userEvent.click(body.getByRole("option", { name: "10" }))
+      // Open the page-size select and pick "10"
+      await selectOption(canvas.getByRole("combobox"), "10")
       expect(canvas.getByText(/1–10 of/)).toBeInTheDocument()
     })
   },
@@ -1142,12 +1140,10 @@ export const MultiConditionFiltering: Story = {
       await userEvent.click(body.getByRole("button", { name: /add filter/i }))
       // Switch column from default (Name) to Status
       const comboboxes = body.getAllByRole("combobox")
-      await userEvent.click(comboboxes[0])
-      await userEvent.click(await body.findByRole("option", { name: /^status$/i }))
+      await selectOption(comboboxes[0], /^status$/i)
       // Switch operator to equals
       const updatedComboboxes = body.getAllByRole("combobox")
-      await userEvent.click(updatedComboboxes[1])
-      await userEvent.click(await body.findByRole("option", { name: /^equals$/i }))
+      await selectOption(updatedComboboxes[1], /^equals$/i)
       await userEvent.type(body.getByPlaceholderText(/value/i), "Active")
     })
 
@@ -1155,8 +1151,7 @@ export const MultiConditionFiltering: Story = {
       await userEvent.click(body.getByRole("button", { name: /add filter/i }))
       // The new row's column combobox is the 3rd combobox (col1, op1, col2, op2)
       const comboboxes = body.getAllByRole("combobox")
-      await userEvent.click(comboboxes[2])
-      await userEvent.click(await body.findByRole("option", { name: /^owner$/i }))
+      await selectOption(comboboxes[2], /^owner$/i)
       const inputs = body.getAllByPlaceholderText(/value/i)
       await userEvent.type(inputs[1], "Data Ops")
     })
@@ -1203,9 +1198,7 @@ export const FilteringWithConfig: Story = {
       const triggers = body.getAllByRole("combobox")
       expect(triggers.length).toBeGreaterThan(0)
 
-      await userEvent.click(triggers[0])
-
-      const listbox = await within(document.body).findByRole("listbox")
+      const listbox = await openSelect(triggers[0])
       const options = within(listbox).getAllByRole("option")
       const optionLabels = options.map((option) => option.textContent?.trim()).filter(Boolean)
 
@@ -1287,9 +1280,7 @@ export const Grouping: Story = {
 
     await step("Open the group panel and select a column", async () => {
       await userEvent.click(canvas.getByRole("button", { name: /group/i }))
-      const trigger = await body.findByRole("combobox")
-      await userEvent.click(trigger)
-      await userEvent.click(await body.findByRole("option", { name: /^status$/i }))
+      await selectOption(await body.findByRole("combobox"), /^status$/i)
     })
 
     await step("Group header rows appear for each unique value", async () => {
@@ -1315,9 +1306,7 @@ export const Grouping: Story = {
     await step("Clearing grouping restores flat rows", async () => {
       // Reopen the popover and pick None
       await userEvent.click(canvas.getByRole("button", { name: /grouped by/i }))
-      const trigger = await body.findByRole("combobox")
-      await userEvent.click(trigger)
-      await userEvent.click(await body.findByRole("option", { name: /^none$/i }))
+      await selectOption(await body.findByRole("combobox"), /^none$/i)
       // Group headers should be gone
       expect(
         canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length,
@@ -1441,9 +1430,7 @@ export const GroupingWithConfig: Story = {
 
     await step("Only configured columns appear in the group selector", async () => {
       await userEvent.click(canvas.getByRole("button", { name: /group/i }))
-      const trigger = await body.findByRole("combobox")
-      await userEvent.click(trigger)
-      const listbox = await body.findByRole("listbox")
+      const listbox = await openSelect(await body.findByRole("combobox"))
       const options = within(listbox).getAllByRole("option")
       const optionLabels = options.map((o) => o.textContent?.trim()).filter(Boolean)
       // None + Status + Owner only
@@ -1532,9 +1519,7 @@ export const GroupingWithFilter: Story = {
 
     await step("Group by category", async () => {
       await userEvent.click(canvas.getByRole("button", { name: /group by/i }))
-      const trigger = await body.findByRole("combobox")
-      await userEvent.click(trigger)
-      await userEvent.click(await body.findByRole("option", { name: /^category$/i }))
+      await selectOption(await body.findByRole("combobox"), /^category$/i)
       expect(
         canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length,
       ).toBeGreaterThan(0)

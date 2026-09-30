@@ -15,6 +15,7 @@
 import { PanelLeft } from "lucide-react";
 import * as React from "react";
 
+import { WithBuildInfoFooter } from "@/components/composed/BuildInfoFooter/BuildInfoFooter";
 import {
   DataAppShellPrimaryNav,
   type NavGroup,
@@ -149,6 +150,10 @@ export interface AppShellSimpleProps {
   nav?: AppShellSimpleNavState;
   /** Fired whenever the nav state changes (toggle, drag, or keyboard resize) */
   onNavChange?: (nav: AppShellSimpleNavState) => void;
+  /** App version, shown in the build-info footer (rendered when this or `commitSha` is set) */
+  version?: string;
+  /** Short commit SHA, shown in the build-info footer */
+  commitSha?: string;
   /** Main content */
   children: React.ReactNode;
 }
@@ -239,6 +244,8 @@ export function AppShellSimple({
   defaultNav = "sidebar",
   nav: navProp,
   onNavChange,
+  version,
+  commitSha,
   children,
 }: AppShellSimpleProps) {
   // The cursor is always local: `index` is only authoritative while
@@ -405,7 +412,9 @@ export function AppShellSimple({
         data-slot="app-shell-simple-content"
         className="[grid-area:body] min-h-0 min-w-0 overflow-auto bg-background"
       >
-        {children}
+        <WithBuildInfoFooter show={Boolean(version || commitSha)} version={version} commitSha={commitSha}>
+          {children}
+        </WithBuildInfoFooter>
       </main>
     </div>
   );

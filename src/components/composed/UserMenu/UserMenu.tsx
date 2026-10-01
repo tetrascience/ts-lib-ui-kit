@@ -44,16 +44,14 @@ const userMenuTriggerVariants = cva(
         /** Icon-only avatar — for the TopBar right slot or the collapsed rail */
         avatar: "p-0 hover:opacity-85",
         /** Avatar + name/subtitle row — for the expanded sidebar footer */
-        detailed:
-          "gap-3 w-full px-1 py-1 text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+        detailed: "gap-3 w-full px-1 py-1 text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
       },
     },
     defaultVariants: { variant: "avatar" },
-  }
+  },
 );
 
-export interface UserMenuProps
-  extends VariantProps<typeof userMenuTriggerVariants> {
+export interface UserMenuProps extends VariantProps<typeof userMenuTriggerVariants> {
   /** User's full name — used for the menu header and derived initials */
   name: string;
   /** Secondary line shown under the name (e.g. email or role) */
@@ -126,35 +124,20 @@ function UserMenu({
           </Avatar>
           {isDetailed && (
             <div className="flex flex-col items-start min-w-0">
-              <span className="text-xs font-medium text-foreground truncate">
-                {name}
-              </span>
+              <span className="text-xs font-medium text-foreground truncate">{name}</span>
               {subtitle && (
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide truncate">
-                  {subtitle}
-                </span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide truncate">{subtitle}</span>
               )}
             </div>
           )}
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent
-        data-slot="user-menu-content"
-        side={side}
-        align={align}
-        className="min-w-[200px]"
-      >
+      <DropdownMenuContent data-slot="user-menu-content" side={side} align={align} className="min-w-[200px]">
         {/* Header: name + subtitle */}
         <div className="flex flex-col px-2 py-1.5">
-          <span className="text-sm font-semibold text-foreground truncate">
-            {name}
-          </span>
-          {subtitle && (
-            <span className="text-xs text-muted-foreground truncate">
-              {subtitle}
-            </span>
-          )}
+          <span className="text-sm font-semibold text-foreground truncate">{name}</span>
+          {subtitle && <span className="text-xs text-muted-foreground truncate">{subtitle}</span>}
         </div>
 
         {groups.map((group, groupIndex) => (

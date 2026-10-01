@@ -47,15 +47,9 @@ export function WellQuickPaint({
       data-slot="well-quick-paint"
       role="group"
       aria-label={label}
-      className={cn(
-        "flex flex-col gap-1 rounded-lg border bg-popover p-1.5 shadow-elevation-3",
-        className,
-      )}
+      className={cn("flex flex-col gap-1 rounded-lg border bg-popover p-1.5 shadow-elevation-3", className)}
     >
-      <div
-        className="grid gap-1"
-        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-      >
+      <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
         {options.map((option) => {
           const isActive = activeValue !== undefined && option.value === activeValue;
           return (

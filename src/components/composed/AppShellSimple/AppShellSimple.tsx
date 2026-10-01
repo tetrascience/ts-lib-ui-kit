@@ -16,11 +16,7 @@ import { PanelLeft } from "lucide-react";
 import * as React from "react";
 
 import { WithBuildInfoFooter } from "@/components/composed/BuildInfoFooter/BuildInfoFooter";
-import {
-  DataAppShellPrimaryNav,
-  type NavGroup,
-  type NavPage,
-} from "@/components/composed/DataAppShell";
+import { DataAppShellPrimaryNav, type NavGroup, type NavPage } from "@/components/composed/DataAppShell";
 import { TopBar } from "@/components/composed/TopBar";
 import {
   Breadcrumb,
@@ -31,12 +27,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -266,7 +257,7 @@ export function AppShellSimple({
       setCursor(next);
       if (next.index !== index) onNavChange?.(NAV_ORDER[next.index]);
     },
-    [index, onNavChange]
+    [index, onNavChange],
   );
 
   const nextCursor = nextNav({ index, dir });
@@ -319,7 +310,7 @@ export function AppShellSimple({
         showNav
           ? "[grid-template-columns:auto_minmax(0,1fr)] [grid-template-areas:'top_top'_'nav_body']"
           : "[grid-template-columns:minmax(0,1fr)] [grid-template-areas:'top'_'body']",
-        resizing && "select-none cursor-col-resize"
+        resizing && "select-none cursor-col-resize",
       )}
     >
       {/* Top bar */}
@@ -346,17 +337,13 @@ export function AppShellSimple({
           data-nav-state={navState}
           className={cn(
             "[grid-area:nav] relative min-h-0 flex flex-col shrink-0 bg-sidebar h-full transition-[width] duration-200",
-            isHidden ? "overflow-hidden" : "border-r border-sidebar-border"
+            isHidden ? "overflow-hidden" : "border-r border-sidebar-border",
           )}
           style={{ width: NAV_WIDTH[navState] }}
         >
           {/* `inert` keeps the collapsed nav out of the tab order and the
               accessibility tree while it stays mounted for the drag handle. */}
-          <div
-            data-slot="app-shell-simple-nav-content"
-            className="h-full w-full overflow-hidden"
-            inert={isHidden}
-          >
+          <div data-slot="app-shell-simple-nav-content" className="h-full w-full overflow-hidden" inert={isHidden}>
             <DataAppShellPrimaryNav
               variant={navState === "rail" ? "rail" : "sidebar"}
               aria-label="Application navigation"
@@ -401,7 +388,7 @@ export function AppShellSimple({
             className={cn(
               "absolute top-0 right-0 z-10 h-full translate-x-1/2 cursor-col-resize transition-colors hover:bg-primary/40 focus-visible:outline-none focus-visible:bg-primary/60 focus-visible:ring-2 focus-visible:ring-ring",
               isHidden ? "w-3" : "w-1.5",
-              resizing && "bg-primary/60"
+              resizing && "bg-primary/60",
             )}
           />
         </div>

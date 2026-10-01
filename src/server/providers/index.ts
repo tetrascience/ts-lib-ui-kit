@@ -45,10 +45,7 @@ export {
 
 // Database providers
 export { SnowflakeProvider, buildSnowflakeProvider } from "./SnowflakeProvider";
-export {
-  DatabricksProvider,
-  buildDatabricksProvider,
-} from "./DatabricksProvider";
+export { DatabricksProvider, buildDatabricksProvider } from "./DatabricksProvider";
 export { AthenaProvider, getTdpAthenaProvider } from "./AthenaProvider";
 
 // Provider factory

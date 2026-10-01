@@ -9,11 +9,7 @@ export type {
 } from "./PlateMapEditor";
 
 export { usePlateMapEditorState, defaultColorForWell, defaultEmptyEntry } from "./usePlateMapEditorState";
-export type {
-  UsePlateMapEditorStateOptions,
-  PlateMapEditorState,
-  PlateMapApplyScope,
-} from "./usePlateMapEditorState";
+export type { UsePlateMapEditorStateOptions, PlateMapEditorState, PlateMapApplyScope } from "./usePlateMapEditorState";
 
 export { PlateMapForm } from "./PlateMapForm";
 export type { PlateMapFormProps } from "./PlateMapForm";

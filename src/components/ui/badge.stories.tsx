@@ -1,9 +1,8 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { Badge } from "./badge"
+import { Badge } from "./badge";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Badge> = {
   title: "Components/Data Display/Badge",
@@ -22,11 +21,11 @@ const meta: Meta<typeof Badge> = {
     children: "Badge",
     variant: "default",
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Badge>
+type Story = StoryObj<typeof Badge>;
 
 export const Default: Story = {
   parameters: {
@@ -34,23 +33,23 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1192" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const badge = canvas.getByText("Badge")
+    const canvas = within(canvasElement);
+    const badge = canvas.getByText("Badge");
 
     await step("Badge text renders", async () => {
-      expect(badge).toBeInTheDocument()
-    })
+      expect(badge).toBeInTheDocument();
+    });
 
     await step("Badge has correct data attributes", async () => {
-      expect(badge).toHaveAttribute("data-slot", "badge")
-      expect(badge).toHaveAttribute("data-variant", "default")
-    })
+      expect(badge).toHaveAttribute("data-slot", "badge");
+      expect(badge).toHaveAttribute("data-variant", "default");
+    });
 
     await step("Badge renders as a span element", async () => {
-      expect(badge.tagName).toBe("SPAN")
-    })
+      expect(badge.tagName).toBe("SPAN");
+    });
   },
-}
+};
 
 export const Secondary: Story = {
   args: {
@@ -61,18 +60,18 @@ export const Secondary: Story = {
     zephyr: { testCaseId: "SW-T1193" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const badge = canvas.getByText("Secondary Badge")
+    const canvas = within(canvasElement);
+    const badge = canvas.getByText("Secondary Badge");
 
     await step("Secondary badge text renders", async () => {
-      expect(badge).toBeInTheDocument()
-    })
+      expect(badge).toBeInTheDocument();
+    });
 
     await step("Badge has secondary variant attribute", async () => {
-      expect(badge).toHaveAttribute("data-variant", "secondary")
-    })
+      expect(badge).toHaveAttribute("data-variant", "secondary");
+    });
   },
-}
+};
 
 export const Info: Story = {
   args: {
@@ -80,21 +79,21 @@ export const Info: Story = {
     variant: "info",
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const badge = canvas.getByText("Info Badge")
+    const canvas = within(canvasElement);
+    const badge = canvas.getByText("Info Badge");
 
     await step("Info badge text renders", async () => {
-      expect(badge).toBeInTheDocument()
-    })
+      expect(badge).toBeInTheDocument();
+    });
 
     await step("Badge has info variant attribute", async () => {
-      expect(badge).toHaveAttribute("data-variant", "info")
-    })
+      expect(badge).toHaveAttribute("data-variant", "info");
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1397" },
   },
-}
+};
 
 export const Destructive: Story = {
   args: {
@@ -105,18 +104,18 @@ export const Destructive: Story = {
     zephyr: { testCaseId: "SW-T1194" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const badge = canvas.getByText("Destructive Badge")
+    const canvas = within(canvasElement);
+    const badge = canvas.getByText("Destructive Badge");
 
     await step("Destructive badge text renders", async () => {
-      expect(badge).toBeInTheDocument()
-    })
+      expect(badge).toBeInTheDocument();
+    });
 
     await step("Badge has destructive variant attribute", async () => {
-      expect(badge).toHaveAttribute("data-variant", "destructive")
-    })
+      expect(badge).toHaveAttribute("data-variant", "destructive");
+    });
   },
-}
+};
 
 export const Positive: Story = {
   args: {
@@ -124,21 +123,21 @@ export const Positive: Story = {
     variant: "positive",
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const badge = canvas.getByText("Positive Badge")
+    const canvas = within(canvasElement);
+    const badge = canvas.getByText("Positive Badge");
 
     await step("Positive badge text renders", async () => {
-      expect(badge).toBeInTheDocument()
-    })
+      expect(badge).toBeInTheDocument();
+    });
 
     await step("Badge has positive variant attribute", async () => {
-      expect(badge).toHaveAttribute("data-variant", "positive")
-    })
+      expect(badge).toHaveAttribute("data-variant", "positive");
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1398" },
   },
-}
+};
 
 export const Warning: Story = {
   args: {
@@ -146,21 +145,21 @@ export const Warning: Story = {
     variant: "warning",
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const badge = canvas.getByText("Warning Badge")
+    const canvas = within(canvasElement);
+    const badge = canvas.getByText("Warning Badge");
 
     await step("Warning badge text renders", async () => {
-      expect(badge).toBeInTheDocument()
-    })
+      expect(badge).toBeInTheDocument();
+    });
 
     await step("Badge has warning variant attribute", async () => {
-      expect(badge).toHaveAttribute("data-variant", "warning")
-    })
+      expect(badge).toHaveAttribute("data-variant", "warning");
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1399" },
   },
-}
+};
 
 export const Outline: Story = {
   args: {
@@ -171,18 +170,18 @@ export const Outline: Story = {
     zephyr: { testCaseId: "SW-T1195" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const badge = canvas.getByText("Outline Badge")
+    const canvas = within(canvasElement);
+    const badge = canvas.getByText("Outline Badge");
 
     await step("Outline badge text renders", async () => {
-      expect(badge).toBeInTheDocument()
-    })
+      expect(badge).toBeInTheDocument();
+    });
 
     await step("Badge has outline variant attribute", async () => {
-      expect(badge).toHaveAttribute("data-variant", "outline")
-    })
+      expect(badge).toHaveAttribute("data-variant", "outline");
+    });
   },
-}
+};
 
 export const Ghost: Story = {
   args: {
@@ -193,18 +192,18 @@ export const Ghost: Story = {
     zephyr: { testCaseId: "SW-T1196" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const badge = canvas.getByText("Ghost Badge")
+    const canvas = within(canvasElement);
+    const badge = canvas.getByText("Ghost Badge");
 
     await step("Ghost badge text renders", async () => {
-      expect(badge).toBeInTheDocument()
-    })
+      expect(badge).toBeInTheDocument();
+    });
 
     await step("Badge has ghost variant attribute", async () => {
-      expect(badge).toHaveAttribute("data-variant", "ghost")
-    })
+      expect(badge).toHaveAttribute("data-variant", "ghost");
+    });
   },
-}
+};
 
 export const Link: Story = {
   args: {
@@ -215,18 +214,18 @@ export const Link: Story = {
     zephyr: { testCaseId: "SW-T1197" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const badge = canvas.getByText("Link Badge")
+    const canvas = within(canvasElement);
+    const badge = canvas.getByText("Link Badge");
 
     await step("Link badge text renders", async () => {
-      expect(badge).toBeInTheDocument()
-    })
+      expect(badge).toBeInTheDocument();
+    });
 
     await step("Badge has link variant attribute", async () => {
-      expect(badge).toHaveAttribute("data-variant", "link")
-    })
+      expect(badge).toHaveAttribute("data-variant", "link");
+    });
   },
-}
+};
 
 export const AsChild: Story = {
   args: {
@@ -238,23 +237,23 @@ export const AsChild: Story = {
     </Badge>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const link = canvas.getByText("Link as Badge")
+    const canvas = within(canvasElement);
+    const link = canvas.getByText("Link as Badge");
 
     await step("Renders as child element (anchor) instead of span", async () => {
-      expect(link.tagName).toBe("A")
-      expect(link).toHaveAttribute("href", "#test")
-    })
+      expect(link.tagName).toBe("A");
+      expect(link).toHaveAttribute("href", "#test");
+    });
 
     await step("Data attributes are forwarded to the child element", async () => {
-      expect(link).toHaveAttribute("data-slot", "badge")
-      expect(link).toHaveAttribute("data-variant", "default")
-    })
+      expect(link).toHaveAttribute("data-slot", "badge");
+      expect(link).toHaveAttribute("data-variant", "default");
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1475" },
   },
-}
+};
 
 export const CustomClassName: Story = {
   args: {
@@ -262,18 +261,18 @@ export const CustomClassName: Story = {
     className: "my-custom-class",
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const badge = canvas.getByText("Custom Badge")
+    const canvas = within(canvasElement);
+    const badge = canvas.getByText("Custom Badge");
 
     await step("Badge renders with custom className merged", async () => {
-      expect(badge).toHaveClass("my-custom-class")
-    })
+      expect(badge).toHaveClass("my-custom-class");
+    });
 
     await step("Badge retains data-slot attribute", async () => {
-      expect(badge).toHaveAttribute("data-slot", "badge")
-    })
+      expect(badge).toHaveAttribute("data-slot", "badge");
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1476" },
   },
-}
+};

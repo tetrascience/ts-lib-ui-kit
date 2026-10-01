@@ -12,7 +12,7 @@ export function applyStackingTransform(
   inputAnnotations: PeakAnnotation[][] | undefined,
   mode: StackingMode,
   stackOffset: number,
-  stackingOrder: "first-on-bottom" | "first-on-top" = "first-on-bottom"
+  stackingOrder: "first-on-bottom" | "first-on-top" = "first-on-bottom",
 ): TransformResult {
   const yValues = inputSeries.flatMap((s) => s.y);
   const yMin = Math.min(...yValues, 0);
@@ -30,16 +30,12 @@ export function applyStackingTransform(
   // 'stack' mode: shift each series up by its index × stackOffset
   const N = inputSeries.length;
   const yShiftForIndex = (index: number): number =>
-    stackingOrder === "first-on-top"
-      ? (N - 1 - index) * stackOffset
-      : index * stackOffset;
+    stackingOrder === "first-on-top" ? (N - 1 - index) * stackOffset : index * stackOffset;
 
-  const offsetSeries: ChromatogramSeries[] = inputSeries.map(
-    (series, index) => ({
-      ...series,
-      y: series.y.map((yVal) => yVal + yShiftForIndex(index)),
-    })
-  );
+  const offsetSeries: ChromatogramSeries[] = inputSeries.map((series, index) => ({
+    ...series,
+    y: series.y.map((yVal) => yVal + yShiftForIndex(index)),
+  }));
 
   const offsetAnnotations: PeakAnnotation[] = [];
   if (inputAnnotations) {

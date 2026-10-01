@@ -4,3 +4,5 @@ storybook-static
 .yarn
 *.lock
 
+.claude
+coverage

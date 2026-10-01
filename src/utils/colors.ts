@@ -39,9 +39,7 @@ const toPlotlySafeColor = (value: string, fallback?: string): string => {
   colorProbe.fillRect(0, 0, 1, 1);
   const [r, g, b, a] = colorProbe.getImageData(0, 0, 1, 1).data;
   if (a === OPAQUE_ALPHA) {
-    return (
-      "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")
-    );
+    return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
   }
   return `rgba(${r}, ${g}, ${b}, ${(a / OPAQUE_ALPHA).toFixed(3)})`;
 };
@@ -112,9 +110,48 @@ const ramp = (name: string, fallbacks: readonly string[]): string[] =>
  * Source of truth: `--chart-seq-*` CSS variables in `index.tailwind.css`.
  */
 export const CHART_SEQUENTIAL = {
-  blue: ramp("chart-seq-blue", ["#F0F3FC", "#DCE3F8", "#C5D1F2", "#A9BCEC", "#8AA5E4", "#6C8DDB", "#5276D0", "#3D62C5", "#2F45B5", "#27399A", "#1F2D7E", "#172261"]),
-  teal: ramp("chart-seq-teal", ["#E8F8FA", "#CFF1F5", "#AFE7EF", "#88DAE6", "#5ECADA", "#34B9CC", "#1AA5BD", "#0BB6D0", "#099DB3", "#08899C", "#067282", "#055A66"]),
-  purple: ramp("chart-seq-purple", ["#F8EEFB", "#EFD8F4", "#E3BCEB", "#D49DE0", "#C27CD2", "#AD5DC3", "#9544B0", "#8243BA", "#6E2FA0", "#5A2487", "#481B6E", "#371454"]),
+  blue: ramp("chart-seq-blue", [
+    "#F0F3FC",
+    "#DCE3F8",
+    "#C5D1F2",
+    "#A9BCEC",
+    "#8AA5E4",
+    "#6C8DDB",
+    "#5276D0",
+    "#3D62C5",
+    "#2F45B5",
+    "#27399A",
+    "#1F2D7E",
+    "#172261",
+  ]),
+  teal: ramp("chart-seq-teal", [
+    "#E8F8FA",
+    "#CFF1F5",
+    "#AFE7EF",
+    "#88DAE6",
+    "#5ECADA",
+    "#34B9CC",
+    "#1AA5BD",
+    "#0BB6D0",
+    "#099DB3",
+    "#08899C",
+    "#067282",
+    "#055A66",
+  ]),
+  purple: ramp("chart-seq-purple", [
+    "#F8EEFB",
+    "#EFD8F4",
+    "#E3BCEB",
+    "#D49DE0",
+    "#C27CD2",
+    "#AD5DC3",
+    "#9544B0",
+    "#8243BA",
+    "#6E2FA0",
+    "#5A2487",
+    "#481B6E",
+    "#371454",
+  ]),
 } as const;
 
 /**
@@ -123,18 +160,55 @@ export const CHART_SEQUENTIAL = {
  * Source of truth: `--chart-div-*` CSS variables in `index.tailwind.css`.
  */
 export const CHART_DIVERGING = {
-  blueOrange: ramp("chart-div-blue-orange", ["#1F3D9E", "#2F45B5", "#5276D0", "#7A95DD", "#A9BCEC", "#DCE3F8", "#FCE6CC", "#FACB99", "#F7AE63", "#FD972F", "#D87410", "#A6580A"]),
-  tealMagenta: ramp("chart-div-teal-magenta", ["#055A66", "#099DB3", "#34B9CC", "#88DAE6", "#CFF1F5", "#F0FAFB", "#FBEBF3", "#F0C8DE", "#E29EC2", "#CC79A7", "#A85585", "#7E3B62"]),
-  purpleYellowGreen: ramp("chart-div-purple-yellowgreen", ["#481B6E", "#8243BA", "#A767D0", "#C593E0", "#E3C5EE", "#F4E6F8", "#F2F7D9", "#DCEB9F", "#B8D266", "#8FB939", "#6E9A1F", "#527516"]),
+  blueOrange: ramp("chart-div-blue-orange", [
+    "#1F3D9E",
+    "#2F45B5",
+    "#5276D0",
+    "#7A95DD",
+    "#A9BCEC",
+    "#DCE3F8",
+    "#FCE6CC",
+    "#FACB99",
+    "#F7AE63",
+    "#FD972F",
+    "#D87410",
+    "#A6580A",
+  ]),
+  tealMagenta: ramp("chart-div-teal-magenta", [
+    "#055A66",
+    "#099DB3",
+    "#34B9CC",
+    "#88DAE6",
+    "#CFF1F5",
+    "#F0FAFB",
+    "#FBEBF3",
+    "#F0C8DE",
+    "#E29EC2",
+    "#CC79A7",
+    "#A85585",
+    "#7E3B62",
+  ]),
+  purpleYellowGreen: ramp("chart-div-purple-yellowgreen", [
+    "#481B6E",
+    "#8243BA",
+    "#A767D0",
+    "#C593E0",
+    "#E3C5EE",
+    "#F4E6F8",
+    "#F2F7D9",
+    "#DCEB9F",
+    "#B8D266",
+    "#8FB939",
+    "#6E9A1F",
+    "#527516",
+  ]),
 } as const;
 
 /**
  * Convert a color ramp (e.g. `CHART_SEQUENTIAL.blue`, `CHART_DIVERGING.blueOrange`)
  * into Plotly's colorscale format: evenly spaced [position, color] stops.
  */
-export const toPlotlyColorscale = (
-  ramp: readonly string[],
-): Array<[number, string]> => {
+export const toPlotlyColorscale = (ramp: readonly string[]): Array<[number, string]> => {
   if (ramp.length === 0) return [];
   if (ramp.length === 1) {
     return [

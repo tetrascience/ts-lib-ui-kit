@@ -151,7 +151,9 @@ export default tseslint.config(
       "no-magic-numbers": [
         "warn",
         {
-          ignore: [-1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16, 24, 32, 48, 100], // Common values for layouts, percentages, grid sizes
+          ignore: [
+            -1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16, 24, 32, 48, 100,
+          ], // Common values for layouts, percentages, grid sizes
           ignoreArrayIndexes: true,
           ignoreDefaultValues: true,
           enforceConst: true,

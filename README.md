@@ -336,11 +336,11 @@ function PlateScreen() {
 
 ##### Choosing a level
 
-| You need | Use |
-| --- | --- |
-| The standard surface, tuned by props | `PlateMapEditor` |
-| The form somewhere the editor can't reach | `PlateMapEditor` + `hideForm` + the imperative handle |
-| A layout no prop combination expresses | `usePlateMapEditorState` + `PlateMapForm` / `PlateMapGrid` / `PlateMapManifest` |
+| You need                                  | Use                                                                             |
+| ----------------------------------------- | ------------------------------------------------------------------------------- |
+| The standard surface, tuned by props      | `PlateMapEditor`                                                                |
+| The form somewhere the editor can't reach | `PlateMapEditor` + `hideForm` + the imperative handle                           |
+| A layout no prop combination expresses    | `usePlateMapEditorState` + `PlateMapForm` / `PlateMapGrid` / `PlateMapManifest` |
 
 Dropping to the hook keeps the apply/clear semantics, plate scoping, and barcode
 stamping — you only take over layout. Do not re-implement staged edits by hand.
@@ -357,7 +357,7 @@ stamping — you only take over layout. Do not re-implement staged edits by hand
   `mergeOnApply` for custom merge semantics, `applyScope="all-plates"` to write
   across every plate at once.
 - **Manifest** — one `manifest` object: `{ filterable, filterColumns, groupable,
-  defaultGroupBy, pageSize, pageSizeOptions, enableFillDown }`. Structural bits
+defaultGroupBy, pageSize, pageSizeOptions, enableFillDown }`. Structural bits
   stay top-level: `hideManifest`, `manifestTitle`, `manifestSlot`.
 - **Labels** — one `labels` object covers every string the editor and its
   manifest render, typed as the exported `PlateMapEditorLabels`, so an app's
@@ -367,7 +367,7 @@ stamping — you only take over layout. Do not re-implement staged edits by hand
   plain text).
 - **Styling** — `className` / `style` on the root, plus one `classNames` map for
   the regions (`PlateMapEditorClassNames`): `{ layout, formCard, plateCard,
-  manifestCard, form, grid, manifest }`. Each card also carries
+manifestCard, form, grid, manifest }`. Each card also carries
   `data-plate-map-region="form|plate|manifest"`, so plain CSS can target the
   same regions without threading props.
 

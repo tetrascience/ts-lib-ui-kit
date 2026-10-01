@@ -40,10 +40,7 @@ export default meta;
 type Story = StoryObj<typeof CodeEditor>;
 
 async function waitForMonacoEditor(canvasElement: HTMLElement) {
-  await waitFor(
-    () => expect(canvasElement.querySelector(".monaco-editor")).toBeInTheDocument(),
-    { timeout: 5000 }
-  );
+  await waitFor(() => expect(canvasElement.querySelector(".monaco-editor")).toBeInTheDocument(), { timeout: 5000 });
 }
 
 const defaultHandlers = {

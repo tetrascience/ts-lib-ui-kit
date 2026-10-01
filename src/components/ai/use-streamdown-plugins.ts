@@ -29,9 +29,7 @@ function loadStreamdownPlugins(): Promise<PluginConfig> {
  * the consumer's main bundle.
  */
 export function useStreamdownPlugins(): PluginConfig | undefined {
-  const [plugins, setPlugins] = useState<PluginConfig | undefined>(
-    cachedPlugins ?? undefined,
-  );
+  const [plugins, setPlugins] = useState<PluginConfig | undefined>(cachedPlugins ?? undefined);
 
   useEffect(() => {
     if (plugins) return;

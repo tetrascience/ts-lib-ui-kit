@@ -1,7 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-
 import type { ToolUIPart } from "ai";
 import type { ComponentProps, PropsWithChildren, ReactNode } from "react";
 
@@ -9,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/ui/code-block";
 import { Kbd } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
-
 
 type ToolUIPartApproval =
   | { id: string; approved?: never; reason?: never }
@@ -44,21 +42,13 @@ export type ConfirmationProps = ComponentProps<"div"> & {
 
 const ACCEPTED_HIDE_DELAY = 1500;
 
-export const Confirmation = ({
-  className,
-  approval,
-  state,
-  children,
-  ...props
-}: ConfirmationProps) => {
+export const Confirmation = ({ className, approval, state, children, ...props }: ConfirmationProps) => {
   const contextValue = useMemo(() => ({ approval, state }), [approval, state]);
   const [visible, setVisible] = useState(true);
 
   const isAccepted =
     approval?.approved === true &&
-    (state === "approval-responded" ||
-      state === "output-available" ||
-      state === "output-denied");
+    (state === "approval-responded" || state === "output-available" || state === "output-denied");
 
   useEffect(() => {
     if (isAccepted) {
@@ -74,7 +64,7 @@ export const Confirmation = ({
   // Pass through data-* and aria-* only; drop event handlers to avoid
   // onDrag type conflict between React and framer-motion.
   const passthroughProps = Object.fromEntries(
-    Object.entries(props).filter(([k]) => k.startsWith("data-") || k.startsWith("aria-"))
+    Object.entries(props).filter(([k]) => k.startsWith("data-") || k.startsWith("aria-")),
   );
 
   return (
@@ -83,10 +73,7 @@ export const Confirmation = ({
         {visible && (
           <motion.div
             {...passthroughProps}
-            className={cn(
-              "flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-elevation-3",
-              className
-            )}
+            className={cn("flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-elevation-3", className)}
             exit={{ opacity: 0, scale: 0.96 }}
             id={props.id}
             style={props.style}
@@ -106,15 +93,8 @@ export const Confirmation = ({
 
 export type ConfirmationTitleProps = PropsWithChildren<ComponentProps<"h3">>;
 
-export const ConfirmationTitle = ({
-  className,
-  children,
-  ...props
-}: ConfirmationTitleProps) => (
-  <h3
-    className={cn("font-semibold text-base text-foreground", className)}
-    {...props}
-  >
+export const ConfirmationTitle = ({ className, children, ...props }: ConfirmationTitleProps) => (
+  <h3 className={cn("font-semibold text-base text-foreground", className)} {...props}>
     {children}
   </h3>
 );
@@ -125,12 +105,8 @@ export const ConfirmationTitle = ({
 
 export type ConfirmationCodeProps = ComponentProps<typeof CodeBlock>;
 
-export const ConfirmationCode = ({
-  className,
-  children,
-  ...props
-}: ConfirmationCodeProps) => (
-  <CodeBlock className={cn(className)} {...props} language="bash" code={children?.toString() ?? ''} />
+export const ConfirmationCode = ({ className, children, ...props }: ConfirmationCodeProps) => (
+  <CodeBlock className={cn(className)} {...props} language="bash" code={children?.toString() ?? ""} />
 );
 
 // ---------------------------------------------------------------------------
@@ -147,9 +123,7 @@ export const ConfirmationAccepted = ({ children }: { children?: ReactNode }) => 
   const { approval, state } = useConfirmation();
   if (
     !approval?.approved ||
-    (state !== "approval-responded" &&
-      state !== "output-denied" &&
-      state !== "output-available")
+    (state !== "approval-responded" && state !== "output-denied" && state !== "output-available")
   ) {
     return null;
   }
@@ -160,9 +134,7 @@ export const ConfirmationRejected = ({ children }: { children?: ReactNode }) => 
   const { approval, state } = useConfirmation();
   if (
     approval?.approved !== false ||
-    (state !== "approval-responded" &&
-      state !== "output-denied" &&
-      state !== "output-available")
+    (state !== "approval-responded" && state !== "output-denied" && state !== "output-available")
   ) {
     return null;
   }
@@ -175,18 +147,10 @@ export const ConfirmationRejected = ({ children }: { children?: ReactNode }) => 
 
 export type ConfirmationActionsProps = ComponentProps<"div">;
 
-export const ConfirmationActions = ({
-  className,
-  ...props
-}: ConfirmationActionsProps) => {
+export const ConfirmationActions = ({ className, ...props }: ConfirmationActionsProps) => {
   const { state } = useConfirmation();
   if (state !== "approval-requested") return null;
-  return (
-    <div
-      className={cn("flex items-center justify-between gap-2", className)}
-      {...props}
-    />
-  );
+  return <div className={cn("flex items-center justify-between gap-2", className)} {...props} />;
 };
 
 // ---------------------------------------------------------------------------
@@ -195,17 +159,8 @@ export const ConfirmationActions = ({
 
 export type ConfirmationActionProps = ComponentProps<typeof Button>;
 
-export const ConfirmationAction = ({
-  className,
-  size = "sm",
-  ...props
-}: ConfirmationActionProps) => (
-  <Button
-    className={cn("gap-1.5", className)}
-    size={size}
-    type="button"
-    {...props}
-  />
+export const ConfirmationAction = ({ className, size = "sm", ...props }: ConfirmationActionProps) => (
+  <Button className={cn("gap-1.5", className)} size={size} type="button" {...props} />
 );
 
 // ---------------------------------------------------------------------------
@@ -214,9 +169,6 @@ export const ConfirmationAction = ({
 
 export type ConfirmationShortcutProps = ComponentProps<typeof Kbd>;
 
-export const ConfirmationShortcut = ({
-  className,
-  ...props
-}: ConfirmationShortcutProps) => (
+export const ConfirmationShortcut = ({ className, ...props }: ConfirmationShortcutProps) => (
   <Kbd className={cn("ml-0.5", className)} {...props} />
 );

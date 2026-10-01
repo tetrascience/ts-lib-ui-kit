@@ -45,11 +45,7 @@ describe("buildEsBody", () => {
   });
 
   it("passes through additional properties", () => {
-    const body = buildEsBody(
-      { searchTerm: "test", expression: { g: "AND", e: [] } } as any,
-      0,
-      10,
-    );
+    const body = buildEsBody({ searchTerm: "test", expression: { g: "AND", e: [] } } as any, 0, 10);
     expect(body.expression).toEqual({ g: "AND", e: [] });
   });
 

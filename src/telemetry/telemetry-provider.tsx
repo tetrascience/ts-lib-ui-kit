@@ -1,8 +1,8 @@
 import {
-	createTelemetry,
-	type ArtifactType,
-	type TelemetryArtifact,
-	type TelemetryOptions,
+  createTelemetry,
+  type ArtifactType,
+  type TelemetryArtifact,
+  type TelemetryOptions,
 } from "@tetrascience-npm/request/telemetry";
 import { useEffect, useRef, useState } from "react";
 

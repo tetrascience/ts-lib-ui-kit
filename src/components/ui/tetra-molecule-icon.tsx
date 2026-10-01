@@ -1,14 +1,14 @@
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 export interface TetraMoleculeIconProps extends React.SVGProps<SVGSVGElement> {
-  size?: number | string
+  size?: number | string;
 }
 
 // TS brand blues: light accent → deep indigo.
-const LIGHT = "#549DFF" // TS Light Blue 300
-const DARK = "#2F45B5" // TS Indigo
+const LIGHT = "#549DFF"; // TS Light Blue 300
+const DARK = "#2F45B5"; // TS Indigo
 
 /**
  * The official TetraScience "molecule" brand mark — the four-node symbol from
@@ -17,7 +17,7 @@ const DARK = "#2F45B5" // TS Indigo
 const TetraMoleculeIcon = React.forwardRef<SVGSVGElement, TetraMoleculeIconProps>(
   ({ size = 24, className, ...props }, ref) => {
     // useId() contains colons, which are brittle inside SVG url(#…) refs.
-    const gradientId = `tetra-molecule-${React.useId().replace(/:/g, "")}`
+    const gradientId = `tetra-molecule-${React.useId().replace(/:/g, "")}`;
     return (
       <svg
         ref={ref}
@@ -32,14 +32,7 @@ const TetraMoleculeIcon = React.forwardRef<SVGSVGElement, TetraMoleculeIconProps
         {...props}
       >
         <defs>
-          <linearGradient
-            id={gradientId}
-            gradientUnits="userSpaceOnUse"
-            x1="188"
-            y1="569"
-            x2="555"
-            y2="188"
-          >
+          <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1="188" y1="569" x2="555" y2="188">
             <stop stopColor={LIGHT} />
             <stop offset="1" stopColor={DARK} />
           </linearGradient>
@@ -51,11 +44,11 @@ const TetraMoleculeIcon = React.forwardRef<SVGSVGElement, TetraMoleculeIconProps
           <path d="M548.302 237.84C548.302 264.44 527.34 286.152 501.034 287.344C500.894 287.338 500.753 287.338 500.612 287.338C500.016 287.338 499.42 287.358 498.831 287.398C486.348 288.235 476.248 297.778 474.567 310.021C471.018 307.864 467.261 306.016 463.323 304.529C467.207 300.323 469.578 294.698 469.578 288.516C469.578 282.335 467.254 276.823 463.437 272.624C463.39 272.571 463.343 272.524 463.296 272.47C463.089 272.242 462.874 272.021 462.653 271.8L462.613 271.76C454.282 262.9 449.186 250.966 449.186 237.84C449.186 210.469 471.373 188.281 498.744 188.281C526.115 188.281 548.302 210.469 548.302 237.84Z" />
         </g>
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-TetraMoleculeIcon.displayName = "TetraMoleculeIcon"
+TetraMoleculeIcon.displayName = "TetraMoleculeIcon";
 
-export { TetraMoleculeIcon }
-export default TetraMoleculeIcon
+export { TetraMoleculeIcon };
+export default TetraMoleculeIcon;

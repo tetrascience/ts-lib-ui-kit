@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 // ---------------------------------------------------------------------------
 // Elevation levels
@@ -7,26 +7,46 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 const ELEVATION_LEVELS = [
   { level: 0, cssClass: "shadow-elevation-0", cssVar: "--elevation-0", description: "Flat / no shadow" },
   { level: 1, cssClass: "shadow-elevation-1", cssVar: "--elevation-1", description: "Hairline raise (≙ shadow-2xs)" },
-  { level: 2, cssClass: "shadow-elevation-2", cssVar: "--elevation-2", description: "Subtle cards, chips (≙ shadow-xs)" },
-  { level: 3, cssClass: "shadow-elevation-3", cssVar: "--elevation-3", description: "Cards, tab pills, sidebar (≙ shadow-sm)" },
-  { level: 4, cssClass: "shadow-elevation-4", cssVar: "--elevation-4", description: "Menus, popovers, selects (≙ shadow-md)" },
-  { level: 5, cssClass: "shadow-elevation-5", cssVar: "--elevation-5", description: "Dialogs, sheets, submenus (≙ shadow-lg)" },
+  {
+    level: 2,
+    cssClass: "shadow-elevation-2",
+    cssVar: "--elevation-2",
+    description: "Subtle cards, chips (≙ shadow-xs)",
+  },
+  {
+    level: 3,
+    cssClass: "shadow-elevation-3",
+    cssVar: "--elevation-3",
+    description: "Cards, tab pills, sidebar (≙ shadow-sm)",
+  },
+  {
+    level: 4,
+    cssClass: "shadow-elevation-4",
+    cssVar: "--elevation-4",
+    description: "Menus, popovers, selects (≙ shadow-md)",
+  },
+  {
+    level: 5,
+    cssClass: "shadow-elevation-5",
+    cssVar: "--elevation-5",
+    description: "Dialogs, sheets, submenus (≙ shadow-lg)",
+  },
   { level: 6, cssClass: "shadow-elevation-6", cssVar: "--elevation-6", description: "Reserved headroom (≙ shadow-xl)" },
   { level: 7, cssClass: "shadow-elevation-7", cssVar: "--elevation-7", description: "Maximum lift (≙ shadow-2xl)" },
-]
+];
 
 // ---------------------------------------------------------------------------
 // Shape scale
 // ---------------------------------------------------------------------------
 
 const SHAPE_LEVELS = [
-  { name: "Extra Small", size: "4px",    cssClass: "rounded-shape-xs",   cssVar: "--shape-xs" },
-  { name: "Small",       size: "8px",    cssClass: "rounded-shape-sm",   cssVar: "--shape-sm" },
-  { name: "Medium",      size: "12px",   cssClass: "rounded-shape-md",   cssVar: "--shape-md" },
-  { name: "Large",       size: "16px",   cssClass: "rounded-shape-lg",   cssVar: "--shape-lg" },
-  { name: "Extra Large", size: "28px",   cssClass: "rounded-shape-xl",   cssVar: "--shape-xl" },
-  { name: "Full",        size: "9999px", cssClass: "rounded-shape-full", cssVar: "--shape-full" },
-]
+  { name: "Extra Small", size: "4px", cssClass: "rounded-shape-xs", cssVar: "--shape-xs" },
+  { name: "Small", size: "8px", cssClass: "rounded-shape-sm", cssVar: "--shape-sm" },
+  { name: "Medium", size: "12px", cssClass: "rounded-shape-md", cssVar: "--shape-md" },
+  { name: "Large", size: "16px", cssClass: "rounded-shape-lg", cssVar: "--shape-lg" },
+  { name: "Extra Large", size: "28px", cssClass: "rounded-shape-xl", cssVar: "--shape-xl" },
+  { name: "Full", size: "9999px", cssClass: "rounded-shape-full", cssVar: "--shape-full" },
+];
 
 // ---------------------------------------------------------------------------
 // Components
@@ -42,7 +62,7 @@ function CopyButton({ text }: { text: string }) {
     >
       {text}
     </button>
-  )
+  );
 }
 
 function ElevationAndShapePage() {
@@ -51,8 +71,8 @@ function ElevationAndShapePage() {
       <div className="space-y-2">
         <h1 className="text-2xl font-bold text-foreground">Elevation & Shape</h1>
         <p className="text-sm text-muted-foreground max-w-2xl">
-          Material Design 3 elevation (shadow) and shape (border-radius) tokens.
-          Each is available as a single Tailwind utility class.
+          Material Design 3 elevation (shadow) and shape (border-radius) tokens. Each is available as a single Tailwind
+          utility class.
         </p>
       </div>
 
@@ -90,8 +110,12 @@ function ElevationAndShapePage() {
               {ELEVATION_LEVELS.map(({ level, cssClass, cssVar, description }) => (
                 <tr key={level} className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-2.5 font-medium text-foreground">Elevation {level}</td>
-                  <td className="px-4 py-2.5"><CopyButton text={cssClass} /></td>
-                  <td className="px-4 py-2.5"><CopyButton text={`var(${cssVar})`} /></td>
+                  <td className="px-4 py-2.5">
+                    <CopyButton text={cssClass} />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <CopyButton text={`var(${cssVar})`} />
+                  </td>
                   <td className="px-4 py-2.5 text-muted-foreground">{description}</td>
                 </tr>
               ))}
@@ -135,8 +159,12 @@ function ElevationAndShapePage() {
                 <tr key={name} className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-2.5 font-medium text-foreground">{name}</td>
                   <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{size}</td>
-                  <td className="px-4 py-2.5"><CopyButton text={cssClass} /></td>
-                  <td className="px-4 py-2.5"><CopyButton text={`var(${cssVar})`} /></td>
+                  <td className="px-4 py-2.5">
+                    <CopyButton text={cssClass} />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <CopyButton text={`var(${cssVar})`} />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -144,7 +172,7 @@ function ElevationAndShapePage() {
         </div>
       </section>
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -159,11 +187,11 @@ const meta: Meta = {
     controls: { disable: true },
     actions: { disable: true },
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
 export const Overview: Story = {
   render: () => <ElevationAndShapePage />,
@@ -172,4 +200,4 @@ export const Overview: Story = {
     docs: { canvas: { sourceState: "none" } },
     zephyr: { testCaseId: "SW-T1468" },
   },
-}
+};

@@ -83,7 +83,7 @@ const selectorUsageCode = (variant: "dropdown" | "tabs") => `function PlateSelec
       onRemovePlate={handleRemove}
     />
   )
-}`
+}`;
 
 export const DropdownDefault: Story = {
   name: "Dropdown: select a plate",
@@ -221,10 +221,7 @@ export const TabsAddAndRemove: Story = {
 export const TabsSinglePlateNoRemove: Story = {
   name: "Tabs: single plate hides remove",
   render: () => (
-    <StatefulSelector
-      initialPlates={[{ id: "ONLY", barcode: "ONLY", label: "Only Plate", count: 4 }]}
-      variant="tabs"
-    />
+    <StatefulSelector initialPlates={[{ id: "ONLY", barcode: "ONLY", label: "Only Plate", count: 4 }]} variant="tabs" />
   ),
   parameters: {
     docs: { source: { code: selectorUsageCode("tabs"), language: "tsx" } },

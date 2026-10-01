@@ -6,16 +6,16 @@ name: Report Test Results to Zephyr
 
 on:
   workflow_run:
-    workflows: ['Storybook Tests']
+    workflows: ["Storybook Tests"]
     types: [completed]
   workflow_dispatch:
     inputs:
       test_cycle:
-        description: 'Zephyr test cycle key to report results to (e.g., SW-R123)'
+        description: "Zephyr test cycle key to report results to (e.g., SW-R123)"
         required: true
         type: string
       run_id:
-        description: 'Workflow run ID to download artifacts from'
+        description: "Workflow run ID to download artifacts from"
         required: true
         type: string
 
@@ -47,8 +47,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '24'
-          cache: 'yarn'
+          node-version: "24"
+          cache: "yarn"
 
       - name: Enable Corepack
         run: corepack enable

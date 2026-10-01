@@ -1,9 +1,8 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { Separator } from "./separator"
+import { Separator } from "./separator";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Separator> = {
   title: "Components/Layout & Structure/Separator",
@@ -21,11 +20,11 @@ const meta: Meta<typeof Separator> = {
   args: {
     orientation: "horizontal",
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Separator>
+type Story = StoryObj<typeof Separator>;
 
 export const Horizontal: Story = {
   render: () => (
@@ -39,20 +38,18 @@ export const Horizontal: Story = {
     zephyr: { testCaseId: "SW-T1282" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Component renders", async () => {
-      expect(canvas.getByText("Overview")).toBeInTheDocument()
-      expect(
-        canvas.getByText("Separate sections without adding visual weight."),
-      ).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Overview")).toBeInTheDocument();
+      expect(canvas.getByText("Separate sections without adding visual weight.")).toBeInTheDocument();
+    });
 
     await step("Separator is present", async () => {
-      expect(canvasElement.querySelector('[data-slot="separator"]')).toBeInTheDocument()
-    })
+      expect(canvasElement.querySelector('[data-slot="separator"]')).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Vertical: Story = {
   render: () => (
@@ -66,15 +63,15 @@ export const Vertical: Story = {
     zephyr: { testCaseId: "SW-T1283" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Component renders", async () => {
-      expect(canvas.getByText("Activity")).toBeInTheDocument()
-      expect(canvas.getByText("Deployments")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Activity")).toBeInTheDocument();
+      expect(canvas.getByText("Deployments")).toBeInTheDocument();
+    });
 
     await step("Separator is present", async () => {
-      expect(canvasElement.querySelector('[data-slot="separator"]')).toBeInTheDocument()
-    })
+      expect(canvasElement.querySelector('[data-slot="separator"]')).toBeInTheDocument();
+    });
   },
-}
+};

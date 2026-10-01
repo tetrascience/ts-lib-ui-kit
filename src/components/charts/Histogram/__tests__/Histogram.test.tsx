@@ -13,17 +13,14 @@ import type { Root } from "react-dom/client";
 // container size in explicitly (mirrors the AreaPlot test pattern).
 let triggerResize: (width: number, height: number) => void;
 class ResizeObserverStub {
-  constructor(
-    private callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void,
-  ) {
+  constructor(private callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void) {
     triggerResize = (width, height) => this.callback([{ contentRect: { width, height } }]);
   }
   observe() {}
   unobserve() {}
   disconnect() {}
 }
-(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver =
-  ResizeObserverStub;
+(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver = ResizeObserverStub;
 
 const plotly = vi.hoisted(() => ({
   newPlot: vi.fn(),

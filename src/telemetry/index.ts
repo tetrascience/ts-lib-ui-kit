@@ -24,4 +24,4 @@ export * from "./use-tetra-events";
 export * from "./error-boundary";
 export * from "./global-handlers";
 export * from "@tetrascience-npm/request/telemetry";
-export type {ArtifactIdentity} from "@tetrascience-npm/request/telemetry";
+export type { ArtifactIdentity } from "@tetrascience-npm/request/telemetry";

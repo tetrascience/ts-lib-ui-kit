@@ -1,6 +1,6 @@
-import { CopyIcon, FolderIcon, PencilIcon, Trash2Icon } from "lucide-react"
-import React from "react"
-import { expect, userEvent, waitFor, within } from "storybook/test"
+import { CopyIcon, FolderIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import React from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import {
   ContextMenu,
@@ -17,9 +17,9 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
   ContextMenuTrigger,
-} from "./context-menu"
+} from "./context-menu";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof ContextMenuItem> = {
   title: "Components/Navigation & Menus/Context Menu",
@@ -37,14 +37,14 @@ const meta: Meta<typeof ContextMenuItem> = {
   args: {
     variant: "default",
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof ContextMenuItem>
+type Story = StoryObj<typeof ContextMenuItem>;
 
 function renderMenu(args: Story["args"]) {
-  const destructive = args?.variant === "destructive"
+  const destructive = args?.variant === "destructive";
 
   return (
     <ContextMenu>
@@ -69,7 +69,7 @@ function renderMenu(args: Story["args"]) {
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
-  )
+  );
 }
 
 export const Default: Story = {
@@ -78,14 +78,14 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1228" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Context menu trigger renders", async () => {
-      expect(canvas.getByText("Right click this area")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Right click this area")).toBeInTheDocument();
+    });
 
     await step("Open menu and verify items in portal", async () => {
-      const trigger = canvas.getByText("Right click this area")
+      const trigger = canvas.getByText("Right click this area");
       trigger.dispatchEvent(
         new MouseEvent("contextmenu", {
           bubbles: true,
@@ -93,14 +93,14 @@ export const Default: Story = {
           clientX: 8,
           clientY: 8,
         }),
-      )
-      const body = within(canvasElement.ownerDocument.body)
-      expect(await body.findByText("Rename")).toBeInTheDocument()
-      expect(body.getByText("Duplicate")).toBeInTheDocument()
-      expect(body.getByText("Move to folder")).toBeInTheDocument()
-    })
+      );
+      const body = within(canvasElement.ownerDocument.body);
+      expect(await body.findByText("Rename")).toBeInTheDocument();
+      expect(body.getByText("Duplicate")).toBeInTheDocument();
+      expect(body.getByText("Move to folder")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Destructive: Story = {
   args: {
@@ -111,14 +111,14 @@ export const Destructive: Story = {
     zephyr: { testCaseId: "SW-T1229" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Context menu trigger renders", async () => {
-      expect(canvas.getByText("Right click this area")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Right click this area")).toBeInTheDocument();
+    });
 
     await step("Open menu and verify destructive item in portal", async () => {
-      const trigger = canvas.getByText("Right click this area")
+      const trigger = canvas.getByText("Right click this area");
       trigger.dispatchEvent(
         new MouseEvent("contextmenu", {
           bubbles: true,
@@ -126,12 +126,12 @@ export const Destructive: Story = {
           clientX: 8,
           clientY: 8,
         }),
-      )
-      const body = within(canvasElement.ownerDocument.body)
-      expect(await body.findByText("Delete")).toBeInTheDocument()
-    })
+      );
+      const body = within(canvasElement.ownerDocument.body);
+      expect(await body.findByText("Delete")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const WithGroup: Story = {
   render: () => (
@@ -169,25 +169,23 @@ export const WithGroup: Story = {
     zephyr: { testCaseId: "SW-T5501" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Trigger renders", async () => {
-      expect(canvas.getByText("Right click this area")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Right click this area")).toBeInTheDocument();
+    });
 
     await step("Open menu and verify grouped items", async () => {
-      const trigger = canvas.getByText("Right click this area")
-      trigger.dispatchEvent(
-        new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 8, clientY: 8 }),
-      )
-      const body = within(canvasElement.ownerDocument.body)
-      expect(await body.findByText("File")).toBeInTheDocument()
-      expect(body.getByText("Actions")).toBeInTheDocument()
-      expect(body.getByText("Rename")).toBeInTheDocument()
-      expect(body.getByText("Move to folder")).toBeInTheDocument()
-    })
+      const trigger = canvas.getByText("Right click this area");
+      trigger.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 8, clientY: 8 }));
+      const body = within(canvasElement.ownerDocument.body);
+      expect(await body.findByText("File")).toBeInTheDocument();
+      expect(body.getByText("Actions")).toBeInTheDocument();
+      expect(body.getByText("Rename")).toBeInTheDocument();
+      expect(body.getByText("Move to folder")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const WithSubMenu: Story = {
   render: () => (
@@ -224,40 +222,36 @@ export const WithSubMenu: Story = {
     zephyr: { testCaseId: "SW-T5502" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Trigger renders", async () => {
-      expect(canvas.getByText("Right click this area")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Right click this area")).toBeInTheDocument();
+    });
 
     await step("Open menu and verify sub-trigger", async () => {
-      const trigger = canvas.getByText("Right click this area")
-      trigger.dispatchEvent(
-        new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 8, clientY: 8 }),
-      )
-      const body = within(canvasElement.ownerDocument.body)
-      expect(await body.findByText("Move to")).toBeInTheDocument()
-      expect(
-        body.getByText("Move to").closest("[data-slot='context-menu-sub-trigger']"),
-      ).toBeInTheDocument()
-    })
+      const trigger = canvas.getByText("Right click this area");
+      trigger.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 8, clientY: 8 }));
+      const body = within(canvasElement.ownerDocument.body);
+      expect(await body.findByText("Move to")).toBeInTheDocument();
+      expect(body.getByText("Move to").closest("[data-slot='context-menu-sub-trigger']")).toBeInTheDocument();
+    });
 
     await step("Hover sub-trigger opens sub-content", async () => {
-      const body = within(canvasElement.ownerDocument.body)
-      const subTrigger = body.getByText("Move to")
-      await userEvent.hover(subTrigger)
+      const body = within(canvasElement.ownerDocument.body);
+      const subTrigger = body.getByText("Move to");
+      await userEvent.hover(subTrigger);
       await waitFor(() => {
-        expect(body.getByText("Projects")).toBeInTheDocument()
-      })
-      expect(body.getByText("Archive")).toBeInTheDocument()
-    })
+        expect(body.getByText("Projects")).toBeInTheDocument();
+      });
+      expect(body.getByText("Archive")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const WithCheckboxItems: Story = {
   render: () => {
-    const [showGrid, setShowGrid] = React.useState(true)
-    const [showRulers, setShowRulers] = React.useState(false)
+    const [showGrid, setShowGrid] = React.useState(true);
+    const [showRulers, setShowRulers] = React.useState(false);
 
     return (
       <ContextMenu>
@@ -275,42 +269,40 @@ export const WithCheckboxItems: Story = {
           </ContextMenuCheckboxItem>
         </ContextMenuContent>
       </ContextMenu>
-    )
+    );
   },
   parameters: {
     // Auto-generated by sync-storybook-zephyr - do not add manually
     zephyr: { testCaseId: "SW-T5503" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Trigger renders", async () => {
-      expect(canvas.getByText("Right click this area")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Right click this area")).toBeInTheDocument();
+    });
 
     await step("Open menu and verify checkbox items", async () => {
-      const trigger = canvas.getByText("Right click this area")
-      trigger.dispatchEvent(
-        new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 8, clientY: 8 }),
-      )
-      const body = within(canvasElement.ownerDocument.body)
-      expect(await body.findByText("Show grid")).toBeInTheDocument()
-      expect(body.getByText("Show rulers")).toBeInTheDocument()
-    })
+      const trigger = canvas.getByText("Right click this area");
+      trigger.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 8, clientY: 8 }));
+      const body = within(canvasElement.ownerDocument.body);
+      expect(await body.findByText("Show grid")).toBeInTheDocument();
+      expect(body.getByText("Show rulers")).toBeInTheDocument();
+    });
 
     await step("Checked item has data-state checked", async () => {
-      const body = within(canvasElement.ownerDocument.body)
-      const gridItem = body.getByText("Show grid").closest("[data-slot='context-menu-checkbox-item']")!
-      expect(gridItem).toHaveAttribute("data-state", "checked")
-      const rulersItem = body.getByText("Show rulers").closest("[data-slot='context-menu-checkbox-item']")!
-      expect(rulersItem).toHaveAttribute("data-state", "unchecked")
-    })
+      const body = within(canvasElement.ownerDocument.body);
+      const gridItem = body.getByText("Show grid").closest("[data-slot='context-menu-checkbox-item']")!;
+      expect(gridItem).toHaveAttribute("data-state", "checked");
+      const rulersItem = body.getByText("Show rulers").closest("[data-slot='context-menu-checkbox-item']")!;
+      expect(rulersItem).toHaveAttribute("data-state", "unchecked");
+    });
   },
-}
+};
 
 export const WithRadioItems: Story = {
   render: () => {
-    const [zoom, setZoom] = React.useState("100")
+    const [zoom, setZoom] = React.useState("100");
 
     return (
       <ContextMenu>
@@ -327,36 +319,34 @@ export const WithRadioItems: Story = {
           </ContextMenuRadioGroup>
         </ContextMenuContent>
       </ContextMenu>
-    )
+    );
   },
   parameters: {
     // Auto-generated by sync-storybook-zephyr - do not add manually
     zephyr: { testCaseId: "SW-T5504" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Trigger renders", async () => {
-      expect(canvas.getByText("Right click this area")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Right click this area")).toBeInTheDocument();
+    });
 
     await step("Open menu and verify radio items", async () => {
-      const trigger = canvas.getByText("Right click this area")
-      trigger.dispatchEvent(
-        new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 8, clientY: 8 }),
-      )
-      const body = within(canvasElement.ownerDocument.body)
-      expect(await body.findByText("100%")).toBeInTheDocument()
-      expect(body.getByText("50%")).toBeInTheDocument()
-      expect(body.getByText("150%")).toBeInTheDocument()
-    })
+      const trigger = canvas.getByText("Right click this area");
+      trigger.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 8, clientY: 8 }));
+      const body = within(canvasElement.ownerDocument.body);
+      expect(await body.findByText("100%")).toBeInTheDocument();
+      expect(body.getByText("50%")).toBeInTheDocument();
+      expect(body.getByText("150%")).toBeInTheDocument();
+    });
 
     await step("Selected radio item has data-state checked", async () => {
-      const body = within(canvasElement.ownerDocument.body)
-      const hundredItem = body.getByText("100%").closest("[data-slot='context-menu-radio-item']")!
-      expect(hundredItem).toHaveAttribute("data-state", "checked")
-      const fiftyItem = body.getByText("50%").closest("[data-slot='context-menu-radio-item']")!
-      expect(fiftyItem).toHaveAttribute("data-state", "unchecked")
-    })
+      const body = within(canvasElement.ownerDocument.body);
+      const hundredItem = body.getByText("100%").closest("[data-slot='context-menu-radio-item']")!;
+      expect(hundredItem).toHaveAttribute("data-state", "checked");
+      const fiftyItem = body.getByText("50%").closest("[data-slot='context-menu-radio-item']")!;
+      expect(fiftyItem).toHaveAttribute("data-state", "unchecked");
+    });
   },
-}
+};

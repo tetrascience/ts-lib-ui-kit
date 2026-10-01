@@ -26,9 +26,7 @@ import type { ProviderConfiguration, ProviderInfo } from "./types";
  * // [{ name: "my-snowflake", type: "snowflake", iconUrl: "...", availableFields: ["user", "password", "account"] }, ...]
  * ```
  */
-export function getProviderInfoList(
-  configs: ProviderConfiguration[],
-): ProviderInfo[] {
+export function getProviderInfoList(configs: ProviderConfiguration[]): ProviderInfo[] {
   return configs.map((config) => ({
     name: config.name,
     type: config.type,
@@ -53,10 +51,7 @@ export function getProviderInfoList(
  * }
  * ```
  */
-export function getProviderByName(
-  configs: ProviderConfiguration[],
-  name: string,
-): ProviderConfiguration | undefined {
+export function getProviderByName(configs: ProviderConfiguration[], name: string): ProviderConfiguration | undefined {
   return configs.find((config) => config.name === name);
 }
 
@@ -76,10 +71,7 @@ export function getProviderByName(
  * }
  * ```
  */
-export function getProvidersByType(
-  configs: ProviderConfiguration[],
-  type: string,
-): ProviderConfiguration[] {
+export function getProvidersByType(configs: ProviderConfiguration[], type: string): ProviderConfiguration[] {
   return configs.filter((config) => config.type === type);
 }
 
@@ -116,4 +108,3 @@ export function getProviderNames(configs: ProviderConfiguration[]): string[] {
 export function getProviderTypes(configs: ProviderConfiguration[]): string[] {
   return [...new Set(configs.map((config) => config.type))];
 }
-

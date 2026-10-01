@@ -1,8 +1,8 @@
-import { icons, RocketIcon, SearchIcon } from "lucide-react"
-import { useMemo, useState } from "react"
-import { expect, within } from "storybook/test"
+import { icons, RocketIcon, SearchIcon } from "lucide-react";
+import { useMemo, useState } from "react";
+import { expect, within } from "storybook/test";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 /**
  * This library uses [Lucide React](https://lucide.dev) for icons.
@@ -25,11 +25,11 @@ function IconShowcase({
   color = "currentColor",
 }: {
   /** Icon size in pixels */
-  size?: number
+  size?: number;
   /** Stroke width */
-  strokeWidth?: number
+  strokeWidth?: number;
   /** Icon color */
-  color?: string
+  color?: string;
 }) {
   return (
     <div className="flex flex-col items-center gap-3">
@@ -38,7 +38,7 @@ function IconShowcase({
         {size}px &middot; stroke {strokeWidth}
       </span>
     </div>
-  )
+  );
 }
 
 const meta: Meta<typeof IconShowcase> = {
@@ -68,11 +68,11 @@ const meta: Meta<typeof IconShowcase> = {
     strokeWidth: 2,
     color: "currentColor",
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof IconShowcase>
+type Story = StoryObj<typeof IconShowcase>;
 
 // ---------------------------------------------------------------------------
 // Stories
@@ -81,18 +81,18 @@ type Story = StoryObj<typeof IconShowcase>
 /** Interactive demo — use the controls panel to adjust size, stroke width, and color. */
 export const Default: Story = {
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Icon renders", async () => {
-      expect(canvas.getByText(/px/)).toBeInTheDocument()
-    })
+      expect(canvas.getByText(/px/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1414" },
   },
-}
+};
 
-const ALL_ICON_ENTRIES = Object.entries(icons)
-const MAX_VISIBLE = 120
+const ALL_ICON_ENTRIES = Object.entries(icons);
+const MAX_VISIBLE = 120;
 
 /**
  * Search through all 1500+ Lucide icons. Type a name to filter.
@@ -106,16 +106,13 @@ export const AllIcons: Story = {
     zephyr: { testCaseId: "SW-T1415" },
   },
   render: function AllIconsRender({ size, strokeWidth, color }) {
-    const [search, setSearch] = useState("")
+    const [search, setSearch] = useState("");
 
     const filtered = useMemo(() => {
-      if (!search) return ALL_ICON_ENTRIES.slice(0, MAX_VISIBLE)
-      const lower = search.toLowerCase()
-      return ALL_ICON_ENTRIES.filter(([name]) => name.toLowerCase().includes(lower)).slice(
-        0,
-        MAX_VISIBLE,
-      )
-    }, [search])
+      if (!search) return ALL_ICON_ENTRIES.slice(0, MAX_VISIBLE);
+      const lower = search.toLowerCase();
+      return ALL_ICON_ENTRIES.filter(([name]) => name.toLowerCase().includes(lower)).slice(0, MAX_VISIBLE);
+    }, [search]);
 
     return (
       <div className="flex flex-col gap-4 p-4">
@@ -130,8 +127,7 @@ export const AllIcons: Story = {
           />
           <span className="text-muted-foreground text-xs">
             {filtered.length}
-            {filtered.length >= MAX_VISIBLE ? "+" : ""} of{" "}
-            {ALL_ICON_ENTRIES.length} icons
+            {filtered.length >= MAX_VISIBLE ? "+" : ""} of {ALL_ICON_ENTRIES.length} icons
           </span>
         </div>
         <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 lg:grid-cols-12">
@@ -141,22 +137,19 @@ export const AllIcons: Story = {
               className="hover:bg-muted flex flex-col items-center gap-1.5 rounded-md p-2 transition-colors"
             >
               <Icon size={size} strokeWidth={strokeWidth} color={color} />
-              <span className="text-muted-foreground max-w-full truncate text-[10px]">
-                {name}
-              </span>
+              <span className="text-muted-foreground max-w-full truncate text-[10px]">{name}</span>
             </div>
           ))}
         </div>
       </div>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
     await step("Search input and icon grid render", async () => {
-      const input = canvasElement.querySelector("input")
-      expect(input).toBeInTheDocument()
-      const svgs = canvasElement.querySelectorAll("svg")
-      expect(svgs.length).toBeGreaterThan(10)
-    })
+      const input = canvasElement.querySelector("input");
+      expect(input).toBeInTheDocument();
+      const svgs = canvasElement.querySelectorAll("svg");
+      expect(svgs.length).toBeGreaterThan(10);
+    });
   },
-}
-
+};

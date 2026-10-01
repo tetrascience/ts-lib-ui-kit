@@ -21,9 +21,7 @@ let handlers: Record<string, EventHandler>;
 
 const roots: Array<{ root: Root; container: HTMLElement }> = [];
 
-const dataSeries: ScatterPlotProps["dataSeries"] = [
-  { name: "A", x: [1, 2, 3], y: [10, 20, 30] },
-];
+const dataSeries: ScatterPlotProps["dataSeries"] = [{ name: "A", x: [1, 2, 3], y: [10, 20, 30] }];
 
 // Async act so the lazy Plotly import (SW-2007) resolves and the draw
 // completes before assertions run.

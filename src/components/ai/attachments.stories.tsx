@@ -1,5 +1,5 @@
-import { expect, fn, screen, userEvent, within } from "storybook/test"
-import { css } from "storybook/theming"
+import { expect, fn, screen, userEvent, within } from "storybook/test";
+import { css } from "storybook/theming";
 
 import {
   Attachment,
@@ -11,10 +11,10 @@ import {
   AttachmentPreview,
   AttachmentRemove,
   Attachments,
-} from "./attachments"
+} from "./attachments";
 
-import type { AttachmentData } from "./attachments"
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { AttachmentData } from "./attachments";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const mockImageFile: AttachmentData = {
   type: "file",
@@ -23,7 +23,7 @@ const mockImageFile: AttachmentData = {
   filename: "screenshot.png",
   mediaType: "image/png",
   url: "./sample_image2.png",
-}
+};
 
 const mockDocFile: AttachmentData = {
   type: "file",
@@ -31,7 +31,7 @@ const mockDocFile: AttachmentData = {
   name: "report.pdf",
   filename: "report.pdf",
   mediaType: "application/pdf",
-}
+};
 
 const mockAudioFile: AttachmentData = {
   type: "file",
@@ -39,7 +39,7 @@ const mockAudioFile: AttachmentData = {
   name: "recording.mp3",
   filename: "recording.mp3",
   mediaType: "audio/mpeg",
-}
+};
 
 const mockVideoFile: AttachmentData = {
   type: "file",
@@ -48,19 +48,19 @@ const mockVideoFile: AttachmentData = {
   filename: "clip.mp4",
   mediaType: "video/mp4",
   url: "./sample-video.mp4",
-}
+};
 
 const mockImageWithoutName: AttachmentData = {
   type: "file",
   id: "img-2",
   mediaType: "image/png",
   url: "./sample_image2.png",
-}
+};
 
 const mockUnknownFile: AttachmentData = {
   type: "file",
   id: "unknown-1",
-}
+};
 
 const mockSource: AttachmentData = {
   type: "source-document",
@@ -69,18 +69,18 @@ const mockSource: AttachmentData = {
   filename: "ai-research.pdf",
   mediaType: "application/pdf",
   sourceType: "file",
-}
+};
 
 const meta: Meta = {
   title: "AI Elements/Input/Attachments",
   parameters: {
     layout: "padded",
     backgrounds: {
-      default: 'light',
+      default: "light",
       values: [
-        { name: 'light', value: '#F8F8F8' },
-        { name: 'dark', value: '#333333' },
-        { name: 'brand', value: '#0070f3' }, // Your custom color
+        { name: "light", value: "#F8F8F8" },
+        { name: "dark", value: "#333333" },
+        { name: "brand", value: "#0070f3" }, // Your custom color
       ],
     },
     css: css`body {
@@ -89,11 +89,11 @@ const meta: Meta = {
     `,
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
 export const Grid: Story = {
   render: () => (
@@ -113,16 +113,16 @@ export const Grid: Story = {
     </Attachments>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Grid attachments render", async () => {
-      const removeButtons = canvas.getAllByRole("button", { name: /remove/i })
-      await expect(removeButtons.length).toBeGreaterThan(0)
-    })
+      const removeButtons = canvas.getAllByRole("button", { name: /remove/i });
+      await expect(removeButtons.length).toBeGreaterThan(0);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4508" },
   },
-}
+};
 
 export const Inline: Story = {
   render: () => (
@@ -144,17 +144,17 @@ export const Inline: Story = {
     </Attachments>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Inline attachments render with filenames", async () => {
-      await expect(canvas.getByText("screenshot.png")).toBeInTheDocument()
-      await expect(canvas.getByText("report.pdf")).toBeInTheDocument()
-      await expect(canvas.getByText("AI Research Paper")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("screenshot.png")).toBeInTheDocument();
+      await expect(canvas.getByText("report.pdf")).toBeInTheDocument();
+      await expect(canvas.getByText("AI Research Paper")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4509" },
   },
-}
+};
 
 export const List: Story = {
   render: () => (
@@ -177,16 +177,16 @@ export const List: Story = {
     </Attachments>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("List attachments render with media types", async () => {
-      await expect(canvas.getByText("image/png")).toBeInTheDocument()
-      await expect(canvas.getByText("application/pdf")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("image/png")).toBeInTheDocument();
+      await expect(canvas.getByText("application/pdf")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4510" },
   },
-}
+};
 
 export const WithHoverCard: Story = {
   render: () => (
@@ -209,19 +209,19 @@ export const WithHoverCard: Story = {
     </Attachments>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Attachment with hover card renders", async () => {
-      await expect(canvas.getByText("screenshot.png")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("screenshot.png")).toBeInTheDocument();
+    });
     await step("Hovering attachment opens preview content", async () => {
-      await userEvent.hover(canvas.getByText("screenshot.png"))
-      await expect(await screen.findAllByRole("img", { name: "screenshot.png" })).toHaveLength(2)
-    })
+      await userEvent.hover(canvas.getByText("screenshot.png"));
+      await expect(await screen.findAllByRole("img", { name: "screenshot.png" })).toHaveLength(2);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4511" },
   },
-}
+};
 
 export const MediaFallbacksAndRemove: Story = {
   args: {
@@ -251,22 +251,22 @@ export const MediaFallbacksAndRemove: Story = {
     </div>
   ),
   play: async ({ args, canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Image and unknown attachments use fallback labels", async () => {
-      await expect(canvas.getByText("Image")).toBeInTheDocument()
-      await expect(canvas.getByText("Attachment")).toBeInTheDocument()
-      await expect(canvas.getByText("Fallback icon")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Image")).toBeInTheDocument();
+      await expect(canvas.getByText("Attachment")).toBeInTheDocument();
+      await expect(canvas.getByText("Fallback icon")).toBeInTheDocument();
+    });
     await step("Video previews render and inline remove invokes callback", async () => {
-      await expect(canvas.getByTestId("video-preview").querySelector("video")).toBeInTheDocument()
-      await userEvent.click(canvas.getByRole("button", { name: "Discard attachment" }))
-      await expect(args.onRemove).toHaveBeenCalledOnce()
-    })
+      await expect(canvas.getByTestId("video-preview").querySelector("video")).toBeInTheDocument();
+      await userEvent.click(canvas.getByRole("button", { name: "Discard attachment" }));
+      await expect(args.onRemove).toHaveBeenCalledOnce();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4512" },
   },
-}
+};
 
 export const EmptyState: Story = {
   render: () => (
@@ -276,13 +276,13 @@ export const EmptyState: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Default and custom empty states render", async () => {
-      await expect(canvas.getByText("No attachments")).toBeInTheDocument()
-      await expect(canvas.getByText("Nothing selected")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("No attachments")).toBeInTheDocument();
+      await expect(canvas.getByText("Nothing selected")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4513" },
   },
-}
+};

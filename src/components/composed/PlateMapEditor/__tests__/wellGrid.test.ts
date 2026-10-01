@@ -1,14 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  allPositions,
-  parsePos,
-  parseRowLabel,
-  pos,
-  rectPositions,
-  resolveDimensions,
-  rowLabel,
-} from "../wellGrid";
+import { allPositions, parsePos, parseRowLabel, pos, rectPositions, resolveDimensions, rowLabel } from "../wellGrid";
 
 describe("wellGrid", () => {
   it("resolves preset dimensions", () => {

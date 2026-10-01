@@ -1,17 +1,13 @@
-import rdkitWasmUrl from "@rdkit/rdkit/dist/RDKit_minimal.wasm?url"
-import { expect, waitFor, within } from "storybook/test"
+import rdkitWasmUrl from "@rdkit/rdkit/dist/RDKit_minimal.wasm?url";
+import { expect, waitFor, within } from "storybook/test";
 
-import { MoleculeStructure } from "./MoleculeStructure"
-import { configureRDKit } from "./rdkit-loader"
+import { MoleculeStructure } from "./MoleculeStructure";
+import { configureRDKit } from "./rdkit-loader";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { Button } from "@/components/ui/button"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
+import { Button } from "@/components/ui/button";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 // ---------------------------------------------------------------------------
 // Air-gapped RDKit — no CDN.
@@ -25,23 +21,23 @@ import {
 // the invalid-SMILES path doesn't trip the runner's console-error gate.
 // ---------------------------------------------------------------------------
 
-configureRDKit({ wasmSrc: rdkitWasmUrl })
+configureRDKit({ wasmSrc: rdkitWasmUrl });
 
 // A couple of real, well-known SMILES for the visual stories.
 const MOLECULES = {
   aspirin: { smiles: "CC(=O)Oc1ccccc1C(=O)O", label: "Aspirin" },
   paracetamol: { smiles: "CC(=O)Nc1ccc(O)cc1", label: "Paracetamol" },
-} as const
+} as const;
 
 const meta: Meta<typeof MoleculeStructure> = {
   title: "Design Patterns/Molecule Structure",
   component: MoleculeStructure,
   parameters: { layout: "centered" },
   tags: ["autodocs"],
-}
+};
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 /**
  * The primitive has no size props — the vector structure fills its box, so
@@ -50,36 +46,28 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   args: { smiles: MOLECULES.aspirin.smiles, alt: "Aspirin", className: "size-64" },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     // Exposed to assistive tech as a single labelled image. Allow headroom for
     // RDKit's WASM to compile on a cold runner.
-    await waitFor(
-      () =>
-        expect(
-          canvas.getByRole("img", { name: "Aspirin" }).querySelector("svg"),
-        ).toBeInTheDocument(),
-      { timeout: 15000 },
-    )
+    await waitFor(() => expect(canvas.getByRole("img", { name: "Aspirin" }).querySelector("svg")).toBeInTheDocument(), {
+      timeout: 15000,
+    });
   },
   parameters: { zephyr: { testCaseId: "SW-T5536" } },
-}
+};
 
 /** Invalid SMILES render an accessible fallback instead of throwing. */
 export const InvalidStructure: Story = {
   args: { smiles: "not a molecule~!", alt: "bad input", className: "size-48" },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    await waitFor(
-      () =>
-        expect(
-          canvas.getByRole("img", { name: /unable to render structure/i }),
-        ).toBeInTheDocument(),
-      { timeout: 15000 },
-    )
-    expect(canvas.getByText(/invalid structure/i)).toBeInTheDocument()
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByRole("img", { name: /unable to render structure/i })).toBeInTheDocument(), {
+      timeout: 15000,
+    });
+    expect(canvas.getByText(/invalid structure/i)).toBeInTheDocument();
   },
   parameters: { zephyr: { testCaseId: "SW-T5537" } },
-}
+};
 
 /** Reveal the structure on hover by composing with the `HoverCard` primitive. */
 export const InHoverCard: Story = {
@@ -89,19 +77,13 @@ export const InHoverCard: Story = {
         <Button variant="link">CPD-0143</Button>
       </HoverCardTrigger>
       <HoverCardContent className="w-56">
-        <MoleculeStructure
-          smiles={MOLECULES.paracetamol.smiles}
-          label="CPD-0143"
-          className="h-40 w-full"
-        />
+        <MoleculeStructure smiles={MOLECULES.paracetamol.smiles} label="CPD-0143" className="h-40 w-full" />
       </HoverCardContent>
     </HoverCard>
   ),
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    expect(
-      canvas.getByRole("button", { name: "CPD-0143" }),
-    ).toBeInTheDocument()
+    const canvas = within(canvasElement);
+    expect(canvas.getByRole("button", { name: "CPD-0143" })).toBeInTheDocument();
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5538" },
@@ -124,4 +106,4 @@ export const InHoverCard: Story = {
       },
     },
   },
-}
+};

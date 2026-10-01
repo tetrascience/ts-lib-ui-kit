@@ -1,4 +1,4 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
 import {
   Breadcrumb,
@@ -8,10 +8,9 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "./breadcrumb"
+} from "./breadcrumb";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Breadcrumb> = {
   title: "Components/Navigation & Menus/Breadcrumb",
@@ -20,11 +19,11 @@ const meta: Meta<typeof Breadcrumb> = {
     layout: "centered",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Breadcrumb>
+type Story = StoryObj<typeof Breadcrumb>;
 
 export const Default: Story = {
   render: () => (
@@ -48,19 +47,19 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1198" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Breadcrumb navigation renders", async () => {
-      expect(canvas.getByRole("navigation", { name: "breadcrumb" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("navigation", { name: "breadcrumb" })).toBeInTheDocument();
+    });
 
     await step("Trail links and current page are visible", async () => {
-      expect(canvas.getByRole("link", { name: "Workspace" })).toBeInTheDocument()
-      expect(canvas.getByRole("link", { name: "UI Kit" })).toBeInTheDocument()
-      expect(canvas.getByRole("link", { name: "Storybook" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("link", { name: "Workspace" })).toBeInTheDocument();
+      expect(canvas.getByRole("link", { name: "UI Kit" })).toBeInTheDocument();
+      expect(canvas.getByRole("link", { name: "Storybook" })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const SlashSeparator: Story = {
   render: () => (
@@ -85,29 +84,29 @@ export const SlashSeparator: Story = {
     </Breadcrumb>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Breadcrumb renders with slash separators", async () => {
-      expect(canvas.getByRole("navigation", { name: "breadcrumb" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("navigation", { name: "breadcrumb" })).toBeInTheDocument();
+    });
 
     await step("Slash separators are present", async () => {
-      const separators = canvasElement.querySelectorAll("[data-slot='breadcrumb-separator']")
-      expect(separators.length).toBe(3)
-      separators.forEach((s) => expect(s.textContent).toBe("/"))
-    })
+      const separators = canvasElement.querySelectorAll("[data-slot='breadcrumb-separator']");
+      expect(separators.length).toBe(3);
+      separators.forEach((s) => expect(s.textContent).toBe("/"));
+    });
 
     await step("Trail links and current page are visible", async () => {
-      expect(canvas.getByRole("link", { name: "All Projects" })).toBeInTheDocument()
-      expect(canvas.getByRole("link", { name: "DUX4" })).toBeInTheDocument()
-      expect(canvas.getByRole("link", { name: "Primary Screening" })).toBeInTheDocument()
-      expect(canvas.getByRole("link", { name: "Data Overview" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("link", { name: "All Projects" })).toBeInTheDocument();
+      expect(canvas.getByRole("link", { name: "DUX4" })).toBeInTheDocument();
+      expect(canvas.getByRole("link", { name: "Primary Screening" })).toBeInTheDocument();
+      expect(canvas.getByRole("link", { name: "Data Overview" })).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4690" },
   },
-}
+};
 
 export const Collapsed: Story = {
   render: () => (
@@ -135,17 +134,17 @@ export const Collapsed: Story = {
     zephyr: { testCaseId: "SW-T1199" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Breadcrumb with ellipsis renders", async () => {
-      expect(canvas.getByRole("navigation", { name: "breadcrumb" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("navigation", { name: "breadcrumb" })).toBeInTheDocument();
+    });
 
     await step("Collapsed trail shows links, ellipsis, and current page", async () => {
-      expect(canvas.getByRole("link", { name: "Workspace" })).toBeInTheDocument()
-      expect(canvas.getByText("More")).toBeInTheDocument()
-      expect(canvas.getByRole("link", { name: "Components" })).toBeInTheDocument()
-      expect(canvas.getByRole("link", { name: "Hover Card" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("link", { name: "Workspace" })).toBeInTheDocument();
+      expect(canvas.getByText("More")).toBeInTheDocument();
+      expect(canvas.getByRole("link", { name: "Components" })).toBeInTheDocument();
+      expect(canvas.getByRole("link", { name: "Hover Card" })).toBeInTheDocument();
+    });
   },
-}
+};

@@ -1,36 +1,24 @@
-import * as React from "react"
+import * as React from "react";
 
-import { FieldGroup } from "@/components/ui/field"
-import { Separator } from "@/components/ui/separator"
-import { cn } from "@/lib/utils"
+import { FieldGroup } from "@/components/ui/field";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 export interface FormSectionProps extends React.ComponentProps<"div"> {
-  heading: string
-  description?: string
-  children: React.ReactNode
+  heading: string;
+  description?: string;
+  children: React.ReactNode;
 }
 
-export function FormSection({
-  heading,
-  description,
-  children,
-  className,
-  ...props
-}: FormSectionProps) {
+export function FormSection({ heading, description, children, className, ...props }: FormSectionProps) {
   return (
-    <div
-      data-slot="form-section"
-      className={cn("flex flex-col gap-4", className)}
-      {...props}
-    >
+    <div data-slot="form-section" className={cn("flex flex-col gap-4", className)} {...props}>
       <div className="space-y-0.5">
         <p className="text-sm font-semibold">{heading}</p>
-        {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        )}
+        {description && <p className="text-sm text-muted-foreground">{description}</p>}
       </div>
       <Separator />
       <FieldGroup>{children}</FieldGroup>
     </div>
-  )
+  );
 }

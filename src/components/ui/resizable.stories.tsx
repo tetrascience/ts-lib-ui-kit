@@ -1,18 +1,14 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "./resizable"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./resizable";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-import type { ComponentProps, ReactNode } from "react"
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ComponentProps, ReactNode } from "react";
 
 /** Args for the demos: the panel-group props plus the handle's `withHandle`. */
 type DemoArgs = ComponentProps<typeof ResizablePanelGroup> & {
-  withHandle?: boolean
-}
+  withHandle?: boolean;
+};
 
 const meta: Meta<DemoArgs> = {
   title: "Components/Layout & Structure/Resizable",
@@ -38,23 +34,15 @@ const meta: Meta<DemoArgs> = {
     orientation: "horizontal",
     withHandle: true,
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<DemoArgs>
+type Story = StoryObj<DemoArgs>;
 
 /* ---- shared panel content (mirrors the SW-2120 prototype) ---- */
 
-function PanelShell({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string
-  subtitle?: string
-  children: ReactNode
-}) {
+function PanelShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   // padded wrapper so each section reads as its own card, with the panel-group
   // background showing through the gap between them
   return (
@@ -62,14 +50,12 @@ function PanelShell({
       <div className="flex h-full flex-col gap-3 overflow-auto rounded-lg border bg-card p-4">
         <div>
           <p className="text-sm font-semibold">{title}</p>
-          {subtitle && (
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
         </div>
         {children}
       </div>
     </div>
-  )
+  );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -78,7 +64,7 @@ function Stat({ label, value }: { label: string; value: string }) {
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className="mt-0.5 text-base font-semibold">{value}</div>
     </div>
-  )
+  );
 }
 
 function SummaryPanel() {
@@ -90,16 +76,10 @@ function SummaryPanel() {
         <Stat label="Flagged aggregation" value="12" />
       </div>
     </PanelShell>
-  )
+  );
 }
 
-function LeadsPanel({
-  subtitle,
-  leads,
-}: {
-  subtitle: string
-  leads: [string, string][]
-}) {
+function LeadsPanel({ subtitle, leads }: { subtitle: string; leads: [string, string][] }) {
   return (
     <PanelShell title="Detail" subtitle={subtitle}>
       <div className="grid grid-cols-2 gap-2.5">
@@ -108,7 +88,7 @@ function LeadsPanel({
         ))}
       </div>
     </PanelShell>
-  )
+  );
 }
 
 function AssistantPanel() {
@@ -119,12 +99,11 @@ function AssistantPanel() {
           Which leads have the best developability?
         </div>
         <div className="max-w-[85%] self-start rounded-lg bg-muted px-3 py-2 text-sm">
-          Leads 3, 7 and 12 score highest on aggregation and thermostability.
-          Want me to filter the table to those?
+          Leads 3, 7 and 12 score highest on aggregation and thermostability. Want me to filter the table to those?
         </div>
       </div>
     </PanelShell>
-  )
+  );
 }
 
 /* ---- horizontal split: Summary | Detail ---- */
@@ -157,30 +136,28 @@ export const Horizontal: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const handle = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="resizable-handle"]'
-    )
-    if (!handle) throw new Error("resize handle not found")
+    const canvas = within(canvasElement);
+    const handle = canvasElement.querySelector<HTMLElement>('[data-slot="resizable-handle"]');
+    if (!handle) throw new Error("resize handle not found");
 
     await step("Panel content renders", async () => {
-      expect(canvas.getByText("Summary")).toBeInTheDocument()
-      expect(canvas.getByText("Selected leads")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Summary")).toBeInTheDocument();
+      expect(canvas.getByText("Selected leads")).toBeInTheDocument();
+    });
 
     await step("Divider footprint is 1px, on the panel seam", async () => {
-      expect(Math.round(handle.getBoundingClientRect().width)).toBe(1)
-    })
+      expect(Math.round(handle.getBoundingClientRect().width)).toBe(1);
+    });
 
     await step("Divider is hidden until interaction", async () => {
-      expect(getComputedStyle(handle).backgroundColor).toBe("rgba(0, 0, 0, 0)")
-    })
+      expect(getComputedStyle(handle).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    });
 
     await step("Grab area is a wide overlay that takes no layout", async () => {
-      expect(getComputedStyle(handle, "::after").width).toBe("12px")
-    })
+      expect(getComputedStyle(handle, "::after").width).toBe("12px");
+    });
   },
-}
+};
 
 /* ---- vertical split: Detail / AI Assistant ---- */
 
@@ -213,18 +190,18 @@ export const VerticalWithHandle: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Panel content renders", async () => {
-      expect(canvas.getByText("AI Assistant")).toBeInTheDocument()
-      expect(canvas.getByText("Main content area")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("AI Assistant")).toBeInTheDocument();
+      expect(canvas.getByText("Main content area")).toBeInTheDocument();
+    });
 
     await step("Resize handle is present", async () => {
-      expect(canvas.getByRole("separator")).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("separator")).toBeInTheDocument();
+    });
   },
-}
+};
 
 /* ---- option: no grip (withHandle omitted) ---- */
 
@@ -257,20 +234,18 @@ export const WithoutGrip: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const handle = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="resizable-handle"]'
-    )
-    if (!handle) throw new Error("resize handle not found")
+    const handle = canvasElement.querySelector<HTMLElement>('[data-slot="resizable-handle"]');
+    if (!handle) throw new Error("resize handle not found");
 
     await step("Handle has no grip child", async () => {
-      expect(handle.querySelector("div")).toBeNull()
-    })
+      expect(handle.querySelector("div")).toBeNull();
+    });
 
     await step("Grab area is still a wide overlay", async () => {
-      expect(getComputedStyle(handle, "::after").width).toBe("12px")
-    })
+      expect(getComputedStyle(handle, "::after").width).toBe("12px");
+    });
   },
-}
+};
 
 /* ---- option: always-visible divider (className override) ---- */
 
@@ -284,10 +259,7 @@ export const AlwaysVisibleDivider: Story = {
         <ResizablePanel defaultSize="38%" minSize="20%" maxSize="80%">
           <SummaryPanel />
         </ResizablePanel>
-        <ResizableHandle
-          withHandle={withHandle}
-          className="bg-border [&>div]:bg-border"
-        />
+        <ResizableHandle withHandle={withHandle} className="bg-border [&>div]:bg-border" />
         <ResizablePanel defaultSize="62%">
           <LeadsPanel
             subtitle="Selected leads"
@@ -303,15 +275,11 @@ export const AlwaysVisibleDivider: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const handle = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="resizable-handle"]'
-    )
-    if (!handle) throw new Error("resize handle not found")
+    const handle = canvasElement.querySelector<HTMLElement>('[data-slot="resizable-handle"]');
+    if (!handle) throw new Error("resize handle not found");
 
     await step("Divider is visible at rest", async () => {
-      expect(getComputedStyle(handle).backgroundColor).not.toBe(
-        "rgba(0, 0, 0, 0)"
-      )
-    })
+      expect(getComputedStyle(handle).backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    });
   },
-}
+};

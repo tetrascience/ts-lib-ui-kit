@@ -1,17 +1,13 @@
-"use client"
+"use client";
 
-import { PanelBottom, PanelLeft, PanelRight, X } from "lucide-react"
-import * as React from "react"
+import { PanelBottom, PanelLeft, PanelRight, X } from "lucide-react";
+import * as React from "react";
 
-import { dockPanels, type AssistantDock } from "./dockLayout"
+import { dockPanels, type AssistantDock } from "./dockLayout";
 
-import { Button } from "@/components/ui/button"
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Context + provider
@@ -19,44 +15,44 @@ import { cn } from "@/lib/utils"
 
 interface AssistantLayoutContextValue {
   /** Where the assistant docks. Persisted. */
-  dock: AssistantDock
-  setDock: (dock: AssistantDock) => void
+  dock: AssistantDock;
+  setDock: (dock: AssistantDock) => void;
   /** Assistant size as a percentage of the layout along the dock axis. Persisted. */
-  size: number
-  setSize: (size: number) => void
+  size: number;
+  setSize: (size: number) => void;
   /** Whether the assistant is shown. In-memory by default (resets to visible on reload). */
-  visible: boolean
-  setVisible: (visible: boolean) => void
+  visible: boolean;
+  setVisible: (visible: boolean) => void;
 }
 
-const AssistantLayoutContext = React.createContext<AssistantLayoutContextValue | null>(null)
+const AssistantLayoutContext = React.createContext<AssistantLayoutContextValue | null>(null);
 
 export interface AssistantLayoutProviderProps {
-  children: React.ReactNode
+  children: React.ReactNode;
   /** localStorage key prefix for the persisted dock + size. */
-  storageKey?: string
+  storageKey?: string;
   /** Default dock when nothing is persisted. */
-  defaultDock?: AssistantDock
+  defaultDock?: AssistantDock;
   /** Default assistant size as a percentage (1–99) of the layout. */
-  defaultSize?: number
+  defaultSize?: number;
   /** Whether the assistant starts visible. */
-  defaultVisible?: boolean
+  defaultVisible?: boolean;
   /** Persist dock + size to localStorage. Defaults to `true`. */
-  persist?: boolean
+  persist?: boolean;
 }
 
 function readDock(key: string, fallback: AssistantDock): AssistantDock {
-  if (typeof window === "undefined") return fallback
-  const v = window.localStorage.getItem(`${key}.dock`)
-  return v === "right" || v === "bottom" || v === "left" ? v : fallback
+  if (typeof window === "undefined") return fallback;
+  const v = window.localStorage.getItem(`${key}.dock`);
+  return v === "right" || v === "bottom" || v === "left" ? v : fallback;
 }
 
 function readSize(key: string, fallback: number): number {
-  if (typeof window === "undefined") return fallback
-  const v = Number(window.localStorage.getItem(`${key}.size`))
+  if (typeof window === "undefined") return fallback;
+  const v = Number(window.localStorage.getItem(`${key}.size`));
   // Persisted as a percentage; ignore anything outside the open (0, 100) range.
-  if (!Number.isFinite(v) || v <= 0 || v >= 100) return fallback
-  return v
+  if (!Number.isFinite(v) || v <= 0 || v >= 100) return fallback;
+  return v;
 }
 
 export function AssistantLayoutProvider({
@@ -68,43 +64,42 @@ export function AssistantLayoutProvider({
   persist = true,
 }: AssistantLayoutProviderProps) {
   const [dock, setDockState] = React.useState<AssistantDock>(() =>
-    persist ? readDock(storageKey, defaultDock) : defaultDock
-  )
+    persist ? readDock(storageKey, defaultDock) : defaultDock,
+  );
   const [size, setSizeState] = React.useState<number>(() =>
-    persist ? readSize(storageKey, defaultSize) : defaultSize
-  )
-  const [visible, setVisible] = React.useState(defaultVisible)
+    persist ? readSize(storageKey, defaultSize) : defaultSize,
+  );
+  const [visible, setVisible] = React.useState(defaultVisible);
 
   const setDock = React.useCallback(
     (next: AssistantDock) => {
-      setDockState(next)
-      if (persist && typeof window !== "undefined")
-        window.localStorage.setItem(`${storageKey}.dock`, next)
+      setDockState(next);
+      if (persist && typeof window !== "undefined") window.localStorage.setItem(`${storageKey}.dock`, next);
     },
-    [storageKey, persist]
-  )
+    [storageKey, persist],
+  );
 
   const setSize = React.useCallback(
     (next: number) => {
-      setSizeState(next)
+      setSizeState(next);
       if (persist && typeof window !== "undefined")
-        window.localStorage.setItem(`${storageKey}.size`, String(Math.round(next)))
+        window.localStorage.setItem(`${storageKey}.size`, String(Math.round(next)));
     },
-    [storageKey, persist]
-  )
+    [storageKey, persist],
+  );
 
   const value = React.useMemo(
     () => ({ dock, setDock, size, setSize, visible, setVisible }),
-    [dock, setDock, size, setSize, visible]
-  )
+    [dock, setDock, size, setSize, visible],
+  );
 
-  return <AssistantLayoutContext.Provider value={value}>{children}</AssistantLayoutContext.Provider>
+  return <AssistantLayoutContext.Provider value={value}>{children}</AssistantLayoutContext.Provider>;
 }
 
 export function useAssistantLayout(): AssistantLayoutContextValue {
-  const ctx = React.useContext(AssistantLayoutContext)
-  if (!ctx) throw new Error("useAssistantLayout must be used within an AssistantLayoutProvider")
-  return ctx
+  const ctx = React.useContext(AssistantLayoutContext);
+  if (!ctx) throw new Error("useAssistantLayout must be used within an AssistantLayoutProvider");
+  return ctx;
 }
 
 // ---------------------------------------------------------------------------
@@ -115,12 +110,12 @@ const DOCK_OPTIONS: { value: AssistantDock; label: string; Icon: typeof PanelLef
   { value: "left", label: "Dock assistant left", Icon: PanelLeft },
   { value: "bottom", label: "Dock assistant bottom", Icon: PanelBottom },
   { value: "right", label: "Dock assistant right", Icon: PanelRight },
-]
+];
 
 export interface AssistantDockControlsProps {
   /** Label shown before the icons. Pass `null` to hide it. */
-  label?: React.ReactNode
-  className?: string
+  label?: React.ReactNode;
+  className?: string;
 }
 
 /**
@@ -128,14 +123,14 @@ export interface AssistantDockControlsProps {
  * assistant there; clicking the active icon again hides it.
  */
 export function AssistantDockControls({ label = "AI Assistant", className }: AssistantDockControlsProps) {
-  const { dock, setDock, visible, setVisible } = useAssistantLayout()
+  const { dock, setDock, visible, setVisible } = useAssistantLayout();
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
       {label != null && <span className="text-sm font-medium">{label}</span>}
       <div className="inline-flex overflow-hidden rounded-lg border border-border">
         {DOCK_OPTIONS.map(({ value, label: optionLabel, Icon }) => {
-          const active = visible && dock === value
+          const active = visible && dock === value;
           return (
             <Button
               key={value}
@@ -149,20 +144,20 @@ export function AssistantDockControls({ label = "AI Assistant", className }: Ass
               aria-pressed={active}
               title={active ? "Hide AI Assistant" : optionLabel}
               onClick={() => {
-                if (active) setVisible(false)
+                if (active) setVisible(false);
                 else {
-                  setDock(value)
-                  setVisible(true)
+                  setDock(value);
+                  setVisible(true);
                 }
               }}
             >
               <Icon className="size-4" />
             </Button>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -172,18 +167,18 @@ export function AssistantDockControls({ label = "AI Assistant", className }: Ass
 // Each panel is padded so the resize handle sits in a comfortable gutter between
 // the cards rather than a hairline seam (SW-2096). The padding lives inside the
 // panel box, so react-resizable-panels' flex sizing is unaffected.
-const PANEL_PAD = "flex min-h-0 min-w-0 p-2"
+const PANEL_PAD = "flex min-h-0 min-w-0 p-2";
 // The visible card surface rendered inside each panel.
 const CARD_CLASS =
-  "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card"
+  "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card";
 
-const ASSISTANT_PANEL_ID = "assistant"
+const ASSISTANT_PANEL_ID = "assistant";
 
 export interface AssistantLayoutProps {
   /** The AI Assistant panel content (e.g. a `<Chat />`). */
-  assistant: React.ReactNode
+  assistant: React.ReactNode;
   /** The main content; fills the remaining space (and the whole body when the assistant is hidden). */
-  children: React.ReactNode
+  children: React.ReactNode;
   /**
    * Title for the assistant panel's header cap (SW-2592). When set, the panel
    * renders a tinted (`bg-accent`) header band above `assistant` — the thing
@@ -191,20 +186,20 @@ export interface AssistantLayoutProps {
    * (both are otherwise the same `bg-card` card). Omit to keep the panel a plain
    * card whose chrome you supply inside `assistant` (backward compatible).
    */
-  assistantTitle?: React.ReactNode
+  assistantTitle?: React.ReactNode;
   /** Optional element before the title in the header cap (e.g. an icon). */
-  assistantIcon?: React.ReactNode
+  assistantIcon?: React.ReactNode;
   /** Extra elements in the header cap, before the close button. */
-  assistantHeaderActions?: React.ReactNode
+  assistantHeaderActions?: React.ReactNode;
   /** Render a close button in the header cap that hides the panel. Defaults to `true` when `assistantTitle` is set. */
-  showAssistantClose?: boolean
+  showAssistantClose?: boolean;
   /** Min assistant size as a percentage of the layout. */
-  minSize?: number
+  minSize?: number;
   /** Max assistant size as a percentage of the layout. */
-  maxSize?: number
-  className?: string
-  assistantClassName?: string
-  contentClassName?: string
+  maxSize?: number;
+  className?: string;
+  assistantClassName?: string;
+  contentClassName?: string;
 }
 
 /**
@@ -230,13 +225,13 @@ export function AssistantLayout({
   assistantClassName,
   contentClassName,
 }: AssistantLayoutProps) {
-  const { dock, size, setSize, visible, setVisible } = useAssistantLayout()
-  const { orientation, assistantFirst } = dockPanels(dock)
+  const { dock, size, setSize, visible, setVisible } = useAssistantLayout();
+  const { orientation, assistantFirst } = dockPanels(dock);
 
   // Accent header cap — the assistant panel's brand band. Only rendered when a
   // title is provided; content panel never gets one, so the two panels read as
   // distinct even though both are `bg-card` (SW-2592).
-  const showClose = showAssistantClose ?? assistantTitle != null
+  const showClose = showAssistantClose ?? assistantTitle != null;
   const assistantHeader = assistantTitle != null && (
     <div
       data-slot="assistant-layout-assistant-header"
@@ -257,15 +252,12 @@ export function AssistantLayout({
         </Button>
       )}
     </div>
-  )
+  );
 
   // Hidden: no resizable group, content fills the whole body.
   if (!visible) {
     return (
-      <div
-        data-slot="assistant-layout"
-        className={cn("flex min-h-0 flex-1 overflow-hidden", className)}
-      >
+      <div data-slot="assistant-layout" className={cn("flex min-h-0 flex-1 overflow-hidden", className)}>
         {/* flex-1 so the lone content panel fills the width (the ResizablePanel
             self-sizes when visible; this plain div needs to be told to grow).
             Padded to match the inset the visible panels carry. */}
@@ -275,7 +267,7 @@ export function AssistantLayout({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   const assistantPanel = (
@@ -291,7 +283,7 @@ export function AssistantLayout({
         {assistant}
       </div>
     </ResizablePanel>
-  )
+  );
 
   const contentPanel = (
     <ResizablePanel id="content" className={PANEL_PAD}>
@@ -299,7 +291,7 @@ export function AssistantLayout({
         {children}
       </div>
     </ResizablePanel>
-  )
+  );
 
   return (
     <ResizablePanelGroup
@@ -308,8 +300,8 @@ export function AssistantLayout({
       data-slot="assistant-layout"
       className={cn("min-h-0 flex-1 overflow-hidden", className)}
       onLayoutChanged={(layout) => {
-        const pct = layout[ASSISTANT_PANEL_ID]
-        if (typeof pct === "number") setSize(pct)
+        const pct = layout[ASSISTANT_PANEL_ID];
+        if (typeof pct === "number") setSize(pct);
       }}
     >
       {assistantFirst ? (
@@ -326,5 +318,5 @@ export function AssistantLayout({
         </>
       )}
     </ResizablePanelGroup>
-  )
+  );
 }

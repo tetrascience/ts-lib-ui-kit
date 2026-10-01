@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { expect, screen, userEvent, within } from "storybook/test"
+import { useState } from "react";
+import { expect, screen, userEvent, within } from "storybook/test";
 
 import {
   ModelSelector,
@@ -16,15 +16,12 @@ import {
   ModelSelectorSeparator,
   ModelSelectorShortcut,
   ModelSelectorTrigger,
-} from "./model-selector"
+} from "./model-selector";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { Button } from "@/components/ui/button"
-import { Command } from "@/components/ui/command"
-
-
-
+import { Button } from "@/components/ui/button";
+import { Command } from "@/components/ui/command";
 
 const meta: Meta = {
   title: "AI Elements/Input/Model Selector",
@@ -32,23 +29,23 @@ const meta: Meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
 const models = [
   { id: "claude-opus-4", name: "Claude Opus 4", provider: "anthropic" as const },
   { id: "gpt-4o", name: "GPT-4o", provider: "openai" as const },
   { id: "gemini-2", name: "Gemini 2", provider: "google" as const },
-]
+];
 
 export const Default: Story = {
   render: () => {
     const Example = () => {
-      const [open, setOpen] = useState(false)
-      const [selected, setSelected] = useState(models[0])
+      const [open, setOpen] = useState(false);
+      const [selected, setSelected] = useState(models[0]);
 
       return (
         <>
@@ -70,8 +67,8 @@ export const Default: Story = {
                     <ModelSelectorItem
                       key={m.id}
                       onSelect={() => {
-                        setSelected(m)
-                        setOpen(false)
+                        setSelected(m);
+                        setOpen(false);
                       }}
                       value={m.name}
                     >
@@ -83,42 +80,40 @@ export const Default: Story = {
                 </ModelSelectorGroup>
                 <ModelSelectorSeparator />
                 <ModelSelectorGroup heading="Actions">
-                  <ModelSelectorItem value="settings">
-                    Settings
-                  </ModelSelectorItem>
+                  <ModelSelectorItem value="settings">Settings</ModelSelectorItem>
                 </ModelSelectorGroup>
               </ModelSelectorList>
             </ModelSelectorContent>
           </ModelSelector>
         </>
-      )
-    }
+      );
+    };
 
-    return <Example />
+    return <Example />;
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Trigger button renders selected model", async () => {
-      await expect(canvas.getByText("Claude Opus 4")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Claude Opus 4")).toBeInTheDocument();
+    });
 
     await step("Opening dialog shows models list", async () => {
-      await userEvent.click(canvas.getByRole("button"))
-      await screen.findByPlaceholderText("Search models…")
-      await expect(screen.getByText("Available models")).toBeInTheDocument()
-      await expect(screen.getByText("GPT-4o")).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByRole("button"));
+      await screen.findByPlaceholderText("Search models…");
+      await expect(screen.getByText("Available models")).toBeInTheDocument();
+      await expect(screen.getByText("GPT-4o")).toBeInTheDocument();
+    });
 
     await step("Selecting a model updates trigger", async () => {
-      await userEvent.click(screen.getByText("GPT-4o"))
-      await expect(canvas.getByText("GPT-4o")).toBeInTheDocument()
-    })
+      await userEvent.click(screen.getByText("GPT-4o"));
+      await expect(canvas.getByText("GPT-4o")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4565" },
   },
-}
+};
 
 export const EmptySearch: Story = {
   render: () => {
@@ -141,26 +136,26 @@ export const EmptySearch: Story = {
           </ModelSelectorList>
         </ModelSelectorContent>
       </ModelSelector>
-    )
+    );
 
-    return <Example />
+    return <Example />;
   },
   play: async ({ step }) => {
     await step("Searching for nonexistent model shows empty state", async () => {
-      const input = await screen.findByPlaceholderText("Search models…")
-      await userEvent.type(input, "zzznothing")
-      await expect(await screen.findByText("No models found.")).toBeInTheDocument()
-    })
+      const input = await screen.findByPlaceholderText("Search models…");
+      await userEvent.type(input, "zzznothing");
+      await expect(await screen.findByText("No models found.")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4566" },
   },
-}
+};
 
 export const UsingCommandDialog: Story = {
   render: () => {
     const Example = () => {
-      const [open, setOpen] = useState(true)
+      const [open, setOpen] = useState(true);
       return (
         <ModelSelectorDialog onOpenChange={setOpen} open={open} title="Pick a model">
           <Command>
@@ -181,18 +176,18 @@ export const UsingCommandDialog: Story = {
             </ModelSelectorList>
           </Command>
         </ModelSelectorDialog>
-      )
-    }
+      );
+    };
 
-    return <Example />
+    return <Example />;
   },
   play: async ({ step }) => {
     await step("CommandDialog opens with model list", async () => {
-      await expect(await screen.findByPlaceholderText("Type a model…")).toBeInTheDocument()
-      await expect(screen.getByText("Models")).toBeInTheDocument()
-    })
+      await expect(await screen.findByPlaceholderText("Type a model…")).toBeInTheDocument();
+      await expect(screen.getByText("Models")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4567" },
   },
-}
+};

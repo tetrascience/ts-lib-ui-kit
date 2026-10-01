@@ -19,10 +19,7 @@ describe("applyStackingTransform - overlay mode", () => {
 
   it("flattens annotations from all series", () => {
     const series = [makeSeries([1, 2]), makeSeries([3, 4])];
-    const annotations: PeakAnnotation[][] = [
-      [{ x: 0, y: 1 }],
-      [{ x: 1, y: 3 }],
-    ];
+    const annotations: PeakAnnotation[][] = [[{ x: 0, y: 1 }], [{ x: 1, y: 3 }]];
     const result = applyStackingTransform(series, annotations, "overlay", 10);
     expect(result.annotations).toHaveLength(2);
   });
@@ -65,10 +62,7 @@ describe("applyStackingTransform - stack mode (first-on-bottom)", () => {
 
   it("shifts peak annotation y values matching their series", () => {
     const series = [makeSeries([0, 5]), makeSeries([0, 5])];
-    const annotations: PeakAnnotation[][] = [
-      [{ x: 1, y: 5 }],
-      [{ x: 1, y: 5 }],
-    ];
+    const annotations: PeakAnnotation[][] = [[{ x: 1, y: 5 }], [{ x: 1, y: 5 }]];
     const result = applyStackingTransform(series, annotations, "stack", 10);
     expect(result.annotations[0].y).toBe(5); // series 0, no shift
     expect(result.annotations[1].y).toBe(15); // series 1, +10
@@ -102,10 +96,7 @@ describe("applyStackingTransform - stack mode (first-on-top)", () => {
 
   it("shifts annotations by first-on-top offset", () => {
     const series = [makeSeries([0, 5]), makeSeries([0, 5])];
-    const annotations: PeakAnnotation[][] = [
-      [{ x: 0, y: 5 }],
-      [{ x: 1, y: 5 }],
-    ];
+    const annotations: PeakAnnotation[][] = [[{ x: 0, y: 5 }], [{ x: 1, y: 5 }]];
     // N=2: index 0 → (2-1-0)*10=10; index 1 → 0
     const result = applyStackingTransform(series, annotations, "stack", 10, "first-on-top");
     expect(result.annotations[0].y).toBe(15);

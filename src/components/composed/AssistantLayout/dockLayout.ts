@@ -1,11 +1,11 @@
 /** Where the AI Assistant panel docks relative to the main content. */
-export type AssistantDock = "left" | "right" | "bottom"
+export type AssistantDock = "left" | "right" | "bottom";
 
 export interface DockPanels {
   /** Resizable group orientation for this dock. */
-  orientation: "horizontal" | "vertical"
+  orientation: "horizontal" | "vertical";
   /** Whether the assistant panel renders before the content panel. */
-  assistantFirst: boolean
+  assistantFirst: boolean;
 }
 
 /**
@@ -18,5 +18,5 @@ export function dockPanels(dock: AssistantDock): DockPanels {
   return {
     orientation: dock === "bottom" ? "vertical" : "horizontal",
     assistantFirst: dock === "left",
-  }
+  };
 }

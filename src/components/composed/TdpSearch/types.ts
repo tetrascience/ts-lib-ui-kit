@@ -12,7 +12,7 @@ interface SearchResult {
 interface TdpSearchFilter {
   key: string;
   label: string;
-  options:  { value: string; label: string, disabled: boolean }[];
+  options: { value: string; label: string; disabled: boolean }[];
 }
 
 /** Search expression for complex queries (matches SDK SearchEqlExpression) */
@@ -155,4 +155,4 @@ export type {
   TdpResultsRenderProps,
   UseSearchConfig,
   UseSearchResult,
-}
+};

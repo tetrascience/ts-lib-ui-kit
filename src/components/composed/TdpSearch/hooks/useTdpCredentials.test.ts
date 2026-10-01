@@ -4,10 +4,7 @@ import { useTdpCredentials } from "../hooks/useTdpCredentials";
 
 describe("useTdpCredentials", () => {
   const originalLocalStorage = globalThis.localStorage;
-  const originalCookieDescriptor = Object.getOwnPropertyDescriptor(
-    Document.prototype,
-    "cookie",
-  );
+  const originalCookieDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, "cookie");
   const getItemMock = vi.fn<(key: string) => string | null>(() => null);
 
   beforeEach(() => {

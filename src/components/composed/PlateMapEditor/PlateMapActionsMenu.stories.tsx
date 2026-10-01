@@ -33,9 +33,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 function getTrigger(canvasElement: HTMLElement): HTMLButtonElement {
-  const trigger = canvasElement.querySelector<HTMLButtonElement>(
-    '[data-slot="dropdown-menu-trigger"]',
-  );
+  const trigger = canvasElement.querySelector<HTMLButtonElement>('[data-slot="dropdown-menu-trigger"]');
   if (!trigger) throw new Error("Actions menu trigger not found");
   return trigger;
 }
@@ -95,9 +93,7 @@ export const FullMenu: Story = {
     await step("Selecting a template invokes onTemplateChange", async () => {
       const body = within(document.body);
       await userEvent.click(body.getByText("3-point AUC"));
-      await waitFor(() =>
-        expect(args.onTemplateChange).toHaveBeenCalledWith("three-point-auc"),
-      );
+      await waitFor(() => expect(args.onTemplateChange).toHaveBeenCalledWith("three-point-auc"));
     });
 
     await step("Export template invokes onExportTemplate (entries present)", async () => {
@@ -283,9 +279,7 @@ export const TemplatesOnly: Story = {
     await step("Clicking a template option invokes onTemplateChange", async () => {
       const body = within(document.body);
       await userEvent.click(body.getByText("Custom layout"));
-      await waitFor(() =>
-        expect(args.onTemplateChange).toHaveBeenCalledWith("custom"),
-      );
+      await waitFor(() => expect(args.onTemplateChange).toHaveBeenCalledWith("custom"));
     });
   },
   parameters: {

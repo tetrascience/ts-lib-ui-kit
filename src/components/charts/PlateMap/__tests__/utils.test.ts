@@ -122,33 +122,25 @@ describe("wellDataToGrid", () => {
   });
 
   it("stores tooltipData in map", () => {
-    const wells: WellData[] = [
-      { wellId: "A1", values: { RFU: 100 }, tooltipData: { sampleId: "S1" } },
-    ];
+    const wells: WellData[] = [{ wellId: "A1", values: { RFU: 100 }, tooltipData: { sampleId: "S1" } }];
     const result = wellDataToGrid(wells, 1, 1, "RFU");
     expect(result.tooltipData.get("A1")).toEqual({ sampleId: "S1" });
   });
 
   it("stores all values in allValues map", () => {
-    const wells: WellData[] = [
-      { wellId: "A1", values: { RFU: 100, AU: 50 } },
-    ];
+    const wells: WellData[] = [{ wellId: "A1", values: { RFU: 100, AU: 50 } }];
     const result = wellDataToGrid(wells, 1, 1, "RFU");
     expect(result.allValues.get("A1")).toEqual({ RFU: 100, AU: 50 });
   });
 
   it("ignores out-of-bounds well IDs", () => {
-    const wells: WellData[] = [
-      { wellId: "Z99", values: { RFU: 100 } },
-    ];
+    const wells: WellData[] = [{ wellId: "Z99", values: { RFU: 100 } }];
     const result = wellDataToGrid(wells, 2, 2, "RFU");
     expect(result.grid.flat().every((v) => v === null)).toBe(true);
   });
 
   it("uses first key when layerId is not specified", () => {
-    const wells: WellData[] = [
-      { wellId: "A1", values: { Signal: 42 } },
-    ];
+    const wells: WellData[] = [{ wellId: "A1", values: { Signal: 42 } }];
     const result = wellDataToGrid(wells, 1, 1);
     expect(result.grid[0][0]).toBe(42);
   });
@@ -158,22 +150,34 @@ describe("wellDataToGrid", () => {
 
 describe("calculateValueRange", () => {
   it("calculates min/max from grid", () => {
-    const grid = [[100, 200], [50, 300]];
+    const grid = [
+      [100, 200],
+      [50, 300],
+    ];
     expect(calculateValueRange(grid)).toEqual({ min: 50, max: 300 });
   });
 
   it("ignores null values", () => {
-    const grid: (number | null)[][] = [[null, 100], [200, null]];
+    const grid: (number | null)[][] = [
+      [null, 100],
+      [200, null],
+    ];
     expect(calculateValueRange(grid)).toEqual({ min: 100, max: 200 });
   });
 
   it("returns 0/1 for all-null grid", () => {
-    const grid: (number | null)[][] = [[null, null], [null, null]];
+    const grid: (number | null)[][] = [
+      [null, null],
+      [null, null],
+    ];
     expect(calculateValueRange(grid)).toEqual({ min: 0, max: 1 });
   });
 
   it("handles single value (min === max)", () => {
-    const grid = [[5, 5], [5, 5]];
+    const grid = [
+      [5, 5],
+      [5, 5],
+    ];
     const { min, max } = calculateValueRange(grid);
     expect(min).toBe(5);
     expect(max).toBe(6); // min + 1
@@ -459,9 +463,15 @@ describe("calculateAxisDomain", () => {
 
 describe("flattenGridData", () => {
   it("flattens 2D grid into scatter plot data", () => {
-    const plotZ = [[1, 2], [3, 4]];
+    const plotZ = [
+      [1, 2],
+      [3, 4],
+    ];
     const rowLabels = ["A", "B"];
-    const hoverText = [["A1", "A2"], ["B1", "B2"]];
+    const hoverText = [
+      ["A1", "A2"],
+      ["B1", "B2"],
+    ];
     const result = flattenGridData(plotZ, rowLabels, hoverText, 2, 2, 0);
     expect(result.xData).toEqual([1, 2, 1, 2]);
     expect(result.yData).toEqual(["A", "A", "B", "B"]);

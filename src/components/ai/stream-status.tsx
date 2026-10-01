@@ -1,9 +1,4 @@
-import {
-  Disc3Icon,
-  LoaderCircleIcon,
-  LoaderIcon,
-  LoaderPinwheelIcon,
-} from "lucide-react";
+import { Disc3Icon, LoaderCircleIcon, LoaderIcon, LoaderPinwheelIcon } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 
 import type { ReactNode } from "react";
@@ -47,10 +42,10 @@ export type StreamStatusIconVariant = keyof typeof STREAM_STATUS_ICONS;
 export type StreamStatusState = "streaming" | "idle" | "done" | "error";
 
 const INDICATOR_CLASS: Record<StreamStatusState, string> = {
-  streaming: "animate-pulse bg-[#549DFF]",   // TS Light Blue 300
-  idle:      "bg-muted-foreground/40",
-  done:      "bg-[#038599]",                 // TS Forest Green 300
-  error:     "bg-[#E15759]",                 // TS Imperial Red
+  streaming: "animate-pulse bg-[#549DFF]", // TS Light Blue 300
+  idle: "bg-muted-foreground/40",
+  done: "bg-[#038599]", // TS Forest Green 300
+  error: "bg-[#E15759]", // TS Imperial Red
 };
 
 // ---------------------------------------------------------------------------
@@ -135,18 +130,15 @@ const StreamStatusComponent = ({
   iconVariant = "tetra",
   className,
 }: StreamStatusProps) => {
-  const resolvedState: StreamStatusState =
-    stateProp ?? (isStreaming ? "streaming" : "idle");
+  const resolvedState: StreamStatusState = stateProp ?? (isStreaming ? "streaming" : "idle");
 
   // `icon` wins when provided (including `null` for no icon); otherwise fall
   // back to the built-in variant, which defaults to the branded "tetra" mark.
-  const resolvedIcon =
-    icon === undefined ? STREAM_STATUS_ICONS[iconVariant] : icon;
+  const resolvedIcon = icon === undefined ? STREAM_STATUS_ICONS[iconVariant] : icon;
 
   const [elapsed, setElapsed] = useState(() => {
     if (startTime === undefined) return 0;
-    const origin =
-      typeof startTime === "number" ? startTime : startTime.getTime();
+    const origin = typeof startTime === "number" ? startTime : startTime.getTime();
     return Math.max(0, Math.floor((Date.now() - origin) / MS_PER_S));
   });
 
@@ -167,10 +159,8 @@ const StreamStatusComponent = ({
   // Elapsed-time ticker — only active while streaming
   useEffect(() => {
     if (!isStreaming || startTime === undefined) return;
-    const origin =
-      typeof startTime === "number" ? startTime : startTime.getTime();
-    const tick = () =>
-      setElapsed(Math.max(0, Math.floor((Date.now() - origin) / MS_PER_S)));
+    const origin = typeof startTime === "number" ? startTime : startTime.getTime();
+    const tick = () => setElapsed(Math.max(0, Math.floor((Date.now() - origin) / MS_PER_S)));
     tick();
     const id = setInterval(tick, MS_PER_S);
     return () => clearInterval(id);
@@ -180,29 +170,16 @@ const StreamStatusComponent = ({
   const showTokens = tokenCount !== undefined;
 
   return (
-    <div
-      aria-live="polite"
-      className={cn(
-        "flex items-center gap-2 text-sm text-muted-foreground",
-        className
-      )}
-    >
+    <div aria-live="polite" className={cn("flex items-center gap-2 text-sm text-muted-foreground", className)}>
       {/* Spinning icon — spins + pulse-surges while streaming */}
       {resolvedIcon !== undefined && (
-        <span
-          className={cn(
-            "shrink-0 [&>svg]:size-3.5",
-            isStreaming ? "ts-spin-pulse" : "opacity-40"
-          )}
-        >
+        <span className={cn("shrink-0 [&>svg]:size-3.5", isStreaming ? "ts-spin-pulse" : "opacity-40")}>
           {resolvedIcon}
         </span>
       )}
 
       {/* Elapsed time */}
-      {showTime && (
-        <span className="tabular-nums">{formatElapsed(elapsed)}</span>
-      )}
+      {showTime && <span className="tabular-nums">{formatElapsed(elapsed)}</span>}
 
       {/* Token count */}
       {showTokens && (
@@ -211,9 +188,7 @@ const StreamStatusComponent = ({
             ·
           </span>
           <span className="tabular-nums">
-            {tokenLabel != null && (
-              <span className="mr-0.5">{tokenLabel}</span>
-            )}
+            {tokenLabel != null && <span className="mr-0.5">{tokenLabel}</span>}
             {formatTokens(tokenCount)} tokens
           </span>
         </>
@@ -222,14 +197,9 @@ const StreamStatusComponent = ({
       {/* Right-end indicator dot — opt-in, colour driven by `state` */}
       {showIndicator && (
         <span className="relative flex size-3 shrink-0 items-center justify-center">
-          {confirming && (
-            <span className="ts-bubble-confirm absolute size-2 rounded-full bg-[#549DFF]" />
-          )}
+          {confirming && <span className="ts-bubble-confirm absolute size-2 rounded-full bg-[#549DFF]" />}
           <span
-            className={cn(
-              "size-1.5 rounded-full transition-colors duration-500",
-              INDICATOR_CLASS[resolvedState]
-            )}
+            className={cn("size-1.5 rounded-full transition-colors duration-500", INDICATOR_CLASS[resolvedState])}
           />
         </span>
       )}

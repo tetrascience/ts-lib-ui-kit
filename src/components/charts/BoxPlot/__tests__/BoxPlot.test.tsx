@@ -13,17 +13,14 @@ import type { Root } from "react-dom/client";
 // container size in explicitly (mirrors the AreaPlot test pattern).
 let triggerResize: (width: number, height: number) => void;
 class ResizeObserverStub {
-  constructor(
-    private callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void,
-  ) {
+  constructor(private callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void) {
     triggerResize = (width, height) => this.callback([{ contentRect: { width, height } }]);
   }
   observe() {}
   unobserve() {}
   disconnect() {}
 }
-(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver =
-  ResizeObserverStub;
+(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver = ResizeObserverStub;
 
 const plotly = vi.hoisted(() => ({
   newPlot: vi.fn(),
@@ -35,9 +32,7 @@ vi.mock("plotly.js-dist", () => ({ default: plotly }));
 const lastTraces = (): Array<{ fillcolor?: string; x?: unknown[] }> =>
   (plotly.newPlot.mock.calls.at(-1)?.[1] as Array<{ fillcolor?: string; x?: unknown[] }>) ?? [];
 
-const dataSeries: BoxPlotProps["dataSeries"] = [
-  { name: "Series 1", y: [10, 18, 14, 22, 9] },
-];
+const dataSeries: BoxPlotProps["dataSeries"] = [{ name: "Series 1", y: [10, 18, 14, 22, 9] }];
 
 const roots: Array<{ root: Root; container: HTMLElement }> = [];
 
@@ -120,6 +115,9 @@ describe("BoxPlot", () => {
       triggerResize(320, 260);
     });
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 320, height: 260 }));
+    expect(plotly.relayout).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ width: 320, height: 260 }),
+    );
   });
 });

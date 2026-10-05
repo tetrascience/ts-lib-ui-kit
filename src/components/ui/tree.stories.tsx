@@ -373,7 +373,7 @@ export const EmptyStateStory: Story = {
     );
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5731" },
   },
 };
 
@@ -459,7 +459,7 @@ export const ErrorStateStory: Story = {
     );
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5732" },
   },
 };
 
@@ -498,7 +498,7 @@ export const LoadMoreStory: Story = {
     );
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5733" },
   },
 };
 
@@ -539,7 +539,7 @@ export const Keyboard: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5715" },
   },
 };
 
@@ -922,6 +922,6 @@ export const PlaceholderAlignmentBehaviour: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5734" },
   },
 };

@@ -50,6 +50,7 @@ export const Confirmation = withRef("Confirmation", function Confirmation({
   approval,
   state,
   children,
+  ref,
   ...props
 }: ConfirmationProps) {
   const contextValue = useMemo(() => ({ approval, state }), [approval, state]);
@@ -84,6 +85,7 @@ export const Confirmation = withRef("Confirmation", function Confirmation({
         {visible && (
           <motion.div
             {...passthroughProps}
+            ref={ref}
             className={cn(
               "flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-elevation-3",
               className

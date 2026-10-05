@@ -184,6 +184,9 @@ export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditR
         }
         case "withRef":
           result.wrapped.push(`${file}:${name}`);
+          // withRef keeps the render function's own props type, so wrapping a component
+          // typed HTMLAttributes<T> still leaves `ref` out of its public props.
+          reportDomPropsWithoutRef(classified.render, name, result.excepted, report);
           if (classified.displayName !== name)
             report(declaration, name, "display-name", `withRef display name is ${JSON.stringify(classified.displayName)}; expected "${name}"`);
           break;

@@ -29,6 +29,8 @@ const MIN_SWEPT = 100
  */
 const RENDER_PROPS: Record<string, Record<string, unknown>> = {
   DataAppShellRightPanel: { id: "ref-sweep", open: true, persist: false },
+  // Renders nothing until a tool call asks for approval.
+  Confirmation: { approval: { id: "ref-sweep" }, state: "approval-requested" },
 }
 
 type ExoticLike = { $$typeof?: symbol; displayName?: string; type?: ExoticLike }

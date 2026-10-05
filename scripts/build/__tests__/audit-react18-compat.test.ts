@@ -76,8 +76,12 @@ describe("React 18 compatibility audit", () => {
         export function Chip(props: React.HTMLAttributes<HTMLSpanElement>) { return <span {...props} /> }
         export const Conversation = (props: React.HTMLAttributes<HTMLDivElement>) => <div {...props} />
         export function NavItem({ onClick }: { onClick: () => void }) { return <button onClick={onClick} /> }
+        export const Tag = withRef("Tag", function Tag(props: React.HTMLAttributes<HTMLSpanElement>) { return <span {...props} /> })
       `);
-      expect(violations.map((v) => [v.name, v.kind])).toEqual([["Chip", "dom-props-without-ref"]]);
+      expect(violations.map((v) => [v.name, v.kind])).toEqual([
+        ["Chip", "dom-props-without-ref"],
+        ["Tag", "dom-props-without-ref"],
+      ]);
       expect(excepted).toEqual(["Conversation"]);
     });
 

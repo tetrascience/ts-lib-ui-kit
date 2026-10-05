@@ -11,19 +11,12 @@
 import type { BundledLanguage } from "shiki";
 import type { CodeHighlighterPlugin } from "streamdown";
 
-import {
-  getCodeBlockHighlighter,
-  getSupportedCodeBlockLanguages,
-  resolveCodeBlockLanguage,
-} from "@/lib/shiki";
+import { getCodeBlockHighlighter, getSupportedCodeBlockLanguages, resolveCodeBlockLanguage } from "@/lib/shiki";
 
 type HighlightCallback = NonNullable<Parameters<CodeHighlighterPlugin["highlight"]>[1]>;
 type HighlightResult = Parameters<HighlightCallback>[0];
 
-const THEMES: ReturnType<CodeHighlighterPlugin["getThemes"]> = [
-  "github-light",
-  "github-dark",
-];
+const THEMES: ReturnType<CodeHighlighterPlugin["getThemes"]> = ["github-light", "github-dark"];
 
 // Highlighted-token cache + pending-callback registry, mirroring the
 // upstream plugin's sync-return/async-callback protocol: return cached

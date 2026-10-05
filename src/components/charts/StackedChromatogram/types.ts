@@ -1,13 +1,8 @@
-import type {
-  ChromatogramProps,
-  ChromatogramSeries,
-  PeakAnnotation,
-} from "../Chromatogram";
+import type { ChromatogramProps, ChromatogramSeries, PeakAnnotation } from "../Chromatogram";
 
 export type StackingMode = "overlay" | "stack";
 
-export interface StackedChromatogramProps
-  extends Omit<ChromatogramProps, "series" | "annotations" | "yRange"> {
+export interface StackedChromatogramProps extends Omit<ChromatogramProps, "series" | "annotations" | "yRange"> {
   /** Array of data series to display */
   series: ChromatogramSeries[];
 

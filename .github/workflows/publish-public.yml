@@ -2,7 +2,7 @@ name: Publish to Public npm
 
 on:
   push:
-    tags: '*'
+    tags: "*"
     branches:
       - main
 
@@ -25,7 +25,7 @@ jobs:
     with:
       publish_to_public_npm: true
     secrets:
-      PUBLISH_REGISTRY: 'https://registry.npmjs.org'
+      PUBLISH_REGISTRY: "https://registry.npmjs.org"
 
   publish-beta:
     if: github.ref == 'refs/heads/main'
@@ -34,4 +34,4 @@ jobs:
       prerelease_tag: beta
       publish_to_public_npm: true
     secrets:
-      PUBLISH_REGISTRY: 'https://registry.npmjs.org'
+      PUBLISH_REGISTRY: "https://registry.npmjs.org"

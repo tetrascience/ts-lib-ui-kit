@@ -1,12 +1,12 @@
-import { CopyIcon, GlobeIcon, RefreshCcwIcon } from "lucide-react"
-import { useCallback, useId, useState } from "react"
+import { CopyIcon, GlobeIcon, RefreshCcwIcon } from "lucide-react";
+import { useCallback, useId, useState } from "react";
 
 import {
   Conversation,
   ConversationContent,
   ConversationEmptyState,
   ConversationScrollButton,
-} from "@/components/ai/conversation"
+} from "@/components/ai/conversation";
 import {
   Message,
   MessageAction,
@@ -20,7 +20,7 @@ import {
   MessageContent,
   MessageResponse,
   MessageToolbar,
-} from "@/components/ai/message"
+} from "@/components/ai/message";
 import {
   PromptInput,
   PromptInputBody,
@@ -35,53 +35,53 @@ import {
   PromptInputTextarea,
   PromptInputTools,
   type PromptInputMessage,
-} from "@/components/ai/prompt-input"
-import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/ai/reasoning"
-import { Source, Sources, SourcesContent, SourcesTrigger } from "@/components/ai/sources"
-import { StreamStatus } from "@/components/ai/stream-status"
-import { Suggestion, Suggestions } from "@/components/ai/suggestion"
-import { cn } from "@/lib/utils"
+} from "@/components/ai/prompt-input";
+import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/ai/reasoning";
+import { Source, Sources, SourcesContent, SourcesTrigger } from "@/components/ai/sources";
+import { StreamStatus } from "@/components/ai/stream-status";
+import { Suggestion, Suggestions } from "@/components/ai/suggestion";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export interface ChatSource {
-  href: string
-  title: string
+  href: string;
+  title: string;
 }
 
 export interface ChatMessage {
-  id: string
-  role: "user" | "assistant"
-  content: string
+  id: string;
+  role: "user" | "assistant";
+  content: string;
   /** Displayed in a collapsible Reasoning panel above the message content. */
-  reasoning?: string
+  reasoning?: string;
   /** Web sources used to produce this message. */
-  sources?: ChatSource[]
+  sources?: ChatSource[];
   /** Multiple alternative responses (for branching). When provided, the
    *  array should include `content` as one of its items. */
-  branches?: string[]
+  branches?: string[];
 }
 
 export interface ChatModel {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export interface ChatProps {
   /** Initial messages to pre-populate the conversation. */
-  initialMessages?: ChatMessage[]
+  initialMessages?: ChatMessage[];
   /** Available models shown in the model-selector dropdown. */
-  models?: ChatModel[]
+  models?: ChatModel[];
   /** Initial model id. Defaults to the first model in `models`. */
-  defaultModel?: string
+  defaultModel?: string;
   /** Suggestion chips shown when the conversation is empty. */
-  suggestions?: string[]
+  suggestions?: string[];
   /** Called when the user submits a message. The returned string (if any)
    *  will be appended as the assistant's reply. Defaults to a no-op. */
-  onSend?: (message: string, model: string) => Promise<string | undefined> | string | undefined
-  className?: string
+  onSend?: (message: string, model: string) => Promise<string | undefined> | string | undefined;
+  className?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -91,22 +91,22 @@ export interface ChatProps {
 const DEFAULT_MODELS: ChatModel[] = [
   { id: "claude-sonnet-4-6", name: "Claude Sonnet" },
   { id: "claude-opus-4-7", name: "Claude Opus" },
-]
+];
 
 const DEFAULT_SUGGESTIONS = [
   "Explain quantum entanglement simply",
   "Write a Python script to rename files",
   "Summarise the latest AI research trends",
   "What is the difference between TCP and UDP?",
-]
+];
 
-let _idCounter = 0
+let _idCounter = 0;
 const nextId = () => {
-  _idCounter += 1
-  return `chat-msg-${_idCounter}`
-}
+  _idCounter += 1;
+  return `chat-msg-${_idCounter}`;
+};
 
-const STREAM_STATUS_LINGER_MS = 3000
+const STREAM_STATUS_LINGER_MS = 3000;
 
 // ---------------------------------------------------------------------------
 // Chat component
@@ -120,61 +120,61 @@ export const Chat = ({
   onSend,
   className,
 }: ChatProps) => {
-  const labelId = useId()
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
-  const [text, setText] = useState("")
-  const [model, setModel] = useState(defaultModel ?? models[0]?.id ?? "")
-  const [webSearch, setWebSearch] = useState(false)
-  const [status, setStatus] = useState<"ready" | "streaming">("ready")
-  const [streamStart, setStreamStart] = useState<Date | undefined>()
+  const labelId = useId();
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [text, setText] = useState("");
+  const [model, setModel] = useState(defaultModel ?? models[0]?.id ?? "");
+  const [webSearch, setWebSearch] = useState(false);
+  const [status, setStatus] = useState<"ready" | "streaming">("ready");
+  const [streamStart, setStreamStart] = useState<Date | undefined>();
 
   const handleSubmit = useCallback(
     async (_msg: PromptInputMessage) => {
-      const trimmed = text.trim()
-      if (!trimmed || status === "streaming") return
+      const trimmed = text.trim();
+      if (!trimmed || status === "streaming") return;
 
       const userMsg: ChatMessage = {
         id: nextId(),
         role: "user",
         content: trimmed,
-      }
-      setMessages((prev) => [...prev, userMsg])
-      setText("")
-      setStatus("streaming")
-      setStreamStart(new Date())
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      setText("");
+      setStatus("streaming");
+      setStreamStart(new Date());
 
       try {
-        const reply = await onSend?.(trimmed, model)
+        const reply = await onSend?.(trimmed, model);
         const assistantMsg: ChatMessage = {
           id: nextId(),
           role: "assistant",
           content: reply ?? "I received your message.",
-        }
-        setMessages((prev) => [...prev, assistantMsg])
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
       } finally {
-        setStatus("ready")
+        setStatus("ready");
         // Keep streamStart briefly so the bubble-confirm ripple can play out
-        setTimeout(() => setStreamStart(undefined), STREAM_STATUS_LINGER_MS)
+        setTimeout(() => setStreamStart(undefined), STREAM_STATUS_LINGER_MS);
       }
     },
     [text, status, model, onSend],
-  )
+  );
 
   const handleSuggestion = useCallback((suggestion: string) => {
-    setText(suggestion)
-  }, [])
+    setText(suggestion);
+  }, []);
 
   const handleCopy = useCallback((content: string) => {
-    navigator.clipboard.writeText(content).catch(() => {})
-  }, [])
+    navigator.clipboard.writeText(content).catch(() => {});
+  }, []);
 
   const handleRetry = useCallback((id: string) => {
     setMessages((prev) => {
-      const idx = prev.findIndex((m) => m.id === id)
-      if (idx === -1) return prev
-      return prev.slice(0, idx)
-    })
-  }, [])
+      const idx = prev.findIndex((m) => m.id === id);
+      if (idx === -1) return prev;
+      return prev.slice(0, idx);
+    });
+  }, []);
 
   return (
     <div className={cn("mx-auto flex h-full w-full max-w-[980px] flex-col", className)}>
@@ -304,20 +304,20 @@ export const Chat = ({
         </PromptInput>
       </div>
     </div>
-  )
-}
+  );
+};
 
 // ---------------------------------------------------------------------------
 // Internal sub-component for assistant messages
 // ---------------------------------------------------------------------------
 
 interface AssistantMessageProps {
-  id: string
-  content: string
-  reasoning?: string
-  sources?: ChatSource[]
-  onCopy: (content: string) => void
-  onRetry: (id: string) => void
+  id: string;
+  content: string;
+  reasoning?: string;
+  sources?: ChatSource[];
+  onCopy: (content: string) => void;
+  onRetry: (id: string) => void;
 }
 
 const AssistantMessage = ({ id, content, reasoning, sources, onCopy, onRetry }: AssistantMessageProps) => (
@@ -355,4 +355,4 @@ const AssistantMessage = ({ id, content, reasoning, sources, onCopy, onRetry }: 
       </MessageAction>
     </MessageActions>
   </div>
-)
+);

@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 
 import { buildEsBody } from "./utils";
 
+import type { SearchEqlExpression } from "./types";
+
 describe("buildEsBody", () => {
   it("builds basic body with from/size", () => {
     const body = buildEsBody({ searchTerm: "test" }, 0, 10);
@@ -45,11 +47,8 @@ describe("buildEsBody", () => {
   });
 
   it("passes through additional properties", () => {
-    const body = buildEsBody(
-      { searchTerm: "test", expression: { g: "AND", e: [] } } as any,
-      0,
-      10,
-    );
+    const expression: SearchEqlExpression = { g: "AND", e: [] };
+    const body = buildEsBody({ searchTerm: "test", expression }, 0, 10);
     expect(body.expression).toEqual({ g: "AND", e: [] });
   });
 

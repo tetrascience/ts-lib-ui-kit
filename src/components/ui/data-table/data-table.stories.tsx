@@ -1,29 +1,29 @@
-import * as React from "react"
-import { expect, userEvent, within } from "storybook/test"
+import * as React from "react";
+import { expect, userEvent, within } from "storybook/test";
 
-import compoundsData from "../../../../.storybook/__fixtures__/compounds"
-import moleculesData from "../../../../.storybook/__fixtures__/molecules"
-import usersData from "../../../../.storybook/__fixtures__/users"
-import { Badge } from "../badge"
-import { CodeBlock } from "../code-block"
+import compoundsData from "../../../../.storybook/__fixtures__/compounds";
+import moleculesData from "../../../../.storybook/__fixtures__/molecules";
+import usersData from "../../../../.storybook/__fixtures__/users";
+import { Badge } from "../badge";
+import { CodeBlock } from "../code-block";
 
-import { DataTable, TableToolbar, useDataTable } from "./data-table"
-import { DataTableColumnToggle } from "./data-table-column-toggle"
-import { DataTableFilter } from "./data-table-filter"
-import { DataTableGroup } from "./data-table-group"
-import { DataTablePagination } from "./data-table-pagination"
+import { DataTable, TableToolbar, useDataTable } from "./data-table";
+import { DataTableColumnToggle } from "./data-table-column-toggle";
+import { DataTableFilter } from "./data-table-filter";
+import { DataTableGroup } from "./data-table-group";
+import { DataTablePagination } from "./data-table-pagination";
 
-import type { FilterCondition } from "./data-table"
-import type { Meta, StoryObj } from "@storybook/react-vite"
-import type { ColumnDef } from "@tanstack/react-table"
+import type { FilterCondition } from "./data-table";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ColumnDef } from "@tanstack/react-table";
 
 // ---------------------------------------------------------------------------
 // Dataset definitions
 // ---------------------------------------------------------------------------
 
-type DatasetKey = "Workspaces" | "Compounds" | "Molecules" | "Users"
+type DatasetKey = "Workspaces" | "Compounds" | "Molecules" | "Users";
 
-type Row = Record<string, unknown>
+type Row = Record<string, unknown>;
 
 const workspaceData: Row[] = [
   { id: "1", name: "Clinical exports", owner: "Data Ops", status: "Active", runs: 142, createdAt: "2025-12-01" },
@@ -31,42 +31,82 @@ const workspaceData: Row[] = [
   { id: "3", name: "Audit trail", owner: "Compliance", status: "Active", runs: 94, createdAt: "2025-10-20" },
   { id: "4", name: "Proteomics pipeline", owner: "Research", status: "Active", runs: 217, createdAt: "2025-09-05" },
   { id: "5", name: "Data lake ETL", owner: "Data Ops", status: "Archived", runs: 0, createdAt: "2025-08-10" },
-]
+];
 
 const workspaceColumns: ColumnDef<Row>[] = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "owner", header: "Owner" },
   { accessorKey: "status", header: "Status" },
-  { accessorKey: "runs", header: "Runs", cell: ({ row }) => <span className="text-right tabular-nums">{String(row.getValue("runs"))}</span> },
+  {
+    accessorKey: "runs",
+    header: "Runs",
+    cell: ({ row }) => <span className="text-right tabular-nums">{String(row.getValue("runs"))}</span>,
+  },
   { accessorKey: "createdAt", header: "Created At" },
-]
+];
 
 const compoundColumns: ColumnDef<Row>[] = [
   { accessorKey: "id", header: "ID" },
   { accessorKey: "name", header: "Name" },
   { accessorKey: "formula", header: "Formula" },
-  { accessorKey: "mw", header: "MW", cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("mw")).toFixed(2)}</span> },
+  {
+    accessorKey: "mw",
+    header: "MW",
+    cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("mw")).toFixed(2)}</span>,
+  },
   { accessorKey: "category", header: "Category" },
   { accessorKey: "status", header: "Status" },
-  { accessorKey: "purity", header: "Purity (%)", cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("purity")).toFixed(1)}</span> },
+  {
+    accessorKey: "purity",
+    header: "Purity (%)",
+    cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("purity")).toFixed(1)}</span>,
+  },
   { accessorKey: "detail", header: "Detail" },
-]
+];
 
 const moleculeColumns: ColumnDef<Row>[] = [
   { accessorKey: "id", header: "ID" },
-  { accessorKey: "simA", header: "Sim A", cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("simA")).toFixed(3)}</span> },
-  { accessorKey: "simB", header: "Sim B", cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("simB")).toFixed(3)}</span> },
-  { accessorKey: "mpoScore", header: "MPO Score", cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("mpoScore")).toFixed(2)}</span> },
-  { accessorKey: "saScore", header: "SA Score", cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("saScore")).toFixed(1)}</span> },
-  { accessorKey: "lipE", header: "LipE", cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("lipE")).toFixed(2)}</span> },
-  { accessorKey: "mw", header: "MW", cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("mw")).toFixed(1)}</span> },
+  {
+    accessorKey: "simA",
+    header: "Sim A",
+    cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("simA")).toFixed(3)}</span>,
+  },
+  {
+    accessorKey: "simB",
+    header: "Sim B",
+    cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("simB")).toFixed(3)}</span>,
+  },
+  {
+    accessorKey: "mpoScore",
+    header: "MPO Score",
+    cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("mpoScore")).toFixed(2)}</span>,
+  },
+  {
+    accessorKey: "saScore",
+    header: "SA Score",
+    cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("saScore")).toFixed(1)}</span>,
+  },
+  {
+    accessorKey: "lipE",
+    header: "LipE",
+    cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("lipE")).toFixed(2)}</span>,
+  },
+  {
+    accessorKey: "mw",
+    header: "MW",
+    cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("mw")).toFixed(1)}</span>,
+  },
   { accessorKey: "psa", header: "PSA" },
-  { accessorKey: "clogp", header: "cLogP", cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("clogp")).toFixed(2)}</span> },
+  {
+    accessorKey: "clogp",
+    header: "cLogP",
+    cell: ({ row }) => <span className="tabular-nums">{Number(row.getValue("clogp")).toFixed(2)}</span>,
+  },
   { accessorKey: "hba", header: "HBA" },
   { accessorKey: "hbd", header: "HBD" },
   { accessorKey: "heavyAtoms", header: "Heavy Atoms" },
   { accessorKey: "rotatableBonds", header: "Rotatable Bonds" },
-]
+];
 
 const userColumns: ColumnDef<Row>[] = [
   { accessorKey: "id", header: "ID" },
@@ -75,17 +115,17 @@ const userColumns: ColumnDef<Row>[] = [
   { accessorKey: "role", header: "Role" },
   { accessorKey: "age", header: "Age" },
   { accessorKey: "department", header: "Department" },
-]
+];
 
 const datasetConfigs: Record<DatasetKey, { data: Row[]; columns: ColumnDef<Row>[] }> = {
   Workspaces: { data: workspaceData, columns: workspaceColumns },
   Compounds: { data: compoundsData, columns: compoundColumns },
   Molecules: { data: moleculesData, columns: moleculeColumns },
   Users: { data: usersData, columns: userColumns },
-}
+};
 
 function getDataset(args: Record<string, unknown>) {
-  return datasetConfigs[(args.dataset as DatasetKey) ?? "Workspaces"]
+  return datasetConfigs[(args.dataset as DatasetKey) ?? "Workspaces"];
 }
 
 // ---------------------------------------------------------------------------
@@ -106,11 +146,11 @@ const meta: Meta<typeof DataTable> = {
     },
   },
   args: { dataset: "Workspaces" },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof DataTable>
+type Story = StoryObj<typeof DataTable>;
 
 // ===========================================================================
 // Basic stories
@@ -122,24 +162,24 @@ type Story = StoryObj<typeof DataTable>
 
 export const Default: Story = {
   render: (args) => {
-    const { data, columns } = getDataset(args as Record<string, unknown>)
-    return <DataTable columns={columns} data={data} />
+    const { data, columns } = getDataset(args as Record<string, unknown>);
+    return <DataTable columns={columns} data={data} />;
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Table renders with headers and rows", async () => {
-      expect(canvas.getByRole("table")).toBeInTheDocument()
-      const headers = canvas.getAllByRole("columnheader")
-      expect(headers.length).toBeGreaterThanOrEqual(4)
-      const rows = canvas.getAllByRole("row")
-      expect(rows.length).toBeGreaterThan(1)
-    })
+      expect(canvas.getByRole("table")).toBeInTheDocument();
+      const headers = canvas.getAllByRole("columnheader");
+      expect(headers.length).toBeGreaterThanOrEqual(4);
+      const rows = canvas.getAllByRole("row");
+      expect(rows.length).toBeGreaterThan(1);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1433" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Sorting
@@ -147,30 +187,30 @@ export const Default: Story = {
 
 export const Sorting: Story = {
   render: (args) => {
-    const { data, columns } = getDataset(args as Record<string, unknown>)
-    return <DataTable columns={columns} data={data} enableSorting />
+    const { data, columns } = getDataset(args as Record<string, unknown>);
+    return <DataTable columns={columns} data={data} enableSorting />;
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Clicking a header sorts ascending", async () => {
-      const headers = canvas.getAllByRole("columnheader")
-      await userEvent.click(headers[0])
+      const headers = canvas.getAllByRole("columnheader");
+      await userEvent.click(headers[0]);
       // Ascending sort icon should be visible
-      const sortIcon = headers[0].querySelector("[data-lucide='arrow-up']") ?? headers[0].querySelector("svg")
-      expect(sortIcon).not.toBeNull()
-    })
+      const sortIcon = headers[0].querySelector("[data-lucide='arrow-up']") ?? headers[0].querySelector("svg");
+      expect(sortIcon).not.toBeNull();
+    });
 
     await step("Clicking the same header again sorts descending", async () => {
-      const headers = canvas.getAllByRole("columnheader")
-      await userEvent.click(headers[0])
-      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
-    })
+      const headers = canvas.getAllByRole("columnheader");
+      await userEvent.click(headers[0]);
+      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1434" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // CustomCells
@@ -181,43 +221,43 @@ const statusVariant: Record<string, "default" | "outline" | "secondary"> = {
   Paused: "outline",
   Archived: "secondary",
   Inactive: "secondary",
-}
+};
 
 const customCellColumns: ColumnDef<Row>[] = [
   {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const value = String(row.getValue("status"))
-      return <Badge variant={statusVariant[value] ?? "secondary"}>{value}</Badge>
+      const value = String(row.getValue("status"));
+      return <Badge variant={statusVariant[value] ?? "secondary"}>{value}</Badge>;
     },
   },
-]
+];
 
 export const CustomCells: Story = {
   render: (args) => {
-    const { data, columns } = getDataset(args as Record<string, unknown>)
+    const { data, columns } = getDataset(args as Record<string, unknown>);
     // Dedupe columns by accessorKey, giving precedence to customCellColumns
-    const customKeys = new Set(customCellColumns.map(c => c.accessorKey))
+    const customKeys = new Set(customCellColumns.map((c) => c.accessorKey));
     const dedupedColumns = [
-      ...columns.filter(c => !("accessorKey" in c && customKeys.has(c.accessorKey))),
+      ...columns.filter((c) => !("accessorKey" in c && customKeys.has(c.accessorKey))),
       ...customCellColumns,
-    ]
-    return <DataTable columns={dedupedColumns} data={data} enableSorting />
+    ];
+    return <DataTable columns={dedupedColumns} data={data} enableSorting />;
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Table renders with custom Badge cells", async () => {
-      expect(canvas.getByRole("table")).toBeInTheDocument()
-      const badges = canvasElement.querySelectorAll("[data-slot='badge']")
-      expect(badges.length).toBeGreaterThan(0)
-    })
+      expect(canvas.getByRole("table")).toBeInTheDocument();
+      const badges = canvasElement.querySelectorAll("[data-slot='badge']");
+      expect(badges.length).toBeGreaterThan(0);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1435" },
   },
-}
+};
 
 // ===========================================================================
 // Feature stories
@@ -228,133 +268,128 @@ export const CustomCells: Story = {
 // ---------------------------------------------------------------------------
 
 function ColumnToggleStory({ dataset }: { dataset: DatasetKey }) {
-  const { data, columns } = datasetConfigs[dataset]
+  const { data, columns } = datasetConfigs[dataset];
   return (
-    <DataTable
-      columns={columns}
-      data={data}
-      enableColumnVisibility
-    >
+    <DataTable columns={columns} data={data} enableColumnVisibility>
       <TableToolbar>
         <div className="flex-1" />
         <DataTableColumnToggle />
       </TableToolbar>
     </DataTable>
-  )
+  );
 }
 
 export const ColumnManagement: Story = {
-  render: (args) => <ColumnToggleStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />,
+  render: (args) => (
+    <ColumnToggleStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />
+  ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Column toggle button is present", async () => {
-      expect(canvas.getByRole("button", { name: /Columns/ })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: /Columns/ })).toBeInTheDocument();
+    });
 
     await step("Clicking opens dropdown with column checkboxes", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }))
-      const checkboxes = body.getAllByRole("checkbox")
-      expect(checkboxes.length).toBeGreaterThan(0)
-    })
+      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }));
+      const checkboxes = body.getAllByRole("checkbox");
+      expect(checkboxes.length).toBeGreaterThan(0);
+    });
 
     await step("Toggling a column via keyboard hides it", async () => {
-      const checkboxes = body.getAllByRole("checkbox")
-      const initialHeaderCount = canvas.getAllByRole("columnheader").length
+      const checkboxes = body.getAllByRole("checkbox");
+      const initialHeaderCount = canvas.getAllByRole("columnheader").length;
       // Focus and press Enter to toggle visibility
-      checkboxes[0].focus()
-      await userEvent.keyboard("{Enter}")
-      const newHeaderCount = canvas.getAllByRole("columnheader").length
-      expect(newHeaderCount).toBe(initialHeaderCount - 1)
-    })
+      checkboxes[0].focus();
+      await userEvent.keyboard("{Enter}");
+      const newHeaderCount = canvas.getAllByRole("columnheader").length;
+      expect(newHeaderCount).toBe(initialHeaderCount - 1);
+    });
 
     await step("Clicking outside closes the dropdown", async () => {
       // Panel should be open from previous step
-      expect(body.queryByRole("group", { name: /Toggle and reorder/ })).not.toBeNull()
+      expect(body.queryByRole("group", { name: /Toggle and reorder/ })).not.toBeNull();
       // Click outside the panel on the table body
-      await userEvent.click(canvas.getByRole("table"))
+      await userEvent.click(canvas.getByRole("table"));
       // Panel should close
-      expect(body.queryByRole("group", { name: /Toggle and reorder/ })).toBeNull()
-    })
+      expect(body.queryByRole("group", { name: /Toggle and reorder/ })).toBeNull();
+    });
 
     await step("Re-toggling the hidden column restores it via click", async () => {
-      const headersBefore = canvas.getAllByRole("columnheader").length
+      const headersBefore = canvas.getAllByRole("columnheader").length;
       // Re-open the panel
-      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }))
-      const checkboxes = body.getAllByRole("checkbox")
+      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }));
+      const checkboxes = body.getAllByRole("checkbox");
       // Find the unchecked one (the column we hid earlier)
-      const unchecked = checkboxes.find((cb) => cb.getAttribute("aria-checked") === "false")
+      const unchecked = checkboxes.find((cb) => cb.getAttribute("aria-checked") === "false");
       if (unchecked) {
-        await userEvent.click(unchecked)
-        const headersAfter = canvas.getAllByRole("columnheader").length
-        expect(headersAfter).toBe(headersBefore + 1)
+        await userEvent.click(unchecked);
+        const headersAfter = canvas.getAllByRole("columnheader").length;
+        expect(headersAfter).toBe(headersBefore + 1);
       }
       // Close the panel
-      await userEvent.click(canvas.getByRole("table"))
-    })
+      await userEvent.click(canvas.getByRole("table"));
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1436" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // LastVisibleColumn — covers the isLastVisible guard (line 186 of column-toggle)
 // ---------------------------------------------------------------------------
 
 function SingleVisibleColumnStory({ dataset }: { dataset: DatasetKey }) {
-  const { data, columns } = datasetConfigs[dataset]
+  const { data, columns } = datasetConfigs[dataset];
   // Start with only the first column visible
-  const initialVisibility: Record<string, boolean> = {}
+  const initialVisibility: Record<string, boolean> = {};
   for (const col of columns) {
-    const key = "accessorKey" in col ? String(col.accessorKey) : ""
-    initialVisibility[key] = false
+    const key = "accessorKey" in col ? String(col.accessorKey) : "";
+    initialVisibility[key] = false;
   }
-  const firstKey = "accessorKey" in columns[0] ? String(columns[0].accessorKey) : ""
-  initialVisibility[firstKey] = true
+  const firstKey = "accessorKey" in columns[0] ? String(columns[0].accessorKey) : "";
+  initialVisibility[firstKey] = true;
 
   return (
-    <DataTable
-      columns={columns}
-      data={data}
-      enableColumnVisibility
-      columnVisibility={initialVisibility}
-    >
+    <DataTable columns={columns} data={data} enableColumnVisibility columnVisibility={initialVisibility}>
       <TableToolbar>
         <div className="flex-1" />
         <DataTableColumnToggle />
       </TableToolbar>
     </DataTable>
-  )
+  );
 }
 
 export const LastVisibleColumn: Story = {
-  render: (args) => <SingleVisibleColumnStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />,
+  render: (args) => (
+    <SingleVisibleColumnStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />
+  ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Only one column header is visible", async () => {
-      expect(canvas.getAllByRole("columnheader").length).toBe(1)
-    })
+      expect(canvas.getAllByRole("columnheader").length).toBe(1);
+    });
 
     await step("Clicking the last visible column checkbox does not hide it", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }))
-      const checkboxes = body.getAllByRole("checkbox")
+      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }));
+      const checkboxes = body.getAllByRole("checkbox");
       // Find the one that is checked (the only visible column)
-      const checked = checkboxes.find((cb) => cb.getAttribute("aria-checked") === "true")
-      expect(checked).toBeDefined()
+      const checked = checkboxes.find((cb) => cb.getAttribute("aria-checked") === "true");
+      expect(checked).toBeDefined();
       // Click it — should be a no-op since it's the last visible column
-      await userEvent.click(checked!)
+      await userEvent.click(checked!);
       // Column should still be visible
-      expect(canvas.getAllByRole("columnheader").length).toBe(1)
-    })
+      expect(canvas.getAllByRole("columnheader").length).toBe(1);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1437" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ColumnToggleCustomLabels — covers the columnLabels branch in getLabel()
@@ -367,132 +402,128 @@ const metaLabelColumns: ColumnDef<Row>[] = [
   { accessorKey: "status", header: "Status" },
   // No meta.label AND non-string header → falls through to col.id ("runs")
   { accessorKey: "runs", header: () => "Runs" },
-]
+];
 
 function ColumnToggleCustomLabelsStory({ dataset }: { dataset: DatasetKey }) {
-  const { data } = datasetConfigs[dataset]
+  const { data } = datasetConfigs[dataset];
   // First column: has columnLabels override (highest priority)
   // Second column: falls through to header string
   // Use metaLabelColumns for meta.label + non-string header branches
   return (
-    <DataTable
-      columns={metaLabelColumns}
-      data={data}
-      enableColumnVisibility
-      columnLabels={{ owner: "Custom Owner" }}
-    >
+    <DataTable columns={metaLabelColumns} data={data} enableColumnVisibility columnLabels={{ owner: "Custom Owner" }}>
       <TableToolbar>
         <div className="flex-1" />
         <DataTableColumnToggle />
       </TableToolbar>
     </DataTable>
-  )
+  );
 }
 
 export const ColumnToggleCustomLabels: Story = {
-  render: (args) => <ColumnToggleCustomLabelsStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />,
+  render: (args) => (
+    <ColumnToggleCustomLabelsStory
+      dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"}
+    />
+  ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Column toggle panel shows labels from all fallback paths", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }))
-      const panel = body.getByRole("group", { name: /Toggle and reorder/ })
+      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }));
+      const panel = body.getByRole("group", { name: /Toggle and reorder/ });
       // "owner" column uses columnLabels prop (highest priority)
-      expect(within(panel).getByText("Custom Owner")).toBeInTheDocument()
+      expect(within(panel).getByText("Custom Owner")).toBeInTheDocument();
       // "name" column uses meta.label since header is a function (not a string)
-      expect(within(panel).getByText("Meta Name")).toBeInTheDocument()
+      expect(within(panel).getByText("Meta Name")).toBeInTheDocument();
       // "status" column uses header string (normal path)
-      expect(within(panel).getByText("Status")).toBeInTheDocument()
+      expect(within(panel).getByText("Status")).toBeInTheDocument();
       // "runs" column has non-string header and no meta.label → falls back to col.id
-      expect(within(panel).getByText("runs")).toBeInTheDocument()
-    })
+      expect(within(panel).getByText("runs")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1438" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ColumnToggleReorder — exercises the drag handler in DataTableColumnToggle
 // ---------------------------------------------------------------------------
 
 function ColumnToggleReorderStory({ dataset }: { dataset: DatasetKey }) {
-  const { data, columns } = datasetConfigs[dataset]
+  const { data, columns } = datasetConfigs[dataset];
   return (
-    <DataTable
-      columns={columns}
-      data={data}
-      enableColumnVisibility
-      enableColumnReorder
-    >
+    <DataTable columns={columns} data={data} enableColumnVisibility enableColumnReorder>
       <TableToolbar>
         <div className="flex-1" />
         <DataTableColumnToggle />
       </TableToolbar>
     </DataTable>
-  )
+  );
 }
 
 export const ColumnToggleReorder: Story = {
-  render: (args) => <ColumnToggleReorderStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />,
+  render: (args) => (
+    <ColumnToggleReorderStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />
+  ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Open column toggle and record initial header order", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }))
-      const panel = body.getByRole("group", { name: /Toggle and reorder/ })
-      expect(panel).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }));
+      const panel = body.getByRole("group", { name: /Toggle and reorder/ });
+      expect(panel).toBeInTheDocument();
+    });
 
     await step("No-op drag: pick up and drop in place preserves order", async () => {
-      const panel = body.getByRole("group", { name: /Toggle and reorder/ })
+      const panel = body.getByRole("group", { name: /Toggle and reorder/ });
       const grabHandles = [...panel.querySelectorAll("button")]
         .filter((btn) => btn.querySelector("svg"))
-        .filter((btn) => btn.closest("[role='checkbox']"))
+        .filter((btn) => btn.closest("[role='checkbox']"));
 
       if (grabHandles.length >= 1) {
-        const headersBefore = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+        const headersBefore = canvas.getAllByRole("columnheader").map((h) => h.textContent);
 
         // Pick up with Space and immediately drop with Space (no arrow key)
-        grabHandles[0].focus()
-        await userEvent.keyboard(" ")
-        await userEvent.keyboard(" ")
+        grabHandles[0].focus();
+        await userEvent.keyboard(" ");
+        await userEvent.keyboard(" ");
 
         // Order should be unchanged
-        const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent)
-        expect(headersAfter).toEqual(headersBefore)
+        const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent);
+        expect(headersAfter).toEqual(headersBefore);
       }
-    })
+    });
 
     await step("Keyboard drag reorders columns in the toggle panel", async () => {
-      const panel = body.getByRole("group", { name: /Toggle and reorder/ })
+      const panel = body.getByRole("group", { name: /Toggle and reorder/ });
       const grabHandles = [...panel.querySelectorAll("button")]
         .filter((btn) => btn.querySelector("svg"))
-        .filter((btn) => btn.closest("[role='checkbox']"))
+        .filter((btn) => btn.closest("[role='checkbox']"));
 
       if (grabHandles.length >= 2) {
-        const headersBefore = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+        const headersBefore = canvas.getAllByRole("columnheader").map((h) => h.textContent);
 
         // Focus the first grab handle, start drag with Space, move down with ArrowDown, drop with Space
-        grabHandles[0].focus()
-        await userEvent.keyboard(" ")
-        await userEvent.keyboard("{ArrowDown}")
-        await userEvent.keyboard(" ")
+        grabHandles[0].focus();
+        await userEvent.keyboard(" ");
+        await userEvent.keyboard("{ArrowDown}");
+        await userEvent.keyboard(" ");
 
         // Check headers changed order
-        const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+        const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent);
         // The first two columns should have swapped
-        expect(headersAfter[0]).toBe(headersBefore[1])
-        expect(headersAfter[1]).toBe(headersBefore[0])
+        expect(headersAfter[0]).toBe(headersBefore[1]);
+        expect(headersAfter[1]).toBe(headersBefore[0]);
       }
-    })
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1439" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ColumnReorder
@@ -500,40 +531,40 @@ export const ColumnToggleReorder: Story = {
 
 export const ColumnReorder: Story = {
   render: (args) => {
-    const { data, columns } = getDataset(args as Record<string, unknown>)
-    return <DataTable columns={columns} data={data} enableColumnReorder enableSorting />
+    const { data, columns } = getDataset(args as Record<string, unknown>);
+    return <DataTable columns={columns} data={data} enableColumnReorder enableSorting />;
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Table renders with drag handles on headers", async () => {
-      expect(canvas.getByRole("table")).toBeInTheDocument()
-      const dragHandles = canvasElement.querySelectorAll("[data-drag-handle]")
-      expect(dragHandles.length).toBeGreaterThan(0)
-    })
+      expect(canvas.getByRole("table")).toBeInTheDocument();
+      const dragHandles = canvasElement.querySelectorAll("[data-drag-handle]");
+      expect(dragHandles.length).toBeGreaterThan(0);
+    });
 
     await step("Keyboard drag on header reorders columns", async () => {
-      const headersBefore = canvas.getAllByRole("columnheader").map((h) => h.textContent)
+      const headersBefore = canvas.getAllByRole("columnheader").map((h) => h.textContent);
       // Find the drag handle buttons in the table headers
-      const dragHandles = [...canvasElement.querySelectorAll("[data-drag-handle]")] as HTMLElement[]
-      expect(dragHandles.length).toBeGreaterThanOrEqual(2)
+      const dragHandles = [...canvasElement.querySelectorAll("[data-drag-handle]")] as HTMLElement[];
+      expect(dragHandles.length).toBeGreaterThanOrEqual(2);
 
       // Focus the first drag handle, initiate drag with Space, move right, drop with Space
-      dragHandles[0].focus()
-      await userEvent.keyboard(" ")
-      await userEvent.keyboard("{ArrowRight}")
-      await userEvent.keyboard(" ")
+      dragHandles[0].focus();
+      await userEvent.keyboard(" ");
+      await userEvent.keyboard("{ArrowRight}");
+      await userEvent.keyboard(" ");
 
       // The first two columns should have swapped
-      const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent)
-      expect(headersAfter[0]).toBe(headersBefore[1])
-      expect(headersAfter[1]).toBe(headersBefore[0])
-    })
+      const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent);
+      expect(headersAfter[0]).toBe(headersBefore[1]);
+      expect(headersAfter[1]).toBe(headersBefore[0]);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1440" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Pagination
@@ -542,62 +573,56 @@ export const ColumnReorder: Story = {
 export const Pagination: Story = {
   args: { dataset: "Compounds" },
   render: (args) => {
-    const { data, columns } = getDataset(args as Record<string, unknown>)
+    const { data, columns } = getDataset(args as Record<string, unknown>);
     return (
-      <DataTable
-        columns={columns}
-        data={data}
-        enableSorting
-        enablePagination
-        defaultPageSize={5}
-      >
+      <DataTable columns={columns} data={data} enableSorting enablePagination defaultPageSize={5}>
         <DataTablePagination pageSizeOptions={[5, 10, 25]} />
       </DataTable>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Pagination controls render", async () => {
-      expect(canvas.getByText("Rows per page:")).toBeInTheDocument()
-      expect(canvas.getByLabelText("Next page")).toBeInTheDocument()
-      expect(canvas.getByLabelText("Previous page")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Rows per page:")).toBeInTheDocument();
+      expect(canvas.getByLabelText("Next page")).toBeInTheDocument();
+      expect(canvas.getByLabelText("Previous page")).toBeInTheDocument();
+    });
 
     await step("Shows correct row range", async () => {
-      expect(canvas.getByText(/1–5 of/)).toBeInTheDocument()
-    })
+      expect(canvas.getByText(/1–5 of/)).toBeInTheDocument();
+    });
 
     await step("Clicking next page shows next rows", async () => {
-      await userEvent.click(canvas.getByLabelText("Next page"))
-      expect(canvas.getByText(/6–10 of/)).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByLabelText("Next page"));
+      expect(canvas.getByText(/6–10 of/)).toBeInTheDocument();
+    });
 
     await step("Clicking a specific page number navigates to it", async () => {
-      await userEvent.click(canvas.getByLabelText("Page 3"))
-      expect(canvas.getByText(/11–15 of/)).toBeInTheDocument()
+      await userEvent.click(canvas.getByLabelText("Page 3"));
+      expect(canvas.getByText(/11–15 of/)).toBeInTheDocument();
       // Page 3 button should be current
-      expect(canvas.getByLabelText("Page 3")).toHaveAttribute("aria-current", "page")
-    })
+      expect(canvas.getByLabelText("Page 3")).toHaveAttribute("aria-current", "page");
+    });
 
     await step("Previous page button navigates back", async () => {
-      await userEvent.click(canvas.getByLabelText("Previous page"))
-      expect(canvas.getByText(/6–10 of/)).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByLabelText("Previous page"));
+      expect(canvas.getByText(/6–10 of/)).toBeInTheDocument();
+    });
 
     await step("Changing page size updates rows per page", async () => {
-      const body = within(canvasElement.ownerDocument.body)
+      const body = within(canvasElement.ownerDocument.body);
       // Open the page-size select
-      await userEvent.click(canvas.getByRole("combobox"))
+      await userEvent.click(canvas.getByRole("combobox"));
       // Pick "10"
-      await userEvent.click(body.getByRole("option", { name: "10" }))
-      expect(canvas.getByText(/1–10 of/)).toBeInTheDocument()
-    })
+      await userEvent.click(body.getByRole("option", { name: "10" }));
+      expect(canvas.getByText(/1–10 of/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1441" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // WithCustomChildren — covers the restSlots branch in categorizeSlots
@@ -605,7 +630,7 @@ export const Pagination: Story = {
 
 export const WithCustomChildren: Story = {
   render: (args) => {
-    const { data, columns } = getDataset(args as Record<string, unknown>)
+    const { data, columns } = getDataset(args as Record<string, unknown>);
     return (
       <DataTable columns={columns} data={data}>
         <TableToolbar>
@@ -614,24 +639,24 @@ export const WithCustomChildren: Story = {
         {/* This arbitrary child is neither TableToolbar nor DataTablePagination */}
         <div data-testid="custom-child">Extra content below</div>
       </DataTable>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Custom child renders after the table", async () => {
-      expect(canvas.getByTestId("custom-child")).toBeInTheDocument()
-      expect(canvas.getByText("Extra content below")).toBeInTheDocument()
-    })
+      expect(canvas.getByTestId("custom-child")).toBeInTheDocument();
+      expect(canvas.getByText("Extra content below")).toBeInTheDocument();
+    });
 
     await step("Toolbar still renders in correct position", async () => {
-      expect(canvas.getByText("Toolbar content")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Toolbar content")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1442" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ReorderWithSorting — covers sort icons and keyboard sort inside the reorderable branch,
@@ -643,83 +668,73 @@ const reorderSortColumns: ColumnDef<Row>[] = [
   { accessorKey: "name", header: () => "Name" },
   { accessorKey: "owner", header: () => "Owner" },
   { accessorKey: "status", header: () => "Status" },
-]
+];
 
 export const ReorderWithSorting: Story = {
-  render: () => (
-    <DataTable
-      columns={reorderSortColumns}
-      data={workspaceData}
-      enableColumnReorder
-      enableSorting
-    />
-  ),
+  render: () => <DataTable columns={reorderSortColumns} data={workspaceData} enableColumnReorder enableSorting />,
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Click header text to sort ascending in reorderable table", async () => {
       // Click the text inside the sort div (not the <th> itself, which has dnd listeners)
-      const nameText = canvas.getByText("Name")
-      await userEvent.click(nameText)
-      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
-    })
+      const nameText = canvas.getByText("Name");
+      await userEvent.click(nameText);
+      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1);
+    });
 
     await step("Click same header text again to sort descending", async () => {
-      const nameText = canvas.getByText("Name")
-      await userEvent.click(nameText)
-      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
-    })
+      const nameText = canvas.getByText("Name");
+      await userEvent.click(nameText);
+      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1);
+    });
 
     await step("Click a third time to clear sort", async () => {
-      const nameText = canvas.getByText("Name")
-      await userEvent.click(nameText)
-      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
-    })
+      const nameText = canvas.getByText("Name");
+      await userEvent.click(nameText);
+      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1);
+    });
 
     await step("Keyboard Enter on sort div triggers sort handler", async () => {
-      const headers = canvas.getAllByRole("columnheader")
+      const headers = canvas.getAllByRole("columnheader");
       // The sort div has cursor-pointer and an onKeyDown handler
-      const sortDiv = headers[1].querySelector("[class*='cursor-pointer']") as HTMLElement
-      expect(sortDiv).not.toBeNull()
+      const sortDiv = headers[1].querySelector("[class*='cursor-pointer']") as HTMLElement;
+      expect(sortDiv).not.toBeNull();
       // Dispatch a KeyboardEvent directly since the div has no tabIndex
-      sortDiv.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
-      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1)
-    })
+      sortDiv.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      expect(canvas.getAllByRole("row").length).toBeGreaterThan(1);
+    });
 
     await step("Drag column with non-string header shows col.id in overlay", async () => {
-      const dragHandles = [...canvasElement.querySelectorAll("[data-drag-handle]")] as HTMLElement[]
-      expect(dragHandles.length).toBeGreaterThanOrEqual(2)
+      const dragHandles = [...canvasElement.querySelectorAll("[data-drag-handle]")] as HTMLElement[];
+      expect(dragHandles.length).toBeGreaterThanOrEqual(2);
 
       // Start drag (Space), move right, drop (Space)
-      dragHandles[0].focus()
-      await userEvent.keyboard(" ")
-      await userEvent.keyboard("{ArrowRight}")
-      await userEvent.keyboard(" ")
+      dragHandles[0].focus();
+      await userEvent.keyboard(" ");
+      await userEvent.keyboard("{ArrowRight}");
+      await userEvent.keyboard(" ");
 
       // Verify columns reordered
-      const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent)
-      expect(headersAfter.length).toBe(3)
-    })
+      const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent);
+      expect(headersAfter.length).toBe(3);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1477" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ColumnLabelRename — covers setColumnLabel via useDataTable context
 // ---------------------------------------------------------------------------
 
 function RenameButton() {
-  const { setColumnLabel } = useDataTable()
+  const { setColumnLabel } = useDataTable();
   return (
-    <button
-      className="rounded-lg border px-3 py-1.5 text-sm"
-      onClick={() => setColumnLabel("name", "Renamed")}
-    >
+    <button className="rounded-lg border px-3 py-1.5 text-sm" onClick={() => setColumnLabel("name", "Renamed")}>
       Rename first column
     </button>
-  )
+  );
 }
 
 // Columns with a non-string header (function) to cover the DragOverlay col.id fallback
@@ -727,61 +742,57 @@ const nonStringHeaderColumns: ColumnDef<Row>[] = [
   { accessorKey: "name", header: () => "Name" },
   { accessorKey: "owner", header: "Owner" },
   { accessorKey: "status", header: "Status" },
-]
+];
 
 export const ColumnLabelRename: Story = {
   render: () => (
-    <DataTable
-      columns={nonStringHeaderColumns}
-      data={workspaceData}
-      enableColumnReorder
-    >
+    <DataTable columns={nonStringHeaderColumns} data={workspaceData} enableColumnReorder>
       <TableToolbar>
         <RenameButton />
       </TableToolbar>
     </DataTable>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Table renders with original header", async () => {
-      expect(canvas.getAllByRole("columnheader").length).toBe(3)
-    })
+      expect(canvas.getAllByRole("columnheader").length).toBe(3);
+    });
 
     await step("Clicking rename button updates column label via setColumnLabel", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /Rename first column/ }))
+      await userEvent.click(canvas.getByRole("button", { name: /Rename first column/ }));
       // The header should now show "Renamed" instead of "Name"
-      expect(canvas.getByRole("columnheader", { name: "Renamed" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("columnheader", { name: "Renamed" })).toBeInTheDocument();
+    });
 
     await step("Keyboard drag on header with non-string header definition", async () => {
-      const headersBefore = canvas.getAllByRole("columnheader").map((h) => h.textContent)
-      const dragHandles = [...canvasElement.querySelectorAll("[data-drag-handle]")] as HTMLElement[]
-      expect(dragHandles.length).toBeGreaterThanOrEqual(2)
+      const headersBefore = canvas.getAllByRole("columnheader").map((h) => h.textContent);
+      const dragHandles = [...canvasElement.querySelectorAll("[data-drag-handle]")] as HTMLElement[];
+      expect(dragHandles.length).toBeGreaterThanOrEqual(2);
 
       // Drag first header right to swap with second
-      dragHandles[0].focus()
-      await userEvent.keyboard(" ")
-      await userEvent.keyboard("{ArrowRight}")
-      await userEvent.keyboard(" ")
+      dragHandles[0].focus();
+      await userEvent.keyboard(" ");
+      await userEvent.keyboard("{ArrowRight}");
+      await userEvent.keyboard(" ");
 
-      const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent)
-      expect(headersAfter[0]).toBe(headersBefore[1])
-      expect(headersAfter[1]).toBe(headersBefore[0])
-    })
+      const headersAfter = canvas.getAllByRole("columnheader").map((h) => h.textContent);
+      expect(headersAfter[0]).toBe(headersBefore[1]);
+      expect(headersAfter[1]).toBe(headersBefore[0]);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1443" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ControlledPagination — covers the onPaginationChange controlled callback
 // ---------------------------------------------------------------------------
 
 function ControlledPaginationStory({ dataset }: { dataset: DatasetKey }) {
-  const { data, columns } = datasetConfigs[dataset]
-  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 5 })
+  const { data, columns } = datasetConfigs[dataset];
+  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 5 });
 
   return (
     <DataTable
@@ -793,28 +804,30 @@ function ControlledPaginationStory({ dataset }: { dataset: DatasetKey }) {
     >
       <DataTablePagination pageSizeOptions={[5, 10, 25]} />
     </DataTable>
-  )
+  );
 }
 
 export const ControlledPagination: Story = {
   args: { dataset: "Compounds" },
-  render: (args) => <ControlledPaginationStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Compounds"} />,
+  render: (args) => (
+    <ControlledPaginationStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Compounds"} />
+  ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Controlled pagination renders with initial state", async () => {
-      expect(canvas.getByText(/1–5 of/)).toBeInTheDocument()
-    })
+      expect(canvas.getByText(/1–5 of/)).toBeInTheDocument();
+    });
 
     await step("Navigating pages updates controlled state", async () => {
-      await userEvent.click(canvas.getByLabelText("Next page"))
-      expect(canvas.getByText(/6–10 of/)).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByLabelText("Next page"));
+      expect(canvas.getByText(/6–10 of/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1444" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // EmptyPagination — covers zero-row branch in DataTablePagination
@@ -822,39 +835,34 @@ export const ControlledPagination: Story = {
 
 export const EmptyPagination: Story = {
   render: () => (
-    <DataTable
-      columns={workspaceColumns}
-      data={[]}
-      enablePagination
-      defaultPageSize={5}
-    >
+    <DataTable columns={workspaceColumns} data={[]} enablePagination defaultPageSize={5}>
       <DataTablePagination pageSizeOptions={[5, 10, 25]} />
     </DataTable>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Table renders empty state", async () => {
-      expect(canvas.getByRole("table")).toBeInTheDocument()
-      expect(canvas.getByText("No results.")).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("table")).toBeInTheDocument();
+      expect(canvas.getByText("No results.")).toBeInTheDocument();
+    });
 
     await step("Pagination controls are hidden when no rows", async () => {
-      expect(canvas.queryByText("Rows per page:")).toBeNull()
-      expect(canvasElement.querySelector("[data-slot='data-table-pagination']")).toBeNull()
-    })
+      expect(canvas.queryByText("Rows per page:")).toBeNull();
+      expect(canvasElement.querySelector("[data-slot='data-table-pagination']")).toBeNull();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1445" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // AllFeatures
 // ---------------------------------------------------------------------------
 
 function FullColumnManagementStory({ dataset }: { dataset: DatasetKey }) {
-  const { data, columns } = datasetConfigs[dataset]
+  const { data, columns } = datasetConfigs[dataset];
 
   return (
     <DataTable
@@ -873,64 +881,64 @@ function FullColumnManagementStory({ dataset }: { dataset: DatasetKey }) {
       </TableToolbar>
       <DataTablePagination pageSizeOptions={[5, 10, 25]} />
     </DataTable>
-  )
+  );
 }
 
 export const AllFeatures: Story = {
   args: { dataset: "Compounds" },
-  render: (args) => <FullColumnManagementStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Compounds"} />,
+  render: (args) => (
+    <FullColumnManagementStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Compounds"} />
+  ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Table renders with all feature controls", async () => {
-      expect(canvas.getByRole("table")).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: /Columns/ })).toBeInTheDocument()
-      expect(canvas.getByText("Rows per page:")).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("table")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: /Columns/ })).toBeInTheDocument();
+      expect(canvas.getByText("Rows per page:")).toBeInTheDocument();
+    });
 
     await step("Column toggle panel has draggable items with grab handles", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }))
-      const panel = body.getByRole("group", { name: /Toggle and reorder/ })
-      expect(panel).toBeInTheDocument()
+      await userEvent.click(canvas.getByRole("button", { name: /Columns/ }));
+      const panel = body.getByRole("group", { name: /Toggle and reorder/ });
+      expect(panel).toBeInTheDocument();
       // Each column item has a grab handle button for reordering
-      const _grabHandles = panel.querySelectorAll("[data-dnd-kit-disabled-dndcontext-id]")
+      const _grabHandles = panel.querySelectorAll("[data-dnd-kit-disabled-dndcontext-id]");
       // Verify checkboxes are present (column items are rendered)
-      const checkboxes = within(panel).getAllByRole("checkbox")
-      expect(checkboxes.length).toBeGreaterThan(0)
+      const checkboxes = within(panel).getAllByRole("checkbox");
+      expect(checkboxes.length).toBeGreaterThan(0);
       // Close by clicking outside
-      await userEvent.click(canvas.getByRole("table"))
-    })
+      await userEvent.click(canvas.getByRole("table"));
+    });
 
     await step("Pagination shows row range", async () => {
-      expect(canvas.getByText(/1–5 of/)).toBeInTheDocument()
-    })
+      expect(canvas.getByText(/1–5 of/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1446" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ControlledState
 // ---------------------------------------------------------------------------
 
 function ControlledStateStory({ dataset }: { dataset: DatasetKey }) {
-  const { data, columns } = datasetConfigs[dataset]
-  const colIds = columns.map((c) => ("accessorKey" in c ? String(c.accessorKey) : ""))
+  const { data, columns } = datasetConfigs[dataset];
+  const colIds = columns.map((c) => ("accessorKey" in c ? String(c.accessorKey) : ""));
 
-  const [columnVisibility, setColumnVisibility] = React.useState<
-    Record<string, boolean>
-  >(() => {
-    const vis: Record<string, boolean> = {}
-    colIds.forEach((id) => { vis[id] = Math.random() > 0.3 })
+  const [columnVisibility, setColumnVisibility] = React.useState<Record<string, boolean>>(() => {
+    const vis: Record<string, boolean> = {};
+    colIds.forEach((id) => {
+      vis[id] = Math.random() > 0.3;
+    });
     // Ensure at least one column is visible
-    if (Object.values(vis).every((v) => !v)) vis[colIds[0]] = true
-    return vis
-  })
-  const [columnOrder, setColumnOrder] = React.useState<string[]>(
-    () => [...colIds].sort(() => Math.random() - 0.5),
-  )
+    if (Object.values(vis).every((v) => !v)) vis[colIds[0]] = true;
+    return vis;
+  });
+  const [columnOrder, setColumnOrder] = React.useState<string[]>(() => [...colIds].sort(() => Math.random() - 0.5));
 
   return (
     <div className="space-y-4">
@@ -948,15 +956,15 @@ function ControlledStateStory({ dataset }: { dataset: DatasetKey }) {
             <button
               className="rounded-lg border px-3 py-1.5 text-sm"
               onClick={() => {
-                const id = colIds[Math.floor(Math.random() * colIds.length)]
+                const id = colIds[Math.floor(Math.random() * colIds.length)];
                 setColumnVisibility((prev) => {
-                  const next = { ...prev, [id]: !prev[id] }
+                  const next = { ...prev, [id]: !prev[id] };
                   // Ensure at least one column stays visible
                   if (Object.keys(next).filter((k) => colIds.includes(k) && next[k] !== false).length === 0) {
-                    next[id] = true
+                    next[id] = true;
                   }
-                  return next
-                })
+                  return next;
+                });
               }}
             >
               Toggle random column
@@ -972,11 +980,13 @@ function ControlledStateStory({ dataset }: { dataset: DatasetKey }) {
         </TableToolbar>
       </DataTable>
       <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
-        <p className="text-xs font-medium text-muted-foreground">Live state from controlled props `onColumnVisibilityChange` and `onColumnOrderChange`:</p>
+        <p className="text-xs font-medium text-muted-foreground">
+          Live state from controlled props `onColumnVisibilityChange` and `onColumnOrderChange`:
+        </p>
         <CodeBlock language="json" code={JSON.stringify({ columnVisibility, columnOrder }, null, 2)} />
       </div>
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -1002,7 +1012,7 @@ const longContentData: Row[] = [
     path: "/tetrascience/data-lake/proteomics/raw-uploads/2025-03-15T14:22:08Z/MS-data-batch-20250315.mzML",
     status: "Archived",
   },
-]
+];
 
 const sizedColumns: ColumnDef<Row>[] = [
   { accessorKey: "id", header: "ID", size: 100 },
@@ -1014,63 +1024,64 @@ const sizedColumns: ColumnDef<Row>[] = [
     size: 100,
     meta: { truncate: false },
     cell: ({ row }) => {
-      const value = String(row.getValue("status"))
-      return <Badge variant={statusVariant[value] ?? "secondary"}>{value}</Badge>
+      const value = String(row.getValue("status"));
+      return <Badge variant={statusVariant[value] ?? "secondary"}>{value}</Badge>;
     },
   },
-]
+];
 
 export const SizedColumnsWithLongContent: Story = {
-  render: () => (
-    <DataTable columns={sizedColumns} data={longContentData} />
-  ),
+  render: () => <DataTable columns={sizedColumns} data={longContentData} />,
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Table renders with fixed layout class", async () => {
-      const table = canvas.getByRole("table")
-      expect(table).toHaveClass("table-fixed")
-    })
+      const table = canvas.getByRole("table");
+      expect(table).toHaveClass("table-fixed");
+    });
 
     await step("All data rows render", async () => {
-      const rows = canvas.getAllByRole("row")
-      expect(rows.length).toBe(longContentData.length + 1)
-    })
+      const rows = canvas.getAllByRole("row");
+      expect(rows.length).toBe(longContentData.length + 1);
+    });
 
     await step("Data cells have truncate class (default truncate=true)", async () => {
-      const truncatedCells = canvasElement.querySelectorAll("[data-slot='table-cell'].truncate")
-      expect(truncatedCells.length).toBeGreaterThan(0)
-    })
+      const truncatedCells = canvasElement.querySelectorAll("[data-slot='table-cell'].truncate");
+      expect(truncatedCells.length).toBeGreaterThan(0);
+    });
 
     await step("Status column Badge renders without being clipped (meta.truncate: false)", async () => {
-      const badges = canvasElement.querySelectorAll("[data-slot='badge']")
-      expect(badges.length).toBe(longContentData.length)
+      const badges = canvasElement.querySelectorAll("[data-slot='badge']");
+      expect(badges.length).toBe(longContentData.length);
       // The status cells must NOT have the truncate class
-      const statusCells = [...canvasElement.querySelectorAll("[data-slot='table-cell']")]
-        .filter((el) => el.querySelector("[data-slot='badge']"))
-      expect(statusCells.every((el) => !el.classList.contains("truncate"))).toBe(true)
-    })
+      const statusCells = [...canvasElement.querySelectorAll("[data-slot='table-cell']")].filter((el) =>
+        el.querySelector("[data-slot='badge']"),
+      );
+      expect(statusCells.every((el) => !el.classList.contains("truncate"))).toBe(true);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4713" },
   },
-}
+};
 
 export const ControlledState: Story = {
-  render: (args) => <ControlledStateStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />,
+  render: (args) => (
+    <ControlledStateStory dataset={((args as Record<string, unknown>).dataset as DatasetKey) ?? "Workspaces"} />
+  ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Table renders with some columns randomly hidden and in random order", async () => {
-      const headers = canvas.getAllByRole("columnheader")
+      const headers = canvas.getAllByRole("columnheader");
       // Should have one fewer column than the dataset defines
-      expect(headers.length).toBeGreaterThanOrEqual(1)
-    })
+      expect(headers.length).toBeGreaterThanOrEqual(1);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1447" },
   },
-}
+};
 
 // ===========================================================================
 // Advanced filtering stories
@@ -1082,7 +1093,7 @@ export const ControlledState: Story = {
 
 export const AdvancedFiltering: Story = {
   render: (args) => {
-    const { data, columns } = getDataset(args as Record<string, unknown>)
+    const { data, columns } = getDataset(args as Record<string, unknown>);
     return (
       <DataTable columns={columns} data={data} enableFiltering enableSorting>
         <TableToolbar>
@@ -1090,36 +1101,36 @@ export const AdvancedFiltering: Story = {
           <DataTableFilter />
         </TableToolbar>
       </DataTable>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Opening the filter panel and adding a filter row", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /filter/i }))
-      await userEvent.click(body.getByRole("button", { name: /add filter/i }))
-      expect(body.getByPlaceholderText(/value/i)).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByRole("button", { name: /filter/i }));
+      await userEvent.click(body.getByRole("button", { name: /add filter/i }));
+      expect(body.getByPlaceholderText(/value/i)).toBeInTheDocument();
+    });
 
     await step("Typing a value filters rows", async () => {
-      await userEvent.type(body.getByPlaceholderText(/value/i), "Active")
-      const rows = canvas.getAllByRole("row")
+      await userEvent.type(body.getByPlaceholderText(/value/i), "Active");
+      const rows = canvas.getAllByRole("row");
       // Header row + at least one data row matching "Active"
-      expect(rows.length).toBeGreaterThan(1)
-    })
+      expect(rows.length).toBeGreaterThan(1);
+    });
 
     await step("Clear all removes the filter and restores all rows", async () => {
-      await userEvent.click(body.getByRole("button", { name: /clear all/i }))
-      const rows = canvas.getAllByRole("row")
+      await userEvent.click(body.getByRole("button", { name: /clear all/i }));
+      const rows = canvas.getAllByRole("row");
       // All original data rows should be back (header + 5 workspace rows)
-      expect(rows.length).toBeGreaterThan(3)
-    })
+      expect(rows.length).toBeGreaterThan(3);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4714" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // MultiConditionFiltering — AND logic across two columns
@@ -1134,43 +1145,43 @@ export const MultiConditionFiltering: Story = {
     </DataTable>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Open filter panel and add first condition: Status equals Active", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /filter/i }))
-      await userEvent.click(body.getByRole("button", { name: /add filter/i }))
+      await userEvent.click(canvas.getByRole("button", { name: /filter/i }));
+      await userEvent.click(body.getByRole("button", { name: /add filter/i }));
       // Switch column from default (Name) to Status
-      const comboboxes = body.getAllByRole("combobox")
-      await userEvent.click(comboboxes[0])
-      await userEvent.click(await body.findByRole("option", { name: /^status$/i }))
+      const comboboxes = body.getAllByRole("combobox");
+      await userEvent.click(comboboxes[0]);
+      await userEvent.click(await body.findByRole("option", { name: /^status$/i }));
       // Switch operator to equals
-      const updatedComboboxes = body.getAllByRole("combobox")
-      await userEvent.click(updatedComboboxes[1])
-      await userEvent.click(await body.findByRole("option", { name: /^equals$/i }))
-      await userEvent.type(body.getByPlaceholderText(/value/i), "Active")
-    })
+      const updatedComboboxes = body.getAllByRole("combobox");
+      await userEvent.click(updatedComboboxes[1]);
+      await userEvent.click(await body.findByRole("option", { name: /^equals$/i }));
+      await userEvent.type(body.getByPlaceholderText(/value/i), "Active");
+    });
 
     await step("Add second condition: Owner contains Data Ops", async () => {
-      await userEvent.click(body.getByRole("button", { name: /add filter/i }))
+      await userEvent.click(body.getByRole("button", { name: /add filter/i }));
       // The new row's column combobox is the 3rd combobox (col1, op1, col2, op2)
-      const comboboxes = body.getAllByRole("combobox")
-      await userEvent.click(comboboxes[2])
-      await userEvent.click(await body.findByRole("option", { name: /^owner$/i }))
-      const inputs = body.getAllByPlaceholderText(/value/i)
-      await userEvent.type(inputs[1], "Data Ops")
-    })
+      const comboboxes = body.getAllByRole("combobox");
+      await userEvent.click(comboboxes[2]);
+      await userEvent.click(await body.findByRole("option", { name: /^owner$/i }));
+      const inputs = body.getAllByPlaceholderText(/value/i);
+      await userEvent.type(inputs[1], "Data Ops");
+    });
 
     await step("AND logic: only rows matching both conditions appear", async () => {
-      const rows = canvas.getAllByRole("row")
+      const rows = canvas.getAllByRole("row");
       // Clinical exports: Status=Active AND Owner=Data Ops — only 1 match
-      expect(rows.length).toBe(2) // header + 1 data row
-    })
+      expect(rows.length).toBe(2); // header + 1 data row
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4715" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // FilteringWithConfig — restrict columns and operators via filterConfig
@@ -1184,7 +1195,7 @@ export const FilteringWithConfig: Story = {
       enableFiltering
       filterConfig={[
         { columnId: "status", label: "Status", operators: ["equals", "not_equals", "is_empty", "is_not_empty"] },
-        { columnId: "owner",  label: "Owner",  operators: ["contains", "equals"] },
+        { columnId: "owner", label: "Owner", operators: ["contains", "equals"] },
       ]}
     >
       <TableToolbar>
@@ -1193,31 +1204,31 @@ export const FilteringWithConfig: Story = {
     </DataTable>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Only configured columns appear in the column selector", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /filter/i }))
-      await userEvent.click(body.getByRole("button", { name: /add filter/i }))
+      await userEvent.click(canvas.getByRole("button", { name: /filter/i }));
+      await userEvent.click(body.getByRole("button", { name: /add filter/i }));
       // The first combobox is the column selector
-      const triggers = body.getAllByRole("combobox")
-      expect(triggers.length).toBeGreaterThan(0)
+      const triggers = body.getAllByRole("combobox");
+      expect(triggers.length).toBeGreaterThan(0);
 
-      await userEvent.click(triggers[0])
+      await userEvent.click(triggers[0]);
 
-      const listbox = await within(document.body).findByRole("listbox")
-      const options = within(listbox).getAllByRole("option")
-      const optionLabels = options.map((option) => option.textContent?.trim()).filter(Boolean)
+      const listbox = await within(document.body).findByRole("listbox");
+      const options = within(listbox).getAllByRole("option");
+      const optionLabels = options.map((option) => option.textContent?.trim()).filter(Boolean);
 
-      expect(optionLabels).toEqual(["Status", "Owner"])
-      expect(within(listbox).queryByRole("option", { name: "Status" })).toBeInTheDocument()
-      expect(within(listbox).queryByRole("option", { name: "Owner" })).toBeInTheDocument()
-    })
+      expect(optionLabels).toEqual(["Status", "Owner"]);
+      expect(within(listbox).queryByRole("option", { name: "Status" })).toBeInTheDocument();
+      expect(within(listbox).queryByRole("option", { name: "Owner" })).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4716" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ControlledFiltering — external filter state
@@ -1225,7 +1236,7 @@ export const FilteringWithConfig: Story = {
 
 export const ControlledFiltering: Story = {
   render: () => {
-    const [filters, setFilters] = React.useState<FilterCondition[]>([])
+    const [filters, setFilters] = React.useState<FilterCondition[]>([]);
 
     return (
       <div className="space-y-4">
@@ -1241,24 +1252,26 @@ export const ControlledFiltering: Story = {
           </TableToolbar>
         </DataTable>
         <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
-          <p className="text-xs font-medium text-muted-foreground">Live state from controlled prop <code>filters</code>:</p>
+          <p className="text-xs font-medium text-muted-foreground">
+            Live state from controlled prop <code>filters</code>:
+          </p>
           <CodeBlock language="json" code={JSON.stringify(filters, null, 2)} />
         </div>
       </div>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Table renders in controlled mode", async () => {
-      expect(canvas.getByRole("table")).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: /filter/i })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("table")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: /filter/i })).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4717" },
   },
-}
+};
 
 // ===========================================================================
 // Grouping stories
@@ -1270,64 +1283,53 @@ export const ControlledFiltering: Story = {
 
 export const Grouping: Story = {
   render: () => (
-    <DataTable
-      columns={workspaceColumns}
-      data={workspaceData}
-      enableGrouping
-      enableSorting
-    >
+    <DataTable columns={workspaceColumns} data={workspaceData} enableGrouping enableSorting>
       <TableToolbar>
         <DataTableGroup />
       </TableToolbar>
     </DataTable>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Open the group panel and select a column", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /group/i }))
-      const trigger = await body.findByRole("combobox")
-      await userEvent.click(trigger)
-      await userEvent.click(await body.findByRole("option", { name: /^status$/i }))
-    })
+      await userEvent.click(canvas.getByRole("button", { name: /group/i }));
+      const trigger = await body.findByRole("combobox");
+      await userEvent.click(trigger);
+      await userEvent.click(await body.findByRole("option", { name: /^status$/i }));
+    });
 
     await step("Group header rows appear for each unique value", async () => {
-      const headers = canvasElement.querySelectorAll(
-        "[data-slot='data-table-group-header']",
-      )
+      const headers = canvasElement.querySelectorAll("[data-slot='data-table-group-header']");
       // Workspaces have 3 statuses: Active, Paused, Archived
-      expect(headers.length).toBe(3)
-    })
+      expect(headers.length).toBe(3);
+    });
 
     await step("Collapsing a group hides its data rows", async () => {
-      const headers = canvasElement.querySelectorAll(
-        "[data-slot='data-table-group-header']",
-      )
-      const firstHeaderButton = headers[0].querySelector("button")
-      expect(firstHeaderButton).not.toBeNull()
-      const rowsBefore = canvas.getAllByRole("row").length
-      await userEvent.click(firstHeaderButton as HTMLElement)
-      const rowsAfter = canvas.getAllByRole("row").length
-      expect(rowsAfter).toBeLessThan(rowsBefore)
-    })
+      const headers = canvasElement.querySelectorAll("[data-slot='data-table-group-header']");
+      const firstHeaderButton = headers[0].querySelector("button");
+      expect(firstHeaderButton).not.toBeNull();
+      const rowsBefore = canvas.getAllByRole("row").length;
+      await userEvent.click(firstHeaderButton as HTMLElement);
+      const rowsAfter = canvas.getAllByRole("row").length;
+      expect(rowsAfter).toBeLessThan(rowsBefore);
+    });
 
     await step("Clearing grouping restores flat rows", async () => {
       // Reopen the popover and pick None
-      await userEvent.click(canvas.getByRole("button", { name: /grouped by/i }))
-      const trigger = await body.findByRole("combobox")
-      await userEvent.click(trigger)
-      await userEvent.click(await body.findByRole("option", { name: /^none$/i }))
+      await userEvent.click(canvas.getByRole("button", { name: /grouped by/i }));
+      const trigger = await body.findByRole("combobox");
+      await userEvent.click(trigger);
+      await userEvent.click(await body.findByRole("option", { name: /^none$/i }));
       // Group headers should be gone
-      expect(
-        canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length,
-      ).toBe(0)
-    })
+      expect(canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length).toBe(0);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5192" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // GroupHeaderAccessibility — full-row click target + keyboard toggle
@@ -1335,85 +1337,67 @@ export const Grouping: Story = {
 
 export const GroupHeaderAccessibility: Story = {
   render: () => (
-    <DataTable
-      columns={workspaceColumns}
-      data={workspaceData}
-      enableGrouping
-      grouping="status"
-    >
+    <DataTable columns={workspaceColumns} data={workspaceData} enableGrouping grouping="status">
       <TableToolbar>
         <DataTableGroup />
       </TableToolbar>
     </DataTable>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Group header button fills the entire row cell", async () => {
-      const headerCell = canvasElement.querySelector<HTMLElement>(
-        "[data-slot='data-table-group-header'] td",
-      )
-      const headerBtn = canvasElement.querySelector<HTMLButtonElement>(
-        "[data-slot='data-table-group-header'] button",
-      )
-      expect(headerCell).not.toBeNull()
-      expect(headerBtn).not.toBeNull()
-      const cellRect = (headerCell as HTMLElement).getBoundingClientRect()
-      const btnRect = (headerBtn as HTMLButtonElement).getBoundingClientRect()
+      const headerCell = canvasElement.querySelector<HTMLElement>("[data-slot='data-table-group-header'] td");
+      const headerBtn = canvasElement.querySelector<HTMLButtonElement>("[data-slot='data-table-group-header'] button");
+      expect(headerCell).not.toBeNull();
+      expect(headerBtn).not.toBeNull();
+      const cellRect = (headerCell as HTMLElement).getBoundingClientRect();
+      const btnRect = (headerBtn as HTMLButtonElement).getBoundingClientRect();
       // Button should cover the cell within a 2px tolerance for sub-pixel rendering
-      expect(Math.abs(btnRect.width - cellRect.width)).toBeLessThanOrEqual(2)
-      expect(Math.abs(btnRect.height - cellRect.height)).toBeLessThanOrEqual(2)
-    })
+      expect(Math.abs(btnRect.width - cellRect.width)).toBeLessThanOrEqual(2);
+      expect(Math.abs(btnRect.height - cellRect.height)).toBeLessThanOrEqual(2);
+    });
 
-    await step(
-      "Clicking near the far right edge of the row still toggles the group",
-      async () => {
-        const headerCell = canvasElement.querySelector<HTMLElement>(
-          "[data-slot='data-table-group-header'] td",
-        )!
-        const rect = headerCell.getBoundingClientRect()
-        const x = Math.round(rect.right - 8)
-        const y = Math.round(rect.top + rect.height / 2)
-        const target = canvasElement.ownerDocument.elementFromPoint(x, y)
-        expect(target).not.toBeNull()
-        expect(target!.closest("[data-slot='data-table-group-header'] button")).not.toBeNull()
-        const rowsBefore = canvas.getAllByRole("row").length
-        await userEvent.click(target as HTMLElement)
-        const rowsAfter = canvas.getAllByRole("row").length
-        expect(rowsAfter).toBeLessThan(rowsBefore)
-      },
-    )
+    await step("Clicking near the far right edge of the row still toggles the group", async () => {
+      const headerCell = canvasElement.querySelector<HTMLElement>("[data-slot='data-table-group-header'] td")!;
+      const rect = headerCell.getBoundingClientRect();
+      const x = Math.round(rect.right - 8);
+      const y = Math.round(rect.top + rect.height / 2);
+      const target = canvasElement.ownerDocument.elementFromPoint(x, y);
+      expect(target).not.toBeNull();
+      expect(target!.closest("[data-slot='data-table-group-header'] button")).not.toBeNull();
+      const rowsBefore = canvas.getAllByRole("row").length;
+      await userEvent.click(target as HTMLElement);
+      const rowsAfter = canvas.getAllByRole("row").length;
+      expect(rowsAfter).toBeLessThan(rowsBefore);
+    });
 
     await step("Enter key re-expands the focused group", async () => {
-      const headerBtn = canvasElement.querySelector<HTMLButtonElement>(
-        "[data-slot='data-table-group-header'] button",
-      )!
-      headerBtn.focus()
-      expect(canvasElement.ownerDocument.activeElement).toBe(headerBtn)
-      expect(headerBtn.getAttribute("aria-expanded")).toBe("false")
-      const rowsBefore = canvas.getAllByRole("row").length
-      await userEvent.keyboard("{Enter}")
-      const rowsAfter = canvas.getAllByRole("row").length
-      expect(rowsAfter).toBeGreaterThan(rowsBefore)
-      expect(headerBtn.getAttribute("aria-expanded")).toBe("true")
-    })
+      const headerBtn = canvasElement.querySelector<HTMLButtonElement>("[data-slot='data-table-group-header'] button")!;
+      headerBtn.focus();
+      expect(canvasElement.ownerDocument.activeElement).toBe(headerBtn);
+      expect(headerBtn.getAttribute("aria-expanded")).toBe("false");
+      const rowsBefore = canvas.getAllByRole("row").length;
+      await userEvent.keyboard("{Enter}");
+      const rowsAfter = canvas.getAllByRole("row").length;
+      expect(rowsAfter).toBeGreaterThan(rowsBefore);
+      expect(headerBtn.getAttribute("aria-expanded")).toBe("true");
+    });
 
     await step("Space key collapses the focused group", async () => {
-      const headerBtn = canvasElement.querySelector<HTMLButtonElement>(
-        "[data-slot='data-table-group-header'] button",
-      )!
-      headerBtn.focus()
-      const rowsBefore = canvas.getAllByRole("row").length
-      await userEvent.keyboard(" ")
-      const rowsAfter = canvas.getAllByRole("row").length
-      expect(rowsAfter).toBeLessThan(rowsBefore)
-      expect(headerBtn.getAttribute("aria-expanded")).toBe("false")
-    })
+      const headerBtn = canvasElement.querySelector<HTMLButtonElement>("[data-slot='data-table-group-header'] button")!;
+      headerBtn.focus();
+      const rowsBefore = canvas.getAllByRole("row").length;
+      await userEvent.keyboard(" ");
+      const rowsAfter = canvas.getAllByRole("row").length;
+      expect(rowsAfter).toBeLessThan(rowsBefore);
+      expect(headerBtn.getAttribute("aria-expanded")).toBe("false");
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5193" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // GroupingWithConfig — restrict groupable columns via groupConfig
@@ -1436,24 +1420,24 @@ export const GroupingWithConfig: Story = {
     </DataTable>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Only configured columns appear in the group selector", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /group/i }))
-      const trigger = await body.findByRole("combobox")
-      await userEvent.click(trigger)
-      const listbox = await body.findByRole("listbox")
-      const options = within(listbox).getAllByRole("option")
-      const optionLabels = options.map((o) => o.textContent?.trim()).filter(Boolean)
+      await userEvent.click(canvas.getByRole("button", { name: /group/i }));
+      const trigger = await body.findByRole("combobox");
+      await userEvent.click(trigger);
+      const listbox = await body.findByRole("listbox");
+      const options = within(listbox).getAllByRole("option");
+      const optionLabels = options.map((o) => o.textContent?.trim()).filter(Boolean);
       // None + Status + Owner only
-      expect(optionLabels).toEqual(["None", "Status", "Owner"])
-    })
+      expect(optionLabels).toEqual(["None", "Status", "Owner"]);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5194" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ControlledGrouping — external grouping state
@@ -1461,7 +1445,7 @@ export const GroupingWithConfig: Story = {
 
 export const ControlledGrouping: Story = {
   render: () => {
-    const [grouping, setGrouping] = React.useState<string | null>("owner")
+    const [grouping, setGrouping] = React.useState<string | null>("owner");
 
     return (
       <div className="space-y-4">
@@ -1483,25 +1467,21 @@ export const ControlledGrouping: Story = {
           <CodeBlock language="json" code={JSON.stringify({ grouping }, null, 2)} />
         </div>
       </div>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Initial controlled grouping is reflected in the trigger button", async () => {
-      expect(
-        canvas.getByRole("button", { name: /grouped by owner/i }),
-      ).toBeInTheDocument()
+      expect(canvas.getByRole("button", { name: /grouped by owner/i })).toBeInTheDocument();
       // 4 unique owners in workspaceData
-      expect(
-        canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length,
-      ).toBe(4)
-    })
+      expect(canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length).toBe(4);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5195" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // GroupingWithFilter — grouping combined with the existing filter UI
@@ -1510,37 +1490,29 @@ export const ControlledGrouping: Story = {
 export const GroupingWithFilter: Story = {
   args: { dataset: "Compounds" },
   render: (args) => {
-    const { data, columns } = getDataset(args as Record<string, unknown>)
+    const { data, columns } = getDataset(args as Record<string, unknown>);
     return (
-      <DataTable
-        columns={columns}
-        data={data}
-        enableGrouping
-        enableFiltering
-        enableSorting
-      >
+      <DataTable columns={columns} data={data} enableGrouping enableFiltering enableSorting>
         <TableToolbar>
           <DataTableFilter />
           <DataTableGroup />
         </TableToolbar>
       </DataTable>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Group by category", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: /group by/i }))
-      const trigger = await body.findByRole("combobox")
-      await userEvent.click(trigger)
-      await userEvent.click(await body.findByRole("option", { name: /^category$/i }))
-      expect(
-        canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length,
-      ).toBeGreaterThan(0)
-    })
+      await userEvent.click(canvas.getByRole("button", { name: /group by/i }));
+      const trigger = await body.findByRole("combobox");
+      await userEvent.click(trigger);
+      await userEvent.click(await body.findByRole("option", { name: /^category$/i }));
+      expect(canvasElement.querySelectorAll("[data-slot='data-table-group-header']").length).toBeGreaterThan(0);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5196" },
   },
-}
+};

@@ -14,9 +14,7 @@ describe("transformStorySource", () => {
     await step("renders", async () => {})
   },
 }`;
-    expect(transformStorySource(source)).toBe(
-      '<AccordionExample type="single" collapsible defaultValue="item-1" />',
-    );
+    expect(transformStorySource(source)).toBe('<AccordionExample type="single" collapsible defaultValue="item-1" />');
   });
 
   it("extracts and unwraps a parenthesized multi-line JSX render", () => {
@@ -89,9 +87,7 @@ describe("transformStorySource", () => {
     zephyr: { testCaseId: "SW-T2" },
   },
 }`;
-    expect(transformStorySource(source)).toBe(
-      'renderCalendar({ mode: "single", selected: selectedDate })',
-    );
+    expect(transformStorySource(source)).toBe('renderCalendar({ mode: "single", selected: selectedDate })');
   });
 
   it("is not fooled by template literals containing property-like lines", () => {
@@ -146,15 +142,11 @@ describe("transformStorySource", () => {
   });
 
   it("extracts a single-line story object", () => {
-    expect(transformStorySource("{ render: () => <Skeleton /> }")).toBe(
-      "<Skeleton />",
-    );
+    expect(transformStorySource("{ render: () => <Skeleton /> }")).toBe("<Skeleton />");
   });
 
   it("normalizes CSF2 zero-arity function stories", () => {
-    expect(transformStorySource("() => <Button>Save</Button>")).toBe(
-      "<Button>Save</Button>",
-    );
+    expect(transformStorySource("() => <Button>Save</Button>")).toBe("<Button>Save</Button>");
   });
 
   it("passes dynamic JSX snippets through unchanged", () => {

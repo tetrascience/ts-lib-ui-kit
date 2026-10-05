@@ -1,14 +1,6 @@
-import {
-  PLATE_FORMAT_96,
-  PLATE_FORMAT_384,
-  PLATE_FORMAT_1536,
-} from "./types";
+import { PLATE_FORMAT_96, PLATE_FORMAT_384, PLATE_FORMAT_1536 } from "./types";
 
-import {
-  CHART_COLORS,
-  CHART_DIVERGING,
-  toPlotlyColorscale,
-} from "@/utils/colors";
+import { CHART_COLORS, CHART_DIVERGING, toPlotlyColorscale } from "@/utils/colors";
 
 /**
  * Default category colors for well types in categorical visualization mode.
@@ -36,8 +28,7 @@ export const PLATE_CONFIGS: Record<
  * Default color scale (CVD-friendly blue → orange diverging ramp
  * suitable for plate data)
  */
-export const DEFAULT_COLOR_SCALE: Array<[number, string]> =
-  toPlotlyColorscale(CHART_DIVERGING.blueOrange);
+export const DEFAULT_COLOR_SCALE: Array<[number, string]> = toPlotlyColorscale(CHART_DIVERGING.blueOrange);
 
 /**
  * UI color constants for PlateMap component styling

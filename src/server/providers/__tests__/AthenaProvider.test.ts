@@ -46,9 +46,7 @@ describe("AthenaProvider", () => {
 
       const longQuery = "x".repeat(262145); // Exceeds 262144 limit
 
-      await expect(provider.query(longQuery)).rejects.toThrow(
-        "Query length exceeds the maximum allowed limit",
-      );
+      await expect(provider.query(longQuery)).rejects.toThrow("Query length exceeds the maximum allowed limit");
     });
 
     it("should execute query successfully", async () => {
@@ -129,9 +127,7 @@ describe("AthenaProvider", () => {
         "test-database",
       );
 
-      await expect(provider.query("SELECT * FROM missing")).rejects.toThrow(
-        MissingTableError,
-      );
+      await expect(provider.query("SELECT * FROM missing")).rejects.toThrow(MissingTableError);
     });
 
     it("should close client", async () => {
@@ -164,4 +160,3 @@ describe("AthenaProvider", () => {
     });
   });
 });
-

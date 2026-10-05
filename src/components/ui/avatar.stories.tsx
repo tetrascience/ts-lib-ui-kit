@@ -1,15 +1,9 @@
-import { CheckIcon } from "lucide-react"
-import { expect, within } from "storybook/test"
+import { CheckIcon } from "lucide-react";
+import { expect, within } from "storybook/test";
 
-import {
-  Avatar,
-  AvatarBadge,
-  AvatarFallback,
-  AvatarGroup,
-  AvatarGroupCount,
-} from "./avatar"
+import { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount } from "./avatar";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Avatar> = {
   title: "Components/Data Display/Avatar",
@@ -27,11 +21,11 @@ const meta: Meta<typeof Avatar> = {
   args: {
     size: "default",
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Avatar>
+type Story = StoryObj<typeof Avatar>;
 
 function renderAvatar(args: Story["args"]) {
   return (
@@ -41,7 +35,7 @@ function renderAvatar(args: Story["args"]) {
         <CheckIcon />
       </AvatarBadge>
     </Avatar>
-  )
+  );
 }
 
 export const Default: Story = {
@@ -50,13 +44,13 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1188" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Avatar fallback initials render", async () => {
-      expect(canvas.getByText("OW")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("OW")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Small: Story = {
   args: {
@@ -67,13 +61,13 @@ export const Small: Story = {
     zephyr: { testCaseId: "SW-T1189" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Small avatar shows fallback initials", async () => {
-      expect(canvas.getByText("OW")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("OW")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Large: Story = {
   args: {
@@ -84,13 +78,13 @@ export const Large: Story = {
     zephyr: { testCaseId: "SW-T1190" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Large avatar shows fallback initials", async () => {
-      expect(canvas.getByText("OW")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("OW")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Group: Story = {
   render: () => (
@@ -111,13 +105,13 @@ export const Group: Story = {
     zephyr: { testCaseId: "SW-T1191" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Avatar group shows fallbacks and count", async () => {
-      expect(canvas.getByText("OW")).toBeInTheDocument()
-      expect(canvas.getByText("TS")).toBeInTheDocument()
-      expect(canvas.getByText("UI")).toBeInTheDocument()
-      expect(canvas.getByText("+2")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("OW")).toBeInTheDocument();
+      expect(canvas.getByText("TS")).toBeInTheDocument();
+      expect(canvas.getByText("UI")).toBeInTheDocument();
+      expect(canvas.getByText("+2")).toBeInTheDocument();
+    });
   },
-}
+};

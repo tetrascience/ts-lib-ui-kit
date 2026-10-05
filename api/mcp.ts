@@ -27,12 +27,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 // function makes no outbound request (no SSRF surface) and avoids native-ESM JSON
 // import-attribute pitfalls in the Vercel runtime. Path resolves from the project
 // root (process.cwd() on Vercel). Cached once per warm instance.
-const CATALOG_FILE = path.join(
-  process.cwd(),
-  "storybook-static",
-  "mcp",
-  "components.json",
-);
+const CATALOG_FILE = path.join(process.cwd(), "storybook-static", "mcp", "components.json");
 
 let cachedCatalog: Catalog | undefined;
 
@@ -105,11 +100,7 @@ function buildServer(catalog: Catalog): McpServer {
         `story with its concrete args (copy-pasteable usage examples). Always prefer ` +
         `these authoritative values over guessing a component's API.`,
       inputSchema: {
-        name: z
-          .string()
-          .describe(
-            'Component name or Storybook title, e.g. "Button" or "Components/Actions/Button".',
-          ),
+        name: z.string().describe('Component name or Storybook title, e.g. "Button" or "Components/Actions/Button".'),
       },
     },
     ({ name }) => {
@@ -148,14 +139,7 @@ function buildServer(catalog: Catalog): McpServer {
       const needle = query.trim().toLowerCase();
       const matches = catalog.components
         .map((c) => {
-          const haystack = [
-            c.title,
-            c.name,
-            ...c.tags,
-            ...Object.keys(c.argTypes),
-          ]
-            .join(" ")
-            .toLowerCase();
+          const haystack = [c.title, c.name, ...c.tags, ...Object.keys(c.argTypes)].join(" ").toLowerCase();
           return { component: c, hit: haystack.includes(needle) };
         })
         .filter((m) => m.hit)
@@ -175,17 +159,11 @@ function buildServer(catalog: Catalog): McpServer {
 function setCorsHeaders(res: VercelResponse): void {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, mcp-session-id, mcp-protocol-version",
-  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, mcp-session-id, mcp-protocol-version");
   res.setHeader("Access-Control-Expose-Headers", "mcp-session-id");
 }
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse,
-): Promise<void> {
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   setCorsHeaders(res);
 
   if (req.method === "OPTIONS") {

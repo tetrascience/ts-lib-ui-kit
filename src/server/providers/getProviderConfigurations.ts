@@ -10,10 +10,7 @@
 
 import { InvalidProviderConfigurationError } from "./exceptions";
 
-import type {
-  GetProviderConfigurationsOptions,
-  ProviderConfiguration,
-} from "./types";
+import type { GetProviderConfigurationsOptions, ProviderConfiguration } from "./types";
 import type { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
 
 // Re-export for backwards compatibility
@@ -23,14 +20,9 @@ export { InvalidProviderConfigurationError };
  * Validates and parses a single provider configuration object.
  * @internal
  */
-function validateProviderConfigItem(
-  item: unknown,
-  index: number,
-): ProviderConfiguration {
+function validateProviderConfigItem(item: unknown, index: number): ProviderConfiguration {
   if (typeof item !== "object" || item === null) {
-    throw new InvalidProviderConfigurationError(
-      `Invalid provider configuration at index ${index}: expected an object`,
-    );
+    throw new InvalidProviderConfigurationError(`Invalid provider configuration at index ${index}: expected an object`);
   }
 
   const obj = item as Record<string, unknown>;
@@ -63,9 +55,7 @@ function validateProviderConfigItem(
  * Parses provider configurations from a JSON config string.
  * @internal
  */
-function parseProviderConfigOverride(
-  configStr: string,
-): ProviderConfiguration[] {
+function parseProviderConfigOverride(configStr: string): ProviderConfiguration[] {
   try {
     const parsed = JSON.parse(configStr);
 
@@ -133,8 +123,7 @@ export async function getProviderConfigurations(
   options: GetProviderConfigurationsOptions = {},
 ): Promise<ProviderConfiguration[]> {
   // Check for override from options or environment variable
-  const configStr =
-    options.providerConfigOverride || process.env.DATA_APP_PROVIDER_CONFIG;
+  const configStr = options.providerConfigOverride || process.env.DATA_APP_PROVIDER_CONFIG;
 
   if (configStr) {
     return parseProviderConfigOverride(configStr);
@@ -142,18 +131,14 @@ export async function getProviderConfigurations(
 
   // Ensure TDPClient is initialized
   if (!client.isInitialized) {
-    throw new Error(
-      "TDPClient is not initialized. Call await client.init() before using getProviderConfigurations.",
-    );
+    throw new Error("TDPClient is not initialized. Call await client.init() before using getProviderConfigurations.");
   }
 
   // Get connector ID from options or environment variable
   const connectorId = options.connectorId || process.env.CONNECTOR_ID;
 
   if (!connectorId) {
-    console.warn(
-      "Environment variable CONNECTOR_ID is not set. Unable to fetch providers.",
-    );
+    console.warn("Environment variable CONNECTOR_ID is not set. Unable to fetch providers.");
     return [];
   }
 
@@ -170,10 +155,7 @@ export async function getProviderConfigurations(
 
   for (const minimalProvider of containerApp.providers) {
     // Get full provider with secret names
-    const provider = await client.api!.dataApps.getProviderById(
-      minimalProvider.id,
-      orgId,
-    );
+    const provider = await client.api!.dataApps.getProviderById(minimalProvider.id, orgId);
 
     // Build fields from environment variables
     // Use secret.name as the key (canonical field name like "user", "password", "server_hostname")
@@ -197,4 +179,3 @@ export async function getProviderConfigurations(
 
   return providerConfigurations;
 }
-

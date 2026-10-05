@@ -79,11 +79,7 @@ const mixedScaleCache = new WeakMap<ChartScale, Map<"short" | "narrow", ChartSca
  * the full left/right margins — vertical chrome follows height, horizontal
  * chrome follows width.
  */
-export function resolveChartScale(
-  width: number,
-  height: number,
-  regular: ChartScale = REGULAR_SCALE,
-): ChartScale {
+export function resolveChartScale(width: number, height: number, regular: ChartScale = REGULAR_SCALE): ChartScale {
   const short = isCompactHeight(height);
   const narrow = isCompactWidth(width);
   if (!short && !narrow) return regular;

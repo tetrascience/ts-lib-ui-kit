@@ -6,28 +6,19 @@
  */
 
 import { getTdpAthenaProvider } from "./AthenaProvider";
-import {
-  buildDatabricksProvider,
-} from "./DatabricksProvider";
+import { buildDatabricksProvider } from "./DatabricksProvider";
 import { InvalidProviderConfigurationError } from "./getProviderConfigurations";
-import {
-  buildSnowflakeProvider,
-} from "./SnowflakeProvider";
+import { buildSnowflakeProvider } from "./SnowflakeProvider";
 
-import type { AthenaProvider} from "./AthenaProvider";
-import type {
-  DatabricksProvider} from "./DatabricksProvider";
-import type {
-  SnowflakeProvider} from "./SnowflakeProvider";
+import type { AthenaProvider } from "./AthenaProvider";
+import type { DatabricksProvider } from "./DatabricksProvider";
+import type { SnowflakeProvider } from "./SnowflakeProvider";
 import type { ProviderConfiguration } from "./types";
 
 /**
  * Union type of all supported data providers
  */
-export type DataProvider =
-  | SnowflakeProvider
-  | DatabricksProvider
-  | AthenaProvider;
+export type DataProvider = SnowflakeProvider | DatabricksProvider | AthenaProvider;
 
 /**
  * Build a data provider from the configuration
@@ -59,9 +50,7 @@ export type DataProvider =
  * }
  * ```
  */
-export async function buildProvider(
-  config: ProviderConfiguration,
-): Promise<DataProvider> {
+export async function buildProvider(config: ProviderConfiguration): Promise<DataProvider> {
   switch (config.type) {
     case "snowflake":
       return buildSnowflakeProvider(config);
@@ -71,9 +60,6 @@ export async function buildProvider(
       // For Athena, we typically use the TDP Athena provider
       return getTdpAthenaProvider();
     default:
-      throw new InvalidProviderConfigurationError(
-        `Unsupported provider type: ${config.type}`,
-      );
+      throw new InvalidProviderConfigurationError(`Unsupported provider type: ${config.type}`);
   }
 }
-

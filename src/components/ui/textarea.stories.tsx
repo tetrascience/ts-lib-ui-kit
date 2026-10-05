@@ -1,9 +1,8 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { Textarea } from "./textarea"
+import { Textarea } from "./textarea";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Textarea> = {
   title: "Components/Forms & Inputs/Textarea",
@@ -22,14 +21,14 @@ const meta: Meta<typeof Textarea> = {
     placeholder: "Add any notes for reviewers",
     rows: 5,
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Textarea>
+type Story = StoryObj<typeof Textarea>;
 
 function renderTextarea(args: Story["args"]) {
-  return <Textarea {...args} className="w-[360px]" />
+  return <Textarea {...args} className="w-[360px]" />;
 }
 
 export const Default: Story = {
@@ -38,19 +37,17 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1314" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Textarea renders", async () => {
-      expect(canvas.getByRole("textbox")).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("textbox")).toBeInTheDocument();
+    });
 
     await step("Placeholder is shown", async () => {
-      expect(
-        canvas.getByPlaceholderText("Add any notes for reviewers"),
-      ).toBeInTheDocument()
-    })
+      expect(canvas.getByPlaceholderText("Add any notes for reviewers")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Disabled: Story = {
   args: {
@@ -62,15 +59,15 @@ export const Disabled: Story = {
     zephyr: { testCaseId: "SW-T1315" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Disabled textarea renders with value", async () => {
-      const field = canvas.getByRole("textbox")
-      expect(field).toBeDisabled()
-      expect(field).toHaveValue("Review complete. Changes approved.")
-    })
+      const field = canvas.getByRole("textbox");
+      expect(field).toBeDisabled();
+      expect(field).toHaveValue("Review complete. Changes approved.");
+    });
   },
-}
+};
 
 export const ExtraSmall: Story = {
   args: {
@@ -81,12 +78,12 @@ export const ExtraSmall: Story = {
     zephyr: { testCaseId: "SW-T5690" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("xs textarea uses the 48px min-height", async () => {
-      const textarea = canvas.getByRole("textbox")
-      expect(textarea).toHaveAttribute("data-size", "xs")
-      expect(getComputedStyle(textarea).minHeight).toBe("48px")
-    })
+      const textarea = canvas.getByRole("textbox");
+      expect(textarea).toHaveAttribute("data-size", "xs");
+      expect(getComputedStyle(textarea).minHeight).toBe("48px");
+    });
   },
-}
+};

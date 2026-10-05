@@ -1,8 +1,8 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { RadioGroup, RadioGroupItem } from "./radio-group"
+import { RadioGroup, RadioGroupItem } from "./radio-group";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const plans = [
   {
@@ -20,7 +20,7 @@ const plans = [
     label: "Enterprise",
     description: "Advanced controls for governance, compliance, and large data volumes.",
   },
-] as const
+] as const;
 
 const meta: Meta<typeof RadioGroup> = {
   title: "Components/Forms & Inputs/Radio Group",
@@ -32,18 +32,18 @@ const meta: Meta<typeof RadioGroup> = {
     docs: { source: { type: "dynamic" } },
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof RadioGroup>
+type Story = StoryObj<typeof RadioGroup>;
 
 function renderRadioGroup(disabledValue?: string) {
   return (
     <div className="w-[360px] rounded-xl border bg-background p-4">
       <RadioGroup className="gap-3" defaultValue="team">
         {plans.map((plan) => {
-          const id = `radio-group-${plan.value}`
+          const id = `radio-group-${plan.value}`;
 
           return (
             <div key={plan.value} className="flex items-start gap-3 rounded-lg border p-3">
@@ -53,11 +53,11 @@ function renderRadioGroup(disabledValue?: string) {
                 <span className="text-sm text-muted-foreground">{plan.description}</span>
               </label>
             </div>
-          )
+          );
         })}
       </RadioGroup>
     </div>
-  )
+  );
 }
 
 export const Default: Story = {
@@ -66,19 +66,19 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1274" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Radio group renders", async () => {
-      expect(canvas.getAllByRole("radio")).toHaveLength(3)
-    })
+      expect(canvas.getAllByRole("radio")).toHaveLength(3);
+    });
 
     await step("Plan labels render", async () => {
-      expect(canvas.getByText("Starter")).toBeInTheDocument()
-      expect(canvas.getByText("Team")).toBeInTheDocument()
-      expect(canvas.getByText("Enterprise")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Starter")).toBeInTheDocument();
+      expect(canvas.getByText("Team")).toBeInTheDocument();
+      expect(canvas.getByText("Enterprise")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const DisabledOption: Story = {
   render: () => renderRadioGroup("enterprise"),
@@ -86,17 +86,17 @@ export const DisabledOption: Story = {
     zephyr: { testCaseId: "SW-T1275" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Radio group renders", async () => {
-      expect(canvas.getAllByRole("radio")).toHaveLength(3)
-    })
+      expect(canvas.getAllByRole("radio")).toHaveLength(3);
+    });
 
     await step("Enterprise option is disabled", async () => {
-      expect(canvas.getByRole("radio", { name: /Enterprise/i })).toBeDisabled()
-    })
+      expect(canvas.getByRole("radio", { name: /Enterprise/i })).toBeDisabled();
+    });
   },
-}
+};
 export const ExtraSmall: Story = {
   render: () => (
     <RadioGroup size="xs" defaultValue="team" aria-label="Plan">
@@ -108,15 +108,15 @@ export const ExtraSmall: Story = {
     zephyr: { testCaseId: "SW-T5695" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("xs radio box is 14px (group size flows to items)", async () => {
-      const item = canvas.getAllByRole("radio")[0]
-      expect(item).toHaveAttribute("data-size", "xs")
-      expect(Math.round(item.getBoundingClientRect().height)).toBe(14)
-    })
+      const item = canvas.getAllByRole("radio")[0];
+      expect(item).toHaveAttribute("data-size", "xs");
+      expect(Math.round(item.getBoundingClientRect().height)).toBe(14);
+    });
   },
-}
+};
 
 export const Large: Story = {
   render: () => (
@@ -129,11 +129,11 @@ export const Large: Story = {
     zephyr: { testCaseId: "SW-T5696" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("lg radio box is 20px", async () => {
-      const item = canvas.getAllByRole("radio")[0]
-      expect(Math.round(item.getBoundingClientRect().height)).toBe(20)
-    })
+      const item = canvas.getAllByRole("radio")[0];
+      expect(Math.round(item.getBoundingClientRect().height)).toBe(20);
+    });
   },
-}
+};

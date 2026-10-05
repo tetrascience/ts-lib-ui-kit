@@ -50,7 +50,7 @@ export function findClosestIndex(arr: number[], target: number): number {
 export function processUserAnnotations(
   annotations: PeakAnnotation[],
   xArray: number[],
-  yArray: number[]
+  yArray: number[],
 ): PeakAnnotation[] {
   return annotations.map((ann) => {
     // If startX/endX are provided, convert to indices
@@ -84,7 +84,7 @@ export function processUserAnnotations(
 export function collectPeaksWithBoundaryData(
   allDetectedPeaks: { peaks: PeakAnnotation[]; seriesIndex: number }[],
   annotations: PeakAnnotation[],
-  processedSeries: { x: number[]; y: number[] }[]
+  processedSeries: { x: number[]; y: number[] }[],
 ): PeakDataWithSeries[] {
   const peaksWithData: PeakDataWithSeries[] = [];
 
@@ -101,7 +101,7 @@ export function collectPeaksWithBoundaryData(
   // Add user-provided annotations that have boundary info (_computed.startIndex and _computed.endIndex)
   // Note: annotations with startX/endX should already be processed to have _computed fields
   const annotationsWithBoundaries = annotations.filter(
-    (ann) => ann._computed?.startIndex !== undefined && ann._computed?.endIndex !== undefined
+    (ann) => ann._computed?.startIndex !== undefined && ann._computed?.endIndex !== undefined,
   );
   if (annotationsWithBoundaries.length > 0 && processedSeries.length > 0) {
     peaksWithData.push({
@@ -119,10 +119,7 @@ export function collectPeaksWithBoundaryData(
  * Build the extra content for Plotly hovertemplate from series metadata.
  * Displays all metadata fields as key: value pairs.
  */
-export function buildHoverExtraContent(
-  seriesName: string,
-  metadata?: Record<string, unknown>
-): string {
+export function buildHoverExtraContent(seriesName: string, metadata?: Record<string, unknown>): string {
   if (!metadata) return seriesName;
 
   const metaLines: string[] = [];
@@ -148,10 +145,7 @@ export function buildHoverExtraContent(
  * - Ensures x and y arrays have the same length (truncates to shorter)
  * - Replaces NaN and Infinity values with 0
  */
-export function validateSeriesData(
-  x: number[],
-  y: number[]
-): { x: number[]; y: number[] } {
+export function validateSeriesData(x: number[], y: number[]): { x: number[]; y: number[] } {
   // Ensure arrays have same length
   const length = Math.min(x.length, y.length);
   const validX = x.slice(0, length);
@@ -170,7 +164,7 @@ export function validateSeriesData(
 export function applyBaselineCorrection(
   y: number[],
   method: BaselineCorrectionMethod,
-  windowSize: number = 50
+  windowSize: number = 50,
 ): number[] {
   if (method === "none" || y.length === 0) return y;
 
@@ -201,4 +195,3 @@ export function applyBaselineCorrection(
 
   return y;
 }
-

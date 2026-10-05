@@ -1,22 +1,22 @@
-import { type VariantProps } from "class-variance-authority"
-import { CircleDashed, Check } from "lucide-react"
-import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui"
-import * as React from "react"
+import { type VariantProps } from "class-variance-authority";
+import { CircleDashed, Check } from "lucide-react";
+import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui";
+import * as React from "react";
 
-import { toggleVariants } from "@/components/ui/toggle"
-import { cn } from "@/lib/utils"
+import { toggleVariants } from "@/components/ui/toggle";
+import { cn } from "@/lib/utils";
 
 const ToggleGroupContext = React.createContext<
   VariantProps<typeof toggleVariants> & {
-    spacing?: number
-    orientation?: "horizontal" | "vertical"
+    spacing?: number;
+    orientation?: "horizontal" | "vertical";
   }
 >({
   size: "default",
   variant: "default",
   spacing: 0,
   orientation: "horizontal",
-})
+});
 
 function ToggleGroup({
   className,
@@ -28,8 +28,8 @@ function ToggleGroup({
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Root> &
   VariantProps<typeof toggleVariants> & {
-    spacing?: number
-    orientation?: "horizontal" | "vertical"
+    spacing?: number;
+    orientation?: "horizontal" | "vertical";
   }) {
   return (
     <ToggleGroupPrimitive.Root
@@ -41,17 +41,15 @@ function ToggleGroup({
       style={{ "--gap": spacing } as React.CSSProperties}
       className={cn(
         "group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] rounded-lg data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-[size=xs]:rounded-[min(var(--radius-md),10px)] data-vertical:flex-col data-vertical:items-stretch",
-        className
+        className,
       )}
       {...props}
     >
-      <ToggleGroupContext.Provider
-        value={{ variant, size, spacing, orientation }}
-      >
+      <ToggleGroupContext.Provider value={{ variant, size, spacing, orientation }}>
         {children}
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
-  )
+  );
 }
 
 function ToggleGroupItem({
@@ -76,9 +74,9 @@ function ToggleGroupItem({
      * label wrapped in a `<span>`, a translation component or a tooltip still
      * keeps its ring. Pass the prop to override either way.
      */
-    selectedIndicator?: "dot" | "none"
+    selectedIndicator?: "dot" | "none";
   }) {
-  const context = React.useContext(ToggleGroupContext)
+  const context = React.useContext(ToggleGroupContext);
 
   // Segmented (spacing=0) items carry their own border. Applied as plain
   // `border` rather than a `group-data-*:` variant on purpose: a group-scoped
@@ -86,11 +84,9 @@ function ToggleGroupItem({
   // consumer's own `border-r-0`/`border-l-0` in `className` (0,1,0). Plain
   // utilities stay at (0,1,0), so `className` keeps winning — which is the
   // contract every other component here follows.
-  const segmented = (context.spacing ?? 0) === 0
+  const segmented = (context.spacing ?? 0) === 0;
   const collapseLeadingEdge =
-    context.orientation === "vertical"
-      ? "[&:not(:first-child)]:border-t-0"
-      : "[&:not(:first-child)]:border-l-0"
+    context.orientation === "vertical" ? "[&:not(:first-child)]:border-t-0" : "[&:not(:first-child)]:border-l-0";
 
   return (
     <ToggleGroupPrimitive.Item
@@ -114,7 +110,7 @@ function ToggleGroupItem({
         // the same element, so the selected fill always aligns with the outline.
         segmented && "border border-input",
         segmented && collapseLeadingEdge,
-        className
+        className,
       )}
       {...props}
     >
@@ -131,7 +127,7 @@ function ToggleGroupItem({
             // drop the ring — misaligning a group that mixes plain and wrapped
             // labels. `display:none` also drops the slot, so no layout shift.
             selectedIndicator === undefined &&
-              "group-has-[svg:not([data-slot=toggle-group-indicator]_svg)]/toggle:hidden"
+              "group-has-[svg:not([data-slot=toggle-group-indicator]_svg)]/toggle:hidden",
           )}
         >
           <CircleDashed className="size-3.5 text-muted-foreground/50 transition-opacity group-data-[state=on]/toggle:opacity-0" />
@@ -140,7 +136,7 @@ function ToggleGroupItem({
       )}
       {children}
     </ToggleGroupPrimitive.Item>
-  )
+  );
 }
 
-export { ToggleGroup, ToggleGroupItem }
+export { ToggleGroup, ToggleGroupItem };

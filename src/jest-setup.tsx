@@ -87,10 +87,8 @@ function attachPlotEvents(el: HTMLElement): MockPlotElement {
 }
 
 export const plotlyStub = {
-  newPlot: (el: HTMLElement): Promise<MockPlotElement> =>
-    Promise.resolve(attachPlotEvents(el)),
-  react: (el: HTMLElement): Promise<MockPlotElement> =>
-    Promise.resolve(attachPlotEvents(el)),
+  newPlot: (el: HTMLElement): Promise<MockPlotElement> => Promise.resolve(attachPlotEvents(el)),
+  react: (el: HTMLElement): Promise<MockPlotElement> => Promise.resolve(attachPlotEvents(el)),
   relayout: (el: HTMLElement): Promise<HTMLElement> => Promise.resolve(el),
   restyle: (el: HTMLElement): Promise<HTMLElement> => Promise.resolve(el),
   update: (el: HTMLElement): Promise<HTMLElement> => Promise.resolve(el),
@@ -131,14 +129,12 @@ export interface MinimalRdkitMol {
 export const rdkitModuleStub = {
   get_mol: (smiles: string): MinimalRdkitMol => ({
     is_valid: () => true,
-    get_svg_with_highlights: () =>
-      `<?xml version='1.0' encoding='iso-8859-1'?>\n<svg data-smiles="${smiles}"></svg>`,
+    get_svg_with_highlights: () => `<?xml version='1.0' encoding='iso-8859-1'?>\n<svg data-smiles="${smiles}"></svg>`,
     delete: () => {},
   }),
 };
 
-export const rdkitFactoryStub = (): Promise<typeof rdkitModuleStub> =>
-  Promise.resolve(rdkitModuleStub);
+export const rdkitFactoryStub = (): Promise<typeof rdkitModuleStub> => Promise.resolve(rdkitModuleStub);
 
 // ---------------------------------------------------------------------------
 // streamdown stub — renders the markdown source as plain text so
@@ -236,12 +232,7 @@ export function ResizablePanelStub({ children, className, style }: ContainerStub
 
 export function ResizableSeparatorStub({ children, className, style }: ContainerStubProps) {
   return (
-    <div
-      data-slot="resizable-separator-mock"
-      role="separator"
-      className={className}
-      style={style}
-    >
+    <div data-slot="resizable-separator-mock" role="separator" className={className} style={style}>
       {children}
     </div>
   );
@@ -259,10 +250,7 @@ interface StubToken {
 }
 
 export interface StubHighlighterCore {
-  codeToTokens: (
-    code: string,
-    options?: unknown,
-  ) => { bg: string; fg: string; tokens: StubToken[][] };
+  codeToTokens: (code: string, options?: unknown) => { bg: string; fg: string; tokens: StubToken[][] };
   codeToHtml: (code: string, options?: unknown) => string;
   loadLanguage: (...grammars: unknown[]) => Promise<void>;
   getLoadedLanguages: () => string[];
@@ -270,10 +258,7 @@ export interface StubHighlighterCore {
 }
 
 function escapeHtml(code: string): string {
-  return code
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 export function createHighlighterCoreStub(): Promise<StubHighlighterCore> {
@@ -281,9 +266,7 @@ export function createHighlighterCoreStub(): Promise<StubHighlighterCore> {
     codeToTokens: (code: string) => ({
       bg: "transparent",
       fg: "inherit",
-      tokens: code
-        .split("\n")
-        .map((line) => [{ content: line, color: "inherit" }]),
+      tokens: code.split("\n").map((line) => [{ content: line, color: "inherit" }]),
     }),
     codeToHtml: (code: string) => `<pre><code>${escapeHtml(code)}</code></pre>`,
     loadLanguage: () => Promise.resolve(),
@@ -311,11 +294,7 @@ export const KIT_SHIKI_LANGUAGES = [
 
 /** Structural subset of Jest's `jest` object — avoids @types/jest. */
 export interface JestMockApi {
-  mock: (
-    moduleName: string,
-    factory?: () => unknown,
-    options?: { virtual?: boolean },
-  ) => unknown;
+  mock: (moduleName: string, factory?: () => unknown, options?: { virtual?: boolean }) => unknown;
 }
 
 /**
@@ -458,10 +437,7 @@ export function installUiKitDomShims(): void {
 // keeps this module inert everywhere else (bundlers, Vitest, tooling).
 declare const jest: JestMockApi | undefined;
 
-const jestObject =
-  typeof jest !== "undefined" && jest && typeof jest.mock === "function"
-    ? jest
-    : undefined;
+const jestObject = typeof jest !== "undefined" && jest && typeof jest.mock === "function" ? jest : undefined;
 if (jestObject) {
   installUiKitDomShims();
   installUiKitJestMocks(jestObject);

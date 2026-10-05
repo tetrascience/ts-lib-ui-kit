@@ -22,12 +22,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const tarballPath = path.join(__dirname, "ui-kit.tgz");
-const targetDir = path.join(
-  __dirname,
-  "node_modules",
-  "@tetrascience-npm",
-  "tetrascience-react-ui",
-);
+const targetDir = path.join(__dirname, "node_modules", "@tetrascience-npm", "tetrascience-react-ui");
 
 if (!fs.existsSync(tarballPath)) {
   console.error(

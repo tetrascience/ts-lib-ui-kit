@@ -264,10 +264,7 @@ const LinePlot: React.FC<LinePlotProps> = ({
     };
   }, [dataSeries]);
 
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
+  const effectiveYRange = useMemo(() => yRange || [yMin, yMax], [yRange, yMin, yMax]);
 
   const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
@@ -285,10 +282,7 @@ const LinePlot: React.FC<LinePlotProps> = ({
     return ticks;
   }, [effectiveYRange]);
 
-  const xTicks = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
-    [dataSeries],
-  );
+  const xTicks = useMemo(() => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b), [dataSeries]);
 
   // Only apply categorical labels when they align 1:1 with the tick positions;
   // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
@@ -485,7 +479,25 @@ const LinePlot: React.FC<LinePlotProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, hasSize, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, effectiveYRange, variant, theme, bindTooltip]);
+  }, [
+    dataSeries,
+    hasSize,
+    xRange,
+    yRange,
+    xTitle,
+    yTitle,
+    title,
+    mode,
+    tickOptions,
+    xTicks,
+    yTicks,
+    useCategoricalX,
+    xTickText,
+    effectiveYRange,
+    variant,
+    theme,
+    bindTooltip,
+  ]);
 
   // Resize in place when the measured/overridden size changes — cheaper than
   // recreating the plot, and it preserves tooltip/event bindings.
@@ -496,10 +508,7 @@ const LinePlot: React.FC<LinePlotProps> = ({
     }
     // newPlot already drew at the current size; skip the redundant relayout
     // (it would queue an automargin redraw that can reject if we unmount first).
-    if (
-      appliedSizeRef.current.width === resolvedWidth &&
-      appliedSizeRef.current.height === resolvedHeight
-    ) {
+    if (appliedSizeRef.current.width === resolvedWidth && appliedSizeRef.current.height === resolvedHeight) {
       return;
     }
     appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };

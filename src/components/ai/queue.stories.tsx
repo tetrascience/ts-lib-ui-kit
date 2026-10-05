@@ -1,5 +1,5 @@
-import { ListChecksIcon, XIcon } from "lucide-react"
-import { expect, userEvent, within } from "storybook/test"
+import { ListChecksIcon, XIcon } from "lucide-react";
+import { expect, userEvent, within } from "storybook/test";
 
 import {
   Queue,
@@ -17,10 +17,9 @@ import {
   QueueSectionContent,
   QueueSectionLabel,
   QueueSectionTrigger,
-} from "./queue"
+} from "./queue";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta = {
   title: "AI Elements/Agent Activity/Queue",
@@ -28,26 +27,22 @@ const meta: Meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
-const expectCollapsedChevronConfiguredForHoverReveal = async (
-  trigger: HTMLElement
-) => {
-  const chevron = trigger.querySelector<SVGElement>(
-    '[data-slot="collapsible-chevron"]'
-  )
+const expectCollapsedChevronConfiguredForHoverReveal = async (trigger: HTMLElement) => {
+  const chevron = trigger.querySelector<SVGElement>('[data-slot="collapsible-chevron"]');
 
   if (!chevron) {
-    throw new Error("Expected collapsible chevron to render")
+    throw new Error("Expected collapsible chevron to render");
   }
 
-  await expect(chevron).toHaveClass("opacity-0")
-  await expect(chevron).toHaveClass("group-hover:opacity-100")
-}
+  await expect(chevron).toHaveClass("opacity-0");
+  await expect(chevron).toHaveClass("group-hover:opacity-100");
+};
 
 export const Default: Story = {
   render: () => (
@@ -76,16 +71,16 @@ export const Default: Story = {
     </Queue>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Queue items render", async () => {
-      await expect(canvas.getByText("Analyzing dataset structure")).toBeInTheDocument()
-      await expect(canvas.getByText("Running statistical analysis")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Analyzing dataset structure")).toBeInTheDocument();
+      await expect(canvas.getByText("Running statistical analysis")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4596" },
   },
-}
+};
 
 export const Collapsed: Story = {
   render: () => (
@@ -106,21 +101,21 @@ export const Collapsed: Story = {
     </Queue>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const trigger = canvas.getByText(/In Progress/).closest("button")
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByText(/In Progress/).closest("button");
 
     if (!trigger) {
-      throw new Error("Expected queue section trigger to render")
+      throw new Error("Expected queue section trigger to render");
     }
 
     await step("Collapsed chevron appears on hover", async () => {
-      await expectCollapsedChevronConfiguredForHoverReveal(trigger)
-    })
+      await expectCollapsedChevronConfiguredForHoverReveal(trigger);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4597" },
   },
-}
+};
 
 export const WithCompletedItems: Story = {
   render: () => (
@@ -158,27 +153,25 @@ export const WithCompletedItems: Story = {
     </Queue>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Multiple sections render", async () => {
-      await expect(canvas.getByText("Fetch raw data")).toBeInTheDocument()
-      await expect(canvas.getByText("Train model")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Fetch raw data")).toBeInTheDocument();
+      await expect(canvas.getByText("Train model")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4598" },
   },
-}
+};
 
 export const WithActionsAndDescription: Story = {
   render: () => {
-    let removed = false
+    let removed = false;
     return (
       <Queue className="w-full max-w-md">
         <QueueSection defaultOpen>
           <QueueSectionTrigger>
-            <QueueSectionLabel icon={<ListChecksIcon className="size-4" />}>
-              Tasks
-            </QueueSectionLabel>
+            <QueueSectionLabel icon={<ListChecksIcon className="size-4" />}>Tasks</QueueSectionLabel>
           </QueueSectionTrigger>
           <QueueSectionContent>
             <QueueList>
@@ -192,7 +185,7 @@ export const WithActionsAndDescription: Story = {
                   <QueueItemAction
                     aria-label="Remove"
                     onClick={() => {
-                      removed = true
+                      removed = true;
                     }}
                   >
                     <XIcon className="size-3" />
@@ -210,21 +203,21 @@ export const WithActionsAndDescription: Story = {
           </QueueSectionContent>
         </QueueSection>
       </Queue>
-    )
-    void removed
+    );
+    void removed;
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Description and action render", async () => {
-      await expect(canvas.getByText("Done yesterday")).toBeInTheDocument()
-      const remove = canvas.getByRole("button", { name: "Remove" })
-      await userEvent.click(remove)
-    })
+      await expect(canvas.getByText("Done yesterday")).toBeInTheDocument();
+      const remove = canvas.getByRole("button", { name: "Remove" });
+      await userEvent.click(remove);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4599" },
   },
-}
+};
 
 export const WithAttachments: Story = {
   render: () => (
@@ -255,17 +248,17 @@ export const WithAttachments: Story = {
     </Queue>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Attachments render", async () => {
-      await expect(canvas.getByText("spec.pdf")).toBeInTheDocument()
-      await expect(canvas.getByText("notes.txt")).toBeInTheDocument()
-      await expect(canvas.getByAltText("thumbnail")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("spec.pdf")).toBeInTheDocument();
+      await expect(canvas.getByText("notes.txt")).toBeInTheDocument();
+      await expect(canvas.getByAltText("thumbnail")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4600" },
   },
-}
+};
 
 export const WithError: Story = {
   render: () => (
@@ -294,12 +287,12 @@ export const WithError: Story = {
     </Queue>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Error state renders", async () => {
-      await expect(canvas.getByText("Connect to database")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Connect to database")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4601" },
   },
-}
+};

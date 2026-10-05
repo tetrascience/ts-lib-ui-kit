@@ -4,12 +4,12 @@
  * error volume is queryable across every app without per-app naming drift.
  */
 export const TelemetryEvent = {
-	/** React render error caught by `TSErrorBoundary`. */
-	ReactError: "App:Error:React",
-	/** Uncaught exception seen by `window.onerror`. */
-	WindowError: "App:Error:Window",
-	/** Promise rejection with no handler. */
-	UnhandledRejection: "App:Error:UnhandledRejection",
+  /** React render error caught by `TSErrorBoundary`. */
+  ReactError: "App:Error:React",
+  /** Uncaught exception seen by `window.onerror`. */
+  WindowError: "App:Error:Window",
+  /** Promise rejection with no handler. */
+  UnhandledRejection: "App:Error:UnhandledRejection",
 } as const;
 
 /** Max length of the React component stack attribute. */

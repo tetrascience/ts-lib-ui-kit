@@ -4,14 +4,7 @@
  * nav. The toggle ping-pongs the nav (labels ↔ icons ↔ hidden); the nav's right
  * border can also be dragged to snap between the same three states.
  */
-import {
-  Database,
-  FlaskConical,
-  LayoutDashboard,
-  LineChart,
-  Settings,
-  Table2,
-} from "lucide-react";
+import { Database, FlaskConical, LayoutDashboard, LineChart, Settings, Table2 } from "lucide-react";
 import { expect, fn, userEvent, within } from "storybook/test";
 
 import { AppShellSimple, type AppShellSimpleCrumb } from "./AppShellSimple";
@@ -20,8 +13,6 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { type NavGroup } from "@/components/composed/DataAppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-
 
 // -- Sample data for the demo -------------------------------------------------
 
@@ -55,8 +46,8 @@ function SampleContent() {
       <div>
         <h1 className="text-xl font-semibold text-foreground">Run 4821 overview</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          The control in the top-left ping-pongs the nav (labels ↔ icons ↔ hidden), or drag the
-          nav&rsquo;s right border to snap between them.
+          The control in the top-left ping-pongs the nav (labels ↔ icons ↔ hidden), or drag the nav&rsquo;s right border
+          to snap between them.
         </p>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -67,9 +58,7 @@ function SampleContent() {
         ].map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
             </CardHeader>
             <CardContent>
               <span className="text-2xl font-semibold text-foreground">{stat.value}</span>
@@ -187,9 +176,7 @@ export const Hidden: Story = {
     });
 
     await step("the drag handle stays reachable while hidden", async () => {
-      expect(
-        within(canvasElement).getByRole("separator", { name: "Resize navigation" })
-      ).toBeInTheDocument();
+      expect(within(canvasElement).getByRole("separator", { name: "Resize navigation" })).toBeInTheDocument();
     });
 
     await step("next click restores the icon rail", async () => {
@@ -229,7 +216,7 @@ export const DragToResize: Story = {
           clientX,
           clientY: 200,
           buttons,
-        })
+        }),
       );
     const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -341,9 +328,7 @@ export const NoSideNav: Story = {
     });
 
     await step("no top-bar nav toggle is rendered", async () => {
-      expect(
-        canvasElement.querySelector('[data-slot="app-shell-simple-nav-toggle"]')
-      ).toBeNull();
+      expect(canvasElement.querySelector('[data-slot="app-shell-simple-nav-toggle"]')).toBeNull();
     });
 
     await step("the breadcrumb name still shows in the top bar", async () => {
@@ -378,11 +363,7 @@ export const BreadcrumbNavigation: Story = {
         ],
       },
     ],
-    breadcrumbs: [
-      { label: "Home", onClick: onCrumbClick },
-      { label: "Section" },
-      { label: "Run 4821 overview" },
-    ],
+    breadcrumbs: [{ label: "Home", onClick: onCrumbClick }, { label: "Section" }, { label: "Run 4821 overview" }],
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -457,11 +438,7 @@ export const WithBuildInfoLongContent: Story = {
     children: (
       <div className="space-y-3 p-6">
         {Array.from({ length: 40 }, (_, i) => (
-          <button
-            key={i}
-            type="button"
-            className="block w-full rounded-md bg-muted/60 px-3 py-2 text-left text-sm"
-          >
+          <button key={i} type="button" className="block w-full rounded-md bg-muted/60 px-3 py-2 text-left text-sm">
             Sample {i + 1}
           </button>
         ))}

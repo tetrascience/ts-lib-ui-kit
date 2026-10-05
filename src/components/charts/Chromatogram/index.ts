@@ -9,4 +9,3 @@ export type {
   BoundaryMarkerStyle,
   PeakDetectionOptions,
 } from "./types";
-

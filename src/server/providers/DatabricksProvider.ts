@@ -62,10 +62,7 @@ export class DatabricksProvider {
    * @param _params - Parameters to pass to the query (currently not used)
    * @returns Promise resolving to array of row objects
    */
-  async query(
-    sqlQuery: string,
-    _params: Record<string, unknown> = {},
-  ): Promise<Array<Record<string, unknown>>> {
+  async query(sqlQuery: string, _params: Record<string, unknown> = {}): Promise<Array<Record<string, unknown>>> {
     const operation = await this.session.executeStatement(sqlQuery);
     try {
       const result = await operation.fetchAll();
@@ -101,19 +98,11 @@ function getDefaultSchema(): string {
  * @returns Promise resolving to Databricks data provider
  * @throws {InvalidProviderConfigurationError} If @databricks/sql is not installed or config is invalid
  */
-export async function buildDatabricksProvider(
-  config: ProviderConfiguration,
-): Promise<DatabricksProvider> {
+export async function buildDatabricksProvider(config: ProviderConfiguration): Promise<DatabricksProvider> {
   // Dynamically import @databricks/sql
   const { DBSQLClient } = await getDatabricksSQL();
 
-  const requiredFields = [
-    "server_hostname",
-    "http_path",
-    "client_id",
-    "client_secret",
-    "catalog",
-  ] as const;
+  const requiredFields = ["server_hostname", "http_path", "client_id", "client_secret", "catalog"] as const;
 
   for (const field of requiredFields) {
     if (!config.fields[field]) {
@@ -147,4 +136,3 @@ export async function buildDatabricksProvider(
 
   return new DatabricksProvider(client, session);
 }
-

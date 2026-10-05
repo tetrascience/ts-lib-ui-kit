@@ -1470,8 +1470,7 @@ function dispatchSvgMouse(
   else if (type === "mouseleave") {
     fireEvent.pointerOut(svg, pointerInit);
     fireEvent.pointerLeave(svg, pointerInit);
-  }
-  else fireEvent.doubleClick(svg, init);
+  } else fireEvent.doubleClick(svg, init);
 }
 
 function getActiveSvg(canvasElement: HTMLElement): SVGSVGElement {
@@ -2888,9 +2887,7 @@ export const ApplyAcrossAllPlates: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     const countFor = (barcode: string) =>
-      Number(
-        (canvasElement.querySelector(`[data-testid="count-${barcode}"] strong`) as HTMLElement).textContent,
-      );
+      Number((canvasElement.querySelector(`[data-testid="count-${barcode}"] strong`) as HTMLElement).textContent);
 
     await step("All three plates start empty", async () => {
       for (const b of ["PLATE-A", "PLATE-B", "PLATE-C"]) expect(countFor(b)).toBe(0);
@@ -3306,9 +3303,7 @@ export const QuickPaintOnSelection: Story = {
     await step("Stays inside the plate horizontally", async () => {
       const anchor = canvasElement.querySelector('[data-slot="plate-quick-paint-anchor"]') as HTMLElement;
       const gridEl = canvasElement.querySelector('[data-slot="plate-paint-grid"]') as HTMLElement;
-      expect(anchor.getBoundingClientRect().left).toBeGreaterThanOrEqual(
-        gridEl.getBoundingClientRect().left - 1,
-      );
+      expect(anchor.getBoundingClientRect().left).toBeGreaterThanOrEqual(gridEl.getBoundingClientRect().left - 1);
     });
   },
 };

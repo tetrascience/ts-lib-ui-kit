@@ -42,7 +42,7 @@ export interface TopBarProps
  * - **center** is an optional "context" slot (e.g. a version/status selector).
  * - **right** holds actions, a help affordance, a `UserMenu`, etc.
  */
-const TopBar = withRef("TopBar", function TopBar({ left, center, right, sticky, className, ...props }: TopBarProps) {
+function TopBar19({ left, center, right, sticky, className, ...props }: TopBarProps) {
   return (
     <div
       data-slot="top-bar"
@@ -73,6 +73,15 @@ const TopBar = withRef("TopBar", function TopBar({ left, center, right, sticky, 
       </div>
     </div>
   );
-});
+}
+
+/**
+ * Sticky application header with three slots — left / center / right.
+ *
+ * - **left** is typically a breadcrumb, but any node can be slotted in.
+ * - **center** is an optional "context" slot (e.g. a version/status selector).
+ * - **right** holds actions, a help affordance, a `UserMenu`, etc.
+ */
+const TopBar = withRef("TopBar", TopBar19);
 
 export { TopBar, topBarVariants };

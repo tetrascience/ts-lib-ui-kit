@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-const FieldSet = withRef("FieldSet", function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
+function FieldSet19({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
     <fieldset
       data-slot="field-set"
@@ -17,9 +17,11 @@ const FieldSet = withRef("FieldSet", function FieldSet({ className, ...props }: 
       {...props}
     />
   )
-})
+}
 
-const FieldLegend = withRef("FieldLegend", function FieldLegend({
+const FieldSet = withRef("FieldSet", FieldSet19)
+
+function FieldLegend19({
   className,
   variant = "legend",
   ...props
@@ -35,9 +37,11 @@ const FieldLegend = withRef("FieldLegend", function FieldLegend({
       {...props}
     />
   )
-})
+}
 
-const FieldGroup = withRef("FieldGroup", function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
+const FieldLegend = withRef("FieldLegend", FieldLegend19)
+
+function FieldGroup19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="field-group"
@@ -48,7 +52,9 @@ const FieldGroup = withRef("FieldGroup", function FieldGroup({ className, ...pro
       {...props}
     />
   )
-})
+}
+
+const FieldGroup = withRef("FieldGroup", FieldGroup19)
 
 const fieldVariants = cva(
   "group/field flex w-full gap-2 data-[invalid=true]:text-destructive",
@@ -68,7 +74,7 @@ const fieldVariants = cva(
   }
 )
 
-const Field = withRef("Field", function Field({
+function Field19({
   className,
   orientation = "vertical",
   ...props
@@ -82,9 +88,11 @@ const Field = withRef("Field", function Field({
       {...props}
     />
   )
-})
+}
 
-const FieldContent = withRef("FieldContent", function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
+const Field = withRef("Field", Field19)
+
+function FieldContent19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="field-content"
@@ -95,9 +103,11 @@ const FieldContent = withRef("FieldContent", function FieldContent({ className, 
       {...props}
     />
   )
-})
+}
 
-const FieldLabel = withRef("FieldLabel", function FieldLabel({
+const FieldContent = withRef("FieldContent", FieldContent19)
+
+function FieldLabel19({
   className,
   ...props
 }: React.ComponentProps<typeof Label>) {
@@ -112,9 +122,11 @@ const FieldLabel = withRef("FieldLabel", function FieldLabel({
       {...props}
     />
   )
-})
+}
 
-const FieldTitle = withRef("FieldTitle", function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
+const FieldLabel = withRef("FieldLabel", FieldLabel19)
+
+function FieldTitle19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="field-label"
@@ -125,9 +137,11 @@ const FieldTitle = withRef("FieldTitle", function FieldTitle({ className, ...pro
       {...props}
     />
   )
-})
+}
 
-const FieldDescription = withRef("FieldDescription", function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
+const FieldTitle = withRef("FieldTitle", FieldTitle19)
+
+function FieldDescription19({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       data-slot="field-description"
@@ -140,9 +154,11 @@ const FieldDescription = withRef("FieldDescription", function FieldDescription({
       {...props}
     />
   )
-})
+}
 
-const FieldSeparator = withRef("FieldSeparator", function FieldSeparator({
+const FieldDescription = withRef("FieldDescription", FieldDescription19)
+
+function FieldSeparator19({
   children,
   className,
   ...props
@@ -170,9 +186,11 @@ const FieldSeparator = withRef("FieldSeparator", function FieldSeparator({
       )}
     </div>
   )
-})
+}
 
-const FieldError = withRef("FieldError", function FieldError({
+const FieldSeparator = withRef("FieldSeparator", FieldSeparator19)
+
+function FieldError19({
   className,
   children,
   errors,
@@ -221,7 +239,9 @@ const FieldError = withRef("FieldError", function FieldError({
       {content}
     </div>
   )
-})
+}
+
+const FieldError = withRef("FieldError", FieldError19)
 
 export {
   Field,

@@ -4,7 +4,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-const Progress = withRef("Progress", function Progress({
+function Progress19({
   className,
   value,
   ...props
@@ -26,6 +26,8 @@ const Progress = withRef("Progress", function Progress({
       />
     </ProgressPrimitive.Root>
   )
-})
+}
+
+const Progress = withRef("Progress", Progress19)
 
 export { Progress }

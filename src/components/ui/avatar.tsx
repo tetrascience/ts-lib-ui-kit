@@ -4,7 +4,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-const Avatar = withRef("Avatar", function Avatar({
+function Avatar19({
   className,
   size = "default",
   ...props
@@ -22,9 +22,11 @@ const Avatar = withRef("Avatar", function Avatar({
       {...props}
     />
   )
-})
+}
 
-const AvatarImage = withRef("AvatarImage", function AvatarImage({
+const Avatar = withRef("Avatar", Avatar19)
+
+function AvatarImage19({
   className,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
@@ -38,9 +40,11 @@ const AvatarImage = withRef("AvatarImage", function AvatarImage({
       {...props}
     />
   )
-})
+}
 
-const AvatarFallback = withRef("AvatarFallback", function AvatarFallback({
+const AvatarImage = withRef("AvatarImage", AvatarImage19)
+
+function AvatarFallback19({
   className,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
@@ -54,9 +58,11 @@ const AvatarFallback = withRef("AvatarFallback", function AvatarFallback({
       {...props}
     />
   )
-})
+}
 
-const AvatarBadge = withRef("AvatarBadge", function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
+const AvatarFallback = withRef("AvatarFallback", AvatarFallback19)
+
+function AvatarBadge19({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       data-slot="avatar-badge"
@@ -70,9 +76,11 @@ const AvatarBadge = withRef("AvatarBadge", function AvatarBadge({ className, ...
       {...props}
     />
   )
-})
+}
 
-const AvatarGroup = withRef("AvatarGroup", function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
+const AvatarBadge = withRef("AvatarBadge", AvatarBadge19)
+
+function AvatarGroup19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="avatar-group"
@@ -83,9 +91,11 @@ const AvatarGroup = withRef("AvatarGroup", function AvatarGroup({ className, ...
       {...props}
     />
   )
-})
+}
 
-const AvatarGroupCount = withRef("AvatarGroupCount", function AvatarGroupCount({
+const AvatarGroup = withRef("AvatarGroup", AvatarGroup19)
+
+function AvatarGroupCount19({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -99,7 +109,9 @@ const AvatarGroupCount = withRef("AvatarGroupCount", function AvatarGroupCount({
       {...props}
     />
   )
-})
+}
+
+const AvatarGroupCount = withRef("AvatarGroupCount", AvatarGroupCount19)
 
 export {
   Avatar,

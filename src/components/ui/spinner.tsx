@@ -18,7 +18,7 @@ const spinnerVariants = cva("animate-spin", {
   },
 })
 
-const Spinner = withRef("Spinner", function Spinner({
+function Spinner19({
   className,
   size = "default",
   ...props
@@ -33,6 +33,8 @@ const Spinner = withRef("Spinner", function Spinner({
       {...props}
     />
   )
-})
+}
+
+const Spinner = withRef("Spinner", Spinner19)
 
 export { Spinner, spinnerVariants }

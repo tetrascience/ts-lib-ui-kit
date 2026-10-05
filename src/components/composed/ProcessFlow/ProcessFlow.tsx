@@ -544,7 +544,7 @@ function VerticalProcessFlow({
   );
 }
 
-export const ProcessFlow = withRef("ProcessFlow", function ProcessFlow({
+function ProcessFlow19({
   steps,
   connections,
   selectedStepId,
@@ -706,4 +706,6 @@ export const ProcessFlow = withRef("ProcessFlow", function ProcessFlow({
       </div>
     </nav>
   );
-});
+}
+
+export const ProcessFlow = withRef("ProcessFlow", ProcessFlow19);

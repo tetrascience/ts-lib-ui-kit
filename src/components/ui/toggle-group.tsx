@@ -19,7 +19,7 @@ const ToggleGroupContext = React.createContext<
   orientation: "horizontal",
 })
 
-const ToggleGroup = withRef("ToggleGroup", function ToggleGroup({
+function ToggleGroup19({
   className,
   variant,
   size,
@@ -53,9 +53,11 @@ const ToggleGroup = withRef("ToggleGroup", function ToggleGroup({
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
   )
-})
+}
 
-const ToggleGroupItem = withRef("ToggleGroupItem", function ToggleGroupItem({
+const ToggleGroup = withRef("ToggleGroup", ToggleGroup19)
+
+function ToggleGroupItem19({
   className,
   children,
   variant = "default",
@@ -142,6 +144,8 @@ const ToggleGroupItem = withRef("ToggleGroupItem", function ToggleGroupItem({
       {children}
     </ToggleGroupPrimitive.Item>
   )
-})
+}
+
+const ToggleGroupItem = withRef("ToggleGroupItem", ToggleGroupItem19)
 
 export { ToggleGroup, ToggleGroupItem }

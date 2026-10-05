@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-const ItemGroup = withRef("ItemGroup", function ItemGroup({
+function ItemGroup19({
   className,
   children,
   ...props
@@ -34,9 +34,11 @@ const ItemGroup = withRef("ItemGroup", function ItemGroup({
       })}
     </div>
   )
-})
+}
 
-const ItemSeparator = withRef("ItemSeparator", function ItemSeparator({
+const ItemGroup = withRef("ItemGroup", ItemGroup19)
+
+function ItemSeparator19({
   className,
   ...props
 }: React.ComponentProps<typeof Separator>) {
@@ -48,7 +50,9 @@ const ItemSeparator = withRef("ItemSeparator", function ItemSeparator({
       {...props}
     />
   )
-})
+}
+
+const ItemSeparator = withRef("ItemSeparator", ItemSeparator19)
 
 const itemVariants = cva(
   "group/item flex w-full flex-wrap items-center rounded-lg border text-sm transition-colors duration-100 outline-none focus-visible:border-ring focus-visible:shadow-focus [a]:transition-colors [a]:hover:bg-accent",
@@ -72,7 +76,7 @@ const itemVariants = cva(
   }
 )
 
-const Item = withRef("Item", function Item({
+function Item19({
   className,
   variant = "default",
   size = "default",
@@ -90,7 +94,9 @@ const Item = withRef("Item", function Item({
       {...props}
     />
   )
-})
+}
+
+const Item = withRef("Item", Item19)
 
 const itemMediaVariants = cva(
   "flex shrink-0 items-center justify-center gap-2 group-has-data-[slot=item-description]/item:translate-y-0.5 group-has-data-[slot=item-description]/item:self-start [&_svg]:pointer-events-none",
@@ -109,7 +115,7 @@ const itemMediaVariants = cva(
   }
 )
 
-const ItemMedia = withRef("ItemMedia", function ItemMedia({
+function ItemMedia19({
   className,
   variant = "default",
   ...props
@@ -122,9 +128,11 @@ const ItemMedia = withRef("ItemMedia", function ItemMedia({
       {...props}
     />
   )
-})
+}
 
-const ItemContent = withRef("ItemContent", function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
+const ItemMedia = withRef("ItemMedia", ItemMedia19)
+
+function ItemContent19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-content"
@@ -135,9 +143,11 @@ const ItemContent = withRef("ItemContent", function ItemContent({ className, ...
       {...props}
     />
   )
-})
+}
 
-const ItemTitle = withRef("ItemTitle", function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
+const ItemContent = withRef("ItemContent", ItemContent19)
+
+function ItemTitle19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-title"
@@ -148,9 +158,11 @@ const ItemTitle = withRef("ItemTitle", function ItemTitle({ className, ...props 
       {...props}
     />
   )
-})
+}
 
-const ItemDescription = withRef("ItemDescription", function ItemDescription({ className, ...props }: React.ComponentProps<"p">) {
+const ItemTitle = withRef("ItemTitle", ItemTitle19)
+
+function ItemDescription19({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       data-slot="item-description"
@@ -161,9 +173,11 @@ const ItemDescription = withRef("ItemDescription", function ItemDescription({ cl
       {...props}
     />
   )
-})
+}
 
-const ItemActions = withRef("ItemActions", function ItemActions({ className, ...props }: React.ComponentProps<"div">) {
+const ItemDescription = withRef("ItemDescription", ItemDescription19)
+
+function ItemActions19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-actions"
@@ -171,9 +185,11 @@ const ItemActions = withRef("ItemActions", function ItemActions({ className, ...
       {...props}
     />
   )
-})
+}
 
-const ItemHeader = withRef("ItemHeader", function ItemHeader({ className, ...props }: React.ComponentProps<"div">) {
+const ItemActions = withRef("ItemActions", ItemActions19)
+
+function ItemHeader19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-header"
@@ -184,9 +200,11 @@ const ItemHeader = withRef("ItemHeader", function ItemHeader({ className, ...pro
       {...props}
     />
   )
-})
+}
 
-const ItemFooter = withRef("ItemFooter", function ItemFooter({ className, ...props }: React.ComponentProps<"div">) {
+const ItemHeader = withRef("ItemHeader", ItemHeader19)
+
+function ItemFooter19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-footer"
@@ -197,7 +215,9 @@ const ItemFooter = withRef("ItemFooter", function ItemFooter({ className, ...pro
       {...props}
     />
   )
-})
+}
+
+const ItemFooter = withRef("ItemFooter", ItemFooter19)
 
 export {
   Item,

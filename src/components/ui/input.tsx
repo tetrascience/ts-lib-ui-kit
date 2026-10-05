@@ -22,7 +22,7 @@ const inputVariants = cva(
   }
 )
 
-const Input = withRef("Input", function Input({
+function Input19({
   className,
   type,
   size,
@@ -43,6 +43,8 @@ const Input = withRef("Input", function Input({
       {...props}
     />
   )
-})
+}
+
+const Input = withRef("Input", Input19)
 
 export { Input, inputVariants }

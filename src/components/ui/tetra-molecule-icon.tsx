@@ -1,6 +1,5 @@
 import * as React from "react"
 
-import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 export interface TetraMoleculeIconProps extends React.SVGProps<SVGSVGElement> {
@@ -15,13 +14,13 @@ const DARK = "#2F45B5" // TS Indigo
  * The official TetraScience "molecule" brand mark — the four-node symbol from
  * the TetraScience logo, filled with the brand blue gradient.
  */
-const TetraMoleculeIcon = withRef(
-  "TetraMoleculeIcon",
-  function TetraMoleculeIcon({ size = 24, className, ...props }: TetraMoleculeIconProps) {
+const TetraMoleculeIcon = React.forwardRef<SVGSVGElement, TetraMoleculeIconProps>(
+  ({ size = 24, className, ...props }, ref) => {
     // useId() contains colons, which are brittle inside SVG url(#…) refs.
     const gradientId = `tetra-molecule-${React.useId().replace(/:/g, "")}`
     return (
       <svg
+        ref={ref}
         xmlns="http://www.w3.org/2000/svg"
         width={size}
         height={size}
@@ -53,8 +52,10 @@ const TetraMoleculeIcon = withRef(
         </g>
       </svg>
     )
-  },
+  }
 )
+
+TetraMoleculeIcon.displayName = "TetraMoleculeIcon"
 
 export { TetraMoleculeIcon }
 export default TetraMoleculeIcon

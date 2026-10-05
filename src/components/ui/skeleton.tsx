@@ -1,7 +1,7 @@
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-const Skeleton = withRef("Skeleton", function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+function Skeleton19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="skeleton"
@@ -17,6 +17,8 @@ const Skeleton = withRef("Skeleton", function Skeleton({ className, ...props }: 
       {...props}
     />
   )
-})
+}
+
+const Skeleton = withRef("Skeleton", Skeleton19)
 
 export { Skeleton }

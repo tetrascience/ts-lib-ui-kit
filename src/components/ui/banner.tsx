@@ -48,7 +48,7 @@ export type BannerProps = React.ComponentProps<"div"> &
     action?: React.ReactNode;
   };
 
-const Banner = withRef("Banner", function Banner({
+function Banner19({
   variant = "info",
   title,
   description,
@@ -98,6 +98,8 @@ const Banner = withRef("Banner", function Banner({
       )}
     </div>
   );
-});
+}
+
+const Banner = withRef("Banner", Banner19);
 
 export { Banner, bannerVariants };

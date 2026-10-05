@@ -6,7 +6,7 @@ import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
-const Breadcrumb = withRef("Breadcrumb", function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
+function Breadcrumb19({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
       aria-label="breadcrumb"
@@ -15,9 +15,11 @@ const Breadcrumb = withRef("Breadcrumb", function Breadcrumb({ className, ...pro
       {...props}
     />
   )
-})
+}
 
-const BreadcrumbList = withRef("BreadcrumbList", function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
+const Breadcrumb = withRef("Breadcrumb", Breadcrumb19)
+
+function BreadcrumbList19({ className, ...props }: React.ComponentProps<"ol">) {
   return (
     <ol
       data-slot="breadcrumb-list"
@@ -28,9 +30,11 @@ const BreadcrumbList = withRef("BreadcrumbList", function BreadcrumbList({ class
       {...props}
     />
   )
-})
+}
 
-const BreadcrumbItem = withRef("BreadcrumbItem", function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
+const BreadcrumbList = withRef("BreadcrumbList", BreadcrumbList19)
+
+function BreadcrumbItem19({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
       data-slot="breadcrumb-item"
@@ -38,9 +42,11 @@ const BreadcrumbItem = withRef("BreadcrumbItem", function BreadcrumbItem({ class
       {...props}
     />
   )
-})
+}
 
-const BreadcrumbLink = withRef("BreadcrumbLink", function BreadcrumbLink({
+const BreadcrumbItem = withRef("BreadcrumbItem", BreadcrumbItem19)
+
+function BreadcrumbLink19({
   asChild,
   className,
   ...props
@@ -56,9 +62,11 @@ const BreadcrumbLink = withRef("BreadcrumbLink", function BreadcrumbLink({
       {...props}
     />
   )
-})
+}
 
-const BreadcrumbPage = withRef("BreadcrumbPage", function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
+const BreadcrumbLink = withRef("BreadcrumbLink", BreadcrumbLink19)
+
+function BreadcrumbPage19({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       data-slot="breadcrumb-page"
@@ -69,9 +77,11 @@ const BreadcrumbPage = withRef("BreadcrumbPage", function BreadcrumbPage({ class
       {...props}
     />
   )
-})
+}
 
-const BreadcrumbSeparator = withRef("BreadcrumbSeparator", function BreadcrumbSeparator({
+const BreadcrumbPage = withRef("BreadcrumbPage", BreadcrumbPage19)
+
+function BreadcrumbSeparator19({
   children,
   className,
   ...props
@@ -89,9 +99,11 @@ const BreadcrumbSeparator = withRef("BreadcrumbSeparator", function BreadcrumbSe
       )}
     </li>
   )
-})
+}
 
-const BreadcrumbEllipsis = withRef("BreadcrumbEllipsis", function BreadcrumbEllipsis({
+const BreadcrumbSeparator = withRef("BreadcrumbSeparator", BreadcrumbSeparator19)
+
+function BreadcrumbEllipsis19({
   className,
   ...props
 }: React.ComponentProps<"span">) {
@@ -111,7 +123,9 @@ const BreadcrumbEllipsis = withRef("BreadcrumbEllipsis", function BreadcrumbElli
       <span className="sr-only">More</span>
     </span>
   )
-})
+}
+
+const BreadcrumbEllipsis = withRef("BreadcrumbEllipsis", BreadcrumbEllipsis19)
 
 export {
   Breadcrumb,

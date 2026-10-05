@@ -6,7 +6,7 @@ import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
-const Accordion = withRef("Accordion", function Accordion({
+function Accordion19({
   className,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
@@ -17,9 +17,11 @@ const Accordion = withRef("Accordion", function Accordion({
       {...props}
     />
   )
-})
+}
 
-const AccordionItem = withRef("AccordionItem", function AccordionItem({
+const Accordion = withRef("Accordion", Accordion19)
+
+function AccordionItem19({
   className,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Item>) {
@@ -30,9 +32,11 @@ const AccordionItem = withRef("AccordionItem", function AccordionItem({
       {...props}
     />
   )
-})
+}
 
-const AccordionTrigger = withRef("AccordionTrigger", function AccordionTrigger({
+const AccordionItem = withRef("AccordionItem", AccordionItem19)
+
+function AccordionTrigger19({
   className,
   children,
   ...props
@@ -53,9 +57,11 @@ const AccordionTrigger = withRef("AccordionTrigger", function AccordionTrigger({
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   )
-})
+}
 
-const AccordionContent = withRef("AccordionContent", function AccordionContent({
+const AccordionTrigger = withRef("AccordionTrigger", AccordionTrigger19)
+
+function AccordionContent19({
   className,
   children,
   ...props
@@ -76,6 +82,8 @@ const AccordionContent = withRef("AccordionContent", function AccordionContent({
       </div>
     </AccordionPrimitive.Content>
   )
-})
+}
+
+const AccordionContent = withRef("AccordionContent", AccordionContent19)
 
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }

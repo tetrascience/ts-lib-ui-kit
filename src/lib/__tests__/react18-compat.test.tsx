@@ -80,6 +80,30 @@ describe("withRef", () => {
     expect(container.textContent).toBe("n1n2")
   })
 
+  it("names the React 19 component it wraps, unless it already has a name", () => {
+    function Unnamed19(props: React.ComponentProps<"div">) {
+      return <div {...props} />
+    }
+    withRef("Unnamed", Unnamed19)
+    expect((Unnamed19 as { displayName?: string }).displayName).toBe("Unnamed")
+
+    const Named19 = Object.assign((props: React.ComponentProps<"div">) => <div {...props} />, { displayName: "Kept" })
+    withRef("Named", Named19)
+    expect(Named19.displayName).toBe("Kept")
+  })
+
+  it("exposes the React 19 component's docgen info on the export, even when attached later", () => {
+    function Documented19(props: React.ComponentProps<"div">) {
+      return <div {...props} />
+    }
+    const Documented = withRef("Documented", Documented19) as unknown as { __docgenInfo?: unknown }
+    expect(Documented.__docgenInfo).toBeUndefined()
+    // Storybook's react-docgen plugin appends this assignment at the end of the module.
+    const info = { displayName: "Documented19", description: "Docs", props: {} }
+    Object.assign(Documented19, { __docgenInfo: info })
+    expect(Documented.__docgenInfo).toBe(info)
+  })
+
   it("forwards refs through memo", () => {
     const Memo = React.memo(Box)
     const ref = React.createRef<HTMLDivElement>()

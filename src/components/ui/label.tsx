@@ -6,7 +6,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-const Label = withRef("Label", function Label({
+function Label19({
   className,
   ...props
 }: React.ComponentProps<typeof LabelPrimitive.Root>) {
@@ -20,6 +20,8 @@ const Label = withRef("Label", function Label({
       {...props}
     />
   )
-})
+}
+
+const Label = withRef("Label", Label19)
 
 export { Label }

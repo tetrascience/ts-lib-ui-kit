@@ -11,7 +11,7 @@ export interface FormSectionProps extends React.ComponentProps<"div"> {
   children: React.ReactNode
 }
 
-export const FormSection = withRef("FormSection", function FormSection({
+function FormSection19({
   heading,
   description,
   children,
@@ -34,4 +34,6 @@ export const FormSection = withRef("FormSection", function FormSection({
       <FieldGroup>{children}</FieldGroup>
     </div>
   )
-})
+}
+
+export const FormSection = withRef("FormSection", FormSection19)

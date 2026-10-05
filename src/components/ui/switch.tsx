@@ -6,7 +6,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-const Switch = withRef("Switch", function Switch({
+function Switch19({
   className,
   size = "default",
   ...props
@@ -30,6 +30,8 @@ const Switch = withRef("Switch", function Switch({
       />
     </SwitchPrimitive.Root>
   )
-})
+}
+
+const Switch = withRef("Switch", Switch19)
 
 export { Switch }

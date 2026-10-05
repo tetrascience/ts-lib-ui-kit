@@ -28,7 +28,7 @@ const toggleVariants = cva(
   }
 )
 
-const Toggle = withRef("Toggle", function Toggle({
+function Toggle19({
   className,
   variant = "default",
   size = "default",
@@ -42,6 +42,8 @@ const Toggle = withRef("Toggle", function Toggle({
       {...props}
     />
   )
-})
+}
+
+const Toggle = withRef("Toggle", Toggle19)
 
 export { Toggle, toggleVariants }

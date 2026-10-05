@@ -10,15 +10,17 @@ function HoverCard({
   return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />
 }
 
-const HoverCardTrigger = withRef("HoverCardTrigger", function HoverCardTrigger({
+function HoverCardTrigger19({
   ...props
 }: React.ComponentProps<typeof HoverCardPrimitive.Trigger>) {
   return (
     <HoverCardPrimitive.Trigger data-slot="hover-card-trigger" {...props} />
   )
-})
+}
 
-const HoverCardContent = withRef("HoverCardContent", function HoverCardContent({
+const HoverCardTrigger = withRef("HoverCardTrigger", HoverCardTrigger19)
+
+function HoverCardContent19({
   className,
   align = "center",
   sideOffset = 4,
@@ -38,6 +40,8 @@ const HoverCardContent = withRef("HoverCardContent", function HoverCardContent({
       />
     </HoverCardPrimitive.Portal>
   )
-})
+}
+
+const HoverCardContent = withRef("HoverCardContent", HoverCardContent19)
 
 export { HoverCard, HoverCardTrigger, HoverCardContent }

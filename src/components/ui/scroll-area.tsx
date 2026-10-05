@@ -6,7 +6,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-const ScrollArea = withRef("ScrollArea", function ScrollArea({
+function ScrollArea19({
   className,
   children,
   ...props
@@ -28,9 +28,11 @@ const ScrollArea = withRef("ScrollArea", function ScrollArea({
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
   )
-})
+}
 
-const ScrollBar = withRef("ScrollBar", function ScrollBar({
+const ScrollArea = withRef("ScrollArea", ScrollArea19)
+
+function ScrollBar19({
   className,
   orientation = "vertical",
   ...props
@@ -52,6 +54,8 @@ const ScrollBar = withRef("ScrollBar", function ScrollBar({
       />
     </ScrollAreaPrimitive.ScrollAreaScrollbar>
   )
-})
+}
+
+const ScrollBar = withRef("ScrollBar", ScrollBar19)
 
 export { ScrollArea, ScrollBar }

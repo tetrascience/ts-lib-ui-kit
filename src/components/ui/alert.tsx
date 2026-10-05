@@ -27,7 +27,7 @@ const alertVariants = cva(
   }
 )
 
-const Alert = withRef("Alert", function Alert({
+function Alert19({
   className,
   variant,
   ...props
@@ -40,9 +40,11 @@ const Alert = withRef("Alert", function Alert({
       {...props}
     />
   )
-})
+}
 
-const AlertTitle = withRef("AlertTitle", function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
+const Alert = withRef("Alert", Alert19)
+
+function AlertTitle19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-title"
@@ -53,9 +55,11 @@ const AlertTitle = withRef("AlertTitle", function AlertTitle({ className, ...pro
       {...props}
     />
   )
-})
+}
 
-const AlertDescription = withRef("AlertDescription", function AlertDescription({
+const AlertTitle = withRef("AlertTitle", AlertTitle19)
+
+function AlertDescription19({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -69,9 +73,11 @@ const AlertDescription = withRef("AlertDescription", function AlertDescription({
       {...props}
     />
   )
-})
+}
 
-const AlertAction = withRef("AlertAction", function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
+const AlertDescription = withRef("AlertDescription", AlertDescription19)
+
+function AlertAction19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-action"
@@ -79,6 +85,8 @@ const AlertAction = withRef("AlertAction", function AlertAction({ className, ...
       {...props}
     />
   )
-})
+}
+
+const AlertAction = withRef("AlertAction", AlertAction19)
 
 export { Alert, AlertTitle, AlertDescription, AlertAction }

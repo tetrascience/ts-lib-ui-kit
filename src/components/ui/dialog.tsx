@@ -12,11 +12,13 @@ function Dialog({
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
 }
 
-const DialogTrigger = withRef("DialogTrigger", function DialogTrigger({
+function DialogTrigger19({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
-})
+}
+
+const DialogTrigger = withRef("DialogTrigger", DialogTrigger19)
 
 function DialogPortal({
   ...props
@@ -24,13 +26,15 @@ function DialogPortal({
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
 }
 
-const DialogClose = withRef("DialogClose", function DialogClose({
+function DialogClose19({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Close>) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
-})
+}
 
-const DialogOverlay = withRef("DialogOverlay", function DialogOverlay({
+const DialogClose = withRef("DialogClose", DialogClose19)
+
+function DialogOverlay19({
   className,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
@@ -44,9 +48,11 @@ const DialogOverlay = withRef("DialogOverlay", function DialogOverlay({
       {...props}
     />
   )
-})
+}
 
-const DialogContent = withRef("DialogContent", function DialogContent({
+const DialogOverlay = withRef("DialogOverlay", DialogOverlay19)
+
+function DialogContent19({
   className,
   children,
   showCloseButton = true,
@@ -96,9 +102,11 @@ const DialogContent = withRef("DialogContent", function DialogContent({
       </DialogPrimitive.Content>
     </DialogPortal>
   )
-})
+}
 
-const DialogHeader = withRef("DialogHeader", function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+const DialogContent = withRef("DialogContent", DialogContent19)
+
+function DialogHeader19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
@@ -106,9 +114,11 @@ const DialogHeader = withRef("DialogHeader", function DialogHeader({ className, 
       {...props}
     />
   )
-})
+}
 
-const DialogBody = withRef("DialogBody", function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
+const DialogHeader = withRef("DialogHeader", DialogHeader19)
+
+function DialogBody19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-body"
@@ -116,9 +126,11 @@ const DialogBody = withRef("DialogBody", function DialogBody({ className, ...pro
       {...props}
     />
   )
-})
+}
 
-const DialogFooter = withRef("DialogFooter", function DialogFooter({
+const DialogBody = withRef("DialogBody", DialogBody19)
+
+function DialogFooter19({
   className,
   showCloseButton = false,
   children,
@@ -143,9 +155,11 @@ const DialogFooter = withRef("DialogFooter", function DialogFooter({
       )}
     </div>
   )
-})
+}
 
-const DialogTitle = withRef("DialogTitle", function DialogTitle({
+const DialogFooter = withRef("DialogFooter", DialogFooter19)
+
+function DialogTitle19({
   className,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Title>) {
@@ -156,9 +170,11 @@ const DialogTitle = withRef("DialogTitle", function DialogTitle({
       {...props}
     />
   )
-})
+}
 
-const DialogDescription = withRef("DialogDescription", function DialogDescription({
+const DialogTitle = withRef("DialogTitle", DialogTitle19)
+
+function DialogDescription19({
   className,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Description>) {
@@ -172,7 +188,9 @@ const DialogDescription = withRef("DialogDescription", function DialogDescriptio
       {...props}
     />
   )
-})
+}
+
+const DialogDescription = withRef("DialogDescription", DialogDescription19)
 
 export {
   Dialog,

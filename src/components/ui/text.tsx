@@ -139,7 +139,7 @@ interface TextProps extends React.HTMLAttributes<HTMLElement>, VariantProps<type
   truncate?: boolean;
 }
 
-const Text = withRef("Text", function Text({
+function Text19({
   className,
   variant = "body",
   state = "default",
@@ -183,7 +183,9 @@ const Text = withRef("Text", function Text({
       {isComposite ? <span className={cn("min-w-0", truncate && "truncate")}>{children}</span> : children}
     </Comp>
   );
-});
+}
+
+const Text = withRef("Text", Text19);
 
 export { Text, textVariants };
 export type { TextProps, TextElement, TextVariant };

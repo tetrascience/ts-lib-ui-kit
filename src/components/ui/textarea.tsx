@@ -23,7 +23,7 @@ const textareaVariants = cva(
   }
 )
 
-const Textarea = withRef("Textarea", function Textarea({
+function Textarea19({
   className,
   size,
   ...props
@@ -36,6 +36,8 @@ const Textarea = withRef("Textarea", function Textarea({
       {...props}
     />
   )
-})
+}
+
+const Textarea = withRef("Textarea", Textarea19)
 
 export { Textarea, textareaVariants }

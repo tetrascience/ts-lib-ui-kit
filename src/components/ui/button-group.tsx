@@ -22,7 +22,7 @@ const buttonGroupVariants = cva(
   }
 )
 
-const ButtonGroup = withRef("ButtonGroup", function ButtonGroup({
+function ButtonGroup19({
   className,
   orientation,
   ...props
@@ -36,9 +36,11 @@ const ButtonGroup = withRef("ButtonGroup", function ButtonGroup({
       {...props}
     />
   )
-})
+}
 
-const ButtonGroupText = withRef("ButtonGroupText", function ButtonGroupText({
+const ButtonGroup = withRef("ButtonGroup", ButtonGroup19)
+
+function ButtonGroupText19({
   className,
   asChild = false,
   ...props
@@ -56,9 +58,11 @@ const ButtonGroupText = withRef("ButtonGroupText", function ButtonGroupText({
       {...props}
     />
   )
-})
+}
 
-const ButtonGroupSeparator = withRef("ButtonGroupSeparator", function ButtonGroupSeparator({
+const ButtonGroupText = withRef("ButtonGroupText", ButtonGroupText19)
+
+function ButtonGroupSeparator19({
   className,
   orientation = "vertical",
   ...props
@@ -74,7 +78,9 @@ const ButtonGroupSeparator = withRef("ButtonGroupSeparator", function ButtonGrou
       {...props}
     />
   )
-})
+}
+
+const ButtonGroupSeparator = withRef("ButtonGroupSeparator", ButtonGroupSeparator19)
 
 export {
   ButtonGroup,

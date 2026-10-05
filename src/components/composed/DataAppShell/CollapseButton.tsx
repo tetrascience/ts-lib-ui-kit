@@ -29,7 +29,7 @@ export interface ShellCollapseButtonProps extends Omit<React.ComponentProps<type
  * a chevron, placed in a zone's header row when expanded and at the top of the
  * collapsed rail. One component so every zone's trigger looks identical.
  */
-const ShellCollapseButton = withRef("ShellCollapseButton", function ShellCollapseButton({
+function ShellCollapseButton19({
   direction,
   label,
   tooltipSide = "right",
@@ -61,6 +61,13 @@ const ShellCollapseButton = withRef("ShellCollapseButton", function ShellCollaps
       </Tooltip>
     </TooltipProvider>
   );
-});
+}
+
+/**
+ * The shell's shared collapse/expand affordance — a small outlined square with
+ * a chevron, placed in a zone's header row when expanded and at the top of the
+ * collapsed rail. One component so every zone's trigger looks identical.
+ */
+const ShellCollapseButton = withRef("ShellCollapseButton", ShellCollapseButton19);
 
 export { ShellCollapseButton };

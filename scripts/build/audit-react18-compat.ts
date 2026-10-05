@@ -2,16 +2,23 @@
  * UXT-77: fail when a component would break on React 18.
  *
  * The kit is written React 19-style. React 18 strips `ref` from a function
- * component's props, so any component whose props accept `ref` must go through
- * `withRef` from `src/lib/react18-compat.ts`. React 18 also drops a boolean
- * `inert`, so JSX must spread `inertProp(...)` instead of writing `inert={…}`.
+ * component's props, so any component whose props accept `ref` is declared for
+ * React 19 as `X19` and exported through `const X = withRef("X", X19)` from
+ * `src/lib/react18-compat.ts`. React 18 also drops a boolean `inert`, so JSX
+ * must spread `inertProp(...)` instead of writing `inert={…}`.
  *
  * Rules, over every top-level PascalCase component in `src/components`:
  *
  * - "unwrapped-ref":       the props type has `ref` but the component is a plain
- *                          function or arrow. Fix: `const X = withRef("X", function X(…) {…})`.
+ *                          function or arrow that no `withRef` call exports. Fix:
+ *                          rename it `X19` and add `const X = withRef("X", X19)`.
+ * - "render-name":         `withRef`'s component is not the React 19 declaration
+ *                          `X19` (or `X19.type` for a memoised one), e.g. an inline
+ *                          function. The convention keeps every React 19 component
+ *                          intact and findable for the React 19 exports.
  * - "direct-forward-ref":  `React.forwardRef` used directly. Fix: use `withRef`, so
- *                          dropping React 18 stays a one-file change.
+ *                          the React 18 layer stays separable. `FORWARD_REF_ALLOWED`
+ *                          lists the components that predate this rule.
  * - "display-name":        `withRef`'s name literal differs from the variable name.
  * - "boolean-inert":       a JSX `inert={…}` attribute. Fix: `{...inertProp(…)}`.
  * - "dom-props-without-ref": the props carry DOM attributes (they reach the DOM, so the
@@ -38,6 +45,7 @@ import type { CallExpression, Expression, SourceFile, Type } from "ts-morph";
 
 export type ViolationKind =
   | "unwrapped-ref"
+  | "render-name"
   | "direct-forward-ref"
   | "display-name"
   | "boolean-inert"
@@ -63,6 +71,12 @@ export const REF_EXCEPTIONS: Readonly<Record<string, string>> = {
   CalendarDayButton:
     "Rendered by react-day-picker through Calendar's components prop with DayPicker's DayButton props, which carry no ref; it keeps its own ref to move focus.",
 };
+
+/**
+ * Components that call `React.forwardRef` themselves. They predate `withRef` and
+ * already forward refs on React 18 and 19, so there is nothing to separate out.
+ */
+export const FORWARD_REF_ALLOWED: ReadonlySet<string> = new Set(["TetraScienceIcon", "TetraMoleculeIcon"]);
 
 /** A DOM-only handler: present on every `HTMLAttributes`, absent from data-style props. */
 const DOM_PROP_PROBE = "onPointerDown";
@@ -118,7 +132,7 @@ function hasDomPropsWithoutRef(node: Node): boolean {
 
 type Classified =
   | { kind: "plain"; fn: Node }
-  | { kind: "withRef"; render: Node; displayName: string | undefined }
+  | { kind: "withRef"; render: Node; displayName: string | undefined; call: CallExpression }
   | { kind: "forwardRef" }
   | { kind: "other" };
 
@@ -130,7 +144,7 @@ function classify(expr: Expression): Classified {
   const [first, second] = expr.getArguments();
   if (callee === "withRef") {
     const displayName = first && Node.isStringLiteral(first) ? first.getLiteralValue() : undefined;
-    return second ? { kind: "withRef", render: second, displayName } : { kind: "other" };
+    return second ? { kind: "withRef", render: second, displayName, call: expr } : { kind: "other" };
   }
   if (callee === "forwardRef") return { kind: "forwardRef" };
   if (callee === "memo" && first && Node.isExpression(first)) return classify(first);
@@ -138,6 +152,25 @@ function classify(expr: Expression): Classified {
 }
 
 type Reporter = (node: Node, name: string, kind: ViolationKind, detail: string) => void;
+
+/** The declaration a `withRef` render argument names: `X19`, or `X19` from `X19.type`. */
+function renderTarget(render: Node): string | undefined {
+  if (Node.isIdentifier(render)) return render.getText();
+  if (Node.isPropertyAccessExpression(render) && render.getName() === "type" && Node.isIdentifier(render.getExpression()))
+    return render.getExpression().getText();
+  return undefined;
+}
+
+/** Names passed to `withRef` anywhere in the file: those declarations are wrapped. */
+function withRefTargets(sourceFile: SourceFile): Set<string> {
+  const targets = new Set<string>();
+  for (const call of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+    if (calleeName(call) !== "withRef") continue;
+    const target = call.getArguments()[1] && renderTarget(call.getArguments()[1]);
+    if (target) targets.add(target);
+  }
+  return targets;
+}
 
 function reportDomPropsWithoutRef(node: Node, name: string, excepted: string[], report: Reporter) {
   if (!hasDomPropsWithoutRef(node)) return;
@@ -158,29 +191,31 @@ export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditR
   const file = path.relative(root, sourceFile.getFilePath());
   const report: Reporter = (node, name, kind, detail) =>
     result.violations.push({ file, line: node.getStartLineNumber(), name, kind, detail });
+  // A React 19 declaration exported through withRef is checked at its withRef call.
+  const targets = withRefTargets(sourceFile);
+  const wrapHint = (name: string) => `props accept \`ref\`; rename it ${name}19 and export it with const ${name} = withRef("${name}", ${name}19)`;
 
   for (const statement of sourceFile.getStatements()) {
     if (Node.isFunctionDeclaration(statement)) {
       const name = statement.getName();
-      if (!isComponentName(name) || !statement.hasBody()) continue;
+      if (!isComponentName(name) || !statement.hasBody() || targets.has(name)) continue;
       reportDomPropsWithoutRef(statement, name, result.excepted, report);
       if (!acceptsRef(statement)) continue;
-      report(statement, name, "unwrapped-ref", `props accept \`ref\`; wrap it: const ${name} = withRef("${name}", function ${name}(…) {…})`);
+      report(statement, name, "unwrapped-ref", wrapHint(name));
       continue;
     }
     if (!Node.isVariableStatement(statement)) continue;
     for (const declaration of statement.getDeclarations()) {
       const name = declaration.getName();
       const initializer = declaration.getInitializer();
-      if (!isComponentName(name) || !initializer) continue;
+      if (!isComponentName(name) || !initializer || targets.has(name)) continue;
       const classified = classify(initializer);
       switch (classified.kind) {
         case "plain": {
           // Annotated consts (`const X: React.FC<P> = …`) carry their props on the declaration.
           const typed = declaration.getTypeNode() ? declaration : classified.fn;
           reportDomPropsWithoutRef(typed, name, result.excepted, report);
-          if (acceptsRef(typed))
-            report(declaration, name, "unwrapped-ref", `props accept \`ref\`; wrap it: const ${name} = withRef("${name}", function ${name}(…) {…})`);
+          if (acceptsRef(typed)) report(declaration, name, "unwrapped-ref", wrapHint(name));
           break;
         }
         case "withRef":
@@ -190,9 +225,12 @@ export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditR
           reportDomPropsWithoutRef(classified.render, name, result.excepted, report);
           if (classified.displayName !== name)
             report(declaration, name, "display-name", `withRef display name is ${JSON.stringify(classified.displayName)}; expected "${name}"`);
+          if (renderTarget(classified.render) !== `${name}19`)
+            report(declaration, name, "render-name", `withRef must export the React 19 declaration ${name}19 (or ${name}19.type when it is memoised), not ${classified.render.getText().slice(0, 40)}`);
           break;
         case "forwardRef":
-          report(declaration, name, "direct-forward-ref", "use withRef from @/lib/react18-compat instead of forwardRef");
+          if (!FORWARD_REF_ALLOWED.has(name))
+            report(declaration, name, "direct-forward-ref", `declare it for React 19 as ${name}19 and export it with withRef from @/lib/react18-compat instead of forwardRef`);
           break;
         case "other":
           break;

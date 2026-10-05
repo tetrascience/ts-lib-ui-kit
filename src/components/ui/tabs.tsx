@@ -7,7 +7,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-const Tabs = withRef("Tabs", function Tabs({
+function Tabs19({
   className,
   orientation = "horizontal",
   ...props
@@ -23,7 +23,9 @@ const Tabs = withRef("Tabs", function Tabs({
       {...props}
     />
   )
-})
+}
+
+const Tabs = withRef("Tabs", Tabs19)
 
 const tabsListVariants = cva(
   "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-horizontal/tabs:h-8 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col data-[variant=line]:rounded-none",
@@ -40,7 +42,7 @@ const tabsListVariants = cva(
   }
 )
 
-const TabsList = withRef("TabsList", function TabsList({
+function TabsList19({
   className,
   variant = "default",
   ...props
@@ -54,9 +56,11 @@ const TabsList = withRef("TabsList", function TabsList({
       {...props}
     />
   )
-})
+}
 
-const TabsTrigger = withRef("TabsTrigger", function TabsTrigger({
+const TabsList = withRef("TabsList", TabsList19)
+
+function TabsTrigger19({
   className,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
@@ -74,9 +78,11 @@ const TabsTrigger = withRef("TabsTrigger", function TabsTrigger({
       {...props}
     />
   )
-})
+}
 
-const TabsContent = withRef("TabsContent", function TabsContent({
+const TabsTrigger = withRef("TabsTrigger", TabsTrigger19)
+
+function TabsContent19({
   className,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Content>) {
@@ -87,6 +93,8 @@ const TabsContent = withRef("TabsContent", function TabsContent({
       {...props}
     />
   )
-})
+}
+
+const TabsContent = withRef("TabsContent", TabsContent19)
 
 export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }

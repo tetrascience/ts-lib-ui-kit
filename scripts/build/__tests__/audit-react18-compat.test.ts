@@ -51,16 +51,34 @@ describe("React 18 compatibility audit", () => {
       ]);
     });
 
-    it("accepts withRef, memo(withRef) and components without ref", () => {
+    it("accepts X19 declarations exported through withRef, and components without ref", () => {
       const { wrapped, violations } = audit(`${header}
-        export const Box = withRef("Box", function Box(props: React.ComponentProps<"div">) { return <div {...props} /> })
-        export const Row = memo(withRef("Row", function Row(props: React.ComponentProps<"div">) { return <div {...props} /> }))
+        function Box19(props: React.ComponentProps<"div">) { return <div {...props} /> }
+        export const Box = withRef("Box", Box19)
+        const Row19 = memo((props: React.ComponentProps<"div">) => <div {...props} />)
+        export const Row = memo(withRef("Row", Row19.type))
+        export const Icon = React.forwardRef<SVGSVGElement, React.ComponentProps<"svg">>((props, ref) => <svg ref={ref} {...props} />)
+        const TetraScienceIcon = React.forwardRef<SVGSVGElement, React.ComponentProps<"svg">>((props, ref) => <svg ref={ref} {...props} />)
+        export { TetraScienceIcon }
         export function Label({ text }: { text: string }) { return <span>{text}</span> }
         export const Count = ({ n }: { n: number }) => <b>{n}</b>
         export function useThing() { return 1 }
       `);
-      expect(violations).toEqual([]);
+      // Icon is a new direct forwardRef; TetraScienceIcon predates the rule and is allowed.
+      expect(violations.map((v) => [v.name, v.kind])).toEqual([["Icon", "direct-forward-ref"]]);
       expect(wrapped).toEqual(["src/components/__fixture__.tsx:Box", "src/components/__fixture__.tsx:Row"]);
+    });
+
+    it("requires withRef to export the React 19 declaration by its X19 name", () => {
+      const { violations } = audit(`${header}
+        export const Inline = withRef("Inline", function Inline(props: React.ComponentProps<"div">) { return <div {...props} /> })
+        function Other(props: React.ComponentProps<"div">) { return <div {...props} /> }
+        export const Misnamed = withRef("Misnamed", Other)
+      `);
+      expect(violations.map((v) => [v.name, v.kind])).toEqual([
+        ["Inline", "render-name"],
+        ["Misnamed", "render-name"],
+      ]);
     });
 
     it("flags DOM props without ref unless the component is a documented exception", () => {
@@ -68,7 +86,8 @@ describe("React 18 compatibility audit", () => {
         export function Chip(props: React.HTMLAttributes<HTMLSpanElement>) { return <span {...props} /> }
         export const Conversation = (props: React.HTMLAttributes<HTMLDivElement>) => <div {...props} />
         export function NavItem({ onClick }: { onClick: () => void }) { return <button onClick={onClick} /> }
-        export const Tag = withRef("Tag", function Tag(props: React.HTMLAttributes<HTMLSpanElement>) { return <span {...props} /> })
+        function Tag19(props: React.HTMLAttributes<HTMLSpanElement>) { return <span {...props} /> }
+        export const Tag = withRef("Tag", Tag19)
       `);
       expect(violations.map((v) => [v.name, v.kind])).toEqual([
         ["Chip", "dom-props-without-ref"],
@@ -80,7 +99,8 @@ describe("React 18 compatibility audit", () => {
     it("flags direct forwardRef, a mismatched display name and boolean inert", () => {
       const { violations } = audit(`${header}
         export const Box = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>((props, ref) => <div ref={ref} {...props} />)
-        export const Row = withRef("Rwo", function Row(props: React.ComponentProps<"div">) { return <div {...props} /> })
+        function Row19(props: React.ComponentProps<"div">) { return <div {...props} /> }
+        export const Row = withRef("Rwo", Row19)
         export function Nav({ hidden }: { hidden: boolean }) { return <nav inert={hidden} /> }
       `);
       expect(violations.map((v) => [v.name, v.kind])).toEqual([

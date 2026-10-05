@@ -43,7 +43,7 @@ function useCarousel() {
   return context
 }
 
-const Carousel = withRef("Carousel", function Carousel({
+function Carousel19({
   orientation = "horizontal",
   opts,
   setApi,
@@ -131,9 +131,11 @@ const Carousel = withRef("Carousel", function Carousel({
       </div>
     </CarouselContext.Provider>
   )
-})
+}
 
-const CarouselContent = withRef("CarouselContent", function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
+const Carousel = withRef("Carousel", Carousel19)
+
+function CarouselContent19({ className, ...props }: React.ComponentProps<"div">) {
   const { carouselRef, orientation } = useCarousel()
 
   return (
@@ -152,9 +154,11 @@ const CarouselContent = withRef("CarouselContent", function CarouselContent({ cl
       />
     </div>
   )
-})
+}
 
-const CarouselItem = withRef("CarouselItem", function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
+const CarouselContent = withRef("CarouselContent", CarouselContent19)
+
+function CarouselItem19({ className, ...props }: React.ComponentProps<"div">) {
   const { orientation } = useCarousel()
 
   return (
@@ -170,9 +174,11 @@ const CarouselItem = withRef("CarouselItem", function CarouselItem({ className, 
       {...props}
     />
   )
-})
+}
 
-const CarouselPrevious = withRef("CarouselPrevious", function CarouselPrevious({
+const CarouselItem = withRef("CarouselItem", CarouselItem19)
+
+function CarouselPrevious19({
   className,
   variant = "outline",
   size = "icon-sm",
@@ -200,9 +206,11 @@ const CarouselPrevious = withRef("CarouselPrevious", function CarouselPrevious({
       <span className="sr-only">Previous slide</span>
     </Button>
   )
-})
+}
 
-const CarouselNext = withRef("CarouselNext", function CarouselNext({
+const CarouselPrevious = withRef("CarouselPrevious", CarouselPrevious19)
+
+function CarouselNext19({
   className,
   variant = "outline",
   size = "icon-sm",
@@ -230,7 +238,9 @@ const CarouselNext = withRef("CarouselNext", function CarouselNext({
       <span className="sr-only">Next slide</span>
     </Button>
   )
-})
+}
+
+const CarouselNext = withRef("CarouselNext", CarouselNext19)
 
 export {
   type CarouselApi,

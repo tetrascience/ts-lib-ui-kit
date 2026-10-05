@@ -89,13 +89,13 @@ const detectSpeechInputMode = (): SpeechInputMode => {
   return "none";
 };
 
-export const SpeechInput = withRef("SpeechInput", function SpeechInput({
+const SpeechInput19 = ({
   className,
   onTranscriptionChange,
   onAudioRecorded,
   lang = "en-US",
   ...props
-}: SpeechInputProps) {
+}: SpeechInputProps) => {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mode] = useState<SpeechInputMode>(detectSpeechInputMode);
@@ -323,4 +323,6 @@ export const SpeechInput = withRef("SpeechInput", function SpeechInput({
       </Button>
     </div>
   );
-});
+};
+
+export const SpeechInput = withRef("SpeechInput", SpeechInput19);

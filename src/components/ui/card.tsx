@@ -3,7 +3,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-const Card = withRef("Card", function Card({
+function Card19({
   className,
   size = "default",
   ...props
@@ -19,9 +19,11 @@ const Card = withRef("Card", function Card({
       {...props}
     />
   )
-})
+}
 
-const CardHeader = withRef("CardHeader", function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+const Card = withRef("Card", Card19)
+
+function CardHeader19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-header"
@@ -32,9 +34,11 @@ const CardHeader = withRef("CardHeader", function CardHeader({ className, ...pro
       {...props}
     />
   )
-})
+}
 
-const CardTitle = withRef("CardTitle", function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+const CardHeader = withRef("CardHeader", CardHeader19)
+
+function CardTitle19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
@@ -45,9 +49,11 @@ const CardTitle = withRef("CardTitle", function CardTitle({ className, ...props 
       {...props}
     />
   )
-})
+}
 
-const CardDescription = withRef("CardDescription", function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+const CardTitle = withRef("CardTitle", CardTitle19)
+
+function CardDescription19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
@@ -55,9 +61,11 @@ const CardDescription = withRef("CardDescription", function CardDescription({ cl
       {...props}
     />
   )
-})
+}
 
-const CardAction = withRef("CardAction", function CardAction({ className, ...props }: React.ComponentProps<"div">) {
+const CardDescription = withRef("CardDescription", CardDescription19)
+
+function CardAction19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-action"
@@ -68,9 +76,11 @@ const CardAction = withRef("CardAction", function CardAction({ className, ...pro
       {...props}
     />
   )
-})
+}
 
-const CardContent = withRef("CardContent", function CardContent({ className, ...props }: React.ComponentProps<"div">) {
+const CardAction = withRef("CardAction", CardAction19)
+
+function CardContent19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
@@ -78,9 +88,11 @@ const CardContent = withRef("CardContent", function CardContent({ className, ...
       {...props}
     />
   )
-})
+}
 
-const CardFooter = withRef("CardFooter", function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
+const CardContent = withRef("CardContent", CardContent19)
+
+function CardFooter19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-footer"
@@ -91,7 +103,9 @@ const CardFooter = withRef("CardFooter", function CardFooter({ className, ...pro
       {...props}
     />
   )
-})
+}
+
+const CardFooter = withRef("CardFooter", CardFooter19)
 
 export {
   Card,

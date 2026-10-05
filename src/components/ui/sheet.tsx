@@ -12,17 +12,21 @@ function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
 
-const SheetTrigger = withRef("SheetTrigger", function SheetTrigger({
+function SheetTrigger19({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
-})
+}
 
-const SheetClose = withRef("SheetClose", function SheetClose({
+const SheetTrigger = withRef("SheetTrigger", SheetTrigger19)
+
+function SheetClose19({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Close>) {
   return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
-})
+}
+
+const SheetClose = withRef("SheetClose", SheetClose19)
 
 function SheetPortal({
   ...props
@@ -30,7 +34,7 @@ function SheetPortal({
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
 }
 
-const SheetOverlay = withRef("SheetOverlay", function SheetOverlay({
+function SheetOverlay19({
   className,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
@@ -44,9 +48,11 @@ const SheetOverlay = withRef("SheetOverlay", function SheetOverlay({
       {...props}
     />
   )
-})
+}
 
-const SheetContent = withRef("SheetContent", function SheetContent({
+const SheetOverlay = withRef("SheetOverlay", SheetOverlay19)
+
+function SheetContent19({
   className,
   children,
   side = "right",
@@ -85,9 +91,11 @@ const SheetContent = withRef("SheetContent", function SheetContent({
       </SheetPrimitive.Content>
     </SheetPortal>
   )
-})
+}
 
-const SheetHeader = withRef("SheetHeader", function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
+const SheetContent = withRef("SheetContent", SheetContent19)
+
+function SheetHeader19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-header"
@@ -95,9 +103,11 @@ const SheetHeader = withRef("SheetHeader", function SheetHeader({ className, ...
       {...props}
     />
   )
-})
+}
 
-const SheetFooter = withRef("SheetFooter", function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
+const SheetHeader = withRef("SheetHeader", SheetHeader19)
+
+function SheetFooter19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-footer"
@@ -105,9 +115,11 @@ const SheetFooter = withRef("SheetFooter", function SheetFooter({ className, ...
       {...props}
     />
   )
-})
+}
 
-const SheetTitle = withRef("SheetTitle", function SheetTitle({
+const SheetFooter = withRef("SheetFooter", SheetFooter19)
+
+function SheetTitle19({
   className,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Title>) {
@@ -118,9 +130,11 @@ const SheetTitle = withRef("SheetTitle", function SheetTitle({
       {...props}
     />
   )
-})
+}
 
-const SheetDescription = withRef("SheetDescription", function SheetDescription({
+const SheetTitle = withRef("SheetTitle", SheetTitle19)
+
+function SheetDescription19({
   className,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Description>) {
@@ -131,7 +145,9 @@ const SheetDescription = withRef("SheetDescription", function SheetDescription({
       {...props}
     />
   )
-})
+}
+
+const SheetDescription = withRef("SheetDescription", SheetDescription19)
 
 export {
   Sheet,

@@ -3,7 +3,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-const Table = withRef("Table", function Table({
+function Table19({
   className,
   containerClassName,
   variant,
@@ -32,9 +32,11 @@ const Table = withRef("Table", function Table({
       />
     </div>
   )
-})
+}
 
-const TableHeader = withRef("TableHeader", function TableHeader({
+const Table = withRef("Table", Table19)
+
+function TableHeader19({
   className,
   variant,
   ...props
@@ -52,9 +54,11 @@ const TableHeader = withRef("TableHeader", function TableHeader({
       {...props}
     />
   )
-})
+}
 
-const TableBody = withRef("TableBody", function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
+const TableHeader = withRef("TableHeader", TableHeader19)
+
+function TableBody19({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
@@ -62,9 +66,11 @@ const TableBody = withRef("TableBody", function TableBody({ className, ...props 
       {...props}
     />
   )
-})
+}
 
-const TableFooter = withRef("TableFooter", function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
+const TableBody = withRef("TableBody", TableBody19)
+
+function TableFooter19({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
     <tfoot
       data-slot="table-footer"
@@ -75,9 +81,11 @@ const TableFooter = withRef("TableFooter", function TableFooter({ className, ...
       {...props}
     />
   )
-})
+}
 
-const TableRow = withRef("TableRow", function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+const TableFooter = withRef("TableFooter", TableFooter19)
+
+function TableRow19({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       data-slot="table-row"
@@ -88,9 +96,11 @@ const TableRow = withRef("TableRow", function TableRow({ className, ...props }: 
       {...props}
     />
   )
-})
+}
 
-const TableHead = withRef("TableHead", function TableHead({
+const TableRow = withRef("TableRow", TableRow19)
+
+function TableHead19({
   className,
   variant,
   truncate,
@@ -113,9 +123,11 @@ const TableHead = withRef("TableHead", function TableHead({
       {...props}
     />
   )
-})
+}
 
-const TableCell = withRef("TableCell", function TableCell({
+const TableHead = withRef("TableHead", TableHead19)
+
+function TableCell19({
   className,
   variant,
   truncate,
@@ -139,9 +151,11 @@ const TableCell = withRef("TableCell", function TableCell({
       {...props}
     />
   )
-})
+}
 
-const TableCaption = withRef("TableCaption", function TableCaption({
+const TableCell = withRef("TableCell", TableCell19)
+
+function TableCaption19({
   className,
   ...props
 }: React.ComponentProps<"caption">) {
@@ -152,7 +166,9 @@ const TableCaption = withRef("TableCaption", function TableCaption({
       {...props}
     />
   )
-})
+}
+
+const TableCaption = withRef("TableCaption", TableCaption19)
 
 export {
   Table,

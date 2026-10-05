@@ -12,7 +12,7 @@ function ContextMenu({
   return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />
 }
 
-const ContextMenuTrigger = withRef("ContextMenuTrigger", function ContextMenuTrigger({
+function ContextMenuTrigger19({
   className,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Trigger>) {
@@ -23,15 +23,19 @@ const ContextMenuTrigger = withRef("ContextMenuTrigger", function ContextMenuTri
       {...props}
     />
   )
-})
+}
 
-const ContextMenuGroup = withRef("ContextMenuGroup", function ContextMenuGroup({
+const ContextMenuTrigger = withRef("ContextMenuTrigger", ContextMenuTrigger19)
+
+function ContextMenuGroup19({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Group>) {
   return (
     <ContextMenuPrimitive.Group data-slot="context-menu-group" {...props} />
   )
-})
+}
+
+const ContextMenuGroup = withRef("ContextMenuGroup", ContextMenuGroup19)
 
 function ContextMenuPortal({
   ...props
@@ -47,7 +51,7 @@ function ContextMenuSub({
   return <ContextMenuPrimitive.Sub data-slot="context-menu-sub" {...props} />
 }
 
-const ContextMenuRadioGroup = withRef("ContextMenuRadioGroup", function ContextMenuRadioGroup({
+function ContextMenuRadioGroup19({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.RadioGroup>) {
   return (
@@ -56,9 +60,11 @@ const ContextMenuRadioGroup = withRef("ContextMenuRadioGroup", function ContextM
       {...props}
     />
   )
-})
+}
 
-const ContextMenuContent = withRef("ContextMenuContent", function ContextMenuContent({
+const ContextMenuRadioGroup = withRef("ContextMenuRadioGroup", ContextMenuRadioGroup19)
+
+function ContextMenuContent19({
   className,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Content> & {
@@ -73,9 +79,11 @@ const ContextMenuContent = withRef("ContextMenuContent", function ContextMenuCon
       />
     </ContextMenuPrimitive.Portal>
   )
-})
+}
 
-const ContextMenuItem = withRef("ContextMenuItem", function ContextMenuItem({
+const ContextMenuContent = withRef("ContextMenuContent", ContextMenuContent19)
+
+function ContextMenuItem19({
   className,
   inset,
   variant = "default",
@@ -96,9 +104,11 @@ const ContextMenuItem = withRef("ContextMenuItem", function ContextMenuItem({
       {...props}
     />
   )
-})
+}
 
-const ContextMenuSubTrigger = withRef("ContextMenuSubTrigger", function ContextMenuSubTrigger({
+const ContextMenuItem = withRef("ContextMenuItem", ContextMenuItem19)
+
+function ContextMenuSubTrigger19({
   className,
   inset,
   children,
@@ -120,9 +130,11 @@ const ContextMenuSubTrigger = withRef("ContextMenuSubTrigger", function ContextM
       <ChevronRightIcon className="ml-auto" />
     </ContextMenuPrimitive.SubTrigger>
   )
-})
+}
 
-const ContextMenuSubContent = withRef("ContextMenuSubContent", function ContextMenuSubContent({
+const ContextMenuSubTrigger = withRef("ContextMenuSubTrigger", ContextMenuSubTrigger19)
+
+function ContextMenuSubContent19({
   className,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.SubContent>) {
@@ -133,9 +145,11 @@ const ContextMenuSubContent = withRef("ContextMenuSubContent", function ContextM
       {...props}
     />
   )
-})
+}
 
-const ContextMenuCheckboxItem = withRef("ContextMenuCheckboxItem", function ContextMenuCheckboxItem({
+const ContextMenuSubContent = withRef("ContextMenuSubContent", ContextMenuSubContent19)
+
+function ContextMenuCheckboxItem19({
   className,
   children,
   checked,
@@ -164,9 +178,11 @@ const ContextMenuCheckboxItem = withRef("ContextMenuCheckboxItem", function Cont
       {children}
     </ContextMenuPrimitive.CheckboxItem>
   )
-})
+}
 
-const ContextMenuRadioItem = withRef("ContextMenuRadioItem", function ContextMenuRadioItem({
+const ContextMenuCheckboxItem = withRef("ContextMenuCheckboxItem", ContextMenuCheckboxItem19)
+
+function ContextMenuRadioItem19({
   className,
   children,
   inset,
@@ -193,9 +209,11 @@ const ContextMenuRadioItem = withRef("ContextMenuRadioItem", function ContextMen
       {children}
     </ContextMenuPrimitive.RadioItem>
   )
-})
+}
 
-const ContextMenuLabel = withRef("ContextMenuLabel", function ContextMenuLabel({
+const ContextMenuRadioItem = withRef("ContextMenuRadioItem", ContextMenuRadioItem19)
+
+function ContextMenuLabel19({
   className,
   inset,
   ...props
@@ -213,9 +231,11 @@ const ContextMenuLabel = withRef("ContextMenuLabel", function ContextMenuLabel({
       {...props}
     />
   )
-})
+}
 
-const ContextMenuSeparator = withRef("ContextMenuSeparator", function ContextMenuSeparator({
+const ContextMenuLabel = withRef("ContextMenuLabel", ContextMenuLabel19)
+
+function ContextMenuSeparator19({
   className,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Separator>) {
@@ -226,9 +246,11 @@ const ContextMenuSeparator = withRef("ContextMenuSeparator", function ContextMen
       {...props}
     />
   )
-})
+}
 
-const ContextMenuShortcut = withRef("ContextMenuShortcut", function ContextMenuShortcut({
+const ContextMenuSeparator = withRef("ContextMenuSeparator", ContextMenuSeparator19)
+
+function ContextMenuShortcut19({
   className,
   ...props
 }: React.ComponentProps<"span">) {
@@ -242,7 +264,9 @@ const ContextMenuShortcut = withRef("ContextMenuShortcut", function ContextMenuS
       {...props}
     />
   )
-})
+}
+
+const ContextMenuShortcut = withRef("ContextMenuShortcut", ContextMenuShortcut19)
 
 export {
   ContextMenu,

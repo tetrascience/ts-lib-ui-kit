@@ -45,14 +45,14 @@ export type ConfirmationProps = ComponentProps<"div"> & {
 
 const ACCEPTED_HIDE_DELAY = 1500;
 
-export const Confirmation = withRef("Confirmation", function Confirmation({
+const Confirmation19 = ({
   className,
   approval,
   state,
   children,
   ref,
   ...props
-}: ConfirmationProps) {
+}: ConfirmationProps) => {
   const contextValue = useMemo(() => ({ approval, state }), [approval, state]);
   const [visible, setVisible] = useState(true);
 
@@ -101,7 +101,9 @@ export const Confirmation = withRef("Confirmation", function Confirmation({
       </AnimatePresence>
     </ConfirmationContext.Provider>
   );
-});
+};
+
+export const Confirmation = withRef("Confirmation", Confirmation19);
 
 // ---------------------------------------------------------------------------
 // ConfirmationTitle
@@ -109,20 +111,20 @@ export const Confirmation = withRef("Confirmation", function Confirmation({
 
 export type ConfirmationTitleProps = PropsWithChildren<ComponentProps<"h3">>;
 
-export const ConfirmationTitle = withRef("ConfirmationTitle", function ConfirmationTitle({
+const ConfirmationTitle19 = ({
   className,
   children,
   ...props
-}: ConfirmationTitleProps) {
-  return (
-    <h3
-      className={cn("font-semibold text-base text-foreground", className)}
-      {...props}
-    >
-      {children}
-    </h3>
-  );
-});
+}: ConfirmationTitleProps) => (
+  <h3
+    className={cn("font-semibold text-base text-foreground", className)}
+    {...props}
+  >
+    {children}
+  </h3>
+);
+
+export const ConfirmationTitle = withRef("ConfirmationTitle", ConfirmationTitle19);
 
 // ---------------------------------------------------------------------------
 // ConfirmationCode — monospace command/code block
@@ -130,15 +132,15 @@ export const ConfirmationTitle = withRef("ConfirmationTitle", function Confirmat
 
 export type ConfirmationCodeProps = ComponentProps<typeof CodeBlock>;
 
-export const ConfirmationCode = withRef("ConfirmationCode", function ConfirmationCode({
+const ConfirmationCode19 = ({
   className,
   children,
   ...props
-}: ConfirmationCodeProps) {
-  return (
-    <CodeBlock className={cn(className)} {...props} language="bash" code={children?.toString() ?? ''} />
-  );
-});
+}: ConfirmationCodeProps) => (
+  <CodeBlock className={cn(className)} {...props} language="bash" code={children?.toString() ?? ''} />
+);
+
+export const ConfirmationCode = withRef("ConfirmationCode", ConfirmationCode19);
 
 // ---------------------------------------------------------------------------
 // ConfirmationRequest / Accepted / Rejected — conditional renderers
@@ -182,10 +184,10 @@ export const ConfirmationRejected = ({ children }: { children?: ReactNode }) => 
 
 export type ConfirmationActionsProps = ComponentProps<"div">;
 
-export const ConfirmationActions = withRef("ConfirmationActions", function ConfirmationActions({
+const ConfirmationActions19 = ({
   className,
   ...props
-}: ConfirmationActionsProps) {
+}: ConfirmationActionsProps) => {
   const { state } = useConfirmation();
   if (state !== "approval-requested") return null;
   return (
@@ -194,7 +196,9 @@ export const ConfirmationActions = withRef("ConfirmationActions", function Confi
       {...props}
     />
   );
-});
+};
+
+export const ConfirmationActions = withRef("ConfirmationActions", ConfirmationActions19);
 
 // ---------------------------------------------------------------------------
 // ConfirmationAction — individual button
@@ -202,20 +206,20 @@ export const ConfirmationActions = withRef("ConfirmationActions", function Confi
 
 export type ConfirmationActionProps = ComponentProps<typeof Button>;
 
-export const ConfirmationAction = withRef("ConfirmationAction", function ConfirmationAction({
+const ConfirmationAction19 = ({
   className,
   size = "sm",
   ...props
-}: ConfirmationActionProps) {
-  return (
-    <Button
-      className={cn("gap-1.5", className)}
-      size={size}
-      type="button"
-      {...props}
-    />
-  );
-});
+}: ConfirmationActionProps) => (
+  <Button
+    className={cn("gap-1.5", className)}
+    size={size}
+    type="button"
+    {...props}
+  />
+);
+
+export const ConfirmationAction = withRef("ConfirmationAction", ConfirmationAction19);
 
 // ---------------------------------------------------------------------------
 // ConfirmationShortcut — keyboard shortcut label inside a button
@@ -223,11 +227,11 @@ export const ConfirmationAction = withRef("ConfirmationAction", function Confirm
 
 export type ConfirmationShortcutProps = ComponentProps<typeof Kbd>;
 
-export const ConfirmationShortcut = withRef("ConfirmationShortcut", function ConfirmationShortcut({
+const ConfirmationShortcut19 = ({
   className,
   ...props
-}: ConfirmationShortcutProps) {
-  return (
-    <Kbd className={cn("ml-0.5", className)} {...props} />
-  );
-});
+}: ConfirmationShortcutProps) => (
+  <Kbd className={cn("ml-0.5", className)} {...props} />
+);
+
+export const ConfirmationShortcut = withRef("ConfirmationShortcut", ConfirmationShortcut19);

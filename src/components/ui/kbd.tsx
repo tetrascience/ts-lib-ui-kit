@@ -1,7 +1,7 @@
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-const Kbd = withRef("Kbd", function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
+function Kbd19({ className, ...props }: React.ComponentProps<"kbd">) {
   return (
     <kbd
       data-slot="kbd"
@@ -12,9 +12,11 @@ const Kbd = withRef("Kbd", function Kbd({ className, ...props }: React.Component
       {...props}
     />
   )
-})
+}
 
-const KbdGroup = withRef("KbdGroup", function KbdGroup({ className, ...props }: React.ComponentProps<"div">) {
+const Kbd = withRef("Kbd", Kbd19)
+
+function KbdGroup19({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <kbd
       data-slot="kbd-group"
@@ -22,6 +24,8 @@ const KbdGroup = withRef("KbdGroup", function KbdGroup({ className, ...props }: 
       {...props}
     />
   )
-})
+}
+
+const KbdGroup = withRef("KbdGroup", KbdGroup19)
 
 export { Kbd, KbdGroup }

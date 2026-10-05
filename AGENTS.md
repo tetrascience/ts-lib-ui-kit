@@ -191,16 +191,39 @@ A plain function component therefore drops a consumer's `ref`, and Radix
 the ref they need for positioning, focus and outside-click. React logs
 "Function components cannot be given refs".
 
-Everything React 18 needs lives in [`src/lib/react18-compat.ts`](./src/lib/react18-compat.ts),
-so dropping React 18 later is a change to that one file:
+React 18 support is temporary: it will be deprecated in favour of React 19
+exports, then removed. So it stays out of the components themselves, and
+everything it needs lives in [`src/lib/react18-compat.ts`](./src/lib/react18-compat.ts):
 
-- **`withRef("Name", function Name(props) {…})`** wraps every component whose props
-  accept `ref`. The body stays React 19-style, with `ref` arriving in props. Pass a
-  **named function expression** (`rules-of-hooks` needs the name) and the name as a
-  **string literal** (the build mangles function names). The return type is the
-  render function's own type, so public props, generics and docgen are unchanged.
-  Wrap a memoised component as `memo(withRef(…))`. Never call `React.forwardRef`
-  directly.
+- **Declare the component for React 19 as `X19`, and export it with one added
+  line.** The `X19` declaration is exactly what the component would be on
+  React 19 alone, with `ref` arriving in props and nothing React 18-specific:
+
+  ```tsx
+  function Button19({ className, ...props }: ButtonProps) {
+    return <button className={cn(buttonVariants(), className)} {...props} />
+  }
+
+  const Button = withRef("Button", Button19)
+  ```
+
+  Pass the name as a **string literal**, because the build mangles function
+  names. `withRef` also sets it as the `X19` component's `displayName`. Its return
+  type is `X19`'s own type, so public props and generics are unchanged. For a
+  memoised component, keep `memo` on the React 19 one and re-memoise the export:
+  `const X = memo(withRef("X", X19.type))`. Never call `React.forwardRef`
+  directly; `TetraScienceIcon` and `TetraMoleculeIcon` predate this and are
+  allowlisted.
+- **JSDoc stays on `X19`, and is copied onto the export line.** Storybook's
+  react-docgen reads the description from the `X19` declaration, and `withRef`
+  exposes that docgen info on the export, so prop tables and descriptions are
+  unchanged. Editors read hover docs only from the exported `const`, so a
+  documented component carries the JSDoc in both places until React 18 is dropped.
+- **Deprecating and dropping React 18.** To deprecate: export the `X19`
+  components under their plain names from a React 19 entry point, and mark the
+  `withRef` exports deprecated. To drop: delete each `withRef` line and its
+  copied JSDoc, rename `X19` back to `X`, delete `src/lib/react18-compat.ts`, and
+  swap `{...inertProp(v)}` back to `inert={v}`.
 - **`{...inertProp(value)}`** instead of `inert={value}`: React 18 drops a boolean
   `inert`, leaving "inert" content focusable.
 - A component that spreads DOM props types them as `ComponentProps<"tag">`, not
@@ -218,7 +241,9 @@ a step of CI's build job; its unit test only runs the rules against fixtures)
 uses the type checker to fail on an unwrapped component
 whose props accept `ref`, a component whose props carry DOM attributes but no
 `ref`, a direct `forwardRef`, a mismatched display name or a boolean `inert`.
-The only components allowed DOM props without a `ref` are listed, with the reason,
+The audit also requires each `withRef` to export `X19` by that name, so the
+React 19 components stay intact and easy to find. The only components allowed
+DOM props without a `ref` are listed, with the reason,
 in its `REF_EXCEPTIONS`; that list and the "Refs" section of README.md (every
 component without a ref, grouped by why) must change together, and a stale entry
 fails the audit. [`src/__tests__/react18-ref-forwarding.test.tsx`](./src/__tests__/react18-ref-forwarding.test.tsx)

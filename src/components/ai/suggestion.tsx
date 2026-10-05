@@ -8,26 +8,26 @@ import { cn } from "@/lib/utils";
 
 export type SuggestionsProps = ComponentProps<"div">;
 
-export const Suggestions = withRef("Suggestions", function Suggestions({
+const Suggestions19 = ({
   className,
   children,
   ...props
-}: SuggestionsProps) {
-  return (
-    <div className="w-full overflow-x-auto py-1" {...props}>
-      <div className={cn("flex w-max flex-nowrap items-center gap-2 px-4", className)}>
-        {children}
-      </div>
+}: SuggestionsProps) => (
+  <div className="w-full overflow-x-auto py-1" {...props}>
+    <div className={cn("flex w-max flex-nowrap items-center gap-2 px-4", className)}>
+      {children}
     </div>
-  );
-});
+  </div>
+);
+
+export const Suggestions = withRef("Suggestions", Suggestions19);
 
 export type SuggestionProps = Omit<ComponentProps<typeof Button>, "onClick"> & {
   suggestion: string;
   onClick?: (suggestion: string) => void;
 };
 
-export const Suggestion = withRef("Suggestion", function Suggestion({
+const Suggestion19 = ({
   suggestion,
   onClick,
   className,
@@ -35,7 +35,7 @@ export const Suggestion = withRef("Suggestion", function Suggestion({
   size = "sm",
   children,
   ...props
-}: SuggestionProps) {
+}: SuggestionProps) => {
   const handleClick = useCallback(() => {
     onClick?.(suggestion);
   }, [onClick, suggestion]);
@@ -52,4 +52,6 @@ export const Suggestion = withRef("Suggestion", function Suggestion({
       {children || suggestion}
     </Button>
   );
-});
+};
+
+export const Suggestion = withRef("Suggestion", Suggestion19);

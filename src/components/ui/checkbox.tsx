@@ -24,7 +24,7 @@ const checkboxVariants = cva(
   }
 )
 
-const Checkbox = withRef("Checkbox", function Checkbox({
+function Checkbox19({
   className,
   size,
   ...props
@@ -45,6 +45,8 @@ const Checkbox = withRef("Checkbox", function Checkbox({
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )
-})
+}
+
+const Checkbox = withRef("Checkbox", Checkbox19)
 
 export { Checkbox, checkboxVariants }

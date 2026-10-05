@@ -11,13 +11,15 @@ function AlertDialog({
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />
 }
 
-const AlertDialogTrigger = withRef("AlertDialogTrigger", function AlertDialogTrigger({
+function AlertDialogTrigger19({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Trigger>) {
   return (
     <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" {...props} />
   )
-})
+}
+
+const AlertDialogTrigger = withRef("AlertDialogTrigger", AlertDialogTrigger19)
 
 function AlertDialogPortal({
   ...props
@@ -27,7 +29,7 @@ function AlertDialogPortal({
   )
 }
 
-const AlertDialogOverlay = withRef("AlertDialogOverlay", function AlertDialogOverlay({
+function AlertDialogOverlay19({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) {
@@ -41,9 +43,11 @@ const AlertDialogOverlay = withRef("AlertDialogOverlay", function AlertDialogOve
       {...props}
     />
   )
-})
+}
 
-const AlertDialogContent = withRef("AlertDialogContent", function AlertDialogContent({
+const AlertDialogOverlay = withRef("AlertDialogOverlay", AlertDialogOverlay19)
+
+function AlertDialogContent19({
   className,
   size = "default",
   ...props
@@ -64,9 +68,11 @@ const AlertDialogContent = withRef("AlertDialogContent", function AlertDialogCon
       />
     </AlertDialogPortal>
   )
-})
+}
 
-const AlertDialogHeader = withRef("AlertDialogHeader", function AlertDialogHeader({
+const AlertDialogContent = withRef("AlertDialogContent", AlertDialogContent19)
+
+function AlertDialogHeader19({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -80,9 +86,11 @@ const AlertDialogHeader = withRef("AlertDialogHeader", function AlertDialogHeade
       {...props}
     />
   )
-})
+}
 
-const AlertDialogFooter = withRef("AlertDialogFooter", function AlertDialogFooter({
+const AlertDialogHeader = withRef("AlertDialogHeader", AlertDialogHeader19)
+
+function AlertDialogFooter19({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -96,9 +104,11 @@ const AlertDialogFooter = withRef("AlertDialogFooter", function AlertDialogFoote
       {...props}
     />
   )
-})
+}
 
-const AlertDialogMedia = withRef("AlertDialogMedia", function AlertDialogMedia({
+const AlertDialogFooter = withRef("AlertDialogFooter", AlertDialogFooter19)
+
+function AlertDialogMedia19({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -112,9 +122,11 @@ const AlertDialogMedia = withRef("AlertDialogMedia", function AlertDialogMedia({
       {...props}
     />
   )
-})
+}
 
-const AlertDialogTitle = withRef("AlertDialogTitle", function AlertDialogTitle({
+const AlertDialogMedia = withRef("AlertDialogMedia", AlertDialogMedia19)
+
+function AlertDialogTitle19({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Title>) {
@@ -128,9 +140,11 @@ const AlertDialogTitle = withRef("AlertDialogTitle", function AlertDialogTitle({
       {...props}
     />
   )
-})
+}
 
-const AlertDialogDescription = withRef("AlertDialogDescription", function AlertDialogDescription({
+const AlertDialogTitle = withRef("AlertDialogTitle", AlertDialogTitle19)
+
+function AlertDialogDescription19({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Description>) {
@@ -144,9 +158,11 @@ const AlertDialogDescription = withRef("AlertDialogDescription", function AlertD
       {...props}
     />
   )
-})
+}
 
-const AlertDialogAction = withRef("AlertDialogAction", function AlertDialogAction({
+const AlertDialogDescription = withRef("AlertDialogDescription", AlertDialogDescription19)
+
+function AlertDialogAction19({
   className,
   variant = "default",
   size = "default",
@@ -162,9 +178,11 @@ const AlertDialogAction = withRef("AlertDialogAction", function AlertDialogActio
       />
     </Button>
   )
-})
+}
 
-const AlertDialogCancel = withRef("AlertDialogCancel", function AlertDialogCancel({
+const AlertDialogAction = withRef("AlertDialogAction", AlertDialogAction19)
+
+function AlertDialogCancel19({
   className,
   variant = "outline",
   size = "default",
@@ -180,7 +198,9 @@ const AlertDialogCancel = withRef("AlertDialogCancel", function AlertDialogCance
       />
     </Button>
   )
-})
+}
+
+const AlertDialogCancel = withRef("AlertDialogCancel", AlertDialogCancel19)
 
 export {
   AlertDialog,

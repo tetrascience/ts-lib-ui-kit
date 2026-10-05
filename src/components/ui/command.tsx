@@ -19,7 +19,7 @@ import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
-const Command = withRef("Command", function Command({
+function Command19({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive>) {
@@ -33,7 +33,9 @@ const Command = withRef("Command", function Command({
       {...props}
     />
   )
-})
+}
+
+const Command = withRef("Command", Command19)
 
 function CommandDialog({
   title = "Command Palette",
@@ -67,7 +69,7 @@ function CommandDialog({
   )
 }
 
-const CommandInput = withRef("CommandInput", function CommandInput({
+function CommandInput19({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
@@ -88,9 +90,11 @@ const CommandInput = withRef("CommandInput", function CommandInput({
       </InputGroup>
     </div>
   )
-})
+}
 
-const CommandList = withRef("CommandList", function CommandList({
+const CommandInput = withRef("CommandInput", CommandInput19)
+
+function CommandList19({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.List>) {
@@ -104,9 +108,11 @@ const CommandList = withRef("CommandList", function CommandList({
       {...props}
     />
   )
-})
+}
 
-const CommandEmpty = withRef("CommandEmpty", function CommandEmpty({
+const CommandList = withRef("CommandList", CommandList19)
+
+function CommandEmpty19({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -129,9 +135,11 @@ const CommandEmpty = withRef("CommandEmpty", function CommandEmpty({
       {...props}
     />
   )
-})
+}
 
-const CommandGroup = withRef("CommandGroup", function CommandGroup({
+const CommandEmpty = withRef("CommandEmpty", CommandEmpty19)
+
+function CommandGroup19({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Group>) {
@@ -145,9 +153,11 @@ const CommandGroup = withRef("CommandGroup", function CommandGroup({
       {...props}
     />
   )
-})
+}
 
-const CommandSeparator = withRef("CommandSeparator", function CommandSeparator({
+const CommandGroup = withRef("CommandGroup", CommandGroup19)
+
+function CommandSeparator19({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Separator>) {
@@ -159,9 +169,11 @@ const CommandSeparator = withRef("CommandSeparator", function CommandSeparator({
       {...props}
     />
   )
-})
+}
 
-const CommandItem = withRef("CommandItem", function CommandItem({
+const CommandSeparator = withRef("CommandSeparator", CommandSeparator19)
+
+function CommandItem19({
   className,
   children,
   ...props
@@ -179,9 +191,11 @@ const CommandItem = withRef("CommandItem", function CommandItem({
       <CheckIcon className="ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" />
     </CommandPrimitive.Item>
   )
-})
+}
 
-const CommandShortcut = withRef("CommandShortcut", function CommandShortcut({
+const CommandItem = withRef("CommandItem", CommandItem19)
+
+function CommandShortcut19({
   className,
   ...props
 }: React.ComponentProps<"span">) {
@@ -195,7 +209,9 @@ const CommandShortcut = withRef("CommandShortcut", function CommandShortcut({
       {...props}
     />
   )
-})
+}
+
+const CommandShortcut = withRef("CommandShortcut", CommandShortcut19)
 
 export {
   Command,

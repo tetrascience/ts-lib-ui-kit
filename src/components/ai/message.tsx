@@ -33,68 +33,68 @@ export type MessageProps = ComponentProps<"div"> & {
   from: UIMessage["role"];
 };
 
-export const Message = withRef("Message", function Message({ className, from, ...props }: MessageProps) {
-  return (
-    <div
-      className={cn(
-        "group flex w-full max-w-[95%] flex-col gap-2",
-        from === "user" ? "is-user ml-auto justify-end" : "is-assistant",
-        className
-      )}
-      {...props}
-    />
-  );
-});
+const Message19 = ({ className, from, ...props }: MessageProps) => (
+  <div
+    className={cn(
+      "group flex w-full max-w-[95%] flex-col gap-2",
+      from === "user" ? "is-user ml-auto justify-end" : "is-assistant",
+      className
+    )}
+    {...props}
+  />
+);
+
+export const Message = withRef("Message", Message19);
 
 export type MessageContentProps = ComponentProps<"div">;
 
-export const MessageContent = withRef("MessageContent", function MessageContent({
+const MessageContent19 = ({
   children,
   className,
   ...props
-}: MessageContentProps) {
-  return (
-    <div
-      className={cn(
-        "is-user:dark flex w-fit min-w-0 max-w-full flex-col gap-2 overflow-hidden text-sm",
-        "group-[.is-user]:ml-auto group-[.is-user]:rounded-lg group-[.is-user]:bg-secondary group-[.is-user]:px-4 group-[.is-user]:py-3 group-[.is-user]:text-foreground",
-        "group-[.is-assistant]:text-foreground",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-});
+}: MessageContentProps) => (
+  <div
+    className={cn(
+      "is-user:dark flex w-fit min-w-0 max-w-full flex-col gap-2 overflow-hidden text-sm",
+      "group-[.is-user]:ml-auto group-[.is-user]:rounded-lg group-[.is-user]:bg-secondary group-[.is-user]:px-4 group-[.is-user]:py-3 group-[.is-user]:text-foreground",
+      "group-[.is-assistant]:text-foreground",
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </div>
+);
+
+export const MessageContent = withRef("MessageContent", MessageContent19);
 
 export type MessageActionsProps = ComponentProps<"div">;
 
-export const MessageActions = withRef("MessageActions", function MessageActions({
+const MessageActions19 = ({
   className,
   children,
   ...props
-}: MessageActionsProps) {
-  return (
-    <div className={cn("flex items-center gap-1", className)} {...props}>
-      {children}
-    </div>
-  );
-});
+}: MessageActionsProps) => (
+  <div className={cn("flex items-center gap-1", className)} {...props}>
+    {children}
+  </div>
+);
+
+export const MessageActions = withRef("MessageActions", MessageActions19);
 
 export type MessageActionProps = ComponentProps<typeof Button> & {
   tooltip?: string;
   label?: string;
 };
 
-export const MessageAction = withRef("MessageAction", function MessageAction({
+const MessageAction19 = ({
   tooltip,
   children,
   label,
   variant = "ghost",
   size = "icon-sm",
   ...props
-}: MessageActionProps) {
+}: MessageActionProps) => {
   const button = (
     <Button size={size} type="button" variant={variant} {...props}>
       {children}
@@ -116,7 +116,9 @@ export const MessageAction = withRef("MessageAction", function MessageAction({
   }
 
   return button;
-});
+};
+
+export const MessageAction = withRef("MessageAction", MessageAction19);
 
 interface MessageBranchContextType {
   currentBranch: number;
@@ -148,12 +150,12 @@ export type MessageBranchProps = ComponentProps<"div"> & {
   onBranchChange?: (branchIndex: number) => void;
 };
 
-export const MessageBranch = withRef("MessageBranch", function MessageBranch({
+const MessageBranch19 = ({
   defaultBranch = 0,
   onBranchChange,
   className,
   ...props
-}: MessageBranchProps) {
+}: MessageBranchProps) => {
   const [currentBranch, setCurrentBranch] = useState(defaultBranch);
   const [branches, setBranches] = useState<ReactElement[]>([]);
 
@@ -197,14 +199,16 @@ export const MessageBranch = withRef("MessageBranch", function MessageBranch({
       />
     </MessageBranchContext.Provider>
   );
-});
+};
+
+export const MessageBranch = withRef("MessageBranch", MessageBranch19);
 
 export type MessageBranchContentProps = ComponentProps<"div">;
 
-export const MessageBranchContent = withRef("MessageBranchContent", function MessageBranchContent({
+const MessageBranchContent19 = ({
   children,
   ...props
-}: MessageBranchContentProps) {
+}: MessageBranchContentProps) => {
   const { currentBranch, setBranches, branches } = useMessageBranch();
   const childrenArray = useMemo(
     () => (Array.isArray(children) ? children : [children]),
@@ -230,14 +234,16 @@ export const MessageBranchContent = withRef("MessageBranchContent", function Mes
       {branch}
     </div>
   ));
-});
+};
+
+export const MessageBranchContent = withRef("MessageBranchContent", MessageBranchContent19);
 
 export type MessageBranchSelectorProps = ComponentProps<typeof ButtonGroup>;
 
-export const MessageBranchSelector = withRef("MessageBranchSelector", function MessageBranchSelector({
+const MessageBranchSelector19 = ({
   className,
   ...props
-}: MessageBranchSelectorProps) {
+}: MessageBranchSelectorProps) => {
   const { totalBranches } = useMessageBranch();
 
   // Don't render if there's only one branch
@@ -255,14 +261,16 @@ export const MessageBranchSelector = withRef("MessageBranchSelector", function M
       {...props}
     />
   );
-});
+};
+
+export const MessageBranchSelector = withRef("MessageBranchSelector", MessageBranchSelector19);
 
 export type MessageBranchPreviousProps = ComponentProps<typeof Button>;
 
-export const MessageBranchPrevious = withRef("MessageBranchPrevious", function MessageBranchPrevious({
+const MessageBranchPrevious19 = ({
   children,
   ...props
-}: MessageBranchPreviousProps) {
+}: MessageBranchPreviousProps) => {
   const { goToPrevious, totalBranches } = useMessageBranch();
 
   return (
@@ -278,14 +286,16 @@ export const MessageBranchPrevious = withRef("MessageBranchPrevious", function M
       {children ?? <ChevronLeftIcon size={14} />}
     </Button>
   );
-});
+};
+
+export const MessageBranchPrevious = withRef("MessageBranchPrevious", MessageBranchPrevious19);
 
 export type MessageBranchNextProps = ComponentProps<typeof Button>;
 
-export const MessageBranchNext = withRef("MessageBranchNext", function MessageBranchNext({
+const MessageBranchNext19 = ({
   children,
   ...props
-}: MessageBranchNextProps) {
+}: MessageBranchNextProps) => {
   const { goToNext, totalBranches } = useMessageBranch();
 
   return (
@@ -301,17 +311,19 @@ export const MessageBranchNext = withRef("MessageBranchNext", function MessageBr
       {children ?? <ChevronRightIcon size={14} />}
     </Button>
   );
-});
+};
+
+export const MessageBranchNext = withRef("MessageBranchNext", MessageBranchNext19);
 
 // Typed with span attributes for compatibility; the root is a ButtonGroupText div, so `ref` is a div ref.
 export type MessageBranchPageProps = Omit<ComponentProps<"span">, "ref"> & {
   ref?: Ref<HTMLDivElement>;
 };
 
-export const MessageBranchPage = withRef("MessageBranchPage", function MessageBranchPage({
+const MessageBranchPage19 = ({
   className,
   ...props
-}: MessageBranchPageProps) {
+}: MessageBranchPageProps) => {
   const { currentBranch, totalBranches } = useMessageBranch();
 
   return (
@@ -325,7 +337,9 @@ export const MessageBranchPage = withRef("MessageBranchPage", function MessageBr
       {`${currentBranch + 1} of ${totalBranches}`}
     </ButtonGroupText>
   );
-});
+};
+
+export const MessageBranchPage = withRef("MessageBranchPage", MessageBranchPage19);
 
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
@@ -355,20 +369,20 @@ MessageResponse.displayName = "MessageResponse";
 
 export type MessageToolbarProps = ComponentProps<"div">;
 
-export const MessageToolbar = withRef("MessageToolbar", function MessageToolbar({
+const MessageToolbar19 = ({
   className,
   children,
   ...props
-}: MessageToolbarProps) {
-  return (
-    <div
-      className={cn(
-        "mt-4 flex w-full items-center justify-between gap-4",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-});
+}: MessageToolbarProps) => (
+  <div
+    className={cn(
+      "mt-4 flex w-full items-center justify-between gap-4",
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </div>
+);
+
+export const MessageToolbar = withRef("MessageToolbar", MessageToolbar19);

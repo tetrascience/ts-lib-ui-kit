@@ -476,7 +476,7 @@ function PlateMapEditorManifestCard({
  * />
  * ```
  */
-export const PlateMapEditor = withRef("PlateMapEditor", function PlateMapEditor<T extends WellRecord = WellRecord>({
+function PlateMapEditor19<T extends WellRecord = WellRecord>({
   format,
   rows,
   columns,
@@ -899,6 +899,79 @@ export const PlateMapEditor = withRef("PlateMapEditor", function PlateMapEditor<
       {footer ? <div className="flex flex-wrap justify-end gap-2 pt-2">{footer}</div> : null}
     </div>
   );
-});
+}
+
+/**
+ * Turnkey plate-map editing surface: a metadata form, an interactive plate
+ * grid, and a sample manifest, wired together with the staged-edit controller
+ * in {@link usePlateMapEditorState}.
+ *
+ * ## Choosing a level
+ *
+ * | You need | Use |
+ * | --- | --- |
+ * | The standard surface, tuned by props | `PlateMapEditor` (this) |
+ * | A layout these props can't express | {@link usePlateMapEditorState} + `PlateMapForm` / `PlateMapGrid` / `PlateMapManifest` |
+ * | One region only, wired yourself | The primitives directly |
+ *
+ * Dropping to the hook keeps the apply/clear semantics, plate scoping, and
+ * barcode stamping — you only take over layout.
+ *
+ * ## Customization map
+ *
+ * - **Layout** — `formPlacement` (`start`/`end`/`top`/`bottom`), `stackAt`,
+ *   `formWidth`, `hideForm`, `hideManifest`.
+ * - **Slots** — `title`, `badges`, `banner` (whole editor), `plateBanner`
+ *   (plate card only), `plateToolbar` (above grid), `plateFooter` (the plate
+ *   card's footer), `footer` (editor-wide action row), `legend` +
+ *   `legendPlacement`, `formExtras`, `formSlot` (replaces the form),
+ *   `manifestSlot` (replaces the manifest body).
+ * - **Edit semantics** — `mergeOnApply`, `emptyEntry`, `isPopulated`,
+ *   `cycleFieldOnWellDoubleClick`, and `staged` / `onStagedChange` to make the
+ *   staged record controlled.
+ * - **Labels** — one `labels` object covers every string the editor and its
+ *   manifest render. `plateTitle` / `manifestTitle` and the import/export menu
+ *   labels stay separate (they are `ReactNode` slots, not plain text).
+ * - **Styling** — `className` / `style` on the root plus one `classNames` map
+ *   for the regions. Each card also carries
+ *   `data-plate-map-region="form|plate|manifest"` for CSS targeting.
+ * - **Manifest** — one `manifest` options object; `hideManifest`,
+ *   `manifestTitle` and `manifestSlot` stay top-level.
+ *
+ * ## Responsiveness
+ *
+ * The editor responds to **its container's** width, not the viewport's, so it
+ * lays out correctly inside a narrow panel, split pane, or drawer on a wide
+ * screen. `stackAt` names a container width (`sm` 640 / `md` 768 / `lg` 1024 /
+ * `xl` 1280 / `never`); below it the form and grid stack full-width. A plate
+ * too dense to fit scrolls inside its own container rather than widening the
+ * page.
+ *
+ * @example Default surface
+ * ```tsx
+ * <PlateMapEditor
+ *   format="96"
+ *   values={values}
+ *   onChange={setValues}
+ *   selection={selection}
+ *   onSelectionChange={setSelection}
+ *   fields={FIELDS}
+ *   tableColumns={COLUMNS}
+ * />
+ * ```
+ *
+ * @example Grid-only, form on the right, localised
+ * ```tsx
+ * <PlateMapEditor
+ *   {...base}
+ *   formPlacement="end"
+ *   stackAt="lg"
+ *   formWidth="22rem"
+ *   hideManifest
+ *   labels={{ apply: "Appliquer", clearWells: "Vider les puits" }}
+ * />
+ * ```
+ */
+export const PlateMapEditor = withRef("PlateMapEditor", PlateMapEditor19);
 
 export { Badge as PlateBadge };

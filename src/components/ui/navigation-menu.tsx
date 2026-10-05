@@ -7,7 +7,7 @@ import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
-const NavigationMenu = withRef("NavigationMenu", function NavigationMenu({
+function NavigationMenu19({
   className,
   children,
   viewport = true,
@@ -29,9 +29,11 @@ const NavigationMenu = withRef("NavigationMenu", function NavigationMenu({
       {viewport && <NavigationMenuViewport />}
     </NavigationMenuPrimitive.Root>
   )
-})
+}
 
-const NavigationMenuList = withRef("NavigationMenuList", function NavigationMenuList({
+const NavigationMenu = withRef("NavigationMenu", NavigationMenu19)
+
+function NavigationMenuList19({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.List>) {
@@ -45,9 +47,11 @@ const NavigationMenuList = withRef("NavigationMenuList", function NavigationMenu
       {...props}
     />
   )
-})
+}
 
-const NavigationMenuItem = withRef("NavigationMenuItem", function NavigationMenuItem({
+const NavigationMenuList = withRef("NavigationMenuList", NavigationMenuList19)
+
+function NavigationMenuItem19({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Item>) {
@@ -58,13 +62,15 @@ const NavigationMenuItem = withRef("NavigationMenuItem", function NavigationMenu
       {...props}
     />
   )
-})
+}
+
+const NavigationMenuItem = withRef("NavigationMenuItem", NavigationMenuItem19)
 
 const navigationMenuTriggerStyle = cva(
   "group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg bg-background px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-accent focus:bg-accent focus-visible:shadow-focus focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-accent/50 data-popup-open:hover:bg-accent data-open:bg-accent/50 data-open:hover:bg-accent data-open:focus:bg-accent"
 )
 
-const NavigationMenuTrigger = withRef("NavigationMenuTrigger", function NavigationMenuTrigger({
+function NavigationMenuTrigger19({
   className,
   children,
   ...props
@@ -79,9 +85,11 @@ const NavigationMenuTrigger = withRef("NavigationMenuTrigger", function Navigati
       <ChevronDownIcon className="relative top-px ml-1 size-3 transition duration-300 group-data-popup-open/navigation-menu-trigger:rotate-180 group-data-open/navigation-menu-trigger:rotate-180" aria-hidden="true" />
     </NavigationMenuPrimitive.Trigger>
   )
-})
+}
 
-const NavigationMenuContent = withRef("NavigationMenuContent", function NavigationMenuContent({
+const NavigationMenuTrigger = withRef("NavigationMenuTrigger", NavigationMenuTrigger19)
+
+function NavigationMenuContent19({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Content>) {
@@ -95,9 +103,11 @@ const NavigationMenuContent = withRef("NavigationMenuContent", function Navigati
       {...props}
     />
   )
-})
+}
 
-const NavigationMenuViewport = withRef("NavigationMenuViewport", function NavigationMenuViewport({
+const NavigationMenuContent = withRef("NavigationMenuContent", NavigationMenuContent19)
+
+function NavigationMenuViewport19({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Viewport>) {
@@ -117,9 +127,11 @@ const NavigationMenuViewport = withRef("NavigationMenuViewport", function Naviga
       />
     </div>
   )
-})
+}
 
-const NavigationMenuLink = withRef("NavigationMenuLink", function NavigationMenuLink({
+const NavigationMenuViewport = withRef("NavigationMenuViewport", NavigationMenuViewport19)
+
+function NavigationMenuLink19({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Link>) {
@@ -133,9 +145,11 @@ const NavigationMenuLink = withRef("NavigationMenuLink", function NavigationMenu
       {...props}
     />
   )
-})
+}
 
-const NavigationMenuIndicator = withRef("NavigationMenuIndicator", function NavigationMenuIndicator({
+const NavigationMenuLink = withRef("NavigationMenuLink", NavigationMenuLink19)
+
+function NavigationMenuIndicator19({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Indicator>) {
@@ -151,7 +165,9 @@ const NavigationMenuIndicator = withRef("NavigationMenuIndicator", function Navi
       <div className="relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm bg-border shadow-elevation-4" />
     </NavigationMenuPrimitive.Indicator>
   )
-})
+}
+
+const NavigationMenuIndicator = withRef("NavigationMenuIndicator", NavigationMenuIndicator19)
 
 export {
   NavigationMenu,

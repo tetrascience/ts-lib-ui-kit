@@ -187,14 +187,14 @@ export interface TDPLinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchor
  * </TDPLink>
  * ```
  */
-export const TDPLink = withRef('TDPLink', function TDPLink({
+const TDPLink19: React.FC<TDPLinkProps> = ({
   path,
   navigationOptions = { newTab: true },
   children,
   onClick,
   className,
   ...rest
-}: TDPLinkProps) {
+}) => {
   const { getTdpUrl, navigateToTdp } = useTdpNavigationContext();
   const href = getTdpUrl(path);
 
@@ -222,4 +222,27 @@ export const TDPLink = withRef('TDPLink', function TDPLink({
       {children}
     </a>
   );
-});
+};
+
+/**
+ * A link component that navigates to TDP pages.
+ *
+ * Renders a standard `<a>` tag with the correct href for right-click
+ * "Open in new tab" support, accessibility, and SEO.
+ *
+ * Must be used inside a `<TdpNavigationProvider>`.
+ *
+ * @example
+ * ```tsx
+ * import { TDPLink, tdpPaths } from '@tetrascience-npm/tetrascience-react-ui';
+ *
+ * <TDPLink path={tdpPaths.fileDetails("abc-123")}>
+ *   View File Details
+ * </TDPLink>
+ *
+ * <TDPLink path="/search?q=test" navigationOptions={{ newTab: false }}>
+ *   Search in TDP (same tab)
+ * </TDPLink>
+ * ```
+ */
+export const TDPLink = withRef('TDPLink', TDPLink19);

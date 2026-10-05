@@ -66,7 +66,7 @@ function makeResponsive(svg: string): string {
  * <MoleculeStructure smiles="CC(=O)Oc1ccccc1C(=O)O" className="size-40" />
  * ```
  */
-export const MoleculeStructure = withRef("MoleculeStructure", function MoleculeStructure({
+function MoleculeStructure19({
   smiles,
   label,
   dark,
@@ -157,4 +157,20 @@ export const MoleculeStructure = withRef("MoleculeStructure", function MoleculeS
       )}
     </div>
   )
-})
+}
+
+/**
+ * Core cheminformatics primitive: render a 2D chemical structure from a SMILES
+ * string. RDKit's WASM module is loaded lazily on first mount (see
+ * {@link loadRDKit}), so pages that never render a molecule pay nothing for it.
+ *
+ * The output is a vector SVG that fills this component's box — size it with
+ * `className` (e.g. `className="size-32"`). Invalid SMILES render a fallback
+ * rather than throwing.
+ *
+ * @example
+ * ```tsx
+ * <MoleculeStructure smiles="CC(=O)Oc1ccccc1C(=O)O" className="size-40" />
+ * ```
+ */
+export const MoleculeStructure = withRef("MoleculeStructure", MoleculeStructure19)

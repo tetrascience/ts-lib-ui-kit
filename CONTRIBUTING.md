@@ -135,7 +135,7 @@ const myComponentVariants = cva("inline-flex items-center rounded-lg text-sm fon
   },
 });
 
-const MyComponent = withRef("MyComponent", function MyComponent({
+function MyComponent19({
   className,
   variant,
   size,
@@ -148,12 +148,15 @@ const MyComponent = withRef("MyComponent", function MyComponent({
   const Comp = asChild ? Slot.Root : "div";
 
   return <Comp data-slot="my-component" className={cn(myComponentVariants({ variant, size, className }))} {...props} />;
-});
+}
+
+// React 18 support: the only React 18-specific line. Remove it when React 18 is dropped.
+const MyComponent = withRef("MyComponent", MyComponent19);
 
 export { MyComponent, myComponentVariants };
 ```
 
-**Note:** Write the body React 19-style, with `ref` arriving as an ordinary prop, and wrap the component in `withRef` so refs also work for React 18 consumers. Do not call `React.forwardRef` directly. `yarn check:react18-compat` (run in CI's build job) fails on an unwrapped component whose props accept `ref`. See AGENTS.md, "React 18 support".
+**Note:** Declare the component for React 19 as `MyComponent19`, with `ref` arriving as an ordinary prop, and export it through `withRef` so refs also work for React 18 consumers. Leave the `MyComponent19` declaration free of React 18 concerns, and do not call `React.forwardRef` directly. `yarn check:react18-compat` (run in CI's build job) fails on an unwrapped component whose props accept `ref`. See AGENTS.md, "React 18 support".
 
 ### Adding a New Component
 

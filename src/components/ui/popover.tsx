@@ -10,19 +10,23 @@ function Popover({
   return <PopoverPrimitive.Root data-slot="popover" {...props} />
 }
 
-const PopoverTrigger = withRef("PopoverTrigger", function PopoverTrigger({
+function PopoverTrigger19({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
-})
+}
 
-const PopoverAnchor = withRef("PopoverAnchor", function PopoverAnchor({
+const PopoverTrigger = withRef("PopoverTrigger", PopoverTrigger19)
+
+function PopoverAnchor19({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />
-})
+}
 
-const PopoverContent = withRef("PopoverContent", function PopoverContent({
+const PopoverAnchor = withRef("PopoverAnchor", PopoverAnchor19)
+
+function PopoverContent19({
   className,
   align = "center",
   sideOffset = 4,
@@ -42,6 +46,8 @@ const PopoverContent = withRef("PopoverContent", function PopoverContent({
       />
     </PopoverPrimitive.Portal>
   )
-})
+}
+
+const PopoverContent = withRef("PopoverContent", PopoverContent19)
 
 export { Popover, PopoverTrigger, PopoverAnchor, PopoverContent }

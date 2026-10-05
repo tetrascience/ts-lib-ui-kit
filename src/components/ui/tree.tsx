@@ -402,7 +402,7 @@ type TreeProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
   guides?: TreeGuides;
 };
 
-const Tree = withRef("Tree", function Tree({
+function Tree19({
   className,
   children,
   expandedIds: expandedIdsProp,
@@ -635,7 +635,9 @@ const Tree = withRef("Tree", function Tree({
       </TreeTypeaheadContext.Provider>
     </TreeContext.Provider>
   );
-});
+}
+
+const Tree = withRef("Tree", Tree19);
 
 function TreeItemsContainer({ children }: { children: React.ReactNode }) {
   return useIndexedTreeChildren(children);
@@ -655,7 +657,7 @@ type TreeItemProps = React.ComponentProps<"div"> & {
   disabled?: boolean;
 };
 
-const TreeItem = withRef("TreeItem", function TreeItem({
+function TreeItem19({
   className,
   children,
   id,
@@ -787,7 +789,9 @@ const TreeItem = withRef("TreeItem", function TreeItem({
       </div>
     </TreeItemContext.Provider>
   );
-});
+}
+
+const TreeItem = withRef("TreeItem", TreeItem19);
 
 /* -------------------------------------------------------------------------------------------------
  * TreeItemLabel
@@ -827,7 +831,7 @@ type TreeItemLabelProps = React.ComponentProps<"div"> &
     trailing?: React.ReactNode;
   };
 
-const TreeItemLabel = withRef("TreeItemLabel", function TreeItemLabel({ className, children, size, style, icon, trailing, ...props }: TreeItemLabelProps) {
+function TreeItemLabel19({ className, children, size, style, icon, trailing, ...props }: TreeItemLabelProps) {
   const { labelId, level, expanded, hasChildren, selected, disabled, trunkLevels, toggle } =
     useTreeItemContext("TreeItemLabel");
   const { guides } = useTreeContext("TreeItemLabel");
@@ -982,7 +986,9 @@ const TreeItemLabel = withRef("TreeItemLabel", function TreeItemLabel({ classNam
       ) : null}
     </div>
   );
-});
+}
+
+const TreeItemLabel = withRef("TreeItemLabel", TreeItemLabel19);
 
 /**
  * The label text, with the live typeahead prefix highlighted when it matches. Only a plain-string
@@ -1025,7 +1031,7 @@ function TreeItemText({ match, children }: { match: TypeaheadMatch | null; child
  * TreeItemGroup
  * -----------------------------------------------------------------------------------------------*/
 
-const TreeItemGroup = withRef("TreeItemGroup", function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"div">) {
+function TreeItemGroup19({ className, children, ...props }: React.ComponentProps<"div">) {
   const { expanded, level } = useTreeItemContext("TreeItemGroup");
 
   // Not rendered while collapsed: keeps collapsed subtrees out of the accessibility tree entirely,
@@ -1039,7 +1045,9 @@ const TreeItemGroup = withRef("TreeItemGroup", function TreeItemGroup({ classNam
       </div>
     </TreeLevelContext.Provider>
   );
-});
+}
+
+const TreeItemGroup = withRef("TreeItemGroup", TreeItemGroup19);
 
 export {
   Tree,

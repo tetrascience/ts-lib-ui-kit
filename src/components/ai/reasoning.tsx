@@ -53,8 +53,8 @@ export type ReasoningProps = ComponentProps<typeof Collapsible> & {
 const AUTO_CLOSE_DELAY = 1000;
 const MS_IN_S = 1000;
 
-export const Reasoning = memo(
-  withRef("Reasoning", function Reasoning({
+const Reasoning19 = memo(
+  ({
     className,
     isStreaming = false,
     open,
@@ -63,7 +63,7 @@ export const Reasoning = memo(
     duration: durationProp,
     children,
     ...props
-  }: ReasoningProps) {
+  }: ReasoningProps) => {
     const resolvedDefaultOpen = defaultOpen ?? isStreaming;
     // Track if defaultOpen was explicitly set to false (to prevent auto-open)
     const isExplicitlyClosed = defaultOpen === false;
@@ -143,8 +143,11 @@ export const Reasoning = memo(
         </Collapsible>
       </ReasoningContext.Provider>
     );
-  })
+  }
 );
+
+// memo stays on the React 19 component; the React 18 export re-memoises the forwarding wrapper.
+export const Reasoning = memo(withRef("Reasoning", Reasoning19.type));
 
 export type ReasoningTriggerProps = ComponentProps<
   typeof CollapsibleTrigger
@@ -162,13 +165,13 @@ const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
   return <p>Thought for {duration} seconds</p>;
 };
 
-export const ReasoningTrigger = memo(
-  withRef("ReasoningTrigger", function ReasoningTrigger({
+const ReasoningTrigger19 = memo(
+  ({
     className,
     children,
     getThinkingMessage = defaultGetThinkingMessage,
     ...props
-  }: ReasoningTriggerProps) {
+  }: ReasoningTriggerProps) => {
     const { isStreaming, isOpen, duration } = useReasoning();
 
     return (
@@ -194,8 +197,11 @@ export const ReasoningTrigger = memo(
         )}
       </CollapsibleTrigger>
     );
-  })
+  }
 );
+
+// memo stays on the React 19 component; the React 18 export re-memoises the forwarding wrapper.
+export const ReasoningTrigger = memo(withRef("ReasoningTrigger", ReasoningTrigger19.type));
 
 export type ReasoningContentProps = ComponentProps<
   typeof CollapsibleContent
@@ -203,8 +209,8 @@ export type ReasoningContentProps = ComponentProps<
   children: string;
 };
 
-export const ReasoningContent = memo(
-  withRef("ReasoningContent", function ReasoningContent({ className, children, ...props }: ReasoningContentProps) {
+const ReasoningContent19 = memo(
+  ({ className, children, ...props }: ReasoningContentProps) => {
     // Plugins load lazily (SW-2007): markdown streams in immediately and
     // code/math/mermaid rendering upgrades in place once the chunk arrives.
     const plugins = useStreamdownPlugins();
@@ -221,8 +227,11 @@ export const ReasoningContent = memo(
         <Streamdown plugins={plugins}>{children}</Streamdown>
       </CollapsibleContent>
     );
-  })
+  }
 );
+
+// memo stays on the React 19 component; the React 18 export re-memoises the forwarding wrapper.
+export const ReasoningContent = memo(withRef("ReasoningContent", ReasoningContent19.type));
 
 Reasoning.displayName = "Reasoning";
 ReasoningTrigger.displayName = "ReasoningTrigger";

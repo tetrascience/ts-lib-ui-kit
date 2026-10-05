@@ -143,11 +143,11 @@ export type ContextTriggerProps = ComponentProps<typeof Button> & {
   showPercentage?: boolean;
 };
 
-export const ContextTrigger = withRef("ContextTrigger", function ContextTrigger({
+const ContextTrigger19 = ({
   children,
   showPercentage = false,
   ...props
-}: ContextTriggerProps) {
+}: ContextTriggerProps) => {
   const { usedTokens, maxTokens } = useContextValue();
   const usedPercent = usedTokens / maxTokens;
   const status = getUsageStatus(usedPercent);
@@ -172,29 +172,31 @@ export const ContextTrigger = withRef("ContextTrigger", function ContextTrigger(
       )}
     </HoverCardTrigger>
   );
-});
+};
+
+export const ContextTrigger = withRef("ContextTrigger", ContextTrigger19);
 
 export type ContextContentProps = ComponentProps<typeof HoverCardContent>;
 
-export const ContextContent = withRef("ContextContent", function ContextContent({
+const ContextContent19 = ({
   className,
   ...props
-}: ContextContentProps) {
-  return (
-    <HoverCardContent
-      className={cn("min-w-60 divide-y overflow-hidden p-0", className)}
-      {...props}
-    />
-  );
-});
+}: ContextContentProps) => (
+  <HoverCardContent
+    className={cn("min-w-60 divide-y overflow-hidden p-0", className)}
+    {...props}
+  />
+);
+
+export const ContextContent = withRef("ContextContent", ContextContent19);
 
 export type ContextContentHeaderProps = ComponentProps<"div">;
 
-export const ContextContentHeader = withRef("ContextContentHeader", function ContextContentHeader({
+const ContextContentHeader19 = ({
   children,
   className,
   ...props
-}: ContextContentHeaderProps) {
+}: ContextContentHeaderProps) => {
   const { usedTokens, maxTokens } = useContextValue();
   const usedPercent = usedTokens / maxTokens;
   const status = getUsageStatus(usedPercent);
@@ -230,29 +232,31 @@ export const ContextContentHeader = withRef("ContextContentHeader", function Con
       )}
     </div>
   );
-});
+};
+
+export const ContextContentHeader = withRef("ContextContentHeader", ContextContentHeader19);
 
 export type ContextContentBodyProps = ComponentProps<"div">;
 
-export const ContextContentBody = withRef("ContextContentBody", function ContextContentBody({
+const ContextContentBody19 = ({
   children,
   className,
   ...props
-}: ContextContentBodyProps) {
-  return (
-    <div className={cn("w-full p-3", className)} {...props}>
-      {children}
-    </div>
-  );
-});
+}: ContextContentBodyProps) => (
+  <div className={cn("w-full p-3", className)} {...props}>
+    {children}
+  </div>
+);
+
+export const ContextContentBody = withRef("ContextContentBody", ContextContentBody19);
 
 export type ContextContentFooterProps = ComponentProps<"div">;
 
-export const ContextContentFooter = withRef("ContextContentFooter", function ContextContentFooter({
+const ContextContentFooter19 = ({
   children,
   className,
   ...props
-}: ContextContentFooterProps) {
+}: ContextContentFooterProps) => {
   const { cost } = useContextValue();
   const totalCost = cost?.total === undefined ? "—" : USD_FORMAT.format(cost.total);
 
@@ -272,7 +276,9 @@ export const ContextContentFooter = withRef("ContextContentFooter", function Con
       )}
     </div>
   );
-});
+};
+
+export const ContextContentFooter = withRef("ContextContentFooter", ContextContentFooter19);
 
 const TokensWithCost = ({
   tokens,
@@ -295,11 +301,11 @@ const TokensWithCost = ({
 
 export type ContextInputUsageProps = ComponentProps<"div">;
 
-export const ContextInputUsage = withRef("ContextInputUsage", function ContextInputUsage({
+const ContextInputUsage19 = ({
   className,
   children,
   ...props
-}: ContextInputUsageProps) {
+}: ContextInputUsageProps) => {
   const { usage, cost } = useContextValue();
   const inputTokens = usage?.inputTokens ?? 0;
 
@@ -322,15 +328,17 @@ export const ContextInputUsage = withRef("ContextInputUsage", function ContextIn
       <TokensWithCost costText={inputCostText} tokens={inputTokens} />
     </div>
   );
-});
+};
+
+export const ContextInputUsage = withRef("ContextInputUsage", ContextInputUsage19);
 
 export type ContextOutputUsageProps = ComponentProps<"div">;
 
-export const ContextOutputUsage = withRef("ContextOutputUsage", function ContextOutputUsage({
+const ContextOutputUsage19 = ({
   className,
   children,
   ...props
-}: ContextOutputUsageProps) {
+}: ContextOutputUsageProps) => {
   const { usage, cost } = useContextValue();
   const outputTokens = usage?.outputTokens ?? 0;
 
@@ -353,15 +361,17 @@ export const ContextOutputUsage = withRef("ContextOutputUsage", function Context
       <TokensWithCost costText={outputCostText} tokens={outputTokens} />
     </div>
   );
-});
+};
+
+export const ContextOutputUsage = withRef("ContextOutputUsage", ContextOutputUsage19);
 
 export type ContextReasoningUsageProps = ComponentProps<"div">;
 
-export const ContextReasoningUsage = withRef("ContextReasoningUsage", function ContextReasoningUsage({
+const ContextReasoningUsage19 = ({
   className,
   children,
   ...props
-}: ContextReasoningUsageProps) {
+}: ContextReasoningUsageProps) => {
   const { usage, cost } = useContextValue();
   const reasoningTokens = usage?.reasoningTokens ?? 0;
 
@@ -384,15 +394,17 @@ export const ContextReasoningUsage = withRef("ContextReasoningUsage", function C
       <TokensWithCost costText={reasoningCostText} tokens={reasoningTokens} />
     </div>
   );
-});
+};
+
+export const ContextReasoningUsage = withRef("ContextReasoningUsage", ContextReasoningUsage19);
 
 export type ContextCacheUsageProps = ComponentProps<"div">;
 
-export const ContextCacheUsage = withRef("ContextCacheUsage", function ContextCacheUsage({
+const ContextCacheUsage19 = ({
   className,
   children,
   ...props
-}: ContextCacheUsageProps) {
+}: ContextCacheUsageProps) => {
   const { usage, cost } = useContextValue();
   const cacheTokens = usage?.cachedInputTokens ?? 0;
 
@@ -415,4 +427,6 @@ export const ContextCacheUsage = withRef("ContextCacheUsage", function ContextCa
       <TokensWithCost costText={cacheCostText} tokens={cacheTokens} />
     </div>
   );
-});
+};
+
+export const ContextCacheUsage = withRef("ContextCacheUsage", ContextCacheUsage19);

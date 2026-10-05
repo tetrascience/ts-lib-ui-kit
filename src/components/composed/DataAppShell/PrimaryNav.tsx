@@ -342,7 +342,7 @@ function NavItem({ page, variant, active, onSelect }: NavItemProps) {
  * Width/background chrome is owned by the container (the shell's rail wrapper,
  * a Sheet, or a TopBar) — this component is layout-neutral.
  */
-const DataAppShellPrimaryNav = withRef("DataAppShellPrimaryNav", function DataAppShellPrimaryNav({
+function DataAppShellPrimaryNav19({
   variant,
   navGroups,
   activeKey,
@@ -436,7 +436,21 @@ const DataAppShellPrimaryNav = withRef("DataAppShellPrimaryNav", function DataAp
       </TooltipProvider>
     </nav>
   );
-});
+}
+
+/**
+ * The Data App Shell's nav engine — one `navGroups` model rendered in three
+ * placements via `variant`:
+ *
+ * - **rail** — vertical icon-only (48px rail); labels via tooltip, user slot at the bottom
+ * - **sidebar** — vertical icon + label with group headers, user slot at the bottom
+ * - **top** — horizontal bar; user/actions slot on the right
+ *
+ * Active state is either controlled via `activeKey` or per-page `isActive`.
+ * Width/background chrome is owned by the container (the shell's rail wrapper,
+ * a Sheet, or a TopBar) — this component is layout-neutral.
+ */
+const DataAppShellPrimaryNav = withRef("DataAppShellPrimaryNav", DataAppShellPrimaryNav19);
 
 export {
   DataAppShellPrimaryNav,

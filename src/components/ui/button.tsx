@@ -43,7 +43,7 @@ const buttonVariants = cva(
   }
 )
 
-const Button = withRef("Button", function Button({
+function Button19({
   className,
   variant = "default",
   size = "default",
@@ -64,6 +64,8 @@ const Button = withRef("Button", function Button({
       {...props}
     />
   )
-})
+}
+
+const Button = withRef("Button", Button19)
 
 export { Button, buttonVariants }

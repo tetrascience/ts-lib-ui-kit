@@ -28,7 +28,7 @@ function getContentColumns(hasTrailing: boolean, hasActions: boolean) {
   return CONTENT_COLUMNS_NONE;
 }
 
-const RichListItem = withRef("RichListItem", function RichListItem({
+function RichListItem19({
   leading,
   primary,
   secondary,
@@ -78,14 +78,16 @@ const RichListItem = withRef("RichListItem", function RichListItem({
       </ItemContent>
     </Item>
   );
-});
+}
+
+const RichListItem = withRef("RichListItem", RichListItem19);
 
 export interface RichListItemAvatarProps extends Omit<React.ComponentProps<typeof Avatar>, "children"> {
   initials: string;
   fallbackClassName?: string;
 }
 
-const RichListItemAvatar = withRef("RichListItemAvatar", function RichListItemAvatar({
+function RichListItemAvatar19({
   initials,
   className,
   fallbackClassName,
@@ -99,6 +101,8 @@ const RichListItemAvatar = withRef("RichListItemAvatar", function RichListItemAv
       </AvatarFallback>
     </Avatar>
   );
-});
+}
+
+const RichListItemAvatar = withRef("RichListItemAvatar", RichListItemAvatar19);
 
 export { RichListItem, RichListItemAvatar };

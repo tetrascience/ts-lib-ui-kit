@@ -41,43 +41,43 @@ export type ConversationEmptyStateProps = ComponentProps<"div"> & {
   icon?: React.ReactNode;
 };
 
-export const ConversationEmptyState = withRef("ConversationEmptyState", function ConversationEmptyState({
+const ConversationEmptyState19 = ({
   className,
   title = "No messages yet",
   description = "Start a conversation to see messages here",
   icon,
   children,
   ...props
-}: ConversationEmptyStateProps) {
-  return (
-    <div
-      className={cn(
-        "flex size-full flex-col items-center justify-center gap-3 p-8 text-center",
-        className
-      )}
-      {...props}
-    >
-      {children ?? (
-        <>
-          {icon && <div className="text-muted-foreground">{icon}</div>}
-          <div className="space-y-1">
-            <h3 className="font-medium text-sm">{title}</h3>
-            {description && (
-              <p className="text-muted-foreground text-sm">{description}</p>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-});
+}: ConversationEmptyStateProps) => (
+  <div
+    className={cn(
+      "flex size-full flex-col items-center justify-center gap-3 p-8 text-center",
+      className
+    )}
+    {...props}
+  >
+    {children ?? (
+      <>
+        {icon && <div className="text-muted-foreground">{icon}</div>}
+        <div className="space-y-1">
+          <h3 className="font-medium text-sm">{title}</h3>
+          {description && (
+            <p className="text-muted-foreground text-sm">{description}</p>
+          )}
+        </div>
+      </>
+    )}
+  </div>
+);
+
+export const ConversationEmptyState = withRef("ConversationEmptyState", ConversationEmptyState19);
 
 export type ConversationScrollButtonProps = ComponentProps<typeof Button>;
 
-export const ConversationScrollButton = withRef("ConversationScrollButton", function ConversationScrollButton({
+const ConversationScrollButton19 = ({
   className,
   ...props
-}: ConversationScrollButtonProps) {
+}: ConversationScrollButtonProps) => {
   const { isAtBottom, scrollToBottom } = useStickToBottomContext();
 
   const handleScrollToBottom = useCallback(() => {
@@ -101,7 +101,9 @@ export const ConversationScrollButton = withRef("ConversationScrollButton", func
       </Button>
     )
   );
-});
+};
+
+export const ConversationScrollButton = withRef("ConversationScrollButton", ConversationScrollButton19);
 
 const getMessageText = (message: UIMessage): string =>
   message.parts
@@ -132,14 +134,14 @@ export const messagesToMarkdown = (
   ) => string = defaultFormatMessage
 ): string => messages.map((msg, i) => formatMessage(msg, i)).join("\n\n");
 
-export const ConversationDownload = withRef("ConversationDownload", function ConversationDownload({
+const ConversationDownload19 = ({
   messages,
   filename = "conversation.md",
   formatMessage = defaultFormatMessage,
   className,
   children,
   ...props
-}: ConversationDownloadProps) {
+}: ConversationDownloadProps) => {
   const handleDownload = useCallback(() => {
     const markdown = messagesToMarkdown(messages, formatMessage);
     const blob = new Blob([markdown], { type: "text/markdown" });
@@ -168,4 +170,6 @@ export const ConversationDownload = withRef("ConversationDownload", function Con
       {children ?? <DownloadIcon className="size-4" />}
     </Button>
   );
-});
+};
+
+export const ConversationDownload = withRef("ConversationDownload", ConversationDownload19);

@@ -1146,7 +1146,7 @@ function DataTable<TData, TValue>({
 // TableToolbar
 // ---------------------------------------------------------------------------
 
-const TableToolbar = withRef("TableToolbar", function TableToolbar({
+function TableToolbar19({
   className,
   children,
   ...props
@@ -1160,7 +1160,9 @@ const TableToolbar = withRef("TableToolbar", function TableToolbar({
       {children}
     </div>
   )
-})
+}
+
+const TableToolbar = withRef("TableToolbar", TableToolbar19)
 
 export { DataTable, TableToolbar, useDataTable }
 export type { DataTableProps, FilterCondition, FilterOperator, FilterColumnConfig, GroupColumnConfig }

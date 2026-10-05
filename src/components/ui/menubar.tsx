@@ -6,7 +6,7 @@ import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
-const Menubar = withRef("Menubar", function Menubar({
+function Menubar19({
   className,
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Root>) {
@@ -20,7 +20,9 @@ const Menubar = withRef("Menubar", function Menubar({
       {...props}
     />
   )
-})
+}
+
+const Menubar = withRef("Menubar", Menubar19)
 
 function MenubarMenu({
   ...props
@@ -28,11 +30,13 @@ function MenubarMenu({
   return <MenubarPrimitive.Menu data-slot="menubar-menu" {...props} />
 }
 
-const MenubarGroup = withRef("MenubarGroup", function MenubarGroup({
+function MenubarGroup19({
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Group>) {
   return <MenubarPrimitive.Group data-slot="menubar-group" {...props} />
-})
+}
+
+const MenubarGroup = withRef("MenubarGroup", MenubarGroup19)
 
 function MenubarPortal({
   ...props
@@ -40,15 +44,17 @@ function MenubarPortal({
   return <MenubarPrimitive.Portal data-slot="menubar-portal" {...props} />
 }
 
-const MenubarRadioGroup = withRef("MenubarRadioGroup", function MenubarRadioGroup({
+function MenubarRadioGroup19({
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.RadioGroup>) {
   return (
     <MenubarPrimitive.RadioGroup data-slot="menubar-radio-group" {...props} />
   )
-})
+}
 
-const MenubarTrigger = withRef("MenubarTrigger", function MenubarTrigger({
+const MenubarRadioGroup = withRef("MenubarRadioGroup", MenubarRadioGroup19)
+
+function MenubarTrigger19({
   className,
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Trigger>) {
@@ -62,9 +68,11 @@ const MenubarTrigger = withRef("MenubarTrigger", function MenubarTrigger({
       {...props}
     />
   )
-})
+}
 
-const MenubarContent = withRef("MenubarContent", function MenubarContent({
+const MenubarTrigger = withRef("MenubarTrigger", MenubarTrigger19)
+
+function MenubarContent19({
   className,
   align = "start",
   alignOffset = -4,
@@ -83,9 +91,11 @@ const MenubarContent = withRef("MenubarContent", function MenubarContent({
       />
     </MenubarPortal>
   )
-})
+}
 
-const MenubarItem = withRef("MenubarItem", function MenubarItem({
+const MenubarContent = withRef("MenubarContent", MenubarContent19)
+
+function MenubarItem19({
   className,
   inset,
   variant = "default",
@@ -106,9 +116,11 @@ const MenubarItem = withRef("MenubarItem", function MenubarItem({
       {...props}
     />
   )
-})
+}
 
-const MenubarCheckboxItem = withRef("MenubarCheckboxItem", function MenubarCheckboxItem({
+const MenubarItem = withRef("MenubarItem", MenubarItem19)
+
+function MenubarCheckboxItem19({
   className,
   children,
   checked,
@@ -137,9 +149,11 @@ const MenubarCheckboxItem = withRef("MenubarCheckboxItem", function MenubarCheck
       {children}
     </MenubarPrimitive.CheckboxItem>
   )
-})
+}
 
-const MenubarRadioItem = withRef("MenubarRadioItem", function MenubarRadioItem({
+const MenubarCheckboxItem = withRef("MenubarCheckboxItem", MenubarCheckboxItem19)
+
+function MenubarRadioItem19({
   className,
   children,
   inset,
@@ -166,9 +180,11 @@ const MenubarRadioItem = withRef("MenubarRadioItem", function MenubarRadioItem({
       {children}
     </MenubarPrimitive.RadioItem>
   )
-})
+}
 
-const MenubarLabel = withRef("MenubarLabel", function MenubarLabel({
+const MenubarRadioItem = withRef("MenubarRadioItem", MenubarRadioItem19)
+
+function MenubarLabel19({
   className,
   inset,
   ...props
@@ -186,9 +202,11 @@ const MenubarLabel = withRef("MenubarLabel", function MenubarLabel({
       {...props}
     />
   )
-})
+}
 
-const MenubarSeparator = withRef("MenubarSeparator", function MenubarSeparator({
+const MenubarLabel = withRef("MenubarLabel", MenubarLabel19)
+
+function MenubarSeparator19({
   className,
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Separator>) {
@@ -199,9 +217,11 @@ const MenubarSeparator = withRef("MenubarSeparator", function MenubarSeparator({
       {...props}
     />
   )
-})
+}
 
-const MenubarShortcut = withRef("MenubarShortcut", function MenubarShortcut({
+const MenubarSeparator = withRef("MenubarSeparator", MenubarSeparator19)
+
+function MenubarShortcut19({
   className,
   ...props
 }: React.ComponentProps<"span">) {
@@ -215,7 +235,9 @@ const MenubarShortcut = withRef("MenubarShortcut", function MenubarShortcut({
       {...props}
     />
   )
-})
+}
+
+const MenubarShortcut = withRef("MenubarShortcut", MenubarShortcut19)
 
 function MenubarSub({
   ...props
@@ -223,7 +245,7 @@ function MenubarSub({
   return <MenubarPrimitive.Sub data-slot="menubar-sub" {...props} />
 }
 
-const MenubarSubTrigger = withRef("MenubarSubTrigger", function MenubarSubTrigger({
+function MenubarSubTrigger19({
   className,
   inset,
   children,
@@ -245,9 +267,11 @@ const MenubarSubTrigger = withRef("MenubarSubTrigger", function MenubarSubTrigge
       <ChevronRightIcon className="ml-auto size-4" />
     </MenubarPrimitive.SubTrigger>
   )
-})
+}
 
-const MenubarSubContent = withRef("MenubarSubContent", function MenubarSubContent({
+const MenubarSubTrigger = withRef("MenubarSubTrigger", MenubarSubTrigger19)
+
+function MenubarSubContent19({
   className,
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.SubContent>) {
@@ -258,7 +282,9 @@ const MenubarSubContent = withRef("MenubarSubContent", function MenubarSubConten
       {...props}
     />
   )
-})
+}
+
+const MenubarSubContent = withRef("MenubarSubContent", MenubarSubContent19)
 
 export {
   Menubar,

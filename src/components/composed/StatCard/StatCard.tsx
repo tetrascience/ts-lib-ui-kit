@@ -28,7 +28,7 @@ const TREND_CLASS: Record<StatCardTrend, string> = {
   neutral: "text-muted-foreground",
 }
 
-export const StatCard = withRef("StatCard", function StatCard({
+function StatCard19({
   label,
   value,
   delta,
@@ -67,4 +67,6 @@ export const StatCard = withRef("StatCard", function StatCard({
       </Card>
     </div>
   )
-})
+}
+
+export const StatCard = withRef("StatCard", StatCard19)

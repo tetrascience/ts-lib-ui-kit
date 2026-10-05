@@ -25,13 +25,15 @@ function Tooltip({
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
 }
 
-const TooltipTrigger = withRef("TooltipTrigger", function TooltipTrigger({
+function TooltipTrigger19({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
-})
+}
 
-const TooltipContent = withRef("TooltipContent", function TooltipContent({
+const TooltipTrigger = withRef("TooltipTrigger", TooltipTrigger19)
+
+function TooltipContent19({
   className,
   sideOffset = 0,
   children,
@@ -53,6 +55,8 @@ const TooltipContent = withRef("TooltipContent", function TooltipContent({
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   )
-})
+}
+
+const TooltipContent = withRef("TooltipContent", TooltipContent19)
 
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger }

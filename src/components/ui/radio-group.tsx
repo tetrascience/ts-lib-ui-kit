@@ -11,7 +11,7 @@ type RadioSize = "xs" | "sm" | "default" | "lg"
 
 const RadioGroupContext = React.createContext<{ size?: RadioSize }>({})
 
-const RadioGroup = withRef("RadioGroup", function RadioGroup({
+function RadioGroup19({
   className,
   size,
   ...props
@@ -25,7 +25,9 @@ const RadioGroup = withRef("RadioGroup", function RadioGroup({
       />
     </RadioGroupContext.Provider>
   )
-})
+}
+
+const RadioGroup = withRef("RadioGroup", RadioGroup19)
 
 const radioGroupItemVariants = cva(
   "group/radio-group-item peer relative flex aspect-square shrink-0 rounded-full border border-input bg-card outline-none after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:shadow-focus aria-invalid:aria-checked:border-primary dark:bg-input/30 dark:aria-invalid:border-destructive/50 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary",
@@ -45,7 +47,7 @@ const radioGroupItemVariants = cva(
   }
 )
 
-const RadioGroupItem = withRef("RadioGroupItem", function RadioGroupItem({
+function RadioGroupItem19({
   className,
   size,
   ...props
@@ -68,6 +70,8 @@ const RadioGroupItem = withRef("RadioGroupItem", function RadioGroupItem({
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   )
-})
+}
+
+const RadioGroupItem = withRef("RadioGroupItem", RadioGroupItem19)
 
 export { RadioGroup, RadioGroupItem, radioGroupItemVariants }

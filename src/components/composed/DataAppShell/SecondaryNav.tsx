@@ -225,7 +225,7 @@ function StepIcon({
  * Step status (`done` / `active` / `todo`) is derived linearly from
  * `activeKey`, or set explicitly per step. Supports one level of nesting.
  */
-const DataAppShellSecondaryNav = withRef("DataAppShellSecondaryNav", function DataAppShellSecondaryNav({
+function DataAppShellSecondaryNav19({
   orientation,
   steps,
   activeKey,
@@ -511,7 +511,20 @@ const DataAppShellSecondaryNav = withRef("DataAppShellSecondaryNav", function Da
       </div>
     </nav>
   );
-});
+}
+
+/**
+ * The Data App Shell's secondary (per-page/step) nav — one `steps` model
+ * rendered on either axis via `orientation`:
+ *
+ * - **vertical** — collapsible left panel; collapses to an icon-only rail
+ *   with tooltips and a ▸ expand toggle
+ * - **horizontal** — wizard/stepper row above the main content
+ *
+ * Step status (`done` / `active` / `todo`) is derived linearly from
+ * `activeKey`, or set explicitly per step. Supports one level of nesting.
+ */
+const DataAppShellSecondaryNav = withRef("DataAppShellSecondaryNav", DataAppShellSecondaryNav19);
 
 export {
   DataAppShellSecondaryNav,

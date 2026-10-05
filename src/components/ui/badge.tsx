@@ -34,7 +34,7 @@ const badgeVariants = cva(
   }
 )
 
-const Badge = withRef("Badge", function Badge({
+function Badge19({
   className,
   variant  = "default",
   asChild = false,
@@ -51,6 +51,8 @@ const Badge = withRef("Badge", function Badge({
       {...props}
     />
   )
-})
+}
+
+const Badge = withRef("Badge", Badge19)
 
 export { Badge, badgeVariants }

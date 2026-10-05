@@ -62,7 +62,7 @@ export interface EmptyStateProps extends React.ComponentProps<"div"> {
   action?: React.ReactNode;
 }
 
-const EmptyState = withRef("EmptyState", function EmptyState({
+function EmptyState19({
   variant = "no-data",
   title,
   description,
@@ -103,6 +103,8 @@ const EmptyState = withRef("EmptyState", function EmptyState({
       {action}
     </div>
   );
-});
+}
+
+const EmptyState = withRef("EmptyState", EmptyState19);
 
 export { EmptyState };

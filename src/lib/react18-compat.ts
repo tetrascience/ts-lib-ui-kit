@@ -2,13 +2,19 @@
  * React 18 compatibility seam (UXT-77).
  *
  * The kit is written against React 19, but the TetraScience platform host and
- * its Module Federation apps share a React 18 singleton. Everything React 18
- * needs that React 19 does not lives in this one file, so dropping React 18
- * support is a change here rather than a sweep across every component:
+ * its Module Federation apps share a React 18 singleton. React 18 support is
+ * temporary, so it is kept out of the components themselves:
  *
- * - `withRef`: make `withRef` return `render` unchanged, then optionally
- *   codemod the call sites back to plain function declarations.
- * - `inertProp`: return `{ inert }` unconditionally.
+ * - Every component that forwards a ref is declared exactly as it would be for
+ *   React 19, under the name `X19`, and exported through one added line:
+ *   `export const X = withRef("X", X19)`. The `X19` declarations are the
+ *   React 19 components; nothing in them is React 18-specific.
+ * - `inertProp` spells the `inert` attribute so React 18 applies it.
+ *
+ * To deprecate React 18: export the `X19` components (under their plain names,
+ * from a React 19 entry point) and mark the `withRef` exports deprecated. To
+ * drop it: delete each `withRef` line, rename `X19` back to `X`, and make
+ * `inertProp` return `{ inert }`.
  *
  * `yarn check:react18-compat` (scripts/build/audit-react18-compat.ts) fails CI
  * when a component that accepts `ref` is not wrapped, or when JSX writes a
@@ -22,8 +28,14 @@ const REACT_MAJOR = Number.parseInt(React.version, 10)
 /** First major that treats `inert` as a boolean attribute. */
 const INERT_BOOLEAN_SINCE_MAJOR = 19
 
-/** Any function component, including generic ones. `never` accepts every props type. */
-type FunctionComponentLike = (props: never) => React.ReactNode
+/**
+ * Any function component, including generic ones and `React.FC` (whose React 19
+ * return type admits a Promise). `never` accepts every props type.
+ */
+type FunctionComponentLike = (props: never) => React.ReactNode | Promise<React.ReactNode>
+
+/** What Storybook's react-docgen plugin attaches to a component definition. */
+type WithDocgen = { displayName?: string; __docgenInfo?: unknown }
 
 /**
  * Makes a React 19-style component (one that receives `ref` as an ordinary
@@ -34,22 +46,24 @@ type FunctionComponentLike = (props: never) => React.ReactNode
  * (`<TooltipTrigger asChild><Button /></TooltipTrigger>`) cannot attach the
  * ref they need for positioning, focus and outside-click handling.
  *
- * The render function's body is unchanged: `ref` keeps arriving inside props,
+ * The React 19 component is untouched: `ref` keeps arriving inside props,
  * exactly as React 19 delivers it. On React 19 `forwardRef` hands the ref over
  * separately and strips it from props, so this re-attaches it in both cases.
  *
- * The return type is the render function's own type, so the component's public
- * props (including generics) are identical to the unwrapped declaration.
+ * The return type is the React 19 component's own type, so the export's public
+ * props (including generics) are identical to it.
  *
- * @param displayName The component name. Passed as a literal because the
- *   library build mangles function names, so `render.name` is not reliable.
- * @param render A named function expression. Name it so `rules-of-hooks`
- *   recognises it as a component.
+ * @param displayName The component name, without the `19` suffix. Passed as a
+ *   literal because the library build mangles function names. It is also set on
+ *   the React 19 component, so that one keeps its public name too.
+ * @param render The React 19 component, declared as `X19`.
  *
  * @example
- * const Button = withRef("Button", function Button({ className, ...props }: ButtonProps) {
+ * function Button19({ className, ...props }: ButtonProps) {
  *   return <button className={cn(buttonVariants(), className)} {...props} />
- * })
+ * }
+ *
+ * const Button = withRef("Button", Button19)
  */
 export function withRef<C extends FunctionComponentLike>(displayName: string, render: C): C {
   const renderWithProps = render as unknown as (props: object) => React.ReactNode
@@ -57,6 +71,16 @@ export function withRef<C extends FunctionComponentLike>(displayName: string, re
     return renderWithProps(ref == null ? props : { ...props, ref })
   })
   Forwarded.displayName = displayName
+  const react19 = render as unknown as WithDocgen
+  react19.displayName ??= displayName
+  // Storybook's react-docgen plugin attaches the props table and description to
+  // the declaration it parsed, `X19`, and appends that assignment at the end of
+  // the module, after this call. Read it lazily so the exported component, which
+  // is what stories pass as `component`, shows the same docs.
+  Object.defineProperty(Forwarded, "__docgenInfo", {
+    configurable: true,
+    get: () => react19.__docgenInfo,
+  })
   // The forwardRef object is callable from JSX exactly like `render`, and its
   // props are `render`'s props, so the original type is the accurate public type.
   return Forwarded as unknown as C

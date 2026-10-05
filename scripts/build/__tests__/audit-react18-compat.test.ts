@@ -4,30 +4,22 @@ import { fileURLToPath } from "node:url";
 import { Project } from "ts-morph";
 import { describe, expect, it } from "vitest";
 
-import { auditReact18Compat, auditSourceFile, formatViolations, REF_EXCEPTIONS } from "../audit-react18-compat";
+import { auditSourceFile, formatViolations } from "../audit-react18-compat";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 
 /**
  * UXT-77: React 18 consumers (the TDP host and its Module Federation apps) lose
  * every `ref` passed to a kit component that is a plain function, and with it
- * Radix `asChild` trigger positioning, focus and outside-click handling. This
- * fails CI when a component that accepts `ref` skips `withRef`, so the kit
- * cannot regress React 18 support one new component at a time.
+ * Radix `asChild` trigger positioning, focus and outside-click handling.
+ *
+ * These fixtures prove each rule fires. The audit over the real component tree
+ * runs as its own CI step (`yarn check:react18-compat` in the build job), not
+ * here: it type-checks every component synchronously, and inside the combined
+ * unit + Storybook coverage run that CPU load starved the Storybook browser
+ * workers into Vitest's fixed 60s RPC timeout.
  */
 describe("React 18 compatibility audit", () => {
-  // ts-morph type-checks all of src/components; give the cold start headroom
-  // under CI + v8 coverage, as the story-source audit does.
-  it("every component that accepts ref forwards it on React 18", { timeout: 120_000 }, () => {
-    const { wrapped, excepted, violations } = auditReact18Compat();
-
-    // Sanity: the audit actually saw the component corpus.
-    expect(wrapped.length).toBeGreaterThan(350);
-    // Every documented exception still names a real component that lacks a ref.
-    expect([...excepted].sort()).toEqual(Object.keys(REF_EXCEPTIONS).sort());
-    expect(violations, `\n${formatViolations(violations)}\n`).toEqual([]);
-  });
-
   describe("rules", () => {
     const project = new Project({
       tsConfigFilePath: path.join(repoRoot, "tsconfig.json"),

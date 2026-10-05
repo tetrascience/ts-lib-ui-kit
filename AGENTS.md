@@ -214,7 +214,8 @@ so dropping React 18 later is a change to that one file:
 
 Guards: `yarn check:react18-compat`
 ([`scripts/build/audit-react18-compat.ts`](./scripts/build/audit-react18-compat.ts),
-also run as a unit test) uses the type checker to fail on an unwrapped component
+a step of CI's build job; its unit test only runs the rules against fixtures)
+uses the type checker to fail on an unwrapped component
 whose props accept `ref`, a component whose props carry DOM attributes but no
 `ref`, a direct `forwardRef`, a mismatched display name or a boolean `inert`.
 The only components allowed DOM props without a `ref` are listed, with the reason,

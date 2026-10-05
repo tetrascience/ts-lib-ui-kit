@@ -54,6 +54,12 @@ jobs:
       - name: Type Check
         run: yarn typecheck
 
+      # UXT-77: every component that takes DOM props forwards ref on React 18.
+      # Kept out of the coverage run below: it type-checks the whole component
+      # tree synchronously, which competed with the Storybook browser workers.
+      - name: React 18 compatibility audit
+        run: yarn check:react18-compat
+
       - name: Run Tests with Coverage
         run: yarn run test:all:coverage
 

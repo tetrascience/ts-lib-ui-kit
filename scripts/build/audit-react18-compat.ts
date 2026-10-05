@@ -26,7 +26,8 @@
  * type that reaches `ref` through `ComponentProps<"div">`, a Radix primitive or
  * an interface `extends` chain is caught the same way.
  *
- * Run: `yarn check:react18-compat`. A unit test runs the same audit in CI.
+ * Run: `yarn check:react18-compat`. CI runs it as a step of the build job; the
+ * unit test only exercises the rules against fixtures.
  */
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -237,8 +238,15 @@ export function formatViolations(violations: Violation[]): string {
   return violations.map((v) => `${v.file}:${v.line} ${v.name} [${v.kind}] ${v.detail}`).join("\n");
 }
 
+/** Fewer wrapped components than this means the audit did not see the component tree. */
+const MIN_WRAPPED_COMPONENTS = 350;
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { wrapped, violations } = auditReact18Compat();
+  if (wrapped.length < MIN_WRAPPED_COMPONENTS) {
+    console.error(`React 18 compatibility audit saw only ${wrapped.length} wrapped components; expected at least ${MIN_WRAPPED_COMPONENTS}. Is the tsconfig include still src?`);
+    process.exit(1);
+  }
   if (violations.length > 0) {
     console.error(`React 18 compatibility audit failed (${violations.length}):\n${formatViolations(violations)}`);
     process.exit(1);

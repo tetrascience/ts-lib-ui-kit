@@ -153,7 +153,7 @@ const MyComponent = withRef("MyComponent", function MyComponent({
 export { MyComponent, myComponentVariants };
 ```
 
-**Note:** Write the body React 19-style, with `ref` arriving as an ordinary prop, and wrap the component in `withRef` so refs also work for React 18 consumers. Do not call `React.forwardRef` directly. `yarn check:react18-compat` (also run as a unit test) fails on an unwrapped component whose props accept `ref`. See AGENTS.md, "React 18 support".
+**Note:** Write the body React 19-style, with `ref` arriving as an ordinary prop, and wrap the component in `withRef` so refs also work for React 18 consumers. Do not call `React.forwardRef` directly. `yarn check:react18-compat` (run in CI's build job) fails on an unwrapped component whose props accept `ref`. See AGENTS.md, "React 18 support".
 
 ### Adding a New Component
 

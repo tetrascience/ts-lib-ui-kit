@@ -223,6 +223,11 @@ everything it needs lives in [`src/lib/react18-compat.ts`](./src/lib/react18-com
   a props spread, or Radix `Presence` inside a `Portal`, which is how
   `<DialogOverlay />` inside `DialogContent` broke on React 18. A component that is
   never exported and never rendered in its own file needs no wrapper.
+- **Compare children with `isElementOfType(child, X)`, never `child.type === X`.**
+  Consumers render the wrapper, so an identity check against the plain component
+  silently stops matching: `Tree` counted its "Load more" row, `ItemGroup` gave
+  separators `role="listitem"`, and `DataTable` lost its toolbar slot.
+  `isElementOfType` matches the plain component and its wrapper.
 - **JSDoc stays on the component and is copied onto the wrapper.** Storybook's
   react-docgen reads the description from the plain declaration, and `withRef`
   exposes that docgen info on the wrapper, so prop tables and descriptions are
@@ -231,8 +236,9 @@ everything it needs lives in [`src/lib/react18-compat.ts`](./src/lib/react18-com
 - **Deprecating and dropping React 18.** To deprecate: also export the plain
   components (for example from a React 19 entry point) and mark the `WithRef`
   exports deprecated. To drop: delete each wrapper line, its comment and copied
-  JSDoc, export `X` itself, delete `src/lib/react18-compat.ts`, and swap
-  `{...inertProp(v)}` back to `inert={v}`.
+  JSDoc, export `X` itself, delete `src/lib/react18-compat.ts`, swap
+  `{...inertProp(v)}` back to `inert={v}`, and `isElementOfType(c, X)` back to
+  `c.type === X`.
 - **`{...inertProp(value)}`** instead of `inert={value}`: React 18 drops a boolean
   `inert`, leaving "inert" content focusable.
 - A component that spreads DOM props types them as `ComponentProps<"tag">`, not
@@ -252,7 +258,7 @@ whose props accept `ref`, a component whose props carry DOM attributes but no
 `ref`, a direct `forwardRef` or a boolean `inert`. It also requires each wrapper
 to be named `XWithRef` around `X` itself, fails if a wrapped component is exported
 unwrapped, and fails if a ref-accepting component is rendered as the plain `X`
-inside its own file. The only components allowed
+inside its own file, or compared with `.type === X`. The only components allowed
 DOM props without a `ref` are listed, with the reason,
 in its `REF_EXCEPTIONS`; that list and the "Refs" section of README.md (every
 component without a ref, grouped by why) must change together, and a stale entry

@@ -60,6 +60,10 @@ jobs:
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
         run: npx tsx scripts/zephyr/sync-storybook-zephyr.ts
 
+      - name: Format updated story files
+        # ts-morph output is not Prettier-formatted; `yarn format:check` in CI would reject it.
+        run: npx prettier --write "src/**/*.stories.tsx"
+
       - name: Commit updated story files
         uses: stefanzweifel/git-auto-commit-action@8621497c8c39c72f3e2a999a26b4ca1b5058a842 # v5.1.0
         with:

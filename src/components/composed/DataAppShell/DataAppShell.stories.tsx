@@ -544,6 +544,8 @@ interface ShellDemoProps {
   initialPanelOpen?: boolean;
   /** Right panel trigger placement. */
   triggerPlacement?: "header" | "fab";
+  /** Short commit SHA — renders the build-info footer. */
+  commitSha?: string;
 }
 
 const ShellDemo = ({
@@ -557,6 +559,7 @@ const ShellDemo = ({
   autoCollapse = false,
   initialPanelOpen = true,
   triggerPlacement = "header",
+  commitSha,
 }: ShellDemoProps) => {
   const [activeStepId, setActiveStepId] = useState("data-overview");
   const [activeMenuId, setActiveMenuId] = useState("overview");
@@ -588,6 +591,7 @@ const ShellDemo = ({
       appName="HTS"
       appFullName="HTS Hit Finder"
       version="v2.4.1"
+      commitSha={commitSha}
       navGroups={htsNavGroups}
       navVariant={navVariant}
       primaryNav={primary}
@@ -1035,5 +1039,43 @@ export const WithRightPanel: Story = {
   parameters: {
       zephyr: { testCaseId: "SW-T5535" },
     docs: { source: { code: RIGHT_PANEL_CODE, language: "tsx" } },
+  },
+};
+
+const BUILD_INFO_CODE = `<DataAppShell
+  appName="HTS"
+  version="v2.4.1"
+  commitSha="3f9c2a1"
+  navGroups={navGroups}
+  breadcrumbs={breadcrumbs}
+>
+  {/* page content */}
+</DataAppShell>`;
+
+/**
+ * Pass `commitSha` and the shell renders a build-info footer (version + SHA)
+ * below the content, pinned to the bottom when the content is short (SW-2383).
+ */
+export const WithBuildInfo: Story = {
+  render: () => <ShellDemo commitSha="3f9c2a1" />,
+  play: async ({ canvasElement, step }) => {
+    const main = canvasElement.querySelector<HTMLElement>('[data-slot="data-app-shell-content"]');
+    const footer = canvasElement.querySelector<HTMLElement>('[data-slot="build-info-footer"]');
+    if (!main || !footer) throw new Error("content or footer not found");
+
+    await step("The footer shows the version and commit SHA", async () => {
+      expect(footer).toHaveTextContent("v2.4.1");
+      expect(footer).not.toHaveTextContent("vv2.4.1");
+      expect(footer).toHaveTextContent("3f9c2a1");
+    });
+
+    await step("With short content the footer is pinned to the bottom", async () => {
+      const gap = main.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom;
+      expect(Math.abs(gap)).toBeLessThanOrEqual(1);
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+    docs: { source: { code: BUILD_INFO_CODE, language: "tsx" } },
   },
 };

@@ -505,6 +505,12 @@ export const RowActions: Story = {
       const buttons = canvas.getAllByRole("button", { name: /Actions for/ })
       expect(buttons.length).toBeGreaterThan(0)
     })
+
+    await step("Default: the action cell is hidden at rest (revealed on row hover)", async () => {
+      const cell = canvas.getAllByRole("button", { name: /Actions for/ })[0].closest("td")
+      expect(cell).not.toBeNull()
+      expect(getComputedStyle(cell as HTMLElement).opacity).toBe("0")
+    })
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1452" },

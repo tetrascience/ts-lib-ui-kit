@@ -3,7 +3,7 @@ import { act } from "react"
 import { createRoot } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { inertProp, withRef } from "../react18-compat"
+import { inertProp, isElementOfType, withRef } from "../react18-compat"
 
 ;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -109,6 +109,24 @@ describe("withRef", () => {
     const ref = React.createRef<HTMLDivElement>()
     act(() => root.render(<Memo ref={ref} />))
     expect(ref.current).toBeInstanceOf(HTMLDivElement)
+  })
+})
+
+describe("isElementOfType", () => {
+  function Plain(props: React.ComponentProps<"hr">) {
+    return <hr {...props} />
+  }
+  const PlainWithRef = withRef("Plain", Plain)
+  function Other(props: React.ComponentProps<"hr">) {
+    return <hr {...props} />
+  }
+
+  it("matches the plain component and its wrapper, and nothing else", () => {
+    expect(isElementOfType(<Plain />, Plain)).toBe(true)
+    expect(isElementOfType(<PlainWithRef />, Plain)).toBe(true)
+    expect(isElementOfType(<Other />, Plain)).toBe(false)
+    expect(isElementOfType(<hr />, Plain)).toBe(false)
+    expect(isElementOfType(<React.Fragment />, Plain)).toBe(false)
   })
 })
 

@@ -150,6 +150,22 @@ describe("React 18 compatibility audit", () => {
       expect(excepted).toEqual(["Conversation"]);
     });
 
+    it("flags identity checks against a wrapped component", () => {
+      const { violations } = audit(`${header}
+        import { isElementOfType } from "@/lib/react18-compat"
+        function Separator(props: React.ComponentProps<"hr">) { return <hr {...props} /> }
+        const SeparatorWithRef = withRef("Separator", Separator)
+        export { SeparatorWithRef as Separator }
+        export function isSeparator(child: React.ReactElement) { return child.type === Separator }
+        export function isNotSeparator(child: React.ReactElement) { return Separator !== child.type }
+        export function matches(child: React.ReactElement) { return isElementOfType(child, Separator) }
+      `);
+      expect(violations.map((v) => [v.name, v.kind])).toEqual([
+        ["Separator", "identity-unwrapped"],
+        ["Separator", "identity-unwrapped"],
+      ]);
+    });
+
     it("flags direct forwardRef and boolean inert", () => {
       const { violations } = audit(`${header}
         export const Box = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>((props, ref) => <div ref={ref} {...props} />)

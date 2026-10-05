@@ -23,6 +23,9 @@
  *                          file as `X`, the plain component. Render `XWithRef`: refs can
  *                          reach a child implicitly (an `asChild` parent, a props spread,
  *                          Radix Presence), so every in-file use goes through the wrapper.
+ * - "identity-unwrapped":  `element.type === X` (or `!==`) against a wrapped component.
+ *                          Consumers render the wrapper, so it never matches; use
+ *                          `isElementOfType(element, X)`.
  * - "direct-forward-ref":  `React.forwardRef` used directly. Fix: use `withRef`, so
  *                          the React 18 layer stays separable. `FORWARD_REF_ALLOWED`
  *                          lists the components that predate this rule.
@@ -55,6 +58,7 @@ export type ViolationKind =
   | "wrapper-name"
   | "exported-unwrapped"
   | "same-file-unwrapped"
+  | "identity-unwrapped"
   | "direct-forward-ref"
   | "boolean-inert"
   | "dom-props-without-ref"
@@ -276,6 +280,17 @@ export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditR
     if (!refComponents.has(tag)) continue;
     const addWrapper = targets.has(tag) ? "" : `, adding const ${tag}WithRef = withRef("${tag}", ${tag})`;
     report(element, tag, "same-file-unwrapped", `inside this file ${tag} is the plain component, which drops refs on React 18; render <${tag}WithRef>${addWrapper}`);
+  }
+
+  // `child.type === X` never matches the wrapper consumers actually render.
+  for (const binary of sourceFile.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
+    const op = binary.getOperatorToken().getKind();
+    if (op !== SyntaxKind.EqualsEqualsEqualsToken && op !== SyntaxKind.ExclamationEqualsEqualsToken && op !== SyntaxKind.EqualsEqualsToken && op !== SyntaxKind.ExclamationEqualsToken) continue;
+    const [left, right] = [binary.getLeft(), binary.getRight()];
+    const component = [left, right].find((side) => Node.isIdentifier(side) && targets.has(side.getText()));
+    const other = component === left ? right : left;
+    if (!component || !(Node.isPropertyAccessExpression(other) && other.getName() === "type")) continue;
+    report(binary, component.getText(), "identity-unwrapped", `${binary.getText()} never matches the exported wrapper; use isElementOfType(${other.getExpression().getText()}, ${component.getText()})`);
   }
 
   for (const attribute of sourceFile.getDescendantsOfKind(SyntaxKind.JsxAttribute)) {

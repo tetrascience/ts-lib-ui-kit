@@ -408,3 +408,84 @@ export const BreadcrumbNavigation: Story = {
     zephyr: { testCaseId: "SW-T5675" },
   },
 };
+
+// An unlabelled nav group keeps the pre-existing section-label contrast finding
+// (see BreadcrumbNavigation) out of these footer stories.
+const BUILD_INFO_NAV: NavGroup[] = [
+  {
+    pages: [
+      { id: "overview", label: "Overview", icon: LayoutDashboard, isActive: true },
+      { id: "datasets", label: "Datasets", icon: Database },
+    ],
+  },
+];
+
+/**
+ * Pass `version` and/or `commitSha` and the shell renders a build-info footer
+ * below the content (SW-2383). With short content it stays pinned to the bottom.
+ */
+export const WithBuildInfo: Story = {
+  args: { navGroups: BUILD_INFO_NAV, version: "1.4.2", commitSha: "3f9c2a1" },
+  play: async ({ canvasElement, step }) => {
+    const main = canvasElement.querySelector('[data-slot="app-shell-simple-content"]');
+    const footer = canvasElement.querySelector('[data-slot="build-info-footer"]');
+    if (!(main instanceof HTMLElement) || !(footer instanceof HTMLElement)) {
+      throw new Error("content or footer not found");
+    }
+
+    await step("the footer shows the version and commit SHA", async () => {
+      expect(footer).toHaveTextContent("v1.4.2");
+      expect(footer).toHaveTextContent("3f9c2a1");
+    });
+
+    await step("with short content the footer is pinned to the bottom", async () => {
+      const gap = main.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom;
+      expect(Math.abs(gap)).toBeLessThanOrEqual(1);
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};
+
+/** With content taller than the viewport, the footer follows the content. */
+export const WithBuildInfoLongContent: Story = {
+  args: {
+    navGroups: BUILD_INFO_NAV,
+    version: "1.4.2",
+    commitSha: "3f9c2a1",
+    children: (
+      <div className="space-y-3 p-6">
+        {Array.from({ length: 40 }, (_, i) => (
+          <button
+            key={i}
+            type="button"
+            className="block w-full rounded-md bg-muted/60 px-3 py-2 text-left text-sm"
+          >
+            Sample {i + 1}
+          </button>
+        ))}
+      </div>
+    ),
+  },
+  play: async ({ canvasElement, step }) => {
+    const main = canvasElement.querySelector('[data-slot="app-shell-simple-content"]');
+    const footer = canvasElement.querySelector('[data-slot="build-info-footer"]');
+    if (!(main instanceof HTMLElement) || !(footer instanceof HTMLElement)) {
+      throw new Error("content or footer not found");
+    }
+
+    await step("the footer sits below the fold, after the content", async () => {
+      expect(footer.getBoundingClientRect().top).toBeGreaterThan(main.getBoundingClientRect().bottom);
+    });
+
+    await step("scrolling to the end brings the footer into view", async () => {
+      main.scrollTop = main.scrollHeight;
+      const gap = main.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom;
+      expect(Math.abs(gap)).toBeLessThanOrEqual(1);
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};

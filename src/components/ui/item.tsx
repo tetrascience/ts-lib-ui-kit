@@ -3,7 +3,7 @@ import { Slot } from "radix-ui"
 import * as React from "react"
 
 import { Separator } from "@/components/ui/separator"
-import { withRef } from "@/lib/react18-compat"
+import { isElementOfType, withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function ItemGroup({
@@ -24,7 +24,7 @@ function ItemGroup({
       {React.Children.map(children, (child) => {
         if (
           !React.isValidElement<{ role?: string }>(child) ||
-          child.type === ItemSeparator
+          isElementOfType(child, ItemSeparator)
         ) {
           return child
         }

@@ -14,11 +14,13 @@
  *
  *   Inside the file, `X` is still the plain React 19 component.
  * - `inertProp` spells the `inert` attribute so React 18 applies it.
+ * - `isElementOfType` replaces `element.type === X`, which no longer matches once
+ *   consumers render the wrapper.
  *
  * To deprecate React 18: export the plain components as well (for example from
  * a React 19 entry point) and mark the `WithRef` exports deprecated. To drop
- * it: delete each `withRef` line, export `X` itself, and make `inertProp`
- * return `{ inert }`.
+ * it: delete each `withRef` line, export `X` itself, make `inertProp` return
+ * `{ inert }`, and make `isElementOfType` a plain `element.type === component`.
  *
  * `yarn check:react18-compat` (scripts/build/audit-react18-compat.ts) fails CI
  * when a component that accepts `ref` is not wrapped, or when JSX writes a
@@ -37,6 +39,9 @@ const INERT_BOOLEAN_SINCE_MAJOR = 19
  * return type admits a Promise). `never` accepts every props type.
  */
 type FunctionComponentLike = (props: never) => React.ReactNode | Promise<React.ReactNode>
+
+/** Each wrapper's plain component, for `isElementOfType`. */
+const plainComponentOf = new WeakMap<object, unknown>()
 
 /** What Storybook's react-docgen plugin attaches to a component definition. */
 type WithDocgen = { displayName?: string; __docgenInfo?: unknown }
@@ -78,6 +83,7 @@ export function withRef<C extends FunctionComponentLike>(displayName: string, re
     return renderWithProps(ref == null ? props : { ...props, ref })
   })
   Forwarded.displayName = displayName
+  plainComponentOf.set(Forwarded, render)
   const react19 = render as unknown as WithDocgen
   react19.displayName ??= displayName
   // Storybook's react-docgen plugin attaches the props table and description to
@@ -91,6 +97,23 @@ export function withRef<C extends FunctionComponentLike>(displayName: string, re
   // The forwardRef object is callable from JSX exactly like `render`, and its
   // props are `render`'s props, so the original type is the accurate public type.
   return Forwarded as unknown as C
+}
+
+/**
+ * Whether `element` renders `component`, directly or through its `withRef` wrapper.
+ *
+ * Replaces `element.type === component` for components that compare their
+ * children by identity (`Tree` skipping its placeholders, `ItemGroup` skipping
+ * separators). Consumers render the exported wrapper, whose `type` is the
+ * forwardRef object rather than the plain component.
+ *
+ * @example
+ * React.Children.map(children, (child) =>
+ *   React.isValidElement(child) && isElementOfType(child, ItemSeparator) ? child : wrap(child))
+ */
+export function isElementOfType(element: React.ReactElement, component: unknown): boolean {
+  if (element.type === component) return true
+  return typeof element.type === "object" && element.type !== null && plainComponentOf.get(element.type) === component
 }
 
 /**

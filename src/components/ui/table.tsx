@@ -149,8 +149,10 @@ function TableCell({
         "p-4 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
         "in-data-[density=compact]:py-2 in-data-[density=relaxed]:py-5",
         variant === "numeric" && "text-right tabular-nums",
+        // Action cells reveal on row hover/focus; on a coarse pointer (touch, no
+        // hover) they always show so they stay reachable (SW-2535).
         variant === "action" &&
-          "opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 focus-within:opacity-100 transition-opacity",
+          "opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100 transition-opacity",
         truncate && "truncate",
         className,
       )}

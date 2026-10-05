@@ -131,3 +131,23 @@ export const Link: Story = {
     })
   },
 }
+
+/** Disabled in any variant — switch `variant` in Controls (SW-2443). */
+export const DisabledContrast: Story = {
+  args: {
+    children: "Disabled Button",
+    disabled: true,
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5676" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Disabled button renders without a blanket opacity fade", async () => {
+      const btn = canvas.getByRole("button", { name: "Disabled Button" })
+      expect(btn).toBeDisabled()
+      expect(getComputedStyle(btn).opacity).toBe("1")
+    })
+  },
+}

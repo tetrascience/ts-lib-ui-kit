@@ -2883,7 +2883,7 @@ export const ApplyAcrossAllPlates: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5716" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -2999,7 +2999,7 @@ export const ExternalizedFormViaHandle: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5717" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -3065,7 +3065,7 @@ export const LegendTolerantOfMissingInput: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5718" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -3117,7 +3117,7 @@ export const KeyboardSelectionAndLiveFeedback: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5719" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -3224,7 +3224,7 @@ export const QuickPaintOnSelection: Story = {
     return <Demo />;
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5720" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);

@@ -3,10 +3,11 @@ import { ChevronDownIcon } from "lucide-react"
 import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
-function NavigationMenu({
+const NavigationMenu = withRef("NavigationMenu", function NavigationMenu({
   className,
   children,
   viewport = true,
@@ -28,9 +29,9 @@ function NavigationMenu({
       {viewport && <NavigationMenuViewport />}
     </NavigationMenuPrimitive.Root>
   )
-}
+})
 
-function NavigationMenuList({
+const NavigationMenuList = withRef("NavigationMenuList", function NavigationMenuList({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.List>) {
@@ -44,9 +45,9 @@ function NavigationMenuList({
       {...props}
     />
   )
-}
+})
 
-function NavigationMenuItem({
+const NavigationMenuItem = withRef("NavigationMenuItem", function NavigationMenuItem({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Item>) {
@@ -57,13 +58,13 @@ function NavigationMenuItem({
       {...props}
     />
   )
-}
+})
 
 const navigationMenuTriggerStyle = cva(
   "group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg bg-background px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-accent focus:bg-accent focus-visible:shadow-focus focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-accent/50 data-popup-open:hover:bg-accent data-open:bg-accent/50 data-open:hover:bg-accent data-open:focus:bg-accent"
 )
 
-function NavigationMenuTrigger({
+const NavigationMenuTrigger = withRef("NavigationMenuTrigger", function NavigationMenuTrigger({
   className,
   children,
   ...props
@@ -78,9 +79,9 @@ function NavigationMenuTrigger({
       <ChevronDownIcon className="relative top-px ml-1 size-3 transition duration-300 group-data-popup-open/navigation-menu-trigger:rotate-180 group-data-open/navigation-menu-trigger:rotate-180" aria-hidden="true" />
     </NavigationMenuPrimitive.Trigger>
   )
-}
+})
 
-function NavigationMenuContent({
+const NavigationMenuContent = withRef("NavigationMenuContent", function NavigationMenuContent({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Content>) {
@@ -94,9 +95,9 @@ function NavigationMenuContent({
       {...props}
     />
   )
-}
+})
 
-function NavigationMenuViewport({
+const NavigationMenuViewport = withRef("NavigationMenuViewport", function NavigationMenuViewport({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Viewport>) {
@@ -116,9 +117,9 @@ function NavigationMenuViewport({
       />
     </div>
   )
-}
+})
 
-function NavigationMenuLink({
+const NavigationMenuLink = withRef("NavigationMenuLink", function NavigationMenuLink({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Link>) {
@@ -132,9 +133,9 @@ function NavigationMenuLink({
       {...props}
     />
   )
-}
+})
 
-function NavigationMenuIndicator({
+const NavigationMenuIndicator = withRef("NavigationMenuIndicator", function NavigationMenuIndicator({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Indicator>) {
@@ -150,7 +151,7 @@ function NavigationMenuIndicator({
       <div className="relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm bg-border shadow-elevation-4" />
     </NavigationMenuPrimitive.Indicator>
   )
-}
+})
 
 export {
   NavigationMenu,

@@ -21,6 +21,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 
@@ -32,14 +33,14 @@ export type ToolProps = ComponentProps<typeof Collapsible> & {
   isStreaming?: boolean;
 };
 
-export const Tool = ({
+export const Tool = withRef("Tool", function Tool({
   className,
   isStreaming = false,
   open,
   onOpenChange,
   defaultOpen,
   ...props
-}: ToolProps) => {
+}: ToolProps) {
   const [isOpen, setIsOpen] = useControllableState<boolean>({
     defaultProp: defaultOpen ?? true,
     onChange: onOpenChange,
@@ -76,7 +77,7 @@ export const Tool = ({
       {...props}
     />
   );
-};
+});
 
 export type ToolPart = ToolUIPart | DynamicToolUIPart;
 
@@ -153,42 +154,46 @@ export const ToolHeader = ({
 
 export type ToolContentProps = ComponentProps<typeof CollapsibleContent>;
 
-export const ToolContent = ({ className, ...props }: ToolContentProps) => (
-  <CollapsibleContent
-    className={cn(
-      "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 space-y-4 p-4 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
-      className
-    )}
-    {...props}
-  />
-);
+export const ToolContent = withRef("ToolContent", function ToolContent({ className, ...props }: ToolContentProps) {
+  return (
+    <CollapsibleContent
+      className={cn(
+        "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 space-y-4 p-4 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
+        className
+      )}
+      {...props}
+    />
+  );
+});
 
 export type ToolInputProps = ComponentProps<"div"> & {
   input: ToolPart["input"];
 };
 
-export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
-  <div className={cn("space-y-2 overflow-hidden", className)} {...props}>
-    <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-      Parameters
-    </h4>
-    <div className="rounded-md bg-muted/50">
-      <CodeBlock code={JSON.stringify(input, null, 2)} language="json" />
+export const ToolInput = withRef("ToolInput", function ToolInput({ className, input, ...props }: ToolInputProps) {
+  return (
+    <div className={cn("space-y-2 overflow-hidden", className)} {...props}>
+      <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+        Parameters
+      </h4>
+      <div className="rounded-md bg-muted/50">
+        <CodeBlock code={JSON.stringify(input, null, 2)} language="json" />
+      </div>
     </div>
-  </div>
-);
+  );
+});
 
 export type ToolOutputProps = ComponentProps<"div"> & {
   output: ToolPart["output"];
   errorText: ToolPart["errorText"];
 };
 
-export const ToolOutput = ({
+export const ToolOutput = withRef("ToolOutput", function ToolOutput({
   className,
   output,
   errorText,
   ...props
-}: ToolOutputProps) => {
+}: ToolOutputProps) {
   if (!(output || errorText)) {
     return null;
   }
@@ -221,4 +226,4 @@ export const ToolOutput = ({
       )}
     </div>
   );
-};
+});

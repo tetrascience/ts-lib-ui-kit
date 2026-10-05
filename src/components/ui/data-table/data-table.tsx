@@ -48,6 +48,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 // ---------------------------------------------------------------------------
@@ -1145,7 +1146,7 @@ function DataTable<TData, TValue>({
 // TableToolbar
 // ---------------------------------------------------------------------------
 
-function TableToolbar({
+const TableToolbar = withRef("TableToolbar", function TableToolbar({
   className,
   children,
   ...props
@@ -1159,7 +1160,7 @@ function TableToolbar({
       {children}
     </div>
   )
-}
+})
 
 export { DataTable, TableToolbar, useDataTable }
 export type { DataTableProps, FilterCondition, FilterOperator, FilterColumnConfig, GroupColumnConfig }

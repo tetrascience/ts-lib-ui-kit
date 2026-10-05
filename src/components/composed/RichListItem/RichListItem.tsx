@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export interface RichListItemProps extends Omit<React.ComponentProps<typeof Item>, "asChild" | "children"> {
@@ -27,7 +28,7 @@ function getContentColumns(hasTrailing: boolean, hasActions: boolean) {
   return CONTENT_COLUMNS_NONE;
 }
 
-function RichListItem({
+const RichListItem = withRef("RichListItem", function RichListItem({
   leading,
   primary,
   secondary,
@@ -77,14 +78,14 @@ function RichListItem({
       </ItemContent>
     </Item>
   );
-}
+});
 
 export interface RichListItemAvatarProps extends Omit<React.ComponentProps<typeof Avatar>, "children"> {
   initials: string;
   fallbackClassName?: string;
 }
 
-function RichListItemAvatar({
+const RichListItemAvatar = withRef("RichListItemAvatar", function RichListItemAvatar({
   initials,
   className,
   fallbackClassName,
@@ -98,6 +99,6 @@ function RichListItemAvatar({
       </AvatarFallback>
     </Avatar>
   );
-}
+});
 
 export { RichListItem, RichListItemAvatar };

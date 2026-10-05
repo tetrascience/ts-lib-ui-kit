@@ -7,6 +7,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 type CarouselApi = UseEmblaCarouselType[1]
@@ -42,7 +43,7 @@ function useCarousel() {
   return context
 }
 
-function Carousel({
+const Carousel = withRef("Carousel", function Carousel({
   orientation = "horizontal",
   opts,
   setApi,
@@ -130,9 +131,9 @@ function Carousel({
       </div>
     </CarouselContext.Provider>
   )
-}
+})
 
-function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
+const CarouselContent = withRef("CarouselContent", function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
   const { carouselRef, orientation } = useCarousel()
 
   return (
@@ -151,9 +152,9 @@ function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
       />
     </div>
   )
-}
+})
 
-function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
+const CarouselItem = withRef("CarouselItem", function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
   const { orientation } = useCarousel()
 
   return (
@@ -169,9 +170,9 @@ function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   )
-}
+})
 
-function CarouselPrevious({
+const CarouselPrevious = withRef("CarouselPrevious", function CarouselPrevious({
   className,
   variant = "outline",
   size = "icon-sm",
@@ -199,9 +200,9 @@ function CarouselPrevious({
       <span className="sr-only">Previous slide</span>
     </Button>
   )
-}
+})
 
-function CarouselNext({
+const CarouselNext = withRef("CarouselNext", function CarouselNext({
   className,
   variant = "outline",
   size = "icon-sm",
@@ -229,7 +230,7 @@ function CarouselNext({
       <span className="sr-only">Next slide</span>
     </Button>
   )
-}
+})
 
 export {
   type CarouselApi,

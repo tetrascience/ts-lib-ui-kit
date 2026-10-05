@@ -1,6 +1,7 @@
 import { Popover as PopoverPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function Popover({
@@ -9,19 +10,19 @@ function Popover({
   return <PopoverPrimitive.Root data-slot="popover" {...props} />
 }
 
-function PopoverTrigger({
+const PopoverTrigger = withRef("PopoverTrigger", function PopoverTrigger({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
-}
+})
 
-function PopoverAnchor({
+const PopoverAnchor = withRef("PopoverAnchor", function PopoverAnchor({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />
-}
+})
 
-function PopoverContent({
+const PopoverContent = withRef("PopoverContent", function PopoverContent({
   className,
   align = "center",
   sideOffset = 4,
@@ -41,6 +42,6 @@ function PopoverContent({
       />
     </PopoverPrimitive.Portal>
   )
-}
+})
 
 export { Popover, PopoverTrigger, PopoverAnchor, PopoverContent }

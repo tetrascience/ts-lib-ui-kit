@@ -15,10 +15,11 @@ import {
   InputGroup,
   InputGroupAddon,
 } from "@/components/ui/input-group"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
-function Command({
+const Command = withRef("Command", function Command({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive>) {
@@ -32,7 +33,7 @@ function Command({
       {...props}
     />
   )
-}
+})
 
 function CommandDialog({
   title = "Command Palette",
@@ -66,7 +67,7 @@ function CommandDialog({
   )
 }
 
-function CommandInput({
+const CommandInput = withRef("CommandInput", function CommandInput({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
@@ -87,9 +88,9 @@ function CommandInput({
       </InputGroup>
     </div>
   )
-}
+})
 
-function CommandList({
+const CommandList = withRef("CommandList", function CommandList({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.List>) {
@@ -103,9 +104,9 @@ function CommandList({
       {...props}
     />
   )
-}
+})
 
-function CommandEmpty({
+const CommandEmpty = withRef("CommandEmpty", function CommandEmpty({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -128,9 +129,9 @@ function CommandEmpty({
       {...props}
     />
   )
-}
+})
 
-function CommandGroup({
+const CommandGroup = withRef("CommandGroup", function CommandGroup({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Group>) {
@@ -144,9 +145,9 @@ function CommandGroup({
       {...props}
     />
   )
-}
+})
 
-function CommandSeparator({
+const CommandSeparator = withRef("CommandSeparator", function CommandSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Separator>) {
@@ -158,9 +159,9 @@ function CommandSeparator({
       {...props}
     />
   )
-}
+})
 
-function CommandItem({
+const CommandItem = withRef("CommandItem", function CommandItem({
   className,
   children,
   ...props
@@ -178,9 +179,9 @@ function CommandItem({
       <CheckIcon className="ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" />
     </CommandPrimitive.Item>
   )
-}
+})
 
-function CommandShortcut({
+const CommandShortcut = withRef("CommandShortcut", function CommandShortcut({
   className,
   ...props
 }: React.ComponentProps<"span">) {
@@ -194,7 +195,7 @@ function CommandShortcut({
       {...props}
     />
   )
-}
+})
 
 export {
   Command,

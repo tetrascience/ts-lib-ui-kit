@@ -3,9 +3,10 @@
 import { Label as LabelPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function Label({
+const Label = withRef("Label", function Label({
   className,
   ...props
 }: React.ComponentProps<typeof LabelPrimitive.Root>) {
@@ -19,6 +20,6 @@ function Label({
       {...props}
     />
   )
-}
+})
 
 export { Label }

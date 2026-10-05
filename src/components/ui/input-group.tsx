@@ -4,6 +4,7 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 type InputGroupSize = "xs" | "sm" | "default" | "lg"
@@ -28,7 +29,7 @@ const inputGroupVariants = cva(
   }
 )
 
-function InputGroup({
+const InputGroup = withRef("InputGroup", function InputGroup({
   className,
   size,
   ...props
@@ -44,7 +45,7 @@ function InputGroup({
       />
     </InputGroupContext.Provider>
   )
-}
+})
 
 const inputGroupAddonVariants = cva(
   "flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium text-muted-foreground select-none group-data-[disabled=true]/input-group:opacity-50 [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4",
@@ -67,7 +68,7 @@ const inputGroupAddonVariants = cva(
   }
 )
 
-function InputGroupAddon({
+const InputGroupAddon = withRef("InputGroupAddon", function InputGroupAddon({
   className,
   align = "inline-start",
   ...props
@@ -93,7 +94,7 @@ function InputGroupAddon({
       {...props}
     />
   )
-}
+})
 
 const inputGroupButtonVariants = cva(
   "flex items-center gap-2 text-sm shadow-none",
@@ -113,7 +114,7 @@ const inputGroupButtonVariants = cva(
   }
 )
 
-function InputGroupButton({
+const InputGroupButton = withRef("InputGroupButton", function InputGroupButton({
   className,
   type = "button",
   variant = "ghost",
@@ -130,9 +131,9 @@ function InputGroupButton({
       {...props}
     />
   )
-}
+})
 
-function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
+const InputGroupText = withRef("InputGroupText", function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       className={cn(
@@ -142,9 +143,9 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
       {...props}
     />
   )
-}
+})
 
-function InputGroupInput({
+const InputGroupInput = withRef("InputGroupInput", function InputGroupInput({
   className,
   size,
   ...props
@@ -162,9 +163,9 @@ function InputGroupInput({
       {...props}
     />
   )
-}
+})
 
-function InputGroupTextarea({
+const InputGroupTextarea = withRef("InputGroupTextarea", function InputGroupTextarea({
   className,
   size,
   ...props
@@ -181,7 +182,7 @@ function InputGroupTextarea({
       {...props}
     />
   )
-}
+})
 
 export {
   InputGroup,

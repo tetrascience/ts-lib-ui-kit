@@ -20,6 +20,7 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@/components/ui/input-group";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 
@@ -35,12 +36,12 @@ export type SnippetProps = ComponentProps<typeof InputGroup> & {
   code: string;
 };
 
-export const Snippet = ({
+export const Snippet = withRef("Snippet", function Snippet({
   code,
   className,
   children,
   ...props
-}: SnippetProps) => {
+}: SnippetProps) {
   const contextValue = useMemo(() => ({ code }), [code]);
 
   return (
@@ -50,29 +51,33 @@ export const Snippet = ({
       </InputGroup>
     </SnippetContext.Provider>
   );
-};
+});
 
 export type SnippetAddonProps = ComponentProps<typeof InputGroupAddon>;
 
-export const SnippetAddon = (props: SnippetAddonProps) => (
-  <InputGroupAddon {...props} />
-);
+export const SnippetAddon = withRef("SnippetAddon", function SnippetAddon(props: SnippetAddonProps) {
+  return (
+    <InputGroupAddon {...props} />
+  );
+});
 
 export type SnippetTextProps = ComponentProps<typeof InputGroupText>;
 
-export const SnippetText = ({ className, ...props }: SnippetTextProps) => (
-  <InputGroupText
-    className={cn("pl-2 font-normal text-muted-foreground", className)}
-    {...props}
-  />
-);
+export const SnippetText = withRef("SnippetText", function SnippetText({ className, ...props }: SnippetTextProps) {
+  return (
+    <InputGroupText
+      className={cn("pl-2 font-normal text-muted-foreground", className)}
+      {...props}
+    />
+  );
+});
 
 export type SnippetInputProps = Omit<
   ComponentProps<typeof InputGroupInput>,
   "readOnly" | "value"
 >;
 
-export const SnippetInput = ({ className, ...props }: SnippetInputProps) => {
+export const SnippetInput = withRef("SnippetInput", function SnippetInput({ className, ...props }: SnippetInputProps) {
   const { code } = useContext(SnippetContext);
 
   return (
@@ -84,7 +89,7 @@ export const SnippetInput = ({ className, ...props }: SnippetInputProps) => {
       {...props}
     />
   );
-};
+});
 
 export type SnippetCopyButtonProps = ComponentProps<typeof InputGroupButton> & {
   onCopy?: () => void;
@@ -92,14 +97,14 @@ export type SnippetCopyButtonProps = ComponentProps<typeof InputGroupButton> & {
   timeout?: number;
 };
 
-export const SnippetCopyButton = ({
+export const SnippetCopyButton = withRef("SnippetCopyButton", function SnippetCopyButton({
   onCopy,
   onError,
   timeout = 2000,
   children,
   className,
   ...props
-}: SnippetCopyButtonProps) => {
+}: SnippetCopyButtonProps) {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef<number>(0);
   const { code } = useContext(SnippetContext);
@@ -146,4 +151,4 @@ export const SnippetCopyButton = ({
       {children ?? <Icon className="size-3.5" size={14} />}
     </InputGroupButton>
   );
-};
+});

@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const inputVariants = cva(
@@ -21,7 +22,7 @@ const inputVariants = cva(
   }
 )
 
-function Input({
+const Input = withRef("Input", function Input({
   className,
   type,
   size,
@@ -42,6 +43,6 @@ function Input({
       {...props}
     />
   )
-}
+})
 
 export { Input, inputVariants }

@@ -3,9 +3,10 @@
 import { ScrollArea as ScrollAreaPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function ScrollArea({
+const ScrollArea = withRef("ScrollArea", function ScrollArea({
   className,
   children,
   ...props
@@ -27,9 +28,9 @@ function ScrollArea({
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
   )
-}
+})
 
-function ScrollBar({
+const ScrollBar = withRef("ScrollBar", function ScrollBar({
   className,
   orientation = "vertical",
   ...props
@@ -51,6 +52,6 @@ function ScrollBar({
       />
     </ScrollAreaPrimitive.ScrollAreaScrollbar>
   )
-}
+})
 
 export { ScrollArea, ScrollBar }

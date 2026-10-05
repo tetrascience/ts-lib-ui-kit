@@ -3,6 +3,7 @@ import { CheckIcon } from "lucide-react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const checkboxVariants = cva(
@@ -23,7 +24,7 @@ const checkboxVariants = cva(
   }
 )
 
-function Checkbox({
+const Checkbox = withRef("Checkbox", function Checkbox({
   className,
   size,
   ...props
@@ -44,6 +45,6 @@ function Checkbox({
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )
-}
+})
 
 export { Checkbox, checkboxVariants }

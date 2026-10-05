@@ -5,23 +5,24 @@ import { Dialog as SheetPrimitive } from "radix-ui"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
 
-function SheetTrigger({
+const SheetTrigger = withRef("SheetTrigger", function SheetTrigger({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
-}
+})
 
-function SheetClose({
+const SheetClose = withRef("SheetClose", function SheetClose({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Close>) {
   return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
-}
+})
 
 function SheetPortal({
   ...props
@@ -29,7 +30,7 @@ function SheetPortal({
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
 }
 
-function SheetOverlay({
+const SheetOverlay = withRef("SheetOverlay", function SheetOverlay({
   className,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
@@ -43,9 +44,9 @@ function SheetOverlay({
       {...props}
     />
   )
-}
+})
 
-function SheetContent({
+const SheetContent = withRef("SheetContent", function SheetContent({
   className,
   children,
   side = "right",
@@ -84,9 +85,9 @@ function SheetContent({
       </SheetPrimitive.Content>
     </SheetPortal>
   )
-}
+})
 
-function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
+const SheetHeader = withRef("SheetHeader", function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-header"
@@ -94,9 +95,9 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   )
-}
+})
 
-function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
+const SheetFooter = withRef("SheetFooter", function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-footer"
@@ -104,9 +105,9 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   )
-}
+})
 
-function SheetTitle({
+const SheetTitle = withRef("SheetTitle", function SheetTitle({
   className,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Title>) {
@@ -117,9 +118,9 @@ function SheetTitle({
       {...props}
     />
   )
-}
+})
 
-function SheetDescription({
+const SheetDescription = withRef("SheetDescription", function SheetDescription({
   className,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Description>) {
@@ -130,7 +131,7 @@ function SheetDescription({
       {...props}
     />
   )
-}
+})
 
 export {
   Sheet,

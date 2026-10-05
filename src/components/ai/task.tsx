@@ -9,33 +9,38 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export type TaskItemFileProps = ComponentProps<"div">;
 
-export const TaskItemFile = ({
+export const TaskItemFile = withRef("TaskItemFile", function TaskItemFile({
   children,
   className,
   ...props
-}: TaskItemFileProps) => (
-  <div
-    className={cn(
-      "inline-flex items-center gap-1 rounded-md border bg-secondary px-1.5 py-0.5 text-foreground text-xs",
-      className
-    )}
-    {...props}
-  >
-    {children}
-  </div>
-);
+}: TaskItemFileProps) {
+  return (
+    <div
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md border bg-secondary px-1.5 py-0.5 text-foreground text-xs",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+});
 
 export type TaskItemProps = ComponentProps<"div">;
 
-export const TaskItem = ({ children, className, ...props }: TaskItemProps) => (
-  <div className={cn("text-muted-foreground text-sm", className)} {...props}>
-    {children}
-  </div>
-);
+export const TaskItem = withRef("TaskItem", function TaskItem({ children, className, ...props }: TaskItemProps) {
+  return (
+    <div className={cn("text-muted-foreground text-sm", className)} {...props}>
+      {children}
+    </div>
+  );
+});
 
 const AUTO_CLOSE_DELAY = 1000;
 
@@ -43,14 +48,14 @@ export type TaskProps = ComponentProps<typeof Collapsible> & {
   isStreaming?: boolean;
 };
 
-export const Task = ({
+export const Task = withRef("Task", function Task({
   defaultOpen = true,
   isStreaming = false,
   open,
   onOpenChange,
   className,
   ...props
-}: TaskProps) => {
+}: TaskProps) {
   const [isOpen, setIsOpen] = useControllableState<boolean>({
     defaultProp: defaultOpen,
     onChange: onOpenChange,
@@ -87,51 +92,55 @@ export const Task = ({
       {...props}
     />
   );
-};
+});
 
 export type TaskTriggerProps = ComponentProps<typeof CollapsibleTrigger> & {
   title: string;
 };
 
-export const TaskTrigger = ({
+export const TaskTrigger = withRef("TaskTrigger", function TaskTrigger({
   children,
   className,
   title,
   ...props
-}: TaskTriggerProps) => (
-  <CollapsibleTrigger asChild className={cn("group", className)} {...props}>
-    {children ?? (
-      <button
-        type="button"
-        className="group flex w-full cursor-pointer items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground"
-      >
-        <SearchIcon className="size-4" />
-        <span className="text-sm">{title}</span>
-        <ChevronDownIcon
-          className="size-4 opacity-0 transition-all group-focus-visible:opacity-100 group-hover:opacity-100 group-data-[state=open]:rotate-180 group-data-[state=open]:opacity-100"
-          data-slot="collapsible-chevron"
-        />
-      </button>
-    )}
-  </CollapsibleTrigger>
-);
+}: TaskTriggerProps) {
+  return (
+    <CollapsibleTrigger asChild className={cn("group", className)} {...props}>
+      {children ?? (
+        <button
+          type="button"
+          className="group flex w-full cursor-pointer items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground"
+        >
+          <SearchIcon className="size-4" />
+          <span className="text-sm">{title}</span>
+          <ChevronDownIcon
+            className="size-4 opacity-0 transition-all group-focus-visible:opacity-100 group-hover:opacity-100 group-data-[state=open]:rotate-180 group-data-[state=open]:opacity-100"
+            data-slot="collapsible-chevron"
+          />
+        </button>
+      )}
+    </CollapsibleTrigger>
+  );
+});
 
 export type TaskContentProps = ComponentProps<typeof CollapsibleContent>;
 
-export const TaskContent = ({
+export const TaskContent = withRef("TaskContent", function TaskContent({
   children,
   className,
   ...props
-}: TaskContentProps) => (
-  <CollapsibleContent
-    className={cn(
-      "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
-      className
-    )}
-    {...props}
-  >
-    <div className="mt-4 space-y-2 border-border border-l-2 pl-4">
-      {children}
-    </div>
-  </CollapsibleContent>
-);
+}: TaskContentProps) {
+  return (
+    <CollapsibleContent
+      className={cn(
+        "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
+        className
+      )}
+      {...props}
+    >
+      <div className="mt-4 space-y-2 border-border border-l-2 pl-4">
+        {children}
+      </div>
+    </CollapsibleContent>
+  );
+});

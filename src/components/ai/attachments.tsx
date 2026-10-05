@@ -10,7 +10,7 @@ import {
 import { createContext, useCallback, useContext, useMemo } from "react";
 
 import type { FileUIPart, SourceDocumentUIPart } from "ai";
-import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 
@@ -148,16 +149,16 @@ export const useAttachmentContext = () => {
 // Attachments - Container
 // ============================================================================
 
-export type AttachmentsProps = HTMLAttributes<HTMLDivElement> & {
+export type AttachmentsProps = ComponentProps<"div"> & {
   variant?: AttachmentVariant;
 };
 
-export const Attachments = ({
+export const Attachments = withRef("Attachments", function Attachments({
   variant = "grid",
   className,
   children,
   ...props
-}: AttachmentsProps) => {
+}: AttachmentsProps) {
   const contextValue = useMemo(() => ({ variant }), [variant]);
 
   return (
@@ -175,24 +176,24 @@ export const Attachments = ({
       </div>
     </AttachmentsContext.Provider>
   );
-};
+});
 
 // ============================================================================
 // Attachment - Item
 // ============================================================================
 
-export type AttachmentProps = HTMLAttributes<HTMLDivElement> & {
+export type AttachmentProps = ComponentProps<"div"> & {
   data: AttachmentData;
   onRemove?: () => void;
 };
 
-export const Attachment = ({
+export const Attachment = withRef("Attachment", function Attachment({
   data,
   onRemove,
   className,
   children,
   ...props
-}: AttachmentProps) => {
+}: AttachmentProps) {
   const { variant } = useAttachmentsContext();
   const mediaCategory = getMediaCategory(data);
 
@@ -225,21 +226,21 @@ export const Attachment = ({
       </div>
     </AttachmentContext.Provider>
   );
-};
+});
 
 // ============================================================================
 // AttachmentPreview - Media preview
 // ============================================================================
 
-export type AttachmentPreviewProps = HTMLAttributes<HTMLDivElement> & {
+export type AttachmentPreviewProps = ComponentProps<"div"> & {
   fallbackIcon?: ReactNode;
 };
 
-export const AttachmentPreview = ({
+export const AttachmentPreview = withRef("AttachmentPreview", function AttachmentPreview({
   fallbackIcon,
   className,
   ...props
-}: AttachmentPreviewProps) => {
+}: AttachmentPreviewProps) {
   const { data, mediaCategory, variant } = useAttachmentContext();
 
   const iconSize = variant === "inline" ? "size-3" : "size-4";
@@ -275,21 +276,21 @@ export const AttachmentPreview = ({
       {renderContent()}
     </div>
   );
-};
+});
 
 // ============================================================================
 // AttachmentInfo - Name and type display
 // ============================================================================
 
-export type AttachmentInfoProps = HTMLAttributes<HTMLDivElement> & {
+export type AttachmentInfoProps = ComponentProps<"div"> & {
   showMediaType?: boolean;
 };
 
-export const AttachmentInfo = ({
+export const AttachmentInfo = withRef("AttachmentInfo", function AttachmentInfo({
   showMediaType = false,
   className,
   ...props
-}: AttachmentInfoProps) => {
+}: AttachmentInfoProps) {
   const { data, variant } = useAttachmentContext();
   const label = getAttachmentLabel(data);
 
@@ -307,7 +308,7 @@ export const AttachmentInfo = ({
       )}
     </div>
   );
-};
+});
 
 // ============================================================================
 // AttachmentRemove - Remove button
@@ -317,12 +318,12 @@ export type AttachmentRemoveProps = ComponentProps<typeof Button> & {
   label?: string;
 };
 
-export const AttachmentRemove = ({
+export const AttachmentRemove = withRef("AttachmentRemove", function AttachmentRemove({
   label = "Remove",
   className,
   children,
   ...props
-}: AttachmentRemoveProps) => {
+}: AttachmentRemoveProps) {
   const { onRemove, variant } = useAttachmentContext();
 
   const handleClick = useCallback(
@@ -365,7 +366,7 @@ export const AttachmentRemove = ({
       <span className="sr-only">{label}</span>
     </Button>
   );
-};
+});
 
 // ============================================================================
 // AttachmentHoverCard - Hover preview
@@ -385,44 +386,50 @@ export type AttachmentHoverCardTriggerProps = ComponentProps<
   typeof HoverCardTrigger
 >;
 
-export const AttachmentHoverCardTrigger = (
+export const AttachmentHoverCardTrigger = withRef("AttachmentHoverCardTrigger", function AttachmentHoverCardTrigger(
   props: AttachmentHoverCardTriggerProps
-) => <HoverCardTrigger {...props} />;
+) {
+  return <HoverCardTrigger {...props} />;
+});
 
 export type AttachmentHoverCardContentProps = ComponentProps<
   typeof HoverCardContent
 >;
 
-export const AttachmentHoverCardContent = ({
+export const AttachmentHoverCardContent = withRef("AttachmentHoverCardContent", function AttachmentHoverCardContent({
   align = "start",
   className,
   ...props
-}: AttachmentHoverCardContentProps) => (
-  <HoverCardContent
-    align={align}
-    className={cn("w-auto p-2", className)}
-    {...props}
-  />
-);
+}: AttachmentHoverCardContentProps) {
+  return (
+    <HoverCardContent
+      align={align}
+      className={cn("w-auto p-2", className)}
+      {...props}
+    />
+  );
+});
 
 // ============================================================================
 // AttachmentEmpty - Empty state
 // ============================================================================
 
-export type AttachmentEmptyProps = HTMLAttributes<HTMLDivElement>;
+export type AttachmentEmptyProps = ComponentProps<"div">;
 
-export const AttachmentEmpty = ({
+export const AttachmentEmpty = withRef("AttachmentEmpty", function AttachmentEmpty({
   className,
   children,
   ...props
-}: AttachmentEmptyProps) => (
-  <div
-    className={cn(
-      "flex items-center justify-center p-4 text-muted-foreground text-sm",
-      className
-    )}
-    {...props}
-  >
-    {children ?? "No attachments"}
-  </div>
-);
+}: AttachmentEmptyProps) {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-center p-4 text-muted-foreground text-sm",
+        className
+      )}
+      {...props}
+    >
+      {children ?? "No attachments"}
+    </div>
+  );
+});

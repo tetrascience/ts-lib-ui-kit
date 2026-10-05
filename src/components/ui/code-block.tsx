@@ -10,7 +10,7 @@ import {
   useState,
 } from "react";
 
-import type { ComponentProps, CSSProperties, HTMLAttributes } from "react";
+import type { ComponentProps, CSSProperties } from "react";
 import type { BundledLanguage, ThemedToken } from "shiki";
 
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { withRef } from "@/lib/react18-compat";
 import { getCodeBlockHighlighter } from "@/lib/shiki";
 import { cn } from "@/lib/utils";
 
@@ -106,7 +107,7 @@ const LineSpan = ({
 );
 
 // Types
-type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
+type CodeBlockProps = ComponentProps<"div"> & {
   code: string;
   language: BundledLanguage;
   showLineNumbers?: boolean;
@@ -307,75 +308,85 @@ const CodeBlockBody = memo(
 
 CodeBlockBody.displayName = "CodeBlockBody";
 
-export const CodeBlockContainer = ({
+export const CodeBlockContainer = withRef("CodeBlockContainer", function CodeBlockContainer({
   className,
   language,
   style,
   ...props
-}: HTMLAttributes<HTMLDivElement> & { language: string }) => (
-  <div
-    className={cn(
-      "group relative w-full overflow-hidden rounded-md border bg-background text-foreground",
-      className
-    )}
-    data-language={language}
-    style={{
-      containIntrinsicSize: "auto 200px",
-      contentVisibility: "auto",
-      ...style,
-    }}
-    {...props}
-  />
-);
+}: ComponentProps<"div"> & { language: string }) {
+  return (
+    <div
+      className={cn(
+        "group relative w-full overflow-hidden rounded-md border bg-background text-foreground",
+        className
+      )}
+      data-language={language}
+      style={{
+        containIntrinsicSize: "auto 200px",
+        contentVisibility: "auto",
+        ...style,
+      }}
+      {...props}
+    />
+  );
+});
 
-export const CodeBlockHeader = ({
+export const CodeBlockHeader = withRef("CodeBlockHeader", function CodeBlockHeader({
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex items-center justify-between border-b bg-muted/80 px-3 py-2 text-muted-foreground text-xs",
-      className
-    )}
-    {...props}
-  >
-    {children}
-  </div>
-);
+}: ComponentProps<"div">) {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between border-b bg-muted/80 px-3 py-2 text-muted-foreground text-xs",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+});
 
-export const CodeBlockTitle = ({
+export const CodeBlockTitle = withRef("CodeBlockTitle", function CodeBlockTitle({
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex items-center gap-2", className)} {...props}>
-    {children}
-  </div>
-);
+}: ComponentProps<"div">) {
+  return (
+    <div className={cn("flex items-center gap-2", className)} {...props}>
+      {children}
+    </div>
+  );
+});
 
-export const CodeBlockFilename = ({
+export const CodeBlockFilename = withRef("CodeBlockFilename", function CodeBlockFilename({
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLSpanElement>) => (
-  <span className={cn("font-mono", className)} {...props}>
-    {children}
-  </span>
-);
+}: ComponentProps<"span">) {
+  return (
+    <span className={cn("font-mono", className)} {...props}>
+      {children}
+    </span>
+  );
+});
 
-export const CodeBlockActions = ({
+export const CodeBlockActions = withRef("CodeBlockActions", function CodeBlockActions({
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn("-my-1 -mr-1 flex items-center gap-2", className)}
-    {...props}
-  >
-    {children}
-  </div>
-);
+}: ComponentProps<"div">) {
+  return (
+    <div
+      className={cn("-my-1 -mr-1 flex items-center gap-2", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+});
 
 export const CodeBlockContent = ({
   code,
@@ -431,14 +442,14 @@ export const CodeBlockContent = ({
   );
 };
 
-export const CodeBlock = ({
+export const CodeBlock = withRef("CodeBlock", function CodeBlock({
   code,
   language,
   showLineNumbers = false,
   className,
   children,
   ...props
-}: CodeBlockProps) => {
+}: CodeBlockProps) {
   const contextValue = useMemo(() => ({ code }), [code]);
 
   return (
@@ -453,7 +464,7 @@ export const CodeBlock = ({
       </CodeBlockContainer>
     </CodeBlockContext.Provider>
   );
-};
+});
 
 export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
   onCopy?: () => void;
@@ -461,14 +472,14 @@ export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
   timeout?: number;
 };
 
-export const CodeBlockCopyButton = ({
+export const CodeBlockCopyButton = withRef("CodeBlockCopyButton", function CodeBlockCopyButton({
   onCopy,
   onError,
   timeout = 2000,
   children,
   className,
   ...props
-}: CodeBlockCopyButtonProps) => {
+}: CodeBlockCopyButtonProps) {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef<number>(0);
   const { code } = useContext(CodeBlockContext);
@@ -515,7 +526,7 @@ export const CodeBlockCopyButton = ({
       {children ?? <Icon size={14} />}
     </Button>
   );
-};
+});
 
 export type CodeBlockLanguageSelectorProps = ComponentProps<typeof Select>;
 
@@ -527,44 +538,52 @@ export type CodeBlockLanguageSelectorTriggerProps = ComponentProps<
   typeof SelectTrigger
 >;
 
-export const CodeBlockLanguageSelectorTrigger = ({
+export const CodeBlockLanguageSelectorTrigger = withRef("CodeBlockLanguageSelectorTrigger", function CodeBlockLanguageSelectorTrigger({
   className,
   ...props
-}: CodeBlockLanguageSelectorTriggerProps) => (
-  <SelectTrigger
-    aria-label="Select language"
-    className={cn(
-      "h-7 border-none bg-transparent px-2 text-xs shadow-none",
-      className
-    )}
-    size="sm"
-    {...props}
-  />
-);
+}: CodeBlockLanguageSelectorTriggerProps) {
+  return (
+    <SelectTrigger
+      aria-label="Select language"
+      className={cn(
+        "h-7 border-none bg-transparent px-2 text-xs shadow-none",
+        className
+      )}
+      size="sm"
+      {...props}
+    />
+  );
+});
 
 export type CodeBlockLanguageSelectorValueProps = ComponentProps<
   typeof SelectValue
 >;
 
-export const CodeBlockLanguageSelectorValue = (
+export const CodeBlockLanguageSelectorValue = withRef("CodeBlockLanguageSelectorValue", function CodeBlockLanguageSelectorValue(
   props: CodeBlockLanguageSelectorValueProps
-) => <SelectValue {...props} />;
+) {
+  return <SelectValue {...props} />;
+});
 
 export type CodeBlockLanguageSelectorContentProps = ComponentProps<
   typeof SelectContent
 >;
 
-export const CodeBlockLanguageSelectorContent = ({
+export const CodeBlockLanguageSelectorContent = withRef("CodeBlockLanguageSelectorContent", function CodeBlockLanguageSelectorContent({
   align = "end",
   ...props
-}: CodeBlockLanguageSelectorContentProps) => (
-  <SelectContent align={align} {...props} />
-);
+}: CodeBlockLanguageSelectorContentProps) {
+  return (
+    <SelectContent align={align} {...props} />
+  );
+});
 
 export type CodeBlockLanguageSelectorItemProps = ComponentProps<
   typeof SelectItem
 >;
 
-export const CodeBlockLanguageSelectorItem = (
+export const CodeBlockLanguageSelectorItem = withRef("CodeBlockLanguageSelectorItem", function CodeBlockLanguageSelectorItem(
   props: CodeBlockLanguageSelectorItemProps
-) => <SelectItem {...props} />;
+) {
+  return <SelectItem {...props} />;
+});

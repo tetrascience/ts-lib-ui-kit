@@ -22,6 +22,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 interface ReasoningContextValue {
@@ -53,7 +54,7 @@ const AUTO_CLOSE_DELAY = 1000;
 const MS_IN_S = 1000;
 
 export const Reasoning = memo(
-  ({
+  withRef("Reasoning", function Reasoning({
     className,
     isStreaming = false,
     open,
@@ -62,7 +63,7 @@ export const Reasoning = memo(
     duration: durationProp,
     children,
     ...props
-  }: ReasoningProps) => {
+  }: ReasoningProps) {
     const resolvedDefaultOpen = defaultOpen ?? isStreaming;
     // Track if defaultOpen was explicitly set to false (to prevent auto-open)
     const isExplicitlyClosed = defaultOpen === false;
@@ -142,7 +143,7 @@ export const Reasoning = memo(
         </Collapsible>
       </ReasoningContext.Provider>
     );
-  }
+  })
 );
 
 export type ReasoningTriggerProps = ComponentProps<
@@ -162,12 +163,12 @@ const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
 };
 
 export const ReasoningTrigger = memo(
-  ({
+  withRef("ReasoningTrigger", function ReasoningTrigger({
     className,
     children,
     getThinkingMessage = defaultGetThinkingMessage,
     ...props
-  }: ReasoningTriggerProps) => {
+  }: ReasoningTriggerProps) {
     const { isStreaming, isOpen, duration } = useReasoning();
 
     return (
@@ -193,7 +194,7 @@ export const ReasoningTrigger = memo(
         )}
       </CollapsibleTrigger>
     );
-  }
+  })
 );
 
 export type ReasoningContentProps = ComponentProps<
@@ -203,7 +204,7 @@ export type ReasoningContentProps = ComponentProps<
 };
 
 export const ReasoningContent = memo(
-  ({ className, children, ...props }: ReasoningContentProps) => {
+  withRef("ReasoningContent", function ReasoningContent({ className, children, ...props }: ReasoningContentProps) {
     // Plugins load lazily (SW-2007): markdown streams in immediately and
     // code/math/mermaid rendering upgrades in place once the chunk arrives.
     const plugins = useStreamdownPlugins();
@@ -220,7 +221,7 @@ export const ReasoningContent = memo(
         <Streamdown plugins={plugins}>{children}</Streamdown>
       </CollapsibleContent>
     );
-  }
+  })
 );
 
 Reasoning.displayName = "Reasoning";

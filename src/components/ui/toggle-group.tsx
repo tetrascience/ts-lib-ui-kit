@@ -4,6 +4,7 @@ import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui"
 import * as React from "react"
 
 import { toggleVariants } from "@/components/ui/toggle"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const ToggleGroupContext = React.createContext<
@@ -18,7 +19,7 @@ const ToggleGroupContext = React.createContext<
   orientation: "horizontal",
 })
 
-function ToggleGroup({
+const ToggleGroup = withRef("ToggleGroup", function ToggleGroup({
   className,
   variant,
   size,
@@ -52,9 +53,9 @@ function ToggleGroup({
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
   )
-}
+})
 
-function ToggleGroupItem({
+const ToggleGroupItem = withRef("ToggleGroupItem", function ToggleGroupItem({
   className,
   children,
   variant = "default",
@@ -141,6 +142,6 @@ function ToggleGroupItem({
       {children}
     </ToggleGroupPrimitive.Item>
   )
-}
+})
 
 export { ToggleGroup, ToggleGroupItem }

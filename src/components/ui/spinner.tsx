@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import { Loader2Icon } from "lucide-react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const spinnerVariants = cva("animate-spin", {
@@ -17,7 +18,7 @@ const spinnerVariants = cva("animate-spin", {
   },
 })
 
-function Spinner({
+const Spinner = withRef("Spinner", function Spinner({
   className,
   size = "default",
   ...props
@@ -32,6 +33,6 @@ function Spinner({
       {...props}
     />
   )
-}
+})
 
 export { Spinner, spinnerVariants }

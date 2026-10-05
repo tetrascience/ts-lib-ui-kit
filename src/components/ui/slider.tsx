@@ -1,9 +1,10 @@
 import { Slider as SliderPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function Slider({
+const Slider = withRef("Slider", function Slider({
   className,
   defaultValue,
   value,
@@ -58,6 +59,6 @@ function Slider({
       ))}
     </SliderPrimitive.Root>
   )
-}
+})
 
 export { Slider }

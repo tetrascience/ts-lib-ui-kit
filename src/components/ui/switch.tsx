@@ -3,9 +3,10 @@
 import { Switch as SwitchPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function Switch({
+const Switch = withRef("Switch", function Switch({
   className,
   size = "default",
   ...props
@@ -29,6 +30,6 @@ function Switch({
       />
     </SwitchPrimitive.Root>
   )
-}
+})
 
 export { Switch }

@@ -1,9 +1,10 @@
 import { Separator as SeparatorPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function Separator({
+const Separator = withRef("Separator", function Separator({
   className,
   orientation = "horizontal",
   decorative = true,
@@ -21,6 +22,6 @@ function Separator({
       {...props}
     />
   )
-}
+})
 
 export { Separator }

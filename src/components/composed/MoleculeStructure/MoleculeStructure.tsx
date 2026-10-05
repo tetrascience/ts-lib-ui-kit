@@ -6,6 +6,7 @@ import { useRDKit } from "./use-rdkit"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { useIsDark } from "@/hooks/use-is-dark"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 export interface MoleculeStructureProps
@@ -65,7 +66,7 @@ function makeResponsive(svg: string): string {
  * <MoleculeStructure smiles="CC(=O)Oc1ccccc1C(=O)O" className="size-40" />
  * ```
  */
-export function MoleculeStructure({
+export const MoleculeStructure = withRef("MoleculeStructure", function MoleculeStructure({
   smiles,
   label,
   dark,
@@ -156,4 +157,4 @@ export function MoleculeStructure({
       )}
     </div>
   )
-}
+})

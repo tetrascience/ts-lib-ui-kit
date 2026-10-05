@@ -2,6 +2,7 @@ import { ChevronRightIcon, CheckIcon } from "lucide-react"
 import { ContextMenu as ContextMenuPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
@@ -11,7 +12,7 @@ function ContextMenu({
   return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />
 }
 
-function ContextMenuTrigger({
+const ContextMenuTrigger = withRef("ContextMenuTrigger", function ContextMenuTrigger({
   className,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Trigger>) {
@@ -22,15 +23,15 @@ function ContextMenuTrigger({
       {...props}
     />
   )
-}
+})
 
-function ContextMenuGroup({
+const ContextMenuGroup = withRef("ContextMenuGroup", function ContextMenuGroup({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Group>) {
   return (
     <ContextMenuPrimitive.Group data-slot="context-menu-group" {...props} />
   )
-}
+})
 
 function ContextMenuPortal({
   ...props
@@ -46,7 +47,7 @@ function ContextMenuSub({
   return <ContextMenuPrimitive.Sub data-slot="context-menu-sub" {...props} />
 }
 
-function ContextMenuRadioGroup({
+const ContextMenuRadioGroup = withRef("ContextMenuRadioGroup", function ContextMenuRadioGroup({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.RadioGroup>) {
   return (
@@ -55,9 +56,9 @@ function ContextMenuRadioGroup({
       {...props}
     />
   )
-}
+})
 
-function ContextMenuContent({
+const ContextMenuContent = withRef("ContextMenuContent", function ContextMenuContent({
   className,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Content> & {
@@ -72,9 +73,9 @@ function ContextMenuContent({
       />
     </ContextMenuPrimitive.Portal>
   )
-}
+})
 
-function ContextMenuItem({
+const ContextMenuItem = withRef("ContextMenuItem", function ContextMenuItem({
   className,
   inset,
   variant = "default",
@@ -95,9 +96,9 @@ function ContextMenuItem({
       {...props}
     />
   )
-}
+})
 
-function ContextMenuSubTrigger({
+const ContextMenuSubTrigger = withRef("ContextMenuSubTrigger", function ContextMenuSubTrigger({
   className,
   inset,
   children,
@@ -119,9 +120,9 @@ function ContextMenuSubTrigger({
       <ChevronRightIcon className="ml-auto" />
     </ContextMenuPrimitive.SubTrigger>
   )
-}
+})
 
-function ContextMenuSubContent({
+const ContextMenuSubContent = withRef("ContextMenuSubContent", function ContextMenuSubContent({
   className,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.SubContent>) {
@@ -132,9 +133,9 @@ function ContextMenuSubContent({
       {...props}
     />
   )
-}
+})
 
-function ContextMenuCheckboxItem({
+const ContextMenuCheckboxItem = withRef("ContextMenuCheckboxItem", function ContextMenuCheckboxItem({
   className,
   children,
   checked,
@@ -163,9 +164,9 @@ function ContextMenuCheckboxItem({
       {children}
     </ContextMenuPrimitive.CheckboxItem>
   )
-}
+})
 
-function ContextMenuRadioItem({
+const ContextMenuRadioItem = withRef("ContextMenuRadioItem", function ContextMenuRadioItem({
   className,
   children,
   inset,
@@ -192,9 +193,9 @@ function ContextMenuRadioItem({
       {children}
     </ContextMenuPrimitive.RadioItem>
   )
-}
+})
 
-function ContextMenuLabel({
+const ContextMenuLabel = withRef("ContextMenuLabel", function ContextMenuLabel({
   className,
   inset,
   ...props
@@ -212,9 +213,9 @@ function ContextMenuLabel({
       {...props}
     />
   )
-}
+})
 
-function ContextMenuSeparator({
+const ContextMenuSeparator = withRef("ContextMenuSeparator", function ContextMenuSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Separator>) {
@@ -225,9 +226,9 @@ function ContextMenuSeparator({
       {...props}
     />
   )
-}
+})
 
-function ContextMenuShortcut({
+const ContextMenuShortcut = withRef("ContextMenuShortcut", function ContextMenuShortcut({
   className,
   ...props
 }: React.ComponentProps<"span">) {
@@ -241,7 +242,7 @@ function ContextMenuShortcut({
       {...props}
     />
   )
-}
+})
 
 export {
   ContextMenu,

@@ -5,6 +5,7 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 const CHEVRONS = {
@@ -28,7 +29,7 @@ export interface ShellCollapseButtonProps extends Omit<React.ComponentProps<type
  * a chevron, placed in a zone's header row when expanded and at the top of the
  * collapsed rail. One component so every zone's trigger looks identical.
  */
-function ShellCollapseButton({
+const ShellCollapseButton = withRef("ShellCollapseButton", function ShellCollapseButton({
   direction,
   label,
   tooltipSide = "right",
@@ -60,6 +61,6 @@ function ShellCollapseButton({
       </Tooltip>
     </TooltipProvider>
   );
-}
+});
 
 export { ShellCollapseButton };

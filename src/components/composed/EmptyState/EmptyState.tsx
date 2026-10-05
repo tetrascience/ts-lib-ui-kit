@@ -9,6 +9,7 @@ import * as React from "react";
 
 import type { LucideIcon } from "lucide-react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export type EmptyStateVariant =
@@ -61,7 +62,7 @@ export interface EmptyStateProps extends React.ComponentProps<"div"> {
   action?: React.ReactNode;
 }
 
-function EmptyState({
+const EmptyState = withRef("EmptyState", function EmptyState({
   variant = "no-data",
   title,
   description,
@@ -102,6 +103,6 @@ function EmptyState({
       {action}
     </div>
   );
-}
+});
 
 export { EmptyState };

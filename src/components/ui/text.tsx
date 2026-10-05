@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 /**
@@ -107,9 +108,11 @@ const DEFAULT_ELEMENT: Record<TextVariant, TextElement> = {
  * `ComponentProps<"tag">`, because every handler and the `ref` on a concrete
  * tag is parameterised by that one element type — which cannot hold once `as`
  * is polymorphic. `HTMLElement` is the widest type that stays assignable to all
- * of them. No `ref` is forwarded; the kit is migrating off `forwardRef`.
+ * of them. `ref` is typed the same way, as `HTMLElement`, and reaches whichever
+ * element `as` resolves to.
  */
 interface TextProps extends React.HTMLAttributes<HTMLElement>, VariantProps<typeof textVariants> {
+  ref?: React.Ref<HTMLElement>
   /**
    * Semantic element to render. Defaults per `variant` (see `DEFAULT_ELEMENT`).
    * Set it explicitly whenever the document outline and the visual scale
@@ -136,7 +139,7 @@ interface TextProps extends React.HTMLAttributes<HTMLElement>, VariantProps<type
   truncate?: boolean;
 }
 
-function Text({
+const Text = withRef("Text", function Text({
   className,
   variant = "body",
   state = "default",
@@ -148,7 +151,9 @@ function Text({
 }: TextProps) {
   const resolvedVariant: TextVariant = variant ?? "body";
   const resolvedElement: TextElement = as ?? DEFAULT_ELEMENT[resolvedVariant];
-  const Comp: React.ElementType = resolvedElement;
+  // Typed by what every allowed tag shares. A plain `React.ElementType` makes
+  // TypeScript intersect the `ref` types of all those tags, which no ref satisfies.
+  const Comp = resolvedElement as unknown as React.ComponentType<Omit<TextProps, "as" | "icon" | "truncate" | keyof VariantProps<typeof textVariants>>>;
 
   // An icon or a truncating label needs a flex root and a wrapper it can
   // shrink; plain text keeps the bare element so inline flow is untouched.
@@ -178,7 +183,7 @@ function Text({
       {isComposite ? <span className={cn("min-w-0", truncate && "truncate")}>{children}</span> : children}
     </Comp>
   );
-}
+});
 
 export { Text, textVariants };
 export type { TextProps, TextElement, TextVariant };

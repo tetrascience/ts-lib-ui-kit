@@ -5,6 +5,7 @@ import type { ComponentProps } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 
@@ -88,13 +89,13 @@ const detectSpeechInputMode = (): SpeechInputMode => {
   return "none";
 };
 
-export const SpeechInput = ({
+export const SpeechInput = withRef("SpeechInput", function SpeechInput({
   className,
   onTranscriptionChange,
   onAudioRecorded,
   lang = "en-US",
   ...props
-}: SpeechInputProps) => {
+}: SpeechInputProps) {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mode] = useState<SpeechInputMode>(detectSpeechInputMode);
@@ -322,4 +323,4 @@ export const SpeechInput = ({
       </Button>
     </div>
   );
-};
+});

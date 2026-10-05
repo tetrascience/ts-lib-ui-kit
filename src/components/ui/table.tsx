@@ -1,8 +1,9 @@
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function Table({
+const Table = withRef("Table", function Table({
   className,
   containerClassName,
   variant,
@@ -31,9 +32,9 @@ function Table({
       />
     </div>
   )
-}
+})
 
-function TableHeader({
+const TableHeader = withRef("TableHeader", function TableHeader({
   className,
   variant,
   ...props
@@ -51,9 +52,9 @@ function TableHeader({
       {...props}
     />
   )
-}
+})
 
-function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
+const TableBody = withRef("TableBody", function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
@@ -61,9 +62,9 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
       {...props}
     />
   )
-}
+})
 
-function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
+const TableFooter = withRef("TableFooter", function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
     <tfoot
       data-slot="table-footer"
@@ -74,9 +75,9 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
       {...props}
     />
   )
-}
+})
 
-function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+const TableRow = withRef("TableRow", function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       data-slot="table-row"
@@ -87,9 +88,9 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
       {...props}
     />
   )
-}
+})
 
-function TableHead({
+const TableHead = withRef("TableHead", function TableHead({
   className,
   variant,
   truncate,
@@ -112,9 +113,9 @@ function TableHead({
       {...props}
     />
   )
-}
+})
 
-function TableCell({
+const TableCell = withRef("TableCell", function TableCell({
   className,
   variant,
   truncate,
@@ -138,9 +139,9 @@ function TableCell({
       {...props}
     />
   )
-}
+})
 
-function TableCaption({
+const TableCaption = withRef("TableCaption", function TableCaption({
   className,
   ...props
 }: React.ComponentProps<"caption">) {
@@ -151,7 +152,7 @@ function TableCaption({
       {...props}
     />
   )
-}
+})
 
 export {
   Table,

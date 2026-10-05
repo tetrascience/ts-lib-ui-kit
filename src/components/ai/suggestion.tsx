@@ -3,28 +3,31 @@ import { useCallback } from "react";
 import type { ComponentProps } from "react";
 
 import { Button } from "@/components/ui/button";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export type SuggestionsProps = ComponentProps<"div">;
 
-export const Suggestions = ({
+export const Suggestions = withRef("Suggestions", function Suggestions({
   className,
   children,
   ...props
-}: SuggestionsProps) => (
-  <div className="w-full overflow-x-auto py-1" {...props}>
-    <div className={cn("flex w-max flex-nowrap items-center gap-2 px-4", className)}>
-      {children}
+}: SuggestionsProps) {
+  return (
+    <div className="w-full overflow-x-auto py-1" {...props}>
+      <div className={cn("flex w-max flex-nowrap items-center gap-2 px-4", className)}>
+        {children}
+      </div>
     </div>
-  </div>
-);
+  );
+});
 
 export type SuggestionProps = Omit<ComponentProps<typeof Button>, "onClick"> & {
   suggestion: string;
   onClick?: (suggestion: string) => void;
 };
 
-export const Suggestion = ({
+export const Suggestion = withRef("Suggestion", function Suggestion({
   suggestion,
   onClick,
   className,
@@ -32,7 +35,7 @@ export const Suggestion = ({
   size = "sm",
   children,
   ...props
-}: SuggestionProps) => {
+}: SuggestionProps) {
   const handleClick = useCallback(() => {
     onClick?.(suggestion);
   }, [onClick, suggestion]);
@@ -49,4 +52,4 @@ export const Suggestion = ({
       {children || suggestion}
     </Button>
   );
-};
+});

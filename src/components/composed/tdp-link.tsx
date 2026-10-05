@@ -4,6 +4,8 @@ import { buildTdpUrl, getTdpBaseUrlFromReferrer, navigateToTdpUrl } from './tdp-
 
 import type { TdpNavigationOptions } from './tdp-url';
 
+import { withRef } from '@/lib/react18-compat';
+
 export interface TdpNavigationContextValue {
   /** The resolved TDP base URL (origin + org path prefix), or null if not resolved */
   tdpBaseUrl: string | null;
@@ -185,14 +187,14 @@ export interface TDPLinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchor
  * </TDPLink>
  * ```
  */
-export const TDPLink: React.FC<TDPLinkProps> = ({
+export const TDPLink = withRef('TDPLink', function TDPLink({
   path,
   navigationOptions = { newTab: true },
   children,
   onClick,
   className,
   ...rest
-}) => {
+}: TDPLinkProps) {
   const { getTdpUrl, navigateToTdp } = useTdpNavigationContext();
   const href = getTdpUrl(path);
 
@@ -220,4 +222,4 @@ export const TDPLink: React.FC<TDPLinkProps> = ({
       {children}
     </a>
   );
-};
+});

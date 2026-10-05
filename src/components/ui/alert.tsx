@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
@@ -26,7 +27,7 @@ const alertVariants = cva(
   }
 )
 
-function Alert({
+const Alert = withRef("Alert", function Alert({
   className,
   variant,
   ...props
@@ -39,9 +40,9 @@ function Alert({
       {...props}
     />
   )
-}
+})
 
-function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
+const AlertTitle = withRef("AlertTitle", function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-title"
@@ -52,9 +53,9 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   )
-}
+})
 
-function AlertDescription({
+const AlertDescription = withRef("AlertDescription", function AlertDescription({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -68,9 +69,9 @@ function AlertDescription({
       {...props}
     />
   )
-}
+})
 
-function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
+const AlertAction = withRef("AlertAction", function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-action"
@@ -78,6 +79,6 @@ function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   )
-}
+})
 
 export { Alert, AlertTitle, AlertDescription, AlertAction }

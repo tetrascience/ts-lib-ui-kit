@@ -27,6 +27,7 @@ import type { FilterColumnConfig } from "@/components/ui/data-table/data-table";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_PLATE_BARCODE_FIELD = "plateBarcode";
@@ -475,7 +476,7 @@ function PlateMapEditorManifestCard({
  * />
  * ```
  */
-export function PlateMapEditor<T extends WellRecord = WellRecord>({
+export const PlateMapEditor = withRef("PlateMapEditor", function PlateMapEditor<T extends WellRecord = WellRecord>({
   format,
   rows,
   columns,
@@ -898,6 +899,6 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
       {footer ? <div className="flex flex-wrap justify-end gap-2 pt-2">{footer}</div> : null}
     </div>
   );
-}
+});
 
 export { Badge as PlateBadge };

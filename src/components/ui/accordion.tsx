@@ -2,10 +2,11 @@ import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import { Accordion as AccordionPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
-function Accordion({
+const Accordion = withRef("Accordion", function Accordion({
   className,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
@@ -16,9 +17,9 @@ function Accordion({
       {...props}
     />
   )
-}
+})
 
-function AccordionItem({
+const AccordionItem = withRef("AccordionItem", function AccordionItem({
   className,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Item>) {
@@ -29,9 +30,9 @@ function AccordionItem({
       {...props}
     />
   )
-}
+})
 
-function AccordionTrigger({
+const AccordionTrigger = withRef("AccordionTrigger", function AccordionTrigger({
   className,
   children,
   ...props
@@ -52,9 +53,9 @@ function AccordionTrigger({
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   )
-}
+})
 
-function AccordionContent({
+const AccordionContent = withRef("AccordionContent", function AccordionContent({
   className,
   children,
   ...props
@@ -75,6 +76,6 @@ function AccordionContent({
       </div>
     </AccordionPrimitive.Content>
   )
-}
+})
 
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }

@@ -7,6 +7,7 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -97,7 +98,7 @@ export interface DataAppShellRightPanelTriggerProps
  * onto its child — any clickable element (a link, menu item, custom button)
  * can act as the trigger.
  */
-function DataAppShellRightPanelTrigger({
+const DataAppShellRightPanelTrigger = withRef("DataAppShellRightPanelTrigger", function DataAppShellRightPanelTrigger({
   className,
   variant,
   size,
@@ -118,7 +119,7 @@ function DataAppShellRightPanelTrigger({
       {asChild ? children : (children ?? <PanelRightOpen />)}
     </Comp>
   );
-}
+});
 
 // =============================================================================
 // DragHandle — pointer + keyboard resize on the panel's left edge
@@ -319,7 +320,7 @@ export interface DataAppShellRightPanelProps extends Omit<React.ComponentProps<"
  * </div>
  * ```
  */
-function DataAppShellRightPanel({
+const DataAppShellRightPanel = withRef("DataAppShellRightPanel", function DataAppShellRightPanel({
   id,
   open,
   onOpenChange,
@@ -429,6 +430,8 @@ function DataAppShellRightPanel({
       <>
         <Sheet open={open} onOpenChange={onOpenChange}>
           <SheetContent
+            // The overlay renders a div, which satisfies the panel's HTMLElement ref.
+            ref={ref as React.Ref<HTMLDivElement>}
             side="right"
             showCloseButton={false}
             data-slot="data-app-shell-right-panel"
@@ -492,6 +495,6 @@ function DataAppShellRightPanel({
       {content}
     </aside>
   );
-}
+});
 
 export { DataAppShellRightPanel, DataAppShellRightPanelTrigger, dataAppShellRightPanelTriggerVariants };

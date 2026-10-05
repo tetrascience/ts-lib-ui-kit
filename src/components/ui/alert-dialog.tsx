@@ -2,6 +2,7 @@ import { AlertDialog as AlertDialogPrimitive } from "radix-ui"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function AlertDialog({
@@ -10,13 +11,13 @@ function AlertDialog({
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />
 }
 
-function AlertDialogTrigger({
+const AlertDialogTrigger = withRef("AlertDialogTrigger", function AlertDialogTrigger({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Trigger>) {
   return (
     <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" {...props} />
   )
-}
+})
 
 function AlertDialogPortal({
   ...props
@@ -26,7 +27,7 @@ function AlertDialogPortal({
   )
 }
 
-function AlertDialogOverlay({
+const AlertDialogOverlay = withRef("AlertDialogOverlay", function AlertDialogOverlay({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) {
@@ -40,9 +41,9 @@ function AlertDialogOverlay({
       {...props}
     />
   )
-}
+})
 
-function AlertDialogContent({
+const AlertDialogContent = withRef("AlertDialogContent", function AlertDialogContent({
   className,
   size = "default",
   ...props
@@ -63,9 +64,9 @@ function AlertDialogContent({
       />
     </AlertDialogPortal>
   )
-}
+})
 
-function AlertDialogHeader({
+const AlertDialogHeader = withRef("AlertDialogHeader", function AlertDialogHeader({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -79,9 +80,9 @@ function AlertDialogHeader({
       {...props}
     />
   )
-}
+})
 
-function AlertDialogFooter({
+const AlertDialogFooter = withRef("AlertDialogFooter", function AlertDialogFooter({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -95,9 +96,9 @@ function AlertDialogFooter({
       {...props}
     />
   )
-}
+})
 
-function AlertDialogMedia({
+const AlertDialogMedia = withRef("AlertDialogMedia", function AlertDialogMedia({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -111,9 +112,9 @@ function AlertDialogMedia({
       {...props}
     />
   )
-}
+})
 
-function AlertDialogTitle({
+const AlertDialogTitle = withRef("AlertDialogTitle", function AlertDialogTitle({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Title>) {
@@ -127,9 +128,9 @@ function AlertDialogTitle({
       {...props}
     />
   )
-}
+})
 
-function AlertDialogDescription({
+const AlertDialogDescription = withRef("AlertDialogDescription", function AlertDialogDescription({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Description>) {
@@ -143,9 +144,9 @@ function AlertDialogDescription({
       {...props}
     />
   )
-}
+})
 
-function AlertDialogAction({
+const AlertDialogAction = withRef("AlertDialogAction", function AlertDialogAction({
   className,
   variant = "default",
   size = "default",
@@ -161,9 +162,9 @@ function AlertDialogAction({
       />
     </Button>
   )
-}
+})
 
-function AlertDialogCancel({
+const AlertDialogCancel = withRef("AlertDialogCancel", function AlertDialogCancel({
   className,
   variant = "outline",
   size = "default",
@@ -179,7 +180,7 @@ function AlertDialogCancel({
       />
     </Button>
   )
-}
+})
 
 export {
   AlertDialog,

@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -41,7 +42,7 @@ export interface TopBarProps
  * - **center** is an optional "context" slot (e.g. a version/status selector).
  * - **right** holds actions, a help affordance, a `UserMenu`, etc.
  */
-function TopBar({ left, center, right, sticky, className, ...props }: TopBarProps) {
+const TopBar = withRef("TopBar", function TopBar({ left, center, right, sticky, className, ...props }: TopBarProps) {
   return (
     <div
       data-slot="top-bar"
@@ -72,6 +73,6 @@ function TopBar({ left, center, right, sticky, className, ...props }: TopBarProp
       </div>
     </div>
   );
-}
+});
 
 export { TopBar, topBarVariants };

@@ -2,6 +2,7 @@ import { CheckIcon, ChevronRightIcon } from "lucide-react"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
@@ -26,7 +27,7 @@ function DropdownMenuPortal({
   )
 }
 
-function DropdownMenuTrigger({
+const DropdownMenuTrigger = withRef("DropdownMenuTrigger", function DropdownMenuTrigger({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
   return (
@@ -35,9 +36,9 @@ function DropdownMenuTrigger({
       {...props}
     />
   )
-}
+})
 
-function DropdownMenuContent({
+const DropdownMenuContent = withRef("DropdownMenuContent", function DropdownMenuContent({
   className,
   align = "start",
   sideOffset = 4,
@@ -54,17 +55,17 @@ function DropdownMenuContent({
       />
     </DropdownMenuPrimitive.Portal>
   )
-}
+})
 
-function DropdownMenuGroup({
+const DropdownMenuGroup = withRef("DropdownMenuGroup", function DropdownMenuGroup({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Group>) {
   return (
     <DropdownMenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
   )
-}
+})
 
-function DropdownMenuItem({
+const DropdownMenuItem = withRef("DropdownMenuItem", function DropdownMenuItem({
   className,
   inset,
   variant = "default",
@@ -85,9 +86,9 @@ function DropdownMenuItem({
       {...props}
     />
   )
-}
+})
 
-function DropdownMenuCheckboxItem({
+const DropdownMenuCheckboxItem = withRef("DropdownMenuCheckboxItem", function DropdownMenuCheckboxItem({
   className,
   children,
   checked,
@@ -119,9 +120,9 @@ function DropdownMenuCheckboxItem({
       {children}
     </DropdownMenuPrimitive.CheckboxItem>
   )
-}
+})
 
-function DropdownMenuRadioGroup({
+const DropdownMenuRadioGroup = withRef("DropdownMenuRadioGroup", function DropdownMenuRadioGroup({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>) {
   return (
@@ -130,9 +131,9 @@ function DropdownMenuRadioGroup({
       {...props}
     />
   )
-}
+})
 
-function DropdownMenuRadioItem({
+const DropdownMenuRadioItem = withRef("DropdownMenuRadioItem", function DropdownMenuRadioItem({
   className,
   children,
   inset,
@@ -162,9 +163,9 @@ function DropdownMenuRadioItem({
       {children}
     </DropdownMenuPrimitive.RadioItem>
   )
-}
+})
 
-function DropdownMenuLabel({
+const DropdownMenuLabel = withRef("DropdownMenuLabel", function DropdownMenuLabel({
   className,
   inset,
   ...props
@@ -182,9 +183,9 @@ function DropdownMenuLabel({
       {...props}
     />
   )
-}
+})
 
-function DropdownMenuSeparator({
+const DropdownMenuSeparator = withRef("DropdownMenuSeparator", function DropdownMenuSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
@@ -195,9 +196,9 @@ function DropdownMenuSeparator({
       {...props}
     />
   )
-}
+})
 
-function DropdownMenuShortcut({
+const DropdownMenuShortcut = withRef("DropdownMenuShortcut", function DropdownMenuShortcut({
   className,
   ...props
 }: React.ComponentProps<"span">) {
@@ -211,7 +212,7 @@ function DropdownMenuShortcut({
       {...props}
     />
   )
-}
+})
 
 function DropdownMenuSub({
   ...props
@@ -219,7 +220,7 @@ function DropdownMenuSub({
   return <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />
 }
 
-function DropdownMenuSubTrigger({
+const DropdownMenuSubTrigger = withRef("DropdownMenuSubTrigger", function DropdownMenuSubTrigger({
   className,
   inset,
   children,
@@ -241,9 +242,9 @@ function DropdownMenuSubTrigger({
       <ChevronRightIcon className="ml-auto" />
     </DropdownMenuPrimitive.SubTrigger>
   )
-}
+})
 
-function DropdownMenuSubContent({
+const DropdownMenuSubContent = withRef("DropdownMenuSubContent", function DropdownMenuSubContent({
   className,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
@@ -254,7 +255,7 @@ function DropdownMenuSubContent({
       {...props}
     />
   )
-}
+})
 
 export {
   DropdownMenu,

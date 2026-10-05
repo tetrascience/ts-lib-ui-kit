@@ -17,8 +17,9 @@ import {
   type ProcessFlowStepStatus,
 } from "./ProcessFlow.utils";
 
-import type { ComponentPropsWithoutRef, CSSProperties, MouseEvent } from "react";
+import type { ComponentProps, CSSProperties, MouseEvent } from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export { PROCESS_FLOW_STEP_STATUSES } from "./ProcessFlow.utils";
@@ -51,7 +52,7 @@ export interface ProcessFlowStepSelectDetails {
  * ProcessFlow is fully controlled by props. It visualizes parent-owned workflow state and emits user selection through
  * onStepSelect. It intentionally does not own status transitions or fire completion/error side effects.
  */
-export interface ProcessFlowProps extends Omit<ComponentPropsWithoutRef<"nav">, "onSelect"> {
+export interface ProcessFlowProps extends Omit<ComponentProps<"nav">, "onSelect"> {
   /** Ordered list of steps to render. Each step controls its own visual status. */
   steps: ProcessFlowStep[];
   /** Optional explicit connections for branching/configurable flows. */
@@ -543,7 +544,7 @@ function VerticalProcessFlow({
   );
 }
 
-export function ProcessFlow({
+export const ProcessFlow = withRef("ProcessFlow", function ProcessFlow({
   steps,
   connections,
   selectedStepId,
@@ -705,4 +706,4 @@ export function ProcessFlow({
       </div>
     </nav>
   );
-}
+});

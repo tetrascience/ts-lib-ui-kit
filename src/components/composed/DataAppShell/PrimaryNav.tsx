@@ -9,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -341,7 +342,7 @@ function NavItem({ page, variant, active, onSelect }: NavItemProps) {
  * Width/background chrome is owned by the container (the shell's rail wrapper,
  * a Sheet, or a TopBar) — this component is layout-neutral.
  */
-function DataAppShellPrimaryNav({
+const DataAppShellPrimaryNav = withRef("DataAppShellPrimaryNav", function DataAppShellPrimaryNav({
   variant,
   navGroups,
   activeKey,
@@ -435,7 +436,7 @@ function DataAppShellPrimaryNav({
       </TooltipProvider>
     </nav>
   );
-}
+});
 
 export {
   DataAppShellPrimaryNav,

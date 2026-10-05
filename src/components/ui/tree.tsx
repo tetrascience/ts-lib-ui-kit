@@ -5,6 +5,7 @@ import * as React from "react";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------------------------------
@@ -401,7 +402,7 @@ type TreeProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
   guides?: TreeGuides;
 };
 
-function Tree({
+const Tree = withRef("Tree", function Tree({
   className,
   children,
   expandedIds: expandedIdsProp,
@@ -634,7 +635,7 @@ function Tree({
       </TreeTypeaheadContext.Provider>
     </TreeContext.Provider>
   );
-}
+});
 
 function TreeItemsContainer({ children }: { children: React.ReactNode }) {
   return useIndexedTreeChildren(children);
@@ -654,7 +655,7 @@ type TreeItemProps = React.ComponentProps<"div"> & {
   disabled?: boolean;
 };
 
-function TreeItem({
+const TreeItem = withRef("TreeItem", function TreeItem({
   className,
   children,
   id,
@@ -786,7 +787,7 @@ function TreeItem({
       </div>
     </TreeItemContext.Provider>
   );
-}
+});
 
 /* -------------------------------------------------------------------------------------------------
  * TreeItemLabel
@@ -826,7 +827,7 @@ type TreeItemLabelProps = React.ComponentProps<"div"> &
     trailing?: React.ReactNode;
   };
 
-function TreeItemLabel({ className, children, size, style, icon, trailing, ...props }: TreeItemLabelProps) {
+const TreeItemLabel = withRef("TreeItemLabel", function TreeItemLabel({ className, children, size, style, icon, trailing, ...props }: TreeItemLabelProps) {
   const { labelId, level, expanded, hasChildren, selected, disabled, trunkLevels, toggle } =
     useTreeItemContext("TreeItemLabel");
   const { guides } = useTreeContext("TreeItemLabel");
@@ -981,7 +982,7 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
       ) : null}
     </div>
   );
-}
+});
 
 /**
  * The label text, with the live typeahead prefix highlighted when it matches. Only a plain-string
@@ -1024,7 +1025,7 @@ function TreeItemText({ match, children }: { match: TypeaheadMatch | null; child
  * TreeItemGroup
  * -----------------------------------------------------------------------------------------------*/
 
-function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"div">) {
+const TreeItemGroup = withRef("TreeItemGroup", function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"div">) {
   const { expanded, level } = useTreeItemContext("TreeItemGroup");
 
   // Not rendered while collapsed: keeps collapsed subtrees out of the accessibility tree entirely,
@@ -1038,7 +1039,7 @@ function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"
       </div>
     </TreeLevelContext.Provider>
   );
-}
+});
 
 export {
   Tree,

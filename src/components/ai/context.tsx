@@ -10,6 +10,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Progress } from "@/components/ui/progress";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 
@@ -142,11 +143,11 @@ export type ContextTriggerProps = ComponentProps<typeof Button> & {
   showPercentage?: boolean;
 };
 
-export const ContextTrigger = ({
+export const ContextTrigger = withRef("ContextTrigger", function ContextTrigger({
   children,
   showPercentage = false,
   ...props
-}: ContextTriggerProps) => {
+}: ContextTriggerProps) {
   const { usedTokens, maxTokens } = useContextValue();
   const usedPercent = usedTokens / maxTokens;
   const status = getUsageStatus(usedPercent);
@@ -171,27 +172,29 @@ export const ContextTrigger = ({
       )}
     </HoverCardTrigger>
   );
-};
+});
 
 export type ContextContentProps = ComponentProps<typeof HoverCardContent>;
 
-export const ContextContent = ({
+export const ContextContent = withRef("ContextContent", function ContextContent({
   className,
   ...props
-}: ContextContentProps) => (
-  <HoverCardContent
-    className={cn("min-w-60 divide-y overflow-hidden p-0", className)}
-    {...props}
-  />
-);
+}: ContextContentProps) {
+  return (
+    <HoverCardContent
+      className={cn("min-w-60 divide-y overflow-hidden p-0", className)}
+      {...props}
+    />
+  );
+});
 
 export type ContextContentHeaderProps = ComponentProps<"div">;
 
-export const ContextContentHeader = ({
+export const ContextContentHeader = withRef("ContextContentHeader", function ContextContentHeader({
   children,
   className,
   ...props
-}: ContextContentHeaderProps) => {
+}: ContextContentHeaderProps) {
   const { usedTokens, maxTokens } = useContextValue();
   const usedPercent = usedTokens / maxTokens;
   const status = getUsageStatus(usedPercent);
@@ -227,27 +230,29 @@ export const ContextContentHeader = ({
       )}
     </div>
   );
-};
+});
 
 export type ContextContentBodyProps = ComponentProps<"div">;
 
-export const ContextContentBody = ({
+export const ContextContentBody = withRef("ContextContentBody", function ContextContentBody({
   children,
   className,
   ...props
-}: ContextContentBodyProps) => (
-  <div className={cn("w-full p-3", className)} {...props}>
-    {children}
-  </div>
-);
+}: ContextContentBodyProps) {
+  return (
+    <div className={cn("w-full p-3", className)} {...props}>
+      {children}
+    </div>
+  );
+});
 
 export type ContextContentFooterProps = ComponentProps<"div">;
 
-export const ContextContentFooter = ({
+export const ContextContentFooter = withRef("ContextContentFooter", function ContextContentFooter({
   children,
   className,
   ...props
-}: ContextContentFooterProps) => {
+}: ContextContentFooterProps) {
   const { cost } = useContextValue();
   const totalCost = cost?.total === undefined ? "—" : USD_FORMAT.format(cost.total);
 
@@ -267,7 +272,7 @@ export const ContextContentFooter = ({
       )}
     </div>
   );
-};
+});
 
 const TokensWithCost = ({
   tokens,
@@ -290,11 +295,11 @@ const TokensWithCost = ({
 
 export type ContextInputUsageProps = ComponentProps<"div">;
 
-export const ContextInputUsage = ({
+export const ContextInputUsage = withRef("ContextInputUsage", function ContextInputUsage({
   className,
   children,
   ...props
-}: ContextInputUsageProps) => {
+}: ContextInputUsageProps) {
   const { usage, cost } = useContextValue();
   const inputTokens = usage?.inputTokens ?? 0;
 
@@ -317,15 +322,15 @@ export const ContextInputUsage = ({
       <TokensWithCost costText={inputCostText} tokens={inputTokens} />
     </div>
   );
-};
+});
 
 export type ContextOutputUsageProps = ComponentProps<"div">;
 
-export const ContextOutputUsage = ({
+export const ContextOutputUsage = withRef("ContextOutputUsage", function ContextOutputUsage({
   className,
   children,
   ...props
-}: ContextOutputUsageProps) => {
+}: ContextOutputUsageProps) {
   const { usage, cost } = useContextValue();
   const outputTokens = usage?.outputTokens ?? 0;
 
@@ -348,15 +353,15 @@ export const ContextOutputUsage = ({
       <TokensWithCost costText={outputCostText} tokens={outputTokens} />
     </div>
   );
-};
+});
 
 export type ContextReasoningUsageProps = ComponentProps<"div">;
 
-export const ContextReasoningUsage = ({
+export const ContextReasoningUsage = withRef("ContextReasoningUsage", function ContextReasoningUsage({
   className,
   children,
   ...props
-}: ContextReasoningUsageProps) => {
+}: ContextReasoningUsageProps) {
   const { usage, cost } = useContextValue();
   const reasoningTokens = usage?.reasoningTokens ?? 0;
 
@@ -379,15 +384,15 @@ export const ContextReasoningUsage = ({
       <TokensWithCost costText={reasoningCostText} tokens={reasoningTokens} />
     </div>
   );
-};
+});
 
 export type ContextCacheUsageProps = ComponentProps<"div">;
 
-export const ContextCacheUsage = ({
+export const ContextCacheUsage = withRef("ContextCacheUsage", function ContextCacheUsage({
   className,
   children,
   ...props
-}: ContextCacheUsageProps) => {
+}: ContextCacheUsageProps) {
   const { usage, cost } = useContextValue();
   const cacheTokens = usage?.cachedInputTokens ?? 0;
 
@@ -410,4 +415,4 @@ export const ContextCacheUsage = ({
       <TokensWithCost costText={cacheCostText} tokens={cacheTokens} />
     </div>
   );
-};
+});

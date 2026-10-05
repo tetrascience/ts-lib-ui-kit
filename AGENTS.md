@@ -1,6 +1,6 @@
 # CLAUDE.md — ts-lib-ui-kit
 
-React 19 + TypeScript UI component library (`@tetrascience-npm/tetrascience-react-ui`).
+React 19 + TypeScript UI component library (`@tetrascience-npm/tetrascience-react-ui`), also supported on React 18.2+ for consumers (see "React 18 support").
 Built with Vite 7, Tailwind CSS 4, shadcn/ui, Storybook 10, Vitest, Yarn 4.
 
 ## Quick Commands
@@ -180,6 +180,50 @@ i18n lookups produce for a missing key), keep structural `ReactNode` slots (a
 title, a heading) as their own props — they are content, not strings — and
 guard the work with a story asserting no English survives in the rendered
 subtree, not just that the replacements appear.
+
+## React 18 support: every DOM component goes through `withRef` (UXT-77)
+
+The kit is written against React 19, but the TDP platform shell and its Module
+Federation apps share a React 18 singleton, so the peer range is
+`^18.2.0 || ^19.0.0`. React 18 strips `ref` from a function component's props.
+A plain function component therefore drops a consumer's `ref`, and Radix
+`asChild` triggers (`<TooltipTrigger asChild><Button /></TooltipTrigger>`) lose
+the ref they need for positioning, focus and outside-click. React logs
+"Function components cannot be given refs".
+
+Everything React 18 needs lives in [`src/lib/react18-compat.ts`](./src/lib/react18-compat.ts),
+so dropping React 18 later is a change to that one file:
+
+- **`withRef("Name", function Name(props) {…})`** wraps every component whose props
+  accept `ref`. The body stays React 19-style, with `ref` arriving in props. Pass a
+  **named function expression** (`rules-of-hooks` needs the name) and the name as a
+  **string literal** (the build mangles function names). The return type is the
+  render function's own type, so public props, generics and docgen are unchanged.
+  Wrap a memoised component as `memo(withRef(…))`. Never call `React.forwardRef`
+  directly.
+- **`{...inertProp(value)}`** instead of `inert={value}`: React 18 drops a boolean
+  `inert`, leaving "inert" content focusable.
+- A component that spreads DOM props types them as `ComponentProps<"tag">`, not
+  `HTMLAttributes<HTMLTagElement>`. The latter has no `ref`, so the component
+  silently fails as an `asChild` child on React 18. This is how `Attachment` broke
+  inside `HoverCardTrigger`.
+- Effects that `setState` during mount, and updates fired from continuous events
+  such as `pointermove`, flush later on React 18 than inside a React 19
+  `flushSync`. Unit tests drive renders with `act()`, which flushes everything on
+  both versions.
+
+Guards: `yarn check:react18-compat`
+([`scripts/build/audit-react18-compat.ts`](./scripts/build/audit-react18-compat.ts),
+also run as a unit test) uses the type checker to fail on an unwrapped component
+whose props accept `ref`, a component whose props carry DOM attributes but no
+`ref`, a direct `forwardRef`, a mismatched display name or a boolean `inert`.
+The only components allowed DOM props without a `ref` are listed, with the reason,
+in its `REF_EXCEPTIONS`; that list and the "Refs" section of README.md (every
+component without a ref, grouped by why) must change together, and a stale entry
+fails the audit. [`src/__tests__/react18-ref-forwarding.test.tsx`](./src/__tests__/react18-ref-forwarding.test.tsx)
+renders every `withRef` export with a ref and checks the Radix `asChild`
+triggers. CI's `react-18` job reruns the unit and Storybook suites on React
+18.3, where Storybook's console-error check catches any ref warning.
 
 ## Component Patterns
 

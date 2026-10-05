@@ -1,9 +1,10 @@
 import { Avatar as AvatarPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function Avatar({
+const Avatar = withRef("Avatar", function Avatar({
   className,
   size = "default",
   ...props
@@ -21,9 +22,9 @@ function Avatar({
       {...props}
     />
   )
-}
+})
 
-function AvatarImage({
+const AvatarImage = withRef("AvatarImage", function AvatarImage({
   className,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
@@ -37,9 +38,9 @@ function AvatarImage({
       {...props}
     />
   )
-}
+})
 
-function AvatarFallback({
+const AvatarFallback = withRef("AvatarFallback", function AvatarFallback({
   className,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
@@ -53,9 +54,9 @@ function AvatarFallback({
       {...props}
     />
   )
-}
+})
 
-function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
+const AvatarBadge = withRef("AvatarBadge", function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       data-slot="avatar-badge"
@@ -69,9 +70,9 @@ function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
       {...props}
     />
   )
-}
+})
 
-function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
+const AvatarGroup = withRef("AvatarGroup", function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="avatar-group"
@@ -82,9 +83,9 @@ function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   )
-}
+})
 
-function AvatarGroupCount({
+const AvatarGroupCount = withRef("AvatarGroupCount", function AvatarGroupCount({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -98,7 +99,7 @@ function AvatarGroupCount({
       {...props}
     />
   )
-}
+})
 
 export {
   Avatar,

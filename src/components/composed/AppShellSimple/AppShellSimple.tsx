@@ -36,6 +36,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { inertProp } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -344,11 +345,12 @@ export function AppShellSimple({
           style={{ width: NAV_WIDTH[navState] }}
         >
           {/* `inert` keeps the collapsed nav out of the tab order and the
-              accessibility tree while it stays mounted for the drag handle. */}
+              accessibility tree while it stays mounted for the drag handle.
+              `inertProp` spells it so React 18 applies it too (UXT-77). */}
           <div
             data-slot="app-shell-simple-nav-content"
             className="h-full w-full overflow-hidden"
-            inert={isHidden}
+            {...inertProp(isHidden)}
           >
             <DataAppShellPrimaryNav
               variant={navState === "rail" ? "rail" : "sidebar"}

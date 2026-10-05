@@ -202,6 +202,7 @@
     "build:css:tailwind": "yarn dlx @tailwindcss/cli@4.2.2 -i ./src/index.tailwind.css -o ./dist/index.tailwind.css --minify",
     "build:css:scoped": "tsx scripts/build/build-scoped-css.ts",
     "check:css-leaks": "tsx scripts/build/audit-css-leaks.ts",
+    "check:react18-compat": "tsx scripts/build/audit-react18-compat.ts",
     "verify:jest-consumer": "yarn pack --out scripts/verify-jest-consumer/ui-kit.tgz && cd scripts/verify-jest-consumer && npm install && npm test",
     "dev": "yarn storybook",
     "storybook": "storybook dev -p 6006",
@@ -269,8 +270,8 @@
     "@streamdown/mermaid": "^1.0.2",
     "@tetrascience-npm/request": ">=0.4.0",
     "plotly.js-dist": "^2.35.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0",
     "snowflake-sdk": "^2.0.0"
   },
   "peerDependenciesMeta": {

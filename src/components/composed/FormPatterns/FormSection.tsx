@@ -2,6 +2,7 @@ import * as React from "react"
 
 import { FieldGroup } from "@/components/ui/field"
 import { Separator } from "@/components/ui/separator"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 export interface FormSectionProps extends React.ComponentProps<"div"> {
@@ -10,7 +11,7 @@ export interface FormSectionProps extends React.ComponentProps<"div"> {
   children: React.ReactNode
 }
 
-export function FormSection({
+export const FormSection = withRef("FormSection", function FormSection({
   heading,
   description,
   children,
@@ -33,4 +34,4 @@ export function FormSection({
       <FieldGroup>{children}</FieldGroup>
     </div>
   )
-}
+})

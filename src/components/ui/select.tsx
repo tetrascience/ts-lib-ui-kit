@@ -4,6 +4,7 @@ import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 import { Select as SelectPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
@@ -13,7 +14,7 @@ function Select({
   return <SelectPrimitive.Root data-slot="select" {...props} />
 }
 
-function SelectGroup({
+const SelectGroup = withRef("SelectGroup", function SelectGroup({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Group>) {
@@ -24,15 +25,15 @@ function SelectGroup({
       {...props}
     />
   )
-}
+})
 
-function SelectValue({
+const SelectValue = withRef("SelectValue", function SelectValue({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Value>) {
   return <SelectPrimitive.Value data-slot="select-value" {...props} />
-}
+})
 
-function SelectTrigger({
+const SelectTrigger = withRef("SelectTrigger", function SelectTrigger({
   className,
   size = "default",
   children,
@@ -58,9 +59,9 @@ function SelectTrigger({
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   )
-}
+})
 
-function SelectContent({
+const SelectContent = withRef("SelectContent", function SelectContent({
   className,
   children,
   position = "item-aligned",
@@ -91,9 +92,9 @@ function SelectContent({
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   )
-}
+})
 
-function SelectLabel({
+const SelectLabel = withRef("SelectLabel", function SelectLabel({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Label>) {
@@ -104,9 +105,9 @@ function SelectLabel({
       {...props}
     />
   )
-}
+})
 
-function SelectItem({
+const SelectItem = withRef("SelectItem", function SelectItem({
   className,
   children,
   ...props
@@ -128,9 +129,9 @@ function SelectItem({
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   )
-}
+})
 
-function SelectSeparator({
+const SelectSeparator = withRef("SelectSeparator", function SelectSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Separator>) {
@@ -141,9 +142,9 @@ function SelectSeparator({
       {...props}
     />
   )
-}
+})
 
-function SelectScrollUpButton({
+const SelectScrollUpButton = withRef("SelectScrollUpButton", function SelectScrollUpButton({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) {
@@ -160,9 +161,9 @@ function SelectScrollUpButton({
       />
     </SelectPrimitive.ScrollUpButton>
   )
-}
+})
 
-function SelectScrollDownButton({
+const SelectScrollDownButton = withRef("SelectScrollDownButton", function SelectScrollDownButton({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) {
@@ -179,7 +180,7 @@ function SelectScrollDownButton({
       />
     </SelectPrimitive.ScrollDownButton>
   )
-}
+})
 
 export {
   Select,

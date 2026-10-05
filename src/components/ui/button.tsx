@@ -2,6 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -42,7 +43,7 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
+const Button = withRef("Button", function Button({
   className,
   variant = "default",
   size = "default",
@@ -63,6 +64,6 @@ function Button({
       {...props}
     />
   )
-}
+})
 
 export { Button, buttonVariants }

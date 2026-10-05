@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const textareaVariants = cva(
@@ -22,7 +23,7 @@ const textareaVariants = cva(
   }
 )
 
-function Textarea({
+const Textarea = withRef("Textarea", function Textarea({
   className,
   size,
   ...props
@@ -35,6 +36,6 @@ function Textarea({
       {...props}
     />
   )
-}
+})
 
 export { Textarea, textareaVariants }

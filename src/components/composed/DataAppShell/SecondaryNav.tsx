@@ -19,6 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -224,7 +225,7 @@ function StepIcon({
  * Step status (`done` / `active` / `todo`) is derived linearly from
  * `activeKey`, or set explicitly per step. Supports one level of nesting.
  */
-function DataAppShellSecondaryNav({
+const DataAppShellSecondaryNav = withRef("DataAppShellSecondaryNav", function DataAppShellSecondaryNav({
   orientation,
   steps,
   activeKey,
@@ -510,7 +511,7 @@ function DataAppShellSecondaryNav({
       </div>
     </nav>
   );
-}
+});
 
 export {
   DataAppShellSecondaryNav,

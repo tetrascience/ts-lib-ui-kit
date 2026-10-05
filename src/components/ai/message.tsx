@@ -13,7 +13,7 @@ import { Streamdown } from "streamdown";
 import { useStreamdownPlugins } from "./use-streamdown-plugins";
 
 import type { UIMessage } from "ai";
-import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
+import type { ComponentProps, ReactElement, Ref } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,68 +26,75 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
-export type MessageProps = HTMLAttributes<HTMLDivElement> & {
+export type MessageProps = ComponentProps<"div"> & {
   from: UIMessage["role"];
 };
 
-export const Message = ({ className, from, ...props }: MessageProps) => (
-  <div
-    className={cn(
-      "group flex w-full max-w-[95%] flex-col gap-2",
-      from === "user" ? "is-user ml-auto justify-end" : "is-assistant",
-      className
-    )}
-    {...props}
-  />
-);
+export const Message = withRef("Message", function Message({ className, from, ...props }: MessageProps) {
+  return (
+    <div
+      className={cn(
+        "group flex w-full max-w-[95%] flex-col gap-2",
+        from === "user" ? "is-user ml-auto justify-end" : "is-assistant",
+        className
+      )}
+      {...props}
+    />
+  );
+});
 
-export type MessageContentProps = HTMLAttributes<HTMLDivElement>;
+export type MessageContentProps = ComponentProps<"div">;
 
-export const MessageContent = ({
+export const MessageContent = withRef("MessageContent", function MessageContent({
   children,
   className,
   ...props
-}: MessageContentProps) => (
-  <div
-    className={cn(
-      "is-user:dark flex w-fit min-w-0 max-w-full flex-col gap-2 overflow-hidden text-sm",
-      "group-[.is-user]:ml-auto group-[.is-user]:rounded-lg group-[.is-user]:bg-secondary group-[.is-user]:px-4 group-[.is-user]:py-3 group-[.is-user]:text-foreground",
-      "group-[.is-assistant]:text-foreground",
-      className
-    )}
-    {...props}
-  >
-    {children}
-  </div>
-);
+}: MessageContentProps) {
+  return (
+    <div
+      className={cn(
+        "is-user:dark flex w-fit min-w-0 max-w-full flex-col gap-2 overflow-hidden text-sm",
+        "group-[.is-user]:ml-auto group-[.is-user]:rounded-lg group-[.is-user]:bg-secondary group-[.is-user]:px-4 group-[.is-user]:py-3 group-[.is-user]:text-foreground",
+        "group-[.is-assistant]:text-foreground",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+});
 
 export type MessageActionsProps = ComponentProps<"div">;
 
-export const MessageActions = ({
+export const MessageActions = withRef("MessageActions", function MessageActions({
   className,
   children,
   ...props
-}: MessageActionsProps) => (
-  <div className={cn("flex items-center gap-1", className)} {...props}>
-    {children}
-  </div>
-);
+}: MessageActionsProps) {
+  return (
+    <div className={cn("flex items-center gap-1", className)} {...props}>
+      {children}
+    </div>
+  );
+});
 
 export type MessageActionProps = ComponentProps<typeof Button> & {
   tooltip?: string;
   label?: string;
 };
 
-export const MessageAction = ({
+export const MessageAction = withRef("MessageAction", function MessageAction({
   tooltip,
   children,
   label,
   variant = "ghost",
   size = "icon-sm",
   ...props
-}: MessageActionProps) => {
+}: MessageActionProps) {
   const button = (
     <Button size={size} type="button" variant={variant} {...props}>
       {children}
@@ -109,7 +116,7 @@ export const MessageAction = ({
   }
 
   return button;
-};
+});
 
 interface MessageBranchContextType {
   currentBranch: number;
@@ -136,17 +143,17 @@ const useMessageBranch = () => {
   return context;
 };
 
-export type MessageBranchProps = HTMLAttributes<HTMLDivElement> & {
+export type MessageBranchProps = ComponentProps<"div"> & {
   defaultBranch?: number;
   onBranchChange?: (branchIndex: number) => void;
 };
 
-export const MessageBranch = ({
+export const MessageBranch = withRef("MessageBranch", function MessageBranch({
   defaultBranch = 0,
   onBranchChange,
   className,
   ...props
-}: MessageBranchProps) => {
+}: MessageBranchProps) {
   const [currentBranch, setCurrentBranch] = useState(defaultBranch);
   const [branches, setBranches] = useState<ReactElement[]>([]);
 
@@ -190,14 +197,14 @@ export const MessageBranch = ({
       />
     </MessageBranchContext.Provider>
   );
-};
+});
 
-export type MessageBranchContentProps = HTMLAttributes<HTMLDivElement>;
+export type MessageBranchContentProps = ComponentProps<"div">;
 
-export const MessageBranchContent = ({
+export const MessageBranchContent = withRef("MessageBranchContent", function MessageBranchContent({
   children,
   ...props
-}: MessageBranchContentProps) => {
+}: MessageBranchContentProps) {
   const { currentBranch, setBranches, branches } = useMessageBranch();
   const childrenArray = useMemo(
     () => (Array.isArray(children) ? children : [children]),
@@ -223,14 +230,14 @@ export const MessageBranchContent = ({
       {branch}
     </div>
   ));
-};
+});
 
 export type MessageBranchSelectorProps = ComponentProps<typeof ButtonGroup>;
 
-export const MessageBranchSelector = ({
+export const MessageBranchSelector = withRef("MessageBranchSelector", function MessageBranchSelector({
   className,
   ...props
-}: MessageBranchSelectorProps) => {
+}: MessageBranchSelectorProps) {
   const { totalBranches } = useMessageBranch();
 
   // Don't render if there's only one branch
@@ -248,14 +255,14 @@ export const MessageBranchSelector = ({
       {...props}
     />
   );
-};
+});
 
 export type MessageBranchPreviousProps = ComponentProps<typeof Button>;
 
-export const MessageBranchPrevious = ({
+export const MessageBranchPrevious = withRef("MessageBranchPrevious", function MessageBranchPrevious({
   children,
   ...props
-}: MessageBranchPreviousProps) => {
+}: MessageBranchPreviousProps) {
   const { goToPrevious, totalBranches } = useMessageBranch();
 
   return (
@@ -271,14 +278,14 @@ export const MessageBranchPrevious = ({
       {children ?? <ChevronLeftIcon size={14} />}
     </Button>
   );
-};
+});
 
 export type MessageBranchNextProps = ComponentProps<typeof Button>;
 
-export const MessageBranchNext = ({
+export const MessageBranchNext = withRef("MessageBranchNext", function MessageBranchNext({
   children,
   ...props
-}: MessageBranchNextProps) => {
+}: MessageBranchNextProps) {
   const { goToNext, totalBranches } = useMessageBranch();
 
   return (
@@ -294,14 +301,17 @@ export const MessageBranchNext = ({
       {children ?? <ChevronRightIcon size={14} />}
     </Button>
   );
+});
+
+// Typed with span attributes for compatibility; the root is a ButtonGroupText div, so `ref` is a div ref.
+export type MessageBranchPageProps = Omit<ComponentProps<"span">, "ref"> & {
+  ref?: Ref<HTMLDivElement>;
 };
 
-export type MessageBranchPageProps = HTMLAttributes<HTMLSpanElement>;
-
-export const MessageBranchPage = ({
+export const MessageBranchPage = withRef("MessageBranchPage", function MessageBranchPage({
   className,
   ...props
-}: MessageBranchPageProps) => {
+}: MessageBranchPageProps) {
   const { currentBranch, totalBranches } = useMessageBranch();
 
   return (
@@ -315,7 +325,7 @@ export const MessageBranchPage = ({
       {`${currentBranch + 1} of ${totalBranches}`}
     </ButtonGroupText>
   );
-};
+});
 
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
@@ -345,18 +355,20 @@ MessageResponse.displayName = "MessageResponse";
 
 export type MessageToolbarProps = ComponentProps<"div">;
 
-export const MessageToolbar = ({
+export const MessageToolbar = withRef("MessageToolbar", function MessageToolbar({
   className,
   children,
   ...props
-}: MessageToolbarProps) => (
-  <div
-    className={cn(
-      "mt-4 flex w-full items-center justify-between gap-4",
-      className
-    )}
-    {...props}
-  >
-    {children}
-  </div>
-);
+}: MessageToolbarProps) {
+  return (
+    <div
+      className={cn(
+        "mt-4 flex w-full items-center justify-between gap-4",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+});

@@ -3,6 +3,7 @@
 import { Tooltip as TooltipPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function TooltipProvider({
@@ -24,13 +25,13 @@ function Tooltip({
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
 }
 
-function TooltipTrigger({
+const TooltipTrigger = withRef("TooltipTrigger", function TooltipTrigger({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
-}
+})
 
-function TooltipContent({
+const TooltipContent = withRef("TooltipContent", function TooltipContent({
   className,
   sideOffset = 0,
   children,
@@ -52,6 +53,6 @@ function TooltipContent({
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   )
-}
+})
 
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger }

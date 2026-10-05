@@ -9,6 +9,7 @@ import {
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 const bannerVariants = cva(
@@ -47,7 +48,7 @@ export type BannerProps = React.ComponentProps<"div"> &
     action?: React.ReactNode;
   };
 
-function Banner({
+const Banner = withRef("Banner", function Banner({
   variant = "info",
   title,
   description,
@@ -97,6 +98,6 @@ function Banner({
       )}
     </div>
   );
-}
+});
 
 export { Banner, bannerVariants };

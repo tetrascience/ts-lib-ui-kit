@@ -1,6 +1,7 @@
 import { HoverCard as HoverCardPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function HoverCard({
@@ -9,15 +10,15 @@ function HoverCard({
   return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />
 }
 
-function HoverCardTrigger({
+const HoverCardTrigger = withRef("HoverCardTrigger", function HoverCardTrigger({
   ...props
 }: React.ComponentProps<typeof HoverCardPrimitive.Trigger>) {
   return (
     <HoverCardPrimitive.Trigger data-slot="hover-card-trigger" {...props} />
   )
-}
+})
 
-function HoverCardContent({
+const HoverCardContent = withRef("HoverCardContent", function HoverCardContent({
   className,
   align = "center",
   sideOffset = 4,
@@ -37,6 +38,6 @@ function HoverCardContent({
       />
     </HoverCardPrimitive.Portal>
   )
-}
+})
 
 export { HoverCard, HoverCardTrigger, HoverCardContent }

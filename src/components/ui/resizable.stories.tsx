@@ -480,3 +480,39 @@ export const CollapsedPanel: Story = {
     })
   },
 }
+
+/* ---- SW-2648: a collapsed panel on the leading edge doesn't bleed ---- */
+
+export const CollapsedLeadingPanel: Story = {
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+  render: ({ withHandle, ...args }) => (
+    <div className="h-[320px] w-[760px] overflow-hidden rounded-xl border bg-muted/40">
+      <ResizablePanelGroup {...args}>
+        {/* collapsed sidebar first: its overflow points into the group */}
+        <ResizablePanel collapsible collapsedSize="0%" defaultSize="0%" minSize="25%">
+          <div className="h-full bg-card p-4 text-sm">Sidebar</div>
+        </ResizablePanel>
+        <ResizableHandle withHandle={withHandle} />
+        <ResizablePanel defaultSize="100%" minSize="30%">
+          <SummaryPanel />
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const [collapsed, main] = [...canvasElement.querySelectorAll("[data-panel]")].map(
+      (panel) => getComputedStyle(panel.firstElementChild as HTMLElement)
+    )
+
+    await step("A collapsible panel clips at its edge, so nothing paints across the seam", async () => {
+      expect(collapsed.overflow).toBe("clip")
+      expect(collapsed.overflowClipMargin).toBe("0px")
+    })
+
+    await step("Non-collapsible panels keep the 4px margin for rings", async () => {
+      expect(main.overflowClipMargin).toBe("4px")
+    })
+  },
+}

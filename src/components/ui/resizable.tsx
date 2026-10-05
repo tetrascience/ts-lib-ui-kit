@@ -35,13 +35,17 @@ function ResizablePanelGroup({
  * on the resize seam. Oversized content is clipped at the panel edge — it never
  * spills onto a neighbouring panel, and a collapsed panel stays hidden — with a
  * 4px `overflow-clip-margin` so a `Card`'s ring and focus rings still paint
- * (browsers without `overflow-clip-margin`, e.g. Safari, clip at the edge).
+ * (browsers without `overflow-clip-margin`, e.g. Safari, clip at the edge). The
+ * margin applies to any content wider than the panel, not only rings: up to 4px
+ * of it paints past the seam. `collapsible` panels get no margin, so a collapsed
+ * panel can't bleed across the seam (a card in one loses its ring on that edge).
  * Pass `scrollable` to make the panel itself scroll.
  */
 function ResizablePanel({
   className,
   style,
   scrollable = false,
+  collapsible,
   ...props
 }: ResizablePrimitive.PanelProps & {
   /** Make the panel its own scroll container. */
@@ -50,11 +54,16 @@ function ResizablePanel({
   return (
     <ResizablePrimitive.Panel
       data-slot="resizable-panel"
+      collapsible={collapsible}
       // react-resizable-panels sets `overflow: auto` inline; clear it so the
       // class governs and consumers can override it with a plain utility.
       style={{ overflow: undefined, ...style }}
       className={cn(
-        scrollable ? "overflow-auto" : "overflow-clip [overflow-clip-margin:4px]",
+        scrollable
+          ? "overflow-auto"
+          : collapsible
+            ? "overflow-clip"
+            : "overflow-clip [overflow-clip-margin:4px]",
         className
       )}
       {...props}

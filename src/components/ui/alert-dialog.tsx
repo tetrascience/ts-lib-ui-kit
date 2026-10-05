@@ -2,6 +2,7 @@ import { AlertDialog as AlertDialogPrimitive } from "radix-ui"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function AlertDialog({
@@ -17,6 +18,9 @@ function AlertDialogTrigger({
     <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" {...props} />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogTriggerWithRef = withRef("AlertDialogTrigger", AlertDialogTrigger)
 
 function AlertDialogPortal({
   ...props
@@ -42,6 +46,9 @@ function AlertDialogOverlay({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogOverlayWithRef = withRef("AlertDialogOverlay", AlertDialogOverlay)
+
 function AlertDialogContent({
   className,
   size = "default",
@@ -51,7 +58,7 @@ function AlertDialogContent({
 }) {
   return (
     <AlertDialogPortal>
-      <AlertDialogOverlay />
+      <AlertDialogOverlayWithRef />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
         data-size={size}
@@ -64,6 +71,9 @@ function AlertDialogContent({
     </AlertDialogPortal>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogContentWithRef = withRef("AlertDialogContent", AlertDialogContent)
 
 function AlertDialogHeader({
   className,
@@ -81,6 +91,9 @@ function AlertDialogHeader({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogHeaderWithRef = withRef("AlertDialogHeader", AlertDialogHeader)
+
 function AlertDialogFooter({
   className,
   ...props
@@ -96,6 +109,9 @@ function AlertDialogFooter({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogFooterWithRef = withRef("AlertDialogFooter", AlertDialogFooter)
 
 function AlertDialogMedia({
   className,
@@ -113,6 +129,9 @@ function AlertDialogMedia({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogMediaWithRef = withRef("AlertDialogMedia", AlertDialogMedia)
+
 function AlertDialogTitle({
   className,
   ...props
@@ -129,6 +148,9 @@ function AlertDialogTitle({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogTitleWithRef = withRef("AlertDialogTitle", AlertDialogTitle)
+
 function AlertDialogDescription({
   className,
   ...props
@@ -144,6 +166,9 @@ function AlertDialogDescription({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogDescriptionWithRef = withRef("AlertDialogDescription", AlertDialogDescription)
 
 function AlertDialogAction({
   className,
@@ -163,6 +188,9 @@ function AlertDialogAction({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogActionWithRef = withRef("AlertDialogAction", AlertDialogAction)
+
 function AlertDialogCancel({
   className,
   variant = "outline",
@@ -181,17 +209,20 @@ function AlertDialogCancel({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogCancelWithRef = withRef("AlertDialogCancel", AlertDialogCancel)
+
 export {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogOverlay,
+  AlertDialogActionWithRef as AlertDialogAction,
+  AlertDialogCancelWithRef as AlertDialogCancel,
+  AlertDialogContentWithRef as AlertDialogContent,
+  AlertDialogDescriptionWithRef as AlertDialogDescription,
+  AlertDialogFooterWithRef as AlertDialogFooter,
+  AlertDialogHeaderWithRef as AlertDialogHeader,
+  AlertDialogMediaWithRef as AlertDialogMedia,
+  AlertDialogOverlayWithRef as AlertDialogOverlay,
   AlertDialogPortal,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogTitleWithRef as AlertDialogTitle,
+  AlertDialogTriggerWithRef as AlertDialogTrigger,
 }

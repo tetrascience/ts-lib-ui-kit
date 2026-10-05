@@ -2,6 +2,7 @@ import * as React from "react"
 
 import { FieldGroup } from "@/components/ui/field"
 import { Separator } from "@/components/ui/separator"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 export interface FormSectionProps extends React.ComponentProps<"div"> {
@@ -10,7 +11,7 @@ export interface FormSectionProps extends React.ComponentProps<"div"> {
   children: React.ReactNode
 }
 
-export function FormSection({
+function FormSection({
   heading,
   description,
   children,
@@ -34,3 +35,7 @@ export function FormSection({
     </div>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FormSectionWithRef = withRef("FormSection", FormSection)
+export { FormSectionWithRef as FormSection }

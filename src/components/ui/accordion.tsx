@@ -2,6 +2,7 @@ import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import { Accordion as AccordionPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
@@ -18,6 +19,9 @@ function Accordion({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AccordionWithRef = withRef("Accordion", Accordion)
+
 function AccordionItem({
   className,
   ...props
@@ -30,6 +34,9 @@ function AccordionItem({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AccordionItemWithRef = withRef("AccordionItem", AccordionItem)
 
 function AccordionTrigger({
   className,
@@ -54,6 +61,9 @@ function AccordionTrigger({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AccordionTriggerWithRef = withRef("AccordionTrigger", AccordionTrigger)
+
 function AccordionContent({
   className,
   children,
@@ -77,4 +87,7 @@ function AccordionContent({
   )
 }
 
-export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AccordionContentWithRef = withRef("AccordionContent", AccordionContent)
+
+export { AccordionWithRef as Accordion, AccordionItemWithRef as AccordionItem, AccordionTriggerWithRef as AccordionTrigger, AccordionContentWithRef as AccordionContent }

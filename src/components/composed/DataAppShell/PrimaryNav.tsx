@@ -9,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -437,8 +438,23 @@ function DataAppShellPrimaryNav({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+/**
+ * The Data App Shell's nav engine — one `navGroups` model rendered in three
+ * placements via `variant`:
+ *
+ * - **rail** — vertical icon-only (48px rail); labels via tooltip, user slot at the bottom
+ * - **sidebar** — vertical icon + label with group headers, user slot at the bottom
+ * - **top** — horizontal bar; user/actions slot on the right
+ *
+ * Active state is either controlled via `activeKey` or per-page `isActive`.
+ * Width/background chrome is owned by the container (the shell's rail wrapper,
+ * a Sheet, or a TopBar) — this component is layout-neutral.
+ */
+const DataAppShellPrimaryNavWithRef = withRef("DataAppShellPrimaryNav", DataAppShellPrimaryNav);
+
 export {
-  DataAppShellPrimaryNav,
+  DataAppShellPrimaryNavWithRef as DataAppShellPrimaryNav,
   dataAppShellPrimaryNavVariants,
   dataAppShellPrimaryNavItemVariants,
 };

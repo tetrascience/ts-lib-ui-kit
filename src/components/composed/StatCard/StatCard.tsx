@@ -2,6 +2,7 @@ import { MinusIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react"
 import * as React from "react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 export type StatCardTrend = "up" | "down" | "neutral"
@@ -27,7 +28,7 @@ const TREND_CLASS: Record<StatCardTrend, string> = {
   neutral: "text-muted-foreground",
 }
 
-export function StatCard({
+function StatCard({
   label,
   value,
   delta,
@@ -67,3 +68,7 @@ export function StatCard({
     </div>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const StatCardWithRef = withRef("StatCard", StatCard)
+export { StatCardWithRef as StatCard }

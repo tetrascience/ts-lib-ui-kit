@@ -5,6 +5,7 @@ import type { ComponentProps } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 
@@ -88,7 +89,7 @@ const detectSpeechInputMode = (): SpeechInputMode => {
   return "none";
 };
 
-export const SpeechInput = ({
+const SpeechInput = ({
   className,
   onTranscriptionChange,
   onAudioRecorded,
@@ -323,3 +324,7 @@ export const SpeechInput = ({
     </div>
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SpeechInputWithRef = withRef("SpeechInput", SpeechInput);
+export { SpeechInputWithRef as SpeechInput };

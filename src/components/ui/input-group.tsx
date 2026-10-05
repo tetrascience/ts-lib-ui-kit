@@ -4,6 +4,7 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 type InputGroupSize = "xs" | "sm" | "default" | "lg"
@@ -45,6 +46,9 @@ function InputGroup({
     </InputGroupContext.Provider>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InputGroupWithRef = withRef("InputGroup", InputGroup)
 
 const inputGroupAddonVariants = cva(
   "flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium text-muted-foreground select-none group-data-[disabled=true]/input-group:opacity-50 [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4",
@@ -95,6 +99,9 @@ function InputGroupAddon({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InputGroupAddonWithRef = withRef("InputGroupAddon", InputGroupAddon)
+
 const inputGroupButtonVariants = cva(
   "flex items-center gap-2 text-sm shadow-none",
   {
@@ -132,6 +139,9 @@ function InputGroupButton({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InputGroupButtonWithRef = withRef("InputGroupButton", InputGroupButton)
+
 function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
@@ -143,6 +153,9 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InputGroupTextWithRef = withRef("InputGroupText", InputGroupText)
 
 function InputGroupInput({
   className,
@@ -164,6 +177,9 @@ function InputGroupInput({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InputGroupInputWithRef = withRef("InputGroupInput", InputGroupInput)
+
 function InputGroupTextarea({
   className,
   size,
@@ -183,11 +199,14 @@ function InputGroupTextarea({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InputGroupTextareaWithRef = withRef("InputGroupTextarea", InputGroupTextarea)
+
 export {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupText,
-  InputGroupInput,
-  InputGroupTextarea,
+  InputGroupWithRef as InputGroup,
+  InputGroupAddonWithRef as InputGroupAddon,
+  InputGroupButtonWithRef as InputGroupButton,
+  InputGroupTextWithRef as InputGroupText,
+  InputGroupInputWithRef as InputGroupInput,
+  InputGroupTextareaWithRef as InputGroupTextarea,
 }

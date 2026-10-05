@@ -3,6 +3,7 @@ import { Slot } from "radix-ui"
 import * as React from "react"
 
 import { Separator } from "@/components/ui/separator"
+import { isElementOfType, withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function ItemGroup({
@@ -23,7 +24,7 @@ function ItemGroup({
       {React.Children.map(children, (child) => {
         if (
           !React.isValidElement<{ role?: string }>(child) ||
-          child.type === ItemSeparator
+          isElementOfType(child, ItemSeparator)
         ) {
           return child
         }
@@ -34,6 +35,9 @@ function ItemGroup({
     </div>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemGroupWithRef = withRef("ItemGroup", ItemGroup)
 
 function ItemSeparator({
   className,
@@ -48,6 +52,9 @@ function ItemSeparator({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemSeparatorWithRef = withRef("ItemSeparator", ItemSeparator)
 
 const itemVariants = cva(
   "group/item flex w-full flex-wrap items-center rounded-lg border text-sm transition-colors duration-100 outline-none focus-visible:border-ring focus-visible:shadow-focus [a]:transition-colors [a]:hover:bg-accent",
@@ -91,6 +98,9 @@ function Item({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemWithRef = withRef("Item", Item)
+
 const itemMediaVariants = cva(
   "flex shrink-0 items-center justify-center gap-2 group-has-data-[slot=item-description]/item:translate-y-0.5 group-has-data-[slot=item-description]/item:self-start [&_svg]:pointer-events-none",
   {
@@ -123,6 +133,9 @@ function ItemMedia({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemMediaWithRef = withRef("ItemMedia", ItemMedia)
+
 function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -135,6 +148,9 @@ function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemContentWithRef = withRef("ItemContent", ItemContent)
 
 function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -149,6 +165,9 @@ function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemTitleWithRef = withRef("ItemTitle", ItemTitle)
+
 function ItemDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
@@ -162,6 +181,9 @@ function ItemDescription({ className, ...props }: React.ComponentProps<"p">) {
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemDescriptionWithRef = withRef("ItemDescription", ItemDescription)
+
 function ItemActions({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -171,6 +193,9 @@ function ItemActions({ className, ...props }: React.ComponentProps<"div">) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemActionsWithRef = withRef("ItemActions", ItemActions)
 
 function ItemHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -185,6 +210,9 @@ function ItemHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemHeaderWithRef = withRef("ItemHeader", ItemHeader)
+
 function ItemFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -198,15 +226,18 @@ function ItemFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemFooterWithRef = withRef("ItemFooter", ItemFooter)
+
 export {
-  Item,
-  ItemMedia,
-  ItemContent,
-  ItemActions,
-  ItemGroup,
-  ItemSeparator,
-  ItemTitle,
-  ItemDescription,
-  ItemHeader,
-  ItemFooter,
+  ItemWithRef as Item,
+  ItemMediaWithRef as ItemMedia,
+  ItemContentWithRef as ItemContent,
+  ItemActionsWithRef as ItemActions,
+  ItemGroupWithRef as ItemGroup,
+  ItemSeparatorWithRef as ItemSeparator,
+  ItemTitleWithRef as ItemTitle,
+  ItemDescriptionWithRef as ItemDescription,
+  ItemHeaderWithRef as ItemHeader,
+  ItemFooterWithRef as ItemFooter,
 }

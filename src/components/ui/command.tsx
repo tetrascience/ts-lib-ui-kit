@@ -15,6 +15,7 @@ import {
   InputGroup,
   InputGroupAddon,
 } from "@/components/ui/input-group"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
@@ -33,6 +34,9 @@ function Command({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandWithRef = withRef("Command", Command)
 
 function CommandDialog({
   title = "Command Palette",
@@ -89,6 +93,9 @@ function CommandInput({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandInputWithRef = withRef("CommandInput", CommandInput)
+
 function CommandList({
   className,
   ...props
@@ -104,6 +111,9 @@ function CommandList({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandListWithRef = withRef("CommandList", CommandList)
 
 function CommandEmpty({
   className,
@@ -130,6 +140,9 @@ function CommandEmpty({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandEmptyWithRef = withRef("CommandEmpty", CommandEmpty)
+
 function CommandGroup({
   className,
   ...props
@@ -146,6 +159,9 @@ function CommandGroup({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandGroupWithRef = withRef("CommandGroup", CommandGroup)
+
 function CommandSeparator({
   className,
   ...props
@@ -159,6 +175,9 @@ function CommandSeparator({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandSeparatorWithRef = withRef("CommandSeparator", CommandSeparator)
 
 function CommandItem({
   className,
@@ -180,6 +199,9 @@ function CommandItem({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandItemWithRef = withRef("CommandItem", CommandItem)
+
 function CommandShortcut({
   className,
   ...props
@@ -196,14 +218,17 @@ function CommandShortcut({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandShortcutWithRef = withRef("CommandShortcut", CommandShortcut)
+
 export {
-  Command,
+  CommandWithRef as Command,
   CommandDialog,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandShortcut,
-  CommandSeparator,
+  CommandInputWithRef as CommandInput,
+  CommandListWithRef as CommandList,
+  CommandEmptyWithRef as CommandEmpty,
+  CommandGroupWithRef as CommandGroup,
+  CommandItemWithRef as CommandItem,
+  CommandShortcutWithRef as CommandShortcut,
+  CommandSeparatorWithRef as CommandSeparator,
 }

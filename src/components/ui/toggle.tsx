@@ -2,6 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Toggle as TogglePrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const toggleVariants = cva(
@@ -43,4 +44,7 @@ function Toggle({
   )
 }
 
-export { Toggle, toggleVariants }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToggleWithRef = withRef("Toggle", Toggle)
+
+export { ToggleWithRef as Toggle, toggleVariants }

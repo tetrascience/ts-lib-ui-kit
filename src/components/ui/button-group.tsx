@@ -2,6 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
 import { Separator } from "@/components/ui/separator"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const buttonGroupVariants = cva(
@@ -37,6 +38,9 @@ function ButtonGroup({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ButtonGroupWithRef = withRef("ButtonGroup", ButtonGroup)
+
 function ButtonGroupText({
   className,
   asChild = false,
@@ -57,6 +61,9 @@ function ButtonGroupText({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ButtonGroupTextWithRef = withRef("ButtonGroupText", ButtonGroupText)
+
 function ButtonGroupSeparator({
   className,
   orientation = "vertical",
@@ -75,9 +82,12 @@ function ButtonGroupSeparator({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ButtonGroupSeparatorWithRef = withRef("ButtonGroupSeparator", ButtonGroupSeparator)
+
 export {
-  ButtonGroup,
-  ButtonGroupSeparator,
-  ButtonGroupText,
+  ButtonGroupWithRef as ButtonGroup,
+  ButtonGroupSeparatorWithRef as ButtonGroupSeparator,
+  ButtonGroupTextWithRef as ButtonGroupText,
   buttonGroupVariants,
 }

@@ -3,6 +3,7 @@
 import { Tooltip as TooltipPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function TooltipProvider({
@@ -30,6 +31,9 @@ function TooltipTrigger({
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TooltipTriggerWithRef = withRef("TooltipTrigger", TooltipTrigger)
+
 function TooltipContent({
   className,
   sideOffset = 0,
@@ -54,4 +58,7 @@ function TooltipContent({
   )
 }
 
-export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TooltipContentWithRef = withRef("TooltipContent", TooltipContent)
+
+export { Tooltip, TooltipContentWithRef as TooltipContent, TooltipProvider, TooltipTriggerWithRef as TooltipTrigger }

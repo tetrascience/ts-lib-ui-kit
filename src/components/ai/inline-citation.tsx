@@ -21,6 +21,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 
@@ -28,7 +29,7 @@ import { cn } from "@/lib/utils";
 
 export type InlineCitationProps = ComponentProps<"span">;
 
-export const InlineCitation = ({
+const InlineCitation = ({
   className,
   ...props
 }: InlineCitationProps) => (
@@ -38,9 +39,13 @@ export const InlineCitation = ({
   />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationWithRef = withRef("InlineCitation", InlineCitation);
+export { InlineCitationWithRef as InlineCitation };
+
 export type InlineCitationTextProps = ComponentProps<"span">;
 
-export const InlineCitationText = ({
+const InlineCitationText = ({
   className,
   ...props
 }: InlineCitationTextProps) => (
@@ -49,6 +54,10 @@ export const InlineCitationText = ({
     {...props}
   />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationTextWithRef = withRef("InlineCitationText", InlineCitationText);
+export { InlineCitationTextWithRef as InlineCitationText };
 
 const getHostname = (source: string) => {
   try {
@@ -68,7 +77,7 @@ export type InlineCitationCardTriggerProps = ComponentProps<typeof Badge> & {
   sources: string[];
 };
 
-export const InlineCitationCardTrigger = ({
+const InlineCitationCardTrigger = ({
   sources,
   className,
   ...props
@@ -91,14 +100,22 @@ export const InlineCitationCardTrigger = ({
   </HoverCardTrigger>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationCardTriggerWithRef = withRef("InlineCitationCardTrigger", InlineCitationCardTrigger);
+export { InlineCitationCardTriggerWithRef as InlineCitationCardTrigger };
+
 export type InlineCitationCardBodyProps = ComponentProps<"div">;
 
-export const InlineCitationCardBody = ({
+const InlineCitationCardBody = ({
   className,
   ...props
 }: InlineCitationCardBodyProps) => (
   <HoverCardContent className={cn("relative w-80 p-0", className)} {...props} />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationCardBodyWithRef = withRef("InlineCitationCardBody", InlineCitationCardBody);
+export { InlineCitationCardBodyWithRef as InlineCitationCardBody };
 
 const CarouselApiContext = createContext<CarouselApi | undefined>(undefined);
 
@@ -108,7 +125,7 @@ const useCarouselApi = () => {
 
 export type InlineCitationCarouselProps = ComponentProps<typeof Carousel>;
 
-export const InlineCitationCarousel = ({
+const InlineCitationCarousel = ({
   className,
   children,
   ...props
@@ -124,15 +141,23 @@ export const InlineCitationCarousel = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationCarouselWithRef = withRef("InlineCitationCarousel", InlineCitationCarousel);
+export { InlineCitationCarouselWithRef as InlineCitationCarousel };
+
 export type InlineCitationCarouselContentProps = ComponentProps<"div">;
 
-export const InlineCitationCarouselContent = (
+const InlineCitationCarouselContent = (
   props: InlineCitationCarouselContentProps
 ) => <CarouselContent {...props} />;
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationCarouselContentWithRef = withRef("InlineCitationCarouselContent", InlineCitationCarouselContent);
+export { InlineCitationCarouselContentWithRef as InlineCitationCarouselContent };
+
 export type InlineCitationCarouselItemProps = ComponentProps<"div">;
 
-export const InlineCitationCarouselItem = ({
+const InlineCitationCarouselItem = ({
   className,
   ...props
 }: InlineCitationCarouselItemProps) => (
@@ -142,9 +167,13 @@ export const InlineCitationCarouselItem = ({
   />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationCarouselItemWithRef = withRef("InlineCitationCarouselItem", InlineCitationCarouselItem);
+export { InlineCitationCarouselItemWithRef as InlineCitationCarouselItem };
+
 export type InlineCitationCarouselHeaderProps = ComponentProps<"div">;
 
-export const InlineCitationCarouselHeader = ({
+const InlineCitationCarouselHeader = ({
   className,
   ...props
 }: InlineCitationCarouselHeaderProps) => (
@@ -157,9 +186,13 @@ export const InlineCitationCarouselHeader = ({
   />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationCarouselHeaderWithRef = withRef("InlineCitationCarouselHeader", InlineCitationCarouselHeader);
+export { InlineCitationCarouselHeaderWithRef as InlineCitationCarouselHeader };
+
 export type InlineCitationCarouselIndexProps = ComponentProps<"div">;
 
-export const InlineCitationCarouselIndex = ({
+const InlineCitationCarouselIndex = ({
   children,
   className,
   ...props
@@ -203,9 +236,13 @@ export const InlineCitationCarouselIndex = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationCarouselIndexWithRef = withRef("InlineCitationCarouselIndex", InlineCitationCarouselIndex);
+export { InlineCitationCarouselIndexWithRef as InlineCitationCarouselIndex };
+
 export type InlineCitationCarouselPrevProps = ComponentProps<"button">;
 
-export const InlineCitationCarouselPrev = ({
+const InlineCitationCarouselPrev = ({
   className,
   ...props
 }: InlineCitationCarouselPrevProps) => {
@@ -230,9 +267,13 @@ export const InlineCitationCarouselPrev = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationCarouselPrevWithRef = withRef("InlineCitationCarouselPrev", InlineCitationCarouselPrev);
+export { InlineCitationCarouselPrevWithRef as InlineCitationCarouselPrev };
+
 export type InlineCitationCarouselNextProps = ComponentProps<"button">;
 
-export const InlineCitationCarouselNext = ({
+const InlineCitationCarouselNext = ({
   className,
   ...props
 }: InlineCitationCarouselNextProps) => {
@@ -257,13 +298,17 @@ export const InlineCitationCarouselNext = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationCarouselNextWithRef = withRef("InlineCitationCarouselNext", InlineCitationCarouselNext);
+export { InlineCitationCarouselNextWithRef as InlineCitationCarouselNext };
+
 export type InlineCitationSourceProps = ComponentProps<"div"> & {
   title?: string;
   url?: string;
   description?: string;
 };
 
-export const InlineCitationSource = ({
+const InlineCitationSource = ({
   title,
   url,
   description,
@@ -287,9 +332,13 @@ export const InlineCitationSource = ({
   </div>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationSourceWithRef = withRef("InlineCitationSource", InlineCitationSource);
+export { InlineCitationSourceWithRef as InlineCitationSource };
+
 export type InlineCitationQuoteProps = ComponentProps<"blockquote">;
 
-export const InlineCitationQuote = ({
+const InlineCitationQuote = ({
   children,
   className,
   ...props
@@ -304,3 +353,7 @@ export const InlineCitationQuote = ({
     {children}
   </blockquote>
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InlineCitationQuoteWithRef = withRef("InlineCitationQuote", InlineCitationQuote);
+export { InlineCitationQuoteWithRef as InlineCitationQuote };

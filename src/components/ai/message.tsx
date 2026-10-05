@@ -13,7 +13,7 @@ import { Streamdown } from "streamdown";
 import { useStreamdownPlugins } from "./use-streamdown-plugins";
 
 import type { UIMessage } from "ai";
-import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
+import type { ComponentProps, ReactElement, Ref } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,13 +26,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
-export type MessageProps = HTMLAttributes<HTMLDivElement> & {
+export type MessageProps = ComponentProps<"div"> & {
   from: UIMessage["role"];
 };
 
-export const Message = ({ className, from, ...props }: MessageProps) => (
+const Message = ({ className, from, ...props }: MessageProps) => (
   <div
     className={cn(
       "group flex w-full max-w-[95%] flex-col gap-2",
@@ -43,9 +44,13 @@ export const Message = ({ className, from, ...props }: MessageProps) => (
   />
 );
 
-export type MessageContentProps = HTMLAttributes<HTMLDivElement>;
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MessageWithRef = withRef("Message", Message);
+export { MessageWithRef as Message };
 
-export const MessageContent = ({
+export type MessageContentProps = ComponentProps<"div">;
+
+const MessageContent = ({
   children,
   className,
   ...props
@@ -63,9 +68,13 @@ export const MessageContent = ({
   </div>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MessageContentWithRef = withRef("MessageContent", MessageContent);
+export { MessageContentWithRef as MessageContent };
+
 export type MessageActionsProps = ComponentProps<"div">;
 
-export const MessageActions = ({
+const MessageActions = ({
   className,
   children,
   ...props
@@ -75,12 +84,16 @@ export const MessageActions = ({
   </div>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MessageActionsWithRef = withRef("MessageActions", MessageActions);
+export { MessageActionsWithRef as MessageActions };
+
 export type MessageActionProps = ComponentProps<typeof Button> & {
   tooltip?: string;
   label?: string;
 };
 
-export const MessageAction = ({
+const MessageAction = ({
   tooltip,
   children,
   label,
@@ -111,6 +124,10 @@ export const MessageAction = ({
   return button;
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MessageActionWithRef = withRef("MessageAction", MessageAction);
+export { MessageActionWithRef as MessageAction };
+
 interface MessageBranchContextType {
   currentBranch: number;
   totalBranches: number;
@@ -136,12 +153,12 @@ const useMessageBranch = () => {
   return context;
 };
 
-export type MessageBranchProps = HTMLAttributes<HTMLDivElement> & {
+export type MessageBranchProps = ComponentProps<"div"> & {
   defaultBranch?: number;
   onBranchChange?: (branchIndex: number) => void;
 };
 
-export const MessageBranch = ({
+const MessageBranch = ({
   defaultBranch = 0,
   onBranchChange,
   className,
@@ -192,9 +209,13 @@ export const MessageBranch = ({
   );
 };
 
-export type MessageBranchContentProps = HTMLAttributes<HTMLDivElement>;
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MessageBranchWithRef = withRef("MessageBranch", MessageBranch);
+export { MessageBranchWithRef as MessageBranch };
 
-export const MessageBranchContent = ({
+export type MessageBranchContentProps = ComponentProps<"div">;
+
+const MessageBranchContent = ({
   children,
   ...props
 }: MessageBranchContentProps) => {
@@ -225,9 +246,13 @@ export const MessageBranchContent = ({
   ));
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MessageBranchContentWithRef = withRef("MessageBranchContent", MessageBranchContent);
+export { MessageBranchContentWithRef as MessageBranchContent };
+
 export type MessageBranchSelectorProps = ComponentProps<typeof ButtonGroup>;
 
-export const MessageBranchSelector = ({
+const MessageBranchSelector = ({
   className,
   ...props
 }: MessageBranchSelectorProps) => {
@@ -250,9 +275,13 @@ export const MessageBranchSelector = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MessageBranchSelectorWithRef = withRef("MessageBranchSelector", MessageBranchSelector);
+export { MessageBranchSelectorWithRef as MessageBranchSelector };
+
 export type MessageBranchPreviousProps = ComponentProps<typeof Button>;
 
-export const MessageBranchPrevious = ({
+const MessageBranchPrevious = ({
   children,
   ...props
 }: MessageBranchPreviousProps) => {
@@ -273,9 +302,13 @@ export const MessageBranchPrevious = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MessageBranchPreviousWithRef = withRef("MessageBranchPrevious", MessageBranchPrevious);
+export { MessageBranchPreviousWithRef as MessageBranchPrevious };
+
 export type MessageBranchNextProps = ComponentProps<typeof Button>;
 
-export const MessageBranchNext = ({
+const MessageBranchNext = ({
   children,
   ...props
 }: MessageBranchNextProps) => {
@@ -296,9 +329,16 @@ export const MessageBranchNext = ({
   );
 };
 
-export type MessageBranchPageProps = HTMLAttributes<HTMLSpanElement>;
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MessageBranchNextWithRef = withRef("MessageBranchNext", MessageBranchNext);
+export { MessageBranchNextWithRef as MessageBranchNext };
 
-export const MessageBranchPage = ({
+// Typed with span attributes for compatibility; the root is a ButtonGroupText div, so `ref` is a div ref.
+export type MessageBranchPageProps = Omit<ComponentProps<"span">, "ref"> & {
+  ref?: Ref<HTMLDivElement>;
+};
+
+const MessageBranchPage = ({
   className,
   ...props
 }: MessageBranchPageProps) => {
@@ -316,6 +356,10 @@ export const MessageBranchPage = ({
     </ButtonGroupText>
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MessageBranchPageWithRef = withRef("MessageBranchPage", MessageBranchPage);
+export { MessageBranchPageWithRef as MessageBranchPage };
 
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
@@ -345,7 +389,7 @@ MessageResponse.displayName = "MessageResponse";
 
 export type MessageToolbarProps = ComponentProps<"div">;
 
-export const MessageToolbar = ({
+const MessageToolbar = ({
   className,
   children,
   ...props
@@ -360,3 +404,7 @@ export const MessageToolbar = ({
     {children}
   </div>
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MessageToolbarWithRef = withRef("MessageToolbar", MessageToolbar);
+export { MessageToolbarWithRef as MessageToolbar };

@@ -3,6 +3,7 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function Dialog({
@@ -17,6 +18,9 @@ function DialogTrigger({
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogTriggerWithRef = withRef("DialogTrigger", DialogTrigger)
+
 function DialogPortal({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
@@ -28,6 +32,9 @@ function DialogClose({
 }: React.ComponentProps<typeof DialogPrimitive.Close>) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogCloseWithRef = withRef("DialogClose", DialogClose)
 
 function DialogOverlay({
   className,
@@ -45,6 +52,9 @@ function DialogOverlay({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogOverlayWithRef = withRef("DialogOverlay", DialogOverlay)
+
 function DialogContent({
   className,
   children,
@@ -55,7 +65,7 @@ function DialogContent({
 }) {
   return (
     <DialogPortal>
-      <DialogOverlay />
+      <DialogOverlayWithRef />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
@@ -97,6 +107,9 @@ function DialogContent({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogContentWithRef = withRef("DialogContent", DialogContent)
+
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -107,6 +120,9 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogHeaderWithRef = withRef("DialogHeader", DialogHeader)
+
 function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -116,6 +132,9 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogBodyWithRef = withRef("DialogBody", DialogBody)
 
 function DialogFooter({
   className,
@@ -144,6 +163,9 @@ function DialogFooter({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogFooterWithRef = withRef("DialogFooter", DialogFooter)
+
 function DialogTitle({
   className,
   ...props
@@ -156,6 +178,9 @@ function DialogTitle({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogTitleWithRef = withRef("DialogTitle", DialogTitle)
 
 function DialogDescription({
   className,
@@ -173,16 +198,19 @@ function DialogDescription({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogDescriptionWithRef = withRef("DialogDescription", DialogDescription)
+
 export {
   Dialog,
-  DialogBody,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogOverlay,
+  DialogBodyWithRef as DialogBody,
+  DialogCloseWithRef as DialogClose,
+  DialogContentWithRef as DialogContent,
+  DialogDescriptionWithRef as DialogDescription,
+  DialogFooterWithRef as DialogFooter,
+  DialogHeaderWithRef as DialogHeader,
+  DialogOverlayWithRef as DialogOverlay,
   DialogPortal,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitleWithRef as DialogTitle,
+  DialogTriggerWithRef as DialogTrigger,
 }

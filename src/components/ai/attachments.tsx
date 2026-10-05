@@ -10,7 +10,7 @@ import {
 import { createContext, useCallback, useContext, useMemo } from "react";
 
 import type { FileUIPart, SourceDocumentUIPart } from "ai";
-import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 
@@ -148,11 +149,11 @@ export const useAttachmentContext = () => {
 // Attachments - Container
 // ============================================================================
 
-export type AttachmentsProps = HTMLAttributes<HTMLDivElement> & {
+export type AttachmentsProps = ComponentProps<"div"> & {
   variant?: AttachmentVariant;
 };
 
-export const Attachments = ({
+const Attachments = ({
   variant = "grid",
   className,
   children,
@@ -177,16 +178,20 @@ export const Attachments = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AttachmentsWithRef = withRef("Attachments", Attachments);
+export { AttachmentsWithRef as Attachments };
+
 // ============================================================================
 // Attachment - Item
 // ============================================================================
 
-export type AttachmentProps = HTMLAttributes<HTMLDivElement> & {
+export type AttachmentProps = ComponentProps<"div"> & {
   data: AttachmentData;
   onRemove?: () => void;
 };
 
-export const Attachment = ({
+const Attachment = ({
   data,
   onRemove,
   className,
@@ -227,15 +232,19 @@ export const Attachment = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AttachmentWithRef = withRef("Attachment", Attachment);
+export { AttachmentWithRef as Attachment };
+
 // ============================================================================
 // AttachmentPreview - Media preview
 // ============================================================================
 
-export type AttachmentPreviewProps = HTMLAttributes<HTMLDivElement> & {
+export type AttachmentPreviewProps = ComponentProps<"div"> & {
   fallbackIcon?: ReactNode;
 };
 
-export const AttachmentPreview = ({
+const AttachmentPreview = ({
   fallbackIcon,
   className,
   ...props
@@ -277,15 +286,19 @@ export const AttachmentPreview = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AttachmentPreviewWithRef = withRef("AttachmentPreview", AttachmentPreview);
+export { AttachmentPreviewWithRef as AttachmentPreview };
+
 // ============================================================================
 // AttachmentInfo - Name and type display
 // ============================================================================
 
-export type AttachmentInfoProps = HTMLAttributes<HTMLDivElement> & {
+export type AttachmentInfoProps = ComponentProps<"div"> & {
   showMediaType?: boolean;
 };
 
-export const AttachmentInfo = ({
+const AttachmentInfo = ({
   showMediaType = false,
   className,
   ...props
@@ -309,6 +322,10 @@ export const AttachmentInfo = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AttachmentInfoWithRef = withRef("AttachmentInfo", AttachmentInfo);
+export { AttachmentInfoWithRef as AttachmentInfo };
+
 // ============================================================================
 // AttachmentRemove - Remove button
 // ============================================================================
@@ -317,7 +334,7 @@ export type AttachmentRemoveProps = ComponentProps<typeof Button> & {
   label?: string;
 };
 
-export const AttachmentRemove = ({
+const AttachmentRemove = ({
   label = "Remove",
   className,
   children,
@@ -367,6 +384,10 @@ export const AttachmentRemove = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AttachmentRemoveWithRef = withRef("AttachmentRemove", AttachmentRemove);
+export { AttachmentRemoveWithRef as AttachmentRemove };
+
 // ============================================================================
 // AttachmentHoverCard - Hover preview
 // ============================================================================
@@ -385,15 +406,19 @@ export type AttachmentHoverCardTriggerProps = ComponentProps<
   typeof HoverCardTrigger
 >;
 
-export const AttachmentHoverCardTrigger = (
+const AttachmentHoverCardTrigger = (
   props: AttachmentHoverCardTriggerProps
 ) => <HoverCardTrigger {...props} />;
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AttachmentHoverCardTriggerWithRef = withRef("AttachmentHoverCardTrigger", AttachmentHoverCardTrigger);
+export { AttachmentHoverCardTriggerWithRef as AttachmentHoverCardTrigger };
 
 export type AttachmentHoverCardContentProps = ComponentProps<
   typeof HoverCardContent
 >;
 
-export const AttachmentHoverCardContent = ({
+const AttachmentHoverCardContent = ({
   align = "start",
   className,
   ...props
@@ -405,13 +430,17 @@ export const AttachmentHoverCardContent = ({
   />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AttachmentHoverCardContentWithRef = withRef("AttachmentHoverCardContent", AttachmentHoverCardContent);
+export { AttachmentHoverCardContentWithRef as AttachmentHoverCardContent };
+
 // ============================================================================
 // AttachmentEmpty - Empty state
 // ============================================================================
 
-export type AttachmentEmptyProps = HTMLAttributes<HTMLDivElement>;
+export type AttachmentEmptyProps = ComponentProps<"div">;
 
-export const AttachmentEmpty = ({
+const AttachmentEmpty = ({
   className,
   children,
   ...props
@@ -426,3 +455,7 @@ export const AttachmentEmpty = ({
     {children ?? "No attachments"}
   </div>
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AttachmentEmptyWithRef = withRef("AttachmentEmpty", AttachmentEmpty);
+export { AttachmentEmptyWithRef as AttachmentEmpty };

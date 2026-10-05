@@ -10,6 +10,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Progress } from "@/components/ui/progress";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 
@@ -142,7 +143,7 @@ export type ContextTriggerProps = ComponentProps<typeof Button> & {
   showPercentage?: boolean;
 };
 
-export const ContextTrigger = ({
+const ContextTrigger = ({
   children,
   showPercentage = false,
   ...props
@@ -173,9 +174,13 @@ export const ContextTrigger = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextTriggerWithRef = withRef("ContextTrigger", ContextTrigger);
+export { ContextTriggerWithRef as ContextTrigger };
+
 export type ContextContentProps = ComponentProps<typeof HoverCardContent>;
 
-export const ContextContent = ({
+const ContextContent = ({
   className,
   ...props
 }: ContextContentProps) => (
@@ -185,9 +190,13 @@ export const ContextContent = ({
   />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextContentWithRef = withRef("ContextContent", ContextContent);
+export { ContextContentWithRef as ContextContent };
+
 export type ContextContentHeaderProps = ComponentProps<"div">;
 
-export const ContextContentHeader = ({
+const ContextContentHeader = ({
   children,
   className,
   ...props
@@ -229,9 +238,13 @@ export const ContextContentHeader = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextContentHeaderWithRef = withRef("ContextContentHeader", ContextContentHeader);
+export { ContextContentHeaderWithRef as ContextContentHeader };
+
 export type ContextContentBodyProps = ComponentProps<"div">;
 
-export const ContextContentBody = ({
+const ContextContentBody = ({
   children,
   className,
   ...props
@@ -241,9 +254,13 @@ export const ContextContentBody = ({
   </div>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextContentBodyWithRef = withRef("ContextContentBody", ContextContentBody);
+export { ContextContentBodyWithRef as ContextContentBody };
+
 export type ContextContentFooterProps = ComponentProps<"div">;
 
-export const ContextContentFooter = ({
+const ContextContentFooter = ({
   children,
   className,
   ...props
@@ -269,6 +286,10 @@ export const ContextContentFooter = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextContentFooterWithRef = withRef("ContextContentFooter", ContextContentFooter);
+export { ContextContentFooterWithRef as ContextContentFooter };
+
 const TokensWithCost = ({
   tokens,
   costText,
@@ -290,7 +311,7 @@ const TokensWithCost = ({
 
 export type ContextInputUsageProps = ComponentProps<"div">;
 
-export const ContextInputUsage = ({
+const ContextInputUsage = ({
   className,
   children,
   ...props
@@ -319,9 +340,13 @@ export const ContextInputUsage = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextInputUsageWithRef = withRef("ContextInputUsage", ContextInputUsage);
+export { ContextInputUsageWithRef as ContextInputUsage };
+
 export type ContextOutputUsageProps = ComponentProps<"div">;
 
-export const ContextOutputUsage = ({
+const ContextOutputUsage = ({
   className,
   children,
   ...props
@@ -350,9 +375,13 @@ export const ContextOutputUsage = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextOutputUsageWithRef = withRef("ContextOutputUsage", ContextOutputUsage);
+export { ContextOutputUsageWithRef as ContextOutputUsage };
+
 export type ContextReasoningUsageProps = ComponentProps<"div">;
 
-export const ContextReasoningUsage = ({
+const ContextReasoningUsage = ({
   className,
   children,
   ...props
@@ -381,9 +410,13 @@ export const ContextReasoningUsage = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextReasoningUsageWithRef = withRef("ContextReasoningUsage", ContextReasoningUsage);
+export { ContextReasoningUsageWithRef as ContextReasoningUsage };
+
 export type ContextCacheUsageProps = ComponentProps<"div">;
 
-export const ContextCacheUsage = ({
+const ContextCacheUsage = ({
   className,
   children,
   ...props
@@ -411,3 +444,7 @@ export const ContextCacheUsage = ({
     </div>
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextCacheUsageWithRef = withRef("ContextCacheUsage", ContextCacheUsage);
+export { ContextCacheUsageWithRef as ContextCacheUsage };

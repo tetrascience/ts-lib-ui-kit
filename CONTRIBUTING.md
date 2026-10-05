@@ -105,7 +105,7 @@ ComponentName/
 └── index.ts                 # Exports component + types
 ```
 
-### Component Template (React 19)
+### Component Template
 
 New `ui/` components follow the shadcn/ui pattern with Tailwind CSS and CVA:
 
@@ -114,6 +114,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 const myComponentVariants = cva("inline-flex items-center rounded-lg text-sm font-medium transition-all", {
@@ -149,10 +150,13 @@ function MyComponent({
   return <Comp data-slot="my-component" className={cn(myComponentVariants({ variant, size, className }))} {...props} />;
 }
 
-export { MyComponent, myComponentVariants };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MyComponentWithRef = withRef("MyComponent", MyComponent);
+
+export { MyComponentWithRef as MyComponent, myComponentVariants };
 ```
 
-**Note:** This library prefers the ref-as-prop pattern. Avoid `React.forwardRef` in new components — existing usages are being migrated.
+**Note:** Write the component for React 19, with `ref` arriving as an ordinary prop, and leave it free of React 18 concerns. Export the `withRef` wrapper under the component's name so refs also work for React 18 consumers, and do not call `React.forwardRef` directly. `yarn check:react18-compat` (run in CI's build job) fails on an unwrapped component whose props accept `ref`. See AGENTS.md, "React 18 support".
 
 ### Adding a New Component
 

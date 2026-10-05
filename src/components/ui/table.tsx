@@ -1,5 +1,6 @@
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function Table({
@@ -33,6 +34,9 @@ function Table({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableWithRef = withRef("Table", Table)
+
 function TableHeader({
   className,
   variant,
@@ -53,6 +57,9 @@ function TableHeader({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableHeaderWithRef = withRef("TableHeader", TableHeader)
+
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
@@ -62,6 +69,9 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableBodyWithRef = withRef("TableBody", TableBody)
 
 function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
@@ -76,6 +86,9 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableFooterWithRef = withRef("TableFooter", TableFooter)
+
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
@@ -88,6 +101,9 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableRowWithRef = withRef("TableRow", TableRow)
 
 function TableHead({
   className,
@@ -113,6 +129,9 @@ function TableHead({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableHeadWithRef = withRef("TableHead", TableHead)
 
 function TableCell({
   className,
@@ -142,6 +161,9 @@ function TableCell({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableCellWithRef = withRef("TableCell", TableCell)
+
 function TableCaption({
   className,
   ...props
@@ -155,13 +177,16 @@ function TableCaption({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableCaptionWithRef = withRef("TableCaption", TableCaption)
+
 export {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption,
+  TableWithRef as Table,
+  TableHeaderWithRef as TableHeader,
+  TableBodyWithRef as TableBody,
+  TableFooterWithRef as TableFooter,
+  TableHeadWithRef as TableHead,
+  TableRowWithRef as TableRow,
+  TableCellWithRef as TableCell,
+  TableCaptionWithRef as TableCaption,
 }

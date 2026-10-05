@@ -7,6 +7,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 type CarouselApi = UseEmblaCarouselType[1]
@@ -132,6 +133,9 @@ function Carousel({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CarouselWithRef = withRef("Carousel", Carousel)
+
 function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
   const { carouselRef, orientation } = useCarousel()
 
@@ -153,6 +157,9 @@ function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CarouselContentWithRef = withRef("CarouselContent", CarouselContent)
+
 function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
   const { orientation } = useCarousel()
 
@@ -170,6 +177,9 @@ function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CarouselItemWithRef = withRef("CarouselItem", CarouselItem)
 
 function CarouselPrevious({
   className,
@@ -201,6 +211,9 @@ function CarouselPrevious({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CarouselPreviousWithRef = withRef("CarouselPrevious", CarouselPrevious)
+
 function CarouselNext({
   className,
   variant = "outline",
@@ -231,12 +244,15 @@ function CarouselNext({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CarouselNextWithRef = withRef("CarouselNext", CarouselNext)
+
 export {
   type CarouselApi,
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
+  CarouselWithRef as Carousel,
+  CarouselContentWithRef as CarouselContent,
+  CarouselItemWithRef as CarouselItem,
+  CarouselPreviousWithRef as CarouselPrevious,
+  CarouselNextWithRef as CarouselNext,
   useCarousel,
 }

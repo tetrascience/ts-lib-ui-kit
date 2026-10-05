@@ -4,6 +4,8 @@ import { buildTdpUrl, getTdpBaseUrlFromReferrer, navigateToTdpUrl } from './tdp-
 
 import type { TdpNavigationOptions } from './tdp-url';
 
+import { withRef } from '@/lib/react18-compat';
+
 export interface TdpNavigationContextValue {
   /** The resolved TDP base URL (origin + org path prefix), or null if not resolved */
   tdpBaseUrl: string | null;
@@ -185,7 +187,7 @@ export interface TDPLinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchor
  * </TDPLink>
  * ```
  */
-export const TDPLink: React.FC<TDPLinkProps> = ({
+const TDPLink: React.FC<TDPLinkProps> = ({
   path,
   navigationOptions = { newTab: true },
   children,
@@ -221,3 +223,28 @@ export const TDPLink: React.FC<TDPLinkProps> = ({
     </a>
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+/**
+ * A link component that navigates to TDP pages.
+ *
+ * Renders a standard `<a>` tag with the correct href for right-click
+ * "Open in new tab" support, accessibility, and SEO.
+ *
+ * Must be used inside a `<TdpNavigationProvider>`.
+ *
+ * @example
+ * ```tsx
+ * import { TDPLink, tdpPaths } from '@tetrascience-npm/tetrascience-react-ui';
+ *
+ * <TDPLink path={tdpPaths.fileDetails("abc-123")}>
+ *   View File Details
+ * </TDPLink>
+ *
+ * <TDPLink path="/search?q=test" navigationOptions={{ newTab: false }}>
+ *   Search in TDP (same tab)
+ * </TDPLink>
+ * ```
+ */
+const TDPLinkWithRef = withRef('TDPLink', TDPLink);
+export { TDPLinkWithRef as TDPLink };

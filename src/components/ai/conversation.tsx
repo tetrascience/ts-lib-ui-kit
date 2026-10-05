@@ -6,6 +6,7 @@ import type { UIMessage } from "ai";
 import type { ComponentProps } from "react";
 
 import { Button } from "@/components/ui/button";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export type ConversationProps = ComponentProps<typeof StickToBottom>;
@@ -40,7 +41,7 @@ export type ConversationEmptyStateProps = ComponentProps<"div"> & {
   icon?: React.ReactNode;
 };
 
-export const ConversationEmptyState = ({
+const ConversationEmptyState = ({
   className,
   title = "No messages yet",
   description = "Start a conversation to see messages here",
@@ -69,9 +70,13 @@ export const ConversationEmptyState = ({
   </div>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConversationEmptyStateWithRef = withRef("ConversationEmptyState", ConversationEmptyState);
+export { ConversationEmptyStateWithRef as ConversationEmptyState };
+
 export type ConversationScrollButtonProps = ComponentProps<typeof Button>;
 
-export const ConversationScrollButton = ({
+const ConversationScrollButton = ({
   className,
   ...props
 }: ConversationScrollButtonProps) => {
@@ -99,6 +104,10 @@ export const ConversationScrollButton = ({
     )
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConversationScrollButtonWithRef = withRef("ConversationScrollButton", ConversationScrollButton);
+export { ConversationScrollButtonWithRef as ConversationScrollButton };
 
 const getMessageText = (message: UIMessage): string =>
   message.parts
@@ -129,7 +138,7 @@ export const messagesToMarkdown = (
   ) => string = defaultFormatMessage
 ): string => messages.map((msg, i) => formatMessage(msg, i)).join("\n\n");
 
-export const ConversationDownload = ({
+const ConversationDownload = ({
   messages,
   filename = "conversation.md",
   formatMessage = defaultFormatMessage,
@@ -166,3 +175,7 @@ export const ConversationDownload = ({
     </Button>
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConversationDownloadWithRef = withRef("ConversationDownload", ConversationDownload);
+export { ConversationDownloadWithRef as ConversationDownload };

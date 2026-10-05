@@ -2,6 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -68,4 +69,7 @@ function Button({
   )
 }
 
-export { Button, buttonVariants }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ButtonWithRef = withRef("Button", Button)
+
+export { ButtonWithRef as Button, buttonVariants }

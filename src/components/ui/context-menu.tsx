@@ -2,6 +2,7 @@ import { ChevronRightIcon, CheckIcon } from "lucide-react"
 import { ContextMenu as ContextMenuPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
@@ -24,6 +25,9 @@ function ContextMenuTrigger({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextMenuTriggerWithRef = withRef("ContextMenuTrigger", ContextMenuTrigger)
+
 function ContextMenuGroup({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Group>) {
@@ -31,6 +35,9 @@ function ContextMenuGroup({
     <ContextMenuPrimitive.Group data-slot="context-menu-group" {...props} />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextMenuGroupWithRef = withRef("ContextMenuGroup", ContextMenuGroup)
 
 function ContextMenuPortal({
   ...props
@@ -57,6 +64,9 @@ function ContextMenuRadioGroup({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextMenuRadioGroupWithRef = withRef("ContextMenuRadioGroup", ContextMenuRadioGroup)
+
 function ContextMenuContent({
   className,
   ...props
@@ -73,6 +83,9 @@ function ContextMenuContent({
     </ContextMenuPrimitive.Portal>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextMenuContentWithRef = withRef("ContextMenuContent", ContextMenuContent)
 
 function ContextMenuItem({
   className,
@@ -96,6 +109,9 @@ function ContextMenuItem({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextMenuItemWithRef = withRef("ContextMenuItem", ContextMenuItem)
 
 function ContextMenuSubTrigger({
   className,
@@ -121,6 +137,9 @@ function ContextMenuSubTrigger({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextMenuSubTriggerWithRef = withRef("ContextMenuSubTrigger", ContextMenuSubTrigger)
+
 function ContextMenuSubContent({
   className,
   ...props
@@ -133,6 +152,9 @@ function ContextMenuSubContent({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextMenuSubContentWithRef = withRef("ContextMenuSubContent", ContextMenuSubContent)
 
 function ContextMenuCheckboxItem({
   className,
@@ -165,6 +187,9 @@ function ContextMenuCheckboxItem({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextMenuCheckboxItemWithRef = withRef("ContextMenuCheckboxItem", ContextMenuCheckboxItem)
+
 function ContextMenuRadioItem({
   className,
   children,
@@ -194,6 +219,9 @@ function ContextMenuRadioItem({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextMenuRadioItemWithRef = withRef("ContextMenuRadioItem", ContextMenuRadioItem)
+
 function ContextMenuLabel({
   className,
   inset,
@@ -214,6 +242,9 @@ function ContextMenuLabel({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextMenuLabelWithRef = withRef("ContextMenuLabel", ContextMenuLabel)
+
 function ContextMenuSeparator({
   className,
   ...props
@@ -226,6 +257,9 @@ function ContextMenuSeparator({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextMenuSeparatorWithRef = withRef("ContextMenuSeparator", ContextMenuSeparator)
 
 function ContextMenuShortcut({
   className,
@@ -243,20 +277,23 @@ function ContextMenuShortcut({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextMenuShortcutWithRef = withRef("ContextMenuShortcut", ContextMenuShortcut)
+
 export {
   ContextMenu,
-  ContextMenuTrigger,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuCheckboxItem,
-  ContextMenuRadioItem,
-  ContextMenuLabel,
-  ContextMenuSeparator,
-  ContextMenuShortcut,
-  ContextMenuGroup,
+  ContextMenuTriggerWithRef as ContextMenuTrigger,
+  ContextMenuContentWithRef as ContextMenuContent,
+  ContextMenuItemWithRef as ContextMenuItem,
+  ContextMenuCheckboxItemWithRef as ContextMenuCheckboxItem,
+  ContextMenuRadioItemWithRef as ContextMenuRadioItem,
+  ContextMenuLabelWithRef as ContextMenuLabel,
+  ContextMenuSeparatorWithRef as ContextMenuSeparator,
+  ContextMenuShortcutWithRef as ContextMenuShortcut,
+  ContextMenuGroupWithRef as ContextMenuGroup,
   ContextMenuPortal,
   ContextMenuSub,
-  ContextMenuSubContent,
-  ContextMenuSubTrigger,
-  ContextMenuRadioGroup,
+  ContextMenuSubContentWithRef as ContextMenuSubContent,
+  ContextMenuSubTriggerWithRef as ContextMenuSubTrigger,
+  ContextMenuRadioGroupWithRef as ContextMenuRadioGroup,
 }

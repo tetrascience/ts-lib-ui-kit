@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 export type ChainOfThoughtProps = ComponentProps<typeof Collapsible>;
 
-const ChainOfThought19 = ({
+const ChainOfThought = ({
   className,
   defaultOpen = true,
   ...props
@@ -28,7 +28,9 @@ const ChainOfThought19 = ({
   />
 );
 
-export const ChainOfThought = withRef("ChainOfThought", ChainOfThought19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtWithRef = withRef("ChainOfThought", ChainOfThought);
+export { ChainOfThoughtWithRef as ChainOfThought };
 
 // ---------------------------------------------------------------------------
 // ChainOfThoughtTrigger
@@ -41,7 +43,7 @@ export type ChainOfThoughtTriggerProps = ComponentProps<typeof CollapsibleTrigge
   isStreaming?: boolean;
 };
 
-const ChainOfThoughtTrigger19 = ({
+const ChainOfThoughtTrigger = ({
   className,
   children,
   title = "Chain of Thought",
@@ -74,7 +76,9 @@ const ChainOfThoughtTrigger19 = ({
   </CollapsibleTrigger>
 );
 
-export const ChainOfThoughtTrigger = withRef("ChainOfThoughtTrigger", ChainOfThoughtTrigger19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtTriggerWithRef = withRef("ChainOfThoughtTrigger", ChainOfThoughtTrigger);
+export { ChainOfThoughtTriggerWithRef as ChainOfThoughtTrigger };
 
 // ---------------------------------------------------------------------------
 // ChainOfThoughtContent
@@ -82,7 +86,7 @@ export const ChainOfThoughtTrigger = withRef("ChainOfThoughtTrigger", ChainOfTho
 
 export type ChainOfThoughtContentProps = ComponentProps<typeof CollapsibleContent>;
 
-const ChainOfThoughtContent19 = ({
+const ChainOfThoughtContent = ({
   className,
   ...props
 }: ChainOfThoughtContentProps) => (
@@ -98,7 +102,9 @@ const ChainOfThoughtContent19 = ({
   />
 );
 
-export const ChainOfThoughtContent = withRef("ChainOfThoughtContent", ChainOfThoughtContent19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtContentWithRef = withRef("ChainOfThoughtContent", ChainOfThoughtContent);
+export { ChainOfThoughtContentWithRef as ChainOfThoughtContent };
 
 // ---------------------------------------------------------------------------
 // ChainOfThoughtStep
@@ -125,7 +131,7 @@ const STEP_ICONS: Record<ChainOfThoughtStepVariant, ReactNode> = {
   image: <ImageIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />,
 };
 
-const ChainOfThoughtStep19 = ({
+const ChainOfThoughtStep = ({
   variant = "bullet",
   className,
   children,
@@ -147,7 +153,9 @@ const ChainOfThoughtStep19 = ({
   );
 };
 
-export const ChainOfThoughtStep = withRef("ChainOfThoughtStep", ChainOfThoughtStep19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtStepWithRef = withRef("ChainOfThoughtStep", ChainOfThoughtStep);
+export { ChainOfThoughtStepWithRef as ChainOfThoughtStep };
 
 // ---------------------------------------------------------------------------
 // ChainOfThoughtSources — inline chip group with left bar
@@ -155,7 +163,7 @@ export const ChainOfThoughtStep = withRef("ChainOfThoughtStep", ChainOfThoughtSt
 
 export type ChainOfThoughtSourcesProps = ComponentProps<"div">;
 
-const ChainOfThoughtSources19 = ({
+const ChainOfThoughtSources = ({
   className,
   ...props
 }: ChainOfThoughtSourcesProps) => (
@@ -168,11 +176,13 @@ const ChainOfThoughtSources19 = ({
   />
 );
 
-export const ChainOfThoughtSources = withRef("ChainOfThoughtSources", ChainOfThoughtSources19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtSourcesWithRef = withRef("ChainOfThoughtSources", ChainOfThoughtSources);
+export { ChainOfThoughtSourcesWithRef as ChainOfThoughtSources };
 
 export type ChainOfThoughtSourceProps = ComponentProps<"a">;
 
-const ChainOfThoughtSource19 = ({
+const ChainOfThoughtSource = ({
   className,
   children,
   ...props
@@ -191,7 +201,9 @@ const ChainOfThoughtSource19 = ({
   </a>
 );
 
-export const ChainOfThoughtSource = withRef("ChainOfThoughtSource", ChainOfThoughtSource19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtSourceWithRef = withRef("ChainOfThoughtSource", ChainOfThoughtSource);
+export { ChainOfThoughtSourceWithRef as ChainOfThoughtSource };
 
 // ---------------------------------------------------------------------------
 // ChainOfThoughtImage — inline image with optional caption
@@ -203,7 +215,7 @@ export type ChainOfThoughtImageProps = ComponentProps<"figure"> & {
   caption?: string;
 };
 
-const ChainOfThoughtImage19 = ({
+const ChainOfThoughtImage = ({
   src,
   alt = "",
   caption,
@@ -223,12 +235,14 @@ const ChainOfThoughtImage19 = ({
   </figure>
 );
 
-export const ChainOfThoughtImage = withRef("ChainOfThoughtImage", ChainOfThoughtImage19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtImageWithRef = withRef("ChainOfThoughtImage", ChainOfThoughtImage);
+export { ChainOfThoughtImageWithRef as ChainOfThoughtImage };
 
-ChainOfThought19.displayName = "ChainOfThought";
-ChainOfThoughtTrigger19.displayName = "ChainOfThoughtTrigger";
-ChainOfThoughtContent19.displayName = "ChainOfThoughtContent";
-ChainOfThoughtStep19.displayName = "ChainOfThoughtStep";
-ChainOfThoughtSources19.displayName = "ChainOfThoughtSources";
-ChainOfThoughtSource19.displayName = "ChainOfThoughtSource";
-ChainOfThoughtImage19.displayName = "ChainOfThoughtImage";
+ChainOfThought.displayName = "ChainOfThought";
+ChainOfThoughtTrigger.displayName = "ChainOfThoughtTrigger";
+ChainOfThoughtContent.displayName = "ChainOfThoughtContent";
+ChainOfThoughtStep.displayName = "ChainOfThoughtStep";
+ChainOfThoughtSources.displayName = "ChainOfThoughtSources";
+ChainOfThoughtSource.displayName = "ChainOfThoughtSource";
+ChainOfThoughtImage.displayName = "ChainOfThoughtImage";

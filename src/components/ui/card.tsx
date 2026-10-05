@@ -3,7 +3,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function Card19({
+function Card({
   className,
   size = "default",
   ...props
@@ -21,9 +21,10 @@ function Card19({
   )
 }
 
-const Card = withRef("Card", Card19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardWithRef = withRef("Card", Card)
 
-function CardHeader19({ className, ...props }: React.ComponentProps<"div">) {
+function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-header"
@@ -36,9 +37,10 @@ function CardHeader19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const CardHeader = withRef("CardHeader", CardHeader19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardHeaderWithRef = withRef("CardHeader", CardHeader)
 
-function CardTitle19({ className, ...props }: React.ComponentProps<"div">) {
+function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
@@ -51,9 +53,10 @@ function CardTitle19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const CardTitle = withRef("CardTitle", CardTitle19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardTitleWithRef = withRef("CardTitle", CardTitle)
 
-function CardDescription19({ className, ...props }: React.ComponentProps<"div">) {
+function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
@@ -63,9 +66,10 @@ function CardDescription19({ className, ...props }: React.ComponentProps<"div">)
   )
 }
 
-const CardDescription = withRef("CardDescription", CardDescription19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardDescriptionWithRef = withRef("CardDescription", CardDescription)
 
-function CardAction19({ className, ...props }: React.ComponentProps<"div">) {
+function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-action"
@@ -78,9 +82,10 @@ function CardAction19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const CardAction = withRef("CardAction", CardAction19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardActionWithRef = withRef("CardAction", CardAction)
 
-function CardContent19({ className, ...props }: React.ComponentProps<"div">) {
+function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
@@ -90,9 +95,10 @@ function CardContent19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const CardContent = withRef("CardContent", CardContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardContentWithRef = withRef("CardContent", CardContent)
 
-function CardFooter19({ className, ...props }: React.ComponentProps<"div">) {
+function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-footer"
@@ -105,14 +111,15 @@ function CardFooter19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const CardFooter = withRef("CardFooter", CardFooter19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardFooterWithRef = withRef("CardFooter", CardFooter)
 
 export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardAction,
-  CardDescription,
-  CardContent,
+  CardWithRef as Card,
+  CardHeaderWithRef as CardHeader,
+  CardFooterWithRef as CardFooter,
+  CardTitleWithRef as CardTitle,
+  CardActionWithRef as CardAction,
+  CardDescriptionWithRef as CardDescription,
+  CardContentWithRef as CardContent,
 }

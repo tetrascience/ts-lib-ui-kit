@@ -4,15 +4,16 @@ import { Collapsible as CollapsiblePrimitive } from "radix-ui"
 
 import { withRef } from "@/lib/react18-compat"
 
-function Collapsible19({
+function Collapsible({
   ...props
 }: React.ComponentProps<typeof CollapsiblePrimitive.Root>) {
   return <CollapsiblePrimitive.Root data-slot="collapsible" {...props} />
 }
 
-const Collapsible = withRef("Collapsible", Collapsible19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CollapsibleWithRef = withRef("Collapsible", Collapsible)
 
-function CollapsibleTrigger19({
+function CollapsibleTrigger({
   ...props
 }: React.ComponentProps<typeof CollapsiblePrimitive.CollapsibleTrigger>) {
   return (
@@ -23,9 +24,10 @@ function CollapsibleTrigger19({
   )
 }
 
-const CollapsibleTrigger = withRef("CollapsibleTrigger", CollapsibleTrigger19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CollapsibleTriggerWithRef = withRef("CollapsibleTrigger", CollapsibleTrigger)
 
-function CollapsibleContent19({
+function CollapsibleContent({
   ...props
 }: React.ComponentProps<typeof CollapsiblePrimitive.CollapsibleContent>) {
   return (
@@ -36,6 +38,7 @@ function CollapsibleContent19({
   )
 }
 
-const CollapsibleContent = withRef("CollapsibleContent", CollapsibleContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CollapsibleContentWithRef = withRef("CollapsibleContent", CollapsibleContent)
 
-export { Collapsible, CollapsibleTrigger, CollapsibleContent }
+export { CollapsibleWithRef as Collapsible, CollapsibleTriggerWithRef as CollapsibleTrigger, CollapsibleContentWithRef as CollapsibleContent }

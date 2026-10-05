@@ -11,7 +11,7 @@ export interface FormSectionProps extends React.ComponentProps<"div"> {
   children: React.ReactNode
 }
 
-function FormSection19({
+function FormSection({
   heading,
   description,
   children,
@@ -36,4 +36,6 @@ function FormSection19({
   )
 }
 
-export const FormSection = withRef("FormSection", FormSection19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FormSectionWithRef = withRef("FormSection", FormSection)
+export { FormSectionWithRef as FormSection }

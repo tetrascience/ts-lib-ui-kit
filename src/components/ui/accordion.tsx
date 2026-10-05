@@ -6,7 +6,7 @@ import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
-function Accordion19({
+function Accordion({
   className,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
@@ -19,9 +19,10 @@ function Accordion19({
   )
 }
 
-const Accordion = withRef("Accordion", Accordion19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AccordionWithRef = withRef("Accordion", Accordion)
 
-function AccordionItem19({
+function AccordionItem({
   className,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Item>) {
@@ -34,9 +35,10 @@ function AccordionItem19({
   )
 }
 
-const AccordionItem = withRef("AccordionItem", AccordionItem19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AccordionItemWithRef = withRef("AccordionItem", AccordionItem)
 
-function AccordionTrigger19({
+function AccordionTrigger({
   className,
   children,
   ...props
@@ -59,9 +61,10 @@ function AccordionTrigger19({
   )
 }
 
-const AccordionTrigger = withRef("AccordionTrigger", AccordionTrigger19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AccordionTriggerWithRef = withRef("AccordionTrigger", AccordionTrigger)
 
-function AccordionContent19({
+function AccordionContent({
   className,
   children,
   ...props
@@ -84,6 +87,7 @@ function AccordionContent19({
   )
 }
 
-const AccordionContent = withRef("AccordionContent", AccordionContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AccordionContentWithRef = withRef("AccordionContent", AccordionContent)
 
-export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }
+export { AccordionWithRef as Accordion, AccordionItemWithRef as AccordionItem, AccordionTriggerWithRef as AccordionTrigger, AccordionContentWithRef as AccordionContent }

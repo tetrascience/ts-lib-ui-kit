@@ -4,7 +4,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function Separator19({
+function Separator({
   className,
   orientation = "horizontal",
   decorative = true,
@@ -24,6 +24,7 @@ function Separator19({
   )
 }
 
-const Separator = withRef("Separator", Separator19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SeparatorWithRef = withRef("Separator", Separator)
 
-export { Separator }
+export { SeparatorWithRef as Separator }

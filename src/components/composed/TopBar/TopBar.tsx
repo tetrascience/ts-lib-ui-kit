@@ -42,7 +42,7 @@ export interface TopBarProps
  * - **center** is an optional "context" slot (e.g. a version/status selector).
  * - **right** holds actions, a help affordance, a `UserMenu`, etc.
  */
-function TopBar19({ left, center, right, sticky, className, ...props }: TopBarProps) {
+function TopBar({ left, center, right, sticky, className, ...props }: TopBarProps) {
   return (
     <div
       data-slot="top-bar"
@@ -75,6 +75,7 @@ function TopBar19({ left, center, right, sticky, className, ...props }: TopBarPr
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
 /**
  * Sticky application header with three slots — left / center / right.
  *
@@ -82,6 +83,6 @@ function TopBar19({ left, center, right, sticky, className, ...props }: TopBarPr
  * - **center** is an optional "context" slot (e.g. a version/status selector).
  * - **right** holds actions, a help affordance, a `UserMenu`, etc.
  */
-const TopBar = withRef("TopBar", TopBar19);
+const TopBarWithRef = withRef("TopBar", TopBar);
 
-export { TopBar, topBarVariants };
+export { TopBarWithRef as TopBar, topBarVariants };

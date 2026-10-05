@@ -53,7 +53,7 @@ export type ReasoningProps = ComponentProps<typeof Collapsible> & {
 const AUTO_CLOSE_DELAY = 1000;
 const MS_IN_S = 1000;
 
-const Reasoning19 = memo(
+const Reasoning = memo(
   ({
     className,
     isStreaming = false,
@@ -147,7 +147,9 @@ const Reasoning19 = memo(
 );
 
 // memo stays on the React 19 component; the React 18 export re-memoises the forwarding wrapper.
-export const Reasoning = memo(withRef("Reasoning", Reasoning19.type));
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ReasoningWithRef = memo(withRef("Reasoning", Reasoning.type));
+export { ReasoningWithRef as Reasoning };
 
 export type ReasoningTriggerProps = ComponentProps<
   typeof CollapsibleTrigger
@@ -165,7 +167,7 @@ const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
   return <p>Thought for {duration} seconds</p>;
 };
 
-const ReasoningTrigger19 = memo(
+const ReasoningTrigger = memo(
   ({
     className,
     children,
@@ -201,7 +203,9 @@ const ReasoningTrigger19 = memo(
 );
 
 // memo stays on the React 19 component; the React 18 export re-memoises the forwarding wrapper.
-export const ReasoningTrigger = memo(withRef("ReasoningTrigger", ReasoningTrigger19.type));
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ReasoningTriggerWithRef = memo(withRef("ReasoningTrigger", ReasoningTrigger.type));
+export { ReasoningTriggerWithRef as ReasoningTrigger };
 
 export type ReasoningContentProps = ComponentProps<
   typeof CollapsibleContent
@@ -209,7 +213,7 @@ export type ReasoningContentProps = ComponentProps<
   children: string;
 };
 
-const ReasoningContent19 = memo(
+const ReasoningContent = memo(
   ({ className, children, ...props }: ReasoningContentProps) => {
     // Plugins load lazily (SW-2007): markdown streams in immediately and
     // code/math/mermaid rendering upgrades in place once the chunk arrives.
@@ -231,7 +235,9 @@ const ReasoningContent19 = memo(
 );
 
 // memo stays on the React 19 component; the React 18 export re-memoises the forwarding wrapper.
-export const ReasoningContent = memo(withRef("ReasoningContent", ReasoningContent19.type));
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ReasoningContentWithRef = memo(withRef("ReasoningContent", ReasoningContent.type));
+export { ReasoningContentWithRef as ReasoningContent };
 
 Reasoning.displayName = "Reasoning";
 ReasoningTrigger.displayName = "ReasoningTrigger";

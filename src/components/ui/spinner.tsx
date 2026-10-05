@@ -18,7 +18,7 @@ const spinnerVariants = cva("animate-spin", {
   },
 })
 
-function Spinner19({
+function Spinner({
   className,
   size = "default",
   ...props
@@ -35,6 +35,7 @@ function Spinner19({
   )
 }
 
-const Spinner = withRef("Spinner", Spinner19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SpinnerWithRef = withRef("Spinner", Spinner)
 
-export { Spinner, spinnerVariants }
+export { SpinnerWithRef as Spinner, spinnerVariants }

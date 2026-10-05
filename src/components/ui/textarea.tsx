@@ -23,7 +23,7 @@ const textareaVariants = cva(
   }
 )
 
-function Textarea19({
+function Textarea({
   className,
   size,
   ...props
@@ -38,6 +38,7 @@ function Textarea19({
   )
 }
 
-const Textarea = withRef("Textarea", Textarea19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TextareaWithRef = withRef("Textarea", Textarea)
 
-export { Textarea, textareaVariants }
+export { TextareaWithRef as Textarea, textareaVariants }

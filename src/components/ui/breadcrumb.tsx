@@ -6,7 +6,7 @@ import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
-function Breadcrumb19({ className, ...props }: React.ComponentProps<"nav">) {
+function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
       aria-label="breadcrumb"
@@ -17,9 +17,10 @@ function Breadcrumb19({ className, ...props }: React.ComponentProps<"nav">) {
   )
 }
 
-const Breadcrumb = withRef("Breadcrumb", Breadcrumb19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbWithRef = withRef("Breadcrumb", Breadcrumb)
 
-function BreadcrumbList19({ className, ...props }: React.ComponentProps<"ol">) {
+function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
   return (
     <ol
       data-slot="breadcrumb-list"
@@ -32,9 +33,10 @@ function BreadcrumbList19({ className, ...props }: React.ComponentProps<"ol">) {
   )
 }
 
-const BreadcrumbList = withRef("BreadcrumbList", BreadcrumbList19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbListWithRef = withRef("BreadcrumbList", BreadcrumbList)
 
-function BreadcrumbItem19({ className, ...props }: React.ComponentProps<"li">) {
+function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
       data-slot="breadcrumb-item"
@@ -44,9 +46,10 @@ function BreadcrumbItem19({ className, ...props }: React.ComponentProps<"li">) {
   )
 }
 
-const BreadcrumbItem = withRef("BreadcrumbItem", BreadcrumbItem19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbItemWithRef = withRef("BreadcrumbItem", BreadcrumbItem)
 
-function BreadcrumbLink19({
+function BreadcrumbLink({
   asChild,
   className,
   ...props
@@ -64,9 +67,10 @@ function BreadcrumbLink19({
   )
 }
 
-const BreadcrumbLink = withRef("BreadcrumbLink", BreadcrumbLink19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbLinkWithRef = withRef("BreadcrumbLink", BreadcrumbLink)
 
-function BreadcrumbPage19({ className, ...props }: React.ComponentProps<"span">) {
+function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       data-slot="breadcrumb-page"
@@ -79,9 +83,10 @@ function BreadcrumbPage19({ className, ...props }: React.ComponentProps<"span">)
   )
 }
 
-const BreadcrumbPage = withRef("BreadcrumbPage", BreadcrumbPage19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbPageWithRef = withRef("BreadcrumbPage", BreadcrumbPage)
 
-function BreadcrumbSeparator19({
+function BreadcrumbSeparator({
   children,
   className,
   ...props
@@ -101,9 +106,10 @@ function BreadcrumbSeparator19({
   )
 }
 
-const BreadcrumbSeparator = withRef("BreadcrumbSeparator", BreadcrumbSeparator19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbSeparatorWithRef = withRef("BreadcrumbSeparator", BreadcrumbSeparator)
 
-function BreadcrumbEllipsis19({
+function BreadcrumbEllipsis({
   className,
   ...props
 }: React.ComponentProps<"span">) {
@@ -125,14 +131,15 @@ function BreadcrumbEllipsis19({
   )
 }
 
-const BreadcrumbEllipsis = withRef("BreadcrumbEllipsis", BreadcrumbEllipsis19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbEllipsisWithRef = withRef("BreadcrumbEllipsis", BreadcrumbEllipsis)
 
 export {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-  BreadcrumbEllipsis,
+  BreadcrumbWithRef as Breadcrumb,
+  BreadcrumbListWithRef as BreadcrumbList,
+  BreadcrumbItemWithRef as BreadcrumbItem,
+  BreadcrumbLinkWithRef as BreadcrumbLink,
+  BreadcrumbPageWithRef as BreadcrumbPage,
+  BreadcrumbSeparatorWithRef as BreadcrumbSeparator,
+  BreadcrumbEllipsisWithRef as BreadcrumbEllipsis,
 }

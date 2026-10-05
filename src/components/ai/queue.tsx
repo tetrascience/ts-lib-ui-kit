@@ -40,7 +40,7 @@ export interface QueueTodo {
 
 export type QueueItemProps = ComponentProps<"li">;
 
-const QueueItem19 = ({ className, ...props }: QueueItemProps) => (
+const QueueItem = ({ className, ...props }: QueueItemProps) => (
   <li
     className={cn(
       "group flex flex-row items-center gap-2 rounded-md px-3 py-1 text-sm transition-colors hover:bg-accent",
@@ -50,7 +50,9 @@ const QueueItem19 = ({ className, ...props }: QueueItemProps) => (
   />
 );
 
-export const QueueItem = withRef("QueueItem", QueueItem19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemWithRef = withRef("QueueItem", QueueItem);
+export { QueueItemWithRef as QueueItem };
 
 // ---------------------------------------------------------------------------
 // QueueItemIndicator
@@ -79,7 +81,7 @@ const INDICATOR_STATUS: Record<QueueItemStatus, string> = {
   error: "border border-destructive/30 bg-destructive/70",
 };
 
-const QueueItemIndicator19 = ({
+const QueueItemIndicator = ({
   status,
   completed = false,
   className,
@@ -100,7 +102,9 @@ const QueueItemIndicator19 = ({
   );
 };
 
-export const QueueItemIndicator = withRef("QueueItemIndicator", QueueItemIndicator19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemIndicatorWithRef = withRef("QueueItemIndicator", QueueItemIndicator);
+export { QueueItemIndicatorWithRef as QueueItemIndicator };
 
 // ---------------------------------------------------------------------------
 // QueueItemContent
@@ -110,7 +114,7 @@ export type QueueItemContentProps = ComponentProps<"span"> & {
   completed?: boolean;
 };
 
-const QueueItemContent19 = ({
+const QueueItemContent = ({
   completed = false,
   className,
   ...props
@@ -125,7 +129,9 @@ const QueueItemContent19 = ({
   />
 );
 
-export const QueueItemContent = withRef("QueueItemContent", QueueItemContent19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemContentWithRef = withRef("QueueItemContent", QueueItemContent);
+export { QueueItemContentWithRef as QueueItemContent };
 
 // ---------------------------------------------------------------------------
 // QueueItemDescription
@@ -137,7 +143,7 @@ export type QueueItemDescriptionProps = ComponentProps<"div"> & {
   completed?: boolean;
 };
 
-const QueueItemDescription19 = ({
+const QueueItemDescription = ({
   completed = false,
   className,
   ...props
@@ -152,7 +158,9 @@ const QueueItemDescription19 = ({
   />
 );
 
-export const QueueItemDescription = withRef("QueueItemDescription", QueueItemDescription19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemDescriptionWithRef = withRef("QueueItemDescription", QueueItemDescription);
+export { QueueItemDescriptionWithRef as QueueItemDescription };
 
 // ---------------------------------------------------------------------------
 // QueueItemActions / QueueItemAction
@@ -160,21 +168,23 @@ export const QueueItemDescription = withRef("QueueItemDescription", QueueItemDes
 
 export type QueueItemActionsProps = ComponentProps<"div">;
 
-const QueueItemActions19 = ({
+const QueueItemActions = ({
   className,
   ...props
 }: QueueItemActionsProps) => (
   <div className={cn("ml-auto flex shrink-0 gap-1", className)} {...props} />
 );
 
-export const QueueItemActions = withRef("QueueItemActions", QueueItemActions19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemActionsWithRef = withRef("QueueItemActions", QueueItemActions);
+export { QueueItemActionsWithRef as QueueItemActions };
 
 export type QueueItemActionProps = Omit<
   ComponentProps<typeof Button>,
   "variant" | "size"
 >;
 
-const QueueItemAction19 = ({
+const QueueItemAction = ({
   className,
   ...props
 }: QueueItemActionProps) => (
@@ -190,7 +200,9 @@ const QueueItemAction19 = ({
   />
 );
 
-export const QueueItemAction = withRef("QueueItemAction", QueueItemAction19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemActionWithRef = withRef("QueueItemAction", QueueItemAction);
+export { QueueItemActionWithRef as QueueItemAction };
 
 // ---------------------------------------------------------------------------
 // QueueItemAttachment / QueueItemImage / QueueItemFile
@@ -198,18 +210,20 @@ export const QueueItemAction = withRef("QueueItemAction", QueueItemAction19);
 
 export type QueueItemAttachmentProps = ComponentProps<"div">;
 
-const QueueItemAttachment19 = ({
+const QueueItemAttachment = ({
   className,
   ...props
 }: QueueItemAttachmentProps) => (
   <div className={cn("flex flex-wrap gap-2", className)} {...props} />
 );
 
-export const QueueItemAttachment = withRef("QueueItemAttachment", QueueItemAttachment19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemAttachmentWithRef = withRef("QueueItemAttachment", QueueItemAttachment);
+export { QueueItemAttachmentWithRef as QueueItemAttachment };
 
 export type QueueItemImageProps = ComponentProps<"img">;
 
-const QueueItemImage19 = ({
+const QueueItemImage = ({
   className,
   ...props
 }: QueueItemImageProps) => (
@@ -222,11 +236,13 @@ const QueueItemImage19 = ({
   />
 );
 
-export const QueueItemImage = withRef("QueueItemImage", QueueItemImage19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemImageWithRef = withRef("QueueItemImage", QueueItemImage);
+export { QueueItemImageWithRef as QueueItemImage };
 
 export type QueueItemFileProps = ComponentProps<"span">;
 
-const QueueItemFile19 = ({
+const QueueItemFile = ({
   children,
   className,
   ...props
@@ -243,7 +259,9 @@ const QueueItemFile19 = ({
   </span>
 );
 
-export const QueueItemFile = withRef("QueueItemFile", QueueItemFile19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemFileWithRef = withRef("QueueItemFile", QueueItemFile);
+export { QueueItemFileWithRef as QueueItemFile };
 
 // ---------------------------------------------------------------------------
 // QueueList
@@ -251,7 +269,7 @@ export const QueueItemFile = withRef("QueueItemFile", QueueItemFile19);
 
 export type QueueListProps = ComponentProps<typeof ScrollArea>;
 
-const QueueList19 = ({
+const QueueList = ({
   children,
   className,
   ...props
@@ -263,7 +281,9 @@ const QueueList19 = ({
   </ScrollArea>
 );
 
-export const QueueList = withRef("QueueList", QueueList19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueListWithRef = withRef("QueueList", QueueList);
+export { QueueListWithRef as QueueList };
 
 // ---------------------------------------------------------------------------
 // QueueSection / QueueSectionTrigger / QueueSectionLabel / QueueSectionContent
@@ -271,7 +291,7 @@ export const QueueList = withRef("QueueList", QueueList19);
 
 export type QueueSectionProps = ComponentProps<typeof Collapsible>;
 
-const QueueSection19 = ({
+const QueueSection = ({
   className,
   defaultOpen = true,
   ...props
@@ -279,11 +299,13 @@ const QueueSection19 = ({
   <Collapsible className={cn(className)} defaultOpen={defaultOpen} {...props} />
 );
 
-export const QueueSection = withRef("QueueSection", QueueSection19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueSectionWithRef = withRef("QueueSection", QueueSection);
+export { QueueSectionWithRef as QueueSection };
 
 export type QueueSectionTriggerProps = ComponentProps<"button">;
 
-const QueueSectionTrigger19 = ({
+const QueueSectionTrigger = ({
   children,
   className,
   ...props
@@ -302,14 +324,16 @@ const QueueSectionTrigger19 = ({
   </CollapsibleTrigger>
 );
 
-export const QueueSectionTrigger = withRef("QueueSectionTrigger", QueueSectionTrigger19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueSectionTriggerWithRef = withRef("QueueSectionTrigger", QueueSectionTrigger);
+export { QueueSectionTriggerWithRef as QueueSectionTrigger };
 
 export type QueueSectionLabelProps = ComponentProps<"span"> & {
   count?: number;
   icon?: React.ReactNode;
 };
 
-const QueueSectionLabel19 = ({
+const QueueSectionLabel = ({
   count,
   icon,
   className,
@@ -329,18 +353,22 @@ const QueueSectionLabel19 = ({
   </span>
 );
 
-export const QueueSectionLabel = withRef("QueueSectionLabel", QueueSectionLabel19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueSectionLabelWithRef = withRef("QueueSectionLabel", QueueSectionLabel);
+export { QueueSectionLabelWithRef as QueueSectionLabel };
 
 export type QueueSectionContentProps = ComponentProps<typeof CollapsibleContent>;
 
-const QueueSectionContent19 = ({
+const QueueSectionContent = ({
   className,
   ...props
 }: QueueSectionContentProps) => (
   <CollapsibleContent className={cn(className)} {...props} />
 );
 
-export const QueueSectionContent = withRef("QueueSectionContent", QueueSectionContent19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueSectionContentWithRef = withRef("QueueSectionContent", QueueSectionContent);
+export { QueueSectionContentWithRef as QueueSectionContent };
 
 // ---------------------------------------------------------------------------
 // Queue (root)
@@ -352,7 +380,7 @@ export type QueueProps = ComponentProps<"div"> & {
   isStreaming?: boolean;
 };
 
-const Queue19 = ({ className, isStreaming = false, children, style, id, ref, ...props }: QueueProps) => {
+const Queue = ({ className, isStreaming = false, children, style, id, ref, ...props }: QueueProps) => {
   const [visible, setVisible] = useState(true);
   const hasEverStreamedRef = useRef(isStreaming);
   const [hasAutoHidden, setHasAutoHidden] = useState(false);
@@ -399,4 +427,6 @@ const Queue19 = ({ className, isStreaming = false, children, style, id, ref, ...
   );
 };
 
-export const Queue = withRef("Queue", Queue19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueWithRef = withRef("Queue", Queue);
+export { QueueWithRef as Queue };

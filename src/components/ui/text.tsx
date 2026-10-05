@@ -139,7 +139,7 @@ interface TextProps extends React.HTMLAttributes<HTMLElement>, VariantProps<type
   truncate?: boolean;
 }
 
-function Text19({
+function Text({
   className,
   variant = "body",
   state = "default",
@@ -185,7 +185,8 @@ function Text19({
   );
 }
 
-const Text = withRef("Text", Text19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TextWithRef = withRef("Text", Text);
 
-export { Text, textVariants };
+export { TextWithRef as Text, textVariants };
 export type { TextProps, TextElement, TextVariant };

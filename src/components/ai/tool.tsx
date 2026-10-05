@@ -33,7 +33,7 @@ export type ToolProps = ComponentProps<typeof Collapsible> & {
   isStreaming?: boolean;
 };
 
-const Tool19 = ({
+const Tool = ({
   className,
   isStreaming = false,
   open,
@@ -79,7 +79,9 @@ const Tool19 = ({
   );
 };
 
-export const Tool = withRef("Tool", Tool19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToolWithRef = withRef("Tool", Tool);
+export { ToolWithRef as Tool };
 
 export type ToolPart = ToolUIPart | DynamicToolUIPart;
 
@@ -156,7 +158,7 @@ export const ToolHeader = ({
 
 export type ToolContentProps = ComponentProps<typeof CollapsibleContent>;
 
-const ToolContent19 = ({ className, ...props }: ToolContentProps) => (
+const ToolContent = ({ className, ...props }: ToolContentProps) => (
   <CollapsibleContent
     className={cn(
       "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 space-y-4 p-4 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
@@ -166,13 +168,15 @@ const ToolContent19 = ({ className, ...props }: ToolContentProps) => (
   />
 );
 
-export const ToolContent = withRef("ToolContent", ToolContent19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToolContentWithRef = withRef("ToolContent", ToolContent);
+export { ToolContentWithRef as ToolContent };
 
 export type ToolInputProps = ComponentProps<"div"> & {
   input: ToolPart["input"];
 };
 
-const ToolInput19 = ({ className, input, ...props }: ToolInputProps) => (
+const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
   <div className={cn("space-y-2 overflow-hidden", className)} {...props}>
     <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
       Parameters
@@ -183,14 +187,16 @@ const ToolInput19 = ({ className, input, ...props }: ToolInputProps) => (
   </div>
 );
 
-export const ToolInput = withRef("ToolInput", ToolInput19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToolInputWithRef = withRef("ToolInput", ToolInput);
+export { ToolInputWithRef as ToolInput };
 
 export type ToolOutputProps = ComponentProps<"div"> & {
   output: ToolPart["output"];
   errorText: ToolPart["errorText"];
 };
 
-const ToolOutput19 = ({
+const ToolOutput = ({
   className,
   output,
   errorText,
@@ -230,4 +236,6 @@ const ToolOutput19 = ({
   );
 };
 
-export const ToolOutput = withRef("ToolOutput", ToolOutput19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToolOutputWithRef = withRef("ToolOutput", ToolOutput);
+export { ToolOutputWithRef as ToolOutput };

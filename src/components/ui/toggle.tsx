@@ -28,7 +28,7 @@ const toggleVariants = cva(
   }
 )
 
-function Toggle19({
+function Toggle({
   className,
   variant = "default",
   size = "default",
@@ -44,6 +44,7 @@ function Toggle19({
   )
 }
 
-const Toggle = withRef("Toggle", Toggle19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToggleWithRef = withRef("Toggle", Toggle)
 
-export { Toggle, toggleVariants }
+export { ToggleWithRef as Toggle, toggleVariants }

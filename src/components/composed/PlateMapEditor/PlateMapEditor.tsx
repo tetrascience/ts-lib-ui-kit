@@ -476,7 +476,7 @@ function PlateMapEditorManifestCard({
  * />
  * ```
  */
-function PlateMapEditor19<T extends WellRecord = WellRecord>({
+function PlateMapEditor<T extends WellRecord = WellRecord>({
   format,
   rows,
   columns,
@@ -901,6 +901,7 @@ function PlateMapEditor19<T extends WellRecord = WellRecord>({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
 /**
  * Turnkey plate-map editing surface: a metadata form, an interactive plate
  * grid, and a sample manifest, wired together with the staged-edit controller
@@ -972,6 +973,7 @@ function PlateMapEditor19<T extends WellRecord = WellRecord>({
  * />
  * ```
  */
-export const PlateMapEditor = withRef("PlateMapEditor", PlateMapEditor19);
+const PlateMapEditorWithRef = withRef("PlateMapEditor", PlateMapEditor);
+export { PlateMapEditorWithRef as PlateMapEditor };
 
 export { Badge as PlateBadge };

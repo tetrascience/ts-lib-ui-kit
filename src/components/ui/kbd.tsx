@@ -1,7 +1,7 @@
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function Kbd19({ className, ...props }: React.ComponentProps<"kbd">) {
+function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
   return (
     <kbd
       data-slot="kbd"
@@ -14,9 +14,10 @@ function Kbd19({ className, ...props }: React.ComponentProps<"kbd">) {
   )
 }
 
-const Kbd = withRef("Kbd", Kbd19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const KbdWithRef = withRef("Kbd", Kbd)
 
-function KbdGroup19({ className, ...props }: React.ComponentProps<"div">) {
+function KbdGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <kbd
       data-slot="kbd-group"
@@ -26,6 +27,7 @@ function KbdGroup19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const KbdGroup = withRef("KbdGroup", KbdGroup19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const KbdGroupWithRef = withRef("KbdGroup", KbdGroup)
 
-export { Kbd, KbdGroup }
+export { KbdWithRef as Kbd, KbdGroupWithRef as KbdGroup }

@@ -342,7 +342,7 @@ function NavItem({ page, variant, active, onSelect }: NavItemProps) {
  * Width/background chrome is owned by the container (the shell's rail wrapper,
  * a Sheet, or a TopBar) — this component is layout-neutral.
  */
-function DataAppShellPrimaryNav19({
+function DataAppShellPrimaryNav({
   variant,
   navGroups,
   activeKey,
@@ -438,6 +438,7 @@ function DataAppShellPrimaryNav19({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
 /**
  * The Data App Shell's nav engine — one `navGroups` model rendered in three
  * placements via `variant`:
@@ -450,10 +451,10 @@ function DataAppShellPrimaryNav19({
  * Width/background chrome is owned by the container (the shell's rail wrapper,
  * a Sheet, or a TopBar) — this component is layout-neutral.
  */
-const DataAppShellPrimaryNav = withRef("DataAppShellPrimaryNav", DataAppShellPrimaryNav19);
+const DataAppShellPrimaryNavWithRef = withRef("DataAppShellPrimaryNav", DataAppShellPrimaryNav);
 
 export {
-  DataAppShellPrimaryNav,
+  DataAppShellPrimaryNavWithRef as DataAppShellPrimaryNav,
   dataAppShellPrimaryNavVariants,
   dataAppShellPrimaryNavItemVariants,
 };

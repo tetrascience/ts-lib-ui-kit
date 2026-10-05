@@ -28,17 +28,19 @@ export const ModelSelector = (props: ModelSelectorProps) => (
 
 export type ModelSelectorTriggerProps = ComponentProps<typeof DialogTrigger>;
 
-const ModelSelectorTrigger19 = (props: ModelSelectorTriggerProps) => (
+const ModelSelectorTrigger = (props: ModelSelectorTriggerProps) => (
   <DialogTrigger {...props} />
 );
 
-export const ModelSelectorTrigger = withRef("ModelSelectorTrigger", ModelSelectorTrigger19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ModelSelectorTriggerWithRef = withRef("ModelSelectorTrigger", ModelSelectorTrigger);
+export { ModelSelectorTriggerWithRef as ModelSelectorTrigger };
 
 export type ModelSelectorContentProps = ComponentProps<typeof DialogContent> & {
   title?: ReactNode;
 };
 
-const ModelSelectorContent19 = ({
+const ModelSelectorContent = ({
   className,
   children,
   title = "Model Selector",
@@ -59,7 +61,9 @@ const ModelSelectorContent19 = ({
   </DialogContent>
 );
 
-export const ModelSelectorContent = withRef("ModelSelectorContent", ModelSelectorContent19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ModelSelectorContentWithRef = withRef("ModelSelectorContent", ModelSelectorContent);
+export { ModelSelectorContentWithRef as ModelSelectorContent };
 
 export type ModelSelectorDialogProps = ComponentProps<typeof CommandDialog>;
 
@@ -69,67 +73,81 @@ export const ModelSelectorDialog = (props: ModelSelectorDialogProps) => (
 
 export type ModelSelectorInputProps = ComponentProps<typeof CommandInput>;
 
-const ModelSelectorInput19 = ({
+const ModelSelectorInput = ({
   className,
   ...props
 }: ModelSelectorInputProps) => (
   <CommandInput className={cn("h-auto py-3.5", className)} {...props} />
 );
 
-export const ModelSelectorInput = withRef("ModelSelectorInput", ModelSelectorInput19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ModelSelectorInputWithRef = withRef("ModelSelectorInput", ModelSelectorInput);
+export { ModelSelectorInputWithRef as ModelSelectorInput };
 
 export type ModelSelectorListProps = ComponentProps<typeof CommandList>;
 
-const ModelSelectorList19 = (props: ModelSelectorListProps) => (
+const ModelSelectorList = (props: ModelSelectorListProps) => (
   <CommandList {...props} />
 );
 
-export const ModelSelectorList = withRef("ModelSelectorList", ModelSelectorList19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ModelSelectorListWithRef = withRef("ModelSelectorList", ModelSelectorList);
+export { ModelSelectorListWithRef as ModelSelectorList };
 
 export type ModelSelectorEmptyProps = ComponentProps<typeof CommandEmpty>;
 
-const ModelSelectorEmpty19 = (props: ModelSelectorEmptyProps) => (
+const ModelSelectorEmpty = (props: ModelSelectorEmptyProps) => (
   <CommandEmpty {...props} />
 );
 
-export const ModelSelectorEmpty = withRef("ModelSelectorEmpty", ModelSelectorEmpty19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ModelSelectorEmptyWithRef = withRef("ModelSelectorEmpty", ModelSelectorEmpty);
+export { ModelSelectorEmptyWithRef as ModelSelectorEmpty };
 
 export type ModelSelectorGroupProps = ComponentProps<typeof CommandGroup>;
 
-const ModelSelectorGroup19 = (props: ModelSelectorGroupProps) => (
+const ModelSelectorGroup = (props: ModelSelectorGroupProps) => (
   <CommandGroup {...props} />
 );
 
-export const ModelSelectorGroup = withRef("ModelSelectorGroup", ModelSelectorGroup19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ModelSelectorGroupWithRef = withRef("ModelSelectorGroup", ModelSelectorGroup);
+export { ModelSelectorGroupWithRef as ModelSelectorGroup };
 
 export type ModelSelectorItemProps = ComponentProps<typeof CommandItem>;
 
-const ModelSelectorItem19 = (props: ModelSelectorItemProps) => (
+const ModelSelectorItem = (props: ModelSelectorItemProps) => (
   <CommandItem {...props} />
 );
 
-export const ModelSelectorItem = withRef("ModelSelectorItem", ModelSelectorItem19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ModelSelectorItemWithRef = withRef("ModelSelectorItem", ModelSelectorItem);
+export { ModelSelectorItemWithRef as ModelSelectorItem };
 
 export type ModelSelectorShortcutProps = ComponentProps<typeof Kbd>;
 
-const ModelSelectorShortcut19 = ({
+const ModelSelectorShortcut = ({
   className,
   ...props
 }: ModelSelectorShortcutProps) => (
   <Kbd className={cn("ml-auto", className)} {...props} />
 );
 
-export const ModelSelectorShortcut = withRef("ModelSelectorShortcut", ModelSelectorShortcut19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ModelSelectorShortcutWithRef = withRef("ModelSelectorShortcut", ModelSelectorShortcut);
+export { ModelSelectorShortcutWithRef as ModelSelectorShortcut };
 
 export type ModelSelectorSeparatorProps = ComponentProps<
   typeof CommandSeparator
 >;
 
-const ModelSelectorSeparator19 = (props: ModelSelectorSeparatorProps) => (
+const ModelSelectorSeparator = (props: ModelSelectorSeparatorProps) => (
   <CommandSeparator {...props} />
 );
 
-export const ModelSelectorSeparator = withRef("ModelSelectorSeparator", ModelSelectorSeparator19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ModelSelectorSeparatorWithRef = withRef("ModelSelectorSeparator", ModelSelectorSeparator);
+export { ModelSelectorSeparatorWithRef as ModelSelectorSeparator };
 
 export type ModelSelectorLogoProps = Omit<
   ComponentProps<"img">,
@@ -196,7 +214,7 @@ export type ModelSelectorLogoProps = Omit<
     | (string & {});
 };
 
-const ModelSelectorLogo19 = ({
+const ModelSelectorLogo = ({
   provider,
   className,
   ...props
@@ -211,11 +229,13 @@ const ModelSelectorLogo19 = ({
   />
 );
 
-export const ModelSelectorLogo = withRef("ModelSelectorLogo", ModelSelectorLogo19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ModelSelectorLogoWithRef = withRef("ModelSelectorLogo", ModelSelectorLogo);
+export { ModelSelectorLogoWithRef as ModelSelectorLogo };
 
 export type ModelSelectorLogoGroupProps = ComponentProps<"div">;
 
-const ModelSelectorLogoGroup19 = ({
+const ModelSelectorLogoGroup = ({
   className,
   ...props
 }: ModelSelectorLogoGroupProps) => (
@@ -228,15 +248,19 @@ const ModelSelectorLogoGroup19 = ({
   />
 );
 
-export const ModelSelectorLogoGroup = withRef("ModelSelectorLogoGroup", ModelSelectorLogoGroup19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ModelSelectorLogoGroupWithRef = withRef("ModelSelectorLogoGroup", ModelSelectorLogoGroup);
+export { ModelSelectorLogoGroupWithRef as ModelSelectorLogoGroup };
 
 export type ModelSelectorNameProps = ComponentProps<"span">;
 
-const ModelSelectorName19 = ({
+const ModelSelectorName = ({
   className,
   ...props
 }: ModelSelectorNameProps) => (
   <span className={cn("flex-1 truncate text-left", className)} {...props} />
 );
 
-export const ModelSelectorName = withRef("ModelSelectorName", ModelSelectorName19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ModelSelectorNameWithRef = withRef("ModelSelectorName", ModelSelectorName);
+export { ModelSelectorNameWithRef as ModelSelectorName };

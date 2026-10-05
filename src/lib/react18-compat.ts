@@ -5,16 +5,20 @@
  * its Module Federation apps share a React 18 singleton. React 18 support is
  * temporary, so it is kept out of the components themselves:
  *
- * - Every component that forwards a ref is declared exactly as it would be for
- *   React 19, under the name `X19`, and exported through one added line:
- *   `export const X = withRef("X", X19)`. The `X19` declarations are the
- *   React 19 components; nothing in them is React 18-specific.
+ * - Every component that forwards a ref keeps its React 19 declaration, name
+ *   and body untouched. A wrapper is added after it and exported under the
+ *   component's name:
+ *
+ *     const XWithRef = withRef("X", X)
+ *     export { XWithRef as X }
+ *
+ *   Inside the file, `X` is still the plain React 19 component.
  * - `inertProp` spells the `inert` attribute so React 18 applies it.
  *
- * To deprecate React 18: export the `X19` components (under their plain names,
- * from a React 19 entry point) and mark the `withRef` exports deprecated. To
- * drop it: delete each `withRef` line, rename `X19` back to `X`, and make
- * `inertProp` return `{ inert }`.
+ * To deprecate React 18: export the plain components as well (for example from
+ * a React 19 entry point) and mark the `WithRef` exports deprecated. To drop
+ * it: delete each `withRef` line, export `X` itself, and make `inertProp`
+ * return `{ inert }`.
  *
  * `yarn check:react18-compat` (scripts/build/audit-react18-compat.ts) fails CI
  * when a component that accepts `ref` is not wrapped, or when JSX writes a
@@ -53,17 +57,20 @@ type WithDocgen = { displayName?: string; __docgenInfo?: unknown }
  * The return type is the React 19 component's own type, so the export's public
  * props (including generics) are identical to it.
  *
- * @param displayName The component name, without the `19` suffix. Passed as a
- *   literal because the library build mangles function names. It is also set on
- *   the React 19 component, so that one keeps its public name too.
- * @param render The React 19 component, declared as `X19`.
+ * @param displayName The component name. Passed as a literal because the library
+ *   build mangles function names. It is also set on the React 19 component, so
+ *   that one keeps its public name too.
+ * @param render The React 19 component, unchanged.
  *
  * @example
- * function Button19({ className, ...props }: ButtonProps) {
+ * function Button({ className, ...props }: ButtonProps) {
  *   return <button className={cn(buttonVariants(), className)} {...props} />
  * }
  *
- * const Button = withRef("Button", Button19)
+ * // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+ * const ButtonWithRef = withRef("Button", Button)
+ *
+ * export { ButtonWithRef as Button }
  */
 export function withRef<C extends FunctionComponentLike>(displayName: string, render: C): C {
   const renderWithProps = render as unknown as (props: object) => React.ReactNode
@@ -74,8 +81,8 @@ export function withRef<C extends FunctionComponentLike>(displayName: string, re
   const react19 = render as unknown as WithDocgen
   react19.displayName ??= displayName
   // Storybook's react-docgen plugin attaches the props table and description to
-  // the declaration it parsed, `X19`, and appends that assignment at the end of
-  // the module, after this call. Read it lazily so the exported component, which
+  // the declaration it parsed, the plain component, and appends that assignment
+  // at the end of the module, after this call. Read it lazily so the exported component, which
   // is what stories pass as `component`, shows the same docs.
   Object.defineProperty(Forwarded, "__docgenInfo", {
     configurable: true,

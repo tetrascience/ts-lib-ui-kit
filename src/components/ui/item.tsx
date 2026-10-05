@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function ItemGroup19({
+function ItemGroup({
   className,
   children,
   ...props
@@ -36,9 +36,10 @@ function ItemGroup19({
   )
 }
 
-const ItemGroup = withRef("ItemGroup", ItemGroup19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemGroupWithRef = withRef("ItemGroup", ItemGroup)
 
-function ItemSeparator19({
+function ItemSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof Separator>) {
@@ -52,7 +53,8 @@ function ItemSeparator19({
   )
 }
 
-const ItemSeparator = withRef("ItemSeparator", ItemSeparator19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemSeparatorWithRef = withRef("ItemSeparator", ItemSeparator)
 
 const itemVariants = cva(
   "group/item flex w-full flex-wrap items-center rounded-lg border text-sm transition-colors duration-100 outline-none focus-visible:border-ring focus-visible:shadow-focus [a]:transition-colors [a]:hover:bg-accent",
@@ -76,7 +78,7 @@ const itemVariants = cva(
   }
 )
 
-function Item19({
+function Item({
   className,
   variant = "default",
   size = "default",
@@ -96,7 +98,8 @@ function Item19({
   )
 }
 
-const Item = withRef("Item", Item19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemWithRef = withRef("Item", Item)
 
 const itemMediaVariants = cva(
   "flex shrink-0 items-center justify-center gap-2 group-has-data-[slot=item-description]/item:translate-y-0.5 group-has-data-[slot=item-description]/item:self-start [&_svg]:pointer-events-none",
@@ -115,7 +118,7 @@ const itemMediaVariants = cva(
   }
 )
 
-function ItemMedia19({
+function ItemMedia({
   className,
   variant = "default",
   ...props
@@ -130,9 +133,10 @@ function ItemMedia19({
   )
 }
 
-const ItemMedia = withRef("ItemMedia", ItemMedia19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemMediaWithRef = withRef("ItemMedia", ItemMedia)
 
-function ItemContent19({ className, ...props }: React.ComponentProps<"div">) {
+function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-content"
@@ -145,9 +149,10 @@ function ItemContent19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const ItemContent = withRef("ItemContent", ItemContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemContentWithRef = withRef("ItemContent", ItemContent)
 
-function ItemTitle19({ className, ...props }: React.ComponentProps<"div">) {
+function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-title"
@@ -160,9 +165,10 @@ function ItemTitle19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const ItemTitle = withRef("ItemTitle", ItemTitle19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemTitleWithRef = withRef("ItemTitle", ItemTitle)
 
-function ItemDescription19({ className, ...props }: React.ComponentProps<"p">) {
+function ItemDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       data-slot="item-description"
@@ -175,9 +181,10 @@ function ItemDescription19({ className, ...props }: React.ComponentProps<"p">) {
   )
 }
 
-const ItemDescription = withRef("ItemDescription", ItemDescription19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemDescriptionWithRef = withRef("ItemDescription", ItemDescription)
 
-function ItemActions19({ className, ...props }: React.ComponentProps<"div">) {
+function ItemActions({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-actions"
@@ -187,9 +194,10 @@ function ItemActions19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const ItemActions = withRef("ItemActions", ItemActions19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemActionsWithRef = withRef("ItemActions", ItemActions)
 
-function ItemHeader19({ className, ...props }: React.ComponentProps<"div">) {
+function ItemHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-header"
@@ -202,9 +210,10 @@ function ItemHeader19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const ItemHeader = withRef("ItemHeader", ItemHeader19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemHeaderWithRef = withRef("ItemHeader", ItemHeader)
 
-function ItemFooter19({ className, ...props }: React.ComponentProps<"div">) {
+function ItemFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-footer"
@@ -217,17 +226,18 @@ function ItemFooter19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const ItemFooter = withRef("ItemFooter", ItemFooter19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ItemFooterWithRef = withRef("ItemFooter", ItemFooter)
 
 export {
-  Item,
-  ItemMedia,
-  ItemContent,
-  ItemActions,
-  ItemGroup,
-  ItemSeparator,
-  ItemTitle,
-  ItemDescription,
-  ItemHeader,
-  ItemFooter,
+  ItemWithRef as Item,
+  ItemMediaWithRef as ItemMedia,
+  ItemContentWithRef as ItemContent,
+  ItemActionsWithRef as ItemActions,
+  ItemGroupWithRef as ItemGroup,
+  ItemSeparatorWithRef as ItemSeparator,
+  ItemTitleWithRef as ItemTitle,
+  ItemDescriptionWithRef as ItemDescription,
+  ItemHeaderWithRef as ItemHeader,
+  ItemFooterWithRef as ItemFooter,
 }

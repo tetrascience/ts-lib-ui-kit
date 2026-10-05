@@ -6,7 +6,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function ScrollArea19({
+function ScrollArea({
   className,
   children,
   ...props
@@ -24,15 +24,16 @@ function ScrollArea19({
       >
         {children}
       </ScrollAreaPrimitive.Viewport>
-      <ScrollBar />
+      <ScrollBarWithRef />
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
   )
 }
 
-const ScrollArea = withRef("ScrollArea", ScrollArea19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ScrollAreaWithRef = withRef("ScrollArea", ScrollArea)
 
-function ScrollBar19({
+function ScrollBar({
   className,
   orientation = "vertical",
   ...props
@@ -56,6 +57,7 @@ function ScrollBar19({
   )
 }
 
-const ScrollBar = withRef("ScrollBar", ScrollBar19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ScrollBarWithRef = withRef("ScrollBar", ScrollBar)
 
-export { ScrollArea, ScrollBar }
+export { ScrollAreaWithRef as ScrollArea, ScrollBarWithRef as ScrollBar }

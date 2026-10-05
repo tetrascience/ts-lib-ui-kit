@@ -544,7 +544,7 @@ function VerticalProcessFlow({
   );
 }
 
-function ProcessFlow19({
+function ProcessFlow({
   steps,
   connections,
   selectedStepId,
@@ -708,4 +708,6 @@ function ProcessFlow19({
   );
 }
 
-export const ProcessFlow = withRef("ProcessFlow", ProcessFlow19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ProcessFlowWithRef = withRef("ProcessFlow", ProcessFlow);
+export { ProcessFlowWithRef as ProcessFlow };

@@ -22,7 +22,7 @@ const inputVariants = cva(
   }
 )
 
-function Input19({
+function Input({
   className,
   type,
   size,
@@ -45,6 +45,7 @@ function Input19({
   )
 }
 
-const Input = withRef("Input", Input19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InputWithRef = withRef("Input", Input)
 
-export { Input, inputVariants }
+export { InputWithRef as Input, inputVariants }

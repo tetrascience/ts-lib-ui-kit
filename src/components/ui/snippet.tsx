@@ -36,7 +36,7 @@ export type SnippetProps = ComponentProps<typeof InputGroup> & {
   code: string;
 };
 
-const Snippet19 = ({
+const Snippet = ({
   code,
   className,
   children,
@@ -53,33 +53,39 @@ const Snippet19 = ({
   );
 };
 
-export const Snippet = withRef("Snippet", Snippet19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SnippetWithRef = withRef("Snippet", Snippet);
+export { SnippetWithRef as Snippet };
 
 export type SnippetAddonProps = ComponentProps<typeof InputGroupAddon>;
 
-const SnippetAddon19 = (props: SnippetAddonProps) => (
+const SnippetAddon = (props: SnippetAddonProps) => (
   <InputGroupAddon {...props} />
 );
 
-export const SnippetAddon = withRef("SnippetAddon", SnippetAddon19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SnippetAddonWithRef = withRef("SnippetAddon", SnippetAddon);
+export { SnippetAddonWithRef as SnippetAddon };
 
 export type SnippetTextProps = ComponentProps<typeof InputGroupText>;
 
-const SnippetText19 = ({ className, ...props }: SnippetTextProps) => (
+const SnippetText = ({ className, ...props }: SnippetTextProps) => (
   <InputGroupText
     className={cn("pl-2 font-normal text-muted-foreground", className)}
     {...props}
   />
 );
 
-export const SnippetText = withRef("SnippetText", SnippetText19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SnippetTextWithRef = withRef("SnippetText", SnippetText);
+export { SnippetTextWithRef as SnippetText };
 
 export type SnippetInputProps = Omit<
   ComponentProps<typeof InputGroupInput>,
   "readOnly" | "value"
 >;
 
-const SnippetInput19 = ({ className, ...props }: SnippetInputProps) => {
+const SnippetInput = ({ className, ...props }: SnippetInputProps) => {
   const { code } = useContext(SnippetContext);
 
   return (
@@ -93,7 +99,9 @@ const SnippetInput19 = ({ className, ...props }: SnippetInputProps) => {
   );
 };
 
-export const SnippetInput = withRef("SnippetInput", SnippetInput19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SnippetInputWithRef = withRef("SnippetInput", SnippetInput);
+export { SnippetInputWithRef as SnippetInput };
 
 export type SnippetCopyButtonProps = ComponentProps<typeof InputGroupButton> & {
   onCopy?: () => void;
@@ -101,7 +109,7 @@ export type SnippetCopyButtonProps = ComponentProps<typeof InputGroupButton> & {
   timeout?: number;
 };
 
-const SnippetCopyButton19 = ({
+const SnippetCopyButton = ({
   onCopy,
   onError,
   timeout = 2000,
@@ -157,4 +165,6 @@ const SnippetCopyButton19 = ({
   );
 };
 
-export const SnippetCopyButton = withRef("SnippetCopyButton", SnippetCopyButton19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SnippetCopyButtonWithRef = withRef("SnippetCopyButton", SnippetCopyButton);
+export { SnippetCopyButtonWithRef as SnippetCopyButton };

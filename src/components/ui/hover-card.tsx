@@ -10,7 +10,7 @@ function HoverCard({
   return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />
 }
 
-function HoverCardTrigger19({
+function HoverCardTrigger({
   ...props
 }: React.ComponentProps<typeof HoverCardPrimitive.Trigger>) {
   return (
@@ -18,9 +18,10 @@ function HoverCardTrigger19({
   )
 }
 
-const HoverCardTrigger = withRef("HoverCardTrigger", HoverCardTrigger19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const HoverCardTriggerWithRef = withRef("HoverCardTrigger", HoverCardTrigger)
 
-function HoverCardContent19({
+function HoverCardContent({
   className,
   align = "center",
   sideOffset = 4,
@@ -42,6 +43,7 @@ function HoverCardContent19({
   )
 }
 
-const HoverCardContent = withRef("HoverCardContent", HoverCardContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const HoverCardContentWithRef = withRef("HoverCardContent", HoverCardContent)
 
-export { HoverCard, HoverCardTrigger, HoverCardContent }
+export { HoverCard, HoverCardTriggerWithRef as HoverCardTrigger, HoverCardContentWithRef as HoverCardContent }

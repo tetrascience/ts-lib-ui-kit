@@ -25,15 +25,16 @@ function Tooltip({
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
 }
 
-function TooltipTrigger19({
+function TooltipTrigger({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
 }
 
-const TooltipTrigger = withRef("TooltipTrigger", TooltipTrigger19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TooltipTriggerWithRef = withRef("TooltipTrigger", TooltipTrigger)
 
-function TooltipContent19({
+function TooltipContent({
   className,
   sideOffset = 0,
   children,
@@ -57,6 +58,7 @@ function TooltipContent19({
   )
 }
 
-const TooltipContent = withRef("TooltipContent", TooltipContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TooltipContentWithRef = withRef("TooltipContent", TooltipContent)
 
-export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger }
+export { Tooltip, TooltipContentWithRef as TooltipContent, TooltipProvider, TooltipTriggerWithRef as TooltipTrigger }

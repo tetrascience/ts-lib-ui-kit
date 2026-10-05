@@ -24,7 +24,7 @@ const checkboxVariants = cva(
   }
 )
 
-function Checkbox19({
+function Checkbox({
   className,
   size,
   ...props
@@ -47,6 +47,7 @@ function Checkbox19({
   )
 }
 
-const Checkbox = withRef("Checkbox", Checkbox19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CheckboxWithRef = withRef("Checkbox", Checkbox)
 
-export { Checkbox, checkboxVariants }
+export { CheckboxWithRef as Checkbox, checkboxVariants }

@@ -7,7 +7,7 @@ import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
-function NavigationMenu19({
+function NavigationMenu({
   className,
   children,
   viewport = true,
@@ -26,14 +26,15 @@ function NavigationMenu19({
       {...props}
     >
       {children}
-      {viewport && <NavigationMenuViewport />}
+      {viewport && <NavigationMenuViewportWithRef />}
     </NavigationMenuPrimitive.Root>
   )
 }
 
-const NavigationMenu = withRef("NavigationMenu", NavigationMenu19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuWithRef = withRef("NavigationMenu", NavigationMenu)
 
-function NavigationMenuList19({
+function NavigationMenuList({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.List>) {
@@ -49,9 +50,10 @@ function NavigationMenuList19({
   )
 }
 
-const NavigationMenuList = withRef("NavigationMenuList", NavigationMenuList19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuListWithRef = withRef("NavigationMenuList", NavigationMenuList)
 
-function NavigationMenuItem19({
+function NavigationMenuItem({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Item>) {
@@ -64,13 +66,14 @@ function NavigationMenuItem19({
   )
 }
 
-const NavigationMenuItem = withRef("NavigationMenuItem", NavigationMenuItem19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuItemWithRef = withRef("NavigationMenuItem", NavigationMenuItem)
 
 const navigationMenuTriggerStyle = cva(
   "group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg bg-background px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-accent focus:bg-accent focus-visible:shadow-focus focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-accent/50 data-popup-open:hover:bg-accent data-open:bg-accent/50 data-open:hover:bg-accent data-open:focus:bg-accent"
 )
 
-function NavigationMenuTrigger19({
+function NavigationMenuTrigger({
   className,
   children,
   ...props
@@ -87,9 +90,10 @@ function NavigationMenuTrigger19({
   )
 }
 
-const NavigationMenuTrigger = withRef("NavigationMenuTrigger", NavigationMenuTrigger19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuTriggerWithRef = withRef("NavigationMenuTrigger", NavigationMenuTrigger)
 
-function NavigationMenuContent19({
+function NavigationMenuContent({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Content>) {
@@ -105,9 +109,10 @@ function NavigationMenuContent19({
   )
 }
 
-const NavigationMenuContent = withRef("NavigationMenuContent", NavigationMenuContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuContentWithRef = withRef("NavigationMenuContent", NavigationMenuContent)
 
-function NavigationMenuViewport19({
+function NavigationMenuViewport({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Viewport>) {
@@ -129,9 +134,10 @@ function NavigationMenuViewport19({
   )
 }
 
-const NavigationMenuViewport = withRef("NavigationMenuViewport", NavigationMenuViewport19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuViewportWithRef = withRef("NavigationMenuViewport", NavigationMenuViewport)
 
-function NavigationMenuLink19({
+function NavigationMenuLink({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Link>) {
@@ -147,9 +153,10 @@ function NavigationMenuLink19({
   )
 }
 
-const NavigationMenuLink = withRef("NavigationMenuLink", NavigationMenuLink19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuLinkWithRef = withRef("NavigationMenuLink", NavigationMenuLink)
 
-function NavigationMenuIndicator19({
+function NavigationMenuIndicator({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Indicator>) {
@@ -167,16 +174,17 @@ function NavigationMenuIndicator19({
   )
 }
 
-const NavigationMenuIndicator = withRef("NavigationMenuIndicator", NavigationMenuIndicator19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuIndicatorWithRef = withRef("NavigationMenuIndicator", NavigationMenuIndicator)
 
 export {
-  NavigationMenu,
-  NavigationMenuList,
-  NavigationMenuItem,
-  NavigationMenuContent,
-  NavigationMenuTrigger,
-  NavigationMenuLink,
-  NavigationMenuIndicator,
-  NavigationMenuViewport,
+  NavigationMenuWithRef as NavigationMenu,
+  NavigationMenuListWithRef as NavigationMenuList,
+  NavigationMenuItemWithRef as NavigationMenuItem,
+  NavigationMenuContentWithRef as NavigationMenuContent,
+  NavigationMenuTriggerWithRef as NavigationMenuTrigger,
+  NavigationMenuLinkWithRef as NavigationMenuLink,
+  NavigationMenuIndicatorWithRef as NavigationMenuIndicator,
+  NavigationMenuViewportWithRef as NavigationMenuViewport,
   navigationMenuTriggerStyle,
 }

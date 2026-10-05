@@ -66,7 +66,7 @@ function makeResponsive(svg: string): string {
  * <MoleculeStructure smiles="CC(=O)Oc1ccccc1C(=O)O" className="size-40" />
  * ```
  */
-function MoleculeStructure19({
+function MoleculeStructure({
   smiles,
   label,
   dark,
@@ -159,6 +159,7 @@ function MoleculeStructure19({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
 /**
  * Core cheminformatics primitive: render a 2D chemical structure from a SMILES
  * string. RDKit's WASM module is loaded lazily on first mount (see
@@ -173,4 +174,5 @@ function MoleculeStructure19({
  * <MoleculeStructure smiles="CC(=O)Oc1ccccc1C(=O)O" className="size-40" />
  * ```
  */
-export const MoleculeStructure = withRef("MoleculeStructure", MoleculeStructure19)
+const MoleculeStructureWithRef = withRef("MoleculeStructure", MoleculeStructure)
+export { MoleculeStructureWithRef as MoleculeStructure }

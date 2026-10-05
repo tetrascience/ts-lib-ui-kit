@@ -28,7 +28,7 @@ const TREND_CLASS: Record<StatCardTrend, string> = {
   neutral: "text-muted-foreground",
 }
 
-function StatCard19({
+function StatCard({
   label,
   value,
   delta,
@@ -69,4 +69,6 @@ function StatCard19({
   )
 }
 
-export const StatCard = withRef("StatCard", StatCard19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const StatCardWithRef = withRef("StatCard", StatCard)
+export { StatCardWithRef as StatCard }

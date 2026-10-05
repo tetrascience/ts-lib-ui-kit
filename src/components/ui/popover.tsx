@@ -10,23 +10,25 @@ function Popover({
   return <PopoverPrimitive.Root data-slot="popover" {...props} />
 }
 
-function PopoverTrigger19({
+function PopoverTrigger({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
 }
 
-const PopoverTrigger = withRef("PopoverTrigger", PopoverTrigger19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PopoverTriggerWithRef = withRef("PopoverTrigger", PopoverTrigger)
 
-function PopoverAnchor19({
+function PopoverAnchor({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />
 }
 
-const PopoverAnchor = withRef("PopoverAnchor", PopoverAnchor19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PopoverAnchorWithRef = withRef("PopoverAnchor", PopoverAnchor)
 
-function PopoverContent19({
+function PopoverContent({
   className,
   align = "center",
   sideOffset = 4,
@@ -48,6 +50,7 @@ function PopoverContent19({
   )
 }
 
-const PopoverContent = withRef("PopoverContent", PopoverContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PopoverContentWithRef = withRef("PopoverContent", PopoverContent)
 
-export { Popover, PopoverTrigger, PopoverAnchor, PopoverContent }
+export { Popover, PopoverTriggerWithRef as PopoverTrigger, PopoverAnchorWithRef as PopoverAnchor, PopoverContentWithRef as PopoverContent }

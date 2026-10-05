@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export type SuggestionsProps = ComponentProps<"div">;
 
-const Suggestions19 = ({
+const Suggestions = ({
   className,
   children,
   ...props
@@ -20,14 +20,16 @@ const Suggestions19 = ({
   </div>
 );
 
-export const Suggestions = withRef("Suggestions", Suggestions19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SuggestionsWithRef = withRef("Suggestions", Suggestions);
+export { SuggestionsWithRef as Suggestions };
 
 export type SuggestionProps = Omit<ComponentProps<typeof Button>, "onClick"> & {
   suggestion: string;
   onClick?: (suggestion: string) => void;
 };
 
-const Suggestion19 = ({
+const Suggestion = ({
   suggestion,
   onClick,
   className,
@@ -54,4 +56,6 @@ const Suggestion19 = ({
   );
 };
 
-export const Suggestion = withRef("Suggestion", Suggestion19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SuggestionWithRef = withRef("Suggestion", Suggestion);
+export { SuggestionWithRef as Suggestion };

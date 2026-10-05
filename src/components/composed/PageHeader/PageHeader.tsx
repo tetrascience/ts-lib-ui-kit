@@ -109,7 +109,7 @@ interface PageHeaderProps extends Omit<React.HTMLAttributes<HTMLElement>, "title
  * copy own their own scale; replacing it with `PageHeader` gives the kit two
  * sources of truth for one set of pixels.
  */
-function PageHeader19({
+function PageHeader({
   title,
   subtitle,
   trailing,
@@ -156,6 +156,7 @@ function PageHeader19({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
 /**
  * Page title, optional subtitle, and an optional trailing action slot.
  *
@@ -181,7 +182,7 @@ function PageHeader19({
  * copy own their own scale; replacing it with `PageHeader` gives the kit two
  * sources of truth for one set of pixels.
  */
-const PageHeader = withRef("PageHeader", PageHeader19);
+const PageHeaderWithRef = withRef("PageHeader", PageHeader);
 
-export { PageHeader };
+export { PageHeaderWithRef as PageHeader };
 export type { PageHeaderProps, PageHeaderHeading, PageHeaderVariant };

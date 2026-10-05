@@ -11,7 +11,7 @@ function AlertDialog({
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />
 }
 
-function AlertDialogTrigger19({
+function AlertDialogTrigger({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Trigger>) {
   return (
@@ -19,7 +19,8 @@ function AlertDialogTrigger19({
   )
 }
 
-const AlertDialogTrigger = withRef("AlertDialogTrigger", AlertDialogTrigger19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogTriggerWithRef = withRef("AlertDialogTrigger", AlertDialogTrigger)
 
 function AlertDialogPortal({
   ...props
@@ -29,7 +30,7 @@ function AlertDialogPortal({
   )
 }
 
-function AlertDialogOverlay19({
+function AlertDialogOverlay({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) {
@@ -45,9 +46,10 @@ function AlertDialogOverlay19({
   )
 }
 
-const AlertDialogOverlay = withRef("AlertDialogOverlay", AlertDialogOverlay19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogOverlayWithRef = withRef("AlertDialogOverlay", AlertDialogOverlay)
 
-function AlertDialogContent19({
+function AlertDialogContent({
   className,
   size = "default",
   ...props
@@ -56,7 +58,7 @@ function AlertDialogContent19({
 }) {
   return (
     <AlertDialogPortal>
-      <AlertDialogOverlay />
+      <AlertDialogOverlayWithRef />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
         data-size={size}
@@ -70,9 +72,10 @@ function AlertDialogContent19({
   )
 }
 
-const AlertDialogContent = withRef("AlertDialogContent", AlertDialogContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogContentWithRef = withRef("AlertDialogContent", AlertDialogContent)
 
-function AlertDialogHeader19({
+function AlertDialogHeader({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -88,9 +91,10 @@ function AlertDialogHeader19({
   )
 }
 
-const AlertDialogHeader = withRef("AlertDialogHeader", AlertDialogHeader19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogHeaderWithRef = withRef("AlertDialogHeader", AlertDialogHeader)
 
-function AlertDialogFooter19({
+function AlertDialogFooter({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -106,9 +110,10 @@ function AlertDialogFooter19({
   )
 }
 
-const AlertDialogFooter = withRef("AlertDialogFooter", AlertDialogFooter19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogFooterWithRef = withRef("AlertDialogFooter", AlertDialogFooter)
 
-function AlertDialogMedia19({
+function AlertDialogMedia({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -124,9 +129,10 @@ function AlertDialogMedia19({
   )
 }
 
-const AlertDialogMedia = withRef("AlertDialogMedia", AlertDialogMedia19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogMediaWithRef = withRef("AlertDialogMedia", AlertDialogMedia)
 
-function AlertDialogTitle19({
+function AlertDialogTitle({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Title>) {
@@ -142,9 +148,10 @@ function AlertDialogTitle19({
   )
 }
 
-const AlertDialogTitle = withRef("AlertDialogTitle", AlertDialogTitle19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogTitleWithRef = withRef("AlertDialogTitle", AlertDialogTitle)
 
-function AlertDialogDescription19({
+function AlertDialogDescription({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Description>) {
@@ -160,9 +167,10 @@ function AlertDialogDescription19({
   )
 }
 
-const AlertDialogDescription = withRef("AlertDialogDescription", AlertDialogDescription19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogDescriptionWithRef = withRef("AlertDialogDescription", AlertDialogDescription)
 
-function AlertDialogAction19({
+function AlertDialogAction({
   className,
   variant = "default",
   size = "default",
@@ -180,9 +188,10 @@ function AlertDialogAction19({
   )
 }
 
-const AlertDialogAction = withRef("AlertDialogAction", AlertDialogAction19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogActionWithRef = withRef("AlertDialogAction", AlertDialogAction)
 
-function AlertDialogCancel19({
+function AlertDialogCancel({
   className,
   variant = "outline",
   size = "default",
@@ -200,19 +209,20 @@ function AlertDialogCancel19({
   )
 }
 
-const AlertDialogCancel = withRef("AlertDialogCancel", AlertDialogCancel19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDialogCancelWithRef = withRef("AlertDialogCancel", AlertDialogCancel)
 
 export {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogOverlay,
+  AlertDialogActionWithRef as AlertDialogAction,
+  AlertDialogCancelWithRef as AlertDialogCancel,
+  AlertDialogContentWithRef as AlertDialogContent,
+  AlertDialogDescriptionWithRef as AlertDialogDescription,
+  AlertDialogFooterWithRef as AlertDialogFooter,
+  AlertDialogHeaderWithRef as AlertDialogHeader,
+  AlertDialogMediaWithRef as AlertDialogMedia,
+  AlertDialogOverlayWithRef as AlertDialogOverlay,
   AlertDialogPortal,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogTitleWithRef as AlertDialogTitle,
+  AlertDialogTriggerWithRef as AlertDialogTrigger,
 }

@@ -89,7 +89,7 @@ const detectSpeechInputMode = (): SpeechInputMode => {
   return "none";
 };
 
-const SpeechInput19 = ({
+const SpeechInput = ({
   className,
   onTranscriptionChange,
   onAudioRecorded,
@@ -325,4 +325,6 @@ const SpeechInput19 = ({
   );
 };
 
-export const SpeechInput = withRef("SpeechInput", SpeechInput19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SpeechInputWithRef = withRef("SpeechInput", SpeechInput);
+export { SpeechInputWithRef as SpeechInput };

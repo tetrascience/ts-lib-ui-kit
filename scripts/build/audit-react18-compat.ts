@@ -2,24 +2,30 @@
  * UXT-77: fail when a component would break on React 18.
  *
  * The kit is written React 19-style. React 18 strips `ref` from a function
- * component's props, so any component whose props accept `ref` is declared for
- * React 19 as `X19` and exported through `const X = withRef("X", X19)` from
- * `src/lib/react18-compat.ts`. React 18 also drops a boolean `inert`, so JSX
+ * component's props, so any component whose props accept `ref` keeps its React 19
+ * declaration untouched and is exported through a wrapper from
+ * `src/lib/react18-compat.ts`: `const XWithRef = withRef("X", X)` and
+ * `export { XWithRef as X }`. React 18 also drops a boolean `inert`, so JSX
  * must spread `inertProp(...)` instead of writing `inert={…}`.
  *
  * Rules, over every top-level PascalCase component in `src/components`:
  *
- * - "unwrapped-ref":       the props type has `ref` but the component is a plain
- *                          function or arrow that no `withRef` call exports. Fix:
- *                          rename it `X19` and add `const X = withRef("X", X19)`.
- * - "render-name":         `withRef`'s component is not the React 19 declaration
- *                          `X19` (or `X19.type` for a memoised one), e.g. an inline
- *                          function. The convention keeps every React 19 component
- *                          intact and findable for the React 19 exports.
+ * - "unwrapped-ref":       an exported component's props accept `ref` but no
+ *                          `withRef` call wraps it. Fix: add
+ *                          `const XWithRef = withRef("X", X)` and export it as `X`.
+ * - "render-name":         `withRef` does not wrap the component named by its display
+ *                          name (`X`, or `X.type` for a memoised one), e.g. an inline
+ *                          function. The convention keeps the React 19 component intact.
+ * - "wrapper-name":        the wrapper is not named `XWithRef`.
+ * - "exported-unwrapped":  a wrapped component is exported as itself rather than
+ *                          through its wrapper, so React 18 consumers get no ref.
+ * - "same-file-unwrapped": a ref-accepting component is rendered in JSX inside its own
+ *                          file as `X`, the plain component. Render `XWithRef`: refs can
+ *                          reach a child implicitly (an `asChild` parent, a props spread,
+ *                          Radix Presence), so every in-file use goes through the wrapper.
  * - "direct-forward-ref":  `React.forwardRef` used directly. Fix: use `withRef`, so
  *                          the React 18 layer stays separable. `FORWARD_REF_ALLOWED`
  *                          lists the components that predate this rule.
- * - "display-name":        `withRef`'s name literal differs from the variable name.
  * - "boolean-inert":       a JSX `inert={…}` attribute. Fix: `{...inertProp(…)}`.
  * - "dom-props-without-ref": the props carry DOM attributes (they reach the DOM, so the
  *                        component can sit under a Radix `asChild`) but have no `ref`, as
@@ -46,8 +52,10 @@ import type { CallExpression, Expression, SourceFile, Type } from "ts-morph";
 export type ViolationKind =
   | "unwrapped-ref"
   | "render-name"
+  | "wrapper-name"
+  | "exported-unwrapped"
+  | "same-file-unwrapped"
   | "direct-forward-ref"
-  | "display-name"
   | "boolean-inert"
   | "dom-props-without-ref"
   | "stale-exception";
@@ -153,7 +161,7 @@ function classify(expr: Expression): Classified {
 
 type Reporter = (node: Node, name: string, kind: ViolationKind, detail: string) => void;
 
-/** The declaration a `withRef` render argument names: `X19`, or `X19` from `X19.type`. */
+/** The declaration a `withRef` render argument names: `X`, or `X` from `X.type`. */
 function renderTarget(render: Node): string | undefined {
   if (Node.isIdentifier(render)) return render.getText();
   if (Node.isPropertyAccessExpression(render) && render.getName() === "type" && Node.isIdentifier(render.getExpression()))
@@ -191,9 +199,16 @@ export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditR
   const file = path.relative(root, sourceFile.getFilePath());
   const report: Reporter = (node, name, kind, detail) =>
     result.violations.push({ file, line: node.getStartLineNumber(), name, kind, detail });
-  // A React 19 declaration exported through withRef is checked at its withRef call.
+  // A React 19 declaration wrapped by withRef is checked at its withRef call.
   const targets = withRefTargets(sourceFile);
-  const wrapHint = (name: string) => `props accept \`ref\`; rename it ${name}19 and export it with const ${name} = withRef("${name}", ${name}19)`;
+  const exportedLocals = new Set(
+    [...sourceFile.getExportedDeclarations().values()].flat().map((d) =>
+      Node.isFunctionDeclaration(d) || Node.isVariableDeclaration(d) ? d.getName() : undefined),
+  );
+  /** Plain components in this file whose props accept ref: wrapped targets and internal ones. */
+  const refComponents = new Set(targets);
+  const wrapHint = (name: string) =>
+    `props accept \`ref\`; add const ${name}WithRef = withRef("${name}", ${name}) and export { ${name}WithRef as ${name} }`;
 
   for (const statement of sourceFile.getStatements()) {
     if (Node.isFunctionDeclaration(statement)) {
@@ -201,7 +216,8 @@ export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditR
       if (!isComponentName(name) || !statement.hasBody() || targets.has(name)) continue;
       reportDomPropsWithoutRef(statement, name, result.excepted, report);
       if (!acceptsRef(statement)) continue;
-      report(statement, name, "unwrapped-ref", wrapHint(name));
+      refComponents.add(name);
+      if (exportedLocals.has(name)) report(statement, name, "unwrapped-ref", wrapHint(name));
       continue;
     }
     if (!Node.isVariableStatement(statement)) continue;
@@ -215,27 +231,51 @@ export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditR
           // Annotated consts (`const X: React.FC<P> = …`) carry their props on the declaration.
           const typed = declaration.getTypeNode() ? declaration : classified.fn;
           reportDomPropsWithoutRef(typed, name, result.excepted, report);
-          if (acceptsRef(typed)) report(declaration, name, "unwrapped-ref", wrapHint(name));
+          if (acceptsRef(typed)) {
+            refComponents.add(name);
+            if (exportedLocals.has(name)) report(declaration, name, "unwrapped-ref", wrapHint(name));
+          }
           break;
         }
-        case "withRef":
-          result.wrapped.push(`${file}:${name}`);
+        case "withRef": {
+          const component = classified.displayName ?? name;
+          result.wrapped.push(`${file}:${component}`);
           // withRef keeps the render function's own props type, so wrapping a component
           // typed HTMLAttributes<T> still leaves `ref` out of its public props.
-          reportDomPropsWithoutRef(classified.render, name, result.excepted, report);
-          if (classified.displayName !== name)
-            report(declaration, name, "display-name", `withRef display name is ${JSON.stringify(classified.displayName)}; expected "${name}"`);
-          if (renderTarget(classified.render) !== `${name}19`)
-            report(declaration, name, "render-name", `withRef must export the React 19 declaration ${name}19 (or ${name}19.type when it is memoised), not ${classified.render.getText().slice(0, 40)}`);
+          reportDomPropsWithoutRef(classified.render, component, result.excepted, report);
+          if (name !== `${component}WithRef`)
+            report(declaration, name, "wrapper-name", `the wrapper for ${component} must be named ${component}WithRef`);
+          if (renderTarget(classified.render) !== component)
+            report(declaration, name, "render-name", `withRef("${component}", …) must wrap ${component} itself (or ${component}.type when it is memoised), not ${classified.render.getText().slice(0, 40)}`);
           break;
+        }
         case "forwardRef":
           if (!FORWARD_REF_ALLOWED.has(name))
-            report(declaration, name, "direct-forward-ref", `declare it for React 19 as ${name}19 and export it with withRef from @/lib/react18-compat instead of forwardRef`);
+            report(declaration, name, "direct-forward-ref", `use withRef from @/lib/react18-compat instead of forwardRef: const ${name}WithRef = withRef("${name}", ${name})`);
           break;
         case "other":
           break;
       }
     }
+  }
+
+  // A wrapped component must reach consumers only through its wrapper.
+  for (const [exportedName, declarations] of sourceFile.getExportedDeclarations()) {
+    for (const exported of declarations) {
+      const localName = Node.isFunctionDeclaration(exported) || Node.isVariableDeclaration(exported) ? exported.getName() : undefined;
+      if (localName && targets.has(localName))
+        report(exported, exportedName, "exported-unwrapped", `${localName} is exported without its wrapper; export { ${localName}WithRef as ${exportedName} } instead`);
+    }
+  }
+
+  // Inside the file, X is the plain component, so every JSX use renders XWithRef.
+  // "Only where a ref reaches it" is not checkable: libraries hand refs to children
+  // implicitly (Radix Presence inside a Portal clones its child with one).
+  for (const element of [...sourceFile.getDescendantsOfKind(SyntaxKind.JsxOpeningElement), ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement)]) {
+    const tag = element.getTagNameNode().getText();
+    if (!refComponents.has(tag)) continue;
+    const addWrapper = targets.has(tag) ? "" : `, adding const ${tag}WithRef = withRef("${tag}", ${tag})`;
+    report(element, tag, "same-file-unwrapped", `inside this file ${tag} is the plain component, which drops refs on React 18; render <${tag}WithRef>${addWrapper}`);
   }
 
   for (const attribute of sourceFile.getDescendantsOfKind(SyntaxKind.JsxAttribute)) {

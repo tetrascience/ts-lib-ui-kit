@@ -43,7 +43,7 @@ function useCarousel() {
   return context
 }
 
-function Carousel19({
+function Carousel({
   orientation = "horizontal",
   opts,
   setApi,
@@ -133,9 +133,10 @@ function Carousel19({
   )
 }
 
-const Carousel = withRef("Carousel", Carousel19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CarouselWithRef = withRef("Carousel", Carousel)
 
-function CarouselContent19({ className, ...props }: React.ComponentProps<"div">) {
+function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
   const { carouselRef, orientation } = useCarousel()
 
   return (
@@ -156,9 +157,10 @@ function CarouselContent19({ className, ...props }: React.ComponentProps<"div">)
   )
 }
 
-const CarouselContent = withRef("CarouselContent", CarouselContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CarouselContentWithRef = withRef("CarouselContent", CarouselContent)
 
-function CarouselItem19({ className, ...props }: React.ComponentProps<"div">) {
+function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
   const { orientation } = useCarousel()
 
   return (
@@ -176,9 +178,10 @@ function CarouselItem19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const CarouselItem = withRef("CarouselItem", CarouselItem19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CarouselItemWithRef = withRef("CarouselItem", CarouselItem)
 
-function CarouselPrevious19({
+function CarouselPrevious({
   className,
   variant = "outline",
   size = "icon-sm",
@@ -208,9 +211,10 @@ function CarouselPrevious19({
   )
 }
 
-const CarouselPrevious = withRef("CarouselPrevious", CarouselPrevious19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CarouselPreviousWithRef = withRef("CarouselPrevious", CarouselPrevious)
 
-function CarouselNext19({
+function CarouselNext({
   className,
   variant = "outline",
   size = "icon-sm",
@@ -240,14 +244,15 @@ function CarouselNext19({
   )
 }
 
-const CarouselNext = withRef("CarouselNext", CarouselNext19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CarouselNextWithRef = withRef("CarouselNext", CarouselNext)
 
 export {
   type CarouselApi,
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
+  CarouselWithRef as Carousel,
+  CarouselContentWithRef as CarouselContent,
+  CarouselItemWithRef as CarouselItem,
+  CarouselPreviousWithRef as CarouselPrevious,
+  CarouselNextWithRef as CarouselNext,
   useCarousel,
 }

@@ -22,7 +22,7 @@ const buttonGroupVariants = cva(
   }
 )
 
-function ButtonGroup19({
+function ButtonGroup({
   className,
   orientation,
   ...props
@@ -38,9 +38,10 @@ function ButtonGroup19({
   )
 }
 
-const ButtonGroup = withRef("ButtonGroup", ButtonGroup19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ButtonGroupWithRef = withRef("ButtonGroup", ButtonGroup)
 
-function ButtonGroupText19({
+function ButtonGroupText({
   className,
   asChild = false,
   ...props
@@ -60,9 +61,10 @@ function ButtonGroupText19({
   )
 }
 
-const ButtonGroupText = withRef("ButtonGroupText", ButtonGroupText19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ButtonGroupTextWithRef = withRef("ButtonGroupText", ButtonGroupText)
 
-function ButtonGroupSeparator19({
+function ButtonGroupSeparator({
   className,
   orientation = "vertical",
   ...props
@@ -80,11 +82,12 @@ function ButtonGroupSeparator19({
   )
 }
 
-const ButtonGroupSeparator = withRef("ButtonGroupSeparator", ButtonGroupSeparator19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ButtonGroupSeparatorWithRef = withRef("ButtonGroupSeparator", ButtonGroupSeparator)
 
 export {
-  ButtonGroup,
-  ButtonGroupSeparator,
-  ButtonGroupText,
+  ButtonGroupWithRef as ButtonGroup,
+  ButtonGroupSeparatorWithRef as ButtonGroupSeparator,
+  ButtonGroupTextWithRef as ButtonGroupText,
   buttonGroupVariants,
 }

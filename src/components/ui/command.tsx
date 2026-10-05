@@ -19,7 +19,7 @@ import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
-function Command19({
+function Command({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive>) {
@@ -35,7 +35,8 @@ function Command19({
   )
 }
 
-const Command = withRef("Command", Command19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandWithRef = withRef("Command", Command)
 
 function CommandDialog({
   title = "Command Palette",
@@ -69,7 +70,7 @@ function CommandDialog({
   )
 }
 
-function CommandInput19({
+function CommandInput({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
@@ -92,9 +93,10 @@ function CommandInput19({
   )
 }
 
-const CommandInput = withRef("CommandInput", CommandInput19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandInputWithRef = withRef("CommandInput", CommandInput)
 
-function CommandList19({
+function CommandList({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.List>) {
@@ -110,9 +112,10 @@ function CommandList19({
   )
 }
 
-const CommandList = withRef("CommandList", CommandList19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandListWithRef = withRef("CommandList", CommandList)
 
-function CommandEmpty19({
+function CommandEmpty({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -137,9 +140,10 @@ function CommandEmpty19({
   )
 }
 
-const CommandEmpty = withRef("CommandEmpty", CommandEmpty19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandEmptyWithRef = withRef("CommandEmpty", CommandEmpty)
 
-function CommandGroup19({
+function CommandGroup({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Group>) {
@@ -155,9 +159,10 @@ function CommandGroup19({
   )
 }
 
-const CommandGroup = withRef("CommandGroup", CommandGroup19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandGroupWithRef = withRef("CommandGroup", CommandGroup)
 
-function CommandSeparator19({
+function CommandSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Separator>) {
@@ -171,9 +176,10 @@ function CommandSeparator19({
   )
 }
 
-const CommandSeparator = withRef("CommandSeparator", CommandSeparator19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandSeparatorWithRef = withRef("CommandSeparator", CommandSeparator)
 
-function CommandItem19({
+function CommandItem({
   className,
   children,
   ...props
@@ -193,9 +199,10 @@ function CommandItem19({
   )
 }
 
-const CommandItem = withRef("CommandItem", CommandItem19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandItemWithRef = withRef("CommandItem", CommandItem)
 
-function CommandShortcut19({
+function CommandShortcut({
   className,
   ...props
 }: React.ComponentProps<"span">) {
@@ -211,16 +218,17 @@ function CommandShortcut19({
   )
 }
 
-const CommandShortcut = withRef("CommandShortcut", CommandShortcut19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CommandShortcutWithRef = withRef("CommandShortcut", CommandShortcut)
 
 export {
-  Command,
+  CommandWithRef as Command,
   CommandDialog,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandShortcut,
-  CommandSeparator,
+  CommandInputWithRef as CommandInput,
+  CommandListWithRef as CommandList,
+  CommandEmptyWithRef as CommandEmpty,
+  CommandGroupWithRef as CommandGroup,
+  CommandItemWithRef as CommandItem,
+  CommandShortcutWithRef as CommandShortcut,
+  CommandSeparatorWithRef as CommandSeparator,
 }

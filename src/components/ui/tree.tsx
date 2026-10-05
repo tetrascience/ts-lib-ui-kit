@@ -402,7 +402,7 @@ type TreeProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
   guides?: TreeGuides;
 };
 
-function Tree19({
+function Tree({
   className,
   children,
   expandedIds: expandedIdsProp,
@@ -637,7 +637,8 @@ function Tree19({
   );
 }
 
-const Tree = withRef("Tree", Tree19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TreeWithRef = withRef("Tree", Tree);
 
 function TreeItemsContainer({ children }: { children: React.ReactNode }) {
   return useIndexedTreeChildren(children);
@@ -657,7 +658,7 @@ type TreeItemProps = React.ComponentProps<"div"> & {
   disabled?: boolean;
 };
 
-function TreeItem19({
+function TreeItem({
   className,
   children,
   id,
@@ -791,7 +792,8 @@ function TreeItem19({
   );
 }
 
-const TreeItem = withRef("TreeItem", TreeItem19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TreeItemWithRef = withRef("TreeItem", TreeItem);
 
 /* -------------------------------------------------------------------------------------------------
  * TreeItemLabel
@@ -831,7 +833,7 @@ type TreeItemLabelProps = React.ComponentProps<"div"> &
     trailing?: React.ReactNode;
   };
 
-function TreeItemLabel19({ className, children, size, style, icon, trailing, ...props }: TreeItemLabelProps) {
+function TreeItemLabel({ className, children, size, style, icon, trailing, ...props }: TreeItemLabelProps) {
   const { labelId, level, expanded, hasChildren, selected, disabled, trunkLevels, toggle } =
     useTreeItemContext("TreeItemLabel");
   const { guides } = useTreeContext("TreeItemLabel");
@@ -988,7 +990,8 @@ function TreeItemLabel19({ className, children, size, style, icon, trailing, ...
   );
 }
 
-const TreeItemLabel = withRef("TreeItemLabel", TreeItemLabel19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TreeItemLabelWithRef = withRef("TreeItemLabel", TreeItemLabel);
 
 /**
  * The label text, with the live typeahead prefix highlighted when it matches. Only a plain-string
@@ -1031,7 +1034,7 @@ function TreeItemText({ match, children }: { match: TypeaheadMatch | null; child
  * TreeItemGroup
  * -----------------------------------------------------------------------------------------------*/
 
-function TreeItemGroup19({ className, children, ...props }: React.ComponentProps<"div">) {
+function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"div">) {
   const { expanded, level } = useTreeItemContext("TreeItemGroup");
 
   // Not rendered while collapsed: keeps collapsed subtrees out of the accessibility tree entirely,
@@ -1047,13 +1050,14 @@ function TreeItemGroup19({ className, children, ...props }: React.ComponentProps
   );
 }
 
-const TreeItemGroup = withRef("TreeItemGroup", TreeItemGroup19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TreeItemGroupWithRef = withRef("TreeItemGroup", TreeItemGroup);
 
 export {
-  Tree,
-  TreeItem,
-  TreeItemGroup,
-  TreeItemLabel,
+  TreeWithRef as Tree,
+  TreeItemWithRef as TreeItem,
+  TreeItemGroupWithRef as TreeItemGroup,
+  TreeItemLabelWithRef as TreeItemLabel,
   treeItemLabelVariants,
   useTreeItem,
   type TreeGuides,

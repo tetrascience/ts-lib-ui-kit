@@ -13,20 +13,22 @@ import { cn } from "@/lib/utils";
 
 export type SourcesProps = ComponentProps<"div">;
 
-const Sources19 = ({ className, ...props }: SourcesProps) => (
+const Sources = ({ className, ...props }: SourcesProps) => (
   <Collapsible
     className={cn("not-prose mb-4 text-primary text-xs", className)}
     {...props}
   />
 );
 
-export const Sources = withRef("Sources", Sources19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SourcesWithRef = withRef("Sources", Sources);
+export { SourcesWithRef as Sources };
 
 export type SourcesTriggerProps = ComponentProps<typeof CollapsibleTrigger> & {
   count: number;
 };
 
-const SourcesTrigger19 = ({
+const SourcesTrigger = ({
   className,
   count,
   children,
@@ -45,11 +47,13 @@ const SourcesTrigger19 = ({
   </CollapsibleTrigger>
 );
 
-export const SourcesTrigger = withRef("SourcesTrigger", SourcesTrigger19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SourcesTriggerWithRef = withRef("SourcesTrigger", SourcesTrigger);
+export { SourcesTriggerWithRef as SourcesTrigger };
 
 export type SourcesContentProps = ComponentProps<typeof CollapsibleContent>;
 
-const SourcesContent19 = ({
+const SourcesContent = ({
   className,
   ...props
 }: SourcesContentProps) => (
@@ -63,11 +67,13 @@ const SourcesContent19 = ({
   />
 );
 
-export const SourcesContent = withRef("SourcesContent", SourcesContent19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SourcesContentWithRef = withRef("SourcesContent", SourcesContent);
+export { SourcesContentWithRef as SourcesContent };
 
 export type SourceProps = ComponentProps<"a">;
 
-const Source19 = ({ href, title, className, children, ...props }: SourceProps) => (
+const Source = ({ href, title, className, children, ...props }: SourceProps) => (
   <Button asChild variant="link" className={cn("h-auto gap-1.5 px-0 text-xs font-medium justify-start", className)}>
     <a href={href} rel="noreferrer" target="_blank" {...props}>
       {children ?? (
@@ -80,4 +86,6 @@ const Source19 = ({ href, title, className, children, ...props }: SourceProps) =
   </Button>
 );
 
-export const Source = withRef("Source", Source19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SourceWithRef = withRef("Source", Source);
+export { SourceWithRef as Source };

@@ -187,7 +187,7 @@ export interface TDPLinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchor
  * </TDPLink>
  * ```
  */
-const TDPLink19: React.FC<TDPLinkProps> = ({
+const TDPLink: React.FC<TDPLinkProps> = ({
   path,
   navigationOptions = { newTab: true },
   children,
@@ -224,6 +224,7 @@ const TDPLink19: React.FC<TDPLinkProps> = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
 /**
  * A link component that navigates to TDP pages.
  *
@@ -245,4 +246,5 @@ const TDPLink19: React.FC<TDPLinkProps> = ({
  * </TDPLink>
  * ```
  */
-export const TDPLink = withRef('TDPLink', TDPLink19);
+const TDPLinkWithRef = withRef('TDPLink', TDPLink);
+export { TDPLinkWithRef as TDPLink };

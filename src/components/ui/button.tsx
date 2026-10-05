@@ -43,7 +43,7 @@ const buttonVariants = cva(
   }
 )
 
-function Button19({
+function Button({
   className,
   variant = "default",
   size = "default",
@@ -66,6 +66,7 @@ function Button19({
   )
 }
 
-const Button = withRef("Button", Button19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ButtonWithRef = withRef("Button", Button)
 
-export { Button, buttonVariants }
+export { ButtonWithRef as Button, buttonVariants }

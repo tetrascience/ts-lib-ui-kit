@@ -3,7 +3,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function Table19({
+function Table({
   className,
   containerClassName,
   variant,
@@ -34,9 +34,10 @@ function Table19({
   )
 }
 
-const Table = withRef("Table", Table19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableWithRef = withRef("Table", Table)
 
-function TableHeader19({
+function TableHeader({
   className,
   variant,
   ...props
@@ -56,9 +57,10 @@ function TableHeader19({
   )
 }
 
-const TableHeader = withRef("TableHeader", TableHeader19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableHeaderWithRef = withRef("TableHeader", TableHeader)
 
-function TableBody19({ className, ...props }: React.ComponentProps<"tbody">) {
+function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
@@ -68,9 +70,10 @@ function TableBody19({ className, ...props }: React.ComponentProps<"tbody">) {
   )
 }
 
-const TableBody = withRef("TableBody", TableBody19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableBodyWithRef = withRef("TableBody", TableBody)
 
-function TableFooter19({ className, ...props }: React.ComponentProps<"tfoot">) {
+function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
     <tfoot
       data-slot="table-footer"
@@ -83,9 +86,10 @@ function TableFooter19({ className, ...props }: React.ComponentProps<"tfoot">) {
   )
 }
 
-const TableFooter = withRef("TableFooter", TableFooter19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableFooterWithRef = withRef("TableFooter", TableFooter)
 
-function TableRow19({ className, ...props }: React.ComponentProps<"tr">) {
+function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       data-slot="table-row"
@@ -98,9 +102,10 @@ function TableRow19({ className, ...props }: React.ComponentProps<"tr">) {
   )
 }
 
-const TableRow = withRef("TableRow", TableRow19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableRowWithRef = withRef("TableRow", TableRow)
 
-function TableHead19({
+function TableHead({
   className,
   variant,
   truncate,
@@ -125,9 +130,10 @@ function TableHead19({
   )
 }
 
-const TableHead = withRef("TableHead", TableHead19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableHeadWithRef = withRef("TableHead", TableHead)
 
-function TableCell19({
+function TableCell({
   className,
   variant,
   truncate,
@@ -153,9 +159,10 @@ function TableCell19({
   )
 }
 
-const TableCell = withRef("TableCell", TableCell19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableCellWithRef = withRef("TableCell", TableCell)
 
-function TableCaption19({
+function TableCaption({
   className,
   ...props
 }: React.ComponentProps<"caption">) {
@@ -168,15 +175,16 @@ function TableCaption19({
   )
 }
 
-const TableCaption = withRef("TableCaption", TableCaption19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableCaptionWithRef = withRef("TableCaption", TableCaption)
 
 export {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption,
+  TableWithRef as Table,
+  TableHeaderWithRef as TableHeader,
+  TableBodyWithRef as TableBody,
+  TableFooterWithRef as TableFooter,
+  TableHeadWithRef as TableHead,
+  TableRowWithRef as TableRow,
+  TableCellWithRef as TableCell,
+  TableCaptionWithRef as TableCaption,
 }

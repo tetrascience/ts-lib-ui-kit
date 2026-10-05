@@ -27,7 +27,7 @@ const alertVariants = cva(
   }
 )
 
-function Alert19({
+function Alert({
   className,
   variant,
   ...props
@@ -42,9 +42,10 @@ function Alert19({
   )
 }
 
-const Alert = withRef("Alert", Alert19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertWithRef = withRef("Alert", Alert)
 
-function AlertTitle19({ className, ...props }: React.ComponentProps<"div">) {
+function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-title"
@@ -57,9 +58,10 @@ function AlertTitle19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const AlertTitle = withRef("AlertTitle", AlertTitle19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertTitleWithRef = withRef("AlertTitle", AlertTitle)
 
-function AlertDescription19({
+function AlertDescription({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -75,9 +77,10 @@ function AlertDescription19({
   )
 }
 
-const AlertDescription = withRef("AlertDescription", AlertDescription19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDescriptionWithRef = withRef("AlertDescription", AlertDescription)
 
-function AlertAction19({ className, ...props }: React.ComponentProps<"div">) {
+function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-action"
@@ -87,6 +90,7 @@ function AlertAction19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const AlertAction = withRef("AlertAction", AlertAction19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertActionWithRef = withRef("AlertAction", AlertAction)
 
-export { Alert, AlertTitle, AlertDescription, AlertAction }
+export { AlertWithRef as Alert, AlertTitleWithRef as AlertTitle, AlertDescriptionWithRef as AlertDescription, AlertActionWithRef as AlertAction }

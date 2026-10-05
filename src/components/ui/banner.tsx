@@ -48,7 +48,7 @@ export type BannerProps = React.ComponentProps<"div"> &
     action?: React.ReactNode;
   };
 
-function Banner19({
+function Banner({
   variant = "info",
   title,
   description,
@@ -100,6 +100,7 @@ function Banner19({
   );
 }
 
-const Banner = withRef("Banner", Banner19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BannerWithRef = withRef("Banner", Banner);
 
-export { Banner, bannerVariants };
+export { BannerWithRef as Banner, bannerVariants };

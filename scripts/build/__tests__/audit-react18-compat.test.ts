@@ -51,12 +51,17 @@ describe("React 18 compatibility audit", () => {
       ]);
     });
 
-    it("accepts X19 declarations exported through withRef, and components without ref", () => {
+    it("accepts components wrapped and exported as XWithRef, and components without ref", () => {
       const { wrapped, violations } = audit(`${header}
-        function Box19(props: React.ComponentProps<"div">) { return <div {...props} /> }
-        export const Box = withRef("Box", Box19)
-        const Row19 = memo((props: React.ComponentProps<"div">) => <div {...props} />)
-        export const Row = memo(withRef("Row", Row19.type))
+        function Box(props: React.ComponentProps<"div">) { return <div {...props} /> }
+        const BoxWithRef = withRef("Box", Box)
+        export { BoxWithRef as Box }
+        const Row = memo((props: React.ComponentProps<"div">) => <div {...props} />)
+        const RowWithRef = memo(withRef("Row", Row.type))
+        export { RowWithRef as Row }
+        function Internal(props: React.ComponentProps<"div">) { return <div {...props} /> }
+        const InternalWithRef = withRef("Internal", Internal)
+        export function Panel() { return <><InternalWithRef /><BoxWithRef /></> }
         export const Icon = React.forwardRef<SVGSVGElement, React.ComponentProps<"svg">>((props, ref) => <svg ref={ref} {...props} />)
         const TetraScienceIcon = React.forwardRef<SVGSVGElement, React.ComponentProps<"svg">>((props, ref) => <svg ref={ref} {...props} />)
         export { TetraScienceIcon }
@@ -65,20 +70,68 @@ describe("React 18 compatibility audit", () => {
         export function useThing() { return 1 }
       `);
       // Icon is a new direct forwardRef; TetraScienceIcon predates the rule and is allowed.
+      // Internal is never exported; it only needs a wrapper because Panel renders it.
       expect(violations.map((v) => [v.name, v.kind])).toEqual([["Icon", "direct-forward-ref"]]);
-      expect(wrapped).toEqual(["src/components/__fixture__.tsx:Box", "src/components/__fixture__.tsx:Row"]);
+      expect(wrapped).toEqual([
+        "src/components/__fixture__.tsx:Box",
+        "src/components/__fixture__.tsx:Row",
+        "src/components/__fixture__.tsx:Internal",
+      ]);
     });
 
-    it("requires withRef to export the React 19 declaration by its X19 name", () => {
+    it("requires each wrapper to be XWithRef around X itself", () => {
       const { violations } = audit(`${header}
-        export const Inline = withRef("Inline", function Inline(props: React.ComponentProps<"div">) { return <div {...props} /> })
+        export const InlineWithRef = withRef("Inline", function Inline(props: React.ComponentProps<"div">) { return <div {...props} /> })
         function Other(props: React.ComponentProps<"div">) { return <div {...props} /> }
-        export const Misnamed = withRef("Misnamed", Other)
+        export const MisnamedWithRef = withRef("Misnamed", Other)
+        function Thing(props: React.ComponentProps<"div">) { return <div {...props} /> }
+        const ThingWrapped = withRef("Thing", Thing)
+        export { ThingWrapped as Thing }
       `);
       expect(violations.map((v) => [v.name, v.kind])).toEqual([
-        ["Inline", "render-name"],
-        ["Misnamed", "render-name"],
+        ["InlineWithRef", "render-name"],
+        ["MisnamedWithRef", "render-name"],
+        ["ThingWrapped", "wrapper-name"],
       ]);
+      expect(formatViolations(violations)).toMatch(
+        /^src\/components\/__fixture__\.tsx:\d+ ThingWrapped \[wrapper-name\] the wrapper for Thing must be named ThingWithRef$/m,
+      );
+    });
+
+    it("flags an unwrapped export, and every same-file use of the plain component", () => {
+      const { violations } = audit(`${header}
+        function Box(props: React.ComponentProps<"div">) { return <div {...props} /> }
+        const BoxWithRef = withRef("Box", Box)
+        export { Box }
+        function Item(props: React.ComponentProps<"button">) { return <button {...props} /> }
+        const ItemWithRef = withRef("Item", Item)
+        export { ItemWithRef as Item }
+        function Hidden(props: React.ComponentProps<"span">) { return <span {...props} /> }
+        declare const Trigger: React.FC<{ asChild?: boolean; children?: React.ReactNode }>
+        export function Menu() {
+          const ref = React.useRef<HTMLButtonElement>(null)
+          return (
+            <>
+              <Trigger asChild><Item /></Trigger>
+              <Item ref={ref} />
+              <Trigger asChild><ItemWithRef /></Trigger>
+              <Trigger asChild><Hidden /></Trigger>
+              <Item>fine without a ref</Item>
+            </>
+          )
+        }
+        function Forwarding(props: React.ComponentProps<"button">) { return <Item {...props} /> }
+        function Styled({ ref, ...rest }: React.ComponentProps<"button">) { void ref; return <Item {...rest} /> }
+      `);
+      const counts: Record<string, number> = {};
+      for (const v of violations) counts[`${v.name} ${v.kind}`] = (counts[`${v.name} ${v.kind}`] ?? 0) + 1;
+      // Item: under asChild, with a ref prop, plain children, spread with and without ref.
+      // ItemWithRef is the only in-file use that passes.
+      expect(counts).toEqual({
+        "Box exported-unwrapped": 1,
+        "Item same-file-unwrapped": 5,
+        "Hidden same-file-unwrapped": 1,
+      });
     });
 
     it("flags DOM props without ref unless the component is a documented exception", () => {
@@ -86,8 +139,9 @@ describe("React 18 compatibility audit", () => {
         export function Chip(props: React.HTMLAttributes<HTMLSpanElement>) { return <span {...props} /> }
         export const Conversation = (props: React.HTMLAttributes<HTMLDivElement>) => <div {...props} />
         export function NavItem({ onClick }: { onClick: () => void }) { return <button onClick={onClick} /> }
-        function Tag19(props: React.HTMLAttributes<HTMLSpanElement>) { return <span {...props} /> }
-        export const Tag = withRef("Tag", Tag19)
+        function Tag(props: React.HTMLAttributes<HTMLSpanElement>) { return <span {...props} /> }
+        const TagWithRef = withRef("Tag", Tag)
+        export { TagWithRef as Tag }
       `);
       expect(violations.map((v) => [v.name, v.kind])).toEqual([
         ["Chip", "dom-props-without-ref"],
@@ -96,21 +150,15 @@ describe("React 18 compatibility audit", () => {
       expect(excepted).toEqual(["Conversation"]);
     });
 
-    it("flags direct forwardRef, a mismatched display name and boolean inert", () => {
+    it("flags direct forwardRef and boolean inert", () => {
       const { violations } = audit(`${header}
         export const Box = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>((props, ref) => <div ref={ref} {...props} />)
-        function Row19(props: React.ComponentProps<"div">) { return <div {...props} /> }
-        export const Row = withRef("Rwo", Row19)
         export function Nav({ hidden }: { hidden: boolean }) { return <nav inert={hidden} /> }
       `);
       expect(violations.map((v) => [v.name, v.kind])).toEqual([
         ["Box", "direct-forward-ref"],
-        ["Row", "display-name"],
         ["inert", "boolean-inert"],
       ]);
-      expect(formatViolations(violations)).toMatch(
-        /^src\/components\/__fixture__\.tsx:\d+ Row \[display-name\] withRef display name is "Rwo"; expected "Row"$/m,
-      );
     });
   });
 });

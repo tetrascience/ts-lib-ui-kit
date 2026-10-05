@@ -4,7 +4,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function Avatar19({
+function Avatar({
   className,
   size = "default",
   ...props
@@ -24,9 +24,10 @@ function Avatar19({
   )
 }
 
-const Avatar = withRef("Avatar", Avatar19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AvatarWithRef = withRef("Avatar", Avatar)
 
-function AvatarImage19({
+function AvatarImage({
   className,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
@@ -42,9 +43,10 @@ function AvatarImage19({
   )
 }
 
-const AvatarImage = withRef("AvatarImage", AvatarImage19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AvatarImageWithRef = withRef("AvatarImage", AvatarImage)
 
-function AvatarFallback19({
+function AvatarFallback({
   className,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
@@ -60,9 +62,10 @@ function AvatarFallback19({
   )
 }
 
-const AvatarFallback = withRef("AvatarFallback", AvatarFallback19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AvatarFallbackWithRef = withRef("AvatarFallback", AvatarFallback)
 
-function AvatarBadge19({ className, ...props }: React.ComponentProps<"span">) {
+function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       data-slot="avatar-badge"
@@ -78,9 +81,10 @@ function AvatarBadge19({ className, ...props }: React.ComponentProps<"span">) {
   )
 }
 
-const AvatarBadge = withRef("AvatarBadge", AvatarBadge19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AvatarBadgeWithRef = withRef("AvatarBadge", AvatarBadge)
 
-function AvatarGroup19({ className, ...props }: React.ComponentProps<"div">) {
+function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="avatar-group"
@@ -93,9 +97,10 @@ function AvatarGroup19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const AvatarGroup = withRef("AvatarGroup", AvatarGroup19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AvatarGroupWithRef = withRef("AvatarGroup", AvatarGroup)
 
-function AvatarGroupCount19({
+function AvatarGroupCount({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -111,13 +116,14 @@ function AvatarGroupCount19({
   )
 }
 
-const AvatarGroupCount = withRef("AvatarGroupCount", AvatarGroupCount19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AvatarGroupCountWithRef = withRef("AvatarGroupCount", AvatarGroupCount)
 
 export {
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
-  AvatarGroup,
-  AvatarGroupCount,
-  AvatarBadge,
+  AvatarWithRef as Avatar,
+  AvatarImageWithRef as AvatarImage,
+  AvatarFallbackWithRef as AvatarFallback,
+  AvatarGroupWithRef as AvatarGroup,
+  AvatarGroupCountWithRef as AvatarGroupCount,
+  AvatarBadgeWithRef as AvatarBadge,
 }

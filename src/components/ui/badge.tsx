@@ -34,7 +34,7 @@ const badgeVariants = cva(
   }
 )
 
-function Badge19({
+function Badge({
   className,
   variant  = "default",
   asChild = false,
@@ -53,6 +53,7 @@ function Badge19({
   )
 }
 
-const Badge = withRef("Badge", Badge19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BadgeWithRef = withRef("Badge", Badge)
 
-export { Badge, badgeVariants }
+export { BadgeWithRef as Badge, badgeVariants }

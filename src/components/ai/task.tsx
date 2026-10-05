@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 export type TaskItemFileProps = ComponentProps<"div">;
 
-const TaskItemFile19 = ({
+const TaskItemFile = ({
   children,
   className,
   ...props
@@ -30,17 +30,21 @@ const TaskItemFile19 = ({
   </div>
 );
 
-export const TaskItemFile = withRef("TaskItemFile", TaskItemFile19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TaskItemFileWithRef = withRef("TaskItemFile", TaskItemFile);
+export { TaskItemFileWithRef as TaskItemFile };
 
 export type TaskItemProps = ComponentProps<"div">;
 
-const TaskItem19 = ({ children, className, ...props }: TaskItemProps) => (
+const TaskItem = ({ children, className, ...props }: TaskItemProps) => (
   <div className={cn("text-muted-foreground text-sm", className)} {...props}>
     {children}
   </div>
 );
 
-export const TaskItem = withRef("TaskItem", TaskItem19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TaskItemWithRef = withRef("TaskItem", TaskItem);
+export { TaskItemWithRef as TaskItem };
 
 const AUTO_CLOSE_DELAY = 1000;
 
@@ -48,7 +52,7 @@ export type TaskProps = ComponentProps<typeof Collapsible> & {
   isStreaming?: boolean;
 };
 
-const Task19 = ({
+const Task = ({
   defaultOpen = true,
   isStreaming = false,
   open,
@@ -94,13 +98,15 @@ const Task19 = ({
   );
 };
 
-export const Task = withRef("Task", Task19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TaskWithRef = withRef("Task", Task);
+export { TaskWithRef as Task };
 
 export type TaskTriggerProps = ComponentProps<typeof CollapsibleTrigger> & {
   title: string;
 };
 
-const TaskTrigger19 = ({
+const TaskTrigger = ({
   children,
   className,
   title,
@@ -123,11 +129,13 @@ const TaskTrigger19 = ({
   </CollapsibleTrigger>
 );
 
-export const TaskTrigger = withRef("TaskTrigger", TaskTrigger19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TaskTriggerWithRef = withRef("TaskTrigger", TaskTrigger);
+export { TaskTriggerWithRef as TaskTrigger };
 
 export type TaskContentProps = ComponentProps<typeof CollapsibleContent>;
 
-const TaskContent19 = ({
+const TaskContent = ({
   children,
   className,
   ...props
@@ -145,4 +153,6 @@ const TaskContent19 = ({
   </CollapsibleContent>
 );
 
-export const TaskContent = withRef("TaskContent", TaskContent19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TaskContentWithRef = withRef("TaskContent", TaskContent);
+export { TaskContentWithRef as TaskContent };

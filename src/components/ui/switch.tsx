@@ -6,7 +6,7 @@ import * as React from "react"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function Switch19({
+function Switch({
   className,
   size = "default",
   ...props
@@ -32,6 +32,7 @@ function Switch19({
   )
 }
 
-const Switch = withRef("Switch", Switch19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SwitchWithRef = withRef("Switch", Switch)
 
-export { Switch }
+export { SwitchWithRef as Switch }

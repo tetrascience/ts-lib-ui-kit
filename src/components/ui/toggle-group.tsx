@@ -19,7 +19,7 @@ const ToggleGroupContext = React.createContext<
   orientation: "horizontal",
 })
 
-function ToggleGroup19({
+function ToggleGroup({
   className,
   variant,
   size,
@@ -55,9 +55,10 @@ function ToggleGroup19({
   )
 }
 
-const ToggleGroup = withRef("ToggleGroup", ToggleGroup19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToggleGroupWithRef = withRef("ToggleGroup", ToggleGroup)
 
-function ToggleGroupItem19({
+function ToggleGroupItem({
   className,
   children,
   variant = "default",
@@ -146,6 +147,7 @@ function ToggleGroupItem19({
   )
 }
 
-const ToggleGroupItem = withRef("ToggleGroupItem", ToggleGroupItem19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToggleGroupItemWithRef = withRef("ToggleGroupItem", ToggleGroupItem)
 
-export { ToggleGroup, ToggleGroupItem }
+export { ToggleGroupWithRef as ToggleGroup, ToggleGroupItemWithRef as ToggleGroupItem }

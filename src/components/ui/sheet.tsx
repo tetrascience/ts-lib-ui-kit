@@ -12,21 +12,23 @@ function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
 
-function SheetTrigger19({
+function SheetTrigger({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
 }
 
-const SheetTrigger = withRef("SheetTrigger", SheetTrigger19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetTriggerWithRef = withRef("SheetTrigger", SheetTrigger)
 
-function SheetClose19({
+function SheetClose({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Close>) {
   return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
 }
 
-const SheetClose = withRef("SheetClose", SheetClose19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetCloseWithRef = withRef("SheetClose", SheetClose)
 
 function SheetPortal({
   ...props
@@ -34,7 +36,7 @@ function SheetPortal({
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
 }
 
-function SheetOverlay19({
+function SheetOverlay({
   className,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
@@ -50,9 +52,10 @@ function SheetOverlay19({
   )
 }
 
-const SheetOverlay = withRef("SheetOverlay", SheetOverlay19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetOverlayWithRef = withRef("SheetOverlay", SheetOverlay)
 
-function SheetContent19({
+function SheetContent({
   className,
   children,
   side = "right",
@@ -64,7 +67,7 @@ function SheetContent19({
 }) {
   return (
     <SheetPortal>
-      <SheetOverlay />
+      <SheetOverlayWithRef />
       <SheetPrimitive.Content
         data-slot="sheet-content"
         data-side={side}
@@ -93,9 +96,10 @@ function SheetContent19({
   )
 }
 
-const SheetContent = withRef("SheetContent", SheetContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetContentWithRef = withRef("SheetContent", SheetContent)
 
-function SheetHeader19({ className, ...props }: React.ComponentProps<"div">) {
+function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-header"
@@ -105,9 +109,10 @@ function SheetHeader19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const SheetHeader = withRef("SheetHeader", SheetHeader19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetHeaderWithRef = withRef("SheetHeader", SheetHeader)
 
-function SheetFooter19({ className, ...props }: React.ComponentProps<"div">) {
+function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-footer"
@@ -117,9 +122,10 @@ function SheetFooter19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const SheetFooter = withRef("SheetFooter", SheetFooter19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetFooterWithRef = withRef("SheetFooter", SheetFooter)
 
-function SheetTitle19({
+function SheetTitle({
   className,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Title>) {
@@ -132,9 +138,10 @@ function SheetTitle19({
   )
 }
 
-const SheetTitle = withRef("SheetTitle", SheetTitle19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetTitleWithRef = withRef("SheetTitle", SheetTitle)
 
-function SheetDescription19({
+function SheetDescription({
   className,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Description>) {
@@ -147,15 +154,16 @@ function SheetDescription19({
   )
 }
 
-const SheetDescription = withRef("SheetDescription", SheetDescription19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetDescriptionWithRef = withRef("SheetDescription", SheetDescription)
 
 export {
   Sheet,
-  SheetTrigger,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetFooter,
-  SheetTitle,
-  SheetDescription,
+  SheetTriggerWithRef as SheetTrigger,
+  SheetCloseWithRef as SheetClose,
+  SheetContentWithRef as SheetContent,
+  SheetHeaderWithRef as SheetHeader,
+  SheetFooterWithRef as SheetFooter,
+  SheetTitleWithRef as SheetTitle,
+  SheetDescriptionWithRef as SheetDescription,
 }

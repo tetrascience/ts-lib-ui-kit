@@ -41,7 +41,7 @@ export type ConversationEmptyStateProps = ComponentProps<"div"> & {
   icon?: React.ReactNode;
 };
 
-const ConversationEmptyState19 = ({
+const ConversationEmptyState = ({
   className,
   title = "No messages yet",
   description = "Start a conversation to see messages here",
@@ -70,11 +70,13 @@ const ConversationEmptyState19 = ({
   </div>
 );
 
-export const ConversationEmptyState = withRef("ConversationEmptyState", ConversationEmptyState19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConversationEmptyStateWithRef = withRef("ConversationEmptyState", ConversationEmptyState);
+export { ConversationEmptyStateWithRef as ConversationEmptyState };
 
 export type ConversationScrollButtonProps = ComponentProps<typeof Button>;
 
-const ConversationScrollButton19 = ({
+const ConversationScrollButton = ({
   className,
   ...props
 }: ConversationScrollButtonProps) => {
@@ -103,7 +105,9 @@ const ConversationScrollButton19 = ({
   );
 };
 
-export const ConversationScrollButton = withRef("ConversationScrollButton", ConversationScrollButton19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConversationScrollButtonWithRef = withRef("ConversationScrollButton", ConversationScrollButton);
+export { ConversationScrollButtonWithRef as ConversationScrollButton };
 
 const getMessageText = (message: UIMessage): string =>
   message.parts
@@ -134,7 +138,7 @@ export const messagesToMarkdown = (
   ) => string = defaultFormatMessage
 ): string => messages.map((msg, i) => formatMessage(msg, i)).join("\n\n");
 
-const ConversationDownload19 = ({
+const ConversationDownload = ({
   messages,
   filename = "conversation.md",
   formatMessage = defaultFormatMessage,
@@ -172,4 +176,6 @@ const ConversationDownload19 = ({
   );
 };
 
-export const ConversationDownload = withRef("ConversationDownload", ConversationDownload19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConversationDownloadWithRef = withRef("ConversationDownload", ConversationDownload);
+export { ConversationDownloadWithRef as ConversationDownload };

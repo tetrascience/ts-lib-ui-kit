@@ -195,35 +195,44 @@ React 18 support is temporary: it will be deprecated in favour of React 19
 exports, then removed. So it stays out of the components themselves, and
 everything it needs lives in [`src/lib/react18-compat.ts`](./src/lib/react18-compat.ts):
 
-- **Declare the component for React 19 as `X19`, and export it with one added
-  line.** The `X19` declaration is exactly what the component would be on
-  React 19 alone, with `ref` arriving in props and nothing React 18-specific:
+- **Leave the component untouched and export a wrapper under its name.** The
+  declaration is exactly what the component is on React 19, with `ref` arriving
+  in props. Below it, one commented line adds the React 18 wrapper, and the file
+  exports the wrapper under the component's name:
 
   ```tsx
-  function Button19({ className, ...props }: ButtonProps) {
+  function Button({ className, ...props }: ButtonProps) {
     return <button className={cn(buttonVariants(), className)} {...props} />
   }
 
-  const Button = withRef("Button", Button19)
+  // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+  const ButtonWithRef = withRef("Button", Button)
+
+  export { ButtonWithRef as Button }
   ```
 
   Pass the name as a **string literal**, because the build mangles function
-  names. `withRef` also sets it as the `X19` component's `displayName`. Its return
-  type is `X19`'s own type, so public props and generics are unchanged. For a
-  memoised component, keep `memo` on the React 19 one and re-memoise the export:
-  `const X = memo(withRef("X", X19.type))`. Never call `React.forwardRef`
-  directly; `TetraScienceIcon` and `TetraMoleculeIcon` predate this and are
-  allowlisted.
-- **JSDoc stays on `X19`, and is copied onto the export line.** Storybook's
-  react-docgen reads the description from the `X19` declaration, and `withRef`
-  exposes that docgen info on the export, so prop tables and descriptions are
-  unchanged. Editors read hover docs only from the exported `const`, so a
-  documented component carries the JSDoc in both places until React 18 is dropped.
-- **Deprecating and dropping React 18.** To deprecate: export the `X19`
-  components under their plain names from a React 19 entry point, and mark the
-  `withRef` exports deprecated. To drop: delete each `withRef` line and its
-  copied JSDoc, rename `X19` back to `X`, delete `src/lib/react18-compat.ts`, and
-  swap `{...inertProp(v)}` back to `inert={v}`.
+  names; `withRef` also sets it as the plain component's `displayName`. The
+  wrapper's type is the plain component's own type, so public props and generics
+  are unchanged. For a memoised component, keep `memo` on the plain one and
+  re-memoise the wrapper: `memo(withRef("X", X.type))`. Never call
+  `React.forwardRef` directly; `TetraScienceIcon` and `TetraMoleculeIcon`
+  predate this and are allowlisted.
+- **Inside the file, `X` is the plain component, so every JSX use renders
+  `XWithRef`.** Libraries hand refs to children implicitly: an `asChild` parent,
+  a props spread, or Radix `Presence` inside a `Portal`, which is how
+  `<DialogOverlay />` inside `DialogContent` broke on React 18. A component that is
+  never exported and never rendered in its own file needs no wrapper.
+- **JSDoc stays on the component and is copied onto the wrapper.** Storybook's
+  react-docgen reads the description from the plain declaration, and `withRef`
+  exposes that docgen info on the wrapper, so prop tables and descriptions are
+  unchanged. Editors read hover docs from the wrapper's `const`, so a documented
+  component carries the JSDoc in both places until React 18 is dropped.
+- **Deprecating and dropping React 18.** To deprecate: also export the plain
+  components (for example from a React 19 entry point) and mark the `WithRef`
+  exports deprecated. To drop: delete each wrapper line, its comment and copied
+  JSDoc, export `X` itself, delete `src/lib/react18-compat.ts`, and swap
+  `{...inertProp(v)}` back to `inert={v}`.
 - **`{...inertProp(value)}`** instead of `inert={value}`: React 18 drops a boolean
   `inert`, leaving "inert" content focusable.
 - A component that spreads DOM props types them as `ComponentProps<"tag">`, not
@@ -240,9 +249,10 @@ Guards: `yarn check:react18-compat`
 a step of CI's build job; its unit test only runs the rules against fixtures)
 uses the type checker to fail on an unwrapped component
 whose props accept `ref`, a component whose props carry DOM attributes but no
-`ref`, a direct `forwardRef`, a mismatched display name or a boolean `inert`.
-The audit also requires each `withRef` to export `X19` by that name, so the
-React 19 components stay intact and easy to find. The only components allowed
+`ref`, a direct `forwardRef` or a boolean `inert`. It also requires each wrapper
+to be named `XWithRef` around `X` itself, fails if a wrapped component is exported
+unwrapped, and fails if a ref-accepting component is rendered as the plain `X`
+inside its own file. The only components allowed
 DOM props without a `ref` are listed, with the reason,
 in its `REF_EXCEPTIONS`; that list and the "Refs" section of README.md (every
 component without a ref, grouped by why) must change together, and a stale entry

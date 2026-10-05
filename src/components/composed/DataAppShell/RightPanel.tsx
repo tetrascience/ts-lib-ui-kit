@@ -98,7 +98,7 @@ export interface DataAppShellRightPanelTriggerProps
  * onto its child — any clickable element (a link, menu item, custom button)
  * can act as the trigger.
  */
-function DataAppShellRightPanelTrigger19({
+function DataAppShellRightPanelTrigger({
   className,
   variant,
   size,
@@ -121,6 +121,7 @@ function DataAppShellRightPanelTrigger19({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
 /**
  * Trigger for a `DataAppShellRightPanel`, in two variants:
  *
@@ -136,7 +137,7 @@ function DataAppShellRightPanelTrigger19({
  * onto its child — any clickable element (a link, menu item, custom button)
  * can act as the trigger.
  */
-const DataAppShellRightPanelTrigger = withRef("DataAppShellRightPanelTrigger", DataAppShellRightPanelTrigger19);
+const DataAppShellRightPanelTriggerWithRef = withRef("DataAppShellRightPanelTrigger", DataAppShellRightPanelTrigger);
 
 // =============================================================================
 // DragHandle — pointer + keyboard resize on the panel's left edge
@@ -337,7 +338,7 @@ export interface DataAppShellRightPanelProps extends Omit<React.ComponentProps<"
  * </div>
  * ```
  */
-function DataAppShellRightPanel19({
+function DataAppShellRightPanel({
   id,
   open,
   onOpenChange,
@@ -402,14 +403,14 @@ function DataAppShellRightPanel19({
   const headerClass = raised ? "border-b border-primary/15 bg-accent" : "border-b border-border";
 
   const fab = showTrigger ? (
-    <DataAppShellRightPanelTrigger
+    <DataAppShellRightPanelTriggerWithRef
       ref={fabRef}
       aria-label={triggerLabel}
       aria-expanded={false}
       onClick={() => onOpenChange?.(true)}
     >
       {triggerIcon}
-    </DataAppShellRightPanelTrigger>
+    </DataAppShellRightPanelTriggerWithRef>
   ) : null;
 
   const header = (
@@ -514,6 +515,7 @@ function DataAppShellRightPanel19({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
 /**
  * Right-hand panel for the Data App Shell (SW-2117), in two variants:
  *
@@ -537,6 +539,6 @@ function DataAppShellRightPanel19({
  * </div>
  * ```
  */
-const DataAppShellRightPanel = withRef("DataAppShellRightPanel", DataAppShellRightPanel19);
+const DataAppShellRightPanelWithRef = withRef("DataAppShellRightPanel", DataAppShellRightPanel);
 
-export { DataAppShellRightPanel, DataAppShellRightPanelTrigger, dataAppShellRightPanelTriggerVariants };
+export { DataAppShellRightPanelWithRef as DataAppShellRightPanel, DataAppShellRightPanelTriggerWithRef as DataAppShellRightPanelTrigger, dataAppShellRightPanelTriggerVariants };

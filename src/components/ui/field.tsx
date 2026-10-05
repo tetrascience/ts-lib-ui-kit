@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator"
 import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
-function FieldSet19({ className, ...props }: React.ComponentProps<"fieldset">) {
+function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
     <fieldset
       data-slot="field-set"
@@ -19,9 +19,10 @@ function FieldSet19({ className, ...props }: React.ComponentProps<"fieldset">) {
   )
 }
 
-const FieldSet = withRef("FieldSet", FieldSet19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldSetWithRef = withRef("FieldSet", FieldSet)
 
-function FieldLegend19({
+function FieldLegend({
   className,
   variant = "legend",
   ...props
@@ -39,9 +40,10 @@ function FieldLegend19({
   )
 }
 
-const FieldLegend = withRef("FieldLegend", FieldLegend19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldLegendWithRef = withRef("FieldLegend", FieldLegend)
 
-function FieldGroup19({ className, ...props }: React.ComponentProps<"div">) {
+function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="field-group"
@@ -54,7 +56,8 @@ function FieldGroup19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const FieldGroup = withRef("FieldGroup", FieldGroup19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldGroupWithRef = withRef("FieldGroup", FieldGroup)
 
 const fieldVariants = cva(
   "group/field flex w-full gap-2 data-[invalid=true]:text-destructive",
@@ -74,7 +77,7 @@ const fieldVariants = cva(
   }
 )
 
-function Field19({
+function Field({
   className,
   orientation = "vertical",
   ...props
@@ -90,9 +93,10 @@ function Field19({
   )
 }
 
-const Field = withRef("Field", Field19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldWithRef = withRef("Field", Field)
 
-function FieldContent19({ className, ...props }: React.ComponentProps<"div">) {
+function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="field-content"
@@ -105,9 +109,10 @@ function FieldContent19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const FieldContent = withRef("FieldContent", FieldContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldContentWithRef = withRef("FieldContent", FieldContent)
 
-function FieldLabel19({
+function FieldLabel({
   className,
   ...props
 }: React.ComponentProps<typeof Label>) {
@@ -124,9 +129,10 @@ function FieldLabel19({
   )
 }
 
-const FieldLabel = withRef("FieldLabel", FieldLabel19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldLabelWithRef = withRef("FieldLabel", FieldLabel)
 
-function FieldTitle19({ className, ...props }: React.ComponentProps<"div">) {
+function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="field-label"
@@ -139,9 +145,10 @@ function FieldTitle19({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const FieldTitle = withRef("FieldTitle", FieldTitle19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldTitleWithRef = withRef("FieldTitle", FieldTitle)
 
-function FieldDescription19({ className, ...props }: React.ComponentProps<"p">) {
+function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       data-slot="field-description"
@@ -156,9 +163,10 @@ function FieldDescription19({ className, ...props }: React.ComponentProps<"p">) 
   )
 }
 
-const FieldDescription = withRef("FieldDescription", FieldDescription19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldDescriptionWithRef = withRef("FieldDescription", FieldDescription)
 
-function FieldSeparator19({
+function FieldSeparator({
   children,
   className,
   ...props
@@ -188,9 +196,10 @@ function FieldSeparator19({
   )
 }
 
-const FieldSeparator = withRef("FieldSeparator", FieldSeparator19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldSeparatorWithRef = withRef("FieldSeparator", FieldSeparator)
 
-function FieldError19({
+function FieldError({
   className,
   children,
   errors,
@@ -241,17 +250,18 @@ function FieldError19({
   )
 }
 
-const FieldError = withRef("FieldError", FieldError19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldErrorWithRef = withRef("FieldError", FieldError)
 
 export {
-  Field,
-  FieldLabel,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLegend,
-  FieldSeparator,
-  FieldSet,
-  FieldContent,
-  FieldTitle,
+  FieldWithRef as Field,
+  FieldLabelWithRef as FieldLabel,
+  FieldDescriptionWithRef as FieldDescription,
+  FieldErrorWithRef as FieldError,
+  FieldGroupWithRef as FieldGroup,
+  FieldLegendWithRef as FieldLegend,
+  FieldSeparatorWithRef as FieldSeparator,
+  FieldSetWithRef as FieldSet,
+  FieldContentWithRef as FieldContent,
+  FieldTitleWithRef as FieldTitle,
 }

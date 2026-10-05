@@ -62,7 +62,7 @@ export interface EmptyStateProps extends React.ComponentProps<"div"> {
   action?: React.ReactNode;
 }
 
-function EmptyState19({
+function EmptyState({
   variant = "no-data",
   title,
   description,
@@ -105,6 +105,7 @@ function EmptyState19({
   );
 }
 
-const EmptyState = withRef("EmptyState", EmptyState19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const EmptyStateWithRef = withRef("EmptyState", EmptyState);
 
-export { EmptyState };
+export { EmptyStateWithRef as EmptyState };

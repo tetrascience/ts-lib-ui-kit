@@ -45,7 +45,7 @@ export type ConfirmationProps = ComponentProps<"div"> & {
 
 const ACCEPTED_HIDE_DELAY = 1500;
 
-const Confirmation19 = ({
+const Confirmation = ({
   className,
   approval,
   state,
@@ -103,7 +103,9 @@ const Confirmation19 = ({
   );
 };
 
-export const Confirmation = withRef("Confirmation", Confirmation19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConfirmationWithRef = withRef("Confirmation", Confirmation);
+export { ConfirmationWithRef as Confirmation };
 
 // ---------------------------------------------------------------------------
 // ConfirmationTitle
@@ -111,7 +113,7 @@ export const Confirmation = withRef("Confirmation", Confirmation19);
 
 export type ConfirmationTitleProps = PropsWithChildren<ComponentProps<"h3">>;
 
-const ConfirmationTitle19 = ({
+const ConfirmationTitle = ({
   className,
   children,
   ...props
@@ -124,7 +126,9 @@ const ConfirmationTitle19 = ({
   </h3>
 );
 
-export const ConfirmationTitle = withRef("ConfirmationTitle", ConfirmationTitle19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConfirmationTitleWithRef = withRef("ConfirmationTitle", ConfirmationTitle);
+export { ConfirmationTitleWithRef as ConfirmationTitle };
 
 // ---------------------------------------------------------------------------
 // ConfirmationCode — monospace command/code block
@@ -132,7 +136,7 @@ export const ConfirmationTitle = withRef("ConfirmationTitle", ConfirmationTitle1
 
 export type ConfirmationCodeProps = ComponentProps<typeof CodeBlock>;
 
-const ConfirmationCode19 = ({
+const ConfirmationCode = ({
   className,
   children,
   ...props
@@ -140,7 +144,9 @@ const ConfirmationCode19 = ({
   <CodeBlock className={cn(className)} {...props} language="bash" code={children?.toString() ?? ''} />
 );
 
-export const ConfirmationCode = withRef("ConfirmationCode", ConfirmationCode19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConfirmationCodeWithRef = withRef("ConfirmationCode", ConfirmationCode);
+export { ConfirmationCodeWithRef as ConfirmationCode };
 
 // ---------------------------------------------------------------------------
 // ConfirmationRequest / Accepted / Rejected — conditional renderers
@@ -184,7 +190,7 @@ export const ConfirmationRejected = ({ children }: { children?: ReactNode }) => 
 
 export type ConfirmationActionsProps = ComponentProps<"div">;
 
-const ConfirmationActions19 = ({
+const ConfirmationActions = ({
   className,
   ...props
 }: ConfirmationActionsProps) => {
@@ -198,7 +204,9 @@ const ConfirmationActions19 = ({
   );
 };
 
-export const ConfirmationActions = withRef("ConfirmationActions", ConfirmationActions19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConfirmationActionsWithRef = withRef("ConfirmationActions", ConfirmationActions);
+export { ConfirmationActionsWithRef as ConfirmationActions };
 
 // ---------------------------------------------------------------------------
 // ConfirmationAction — individual button
@@ -206,7 +214,7 @@ export const ConfirmationActions = withRef("ConfirmationActions", ConfirmationAc
 
 export type ConfirmationActionProps = ComponentProps<typeof Button>;
 
-const ConfirmationAction19 = ({
+const ConfirmationAction = ({
   className,
   size = "sm",
   ...props
@@ -219,7 +227,9 @@ const ConfirmationAction19 = ({
   />
 );
 
-export const ConfirmationAction = withRef("ConfirmationAction", ConfirmationAction19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConfirmationActionWithRef = withRef("ConfirmationAction", ConfirmationAction);
+export { ConfirmationActionWithRef as ConfirmationAction };
 
 // ---------------------------------------------------------------------------
 // ConfirmationShortcut — keyboard shortcut label inside a button
@@ -227,11 +237,13 @@ export const ConfirmationAction = withRef("ConfirmationAction", ConfirmationActi
 
 export type ConfirmationShortcutProps = ComponentProps<typeof Kbd>;
 
-const ConfirmationShortcut19 = ({
+const ConfirmationShortcut = ({
   className,
   ...props
 }: ConfirmationShortcutProps) => (
   <Kbd className={cn("ml-0.5", className)} {...props} />
 );
 
-export const ConfirmationShortcut = withRef("ConfirmationShortcut", ConfirmationShortcut19);
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConfirmationShortcutWithRef = withRef("ConfirmationShortcut", ConfirmationShortcut);
+export { ConfirmationShortcutWithRef as ConfirmationShortcut };

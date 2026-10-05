@@ -1146,7 +1146,7 @@ function DataTable<TData, TValue>({
 // TableToolbar
 // ---------------------------------------------------------------------------
 
-function TableToolbar19({
+function TableToolbar({
   className,
   children,
   ...props
@@ -1162,7 +1162,8 @@ function TableToolbar19({
   )
 }
 
-const TableToolbar = withRef("TableToolbar", TableToolbar19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableToolbarWithRef = withRef("TableToolbar", TableToolbar)
 
-export { DataTable, TableToolbar, useDataTable }
+export { DataTable, TableToolbarWithRef as TableToolbar, useDataTable }
 export type { DataTableProps, FilterCondition, FilterOperator, FilterColumnConfig, GroupColumnConfig }

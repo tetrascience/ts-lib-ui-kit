@@ -14,7 +14,7 @@ function Select({
   return <SelectPrimitive.Root data-slot="select" {...props} />
 }
 
-function SelectGroup19({
+function SelectGroup({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Group>) {
@@ -27,17 +27,19 @@ function SelectGroup19({
   )
 }
 
-const SelectGroup = withRef("SelectGroup", SelectGroup19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectGroupWithRef = withRef("SelectGroup", SelectGroup)
 
-function SelectValue19({
+function SelectValue({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Value>) {
   return <SelectPrimitive.Value data-slot="select-value" {...props} />
 }
 
-const SelectValue = withRef("SelectValue", SelectValue19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectValueWithRef = withRef("SelectValue", SelectValue)
 
-function SelectTrigger19({
+function SelectTrigger({
   className,
   size = "default",
   children,
@@ -65,9 +67,10 @@ function SelectTrigger19({
   )
 }
 
-const SelectTrigger = withRef("SelectTrigger", SelectTrigger19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectTriggerWithRef = withRef("SelectTrigger", SelectTrigger)
 
-function SelectContent19({
+function SelectContent({
   className,
   children,
   position = "item-aligned",
@@ -84,7 +87,7 @@ function SelectContent19({
         align={align}
         {...props}
       >
-        <SelectScrollUpButton />
+        <SelectScrollUpButtonWithRef />
         <SelectPrimitive.Viewport
           data-position={position}
           className={cn(
@@ -94,15 +97,16 @@ function SelectContent19({
         >
           {children}
         </SelectPrimitive.Viewport>
-        <SelectScrollDownButton />
+        <SelectScrollDownButtonWithRef />
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   )
 }
 
-const SelectContent = withRef("SelectContent", SelectContent19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectContentWithRef = withRef("SelectContent", SelectContent)
 
-function SelectLabel19({
+function SelectLabel({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Label>) {
@@ -115,9 +119,10 @@ function SelectLabel19({
   )
 }
 
-const SelectLabel = withRef("SelectLabel", SelectLabel19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectLabelWithRef = withRef("SelectLabel", SelectLabel)
 
-function SelectItem19({
+function SelectItem({
   className,
   children,
   ...props
@@ -141,9 +146,10 @@ function SelectItem19({
   )
 }
 
-const SelectItem = withRef("SelectItem", SelectItem19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectItemWithRef = withRef("SelectItem", SelectItem)
 
-function SelectSeparator19({
+function SelectSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Separator>) {
@@ -156,9 +162,10 @@ function SelectSeparator19({
   )
 }
 
-const SelectSeparator = withRef("SelectSeparator", SelectSeparator19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectSeparatorWithRef = withRef("SelectSeparator", SelectSeparator)
 
-function SelectScrollUpButton19({
+function SelectScrollUpButton({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) {
@@ -177,9 +184,10 @@ function SelectScrollUpButton19({
   )
 }
 
-const SelectScrollUpButton = withRef("SelectScrollUpButton", SelectScrollUpButton19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectScrollUpButtonWithRef = withRef("SelectScrollUpButton", SelectScrollUpButton)
 
-function SelectScrollDownButton19({
+function SelectScrollDownButton({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) {
@@ -198,17 +206,18 @@ function SelectScrollDownButton19({
   )
 }
 
-const SelectScrollDownButton = withRef("SelectScrollDownButton", SelectScrollDownButton19)
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectScrollDownButtonWithRef = withRef("SelectScrollDownButton", SelectScrollDownButton)
 
 export {
   Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
+  SelectContentWithRef as SelectContent,
+  SelectGroupWithRef as SelectGroup,
+  SelectItemWithRef as SelectItem,
+  SelectLabelWithRef as SelectLabel,
+  SelectScrollDownButtonWithRef as SelectScrollDownButton,
+  SelectScrollUpButtonWithRef as SelectScrollUpButton,
+  SelectSeparatorWithRef as SelectSeparator,
+  SelectTriggerWithRef as SelectTrigger,
+  SelectValueWithRef as SelectValue,
 }

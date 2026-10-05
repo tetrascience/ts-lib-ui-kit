@@ -225,7 +225,7 @@ function StepIcon({
  * Step status (`done` / `active` / `todo`) is derived linearly from
  * `activeKey`, or set explicitly per step. Supports one level of nesting.
  */
-function DataAppShellSecondaryNav19({
+function DataAppShellSecondaryNav({
   orientation,
   steps,
   activeKey,
@@ -513,6 +513,7 @@ function DataAppShellSecondaryNav19({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
 /**
  * The Data App Shell's secondary (per-page/step) nav — one `steps` model
  * rendered on either axis via `orientation`:
@@ -524,10 +525,10 @@ function DataAppShellSecondaryNav19({
  * Step status (`done` / `active` / `todo`) is derived linearly from
  * `activeKey`, or set explicitly per step. Supports one level of nesting.
  */
-const DataAppShellSecondaryNav = withRef("DataAppShellSecondaryNav", DataAppShellSecondaryNav19);
+const DataAppShellSecondaryNavWithRef = withRef("DataAppShellSecondaryNav", DataAppShellSecondaryNav);
 
 export {
-  DataAppShellSecondaryNav,
+  DataAppShellSecondaryNavWithRef as DataAppShellSecondaryNav,
   dataAppShellSecondaryNavVariants,
   dataAppShellSecondaryNavItemVariants,
 };

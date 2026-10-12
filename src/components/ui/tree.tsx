@@ -128,28 +128,37 @@ function useTreeItem() {
  * rendering) each container walks its own children and wraps them in an index provider. Purely
  * positional, so it is correct on the first render and under SSR.
  *
- * Caveat: every valid element child occupies a set slot, so non-item children of a group (a "Load
- * more" control, for instance) would be counted. That placement question is deliberately deferred
- * to SW-2542.
+ * Every valid element counts as a sibling for indexing, *except* the kit's two placeholders,
+ * `TreeEmpty` and `TreeLoadMore`: a consumer routinely wraps `TreeItem` in their own component (a
+ * row that also wires up drag-and-drop, say), and that wrapper still needs a real posinset/setsize,
+ * so indexing can't be gated on the element's `type` being `TreeItem` literally — the placeholders
+ * opt out instead, explicitly, by identity (SW-2542). Any other non-item child is still counted, so
+ * placeholder content belongs inside one of the two.
  * -----------------------------------------------------------------------------------------------*/
+
+function isPlaceholder(child: React.ReactElement) {
+  return child.type === TreeEmpty || child.type === TreeLoadMore;
+}
 
 function useIndexedTreeChildren(children: React.ReactNode) {
   return React.useMemo(() => {
     const array = React.Children.toArray(children);
-    const elements = array.filter(React.isValidElement);
+    const elements = array.filter(
+      (child): child is React.ReactElement => React.isValidElement(child) && !isPlaceholder(child),
+    );
     const setsize = elements.length;
 
     // Which siblings are branches is read off `hasChildren` in the element's own props. A child
-    // wrapped in a consumer's own component reads as a leaf, which costs a connector rather than
-    // breaking anything — the alternative is a mount-order registry, and the whole point of doing
-    // this positionally is to stay correct on the first render.
+    // wrapped in a consumer's own component reads as a leaf unless that wrapper forwards the prop,
+    // which costs a connector rather than breaking anything — the alternative is a mount-order
+    // registry, and the whole point of doing this positionally is to stay correct on first render.
     const isBranch = (child: React.ReactElement) => (child.props as TreeItemProps)?.hasChildren === true;
     const lastBranchPos = elements.reduce((last, child, index) => (isBranch(child) ? index + 1 : last), 0);
 
     let posinset = 0;
 
     return array.map((child, index) => {
-      if (!React.isValidElement(child)) return child;
+      if (!React.isValidElement(child) || isPlaceholder(child)) return child;
       posinset += 1;
       return (
         <TreeIndexContext.Provider key={child.key ?? index} value={{ posinset, setsize, lastBranchPos }}>
@@ -164,12 +173,16 @@ function useIndexedTreeChildren(children: React.ReactNode) {
  * Keyboard navigation
  *
  * Visible-node order is read from the DOM instead of a JS registry: collapsed groups are not
- * rendered at all, so `querySelectorAll('[role="treeitem"]')` in document order *is* the visible
- * node sequence, and ancestor/descendant lookups are one `closest()` call. This keeps the traversal
+ * rendered at all, so `querySelectorAll(ITEM_SELECTOR)` in document order *is* the visible node
+ * sequence, and ancestor/descendant lookups are one `closest()` call. This keeps the traversal
  * correct for arbitrary consumer markup between the levels.
  * -----------------------------------------------------------------------------------------------*/
 
-const ITEM_SELECTOR = '[role="treeitem"]';
+// `[data-tree-item-id]` excludes `TreeEmpty` and `TreeLoadMore`: both carry `role="treeitem"` too
+// (so an empty `Tree`/`TreeItemGroup` still satisfies `aria-required-children`), but they are
+// placeholders, not nodes — without this, arrow-key traversal would step onto one and, having no id
+// to focus, stall there instead of moving past it to the next real item.
+const ITEM_SELECTOR = '[role="treeitem"][data-tree-item-id]';
 
 function getVisibleItems(root: HTMLElement | null) {
   if (!root) return [];
@@ -1040,15 +1053,134 @@ function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"
   );
 }
 
+/* -------------------------------------------------------------------------------------------------
+ * TreeEmpty
+ * -----------------------------------------------------------------------------------------------*/
+
+/**
+ * Placeholder row for a `Tree` (no root nodes) or a `TreeItemGroup` (a branch that is loading, came
+ * back empty, or whose fetch failed) with nothing real to show (SW-2542; "Load more" is its sibling
+ * `TreeLoadMore`, and the Storybook docs carry the full placement rationale for both). Renders as a
+ * non-indexed, non-navigable `treeitem` rather than a
+ * plain `<div>`: `role="tree"` and `role="group"` both require treeitem/group children per
+ * WAI-ARIA's `aria-required-children`, so a bare paragraph would leave the container structurally
+ * invalid — and some screen readers skip an invalid container's content entirely — the moment it is
+ * the only child. Excluded from sibling indexing (`useIndexedTreeChildren` opts it out by identity)
+ * and from keyboard traversal (`ITEM_SELECTOR` requires `data-tree-item-id`, which this does not
+ * carry): there is nothing here to navigate to.
+ *
+ * Styled as a leaf row at this depth (read off the ambient `TreeLevelContext`, since this isn't a
+ * `TreeItem` and gets no `level` of its own): the same height, inset, transparent border and
+ * chevron spacer as a leaf `TreeItemLabel`, so the first child passed in lands in the icon column
+ * and the next one in the text column — exactly where the node it stands in for would draw them.
+ * Content is otherwise entirely up to the caller: a muted icon for an empty branch, a
+ * destructive-toned one with "Failed to load" for an error, or a `Skeleton` pair for one still
+ * loading. A skeleton-only placeholder has no text, so give it an
+ * `aria-label` ("Loading Shared") — a `treeitem` needs an accessible name. Deliberately *not*
+ * `aria-disabled`: Chromium's accessibility tree treats that as inherited by descendants (mirrored
+ * by Playwright's actionability checks, which is how this was caught), so it would have made a
+ * nested button unreachable by keyboard and screen readers, not just visually inert. A button inside
+ * it must still stop its click from bubbling: it sits inside the enclosing `TreeItem`, whose click
+ * handler walks up to the nearest treeitem and treats any unclaimed click as that node's
+ * select/toggle.
+ */
+function TreeEmpty({ className, children, style, ...props }: React.ComponentProps<"div">) {
+  const level = React.useContext(TreeLevelContext);
+
+  return (
+    <div
+      {...props}
+      data-slot="tree-empty"
+      role="treeitem"
+      aria-selected="false"
+      tabIndex={-1}
+      // The inset, the transparent border and the spacer below all mirror `TreeItemLabel`: drop any
+      // one of them and the placeholder's icon lands in a sibling's chevron column instead of its
+      // icon column.
+      style={{ paddingInlineStart: `calc(var(--tree-indent) * ${level - 1} + 0.25rem)`, ...style }}
+      className={cn(
+        "text-muted-foreground flex h-7 w-full min-w-0 items-center gap-1.5 rounded-md border border-transparent pr-2 text-left text-sm [&_svg]:size-4 [&_svg]:shrink-0",
+        className,
+      )}
+    >
+      <span data-slot="tree-item-indicator-spacer" aria-hidden="true" className="size-3.5 shrink-0" />
+      {children}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * TreeLoadMore
+ * -----------------------------------------------------------------------------------------------*/
+
+type TreeLoadMoreProps = Omit<React.ComponentProps<"button">, "type"> &
+  VariantProps<typeof treeItemLabelVariants> & {
+    /** Decorative leading icon, in the same column as a leaf `TreeItemLabel`'s `icon`. */
+    icon?: React.ReactNode;
+  };
+
+/**
+ * "Load more" for a paginated branch — SW-2542's placement answer. Append it as the *last* child of
+ * the `TreeItemGroup` (or `Tree`) it pages: a non-indexed `treeitem` like `TreeEmpty` (it never
+ * claims a set slot from the real siblings above it, and arrow keys step past it), wrapping a real
+ * `<button>` that fills the row and stays reachable in ordinary Tab order.
+ *
+ * The button is dressed as a leaf row rather than as a `Button`: same `treeItemLabelVariants` height
+ * and radius, depth-correct inset, chevron spacer and icon column, and the same states — `bg-muted`
+ * on hover, the `border-ring`/`shadow-focus` ring a keyboard-focused node shows, and while pressed
+ * the `bg-accent` a clicked node settles into. Clicks stop here: an unclaimed click would bubble to
+ * the enclosing `TreeItem` and select or collapse the branch being paged.
+ */
+function TreeLoadMore({ className, children = "Load more", icon, size, style, onClick, ...props }: TreeLoadMoreProps) {
+  const level = React.useContext(TreeLevelContext);
+
+  return (
+    <div data-slot="tree-load-more" role="treeitem" aria-selected="false" className="flex w-full">
+      <button
+        {...props}
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick?.(event);
+        }}
+        style={{ paddingInlineStart: `calc(var(--tree-indent) * ${level - 1} + 0.25rem)`, ...style }}
+        className={cn(
+          treeItemLabelVariants({ size }),
+          "text-muted-foreground border border-transparent outline-none",
+          "hover:bg-muted hover:text-foreground",
+          "focus-visible:border-ring focus-visible:shadow-focus",
+          "active:bg-accent active:text-accent-foreground",
+          className,
+        )}
+      >
+        <span data-slot="tree-item-indicator-spacer" aria-hidden="true" className="size-3.5 shrink-0" />
+        {icon ? (
+          <span
+            data-slot="tree-item-icon"
+            aria-hidden="true"
+            className="flex size-4 shrink-0 items-center justify-center [&_svg]:size-4 [&_svg]:shrink-0"
+          >
+            {icon}
+          </span>
+        ) : null}
+        <span className="min-w-0 flex-1 truncate">{children}</span>
+      </button>
+    </div>
+  );
+}
+
 export {
   Tree,
+  TreeEmpty,
   TreeItem,
   TreeItemGroup,
   TreeItemLabel,
+  TreeLoadMore,
   treeItemLabelVariants,
   useTreeItem,
   type TreeGuides,
   type TreeItemLabelProps,
   type TreeItemProps,
+  type TreeLoadMoreProps,
   type TreeProps,
 };

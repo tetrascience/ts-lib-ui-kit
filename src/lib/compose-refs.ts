@@ -7,13 +7,6 @@ function setRef<T>(ref: PossibleRef<T>, node: T | null) {
   else if (ref) (ref as React.RefObject<T | null>).current = node
 }
 
-/** One ref callback that writes the node to every ref given. */
-export function composeRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
-  return (node) => {
-    for (const ref of refs) setRef(ref, node)
-  }
-}
-
 /**
  * Attach a component's own ref and a consumer's `ref` to the same element.
  *

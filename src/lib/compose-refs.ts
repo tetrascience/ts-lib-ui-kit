@@ -2,9 +2,28 @@ import * as React from "react"
 
 type PossibleRef<T> = React.Ref<T> | undefined
 
-function setRef<T>(ref: PossibleRef<T>, node: T | null) {
-  if (typeof ref === "function") ref(node)
-  else if (ref) (ref as React.RefObject<T | null>).current = node
+/** Writes `node` to a ref, returning a callback ref's cleanup if it gave one (React 19). */
+function setRef<T>(ref: PossibleRef<T>, node: T | null): void | (() => void) {
+  if (typeof ref === "function") return ref(node)
+  if (ref) (ref as React.RefObject<T | null>).current = node
+}
+
+/** One ref callback that writes the node to every ref given. */
+function composeRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
+  return (node) => {
+    const cleanups = refs.map((ref) => setRef(ref, node))
+    // Return a cleanup only when some ref gave one. React 19 then calls the cleanup
+    // on detach instead of calling this callback with null, so a callback ref that
+    // returns a cleanup never sees null. React 18 ignores the return value and
+    // calls with null, which writes null to every ref as before.
+    if (!cleanups.some((cleanup) => typeof cleanup === "function")) return
+    return () => {
+      cleanups.forEach((cleanup, i) => {
+        if (typeof cleanup === "function") cleanup()
+        else setRef(refs[i], null)
+      })
+    }
+  }
 }
 
 /**
@@ -20,13 +39,10 @@ function setRef<T>(ref: PossibleRef<T>, node: T | null) {
  *   return <div ref={useComposedRefs(treeRef, ref)} {...props} />
  * }
  *
- * The returned callback is stable across renders and always writes to the
- * refs passed on the latest render.
+ * The callback changes whenever either ref changes, so React detaches the old
+ * refs and attaches the new ones (a swapped or conditional consumer ref works).
+ * Callback refs that return a cleanup, a React 19 feature, get it called.
  */
-export function useComposedRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
-  const latest = React.useRef(refs)
-  latest.current = refs
-  return React.useCallback((node: T | null) => {
-    for (const ref of latest.current) setRef(ref, node)
-  }, [])
+export function useComposedRefs<T>(own: PossibleRef<T>, consumer: PossibleRef<T>): React.RefCallback<T> {
+  return React.useMemo(() => composeRefs(own, consumer), [own, consumer])
 }

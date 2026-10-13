@@ -1,11 +1,13 @@
 import * as React from "react"
 import { act } from "react"
 import { createRoot } from "react-dom/client"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { useComposedRefs } from "../compose-refs"
 
 ;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true
+
+const IS_REACT_18 = React.version.startsWith("18.")
 
 let container: HTMLDivElement
 let root: ReturnType<typeof createRoot>
@@ -36,7 +38,8 @@ describe("useComposedRefs", () => {
   it("writes the node to both an object ref and a callback ref, and clears them on unmount", () => {
     const internal = React.createRef<HTMLDivElement>()
     const seen: Array<HTMLDivElement | null> = []
-    act(() => root.render(<Box internal={internal} consumer={(node) => void seen.push(node)} />))
+    const consumer = (node: HTMLDivElement | null) => void seen.push(node)
+    act(() => root.render(<Box internal={internal} consumer={consumer} />))
     expect(internal.current).toBe(box())
     expect(seen.at(-1)).toBe(box())
 
@@ -51,26 +54,50 @@ describe("useComposedRefs", () => {
     expect(internal.current).toBe(box())
   })
 
-  it("keeps one stable callback and writes to the refs passed on the latest render", () => {
+  it("moves the node to a swapped consumer ref while the element stays mounted", () => {
     const internal = React.createRef<HTMLDivElement>()
     const first = React.createRef<HTMLDivElement>()
     const second = React.createRef<HTMLDivElement>()
-    const callbacks: Array<React.RefCallback<HTMLDivElement>> = []
-    function Probe({ consumer }: { consumer: React.Ref<HTMLDivElement> }) {
-      const composed = useComposedRefs(internal, consumer)
-      callbacks.push(composed)
-      return <div data-testid="box" ref={composed} />
-    }
-    act(() => root.render(<Probe consumer={first} />))
-    act(() => root.render(<Probe consumer={second} />))
-    expect(callbacks[0]).toBe(callbacks.at(-1))
-    expect(first.current).toBe(box())
+    act(() => root.render(<Box internal={internal} consumer={first} />))
+    const node = box()
+    expect(first.current).toBe(node)
 
-    // The element stays mounted, so React does not call the stable callback again.
-    // The next attach (here, unmount) goes to the refs from the latest render.
+    act(() => root.render(<Box internal={internal} consumer={second} />))
+    expect(box()).toBe(node)
+    expect(first.current).toBeNull()
+    expect(second.current).toBe(node)
+    expect(internal.current).toBe(node)
+
     act(() => root.render(<span />))
+    expect(second.current).toBeNull()
     expect(internal.current).toBeNull()
-    // The detach went to the latest refs, so the earlier consumer ref was never cleared.
-    expect(first.current).toBeInstanceOf(HTMLDivElement)
+  })
+
+  it("clears a consumer ref that is removed while the element stays mounted", () => {
+    const internal = React.createRef<HTMLDivElement>()
+    const conditional = React.createRef<HTMLDivElement>()
+    act(() => root.render(<Box internal={internal} consumer={conditional} />))
+    expect(conditional.current).toBe(box())
+
+    act(() => root.render(<Box internal={internal} />))
+    expect(conditional.current).toBeNull()
+    expect(internal.current).toBe(box())
+  })
+
+  it.runIf(!IS_REACT_18)("runs a React 19 callback ref's cleanup instead of calling it with null", () => {
+    const internal = React.createRef<HTMLDivElement>()
+    const cleanup = vi.fn()
+    const consumer = vi.fn((node: HTMLDivElement | null) => {
+      if (node === null) throw new Error("a cleanup-returning ref must not be called with null")
+      return cleanup
+    })
+    act(() => root.render(<Box internal={internal} consumer={consumer} />))
+    expect(consumer).toHaveBeenCalledWith(box())
+
+    act(() => root.render(<span />))
+    expect(cleanup).toHaveBeenCalledOnce()
+    expect(consumer).toHaveBeenCalledTimes(1)
+    // The ref without a cleanup is still cleared on the cleanup path.
+    expect(internal.current).toBeNull()
   })
 })

@@ -21,9 +21,13 @@ afterEach(() => {
   container.remove()
 })
 
-/** A component that needs its own ref and also accepts a consumer's. */
-function Box({ ref, internal }: { ref?: React.Ref<HTMLDivElement>; internal: React.Ref<HTMLDivElement> }) {
-  return <div data-testid="box" ref={useComposedRefs(internal, ref)} />
+/**
+ * A component that needs its own ref and also accepts a consumer's. The consumer ref
+ * travels as an ordinary prop: React 18 strips a `ref` prop from plain function
+ * components, and this tests the hook, not React's ref delivery.
+ */
+function Box({ consumer, internal }: { consumer?: React.Ref<HTMLDivElement>; internal: React.Ref<HTMLDivElement> }) {
+  return <div data-testid="box" ref={useComposedRefs(internal, consumer)} />
 }
 
 const box = () => container.querySelector('[data-testid="box"]')
@@ -32,7 +36,7 @@ describe("useComposedRefs", () => {
   it("writes the node to both an object ref and a callback ref, and clears them on unmount", () => {
     const internal = React.createRef<HTMLDivElement>()
     const seen: Array<HTMLDivElement | null> = []
-    act(() => root.render(<Box internal={internal} ref={(node) => void seen.push(node)} />))
+    act(() => root.render(<Box internal={internal} consumer={(node) => void seen.push(node)} />))
     expect(internal.current).toBe(box())
     expect(seen.at(-1)).toBe(box())
 

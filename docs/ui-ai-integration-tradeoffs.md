@@ -56,12 +56,18 @@ primary target before comparing tools.
 2. **Custom docs MCP** (what we built in SW-1730) — small serverless function
    over a generated catalog; tailored, no extra SaaS.
 
-**B. Runtime / end-user-facing (generative UI)** 3. **Vercel AI SDK generative UI** (`streamUI` / RSC, or tool→component mapping
-with the `ai` package) — model output mapped to React components. 4. **Hosted generative-UI services** (e.g. Thesys C1, Tambo, similar) — managed
-model→UI rendering. 5. **Homegrown registry** — our own component registry + per-component JSON
-schema + a render + validation layer, fed by the same `components.json`.
+**B. Runtime / end-user-facing (generative UI)**
 
-**C. Orchestration (orthogonal — likely used _with_ A or B, not instead of)** 6. Agent frameworks (LangGraph, Mastra, OpenAI Agents SDK).
+3. **Vercel AI SDK generative UI** (`streamUI` / RSC, or tool→component mapping
+   with the `ai` package) — model output mapped to React components.
+4. **Hosted generative-UI services** (e.g. Thesys C1, Tambo, similar) — managed
+   model→UI rendering.
+5. **Homegrown registry** — our own component registry + per-component JSON
+   schema + a render + validation layer, fed by the same `components.json`.
+
+**C. Orchestration (orthogonal — likely used _with_ A or B, not instead of)**
+
+6. Agent frameworks (LangGraph, Mastra, OpenAI Agents SDK).
 
 ## Evaluation axes (standard design-doc criteria)
 

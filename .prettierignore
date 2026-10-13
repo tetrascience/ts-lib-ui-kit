@@ -5,4 +5,4 @@ storybook-static
 *.lock
 
 .claude
-coverage
+.agents

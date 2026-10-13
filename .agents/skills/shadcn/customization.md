@@ -104,11 +104,12 @@ module.exports = {
     extend: {
       colors: {
         warning: "oklch(var(--warning) / <alpha-value>)",
-        "warning-foreground": "oklch(var(--warning-foreground) / <alpha-value>)",
+        "warning-foreground":
+          "oklch(var(--warning-foreground) / <alpha-value>)",
       },
     },
   },
-};
+}
 ```
 
 ```tsx
@@ -133,9 +134,7 @@ Prefer these approaches in order:
 ### 1. Built-in variants
 
 ```tsx
-<Button variant="outline" size="sm">
-  Click
-</Button>
+<Button variant="outline" size="sm">Click</Button>
 ```
 
 ### 2. Tailwind classes via `className`
@@ -173,7 +172,7 @@ export function ConfirmDialog({ title, description, onConfirm, children }) {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }
 ```
 

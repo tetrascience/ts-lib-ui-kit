@@ -61,4 +61,5 @@ jobs:
         run: yarn run test:all:coverage
 
       - name: Coverage
-        uses: tetrascience/ts-ci-cd-lib/coverage-check@main
+        # TEMP (SW-2733): testing tetrascience/ts-ci-cd-lib#41 — revert to @main once it merges.
+        uses: tetrascience/ts-ci-cd-lib/coverage-check@443080bcc5de0c99ecbbdf21dd918248abc3f078 # SW-2733-coverage-check-changed-lines

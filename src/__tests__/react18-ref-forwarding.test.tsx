@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client"
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
 import * as kit from "@/index"
+import { isWithRefComponent } from "@/lib/react18-compat"
 
 /*
  * UXT-77 runtime guard. `scripts/build/audit-react18-compat.ts` proves statically
@@ -19,8 +20,6 @@ import * as kit from "@/index"
 
 ;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true
 
-const FORWARD_REF = Symbol.for("react.forward_ref")
-const MEMO = Symbol.for("react.memo")
 const MIN_SWEPT = 100
 
 /**
@@ -33,13 +32,9 @@ const RENDER_PROPS: Record<string, Record<string, unknown>> = {
   Confirmation: { approval: { id: "ref-sweep" }, state: "approval-requested" },
 }
 
-type ExoticLike = { $$typeof?: symbol; displayName?: string; type?: ExoticLike }
-
-function isWithRefComponent(value: unknown): value is React.ComponentType<{ ref?: React.Ref<Element> }> {
-  if (!value || (typeof value !== "object" && typeof value !== "function")) return false
-  const exotic = value as ExoticLike
-  const inner = exotic.$$typeof === MEMO ? exotic.type : exotic
-  return inner?.$$typeof === FORWARD_REF && typeof inner.displayName === "string"
+/** A component the sweep can render with a ref: anything withRef returned. */
+function isRefComponent(value: unknown): value is React.ComponentType<{ ref?: React.Ref<Element> }> {
+  return isWithRefComponent(value)
 }
 
 class Boundary extends React.Component<{ children: React.ReactNode; onError: () => void }, { failed: boolean }> {
@@ -81,7 +76,7 @@ function captureRefWarnings() {
 }
 
 describe("every withRef export forwards its ref to a DOM node", () => {
-  const exports = Object.entries(kit).filter(([, value]) => isWithRefComponent(value)) as Array<
+  const exports = Object.entries(kit).filter(([, value]) => isRefComponent(value)) as Array<
     [string, React.ComponentType<{ ref?: React.Ref<Element> }>]
   >
   // Rendering a part without its parent throws by design; keep that noise out of the log

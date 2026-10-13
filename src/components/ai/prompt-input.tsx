@@ -70,6 +70,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useComposedRefs } from "@/lib/compose-refs";
 import { inertProp, withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
@@ -531,6 +532,7 @@ const PromptInput = ({
   onError,
   onSubmit,
   children,
+  ref,
   ...props
 }: PromptInputProps) => {
   // Try to use a provider controller if present
@@ -540,6 +542,8 @@ const PromptInput = ({
   // Refs
   const inputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
+  // Drag-and-drop listeners attach through formRef; a consumer ref must not replace it.
+  const composedFormRef = useComposedRefs(formRef, ref);
 
   // ----- Local attachments (only used when no provider)
   const [items, setItems] = useState<(FileUIPart & { id: string })[]>([]);
@@ -917,7 +921,7 @@ const PromptInput = ({
       <form
         className={cn("w-full", className)}
         onSubmit={handleSubmit}
-        ref={formRef}
+        ref={composedFormRef}
         {...props}
       >
         <InputGroup className="border-border overflow-hidden has-[[data-slot=input-group-control]:focus-visible]:ring-0">{children}</InputGroup>

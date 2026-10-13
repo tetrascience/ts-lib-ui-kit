@@ -513,18 +513,8 @@ function DataAppShellSecondaryNav({
   );
 }
 
+/** React 18 wrapper for {@link DataAppShellSecondaryNav}; see its documentation. */
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-/**
- * The Data App Shell's secondary (per-page/step) nav — one `steps` model
- * rendered on either axis via `orientation`:
- *
- * - **vertical** — collapsible left panel; collapses to an icon-only rail
- *   with tooltips and a ▸ expand toggle
- * - **horizontal** — wizard/stepper row above the main content
- *
- * Step status (`done` / `active` / `todo`) is derived linearly from
- * `activeKey`, or set explicitly per step. Supports one level of nesting.
- */
 const DataAppShellSecondaryNavWithRef = withRef("DataAppShellSecondaryNav", DataAppShellSecondaryNav);
 
 export {

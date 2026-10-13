@@ -23,9 +23,19 @@
  *                          file as `X`, the plain component. Render `XWithRef`: refs can
  *                          reach a child implicitly (an `asChild` parent, a props spread,
  *                          Radix Presence), so every in-file use goes through the wrapper.
- * - "identity-unwrapped":  `element.type === X` (or `!==`) against a wrapped component.
- *                          Consumers render the wrapper, so it never matches; use
- *                          `isElementOfType(element, X)`.
+ * - "plain-reference":     the plain component is used as a value anywhere other than
+ *                          its `withRef` call, `isElementOfType`, a `displayName`
+ *                          assignment or a type position. Consumers hold the wrapper,
+ *                          so `child.type === X`, `switch (child.type) { case X: }`,
+ *                          `[X, Y].includes(child.type)` and `Object.is(child.type, X)`
+ *                          all silently stop matching. Use `isElementOfType(child, X)`.
+ * - "ref-clobbered":       an element sets `ref={internal}` and also spreads props that
+ *                          carry `ref`. Whichever comes last wins, so either the
+ *                          component's own ref or the consumer's is lost. Destructure
+ *                          `ref` and pass `useComposedRefs(internal, ref)`.
+ * - "missing-marker":      the wrapper's statement is not directly preceded by
+ *                          `// React 18 compatibility: …`, so removing React 18 by
+ *                          searching for the marker would miss it.
  * - "direct-forward-ref":  `React.forwardRef` used directly. Fix: use `withRef`, so
  *                          the React 18 layer stays separable. `FORWARD_REF_ALLOWED`
  *                          lists the components that predate this rule.
@@ -58,7 +68,9 @@ export type ViolationKind =
   | "wrapper-name"
   | "exported-unwrapped"
   | "same-file-unwrapped"
-  | "identity-unwrapped"
+  | "plain-reference"
+  | "ref-clobbered"
+  | "missing-marker"
   | "direct-forward-ref"
   | "boolean-inert"
   | "dom-props-without-ref"
@@ -89,6 +101,9 @@ export const REF_EXCEPTIONS: Readonly<Record<string, string>> = {
  * already forward refs on React 18 and 19, so there is nothing to separate out.
  */
 export const FORWARD_REF_ALLOWED: ReadonlySet<string> = new Set(["TetraScienceIcon", "TetraMoleculeIcon"]);
+
+/** The comment that must sit directly above every wrapper, so React 18 can be removed by search. */
+export const REACT18_MARKER = "// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.";
 
 /** A DOM-only handler: present on every `HTMLAttributes`, absent from data-style props. */
 const DOM_PROP_PROBE = "onPointerDown";
@@ -198,22 +213,22 @@ function reportDomPropsWithoutRef(node: Node, name: string, excepted: string[], 
   );
 }
 
-export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditResult {
-  const result: AuditResult = { wrapped: [], excepted: [], violations: [] };
-  const file = path.relative(root, sourceFile.getFilePath());
-  const report: Reporter = (node, name, kind, detail) =>
-    result.violations.push({ file, line: node.getStartLineNumber(), name, kind, detail });
-  // A React 19 declaration wrapped by withRef is checked at its withRef call.
-  const targets = withRefTargets(sourceFile);
-  const exportedLocals = new Set(
-    [...sourceFile.getExportedDeclarations().values()].flat().map((d) =>
-      Node.isFunctionDeclaration(d) || Node.isVariableDeclaration(d) ? d.getName() : undefined),
-  );
-  /** Plain components in this file whose props accept ref: wrapped targets and internal ones. */
-  const refComponents = new Set(targets);
-  const wrapHint = (name: string) =>
-    `props accept \`ref\`; add const ${name}WithRef = withRef("${name}", ${name}) and export { ${name}WithRef as ${name} }`;
+/** Shared state for the per-file rules. */
+interface FileContext {
+  sourceFile: SourceFile;
+  file: string;
+  result: AuditResult;
+  report: Reporter;
+  /** Plain components a `withRef` call in this file wraps. */
+  targets: Set<string>;
+  exportedLocals: Set<string | undefined>;
+  /** Plain components in this file whose props accept ref: targets plus internal ones. */
+  refComponents: Set<string>;
+  wrapHint: (name: string) => string;
+}
 
+/** Wrapping, naming, markers and DOM props, per top-level component. */
+function checkDeclarations({ sourceFile, file, result, report, targets, exportedLocals, refComponents, wrapHint }: FileContext) {
   for (const statement of sourceFile.getStatements()) {
     if (Node.isFunctionDeclaration(statement)) {
       const name = statement.getName();
@@ -243,6 +258,9 @@ export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditR
         }
         case "withRef": {
           const component = classified.displayName ?? name;
+          const leading = statement.getLeadingCommentRanges().map((c) => c.getText().trim());
+          if (leading.at(-1) !== REACT18_MARKER)
+            report(declaration, name, "missing-marker", `put "${REACT18_MARKER}" on the line directly above the ${name} wrapper`);
           result.wrapped.push(`${file}:${component}`);
           // withRef keeps the render function's own props type, so wrapping a component
           // typed HTMLAttributes<T> still leaves `ref` out of its public props.
@@ -262,7 +280,10 @@ export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditR
       }
     }
   }
+}
 
+/** A wrapped component reaches consumers only through its wrapper. */
+function checkExports({ sourceFile, report, targets }: FileContext) {
   // A wrapped component must reach consumers only through its wrapper.
   for (const [exportedName, declarations] of sourceFile.getExportedDeclarations()) {
     for (const exported of declarations) {
@@ -271,7 +292,10 @@ export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditR
         report(exported, exportedName, "exported-unwrapped", `${localName} is exported without its wrapper; export { ${localName}WithRef as ${exportedName} } instead`);
     }
   }
+}
 
+/** Every in-file JSX use of a ref-accepting component renders its wrapper. */
+function checkSameFileJsx({ sourceFile, report, targets, refComponents }: FileContext) {
   // Inside the file, X is the plain component, so every JSX use renders XWithRef.
   // "Only where a ref reaches it" is not checkable: libraries hand refs to children
   // implicitly (Radix Presence inside a Portal clones its child with one).
@@ -281,23 +305,96 @@ export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditR
     const addWrapper = targets.has(tag) ? "" : `, adding const ${tag}WithRef = withRef("${tag}", ${tag})`;
     report(element, tag, "same-file-unwrapped", `inside this file ${tag} is the plain component, which drops refs on React 18; render <${tag}WithRef>${addWrapper}`);
   }
+}
 
-  // `child.type === X` never matches the wrapper consumers actually render.
-  for (const binary of sourceFile.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
-    const op = binary.getOperatorToken().getKind();
-    if (op !== SyntaxKind.EqualsEqualsEqualsToken && op !== SyntaxKind.ExclamationEqualsEqualsToken && op !== SyntaxKind.EqualsEqualsToken && op !== SyntaxKind.ExclamationEqualsToken) continue;
-    const [left, right] = [binary.getLeft(), binary.getRight()];
-    const component = [left, right].find((side) => Node.isIdentifier(side) && targets.has(side.getText()));
-    const other = component === left ? right : left;
-    if (!component || !(Node.isPropertyAccessExpression(other) && other.getName() === "type")) continue;
-    report(binary, component.getText(), "identity-unwrapped", `${binary.getText()} never matches the exported wrapper; use isElementOfType(${other.getExpression().getText()}, ${component.getText()})`);
+/** No value use of a wrapped plain component (identity checks in any form). */
+function checkPlainReferences({ sourceFile, report, targets }: FileContext) {
+  // Consumers hold the wrapper, so any value use of the plain component (identity
+  // checks in every form: ===, switch/case, .includes(), Object.is) silently stops
+  // matching. Allowed: its own declaration, withRef's argument, isElementOfType's
+  // component argument, displayName assignments, JSX tags (checked above) and types.
+  // Resolve by symbol, not text: `Toggle` in `import { Toggle as TogglePrimitive }` or
+  // `Primitive.CollapsibleTrigger` shares a name with a target but is a different thing.
+  const targetDeclarations = new Map<string, Node>();
+  for (const statement of sourceFile.getStatements()) {
+    if (Node.isFunctionDeclaration(statement) && statement.getName() && targets.has(statement.getName()!)) targetDeclarations.set(statement.getName()!, statement);
+    if (Node.isVariableStatement(statement))
+      for (const d of statement.getDeclarations()) if (targets.has(d.getName())) targetDeclarations.set(d.getName(), d);
   }
+  for (const identifier of sourceFile.getDescendantsOfKind(SyntaxKind.Identifier)) {
+    const name = identifier.getText();
+    const declaration = targetDeclarations.get(name);
+    if (!declaration) continue;
+    if (!(identifier.getSymbol()?.getDeclarations() ?? []).includes(declaration)) continue;
+    const parent = identifier.getParent();
+    if (!parent) continue;
+    // Declarations and export specifiers (exported-unwrapped covers the latter).
+    if ((Node.isFunctionDeclaration(parent) || Node.isVariableDeclaration(parent)) && parent.getNameNode() === identifier) continue;
+    if (Node.isExportSpecifier(parent)) continue;
+    // JSX tags are the same-file rule's job.
+    if (Node.isJsxOpeningElement(parent) || Node.isJsxSelfClosingElement(parent) || Node.isJsxClosingElement(parent)) continue;
+    // Doc comments: {@link X} pointers on the wrappers.
+    if (identifier.getFirstAncestor((a) => Node.isJSDoc(a))) continue;
+    // Type positions: ComponentProps<typeof X>, X in a type annotation.
+    if (identifier.getFirstAncestor((a) => Node.isTypeNode(a) && !Node.isExpressionWithTypeArguments(a))) continue;
+    // withRef("X", X) / withRef("X", X.type), isElementOfType(child, X), X.displayName = …
+    const call = parent.getParentIfKind(SyntaxKind.CallExpression) ?? (Node.isCallExpression(parent) ? parent : undefined);
+    const callee = Node.isCallExpression(parent) ? calleeName(parent) : call ? calleeName(call) : undefined;
+    if (Node.isCallExpression(parent) && (callee === "withRef" || callee === "isElementOfType")) continue;
+    if (Node.isPropertyAccessExpression(parent) && parent.getExpression() === identifier) {
+      const member = parent.getName();
+      if (member === "displayName") continue;
+      if (member === "type" && call && calleeName(call) === "withRef") continue;
+    }
+    report(identifier, name, "plain-reference", `${name} is used as a value here, but consumers hold ${name}WithRef; compare elements with isElementOfType(child, ${name}) or use ${name}WithRef`);
+  }
+}
 
+/** An element's own ref and a ref-carrying spread must not collide. */
+function checkRefClobbering({ sourceFile, report }: FileContext) {
+  // ref={internal} next to a spread that carries the consumer's ref: one of them is lost.
+  for (const element of [...sourceFile.getDescendantsOfKind(SyntaxKind.JsxOpeningElement), ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement)]) {
+    const attributes = element.getAttributes();
+    const explicit = attributes.find((a) => Node.isJsxAttribute(a) && a.getNameNode().getText() === "ref");
+    if (!explicit) continue;
+    const spread = attributes.find((a) => Node.isJsxSpreadAttribute(a) && typeHas(a.getExpression().getType(), "ref"));
+    if (!spread || !Node.isJsxSpreadAttribute(spread)) continue;
+    const lost = explicit.getStart() < spread.getStart() ? "the component's own ref" : "the consumer's ref";
+    report(element, element.getTagNameNode().getText(), "ref-clobbered", `${explicit.getText()} and {...${spread.getExpression().getText()}} both set ref, so ${lost} is lost; destructure ref and pass useComposedRefs(...)`);
+  }
+}
+
+/** No boolean inert: React 18 drops it. */
+function checkInert({ sourceFile, report }: FileContext) {
   for (const attribute of sourceFile.getDescendantsOfKind(SyntaxKind.JsxAttribute)) {
     if (attribute.getNameNode().getText() !== "inert") continue;
     report(attribute, "inert", "boolean-inert", "React 18 drops a boolean inert; spread {...inertProp(value)} instead");
   }
+}
 
+export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditResult {
+  const result: AuditResult = { wrapped: [], excepted: [], violations: [] };
+  const file = path.relative(root, sourceFile.getFilePath());
+  const report: Reporter = (node, name, kind, detail) =>
+    result.violations.push({ file, line: node.getStartLineNumber(), name, kind, detail });
+  // A React 19 declaration wrapped by withRef is checked at its withRef call.
+  const targets = withRefTargets(sourceFile);
+  const exportedLocals = new Set(
+    [...sourceFile.getExportedDeclarations().values()].flat().map((d) =>
+      Node.isFunctionDeclaration(d) || Node.isVariableDeclaration(d) ? d.getName() : undefined),
+  );
+  /** Plain components in this file whose props accept ref: wrapped targets and internal ones. */
+  const refComponents = new Set(targets);
+  const wrapHint = (name: string) =>
+    `props accept \`ref\`; add const ${name}WithRef = withRef("${name}", ${name}) and export { ${name}WithRef as ${name} }`;
+  const context: FileContext = { sourceFile, file, result, report, targets, exportedLocals, refComponents, wrapHint };
+  // Order matters: checkDeclarations adds internal ref-accepting components to refComponents.
+  checkDeclarations(context);
+  checkExports(context);
+  checkSameFileJsx(context);
+  checkPlainReferences(context);
+  checkRefClobbering(context);
+  checkInert(context);
   return result;
 }
 

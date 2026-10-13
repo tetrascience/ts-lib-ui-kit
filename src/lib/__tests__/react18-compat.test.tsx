@@ -8,8 +8,7 @@ import { inertProp, isElementOfType, withRef } from "../react18-compat"
 ;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true
 
 const FORWARD_REF = Symbol.for("react.forward_ref")
-const REACT_MAJOR = Number.parseInt(React.version, 10)
-const REACT_19 = 19
+const IS_REACT_18 = React.version.startsWith("18.")
 
 let container: HTMLDivElement
 let root: ReturnType<typeof createRoot>
@@ -30,10 +29,18 @@ const Box = withRef("Box", function Box({ className, ...props }: React.Component
 })
 
 describe("withRef", () => {
-  it("returns a forwardRef component carrying the given display name", () => {
+  it.runIf(IS_REACT_18)("on React 18, returns a forwardRef component carrying the given display name", () => {
     const component = Box as unknown as { $$typeof: symbol; displayName?: string }
     expect(component.$$typeof).toBe(FORWARD_REF)
     expect(component.displayName).toBe("Box")
+  })
+
+  it.runIf(!IS_REACT_18)("on React 19, returns the component itself, named", () => {
+    function Plain(props: React.ComponentProps<"div">) {
+      return <div {...props} />
+    }
+    expect(withRef("Plain", Plain)).toBe(Plain)
+    expect((Plain as { displayName?: string }).displayName).toBe("Plain")
   })
 
   it("attaches an object ref to the rendered element", () => {
@@ -112,6 +119,38 @@ describe("withRef", () => {
   })
 })
 
+describe("withRef's React 18 wrapper", () => {
+  afterEach(() => {
+    vi.doUnmock("react")
+    vi.resetModules()
+  })
+
+  it("forwards refs, names the wrapper, matches by identity and exposes late docgen", async () => {
+    vi.resetModules()
+    vi.doMock("react", async (importOriginal) => ({ ...(await importOriginal<typeof import("react")>()), version: "18.3.1" }))
+    const compat = await import("../react18-compat")
+    function Panel(props: React.ComponentProps<"section">) {
+      return <section data-testid="panel" {...props} />
+    }
+    const PanelWithRef = compat.withRef("Panel", Panel)
+    const exotic = PanelWithRef as unknown as { $$typeof: symbol; displayName?: string; __docgenInfo?: unknown }
+    expect(exotic.$$typeof).toBe(FORWARD_REF)
+    expect(PanelWithRef).not.toBe(Panel)
+    expect(exotic.displayName).toBe("Panel")
+    expect(compat.isWithRefComponent(PanelWithRef)).toBe(true)
+    expect(compat.isElementOfType(<PanelWithRef />, Panel)).toBe(true)
+    expect(compat.isElementOfType(<Panel />, Panel)).toBe(true)
+
+    const ref = React.createRef<HTMLElement>()
+    act(() => root.render(<PanelWithRef ref={ref} />))
+    expect(ref.current).toBe(container.querySelector('[data-testid="panel"]'))
+
+    const info = { description: "Panel docs" }
+    Object.assign(Panel, { __docgenInfo: info })
+    expect(exotic.__docgenInfo).toBe(info)
+  })
+})
+
 describe("isElementOfType", () => {
   function Plain(props: React.ComponentProps<"hr">) {
     return <hr {...props} />
@@ -131,7 +170,7 @@ describe("isElementOfType", () => {
 })
 
 describe("inertProp", () => {
-  it.runIf(REACT_MAJOR >= REACT_19)("passes the boolean through on React 19", () => {
+  it.runIf(!IS_REACT_18)("passes the boolean through on React 19", () => {
     expect(inertProp(true)).toEqual({ inert: true })
     expect(inertProp(false)).toEqual({ inert: false })
     expect(inertProp()).toEqual({ inert: undefined })
@@ -148,6 +187,17 @@ describe("inertProp", () => {
     afterEach(() => {
       vi.doUnmock("react")
       vi.resetModules()
+    })
+
+    it("treats a React 19 prerelease as React 19, not as major 0", async () => {
+      vi.resetModules()
+      vi.doMock("react", async (importOriginal) => ({ ...(await importOriginal<typeof import("react")>()), version: "0.0.0-experimental-abc123" }))
+      const compat = await import("../react18-compat")
+      expect(compat.inertProp(true)).toEqual({ inert: true })
+      function Plain(props: React.ComponentProps<"div">) {
+        return <div {...props} />
+      }
+      expect(compat.withRef("Plain", Plain)).toBe(Plain)
     })
 
     it("uses an empty string for present and omits the attribute for absent", async () => {

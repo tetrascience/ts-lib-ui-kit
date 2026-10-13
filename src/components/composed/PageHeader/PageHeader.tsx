@@ -156,32 +156,8 @@ function PageHeader({
   );
 }
 
+/** React 18 wrapper for {@link PageHeader}; see its documentation. */
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-/**
- * Page title, optional subtitle, and an optional trailing action slot.
- *
- * The structure is the point. The subtitle renders *outside* the title row, so
- * the row's `items-baseline` aligns `trailing` against the **title's** baseline
- * rather than centring it against the whole title+subtitle block — which is
- * what happens if you put all three in one flex container, and is the most
- * common way this layout is got wrong.
- *
- * ```tsx
- * <PageHeader
- *   title="Peptide mapping"
- *   subtitle="14 samples across 3 plates · last run 12 minutes ago"
- *   trailing={<Button size="sm">Configure</Button>}
- * />
- * ```
- *
- * The root is a `div`, not a `header`: a `header` that happens to be a direct
- * child of `body` becomes a `banner` landmark, and a page can only have one of
- * those — the shell's top bar already claims it.
- *
- * Not for component-internal titles. Card headers, shell chrome, and empty-state
- * copy own their own scale; replacing it with `PageHeader` gives the kit two
- * sources of truth for one set of pixels.
- */
 const PageHeaderWithRef = withRef("PageHeader", PageHeader);
 
 export { PageHeaderWithRef as PageHeader };

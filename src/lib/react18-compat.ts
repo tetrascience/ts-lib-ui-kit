@@ -28,11 +28,13 @@
  */
 import * as React from "react"
 
-/** React major version, read once at module load. */
-const REACT_MAJOR = Number.parseInt(React.version, 10)
-
-/** First major that treats `inert` as a boolean attribute. */
-const INERT_BOOLEAN_SINCE_MAJOR = 19
+/**
+ * Whether the running React is 18, read once at module load. Checked as "18.x"
+ * rather than "major below 19" because React 19 prereleases report versions such
+ * as `0.0.0-experimental-…`, which would otherwise parse as 0 and get the React
+ * 18 behaviour. The peer range is `^18.2.0 || ^19.0.0`, so nothing older runs.
+ */
+const IS_REACT_18 = React.version.startsWith("18.")
 
 /**
  * Any function component, including generic ones and `React.FC` (whose React 19
@@ -42,6 +44,9 @@ type FunctionComponentLike = (props: never) => React.ReactNode | Promise<React.R
 
 /** Each wrapper's plain component, for `isElementOfType`. */
 const plainComponentOf = new WeakMap<object, unknown>()
+
+/** Every component `withRef` returned, for tests that sweep the exports. */
+const withRefResults = new WeakSet<object>()
 
 /** What Storybook's react-docgen plugin attaches to a component definition. */
 type WithDocgen = { displayName?: string; __docgenInfo?: unknown }
@@ -59,8 +64,12 @@ type WithDocgen = { displayName?: string; __docgenInfo?: unknown }
  * exactly as React 19 delivers it. On React 19 `forwardRef` hands the ref over
  * separately and strips it from props, so this re-attaches it in both cases.
  *
- * The return type is the React 19 component's own type, so the export's public
- * props (including generics) are identical to it.
+ * On React 19 and later it returns `render` itself: React 19 already delivers
+ * `ref` as a prop, so there is nothing to forward and no extra component layer.
+ * The declared return type is therefore exact on React 19. On React 18 the
+ * runtime value is a `forwardRef` object typed as `render`'s function type: it
+ * renders identically from JSX, but it is not callable as a plain function, so
+ * kit code never calls components directly (`items.map(Item)`, `Badge({…})`).
  *
  * @param displayName The component name. Passed as a literal because the library
  *   build mangles function names. It is also set on the React 19 component, so
@@ -78,18 +87,23 @@ type WithDocgen = { displayName?: string; __docgenInfo?: unknown }
  * export { ButtonWithRef as Button }
  */
 export function withRef<C extends FunctionComponentLike>(displayName: string, render: C): C {
+  const react19 = render as unknown as WithDocgen
+  react19.displayName ??= displayName
+  if (!IS_REACT_18) {
+    withRefResults.add(render)
+    return render
+  }
   const renderWithProps = render as unknown as (props: object) => React.ReactNode
   const Forwarded = React.forwardRef<unknown, object>(function ForwardRefRender(props, ref) {
     return renderWithProps(ref == null ? props : { ...props, ref })
   })
   Forwarded.displayName = displayName
   plainComponentOf.set(Forwarded, render)
-  const react19 = render as unknown as WithDocgen
-  react19.displayName ??= displayName
+  withRefResults.add(Forwarded)
   // Storybook's react-docgen plugin attaches the props table and description to
   // the declaration it parsed, the plain component, and appends that assignment
-  // at the end of the module, after this call. Read it lazily so the exported component, which
-  // is what stories pass as `component`, shows the same docs.
+  // at the end of the module, after this call. Read it lazily so the exported
+  // component, which is what stories pass as `component`, shows the same docs.
   Object.defineProperty(Forwarded, "__docgenInfo", {
     configurable: true,
     get: () => react19.__docgenInfo,
@@ -99,13 +113,18 @@ export function withRef<C extends FunctionComponentLike>(displayName: string, re
   return Forwarded as unknown as C
 }
 
+/** Whether `component` came from `withRef`. For tests that sweep the kit's exports. */
+export function isWithRefComponent(component: unknown): boolean {
+  return (typeof component === "object" || typeof component === "function") && component !== null && withRefResults.has(component)
+}
+
 /**
  * Whether `element` renders `component`, directly or through its `withRef` wrapper.
  *
  * Replaces `element.type === component` for components that compare their
  * children by identity (`Tree` skipping its placeholders, `ItemGroup` skipping
- * separators). Consumers render the exported wrapper, whose `type` is the
- * forwardRef object rather than the plain component.
+ * separators). On React 18 consumers render the exported wrapper, whose `type`
+ * is the forwardRef object rather than the plain component.
  *
  * @example
  * React.Children.map(children, (child) =>
@@ -128,7 +147,7 @@ export function isElementOfType(element: React.ReactElement, component: unknown)
  * <nav {...inertProp(isCollapsed)} />
  */
 export function inertProp(inert: boolean | undefined): Pick<React.HTMLAttributes<HTMLElement>, "inert"> {
-  if (REACT_MAJOR >= INERT_BOOLEAN_SINCE_MAJOR) return { inert }
+  if (!IS_REACT_18) return { inert }
   // React 18's attribute path needs a string; the type is React 19's boolean.
   return { inert: (inert ? "" : undefined) as unknown as boolean | undefined }
 }

@@ -5,6 +5,7 @@ import * as React from "react";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
 
+import { useComposedRefs } from "@/lib/compose-refs";
 import { isElementOfType, withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
@@ -429,9 +430,12 @@ function Tree({
   guides = "hover",
   onFocus,
   onBlur,
+  ref,
   ...props
 }: TreeProps) {
   const treeRef = React.useRef<HTMLDivElement>(null);
+  // The tree needs its root for keyboard navigation; a consumer ref must not replace it.
+  const rootRef = useComposedRefs(treeRef, ref);
 
   const [expandedIds, setExpandedIds] = useControllableState<Set<string>>({
     prop: expandedIdsProp,
@@ -598,7 +602,7 @@ function Tree({
       <TreeTypeaheadContext.Provider value={typeaheadMatch}>
         <TreeLevelContext.Provider value={1}>
           <div
-            ref={treeRef}
+            ref={rootRef}
             data-slot="tree"
             data-guides={guides}
             role="tree"

@@ -224,27 +224,7 @@ const TDPLink: React.FC<TDPLinkProps> = ({
   );
 };
 
+/** React 18 wrapper for {@link TDPLink}; see its documentation. */
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-/**
- * A link component that navigates to TDP pages.
- *
- * Renders a standard `<a>` tag with the correct href for right-click
- * "Open in new tab" support, accessibility, and SEO.
- *
- * Must be used inside a `<TdpNavigationProvider>`.
- *
- * @example
- * ```tsx
- * import { TDPLink, tdpPaths } from '@tetrascience-npm/tetrascience-react-ui';
- *
- * <TDPLink path={tdpPaths.fileDetails("abc-123")}>
- *   View File Details
- * </TDPLink>
- *
- * <TDPLink path="/search?q=test" navigationOptions={{ newTab: false }}>
- *   Search in TDP (same tab)
- * </TDPLink>
- * ```
- */
 const TDPLinkWithRef = withRef('TDPLink', TDPLink);
 export { TDPLinkWithRef as TDPLink };

@@ -121,22 +121,8 @@ function DataAppShellRightPanelTrigger({
   );
 }
 
+/** React 18 wrapper for {@link DataAppShellRightPanelTrigger}; see its documentation. */
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-/**
- * Trigger for a `DataAppShellRightPanel`, in two variants:
- *
- * - `fab` (default) — floating action button; what the panel auto-renders
- *   while closed. Positioned `absolute` — place inside a `relative` container
- *   (normally the shell's content area).
- * - `icon` — ghost icon button sized like the shell's top-bar actions. Place
- *   it in the shell's `headerActions`, set `showTrigger={false}` on the panel,
- *   and pass the same ref to the panel's `triggerRef` so focus returns here
- *   when the panel closes.
- *
- * With `asChild` the trigger renders no element of its own and instead merges
- * onto its child — any clickable element (a link, menu item, custom button)
- * can act as the trigger.
- */
 const DataAppShellRightPanelTriggerWithRef = withRef("DataAppShellRightPanelTrigger", DataAppShellRightPanelTrigger);
 
 // =============================================================================
@@ -515,30 +501,8 @@ function DataAppShellRightPanel({
   );
 }
 
+/** React 18 wrapper for {@link DataAppShellRightPanel}; see its documentation. */
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-/**
- * Right-hand panel for the Data App Shell (SW-2117), in two variants:
- *
- * - `docked` (default) — rendered in normal flow as a flex sibling of the main
- *   content, so opening/resizing pushes main narrower. Width is drag-resizable
- *   and persisted per `id`.
- * - `overlay` — reuses the design-system `Sheet` (`side="right"`): slides in
- *   over the content with a scrim and does not reflow main.
- *
- * In both variants a floating FAB trigger re-opens the panel while it is
- * closed, and the body is a plain slot — a chat, history list, inspector, ….
- * Pass it to the shell's `rightPanel` slot, or place it after the main content
- * inside a `relative` flex row:
- *
- * ```tsx
- * <div className="relative flex flex-1 min-h-0">
- *   <main className="flex-1 min-w-0">…</main>
- *   <DataAppShellRightPanel id="chat" open={open} onOpenChange={setOpen} title="Chat">
- *     …
- *   </DataAppShellRightPanel>
- * </div>
- * ```
- */
 const DataAppShellRightPanelWithRef = withRef("DataAppShellRightPanel", DataAppShellRightPanel);
 
 export { DataAppShellRightPanelWithRef as DataAppShellRightPanel, DataAppShellRightPanelTriggerWithRef as DataAppShellRightPanelTrigger, dataAppShellRightPanelTriggerVariants };

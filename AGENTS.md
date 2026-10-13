@@ -212,9 +212,13 @@ everything it needs lives in [`src/lib/react18-compat.ts`](./src/lib/react18-com
   ```
 
   Pass the name as a **string literal**, because the build mangles function
-  names; `withRef` also sets it as the plain component's `displayName`. The
-  wrapper's type is the plain component's own type, so public props and generics
-  are unchanged. For a memoised component, keep `memo` on the plain one and
+  names; `withRef` also sets it as the plain component's `displayName`. On
+  React 19 `withRef` returns the plain component itself, so there is no extra
+  layer and the declared type is exact. On React 18 it returns a `forwardRef`
+  object typed as the plain function: it renders identically from JSX but is not
+  callable, so never call a kit component as a function (`items.map(Item)`,
+  `Badge({…})`). The version check is "is React 18", not "major below 19",
+  because React 19 prereleases report `0.0.0-experimental-…`. For a memoised component, keep `memo` on the plain one and
   re-memoise the wrapper: `memo(withRef("X", X.type))`. Never call
   `React.forwardRef` directly; `TetraScienceIcon` and `TetraMoleculeIcon`
   predate this and are allowlisted.
@@ -223,20 +227,29 @@ everything it needs lives in [`src/lib/react18-compat.ts`](./src/lib/react18-com
   a props spread, or Radix `Presence` inside a `Portal`, which is how
   `<DialogOverlay />` inside `DialogContent` broke on React 18. A component that is
   never exported and never rendered in its own file needs no wrapper.
-- **Compare children with `isElementOfType(child, X)`, never `child.type === X`.**
-  Consumers render the wrapper, so an identity check against the plain component
-  silently stops matching: `Tree` counted its "Load more" row, `ItemGroup` gave
+- **Compare children with `isElementOfType(child, X)`, never by identity.**
+  On React 18 consumers render the wrapper, so `child.type === X`, `switch`/`case`,
+  `[X, Y].includes(child.type)` and `Object.is` against the plain component all
+  silently stop matching: `Tree` counted its "Load more" row, `ItemGroup` gave
   separators `role="listitem"`, and `DataTable` lost its toolbar slot.
   `isElementOfType` matches the plain component and its wrapper.
-- **JSDoc stays on the component and is copied onto the wrapper.** Storybook's
-  react-docgen reads the description from the plain declaration, and `withRef`
-  exposes that docgen info on the wrapper, so prop tables and descriptions are
-  unchanged. Editors read hover docs from the wrapper's `const`, so a documented
-  component carries the JSDoc in both places until React 18 is dropped.
+- **JSDoc stays on the component; the wrapper gets a one-line pointer.**
+  Storybook's react-docgen reads the description from the plain declaration, and
+  `withRef` exposes that docgen info on the wrapper, so prop tables and
+  descriptions are unchanged. Editors read hover docs from the wrapper's `const`,
+  so a documented component's wrapper carries
+  `/** React 18 wrapper for {@link X}; see its documentation. */` above the
+  marker, rather than a copy that would drift.
+- **An element with its own `ref` and a `{...props}` spread composes them.**
+  `<div ref={internalRef} {...props}>` lets a consumer's `ref` replace the internal
+  one, and the reverse order drops the consumer's. Destructure `ref` and pass
+  `useComposedRefs(internalRef, ref)` from `src/lib/compose-refs.ts`. This broke
+  `Tree`'s keyboard navigation and `PromptInput`'s drop handling whenever a
+  consumer passed a ref, on React 19 as well as 18.
 - **Deprecating and dropping React 18.** To deprecate: also export the plain
   components (for example from a React 19 entry point) and mark the `WithRef`
-  exports deprecated. To drop: delete each wrapper line, its comment and copied
-  JSDoc, export `X` itself, delete `src/lib/react18-compat.ts`, swap
+  exports deprecated. To drop: delete each wrapper line, its marker and JSDoc
+  pointer, export `X` itself, delete `src/lib/react18-compat.ts`, swap
   `{...inertProp(v)}` back to `inert={v}`, and `isElementOfType(c, X)` back to
   `c.type === X`.
 - **`{...inertProp(value)}`** instead of `inert={value}`: React 18 drops a boolean
@@ -256,9 +269,11 @@ a step of CI's build job; its unit test only runs the rules against fixtures)
 uses the type checker to fail on an unwrapped component
 whose props accept `ref`, a component whose props carry DOM attributes but no
 `ref`, a direct `forwardRef` or a boolean `inert`. It also requires each wrapper
-to be named `XWithRef` around `X` itself, fails if a wrapped component is exported
-unwrapped, and fails if a ref-accepting component is rendered as the plain `X`
-inside its own file, or compared with `.type === X`. The only components allowed
+to be named `XWithRef` around `X` itself with the marker comment directly above
+it, fails if a wrapped component is exported unwrapped, fails if a ref-accepting
+component is rendered as the plain `X` inside its own file or used there as a
+value (any identity check), and fails if an element's own `ref` and a
+ref-carrying spread collide. The only components allowed
 DOM props without a `ref` are listed, with the reason,
 in its `REF_EXCEPTIONS`; that list and the "Refs" section of README.md (every
 component without a ref, grouped by why) must change together, and a stale entry

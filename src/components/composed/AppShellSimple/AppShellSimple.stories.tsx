@@ -478,7 +478,7 @@ export const Controlled: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5746" },
   },
 };
 
@@ -578,7 +578,7 @@ export const WithBuildInfo: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5724" },
   },
 };
 
@@ -620,6 +620,6 @@ export const WithBuildInfoLongContent: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5725" },
   },
 };

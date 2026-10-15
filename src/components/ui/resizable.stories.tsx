@@ -485,7 +485,7 @@ export const CollapsedPanel: Story = {
 
 export const CollapsedLeadingPanel: Story = {
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5742" },
   },
   render: ({ withHandle, ...args }) => (
     <div className="h-[320px] w-[760px] overflow-hidden rounded-xl border bg-muted/40">

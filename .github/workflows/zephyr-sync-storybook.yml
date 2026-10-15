@@ -60,6 +60,28 @@ jobs:
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
         run: npx tsx scripts/zephyr/sync-storybook-zephyr.ts
 
+      # The sync takes minutes. A push to the PR branch in the meantime makes
+      # the commit below non-fast-forward, and the generated IDs are lost with
+      # the run. Replay them onto the branch's current head instead; a real
+      # conflict (the same story line edited meanwhile) still fails loudly.
+      - name: Rebase generated IDs onto the latest branch head
+        if: github.event_name == 'pull_request'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          git diff --binary -- 'src/*.stories.tsx' > "$RUNNER_TEMP/zephyr-ids.patch"
+          git fetch --no-tags origin "$HEAD_REF"
+          if [ "$(git rev-parse HEAD)" = "$(git rev-parse FETCH_HEAD)" ]; then
+            echo "Branch did not move during the sync."
+            exit 0
+          fi
+          echo "Branch moved during the sync; replaying the generated IDs onto $(git rev-parse --short FETCH_HEAD)."
+          git reset --hard FETCH_HEAD
+          if [ -s "$RUNNER_TEMP/zephyr-ids.patch" ]; then
+            git apply --3way "$RUNNER_TEMP/zephyr-ids.patch"
+          fi
+
       - name: Commit updated story files
         uses: stefanzweifel/git-auto-commit-action@8621497c8c39c72f3e2a999a26b4ca1b5058a842 # v5.1.0
         with:

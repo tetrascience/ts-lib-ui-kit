@@ -5,13 +5,15 @@
  * border can also be dragged to snap between the same three states.
  */
 import { Database, FlaskConical, LayoutDashboard, LineChart, Settings, Table2 } from "lucide-react";
-import { expect, fn, userEvent, within } from "storybook/test";
+import * as React from "react";
+import { expect, fireEvent, fn, userEvent, within } from "storybook/test";
 
-import { AppShellSimple, type AppShellSimpleCrumb } from "./AppShellSimple";
+import { AppShellSimple, type AppShellSimpleCrumb, type AppShellSimpleNavState } from "./AppShellSimple";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { type NavGroup } from "@/components/composed/DataAppShell";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // -- Sample data for the demo -------------------------------------------------
@@ -196,7 +198,8 @@ export const Hidden: Story = {
  * shell stayed stuck in resize mode — a later plain hover would resize the nav.
  */
 export const DragToResize: Story = {
-  play: async ({ canvasElement, step }) => {
+  args: { onNavChange: fn() },
+  play: async ({ args, canvasElement, step }) => {
     const canvas = within(canvasElement);
     const shell = canvasElement.querySelector('[data-slot="app-shell-simple"]');
     if (!(shell instanceof HTMLElement)) {
@@ -220,6 +223,13 @@ export const DragToResize: Story = {
       );
     const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
+    await step("a move with no press on the handle does not resize", async () => {
+      drag("pointermove", 4, 1);
+      await settle();
+      expect(shell).toHaveAttribute("data-nav-state", "sidebar");
+      expect(args.onNavChange).not.toHaveBeenCalled();
+    });
+
     await step("dragging the border left past the rail hides the nav", async () => {
       drag("pointerdown", 220, 1);
       await settle();
@@ -227,7 +237,13 @@ export const DragToResize: Story = {
       await settle();
       drag("pointermove", 4, 1);
       await settle();
+      // Further moves inside the same snap zone are not new changes.
+      drag("pointermove", 2, 1);
+      await settle();
       expect(shell).toHaveAttribute("data-nav-state", "hidden");
+      expect(args.onNavChange).toHaveBeenCalledTimes(2);
+      expect(args.onNavChange).toHaveBeenNthCalledWith(1, "rail");
+      expect(args.onNavChange).toHaveBeenNthCalledWith(2, "hidden");
     });
 
     await step("the handle survives the hidden state, so the release lands", async () => {
@@ -259,6 +275,23 @@ export const DragToResize: Story = {
       expect(shell).toHaveAttribute("data-nav-state", "rail");
       expect(shell).not.toHaveClass("cursor-col-resize");
     });
+
+    // The browser ends a drag without a `pointerup` when it cancels the
+    // pointer (touch scroll, a modal) or the capture is taken away. Both must
+    // clear `resizing`, or the next pressed move would still snap the nav.
+    for (const interrupt of ["pointercancel", "lostpointercapture"]) {
+      await step(`${interrupt} ends the drag`, async () => {
+        drag("pointerdown", 60, 1);
+        await settle();
+        expect(shell).toHaveClass("cursor-col-resize");
+        drag(interrupt, 60, 0);
+        await settle();
+        expect(shell).not.toHaveClass("cursor-col-resize");
+        drag("pointermove", 200, 1);
+        await settle();
+        expect(shell).toHaveAttribute("data-nav-state", "rail");
+      });
+    }
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5673" },
@@ -270,7 +303,8 @@ export const DragToResize: Story = {
  * `Home` opens to labels and `End` hides the nav.
  */
 export const ResizeWithKeyboard: Story = {
-  play: async ({ canvasElement, step }) => {
+  args: { onNavChange: fn() },
+  play: async ({ args, canvasElement, step }) => {
     const canvas = within(canvasElement);
     const shell = canvasElement.querySelector('[data-slot="app-shell-simple"]');
     if (!(shell instanceof HTMLElement)) {
@@ -281,6 +315,21 @@ export const ResizeWithKeyboard: Story = {
     await step("the splitter is focusable", async () => {
       handle.focus();
       expect(handle).toHaveFocus();
+    });
+
+    await step("keys that can't widen past labels change nothing", async () => {
+      await userEvent.keyboard("{ArrowRight}{Home}");
+      expect(shell).toHaveAttribute("data-nav-state", "sidebar");
+      expect(args.onNavChange).not.toHaveBeenCalled();
+    });
+
+    await step("keys the splitter doesn't handle keep their default action", async () => {
+      // fireEvent returns false when a handler called preventDefault.
+      expect(fireEvent.keyDown(handle, { key: "ArrowUp" })).toBe(true);
+      expect(fireEvent.keyDown(handle, { key: "PageDown" })).toBe(true);
+      expect(shell).toHaveAttribute("data-nav-state", "sidebar");
+      // Handled keys do block it (no page scroll), even when clamped.
+      expect(fireEvent.keyDown(handle, { key: "Home" })).toBe(false);
     });
 
     await step("ArrowLeft narrows to the icon rail", async () => {
@@ -303,6 +352,13 @@ export const ResizeWithKeyboard: Story = {
       expect(shell).toHaveAttribute("data-nav-state", "sidebar");
       await userEvent.keyboard("{End}");
       expect(shell).toHaveAttribute("data-nav-state", "hidden");
+    });
+
+    await step("onNavChange fires once per actual change, never for clamped keys", async () => {
+      await userEvent.keyboard("{ArrowLeft}{End}");
+      expect(args.onNavChange).toHaveBeenCalledTimes(5);
+      expect(args.onNavChange).toHaveBeenNthCalledWith(4, "sidebar");
+      expect(args.onNavChange).toHaveBeenLastCalledWith("hidden");
     });
   },
   parameters: {
@@ -343,12 +399,81 @@ export const NoSideNav: Story = {
   },
 };
 
+const NAV_STATES: AppShellSimpleNavState[] = ["sidebar", "rail", "hidden"];
+// Unlabelled first group only — keeps the pre-existing section-label contrast
+// finding (see BreadcrumbNavigation) out of this story.
+const CONTROLLED_NAV: NavGroup[] = [NAV_GROUPS[0]];
+
+/**
+ * Controlled: the parent owns `nav` and applies each `onNavChange`. The shell
+ * renders only what it is passed, so the parent can also move the nav itself
+ * (here, from the buttons in the content) — the toggle then picks up from the
+ * new state rather than where its own ping-pong left off.
+ */
+export const Controlled: Story = {
+  render: function ControlledShell() {
+    const [nav, setNav] = React.useState<AppShellSimpleNavState>("sidebar");
+    return (
+      <AppShellSimple navGroups={CONTROLLED_NAV} breadcrumbs={BREADCRUMBS} nav={nav} onNavChange={setNav}>
+        <div className="space-y-3 p-6">
+          <p className="text-sm text-muted-foreground">
+            Parent state: <code data-testid="parent-nav">{nav}</code>
+          </p>
+          <div className="flex gap-2">
+            {NAV_STATES.map((state) => (
+              <Button key={state} size="sm" variant="outline" onClick={() => setNav(state)}>
+                Set {state}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </AppShellSimple>
+    );
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const shell = canvasElement.querySelector('[data-slot="app-shell-simple"]');
+    const toggle = canvasElement.querySelector('[data-slot="app-shell-simple-nav-toggle"]');
+    if (!(shell instanceof HTMLElement) || !(toggle instanceof HTMLElement)) {
+      throw new Error("shell or nav toggle not found");
+    }
+    const parentNav = canvas.getByTestId("parent-nav");
+
+    await step("the toggle reports each change and the parent's state drives the shell", async () => {
+      await userEvent.click(toggle);
+      expect(parentNav).toHaveTextContent("rail");
+      expect(shell).toHaveAttribute("data-nav-state", "rail");
+      await userEvent.click(toggle);
+      expect(parentNav).toHaveTextContent("hidden");
+      expect(shell).toHaveAttribute("data-nav-state", "hidden");
+    });
+
+    await step("a parent-driven move resets the toggle's direction", async () => {
+      // Arriving at rail by the toggle from hidden, the next click would
+      // expand to labels; arriving by the parent, it continues to hidden.
+      await userEvent.click(canvas.getByRole("button", { name: "Set rail" }));
+      expect(shell).toHaveAttribute("data-nav-state", "rail");
+      expect(toggle).toHaveAttribute("aria-label", "Hide navigation");
+    });
+
+    await step("the parent can restore the sidebar directly", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Set sidebar" }));
+      expect(shell).toHaveAttribute("data-nav-state", "sidebar");
+      expect(toggle).toHaveAttribute("aria-label", "Collapse navigation to icons");
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5746" },
+  },
+};
+
 const onCrumbClick = fn();
 
 /**
  * Breadcrumb crumbs support three forms: a link (`href`), a button (`onClick`
- * with no `href`), and plain static text (neither). The last crumb is always
- * the current page.
+ * with no `href`), and plain static text (neither). A crumb with both is a
+ * link — `href` wins. The last crumb is always the current page, even if it
+ * has an `href`.
  */
 export const BreadcrumbNavigation: Story = {
   args: {
@@ -363,7 +488,12 @@ export const BreadcrumbNavigation: Story = {
         ],
       },
     ],
-    breadcrumbs: [{ label: "Home", onClick: onCrumbClick }, { label: "Section" }, { label: "Run 4821 overview" }],
+    breadcrumbs: [
+      { label: "Home", onClick: onCrumbClick },
+      { label: "Projects", href: "#projects", onClick: onCrumbClick },
+      { label: "Section" },
+      { label: "Run 4821 overview", href: "#run-4821" },
+    ],
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
@@ -380,9 +510,17 @@ export const BreadcrumbNavigation: Story = {
       expect(canvas.getByText("Section")).toBeInTheDocument();
     });
 
-    await step("the last crumb is the current page", async () => {
+    await step("a crumb with both href and onClick renders as a link", async () => {
+      expect(canvas.getByRole("link", { name: "Projects" })).toHaveAttribute("href", "#projects");
+      expect(canvas.queryByRole("button", { name: "Projects" })).toBeNull();
+    });
+
+    await step("the last crumb is the current page, not a link", async () => {
       const current = canvasElement.querySelector('[aria-current="page"]');
       expect(current).toHaveTextContent("Run 4821 overview");
+      // BreadcrumbPage is `role="link" aria-disabled` by design, so check that
+      // the crumb's own href never made it onto a real anchor.
+      expect(canvasElement.querySelector('a[href="#run-4821"]')).toBeNull();
     });
   },
   parameters: {
@@ -425,7 +563,7 @@ export const WithBuildInfo: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5724" },
   },
 };
 
@@ -463,6 +601,6 @@ export const WithBuildInfoLongContent: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5725" },
   },
 };

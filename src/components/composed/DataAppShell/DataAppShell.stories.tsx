@@ -1076,7 +1076,7 @@ export const WithBuildInfo: Story = {
     });
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5726" },
     docs: { source: { code: BUILD_INFO_CODE, language: "tsx" } },
   },
 };

@@ -50,7 +50,7 @@ them before upgrading if you embed the kit in a page you don't own, style its re
 - SW-2592 raised surface for DataAppShellRightPanel ([#217](https://github.com/tetrascience/ts-lib-ui-kit/pull/217)) ([8bc0a10](https://github.com/tetrascience/ts-lib-ui-kit/commit/8bc0a10))
 - SW-2596 Stop shipping document-level CSS — layered tokens, namespaced classes, scoped entry ([#219](https://github.com/tetrascience/ts-lib-ui-kit/pull/219)) ([e8ecb51](https://github.com/tetrascience/ts-lib-ui-kit/commit/e8ecb51))
 - **telemetry:** SW-2322 React bindings for product-event telemetry, exported from `./telemetry` ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([6fadd0c](https://github.com/tetrascience/ts-lib-ui-kit/commit/6fadd0c))
-- **telemetry:** SW-2322 carry the artifact kind, defaulting to data-app ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([44b06bc](https://github.com/tetrascience/ts-lib-ui-kit/commit/44b06bc)), closes [ts-lib-request#10](https://github.com/tetrascience/ts-lib-request/issues/10)
+- **telemetry:** SW-2322 carry the artifact kind, defaulting to data-app ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([44b06bc](https://github.com/tetrascience/ts-lib-ui-kit/commit/44b06bc)), closes tetrascience/ts-lib-request#10 (private repository)
 
 ### Bug Fixes
 

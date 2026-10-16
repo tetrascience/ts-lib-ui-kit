@@ -68,3 +68,7 @@ dependency-licenses.csv
 # summaries and internal ticket state, and this repository is public, so they
 # stay local: review them in place, then run the apply script against them.
 artifacts/
+
+# Local worktrees and agent scratch output — never commit
+.worktrees/
+Claude outputs/

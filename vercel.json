@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "yarn build-storybook",
+  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"release-please--branches--main\" ]; then exit 0; fi; if [ \"$VERCEL_GIT_COMMIT_REF\" != \"main\" ] && [ -z \"$VERCEL_GIT_PULL_REQUEST_ID\" ]; then exit 0; else exit 1; fi",
   "outputDirectory": "storybook-static",
   "framework": null,
   "functions": {

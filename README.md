@@ -6,7 +6,7 @@ React component library for building TetraScience applications.
 
 ## Version
 
-v1.0.0
+v1.1.0
 
 This library provides:
 
@@ -26,6 +26,7 @@ This library provides:
 
 | Library version | React | Node.js | TDP (server utilities) |
 | --------------- | ----- | ------- | ---------------------- |
+| v1.1.x          | 19+   | 18+     | v4.x+                  |
 | v1.0.x          | 19+   | 18+     | v4.x+                  |
 | v0.7.x          | 19+   | 18+     | v4.x+                  |
 | v0.6.x          | 19+   | 18+     | v4.x+                  |
@@ -53,23 +54,14 @@ The kit does not install heavy dependencies for you. Add only the ones your app 
 | Any `charts/` component                            | `plotly.js-dist`                                                                                      |
 | `MessageResponse` / `Reasoning` (AI markdown)      | `@streamdown/math`, `@streamdown/mermaid`                                                             |
 | `MoleculeStructure`                                | `@rdkit/rdkit` — **plus a served WASM, [see below](#moleculestructure-requires-a-served-rdkit-wasm)** |
-| **Any import from the package root**               | `@streamdown/math`, `@streamdown/mermaid` — see the caveat below                                      |
 | `/server` Athena / Snowflake / Databricks provider | `@aws-sdk/client-athena` / `snowflake-sdk` / `@databricks/sql`                                        |
 | `./telemetry` (`TelemetryProvider`, …)             | `@tetrascience-npm/request` `>=0.4.0`                                                                 |
 
-> **Root-entry imports pull in the streamdown peers whether or not you use them.**
-> The AI markdown plugins are loaded through a dynamic import, but a dynamic-import target is still
-> part of your bundler's module graph and its _named_ static imports must resolve. With
-> `@streamdown/math` absent, a root-entry build fails even when your only kit import is `AreaPlot`:
->
-> ```
-> dist/components/ai/streamdown-plugins.js (2:9): "math" is not exported by
-> "__vite-optional-peer-dep:@streamdown/math:@tetrascience-npm/tetrascience-react-ui"
-> ```
->
-> Install the two packages, or use [per-component imports](#per-component-imports), which avoid the
-> barrel entirely. This fails at build time, so it can never reach production unnoticed.
-> Tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
+> **Fixed in v1.1.0:** in v1.0.0, any import from the package root required `@streamdown/math` and
+> `@streamdown/mermaid` even if you used no AI component; without them the build failed. They now
+> load through `import()`, so a root-entry build succeeds without them, and markdown renders without
+> math or mermaid. On v1.0.x, install both or use [per-component imports](#per-component-imports)
+> ([SW-2472](https://tetrascience.atlassian.net/browse/SW-2472)).
 
 A missing `plotly.js-dist` behaves differently: it does **not** fail the build under Vite/Rollup — it
 resolves to an empty stub and the chart fails at runtime with a console error from the loader
@@ -124,10 +116,9 @@ The subpath name always matches the component's directory/file under
 [Storybook](https://ts-lib-ui-kit-storybook.vercel.app/) sidebar for the
 exact name.
 
-> **Known gap in v1.0.0:** `./ui/progress` and `./ui/snippet` resolve their _types_ but ship no
-> runtime module, so importing either typechecks cleanly and then fails your build. Neither component
-> is exported from the package root either, so nothing regressed — but the subpath makes them look
-> available. Don't import them.
+> **Fixed in v1.1.0:** in v1.0.0, `./ui/progress` and `./ui/snippet` resolved their _types_ but
+> shipped no runtime module, so importing either typechecked cleanly and then failed the build. Both
+> are now exported from the package root and ship at their subpaths. On v1.0.x, don't import them.
 > Tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
 
 ## Styling & CSS
@@ -678,7 +669,7 @@ Visit <http://localhost:6006>.
 - [Storybook – Live Component Demos](https://ts-lib-ui-kit-storybook.vercel.app/) - Browse all components with interactive examples
 - [NPM Package](https://www.npmjs.com/package/@tetrascience-npm/tetrascience-react-ui) - Installation and version info
 - [Migration Guide](./MIGRATION.md#migrating-from-v07x-to-v100) - Upgrading from v0.7.x to v1.0.0 (chart renames, removed components, optional peers)
-- [Changelog](./CHANGELOG.md) - What changed in each release, including v1.0.0's breaking changes
+- [Changelog](./CHANGELOG.md) - What changed in each release, including v1.0.0's breaking changes and v1.1.0's CSS class renames
 - [Theming Guide](./THEMING.md) - Customise the design system
 - [Contributing](./CONTRIBUTING.md#development-setup) - Clone the repo and run `yarn storybook`
 

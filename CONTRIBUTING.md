@@ -357,13 +357,19 @@ PR. **Do not bump `package.json`'s version, create tags, or edit the release PR 
    `release-please--branches--main`. It bumps `package.json`, adds the new entry to the top of
    `CHANGELOG.md`, and updates the version line in `README.md` and `.release-please-manifest.json`.
    If only non-releasing types have merged (see below), no release PR is opened.
-2. **Review and merge the release PR** like any other PR. CI and the PR title check run on it. It is
-   opened with the `GH_TOKEN` secret, so its author is that token's owner, who cannot approve it.
+2. **Review and merge the release PR.** It is opened with the `GH_TOKEN` secret, so its author is that
+   token's owner, who cannot approve it. The PR title check and Link Check run on it. The expensive
+   checks are skipped on purpose: `CI / build`, the alpha `Publish PR`, and the Vercel preview (and
+   with it Storybook Tests). The PR changes only the version, CHANGELOG and README, and its code is
+   `main`'s, which CI already ran on push. No status check is required on `main`, so the skipped jobs
+   don't block the merge.
 3. **Merging creates the tag and the GitHub release.** The workflow run for that merge tags the merge
    commit `vX.Y.Z` and creates a GitHub release with the same notes. The tag sits on the commit that
    bumped `package.json`, so the tag and the published version always match.
 4. **Approve the publish.** The tag starts `Publish to Public npm` (`publish-public.yml`), which waits
-   at the `PROD` environment until a reviewer approves it on the workflow run's page.
+   at the `PROD` environment until a reviewer approves it on the workflow run's page. **Before
+   approving, check that `CI` passed on the release PR's merge commit on `main`.** That run is the one
+   that builds and tests the exact commit being published, and it starts at the same time as the tag.
 
 Like every merge to `main`, merging the release PR also publishes a `-beta.N` build.
 

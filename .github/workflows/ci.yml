@@ -16,6 +16,14 @@ permissions:
 
 jobs:
   build:
+    # Skipped on the Release Please PR. It changes only the version, CHANGELOG
+    # and README, and its code is main's, which CI already ran on push. CI runs
+    # again on the push to main when it merges. The same-repo check stops a fork
+    # from skipping CI by naming its branch release-please--branches--main.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.head_ref != 'release-please--branches--main' ||
+      github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.59.0-noble

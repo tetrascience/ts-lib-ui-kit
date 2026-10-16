@@ -289,6 +289,9 @@
     "@streamdown/mermaid": {
       "optional": true
     },
+    "@tetrascience-npm/request": {
+      "optional": true
+    },
     "plotly.js-dist": {
       "optional": true
     },

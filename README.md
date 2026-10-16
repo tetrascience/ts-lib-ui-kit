@@ -55,6 +55,7 @@ The kit does not install heavy dependencies for you. Add only the ones your app 
 | `MoleculeStructure`                                | `@rdkit/rdkit` — **plus a served WASM, [see below](#moleculestructure-requires-a-served-rdkit-wasm)** |
 | **Any import from the package root**               | `@streamdown/math`, `@streamdown/mermaid` — see the caveat below                                      |
 | `/server` Athena / Snowflake / Databricks provider | `@aws-sdk/client-athena` / `snowflake-sdk` / `@databricks/sql`                                        |
+| `./telemetry` (`TelemetryProvider`, …)             | `@tetrascience-npm/request` `>=0.4.0`                                                                 |
 
 > **Root-entry imports pull in the streamdown peers whether or not you use them.**
 > The AI markdown plugins are loaded through a dynamic import, but a dynamic-import target is still

@@ -1,3 +1,72 @@
+# [1.1.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v1.0.0...v1.1.0) (2026-10-16)
+
+No breaking API changes, but the first two notes below change what you see without opting in. Read
+them before upgrading if you embed the kit in a page you don't own, style its rendered DOM, or use
+`BarChart`.
+
+### Upgrade notes
+
+- **Kit CSS no longer leaks into the host document.** Tokens and component styles now sit in
+  `@layer ts-ui-kit`, so a host's unlayered `:root` always wins. Chart class names are namespaced:
+  `.divider` → `.histogram-legend-divider`, `.sequence-header` → `.electropherogram-sequence-header`,
+  `@keyframes shimmer` → `ts-shimmer`, and so on. The full map is in
+  [#219](https://github.com/tetrascience/ts-lib-ui-kit/pull/219). Update any CSS you wrote against
+  the old names. Microfrontend remotes and embedded widgets should switch to the new
+  `index.scoped.css` entry (see README › _Embedding in a host page_)
+  ([#219](https://github.com/tetrascience/ts-lib-ui-kit/pull/219)) ([e8ecb51](https://github.com/tetrascience/ts-lib-ui-kit/commit/e8ecb51))
+- **`BarChart` default `barWidth` changed.** It was a fixed 24 x-data units. It is now 0.24 × the
+  smallest gap between x positions, narrowing for four or more grouped series. Charts with x values
+  about 100 apart look the same. Other spacings now get bars sized to their axis. An explicit
+  `barWidth` is unaffected
+  ([#222](https://github.com/tetrascience/ts-lib-ui-kit/pull/222)) ([c69363e](https://github.com/tetrascience/ts-lib-ui-kit/commit/c69363e))
+- **New `./telemetry` entry point** (`TelemetryProvider`, `useTetraEvents`, `TSErrorBoundary`,
+  `installGlobalErrorHandlers`). It adds `@tetrascience-npm/request` `>=0.4.0` as a peer dependency
+  ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193))
+- **v1.0.0 known issues fixed.** `./ui/progress` and `./ui/snippet` now ship a runtime module and
+  are exported from the root ([#198](https://github.com/tetrascience/ts-lib-ui-kit/pull/198)). Root-entry
+  builds no longer fail when `@streamdown/math` / `@streamdown/mermaid` are not installed; markdown
+  renders without math or mermaid instead ([#226](https://github.com/tetrascience/ts-lib-ui-kit/pull/226)).
+
+### Features
+
+- SW-2136 Make PlateMapEditor layout, slots, labels and edit-state composable ([#224](https://github.com/tetrascience/ts-lib-ui-kit/pull/224)) ([ae1b7a5](https://github.com/tetrascience/ts-lib-ui-kit/commit/ae1b7a5))
+- SW-2298 Address visual issues across the Plotly chart components ([#222](https://github.com/tetrascience/ts-lib-ui-kit/pull/222)) ([c69363e](https://github.com/tetrascience/ts-lib-ui-kit/commit/c69363e))
+- SW-2383 build-info footer in the app shells ([#207](https://github.com/tetrascience/ts-lib-ui-kit/pull/207)) ([de99fde](https://github.com/tetrascience/ts-lib-ui-kit/commit/de99fde))
+- SW-2410 add AppShellSimple component ([#194](https://github.com/tetrascience/ts-lib-ui-kit/pull/194)) ([fb59acd](https://github.com/tetrascience/ts-lib-ui-kit/commit/fb59acd))
+- SW-2445 Button/ButtonGroup selected state (aria-pressed) ([#195](https://github.com/tetrascience/ts-lib-ui-kit/pull/195)) ([a77551a](https://github.com/tetrascience/ts-lib-ui-kit/commit/a77551a))
+- SW-2526 Add Text typography primitive with independent as/variant ([#200](https://github.com/tetrascience/ts-lib-ui-kit/pull/200)) ([c2baf18](https://github.com/tetrascience/ts-lib-ui-kit/commit/c2baf18))
+- SW-2540 Add accessible Tree compound component ([#201](https://github.com/tetrascience/ts-lib-ui-kit/pull/201)) ([5191487](https://github.com/tetrascience/ts-lib-ui-kit/commit/5191487))
+- SW-2541 Tree roving tabindex, typeahead, expand-all and focus retention ([#221](https://github.com/tetrascience/ts-lib-ui-kit/pull/221)) ([e712531](https://github.com/tetrascience/ts-lib-ui-kit/commit/e712531))
+- SW-2542 Add empty and error placeholder states to Tree ([#228](https://github.com/tetrascience/ts-lib-ui-kit/pull/228)) ([fa681b4](https://github.com/tetrascience/ts-lib-ui-kit/commit/fa681b4))
+- SW-2547 Export Progress and Snippet from the barrel, fix Progress value forwarding ([#198](https://github.com/tetrascience/ts-lib-ui-kit/pull/198)) ([13a643f](https://github.com/tetrascience/ts-lib-ui-kit/commit/13a643f))
+- SW-2563 unified selected state for Toggle & ToggleGroup ([#196](https://github.com/tetrascience/ts-lib-ui-kit/pull/196)) ([47f203a](https://github.com/tetrascience/ts-lib-ui-kit/commit/47f203a))
+- SW-2570 Add PageHeader component ([#202](https://github.com/tetrascience/ts-lib-ui-kit/pull/202)) ([6ee0196](https://github.com/tetrascience/ts-lib-ui-kit/commit/6ee0196))
+- SW-2588 add xs size to Toggle and ToggleGroup ([#211](https://github.com/tetrascience/ts-lib-ui-kit/pull/211)) ([a45295f](https://github.com/tetrascience/ts-lib-ui-kit/commit/a45295f))
+- SW-2591 add size prop to Checkbox and RadioGroup ([#213](https://github.com/tetrascience/ts-lib-ui-kit/pull/213)) ([7c7c6ef](https://github.com/tetrascience/ts-lib-ui-kit/commit/7c7c6ef))
+- SW-2591 add size prop to Input, Textarea, Select and Combobox ([#212](https://github.com/tetrascience/ts-lib-ui-kit/pull/212)) ([b31ce6b](https://github.com/tetrascience/ts-lib-ui-kit/commit/b31ce6b))
+- SW-2591 add size prop to Switch and Slider ([#214](https://github.com/tetrascience/ts-lib-ui-kit/pull/214)) ([0a1dd36](https://github.com/tetrascience/ts-lib-ui-kit/commit/0a1dd36))
+- SW-2592 differentiate the assistant panel in AssistantLayout ([#216](https://github.com/tetrascience/ts-lib-ui-kit/pull/216)) ([c9f4d2b](https://github.com/tetrascience/ts-lib-ui-kit/commit/c9f4d2b))
+- SW-2592 raised surface for DataAppShellRightPanel ([#217](https://github.com/tetrascience/ts-lib-ui-kit/pull/217)) ([8bc0a10](https://github.com/tetrascience/ts-lib-ui-kit/commit/8bc0a10))
+- SW-2596 Stop shipping document-level CSS — layered tokens, namespaced classes, scoped entry ([#219](https://github.com/tetrascience/ts-lib-ui-kit/pull/219)) ([e8ecb51](https://github.com/tetrascience/ts-lib-ui-kit/commit/e8ecb51))
+- **telemetry:** SW-2322 React bindings for product-event telemetry, exported from `./telemetry` ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([6fadd0c](https://github.com/tetrascience/ts-lib-ui-kit/commit/6fadd0c))
+- **telemetry:** SW-2322 carry the artifact kind, defaulting to data-app ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([44b06bc](https://github.com/tetrascience/ts-lib-ui-kit/commit/44b06bc)), closes [ts-lib-request#10](https://github.com/tetrascience/ts-lib-request/issues/10)
+
+### Bug Fixes
+
+- SW-2007 Load optional streamdown peers with dynamic import ([#226](https://github.com/tetrascience/ts-lib-ui-kit/pull/226)) ([99a52e0](https://github.com/tetrascience/ts-lib-ui-kit/commit/99a52e0))
+- SW-2441 Prevent data table pagination overflow ([#210](https://github.com/tetrascience/ts-lib-ui-kit/pull/210)) ([2f0062e](https://github.com/tetrascience/ts-lib-ui-kit/commit/2f0062e))
+- SW-2443 per-variant disabled treatment for legible contrast ([#209](https://github.com/tetrascience/ts-lib-ui-kit/pull/209)) ([134aad6](https://github.com/tetrascience/ts-lib-ui-kit/commit/134aad6))
+- SW-2528 pad content placed directly in DialogContent ([#205](https://github.com/tetrascience/ts-lib-ui-kit/pull/205)) ([057fd9a](https://github.com/tetrascience/ts-lib-ui-kit/commit/057fd9a))
+- SW-2535 make table action cells reachable on touch ([#218](https://github.com/tetrascience/ts-lib-ui-kit/pull/218)) ([1318f7b](https://github.com/tetrascience/ts-lib-ui-kit/commit/1318f7b))
+- SW-2699 Grant caller permissions for OIDC id-token in publish workflows ([#227](https://github.com/tetrascience/ts-lib-ui-kit/pull/227)) ([44cb39c](https://github.com/tetrascience/ts-lib-ui-kit/commit/44cb39c))
+- **telemetry:** expose `counter` from `useTetraEvents` — the bindings had omitted it ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([eb0134b](https://github.com/tetrascience/ts-lib-ui-kit/commit/eb0134b))
+- **build:** point `./telemetry` types at the declarations that are actually emitted ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([1b5dd5c](https://github.com/tetrascience/ts-lib-ui-kit/commit/1b5dd5c))
+- **ci:** tolerate multi-registry archives for the `@tetrascience-npm` scope ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([9efff76](https://github.com/tetrascience/ts-lib-ui-kit/commit/9efff76))
+- **ci:** use checksumBehavior ignore so --immutable installs succeed ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([132f6ed](https://github.com/tetrascience/ts-lib-ui-kit/commit/132f6ed))
+- **e2e:** bridge the JFrog credential env var name ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([5b4fba6](https://github.com/tetrascience/ts-lib-ui-kit/commit/5b4fba6))
+- **e2e:** import waitForSpanNamed, and typecheck the e2e suite at all ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([beb0e7a](https://github.com/tetrascience/ts-lib-ui-kit/commit/beb0e7a))
+- **e2e:** start the traced span after mount, not in a child effect ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([6d66c94](https://github.com/tetrascience/ts-lib-ui-kit/commit/6d66c94))
+
 # [1.0.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v0.7.0...v1.0.0) (2026-08-07)
 
 First stable major release. See [MIGRATION.md](./MIGRATION.md#migrating-from-v07x-to-v100) for the

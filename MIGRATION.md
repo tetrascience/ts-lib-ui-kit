@@ -174,7 +174,9 @@ chunk). Your numbers will differ with how much of the kit you use.
 ### Known issues in v1.0.0
 
 Found by QE review after the tag was cut, tracked in
-[SW-2472](https://tetrascience.atlassian.net/browse/SW-2472). None block adoption.
+[SW-2472](https://tetrascience.atlassian.net/browse/SW-2472). None block adoption. The first two
+are fixed in v1.1.0 ([#198](https://github.com/tetrascience/ts-lib-ui-kit/pull/198),
+[#226](https://github.com/tetrascience/ts-lib-ui-kit/pull/226)); the workarounds below apply to v1.0.x.
 
 | Issue                                                                                                                                                                                            | Impact                                                                                                                                                       | Workaround                                                                                               |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |

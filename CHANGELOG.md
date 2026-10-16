@@ -60,7 +60,7 @@ them before upgrading if you embed the kit in a page you don't own, style its re
 - SW-2528 pad content placed directly in DialogContent ([#205](https://github.com/tetrascience/ts-lib-ui-kit/pull/205)) ([057fd9a](https://github.com/tetrascience/ts-lib-ui-kit/commit/057fd9a))
 - SW-2535 make table action cells reachable on touch ([#218](https://github.com/tetrascience/ts-lib-ui-kit/pull/218)) ([1318f7b](https://github.com/tetrascience/ts-lib-ui-kit/commit/1318f7b))
 - SW-2699 Grant caller permissions for OIDC id-token in publish workflows ([#227](https://github.com/tetrascience/ts-lib-ui-kit/pull/227)) ([44cb39c](https://github.com/tetrascience/ts-lib-ui-kit/commit/44cb39c))
-- UXT-83 Make @tetrascience-npm/request an optional peer dependency ([#234](https://github.com/tetrascience/ts-lib-ui-kit/pull/234))
+- UXT-243 Make @tetrascience-npm/request an optional peer dependency ([#234](https://github.com/tetrascience/ts-lib-ui-kit/pull/234))
 - **telemetry:** expose `counter` from `useTetraEvents` — the bindings had omitted it ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([eb0134b](https://github.com/tetrascience/ts-lib-ui-kit/commit/eb0134b))
 - **build:** point `./telemetry` types at the declarations that are actually emitted ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([1b5dd5c](https://github.com/tetrascience/ts-lib-ui-kit/commit/1b5dd5c))
 - **ci:** tolerate multi-registry archives for the `@tetrascience-npm` scope ([#193](https://github.com/tetrascience/ts-lib-ui-kit/pull/193)) ([9efff76](https://github.com/tetrascience/ts-lib-ui-kit/commit/9efff76))

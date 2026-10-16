@@ -1,9 +1,13 @@
 import * as React from "react";
-import { flushSync } from "react-dom";
+import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DataAppShellRightPanel, DataAppShellRightPanelTrigger } from "../RightPanel";
+
+// act() rather than flushSync: it flushes effects and every update lane on React 18
+// and 19 alike, so these assertions hold in the React 18 CI job too (UXT-77).
+;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
 // ---------------------------------------------------------------------------
 // Render harness
@@ -19,14 +23,14 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  flushSync(() => root.unmount());
+  act(() => root.unmount());
   container.remove();
   vi.restoreAllMocks();
   window.localStorage.clear();
 });
 
 function render(ui: React.ReactElement) {
-  flushSync(() => root.render(ui));
+  act(() => root.render(ui));
 }
 
 const getPanel = () =>
@@ -41,7 +45,7 @@ function pointerEvent(type: string, init: MouseEventInit) {
 }
 
 function keydown(el: Element, key: string) {
-  flushSync(() => {
+  act(() => {
     el.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
   });
 }
@@ -81,7 +85,7 @@ describe("DataAppShellRightPanel — DragHandle pointer edge cases", () => {
     render(<DataAppShellRightPanel id="p3" open title="Details" defaultWidth={320} />);
     const handle = getHandle()!;
 
-    flushSync(() => {
+    act(() => {
       handle.dispatchEvent(pointerEvent("pointerdown", { button: 2, clientX: 500 }));
       handle.dispatchEvent(pointerEvent("pointermove", { clientX: 400 }));
     });
@@ -95,7 +99,7 @@ describe("DataAppShellRightPanel — DragHandle pointer edge cases", () => {
       throw new DOMException("NotFoundError");
     };
 
-    flushSync(() => {
+    act(() => {
       handle.dispatchEvent(pointerEvent("pointerdown", { button: 0, clientX: 500 }));
       handle.dispatchEvent(pointerEvent("pointermove", { clientX: 450 }));
     });
@@ -110,11 +114,11 @@ describe("DataAppShellRightPanel — DragHandle pointer edge cases", () => {
     const release = vi.fn();
     handle.releasePointerCapture = release;
 
-    // One flushSync per event — the browser renders between pointer events,
+    // One act per event — the browser renders between pointer events,
     // and the commit path reads the width applied by the last render.
-    flushSync(() => handle.dispatchEvent(pointerEvent("pointerdown", { button: 0, clientX: 500 })));
-    flushSync(() => handle.dispatchEvent(pointerEvent("pointermove", { clientX: 460 })));
-    flushSync(() => handle.dispatchEvent(pointerEvent("pointerup", { clientX: 460 })));
+    act(() => handle.dispatchEvent(pointerEvent("pointerdown", { button: 0, clientX: 500 })));
+    act(() => handle.dispatchEvent(pointerEvent("pointermove", { clientX: 460 })));
+    act(() => handle.dispatchEvent(pointerEvent("pointerup", { clientX: 460 })));
 
     expect(release).toHaveBeenCalledOnce();
     expect(getPanel()?.style.width).toBe("360px");
@@ -165,7 +169,7 @@ describe("DataAppShellRightPanelTrigger — asChild", () => {
     expect(link.getAttribute("aria-label")).toBe("Open history");
     expect(link.className).toContain("rounded-lg");
 
-    flushSync(() => link.click());
+    act(() => link.click());
     expect(onOpen).toHaveBeenCalledOnce();
   });
 
@@ -225,7 +229,7 @@ describe("DataAppShellRightPanel — overlay variant", () => {
     );
     const close = document.body.querySelector<HTMLButtonElement>("button[aria-label='Close panel']")!;
     expect(close).not.toBeNull();
-    flushSync(() => close.click());
+    act(() => close.click());
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

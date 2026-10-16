@@ -9,6 +9,7 @@ import * as React from "react";
 
 import type { LucideIcon } from "lucide-react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export type EmptyStateVariant =
@@ -104,4 +105,7 @@ function EmptyState({
   );
 }
 
-export { EmptyState };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const EmptyStateWithRef = withRef("EmptyState", EmptyState);
+
+export { EmptyStateWithRef as EmptyState };

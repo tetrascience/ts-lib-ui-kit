@@ -54,8 +54,59 @@ jobs:
       - name: Type Check
         run: yarn typecheck
 
+      # UXT-77: every component that takes DOM props forwards ref on React 18.
+      # Kept out of the coverage run below: it type-checks the whole component
+      # tree synchronously, which competed with the Storybook browser workers.
+      - name: React 18 compatibility audit
+        run: yarn check:react18-compat
+
       - name: Run Tests with Coverage
         run: yarn run test:all:coverage
 
       - name: Coverage
         uses: tetrascience/ts-ci-cd-lib/coverage-check@main
+  # UXT-77: the TDP platform shell and its Module Federation apps share a React 18
+  # singleton, so the kit's peer range is ^18.2.0 || ^19.0.0. This job reruns the
+  # unit and Storybook interaction suites on React 18. It is where the ref
+  # forwarding tests prove something: on React 19 a dropped ref still works, and
+  # Storybook's console-error check fails on React 18's "Function components
+  # cannot be given refs" warning. 18.3.1 is what ^18.2.0 installs, and the
+  # tests' `act` import from "react" needs 18.3.
+  react-18:
+    name: React 18 compatibility
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.0-noble
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "yarn"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install
+        env:
+          JFROG_ARTIFACTORY_READ_NPM_AUTH: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
+        run: yarn install --immutable
+
+      - name: Swap in React 18
+        # Rewrites package.json and yarn.lock in this throwaway checkout only.
+        env:
+          JFROG_ARTIFACTORY_READ_NPM_AUTH: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
+          YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+        run: |
+          yarn add --dev react@18.3.1 react-dom@18.3.1
+          node -e "const r=require('react/package.json').version, d=require('react-dom/package.json').version; if (!r.startsWith('18.') || !d.startsWith('18.')) { console.error('Expected React 18, got react ' + r + ', react-dom ' + d); process.exit(1) } console.log('react ' + r + ', react-dom ' + d)"
+
+      - name: Unit tests (React 18)
+        run: yarn test
+
+      - name: Storybook interaction tests (React 18)
+        run: yarn test:storybook

@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
@@ -41,6 +42,9 @@ function Alert({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertWithRef = withRef("Alert", Alert)
+
 function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -53,6 +57,9 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertTitleWithRef = withRef("AlertTitle", AlertTitle)
 
 function AlertDescription({
   className,
@@ -70,6 +77,9 @@ function AlertDescription({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertDescriptionWithRef = withRef("AlertDescription", AlertDescription)
+
 function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -80,4 +90,7 @@ function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-export { Alert, AlertTitle, AlertDescription, AlertAction }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AlertActionWithRef = withRef("AlertAction", AlertAction)
+
+export { AlertWithRef as Alert, AlertTitleWithRef as AlertTitle, AlertDescriptionWithRef as AlertDescription, AlertActionWithRef as AlertAction }

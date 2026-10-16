@@ -4,6 +4,7 @@ import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 import { Select as SelectPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
@@ -26,11 +27,17 @@ function SelectGroup({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectGroupWithRef = withRef("SelectGroup", SelectGroup)
+
 function SelectValue({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Value>) {
   return <SelectPrimitive.Value data-slot="select-value" {...props} />
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectValueWithRef = withRef("SelectValue", SelectValue)
 
 function SelectTrigger({
   className,
@@ -60,6 +67,9 @@ function SelectTrigger({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectTriggerWithRef = withRef("SelectTrigger", SelectTrigger)
+
 function SelectContent({
   className,
   children,
@@ -77,7 +87,7 @@ function SelectContent({
         align={align}
         {...props}
       >
-        <SelectScrollUpButton />
+        <SelectScrollUpButtonWithRef />
         <SelectPrimitive.Viewport
           data-position={position}
           className={cn(
@@ -87,11 +97,14 @@ function SelectContent({
         >
           {children}
         </SelectPrimitive.Viewport>
-        <SelectScrollDownButton />
+        <SelectScrollDownButtonWithRef />
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectContentWithRef = withRef("SelectContent", SelectContent)
 
 function SelectLabel({
   className,
@@ -105,6 +118,9 @@ function SelectLabel({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectLabelWithRef = withRef("SelectLabel", SelectLabel)
 
 function SelectItem({
   className,
@@ -130,6 +146,9 @@ function SelectItem({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectItemWithRef = withRef("SelectItem", SelectItem)
+
 function SelectSeparator({
   className,
   ...props
@@ -142,6 +161,9 @@ function SelectSeparator({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectSeparatorWithRef = withRef("SelectSeparator", SelectSeparator)
 
 function SelectScrollUpButton({
   className,
@@ -162,6 +184,9 @@ function SelectScrollUpButton({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectScrollUpButtonWithRef = withRef("SelectScrollUpButton", SelectScrollUpButton)
+
 function SelectScrollDownButton({
   className,
   ...props
@@ -181,15 +206,18 @@ function SelectScrollDownButton({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SelectScrollDownButtonWithRef = withRef("SelectScrollDownButton", SelectScrollDownButton)
+
 export {
   Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
+  SelectContentWithRef as SelectContent,
+  SelectGroupWithRef as SelectGroup,
+  SelectItemWithRef as SelectItem,
+  SelectLabelWithRef as SelectLabel,
+  SelectScrollDownButtonWithRef as SelectScrollDownButton,
+  SelectScrollUpButtonWithRef as SelectScrollUpButton,
+  SelectSeparatorWithRef as SelectSeparator,
+  SelectTriggerWithRef as SelectTrigger,
+  SelectValueWithRef as SelectValue,
 }

@@ -6,6 +6,7 @@ import { useRDKit } from "./use-rdkit"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { useIsDark } from "@/hooks/use-is-dark"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 export interface MoleculeStructureProps
@@ -65,7 +66,7 @@ function makeResponsive(svg: string): string {
  * <MoleculeStructure smiles="CC(=O)Oc1ccccc1C(=O)O" className="size-40" />
  * ```
  */
-export function MoleculeStructure({
+function MoleculeStructure({
   smiles,
   label,
   dark,
@@ -157,3 +158,8 @@ export function MoleculeStructure({
     </div>
   )
 }
+
+/** React 18 wrapper for {@link MoleculeStructure}; see its documentation. */
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MoleculeStructureWithRef = withRef("MoleculeStructure", MoleculeStructure)
+export { MoleculeStructureWithRef as MoleculeStructure }

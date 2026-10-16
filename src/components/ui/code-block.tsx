@@ -10,7 +10,7 @@ import {
   useState,
 } from "react";
 
-import type { ComponentProps, CSSProperties, HTMLAttributes } from "react";
+import type { ComponentProps, CSSProperties } from "react";
 import type { BundledLanguage, ThemedToken } from "shiki";
 
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { withRef } from "@/lib/react18-compat";
 import { getCodeBlockHighlighter } from "@/lib/shiki";
 import { cn } from "@/lib/utils";
 
@@ -106,7 +107,7 @@ const LineSpan = ({
 );
 
 // Types
-type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
+type CodeBlockProps = ComponentProps<"div"> & {
   code: string;
   language: BundledLanguage;
   showLineNumbers?: boolean;
@@ -307,12 +308,12 @@ const CodeBlockBody = memo(
 
 CodeBlockBody.displayName = "CodeBlockBody";
 
-export const CodeBlockContainer = ({
+const CodeBlockContainer = ({
   className,
   language,
   style,
   ...props
-}: HTMLAttributes<HTMLDivElement> & { language: string }) => (
+}: ComponentProps<"div"> & { language: string }) => (
   <div
     className={cn(
       "group relative w-full overflow-hidden rounded-md border bg-background text-foreground",
@@ -328,11 +329,15 @@ export const CodeBlockContainer = ({
   />
 );
 
-export const CodeBlockHeader = ({
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockContainerWithRef = withRef("CodeBlockContainer", CodeBlockContainer);
+export { CodeBlockContainerWithRef as CodeBlockContainer };
+
+const CodeBlockHeader = ({
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLDivElement>) => (
+}: ComponentProps<"div">) => (
   <div
     className={cn(
       "flex items-center justify-between border-b bg-muted/80 px-3 py-2 text-muted-foreground text-xs",
@@ -344,31 +349,43 @@ export const CodeBlockHeader = ({
   </div>
 );
 
-export const CodeBlockTitle = ({
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockHeaderWithRef = withRef("CodeBlockHeader", CodeBlockHeader);
+export { CodeBlockHeaderWithRef as CodeBlockHeader };
+
+const CodeBlockTitle = ({
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLDivElement>) => (
+}: ComponentProps<"div">) => (
   <div className={cn("flex items-center gap-2", className)} {...props}>
     {children}
   </div>
 );
 
-export const CodeBlockFilename = ({
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockTitleWithRef = withRef("CodeBlockTitle", CodeBlockTitle);
+export { CodeBlockTitleWithRef as CodeBlockTitle };
+
+const CodeBlockFilename = ({
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLSpanElement>) => (
+}: ComponentProps<"span">) => (
   <span className={cn("font-mono", className)} {...props}>
     {children}
   </span>
 );
 
-export const CodeBlockActions = ({
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockFilenameWithRef = withRef("CodeBlockFilename", CodeBlockFilename);
+export { CodeBlockFilenameWithRef as CodeBlockFilename };
+
+const CodeBlockActions = ({
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLDivElement>) => (
+}: ComponentProps<"div">) => (
   <div
     className={cn("-my-1 -mr-1 flex items-center gap-2", className)}
     {...props}
@@ -376,6 +393,10 @@ export const CodeBlockActions = ({
     {children}
   </div>
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockActionsWithRef = withRef("CodeBlockActions", CodeBlockActions);
+export { CodeBlockActionsWithRef as CodeBlockActions };
 
 export const CodeBlockContent = ({
   code,
@@ -431,7 +452,7 @@ export const CodeBlockContent = ({
   );
 };
 
-export const CodeBlock = ({
+const CodeBlock = ({
   code,
   language,
   showLineNumbers = false,
@@ -443,17 +464,21 @@ export const CodeBlock = ({
 
   return (
     <CodeBlockContext.Provider value={contextValue}>
-      <CodeBlockContainer className={className} language={language} {...props}>
+      <CodeBlockContainerWithRef className={className} language={language} {...props}>
         {children}
         <CodeBlockContent
           code={code}
           language={language}
           showLineNumbers={showLineNumbers}
         />
-      </CodeBlockContainer>
+      </CodeBlockContainerWithRef>
     </CodeBlockContext.Provider>
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockWithRef = withRef("CodeBlock", CodeBlock);
+export { CodeBlockWithRef as CodeBlock };
 
 export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
   onCopy?: () => void;
@@ -461,7 +486,7 @@ export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
   timeout?: number;
 };
 
-export const CodeBlockCopyButton = ({
+const CodeBlockCopyButton = ({
   onCopy,
   onError,
   timeout = 2000,
@@ -517,6 +542,10 @@ export const CodeBlockCopyButton = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockCopyButtonWithRef = withRef("CodeBlockCopyButton", CodeBlockCopyButton);
+export { CodeBlockCopyButtonWithRef as CodeBlockCopyButton };
+
 export type CodeBlockLanguageSelectorProps = ComponentProps<typeof Select>;
 
 export const CodeBlockLanguageSelector = (
@@ -527,7 +556,7 @@ export type CodeBlockLanguageSelectorTriggerProps = ComponentProps<
   typeof SelectTrigger
 >;
 
-export const CodeBlockLanguageSelectorTrigger = ({
+const CodeBlockLanguageSelectorTrigger = ({
   className,
   ...props
 }: CodeBlockLanguageSelectorTriggerProps) => (
@@ -542,29 +571,45 @@ export const CodeBlockLanguageSelectorTrigger = ({
   />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockLanguageSelectorTriggerWithRef = withRef("CodeBlockLanguageSelectorTrigger", CodeBlockLanguageSelectorTrigger);
+export { CodeBlockLanguageSelectorTriggerWithRef as CodeBlockLanguageSelectorTrigger };
+
 export type CodeBlockLanguageSelectorValueProps = ComponentProps<
   typeof SelectValue
 >;
 
-export const CodeBlockLanguageSelectorValue = (
+const CodeBlockLanguageSelectorValue = (
   props: CodeBlockLanguageSelectorValueProps
 ) => <SelectValue {...props} />;
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockLanguageSelectorValueWithRef = withRef("CodeBlockLanguageSelectorValue", CodeBlockLanguageSelectorValue);
+export { CodeBlockLanguageSelectorValueWithRef as CodeBlockLanguageSelectorValue };
 
 export type CodeBlockLanguageSelectorContentProps = ComponentProps<
   typeof SelectContent
 >;
 
-export const CodeBlockLanguageSelectorContent = ({
+const CodeBlockLanguageSelectorContent = ({
   align = "end",
   ...props
 }: CodeBlockLanguageSelectorContentProps) => (
   <SelectContent align={align} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockLanguageSelectorContentWithRef = withRef("CodeBlockLanguageSelectorContent", CodeBlockLanguageSelectorContent);
+export { CodeBlockLanguageSelectorContentWithRef as CodeBlockLanguageSelectorContent };
+
 export type CodeBlockLanguageSelectorItemProps = ComponentProps<
   typeof SelectItem
 >;
 
-export const CodeBlockLanguageSelectorItem = (
+const CodeBlockLanguageSelectorItem = (
   props: CodeBlockLanguageSelectorItemProps
 ) => <SelectItem {...props} />;
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockLanguageSelectorItemWithRef = withRef("CodeBlockLanguageSelectorItem", CodeBlockLanguageSelectorItem);
+export { CodeBlockLanguageSelectorItemWithRef as CodeBlockLanguageSelectorItem };

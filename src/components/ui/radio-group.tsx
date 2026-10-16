@@ -4,6 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 type RadioSize = "xs" | "sm" | "default" | "lg"
@@ -25,6 +26,9 @@ function RadioGroup({
     </RadioGroupContext.Provider>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const RadioGroupWithRef = withRef("RadioGroup", RadioGroup)
 
 const radioGroupItemVariants = cva(
   "group/radio-group-item peer relative flex aspect-square shrink-0 rounded-full border border-input bg-card outline-none after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:shadow-focus aria-invalid:aria-checked:border-primary dark:bg-input/30 dark:aria-invalid:border-destructive/50 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary",
@@ -69,4 +73,7 @@ function RadioGroupItem({
   )
 }
 
-export { RadioGroup, RadioGroupItem, radioGroupItemVariants }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const RadioGroupItemWithRef = withRef("RadioGroupItem", RadioGroupItem)
+
+export { RadioGroupWithRef as RadioGroup, RadioGroupItemWithRef as RadioGroupItem, radioGroupItemVariants }

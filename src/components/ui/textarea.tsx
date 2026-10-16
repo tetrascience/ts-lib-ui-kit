@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const textareaVariants = cva(
@@ -37,4 +38,7 @@ function Textarea({
   )
 }
 
-export { Textarea, textareaVariants }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TextareaWithRef = withRef("Textarea", Textarea)
+
+export { TextareaWithRef as Textarea, textareaVariants }

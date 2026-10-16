@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const inputVariants = cva(
@@ -44,4 +45,7 @@ function Input({
   )
 }
 
-export { Input, inputVariants }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const InputWithRef = withRef("Input", Input)
+
+export { InputWithRef as Input, inputVariants }

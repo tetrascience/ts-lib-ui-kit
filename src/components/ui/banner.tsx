@@ -9,6 +9,7 @@ import {
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 const bannerVariants = cva(
@@ -99,4 +100,7 @@ function Banner({
   );
 }
 
-export { Banner, bannerVariants };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BannerWithRef = withRef("Banner", Banner);
+
+export { BannerWithRef as Banner, bannerVariants };

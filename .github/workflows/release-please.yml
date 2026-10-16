@@ -1,0 +1,35 @@
+name: Release Please
+
+# Keeps one release PR open against main, updated on every merge with the next
+# version (from Conventional Commit PR titles) and its CHANGELOG entry. Merging
+# that PR creates the vX.Y.Z tag and GitHub release; publish-public.yml then
+# runs on the tag and waits at the PROD environment gate before publishing.
+#
+# Nothing here pushes to main: the version bump lands only through the
+# reviewed release PR, which the org ruleset on main requires anyway.
+
+on:
+  push:
+    branches: [main]
+
+# The action authenticates with GH_TOKEN below, not GITHUB_TOKEN, so the job
+# token needs no write scopes.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          # A PAT, not GITHUB_TOKEN: events created with GITHUB_TOKEN start no
+          # workflows, so the release PR would get no CI or title check, and
+          # the tag would never start publish-public.yml.
+          token: ${{ secrets.GH_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

@@ -46,19 +46,17 @@ Visit http://localhost:6006 to view the component library in Storybook.
 
 ## Available Scripts
 
-| Command                | Description                                                  |
-| ---------------------- | ------------------------------------------------------------ |
-| `yarn storybook`       | Run Storybook development server on port 6006                |
-| `yarn build`           | Build the library for production (using Vite)                |
-| `yarn build-storybook` | Build Storybook for deployment                               |
-| `yarn test`            | Run unit tests only                                          |
-| `yarn test:all`        | Run unit tests + Storybook component tests                   |
-| `yarn lint`            | Run ESLint                                                   |
-| `yarn typecheck`       | Run TypeScript type checking                                 |
-| `yarn prepare`         | Set up Husky git hooks                                       |
-| `yarn prepublishOnly`  | Build the package before publishing                          |
-| `yarn release`         | Run semantic-release (CI use only)                           |
-| `yarn release:dry-run` | Preview the next release locally without publishing anything |
+| Command                | Description                                   |
+| ---------------------- | --------------------------------------------- |
+| `yarn storybook`       | Run Storybook development server on port 6006 |
+| `yarn build`           | Build the library for production (using Vite) |
+| `yarn build-storybook` | Build Storybook for deployment                |
+| `yarn test`            | Run unit tests only                           |
+| `yarn test:all`        | Run unit tests + Storybook component tests    |
+| `yarn lint`            | Run ESLint                                    |
+| `yarn typecheck`       | Run TypeScript type checking                  |
+| `yarn prepare`         | Set up Husky git hooks                        |
+| `yarn prepublishOnly`  | Build the package before publishing           |
 
 ## Path Aliases
 
@@ -227,7 +225,7 @@ If a hook fails, the commit is aborted. Fix the reported issue and try again.
 
 ### Commit Message Format
 
-All commit messages must follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. This is enforced locally by the `commit-msg` hook and drives automated versioning on CI.
+All commit messages must follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. This is enforced locally by the `commit-msg` hook. PRs are squash-merged with the PR title as the commit message, so the **PR title** is what drives versioning (see [Release Process](#release-process)).
 
 **Structure:**
 
@@ -348,36 +346,73 @@ export const MyStory: Story = {
 
 ## Release Process
 
-Releases are fully automated via [semantic-release](https://semantic-release.gitbook.io/) — **do not manually edit `package.json` version or create git tags**.
+Releases are cut by [Release Please](https://github.com/googleapis/release-please) through a release
+PR. **Do not bump `package.json`'s version, create tags, or edit the release PR by hand.**
 
 ### How it works
 
-The `Release` GitHub Action (`.github/workflows/release.yml`) is triggered manually (via `workflow_dispatch` from the GitHub Actions tab), and it:
+1. **Every merge to `main` updates the release PR.** The `Release Please` workflow
+   (`.github/workflows/release-please.yml`) reads the PR titles merged since the last tag and opens or
+   updates one PR titled `chore: UXT-83 release X.Y.Z`, from the branch
+   `release-please--branches--main`. It bumps `package.json`, adds the new entry to the top of
+   `CHANGELOG.md`, and updates the version line in `README.md` and `.release-please-manifest.json`.
+   If only non-releasing types have merged (see below), no release PR is opened.
+2. **Review and merge the release PR** like any other PR. CI and the PR title check run on it. It is
+   opened with the `GH_TOKEN` secret, so its author is that token's owner, who cannot approve it.
+3. **Merging creates the tag and the GitHub release.** The workflow run for that merge tags the merge
+   commit `vX.Y.Z` and creates a GitHub release with the same notes. The tag sits on the commit that
+   bumped `package.json`, so the tag and the published version always match.
+4. **Approve the publish.** The tag starts `Publish to Public npm` (`publish-public.yml`), which waits
+   at the `PROD` environment until a reviewer approves it on the workflow run's page.
 
-1. Analyses all commits since the last release using their [Conventional Commit](#commit-message-format) types
-2. Determines the next version number (or skips if no releasable commits are found)
-3. Generates or updates `CHANGELOG.md`
-4. Bumps the version in `package.json`
-5. Creates a git tag (e.g. `v1.2.0`) and a GitHub Release with auto-generated release notes
-6. Commits the updated `CHANGELOG.md` and `package.json` back to `main` with the message `chore(release): <version> [skip ci]`
+Like every merge to `main`, merging the release PR also publishes a `-beta.N` build.
 
-Separate publish workflows then handle distributing the built package to npm and the internal JFrog registry.
+To check what the next release would be, open the release PR. If there is none, nothing releasable has
+merged since the last tag.
 
 ### Version bump rules
 
-| Commits since last release                      | Next version              |
-| ----------------------------------------------- | ------------------------- |
-| Only `fix`, `perf`, `refactor`                  | Patch — `1.0.0` → `1.0.1` |
-| At least one `feat`                             | Minor — `1.0.0` → `1.1.0` |
-| Any commit with `!` or `BREAKING CHANGE` footer | Major — `1.0.0` → `2.0.0` |
-| Only `chore`, `docs`, `style`, `test`, `ci`     | No release                |
+The version is computed from the squash-merge commits on `main`. Each one is the PR title with an
+empty body (the repository's squash setting), so **the PR title is what counts**.
 
-### Dry-run locally
+| PR titles merged since the last release                                      | Next version              |
+| ---------------------------------------------------------------------------- | ------------------------- |
+| Only `fix`, `perf`, `revert`                                                 | Patch — `1.1.0` → `1.1.1` |
+| At least one `feat`                                                          | Minor — `1.1.0` → `1.2.0` |
+| Any type with `!` (`feat!:`, `fix(charts)!:`), or a `BREAKING CHANGE` footer | Major — `1.1.0` → `2.0.0` |
+| Only `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore`             | No release                |
 
-To preview what the next release would be without publishing anything:
+A `BREAKING CHANGE:` footer in a commit on your branch does not survive the squash. Mark the PR title
+with `!`, or put the footer in an override block (below).
 
-```bash
-yarn release:dry-run
+### Curated release notes
+
+Release Please rewrites the release PR on every merge to `main`, so edits to it are lost. Curated text
+goes here instead:
+
+| What                                                        | Where                                                                                                                                                      |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Upgrade guidance (renames, changed defaults, steps to take) | `MIGRATION.md`, in a normal PR merged before the release PR. Point to it from a changelog line (override block) or from the GitHub release.                |
+| Reworded or extra changelog lines for a merged PR           | A `BEGIN_COMMIT_OVERRIDE` block in that PR's description. Edit it after merging if needed; it takes effect the next time the Release Please workflow runs. |
+| Intro text on the release page                              | Edit the GitHub release after it is created. This does not change `CHANGELOG.md`.                                                                          |
+| A correction to an entry that has already been released     | A normal docs PR that edits `CHANGELOG.md`. Release Please only adds entries above the newest one and never rewrites older ones.                           |
+
+An override block replaces the squash commit's message, and each message in it becomes one changelog
+line. It is parsed like a commit, so a `BREAKING CHANGE:` footer or a `!` in it makes the release
+major:
+
+```text
+BEGIN_COMMIT_OVERRIDE
+feat: SW-2596 Stop shipping document-level CSS; see MIGRATION.md for renamed classes
+
+fix: SW-2441 Prevent data table pagination overflow
+END_COMMIT_OVERRIDE
 ```
 
-This requires a `GITHUB_TOKEN` environment variable with repo read access.
+### Changing the Jira key in the release PR title
+
+The PR title checker requires `type: KEY-123 Description`, so the key is fixed in
+`pull-request-title-pattern` in `release-please-config.json`. Change it there in a normal PR, and the
+open release PR is retitled on the next run. Don't edit the release PR's title by hand: after the
+merge, Release Please reads the version back out of the title using that pattern, and a title that
+doesn't match means no tag is created.

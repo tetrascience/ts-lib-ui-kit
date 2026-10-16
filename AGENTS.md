@@ -355,12 +355,32 @@ It deliberately does **not** install the packed tarball as a normal npm dependen
 
 ## Publishing
 
-```bash
-yarn release          # semantic-release: auto-determines version from commits, publishes to npm
-yarn release:dry-run  # Validate what would be published without actually publishing
-```
+Release Please cuts releases through a release PR; there is no release command to run. Full process:
+[CONTRIBUTING.md › Release Process](./CONTRIBUTING.md#release-process).
 
-Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) for versioning — `feat:` → minor bump, `fix:` → patch bump, `feat!:` / `BREAKING CHANGE:` → major bump.
+1. Every merge to `main` runs `.github/workflows/release-please.yml`, which opens or updates one
+   release PR (`chore: UXT-83 release X.Y.Z`, branch `release-please--branches--main`) bumping
+   `package.json`, `CHANGELOG.md`, the `README.md` version line and `.release-please-manifest.json`.
+2. Merging that PR tags the merge commit `vX.Y.Z` and creates the GitHub release.
+3. The tag starts `publish-public.yml`, which waits at the `PROD` environment for manual approval.
+
+Load-bearing details:
+
+- **Never bump `package.json`'s version, tag, or edit the release PR by hand.** The tag must equal
+  `package.json`'s version (the shared publish workflow fails otherwise); Release Please guarantees
+  that only because it makes both changes in the commit it tags. Its PR is regenerated on every merge.
+- **The workflow uses the `GH_TOKEN` PAT, not `GITHUB_TOKEN`.** PRs and tags created with
+  `GITHUB_TOKEN` start no workflows: the release PR would get no CI and the tag would never publish.
+- **Nothing pushes to `main`.** An org ruleset forbids it; the bump lands only via the reviewed PR.
+- **Versioning reads squash-merged PR titles** (squash body is empty): `feat:` → minor, `fix:` /
+  `perf:` → patch, `!` after any type (`feat!:`, `fix(scope)!:`) → major. `docs` / `chore` / `ci` /
+  `refactor` / `test` / `build` / `style` alone open no release PR.
+- **Curated upgrade notes** go in `MIGRATION.md` or a `BEGIN_COMMIT_OVERRIDE` block in the merged
+  PR's description — not in the release PR.
+- **`CHANGELOG.md` version headings must stay `## [x.y.z]`.** Release Please inserts each new entry
+  above the first `##`/`###` version heading; a file with none (e.g. `# [x.y.z]`) gets rewritten.
+- The release PR's Jira key lives in `pull-request-title-pattern` in `release-please-config.json`;
+  its branch name is fixed by Release Please and is the one exception to the Jira-prefix rule below.
 
 ## Zephyr Integration
 

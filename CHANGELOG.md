@@ -1,4 +1,6 @@
-# [1.0.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v0.7.0...v1.0.0) (2026-08-07)
+# Changelog
+
+## [1.0.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v0.7.0...v1.0.0) (2026-08-07)
 
 First stable major release. See [MIGRATION.md](./MIGRATION.md#migrating-from-v07x-to-v100) for the
 full v0.7.x → v1.0.0 upgrade guide, including the chart rename map and the optional peer dependencies
@@ -59,7 +61,7 @@ Workarounds are documented in [MIGRATION.md](./MIGRATION.md#known-issues-in-v100
 - `MoleculeStructure` needs `RDKit_minimal.wasm` served by your app in addition to the
   `@rdkit/rdkit` install; without it the component renders "Invalid structure" for valid SMILES.
 
-# [0.7.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v0.6.0...v0.7.0) (2026-06-30)
+## [0.7.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v0.6.0...v0.7.0) (2026-06-30)
 
 ### Bug Fixes
 
@@ -84,7 +86,7 @@ Workarounds are documented in [MIGRATION.md](./MIGRATION.md#known-issues-in-v100
 - SW-2037 Wire CVD chart palette tokens into chart components ([#128](https://github.com/tetrascience/ts-lib-ui-kit/pull/128)) ([a7b47c9](https://github.com/tetrascience/ts-lib-ui-kit/commit/a7b47c981fb6315f30caa8976cd32e855732e31b))
 - SW-2052 update Data App Shell breadcrumb labels ([#136](https://github.com/tetrascience/ts-lib-ui-kit/pull/136)) ([cd9aeba](https://github.com/tetrascience/ts-lib-ui-kit/commit/cd9aebab9f199e762a69d03500d57a4dc604a9d4))
 
-# [0.6.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v0.5.0...v0.6.0) (2026-06-15)
+## [0.6.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v0.5.0...v0.6.0) (2026-06-15)
 
 ### Bug Fixes
 

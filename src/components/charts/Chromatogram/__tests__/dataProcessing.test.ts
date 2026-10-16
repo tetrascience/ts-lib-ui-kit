@@ -24,9 +24,7 @@ describe("buildHoverExtraContent", () => {
   });
 
   it("returns seriesName when all metadata values are empty/null/undefined", () => {
-    expect(
-      buildHoverExtraContent("Sample A", { a: null, b: undefined, c: "" })
-    ).toBe("Sample A");
+    expect(buildHoverExtraContent("Sample A", { a: null, b: undefined, c: "" })).toBe("Sample A");
   });
 
   it("appends metadata fields as HTML key: value lines", () => {
@@ -175,9 +173,7 @@ describe("collectPeaksWithBoundaryData", () => {
   });
 
   it("appends a first-series entry for annotations that carry computed boundaries", () => {
-    const annotations: PeakAnnotation[] = [
-      { x: 2, y: 5, _computed: { startIndex: 0, endIndex: 2 } },
-    ];
+    const annotations: PeakAnnotation[] = [{ x: 2, y: 5, _computed: { startIndex: 0, endIndex: 2 } }];
     const result = collectPeaksWithBoundaryData([], annotations, series);
     expect(result).toHaveLength(1);
     expect(result[0].seriesIndex).toBe(0);

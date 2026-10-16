@@ -320,7 +320,10 @@ function resolveQuickPaintPlacement(
   }
 
   const left = Math.min(Math.max(bounds.anchorX - w / 2, 0), Math.max(0, plateWidth - w));
-  const tailOffset = Math.min(Math.max(bounds.anchorX - left, QUICK_PAINT_TAIL_INSET), Math.max(QUICK_PAINT_TAIL_INSET, w - QUICK_PAINT_TAIL_INSET));
+  const tailOffset = Math.min(
+    Math.max(bounds.anchorX - left, QUICK_PAINT_TAIL_INSET),
+    Math.max(QUICK_PAINT_TAIL_INSET, w - QUICK_PAINT_TAIL_INSET),
+  );
   return { left, top, below, tailOffset, ready: true };
 }
 
@@ -831,10 +834,7 @@ export function PlatePaintGrid<T extends WellRecord = WellRecord>({
     () => buildColumnLabels(dims.columns, resolvedCellSize),
     [dims.columns, resolvedCellSize],
   );
-  const rowLabels = React.useMemo(
-    () => buildRowLabels(dims.rows, resolvedCellSize),
-    [dims.rows, resolvedCellSize],
-  );
+  const rowLabels = React.useMemo(() => buildRowLabels(dims.rows, resolvedCellSize), [dims.rows, resolvedCellSize]);
   const resolvedHighlightedWellIds: ReadonlySet<WellId> = highlightedWellIds ?? EMPTY_WELL_ID_SET;
   // Hover state lives above this component, so every pointer move re-renders
   // the grid. Without memoisation a 1536-well plate rebuilds every SVG node on

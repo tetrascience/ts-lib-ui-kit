@@ -2,7 +2,14 @@ import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 
 import { loadPlotly } from "../../plotly-loader";
 import { CHROMATOGRAM_LAYOUT, CHROMATOGRAM_TRACE } from "../constants";
-import { buildConfig, buildLayout, buildTraceData, createClickHandler, createHoverHandler, createUnhoverHandler } from "../plotBuilder";
+import {
+  buildConfig,
+  buildLayout,
+  buildTraceData,
+  createClickHandler,
+  createHoverHandler,
+  createUnhoverHandler,
+} from "../plotBuilder";
 
 import type { PlotlyThemeColors } from "@/hooks/use-plotly-theme";
 
@@ -174,7 +181,12 @@ describe("buildTraceData", () => {
       processedAnnotations: [],
       allDetectedPeaks: [],
       allPeaksForInteraction: [
-        { peak: { x: 2, y: 20, id: "peak-0-0", hoverText: "Peak A" }, seriesIndex: 0, seriesName: "S", isAutoDetected: true },
+        {
+          peak: { x: 2, y: 20, id: "peak-0-0", hoverText: "Peak A" },
+          seriesIndex: 0,
+          seriesName: "S",
+          isAutoDetected: true,
+        },
         { peak: { x: 3, y: 30, id: "peak-0-1" }, seriesIndex: 0, seriesName: "S", isAutoDetected: true },
       ],
       showMarkers: false,
@@ -184,7 +196,11 @@ describe("buildTraceData", () => {
 
     // The shared ChartTooltip is the only hover UI (SW-2298): the series line
     // and the hit-area trace both opt out of Plotly's label but keep events.
-    const [line, hitArea] = result as Array<{ hoverinfo?: string; hovertemplate?: unknown; customdata?: Array<{ peak: { hoverText?: string } }> }>;
+    const [line, hitArea] = result as Array<{
+      hoverinfo?: string;
+      hovertemplate?: unknown;
+      customdata?: Array<{ peak: { hoverText?: string } }>;
+    }>;
     expect(line.hoverinfo).toBe("none");
     expect(line.hovertemplate).toBeUndefined();
     expect(hitArea.hoverinfo).toBe("none");
@@ -336,11 +352,7 @@ describe("createHoverHandler", () => {
     handler(makeEvent(0));
 
     expect(mockRestyle).toHaveBeenCalledTimes(1);
-    expect(mockRestyle).toHaveBeenCalledWith(
-      domElement,
-      { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH * 2 },
-      [0]
-    );
+    expect(mockRestyle).toHaveBeenCalledWith(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH * 2 }, [0]);
     expect(thickenedRef.current).toBe(0);
   });
 
@@ -352,8 +364,18 @@ describe("createHoverHandler", () => {
     handler(makeEvent(1));
 
     expect(mockRestyle).toHaveBeenCalledTimes(2);
-    expect(mockRestyle).toHaveBeenNthCalledWith(1, domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH }, [0]);
-    expect(mockRestyle).toHaveBeenNthCalledWith(2, domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH * 2 }, [1]);
+    expect(mockRestyle).toHaveBeenNthCalledWith(
+      1,
+      domElement,
+      { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH },
+      [0],
+    );
+    expect(mockRestyle).toHaveBeenNthCalledWith(
+      2,
+      domElement,
+      { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH * 2 },
+      [1],
+    );
     expect(thickenedRef.current).toBe(1);
   });
 
@@ -410,10 +432,7 @@ describe("createClickHandler", () => {
     const onPeakClickRef = { current: callback };
     const handler = createClickHandler(onPeakClickRef);
     const fakeEvent = {
-      points: [
-        { customdata: undefined },
-        { customdata: { id: "peak-1-2" } },
-      ],
+      points: [{ customdata: undefined }, { customdata: { id: "peak-1-2" } }],
     } as unknown as import("plotly.js-dist").PlotMouseEvent;
 
     handler(fakeEvent);

@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 
-
 const meta: Meta<typeof TopBar> = {
   title: "Design Patterns/Top Bar",
   component: TopBar,
@@ -127,9 +126,7 @@ export const AllSlots: Story = {
               ],
             },
             {
-              items: [
-                { id: "logout", label: "Log out", variant: "destructive" },
-              ],
+              items: [{ id: "logout", label: "Log out", variant: "destructive" }],
             },
           ]}
         />
@@ -150,9 +147,7 @@ export const AllSlots: Story = {
     });
 
     await step("UserMenu opens from the right slot", async () => {
-      await userEvent.click(
-        canvas.getByRole("button", { name: /account menu/i })
-      );
+      await userEvent.click(canvas.getByRole("button", { name: /account menu/i }));
       const menu = within(document.body);
       expect(await menu.findByText("Settings")).toBeInTheDocument();
     });

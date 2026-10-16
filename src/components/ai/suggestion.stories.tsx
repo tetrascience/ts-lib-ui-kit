@@ -1,17 +1,16 @@
-import { useState } from "react"
-import { expect, fn, userEvent, within } from "storybook/test"
+import { useState } from "react";
+import { expect, fn, userEvent, within } from "storybook/test";
 
-import { Suggestion, Suggestions } from "./suggestion"
+import { Suggestion, Suggestions } from "./suggestion";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const defaultSuggestions = [
   "Explain quantum computing",
   "Write a haiku about autumn",
   "How do I make pasta carbonara?",
   "What is the tallest mountain?",
-]
+];
 
 const meta: Meta = {
   title: "AI Elements/Input/Suggestion",
@@ -19,11 +18,11 @@ const meta: Meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
 export const Default: Story = {
   render: () => (
@@ -34,20 +33,20 @@ export const Default: Story = {
     </Suggestions>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Suggestions render", async () => {
-      await expect(canvas.getByText("Explain quantum computing")).toBeInTheDocument()
-      await expect(canvas.getByText("How do I make pasta carbonara?")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Explain quantum computing")).toBeInTheDocument();
+      await expect(canvas.getByText("How do I make pasta carbonara?")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4639" },
   },
-}
+};
 
 export const Interactive: Story = {
   render: () => {
-    const [selected, setSelected] = useState<string | null>(null)
+    const [selected, setSelected] = useState<string | null>(null);
     return (
       <div className="space-y-4">
         <Suggestions>
@@ -61,22 +60,20 @@ export const Interactive: Story = {
           </p>
         )}
       </div>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Clicking a suggestion selects it", async () => {
-      const btn = canvas.getByText("Write a haiku about autumn")
-      await userEvent.click(btn)
-      await expect(canvas.getByText(/^Selected:/)).toHaveTextContent(
-        "Write a haiku about autumn"
-      )
-    })
+      const btn = canvas.getByText("Write a haiku about autumn");
+      await userEvent.click(btn);
+      await expect(canvas.getByText(/^Selected:/)).toHaveTextContent("Write a haiku about autumn");
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4640" },
   },
-}
+};
 
 export const Few: Story = {
   render: () => (
@@ -86,15 +83,15 @@ export const Few: Story = {
     </Suggestions>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Two suggestions render", async () => {
-      await expect(canvas.getByText("Tell me a joke")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Tell me a joke")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4641" },
   },
-}
+};
 
 export const CustomChildren: Story = {
   args: {
@@ -110,20 +107,20 @@ export const CustomChildren: Story = {
     </Suggestions>
   ),
   play: async ({ args, canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Custom children render instead of suggestion text", async () => {
-      await expect(canvas.getByRole("button", { name: "Protocol run" })).toBeInTheDocument()
-    })
+      await expect(canvas.getByRole("button", { name: "Protocol run" })).toBeInTheDocument();
+    });
     await step("Clicking custom suggestion passes original suggestion value", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Protocol run" }))
-      await expect(args.onSelect).toHaveBeenCalledWith("Run protocol")
-    })
+      await userEvent.click(canvas.getByRole("button", { name: "Protocol run" }));
+      await expect(args.onSelect).toHaveBeenCalledWith("Run protocol");
+    });
     await step("Suggestion without callback remains clickable without throwing", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "No callback" }))
-      await expect(args.onSelect).toHaveBeenCalledOnce()
-    })
+      await userEvent.click(canvas.getByRole("button", { name: "No callback" }));
+      await expect(args.onSelect).toHaveBeenCalledOnce();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4642" },
   },
-}
+};

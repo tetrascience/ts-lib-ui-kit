@@ -62,8 +62,7 @@ const dedent = (lines: string[]): string[] => {
   });
 };
 
-const stripTrailingComma = (text: string): string =>
-  text.replace(/,\s*$/, "");
+const stripTrailingComma = (text: string): string => text.replace(/,\s*$/, "");
 
 /**
  * If the expression is the Prettier arrow wrapper `() => (\n <Jsx />\n)`,
@@ -105,9 +104,7 @@ const unwrapParens = (text: string): string => {
  */
 const presentRenderFunction = (source: string): string | null => {
   const arrow = source.match(/^(?:async\s+)?\(\)\s*=>\s*/);
-  const namedFn = arrow
-    ? null
-    : source.match(/^(?:async\s+)?function\s*([A-Za-z_$][\w$]*)?\s*\(\)\s*/);
+  const namedFn = arrow ? null : source.match(/^(?:async\s+)?function\s*([A-Za-z_$][\w$]*)?\s*\(\)\s*/);
   if (!arrow && !namedFn) return null;
   const body = source.slice((arrow ?? namedFn!)[0].length).trim();
   if (body === "") return null;
@@ -148,27 +145,19 @@ const extractRenderValue = (objectSource: string): string | null => {
   // The story object may open with a property on the same line as the
   // brace (`{ render: () => <Demo />,`) — treat the remainder as line one.
   const firstLineRest = firstLine.slice(1).trim();
-  const initialRest = firstLineRest.startsWith("render:")
-    ? firstLineRest.slice("render:".length).trim()
-    : null;
+  const initialRest = firstLineRest.startsWith("render:") ? firstLineRest.slice("render:".length).trim() : null;
 
-  const { renderRest, valueLines } = scanForRenderValue(
-    lines.slice(1),
-    initialRest,
-  );
+  const { renderRest, valueLines } = scanForRenderValue(lines.slice(1), initialRest);
 
   if (renderRest === null) return null;
-  const value = [renderRest, ...valueLines]
-    .filter((line, index) => !(index === 0 && line === ""))
-    .join("\n");
+  const value = [renderRest, ...valueLines].filter((line, index) => !(index === 0 && line === "")).join("\n");
   const trimmed = stripTrailingComma(value.trimEnd());
   return trimmed.trim() === "" ? null : trimmed;
 };
 
 /** The story object's own closing brace sits below the property indent. */
 const isObjectClosingBrace = (line: string, baseIndent: number | null) =>
-  line.trim() === "}" &&
-  (line.match(/^\s*/)?.[0].length ?? 0) < (baseIndent ?? 1);
+  line.trim() === "}" && (line.match(/^\s*/)?.[0].length ?? 0) < (baseIndent ?? 1);
 
 interface ScanState {
   inTemplate: boolean;
@@ -190,10 +179,7 @@ const scanLine = (line: string, state: ScanState): void => {
     if (isTopLevelProp && line.trimStart().startsWith("render:")) {
       state.renderRest = line.slice(line.indexOf(":") + 1).trim();
     }
-  } else if (
-    !state.inTemplate &&
-    (isTopLevelProp || isObjectClosingBrace(line, state.baseIndent))
-  ) {
+  } else if (!state.inTemplate && (isTopLevelProp || isObjectClosingBrace(line, state.baseIndent))) {
     // Reached the next top-level property or the object's closing brace —
     // a render block body's own closing brace sits at property indent and
     // stays part of the value.

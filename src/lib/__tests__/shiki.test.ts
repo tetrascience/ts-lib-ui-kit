@@ -37,9 +37,7 @@ describe("lib/shiki", () => {
   it("lists the default supported languages", async () => {
     const { getSupportedCodeBlockLanguages } = await import("../shiki");
     const langs = getSupportedCodeBlockLanguages();
-    expect(langs).toEqual(
-      expect.arrayContaining(["bash", "json", "python", "sql", "typescript", "yaml"]),
-    );
+    expect(langs).toEqual(expect.arrayContaining(["bash", "json", "python", "sql", "typescript", "yaml"]));
   });
 
   it("registers an extra grammar with normalized aliases", async () => {

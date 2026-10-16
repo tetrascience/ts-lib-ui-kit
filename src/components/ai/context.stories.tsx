@@ -1,4 +1,4 @@
-import { expect, screen, within } from "storybook/test"
+import { expect, screen, within } from "storybook/test";
 
 import {
   Context,
@@ -11,10 +11,9 @@ import {
   ContextOutputUsage,
   ContextReasoningUsage,
   ContextTrigger,
-} from "./context"
+} from "./context";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta = {
   title: "AI Elements/Conversation/Context",
@@ -22,16 +21,16 @@ const meta: Meta = {
     layout: "centered",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
 const baseUsage = {
   inputTokens: 1200,
   outputTokens: 450,
-}
+};
 
 export const Default: Story = {
   render: () => (
@@ -48,19 +47,19 @@ export const Default: Story = {
     </Context>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Context trigger renders", async () => {
-      await expect(canvas.getByRole("button")).toBeInTheDocument()
-    })
+      await expect(canvas.getByRole("button")).toBeInTheDocument();
+    });
     await step("Overall percentage is hidden by default", async () => {
-      await expect(canvas.queryByText("1.3%")).not.toBeInTheDocument()
-      await expect(canvas.getByRole("img", { name: "Model context usage" })).toBeInTheDocument()
-    })
+      await expect(canvas.queryByText("1.3%")).not.toBeInTheDocument();
+      await expect(canvas.getByRole("img", { name: "Model context usage" })).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4532" },
   },
-}
+};
 
 export const WithVisiblePercentage: Story = {
   render: () => (
@@ -77,16 +76,16 @@ export const WithVisiblePercentage: Story = {
     </Context>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Overall percentage can be shown", async () => {
-      await expect(canvas.getByText("1.3%")).toBeInTheDocument()
-      await expect(canvas.getByRole("img", { name: "Model context usage" })).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("1.3%")).toBeInTheDocument();
+      await expect(canvas.getByRole("img", { name: "Model context usage" })).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4533" },
   },
-}
+};
 
 export const WithReasoning: Story = {
   render: () => (
@@ -112,15 +111,15 @@ export const WithReasoning: Story = {
     </Context>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Context with reasoning renders", async () => {
-      await expect(canvas.getByRole("button")).toBeInTheDocument()
-    })
+      await expect(canvas.getByRole("button")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4534" },
   },
-}
+};
 
 export const WithCaching: Story = {
   render: () => (
@@ -146,15 +145,15 @@ export const WithCaching: Story = {
     </Context>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Context with cache usage renders", async () => {
-      await expect(canvas.getByRole("button")).toBeInTheDocument()
-    })
+      await expect(canvas.getByRole("button")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4535" },
   },
-}
+};
 
 export const OpenPopover: Story = {
   render: () => (
@@ -184,26 +183,21 @@ export const OpenPopover: Story = {
   ),
   play: async ({ step }) => {
     await step("Popover contents visible", async () => {
-      await expect(await screen.findByText("Input")).toBeInTheDocument()
-      await expect(screen.getByText("Output")).toBeInTheDocument()
-      await expect(screen.getByText("Reasoning")).toBeInTheDocument()
-      await expect(screen.getByText("Cache")).toBeInTheDocument()
-      await expect(screen.getByText("Total cost")).toBeInTheDocument()
-    })
+      await expect(await screen.findByText("Input")).toBeInTheDocument();
+      await expect(screen.getByText("Output")).toBeInTheDocument();
+      await expect(screen.getByText("Reasoning")).toBeInTheDocument();
+      await expect(screen.getByText("Cache")).toBeInTheDocument();
+      await expect(screen.getByText("Total cost")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4536" },
   },
-}
+};
 
 export const WarningThreshold: Story = {
   render: () => (
-    <Context
-      open
-      usedTokens={100000}
-      maxTokens={128000}
-      usage={{ inputTokens: 90000, outputTokens: 10000 }}
-    >
+    <Context open usedTokens={100000} maxTokens={128000} usage={{ inputTokens: 90000, outputTokens: 10000 }}>
       <ContextTrigger />
       <ContextContent>
         <ContextContentHeader />
@@ -217,13 +211,13 @@ export const WarningThreshold: Story = {
   ),
   play: async ({ step }) => {
     await step("Warning threshold renders progress bar", async () => {
-      await expect(await screen.findByText("Input")).toBeInTheDocument()
-    })
+      await expect(await screen.findByText("Input")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4537" },
   },
-}
+};
 
 export const CustomChildrenOverride: Story = {
   render: () => (
@@ -266,23 +260,23 @@ export const CustomChildrenOverride: Story = {
     </Context>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Custom trigger renders", async () => {
-      await expect(canvas.getByText("Custom Trigger")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Custom Trigger")).toBeInTheDocument();
+    });
     await step("All custom content slots render", async () => {
-      await expect(await screen.findByText("Custom header")).toBeInTheDocument()
-      await expect(screen.getByText("Custom input row")).toBeInTheDocument()
-      await expect(screen.getByText("Custom output row")).toBeInTheDocument()
-      await expect(screen.getByText("Custom reasoning row")).toBeInTheDocument()
-      await expect(screen.getByText("Custom cache row")).toBeInTheDocument()
-      await expect(screen.getByText("Custom footer")).toBeInTheDocument()
-    })
+      await expect(await screen.findByText("Custom header")).toBeInTheDocument();
+      await expect(screen.getByText("Custom input row")).toBeInTheDocument();
+      await expect(screen.getByText("Custom output row")).toBeInTheDocument();
+      await expect(screen.getByText("Custom reasoning row")).toBeInTheDocument();
+      await expect(screen.getByText("Custom cache row")).toBeInTheDocument();
+      await expect(screen.getByText("Custom footer")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4538" },
   },
-}
+};
 
 export const ZeroUsageHidesRows: Story = {
   render: () => (
@@ -302,15 +296,15 @@ export const ZeroUsageHidesRows: Story = {
   ),
   play: async ({ step }) => {
     await step("Zero-token rows are hidden but footer still renders", async () => {
-      await expect(await screen.findByText("Total cost")).toBeInTheDocument()
-      await expect(screen.queryByText("Input")).not.toBeInTheDocument()
-      await expect(screen.queryByText("Output")).not.toBeInTheDocument()
-    })
+      await expect(await screen.findByText("Total cost")).toBeInTheDocument();
+      await expect(screen.queryByText("Input")).not.toBeInTheDocument();
+      await expect(screen.queryByText("Output")).not.toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4539" },
   },
-}
+};
 
 export const NearLimit: Story = {
   render: () => (
@@ -334,15 +328,15 @@ export const NearLimit: Story = {
     </Context>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Near-limit context renders", async () => {
-      await expect(canvas.getByRole("button")).toBeInTheDocument()
-    })
+      await expect(canvas.getByRole("button")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4540" },
   },
-}
+};
 
 export const UsageWithoutCost: Story = {
   render: () => (
@@ -372,18 +366,18 @@ export const UsageWithoutCost: Story = {
   ),
   play: async ({ step }) => {
     await step("Usage rows render without cost text when no cost is provided", async () => {
-      await expect(await screen.findByText("Input")).toBeInTheDocument()
-      await expect(screen.getByText("Output")).toBeInTheDocument()
-      await expect(screen.getByText("Reasoning")).toBeInTheDocument()
-      await expect(screen.getByText("Cache")).toBeInTheDocument()
-      await expect(screen.queryByText(/\$\d/)).not.toBeInTheDocument()
-      await expect(screen.getByText("—")).toBeInTheDocument()
-    })
+      await expect(await screen.findByText("Input")).toBeInTheDocument();
+      await expect(screen.getByText("Output")).toBeInTheDocument();
+      await expect(screen.getByText("Reasoning")).toBeInTheDocument();
+      await expect(screen.getByText("Cache")).toBeInTheDocument();
+      await expect(screen.queryByText(/\$\d/)).not.toBeInTheDocument();
+      await expect(screen.getByText("—")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4541" },
   },
-}
+};
 
 export const WithCostBreakdown: Story = {
   render: () => (
@@ -417,13 +411,13 @@ export const WithCostBreakdown: Story = {
   ),
   play: async ({ step }) => {
     await step("Cost breakdown renders with pre-computed values", async () => {
-      await expect(await screen.findByText("Input")).toBeInTheDocument()
-      await expect(screen.getByText("Output")).toBeInTheDocument()
-      await expect(screen.getByText("Cache")).toBeInTheDocument()
-      await expect(screen.getByText("$0.07")).toBeInTheDocument()
-    })
+      await expect(await screen.findByText("Input")).toBeInTheDocument();
+      await expect(screen.getByText("Output")).toBeInTheDocument();
+      await expect(screen.getByText("Cache")).toBeInTheDocument();
+      await expect(screen.getByText("$0.07")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4542" },
   },
-}
+};

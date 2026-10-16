@@ -35,9 +35,7 @@ const DEFAULT_RESOLVED_APPEARANCE: ResolvedSelectionAppearance = {
   hoverLineWidthMultiplier: 5 / 3,
 };
 
-export function resolveSelectionAppearance(
-  appearance?: PeakSelectionAppearance
-): ResolvedSelectionAppearance {
+export function resolveSelectionAppearance(appearance?: PeakSelectionAppearance): ResolvedSelectionAppearance {
   if (!appearance) return DEFAULT_RESOLVED_APPEARANCE;
   const d = DEFAULT_RESOLVED_APPEARANCE;
   return {
@@ -49,8 +47,7 @@ export function resolveSelectionAppearance(
     unselected: {
       opacity: appearance.unselected?.opacity ?? d.unselected.opacity,
     },
-    hoverLineWidthMultiplier:
-      appearance.hoverLineWidthMultiplier ?? d.hoverLineWidthMultiplier,
+    hoverLineWidthMultiplier: appearance.hoverLineWidthMultiplier ?? d.hoverLineWidthMultiplier,
   };
 }
 
@@ -72,10 +69,7 @@ export const ANNOTATION_SLOTS = {
 /**
  * Group overlapping peaks by retention time (x) proximity
  */
-export function groupOverlappingPeaks(
-  peaksWithMeta: PeakWithMeta[],
-  overlapThreshold: number
-): PeakWithMeta[][] {
+export function groupOverlappingPeaks(peaksWithMeta: PeakWithMeta[], overlapThreshold: number): PeakWithMeta[][] {
   const sorted = [...peaksWithMeta].sort((a, b) => a.peak.x - b.peak.x);
 
   const groups: PeakWithMeta[][] = [];
@@ -127,11 +121,9 @@ function resolveAnnotationBorderStyle(
   isUserDefined: boolean,
   seriesColor: string,
   appearance: ResolvedSelectionAppearance,
-  hasColorOverride: boolean
+  hasColorOverride: boolean,
 ): AnnotationBorderStyle {
-  const bgcolor = isSelected
-    ? appearance.selected.backgroundColor
-    : CHROMATOGRAM_ANNOTATION.BACKGROUND_COLOR;
+  const bgcolor = isSelected ? appearance.selected.backgroundColor : CHROMATOGRAM_ANNOTATION.BACKGROUND_COLOR;
   let bordercolor: string | undefined;
   if (isSelected) {
     bordercolor = appearance.selected.borderColor;
@@ -151,7 +143,7 @@ function createInlineAnnotation(
   textColor: string,
   isSelected: boolean,
   isDimmed: boolean,
-  appearance: ResolvedSelectionAppearance
+  appearance: ResolvedSelectionAppearance,
 ): Partial<Plotly.Annotations> {
   const opacity = isDimmed ? appearance.unselected.opacity : undefined;
   return {
@@ -179,7 +171,7 @@ export function createPeakAnnotation(
   peak: PeakAnnotation,
   seriesIndex: number,
   slot: { ax: number; ay: number },
-  options: PeakAnnotationOptions = {}
+  options: PeakAnnotationOptions = {},
 ): Partial<Plotly.Annotations> {
   const {
     selectedPeakIds = [],
@@ -193,9 +185,7 @@ export function createPeakAnnotation(
     ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_COLOR
     : CHART_COLORS[seriesIndex % CHART_COLORS.length];
   const color = peak.color ?? defaultColor;
-  const textColor = isUserDefined && !peak.color
-    ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_TEXT_COLOR
-    : color;
+  const textColor = isUserDefined && !peak.color ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_TEXT_COLOR : color;
 
   const rawText = peak.text ?? (peak._computed?.area === undefined ? "" : `Area: ${peak._computed.area.toFixed(2)}`);
 
@@ -217,7 +207,12 @@ export function createPeakAnnotation(
   const ay = isUserDefined && peak.ay !== undefined ? peak.ay : slot.ay;
 
   const borderStyle = resolveAnnotationBorderStyle(
-    isSelected, isDimmed, isUserDefined, color, appearance, peak.color !== undefined
+    isSelected,
+    isDimmed,
+    isUserDefined,
+    color,
+    appearance,
+    peak.color !== undefined,
   );
 
   return {
@@ -246,7 +241,7 @@ export function createPeakAnnotation(
  */
 export function createGroupAnnotations(
   group: PeakWithMeta[],
-  options: PeakAnnotationOptions = {}
+  options: PeakAnnotationOptions = {},
 ): Partial<Plotly.Annotations>[] {
   if (group.length === 1) {
     const { peak, seriesIndex } = group[0];
@@ -257,9 +252,7 @@ export function createGroupAnnotations(
   const sortedGroup = [...group].sort((a, b) => a.peak.y - b.peak.y);
 
   return sortedGroup.map(({ peak, seriesIndex }, slotIndex) => {
-    const slot =
-      ANNOTATION_SLOTS.overlap[slotIndex % ANNOTATION_SLOTS.overlap.length];
+    const slot = ANNOTATION_SLOTS.overlap[slotIndex % ANNOTATION_SLOTS.overlap.length];
     return createPeakAnnotation(peak, seriesIndex, slot, options);
   });
 }
-

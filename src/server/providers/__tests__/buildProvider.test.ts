@@ -93,13 +93,8 @@ describe("buildProvider", () => {
     it("should throw InvalidProviderConfigurationError for unsupported type", async () => {
       const config = createConfig("unknown-type");
 
-      await expect(buildProvider(config)).rejects.toThrow(
-        InvalidProviderConfigurationError,
-      );
-      await expect(buildProvider(config)).rejects.toThrow(
-        "Unsupported provider type: unknown-type",
-      );
+      await expect(buildProvider(config)).rejects.toThrow(InvalidProviderConfigurationError);
+      await expect(buildProvider(config)).rejects.toThrow("Unsupported provider type: unknown-type");
     });
   });
 });
-

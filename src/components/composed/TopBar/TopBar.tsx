@@ -7,22 +7,18 @@ import { cn } from "@/lib/utils";
 // TopBar — sticky 3-slot header
 // =============================================================================
 
-const topBarVariants = cva(
-  "flex items-center h-11 px-3 bg-sidebar border-b border-sidebar-border w-full gap-2 z-40",
-  {
-    variants: {
-      sticky: {
-        true: "sticky top-0",
-        false: "",
-      },
+const topBarVariants = cva("flex items-center h-11 px-3 bg-sidebar border-b border-sidebar-border w-full gap-2 z-40", {
+  variants: {
+    sticky: {
+      true: "sticky top-0",
+      false: "",
     },
-    defaultVariants: { sticky: true },
-  }
-);
+  },
+  defaultVariants: { sticky: true },
+});
 
 export interface TopBarProps
-  extends Omit<React.ComponentProps<"div">, "children">,
-    VariantProps<typeof topBarVariants> {
+  extends Omit<React.ComponentProps<"div">, "children">, VariantProps<typeof topBarVariants> {
   /** Left slot — typically a breadcrumb. */
   left?: React.ReactNode;
   /**
@@ -43,31 +39,18 @@ export interface TopBarProps
  */
 function TopBar({ left, center, right, sticky, className, ...props }: TopBarProps) {
   return (
-    <div
-      data-slot="top-bar"
-      className={cn(topBarVariants({ sticky }), className)}
-      {...props}
-    >
-      <div
-        data-slot="top-bar-left"
-        className="flex items-center gap-2 flex-1 min-w-0"
-      >
+    <div data-slot="top-bar" className={cn(topBarVariants({ sticky }), className)} {...props}>
+      <div data-slot="top-bar-left" className="flex items-center gap-2 flex-1 min-w-0">
         {left}
       </div>
 
       {center != null && (
-        <div
-          data-slot="top-bar-center"
-          className="flex items-center gap-2 shrink-0"
-        >
+        <div data-slot="top-bar-center" className="flex items-center gap-2 shrink-0">
           {center}
         </div>
       )}
 
-      <div
-        data-slot="top-bar-right"
-        className="flex items-center gap-2 shrink-0 justify-end"
-      >
+      <div data-slot="top-bar-right" className="flex items-center gap-2 shrink-0 justify-end">
         {right}
       </div>
     </div>

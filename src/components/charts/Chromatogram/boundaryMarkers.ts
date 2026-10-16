@@ -18,12 +18,7 @@ const BOUNDARY_MARKER_SERIES_OFFSET = -16;
  * Create a marker trace for a boundary point.
  * Markers are placed on the x-axis below 0, staggered by series index.
  */
-function createMarkerTrace(
-  xPos: number,
-  yPos: number,
-  markerType: BoundaryMarkerType,
-  color: string
-): Plotly.Data[] {
+function createMarkerTrace(xPos: number, yPos: number, markerType: BoundaryMarkerType, color: string): Plotly.Data[] {
   if (markerType === "none") {
     return [];
   }
@@ -57,7 +52,7 @@ export function createBoundaryMarkerTraces(
     seriesIndex: number;
     x: number[];
     y: number[];
-  }[]
+  }[],
 ): Plotly.Data[] {
   const traces: Plotly.Data[] = [];
 
@@ -90,4 +85,3 @@ export function createBoundaryMarkerTraces(
 
   return traces;
 }
-

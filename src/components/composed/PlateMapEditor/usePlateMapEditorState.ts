@@ -402,16 +402,7 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
       selection.forEach((wellId) => next.delete(wellId));
       commitScopedValues(next);
     },
-    [
-      appliesToEveryPlate,
-      availablePlates,
-      commitScopedValues,
-      onChange,
-      resolveScope,
-      scopedValues,
-      selection,
-      values,
-    ],
+    [appliesToEveryPlate, availablePlates, commitScopedValues, onChange, resolveScope, scopedValues, selection, values],
   );
 
   const canChangePlate = !isPlateSelectionControlled || !!onPlateChange;
@@ -439,24 +430,24 @@ export function usePlateMapEditorState<T extends WellRecord = WellRecord>({
   // this in effect and `useImperativeHandle` dependency lists.
   return React.useMemo(
     () => ({
-    staged,
-    setStaged,
-    scopedValues,
-    commitScopedValues,
-    applyStagedToSelection,
-    applyToSelection,
-    clearWells,
-    availablePlates,
-    activePlate,
-    isPlateScoped,
-    isPlateSelectionControlled,
-    canChangePlate,
-    handlePlateChange,
-    handleImportCsv,
-    cycleWellField: doubleClickCycleField ? cycleWellField : undefined,
-    flashWell,
-    hoveredWellId,
-    setHoveredWellId,
+      staged,
+      setStaged,
+      scopedValues,
+      commitScopedValues,
+      applyStagedToSelection,
+      applyToSelection,
+      clearWells,
+      availablePlates,
+      activePlate,
+      isPlateScoped,
+      isPlateSelectionControlled,
+      canChangePlate,
+      handlePlateChange,
+      handleImportCsv,
+      cycleWellField: doubleClickCycleField ? cycleWellField : undefined,
+      flashWell,
+      hoveredWellId,
+      setHoveredWellId,
     }),
     [
       applyStagedToSelection,

@@ -1,14 +1,8 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "./accordion"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./accordion";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Accordion> = {
   title: "Components/Layout & Structure/Accordion",
@@ -20,11 +14,11 @@ const meta: Meta<typeof Accordion> = {
     docs: { source: { type: "dynamic" } },
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Accordion>
+type Story = StoryObj<typeof Accordion>;
 
 function renderAccordion(props: React.ComponentProps<typeof Accordion>) {
   return (
@@ -37,9 +31,7 @@ function renderAccordion(props: React.ComponentProps<typeof Accordion>) {
       </AccordionItem>
       <AccordionItem value="item-2">
         <AccordionTrigger>Do they support multiple open sections?</AccordionTrigger>
-        <AccordionContent>
-          The accordion root supports both single and multiple expansion modes.
-        </AccordionContent>
+        <AccordionContent>The accordion root supports both single and multiple expansion modes.</AccordionContent>
       </AccordionItem>
       <AccordionItem value="item-3">
         <AccordionTrigger>Can content include links?</AccordionTrigger>
@@ -48,7 +40,7 @@ function renderAccordion(props: React.ComponentProps<typeof Accordion>) {
         </AccordionContent>
       </AccordionItem>
     </Accordion>
-  )
+  );
 }
 
 export const Single: Story = {
@@ -57,27 +49,21 @@ export const Single: Story = {
     zephyr: { testCaseId: "SW-T1180" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Accordion triggers and section headings render", async () => {
-      expect(
-        canvas.getByRole("button", { name: "Can I use these components in Storybook?" }),
-      ).toBeInTheDocument()
-      expect(
-        canvas.getByRole("button", { name: "Do they support multiple open sections?" }),
-      ).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Can content include links?" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Can I use these components in Storybook?" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Do they support multiple open sections?" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Can content include links?" })).toBeInTheDocument();
+    });
 
     await step("Expanded section content is visible", async () => {
       expect(
-        canvas.getByText(
-          "Yes. Each component can be composed into focused stories for docs and testing.",
-        ),
-      ).toBeInTheDocument()
-    })
+        canvas.getByText("Yes. Each component can be composed into focused stories for docs and testing."),
+      ).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Multiple: Story = {
   render: () => renderAccordion({ type: "multiple", defaultValue: ["item-1", "item-2"] }),
@@ -85,26 +71,20 @@ export const Multiple: Story = {
     zephyr: { testCaseId: "SW-T1181" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Accordion triggers render", async () => {
-      expect(
-        canvas.getByRole("button", { name: "Can I use these components in Storybook?" }),
-      ).toBeInTheDocument()
-      expect(
-        canvas.getByRole("button", { name: "Do they support multiple open sections?" }),
-      ).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Can I use these components in Storybook?" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Do they support multiple open sections?" })).toBeInTheDocument();
+    });
 
     await step("Multiple expanded sections show content", async () => {
       expect(
-        canvas.getByText(
-          "Yes. Each component can be composed into focused stories for docs and testing.",
-        ),
-      ).toBeInTheDocument()
+        canvas.getByText("Yes. Each component can be composed into focused stories for docs and testing."),
+      ).toBeInTheDocument();
       expect(
         canvas.getByText("The accordion root supports both single and multiple expansion modes."),
-      ).toBeInTheDocument()
-    })
+      ).toBeInTheDocument();
+    });
   },
-}
+};

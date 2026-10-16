@@ -51,9 +51,7 @@ export const Info: Story = {
     });
 
     await step("Description renders", async () => {
-      expect(
-        canvas.getByText("The platform will be unavailable on Sunday from 2–4 AM UTC.")
-      ).toBeInTheDocument();
+      expect(canvas.getByText("The platform will be unavailable on Sunday from 2–4 AM UTC.")).toBeInTheDocument();
     });
 
     await step("Icon is present", async () => {
@@ -80,9 +78,7 @@ export const Positive: Story = {
     });
 
     await step("Description renders", async () => {
-      expect(
-        canvas.getByText("Version 3.2.1 is now live in production.")
-      ).toBeInTheDocument();
+      expect(canvas.getByText("Version 3.2.1 is now live in production.")).toBeInTheDocument();
     });
   },
 };
@@ -91,8 +87,7 @@ export const Warning: Story = {
   args: {
     variant: "warning",
     title: "Storage nearing capacity",
-    description:
-      "Your organization is at 87% storage capacity. Upgrade your plan to avoid interruptions.",
+    description: "Your organization is at 87% storage capacity. Upgrade your plan to avoid interruptions.",
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4683" },
@@ -107,9 +102,7 @@ export const Warning: Story = {
 
     await step("Description renders", async () => {
       expect(
-        canvas.getByText(
-          "Your organization is at 87% storage capacity. Upgrade your plan to avoid interruptions."
-        )
+        canvas.getByText("Your organization is at 87% storage capacity. Upgrade your plan to avoid interruptions."),
       ).toBeInTheDocument();
     });
   },
@@ -119,8 +112,7 @@ export const Destructive: Story = {
   args: {
     variant: "destructive",
     title: "Pipeline failed",
-    description:
-      "The ingestion pipeline stopped due to a schema mismatch. Review the error log.",
+    description: "The ingestion pipeline stopped due to a schema mismatch. Review the error log.",
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4684" },
@@ -135,9 +127,7 @@ export const Destructive: Story = {
 
     await step("Description renders", async () => {
       expect(
-        canvas.getByText(
-          "The ingestion pipeline stopped due to a schema mismatch. Review the error log."
-        )
+        canvas.getByText("The ingestion pipeline stopped due to a schema mismatch. Review the error log."),
       ).toBeInTheDocument();
     });
   },
@@ -166,9 +156,7 @@ export const WithAction: Story = {
     });
 
     await step("Action button renders", async () => {
-      expect(
-        canvas.getByRole("button", { name: "Upgrade plan" })
-      ).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Upgrade plan" })).toBeInTheDocument();
     });
   },
 };
@@ -198,11 +186,8 @@ export const Dismissible: Story = {
     await step("Dismissible banner renders with close button", async () => {
       expect(canvas.getByRole("status")).toBeInTheDocument();
       expect(canvas.getByText("New features available")).toBeInTheDocument();
-      expect(
-        canvas.getByRole("button", { name: "Dismiss" })
-      ).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Dismiss" })).toBeInTheDocument();
     });
-
   },
 };
 
@@ -230,9 +215,7 @@ export const DismissibleInteraction: Story = {
     await step("Dismissible banner renders with close button", async () => {
       expect(canvas.getByRole("status")).toBeInTheDocument();
       expect(canvas.getByText("New features available")).toBeInTheDocument();
-      expect(
-        canvas.getByRole("button", { name: "Dismiss" })
-      ).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Dismiss" })).toBeInTheDocument();
     });
 
     await step("Clicking dismiss button hides banner", async () => {
@@ -264,26 +247,10 @@ export const TitleOnly: Story = {
 export const AllVariants: Story = {
   render: () => (
     <div className="flex flex-col gap-0">
-      <Banner
-        variant="info"
-        title="Info"
-        description="Informational system message."
-      />
-      <Banner
-        variant="positive"
-        title="Success"
-        description="Operation completed successfully."
-      />
-      <Banner
-        variant="warning"
-        title="Warning"
-        description="Action required before proceeding."
-      />
-      <Banner
-        variant="destructive"
-        title="Error"
-        description="Something went wrong."
-      />
+      <Banner variant="info" title="Info" description="Informational system message." />
+      <Banner variant="positive" title="Success" description="Operation completed successfully." />
+      <Banner variant="warning" title="Warning" description="Action required before proceeding." />
+      <Banner variant="destructive" title="Error" description="Something went wrong." />
     </div>
   ),
   parameters: {

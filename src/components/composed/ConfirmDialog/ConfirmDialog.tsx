@@ -1,7 +1,7 @@
-import * as React from "react"
+import * as React from "react";
 
-import { Banner } from "@/components/ui/banner"
-import { Button } from "@/components/ui/button"
+import { Banner } from "@/components/ui/banner";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -11,34 +11,32 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Spinner } from "@/components/ui/spinner"
+} from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
 
 interface ConfirmDialogBaseProps {
-  title: string
-  description?: string
-  variant?: "default" | "destructive"
-  confirmLabel?: string
-  cancelLabel?: string
-  onConfirm?: () => void
-  onCancel?: () => void
-  trigger?: React.ReactElement
-  loading?: boolean
+  title: string;
+  description?: string;
+  variant?: "default" | "destructive";
+  confirmLabel?: string;
+  cancelLabel?: string;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+  trigger?: React.ReactElement;
+  loading?: boolean;
 }
 
 type ConfirmDialogControlledProps = ConfirmDialogBaseProps & {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
 
 type ConfirmDialogUncontrolledProps = ConfirmDialogBaseProps & {
-  open?: never
-  onOpenChange?: never
-}
+  open?: never;
+  onOpenChange?: never;
+};
 
-export type ConfirmDialogProps =
-  | ConfirmDialogControlledProps
-  | ConfirmDialogUncontrolledProps
+export type ConfirmDialogProps = ConfirmDialogControlledProps | ConfirmDialogUncontrolledProps;
 
 export function ConfirmDialog({
   title,
@@ -59,16 +57,10 @@ export function ConfirmDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description && (
-            <DialogDescription>{description}</DialogDescription>
-          )}
+          {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         {variant === "destructive" && (
-          <Banner
-            variant="destructive"
-            description="This action cannot be undone."
-            className="rounded-md"
-          />
+          <Banner variant="destructive" description="This action cannot be undone." className="rounded-md" />
         )}
         <DialogFooter>
           <DialogClose asChild>
@@ -87,5 +79,5 @@ export function ConfirmDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

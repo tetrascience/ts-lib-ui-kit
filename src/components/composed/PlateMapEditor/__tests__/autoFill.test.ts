@@ -14,13 +14,7 @@ describe("autoFillPositions", () => {
   });
 
   it("defaults to row-major traversal", () => {
-    expect(autoFillPositions({ dims: DIMS_SMALL, count: 5 })).toEqual([
-      "A01",
-      "A02",
-      "A03",
-      "A04",
-      "B01",
-    ]);
+    expect(autoFillPositions({ dims: DIMS_SMALL, count: 5 })).toEqual(["A01", "A02", "A03", "A04", "B01"]);
   });
 
   it("walks column-major when requested", () => {
@@ -60,18 +54,11 @@ describe("autoFillPositions", () => {
   });
 
   it("honors startWellId by skipping forward to that position", () => {
-    expect(autoFillPositions({ dims: DIMS_SMALL, count: 3, startWellId: "B02" })).toEqual([
-      "B02",
-      "B03",
-      "B04",
-    ]);
+    expect(autoFillPositions({ dims: DIMS_SMALL, count: 3, startWellId: "B02" })).toEqual(["B02", "B03", "B04"]);
   });
 
   it("ignores an invalid startWellId and starts at the origin", () => {
-    expect(autoFillPositions({ dims: DIMS_SMALL, count: 2, startWellId: "Z99" })).toEqual([
-      "A01",
-      "A02",
-    ]);
+    expect(autoFillPositions({ dims: DIMS_SMALL, count: 2, startWellId: "Z99" })).toEqual(["A01", "A02"]);
   });
 
   it("repeats each item by replicates and truncates at plate boundary", () => {
@@ -85,11 +72,10 @@ describe("autoFillPositions", () => {
 describe("autoFillRecords", () => {
   it("maps each item to a record using the builder, respecting replicates", () => {
     const items = ["alpha", "beta"];
-    const records = autoFillRecords(
-      items,
-      (item, idx, wellId) => ({ item, idx, wellId }),
-      { dims: DIMS_SMALL, replicates: 2 },
-    );
+    const records = autoFillRecords(items, (item, idx, wellId) => ({ item, idx, wellId }), {
+      dims: DIMS_SMALL,
+      replicates: 2,
+    });
 
     expect(records.get("A01")).toEqual({ item: "alpha", idx: 0, wellId: "A01" });
     expect(records.get("A02")).toEqual({ item: "alpha", idx: 0, wellId: "A02" });
@@ -100,11 +86,10 @@ describe("autoFillRecords", () => {
 
   it("skips undefined items rather than placing empty records", () => {
     const items: (string | undefined)[] = ["alpha"];
-    const records = autoFillRecords(
-      items as string[],
-      (item, idx, wellId) => ({ item, idx, wellId }),
-      { dims: DIMS_SMALL, replicates: 1 },
-    );
+    const records = autoFillRecords(items as string[], (item, idx, wellId) => ({ item, idx, wellId }), {
+      dims: DIMS_SMALL,
+      replicates: 1,
+    });
     expect(records.size).toBe(1);
     expect(records.get("A01")?.item).toBe("alpha");
   });

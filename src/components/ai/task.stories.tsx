@@ -1,10 +1,9 @@
-import { useState } from "react"
-import { expect, userEvent, waitFor, within } from "storybook/test"
+import { useState } from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
-import { Task, TaskContent, TaskItem, TaskItemFile, TaskTrigger } from "./task"
+import { Task, TaskContent, TaskItem, TaskItemFile, TaskTrigger } from "./task";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta = {
   title: "AI Elements/Agent Activity/Task",
@@ -12,26 +11,22 @@ const meta: Meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
-const expectCollapsedChevronConfiguredForHoverReveal = async (
-  trigger: HTMLElement
-) => {
-  const chevron = trigger.querySelector<SVGElement>(
-    '[data-slot="collapsible-chevron"]'
-  )
+const expectCollapsedChevronConfiguredForHoverReveal = async (trigger: HTMLElement) => {
+  const chevron = trigger.querySelector<SVGElement>('[data-slot="collapsible-chevron"]');
 
   if (!chevron) {
-    throw new Error("Expected collapsible chevron to render")
+    throw new Error("Expected collapsible chevron to render");
   }
 
-  await expect(chevron).toHaveClass("opacity-0")
-  await expect(chevron).toHaveClass("group-hover:opacity-100")
-}
+  await expect(chevron).toHaveClass("opacity-0");
+  await expect(chevron).toHaveClass("group-hover:opacity-100");
+};
 
 export const Default: Story = {
   render: () => (
@@ -47,16 +42,16 @@ export const Default: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Task renders with title and items", async () => {
-      await expect(canvas.getByText("Set up project structure")).toBeInTheDocument()
-      await expect(canvas.getByText("Create src/ directory layout")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Set up project structure")).toBeInTheDocument();
+      await expect(canvas.getByText("Create src/ directory layout")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4643" },
   },
-}
+};
 
 export const MultipleTasks: Story = {
   render: () => (
@@ -87,17 +82,17 @@ export const MultipleTasks: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Multiple tasks render", async () => {
-      await expect(canvas.getByText("Initialize repository")).toBeInTheDocument()
-      await expect(canvas.getByText("Install dependencies")).toBeInTheDocument()
-      await expect(canvas.getByText("Configure CI/CD")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Initialize repository")).toBeInTheDocument();
+      await expect(canvas.getByText("Install dependencies")).toBeInTheDocument();
+      await expect(canvas.getByText("Configure CI/CD")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4644" },
   },
-}
+};
 
 export const WithFileReferences: Story = {
   render: () => (
@@ -128,16 +123,16 @@ export const WithFileReferences: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Task with file references renders", async () => {
-      await expect(canvas.getByText("Button.tsx")).toBeInTheDocument()
-      await expect(canvas.getByText("index.ts")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Button.tsx")).toBeInTheDocument();
+      await expect(canvas.getByText("index.ts")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4645" },
   },
-}
+};
 
 export const Collapsed: Story = {
   render: () => (
@@ -158,31 +153,29 @@ export const Collapsed: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Collapsed task shows only title", async () => {
-      await expect(canvas.getByText("Completed: Scaffold project")).toBeInTheDocument()
-      await expect(canvas.getByText("Building authentication flow")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Completed: Scaffold project")).toBeInTheDocument();
+      await expect(canvas.getByText("Building authentication flow")).toBeInTheDocument();
+    });
     await step("Collapsed chevron appears on hover", async () => {
-      const trigger = canvas
-        .getByText("Completed: Scaffold project")
-        .closest("[aria-expanded]")
+      const trigger = canvas.getByText("Completed: Scaffold project").closest("[aria-expanded]");
 
       if (!trigger) {
-        throw new Error("Expected task trigger to render")
+        throw new Error("Expected task trigger to render");
       }
 
-      await expectCollapsedChevronConfiguredForHoverReveal(trigger as HTMLElement)
-    })
+      await expectCollapsedChevronConfiguredForHoverReveal(trigger as HTMLElement);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4646" },
   },
-}
+};
 
 export const StreamingAutoClose: Story = {
   render: () => {
-    const [isStreaming, setIsStreaming] = useState(true)
+    const [isStreaming, setIsStreaming] = useState(true);
 
     return (
       <div className="w-full max-w-lg space-y-2">
@@ -196,29 +189,29 @@ export const StreamingAutoClose: Story = {
           </TaskContent>
         </Task>
       </div>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const taskTrigger = canvas.getByText("Search knowledge base").closest("[aria-expanded]")
+    const canvas = within(canvasElement);
+    const taskTrigger = canvas.getByText("Search knowledge base").closest("[aria-expanded]");
 
     if (!taskTrigger) {
-      throw new Error("Expected task trigger to render")
+      throw new Error("Expected task trigger to render");
     }
 
     await step("Streaming task starts open", async () => {
-      await expect(taskTrigger).toHaveAttribute("aria-expanded", "true")
-      await expect(canvas.getByText("Reading indexed results")).toBeInTheDocument()
-    })
+      await expect(taskTrigger).toHaveAttribute("aria-expanded", "true");
+      await expect(canvas.getByText("Reading indexed results")).toBeInTheDocument();
+    });
 
     await step("Stopping streaming auto-closes the task", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Finish task" }))
+      await userEvent.click(canvas.getByRole("button", { name: "Finish task" }));
       await waitFor(() => expect(taskTrigger).toHaveAttribute("aria-expanded", "false"), {
         timeout: 1800,
-      })
-    })
+      });
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4647" },
   },
-}
+};

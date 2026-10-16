@@ -10,13 +10,7 @@ import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { cn } from "@/lib/utils";
 import { seriesColor } from "@/utils/colors";
 
-type MarkerSymbol =
-  | "circle"
-  | "square"
-  | "diamond"
-  | "triangle-up"
-  | "triangle-down"
-  | "star";
+type MarkerSymbol = "circle" | "square" | "diamond" | "triangle-up" | "triangle-down" | "star";
 
 interface ScatterPlotDataSeries {
   x: number[];
@@ -59,14 +53,7 @@ interface ScatterPlotProps {
   markerSize?: number;
 }
 
-const DEFAULT_SYMBOLS: MarkerSymbol[] = [
-  "circle",
-  "square",
-  "diamond",
-  "triangle-up",
-  "triangle-down",
-  "star",
-];
+const DEFAULT_SYMBOLS: MarkerSymbol[] = ["circle", "square", "diamond", "triangle-up", "triangle-down", "star"];
 
 const ScatterPlot: React.FC<ScatterPlotProps> = ({
   dataSeries,
@@ -101,10 +88,7 @@ const ScatterPlot: React.FC<ScatterPlotProps> = ({
   // relayout right after newPlot already drew at that size.
   const appliedSizeRef = useRef({ width: 0, height: 0 });
 
-  const seriesArray = useMemo(
-    () => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]),
-    [dataSeries],
-  );
+  const seriesArray = useMemo(() => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]), [dataSeries]);
 
   const { xMin, xMax, yMin, yMax } = useMemo(() => {
     // Seed with ±Infinity, not MAX_VALUE/MIN_VALUE — MIN_VALUE is the smallest
@@ -136,15 +120,9 @@ const ScatterPlot: React.FC<ScatterPlotProps> = ({
     };
   }, [seriesArray]);
 
-  const effectiveXRange = useMemo(
-    () => xRange || [xMin, xMax],
-    [xRange, xMin, xMax],
-  );
+  const effectiveXRange = useMemo(() => xRange || [xMin, xMax], [xRange, xMin, xMax]);
 
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
+  const effectiveYRange = useMemo(() => yRange || [yMin, yMax], [yRange, yMin, yMax]);
 
   const xTicks = useMemo(() => {
     const range = effectiveXRange[1] - effectiveXRange[0];
@@ -212,9 +190,7 @@ const ScatterPlot: React.FC<ScatterPlotProps> = ({
         size: series.size ?? markerSize,
         symbol:
           series.symbol ??
-          (variant === "stacked"
-            ? DEFAULT_SYMBOLS[index % DEFAULT_SYMBOLS.length]
-            : ("circle" as const)),
+          (variant === "stacked" ? DEFAULT_SYMBOLS[index % DEFAULT_SYMBOLS.length] : ("circle" as const)),
         line: {
           color: theme.paperBg,
           width: 1,
@@ -377,7 +353,24 @@ const ScatterPlot: React.FC<ScatterPlotProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [seriesArray, hasSize, xRange, yRange, xTitle, yTitle, title, variant, markerSize, effectiveXRange, effectiveYRange, xTicks, yTicks, tickOptions, theme, bindTooltip]);
+  }, [
+    seriesArray,
+    hasSize,
+    xRange,
+    yRange,
+    xTitle,
+    yTitle,
+    title,
+    variant,
+    markerSize,
+    effectiveXRange,
+    effectiveYRange,
+    xTicks,
+    yTicks,
+    tickOptions,
+    theme,
+    bindTooltip,
+  ]);
 
   // Resize in place when the measured/overridden size changes — cheaper than
   // recreating the plot, and it preserves the hover/crosshair event bindings.
@@ -388,10 +381,7 @@ const ScatterPlot: React.FC<ScatterPlotProps> = ({
     }
     // newPlot already drew at the current size; skip the redundant relayout
     // (it would queue an automargin redraw that can reject if we unmount first).
-    if (
-      appliedSizeRef.current.width === resolvedWidth &&
-      appliedSizeRef.current.height === resolvedHeight
-    ) {
+    if (appliedSizeRef.current.width === resolvedWidth && appliedSizeRef.current.height === resolvedHeight) {
       return;
     }
     appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };
@@ -411,9 +401,4 @@ const ScatterPlot: React.FC<ScatterPlotProps> = ({
 };
 
 export { ScatterPlot };
-export type {
-  MarkerSymbol,
-  ScatterPlotDataSeries,
-  ScatterPlotProps,
-  ScatterPlotVariant,
-};
+export type { MarkerSymbol, ScatterPlotDataSeries, ScatterPlotProps, ScatterPlotVariant };

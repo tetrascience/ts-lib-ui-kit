@@ -3,12 +3,7 @@ import { type LucideIcon } from "lucide-react";
 import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -158,35 +153,33 @@ const dataAppShellPrimaryNavItemVariants = cva(
       },
     ],
     defaultVariants: { variant: "rail", active: false },
-  }
+  },
 );
 
-const pageIconVariants = cva(
-  "relative flex items-center justify-center rounded-lg transition-colors duration-150",
-  {
-    variants: {
-      active: {
-        true: "bg-primary/10",
-        false: "bg-transparent",
-      },
-      variant: {
-        // 32px box everywhere so the rail, sidebar and top-bar toggle boxes all
-        // match; sidebar-accent hover to match the rest of the sidebar surface.
-        rail: "size-8 hover:bg-sidebar-accent/60",
-        sidebar: "size-8",
-        top: "",
-      },
+const pageIconVariants = cva("relative flex items-center justify-center rounded-lg transition-colors duration-150", {
+  variants: {
+    active: {
+      true: "bg-primary/10",
+      false: "bg-transparent",
     },
-    defaultVariants: { active: false, variant: "rail" },
-  }
-);
+    variant: {
+      // 32px box everywhere so the rail, sidebar and top-bar toggle boxes all
+      // match; sidebar-accent hover to match the rest of the sidebar surface.
+      rail: "size-8 hover:bg-sidebar-accent/60",
+      sidebar: "size-8",
+      top: "",
+    },
+  },
+  defaultVariants: { active: false, variant: "rail" },
+});
 
 // =============================================================================
 // Props
 // =============================================================================
 
 export interface DataAppShellPrimaryNavProps
-  extends Omit<React.ComponentProps<"nav">, "children" | "onSelect">,
+  extends
+    Omit<React.ComponentProps<"nav">, "children" | "onSelect">,
     VariantProps<typeof dataAppShellPrimaryNavVariants> {
   /** Navigation groups; each group contains one or more pages */
   navGroups: NavGroup[];
@@ -201,10 +194,7 @@ export interface DataAppShellPrimaryNavProps
   /** Action slot rendered alongside `user` */
   actions?: React.ReactNode;
   /** Escape hatch — full control over an item's rendering */
-  renderItem?: (
-    page: NavPage,
-    state: { active: boolean; variant: DataAppShellPrimaryNavVariant }
-  ) => React.ReactNode;
+  renderItem?: (page: NavPage, state: { active: boolean; variant: DataAppShellPrimaryNavVariant }) => React.ReactNode;
 }
 
 // =============================================================================
@@ -220,15 +210,7 @@ interface NavItemProps {
 
 // The horizontal `top` variant is self-contained (no icon box / gutter styling),
 // so it lives in its own component to keep `NavItem` focused on rail/sidebar.
-function TopNavItem({
-  page,
-  active,
-  onClick,
-}: {
-  page: NavPage;
-  active: boolean;
-  onClick: () => void;
-}) {
+function TopNavItem({ page, active, onClick }: { page: NavPage; active: boolean; onClick: () => void }) {
   const Icon = page.icon;
   return (
     <button
@@ -262,25 +244,16 @@ function NavItem({ page, variant, active, onSelect }: NavItemProps) {
   }
 
   const iconEl = Icon ? (
-    <Icon
-      className={cn("w-4 h-4", active ? "text-primary" : "text-muted-foreground")}
-    />
+    <Icon className={cn("w-4 h-4", active ? "text-primary" : "text-muted-foreground")} />
   ) : (
-    <div
-      className={cn(
-        "w-2 h-2 rounded-full",
-        active ? "bg-primary" : "bg-muted-foreground/40"
-      )}
-    />
+    <div className={cn("w-2 h-2 rounded-full", active ? "bg-primary" : "bg-muted-foreground/40")} />
   );
 
   const iconBox = (
     <div className={cn(pageIconVariants({ active, variant }))}>
       {iconEl}
       {variant === "rail" && page.badge != null && (
-        <Badge className="absolute -top-1 -right-1 h-3.5 min-w-3.5 px-1 text-[9px] leading-none">
-          {page.badge}
-        </Badge>
+        <Badge className="absolute -top-1 -right-1 h-3.5 min-w-3.5 px-1 text-[9px] leading-none">{page.badge}</Badge>
       )}
     </div>
   );
@@ -373,9 +346,7 @@ function DataAppShellPrimaryNav({
           </div>
         )}
         {/* Rail: short centered divider under the header, aligned with the icon column */}
-        {isRail && header != null && (
-          <div className="shrink-0 mx-auto w-8 border-t border-sidebar-border" />
-        )}
+        {isRail && header != null && <div className="shrink-0 mx-auto w-8 border-t border-sidebar-border" />}
 
         <div
           data-slot="data-app-shell-primary-nav-items"
@@ -383,9 +354,7 @@ function DataAppShellPrimaryNav({
         >
           {navGroups.map((group, groupIndex) => (
             <React.Fragment key={`${groupIndex}-${group.label ?? ""}`}>
-              {groupIndex > 0 && (
-                <div className={cn(groupSeparatorVariants({ variant: resolvedVariant }))} />
-              )}
+              {groupIndex > 0 && <div className={cn(groupSeparatorVariants({ variant: resolvedVariant }))} />}
               {resolvedVariant === "sidebar" && group.label && (
                 <span className="pl-12 pr-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">
                   {group.label}
@@ -393,8 +362,7 @@ function DataAppShellPrimaryNav({
               )}
               <div className={cn(groupItemsVariants({ variant: resolvedVariant }))}>
                 {group.pages.map((page) => {
-                  const active =
-                    activeKey == null ? (page.isActive ?? false) : page.id === activeKey;
+                  const active = activeKey == null ? (page.isActive ?? false) : page.id === activeKey;
                   if (renderItem) {
                     return (
                       <React.Fragment key={page.id}>
@@ -403,13 +371,7 @@ function DataAppShellPrimaryNav({
                     );
                   }
                   return (
-                    <NavItem
-                      key={page.id}
-                      page={page}
-                      variant={resolvedVariant}
-                      active={active}
-                      onSelect={onSelect}
-                    />
+                    <NavItem key={page.id} page={page} variant={resolvedVariant} active={active} onSelect={onSelect} />
                   );
                 })}
               </div>
@@ -420,9 +382,7 @@ function DataAppShellPrimaryNav({
         {(user != null || actions != null) && (
           <>
             {/* Rail: short centered divider above the user slot */}
-            {isRail && (
-              <div className="shrink-0 mx-auto w-8 border-t border-sidebar-border" />
-            )}
+            {isRail && <div className="shrink-0 mx-auto w-8 border-t border-sidebar-border" />}
             <div
               data-slot="data-app-shell-primary-nav-user"
               className={cn(userAreaVariants({ variant: resolvedVariant }))}
@@ -437,8 +397,4 @@ function DataAppShellPrimaryNav({
   );
 }
 
-export {
-  DataAppShellPrimaryNav,
-  dataAppShellPrimaryNavVariants,
-  dataAppShellPrimaryNavItemVariants,
-};
+export { DataAppShellPrimaryNav, dataAppShellPrimaryNavVariants, dataAppShellPrimaryNavItemVariants };

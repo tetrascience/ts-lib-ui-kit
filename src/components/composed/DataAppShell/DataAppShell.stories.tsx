@@ -193,9 +193,7 @@ const Bar = ({ w, bg = "#DDE3EC" }: { w: number | string; bg?: string }) => (
 const AnatomyDiagram = () => (
   <div>
     <h2 style={{ margin: "0 0 2px", fontSize: 22, fontWeight: 700, color: "#2F45B5" }}>Anatomy</h2>
-    <p style={{ margin: "0 0 14px", fontSize: 12, color: "#9AA4B2" }}>
-      how the components compose into the AppShell
-    </p>
+    <p style={{ margin: "0 0 14px", fontSize: 12, color: "#9AA4B2" }}>how the components compose into the AppShell</p>
 
     <div
       style={{
@@ -338,29 +336,39 @@ const AnatomyDiagram = () => (
       <Line x={204} y={195.25} w={96} h={1.5} />
       <Dot x={300} y={196} />
       <Num x={74} y={196} n={1} />
-      <Pill x={92} y={184}>Primary nav: Rail</Pill>
+      <Pill x={92} y={184}>
+        Primary nav: Rail
+      </Pill>
 
       {/* 3 · TopBar */}
       <Line x={494.25} y={36} w={1.5} h={16} />
       <Dot x={495} y={52} />
       <Num x={455} y={20} n={3} />
-      <Pill x={473} y={8}>TopBar</Pill>
+      <Pill x={473} y={8}>
+        TopBar
+      </Pill>
 
       {/* 5 · Right panel / Drawer */}
       <Line x={588} y={179.25} w={112} h={1.5} />
       <Dot x={588} y={180} />
-      <Pill x={700} y={168}>Right panel / Drawer</Pill>
+      <Pill x={700} y={168}>
+        Right panel / Drawer
+      </Pill>
 
       {/* 2 · Secondary nav */}
       <Line x={405.25} y={340} w={1.5} h={40} />
       <Dot x={406} y={340} />
       <Num x={306} y={392} n={2} />
-      <Pill x={324} y={382}>Secondary nav : workflow</Pill>
+      <Pill x={324} y={382}>
+        Secondary nav : workflow
+      </Pill>
 
       {/* 4 · Main */}
       <Line x={526.25} y={340} w={1.5} h={40} />
       <Dot x={527} y={340} />
-      <Pill x={505} y={378}>Main</Pill>
+      <Pill x={505} y={378}>
+        Main
+      </Pill>
     </div>
   </div>
 );
@@ -447,17 +455,15 @@ const DataAppShellDocsPage = () => (
       maxWidth: 1475,
       margin: "0 auto",
       padding: "8px 4px",
-      fontFamily:
-        '-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif',
+      fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif',
       color: "#0D1B3E",
     }}
   >
     <h1 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 700 }}>DataAppShell</h1>
     <p style={{ margin: "0 0 8px", color: "#64748B", fontSize: 14, lineHeight: 1.6 }}>
-      A composable application shell for TDP data apps. It assembles a Primary nav, an optional
-      Secondary nav, a Top bar, a main content area, and an optional Right panel. Pick a ready-made
-      variant on the left, or open the Component Properties panel to explore customization options
-      beyond the four main variants.
+      A composable application shell for TDP data apps. It assembles a Primary nav, an optional Secondary nav, a Top
+      bar, a main content area, and an optional Right panel. Pick a ready-made variant on the left, or open the
+      Component Properties panel to explore customization options beyond the four main variants.
     </p>
 
     <div style={{ margin: "8px 0 10px" }}>
@@ -875,10 +881,7 @@ export const SecondaryNavigation: Story = {
 
     await step("Selecting a step advances status derivation", async () => {
       await userEvent.click(canvas.getByRole("button", { name: /Step 2 Name/ }));
-      expect(canvas.getByRole("button", { name: /Step 2 Name/ })).toHaveAttribute(
-        "data-status",
-        "active",
-      );
+      expect(canvas.getByRole("button", { name: /Step 2 Name/ })).toHaveAttribute("data-status", "active");
     });
 
     await step("One toggle collapses nav + workflow into a single icon rail", async () => {
@@ -899,7 +902,7 @@ export const SecondaryNavigation: Story = {
     });
   },
   parameters: {
-      zephyr: { testCaseId: "SW-T5533" },
+    zephyr: { testCaseId: "SW-T5533" },
     docs: { source: { code: WORKFLOW_VERTICAL_CODE, language: "tsx" } },
   },
 };
@@ -941,9 +944,7 @@ export const SecondaryNavigationHorizontal: Story = {
       await userEvent.click(canvas.getByRole("combobox", { name: "Current step" }));
       await userEvent.click(await body.findByRole("option", { name: "Step 3 · Step 3 Name" }));
       await waitFor(() =>
-        expect(canvas.getByRole("combobox", { name: "Current step" })).toHaveTextContent(
-          "Step 3 · Step 3 Name",
-        ),
+        expect(canvas.getByRole("combobox", { name: "Current step" })).toHaveTextContent("Step 3 · Step 3 Name"),
       );
     });
 
@@ -954,7 +955,7 @@ export const SecondaryNavigationHorizontal: Story = {
     });
   },
   parameters: {
-      zephyr: { testCaseId: "SW-T5534" },
+    zephyr: { testCaseId: "SW-T5534" },
     docs: { source: { code: WORKFLOW_HORIZONTAL_CODE, language: "tsx" } },
   },
 };
@@ -1037,7 +1038,7 @@ export const WithRightPanel: Story = {
     });
   },
   parameters: {
-      zephyr: { testCaseId: "SW-T5535" },
+    zephyr: { testCaseId: "SW-T5535" },
     docs: { source: { code: RIGHT_PANEL_CODE, language: "tsx" } },
   },
 };

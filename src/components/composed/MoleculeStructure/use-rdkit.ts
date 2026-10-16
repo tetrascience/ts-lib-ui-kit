@@ -1,18 +1,18 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
-import { loadRDKit } from "./rdkit-loader"
+import { loadRDKit } from "./rdkit-loader";
 
-import type { RDKitModule } from "@rdkit/rdkit"
+import type { RDKitModule } from "@rdkit/rdkit";
 
 /** Lifecycle of the lazily-loaded RDKit module. */
-export type RDKitStatus = "loading" | "ready" | "error"
+export type RDKitStatus = "loading" | "ready" | "error";
 
 export interface UseRDKitResult {
   /** The initialised module, or `null` until it is ready. */
-  rdkit: RDKitModule | null
-  status: RDKitStatus
+  rdkit: RDKitModule | null;
+  status: RDKitStatus;
   /** The load failure, if `status` is `"error"`. */
-  error: Error | null
+  error: Error | null;
 }
 
 /**
@@ -34,29 +34,29 @@ export interface UseRDKitResult {
  * ```
  */
 export function useRDKit(): UseRDKitResult {
-  const [rdkit, setRdkit] = useState<RDKitModule | null>(null)
-  const [status, setStatus] = useState<RDKitStatus>("loading")
-  const [error, setError] = useState<Error | null>(null)
+  const [rdkit, setRdkit] = useState<RDKitModule | null>(null);
+  const [status, setStatus] = useState<RDKitStatus>("loading");
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
 
     loadRDKit()
       .then((module) => {
-        if (cancelled) return
-        setRdkit(module)
-        setStatus("ready")
+        if (cancelled) return;
+        setRdkit(module);
+        setStatus("ready");
       })
       .catch((cause: unknown) => {
-        if (cancelled) return
-        setError(cause instanceof Error ? cause : new Error(String(cause)))
-        setStatus("error")
-      })
+        if (cancelled) return;
+        setError(cause instanceof Error ? cause : new Error(String(cause)));
+        setStatus("error");
+      });
 
     return () => {
-      cancelled = true
-    }
-  }, [])
+      cancelled = true;
+    };
+  }, []);
 
-  return { rdkit, status, error }
+  return { rdkit, status, error };
 }

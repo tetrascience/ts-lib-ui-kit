@@ -34,4 +34,3 @@ export {
 
 // Types
 export type { ProviderConfiguration, QueryResult } from "../types";
-

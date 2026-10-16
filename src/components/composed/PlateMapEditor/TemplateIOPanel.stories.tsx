@@ -60,9 +60,7 @@ export const FullPanel: Story = {
       await userEvent.click(canvas.getByRole("combobox"));
       const option = await body.findByRole("option", { name: /3-point AUC/ });
       await userEvent.click(option);
-      await waitFor(() =>
-        expect(args.onTemplateChange).toHaveBeenCalledWith("three-point"),
-      );
+      await waitFor(() => expect(args.onTemplateChange).toHaveBeenCalledWith("three-point"));
     });
 
     await step("Click 'Clear template'", async () => {

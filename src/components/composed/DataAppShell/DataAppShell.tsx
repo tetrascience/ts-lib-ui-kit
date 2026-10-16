@@ -26,13 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -132,19 +126,18 @@ export interface DataAppShellProps {
 // Sidebar shared body (used by desktop rail + mobile Sheet)
 // =============================================================================
 
-interface SidebarBodyProps
-  extends Pick<
-    DataAppShellProps,
-    | "appName"
-    | "appFullName"
-    | "appIcon"
-    | "version"
-    | "navGroups"
-    | "onAppNameClick"
-    | "backToPlatformPath"
-    | "onBackToPlatform"
-    | "userMenu"
-  > {
+interface SidebarBodyProps extends Pick<
+  DataAppShellProps,
+  | "appName"
+  | "appFullName"
+  | "appIcon"
+  | "version"
+  | "navGroups"
+  | "onAppNameClick"
+  | "backToPlatformPath"
+  | "onBackToPlatform"
+  | "userMenu"
+> {
   /**
    * compact=true  → narrow icon rail (48px): icon-only nav buttons, tooltips on hover
    * compact=false → expanded mobile sheet (220px): icon + label side-by-side rows
@@ -158,17 +151,10 @@ interface SidebarBodyProps
 // App header menu — logo/name button opening the app dropdown
 // =============================================================================
 
-interface AppHeaderMenuProps
-  extends Pick<
-    DataAppShellProps,
-    | "appName"
-    | "appFullName"
-    | "appIcon"
-    | "version"
-    | "onAppNameClick"
-    | "backToPlatformPath"
-    | "onBackToPlatform"
-  > {
+interface AppHeaderMenuProps extends Pick<
+  DataAppShellProps,
+  "appName" | "appFullName" | "appIcon" | "version" | "onAppNameClick" | "backToPlatformPath" | "onBackToPlatform"
+> {
   /** compact=true → icon-only trigger (rail); compact=false → icon + name row */
   compact: boolean;
   /** Which side of the trigger the dropdown opens on — `right` beside a rail, `bottom` under a top bar */
@@ -194,70 +180,61 @@ function AppHeaderMenu({
 
   return (
     <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "cursor-pointer bg-transparent border-none p-0",
+            !compact && "flex items-center w-full text-left",
+          )}
+        >
+          {/* Icon — expanded: centered in the 48px gutter so it lines up with
+                  the nav icons below; compact: bare, centered by the rail header */}
+          {compact ? logo : <span className="flex w-12 shrink-0 justify-center">{logo}</span>}
+
+          {/* Name (expanded only — no version here) */}
+          {!compact && (
+            <span className="text-sm font-semibold text-foreground truncate leading-snug">
+              {appFullName ?? appName}
+            </span>
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side={menuSide} align="start" className="min-w-[220px]">
+        <DropdownMenuItem className="gap-3 px-3 py-2.5" onSelect={() => onAppNameClick?.()}>
+          <div className="w-8 h-8 rounded-lg bg-sidebar-accent border border-sidebar-border flex items-center justify-center shrink-0">
+            <span className="text-[10px] font-bold text-foreground">{appIcon ?? appName}</span>
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-semibold text-foreground truncate">{appFullName ?? appName}</span>
+            {version && (
+              <span className="text-[10px] text-muted-foreground/70 font-mono leading-none mt-0.5">{version}</span>
+            )}
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="gap-2.5 p-0" asChild>
+          {backToPlatformPath ? (
+            <TDPLink
+              path={backToPlatformPath}
+              navigationOptions={{ newTab: false }}
+              className="flex items-center gap-2.5 w-full px-2 py-1.5 !no-underline hover:!no-underline"
+            >
+              <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+              Back to TDP Platform
+            </TDPLink>
+          ) : (
             <button
               type="button"
-              className={cn(
-                "cursor-pointer bg-transparent border-none p-0",
-                !compact && "flex items-center w-full text-left"
-              )}
+              className="flex items-center gap-2.5 w-full px-2 py-1.5 bg-transparent border-none cursor-pointer"
+              onClick={onBackToPlatform}
             >
-              {/* Icon — expanded: centered in the 48px gutter so it lines up with
-                  the nav icons below; compact: bare, centered by the rail header */}
-              {compact ? logo : <span className="flex w-12 shrink-0 justify-center">{logo}</span>}
-
-              {/* Name (expanded only — no version here) */}
-              {!compact && (
-                <span className="text-sm font-semibold text-foreground truncate leading-snug">
-                  {appFullName ?? appName}
-                </span>
-              )}
+              <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+              Back to TDP Platform
             </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side={menuSide} align="start" className="min-w-[220px]">
-            <DropdownMenuItem
-              className="gap-3 px-3 py-2.5"
-              onSelect={() => onAppNameClick?.()}
-            >
-              <div className="w-8 h-8 rounded-lg bg-sidebar-accent border border-sidebar-border flex items-center justify-center shrink-0">
-                <span className="text-[10px] font-bold text-foreground">
-                  {appIcon ?? appName}
-                </span>
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-semibold text-foreground truncate">
-                  {appFullName ?? appName}
-                </span>
-                {version && (
-                  <span className="text-[10px] text-muted-foreground/70 font-mono leading-none mt-0.5">
-                    {version}
-                  </span>
-                )}
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2.5 p-0" asChild>
-              {backToPlatformPath ? (
-                <TDPLink
-                  path={backToPlatformPath}
-                  navigationOptions={{ newTab: false }}
-                  className="flex items-center gap-2.5 w-full px-2 py-1.5 !no-underline hover:!no-underline"
-                >
-                  <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-                  Back to TDP Platform
-                </TDPLink>
-              ) : (
-                <button
-                  type="button"
-                  className="flex items-center gap-2.5 w-full px-2 py-1.5 bg-transparent border-none cursor-pointer"
-                  onClick={onBackToPlatform}
-                >
-                  <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-                  Back to TDP Platform
-                </button>
-              )}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+          )}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
     </DropdownMenu>
   );
 }
@@ -331,8 +308,7 @@ interface PrimarySidebarProps extends Omit<SidebarBodyProps, "compact" | "onAfte
 }
 
 function PrimarySidebar({ collapsed, onCollapsedChange, ...sidebarProps }: PrimarySidebarProps) {
-  const { appName, appFullName, appIcon, version, onAppNameClick, backToPlatformPath, onBackToPlatform } =
-    sidebarProps;
+  const { appName, appFullName, appIcon, version, onAppNameClick, backToPlatformPath, onBackToPlatform } = sidebarProps;
   const headerMenuProps = {
     appName,
     appFullName,
@@ -386,11 +362,7 @@ function PrimarySidebar({ collapsed, onCollapsedChange, ...sidebarProps }: Prima
             <div className="flex-1 min-w-0">
               <AppHeaderMenu {...headerMenuProps} compact={false} />
             </div>
-            <ShellCollapseButton
-              direction="left"
-              label="Collapse navigation"
-              onClick={() => onCollapsedChange(true)}
-            />
+            <ShellCollapseButton direction="left" label="Collapse navigation" onClick={() => onCollapsedChange(true)} />
           </div>
         }
         user={sidebarProps.userMenu}
@@ -437,9 +409,7 @@ function TopNavBreadcrumb({ items }: { items: BreadcrumbItemConfig[] }) {
                     {item.label}
                   </button>
                 ) : (
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    {item.label}
-                  </span>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">{item.label}</span>
                 )}
               </BreadcrumbItem>
             </React.Fragment>
@@ -580,8 +550,7 @@ function DataAppShell({
   // A collapsible sidebar renders its own collapsed rail, so it is never
   // hidden by collapse. hideNavOnCollapse only removes the permanent icon rail.
   const isCollapsibleSidebar = isVertical && primaryNav === "sidebar";
-  const navHidden =
-    !showNavRail || (hideNavOnCollapse && collapsed && !isCollapsibleSidebar);
+  const navHidden = !showNavRail || (hideNavOnCollapse && collapsed && !isCollapsibleSidebar);
 
   // CSS-grid template areas per navVariant — the shell knows zones, never
   // domain concepts. Zones absent from the tree simply collapse their track.
@@ -605,11 +574,7 @@ function DataAppShell({
             (isVertical ? (
               <div className="[grid-area:nav] min-h-0">
                 {isCollapsibleSidebar ? (
-                  <PrimarySidebar
-                    collapsed={collapsed}
-                    onCollapsedChange={setCollapsed}
-                    {...sidebarProps}
-                  />
+                  <PrimarySidebar collapsed={collapsed} onCollapsedChange={setCollapsed} {...sidebarProps} />
                 ) : (
                   <IconRailSidebar {...sidebarProps} />
                 )}
@@ -647,14 +612,8 @@ function DataAppShell({
             className="p-0 bg-sidebar border-r border-sidebar-border data-[side=left]:w-[220px] data-[side=left]:sm:w-[220px] data-[side=left]:sm:max-w-[220px] flex flex-col"
           >
             <SheetTitle className="sr-only">Navigation</SheetTitle>
-            <SheetDescription className="sr-only">
-              Application navigation menu
-            </SheetDescription>
-            <SidebarBody
-              compact={false}
-              onAfterNavClick={() => setMobileNavOpen(false)}
-              {...sidebarProps}
-            />
+            <SheetDescription className="sr-only">Application navigation menu</SheetDescription>
+            <SidebarBody compact={false} onAfterNavClick={() => setMobileNavOpen(false)} {...sidebarProps} />
           </SheetContent>
 
           {/* Secondary (side) zone — e.g. a vertical DataAppShellSecondaryNav */}
@@ -690,10 +649,7 @@ function DataAppShell({
           {/* Body zone: content + right panel. relative — anchors the right
               panel's floating FAB trigger */}
           <div className="[grid-area:body] relative flex min-h-0 min-w-0 overflow-hidden">
-            <main
-              data-slot="data-app-shell-content"
-              className="flex-1 min-w-0 overflow-auto bg-background"
-            >
+            <main data-slot="data-app-shell-content" className="flex-1 min-w-0 overflow-auto bg-background">
               <WithBuildInfoFooter show={Boolean(commitSha)} version={version} commitSha={commitSha}>
                 {children}
               </WithBuildInfoFooter>

@@ -22,10 +22,7 @@ export interface ElementSize {
  * return <div ref={containerRef} className="size-full">…</div>;
  * ```
  */
-export function useElementSize<T extends HTMLElement = HTMLDivElement>(): [
-  React.RefObject<T | null>,
-  ElementSize,
-] {
+export function useElementSize<T extends HTMLElement = HTMLDivElement>(): [React.RefObject<T | null>, ElementSize] {
   const ref = useRef<T>(null);
   const [size, setSize] = useState<ElementSize>({ width: 0, height: 0 });
 
@@ -40,9 +37,7 @@ export function useElementSize<T extends HTMLElement = HTMLDivElement>(): [
       const height = Math.round(entry.contentRect.height);
       // Bail on identical measurements so consumers driving Plotly layout off
       // this size don't trigger a redundant relayout (and a feedback loop).
-      setSize((prev) =>
-        prev.width === width && prev.height === height ? prev : { width, height },
-      );
+      setSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
     });
 
     observer.observe(element);

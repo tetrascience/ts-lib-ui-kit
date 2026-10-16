@@ -1,22 +1,10 @@
-import { expect, userEvent, within } from "storybook/test"
+import { expect, userEvent, within } from "storybook/test";
 
-import { Button } from "./button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "./table"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./tooltip"
+import { Button } from "./button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof TooltipContent> = {
   title: "Components/Overlays/Tooltip",
@@ -35,11 +23,11 @@ const meta: Meta<typeof TooltipContent> = {
     side: "top",
     sideOffset: 8,
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof TooltipContent>
+type Story = StoryObj<typeof TooltipContent>;
 
 function renderTooltip(args: Story["args"]) {
   return (
@@ -53,7 +41,7 @@ function renderTooltip(args: Story["args"]) {
         </Tooltip>
       </div>
     </TooltipProvider>
-  )
+  );
 }
 
 export const Top: Story = {
@@ -62,20 +50,20 @@ export const Top: Story = {
     zephyr: { testCaseId: "SW-T1326" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Tooltip trigger renders", async () => {
-      expect(canvas.getByRole("button", { name: "Export status" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Export status" })).toBeInTheDocument();
+    });
 
     await step("Tooltip content is visible in portal", async () => {
-      const nodes = body.getAllByText("Last synced 3 minutes ago")
-      expect(nodes.length).toBeGreaterThan(0)
-      expect(nodes[0]).toBeInTheDocument()
-    })
+      const nodes = body.getAllByText("Last synced 3 minutes ago");
+      expect(nodes.length).toBeGreaterThan(0);
+      expect(nodes[0]).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Right: Story = {
   args: {
@@ -86,20 +74,20 @@ export const Right: Story = {
     zephyr: { testCaseId: "SW-T1327" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Tooltip trigger renders", async () => {
-      expect(canvas.getByRole("button", { name: "Export status" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Export status" })).toBeInTheDocument();
+    });
 
     await step("Tooltip content is visible in portal", async () => {
-      const nodes = body.getAllByText("Last synced 3 minutes ago")
-      expect(nodes.length).toBeGreaterThan(0)
-      expect(nodes[0]).toBeInTheDocument()
-    })
+      const nodes = body.getAllByText("Last synced 3 minutes ago");
+      expect(nodes.length).toBeGreaterThan(0);
+      expect(nodes[0]).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Bottom: Story = {
   args: {
@@ -110,20 +98,20 @@ export const Bottom: Story = {
     zephyr: { testCaseId: "SW-T1328" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Tooltip trigger renders", async () => {
-      expect(canvas.getByRole("button", { name: "Export status" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Export status" })).toBeInTheDocument();
+    });
 
     await step("Tooltip content is visible in portal", async () => {
-      const nodes = body.getAllByText("Last synced 3 minutes ago")
-      expect(nodes.length).toBeGreaterThan(0)
-      expect(nodes[0]).toBeInTheDocument()
-    })
+      const nodes = body.getAllByText("Last synced 3 minutes ago");
+      expect(nodes.length).toBeGreaterThan(0);
+      expect(nodes[0]).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Left: Story = {
   args: {
@@ -134,20 +122,20 @@ export const Left: Story = {
     zephyr: { testCaseId: "SW-T1329" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Tooltip trigger renders", async () => {
-      expect(canvas.getByRole("button", { name: "Export status" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Export status" })).toBeInTheDocument();
+    });
 
     await step("Tooltip content is visible in portal", async () => {
-      const nodes = body.getAllByText("Last synced 3 minutes ago")
-      expect(nodes.length).toBeGreaterThan(0)
-      expect(nodes[0]).toBeInTheDocument()
-    })
+      const nodes = body.getAllByText("Last synced 3 minutes ago");
+      expect(nodes.length).toBeGreaterThan(0);
+      expect(nodes[0]).toBeInTheDocument();
+    });
   },
-}
+};
 
 const tableRows = [
   {
@@ -168,7 +156,7 @@ const tableRows = [
     lastRun: "yesterday",
     detail: "Scheduled daily at 03:00 UTC — next run in 11 hours",
   },
-]
+];
 
 export const InTableCells: Story = {
   parameters: {
@@ -199,10 +187,7 @@ export const InTableCells: Story = {
                 <TableCell>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="text-left underline decoration-dotted underline-offset-2"
-                      >
+                      <button type="button" className="text-left underline decoration-dotted underline-offset-2">
                         {row.workspace}
                       </button>
                     </TooltipTrigger>
@@ -219,19 +204,19 @@ export const InTableCells: Story = {
     </TooltipProvider>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Tooltip content is not rendered inline before hover", async () => {
-      expect(canvas.queryByText(tableRows[0].detail)).not.toBeInTheDocument()
-    })
+      expect(canvas.queryByText(tableRows[0].detail)).not.toBeInTheDocument();
+    });
 
     await step("Hovering trigger reveals tooltip in portal", async () => {
-      const trigger = canvas.getByRole("button", { name: tableRows[0].workspace })
-      await userEvent.hover(trigger)
-      const nodes = await body.findAllByText(tableRows[0].detail)
-      expect(nodes.length).toBeGreaterThan(0)
-      expect(nodes.every((node) => !canvasElement.contains(node))).toBe(true)
-    })
+      const trigger = canvas.getByRole("button", { name: tableRows[0].workspace });
+      await userEvent.hover(trigger);
+      const nodes = await body.findAllByText(tableRows[0].detail);
+      expect(nodes.length).toBeGreaterThan(0);
+      expect(nodes.every((node) => !canvasElement.contains(node))).toBe(true);
+    });
   },
-}
+};

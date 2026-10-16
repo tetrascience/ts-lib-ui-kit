@@ -1,32 +1,23 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Info,
-  X,
-  XCircle,
-} from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const bannerVariants = cva(
-  "flex w-full items-start gap-3 px-4 py-3 text-sm",
-  {
-    variants: {
-      variant: {
-        info: "bg-info text-info-foreground",
-        positive: "bg-positive text-positive-foreground",
-        warning: "bg-warning text-warning-foreground",
-        destructive: "bg-destructive text-destructive-foreground",
-      },
+const bannerVariants = cva("flex w-full items-start gap-3 px-4 py-3 text-sm", {
+  variants: {
+    variant: {
+      info: "bg-info text-info-foreground",
+      positive: "bg-positive text-positive-foreground",
+      warning: "bg-warning text-warning-foreground",
+      destructive: "bg-destructive text-destructive-foreground",
     },
-    defaultVariants: {
-      variant: "info",
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: "info",
+  },
+});
 
 const BANNER_ICONS = {
   info: Info,
@@ -35,9 +26,7 @@ const BANNER_ICONS = {
   destructive: XCircle,
 } as const;
 
-type DismissibleProps =
-  | { dismissible: true; onDismiss: () => void }
-  | { dismissible?: false; onDismiss?: never };
+type DismissibleProps = { dismissible: true; onDismiss: () => void } | { dismissible?: false; onDismiss?: never };
 
 export type BannerProps = React.ComponentProps<"div"> &
   VariantProps<typeof bannerVariants> &
@@ -62,8 +51,7 @@ function Banner({
 }: BannerProps) {
   const resolvedVariant = variant ?? "info";
   const Icon = BANNER_ICONS[resolvedVariant];
-  const isUrgentBanner =
-    resolvedVariant === "warning" || resolvedVariant === "destructive";
+  const isUrgentBanner = resolvedVariant === "warning" || resolvedVariant === "destructive";
   const resolvedRole = role ?? (isUrgentBanner ? "alert" : "status");
   const resolvedAriaLive = ariaLive ?? (isUrgentBanner ? "assertive" : "polite");
 

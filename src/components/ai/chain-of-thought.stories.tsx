@@ -1,4 +1,4 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
 import {
   ChainOfThought,
@@ -8,10 +8,9 @@ import {
   ChainOfThoughtSources,
   ChainOfThoughtStep,
   ChainOfThoughtTrigger,
-} from "./chain-of-thought"
+} from "./chain-of-thought";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta = {
   title: "AI Elements/Agent Activity/Chain of Thought",
@@ -19,26 +18,22 @@ const meta: Meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
-const expectCollapsedChevronConfiguredForHoverReveal = async (
-  trigger: HTMLElement
-) => {
-  const chevron = trigger.querySelector<SVGElement>(
-    '[data-slot="collapsible-chevron"]'
-  )
+const expectCollapsedChevronConfiguredForHoverReveal = async (trigger: HTMLElement) => {
+  const chevron = trigger.querySelector<SVGElement>('[data-slot="collapsible-chevron"]');
 
   if (!chevron) {
-    throw new Error("Expected collapsible chevron to render")
+    throw new Error("Expected collapsible chevron to render");
   }
 
-  await expect(chevron).toHaveClass("opacity-0")
-  await expect(chevron).toHaveClass("group-hover:opacity-100")
-}
+  await expect(chevron).toHaveClass("opacity-0");
+  await expect(chevron).toHaveClass("group-hover:opacity-100");
+};
 
 // ---------------------------------------------------------------------------
 // Default — bullet steps + source chips
@@ -50,8 +45,8 @@ export const Default: Story = {
       <ChainOfThoughtTrigger />
       <ChainOfThoughtContent>
         <ChainOfThoughtStep>
-          The user wants to know about photosynthesis — the process by which
-          plants convert light energy into chemical energy.
+          The user wants to know about photosynthesis — the process by which plants convert light energy into chemical
+          energy.
         </ChainOfThoughtStep>
         <ChainOfThoughtSources>
           <ChainOfThoughtSource href="#">Wikipedia</ChainOfThoughtSource>
@@ -59,23 +54,23 @@ export const Default: Story = {
           <ChainOfThoughtSource href="#">Biology Online</ChainOfThoughtSource>
         </ChainOfThoughtSources>
         <ChainOfThoughtStep>
-          Combining information from multiple sources to produce a clear,
-          accurate explanation of the photosynthesis process.
+          Combining information from multiple sources to produce a clear, accurate explanation of the photosynthesis
+          process.
         </ChainOfThoughtStep>
       </ChainOfThoughtContent>
     </ChainOfThought>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Chain of thought renders with steps and sources", async () => {
-      await expect(canvas.getAllByText(/photosynthesis/).length).toBeGreaterThan(0)
-      await expect(canvas.getByText("Wikipedia")).toBeInTheDocument()
-    })
+      await expect(canvas.getAllByText(/photosynthesis/).length).toBeGreaterThan(0);
+      await expect(canvas.getByText("Wikipedia")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4523" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // With web search — search icon, URL chips, inline image
@@ -87,30 +82,23 @@ export const WithSearch: Story = {
     <ChainOfThought className="w-full max-w-2xl">
       <ChainOfThoughtTrigger />
       <ChainOfThoughtContent>
-        <ChainOfThoughtStep variant="search">
-          Searching for profiles for Hayden Bleasel
-        </ChainOfThoughtStep>
+        <ChainOfThoughtStep variant="search">Searching for profiles for Hayden Bleasel</ChainOfThoughtStep>
         <ChainOfThoughtSources>
           <ChainOfThoughtSource href="#">www.x.com</ChainOfThoughtSource>
           <ChainOfThoughtSource href="#">www.instagram.com</ChainOfThoughtSource>
           <ChainOfThoughtSource href="#">www.github.com</ChainOfThoughtSource>
         </ChainOfThoughtSources>
-        <ChainOfThoughtStep variant="image">
-          Found the profile photo for Hayden Bleasel
-        </ChainOfThoughtStep>
+        <ChainOfThoughtStep variant="image">Found the profile photo for Hayden Bleasel</ChainOfThoughtStep>
         <ChainOfThoughtImage
           alt="Profile photo"
           caption="Profile photo from x.com, showing a Ghibli-style avatar."
           src="https://placehold.co/600x300/e2e8f0/64748b?text=Profile+Image"
         />
         <ChainOfThoughtStep>
-          Hayden Bleasel is an Australian product designer, software engineer,
-          and founder. He is currently based in the United States working for
-          Vercel, an American cloud application company.
+          Hayden Bleasel is an Australian product designer, software engineer, and founder. He is currently based in the
+          United States working for Vercel, an American cloud application company.
         </ChainOfThoughtStep>
-        <ChainOfThoughtStep variant="search">
-          Searching for recent work…
-        </ChainOfThoughtStep>
+        <ChainOfThoughtStep variant="search">Searching for recent work…</ChainOfThoughtStep>
         <ChainOfThoughtSources>
           <ChainOfThoughtSource href="#">www.github.com</ChainOfThoughtSource>
           <ChainOfThoughtSource href="#">www.dribbble.com</ChainOfThoughtSource>
@@ -119,16 +107,16 @@ export const WithSearch: Story = {
     </ChainOfThought>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Search steps and image render", async () => {
-      await expect(canvas.getByText(/Searching for profiles/)).toBeInTheDocument()
-      await expect(canvas.getAllByText("www.github.com").length).toBeGreaterThan(0)
-    })
+      await expect(canvas.getByText(/Searching for profiles/)).toBeInTheDocument();
+      await expect(canvas.getAllByText("www.github.com").length).toBeGreaterThan(0);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4524" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // With image analysis
@@ -140,31 +128,27 @@ export const WithImageAnalysis: Story = {
     <ChainOfThought className="w-full max-w-2xl">
       <ChainOfThoughtTrigger />
       <ChainOfThoughtContent>
-        <ChainOfThoughtStep variant="image">
-          Examining the chart data from the uploaded image.
-        </ChainOfThoughtStep>
+        <ChainOfThoughtStep variant="image">Examining the chart data from the uploaded image.</ChainOfThoughtStep>
         <ChainOfThoughtImage
           alt="Revenue chart"
           caption="Revenue trend Q1–Q4"
           src="https://placehold.co/600x200/e2e8f0/64748b?text=Revenue+Chart"
         />
-        <ChainOfThoughtStep>
-          Revenue grew 23% YoY with strongest growth in Q3.
-        </ChainOfThoughtStep>
+        <ChainOfThoughtStep>Revenue grew 23% YoY with strongest growth in Q3.</ChainOfThoughtStep>
       </ChainOfThoughtContent>
     </ChainOfThought>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Image and caption render", async () => {
-      await expect(canvas.getByText("Revenue trend Q1–Q4")).toBeInTheDocument()
-      await expect(canvas.getByText(/Revenue grew 23%/)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Revenue trend Q1–Q4")).toBeInTheDocument();
+      await expect(canvas.getByText(/Revenue grew 23%/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4525" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Streaming — pulsing dot while reasoning is active
@@ -175,29 +159,25 @@ export const Streaming: Story = {
     <ChainOfThought className="w-full max-w-2xl">
       <ChainOfThoughtTrigger isStreaming />
       <ChainOfThoughtContent>
-        <ChainOfThoughtStep variant="search">
-          Searching for recent AI research papers…
-        </ChainOfThoughtStep>
+        <ChainOfThoughtStep variant="search">Searching for recent AI research papers…</ChainOfThoughtStep>
         <ChainOfThoughtSources>
           <ChainOfThoughtSource href="#">arxiv.org</ChainOfThoughtSource>
           <ChainOfThoughtSource href="#">paperswithcode.com</ChainOfThoughtSource>
         </ChainOfThoughtSources>
-        <ChainOfThoughtStep>
-          Identifying the most cited papers from Q1 2025…
-        </ChainOfThoughtStep>
+        <ChainOfThoughtStep>Identifying the most cited papers from Q1 2025…</ChainOfThoughtStep>
       </ChainOfThoughtContent>
     </ChainOfThought>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Streaming state renders with steps", async () => {
-      await expect(canvas.getByText(/Searching for recent/)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/Searching for recent/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4526" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Collapsed
@@ -208,22 +188,20 @@ export const Collapsed: Story = {
     <ChainOfThought className="w-full max-w-2xl" defaultOpen={false}>
       <ChainOfThoughtTrigger />
       <ChainOfThoughtContent>
-        <ChainOfThoughtStep>
-          This content is hidden by default.
-        </ChainOfThoughtStep>
+        <ChainOfThoughtStep>This content is hidden by default.</ChainOfThoughtStep>
       </ChainOfThoughtContent>
     </ChainOfThought>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Collapsed trigger renders", async () => {
-      await expect(canvas.getByRole("button")).toBeInTheDocument()
-    })
+      await expect(canvas.getByRole("button")).toBeInTheDocument();
+    });
     await step("Collapsed chevron appears on hover", async () => {
-      await expectCollapsedChevronConfiguredForHoverReveal(canvas.getByRole("button"))
-    })
+      await expectCollapsedChevronConfiguredForHoverReveal(canvas.getByRole("button"));
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4527" },
   },
-}
+};

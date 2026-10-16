@@ -1,4 +1,4 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
 import {
   NavigationMenu,
@@ -8,9 +8,9 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from "./navigation-menu"
+} from "./navigation-menu";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const menuLinks = [
   {
@@ -29,7 +29,7 @@ const menuLinks = [
     title: "Alerts",
     description: "Manage thresholds, notifications, and escalation policies.",
   },
-] as const
+] as const;
 
 const meta: Meta<typeof NavigationMenu> = {
   title: "Components/Navigation & Menus/Navigation Menu",
@@ -46,11 +46,11 @@ const meta: Meta<typeof NavigationMenu> = {
   args: {
     viewport: true,
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof NavigationMenu>
+type Story = StoryObj<typeof NavigationMenu>;
 
 function renderNavigationMenu(args: Story["args"]) {
   return (
@@ -81,7 +81,7 @@ function renderNavigationMenu(args: Story["args"]) {
         <NavigationMenuIndicator />
       </NavigationMenu>
     </div>
-  )
+  );
 }
 
 export const WithViewport: Story = {
@@ -90,18 +90,18 @@ export const WithViewport: Story = {
     zephyr: { testCaseId: "SW-T1272" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Navigation menu renders", async () => {
-      expect(canvas.getByText("Platform")).toBeInTheDocument()
-      expect(canvas.getByText("Documentation")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Platform")).toBeInTheDocument();
+      expect(canvas.getByText("Documentation")).toBeInTheDocument();
+    });
 
     await step("Platform trigger is a menu button", async () => {
-      expect(canvas.getByRole("button", { name: "Platform" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Platform" })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const InlineContent: Story = {
   args: {
@@ -112,15 +112,15 @@ export const InlineContent: Story = {
     zephyr: { testCaseId: "SW-T1273" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Navigation menu renders", async () => {
-      expect(canvas.getByText("Platform")).toBeInTheDocument()
-      expect(canvas.getByText("Documentation")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Platform")).toBeInTheDocument();
+      expect(canvas.getByText("Documentation")).toBeInTheDocument();
+    });
 
     await step("Platform trigger is a menu button", async () => {
-      expect(canvas.getByRole("button", { name: "Platform" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Platform" })).toBeInTheDocument();
+    });
   },
-}
+};

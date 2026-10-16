@@ -75,9 +75,7 @@ describe("getProviderInfoList", () => {
   });
 
   it("should return empty availableFields for provider with no fields", () => {
-    const noFields: ProviderConfiguration[] = [
-      { name: "empty", type: "custom", fields: {} },
-    ];
+    const noFields: ProviderConfiguration[] = [{ name: "empty", type: "custom", fields: {} }];
     const result = getProviderInfoList(noFields);
     expect(result[0].availableFields).toEqual([]);
   });
@@ -140,11 +138,7 @@ describe("getProvidersByType", () => {
 
 describe("getProviderNames", () => {
   it("should return all provider names", () => {
-    expect(getProviderNames(mockConfigs)).toEqual([
-      "my-snowflake",
-      "my-databricks",
-      "second-snowflake",
-    ]);
+    expect(getProviderNames(mockConfigs)).toEqual(["my-snowflake", "my-databricks", "second-snowflake"]);
   });
 
   it("should return empty array for empty input", () => {
@@ -173,4 +167,3 @@ describe("getProviderTypes", () => {
     expect(getProviderTypes(sameType)).toEqual(["snowflake"]);
   });
 });
-

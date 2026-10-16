@@ -54,22 +54,13 @@ The kit does not install heavy dependencies for you. Add only the ones your app 
 | Any `charts/` component                            | `plotly.js-dist`                                                                                      |
 | `MessageResponse` / `Reasoning` (AI markdown)      | `@streamdown/math`, `@streamdown/mermaid`                                                             |
 | `MoleculeStructure`                                | `@rdkit/rdkit` — **plus a served WASM, [see below](#moleculestructure-requires-a-served-rdkit-wasm)** |
-| **Any import from the package root**               | `@streamdown/math`, `@streamdown/mermaid` — see the caveat below                                      |
 | `/server` Athena / Snowflake / Databricks provider | `@aws-sdk/client-athena` / `snowflake-sdk` / `@databricks/sql`                                        |
 
-> **Root-entry imports pull in the streamdown peers whether or not you use them.**
-> The AI markdown plugins are loaded through a dynamic import, but a dynamic-import target is still
-> part of your bundler's module graph and its _named_ static imports must resolve. With
-> `@streamdown/math` absent, a root-entry build fails even when your only kit import is `AreaPlot`:
->
-> ```
-> dist/components/ai/streamdown-plugins.js (2:9): "math" is not exported by
-> "__vite-optional-peer-dep:@streamdown/math:@tetrascience-npm/tetrascience-react-ui"
-> ```
->
-> Install the two packages, or use [per-component imports](#per-component-imports), which avoid the
-> barrel entirely. This fails at build time, so it can never reach production unnoticed.
-> Tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
+> **Fixed in v1.1.0:** in v1.0.0, any import from the package root required `@streamdown/math` and
+> `@streamdown/mermaid` even if you used no AI component; without them the build failed. They now
+> load through `import()`, so a root-entry build succeeds without them, and markdown renders without
+> math or mermaid. On v1.0.x, install both or use [per-component imports](#per-component-imports)
+> ([SW-2472](https://tetrascience.atlassian.net/browse/SW-2472)).
 
 A missing `plotly.js-dist` behaves differently: it does **not** fail the build under Vite/Rollup — it
 resolves to an empty stub and the chart fails at runtime with a console error from the loader

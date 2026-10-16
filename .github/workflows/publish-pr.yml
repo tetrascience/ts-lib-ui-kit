@@ -4,6 +4,10 @@ on:
   pull_request:
     branches:
       - main
+    # A Markdown-only change ships the same code as main, so an alpha of it
+    # is ~2 runner minutes for nothing.
+    paths-ignore:
+      - "**/*.md"
 
 permissions:
   contents: read

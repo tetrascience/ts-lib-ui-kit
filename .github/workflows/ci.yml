@@ -1,14 +1,23 @@
 name: CI
 
+# A Markdown-only change can't affect lint, build, types or tests, and this
+# job runs in a Playwright container for up to 30 minutes. Nothing imports a
+# .md file (stories are .tsx/.mdx), so skipping is safe. Branch protection
+# requires no status checks, so a skipped run doesn't block merging. Any
+# non-Markdown file in the change runs the full job.
 on:
   push:
     branches:
       - main
       - "release/**"
+    paths-ignore:
+      - "**/*.md"
   pull_request:
     branches:
       - main
       - "release/**"
+    paths-ignore:
+      - "**/*.md"
 
 permissions:
   contents: read

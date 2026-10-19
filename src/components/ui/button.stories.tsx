@@ -216,6 +216,8 @@ export const StepStates: Story = {
     </div>
   ),
   parameters: {
+    // Draws its own steps, so the meta's Button controls would do nothing.
+    controls: { disable: true },
     zephyr: { testCaseId: "SW-T5755" },
   },
   play: async ({ canvasElement, step }) => {
@@ -320,6 +322,8 @@ export const StepTrail: Story = {
     )
   },
   parameters: {
+    // Draws its own steps, so the meta's Button controls would do nothing.
+    controls: { disable: true },
     zephyr: { testCaseId: "SW-T5756" },
   },
   play: async ({ canvasElement, step }) => {

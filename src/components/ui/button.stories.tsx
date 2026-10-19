@@ -167,7 +167,7 @@ export const Pill: Story = {
     pill: true,
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5759" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -226,7 +226,7 @@ export const PillVariants: Story = {
   ),
   parameters: {
     controls: { disable: true },
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5760" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

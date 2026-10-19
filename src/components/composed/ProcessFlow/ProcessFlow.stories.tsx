@@ -768,7 +768,7 @@ export const ChipTrail: Story = {
   parameters: {
     controls: { disable: true },
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5757",
     },
   },
   play: async ({ canvasElement, step }) => {
@@ -848,7 +848,7 @@ export const ChipStates: Story = {
   parameters: {
     controls: { disable: true },
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5758",
     },
   },
   play: async ({ canvasElement, step }) => {

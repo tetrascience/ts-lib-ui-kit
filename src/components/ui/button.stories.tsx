@@ -164,7 +164,7 @@ export const Step: Story = {
     variant: "step",
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5754" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -216,7 +216,7 @@ export const StepStates: Story = {
     </div>
   ),
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5755" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
@@ -320,7 +320,7 @@ export const StepTrail: Story = {
     )
   },
   parameters: {
-    zephyr: { testCaseId: "" },
+    zephyr: { testCaseId: "SW-T5756" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)

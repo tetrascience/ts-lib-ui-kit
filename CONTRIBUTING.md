@@ -348,29 +348,49 @@ export const MyStory: Story = {
 
 ## Release Process
 
-Releases are fully automated via [semantic-release](https://semantic-release.gitbook.io/) — **do not manually edit `package.json` version or create git tags**.
+Releases are cut by [semantic-release](https://semantic-release.gitbook.io/) when someone dispatches the
+`Release` workflow. `main` is push-protected, so semantic-release cannot commit the version bump itself:
+a prep PR does that first. **Don't create git tags by hand.**
 
-### How it works
+### Cutting a release
 
-The `Release` GitHub Action (`.github/workflows/release.yml`) is triggered manually (via `workflow_dispatch` from the GitHub Actions tab), and it:
-
-1. Analyses all commits since the last release using their [Conventional Commit](#commit-message-format) types
-2. Determines the next version number (or skips if no releasable commits are found)
-3. Generates or updates `CHANGELOG.md`
-4. Bumps the version in `package.json`
-5. Creates a git tag (e.g. `v1.2.0`) and a GitHub Release with auto-generated release notes
-6. Commits the updated `CHANGELOG.md` and `package.json` back to `main` with the message `chore(release): <version> [skip ci]`
-
-Separate publish workflows then handle distributing the built package to npm and the internal JFrog registry.
+1. **Find the next version.** Run `yarn release:dry-run` (see below), or read the version off the latest
+   `-beta` on npm: betas are named for the release they lead up to.
+2. **Open a prep PR** that sets `package.json`'s `version` to that version and adds its `CHANGELOG.md`
+   entry, with any upgrade notes. Merge it.
+3. **Dispatch `Release`** (`.github/workflows/release.yml`) from the Actions tab. It reads the
+   [Conventional Commit](#commit-message-format) PR titles since the last tag, creates the `vX.Y.Z` tag
+   and a GitHub release with generated notes. If the prep PR hasn't merged — `package.json` doesn't say
+   the version being released — it stops before creating the tag and says so
+   (`scripts/release/verify-package-version.js`).
+4. **Approve the publish.** The tag starts `Publish to Public npm` (`publish-public.yml`), which waits at
+   the `PROD` environment for a reviewer's approval.
 
 ### Version bump rules
 
-| Commits since last release                      | Next version              |
-| ----------------------------------------------- | ------------------------- |
-| Only `fix`, `perf`, `refactor`                  | Patch — `1.0.0` → `1.0.1` |
-| At least one `feat`                             | Minor — `1.0.0` → `1.1.0` |
-| Any commit with `!` or `BREAKING CHANGE` footer | Major — `1.0.0` → `2.0.0` |
-| Only `chore`, `docs`, `style`, `test`, `ci`     | No release                |
+The version comes from the squash-merge commits on `main`, each of which is the PR title with an empty
+body, so **the PR title is what counts**.
+
+| PR titles merged since the last release                 | Next version              |
+| ------------------------------------------------------- | ------------------------- |
+| Only `fix`, `perf`, `revert`                            | Patch — `1.1.0` → `1.1.1` |
+| At least one `feat`                                     | Minor — `1.1.0` → `1.2.0` |
+| Any type with `!` (`feat!:`, `fix(charts)!:`)           | Major — `1.1.0` → `2.0.0` |
+| Only `chore`, `docs`, `style`, `refactor`, `test`, `ci` | No release                |
+
+A `BREAKING CHANGE:` footer in a commit on your branch does not survive the squash merge; mark the PR
+title with `!` instead.
+
+### Beta and alpha builds
+
+- **Beta, on every merge to `main`**, published to npm under the `beta` dist-tag and named for the
+  **next** release: after `v1.1.0`, a merge publishes `1.2.0-beta.<run>.<attempt>` if a `feat:` has
+  merged since the tag, and `1.1.1-beta.…` otherwise. `scripts/release/next-version.ts` makes the same
+  calculation semantic-release will, and `publish-public.yml` writes it into `package.json` before the
+  shared publish workflow builds.
+- **Alpha, only on request.** Add the `alpha` label to a PR to publish
+  `<version>-alpha.<run>.<attempt>` to JFrog, and again on each push while the label stays. PRs without
+  the label don't publish anything.
 
 ### Dry-run locally
 
@@ -380,4 +400,6 @@ To preview what the next release would be without publishing anything:
 yarn release:dry-run
 ```
 
-This requires a `GITHUB_TOKEN` environment variable with repo read access.
+This needs a `GITHUB_TOKEN` environment variable with push access to the repo (semantic-release checks
+it even in a dry run). Until the prep PR has merged, the dry run ends with the version-mismatch error
+from step 3; the version it names is the one the prep PR should set.

@@ -27,11 +27,53 @@ jobs:
     secrets:
       PUBLISH_REGISTRY: 'https://registry.npmjs.org'
 
+  # The shared workflow names a beta `<package.json version>-beta.<run>.<attempt>`.
+  # Between releases package.json holds the version already released, so betas
+  # would sort *before* it (1.1.0-beta.N < 1.1.0). This job works out the next
+  # release's version the way the Release workflow will, and publish-beta
+  # writes it into package.json first, so merges after v1.1.0 publish as
+  # 1.2.0-beta.N (after a feat:) or 1.1.1-beta.N (anything else).
+  beta-version:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needs the tags and the commits since the last one
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "yarn"
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install
+        env:
+          JFROG_ARTIFACTORY_READ_NPM_AUTH: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
+        run: yarn install --immutable
+      - name: Compute next release version
+        id: next
+        run: |
+          VERSION=$(yarn tsx scripts/release/next-version.ts)
+          # It is interpolated into a shell command below, so accept only X.Y.Z.
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Unexpected version: '$VERSION'"
+            exit 1
+          fi
+          echo "Next release: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
   publish-beta:
     if: github.ref == 'refs/heads/main'
+    needs: beta-version
     uses: tetrascience/ts-ci-cd-lib/.github/workflows/publish-npm-package.yml@main
     with:
       prerelease_tag: beta
       publish_to_public_npm: true
+      pre_install_command: >-
+        jq --arg v "${{ needs.beta-version.outputs.version }}" '.version = $v' package.json > package.json.tmp &&
+        mv package.json.tmp package.json
     secrets:
       PUBLISH_REGISTRY: 'https://registry.npmjs.org'

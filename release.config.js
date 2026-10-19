@@ -8,6 +8,9 @@ export default {
   branches: ["main"],
   plugins: [
     ["@semantic-release/commit-analyzer", { preset: "conventionalcommits" }],
+    // Fails the release before tagging unless the prep PR has already bumped
+    // package.json to the version being released. See the file's header.
+    "./scripts/release/verify-package-version.js",
     ["@semantic-release/release-notes-generator", { preset: "conventionalcommits" }],
     ["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }],
     ["@semantic-release/npm", { npmPublish: false }],
@@ -15,8 +18,9 @@ export default {
     // main, and the bypass actor this would need was declined as a supply
     // chain risk. So semantic-release writes package.json + CHANGELOG in the
     // runner and discards them; both are committed by hand via PR before a
-    // release is dispatched. Release Please is the tracked alternative — it
-    // produces the same bump as a PR and needs no bypass. Discussion:
+    // release is dispatched, and verify-package-version.js above refuses to
+    // tag if that PR hasn't merged. (Release Please, which opens that PR
+    // itself, was evaluated in #237 and not adopted.) Discussion:
     // https://tetrascience.slack.com/archives/C02L9BRTA7R/p1782936969323909?thread_ts=1782913564.432859&cid=C02L9BRTA7R
     // [
     //   "@semantic-release/git",

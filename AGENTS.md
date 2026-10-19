@@ -357,11 +357,23 @@ It deliberately does **not** install the packed tarball as a normal npm dependen
 ## Publishing
 
 ```bash
-yarn release          # semantic-release: auto-determines version from commits, publishes to npm
-yarn release:dry-run  # Validate what would be published without actually publishing
+yarn release          # semantic-release (CI use only — the Release workflow runs it)
+yarn release:dry-run  # Preview the next version without publishing
 ```
 
 Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) for versioning — `feat:` → minor bump, `fix:` → patch bump, `feat!:` / `BREAKING CHANGE:` → major bump.
+
+Process: [CONTRIBUTING.md › Release Process](./CONTRIBUTING.md#release-process). Load-bearing details:
+
+- **semantic-release never commits.** `main` is push-protected, so a prep PR bumps `package.json` and
+  `CHANGELOG.md` before `Release` is dispatched. `scripts/release/verify-package-version.js` (a local
+  plugin in `release.config.js`) fails the run before tagging if it hasn't — the shared publish
+  workflow rejects a tag that doesn't match `package.json`.
+- **Betas are named for the next release.** `publish-public.yml`'s `beta-version` job runs
+  `scripts/release/next-version.ts` — semantic-release's own commit analyzer with `release.config.js`'s
+  options — and writes the result into `package.json` through the shared workflow's
+  `pre_install_command`. Keep the two in step: a change to the analyzer config changes both.
+- **Alphas are opt-in** via the `alpha` PR label (`publish-pr.yml`).
 
 ## Zephyr Integration
 

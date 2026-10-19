@@ -1,6 +1,5 @@
-import { CheckIcon } from "lucide-react"
-import { useState } from "react"
-import { expect, userEvent, waitFor, within } from "storybook/test"
+import { PlusIcon } from "lucide-react"
+import { expect, within } from "storybook/test"
 
 import { Button } from "./button"
 
@@ -17,17 +16,21 @@ const meta: Meta<typeof Button> = {
   argTypes: {
     variant: {
       control: { type: "select" },
-      options: ["default", "outline", "secondary", "ghost", "destructive", "link", "step"],
+      options: ["default", "outline", "secondary", "ghost", "destructive", "link"],
     },
     size: {
       control: { type: "select" },
       options: ["default", "xs", "sm", "lg", "icon", "icon-xs", "icon-sm", "icon-lg"],
+    },
+    pill: {
+      control: { type: "boolean" },
     },
   },
   args: {
     children: "Button",
     variant: "default",
     size: "default",
+    pill: false,
   },
 }
 
@@ -155,203 +158,86 @@ export const DisabledContrast: Story = {
 }
 
 /**
- * One step in a trail of steps (UXT-177). On its own a step is to do: an
- * outlined pill with muted text.
+ * `pill` swaps the standard corners for a fully rounded shape. It is a shape,
+ * not a colour: switch `variant` or `size` in Controls and it stays a pill.
  */
-export const Step: Story = {
+export const Pill: Story = {
   args: {
-    children: "Objective",
-    variant: "step",
+    children: "Pill Button",
+    pill: true,
   },
   parameters: {
-    zephyr: { testCaseId: "SW-T5754" },
+    zephyr: { testCaseId: "" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
 
-    await step("A to-do step is a 28px outlined pill", async () => {
-      const btn = canvas.getByRole("button", { name: "Objective" })
-      const style = getComputedStyle(btn)
-      expect(btn).not.toHaveAttribute("aria-current")
-      expect(btn.getBoundingClientRect().height).toBe(28)
-      expect(style.borderTopColor).not.toBe("rgba(0, 0, 0, 0)")
-      expect(parseFloat(style.borderTopLeftRadius)).toBeGreaterThanOrEqual(14)
+    await step("Pill button is fully rounded", async () => {
+      const btn = canvas.getByRole("button", { name: "Pill Button" })
+      const radius = parseFloat(getComputedStyle(btn).borderTopLeftRadius)
+      expect(btn).toHaveAttribute("data-pill", "true")
+      expect(radius).toBeGreaterThanOrEqual(btn.getBoundingClientRect().height / 2)
     })
   },
 }
 
-/**
- * The three looks, and how they combine. `aria-current="step"` marks the
- * current step and `data-done` a done one, so the look always matches what a
- * screen reader is told. A done step carries a tick, so colour is never the
- * only sign. Disabled, a to-do step mutes while done and current steps keep
- * their look, so a trail disabled while saving still shows where you are.
- */
-export const StepStates: Story = {
+/** Every variant, size and state as a pill: the shape holds through all of them. */
+export const PillVariants: Story = {
   render: () => (
-    <div className="flex flex-col gap-3">
-      {[false, true].map((disabled) => (
-        <div
-          key={String(disabled)}
-          role="group"
-          aria-label={disabled ? "Disabled" : "Enabled"}
-          className="flex items-center gap-1.5"
-        >
-          <Button variant="step" disabled={disabled}>
-            To do
-          </Button>
-          <Button variant="step" disabled={disabled} data-done>
-            <CheckIcon aria-hidden="true" />
-            Done
-          </Button>
-          <Button variant="step" disabled={disabled} aria-current="step">
-            Current
-          </Button>
-          <Button variant="step" disabled={disabled} data-done aria-current="step">
-            <CheckIcon aria-hidden="true" />
-            Done and current
-          </Button>
-        </div>
-      ))}
+    <div className="flex flex-col items-start gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button pill>Default</Button>
+        <Button pill variant="secondary">
+          Secondary
+        </Button>
+        <Button pill variant="outline">
+          Outline
+        </Button>
+        <Button pill variant="ghost">
+          Ghost
+        </Button>
+        <Button pill variant="destructive">
+          Destructive
+        </Button>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button pill size="xs">
+          Extra small
+        </Button>
+        <Button pill size="sm">
+          Small
+        </Button>
+        <Button pill size="lg">
+          Large
+        </Button>
+        <Button pill size="icon-sm" aria-label="Add">
+          <PlusIcon />
+        </Button>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button pill variant="outline" aria-pressed="true">
+          Pressed
+        </Button>
+        <Button pill variant="outline" disabled>
+          Disabled
+        </Button>
+      </div>
     </div>
   ),
   parameters: {
-    // Draws its own steps, so the meta's Button controls would do nothing.
     controls: { disable: true },
-    zephyr: { testCaseId: "SW-T5755" },
+    zephyr: { testCaseId: "" },
   },
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement)
-    const looks = (group: string) => {
-      const scope = within(canvas.getByRole("group", { name: group }))
-      return {
-        todo: scope.getByRole("button", { name: "To do" }),
-        done: scope.getByRole("button", { name: "Done" }),
-        current: scope.getByRole("button", { name: "Current" }),
-        doneCurrent: scope.getByRole("button", { name: "Done and current" }),
+
+    await step("Every variant, size and state keeps the pill shape", async () => {
+      const buttons = canvas.getAllByRole("button")
+      expect(buttons).toHaveLength(11)
+      for (const btn of buttons) {
+        const radius = parseFloat(getComputedStyle(btn).borderTopLeftRadius)
+        expect(radius).toBeGreaterThanOrEqual(btn.getBoundingClientRect().height / 2)
       }
-    }
-    const style = (el: HTMLElement) => getComputedStyle(el)
-    const enabled = looks("Enabled")
-    const disabled = looks("Disabled")
-
-    await step("Current is tinted, with a primary border", async () => {
-      const current = style(enabled.current)
-      expect(current.borderTopColor).toBe(current.color)
-      expect(current.backgroundColor).not.toBe(style(enabled.todo).backgroundColor)
-      expect(current.color).not.toBe(style(enabled.todo).color)
-    })
-
-    await step("Done is tinted like current, with no border", async () => {
-      const done = style(enabled.done)
-      expect(done.borderTopColor).toBe("rgba(0, 0, 0, 0)")
-      expect(done.backgroundColor).toBe(style(enabled.current).backgroundColor)
-      expect(done.color).toBe(style(enabled.current).color)
-    })
-
-    await step("Done and current keeps current's primary border", async () => {
-      expect(style(enabled.doneCurrent).borderTopColor).toBe(
-        style(enabled.current).borderTopColor,
-      )
-    })
-
-    await step("Disabled, to do mutes while done and current keep their look", async () => {
-      expect(style(disabled.todo).backgroundColor).not.toBe(
-        style(enabled.todo).backgroundColor,
-      )
-      for (const look of ["done", "current", "doneCurrent"] as const) {
-        expect(disabled[look]).toBeDisabled()
-        expect(style(disabled[look]).backgroundColor).toBe(
-          style(enabled[look]).backgroundColor,
-        )
-        expect(style(disabled[look]).borderTopColor).toBe(
-          style(enabled[look]).borderTopColor,
-        )
-      }
-    })
-
-    await step("Keyboard focus draws the same ring in every look", async () => {
-      const rings: string[] = []
-      for (const btn of Object.values(enabled)) {
-        await userEvent.tab()
-        expect(btn).toHaveFocus()
-        await waitFor(() => expect(style(btn).boxShadow).not.toBe("none"))
-        // transition-all animates the ring in; wait for it to settle.
-        await new Promise((resolve) => setTimeout(resolve, 300))
-        rings.push(style(btn).boxShadow)
-      }
-      expect(new Set(rings).size).toBe(1)
-    })
-  },
-}
-
-/**
- * A trail of steps, as in a setup flow. A `nav` around a list announces the
- * trail as one. Pass `data-done={done || undefined}`: the look keys on the
- * attribute being present, so `data-done="false"` would still read as done.
- */
-export const StepTrail: Story = {
-  render: () => {
-    const steps = [
-      { id: "references", label: "References", done: true },
-      { id: "objective", label: "Objective", done: true },
-      { id: "tactics", label: "Tactics", done: false },
-      { id: "hypothesis", label: "Hypothesis", done: false },
-    ]
-    const [current, setCurrent] = useState("tactics")
-
-    return (
-      <nav aria-label="Setup steps">
-        <ol className="flex flex-wrap items-center gap-1.5">
-          {steps.map((s) => (
-            <li key={s.id}>
-              <Button
-                variant="step"
-                aria-current={s.id === current ? "step" : undefined}
-                data-done={s.done || undefined}
-                onClick={() => setCurrent(s.id)}
-              >
-                {s.done && <CheckIcon aria-hidden="true" />}
-                {s.label}
-                <span className="sr-only">{s.done ? ", answered" : ", not answered"}</span>
-              </Button>
-            </li>
-          ))}
-        </ol>
-      </nav>
-    )
-  },
-  parameters: {
-    // Draws its own steps, so the meta's Button controls would do nothing.
-    controls: { disable: true },
-    zephyr: { testCaseId: "SW-T5756" },
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const trail = within(canvas.getByRole("navigation", { name: "Setup steps" }))
-    // A step's children are flex items, so its name reads "References , answered".
-    const chip = (name: string) => trail.getByRole("button", { name: new RegExp(`^${name}\\b`) })
-
-    await step("The trail is a list, with the current step marked", async () => {
-      expect(trail.getAllByRole("listitem")).toHaveLength(4)
-      expect(chip("Tactics")).toHaveAttribute("aria-current", "step")
-      expect(chip("References")).not.toHaveAttribute("aria-current")
-    })
-
-    await step("Done steps say so in words, not only colour", async () => {
-      expect(chip("References")).toHaveAccessibleName(/^References\s*, answered$/)
-      expect(chip("References")).toHaveAttribute("data-done")
-      expect(chip("Hypothesis")).toHaveAccessibleName(/^Hypothesis\s*, not answered$/)
-      expect(chip("Hypothesis")).not.toHaveAttribute("data-done")
-    })
-
-    await step("Choosing a step makes it current", async () => {
-      await userEvent.click(chip("Hypothesis"))
-      expect(chip("Hypothesis")).toHaveAttribute("aria-current", "step")
-      expect(chip("Tactics")).not.toHaveAttribute("aria-current")
-
-      await userEvent.click(chip("Tactics"))
-      expect(chip("Tactics")).toHaveAttribute("aria-current", "step")
     })
   },
 }

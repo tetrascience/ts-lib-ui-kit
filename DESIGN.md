@@ -69,7 +69,7 @@ import {
 
 | Component                | Category           | Base (shadcn)              | Key Additions                                            | Status |
 | ------------------------ | ------------------ | -------------------------- | -------------------------------------------------------- | ------ |
-| `Button`                 | Actions            | `button`                   | 8 size variants, icon-only mode, `step` trail variant    | Stable |
+| `Button`                 | Actions            | `button`                   | 8 size variants, icon-only mode, `pill` shape            | Stable |
 | `ButtonGroup`            | Actions            | —                          | Segmented button container                               | Stable |
 | `Toggle`                 | Actions            | `toggle`                   | Pressable on/off button                                  | Stable |
 | `ToggleGroup`            | Actions            | `toggle-group`             | Exclusive/multi-select toggle set                        | Stable |
@@ -129,7 +129,7 @@ import {
 | `AppHeader`              | Composed           | —                          | Top nav with avatar/actions                              | Stable |
 | `Main`                   | Composed           | —                          | Main content area with navbar, sidebar, tab bar          | Stable |
 | `Navbar`                 | Composed           | —                          | Secondary nav bar                                        | Stable |
-| `ProcessFlow`            | Composed           | —                          | Controlled multi-step workflow visualizer                | Stable |
+| `ProcessFlow`            | Composed           | —                          | Controlled multi-step workflow visualizer, `chips` trail | Stable |
 | `Sidebar` (composed)     | Composed           | —                          | App sidebar with navigation sections                     | Stable |
 | `LaunchContent`          | Composed           | —                          | Launch/welcome content panel                             | Stable |
 | `ProtocolConfiguration`  | Composed           | —                          | Protocol config form                                     | Stable |

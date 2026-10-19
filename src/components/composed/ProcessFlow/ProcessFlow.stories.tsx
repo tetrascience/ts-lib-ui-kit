@@ -1,6 +1,6 @@
 import { RotateCcwIcon } from "lucide-react";
 import { useEffect, useMemo, useState, type ComponentProps } from "react";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import {
   PROCESS_FLOW_STEP_STATUSES,
@@ -737,6 +737,174 @@ export const NonSelectableStep: Story = {
 
     await step("Step with selectable=false is rendered disabled despite active status", async () => {
       expect(canvas.getByRole("button", { name: "Step B, Active" })).toBeDisabled();
+    });
+  },
+};
+
+/**
+ * `variant="chips"` draws the flow as a trail of pill buttons, compact enough for a setup flow or a page header.
+ * The active step carries `aria-current="step"`; choosing a step selects it, and a selected step gains a primary
+ * border, so a completed step the user returns to reads as both done and current.
+ */
+export const ChipTrail: Story = {
+  render: () => {
+    const [selectedStepId, setSelectedStepId] = useState("tactics");
+
+    return (
+      <ProcessFlow
+        aria-label="Setup steps"
+        variant="chips"
+        steps={[
+          { id: "references", label: "References", status: "completed" },
+          { id: "objective", label: "Objective", status: "completed" },
+          { id: "tactics", label: "Tactics", status: "active" },
+          { id: "hypothesis", label: "Hypothesis", status: "pending" },
+        ]}
+        selectedStepId={selectedStepId}
+        onStepSelect={(step) => setSelectedStepId(step.id)}
+      />
+    );
+  },
+  parameters: {
+    controls: { disable: true },
+    zephyr: {
+      testCaseId: "",
+    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const trail = within(canvas.getByRole("navigation", { name: "Setup steps" }));
+    const chip = (name: string) => trail.getByRole("button", { name: new RegExp(`^${name},`) });
+
+    await step("The trail is a list of pill buttons, with the active step marked", async () => {
+      expect(trail.getAllByRole("listitem")).toHaveLength(4);
+      expect(chip("Tactics")).toHaveAttribute("aria-current", "step");
+      expect(chip("Tactics")).toHaveAttribute("aria-pressed", "true");
+      expect(chip("References")).toHaveAccessibleName("References, Completed");
+
+      const tactics = chip("Tactics");
+      expect(tactics).toHaveAttribute("data-pill", "true");
+      expect(tactics.getBoundingClientRect().height).toBe(28);
+      expect(parseFloat(getComputedStyle(tactics).borderTopLeftRadius)).toBeGreaterThanOrEqual(14);
+    });
+
+    await step("Choosing a completed step selects it, and it reads as done and current", async () => {
+      await userEvent.click(chip("References"));
+      expect(chip("References")).toHaveAttribute("aria-pressed", "true");
+      expect(chip("Tactics")).toHaveAttribute("aria-pressed", "false");
+      expect(chip("Tactics")).toHaveAttribute("aria-current", "step");
+      await waitFor(() =>
+        expect(getComputedStyle(chip("References")).borderTopColor).toBe(
+          getComputedStyle(chip("Tactics")).borderTopColor,
+        ),
+      );
+
+      await userEvent.click(chip("Tactics"));
+      expect(chip("Tactics")).toHaveAttribute("aria-pressed", "true");
+    });
+  },
+};
+
+/** Every status as a chip — selectable, compact and read-only. */
+export const ChipStates: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4">
+      <ProcessFlow
+        aria-label="Selectable chips"
+        variant="chips"
+        selectedStepId="review"
+        onStepSelect={() => {}}
+        steps={[
+          { id: "draft", label: "Draft", status: "completed" },
+          { id: "review", label: "Review", status: "completed" },
+          { id: "tactics", label: "Tactics", status: "active" },
+          { id: "approve", label: "Approve", status: "error" },
+          { id: "publish", label: "Publish", status: "pending" },
+          { id: "archive", label: "Archive", status: "disabled" },
+        ]}
+      />
+      <ProcessFlow
+        aria-label="Compact chips"
+        variant="chips"
+        size="compact"
+        onStepSelect={() => {}}
+        steps={[
+          { id: "draft", label: "Draft", status: "completed" },
+          { id: "tactics", label: "Tactics", status: "active" },
+          { id: "publish", label: "Publish", status: "pending" },
+        ]}
+      />
+      <ProcessFlow
+        aria-label="Read-only chips"
+        variant="chips"
+        steps={[
+          { id: "draft", label: "Draft", status: "completed" },
+          { id: "tactics", label: "Tactics", status: "active" },
+          { id: "publish", label: "Publish", status: "pending" },
+        ]}
+      />
+    </div>
+  ),
+  parameters: {
+    controls: { disable: true },
+    zephyr: {
+      testCaseId: "",
+    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const flow = (name: string) => canvas.getByRole("navigation", { name });
+    const chips = within(flow("Selectable chips"));
+    const chip = (name: string) => chips.getByRole("button", { name: new RegExp(`^${name},`) });
+    const style = (el: HTMLElement) => getComputedStyle(el);
+
+    await step("Active is tinted with a primary border; completed is tinted with a tick and no border", async () => {
+      const active = style(chip("Tactics"));
+      const completed = style(chip("Draft"));
+      expect(active.borderTopColor).toBe(active.color);
+      expect(active.backgroundColor).not.toBe(style(chip("Publish")).backgroundColor);
+      expect(completed.borderTopColor).toBe("rgba(0, 0, 0, 0)");
+      expect(completed.backgroundColor).toBe(active.backgroundColor);
+      expect(completed.color).toBe(active.color);
+      expect(chip("Draft").querySelector("svg")).not.toBeNull();
+    });
+
+    await step("A selected completed step keeps its tick and gains the primary border", async () => {
+      expect(chip("Review")).toHaveAttribute("aria-pressed", "true");
+      expect(chip("Review").querySelector("svg")).not.toBeNull();
+      expect(style(chip("Review")).borderTopColor).toBe(style(chip("Tactics")).borderTopColor);
+    });
+
+    await step("Error is marked in colour, icon and ARIA; disabled is not selectable", async () => {
+      const error = chip("Approve");
+      expect(error).toHaveAttribute("aria-invalid", "true");
+      expect(error.querySelector("svg")).not.toBeNull();
+      expect(style(error).borderTopColor).toBe(style(error).color);
+      expect(style(error).borderTopColor).not.toBe(style(chip("Tactics")).borderTopColor);
+      expect(chip("Archive")).toBeDisabled();
+    });
+
+    await step("Every chip is a pill; compact chips are smaller", async () => {
+      for (const el of canvasElement.querySelectorAll<HTMLElement>("[data-status]")) {
+        expect(parseFloat(style(el).borderTopLeftRadius)).toBeGreaterThanOrEqual(el.getBoundingClientRect().height / 2);
+      }
+      const compact = within(flow("Compact chips")).getByRole("button", { name: /^Tactics,/ });
+      expect(compact.getBoundingClientRect().height).toBe(24);
+    });
+
+    await step("Read-only chips are not buttons but still mark the active step", async () => {
+      const readOnly = flow("Read-only chips");
+      expect(within(readOnly).queryAllByRole("button")).toHaveLength(0);
+      expect(readOnly.querySelector("[aria-current='step']")).toHaveAttribute("aria-label", "Tactics, Active");
+    });
+
+    await step("Keyboard focus visibly changes every look, the selected one included", async () => {
+      for (const name of ["Draft", "Review", "Tactics", "Approve", "Publish"]) {
+        const resting = style(chip(name)).boxShadow;
+        await userEvent.tab();
+        expect(chip(name)).toHaveFocus();
+        await waitFor(() => expect(style(chip(name)).boxShadow).not.toBe(resting));
+      }
     });
   },
 };

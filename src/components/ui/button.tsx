@@ -23,17 +23,6 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:border-destructive/40 disabled:bg-muted disabled:text-muted-foreground",
         link: "text-primary underline-offset-4 hover:underline disabled:text-muted-foreground disabled:no-underline",
-        // One step in a trail of steps (UXT-177). The current and done looks are
-        // keyed on `aria-current="step"` and `data-done`, so what is shown and what
-        // a screen reader hears can't drift apart; callers add a tick to a done
-        // step so colour is never the only sign. Tailwind orders `aria-*` and
-        // `data-*` after `hover:` and `disabled:`, so the two state looks outrank
-        // both: a disabled trail (e.g. while saving) keeps showing where you are,
-        // and only a to-do step mutes. A done step loses its border only when it
-        // isn't also current, which keeps the current step's primary border.
-        // To do is transparent, like `outline`: a `bg-card` fill would put muted
-        // text on --card, which is under AA (4.14:1) in dark mode.
-        step: "border-border bg-transparent font-semibold text-muted-foreground hover:border-primary/35 hover:text-foreground disabled:bg-muted/40 aria-[current=step]:border-primary aria-[current=step]:bg-primary/8 aria-[current=step]:text-primary aria-[current=step]:hover:bg-primary/15 data-done:bg-primary/8 data-done:text-primary data-done:hover:bg-primary/15 data-done:not-aria-[current=step]:border-transparent",
       },
       size: {
         default:
@@ -48,17 +37,11 @@ const buttonVariants = cva(
           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
       },
-    },
-    compoundVariants: [
-      // A step is a pill at every size (the xs/sm radii would otherwise win), and
-      // at the default size it is the compact 28px chip of a step trail.
-      { variant: "step", className: "rounded-full" },
-      {
-        variant: "step",
-        size: "default",
-        className: "h-7 px-[11px] text-xs [&_svg:not([class*='size-'])]:size-3",
+      // Declared after `size` so its radius wins over the xs/sm radii.
+      pill: {
+        true: "rounded-full",
       },
-    ],
+    },
     defaultVariants: {
       variant: "default",
       size: "default",
@@ -70,6 +53,7 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  pill = false,
   asChild = false,
   ...props
 }: React.ComponentProps<"button"> &
@@ -83,7 +67,8 @@ function Button({
       data-slot="button"
       data-variant={variant}
       data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
+      data-pill={pill || undefined}
+      className={cn(buttonVariants({ variant, size, pill, className }))}
       {...props}
     />
   )

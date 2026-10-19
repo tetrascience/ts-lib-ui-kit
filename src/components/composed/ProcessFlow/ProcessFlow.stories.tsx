@@ -937,7 +937,7 @@ export const InlineStages: Story = {
   parameters: {
     controls: { disable: true },
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5763",
     },
   },
   play: async ({ canvasElement, step }) => {
@@ -995,7 +995,7 @@ export const InlineStatuses: Story = {
   parameters: {
     controls: { disable: true },
     zephyr: {
-      testCaseId: "",
+      testCaseId: "SW-T5764",
     },
   },
   play: async ({ canvasElement, step }) => {

@@ -69,7 +69,7 @@ import {
 
 | Component                | Category           | Base (shadcn)              | Key Additions                                            | Status |
 | ------------------------ | ------------------ | -------------------------- | -------------------------------------------------------- | ------ |
-| `Button`                 | Actions            | `button`                   | 8 size variants, icon-only mode                          | Stable |
+| `Button`                 | Actions            | `button`                   | 8 size variants, icon-only mode, `step` trail variant    | Stable |
 | `ButtonGroup`            | Actions            | —                          | Segmented button container                               | Stable |
 | `Toggle`                 | Actions            | `toggle`                   | Pressable on/off button                                  | Stable |
 | `ToggleGroup`            | Actions            | `toggle-group`             | Exclusive/multi-select toggle set                        | Stable |

@@ -366,9 +366,12 @@ Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) fo
 Process: [CONTRIBUTING.md › Release Process](./CONTRIBUTING.md#release-process). Load-bearing details:
 
 - **semantic-release never commits.** `main` is push-protected, so a prep PR bumps `package.json` and
-  `CHANGELOG.md` before `Release` is dispatched. `scripts/release/verify-package-version.js` (a local
-  plugin in `release.config.js`) fails the run before tagging if it hasn't — the shared publish
-  workflow rejects a tag that doesn't match `package.json`.
+  `CHANGELOG.md` before `Release` is dispatched. The `Release prep` workflow opens it:
+  `scripts/release/prepare-release.ts` computes the version and notes with semantic-release's own
+  commit analyzer and notes generator (`release.config.js`'s options), so nobody types a version.
+  `scripts/release/verify-package-version.js` (a local plugin in `release.config.js`) fails `Release`
+  before tagging if `package.json` doesn't match. The shared publish workflow rejects a tag that
+  doesn't match `package.json`.
 - **Betas are named for the next release.** `publish-public.yml`'s `beta-version` job runs
   `scripts/release/next-version.ts` — semantic-release's own commit analyzer with `release.config.js`'s
   options — and writes the result into `package.json` through the shared workflow's

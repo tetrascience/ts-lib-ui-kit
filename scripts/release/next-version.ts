@@ -41,15 +41,20 @@ export function bumpVersion(version: string, type: ReleaseType): string {
   return `${major}.${minor}.${patch + 1}`;
 }
 
-/** Picks the commit-analyzer options out of a semantic-release config's `plugins`. */
-export function commitAnalyzerConfig(plugins: ReadonlyArray<unknown>): Record<string, unknown> {
+/** Picks a plugin's options out of a semantic-release config's `plugins`. */
+export function pluginConfig(plugins: ReadonlyArray<unknown>, name: string): Record<string, unknown> {
   for (const plugin of plugins) {
-    if (plugin === COMMIT_ANALYZER) return {};
-    if (Array.isArray(plugin) && plugin[0] === COMMIT_ANALYZER) {
+    if (plugin === name) return {};
+    if (Array.isArray(plugin) && plugin[0] === name) {
       return (plugin[1] as Record<string, unknown> | undefined) ?? {};
     }
   }
-  throw new Error(`release.config.js has no ${COMMIT_ANALYZER} plugin`);
+  throw new Error(`release.config.js has no ${name} plugin`);
+}
+
+/** The commit-analyzer's options from a semantic-release config's `plugins`. */
+export function commitAnalyzerConfig(plugins: ReadonlyArray<unknown>): Record<string, unknown> {
+  return pluginConfig(plugins, COMMIT_ANALYZER);
 }
 
 /** Parses `git log --format=%H<FIELD>%B<RECORD>` output into analyzer commits. */
@@ -64,7 +69,7 @@ export function parseGitLog(output: string): Array<{ hash: string; message: stri
     });
 }
 
-const silentLogger = { log: () => {}, error: () => {}, warn: () => {}, success: () => {} };
+export const silentLogger = { log: () => {}, error: () => {}, warn: () => {}, success: () => {} };
 
 function git(cwd: string, args: string[]): string {
   return execFileSync("git", args, { cwd, encoding: "utf8" });
@@ -80,24 +85,42 @@ export function lastReleaseTag(cwd: string): string | undefined {
     .find((tag) => RELEASE_TAG.test(tag));
 }
 
-export async function computeNextVersion(cwd: string): Promise<string> {
-  const tag = lastReleaseTag(cwd);
-  if (!tag) throw new Error("No vX.Y.Z tag reachable from HEAD; is the checkout shallow (fetch-depth: 0)?");
+export interface ReleaseAnalysis {
+  /** The last `vX.Y.Z` tag reachable from HEAD. */
+  lastTag: string;
+  lastVersion: string;
+  commits: Array<{ hash: string; message: string }>;
+  /** What semantic-release would release, or null when nothing since the tag triggers one. */
+  type: ReleaseType | null;
+  /** `release.config.js`'s `plugins`, for callers that need other plugins' options. */
+  plugins: unknown[];
+}
+
+/** Runs semantic-release's commit analyzer over the commits since the last release tag. */
+export async function analyzeSinceLastRelease(cwd: string): Promise<ReleaseAnalysis> {
+  const lastTag = lastReleaseTag(cwd);
+  if (!lastTag) throw new Error("No vX.Y.Z tag reachable from HEAD; is the checkout shallow (fetch-depth: 0)?");
 
   const configModule = (await import(pathToFileURL(path.join(cwd, "release.config.js")).href)) as {
     default: { plugins: unknown[] };
   };
-  const pluginConfig = commitAnalyzerConfig(configModule.default.plugins);
+  const { plugins } = configModule.default;
 
-  const commits = parseGitLog(git(cwd, ["log", `--format=%H${FIELD}%B${RECORD}`, `${tag}..HEAD`]));
-  const type = (await analyzeCommits(pluginConfig, {
+  const commits = parseGitLog(git(cwd, ["log", `--format=%H${FIELD}%B${RECORD}`, `${lastTag}..HEAD`]));
+  const type = (await analyzeCommits(commitAnalyzerConfig(plugins), {
     commits,
     cwd,
     env: process.env,
     logger: silentLogger,
   })) as ReleaseType | null;
 
-  return bumpVersion(tag.slice(1), type ?? "patch");
+  return { lastTag, lastVersion: lastTag.slice(1), commits, type, plugins };
+}
+
+/** The next release's version, falling back to a patch bump when nothing would release. */
+export async function computeNextVersion(cwd: string): Promise<string> {
+  const { lastVersion, type } = await analyzeSinceLastRelease(cwd);
+  return bumpVersion(lastVersion, type ?? "patch");
 }
 
 // CLI

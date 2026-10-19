@@ -350,21 +350,35 @@ export const MyStory: Story = {
 
 Releases are cut by [semantic-release](https://semantic-release.gitbook.io/) when someone dispatches the
 `Release` workflow. `main` is push-protected, so semantic-release cannot commit the version bump itself:
-a prep PR does that first. **Don't create git tags by hand.**
+a prep PR does that first, and a workflow opens it for you. **Don't edit `package.json`'s version or
+create git tags by hand.**
 
 ### Cutting a release
 
-1. **Find the next version.** Run `yarn release:dry-run` (see below), or read the version off the latest
-   `-beta` on npm: betas are named for the release they lead up to.
-2. **Open a prep PR** that sets `package.json`'s `version` to that version and adds its `CHANGELOG.md`
-   entry, with any upgrade notes. Merge it.
-3. **Dispatch `Release`** (`.github/workflows/release.yml`) from the Actions tab. It reads the
-   [Conventional Commit](#commit-message-format) PR titles since the last tag, creates the `vX.Y.Z` tag
-   and a GitHub release with generated notes. If the prep PR hasn't merged — `package.json` doesn't say
-   the version being released — it stops before creating the tag and says so
-   (`scripts/release/verify-package-version.js`).
+1. **Dispatch `Release prep`** (`.github/workflows/release-prep.yml`) from the Actions tab, giving only a
+   Jira key. It works out the next version from the [Conventional Commit](#commit-message-format) PR
+   titles since the last tag, using semantic-release's own analyzer, so it matches what `Release` will
+   compute. It then opens a PR that:
+   - sets `package.json` to that version;
+   - adds the generated `CHANGELOG.md` entry (the same notes semantic-release writes on the GitHub
+     release);
+   - updates the README's version line, and its compatibility table when a new minor line starts.
+
+   If nothing releasable has merged since the last tag, it stops and says so.
+
+2. **Review and merge the prep PR.** Add upgrade notes to its CHANGELOG entry (and `MIGRATION.md`) for
+   anything consumers must act on. Your edits are kept; nothing regenerates the PR.
+3. **Dispatch `Release`** (`.github/workflows/release.yml`). It creates the `vX.Y.Z` tag and a GitHub
+   release with generated notes. If `package.json` doesn't say the version being released, it stops
+   before creating the tag (`scripts/release/verify-package-version.js`). That happens when the prep PR
+   hasn't merged, or when more `feat:`/`fix:` PRs merged afterwards and changed the version. In that
+   case, run `Release prep` again. It replaces the unreleased entry and shows the old one in the PR
+   body so you can carry its notes over.
 4. **Approve the publish.** The tag starts `Publish to Public npm` (`publish-public.yml`), which waits at
    the `PROD` environment for a reviewer's approval.
+
+To prepare a release by hand instead (e.g. to test locally), run `yarn tsx scripts/release/prepare-release.ts`
+on an up-to-date `main` with tags fetched; it makes the same edits in your working tree.
 
 ### Version bump rules
 

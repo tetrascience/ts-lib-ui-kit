@@ -129,7 +129,7 @@ import {
 | `AppHeader`              | Composed           | —                          | Top nav with avatar/actions                              | Stable |
 | `Main`                   | Composed           | —                          | Main content area with navbar, sidebar, tab bar          | Stable |
 | `Navbar`                 | Composed           | —                          | Secondary nav bar                                        | Stable |
-| `ProcessFlow`            | Composed           | —                          | Controlled multi-step workflow visualizer, `chips` trail | Stable |
+| `ProcessFlow`            | Composed           | —                          | Workflow visualizer; `chips`, `inline` variants          | Stable |
 | `Sidebar` (composed)     | Composed           | —                          | App sidebar with navigation sections                     | Stable |
 | `LaunchContent`          | Composed           | —                          | Launch/welcome content panel                             | Stable |
 | `ProtocolConfiguration`  | Composed           | —                          | Protocol config form                                     | Stable |

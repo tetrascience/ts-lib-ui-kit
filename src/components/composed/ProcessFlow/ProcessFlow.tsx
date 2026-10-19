@@ -36,8 +36,11 @@ export type {
   ProcessStepStatus,
 } from "./ProcessFlow.utils";
 
-/** How steps are drawn: `default` markers joined by connectors, or `chips` — one pill per step on a single line. */
-export type ProcessFlowVariant = "default" | "chips";
+/**
+ * How steps are drawn: `default` markers joined by connectors, `chips` — one pill per step on a single line — or
+ * `inline`, a small indicator with each label beside its dot that shares a line with a page title.
+ */
+export type ProcessFlowVariant = "default" | "chips" | "inline";
 
 type ProcessFlowLayout = "linear" | "branching";
 type ProcessFlowStepContentLayout = "stacked" | "inline" | "anchored";
@@ -74,6 +77,12 @@ export interface ProcessFlowProps extends Omit<ComponentPropsWithoutRef<"nav">, 
    * Completed steps are tinted with a tick, the active step is tinted with a primary border, and the selected step
    * gains a primary border, so a completed step the user returns to reads as both. Chips are linear: `connections`,
    * step `position` and `showDescriptions` apply to the default variant only.
+   *
+   * `inline` puts each label beside a small dot, on one line that keeps its natural width — compact enough to sit
+   * beside a page title and its buttons. A completed step shows a filled dot with a tick, the active step an outlined
+   * dot with its number, a pending step a muted one; the line into a step fills once the step before it is completed.
+   * Inline flows are a read-only, horizontal status indicator: `onStepSelect`, `selectedStepId`, `connections`,
+   * step `position`, `orientation`, `size` and `showDescriptions` don't apply.
    */
   variant?: ProcessFlowVariant;
 }
@@ -543,6 +552,82 @@ function ChipProcessFlow({
   );
 }
 
+const INLINE_STEP_STATUS_CLASSES: Record<ProcessFlowStepStatus, string> = {
+  pending: "text-muted-foreground",
+  active: "font-semibold text-primary",
+  completed: "text-primary",
+  error: "text-destructive",
+  disabled: "text-muted-foreground",
+};
+
+const INLINE_DOT_STATUS_CLASSES: Record<ProcessFlowStepStatus, string> = {
+  pending: "border-border bg-background text-muted-foreground",
+  active: "border-primary bg-background text-primary",
+  completed: "border-primary bg-primary text-primary-foreground",
+  error: "border-destructive bg-background text-destructive",
+  disabled: "border-border bg-muted text-muted-foreground",
+};
+
+function getInlineDotContent(status: ProcessFlowStepStatus, stepNumber: number) {
+  if (status === "completed") {
+    return <CheckIcon aria-hidden="true" strokeWidth={3} />;
+  }
+
+  if (status === "disabled") {
+    return <LockIcon aria-hidden="true" />;
+  }
+
+  return stepNumber;
+}
+
+function InlineProcessFlow({ steps }: Pick<ProcessFlowProps, "steps">) {
+  const statuses = steps.map(getStepStatus);
+
+  return (
+    <ol className="m-0 flex list-none items-center p-0 text-xs" data-slot="process-flow-list">
+      {steps.map((step, stepIndex) => {
+        const status = statuses[stepIndex];
+
+        return (
+          <li
+            key={step.id}
+            aria-current={status === "active" ? "step" : undefined}
+            className={cn("flex items-center gap-1.5 whitespace-nowrap", INLINE_STEP_STATUS_CLASSES[status])}
+            data-slot="process-flow-item"
+            data-status={status}
+          >
+            {stepIndex > 0 ? (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "mx-2 h-0.5 w-8 shrink-0 rounded-full",
+                  statuses[stepIndex - 1] === "completed" ? "bg-primary" : "bg-border",
+                )}
+                data-slot="process-flow-connector"
+              />
+            ) : null}
+            <span
+              aria-hidden="true"
+              className={cn(
+                "grid size-4.5 shrink-0 place-items-center rounded-full border-[1.5px] text-2xs font-bold tabular-nums [&_svg]:size-2.5",
+                INLINE_DOT_STATUS_CLASSES[status],
+              )}
+              data-slot="process-flow-marker"
+            >
+              {getInlineDotContent(status, stepIndex + 1)}
+            </span>
+            <span data-slot="process-flow-label">{step.label}</span>
+            {/* The active step is announced by aria-current; pending is the unmarked default. */}
+            {status !== "active" && status !== "pending" ? (
+              <span className="sr-only">, {STATUS_LABELS[status]}</span>
+            ) : null}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 function HorizontalProcessFlow({
   steps,
   selectedStepId,
@@ -713,6 +798,21 @@ export function ProcessFlow({
 }: ProcessFlowProps) {
   if (steps.length === 0) {
     return null;
+  }
+
+  if (variant === "inline") {
+    return (
+      <nav
+        aria-label={ariaLabel}
+        className={cn("shrink-0", className)}
+        data-slot="process-flow"
+        data-variant={variant}
+        style={style}
+        {...props}
+      >
+        <InlineProcessFlow steps={steps} />
+      </nav>
+    );
   }
 
   if (variant === "chips") {

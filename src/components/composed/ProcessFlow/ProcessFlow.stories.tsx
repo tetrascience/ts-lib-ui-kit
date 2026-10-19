@@ -908,3 +908,124 @@ export const ChipStates: Story = {
     });
   },
 };
+
+/**
+ * `variant="inline"` is a small, read-only stage indicator that shares a line with a page title and its buttons:
+ * each label sits beside its dot, and the line into a step fills once the step before it is completed.
+ */
+export const InlineStages: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <h2 className="text-base font-semibold">New session</h2>
+      <ProcessFlow
+        aria-label="Stages"
+        variant="inline"
+        steps={[
+          { id: "setup", label: "Set up", status: "completed" },
+          { id: "design", label: "Design exploration", status: "active" },
+          { id: "review", label: "Review", status: "pending" },
+        ]}
+      />
+      <div className="ml-auto flex gap-2">
+        <Button variant="outline" size="sm">
+          Edit layout
+        </Button>
+        <Button size="sm">Start design</Button>
+      </div>
+    </div>
+  ),
+  parameters: {
+    controls: { disable: true },
+    zephyr: {
+      testCaseId: "",
+    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const flow = canvas.getByRole("navigation", { name: "Stages" });
+    const items = within(flow).getAllByRole("listitem");
+
+    await step("Every step sits on one line beside the title, at its natural width", async () => {
+      expect(items).toHaveLength(3);
+      const title = canvas.getByRole("heading", { name: "New session" }).getBoundingClientRect();
+      const box = flow.getBoundingClientRect();
+      expect(box.height).toBeLessThanOrEqual(20);
+      expect(Math.abs(box.top + box.height / 2 - (title.top + title.height / 2))).toBeLessThanOrEqual(4);
+      // scrollWidth rounds to whole pixels.
+      expect(box.width).toBeGreaterThanOrEqual(flow.querySelector("ol")!.scrollWidth - 1);
+      for (const label of flow.querySelectorAll<HTMLElement>("[data-slot='process-flow-label']")) {
+        expect(getComputedStyle(label).fontSize).toBe("12px");
+      }
+    });
+
+    await step("The active step is current; a completed step is ticked and says so in words", async () => {
+      expect(items.map((item) => item.getAttribute("aria-current"))).toEqual([null, "step", null]);
+      const done = items[0].querySelector<HTMLElement>("[data-slot='process-flow-marker']")!;
+      expect(done.querySelector("svg")).not.toBeNull();
+      expect(done.textContent).toBe("");
+      expect(items[0]).toHaveTextContent("Set up, Completed");
+      expect(items[2]).toHaveTextContent(/^3Review$/);
+    });
+
+    await step("The line into a step fills once the step before it is completed", async () => {
+      const [intoDesign, intoReview] = flow.querySelectorAll<HTMLElement>("[data-slot='process-flow-connector']");
+      const filled = getComputedStyle(items[0].querySelector<HTMLElement>("[data-slot='process-flow-marker']")!)
+        .backgroundColor;
+      expect(getComputedStyle(intoDesign).backgroundColor).toBe(filled);
+      expect(getComputedStyle(intoReview).backgroundColor).not.toBe(filled);
+    });
+  },
+};
+
+/** Every status in the inline variant. */
+export const InlineStatuses: Story = {
+  render: () => (
+    <ProcessFlow
+      aria-label="Release stages"
+      variant="inline"
+      steps={[
+        { id: "draft", label: "Draft", status: "completed" },
+        { id: "review", label: "Review", status: "active" },
+        { id: "approve", label: "Approve", status: "error" },
+        { id: "publish", label: "Publish", status: "pending" },
+        { id: "archive", label: "Archive", status: "disabled" },
+      ]}
+    />
+  ),
+  parameters: {
+    controls: { disable: true },
+    zephyr: {
+      testCaseId: "",
+    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const flow = within(canvasElement).getByRole("navigation", { name: "Release stages" });
+    const [draft, review, approve, publish, archive] = within(flow).getAllByRole("listitem");
+    const marker = (item: HTMLElement) => item.querySelector<HTMLElement>("[data-slot='process-flow-marker']")!;
+    const style = (el: HTMLElement) => getComputedStyle(el);
+
+    await step("Completed and active labels are primary; active is semibold; pending is muted", async () => {
+      expect(style(draft).color).toBe(style(review).color);
+      expect(style(review).fontWeight).toBe("600");
+      expect(style(publish).color).not.toBe(style(review).color);
+      expect(style(marker(review)).borderTopColor).toBe(style(review).color);
+      expect(style(marker(review)).backgroundColor).not.toBe(style(marker(draft)).backgroundColor);
+    });
+
+    await step("Error and disabled are marked in colour or icon, and in words", async () => {
+      expect(style(marker(approve)).borderTopColor).toBe(style(approve).color);
+      expect(style(approve).color).not.toBe(style(review).color);
+      expect(approve).toHaveTextContent("Approve, Error");
+      expect(marker(archive).querySelector("svg")).not.toBeNull();
+      expect(archive).toHaveTextContent("Archive, Disabled");
+    });
+
+    await step("Only the line after a completed step is filled", async () => {
+      const lines = [review, approve, publish, archive].map(
+        (item) => style(item.querySelector<HTMLElement>("[data-slot='process-flow-connector']")!).backgroundColor,
+      );
+      const filled = style(marker(draft)).backgroundColor;
+      expect(lines.map((color) => color === filled)).toEqual([true, false, false, false]);
+    });
+  },
+};

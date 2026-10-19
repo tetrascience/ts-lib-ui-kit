@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
+import { resolveDeployedVersion, type DeployedVersion } from "../../.storybook/deployed-version"
 import pkg from "../../package.json"
 
 import { Badge } from "./ui/badge"
@@ -39,8 +40,30 @@ function GithubInvertocatWhite(props: SVGProps<SVGSVGElement>) {
   )
 }
 
-const VERSION = pkg.version
 const PKG_NAME = pkg.name
+
+/**
+ * The version to show: on the production Storybook, the beta published from
+ * this commit; otherwise package.json's (see .storybook/deployed-version.ts).
+ */
+function useDeployedVersion() {
+  const [deployed, setDeployed] = useState<DeployedVersion>({ version: pkg.version, source: "package" })
+  useEffect(() => {
+    let active = true
+    resolveDeployedVersion({
+      packageName: pkg.name,
+      packageVersion: pkg.version,
+      gitSha: import.meta.env.STORYBOOK_DEPLOY_SHA,
+      deployEnv: import.meta.env.STORYBOOK_DEPLOY_ENV,
+    }).then((next) => {
+      if (active) setDeployed(next)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
+  return deployed
+}
 
 /** Detect dark mode by watching <html> class and URL globals */
 function useDarkMode() {
@@ -504,8 +527,15 @@ const features = [
 
 const GITHUB_URL = "https://github.com/tetrascience/ts-lib-ui-kit"
 
+const VERSION_TITLES: Record<string, string> = {
+  beta: "The beta npm build published from the commit this Storybook was built from",
+  pending: "The newest published beta. This build's own beta is still publishing; reload in a few minutes",
+  package: "package.json version",
+}
+
 function IntroductionPage() {
   const isDark = useDarkMode()
+  const deployed = useDeployedVersion()
 
   return (
     <div className={`min-h-screen bg-background text-foreground ${isDark ? "dark" : ""}`}>
@@ -525,8 +555,13 @@ function IntroductionPage() {
               <h1 className="text-4xl font-bold tracking-tight text-[#0B112D] dark:text-white md:text-5xl">
                 TetraScience React UI
               </h1>
-              <Badge variant="outline" className="text-xs font-mono border-[#0B112D]/20 text-[#0B112D]/80 dark:border-white/20 dark:text-white/80">
-                v{VERSION}
+              <Badge
+                variant="outline"
+                className="text-xs font-mono border-[#0B112D]/20 text-[#0B112D]/80 dark:border-white/20 dark:text-white/80"
+                title={VERSION_TITLES[deployed.pending ? "pending" : deployed.source]}
+                data-version-source={deployed.pending ? "pending" : deployed.source}
+              >
+                v{deployed.version}
               </Badge>
             </div>
             <p className="max-w-xl text-lg text-[#465364] dark:text-white/70">

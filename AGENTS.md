@@ -377,6 +377,12 @@ Process: [CONTRIBUTING.md › Release Process](./CONTRIBUTING.md#release-process
   options — and writes the result into `package.json` through the shared workflow's
   `pre_install_command`. Keep the two in step: a change to the analyzer config changes both.
 - **Alphas are opt-in** via the `alpha` PR label (`publish-pr.yml`).
+- **Storybook's version badge shows the beta it was built with.** On the production deploy
+  (ui-toolkit.tetrascience.com, built from `main`), the Introduction page asks the npm registry for
+  the current `beta` and shows it when its `gitHead` is this build's commit, or flags it as still
+  publishing when it isn't. Previews and local runs show `package.json`'s version. The commit and
+  environment come from Vercel's `VERCEL_GIT_COMMIT_SHA` / `VERCEL_ENV` via `.storybook/main.ts`'s
+  `env`; the logic is in `.storybook/deployed-version.ts`.
 
 ## Zephyr Integration
 

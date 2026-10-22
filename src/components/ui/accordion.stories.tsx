@@ -108,3 +108,62 @@ export const Multiple: Story = {
     })
   },
 }
+
+/** UXT-254: the group draws the border, so one item is bounded and many close at both ends. */
+export const Bounded: Story = {
+  render: () => (
+    <div className="flex w-[420px] flex-col gap-6">
+      <Accordion type="single" collapsible data-testid="lone">
+        <AccordionItem value="advanced">
+          <AccordionTrigger>Advanced options</AccordionTrigger>
+          <AccordionContent>
+            A single section is bounded by the group, with no border from the consumer.
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      <Accordion type="single" collapsible data-testid="several">
+        <AccordionItem value="axes">
+          <AccordionTrigger>Axes</AccordionTrigger>
+          <AccordionContent>Tick density, gridlines and the axis label font size.</AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="series">
+          <AccordionTrigger>Series</AccordionTrigger>
+          <AccordionContent>Line width, marker shape and the per-series colour ramp.</AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="legend">
+          <AccordionTrigger>Legend</AccordionTrigger>
+          <AccordionContent>Placement, orientation and whether entries are clickable.</AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const width = (el: Element, side: "Top" | "Right" | "Bottom" | "Left") =>
+      Math.round(parseFloat(getComputedStyle(el)[`border${side}Width`]))
+
+    await step("A lone item is bounded on all four sides", async () => {
+      const lone = canvasElement.querySelector('[data-testid="lone"]')!
+      expect(width(lone, "Top")).toBe(1)
+      expect(width(lone, "Right")).toBe(1)
+      expect(width(lone, "Bottom")).toBe(1)
+      expect(width(lone, "Left")).toBe(1)
+    })
+
+    await step("A multi-item group closes at both ends", async () => {
+      const several = canvasElement.querySelector('[data-testid="several"]')!
+      expect(width(several, "Top")).toBe(1)
+      expect(width(several, "Bottom")).toBe(1)
+    })
+
+    await step("Each boundary carries exactly one rule, and none stack", async () => {
+      const several = canvasElement.querySelector('[data-testid="several"]')!
+      const items = [...several.querySelectorAll('[data-slot="accordion-item"]')]
+      expect(items).toHaveLength(3)
+      // No item draws a bottom rule, so a consumer's border-t replaces rather than stacks.
+      expect(width(items[0], "Top")).toBe(0)
+      items.forEach((item) => expect(width(item, "Bottom")).toBe(0))
+      items.slice(1).forEach((item) => expect(width(item, "Top")).toBe(1))
+    })
+  },
+}

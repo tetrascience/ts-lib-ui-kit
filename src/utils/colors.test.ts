@@ -1,12 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import {
-  CHART_COLORS,
-  CHART_SEQUENTIAL,
-  CHART_DIVERGING,
-  seriesColor,
-  toPlotlyColorscale,
-} from "./colors";
+import { CHART_COLORS, CHART_SEQUENTIAL, CHART_DIVERGING, seriesColor, toPlotlyColorscale } from "./colors";
 
 describe("CHART_COLORS", () => {
   it("provides 12 categorical palette slots", () => {
@@ -23,10 +17,7 @@ describe("CHART_COLORS", () => {
 
 describe("chart ramps", () => {
   it("provides 12-step sequential and diverging ramps", () => {
-    for (const ramp of [
-      ...Object.values(CHART_SEQUENTIAL),
-      ...Object.values(CHART_DIVERGING),
-    ]) {
+    for (const ramp of [...Object.values(CHART_SEQUENTIAL), ...Object.values(CHART_DIVERGING)]) {
       expect(ramp).toHaveLength(12);
     }
   });

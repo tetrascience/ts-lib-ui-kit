@@ -1,6 +1,6 @@
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 function Table({
   className,
@@ -9,9 +9,9 @@ function Table({
   layout = "auto",
   ...props
 }: React.ComponentProps<"table"> & {
-  containerClassName?: string
-  variant?: "default" | "card"
-  layout?: "auto" | "fixed"
+  containerClassName?: string;
+  variant?: "default" | "card";
+  layout?: "auto" | "fixed";
 }) {
   return (
     <div
@@ -30,7 +30,7 @@ function Table({
         {...props}
       />
     </div>
-  )
+  );
 }
 
 function TableHeader({
@@ -38,7 +38,7 @@ function TableHeader({
   variant,
   ...props
 }: React.ComponentProps<"thead"> & {
-  variant?: "default" | "sticky"
+  variant?: "default" | "sticky";
 }) {
   return (
     <thead
@@ -50,30 +50,21 @@ function TableHeader({
       )}
       {...props}
     />
-  )
+  );
 }
 
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
-  return (
-    <tbody
-      data-slot="table-body"
-      className={cn("[&_tr:last-child]:border-0", className)}
-      {...props}
-    />
-  )
+  return <tbody data-slot="table-body" className={cn("[&_tr:last-child]:border-0", className)} {...props} />;
 }
 
 function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
     <tfoot
       data-slot="table-footer"
-      className={cn(
-        "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
-        className
-      )}
+      className={cn("border-t bg-muted/50 font-medium [&>tr]:last:border-b-0", className)}
       {...props}
     />
-  )
+  );
 }
 
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
@@ -82,11 +73,11 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
       data-slot="table-row"
       className={cn(
         "group/row border-b transition-colors hover:bg-accent/50 data-[state=selected]:bg-muted in-data-[striped]:even:bg-muted/30 in-data-[striped]:hover:bg-accent/50",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 function TableHead({
@@ -95,8 +86,8 @@ function TableHead({
   truncate,
   ...props
 }: React.ComponentProps<"th"> & {
-  variant?: "default" | "numeric" | "action"
-  truncate?: boolean
+  variant?: "default" | "numeric" | "action";
+  truncate?: boolean;
 }) {
   return (
     <th
@@ -111,7 +102,7 @@ function TableHead({
       )}
       {...props}
     />
-  )
+  );
 }
 
 function TableCell({
@@ -120,8 +111,8 @@ function TableCell({
   truncate,
   ...props
 }: React.ComponentProps<"td"> & {
-  variant?: "default" | "numeric" | "action"
-  truncate?: boolean
+  variant?: "default" | "numeric" | "action";
+  truncate?: boolean;
 }) {
   return (
     <td
@@ -139,29 +130,13 @@ function TableCell({
       )}
       {...props}
     />
-  )
+  );
 }
 
-function TableCaption({
-  className,
-  ...props
-}: React.ComponentProps<"caption">) {
+function TableCaption({ className, ...props }: React.ComponentProps<"caption">) {
   return (
-    <caption
-      data-slot="table-caption"
-      className={cn("mt-4 text-sm text-muted-foreground", className)}
-      {...props}
-    />
-  )
+    <caption data-slot="table-caption" className={cn("mt-4 text-sm text-muted-foreground", className)} {...props} />
+  );
 }
 
-export {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption,
-}
+export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption };

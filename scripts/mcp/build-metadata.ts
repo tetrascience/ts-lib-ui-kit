@@ -23,20 +23,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import {
-  Node,
-  Project,
-  SyntaxKind,
-  type ObjectLiteralExpression,
-  type SourceFile,
-} from "ts-morph";
+import { Node, Project, SyntaxKind, type ObjectLiteralExpression, type SourceFile } from "ts-morph";
 
-import type {
-  ArgType,
-  Catalog,
-  ComponentMeta,
-  StoryMeta,
-} from "../../api/_catalog-types";
+import type { ArgType, Catalog, ComponentMeta, StoryMeta } from "../../api/_catalog-types";
 
 const ROOT = process.cwd();
 const STATIC_DIR = path.resolve(ROOT, process.argv[2] ?? "storybook-static");
@@ -111,9 +100,7 @@ function objectToRecord(obj: ObjectLiteralExpression): Record<string, unknown> {
 /** Find the object literal initializer of a named/default declaration. */
 function getObjectInitializer(node: Node | undefined): ObjectLiteralExpression | undefined {
   if (!node) return undefined;
-  const init = Node.isVariableDeclaration(node)
-    ? node.getInitializer()
-    : node;
+  const init = Node.isVariableDeclaration(node) ? node.getInitializer() : node;
   if (init && Node.isObjectLiteralExpression(init)) return init;
   return undefined;
 }
@@ -153,13 +140,18 @@ function parseArgs(container: ObjectLiteralExpression | undefined): Record<strin
 }
 
 /** Pull the per-component metadata out of a single story source file. */
-function parseStoryFile(
-  sourceFile: SourceFile,
-): { argTypes: Record<string, ArgType>; defaultArgs: Record<string, unknown>; stories: StoryMeta[] } {
-  const metaObj = getObjectInitializer(sourceFile.getDefaultExportSymbol()
-    ?.getDeclarations()
-    .map((d) => (Node.isExportAssignment(d) ? d.getExpression() : d))
-    .find((n) => Node.isObjectLiteralExpression(n) || Node.isIdentifier(n)));
+function parseStoryFile(sourceFile: SourceFile): {
+  argTypes: Record<string, ArgType>;
+  defaultArgs: Record<string, unknown>;
+  stories: StoryMeta[];
+} {
+  const metaObj = getObjectInitializer(
+    sourceFile
+      .getDefaultExportSymbol()
+      ?.getDeclarations()
+      .map((d) => (Node.isExportAssignment(d) ? d.getExpression() : d))
+      .find((n) => Node.isObjectLiteralExpression(n) || Node.isIdentifier(n)),
+  );
 
   // `export default meta` (identifier) vs `export default { ... }` (literal).
   let meta = metaObj;
@@ -188,9 +180,7 @@ function parseStoryFile(
 
 function main(): void {
   if (!fs.existsSync(INDEX_JSON)) {
-    console.error(
-      `[mcp] ${INDEX_JSON} not found. Run \`storybook build\` before this script.`,
-    );
+    console.error(`[mcp] ${INDEX_JSON} not found. Run \`storybook build\` before this script.`);
     process.exit(1);
   }
 
@@ -210,9 +200,7 @@ function main(): void {
   }
 
   const project = new Project({
-    tsConfigFilePath: fs.existsSync(path.join(ROOT, "tsconfig.json"))
-      ? path.join(ROOT, "tsconfig.json")
-      : undefined,
+    tsConfigFilePath: fs.existsSync(path.join(ROOT, "tsconfig.json")) ? path.join(ROOT, "tsconfig.json") : undefined,
     skipAddingFilesFromTsConfig: true,
   });
 
@@ -245,9 +233,7 @@ function main(): void {
       defaultArgs: parsed.defaultArgs,
       stories: parsed.stories.length
         ? parsed.stories
-        : entries
-            .filter((e) => e.type === "story")
-            .map((e) => ({ name: e.name, hasPlayTest: false })),
+        : entries.filter((e) => e.type === "story").map((e) => ({ name: e.name, hasPlayTest: false })),
     });
   }
 
@@ -264,9 +250,7 @@ function main(): void {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(OUT_FILE, `${JSON.stringify(catalog, null, 2)}\n`, "utf8");
 
-  console.log(
-    `[mcp] wrote ${components.length} components to ${path.relative(ROOT, OUT_FILE)}`,
-  );
+  console.log(`[mcp] wrote ${components.length} components to ${path.relative(ROOT, OUT_FILE)}`);
 }
 
 main();

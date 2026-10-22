@@ -15,7 +15,7 @@ export function generateRowLabels(count: number): string[] {
   return Array.from({ length: count }, (_, i) =>
     i < ALPHABET_LENGTH
       ? String.fromCharCode(ASCII_UPPERCASE_A + i)
-      : "A" + String.fromCharCode(ASCII_UPPERCASE_A + (i - ALPHABET_LENGTH))
+      : "A" + String.fromCharCode(ASCII_UPPERCASE_A + (i - ALPHABET_LENGTH)),
   );
 }
 
@@ -59,7 +59,7 @@ interface ParsedWellPosition {
 function isValidWellPosition(
   parsed: ParsedWellPosition | null,
   rows: number,
-  columns: number
+  columns: number,
 ): parsed is ParsedWellPosition {
   if (!parsed) return false;
   const { row, col } = parsed;
@@ -72,7 +72,7 @@ function isValidWellPosition(
  */
 function extractLayerValue(
   values: Record<string, string | number | null> | undefined,
-  layerId?: string
+  layerId?: string,
 ): string | number | null {
   if (!values) return null;
   const effectiveLayerId = layerId ?? Object.keys(values)[0];
@@ -87,7 +87,7 @@ function storeLayerValue(
   row: number,
   col: number,
   grid: (number | null)[][],
-  categories: (string | null)[][]
+  categories: (string | null)[][],
 ): void {
   if (typeof layerValue === "number") {
     grid[row][col] = layerValue;
@@ -99,19 +99,10 @@ function storeLayerValue(
 /**
  * Convert WellData array to 2D grids for a specific layer
  */
-export function wellDataToGrid(
-  wells: WellData[],
-  rows: number,
-  columns: number,
-  layerId?: string
-): WellDataGridResult {
+export function wellDataToGrid(wells: WellData[], rows: number, columns: number, layerId?: string): WellDataGridResult {
   // Initialize grids with nulls
-  const grid: (number | null)[][] = Array.from({ length: rows }, () =>
-    Array(columns).fill(null)
-  );
-  const categories: (string | null)[][] = Array.from({ length: rows }, () =>
-    Array(columns).fill(null)
-  );
+  const grid: (number | null)[][] = Array.from({ length: rows }, () => Array(columns).fill(null));
+  const categories: (string | null)[][] = Array.from({ length: rows }, () => Array(columns).fill(null));
   const allValues = new Map<string, Record<string, string | number | null>>();
   const tooltipData = new Map<string, Record<string, unknown>>();
 
@@ -205,10 +196,7 @@ export function isStringValueLayer(data: WellData[], layerId: string): boolean {
  * Creates a layer entry for each unique key found in the `values` objects.
  * Merges with user-provided layerConfigs to apply custom settings.
  */
-export function extractLayers(
-  data: WellData[],
-  layerConfigs?: LayerConfig[]
-): LayerConfig[] {
+export function extractLayers(data: WellData[], layerConfigs?: LayerConfig[]): LayerConfig[] {
   const layerIds = extractLayerIds(data);
 
   return layerIds.map((id) => {
@@ -236,7 +224,7 @@ export function extractLayers(
 export function parseRegionWells(
   wells: string,
   rowLabels: readonly (string | number)[],
-  colLabels: readonly (string | number)[]
+  colLabels: readonly (string | number)[],
 ): { minRow: number; maxRow: number; minCol: number; maxCol: number } | null {
   // Parse range notation like "A1:B6"
   const rangeMatch = wells.match(/^([A-Z]{1,2})(\d{1,2}):([A-Z]{1,2})(\d{1,2})$/i);
@@ -313,7 +301,7 @@ function formatAllLayerValues(
   allValues: Record<string, number | string | null>,
   activeLayerId: string | undefined,
   layerConfigMap: Map<string, LayerConfig>,
-  precision: number
+  precision: number,
 ): string {
   let result = "";
   for (const [key, value] of Object.entries(allValues)) {
@@ -359,11 +347,7 @@ export interface ColorbarConfig {
 /**
  * Builds the colorbar configuration based on legend position.
  */
-export function buildColorbarConfig(
-  position: LegendPosition,
-  valueUnit: string,
-  legendTitle?: string
-): ColorbarConfig {
+export function buildColorbarConfig(position: LegendPosition, valueUnit: string, legendTitle?: string): ColorbarConfig {
   const title = legendTitle ? { text: legendTitle } : undefined;
 
   switch (position) {
@@ -433,11 +417,7 @@ export interface PlotMargins {
 /**
  * Builds the margin configuration based on legend position and title presence.
  */
-export function buildPlotMargins(
-  position: LegendPosition,
-  hasTitle: boolean,
-  hasYTitle: boolean
-): PlotMargins {
+export function buildPlotMargins(position: LegendPosition, hasTitle: boolean, hasYTitle: boolean): PlotMargins {
   const baseLeft = hasYTitle ? PLATEMAP_CONSTANTS.MARGIN_TOP : PLATEMAP_CONSTANTS.MARGIN_RIGHT;
   const baseRight = PLATEMAP_CONSTANTS.MARGIN_RIGHT;
 
@@ -500,7 +480,7 @@ export function flattenGridData(
   hoverText: string[][],
   rows: number,
   columns: number,
-  plotZMin: number
+  plotZMin: number,
 ): ScatterPlotData {
   const xData: number[] = [];
   const yData: string[] = [];
@@ -544,7 +524,7 @@ export function calculateMarkerSize(
   columns: number,
   markerShape: "circle" | "square",
   hasTitle: boolean,
-  hasYTitle: boolean
+  hasYTitle: boolean,
 ): number {
   const leftMargin = hasYTitle ? PLATEMAP_CONSTANTS.MARGIN_TOP : PLATEMAP_CONSTANTS.MARGIN_RIGHT;
   const rightMargin = COLORBAR_SPACE; // Always reserve space for colorbar
@@ -557,9 +537,7 @@ export function calculateMarkerSize(
   const cellHeight = plotHeight / rows;
 
   // Circles: use smaller dimension; Squares: use larger dimension
-  const cellSize = markerShape === "square"
-    ? Math.max(cellWidth, cellHeight)
-    : Math.min(cellWidth, cellHeight);
+  const cellSize = markerShape === "square" ? Math.max(cellWidth, cellHeight) : Math.min(cellWidth, cellHeight);
 
   const sizeMultiplier = markerShape === "square" ? SQUARE_SIZE_MULTIPLIER : CIRCLE_SIZE_MULTIPLIER;
   return Math.max(MIN_MARKER_SIZE, cellSize * sizeMultiplier);

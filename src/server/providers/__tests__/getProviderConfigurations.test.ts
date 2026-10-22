@@ -1,9 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-import {
-  getProviderConfigurations,
-  InvalidProviderConfigurationError,
-} from "../getProviderConfigurations";
+import { getProviderConfigurations, InvalidProviderConfigurationError } from "../getProviderConfigurations";
 
 import type { ContainerDataApp, ProviderApiResponse } from "../types";
 import type { TDPClient } from "@tetrascience-npm/ts-connectors-sdk";
@@ -94,9 +91,7 @@ describe("getProviderConfigurations", () => {
       process.env.DATA_APP_PROVIDER_CONFIG = "not valid json";
 
       const client = createMockClient();
-      await expect(getProviderConfigurations(client)).rejects.toThrow(
-        InvalidProviderConfigurationError,
-      );
+      await expect(getProviderConfigurations(client)).rejects.toThrow(InvalidProviderConfigurationError);
     });
 
     it("should throw InvalidProviderConfigurationError when config is not an array", async () => {
@@ -109,27 +104,21 @@ describe("getProviderConfigurations", () => {
     });
 
     it("should throw InvalidProviderConfigurationError when entry is missing name", async () => {
-      process.env.DATA_APP_PROVIDER_CONFIG = JSON.stringify([
-        { type: "snowflake", fields: {} },
-      ]);
+      process.env.DATA_APP_PROVIDER_CONFIG = JSON.stringify([{ type: "snowflake", fields: {} }]);
 
       const client = createMockClient();
       await expect(getProviderConfigurations(client)).rejects.toThrow("'name' must be a string");
     });
 
     it("should throw InvalidProviderConfigurationError when entry is missing type", async () => {
-      process.env.DATA_APP_PROVIDER_CONFIG = JSON.stringify([
-        { name: "test", fields: {} },
-      ]);
+      process.env.DATA_APP_PROVIDER_CONFIG = JSON.stringify([{ name: "test", fields: {} }]);
 
       const client = createMockClient();
       await expect(getProviderConfigurations(client)).rejects.toThrow("'type' must be a string");
     });
 
     it("should throw InvalidProviderConfigurationError when entry is missing fields", async () => {
-      process.env.DATA_APP_PROVIDER_CONFIG = JSON.stringify([
-        { name: "test", type: "snowflake" },
-      ]);
+      process.env.DATA_APP_PROVIDER_CONFIG = JSON.stringify([{ name: "test", type: "snowflake" }]);
 
       const client = createMockClient();
       await expect(getProviderConfigurations(client)).rejects.toThrow("'fields' must be an object");
@@ -318,10 +307,7 @@ describe("getProviderConfigurations", () => {
       // Override isInitialized to return false
       Object.defineProperty(client, "isInitialized", { value: false });
 
-      await expect(getProviderConfigurations(client)).rejects.toThrow(
-        "TDPClient is not initialized",
-      );
+      await expect(getProviderConfigurations(client)).rejects.toThrow("TDPClient is not initialized");
     });
   });
 });
-

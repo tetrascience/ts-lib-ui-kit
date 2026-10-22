@@ -1,6 +1,6 @@
-import { CheckIcon, XIcon } from "lucide-react"
-import { useState } from "react"
-import { expect, userEvent, waitFor, within } from "storybook/test"
+import { CheckIcon, XIcon } from "lucide-react";
+import { useState } from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import {
   Confirmation,
@@ -12,10 +12,9 @@ import {
   ConfirmationRequest,
   ConfirmationShortcut,
   ConfirmationTitle,
-} from "./confirmation"
+} from "./confirmation";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta = {
   title: "AI Elements/Status & Effects/Confirmation",
@@ -23,15 +22,15 @@ const meta: Meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
-const mockApproval = { id: "approval-1" }
-const mockApprovalApproved = { id: "approval-1", approved: true as const }
-const mockApprovalRejected = { id: "approval-1", approved: false as const }
+const mockApproval = { id: "approval-1" };
+const mockApprovalApproved = { id: "approval-1", approved: true as const };
+const mockApprovalRejected = { id: "approval-1", approved: false as const };
 
 // ---------------------------------------------------------------------------
 // Default — command approval (Claude Code style)
@@ -64,16 +63,16 @@ export const Default: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Confirmation renders with all three actions", async () => {
-      await expect(canvas.getByText("Deny")).toBeInTheDocument()
-      await expect(canvas.getByText("Always allow")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Deny")).toBeInTheDocument();
+      await expect(canvas.getByText("Always allow")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4528" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Accepted
@@ -99,15 +98,15 @@ export const Accepted: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Accepted state renders success message", async () => {
-      await expect(canvas.getByText(/Allowed/)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/Allowed/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4529" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Rejected
@@ -119,9 +118,7 @@ export const Rejected: Story = {
       <Confirmation approval={mockApprovalRejected} state="output-denied">
         <ConfirmationTitle>Allow Claude to run ?</ConfirmationTitle>
         <ConfirmationRequest>
-          <ConfirmationCode>
-            {`rm -rf /tmp/build-cache`}
-          </ConfirmationCode>
+          <ConfirmationCode>{`rm -rf /tmp/build-cache`}</ConfirmationCode>
         </ConfirmationRequest>
         <ConfirmationRejected>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -133,15 +130,15 @@ export const Rejected: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Rejected state renders denial message", async () => {
-      await expect(canvas.getByText(/Denied/)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/Denied/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4530" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Interactive
@@ -149,26 +146,18 @@ export const Rejected: Story = {
 
 export const Interactive: Story = {
   render: () => {
-    const [approved, setApproved] = useState<boolean | null>(null)
+    const [approved, setApproved] = useState<boolean | null>(null);
 
-    const approval =
-      approved === null ? mockApproval
-      : approved ? mockApprovalApproved
-      : mockApprovalRejected
+    const approval = approved === null ? mockApproval : approved ? mockApprovalApproved : mockApprovalRejected;
 
-    const state =
-      approved === null ? "approval-requested"
-      : approved ? "output-available"
-      : "output-denied"
+    const state = approved === null ? "approval-requested" : approved ? "output-available" : "output-denied";
 
     return (
       <div className="max-w-lg">
         <Confirmation approval={approval} state={state}>
           <ConfirmationTitle>Allow Claude to run ?</ConfirmationTitle>
           <ConfirmationRequest>
-            <ConfirmationCode>
-              {`yarn tsc --noEmit && yarn lint`}
-            </ConfirmationCode>
+            <ConfirmationCode>{`yarn tsc --noEmit && yarn lint`}</ConfirmationCode>
           </ConfirmationRequest>
           <ConfirmationAccepted>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -197,22 +186,22 @@ export const Interactive: Story = {
           </ConfirmationActions>
         </Confirmation>
       </div>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Clicking Always allow shows accepted state", async () => {
-      await expect(canvasElement).toHaveTextContent("yarn tsc --noEmit && yarn lint")
-      await userEvent.click(canvas.getByRole("button", { name: /always allow/i }))
+      await expect(canvasElement).toHaveTextContent("yarn tsc --noEmit && yarn lint");
+      await userEvent.click(canvas.getByRole("button", { name: /always allow/i }));
       await waitFor(() => {
-        expect(canvas.getByText(/Allowed/)).toBeInTheDocument()
-      })
+        expect(canvas.getByText(/Allowed/)).toBeInTheDocument();
+      });
       await waitFor(() => expect(canvas.queryByText(/Allowed/)).not.toBeInTheDocument(), {
         timeout: 2500,
-      })
-    })
+      });
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4531" },
   },
-}
+};

@@ -5,7 +5,6 @@ import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 
-
 import {
   KIT_SHIKI_LANGUAGES,
   ResizableGroupStub,
@@ -111,17 +110,15 @@ describe("installUiKitJestMocks", () => {
    * without any of this file's mocks — see vite.config.ts's test.projects.
    */
   it("covers every optional peer actually imported from client-facing source", () => {
-    const pkg = JSON.parse(
-      fs.readFileSync(path.resolve(__dirname, "../../package.json"), "utf8"),
-    ) as { peerDependenciesMeta?: Record<string, { optional?: boolean }> };
+    const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../package.json"), "utf8")) as {
+      peerDependenciesMeta?: Record<string, { optional?: boolean }>;
+    };
     const optionalPeers = Object.entries(pkg.peerDependenciesMeta ?? {})
       .filter(([, meta]) => meta.optional)
       .map(([name]) => name);
     expect(optionalPeers.length).toBeGreaterThan(0);
 
-    const clientDirs = ["components", "hooks", "lib"].map((dir) =>
-      path.resolve(__dirname, "../", dir),
-    );
+    const clientDirs = ["components", "hooks", "lib"].map((dir) => path.resolve(__dirname, "../", dir));
     function walk(dir: string): string[] {
       return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
         const full = path.join(dir, entry.name);
@@ -183,8 +180,7 @@ describe("installUiKitJestMocks", () => {
     expect(streamdownPluginStub()).toEqual({});
 
     expect(factoryOutputObject("shiki/core").createHighlighterCore).toBe(createHighlighterCoreStub);
-    const engine = factoryOutputObject("shiki/engine/javascript")
-      .createJavaScriptRegexEngine as () => unknown;
+    const engine = factoryOutputObject("shiki/engine/javascript").createJavaScriptRegexEngine as () => unknown;
     expect(engine()).toEqual({});
 
     // Consumed via `.default` after Rollup's dynamic-import interop, which
@@ -245,17 +241,21 @@ describe("installUiKitDomShims", () => {
       mql.addEventListener("change", () => {});
       mql.removeEventListener("change", () => {});
 
-      const ObserverCtor = globalRef.ResizeObserver as new (
-        cb: () => void,
-      ) => { observe: () => void; unobserve: () => void; disconnect: () => void };
+      const ObserverCtor = globalRef.ResizeObserver as new (cb: () => void) => {
+        observe: () => void;
+        unobserve: () => void;
+        disconnect: () => void;
+      };
       const observer = new ObserverCtor(() => {});
       observer.observe();
       observer.unobserve();
       observer.disconnect();
 
-      const IntersectionCtor = globalRef.IntersectionObserver as new (
-        cb: () => void,
-      ) => { takeRecords: () => unknown[]; observe: () => void; disconnect: () => void };
+      const IntersectionCtor = globalRef.IntersectionObserver as new (cb: () => void) => {
+        takeRecords: () => unknown[];
+        observe: () => void;
+        disconnect: () => void;
+      };
       const intersection = new IntersectionCtor(() => {});
       intersection.observe();
       intersection.disconnect();
@@ -384,9 +384,7 @@ describe("rdkit stub", () => {
 
 describe("component stubs", () => {
   it("Streamdown renders markdown source as text", async () => {
-    const container = await render(
-      <StreamdownStub className="md"># Heading with **bold**</StreamdownStub>,
-    );
+    const container = await render(<StreamdownStub className="md"># Heading with **bold**</StreamdownStub>);
     const el = container.querySelector('[data-slot="streamdown-mock"]');
     expect(el?.textContent).toBe("# Heading with **bold**");
     expect(el?.className).toBe("md");
@@ -398,12 +396,8 @@ describe("component stubs", () => {
         <StickToBottomStub.Content className="content">hello</StickToBottomStub.Content>
       </StickToBottomStub>,
     );
-    expect(
-      container.querySelector('[data-slot="stick-to-bottom-mock"]')?.getAttribute("role"),
-    ).toBe("log");
-    expect(
-      container.querySelector('[data-slot="stick-to-bottom-content-mock"]')?.textContent,
-    ).toBe("hello");
+    expect(container.querySelector('[data-slot="stick-to-bottom-mock"]')?.getAttribute("role")).toBe("log");
+    expect(container.querySelector('[data-slot="stick-to-bottom-content-mock"]')?.textContent).toBe("hello");
 
     const context = useStickToBottomContextStub();
     expect(context.isAtBottom).toBe(true);
@@ -429,9 +423,7 @@ describe("component stubs", () => {
     );
     expect(container.querySelector('[data-slot="resizable-group-mock"]')).not.toBeNull();
     expect(container.querySelectorAll('[data-slot="resizable-panel-mock"]')).toHaveLength(2);
-    expect(
-      container.querySelector('[data-slot="resizable-separator-mock"]')?.getAttribute("role"),
-    ).toBe("separator");
+    expect(container.querySelector('[data-slot="resizable-separator-mock"]')?.getAttribute("role")).toBe("separator");
     expect(container.textContent).toBe("lefthandleright");
   });
 });
@@ -448,9 +440,7 @@ describe("shiki stub", () => {
 
   it("escapes markup in codeToHtml and no-ops the rest of the API", async () => {
     const highlighter = await createHighlighterCoreStub();
-    expect(highlighter.codeToHtml("<b>&x</b>")).toBe(
-      "<pre><code>&lt;b&gt;&amp;x&lt;/b&gt;</code></pre>",
-    );
+    expect(highlighter.codeToHtml("<b>&x</b>")).toBe("<pre><code>&lt;b&gt;&amp;x&lt;/b&gt;</code></pre>");
     await expect(highlighter.loadLanguage()).resolves.toBeUndefined();
     expect(highlighter.getLoadedLanguages()).toEqual([]);
     expect(() => highlighter.dispose()).not.toThrow();

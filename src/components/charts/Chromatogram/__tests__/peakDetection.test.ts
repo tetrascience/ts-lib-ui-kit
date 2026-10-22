@@ -10,11 +10,7 @@ function makePeak(x: number, y: number, index: number): PeakAnnotation {
 
 describe("filterPeaksByDistance", () => {
   it("keeps all peaks that are far enough apart", () => {
-    const peaks = [
-      makePeak(1, 5, 0),
-      makePeak(10, 3, 10),
-      makePeak(20, 7, 20),
-    ];
+    const peaks = [makePeak(1, 5, 0), makePeak(10, 3, 10), makePeak(20, 7, 20)];
     const result = filterPeaksByDistance(peaks, 5);
     expect(result).toHaveLength(3);
   });
@@ -41,10 +37,7 @@ describe("filterPeaksByDistance", () => {
 
   it("returns peaks sorted by x after filtering", () => {
     // Two far-apart peaks passed in reverse x order
-    const peaks = [
-      makePeak(20, 5, 20),
-      makePeak(1, 3, 0),
-    ];
+    const peaks = [makePeak(20, 5, 20), makePeak(1, 3, 0)];
     const result = filterPeaksByDistance(peaks, 5);
     expect(result[0].x).toBe(1);
     expect(result[1].x).toBe(20);

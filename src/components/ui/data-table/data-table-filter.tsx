@@ -1,38 +1,32 @@
-"use client"
+"use client";
 
-import { ListFilterIcon, PlusIcon, XIcon } from "lucide-react"
-import { Popover } from "radix-ui"
+import { ListFilterIcon, PlusIcon, XIcon } from "lucide-react";
+import { Popover } from "radix-ui";
 
-import { useDataTable } from "./data-table"
+import { useDataTable } from "./data-table";
 
-import type { FilterColumnConfig, FilterCondition, FilterOperator } from "./data-table"
+import type { FilterColumnConfig, FilterCondition, FilterOperator } from "./data-table";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Operator metadata
 // ---------------------------------------------------------------------------
 
 const OPERATOR_LABELS: Record<FilterOperator, string> = {
-  contains:     "contains",
-  equals:       "equals",
-  not_equals:   "not equals",
-  starts_with:  "starts with",
-  ends_with:    "ends with",
-  is_empty:     "is empty",
+  contains: "contains",
+  equals: "equals",
+  not_equals: "not equals",
+  starts_with: "starts with",
+  ends_with: "ends with",
+  is_empty: "is empty",
   is_not_empty: "is not empty",
-}
+};
 
-const VALUE_FREE_OPERATORS: FilterOperator[] = ["is_empty", "is_not_empty"]
+const VALUE_FREE_OPERATORS: FilterOperator[] = ["is_empty", "is_not_empty"];
 
 const DEFAULT_OPERATORS: FilterOperator[] = [
   "contains",
@@ -42,7 +36,7 @@ const DEFAULT_OPERATORS: FilterOperator[] = [
   "ends_with",
   "is_empty",
   "is_not_empty",
-]
+];
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -59,15 +53,12 @@ function getColumnLabel(
     (col?.columnDef?.meta as { label?: string } | undefined)?.label ??
     (typeof col?.columnDef?.header === "string" ? col.columnDef.header : undefined) ??
     colId
-  )
+  );
 }
 
-function makeCondition(
-  columnId: string,
-  allowedOperators?: FilterOperator[],
-): FilterCondition {
-  const operator = allowedOperators?.[0] ?? "contains"
-  return { id: crypto.randomUUID(), columnId, operator, value: "" }
+function makeCondition(columnId: string, allowedOperators?: FilterOperator[]): FilterCondition {
+  const operator = allowedOperators?.[0] ?? "contains";
+  return { id: crypto.randomUUID(), columnId, operator, value: "" };
 }
 
 // ---------------------------------------------------------------------------
@@ -75,44 +66,43 @@ function makeCondition(
 // ---------------------------------------------------------------------------
 
 interface DataTableFilterProps {
-  className?: string
+  className?: string;
 }
 
 function DataTableFilter({ className }: DataTableFilterProps) {
-  const { table, columnLabels, filters, setFilters, filterConfig, enableFiltering } =
-    useDataTable()
+  const { table, columnLabels, filters, setFilters, filterConfig, enableFiltering } = useDataTable();
 
-  if (!enableFiltering) return null
+  if (!enableFiltering) return null;
 
-  const allLeafColumns = table.getAllLeafColumns()
+  const allLeafColumns = table.getAllLeafColumns();
 
   const resolvedColumns: FilterColumnConfig[] =
     filterConfig.length > 0
       ? filterConfig
       : allLeafColumns
           .filter((col) => "accessorKey" in col.columnDef || "accessorFn" in col.columnDef)
-          .map((col) => ({ columnId: col.id }))
+          .map((col) => ({ columnId: col.id }));
 
-  const firstColumn = resolvedColumns[0]
-  const firstColumnId = firstColumn?.columnId ?? ""
+  const firstColumn = resolvedColumns[0];
+  const firstColumnId = firstColumn?.columnId ?? "";
 
   function addFilter() {
-    setFilters([...filters, makeCondition(firstColumnId, firstColumn?.operators)])
+    setFilters([...filters, makeCondition(firstColumnId, firstColumn?.operators)]);
   }
 
   function removeFilter(id: string) {
-    setFilters(filters.filter((f) => f.id !== id))
+    setFilters(filters.filter((f) => f.id !== id));
   }
 
   function updateFilter(id: string, patch: Partial<FilterCondition>) {
-    setFilters(filters.map((f) => (f.id === id ? { ...f, ...patch } : f)))
+    setFilters(filters.map((f) => (f.id === id ? { ...f, ...patch } : f)));
   }
 
   function clearAll() {
-    setFilters([])
+    setFilters([]);
   }
 
-  const activeCount = filters.length
+  const activeCount = filters.length;
 
   return (
     <Popover.Root>
@@ -151,9 +141,9 @@ function DataTableFilter({ className }: DataTableFilterProps) {
         >
           <div className="flex flex-col gap-2">
             {filters.map((condition) => {
-              const colConfig = resolvedColumns.find((c) => c.columnId === condition.columnId)
-              const operators = colConfig?.operators ?? DEFAULT_OPERATORS
-              const isValueFree = VALUE_FREE_OPERATORS.includes(condition.operator)
+              const colConfig = resolvedColumns.find((c) => c.columnId === condition.columnId);
+              const operators = colConfig?.operators ?? DEFAULT_OPERATORS;
+              const isValueFree = VALUE_FREE_OPERATORS.includes(condition.operator);
 
               return (
                 <div key={condition.id} className="flex items-center gap-2">
@@ -161,16 +151,16 @@ function DataTableFilter({ className }: DataTableFilterProps) {
                   <Select
                     value={condition.columnId}
                     onValueChange={(v) => {
-                      const nextConfig = resolvedColumns.find((c) => c.columnId === v)
-                      const nextOperators = nextConfig?.operators ?? DEFAULT_OPERATORS
+                      const nextConfig = resolvedColumns.find((c) => c.columnId === v);
+                      const nextOperators = nextConfig?.operators ?? DEFAULT_OPERATORS;
                       const nextOperator = nextOperators.includes(condition.operator)
                         ? condition.operator
-                        : (nextOperators[0] ?? "contains")
+                        : (nextOperators[0] ?? "contains");
                       updateFilter(condition.id, {
                         columnId: v,
                         operator: nextOperator,
                         value: "",
-                      })
+                      });
                     }}
                   >
                     <SelectTrigger aria-label="Filter column" size="sm" className="w-36">
@@ -178,12 +168,12 @@ function DataTableFilter({ className }: DataTableFilterProps) {
                     </SelectTrigger>
                     <SelectContent>
                       {resolvedColumns.map((c) => {
-                        const col = allLeafColumns.find((lc) => lc.id === c.columnId)
+                        const col = allLeafColumns.find((lc) => lc.id === c.columnId);
                         return (
                           <SelectItem key={c.columnId} value={c.columnId}>
                             {c.label ?? getColumnLabel(c.columnId, columnLabels, col)}
                           </SelectItem>
-                        )
+                        );
                       })}
                     </SelectContent>
                   </Select>
@@ -234,7 +224,7 @@ function DataTableFilter({ className }: DataTableFilterProps) {
                     <XIcon className="size-3.5" />
                   </Button>
                 </div>
-              )
+              );
             })}
 
             <div className="flex items-center gap-2">
@@ -249,13 +239,7 @@ function DataTableFilter({ className }: DataTableFilterProps) {
                 Add filter
               </Button>
               {filters.length > 0 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
-                  onClick={clearAll}
-                >
+                <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={clearAll}>
                   Clear all
                 </Button>
               )}
@@ -264,10 +248,10 @@ function DataTableFilter({ className }: DataTableFilterProps) {
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
-  )
+  );
 }
 
-DataTableFilter.displayName = "DataTableFilter"
+DataTableFilter.displayName = "DataTableFilter";
 
-export { DataTableFilter }
-export type { DataTableFilterProps }
+export { DataTableFilter };
+export type { DataTableFilterProps };

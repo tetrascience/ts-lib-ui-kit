@@ -22,10 +22,7 @@
  */
 
 // Provider
-export {
-  DatabricksProvider,
-  buildDatabricksProvider,
-} from "../DatabricksProvider";
+export { DatabricksProvider, buildDatabricksProvider } from "../DatabricksProvider";
 
 // Exceptions
 export {
@@ -38,4 +35,3 @@ export {
 
 // Types
 export type { ProviderConfiguration, QueryResult } from "../types";
-

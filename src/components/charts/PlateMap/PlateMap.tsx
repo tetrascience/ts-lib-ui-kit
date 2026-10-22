@@ -12,10 +12,7 @@ import {
   PLATEMAP_CONSTANTS,
   NAMED_COLORSCALES,
 } from "./constants";
-import {
-  PLATE_FORMAT_96,
-  PLATE_FORMAT_CUSTOM,
-} from "./types";
+import { PLATE_FORMAT_96, PLATE_FORMAT_CUSTOM } from "./types";
 import {
   generateRowLabels,
   generateColumnLabels,
@@ -33,11 +30,7 @@ import {
   calculateMarkerSize,
 } from "./utils";
 
-import type {
-  PlateMapProps,
-  LayerConfig,
-  WellData,
-} from "./types";
+import type { PlateMapProps, LayerConfig, WellData } from "./types";
 import type Plotly from "plotly.js-dist";
 
 // Re-export types and constants for external consumers
@@ -164,7 +157,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   // Merge custom category colors with defaults, including layer-specific colors
   const categoryColors = useMemo(
     () => ({ ...DEFAULT_CATEGORY_COLORS, ...customCategoryColors, ...activeLayer?.categoryColors }),
-    [customCategoryColors, activeLayer?.categoryColors]
+    [customCategoryColors, activeLayer?.categoryColors],
   );
 
   // Convert data to grid format - memoize to prevent re-render issues
@@ -172,9 +165,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   const activeLayerId_ = activeLayer?.id;
   const { grid, categoriesGrid, allValuesMap, tooltipDataMap } = useMemo(() => {
     let resultGrid: (number | null)[][];
-    let resultCategories: (string | null)[][] = Array.from({ length: rows }, () =>
-      Array(columns).fill(null)
-    );
+    let resultCategories: (string | null)[][] = Array.from({ length: rows }, () => Array(columns).fill(null));
     let resultAllValues = new Map<string, Record<string, string | number | null>>();
     let resultTooltipData = new Map<string, Record<string, unknown>>();
 
@@ -188,24 +179,23 @@ const PlateMap: React.FC<PlateMapProps> = ({
     } else {
       // Generate random data for demonstration when no data provided
       resultGrid = Array.from({ length: rows }, () =>
-        Array.from({ length: columns }, () => Math.random() * PLATEMAP_CONSTANTS.MAX_RANDOM_VALUE)
+        Array.from({ length: columns }, () => Math.random() * PLATEMAP_CONSTANTS.MAX_RANDOM_VALUE),
       );
     }
 
-    return { grid: resultGrid, categoriesGrid: resultCategories, allValuesMap: resultAllValues, tooltipDataMap: resultTooltipData };
+    return {
+      grid: resultGrid,
+      categoriesGrid: resultCategories,
+      allValuesMap: resultAllValues,
+      tooltipDataMap: resultTooltipData,
+    };
   }, [data, rows, columns, activeLayerId_]);
 
   // Generate labels - use custom labels if provided, otherwise auto-generate.
   // Memoized so a tooltip-driven re-render doesn't change their identity and
   // needlessly rebuild the plot (which would clear the open tooltip).
-  const rowLabels = useMemo(
-    () => customYLabels ?? generateRowLabels(rows),
-    [customYLabels, rows],
-  );
-  const colLabels = useMemo(
-    () => customXLabels ?? generateColumnLabels(columns),
-    [customXLabels, columns],
-  );
+  const rowLabels = useMemo(() => customYLabels ?? generateRowLabels(rows), [customYLabels, rows]);
+  const colLabels = useMemo(() => customXLabels ?? generateColumnLabels(columns), [customXLabels, columns]);
 
   // Calculate value range if not provided
   const range = calculateValueRange(grid);
@@ -213,7 +203,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   const zMax = valueMax ?? range.max;
 
   // Check if grid has any null values
-  const hasNullValues = grid.some(row => row.includes(null));
+  const hasNullValues = grid.some((row) => row.includes(null));
 
   // Create sentinel value for empty wells (below the data range)
   // This allows us to show emptyWellColor for null cells
@@ -221,10 +211,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
 
   // Replace null values with sentinel for Plotly rendering
   const displayGrid = useMemo(
-    () =>
-      hasNullValues
-        ? grid.map((row) => row.map((val) => (val === null ? sentinelValue : val)))
-        : grid,
+    () => (hasNullValues ? grid.map((row) => row.map((val) => (val === null ? sentinelValue : val))) : grid),
     [hasNullValues, grid, sentinelValue],
   );
 
@@ -300,7 +287,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
             precision,
             valueUnit,
           });
-        })
+        }),
       ),
     [grid, rowLabels, colLabels, allValuesMap, tooltipDataMap, activeLayer?.id, layerConfigMap, precision, valueUnit],
   );
@@ -339,7 +326,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
           return typeToIndex.get("empty") ?? 0;
         }
         return typeToIndex.get(category) ?? typeToIndex.get("empty") ?? 0;
-      })
+      }),
     );
 
     // Build discrete colorscale for categories
@@ -396,8 +383,8 @@ const PlateMap: React.FC<PlateMapProps> = ({
       // Use 0.49 inset to place boundary just inside cell edge,
       // avoiding line doubling when adjacent regions share a border
       const inset = 0.49;
-      const x0 = (bounds.minCol + 1) - inset;
-      const x1 = (bounds.maxCol + 1) + inset;
+      const x0 = bounds.minCol + 1 - inset;
+      const x1 = bounds.maxCol + 1 + inset;
       const y0 = bounds.minRow - inset;
       const y1 = bounds.maxRow + inset;
 
@@ -429,18 +416,11 @@ const PlateMap: React.FC<PlateMapProps> = ({
     const plotZ = isCategorical && categoricalGrid ? categoricalGrid : displayGrid;
     const plotColorScale = isCategorical && categoricalColorScale ? categoricalColorScale : effectiveColorScale;
     const plotZMin = isCategorical ? 0 : effectiveZMin;
-    const plotZMax = isCategorical ? (catMax || 1) : zMax;
+    const plotZMax = isCategorical ? catMax || 1 : zMax;
     const plotShowScale = isCategorical ? false : showColorBar;
 
     // Flatten 2D grid data into arrays for scatter plot
-    const { xData, yData, colorData, textData } = flattenGridData(
-      plotZ,
-      rowLabels,
-      hoverText,
-      rows,
-      columns,
-      plotZMin
-    );
+    const { xData, yData, colorData, textData } = flattenGridData(plotZ, rowLabels, hoverText, rows, columns, plotZMin);
 
     // Create scatter plot with markers
     const plotData: Plotly.Data[] = [
@@ -457,11 +437,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
           cmin: plotZMin,
           cmax: plotZMax,
           showscale: plotShowScale,
-          colorbar: buildColorbarConfig(
-            legendConfig?.position ?? "right",
-            valueUnit,
-            legendConfig?.title
-          ),
+          colorbar: buildColorbarConfig(legendConfig?.position ?? "right", valueUnit, legendConfig?.title),
           line: {
             color: theme.gridColor,
             width: 1,
@@ -743,10 +719,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
                   border: `${region.borderWidth || 2}px solid ${region.borderColor || COLORS.regionBorder}`,
                 }}
               />
-              <span
-                className="platemap-legend__label"
-                style={{ fontSize: `${legendFontSize}px` }}
-              >
+              <span className="platemap-legend__label" style={{ fontSize: `${legendFontSize}px` }}>
                 {region.name}
               </span>
             </div>

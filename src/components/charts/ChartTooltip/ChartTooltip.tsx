@@ -146,12 +146,7 @@ export function ChartTooltip({ anchor, bubbleRef }: ChartTooltipProps) {
   useLayoutEffect(() => {
     const node = wrapperRef.current;
     if (!anchor || !node) return;
-    const next = resolveSide(
-      preferredSide,
-      anchor,
-      node.offsetWidth,
-      node.offsetHeight,
-    );
+    const next = resolveSide(preferredSide, anchor, node.offsetWidth, node.offsetHeight);
     setResolvedSide((current) => (current === next ? current : next));
   }, [anchor, preferredSide]);
 
@@ -173,21 +168,13 @@ export function ChartTooltip({ anchor, bubbleRef }: ChartTooltipProps) {
           data-side={resolvedSide}
           className={cn(
             "relative w-fit max-w-xs rounded-md bg-foreground px-3 py-1.5 text-xs text-background",
-            anchor.closing
-              ? "animate-out fade-out zoom-out-95 fill-mode-forwards"
-              : "animate-in fade-in-0 zoom-in-95",
+            anchor.closing ? "animate-out fade-out zoom-out-95 fill-mode-forwards" : "animate-in fade-in-0 zoom-in-95",
           )}
         >
           {anchor.lines.map((line, index) => (
             <div key={`${index}-${line}`}>{line}</div>
           ))}
-          <span
-            aria-hidden
-            className={cn(
-              "absolute size-2.5 rotate-45 rounded-[2px] bg-foreground",
-              side.arrow,
-            )}
-          />
+          <span aria-hidden className={cn("absolute size-2.5 rotate-45 rounded-[2px] bg-foreground", side.arrow)} />
         </div>
       </div>
     </div>,
@@ -221,12 +208,7 @@ export interface UseChartTooltipOptions {
 }
 
 /** Clamp an anchor point so a bubble of `width`×`height` stays on-screen */
-const clampAnchor = (
-  left: number,
-  top: number,
-  width: number,
-  height: number,
-): { left: number; top: number } => {
+const clampAnchor = (left: number, top: number, width: number, height: number): { left: number; top: number } => {
   const halfWidth = width / 2;
   const clampedLeft = Math.min(
     Math.max(left, halfWidth + VIEWPORT_PADDING_PX),
@@ -285,21 +267,14 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
     // Place the cursor-following tooltip at the (clamped) cursor position
     const positionAtCursor = (lines: string[], clientX: number, clientY: number) => {
       const bubble = bubbleRef.current;
-      const { left, top } = clampAnchor(
-        clientX,
-        clientY,
-        bubble?.offsetWidth ?? 0,
-        bubble?.offsetHeight ?? 0,
-      );
+      const { left, top } = clampAnchor(clientX, clientY, bubble?.offsetWidth ?? 0, bubble?.offsetHeight ?? 0);
       setAnchor({ left, top, lines, side: optionsRef.current.side });
     };
 
     emitter.on("plotly_hover", (eventData) => {
       const points = eventData.points ?? [];
       const { getLines, xLabel, yLabel, followCursor } = optionsRef.current;
-      const lines = getLines
-        ? getLines(points)
-        : chartTooltipLines(points, { xLabel, yLabel });
+      const lines = getLines ? getLines(points) : chartTooltipLines(points, { xLabel, yLabel });
       if (lines.length === 0) return;
 
       clearTimeout(hideTimerRef.current);
@@ -350,17 +325,14 @@ export function useChartTooltip(options: UseChartTooltipOptions = {}) {
       positionAtCursor(lines, event.clientX, event.clientY);
     };
     plotDiv.addEventListener("mousemove", handleMouseMove);
-    detachMouseMoveRef.current = () =>
-      plotDiv.removeEventListener("mousemove", handleMouseMove);
+    detachMouseMoveRef.current = () => plotDiv.removeEventListener("mousemove", handleMouseMove);
 
     emitter.on("plotly_unhover", () => {
       clearTimeout(hideTimerRef.current);
       cursorLinesRef.current = null;
       // After the grace period, play the exit animation, then unmount
       hideTimerRef.current = setTimeout(() => {
-        setAnchor((previous) =>
-          previous ? { ...previous, closing: true } : previous,
-        );
+        setAnchor((previous) => (previous ? { ...previous, closing: true } : previous));
         hideTimerRef.current = setTimeout(() => setAnchor(null), EXIT_ANIMATION_MS);
       }, HIDE_GRACE_MS);
     });

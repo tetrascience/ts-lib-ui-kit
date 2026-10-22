@@ -136,9 +136,7 @@ describe("DataAppShell — zones", () => {
     expect(rail()).toBeNull();
     const shellRoot = container.querySelector("[data-slot='data-app-shell']");
     expect(shellRoot?.getAttribute("data-nav-variant")).toBe("horizontal");
-    expect(
-      container.querySelector("[data-slot='data-app-shell-primary-nav'][data-variant='top']"),
-    ).not.toBeNull();
+    expect(container.querySelector("[data-slot='data-app-shell-primary-nav'][data-variant='top']")).not.toBeNull();
   });
 
   it("publishes {navVariant, collapsed} via ShellContext to zone children", () => {
@@ -148,13 +146,7 @@ describe("DataAppShell — zones", () => {
       return null;
     }
     render(
-      <DataAppShell
-        appName="APP"
-        navGroups={navGroups}
-        defaultCollapsed
-        hideNavOnCollapse
-        autoCollapse={false}
-      >
+      <DataAppShell appName="APP" navGroups={navGroups} defaultCollapsed hideNavOnCollapse autoCollapse={false}>
         <Probe />
       </DataAppShell>,
     );
@@ -196,9 +188,7 @@ describe("DataAppShell — zones", () => {
     render(shell({ defaultCollapsed: true, hideNavOnCollapse: true }));
     expect(rail()).toBeNull();
 
-    const fab = container.querySelector<HTMLButtonElement>(
-      "[data-slot='data-app-shell-expand-fab']",
-    );
+    const fab = container.querySelector<HTMLButtonElement>("[data-slot='data-app-shell-expand-fab']");
     expect(fab).not.toBeNull();
     flushSync(() => fab!.click());
     expect(rail()).not.toBeNull();
@@ -247,7 +237,13 @@ describe("AppHeaderMenu — back to platform", () => {
   it("renders a TDP link for backToPlatformPath", () => {
     render(
       <TdpNavigationProvider tdpBaseUrl="https://tetrascience.com/org">
-        <AppHeaderMenu appName="APP" appFullName="App Name" version="v1" backToPlatformPath="/platform" compact={false} />
+        <AppHeaderMenu
+          appName="APP"
+          appFullName="App Name"
+          version="v1"
+          backToPlatformPath="/platform"
+          compact={false}
+        />
       </TdpNavigationProvider>,
     );
     const trigger = [...container.querySelectorAll<HTMLButtonElement>("button")].find((b) =>
@@ -256,17 +252,13 @@ describe("AppHeaderMenu — back to platform", () => {
     openMenu(trigger);
 
     // Dropdown content is portalled to the body
-    const link = [...document.body.querySelectorAll("a")].find((a) =>
-      a.textContent?.includes("Back to TDP Platform"),
-    );
+    const link = [...document.body.querySelectorAll("a")].find((a) => a.textContent?.includes("Back to TDP Platform"));
     expect(link).not.toBeUndefined();
   });
 
   it("renders a button that calls onBackToPlatform when no path is set", () => {
     const onBackToPlatform = vi.fn();
-    render(
-      <AppHeaderMenu appName="APP" appFullName="App Name" onBackToPlatform={onBackToPlatform} compact={false} />,
-    );
+    render(<AppHeaderMenu appName="APP" appFullName="App Name" onBackToPlatform={onBackToPlatform} compact={false} />);
     const trigger = [...container.querySelectorAll<HTMLButtonElement>("button")].find((b) =>
       b.textContent?.includes("App Name"),
     )!;

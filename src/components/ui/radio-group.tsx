@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { cva, type VariantProps } from "class-variance-authority"
-import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
-import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority";
+import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-type RadioSize = "xs" | "sm" | "default" | "lg"
+type RadioSize = "xs" | "sm" | "default" | "lg";
 
-const RadioGroupContext = React.createContext<{ size?: RadioSize }>({})
+const RadioGroupContext = React.createContext<{ size?: RadioSize }>({});
 
 function RadioGroup({
   className,
@@ -17,13 +17,9 @@ function RadioGroup({
 }: React.ComponentProps<typeof RadioGroupPrimitive.Root> & { size?: RadioSize }) {
   return (
     <RadioGroupContext.Provider value={{ size: size ?? "default" }}>
-      <RadioGroupPrimitive.Root
-        data-slot="radio-group"
-        className={cn("grid w-full gap-2", className)}
-        {...props}
-      />
+      <RadioGroupPrimitive.Root data-slot="radio-group" className={cn("grid w-full gap-2", className)} {...props} />
     </RadioGroupContext.Provider>
-  )
+  );
 }
 
 const radioGroupItemVariants = cva(
@@ -41,17 +37,16 @@ const radioGroupItemVariants = cva(
     defaultVariants: {
       size: "default",
     },
-  }
-)
+  },
+);
 
 function RadioGroupItem({
   className,
   size,
   ...props
-}: React.ComponentProps<typeof RadioGroupPrimitive.Item> &
-  VariantProps<typeof radioGroupItemVariants>) {
-  const context = React.useContext(RadioGroupContext)
-  const resolved = size ?? context.size ?? "default"
+}: React.ComponentProps<typeof RadioGroupPrimitive.Item> & VariantProps<typeof radioGroupItemVariants>) {
+  const context = React.useContext(RadioGroupContext);
+  const resolved = size ?? context.size ?? "default";
   return (
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
@@ -66,7 +61,7 @@ function RadioGroupItem({
         <span className="absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-foreground group-data-[size=xs]/radio-group-item:size-1.5 group-data-[size=lg]/radio-group-item:size-2.5" />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
-  )
+  );
 }
 
-export { RadioGroup, RadioGroupItem, radioGroupItemVariants }
+export { RadioGroup, RadioGroupItem, radioGroupItemVariants };

@@ -1,8 +1,4 @@
-export {
-  ChartTooltip,
-  chartTooltipLines,
-  useChartTooltip,
-} from "./ChartTooltip";
+export { ChartTooltip, chartTooltipLines, useChartTooltip } from "./ChartTooltip";
 export type {
   ChartTooltipAnchor,
   ChartTooltipHoverPoint,

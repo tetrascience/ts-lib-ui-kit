@@ -1,7 +1,7 @@
-import { cva, type VariantProps } from "class-variance-authority"
-import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority";
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const textareaVariants = cva(
   "flex field-sizing-content w-full border border-input bg-card transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:shadow-focus disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:shadow-focus dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50",
@@ -19,8 +19,8 @@ const textareaVariants = cva(
     defaultVariants: {
       size: "default",
     },
-  }
-)
+  },
+);
 
 function Textarea({
   className,
@@ -34,7 +34,7 @@ function Textarea({
       className={cn(textareaVariants({ size }), className)}
       {...props}
     />
-  )
+  );
 }
 
-export { Textarea, textareaVariants }
+export { Textarea, textareaVariants };

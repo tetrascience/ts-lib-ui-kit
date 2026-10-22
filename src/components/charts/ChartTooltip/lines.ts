@@ -39,10 +39,7 @@ const formatValue = (value: number | string): string => {
 };
 
 const pieLines = (point: ChartTooltipHoverPoint): string[] => {
-  const lines = [
-    String(point.label),
-    `Value: ${formatValue((point.value ?? point.v)!)}`,
-  ];
+  const lines = [String(point.label), `Value: ${formatValue((point.value ?? point.v)!)}`];
   if (typeof point.percent === "number") {
     lines.push(`${point.percent.toFixed(1)}%`);
   } else if (typeof point.text === "string" && point.text.endsWith("%")) {
@@ -52,13 +49,9 @@ const pieLines = (point: ChartTooltipHoverPoint): string[] => {
 };
 
 /** Unified hover across multiple traces: shared x, one line per trace */
-const unifiedLines = (
-  points: ChartTooltipHoverPoint[],
-  xLabel: string,
-): string[] => {
+const unifiedLines = (points: ChartTooltipHoverPoint[], xLabel: string): string[] => {
   const [first] = points;
-  const lines =
-    first.x === undefined ? [] : [`${xLabel}: ${formatValue(first.x)}`];
+  const lines = first.x === undefined ? [] : [`${xLabel}: ${formatValue(first.x)}`];
   for (const point of points) {
     if (point.y === undefined) continue;
     lines.push(`${point.data?.name ?? "Series"}: ${formatValue(point.y)}`);
@@ -66,11 +59,7 @@ const unifiedLines = (
   return lines;
 };
 
-const cartesianLines = (
-  point: ChartTooltipHoverPoint,
-  xLabel: string,
-  yLabel: string,
-): string[] => {
+const cartesianLines = (point: ChartTooltipHoverPoint, xLabel: string, yLabel: string): string[] => {
   const lines: string[] = [];
   if (point.data?.name) lines.push(point.data.name);
   if (point.x !== undefined) lines.push(`${xLabel}: ${formatValue(point.x)}`);
@@ -109,7 +98,5 @@ export function chartTooltipLines(
 
   const xLabel = labels?.xLabel || "X";
   const yLabel = labels?.yLabel || "Y";
-  return points.length > 1
-    ? unifiedLines(points, xLabel)
-    : cartesianLines(first, xLabel, yLabel);
+  return points.length > 1 ? unifiedLines(points, xLabel) : cartesianLines(first, xLabel, yLabel);
 }

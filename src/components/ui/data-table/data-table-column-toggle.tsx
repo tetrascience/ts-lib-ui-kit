@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   closestCenter,
@@ -8,49 +8,42 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-} from "@dnd-kit/core"
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import { CheckIcon, GripVerticalIcon, SlidersHorizontalIcon } from "lucide-react"
-import * as React from "react"
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { CheckIcon, GripVerticalIcon, SlidersHorizontalIcon } from "lucide-react";
+import * as React from "react";
 
-import { useDataTable } from "./data-table"
+import { useDataTable } from "./data-table";
 
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface DataTableColumnToggleProps {
-  className?: string
+  className?: string;
 }
 
 interface SortableColumnItemProps {
-  id: string
-  label: string
-  visible: boolean
-  onToggle: () => void
+  id: string;
+  label: string;
+  visible: boolean;
+  onToggle: () => void;
 }
 
 function SortableColumnItem({ id, label, visible, onToggle }: SortableColumnItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-  }
+  };
 
   return (
     <div
@@ -87,66 +80,71 @@ function SortableColumnItem({ id, label, visible, onToggle }: SortableColumnItem
         className="flex flex-1 cursor-pointer items-center gap-2 select-none"
       >
         <span className="flex-1 truncate">{label}</span>
-        <CheckIcon className={cn("size-4 shrink-0", visible ? "text-muted-foreground group-hover/col-item:text-accent-foreground" : "text-transparent")} />
+        <CheckIcon
+          className={cn(
+            "size-4 shrink-0",
+            visible ? "text-muted-foreground group-hover/col-item:text-accent-foreground" : "text-transparent",
+          )}
+        />
       </div>
     </div>
-  )
+  );
 }
 
 function DataTableColumnToggle({ className }: DataTableColumnToggleProps) {
-  const { table, columnLabels } = useDataTable()
-  const [open, setOpen] = React.useState(false)
-  const panelRef = React.useRef<HTMLDivElement>(null)
+  const { table, columnLabels } = useDataTable();
+  const [open, setOpen] = React.useState(false);
+  const panelRef = React.useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
-  )
+  );
 
-  const allColumns = table.getAllColumns().filter((col) => col.getCanHide())
-  const stateOrder = table.getState().columnOrder
+  const allColumns = table.getAllColumns().filter((col) => col.getCanHide());
+  const stateOrder = table.getState().columnOrder;
   const orderedIds =
     stateOrder && stateOrder.length > 0
       ? stateOrder.filter((id) => allColumns.some((c) => c.id === id))
-      : allColumns.map((c) => c.id)
+      : allColumns.map((c) => c.id);
 
   // Close on outside click
   React.useEffect(() => {
-    if (!open) return
+    if (!open) return;
     function handleClick(e: MouseEvent) {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        setOpen(false)
+        setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClick)
-    return () => document.removeEventListener("mousedown", handleClick)
-  }, [open])
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
 
-  if (allColumns.length === 0) return null
+  if (allColumns.length === 0) return null;
 
   function getLabel(colId: string) {
-    const col = allColumns.find((c) => c.id === colId)
-    if (!col) return colId
+    const col = allColumns.find((c) => c.id === colId);
+    if (!col) return colId;
     return (
       columnLabels[col.id] ??
       (col.columnDef.meta as { label?: string } | undefined)?.label ??
       (typeof col.columnDef.header === "string" ? col.columnDef.header : col.id)
-    )
+    );
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
 
-    const oldIndex = orderedIds.indexOf(String(active.id))
-    const newIndex = orderedIds.indexOf(String(over.id))
-    if (oldIndex === -1 || newIndex === -1) return
+    const oldIndex = orderedIds.indexOf(String(active.id));
+    const newIndex = orderedIds.indexOf(String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
 
-    const newOrder = arrayMove(orderedIds, oldIndex, newIndex)
-    table.setColumnOrder(newOrder)
-  }
+    const newOrder = arrayMove(orderedIds, oldIndex, newIndex);
+    table.setColumnOrder(newOrder);
+  };
 
   return (
     <div className="relative" ref={panelRef}>
@@ -176,30 +174,32 @@ function DataTableColumnToggle({ className }: DataTableColumnToggleProps) {
           >
             <SortableContext items={orderedIds} strategy={verticalListSortingStrategy}>
               {(() => {
-                const visibleCount = orderedIds.filter((colId) => allColumns.find((c) => c.id === colId)?.getIsVisible()).length
+                const visibleCount = orderedIds.filter((colId) =>
+                  allColumns.find((c) => c.id === colId)?.getIsVisible(),
+                ).length;
                 return orderedIds.map((colId) => {
-                  const col = allColumns.find((c) => c.id === colId)
-                  if (!col) return null
-                  const isVisible = col.getIsVisible()
-                  const isLastVisible = isVisible && visibleCount <= 1
+                  const col = allColumns.find((c) => c.id === colId);
+                  if (!col) return null;
+                  const isVisible = col.getIsVisible();
+                  const isLastVisible = isVisible && visibleCount <= 1;
                   return (
                     <SortableColumnItem
                       key={colId}
                       id={colId}
                       label={getLabel(colId)}
                       visible={isVisible}
-                      onToggle={isLastVisible ? () => { } : () => col.toggleVisibility()}
+                      onToggle={isLastVisible ? () => {} : () => col.toggleVisibility()}
                     />
-                  )
-                })
+                  );
+                });
               })()}
             </SortableContext>
           </DndContext>
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export { DataTableColumnToggle }
-export type { DataTableColumnToggleProps }
+export { DataTableColumnToggle };
+export type { DataTableColumnToggleProps };

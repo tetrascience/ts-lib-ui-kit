@@ -17,9 +17,7 @@ const path = require("path");
 const React = require("react");
 const { render, waitFor } = require("@testing-library/react");
 
-const pkgDir = path.dirname(
-  require.resolve("@tetrascience-npm/tetrascience-react-ui/package.json"),
-);
+const pkgDir = path.dirname(require.resolve("@tetrascience-npm/tetrascience-react-ui/package.json"));
 
 test("sanity check: the optional peers this test proves are mockable are genuinely not installed", () => {
   expect(fs.existsSync(path.join(pkgDir, "node_modules", "plotly.js-dist"))).toBe(false);

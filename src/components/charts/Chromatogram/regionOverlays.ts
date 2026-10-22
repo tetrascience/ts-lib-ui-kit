@@ -14,7 +14,7 @@ const DEFAULT_REGION_OVERLAY_WIDTH = 3.5;
 export function createRegionOverlayTraces(
   peaks: PeakAnnotation[],
   seriesIndex: number,
-  series: ChromatogramSeries
+  series: ChromatogramSeries,
 ): Plotly.Data[] {
   const seriesColor = series.color ?? CHART_COLORS[seriesIndex % CHART_COLORS.length];
   const traces: Plotly.Data[] = [];

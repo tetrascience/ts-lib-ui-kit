@@ -1,10 +1,5 @@
-import {
-  CalendarIcon,
-  FileTextIcon,
-  SettingsIcon,
-  UserIcon,
-} from "lucide-react"
-import { expect, within } from "storybook/test"
+import { CalendarIcon, FileTextIcon, SettingsIcon, UserIcon } from "lucide-react";
+import { expect, within } from "storybook/test";
 
 import {
   Command,
@@ -16,9 +11,9 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from "./command"
+} from "./command";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Command> = {
   title: "Components/Navigation & Menus/Command",
@@ -30,11 +25,11 @@ const meta: Meta<typeof Command> = {
     docs: { source: { type: "dynamic" } },
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Command>
+type Story = StoryObj<typeof Command>;
 
 function renderCommandContent() {
   return (
@@ -67,33 +62,31 @@ function renderCommandContent() {
         </CommandGroup>
       </CommandList>
     </Command>
-  )
+  );
 }
 
 export const Inline: Story = {
   render: () => (
-    <div className="w-[360px] overflow-hidden rounded-xl border bg-background">
-      {renderCommandContent()}
-    </div>
+    <div className="w-[360px] overflow-hidden rounded-xl border bg-background">{renderCommandContent()}</div>
   ),
   parameters: {
     zephyr: { testCaseId: "SW-T1225" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Command input renders", async () => {
-      expect(canvas.getByPlaceholderText("Search commands...")).toBeInTheDocument()
-    })
+      expect(canvas.getByPlaceholderText("Search commands...")).toBeInTheDocument();
+    });
 
     await step("Group headings and items render", async () => {
-      expect(canvas.getByText("Quick actions")).toBeInTheDocument()
-      expect(canvas.getByText("Workspace")).toBeInTheDocument()
-      expect(canvas.getByText("Open calendar")).toBeInTheDocument()
-      expect(canvas.getByText("Account settings")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Quick actions")).toBeInTheDocument();
+      expect(canvas.getByText("Workspace")).toBeInTheDocument();
+      expect(canvas.getByText("Open calendar")).toBeInTheDocument();
+      expect(canvas.getByText("Account settings")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Dialog: Story = {
   render: () => (
@@ -105,28 +98,23 @@ export const Dialog: Story = {
     zephyr: { testCaseId: "SW-T1226" },
   },
   play: async ({ canvasElement, step }) => {
-    const body = within(canvasElement.ownerDocument.body)
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Dialog command input in portal", async () => {
-      expect(body.getByPlaceholderText("Search commands...")).toBeInTheDocument()
-    })
+      expect(body.getByPlaceholderText("Search commands...")).toBeInTheDocument();
+    });
 
     await step("Palette groups and shortcuts render", async () => {
-      expect(body.getByText("Quick actions")).toBeInTheDocument()
-      expect(body.getByText("Open calendar")).toBeInTheDocument()
-      expect(body.getByText("⌘K")).toBeInTheDocument()
-    })
+      expect(body.getByText("Quick actions")).toBeInTheDocument();
+      expect(body.getByText("Open calendar")).toBeInTheDocument();
+      expect(body.getByText("⌘K")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const DialogWithCloseButton: Story = {
   render: () => (
-    <CommandDialog
-      description="Search for a destination or command."
-      open
-      showCloseButton
-      title="Command Palette"
-    >
+    <CommandDialog description="Search for a destination or command." open showCloseButton title="Command Palette">
       {renderCommandContent()}
     </CommandDialog>
   ),
@@ -134,15 +122,15 @@ export const DialogWithCloseButton: Story = {
     zephyr: { testCaseId: "SW-T1227" },
   },
   play: async ({ canvasElement, step }) => {
-    const body = within(canvasElement.ownerDocument.body)
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Command palette content in document", async () => {
-      expect(body.getByPlaceholderText("Search commands...")).toBeInTheDocument()
-      expect(body.getByText("View reports")).toBeInTheDocument()
-    })
+      expect(body.getByPlaceholderText("Search commands...")).toBeInTheDocument();
+      expect(body.getByText("View reports")).toBeInTheDocument();
+    });
 
     await step("Dialog close control renders", async () => {
-      expect(body.getByRole("button", { name: "Close" })).toBeInTheDocument()
-    })
+      expect(body.getByRole("button", { name: "Close" })).toBeInTheDocument();
+    });
   },
-}
+};

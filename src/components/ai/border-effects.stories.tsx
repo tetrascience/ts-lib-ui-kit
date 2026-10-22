@@ -34,9 +34,9 @@
  *   - Persistent glow on elements that are always visible
  *   - Decorative use with no functional signal
  */
-import { BrainIcon, ChevronDownIcon } from "lucide-react"
-import { useState } from "react"
-import { expect, userEvent, within } from "storybook/test"
+import { BrainIcon, ChevronDownIcon } from "lucide-react";
+import { useState } from "react";
+import { expect, userEvent, within } from "storybook/test";
 
 import {
   PromptInput,
@@ -45,15 +45,15 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
-} from "./prompt-input"
-import { Queue, QueueItem, QueueItemContent, QueueItemIndicator, QueueList } from "./queue"
-import { Reasoning, ReasoningContent, ReasoningTrigger, useReasoning } from "./reasoning"
-import { Shimmer, TS_SHIMMER_GRADIENT } from "./shimmer"
-import { Suggestion } from "./suggestion"
+} from "./prompt-input";
+import { Queue, QueueItem, QueueItemContent, QueueItemIndicator, QueueList } from "./queue";
+import { Reasoning, ReasoningContent, ReasoningTrigger, useReasoning } from "./reasoning";
+import { Shimmer, TS_SHIMMER_GRADIENT } from "./shimmer";
+import { Suggestion } from "./suggestion";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Shared gradient definition for SVG icon stroke
@@ -69,11 +69,11 @@ const TsBrainGradientDef = () => (
       </linearGradient>
     </defs>
   </svg>
-)
+);
 
 /** Reads context from the nearest <Reasoning> to render the full trigger row with a gradient icon. */
 const GradientBrainTrigger = () => {
-  const { isStreaming, isOpen, duration } = useReasoning()
+  const { isStreaming, isOpen, duration } = useReasoning();
   return (
     <>
       <TsBrainGradientDef />
@@ -88,13 +88,12 @@ const GradientBrainTrigger = () => {
       <ChevronDownIcon
         className={cn(
           "size-4 opacity-0 transition-all group-focus-visible:opacity-100 group-hover:opacity-100",
-          isOpen ? "rotate-180 opacity-100" : "rotate-0"
+          isOpen ? "rotate-180 opacity-100" : "rotate-0",
         )}
       />
     </>
-  )
-}
-
+  );
+};
 
 const meta: Meta = {
   title: "AI Elements/Status & Effects/Border Effects",
@@ -102,11 +101,11 @@ const meta: Meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
 // ---------------------------------------------------------------------------
 // ts-border-glow — Prompt Input
@@ -115,17 +114,13 @@ type Story = StoryObj
 export const GlowOnPromptInput: Story = {
   name: "ts-border-glow — Prompt Input",
   render: () => {
-    const [text, setText] = useState("")
+    const [text, setText] = useState("");
     return (
       <div className="w-full max-w-2xl">
         <div className="[&_[data-slot=input-group]]:ts-border-glow [&_[data-slot=input-group]]:rounded-xl">
           <PromptInput onSubmit={() => setText("")}>
             <PromptInputBody>
-              <PromptInputTextarea
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Ask anything…"
-                value={text}
-              />
+              <PromptInputTextarea onChange={(e) => setText(e.target.value)} placeholder="Ask anything…" value={text} />
             </PromptInputBody>
             <PromptInputFooter>
               <PromptInputTools />
@@ -134,20 +129,20 @@ export const GlowOnPromptInput: Story = {
           </PromptInput>
         </div>
       </div>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Prompt input renders with glow border and accepts text", async () => {
-      await expect(canvas.getByPlaceholderText("Ask anything…")).toBeInTheDocument()
-      await userEvent.type(canvas.getByPlaceholderText("Ask anything…"), "Hello")
-      await expect(canvas.getByRole("button", { name: /submit/i })).not.toBeDisabled()
-    })
+      await expect(canvas.getByPlaceholderText("Ask anything…")).toBeInTheDocument();
+      await userEvent.type(canvas.getByPlaceholderText("Ask anything…"), "Hello");
+      await expect(canvas.getByRole("button", { name: /submit/i })).not.toBeDisabled();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4514" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ts-border-gradient — Prompt Input (wrapper)
@@ -156,7 +151,7 @@ export const GlowOnPromptInput: Story = {
 export const GradientOnPromptInput: Story = {
   name: "ts-border-gradient — Prompt Input",
   render: () => {
-    const [text, setText] = useState("")
+    const [text, setText] = useState("");
     return (
       <div className="w-full max-w-2xl">
         <div className="ts-border-gradient rounded-xl [&_[data-slot=input-group]]:rounded-[calc(0.75rem-1.5px)] [&_[data-slot=input-group]]:border-none [&_[data-slot=input-group]]:shadow-none">
@@ -175,20 +170,20 @@ export const GradientOnPromptInput: Story = {
           </PromptInput>
         </div>
       </div>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Prompt input renders with gradient border and accepts text", async () => {
-      await expect(canvas.getByPlaceholderText("How can I help you today?")).toBeInTheDocument()
-      await userEvent.type(canvas.getByPlaceholderText("How can I help you today?"), "Hello")
-      await expect(canvas.getByRole("button", { name: /submit/i })).not.toBeDisabled()
-    })
+      await expect(canvas.getByPlaceholderText("How can I help you today?")).toBeInTheDocument();
+      await userEvent.type(canvas.getByPlaceholderText("How can I help you today?"), "Hello");
+      await expect(canvas.getByRole("button", { name: /submit/i })).not.toBeDisabled();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4515" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ts-border-pulse — Queue (reasoning / in-progress state)
@@ -219,15 +214,15 @@ export const PulseOnQueue: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Queue renders with pulse border", async () => {
-      await expect(canvas.getByText("Searching web for context")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Searching web for context")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4516" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ts-border-accent — Suggestion (selected chip)
@@ -247,15 +242,15 @@ export const AccentOnSuggestion: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Suggestion chips render with accent on selected", async () => {
-      await expect(canvas.getByText("Code")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Code")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4517" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Brand gradient Shimmer — text sweeps through blue→purple brand gradient.
@@ -278,15 +273,15 @@ export const BrandGradientShimmer: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Brand shimmer text renders", async () => {
-      await expect(canvas.getByText("Generating response…")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Generating response…")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4518" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Brand gradient shimmer on Reasoning "Thinking…" text.
@@ -304,24 +299,23 @@ export const GradientShimmerOnReasoning: Story = {
           <GradientBrainTrigger />
         </ReasoningTrigger>
         <ReasoningContent>
-          The user is asking about quantum entanglement. I should explain it
-          in terms of correlated quantum states without invoking faster-than-light
-          communication, which is a common misconception…
+          The user is asking about quantum entanglement. I should explain it in terms of correlated quantum states
+          without invoking faster-than-light communication, which is a common misconception…
         </ReasoningContent>
       </Reasoning>
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Reasoning renders with brand gradient shimmer trigger", async () => {
-      await expect(canvas.getByText("Thinking...")).toBeInTheDocument()
-      await expect(canvas.getByText(/quantum entanglement/)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Thinking...")).toBeInTheDocument();
+      await expect(canvas.getByText(/quantum entanglement/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4519" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Dark "thinking card" — screenshot-inspired composition
@@ -346,10 +340,7 @@ export const ThinkingCard: Story = {
         style={{ "--ts-border-bg": "#1a2235" } as React.CSSProperties}
       >
         {/* Card background */}
-        <div
-          className="absolute inset-0 rounded-2xl"
-          style={{ background: "#1a2235", zIndex: -1 }}
-        />
+        <div className="absolute inset-0 rounded-2xl" style={{ background: "#1a2235", zIndex: -1 }} />
 
         {/* Top loading dots */}
         <div className="mb-4 flex w-fit items-center gap-1 rounded-full bg-white/10 px-3 py-2">
@@ -365,27 +356,28 @@ export const ThinkingCard: Story = {
         {/* Reasoning panel */}
         <Reasoning defaultOpen isStreaming>
           <ReasoningContent className="text-white/80">
-            The user is asking about a dark mode. I should check existing tokens,
-            identify the relevant CSS variables, and produce a clean dark-mode
-            implementation that respects the brand palette…
+            The user is asking about a dark mode. I should check existing tokens, identify the relevant CSS variables,
+            and produce a clean dark-mode implementation that respects the brand palette…
           </ReasoningContent>
         </Reasoning>
 
         {/* Thinking shimmer line */}
         <div className="mt-4 flex items-center gap-2 text-white/60">
-          <Shimmer as="span" className="text-sm italic">Thinking…</Shimmer>
+          <Shimmer as="span" className="text-sm italic">
+            Thinking…
+          </Shimmer>
         </div>
       </div>
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Thinking card renders reasoning content", async () => {
-      await expect(canvas.getByText(/dark mode/i)).toBeInTheDocument()
-      await expect(canvas.getByText(/Thinking/i)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/dark mode/i)).toBeInTheDocument();
+      await expect(canvas.getByText(/Thinking/i)).toBeInTheDocument();
+    });
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // ts-border-gradient — Task queue (use when surfacing a new agentic feature)
@@ -416,16 +408,16 @@ export const GradientOnQueue: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Queue renders with gradient border", async () => {
-      await expect(canvas.getByText("Fetching data from API")).toBeInTheDocument()
-      await expect(canvas.getByText("Validating schema")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Fetching data from API")).toBeInTheDocument();
+      await expect(canvas.getByText("Validating schema")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4521" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // All effects side-by-side
@@ -451,9 +443,7 @@ export const AllEffects: Story = {
 
       <div className="space-y-2">
         <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">ts-border-pulse</p>
-        <div className="ts-border-pulse rounded-lg p-4 text-sm">
-          Breathing glow — reasoning / thinking states
-        </div>
+        <div className="ts-border-pulse rounded-lg p-4 text-sm">Breathing glow — reasoning / thinking states</div>
       </div>
 
       <div className="space-y-2">
@@ -478,7 +468,9 @@ export const AllEffects: Story = {
       </div>
 
       <div className="col-span-full space-y-2">
-        <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Brand gradient Shimmer text</p>
+        <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
+          Brand gradient Shimmer text
+        </p>
         <div className="rounded-lg p-4">
           <Shimmer as="p" className="text-sm font-medium" gradient={TS_SHIMMER_GRADIENT}>
             Generating response… blue → purple sweep on the text itself
@@ -488,13 +480,13 @@ export const AllEffects: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("All effect labels render", async () => {
-      await expect(canvas.getByText(/ts-border-glow/i)).toBeInTheDocument()
-      await expect(canvas.getByText(/ts-border-shimmer/i)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/ts-border-glow/i)).toBeInTheDocument();
+      await expect(canvas.getByText(/ts-border-shimmer/i)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4522" },
   },
-}
+};

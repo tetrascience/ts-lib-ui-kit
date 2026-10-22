@@ -1,12 +1,6 @@
 import React, { useEffect, useRef, useMemo } from "react";
 
-import {
-  REGULAR_SCALE,
-  Y_TICK_LABEL_SPACING,
-  maxTickCount,
-  resolveChartScale,
-  thinTicks,
-} from "../chart-scale";
+import { REGULAR_SCALE, Y_TICK_LABEL_SPACING, maxTickCount, resolveChartScale, thinTicks } from "../chart-scale";
 import { useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 
@@ -156,15 +150,9 @@ const BarChart: React.FC<BarChartProps> = ({
     };
   }, [dataSeries, variant]);
 
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
+  const effectiveYRange = useMemo(() => yRange || [yMin, yMax], [yRange, yMin, yMax]);
 
-  const xTicks = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
-    [dataSeries],
-  );
+  const xTicks = useMemo(() => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b), [dataSeries]);
 
   // Only apply categorical labels when they align 1:1 with the tick positions;
   // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
@@ -173,7 +161,10 @@ const BarChart: React.FC<BarChartProps> = ({
   const resolvedBarWidth = useMemo(() => {
     if (barWidth !== undefined) return barWidth;
     // xTicks is the sorted, de-duplicated data x, so every gap is > 0
-    const gaps = xTicks.slice(1).map((x, i) => x - xTicks[i]).sort((a, b) => a - b);
+    const gaps = xTicks
+      .slice(1)
+      .map((x, i) => x - xTicks[i])
+      .sort((a, b) => a - b);
     // A single x position has no gap to scale from; let Plotly size the bar.
     if (gaps.length === 0) return;
     const mid = Math.floor(gaps.length / 2);
@@ -218,10 +209,7 @@ const BarChart: React.FC<BarChartProps> = ({
     () =>
       thinTicks(
         yTicks,
-        maxTickCount(
-          resolvedHeight - marginTop - scale.margin.b,
-          scale.tickFontSize * Y_TICK_LABEL_SPACING,
-        ),
+        maxTickCount(resolvedHeight - marginTop - scale.margin.b, scale.tickFontSize * Y_TICK_LABEL_SPACING),
       ),
     [yTicks, resolvedHeight, marginTop, scale],
   );
@@ -391,7 +379,26 @@ const BarChart: React.FC<BarChartProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, hasSize, xRange, yRange, xTitle, yTitle, title, resolvedBarWidth, barMode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, theme, scale, marginTop, bindTooltip]);
+  }, [
+    dataSeries,
+    hasSize,
+    xRange,
+    yRange,
+    xTitle,
+    yTitle,
+    title,
+    resolvedBarWidth,
+    barMode,
+    tickOptions,
+    xTicks,
+    yTicks,
+    useCategoricalX,
+    xTickText,
+    theme,
+    scale,
+    marginTop,
+    bindTooltip,
+  ]);
 
   // Resize in place when the measured/overridden size changes — cheaper than
   // recreating the plot, and it preserves tooltip/event bindings.
@@ -402,10 +409,7 @@ const BarChart: React.FC<BarChartProps> = ({
     }
     // newPlot already drew at the current size; skip the redundant relayout
     // (it would queue an automargin redraw that can reject if we unmount first).
-    if (
-      appliedSizeRef.current.width === resolvedWidth &&
-      appliedSizeRef.current.height === resolvedHeight
-    ) {
+    if (appliedSizeRef.current.width === resolvedWidth && appliedSizeRef.current.height === resolvedHeight) {
       return;
     }
     appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };

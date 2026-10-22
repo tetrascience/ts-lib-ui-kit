@@ -1,16 +1,9 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { Button } from "./button"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "./sheet"
+import { Button } from "./button";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "./sheet";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof SheetContent> = {
   title: "Components/Overlays/Sheet",
@@ -29,11 +22,11 @@ const meta: Meta<typeof SheetContent> = {
   args: {
     side: "right",
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof SheetContent>
+type Story = StoryObj<typeof SheetContent>;
 
 function renderSheet(args: Story["args"]) {
   return (
@@ -42,9 +35,7 @@ function renderSheet(args: Story["args"]) {
         <SheetContent {...args}>
           <SheetHeader>
             <SheetTitle>Workspace settings</SheetTitle>
-            <SheetDescription>
-              Configure the workspace name, sharing options, and export defaults.
-            </SheetDescription>
+            <SheetDescription>Configure the workspace name, sharing options, and export defaults.</SheetDescription>
           </SheetHeader>
           <div className="grid gap-3 px-4 text-sm text-muted-foreground">
             <div className="rounded-lg border p-3">Project name: TS UI Kit</div>
@@ -57,24 +48,22 @@ function renderSheet(args: Story["args"]) {
         </SheetContent>
       </Sheet>
     </div>
-  )
+  );
 }
 
 const playSheet: Story["play"] = async ({ canvasElement, step }) => {
-  const body = within(canvasElement.ownerDocument.body)
+  const body = within(canvasElement.ownerDocument.body);
 
   await step("Sheet content renders in portal", async () => {
-    expect(body.getByText("Workspace settings")).toBeInTheDocument()
-    expect(
-      body.getByText("Configure the workspace name, sharing options, and export defaults.")
-    ).toBeInTheDocument()
-  })
+    expect(body.getByText("Workspace settings")).toBeInTheDocument();
+    expect(body.getByText("Configure the workspace name, sharing options, and export defaults.")).toBeInTheDocument();
+  });
 
   await step("Sheet actions", async () => {
-    expect(body.getByRole("button", { name: "Save changes" })).toBeInTheDocument()
-    expect(body.getByRole("button", { name: "Close" })).toBeInTheDocument()
-  })
-}
+    expect(body.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
+    expect(body.getByRole("button", { name: "Close" })).toBeInTheDocument();
+  });
+};
 
 export const Right: Story = {
   render: renderSheet,
@@ -82,7 +71,7 @@ export const Right: Story = {
     zephyr: { testCaseId: "SW-T1284" },
   },
   play: playSheet,
-}
+};
 
 export const Left: Story = {
   args: {
@@ -93,7 +82,7 @@ export const Left: Story = {
     zephyr: { testCaseId: "SW-T1285" },
   },
   play: playSheet,
-}
+};
 
 export const Top: Story = {
   args: {
@@ -104,7 +93,7 @@ export const Top: Story = {
     zephyr: { testCaseId: "SW-T1286" },
   },
   play: playSheet,
-}
+};
 
 export const Bottom: Story = {
   args: {
@@ -115,4 +104,4 @@ export const Bottom: Story = {
     zephyr: { testCaseId: "SW-T1287" },
   },
   play: playSheet,
-}
+};

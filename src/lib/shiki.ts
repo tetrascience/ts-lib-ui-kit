@@ -66,11 +66,7 @@ export function getSupportedCodeBlockLanguages(): string[] {
  *
  * The loader stays a dynamic import, so added grammars are also code-split.
  */
-export function registerCodeBlockLanguage(
-  language: string,
-  loader: LanguageLoader,
-  aliases: string[] = [],
-): void {
+export function registerCodeBlockLanguage(language: string, loader: LanguageLoader, aliases: string[] = []): void {
   const canonical = language.trim().toLowerCase();
   languageLoaders.set(canonical, loader);
   for (const alias of aliases) {
@@ -114,9 +110,7 @@ export async function getCodeBlockHighlighter(
     let pending = loadedLanguages.get(canonical);
     if (!pending) {
       const loader = languageLoaders.get(canonical);
-      pending = loader
-        ? loader().then((grammar) => highlighter.loadLanguage(...grammar.default))
-        : Promise.resolve();
+      pending = loader ? loader().then((grammar) => highlighter.loadLanguage(...grammar.default)) : Promise.resolve();
       loadedLanguages.set(canonical, pending);
     }
     await pending;

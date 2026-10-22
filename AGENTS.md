@@ -21,10 +21,14 @@ yarn format            # Prettier
 Before committing, always run:
 
 ```bash
-yarn lint && yarn typecheck && yarn test:all
+yarn format:check && yarn lint && yarn typecheck && yarn test:all
 ```
 
-Husky + lint-staged auto-runs ESLint on staged `*.{js,jsx,ts,tsx}` files.
+Husky + lint-staged runs `eslint --fix` then `prettier --write` on staged
+`*.{js,jsx,ts,tsx}` files, and `prettier --write` on staged
+`*.{json,css,scss,md,mdx,yml,yaml,html}` files. CI runs `yarn format:check`
+before lint, so unformatted files fail the build. ESLint must run first: its
+autofixes (import merging/ordering) are not Prettier-formatted.
 
 ## Project Structure
 

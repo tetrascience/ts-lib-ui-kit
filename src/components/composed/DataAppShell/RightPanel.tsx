@@ -75,8 +75,7 @@ const dataAppShellRightPanelTriggerVariants = cva(
 );
 
 export interface DataAppShellRightPanelTriggerProps
-  extends React.ComponentProps<"button">,
-    VariantProps<typeof dataAppShellRightPanelTriggerVariants> {
+  extends React.ComponentProps<"button">, VariantProps<typeof dataAppShellRightPanelTriggerVariants> {
   /** Merge the trigger styling/props onto the child element instead of
    *  rendering a `<button>` — makes anything clickable a panel trigger. */
   asChild?: boolean;

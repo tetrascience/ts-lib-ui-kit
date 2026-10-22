@@ -1,83 +1,73 @@
-import {
-  Accessibility,
-  BarChart3,
-  LayoutDashboard,
-  Moon,
-  Puzzle,
-  Sparkles,
-} from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { Accessibility, BarChart3, LayoutDashboard, Moon, Puzzle, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
-import pkg from "../../package.json"
+import pkg from "../../package.json";
 
-import { Badge } from "./ui/badge"
-import { Button } from "./ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card"
-import { Separator } from "./ui/separator"
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Separator } from "./ui/separator";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-import type { SVGProps } from "react"
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { SVGProps } from "react";
 
 function GithubInvertocatWhite(props: SVGProps<SVGSVGElement>) {
   return (
     <svg width="98" height="96" viewBox="0 0 98 96" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       <g clipPath="url(#clip0_730_27136)">
-        <path d="M41.4395 69.3848C28.8066 67.8535 19.9062 58.7617 19.9062 46.9902C19.9062 42.2051 21.6289 37.0371 24.5 33.5918C23.2559 30.4336 23.4473 23.7344 24.8828 20.959C28.7109 20.4805 33.8789 22.4902 36.9414 25.2656C40.5781 24.1172 44.4062 23.543 49.0957 23.543C53.7852 23.543 57.6133 24.1172 61.0586 25.1699C64.0254 22.4902 69.2891 20.4805 73.1172 20.959C74.457 23.543 74.6484 30.2422 73.4043 33.4961C76.4668 37.1328 78.0937 42.0137 78.0937 46.9902C78.0937 58.7617 69.1934 67.6621 56.3691 69.2891C59.623 71.3945 61.8242 75.9883 61.8242 81.252L61.8242 91.2051C61.8242 94.0762 64.2168 95.7031 67.0879 94.5547C84.4102 87.9512 98 70.6289 98 49.1914C98 22.1074 75.9883 6.69539e-07 48.9043 4.309e-07C21.8203 1.92261e-07 -1.9479e-07 22.1074 -4.3343e-07 49.1914C-6.20631e-07 70.4375 13.4941 88.0469 31.6777 94.6504C34.2617 95.6074 36.75 93.8848 36.75 91.3008L36.75 83.6445C35.4102 84.2188 33.6875 84.6016 32.1562 84.6016C25.8398 84.6016 22.1074 81.1563 19.4277 74.7441C18.375 72.1602 17.2266 70.6289 15.0254 70.3418C13.877 70.2461 13.4941 69.7676 13.4941 69.1934C13.4941 68.0449 15.4082 67.1836 17.3223 67.1836C20.0977 67.1836 22.4902 68.9063 24.9785 72.4473C26.8926 75.2227 28.9023 76.4668 31.2949 76.4668C33.6875 76.4668 35.2187 75.6055 37.4199 73.4043C39.0469 71.7773 40.291 70.3418 41.4395 69.3848Z" fill="white"/>
+        <path
+          d="M41.4395 69.3848C28.8066 67.8535 19.9062 58.7617 19.9062 46.9902C19.9062 42.2051 21.6289 37.0371 24.5 33.5918C23.2559 30.4336 23.4473 23.7344 24.8828 20.959C28.7109 20.4805 33.8789 22.4902 36.9414 25.2656C40.5781 24.1172 44.4062 23.543 49.0957 23.543C53.7852 23.543 57.6133 24.1172 61.0586 25.1699C64.0254 22.4902 69.2891 20.4805 73.1172 20.959C74.457 23.543 74.6484 30.2422 73.4043 33.4961C76.4668 37.1328 78.0937 42.0137 78.0937 46.9902C78.0937 58.7617 69.1934 67.6621 56.3691 69.2891C59.623 71.3945 61.8242 75.9883 61.8242 81.252L61.8242 91.2051C61.8242 94.0762 64.2168 95.7031 67.0879 94.5547C84.4102 87.9512 98 70.6289 98 49.1914C98 22.1074 75.9883 6.69539e-07 48.9043 4.309e-07C21.8203 1.92261e-07 -1.9479e-07 22.1074 -4.3343e-07 49.1914C-6.20631e-07 70.4375 13.4941 88.0469 31.6777 94.6504C34.2617 95.6074 36.75 93.8848 36.75 91.3008L36.75 83.6445C35.4102 84.2188 33.6875 84.6016 32.1562 84.6016C25.8398 84.6016 22.1074 81.1563 19.4277 74.7441C18.375 72.1602 17.2266 70.6289 15.0254 70.3418C13.877 70.2461 13.4941 69.7676 13.4941 69.1934C13.4941 68.0449 15.4082 67.1836 17.3223 67.1836C20.0977 67.1836 22.4902 68.9063 24.9785 72.4473C26.8926 75.2227 28.9023 76.4668 31.2949 76.4668C33.6875 76.4668 35.2187 75.6055 37.4199 73.4043C39.0469 71.7773 40.291 70.3418 41.4395 69.3848Z"
+          fill="white"
+        />
       </g>
       <defs>
         <clipPath id="clip0_730_27136">
-          <rect width="98" height="96" fill="white"/>
+          <rect width="98" height="96" fill="white" />
         </clipPath>
       </defs>
     </svg>
-  )
+  );
 }
 
-const VERSION = pkg.version
-const PKG_NAME = pkg.name
+const VERSION = pkg.version;
+const PKG_NAME = pkg.name;
 
 /** Detect dark mode by watching <html> class and URL globals */
 function useDarkMode() {
   const [isDark, setIsDark] = useState(() => {
-    if (typeof document !== "undefined" && document.documentElement.classList.contains("dark")) return true
+    if (typeof document !== "undefined" && document.documentElement.classList.contains("dark")) return true;
     if (typeof window !== "undefined") {
-      return window.location.href.includes("theme:dark") || window.location.href.includes("theme%3Adark")
+      return window.location.href.includes("theme:dark") || window.location.href.includes("theme%3Adark");
     }
-    return false
-  })
+    return false;
+  });
 
   useEffect(() => {
-    const html = document.documentElement
+    const html = document.documentElement;
     const update = () => {
-      const hasDarkClass = html.classList.contains("dark")
-      const hasDarkUrl = window.location.href.includes("theme:dark") || window.location.href.includes("theme%3Adark")
-      setIsDark(hasDarkClass || hasDarkUrl)
-    }
+      const hasDarkClass = html.classList.contains("dark");
+      const hasDarkUrl = window.location.href.includes("theme:dark") || window.location.href.includes("theme%3Adark");
+      setIsDark(hasDarkClass || hasDarkUrl);
+    };
 
     // Watch for class changes on <html> (decorators toggle .dark)
-    const mo = new MutationObserver(update)
-    mo.observe(html, { attributes: true, attributeFilter: ["class"] })
+    const mo = new MutationObserver(update);
+    mo.observe(html, { attributes: true, attributeFilter: ["class"] });
 
     // Watch for Storybook URL changes (globals in hash/search)
-    const onUrlChange = () => update()
-    window.addEventListener("popstate", onUrlChange)
-    window.addEventListener("hashchange", onUrlChange)
+    const onUrlChange = () => update();
+    window.addEventListener("popstate", onUrlChange);
+    window.addEventListener("hashchange", onUrlChange);
 
-    update()
+    update();
     return () => {
-      mo.disconnect()
-      window.removeEventListener("popstate", onUrlChange)
-      window.removeEventListener("hashchange", onUrlChange)
-    }
-  }, [])
+      mo.disconnect();
+      window.removeEventListener("popstate", onUrlChange);
+      window.removeEventListener("hashchange", onUrlChange);
+    };
+  }, []);
 
-  return isDark
+  return isDark;
 }
 
 /*
@@ -96,41 +86,44 @@ function makeResizer(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
   dpr: number,
-  setDims: (w: number, h: number) => void
+  setDims: (w: number, h: number) => void,
 ): () => void {
   return function () {
-    const parent = canvas.parentElement
-    if (!parent) return
-    const w = parent.clientWidth
-    const h = parent.clientHeight
-    if (w === 0 || h === 0) return
-    canvas.width = w * dpr
-    canvas.height = h * dpr
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    setDims(w, h)
-  }
+    const parent = canvas.parentElement;
+    if (!parent) return;
+    const w = parent.clientWidth;
+    const h = parent.clientHeight;
+    if (w === 0 || h === 0) return;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    setDims(w, h);
+  };
 }
 
 /** Bokeh Wave canvas — light mode hero background */
 function BokehWaveCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio, 2)
-    let w = 0
-    let h = 0
-    let raf = 0
+    const dpr = Math.min(window.devicePixelRatio, 2);
+    let w = 0;
+    let h = 0;
+    let raf = 0;
 
-    const resize = makeResizer(canvas, ctx, dpr, (nw, nh) => { w = nw; h = nh })
+    const resize = makeResizer(canvas, ctx, dpr, (nw, nh) => {
+      w = nw;
+      h = nh;
+    });
 
     // Watch for visibility changes (hidden → visible on theme toggle)
-    const ro = new ResizeObserver(() => resize())
-    if (canvas.parentElement) ro.observe(canvas.parentElement)
+    const ro = new ResizeObserver(() => resize());
+    if (canvas.parentElement) ro.observe(canvas.parentElement);
 
     // Bokeh circles
     const bokehs = Array.from({ length: 25 }, () => ({
@@ -142,11 +135,15 @@ function BokehWaveCanvas() {
       phase: Math.random() * Math.PI * 2,
       pulseSpeed: 0.0005 + Math.random() * 0.001,
       color: [
-        [140, 190, 250], [100, 170, 245], [170, 210, 255],
-        [80, 155, 235], [190, 215, 250], [120, 180, 248],
+        [140, 190, 250],
+        [100, 170, 245],
+        [170, 210, 255],
+        [80, 155, 235],
+        [190, 215, 250],
+        [120, 180, 248],
       ][Math.floor(Math.random() * 6)],
       opacity: 0.03 + Math.random() * 0.07,
-    }))
+    }));
 
     // Wave particles
     const waveParticles = Array.from({ length: 200 }, (_, i) => ({
@@ -156,11 +153,14 @@ function BokehWaveCanvas() {
       phase: Math.random() * Math.PI * 2,
       pulseSpeed: 0.003 + Math.random() * 0.008,
       color: [
-        [200, 230, 255], [160, 210, 255], [255, 255, 255],
-        [130, 195, 250], [180, 220, 255],
+        [200, 230, 255],
+        [160, 210, 255],
+        [255, 255, 255],
+        [130, 195, 250],
+        [180, 220, 255],
       ][Math.floor(Math.random() * 5)],
       alpha: 0.3 + Math.random() * 0.5,
-    }))
+    }));
 
     function getWaveY(xFrac: number, time: number, base: number, amp: number, freq: number, speed: number) {
       return (
@@ -168,129 +168,132 @@ function BokehWaveCanvas() {
         Math.sin(xFrac * Math.PI * 2 * freq + time * speed) * amp +
         Math.sin(xFrac * Math.PI * 2 * freq * 2.3 + time * speed * 0.7) * amp * 0.3 +
         Math.cos(xFrac * Math.PI * 2 * freq * 0.6 + time * speed * 1.3) * amp * 0.2
-      )
+      );
     }
 
     function draw(t: number) {
-      const time = t * 0.001
+      const time = t * 0.001;
       // Background gradient
-      const bg = ctx!.createRadialGradient(w * 0.4, h * 0.4, 0, w * 0.5, h * 0.5, w * 0.8)
-      bg.addColorStop(0, "#c8ddf5")
-      bg.addColorStop(0.3, "#a8c8ec")
-      bg.addColorStop(0.6, "#88b4e2")
-      bg.addColorStop(1, "#6a9ed6")
-      ctx!.fillStyle = bg
-      ctx!.fillRect(0, 0, w, h)
+      const bg = ctx!.createRadialGradient(w * 0.4, h * 0.4, 0, w * 0.5, h * 0.5, w * 0.8);
+      bg.addColorStop(0, "#c8ddf5");
+      bg.addColorStop(0.3, "#a8c8ec");
+      bg.addColorStop(0.6, "#88b4e2");
+      bg.addColorStop(1, "#6a9ed6");
+      ctx!.fillStyle = bg;
+      ctx!.fillRect(0, 0, w, h);
 
       // Warm light spot
-      const warm = ctx!.createRadialGradient(w * 0.6, h * 0.35, 0, w * 0.6, h * 0.35, w * 0.3)
-      warm.addColorStop(0, "rgba(240,230,250,0.2)")
-      warm.addColorStop(0.4, "rgba(220,210,240,0.08)")
-      warm.addColorStop(1, "rgba(200,200,230,0)")
-      ctx!.fillStyle = warm
-      ctx!.fillRect(0, 0, w, h)
+      const warm = ctx!.createRadialGradient(w * 0.6, h * 0.35, 0, w * 0.6, h * 0.35, w * 0.3);
+      warm.addColorStop(0, "rgba(240,230,250,0.2)");
+      warm.addColorStop(0.4, "rgba(220,210,240,0.08)");
+      warm.addColorStop(1, "rgba(200,200,230,0)");
+      ctx!.fillStyle = warm;
+      ctx!.fillRect(0, 0, w, h);
 
       // Draw bokeh circles
       for (const b of bokehs) {
-        b.x += b.vx
-        b.y += b.vy
-        if (b.x < -0.15 || b.x > 1.15) b.vx *= -1
-        if (b.y < -0.15 || b.y > 1.15) b.vy *= -1
-        const pulse = 0.7 + Math.sin(t * b.pulseSpeed + b.phase) * 0.3
-        const bx = b.x * w
-        const by = b.y * h
-        const br = b.r * pulse
-        const [r, g, bl] = b.color
-        const alpha = b.opacity * pulse
-        const grad = ctx!.createRadialGradient(bx, by, br * 0.1, bx, by, br)
-        grad.addColorStop(0, `rgba(${r},${g},${bl},${alpha * 0.6})`)
-        grad.addColorStop(0.6, `rgba(${r},${g},${bl},${alpha * 0.3})`)
-        grad.addColorStop(0.85, `rgba(${r},${g},${bl},${alpha * 0.15})`)
-        grad.addColorStop(1, `rgba(${r},${g},${bl},0)`)
-        ctx!.fillStyle = grad
-        ctx!.beginPath()
-        ctx!.arc(bx, by, br, 0, Math.PI * 2)
-        ctx!.fill()
+        b.x += b.vx;
+        b.y += b.vy;
+        if (b.x < -0.15 || b.x > 1.15) b.vx *= -1;
+        if (b.y < -0.15 || b.y > 1.15) b.vy *= -1;
+        const pulse = 0.7 + Math.sin(t * b.pulseSpeed + b.phase) * 0.3;
+        const bx = b.x * w;
+        const by = b.y * h;
+        const br = b.r * pulse;
+        const [r, g, bl] = b.color;
+        const alpha = b.opacity * pulse;
+        const grad = ctx!.createRadialGradient(bx, by, br * 0.1, bx, by, br);
+        grad.addColorStop(0, `rgba(${r},${g},${bl},${alpha * 0.6})`);
+        grad.addColorStop(0.6, `rgba(${r},${g},${bl},${alpha * 0.3})`);
+        grad.addColorStop(0.85, `rgba(${r},${g},${bl},${alpha * 0.15})`);
+        grad.addColorStop(1, `rgba(${r},${g},${bl},0)`);
+        ctx!.fillStyle = grad;
+        ctx!.beginPath();
+        ctx!.arc(bx, by, br, 0, Math.PI * 2);
+        ctx!.fill();
         // Ring edge
-        ctx!.beginPath()
-        ctx!.arc(bx, by, br * 0.85, 0, Math.PI * 2)
-        ctx!.strokeStyle = `rgba(${r},${g},${bl},${alpha * 0.2})`
-        ctx!.lineWidth = 1.5
-        ctx!.stroke()
+        ctx!.beginPath();
+        ctx!.arc(bx, by, br * 0.85, 0, Math.PI * 2);
+        ctx!.strokeStyle = `rgba(${r},${g},${bl},${alpha * 0.2})`;
+        ctx!.lineWidth = 1.5;
+        ctx!.stroke();
       }
 
       // Wave glow path
-      ctx!.beginPath()
+      ctx!.beginPath();
       for (let i = 0; i <= 100; i++) {
-        const xf = i / 100
-        const wy = getWaveY(xf, time, h * 0.48, h * 0.1, 0.8, 0.4)
-        if (i === 0) ctx!.moveTo(xf * w, wy)
-        else ctx!.lineTo(xf * w, wy)
+        const xf = i / 100;
+        const wy = getWaveY(xf, time, h * 0.48, h * 0.1, 0.8, 0.4);
+        if (i === 0) ctx!.moveTo(xf * w, wy);
+        else ctx!.lineTo(xf * w, wy);
       }
-      ctx!.strokeStyle = "rgba(180,215,255,0.08)"
-      ctx!.lineWidth = 60
-      ctx!.lineCap = "round"
-      ctx!.stroke()
+      ctx!.strokeStyle = "rgba(180,215,255,0.08)";
+      ctx!.lineWidth = 60;
+      ctx!.lineCap = "round";
+      ctx!.stroke();
 
       // Wave particles
       for (const p of waveParticles) {
-        p.phase += p.pulseSpeed
-        const xFrac = (p.offset + time * 0.02) % 1.0
-        const x = xFrac * w
-        const baseY = getWaveY(xFrac, time, h * 0.48, h * 0.1, 0.8, 0.4)
-        const y = baseY + p.yJitter * Math.sin(p.phase * 0.5)
-        const alpha = p.alpha * (0.4 + Math.sin(p.phase) * 0.6)
-        const sz = p.size * (0.7 + Math.sin(p.phase * 0.8) * 0.3)
-        const [r, g, b] = p.color
-        const gr = ctx!.createRadialGradient(x, y, 0, x, y, sz * 5)
-        gr.addColorStop(0, `rgba(${r},${g},${b},${alpha * 0.2})`)
-        gr.addColorStop(1, `rgba(${r},${g},${b},0)`)
-        ctx!.fillStyle = gr
-        ctx!.beginPath()
-        ctx!.arc(x, y, sz * 5, 0, Math.PI * 2)
-        ctx!.fill()
-        ctx!.beginPath()
-        ctx!.arc(x, y, sz, 0, Math.PI * 2)
-        ctx!.fillStyle = `rgba(${r},${g},${b},${alpha})`
-        ctx!.fill()
+        p.phase += p.pulseSpeed;
+        const xFrac = (p.offset + time * 0.02) % 1.0;
+        const x = xFrac * w;
+        const baseY = getWaveY(xFrac, time, h * 0.48, h * 0.1, 0.8, 0.4);
+        const y = baseY + p.yJitter * Math.sin(p.phase * 0.5);
+        const alpha = p.alpha * (0.4 + Math.sin(p.phase) * 0.6);
+        const sz = p.size * (0.7 + Math.sin(p.phase * 0.8) * 0.3);
+        const [r, g, b] = p.color;
+        const gr = ctx!.createRadialGradient(x, y, 0, x, y, sz * 5);
+        gr.addColorStop(0, `rgba(${r},${g},${b},${alpha * 0.2})`);
+        gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx!.fillStyle = gr;
+        ctx!.beginPath();
+        ctx!.arc(x, y, sz * 5, 0, Math.PI * 2);
+        ctx!.fill();
+        ctx!.beginPath();
+        ctx!.arc(x, y, sz, 0, Math.PI * 2);
+        ctx!.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+        ctx!.fill();
       }
 
-      raf = requestAnimationFrame(draw)
+      raf = requestAnimationFrame(draw);
     }
 
-    resize()
-    window.addEventListener("resize", resize)
-    raf = requestAnimationFrame(draw)
+    resize();
+    window.addEventListener("resize", resize);
+    raf = requestAnimationFrame(draw);
     return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener("resize", resize)
-      ro.disconnect()
-    }
-  }, [])
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      ro.disconnect();
+    };
+  }, []);
 
-  return <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 size-full" />
+  return <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 size-full" />;
 }
 
 /** Neon Helix canvas — dark mode hero background */
 function NeonHelixCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio, 2)
-    let w = 0
-    let h = 0
-    let raf = 0
+    const dpr = Math.min(window.devicePixelRatio, 2);
+    let w = 0;
+    let h = 0;
+    let raf = 0;
 
-    const resize = makeResizer(canvas, ctx, dpr, (nw, nh) => { w = nw; h = nh })
+    const resize = makeResizer(canvas, ctx, dpr, (nw, nh) => {
+      w = nw;
+      h = nh;
+    });
 
     // Watch for visibility changes (hidden → visible on theme toggle)
-    const ro = new ResizeObserver(() => resize())
-    if (canvas.parentElement) ro.observe(canvas.parentElement)
+    const ro = new ResizeObserver(() => resize());
+    if (canvas.parentElement) ro.observe(canvas.parentElement);
 
     // Helix particles
     const particles = Array.from({ length: 600 }, (_, i) => ({
@@ -301,7 +304,7 @@ function NeonHelixCanvas() {
       pulse: Math.random() * Math.PI * 2,
       pulseSpeed: 0.003 + Math.random() * 0.008,
       brightness: 0.5 + Math.random() * 0.5,
-    }))
+    }));
 
     const glowParticles = Array.from({ length: 80 }, () => ({
       t: Math.random(),
@@ -311,7 +314,7 @@ function NeonHelixCanvas() {
       pulse: Math.random() * Math.PI * 2,
       pulseSpeed: 0.001 + Math.random() * 0.004,
       brightness: 0.3 + Math.random() * 0.4,
-    }))
+    }));
 
     const bgParticles = Array.from({ length: 30 }, () => ({
       x: Math.random() * 1600,
@@ -321,156 +324,174 @@ function NeonHelixCanvas() {
       size: 0.5 + Math.random() * 1.5,
       pulse: Math.random() * Math.PI * 2,
       pulseSpeed: 0.005 + Math.random() * 0.01,
-      color: [[84, 157, 255], [12, 199, 228], [178, 211, 255]][Math.floor(Math.random() * 3)],
+      color: [
+        [84, 157, 255],
+        [12, 199, 228],
+        [178, 211, 255],
+      ][Math.floor(Math.random() * 3)],
       alpha: 0.1 + Math.random() * 0.2,
-    }))
+    }));
 
-    type DrawItem = { x: number; y: number; z: number; size: number; alpha: number; type: string }
+    type DrawItem = { x: number; y: number; z: number; size: number; alpha: number; type: string };
 
     function renderItem(d: DrawItem) {
-      if (d.alpha < 0.02) return
-      const depthNorm = (d.z + 120) / 240
-      const r = Math.round(30 + depthNorm * 60)
-      const g = Math.round(100 + depthNorm * 100)
-      const b = Math.round(200 + depthNorm * 55)
+      if (d.alpha < 0.02) return;
+      const depthNorm = (d.z + 120) / 240;
+      const r = Math.round(30 + depthNorm * 60);
+      const g = Math.round(100 + depthNorm * 100);
+      const b = Math.round(200 + depthNorm * 55);
       if (d.type === "glow") {
-        const gr = ctx!.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.size * 3)
-        gr.addColorStop(0, `rgba(${r},${g},${b},${d.alpha * 0.3})`)
-        gr.addColorStop(1, `rgba(${r},${g},${b},0)`)
-        ctx!.fillStyle = gr
-        ctx!.beginPath()
-        ctx!.arc(d.x, d.y, d.size * 3, 0, Math.PI * 2)
-        ctx!.fill()
+        const gr = ctx!.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.size * 3);
+        gr.addColorStop(0, `rgba(${r},${g},${b},${d.alpha * 0.3})`);
+        gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx!.fillStyle = gr;
+        ctx!.beginPath();
+        ctx!.arc(d.x, d.y, d.size * 3, 0, Math.PI * 2);
+        ctx!.fill();
       } else {
-        const gr = ctx!.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.size * 4)
-        gr.addColorStop(0, `rgba(${r},${g},${b},${d.alpha * 0.2})`)
-        gr.addColorStop(1, `rgba(${r},${g},${b},0)`)
-        ctx!.fillStyle = gr
-        ctx!.beginPath()
-        ctx!.arc(d.x, d.y, d.size * 4, 0, Math.PI * 2)
-        ctx!.fill()
-        ctx!.beginPath()
-        ctx!.arc(d.x, d.y, d.size, 0, Math.PI * 2)
-        ctx!.fillStyle = `rgba(${r},${g},${b},${d.alpha})`
-        ctx!.fill()
+        const gr = ctx!.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.size * 4);
+        gr.addColorStop(0, `rgba(${r},${g},${b},${d.alpha * 0.2})`);
+        gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx!.fillStyle = gr;
+        ctx!.beginPath();
+        ctx!.arc(d.x, d.y, d.size * 4, 0, Math.PI * 2);
+        ctx!.fill();
+        ctx!.beginPath();
+        ctx!.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+        ctx!.fillStyle = `rgba(${r},${g},${b},${d.alpha})`;
+        ctx!.fill();
         if (d.alpha > 0.5) {
-          ctx!.beginPath()
-          ctx!.arc(d.x, d.y, d.size * 0.35, 0, Math.PI * 2)
-          ctx!.fillStyle = `rgba(255,255,255,${(d.alpha - 0.5) * 0.8})`
-          ctx!.fill()
+          ctx!.beginPath();
+          ctx!.arc(d.x, d.y, d.size * 0.35, 0, Math.PI * 2);
+          ctx!.fillStyle = `rgba(255,255,255,${(d.alpha - 0.5) * 0.8})`;
+          ctx!.fill();
         }
       }
     }
 
     function getHelixPoint(t: number, time: number) {
-      const x = t * w * 1.4 - w * 0.2
-      const helixAngle = t * Math.PI * 4 + time * 0.3
-      const helixRadius = 80 + Math.sin(t * Math.PI * 2 + time * 0.1) * 30
-      const y = h * 0.5 + Math.cos(helixAngle) * helixRadius + Math.sin(t * Math.PI + time * 0.15) * 40
-      const z = Math.sin(helixAngle) * helixRadius
-      return { x, y, z }
+      const x = t * w * 1.4 - w * 0.2;
+      const helixAngle = t * Math.PI * 4 + time * 0.3;
+      const helixRadius = 80 + Math.sin(t * Math.PI * 2 + time * 0.1) * 30;
+      const y = h * 0.5 + Math.cos(helixAngle) * helixRadius + Math.sin(t * Math.PI + time * 0.15) * 40;
+      const z = Math.sin(helixAngle) * helixRadius;
+      return { x, y, z };
     }
 
     function draw(ts: number) {
-      const time = ts * 0.001
+      const time = ts * 0.001;
 
       // Dark background
-      const bg = ctx!.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, w * 0.7)
-      bg.addColorStop(0, "#0a1230")
-      bg.addColorStop(0.5, "#070e24")
-      bg.addColorStop(1, "#050a1a")
-      ctx!.fillStyle = bg
-      ctx!.fillRect(0, 0, w, h)
+      const bg = ctx!.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, w * 0.7);
+      bg.addColorStop(0, "#0a1230");
+      bg.addColorStop(0.5, "#070e24");
+      bg.addColorStop(1, "#050a1a");
+      ctx!.fillStyle = bg;
+      ctx!.fillRect(0, 0, w, h);
 
       // Ambient glow
-      ctx!.globalCompositeOperation = "screen"
+      ctx!.globalCompositeOperation = "screen";
       for (let i = 0; i < 8; i++) {
-        const t = (i + 0.5) / 8
-        const p = getHelixPoint(t, time)
-        const gr = ctx!.createRadialGradient(p.x, p.y, 0, p.x, p.y, 120)
-        gr.addColorStop(0, "rgba(47,69,181,0.04)")
-        gr.addColorStop(1, "rgba(47,69,181,0)")
-        ctx!.fillStyle = gr
-        ctx!.beginPath()
-        ctx!.arc(p.x, p.y, 120, 0, Math.PI * 2)
-        ctx!.fill()
+        const t = (i + 0.5) / 8;
+        const p = getHelixPoint(t, time);
+        const gr = ctx!.createRadialGradient(p.x, p.y, 0, p.x, p.y, 120);
+        gr.addColorStop(0, "rgba(47,69,181,0.04)");
+        gr.addColorStop(1, "rgba(47,69,181,0)");
+        ctx!.fillStyle = gr;
+        ctx!.beginPath();
+        ctx!.arc(p.x, p.y, 120, 0, Math.PI * 2);
+        ctx!.fill();
       }
 
       // Background particles
       for (const p of bgParticles) {
-        p.x += p.vx
-        p.y += p.vy
-        p.pulse += p.pulseSpeed
-        if (p.x < -10) p.x = w + 10
-        if (p.x > w + 10) p.x = -10
-        if (p.y < -10) p.y = h + 10
-        if (p.y > h + 10) p.y = -10
-        const a = p.alpha * (0.4 + Math.sin(p.pulse) * 0.6)
-        const [r, g, b] = p.color
-        ctx!.beginPath()
-        ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-        ctx!.fillStyle = `rgba(${r},${g},${b},${a})`
-        ctx!.fill()
+        p.x += p.vx;
+        p.y += p.vy;
+        p.pulse += p.pulseSpeed;
+        if (p.x < -10) p.x = w + 10;
+        if (p.x > w + 10) p.x = -10;
+        if (p.y < -10) p.y = h + 10;
+        if (p.y > h + 10) p.y = -10;
+        const a = p.alpha * (0.4 + Math.sin(p.pulse) * 0.6);
+        const [r, g, b] = p.color;
+        ctx!.beginPath();
+        ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx!.fillStyle = `rgba(${r},${g},${b},${a})`;
+        ctx!.fill();
       }
 
       // Collect draw list with depth
-      const drawList: DrawItem[] = []
+      const drawList: DrawItem[] = [];
 
       for (const gp of glowParticles) {
-        gp.pulse += gp.pulseSpeed
-        const pt = (gp.t + time * 0.02) % 1
-        const base = getHelixPoint(pt, time)
-        const baseNext = getHelixPoint(pt + 0.001, time)
-        const dx = baseNext.x - base.x
-        const dy = baseNext.y - base.y
-        const len = Math.sqrt(dx * dx + dy * dy) || 1
-        const nx = -dy / len
-        const ny = dx / len
-        void ny // tangent used for offset direction
-        const x = base.x + nx * gp.offset
-        const y = base.y + (dx / len) * gp.offset
-        const z = base.z + gp.zOffset
-        const depthAlpha = 0.4 + (z / 120 + 0.5) * 0.3
-        drawList.push({ x, y, z, size: gp.size, alpha: gp.brightness * depthAlpha * (0.3 + Math.sin(gp.pulse) * 0.3), type: "glow" })
+        gp.pulse += gp.pulseSpeed;
+        const pt = (gp.t + time * 0.02) % 1;
+        const base = getHelixPoint(pt, time);
+        const baseNext = getHelixPoint(pt + 0.001, time);
+        const dx = baseNext.x - base.x;
+        const dy = baseNext.y - base.y;
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+        const nx = -dy / len;
+        const ny = dx / len;
+        void ny; // tangent used for offset direction
+        const x = base.x + nx * gp.offset;
+        const y = base.y + (dx / len) * gp.offset;
+        const z = base.z + gp.zOffset;
+        const depthAlpha = 0.4 + (z / 120 + 0.5) * 0.3;
+        drawList.push({
+          x,
+          y,
+          z,
+          size: gp.size,
+          alpha: gp.brightness * depthAlpha * (0.3 + Math.sin(gp.pulse) * 0.3),
+          type: "glow",
+        });
       }
 
       for (const p of particles) {
-        p.pulse += p.pulseSpeed
-        const pt = (p.t + time * 0.02) % 1
-        const base = getHelixPoint(pt, time)
-        const baseNext = getHelixPoint(pt + 0.001, time)
-        const dx = baseNext.x - base.x
-        const dy = baseNext.y - base.y
-        const len = Math.sqrt(dx * dx + dy * dy) || 1
-        const nx = -dy / len
-        const ny = dx / len
-        void ny
-        const x = base.x + nx * p.offset
-        const y = base.y + (dx / len) * p.offset
-        const z = base.z + p.zOffset
-        const depthAlpha = 0.5 + (z / 120 + 0.5) * 0.5
-        drawList.push({ x, y, z, size: p.size * (0.8 + Math.sin(p.pulse) * 0.2), alpha: p.brightness * depthAlpha * (0.5 + Math.sin(p.pulse) * 0.5), type: "core" })
+        p.pulse += p.pulseSpeed;
+        const pt = (p.t + time * 0.02) % 1;
+        const base = getHelixPoint(pt, time);
+        const baseNext = getHelixPoint(pt + 0.001, time);
+        const dx = baseNext.x - base.x;
+        const dy = baseNext.y - base.y;
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+        const nx = -dy / len;
+        const ny = dx / len;
+        void ny;
+        const x = base.x + nx * p.offset;
+        const y = base.y + (dx / len) * p.offset;
+        const z = base.z + p.zOffset;
+        const depthAlpha = 0.5 + (z / 120 + 0.5) * 0.5;
+        drawList.push({
+          x,
+          y,
+          z,
+          size: p.size * (0.8 + Math.sin(p.pulse) * 0.2),
+          alpha: p.brightness * depthAlpha * (0.5 + Math.sin(p.pulse) * 0.5),
+          type: "core",
+        });
       }
 
-      drawList.sort((a, b) => a.z - b.z)
+      drawList.sort((a, b) => a.z - b.z);
 
-      for (const d of drawList) renderItem(d)
+      for (const d of drawList) renderItem(d);
 
-      ctx!.globalCompositeOperation = "source-over"
-      raf = requestAnimationFrame(draw)
+      ctx!.globalCompositeOperation = "source-over";
+      raf = requestAnimationFrame(draw);
     }
 
-    resize()
-    window.addEventListener("resize", resize)
-    raf = requestAnimationFrame(draw)
+    resize();
+    window.addEventListener("resize", resize);
+    raf = requestAnimationFrame(draw);
     return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener("resize", resize)
-      ro.disconnect()
-    }
-  }, [])
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      ro.disconnect();
+    };
+  }, []);
 
-  return <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 size-full" />
+  return <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 size-full" />;
 }
 
 function CodeBlock({ children }: { children: string }) {
@@ -478,21 +499,19 @@ function CodeBlock({ children }: { children: string }) {
     <pre className="overflow-x-auto rounded-lg border border-border bg-muted/50 p-4 text-sm">
       <code className="text-foreground">{children}</code>
     </pre>
-  )
+  );
 }
 
 const features = [
   {
     icon: Puzzle,
     title: "Composable",
-    description:
-      "Built on the shadcn/ui pattern. Components are yours to copy, paste, and customize.",
+    description: "Built on the shadcn/ui pattern. Components are yours to copy, paste, and customize.",
   },
   {
     icon: Moon,
     title: "Themeable",
-    description:
-      "Light and dark mode out of the box with oklch design tokens and CSS custom properties.",
+    description: "Light and dark mode out of the box with oklch design tokens and CSS custom properties.",
   },
   {
     icon: Accessibility,
@@ -500,12 +519,12 @@ const features = [
     description:
       "WCAG 2.1 compliant components built on Radix UI primitives with keyboard navigation and screen reader support.",
   },
-] as const
+] as const;
 
-const GITHUB_URL = "https://github.com/tetrascience/ts-lib-ui-kit"
+const GITHUB_URL = "https://github.com/tetrascience/ts-lib-ui-kit";
 
 function IntroductionPage() {
-  const isDark = useDarkMode()
+  const isDark = useDarkMode();
 
   return (
     <div className={`min-h-screen bg-background text-foreground ${isDark ? "dark" : ""}`}>
@@ -525,7 +544,10 @@ function IntroductionPage() {
               <h1 className="text-4xl font-bold tracking-tight text-[#0B112D] dark:text-white md:text-5xl">
                 TetraScience React UI
               </h1>
-              <Badge variant="outline" className="text-xs font-mono border-[#0B112D]/20 text-[#0B112D]/80 dark:border-white/20 dark:text-white/80">
+              <Badge
+                variant="outline"
+                className="text-xs font-mono border-[#0B112D]/20 text-[#0B112D]/80 dark:border-white/20 dark:text-white/80"
+              >
                 v{VERSION}
               </Badge>
             </div>
@@ -550,8 +572,8 @@ function IntroductionPage() {
               <div>
                 <p className="font-medium">Components &amp; Examples</p>
                 <p className="text-sm text-muted-foreground">
-                  50+ production-ready UI primitives, composed patterns, and
-                  full-page examples like dashboards and data lakes.
+                  50+ production-ready UI primitives, composed patterns, and full-page examples like dashboards and data
+                  lakes.
                 </p>
               </div>
             </div>
@@ -562,8 +584,7 @@ function IntroductionPage() {
               <div>
                 <p className="font-medium">Charts</p>
                 <p className="text-sm text-muted-foreground">
-                  Plotly-based visualizations including area, bar, line, scatter,
-                  heatmap, chromatogram, and more.
+                  Plotly-based visualizations including area, bar, line, scatter, heatmap, chromatogram, and more.
                 </p>
               </div>
             </div>
@@ -574,8 +595,7 @@ function IntroductionPage() {
               <div>
                 <p className="font-medium">AI Elements</p>
                 <p className="text-sm text-muted-foreground">
-                  Conversational UI, assistant modals, and AI-powered components
-                  for scientific workflows.
+                  Conversational UI, assistant modals, and AI-powered components for scientific workflows.
                 </p>
               </div>
             </div>
@@ -608,14 +628,10 @@ function IntroductionPage() {
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">Quick Start</h2>
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Install the package:
-            </p>
+            <p className="text-sm text-muted-foreground">Install the package:</p>
             <CodeBlock>{`yarn add ${PKG_NAME}`}</CodeBlock>
 
-            <p className="text-sm text-muted-foreground">
-              Import a component and the stylesheet:
-            </p>
+            <p className="text-sm text-muted-foreground">Import a component and the stylesheet:</p>
             <CodeBlock>
               {`import { Button } from '${PKG_NAME}'
 import '${PKG_NAME}/dist/index.css'`}
@@ -627,23 +643,21 @@ import '${PKG_NAME}/dist/index.css'`}
 
         {/* Footer */}
         <div className="flex items-center justify-between pb-6">
-          <p className="text-xs text-muted-foreground">
-            Made with ❤️ by the Scientific Workspace Team
-          </p>
-          <Button variant="outline" size="icon" className="bg-foreground text-background border-foreground hover:bg-foreground/90 hover:text-background" asChild>
-            <a
-              href={GITHUB_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub Repository"
-            >
+          <p className="text-xs text-muted-foreground">Made with ❤️ by the Scientific Workspace Team</p>
+          <Button
+            variant="outline"
+            size="icon"
+            className="bg-foreground text-background border-foreground hover:bg-foreground/90 hover:text-background"
+            asChild
+          >
+            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository">
               <GithubInvertocatWhite className="size-4" />
             </a>
           </Button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 const meta: Meta = {
@@ -660,11 +674,11 @@ const meta: Meta = {
       ),
     },
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
 export const Overview: Story = {
   render: () => <IntroductionPage />,
@@ -673,4 +687,4 @@ export const Overview: Story = {
     docs: { canvas: { sourceState: "none" } },
     zephyr: { testCaseId: "SW-T1469" },
   },
-}
+};

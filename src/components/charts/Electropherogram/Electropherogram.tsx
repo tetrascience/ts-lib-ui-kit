@@ -142,10 +142,7 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
     [positions, peakC, colorC],
   );
 
-  const maxValue = useMemo(
-    () => Math.max(...peakA, ...peakT, ...peakG, ...peakC),
-    [peakA, peakT, peakG, peakC],
-  );
+  const maxValue = useMemo(() => Math.max(...peakA, ...peakT, ...peakG, ...peakC), [peakA, peakT, peakG, peakC]);
 
   // The plot has no side margins, so an x-range that ends exactly on the first
   // and last sample clips the outermost peaks and pushes their base letters
@@ -236,12 +233,12 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
               base === "A"
                 ? colorA
                 : base === "T"
-                ? colorT
-                : base === "G"
-                ? colorG
-                : base === "C"
-                ? colorC
-                : theme.textColor;
+                  ? colorT
+                  : base === "G"
+                    ? colorG
+                    : base === "C"
+                      ? colorC
+                      : theme.textColor;
 
             const leftPosition = xToPx(position);
 
@@ -266,11 +263,9 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
       const minPosition = Math.min(...positions);
       const maxPosition = Math.max(...positions);
 
-      const startPos =
-        Math.ceil(minPosition / positionInterval) * positionInterval;
+      const startPos = Math.ceil(minPosition / positionInterval) * positionInterval;
 
-      const regularPositionLabels: Array<{ position: number; label: string }> =
-        [];
+      const regularPositionLabels: Array<{ position: number; label: string }> = [];
 
       for (let pos = startPos; pos <= maxPosition; pos += positionInterval) {
         regularPositionLabels.push({

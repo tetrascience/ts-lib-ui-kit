@@ -3,6 +3,7 @@ import { CheckIcon } from "lucide-react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const checkboxVariants = cva(
@@ -46,4 +47,7 @@ function Checkbox({
   )
 }
 
-export { Checkbox, checkboxVariants }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CheckboxWithRef = withRef("Checkbox", Checkbox)
+
+export { CheckboxWithRef as Checkbox, checkboxVariants }

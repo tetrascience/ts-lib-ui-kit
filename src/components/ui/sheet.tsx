@@ -5,6 +5,7 @@ import { Dialog as SheetPrimitive } from "radix-ui"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
@@ -17,11 +18,17 @@ function SheetTrigger({
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetTriggerWithRef = withRef("SheetTrigger", SheetTrigger)
+
 function SheetClose({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Close>) {
   return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetCloseWithRef = withRef("SheetClose", SheetClose)
 
 function SheetPortal({
   ...props
@@ -45,6 +52,9 @@ function SheetOverlay({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetOverlayWithRef = withRef("SheetOverlay", SheetOverlay)
+
 function SheetContent({
   className,
   children,
@@ -57,7 +67,7 @@ function SheetContent({
 }) {
   return (
     <SheetPortal>
-      <SheetOverlay />
+      <SheetOverlayWithRef />
       <SheetPrimitive.Content
         data-slot="sheet-content"
         data-side={side}
@@ -86,6 +96,9 @@ function SheetContent({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetContentWithRef = withRef("SheetContent", SheetContent)
+
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -96,6 +109,9 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetHeaderWithRef = withRef("SheetHeader", SheetHeader)
+
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -105,6 +121,9 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetFooterWithRef = withRef("SheetFooter", SheetFooter)
 
 function SheetTitle({
   className,
@@ -119,6 +138,9 @@ function SheetTitle({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetTitleWithRef = withRef("SheetTitle", SheetTitle)
+
 function SheetDescription({
   className,
   ...props
@@ -132,13 +154,16 @@ function SheetDescription({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetDescriptionWithRef = withRef("SheetDescription", SheetDescription)
+
 export {
   Sheet,
-  SheetTrigger,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetFooter,
-  SheetTitle,
-  SheetDescription,
+  SheetTriggerWithRef as SheetTrigger,
+  SheetCloseWithRef as SheetClose,
+  SheetContentWithRef as SheetContent,
+  SheetHeaderWithRef as SheetHeader,
+  SheetFooterWithRef as SheetFooter,
+  SheetTitleWithRef as SheetTitle,
+  SheetDescriptionWithRef as SheetDescription,
 }

@@ -27,6 +27,7 @@ import type { FilterColumnConfig } from "@/components/ui/data-table/data-table";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_PLATE_BARCODE_FIELD = "plateBarcode";
@@ -475,7 +476,7 @@ function PlateMapEditorManifestCard({
  * />
  * ```
  */
-export function PlateMapEditor<T extends WellRecord = WellRecord>({
+function PlateMapEditor<T extends WellRecord = WellRecord>({
   format,
   rows,
   columns,
@@ -899,5 +900,10 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
     </div>
   );
 }
+
+/** React 18 wrapper for {@link PlateMapEditor}; see its documentation. */
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PlateMapEditorWithRef = withRef("PlateMapEditor", PlateMapEditor);
+export { PlateMapEditorWithRef as PlateMapEditor };
 
 export { Badge as PlateBadge };

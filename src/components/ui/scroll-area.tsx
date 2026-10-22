@@ -3,6 +3,7 @@
 import { ScrollArea as ScrollAreaPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function ScrollArea({
@@ -23,11 +24,14 @@ function ScrollArea({
       >
         {children}
       </ScrollAreaPrimitive.Viewport>
-      <ScrollBar />
+      <ScrollBarWithRef />
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ScrollAreaWithRef = withRef("ScrollArea", ScrollArea)
 
 function ScrollBar({
   className,
@@ -53,4 +57,7 @@ function ScrollBar({
   )
 }
 
-export { ScrollArea, ScrollBar }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ScrollBarWithRef = withRef("ScrollBar", ScrollBar)
+
+export { ScrollAreaWithRef as ScrollArea, ScrollBarWithRef as ScrollBar }

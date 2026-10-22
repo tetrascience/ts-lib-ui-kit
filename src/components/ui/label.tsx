@@ -3,6 +3,7 @@
 import { Label as LabelPrimitive } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 function Label({
@@ -21,4 +22,7 @@ function Label({
   )
 }
 
-export { Label }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const LabelWithRef = withRef("Label", Label)
+
+export { LabelWithRef as Label }

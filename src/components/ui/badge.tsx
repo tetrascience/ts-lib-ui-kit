@@ -2,6 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
@@ -52,4 +53,7 @@ function Badge({
   )
 }
 
-export { Badge, badgeVariants }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BadgeWithRef = withRef("Badge", Badge)
+
+export { BadgeWithRef as Badge, badgeVariants }

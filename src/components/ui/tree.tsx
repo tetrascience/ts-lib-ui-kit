@@ -5,6 +5,8 @@ import * as React from "react";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
 
+import { useComposedRefs } from "@/lib/compose-refs";
+import { isElementOfType, withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------------------------------
@@ -137,7 +139,7 @@ function useTreeItem() {
  * -----------------------------------------------------------------------------------------------*/
 
 function isPlaceholder(child: React.ReactElement) {
-  return child.type === TreeEmpty || child.type === TreeLoadMore;
+  return isElementOfType(child, TreeEmpty) || isElementOfType(child, TreeLoadMore);
 }
 
 function useIndexedTreeChildren(children: React.ReactNode) {
@@ -428,9 +430,12 @@ function Tree({
   guides = "hover",
   onFocus,
   onBlur,
+  ref,
   ...props
 }: TreeProps) {
   const treeRef = React.useRef<HTMLDivElement>(null);
+  // The tree needs its root for keyboard navigation; a consumer ref must not replace it.
+  const rootRef = useComposedRefs(treeRef, ref);
 
   const [expandedIds, setExpandedIds] = useControllableState<Set<string>>({
     prop: expandedIdsProp,
@@ -597,7 +602,7 @@ function Tree({
       <TreeTypeaheadContext.Provider value={typeaheadMatch}>
         <TreeLevelContext.Provider value={1}>
           <div
-            ref={treeRef}
+            ref={rootRef}
             data-slot="tree"
             data-guides={guides}
             role="tree"
@@ -648,6 +653,9 @@ function Tree({
     </TreeContext.Provider>
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TreeWithRef = withRef("Tree", Tree);
 
 function TreeItemsContainer({ children }: { children: React.ReactNode }) {
   return useIndexedTreeChildren(children);
@@ -800,6 +808,9 @@ function TreeItem({
     </TreeItemContext.Provider>
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TreeItemWithRef = withRef("TreeItem", TreeItem);
 
 /* -------------------------------------------------------------------------------------------------
  * TreeItemLabel
@@ -996,6 +1007,9 @@ function TreeItemLabel({ className, children, size, style, icon, trailing, ...pr
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TreeItemLabelWithRef = withRef("TreeItemLabel", TreeItemLabel);
+
 /**
  * The label text, with the live typeahead prefix highlighted when it matches. Only a plain-string
  * label can be split; a composed label still matches for navigation, it just gets no highlight.
@@ -1053,6 +1067,9 @@ function TreeItemGroup({ className, children, ...props }: React.ComponentProps<"
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TreeItemGroupWithRef = withRef("TreeItemGroup", TreeItemGroup);
+
 /* -------------------------------------------------------------------------------------------------
  * TreeEmpty
  * -----------------------------------------------------------------------------------------------*/
@@ -1108,6 +1125,9 @@ function TreeEmpty({ className, children, style, ...props }: React.ComponentProp
     </div>
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TreeEmptyWithRef = withRef("TreeEmpty", TreeEmpty);
 
 /* -------------------------------------------------------------------------------------------------
  * TreeLoadMore
@@ -1169,13 +1189,16 @@ function TreeLoadMore({ className, children = "Load more", icon, size, style, on
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TreeLoadMoreWithRef = withRef("TreeLoadMore", TreeLoadMore);
+
 export {
-  Tree,
-  TreeEmpty,
-  TreeItem,
-  TreeItemGroup,
-  TreeItemLabel,
-  TreeLoadMore,
+  TreeWithRef as Tree,
+  TreeEmptyWithRef as TreeEmpty,
+  TreeItemWithRef as TreeItem,
+  TreeItemGroupWithRef as TreeItemGroup,
+  TreeItemLabelWithRef as TreeItemLabel,
+  TreeLoadMoreWithRef as TreeLoadMore,
   treeItemLabelVariants,
   useTreeItem,
   type TreeGuides,

@@ -8186,6 +8186,8 @@ __metadata:
       optional: true
     "@streamdown/mermaid":
       optional: true
+    "@tetrascience-npm/request":
+      optional: true
     plotly.js-dist:
       optional: true
     snowflake-sdk:

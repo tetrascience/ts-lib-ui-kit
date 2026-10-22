@@ -1,6 +1,6 @@
 {
   "name": "@tetrascience-npm/tetrascience-react-ui",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "TetraScience React UI",
   "type": "module",
   "author": "TetraScience",
@@ -287,6 +287,9 @@
       "optional": true
     },
     "@streamdown/mermaid": {
+      "optional": true
+    },
+    "@tetrascience-npm/request": {
       "optional": true
     },
     "plotly.js-dist": {

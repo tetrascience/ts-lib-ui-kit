@@ -308,6 +308,7 @@ The lazy paths above keep heavy deps out of a consumer's **bundle** when the com
 
 - `plotly.js-dist` — required only by `charts/` components.
 - `@streamdown/mermaid`, `@streamdown/math` — required only by `MessageResponse` / `Reasoning` (markdown).
+- `@tetrascience-npm/request` — required only by the `./telemetry` entry. Not heavy, but narrow: nothing outside `src/telemetry/` imports it, and that entry is not in the root barrel.
 
 Consumer contract: apps that use these components must install the matching peer themselves; apps that don't never pull it. **How a missing peer surfaces depends on the import shape (SW-2472), so don't assume the bundler catches it.** A _named_ static import from an optional-peer stub is a hard Rollup error, which is why a root-entry build fails without `@streamdown/math`/`@streamdown/mermaid` even when no AI component is used — `streamdown-plugins.ts` is only reached dynamically, but a dynamic-import target is still in the module graph and its named imports must resolve. A _default-only dynamic_ import — `plotly.js-dist` via `plotly-loader.ts` — resolves to an empty stub, the build exits 0, and the only signal is the loader's runtime guard. When adding an optional peer, know which of the two you have; if it's the second, the runtime guard is the whole safety net and must reject a stub, not just a rejected import. `shiki` / `@shikijs/*` / `@streamdown/cjk` stay regular `dependencies` (the `CodeBlock` primitive is broadly used and their install size is modest). When adding a component that pulls a new heavy dep, decide deliberately between hard dep (broadly used) and optional peer (heavy + narrow), and keep the loader's runtime guard message pointing at the install command.
 
@@ -316,6 +317,16 @@ Consumer contract: apps that use these components must install the matching peer
 - **Prefer Storybook play function tests** for React components — real browser via Playwright, more realistic than jsdom
 - Unit tests (`*.test.ts` / `*.test.tsx`) for pure utilities, hooks, and non-visual logic only
 - Do not manually assign `parameters.zephyr.testCaseId` values — generate or repair them through `sync-storybook-zephyr`
+
+### Driving a `Select` from a play function
+
+Use `selectOption(trigger, name)` / `openSelect(trigger)` from
+[`.storybook/select-interactions.ts`](./.storybook/select-interactions.ts) —
+never `userEvent.click(trigger)` followed by a bare
+`body.findByRole("option", …)`. `SelectContent` is portal-rendered and
+positioned in a layout effect, so the option is not in the DOM on the next
+tick; Testing Library's default 1000 ms `asyncUtilTimeout` is enough locally
+but not on a loaded CI runner under coverage instrumentation
 
 ### Docs "Show code" must show component code
 

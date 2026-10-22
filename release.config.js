@@ -4,12 +4,20 @@
 // makes the header match nothing at all, so such a commit parses with no
 // type and no notes and is silently dropped from both the version
 // calculation and the changelog. Set on both plugins so they agree.
+//
+// The preset only releases a revert whose body says "This reverts commit
+// <sha>.", which a squash merge (PR title, empty body) never has, so the
+// `revert` rule makes a `revert:` PR title a patch release as documented.
 export default {
   branches: ["main"],
   plugins: [
-    ["@semantic-release/commit-analyzer", { preset: "conventionalcommits" }],
-    // Fails the release before tagging unless the prep PR has already bumped
-    // package.json to the version being released. See the file's header.
+    [
+      "@semantic-release/commit-analyzer",
+      { preset: "conventionalcommits", releaseRules: [{ type: "revert", release: "patch" }] },
+    ],
+    // Fails the release before tagging unless the prep PR for exactly this
+    // release has merged (package.json, CHANGELOG.md, nothing releasable
+    // merged after it). See the file's header.
     "./scripts/release/verify-package-version.js",
     ["@semantic-release/release-notes-generator", { preset: "conventionalcommits" }],
     ["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }],

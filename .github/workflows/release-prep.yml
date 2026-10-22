@@ -5,9 +5,9 @@ name: Release prep
 # next version and its notes with semantic-release's own analyzer and notes
 # generator, then bumps package.json, CHANGELOG.md and the README. Review the
 # PR, add any upgrade notes to its CHANGELOG entry, merge it, then dispatch
-# Release. If more releasable commits merge in between and change the
-# version, Release refuses to tag (verify-package-version.js); run this again
-# and it replaces the unreleased entry, showing the old one in the PR body.
+# Release. If more releasable commits merge in between, Release refuses to
+# tag (verify-package-version.js); run this again and it replaces the
+# unreleased entry, showing the old one in the PR body.
 
 on:
   workflow_dispatch:
@@ -53,10 +53,10 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
+      # Public npm only (.yarnrc.yml), so no registry credential; skip-build
+      # runs no lifecycle scripts while GH_TOKEN is in this job's secrets.
       - name: Install
-        env:
-          JFROG_ARTIFACTORY_READ_NPM_AUTH: ${{ secrets.JFROG_ARTIFACTORY_READ_NPM_AUTH }}
-        run: yarn install --immutable
+        run: yarn install --immutable --mode=skip-build
 
       - name: Bump version and write CHANGELOG entry
         id: prep
@@ -115,9 +115,9 @@ jobs:
             echo "### After merging"
             echo
             echo "1. Dispatch **Release** from the Actions tab. It tags \`v${VERSION}\` and creates the GitHub release."
-            echo "   If more \`feat:\`/\`fix:\` PRs merged in between and changed the version, it refuses to tag:"
-            echo "   run **Release prep** again (it replaces this entry). Likewise, if that happens before this PR"
-            echo "   merges, close it and run **Release prep** again."
+            echo "   If more \`feat:\`/\`fix:\` PRs merge after this one, it refuses to tag (they would be missing"
+            echo "   from this entry): run **Release prep** again (it replaces this entry). Likewise, if that happens"
+            echo "   before this PR merges, close it and run **Release prep** again."
             echo "2. Approve the \`PROD\` environment on the \`Publish to Public npm\` run."
             echo
             if [[ -s "$RUNNER_TEMP/replaced.md" ]]; then

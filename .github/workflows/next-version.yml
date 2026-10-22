@@ -1,0 +1,57 @@
+name: Next release version
+
+# Reusable: works out the version the next release will get, the way the
+# Release workflow will (scripts/release/next-version.ts), so the publish
+# workflows can name prereleases for it. ts-ci-cd-lib's shared publish
+# workflow names a prerelease `<package.json version>-<tag>.<run>.<attempt>`,
+# and between releases package.json holds the version already released, so
+# without this every beta and alpha after v1.1.0 would sort *before* 1.1.0.
+# Callers write the output into package.json through the shared workflow's
+# `pre_install_command`.
+#
+# Callers give this job `permissions: contents: read` and no secrets: it
+# installs dependencies, and needs neither an OIDC token nor a registry
+# credential (public npm only, see .yarnrc.yml).
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: "The next release's X.Y.Z"
+        value: ${{ jobs.next-version.outputs.version }}
+
+permissions:
+  contents: read
+
+jobs:
+  next-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needs the tags and the commits since the last one
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "yarn"
+      - name: Enable Corepack
+        run: corepack enable
+      # skip-build: no lifecycle scripts run, and with the yarn cache the
+      # rest is a fast link step. A narrower install (only tsx and the
+      # analyzer) would have to pin versions outside yarn.lock.
+      - name: Install
+        run: yarn install --immutable --mode=skip-build
+      - name: Compute next release version
+        id: next
+        run: |
+          VERSION=$(yarn tsx scripts/release/next-version.ts)
+          # Callers interpolate it into a shell command, so accept only X.Y.Z.
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Unexpected version: '$VERSION'"
+            exit 1
+          fi
+          echo "Next release: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"

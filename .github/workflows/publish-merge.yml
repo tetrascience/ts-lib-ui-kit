@@ -9,11 +9,25 @@ permissions:
   contents: read
   id-token: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  # Named for the next release, like the public npm betas. See next-version.yml.
+  beta-version:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/next-version.yml
+
   publish-internal:
+    needs: beta-version
     uses: tetrascience/ts-ci-cd-lib/.github/workflows/publish-npm-package.yml@main
     with:
       prerelease_tag: beta
+      pre_install_command: >-
+        jq --arg v "${{ needs.beta-version.outputs.version }}" '.version = $v' package.json > package.json.tmp &&
+        mv package.json.tmp package.json
     secrets:
       AUTH_TOKEN: '${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_AUTH }}'
       REGISTRY: 'https://registry.npmjs.org'

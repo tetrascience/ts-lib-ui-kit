@@ -370,19 +370,25 @@ Process: [CONTRIBUTING.md › Release Process](./CONTRIBUTING.md#release-process
   `scripts/release/prepare-release.ts` computes the version and notes with semantic-release's own
   commit analyzer and notes generator (`release.config.js`'s options), so nobody types a version.
   `scripts/release/verify-package-version.js` (a local plugin in `release.config.js`) fails `Release`
-  before tagging if `package.json` doesn't match. The shared publish workflow rejects a tag that
-  doesn't match `package.json`.
-- **Betas are named for the next release.** `publish-public.yml`'s `beta-version` job runs
+  before tagging unless `package.json` and the newest `CHANGELOG.md` entry match and nothing
+  releasable merged after that entry. It imports `next-version.ts` directly, which works because
+  Node 24 strips its types: keep that file to erasable TypeScript with no extensionless imports. The
+  shared publish workflow rejects a tag that doesn't match `package.json`.
+- **Betas and alphas are named for the next release.** The reusable `next-version.yml` runs
   `scripts/release/next-version.ts` — semantic-release's own commit analyzer with `release.config.js`'s
-  options — and writes the result into `package.json` through the shared workflow's
-  `pre_install_command`. Keep the two in step: a change to the analyzer config changes both.
+  options and `tagFormat` — and each publish workflow (`publish-public.yml`, `publish-merge.yml`,
+  `publish-pr.yml`) writes the result into `package.json` through the shared workflow's
+  `pre_install_command`. A new caller of the shared publish workflow needs the same two steps. Keep
+  the two in step: a change to the analyzer config changes both.
 - **Alphas are opt-in** via the `alpha` PR label (`publish-pr.yml`).
-- **Storybook's version badge shows the beta it was built with.** On the production deploy
+- **Storybook's version badge shows the npm build it was built with.** On the production deploy
   (ui-toolkit.tetrascience.com, built from `main`), the Introduction page asks the npm registry for
-  the current `beta` and shows it when its `gitHead` is this build's commit, or flags it as still
-  publishing when it isn't. Previews and local runs show `package.json`'s version. The commit and
-  environment come from Vercel's `VERCEL_GIT_COMMIT_SHA` / `VERCEL_ENV` via `.storybook/main.ts`'s
-  `env`; the logic is in `.storybook/deployed-version.ts`.
+  the current `latest` and `beta` and shows whichever has this build's commit as its `gitHead` (the
+  release once the commit is tagged). Otherwise it shows the newest beta, flagged as still publishing
+  for an hour after the build and as from an earlier commit after that, and the install snippet adds
+  `@beta` whenever a beta is shown. Previews and local runs show `package.json`'s version. The commit,
+  environment and build time come from Vercel's `VERCEL_GIT_COMMIT_SHA` / `VERCEL_ENV` and the build
+  clock via `.storybook/main.ts`'s `env`; the logic is in `.storybook/deployed-version.ts`.
 
 ## Zephyr Integration
 

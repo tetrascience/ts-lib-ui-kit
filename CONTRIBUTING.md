@@ -369,9 +369,11 @@ create git tags by hand.**
 2. **Review and merge the prep PR.** Add upgrade notes to its CHANGELOG entry (and `MIGRATION.md`) for
    anything consumers must act on. Your edits are kept; nothing regenerates the PR.
 3. **Dispatch `Release`** (`.github/workflows/release.yml`). It creates the `vX.Y.Z` tag and a GitHub
-   release with generated notes. If `package.json` doesn't say the version being released, it stops
-   before creating the tag (`scripts/release/verify-package-version.js`). That happens when the prep PR
-   hasn't merged, or when more `feat:`/`fix:` PRs merged afterwards and changed the version. In that
+   release with generated notes. It stops before creating the tag
+   (`scripts/release/verify-package-version.js`) unless `package.json` and the newest `CHANGELOG.md`
+   entry both say the version being released, and no `feat`/`fix`/`perf`/`revert` PR has merged since
+   that entry was written (it would ship missing from the CHANGELOG, even when it doesn't change the
+   version). That happens when the prep PR hasn't merged, or when more PRs merged after it. In that
    case, run `Release prep` again. It replaces the unreleased entry and shows the old one in the PR
    body so you can carry its notes over.
 4. **Approve the publish.** The tag starts `Publish to Public npm` (`publish-public.yml`), which waits at
@@ -393,18 +395,22 @@ body, so **the PR title is what counts**.
 | Only `chore`, `docs`, `style`, `refactor`, `test`, `ci` | No release                |
 
 A `BREAKING CHANGE:` footer in a commit on your branch does not survive the squash merge; mark the PR
-title with `!` instead.
+title with `!` instead. Likewise, title a revert PR `revert: SW-1234 …`, not GitHub's default
+`Revert "…"` (which the PR title check rejects, and which would not release).
 
 ### Beta and alpha builds
 
-- **Beta, on every merge to `main`**, published to npm under the `beta` dist-tag and named for the
-  **next** release: after `v1.1.0`, a merge publishes `1.2.0-beta.<run>.<attempt>` if a `feat:` has
-  merged since the tag, and `1.1.1-beta.…` otherwise. `scripts/release/next-version.ts` makes the same
-  calculation semantic-release will, and `publish-public.yml` writes it into `package.json` before the
-  shared publish workflow builds.
+- **Beta, on every merge to `main`**, published under the `beta` dist-tag to npm (`publish-public.yml`)
+  and to JFrog (`publish-merge.yml`), and named for the **next** release: after `v1.1.0`, a merge
+  publishes `1.2.0-beta.<run>.<attempt>` if a `feat:` has merged since the tag, and `1.1.1-beta.…`
+  otherwise.
 - **Alpha, only on request.** Add the `alpha` label to a PR to publish
-  `<version>-alpha.<run>.<attempt>` to JFrog, and again on each push while the label stays. PRs without
-  the label don't publish anything.
+  `<next version>-alpha.<run>.<attempt>` to JFrog, and again on each push while the label stays. PRs
+  without the label don't publish anything.
+
+Both are named by `next-version.yml`, a reusable workflow that runs `scripts/release/next-version.ts` (the
+same calculation semantic-release will make) and that each publish workflow calls before writing the
+result into `package.json` for the shared publish workflow.
 
 ### Dry-run locally
 

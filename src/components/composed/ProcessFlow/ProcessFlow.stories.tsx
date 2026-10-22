@@ -1,6 +1,6 @@
 import { RotateCcwIcon } from "lucide-react";
 import { useEffect, useMemo, useState, type ComponentProps } from "react";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import {
   PROCESS_FLOW_STEP_STATUSES,
@@ -737,6 +737,295 @@ export const NonSelectableStep: Story = {
 
     await step("Step with selectable=false is rendered disabled despite active status", async () => {
       expect(canvas.getByRole("button", { name: "Step B, Active" })).toBeDisabled();
+    });
+  },
+};
+
+/**
+ * `variant="chips"` draws the flow as a trail of pill buttons, compact enough for a setup flow or a page header.
+ * The active step carries `aria-current="step"`; choosing a step selects it, and a selected step gains a primary
+ * border, so a completed step the user returns to reads as both done and current.
+ */
+export const ChipTrail: Story = {
+  render: () => {
+    const [selectedStepId, setSelectedStepId] = useState("tactics");
+
+    return (
+      <ProcessFlow
+        aria-label="Setup steps"
+        variant="chips"
+        steps={[
+          { id: "references", label: "References", status: "completed" },
+          { id: "objective", label: "Objective", status: "completed" },
+          { id: "tactics", label: "Tactics", status: "active" },
+          { id: "hypothesis", label: "Hypothesis", status: "pending" },
+        ]}
+        selectedStepId={selectedStepId}
+        onStepSelect={(step) => setSelectedStepId(step.id)}
+      />
+    );
+  },
+  parameters: {
+    controls: { disable: true },
+    zephyr: {
+      testCaseId: "SW-T5757",
+    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const trail = within(canvas.getByRole("navigation", { name: "Setup steps" }));
+    const chip = (name: string) => trail.getByRole("button", { name: new RegExp(`^${name},`) });
+
+    await step("The trail is a list of pill buttons, with the active step marked", async () => {
+      expect(trail.getAllByRole("listitem")).toHaveLength(4);
+      expect(chip("Tactics")).toHaveAttribute("aria-current", "step");
+      expect(chip("Tactics")).toHaveAttribute("aria-pressed", "true");
+      expect(chip("References")).toHaveAccessibleName("References, Completed");
+
+      const tactics = chip("Tactics");
+      expect(tactics).toHaveAttribute("data-pill", "true");
+      expect(tactics.getBoundingClientRect().height).toBe(28);
+      expect(parseFloat(getComputedStyle(tactics).borderTopLeftRadius)).toBeGreaterThanOrEqual(14);
+    });
+
+    await step("Choosing a completed step selects it, and it reads as done and current", async () => {
+      await userEvent.click(chip("References"));
+      expect(chip("References")).toHaveAttribute("aria-pressed", "true");
+      expect(chip("Tactics")).toHaveAttribute("aria-pressed", "false");
+      expect(chip("Tactics")).toHaveAttribute("aria-current", "step");
+      await waitFor(() =>
+        expect(getComputedStyle(chip("References")).borderTopColor).toBe(
+          getComputedStyle(chip("Tactics")).borderTopColor,
+        ),
+      );
+
+      await userEvent.click(chip("Tactics"));
+      expect(chip("Tactics")).toHaveAttribute("aria-pressed", "true");
+    });
+  },
+};
+
+/** Every status as a chip — selectable, compact and read-only. */
+export const ChipStates: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4">
+      <ProcessFlow
+        aria-label="Selectable chips"
+        variant="chips"
+        selectedStepId="review"
+        onStepSelect={() => {}}
+        steps={[
+          { id: "draft", label: "Draft", status: "completed" },
+          { id: "review", label: "Review", status: "completed" },
+          { id: "tactics", label: "Tactics", status: "active" },
+          { id: "approve", label: "Approve", status: "error" },
+          { id: "publish", label: "Publish", status: "pending" },
+          { id: "archive", label: "Archive", status: "disabled" },
+        ]}
+      />
+      <ProcessFlow
+        aria-label="Compact chips"
+        variant="chips"
+        size="compact"
+        onStepSelect={() => {}}
+        steps={[
+          { id: "draft", label: "Draft", status: "completed" },
+          { id: "tactics", label: "Tactics", status: "active" },
+          { id: "publish", label: "Publish", status: "pending" },
+        ]}
+      />
+      <ProcessFlow
+        aria-label="Read-only chips"
+        variant="chips"
+        steps={[
+          { id: "draft", label: "Draft", status: "completed" },
+          { id: "tactics", label: "Tactics", status: "active" },
+          { id: "publish", label: "Publish", status: "pending" },
+        ]}
+      />
+    </div>
+  ),
+  parameters: {
+    controls: { disable: true },
+    zephyr: {
+      testCaseId: "SW-T5758",
+    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const flow = (name: string) => canvas.getByRole("navigation", { name });
+    const chips = within(flow("Selectable chips"));
+    const chip = (name: string) => chips.getByRole("button", { name: new RegExp(`^${name},`) });
+    const style = (el: HTMLElement) => getComputedStyle(el);
+
+    await step("Active is tinted with a primary border; completed is tinted with a tick and no border", async () => {
+      const active = style(chip("Tactics"));
+      const completed = style(chip("Draft"));
+      expect(active.borderTopColor).toBe(active.color);
+      expect(active.backgroundColor).not.toBe(style(chip("Publish")).backgroundColor);
+      expect(completed.borderTopColor).toBe("rgba(0, 0, 0, 0)");
+      expect(completed.backgroundColor).toBe(active.backgroundColor);
+      expect(completed.color).toBe(active.color);
+      expect(chip("Draft").querySelector("svg")).not.toBeNull();
+    });
+
+    await step("A selected completed step keeps its tick and gains the primary border", async () => {
+      expect(chip("Review")).toHaveAttribute("aria-pressed", "true");
+      expect(chip("Review").querySelector("svg")).not.toBeNull();
+      expect(style(chip("Review")).borderTopColor).toBe(style(chip("Tactics")).borderTopColor);
+    });
+
+    await step("Error is marked in colour, icon and ARIA; disabled is not selectable", async () => {
+      const error = chip("Approve");
+      expect(error).toHaveAttribute("aria-invalid", "true");
+      expect(error.querySelector("svg")).not.toBeNull();
+      expect(style(error).borderTopColor).toBe(style(error).color);
+      expect(style(error).borderTopColor).not.toBe(style(chip("Tactics")).borderTopColor);
+      expect(chip("Archive")).toBeDisabled();
+    });
+
+    await step("Every chip is a pill; compact chips are smaller", async () => {
+      for (const el of canvasElement.querySelectorAll<HTMLElement>("[data-status]")) {
+        expect(parseFloat(style(el).borderTopLeftRadius)).toBeGreaterThanOrEqual(el.getBoundingClientRect().height / 2);
+      }
+      const compact = within(flow("Compact chips")).getByRole("button", { name: /^Tactics,/ });
+      expect(compact.getBoundingClientRect().height).toBe(24);
+    });
+
+    await step("Read-only chips are not buttons but still mark the active step", async () => {
+      const readOnly = flow("Read-only chips");
+      expect(within(readOnly).queryAllByRole("button")).toHaveLength(0);
+      expect(readOnly.querySelector("[aria-current='step']")).toHaveAttribute("aria-label", "Tactics, Active");
+    });
+
+    await step("Keyboard focus visibly changes every look, the selected one included", async () => {
+      for (const name of ["Draft", "Review", "Tactics", "Approve", "Publish"]) {
+        const resting = style(chip(name)).boxShadow;
+        await userEvent.tab();
+        expect(chip(name)).toHaveFocus();
+        await waitFor(() => expect(style(chip(name)).boxShadow).not.toBe(resting));
+      }
+    });
+  },
+};
+
+/**
+ * `variant="inline"` is a small, read-only stage indicator that shares a line with a page title and its buttons:
+ * each label sits beside its dot, and the line into a step fills once the step before it is completed.
+ */
+export const InlineStages: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <h2 className="text-base font-semibold">New session</h2>
+      <ProcessFlow
+        aria-label="Stages"
+        variant="inline"
+        steps={[
+          { id: "setup", label: "Set up", status: "completed" },
+          { id: "design", label: "Design exploration", status: "active" },
+          { id: "review", label: "Review", status: "pending" },
+        ]}
+      />
+      <div className="ml-auto flex gap-2">
+        <Button variant="outline" size="sm">
+          Edit layout
+        </Button>
+        <Button size="sm">Start design</Button>
+      </div>
+    </div>
+  ),
+  parameters: {
+    controls: { disable: true },
+    zephyr: {
+      testCaseId: "SW-T5763",
+    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const flow = canvas.getByRole("navigation", { name: "Stages" });
+    const items = within(flow).getAllByRole("listitem");
+
+    await step("Every step sits on one line beside the title, at its natural width", async () => {
+      expect(items).toHaveLength(3);
+      const title = canvas.getByRole("heading", { name: "New session" }).getBoundingClientRect();
+      const box = flow.getBoundingClientRect();
+      expect(box.height).toBeLessThanOrEqual(20);
+      expect(Math.abs(box.top + box.height / 2 - (title.top + title.height / 2))).toBeLessThanOrEqual(4);
+      // scrollWidth rounds to whole pixels.
+      expect(box.width).toBeGreaterThanOrEqual(flow.querySelector("ol")!.scrollWidth - 1);
+      for (const label of flow.querySelectorAll<HTMLElement>("[data-slot='process-flow-label']")) {
+        expect(getComputedStyle(label).fontSize).toBe("12px");
+      }
+    });
+
+    await step("The active step is current; a completed step is ticked and says so in words", async () => {
+      expect(items.map((item) => item.getAttribute("aria-current"))).toEqual([null, "step", null]);
+      const done = items[0].querySelector<HTMLElement>("[data-slot='process-flow-marker']")!;
+      expect(done.querySelector("svg")).not.toBeNull();
+      expect(done.textContent).toBe("");
+      expect(items[0]).toHaveTextContent("Set up, Completed");
+      expect(items[2]).toHaveTextContent(/^3Review$/);
+    });
+
+    await step("The line into a step fills once the step before it is completed", async () => {
+      const [intoDesign, intoReview] = flow.querySelectorAll<HTMLElement>("[data-slot='process-flow-connector']");
+      const filled = getComputedStyle(items[0].querySelector<HTMLElement>("[data-slot='process-flow-marker']")!)
+        .backgroundColor;
+      expect(getComputedStyle(intoDesign).backgroundColor).toBe(filled);
+      expect(getComputedStyle(intoReview).backgroundColor).not.toBe(filled);
+    });
+  },
+};
+
+/** Every status in the inline variant. */
+export const InlineStatuses: Story = {
+  render: () => (
+    <ProcessFlow
+      aria-label="Release stages"
+      variant="inline"
+      steps={[
+        { id: "draft", label: "Draft", status: "completed" },
+        { id: "review", label: "Review", status: "active" },
+        { id: "approve", label: "Approve", status: "error" },
+        { id: "publish", label: "Publish", status: "pending" },
+        { id: "archive", label: "Archive", status: "disabled" },
+      ]}
+    />
+  ),
+  parameters: {
+    controls: { disable: true },
+    zephyr: {
+      testCaseId: "SW-T5764",
+    },
+  },
+  play: async ({ canvasElement, step }) => {
+    const flow = within(canvasElement).getByRole("navigation", { name: "Release stages" });
+    const [draft, review, approve, publish, archive] = within(flow).getAllByRole("listitem");
+    const marker = (item: HTMLElement) => item.querySelector<HTMLElement>("[data-slot='process-flow-marker']")!;
+    const style = (el: HTMLElement) => getComputedStyle(el);
+
+    await step("Completed and active labels are primary; active is semibold; pending is muted", async () => {
+      expect(style(draft).color).toBe(style(review).color);
+      expect(style(review).fontWeight).toBe("600");
+      expect(style(publish).color).not.toBe(style(review).color);
+      expect(style(marker(review)).borderTopColor).toBe(style(review).color);
+      expect(style(marker(review)).backgroundColor).not.toBe(style(marker(draft)).backgroundColor);
+    });
+
+    await step("Error and disabled are marked in colour or icon, and in words", async () => {
+      expect(style(marker(approve)).borderTopColor).toBe(style(approve).color);
+      expect(style(approve).color).not.toBe(style(review).color);
+      expect(approve).toHaveTextContent("Approve, Error");
+      expect(marker(archive).querySelector("svg")).not.toBeNull();
+      expect(archive).toHaveTextContent("Archive, Disabled");
+    });
+
+    await step("Only the line after a completed step is filled", async () => {
+      const lines = [review, approve, publish, archive].map(
+        (item) => style(item.querySelector<HTMLElement>("[data-slot='process-flow-connector']")!).backgroundColor,
+      );
+      const filled = style(marker(draft)).backgroundColor;
+      expect(lines.map((color) => color === filled)).toEqual([true, false, false, false]);
     });
   },
 };

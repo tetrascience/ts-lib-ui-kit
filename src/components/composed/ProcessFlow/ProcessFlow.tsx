@@ -4,6 +4,7 @@ import {
   getConnectionPath,
   getDescriptionVisibility,
   getStepAccessibleLabel,
+  getStepStatus,
   hasCustomStepLayout,
   positionStep,
   resolveConnections,
@@ -19,6 +20,7 @@ import {
 
 import type { ComponentPropsWithoutRef, CSSProperties, MouseEvent } from "react";
 
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export { PROCESS_FLOW_STEP_STATUSES } from "./ProcessFlow.utils";
@@ -33,6 +35,12 @@ export type {
   ProcessStep,
   ProcessStepStatus,
 } from "./ProcessFlow.utils";
+
+/**
+ * How steps are drawn: `default` markers joined by connectors, `chips` — one pill per step on a single line — or
+ * `inline`, a small indicator with each label beside its dot that shares a line with a page title.
+ */
+export type ProcessFlowVariant = "default" | "chips" | "inline";
 
 type ProcessFlowLayout = "linear" | "branching";
 type ProcessFlowStepContentLayout = "stacked" | "inline" | "anchored";
@@ -64,6 +72,19 @@ export interface ProcessFlowProps extends Omit<ComponentPropsWithoutRef<"nav">, 
   size?: ProcessFlowSize;
   /** Defaults to true. Set to false to hide step descriptions. */
   showDescriptions?: boolean;
+  /**
+   * `chips` draws each step as a pill Button: a trail of steps compact enough for a page header or a setup flow.
+   * Completed steps are tinted with a tick, the active step is tinted with a primary border, and the selected step
+   * gains a primary border, so a completed step the user returns to reads as both. Chips are linear: `connections`,
+   * step `position` and `showDescriptions` apply to the default variant only.
+   *
+   * `inline` puts each label beside a small dot, on one line that keeps its natural width — compact enough to sit
+   * beside a page title and its buttons. A completed step shows a filled dot with a tick, the active step an outlined
+   * dot with its number, a pending step a muted one; the line into a step fills once the step before it is completed.
+   * Inline flows are a read-only, horizontal status indicator: `onStepSelect`, `selectedStepId`, `connections`,
+   * step `position`, `orientation`, `size` and `showDescriptions` don't apply.
+   */
+  variant?: ProcessFlowVariant;
 }
 
 interface StepControlClassOptions {
@@ -389,6 +410,224 @@ function ProcessFlowStepControl({
   );
 }
 
+// Chips are ghost pill Buttons that draw their own border: ghost brings the hover, pressed (selected) and disabled
+// behaviour, without outline's `dark:border-input`, which would outrank a status border in dark mode. The selected
+// border and pressed shadow outrank Button's focus border and shadow, so chips add a ring, which stacks on top.
+const CHIP_CLASSES =
+  "border-border font-semibold text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring aria-pressed:border-primary aria-pressed:hover:bg-primary/20 disabled:border-border disabled:bg-muted/40 aria-disabled:bg-muted/40";
+
+const CHIP_STATUS_CLASSES: Record<ProcessFlowStepStatus, string> = {
+  pending: "",
+  active: "border-primary bg-primary/8 text-primary hover:bg-primary/15 hover:text-primary",
+  completed: "border-transparent bg-primary/8 text-primary hover:bg-primary/15 hover:text-primary",
+  // The selected tint would otherwise turn an error chip blue. Button's invalid treatment (a dimmed dark-mode border
+  // and a resting focus ring) reads as focus on a chip, so the ring shows only on real keyboard focus. Destructive
+  // tints stay at 5%: red text on a 10% tint is under AA in light mode.
+  error:
+    "border-destructive text-destructive hover:bg-destructive/5 hover:text-destructive aria-pressed:border-destructive aria-pressed:bg-destructive/5 aria-pressed:text-destructive aria-pressed:hover:bg-destructive/5 dark:aria-invalid:border-destructive aria-invalid:not-focus-visible:shadow-none",
+  disabled: "",
+};
+
+const CHIP_BUTTON_SIZE: Record<ProcessFlowSize, "sm" | "xs"> = {
+  default: "sm",
+  compact: "xs",
+};
+
+function getChipIcon(status: ProcessFlowStepStatus) {
+  if (status === "completed") {
+    return <CheckIcon aria-hidden="true" />;
+  }
+
+  if (status === "error") {
+    return <TriangleAlertIcon aria-hidden="true" />;
+  }
+
+  if (status === "disabled") {
+    return <LockIcon aria-hidden="true" />;
+  }
+
+  return null;
+}
+
+function ProcessFlowChip({
+  step,
+  stepIndex,
+  isSelected,
+  onStepSelect,
+  size,
+}: {
+  step: ProcessFlowStep;
+  stepIndex: number;
+  isSelected: boolean;
+  onStepSelect?: ProcessFlowProps["onStepSelect"];
+  size: ProcessFlowSize;
+}) {
+  const status = getStepStatus(step);
+  const isDisabled = status === "disabled" || step.selectable === false;
+  const className = cn(CHIP_CLASSES, CHIP_STATUS_CLASSES[status]);
+  const stateProps = {
+    "aria-current": status === "active" ? ("step" as const) : undefined,
+    "aria-invalid": status === "error" || undefined,
+    "aria-label": getStepAccessibleLabel(step, status, stepIndex + 1),
+    "data-selected": isSelected || undefined,
+    "data-status": status,
+  };
+  const content = (
+    <>
+      {getChipIcon(status)}
+      {step.label}
+    </>
+  );
+
+  if (!onStepSelect) {
+    return (
+      <div
+        {...stateProps}
+        aria-disabled={isDisabled || undefined}
+        className={cn(
+          buttonVariants({ variant: "ghost", size: CHIP_BUTTON_SIZE[size], pill: true }),
+          className,
+          "pointer-events-none",
+        )}
+      >
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Button
+      {...stateProps}
+      type="button"
+      variant="ghost"
+      size={CHIP_BUTTON_SIZE[size]}
+      pill
+      aria-pressed={isSelected}
+      className={className}
+      disabled={isDisabled}
+      onClick={(nativeEvent) =>
+        onStepSelect(step, {
+          nativeEvent,
+          status,
+          stepIndex,
+        })
+      }
+    >
+      {content}
+    </Button>
+  );
+}
+
+function ChipProcessFlow({
+  steps,
+  selectedStepId,
+  onStepSelect,
+  orientation,
+  size,
+}: Pick<ProcessFlowProps, "steps" | "selectedStepId" | "onStepSelect"> & {
+  orientation: ProcessFlowOrientation;
+  size: ProcessFlowSize;
+}) {
+  return (
+    <ol
+      className={cn(
+        "flex min-w-0 list-none flex-wrap items-center gap-1.5 p-0",
+        orientation === "vertical" && "flex-col items-start",
+        size === "compact" && "gap-1",
+      )}
+      data-slot="process-flow-list"
+    >
+      {steps.map((step, stepIndex) => (
+        <li key={step.id} className="flex min-w-0" data-slot="process-flow-item">
+          <ProcessFlowChip
+            step={step}
+            stepIndex={stepIndex}
+            isSelected={selectedStepId === step.id}
+            onStepSelect={onStepSelect}
+            size={size}
+          />
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+const INLINE_STEP_STATUS_CLASSES: Record<ProcessFlowStepStatus, string> = {
+  pending: "text-muted-foreground",
+  active: "font-semibold text-primary",
+  completed: "text-primary",
+  error: "text-destructive",
+  disabled: "text-muted-foreground",
+};
+
+const INLINE_DOT_STATUS_CLASSES: Record<ProcessFlowStepStatus, string> = {
+  pending: "border-border bg-background text-muted-foreground",
+  active: "border-primary bg-background text-primary",
+  completed: "border-primary bg-primary text-primary-foreground",
+  error: "border-destructive bg-background text-destructive",
+  disabled: "border-border bg-muted text-muted-foreground",
+};
+
+function getInlineDotContent(status: ProcessFlowStepStatus, stepNumber: number) {
+  if (status === "completed") {
+    return <CheckIcon aria-hidden="true" strokeWidth={3} />;
+  }
+
+  if (status === "disabled") {
+    return <LockIcon aria-hidden="true" />;
+  }
+
+  return stepNumber;
+}
+
+function InlineProcessFlow({ steps }: Pick<ProcessFlowProps, "steps">) {
+  const statuses = steps.map(getStepStatus);
+
+  return (
+    <ol className="m-0 flex list-none items-center p-0 text-xs" data-slot="process-flow-list">
+      {steps.map((step, stepIndex) => {
+        const status = statuses[stepIndex];
+
+        return (
+          <li
+            key={step.id}
+            aria-current={status === "active" ? "step" : undefined}
+            className={cn("flex items-center gap-1.5 whitespace-nowrap", INLINE_STEP_STATUS_CLASSES[status])}
+            data-slot="process-flow-item"
+            data-status={status}
+          >
+            {stepIndex > 0 ? (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "mx-2 h-0.5 w-8 shrink-0 rounded-full",
+                  statuses[stepIndex - 1] === "completed" ? "bg-primary" : "bg-border",
+                )}
+                data-slot="process-flow-connector"
+              />
+            ) : null}
+            <span
+              aria-hidden="true"
+              className={cn(
+                "grid size-4.5 shrink-0 place-items-center rounded-full border-[1.5px] text-2xs font-bold tabular-nums [&_svg]:size-2.5",
+                INLINE_DOT_STATUS_CLASSES[status],
+              )}
+              data-slot="process-flow-marker"
+            >
+              {getInlineDotContent(status, stepIndex + 1)}
+            </span>
+            <span data-slot="process-flow-label">{step.label}</span>
+            {/* The active step is announced by aria-current; pending is the unmarked default. */}
+            {status !== "active" && status !== "pending" ? (
+              <span className="sr-only">, {STATUS_LABELS[status]}</span>
+            ) : null}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 function HorizontalProcessFlow({
   steps,
   selectedStepId,
@@ -551,6 +790,7 @@ export function ProcessFlow({
   orientation = "horizontal",
   size = "default",
   showDescriptions,
+  variant = "default",
   className,
   style,
   "aria-label": ariaLabel = "Process flow",
@@ -558,6 +798,44 @@ export function ProcessFlow({
 }: ProcessFlowProps) {
   if (steps.length === 0) {
     return null;
+  }
+
+  if (variant === "inline") {
+    return (
+      <nav
+        aria-label={ariaLabel}
+        className={cn("shrink-0", className)}
+        data-slot="process-flow"
+        data-variant={variant}
+        style={style}
+        {...props}
+      >
+        <InlineProcessFlow steps={steps} />
+      </nav>
+    );
+  }
+
+  if (variant === "chips") {
+    return (
+      <nav
+        aria-label={ariaLabel}
+        className={cn("w-full min-w-0", className)}
+        data-orientation={orientation}
+        data-slot="process-flow"
+        data-size={size}
+        data-variant={variant}
+        style={style}
+        {...props}
+      >
+        <ChipProcessFlow
+          steps={steps}
+          selectedStepId={selectedStepId}
+          onStepSelect={onStepSelect}
+          orientation={orientation}
+          size={size}
+        />
+      </nav>
+    );
   }
 
   const layout: ProcessFlowLayout = connections || hasCustomStepLayout(steps) ? "branching" : "linear";

@@ -32,7 +32,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @layer ts-ui-kit {
-  [data-slot="process-flow"] {
+  /* The inline variant is exempt: it sits in a row beside a page title and must keep its content width, which
+     inline-size containment takes away (it would collapse to nothing). Its labels are sized by the component. */
+  [data-slot="process-flow"]:not([data-variant="inline"]) {
     container: process-flow / inline-size;
     --process-flow-label-font-size: 0.875rem;
   }
@@ -45,7 +47,7 @@
     --process-flow-marker-size: var(--process-flow-marker-size-base);
   }
 
-  [data-slot="process-flow"] [data-slot="process-flow-label"] {
+  [data-slot="process-flow"]:not([data-variant="inline"]) [data-slot="process-flow-label"] {
     font-size: var(--process-flow-label-font-size);
   }
 

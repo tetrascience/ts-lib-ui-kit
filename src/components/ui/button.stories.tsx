@@ -1,3 +1,4 @@
+import { PlusIcon } from "lucide-react"
 import { expect, within } from "storybook/test"
 
 import { Button } from "./button"
@@ -21,11 +22,15 @@ const meta: Meta<typeof Button> = {
       control: { type: "select" },
       options: ["default", "xs", "sm", "lg", "icon", "icon-xs", "icon-sm", "icon-lg"],
     },
+    pill: {
+      control: { type: "boolean" },
+    },
   },
   args: {
     children: "Button",
     variant: "default",
     size: "default",
+    pill: false,
   },
 }
 
@@ -148,6 +153,91 @@ export const DisabledContrast: Story = {
       const btn = canvas.getByRole("button", { name: "Disabled Button" })
       expect(btn).toBeDisabled()
       expect(getComputedStyle(btn).opacity).toBe("1")
+    })
+  },
+}
+
+/**
+ * `pill` swaps the standard corners for a fully rounded shape. It is a shape,
+ * not a colour: switch `variant` or `size` in Controls and it stays a pill.
+ */
+export const Pill: Story = {
+  args: {
+    children: "Pill Button",
+    pill: true,
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5759" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Pill button is fully rounded", async () => {
+      const btn = canvas.getByRole("button", { name: "Pill Button" })
+      const radius = parseFloat(getComputedStyle(btn).borderTopLeftRadius)
+      expect(btn).toHaveAttribute("data-pill", "true")
+      expect(radius).toBeGreaterThanOrEqual(btn.getBoundingClientRect().height / 2)
+    })
+  },
+}
+
+/** Every variant, size and state as a pill: the shape holds through all of them. */
+export const PillVariants: Story = {
+  render: () => (
+    <div className="flex flex-col items-start gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button pill>Default</Button>
+        <Button pill variant="secondary">
+          Secondary
+        </Button>
+        <Button pill variant="outline">
+          Outline
+        </Button>
+        <Button pill variant="ghost">
+          Ghost
+        </Button>
+        <Button pill variant="destructive">
+          Destructive
+        </Button>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button pill size="xs">
+          Extra small
+        </Button>
+        <Button pill size="sm">
+          Small
+        </Button>
+        <Button pill size="lg">
+          Large
+        </Button>
+        <Button pill size="icon-sm" aria-label="Add">
+          <PlusIcon />
+        </Button>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button pill variant="outline" aria-pressed="true">
+          Pressed
+        </Button>
+        <Button pill variant="outline" disabled>
+          Disabled
+        </Button>
+      </div>
+    </div>
+  ),
+  parameters: {
+    controls: { disable: true },
+    zephyr: { testCaseId: "SW-T5760" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement)
+
+    await step("Every variant, size and state keeps the pill shape", async () => {
+      const buttons = canvas.getAllByRole("button")
+      expect(buttons).toHaveLength(11)
+      for (const btn of buttons) {
+        const radius = parseFloat(getComputedStyle(btn).borderTopLeftRadius)
+        expect(radius).toBeGreaterThanOrEqual(btn.getBoundingClientRect().height / 2)
+      }
     })
   },
 }

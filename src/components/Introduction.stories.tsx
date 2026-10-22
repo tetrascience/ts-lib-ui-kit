@@ -8,6 +8,14 @@ import {
 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
+import {
+  isPrerelease,
+  queriesRegistry,
+  resolveDeployedVersion,
+  type BuildInfo,
+  type DeployedVersion,
+  type VersionSource,
+} from "../../.storybook/deployed-version"
 import pkg from "../../package.json"
 
 import { Badge } from "./ui/badge"
@@ -39,8 +47,38 @@ function GithubInvertocatWhite(props: SVGProps<SVGSVGElement>) {
   )
 }
 
-const VERSION = pkg.version
 const PKG_NAME = pkg.name
+
+const BUILD: BuildInfo = {
+  packageName: pkg.name,
+  packageVersion: pkg.version,
+  gitSha: import.meta.env.STORYBOOK_DEPLOY_SHA,
+  deployEnv: import.meta.env.STORYBOOK_DEPLOY_ENV,
+  buildTime: Number(import.meta.env.STORYBOOK_BUILD_TIME) || undefined,
+}
+
+/**
+ * The version to show: on the production Storybook, the npm build published
+ * from this commit; otherwise package.json's (see .storybook/deployed-version.ts).
+ * Undefined while the production page is still asking the registry, so it
+ * doesn't flash package.json's version first.
+ */
+function useDeployedVersion() {
+  const [deployed, setDeployed] = useState<DeployedVersion | undefined>(() =>
+    queriesRegistry(BUILD) ? undefined : { version: pkg.version, source: "package" },
+  )
+  useEffect(() => {
+    if (!queriesRegistry(BUILD)) return
+    let active = true
+    resolveDeployedVersion(BUILD).then((next) => {
+      if (active) setDeployed(next)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
+  return deployed
+}
 
 /** Detect dark mode by watching <html> class and URL globals */
 function useDarkMode() {
@@ -504,8 +542,17 @@ const features = [
 
 const GITHUB_URL = "https://github.com/tetrascience/ts-lib-ui-kit"
 
+const VERSION_TITLES: Record<VersionSource, string> = {
+  release: "The npm release tagged on the commit this Storybook was built from",
+  beta: "The beta npm build published from the commit this Storybook was built from",
+  pending: "The newest published beta. This build's own beta is still publishing; reload in a few minutes",
+  earlier: "The newest published beta, from an earlier commit. This commit's own beta was not published",
+  package: "package.json version",
+}
+
 function IntroductionPage() {
   const isDark = useDarkMode()
+  const deployed = useDeployedVersion()
 
   return (
     <div className={`min-h-screen bg-background text-foreground ${isDark ? "dark" : ""}`}>
@@ -525,9 +572,16 @@ function IntroductionPage() {
               <h1 className="text-4xl font-bold tracking-tight text-[#0B112D] dark:text-white md:text-5xl">
                 TetraScience React UI
               </h1>
-              <Badge variant="outline" className="text-xs font-mono border-[#0B112D]/20 text-[#0B112D]/80 dark:border-white/20 dark:text-white/80">
-                v{VERSION}
-              </Badge>
+              {deployed && (
+                <Badge
+                  variant="outline"
+                  className="text-xs font-mono border-[#0B112D]/20 text-[#0B112D]/80 dark:border-white/20 dark:text-white/80"
+                  title={VERSION_TITLES[deployed.source]}
+                  data-version-source={deployed.source}
+                >
+                  v{deployed.version}
+                </Badge>
+              )}
             </div>
             <p className="max-w-xl text-lg text-[#465364] dark:text-white/70">
               A React component library for scientific UI workflows on the TDP platform
@@ -611,7 +665,17 @@ function IntroductionPage() {
             <p className="text-sm text-muted-foreground">
               Install the package:
             </p>
-            <CodeBlock>{`yarn add ${PKG_NAME}`}</CodeBlock>
+            {deployed && isPrerelease(deployed) ? (
+              <>
+                <CodeBlock>{`yarn add ${PKG_NAME}@beta`}</CodeBlock>
+                <p className="text-sm text-muted-foreground">
+                  These docs are built from <code>main</code>, which ships as the <code>beta</code> build above.
+                  Drop <code>@beta</code> for the latest release, which may not have every component shown here yet.
+                </p>
+              </>
+            ) : (
+              <CodeBlock>{`yarn add ${PKG_NAME}`}</CodeBlock>
+            )}
 
             <p className="text-sm text-muted-foreground">
               Import a component and the stylesheet:

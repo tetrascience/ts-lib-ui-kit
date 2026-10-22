@@ -348,29 +348,69 @@ export const MyStory: Story = {
 
 ## Release Process
 
-Releases are fully automated via [semantic-release](https://semantic-release.gitbook.io/) — **do not manually edit `package.json` version or create git tags**.
+Releases are cut by [semantic-release](https://semantic-release.gitbook.io/) when someone dispatches the
+`Release` workflow. `main` is push-protected, so semantic-release cannot commit the version bump itself:
+a prep PR does that first, and a workflow opens it for you. **Don't edit `package.json`'s version or
+create git tags by hand.**
 
-### How it works
+### Cutting a release
 
-The `Release` GitHub Action (`.github/workflows/release.yml`) is triggered manually (via `workflow_dispatch` from the GitHub Actions tab), and it:
+1. **Dispatch `Release prep`** (`.github/workflows/release-prep.yml`) from the Actions tab, giving only a
+   Jira key. It works out the next version from the [Conventional Commit](#commit-message-format) PR
+   titles since the last tag, using semantic-release's own analyzer, so it matches what `Release` will
+   compute. It then opens a PR that:
+   - sets `package.json` to that version;
+   - adds the generated `CHANGELOG.md` entry (the same notes semantic-release writes on the GitHub
+     release);
+   - updates the README's version line, and its compatibility table when a new minor line starts.
 
-1. Analyses all commits since the last release using their [Conventional Commit](#commit-message-format) types
-2. Determines the next version number (or skips if no releasable commits are found)
-3. Generates or updates `CHANGELOG.md`
-4. Bumps the version in `package.json`
-5. Creates a git tag (e.g. `v1.2.0`) and a GitHub Release with auto-generated release notes
-6. Commits the updated `CHANGELOG.md` and `package.json` back to `main` with the message `chore(release): <version> [skip ci]`
+   If nothing releasable has merged since the last tag, it stops and says so.
 
-Separate publish workflows then handle distributing the built package to npm and the internal JFrog registry.
+2. **Review and merge the prep PR.** Add upgrade notes to its CHANGELOG entry (and `MIGRATION.md`) for
+   anything consumers must act on. Your edits are kept; nothing regenerates the PR.
+3. **Dispatch `Release`** (`.github/workflows/release.yml`). It creates the `vX.Y.Z` tag and a GitHub
+   release with generated notes. It stops before creating the tag
+   (`scripts/release/verify-package-version.js`) unless `package.json` and the newest `CHANGELOG.md`
+   entry both say the version being released, and no `feat`/`fix`/`perf`/`revert` PR has merged since
+   that entry was written (it would ship missing from the CHANGELOG, even when it doesn't change the
+   version). That happens when the prep PR hasn't merged, or when more PRs merged after it. In that
+   case, run `Release prep` again. It replaces the unreleased entry and shows the old one in the PR
+   body so you can carry its notes over.
+4. **Approve the publish.** The tag starts `Publish to Public npm` (`publish-public.yml`), which waits at
+   the `PROD` environment for a reviewer's approval.
+
+To prepare a release by hand instead (e.g. to test locally), run `yarn tsx scripts/release/prepare-release.ts`
+on an up-to-date `main` with tags fetched; it makes the same edits in your working tree.
 
 ### Version bump rules
 
-| Commits since last release                      | Next version              |
-| ----------------------------------------------- | ------------------------- |
-| Only `fix`, `perf`, `refactor`                  | Patch — `1.0.0` → `1.0.1` |
-| At least one `feat`                             | Minor — `1.0.0` → `1.1.0` |
-| Any commit with `!` or `BREAKING CHANGE` footer | Major — `1.0.0` → `2.0.0` |
-| Only `chore`, `docs`, `style`, `test`, `ci`     | No release                |
+The version comes from the squash-merge commits on `main`, each of which is the PR title with an empty
+body, so **the PR title is what counts**.
+
+| PR titles merged since the last release                 | Next version              |
+| ------------------------------------------------------- | ------------------------- |
+| Only `fix`, `perf`, `revert`                            | Patch — `1.1.0` → `1.1.1` |
+| At least one `feat`                                     | Minor — `1.1.0` → `1.2.0` |
+| Any type with `!` (`feat!:`, `fix(charts)!:`)           | Major — `1.1.0` → `2.0.0` |
+| Only `chore`, `docs`, `style`, `refactor`, `test`, `ci` | No release                |
+
+A `BREAKING CHANGE:` footer in a commit on your branch does not survive the squash merge; mark the PR
+title with `!` instead. Likewise, title a revert PR `revert: SW-1234 …`, not GitHub's default
+`Revert "…"` (which the PR title check rejects, and which would not release).
+
+### Beta and alpha builds
+
+- **Beta, on every merge to `main`**, published under the `beta` dist-tag to npm (`publish-public.yml`)
+  and to JFrog (`publish-merge.yml`), and named for the **next** release: after `v1.1.0`, a merge
+  publishes `1.2.0-beta.<run>.<attempt>` if a `feat:` has merged since the tag, and `1.1.1-beta.…`
+  otherwise.
+- **Alpha, only on request.** Add the `alpha` label to a PR to publish
+  `<next version>-alpha.<run>.<attempt>` to JFrog, and again on each push while the label stays. PRs
+  without the label don't publish anything.
+
+Both are named by `next-version.yml`, a reusable workflow that runs `scripts/release/next-version.ts` (the
+same calculation semantic-release will make) and that each publish workflow calls before writing the
+result into `package.json` for the shared publish workflow.
 
 ### Dry-run locally
 
@@ -380,4 +420,6 @@ To preview what the next release would be without publishing anything:
 yarn release:dry-run
 ```
 
-This requires a `GITHUB_TOKEN` environment variable with repo read access.
+This needs a `GITHUB_TOKEN` environment variable with push access to the repo (semantic-release checks
+it even in a dry run). Until the prep PR has merged, the dry run ends with the version-mismatch error
+from step 3; the version it names is the one the prep PR should set.

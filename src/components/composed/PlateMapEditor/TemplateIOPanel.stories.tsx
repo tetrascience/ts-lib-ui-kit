@@ -1,6 +1,8 @@
 import * as React from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
+import { selectOption } from "../../../../.storybook/select-interactions";
+
 import { TemplateIOPanel } from "./TemplateIOPanel";
 
 import type { TemplateOption } from "./types";
@@ -50,16 +52,13 @@ export const FullPanel: Story = {
   ),
   play: async ({ args, canvasElement, step }) => {
     const canvas = within(canvasElement);
-    const body = within(canvasElement.ownerDocument.body);
 
     await step("Renders the panel title", async () => {
       expect(canvas.getByText(/Template & import \/ export/)).toBeInTheDocument();
     });
 
     await step("Opens template select and picks a template", async () => {
-      await userEvent.click(canvas.getByRole("combobox"));
-      const option = await body.findByRole("option", { name: /3-point AUC/ });
-      await userEvent.click(option);
+      await selectOption(canvas.getByRole("combobox"), /3-point AUC/);
       await waitFor(() =>
         expect(args.onTemplateChange).toHaveBeenCalledWith("three-point"),
       );

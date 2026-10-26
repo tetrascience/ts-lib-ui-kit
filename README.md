@@ -218,7 +218,32 @@ Accordion, Alert, AlertDialog, AspectRatio, Avatar, Badge, Breadcrumb, Button, B
 
 TetraScience-specific compositions built from UI primitives:
 
-AssistantLayout, Chat, ConfirmDialog, DataAppShell (with PrimaryNav, SecondaryNav, RightPanel), EmptyState, FormPatterns, MoleculeStructure, PlateMapEditor, ProcessFlow, RichListItem, StatCard, TdpLink, TdpSearch, TdpUrl, TopBar, UserMenu
+AppShellSimple, AssistantLayout, Chat, ConfirmDialog, DataAppShell (with PrimaryNav, SecondaryNav, RightPanel), EmptyState, FormPatterns, MoleculeStructure, PlateMapEditor, ProcessFlow, RichListItem, StatCard, TdpLink, TdpSearch, TdpUrl, TopBar, UserMenu
+
+#### Full-height pages in an app shell with a build-info footer
+
+Passing `version` or `commitSha` to `AppShellSimple` (or `commitSha` to `DataAppShell`) adds a
+build-info footer that follows the content: on a long page it sits after the last row.
+
+A page that instead fills the viewport and scrolls internally — a chat with a pinned composer, an
+editor — needs a content area with a definite height for its `h-full` to resolve against. Mark the
+page's outermost element:
+
+```tsx
+<AppShellSimple version="1.4.2" commitSha="3f9c2a1" breadcrumbs={breadcrumbs}>
+  <div data-ts-shell-fill className="flex h-full flex-col">
+    <div className="min-h-0 flex-1 overflow-auto">{/* transcript */}</div>
+    <Composer />
+  </div>
+</AppShellSimple>
+```
+
+`AssistantLayout` needs no marker when it is the first element inside the shell.
+
+Without the marker nothing fails loudly: the page grows with its content instead of scrolling, and
+whatever sits below the scrolling region is pushed off screen. The marker has to be on the first
+element inside the shell — a wrapper around the page hides it. Use it only on pages that scroll
+internally; a long page with the marker overflows its bounded area and the footer covers it.
 
 #### `MoleculeStructure` requires a served RDKit WASM
 

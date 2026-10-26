@@ -1079,3 +1079,45 @@ export const WithBuildInfo: Story = {
     docs: { source: { code: BUILD_INFO_CODE, language: "tsx" } },
   },
 };
+
+/**
+ * A page that fills the viewport and scrolls internally marks its root with
+ * `data-ts-shell-fill`, so the build-info footer doesn't push it taller (UXT-271).
+ */
+export const WithBuildInfoFullHeightPage: Story = {
+  render: () => (
+    <DataAppShell appName="HTS" version="v2.4.1" commitSha="3f9c2a1" navGroups={htsNavGroups}>
+      <div data-ts-shell-fill className="flex h-full flex-col">
+        <div role="group" aria-label="Transcript" tabIndex={0} className="min-h-0 flex-1 space-y-2 overflow-auto p-6">
+          {Array.from({ length: 40 }, (_, i) => (
+            <p key={i} className="rounded-md bg-muted/60 px-3 py-2 text-sm">
+              Message {i + 1}
+            </p>
+          ))}
+        </div>
+        <div data-testid="composer" className="shrink-0 border-t p-3 text-sm text-muted-foreground">
+          Ask a question…
+        </div>
+      </div>
+    </DataAppShell>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const main = canvasElement.querySelector<HTMLElement>('[data-slot="data-app-shell-content"]');
+    const footer = canvasElement.querySelector<HTMLElement>('[data-slot="build-info-footer"]');
+    const composer = canvasElement.querySelector<HTMLElement>('[data-testid="composer"]');
+    const transcript = within(canvasElement).getByRole("group", { name: "Transcript" });
+    if (!main || !footer || !composer) throw new Error("content, footer or composer not found");
+
+    await step("The page fills the content area instead of growing", async () => {
+      expect(main.scrollHeight).toBeLessThanOrEqual(main.clientHeight + 1);
+    });
+
+    await step("The composer stays on screen, above the footer", async () => {
+      expect(composer.getBoundingClientRect().bottom).toBeLessThanOrEqual(footer.getBoundingClientRect().top + 1);
+    });
+
+    await step("The transcript scrolls internally", async () => {
+      expect(transcript.scrollHeight).toBeGreaterThan(transcript.clientHeight);
+    });
+  },
+};

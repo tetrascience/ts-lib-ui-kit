@@ -19,6 +19,7 @@ import { AppShellSimple, type AppShellSimpleCrumb, type AppShellSimpleNavState }
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { AssistantLayout, AssistantLayoutProvider } from "@/components/composed/AssistantLayout";
 import { type NavGroup } from "@/components/composed/DataAppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -622,4 +623,91 @@ export const WithBuildInfoLongContent: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T5725" },
   },
+};
+
+const TRANSCRIPT = Array.from({ length: 40 }, (_, i) => `Message ${i + 1}`);
+
+/** Asserts a full-height page stays inside the shell with the footer below it. */
+async function expectBoundedPage(canvasElement: HTMLElement, step: (name: string, fn: () => Promise<void>) => Promise<void>) {
+  const main = canvasElement.querySelector('[data-slot="app-shell-simple-content"]');
+  const footer = canvasElement.querySelector('[data-slot="build-info-footer"]');
+  const composer = canvasElement.querySelector('[data-testid="composer"]');
+  const transcript = within(canvasElement).getByRole("group", { name: "Transcript" });
+  if (!(main instanceof HTMLElement) || !(footer instanceof HTMLElement) || !(composer instanceof HTMLElement)) {
+    throw new Error("content, footer or composer not found");
+  }
+
+  await step("the page fills the content area instead of growing", async () => {
+    expect(main.scrollHeight).toBeLessThanOrEqual(main.clientHeight + 1);
+  });
+
+  await step("the composer stays on screen, above the footer", async () => {
+    expect(composer.getBoundingClientRect().bottom).toBeLessThanOrEqual(footer.getBoundingClientRect().top + 1);
+    const gap = main.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom;
+    expect(Math.abs(gap)).toBeLessThanOrEqual(1);
+  });
+
+  await step("the transcript scrolls internally", async () => {
+    expect(transcript.scrollHeight).toBeGreaterThan(transcript.clientHeight);
+  });
+}
+
+/**
+ * A page that fills the viewport and scrolls internally marks its root with
+ * `data-ts-shell-fill`, so the build-info footer doesn't push it taller (UXT-271).
+ */
+export const WithBuildInfoFullHeightPage: Story = {
+  args: {
+    navGroups: BUILD_INFO_NAV,
+    version: "1.4.2",
+    commitSha: "3f9c2a1",
+    children: (
+      <div data-ts-shell-fill className="flex h-full flex-col">
+        <div role="group" aria-label="Transcript" tabIndex={0} className="min-h-0 flex-1 space-y-2 overflow-auto p-6">
+          {TRANSCRIPT.map((message) => (
+            <p key={message} className="rounded-md bg-muted/60 px-3 py-2 text-sm">
+              {message}
+            </p>
+          ))}
+        </div>
+        <div data-testid="composer" className="shrink-0 border-t p-3 text-sm text-muted-foreground">
+          Ask a question…
+        </div>
+      </div>
+    ),
+  },
+  play: async ({ canvasElement, step }) => expectBoundedPage(canvasElement, step),
+};
+
+/** `AssistantLayout` fills the shell with no marker — it's detected by its `data-slot`. */
+export const WithBuildInfoAssistantLayout: Story = {
+  args: {
+    navGroups: BUILD_INFO_NAV,
+    version: "1.4.2",
+    commitSha: "3f9c2a1",
+    children: (
+      <AssistantLayoutProvider persist={false}>
+        <AssistantLayout
+          assistantTitle="AI Assistant"
+          assistant={
+            <div className="flex h-full min-h-0 flex-col">
+              <div role="group" aria-label="Transcript" tabIndex={0} className="min-h-0 flex-1 space-y-2 overflow-auto p-3">
+                {TRANSCRIPT.map((message) => (
+                  <p key={message} className="rounded-md bg-muted/60 px-3 py-2 text-sm">
+                    {message}
+                  </p>
+                ))}
+              </div>
+              <div data-testid="composer" className="shrink-0 border-t p-3 text-sm text-muted-foreground">
+                Ask a question…
+              </div>
+            </div>
+          }
+        >
+          <div className="p-6 text-sm text-muted-foreground">Main content</div>
+        </AssistantLayout>
+      </AssistantLayoutProvider>
+    ),
+  },
+  play: async ({ canvasElement, step }) => expectBoundedPage(canvasElement, step),
 };

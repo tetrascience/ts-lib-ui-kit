@@ -11,6 +11,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
@@ -38,6 +39,9 @@ function ComboboxTrigger({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxTriggerWithRef = withRef("ComboboxTrigger", ComboboxTrigger)
+
 function ComboboxClear({ className, ...props }: ComboboxPrimitive.Clear.Props) {
   return (
     <ComboboxPrimitive.Clear
@@ -51,6 +55,9 @@ function ComboboxClear({ className, ...props }: ComboboxPrimitive.Clear.Props) {
     </ComboboxPrimitive.Clear>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxClearWithRef = withRef("ComboboxClear", ComboboxClear)
 
 function ComboboxInput({
   className,
@@ -82,15 +89,18 @@ function ComboboxInput({
             className="group-has-data-[slot=combobox-clear]/input-group:hidden data-pressed:bg-transparent"
             disabled={disabled}
           >
-            <ComboboxTrigger />
+            <ComboboxTriggerWithRef />
           </InputGroupButton>
         )}
-        {showClear && <ComboboxClear disabled={disabled} />}
+        {showClear && <ComboboxClearWithRef disabled={disabled} />}
       </InputGroupAddon>
       {children}
     </InputGroup>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxInputWithRef = withRef("ComboboxInput", ComboboxInput)
 
 function ComboboxContent({
   className,
@@ -126,6 +136,9 @@ function ComboboxContent({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxContentWithRef = withRef("ComboboxContent", ComboboxContent)
+
 function ComboboxList({ className, ...props }: ComboboxPrimitive.List.Props) {
   return (
     <ComboboxPrimitive.List
@@ -138,6 +151,9 @@ function ComboboxList({ className, ...props }: ComboboxPrimitive.List.Props) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxListWithRef = withRef("ComboboxList", ComboboxList)
 
 function ComboboxItem({
   className,
@@ -165,6 +181,9 @@ function ComboboxItem({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxItemWithRef = withRef("ComboboxItem", ComboboxItem)
+
 function ComboboxGroup({ className, ...props }: ComboboxPrimitive.Group.Props) {
   return (
     <ComboboxPrimitive.Group
@@ -174,6 +193,9 @@ function ComboboxGroup({ className, ...props }: ComboboxPrimitive.Group.Props) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxGroupWithRef = withRef("ComboboxGroup", ComboboxGroup)
 
 function ComboboxLabel({
   className,
@@ -187,6 +209,9 @@ function ComboboxLabel({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxLabelWithRef = withRef("ComboboxLabel", ComboboxLabel)
 
 function ComboboxCollection({ ...props }: ComboboxPrimitive.Collection.Props) {
   return (
@@ -207,6 +232,9 @@ function ComboboxEmpty({ className, ...props }: ComboboxPrimitive.Empty.Props) {
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxEmptyWithRef = withRef("ComboboxEmpty", ComboboxEmpty)
+
 function ComboboxSeparator({
   className,
   ...props
@@ -220,6 +248,9 @@ function ComboboxSeparator({
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxSeparatorWithRef = withRef("ComboboxSeparator", ComboboxSeparator)
 
 function ComboboxChips({
   className,
@@ -255,11 +286,14 @@ function ComboboxChips({
       {showTrigger && (
         // Pinned to the top-right and sized to the first row, so it stays put
         // (aligned with the input row) as chips wrap to multiple lines (SW-2583).
-        <ComboboxTrigger className="absolute top-0 right-1 flex shrink-0 items-center text-muted-foreground group-data-[size=xs]/chips:h-6 group-data-[size=sm]/chips:h-7 group-data-[size=default]/chips:h-8 group-data-[size=lg]/chips:h-9" />
+        <ComboboxTriggerWithRef className="absolute top-0 right-1 flex shrink-0 items-center text-muted-foreground group-data-[size=xs]/chips:h-6 group-data-[size=sm]/chips:h-7 group-data-[size=default]/chips:h-8 group-data-[size=lg]/chips:h-9" />
       )}
     </ComboboxPrimitive.Chips>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxChipsWithRef = withRef("ComboboxChips", ComboboxChips)
 
 function ComboboxChip({
   className,
@@ -295,6 +329,9 @@ function ComboboxChip({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxChipWithRef = withRef("ComboboxChip", ComboboxChip)
+
 function ComboboxChipsInput({
   className,
   ...props
@@ -311,25 +348,28 @@ function ComboboxChipsInput({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ComboboxChipsInputWithRef = withRef("ComboboxChipsInput", ComboboxChipsInput)
+
 function useComboboxAnchor() {
   return React.useRef<HTMLDivElement | null>(null)
 }
 
 export {
   Combobox,
-  ComboboxInput,
-  ComboboxContent,
-  ComboboxList,
-  ComboboxItem,
-  ComboboxGroup,
-  ComboboxLabel,
+  ComboboxInputWithRef as ComboboxInput,
+  ComboboxContentWithRef as ComboboxContent,
+  ComboboxListWithRef as ComboboxList,
+  ComboboxItemWithRef as ComboboxItem,
+  ComboboxGroupWithRef as ComboboxGroup,
+  ComboboxLabelWithRef as ComboboxLabel,
   ComboboxCollection,
-  ComboboxEmpty,
-  ComboboxSeparator,
-  ComboboxChips,
-  ComboboxChip,
-  ComboboxChipsInput,
-  ComboboxTrigger,
+  ComboboxEmptyWithRef as ComboboxEmpty,
+  ComboboxSeparatorWithRef as ComboboxSeparator,
+  ComboboxChipsWithRef as ComboboxChips,
+  ComboboxChipWithRef as ComboboxChip,
+  ComboboxChipsInputWithRef as ComboboxChipsInput,
+  ComboboxTriggerWithRef as ComboboxTrigger,
   ComboboxValue,
   useComboboxAnchor,
 }

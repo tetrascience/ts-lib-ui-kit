@@ -2,6 +2,7 @@ import { ChevronRightIcon, MoreHorizontalIcon } from "lucide-react"
 import { Slot } from "radix-ui"
 import * as React from "react"
 
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 
@@ -16,6 +17,9 @@ function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbWithRef = withRef("Breadcrumb", Breadcrumb)
+
 function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
   return (
     <ol
@@ -29,6 +33,9 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbListWithRef = withRef("BreadcrumbList", BreadcrumbList)
+
 function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
@@ -38,6 +45,9 @@ function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbItemWithRef = withRef("BreadcrumbItem", BreadcrumbItem)
 
 function BreadcrumbLink({
   asChild,
@@ -57,6 +67,9 @@ function BreadcrumbLink({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbLinkWithRef = withRef("BreadcrumbLink", BreadcrumbLink)
+
 function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
@@ -69,6 +82,9 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
     />
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbPageWithRef = withRef("BreadcrumbPage", BreadcrumbPage)
 
 function BreadcrumbSeparator({
   children,
@@ -89,6 +105,9 @@ function BreadcrumbSeparator({
     </li>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbSeparatorWithRef = withRef("BreadcrumbSeparator", BreadcrumbSeparator)
 
 function BreadcrumbEllipsis({
   className,
@@ -112,12 +131,15 @@ function BreadcrumbEllipsis({
   )
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BreadcrumbEllipsisWithRef = withRef("BreadcrumbEllipsis", BreadcrumbEllipsis)
+
 export {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-  BreadcrumbEllipsis,
+  BreadcrumbWithRef as Breadcrumb,
+  BreadcrumbListWithRef as BreadcrumbList,
+  BreadcrumbItemWithRef as BreadcrumbItem,
+  BreadcrumbLinkWithRef as BreadcrumbLink,
+  BreadcrumbPageWithRef as BreadcrumbPage,
+  BreadcrumbSeparatorWithRef as BreadcrumbSeparator,
+  BreadcrumbEllipsisWithRef as BreadcrumbEllipsis,
 }

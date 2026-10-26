@@ -7,6 +7,7 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -119,6 +120,10 @@ function DataAppShellRightPanelTrigger({
     </Comp>
   );
 }
+
+/** React 18 wrapper for {@link DataAppShellRightPanelTrigger}; see its documentation. */
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DataAppShellRightPanelTriggerWithRef = withRef("DataAppShellRightPanelTrigger", DataAppShellRightPanelTrigger);
 
 // =============================================================================
 // DragHandle — pointer + keyboard resize on the panel's left edge
@@ -384,14 +389,14 @@ function DataAppShellRightPanel({
   const headerClass = raised ? "border-b border-primary/15 bg-accent" : "border-b border-border";
 
   const fab = showTrigger ? (
-    <DataAppShellRightPanelTrigger
+    <DataAppShellRightPanelTriggerWithRef
       ref={fabRef}
       aria-label={triggerLabel}
       aria-expanded={false}
       onClick={() => onOpenChange?.(true)}
     >
       {triggerIcon}
-    </DataAppShellRightPanelTrigger>
+    </DataAppShellRightPanelTriggerWithRef>
   ) : null;
 
   const header = (
@@ -429,6 +434,8 @@ function DataAppShellRightPanel({
       <>
         <Sheet open={open} onOpenChange={onOpenChange}>
           <SheetContent
+            // The overlay renders a div, which satisfies the panel's HTMLElement ref.
+            ref={ref as React.Ref<HTMLDivElement>}
             side="right"
             showCloseButton={false}
             data-slot="data-app-shell-right-panel"
@@ -494,4 +501,8 @@ function DataAppShellRightPanel({
   );
 }
 
-export { DataAppShellRightPanel, DataAppShellRightPanelTrigger, dataAppShellRightPanelTriggerVariants };
+/** React 18 wrapper for {@link DataAppShellRightPanel}; see its documentation. */
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DataAppShellRightPanelWithRef = withRef("DataAppShellRightPanel", DataAppShellRightPanel);
+
+export { DataAppShellRightPanelWithRef as DataAppShellRightPanel, DataAppShellRightPanelTriggerWithRef as DataAppShellRightPanelTrigger, dataAppShellRightPanelTriggerVariants };

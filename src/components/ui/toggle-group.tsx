@@ -4,6 +4,7 @@ import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui"
 import * as React from "react"
 
 import { toggleVariants } from "@/components/ui/toggle"
+import { withRef } from "@/lib/react18-compat"
 import { cn } from "@/lib/utils"
 
 const ToggleGroupContext = React.createContext<
@@ -53,6 +54,9 @@ function ToggleGroup({
     </ToggleGroupPrimitive.Root>
   )
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToggleGroupWithRef = withRef("ToggleGroup", ToggleGroup)
 
 function ToggleGroupItem({
   className,
@@ -143,4 +147,7 @@ function ToggleGroupItem({
   )
 }
 
-export { ToggleGroup, ToggleGroupItem }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToggleGroupItemWithRef = withRef("ToggleGroupItem", ToggleGroupItem)
+
+export { ToggleGroupWithRef as ToggleGroup, ToggleGroupItemWithRef as ToggleGroupItem }

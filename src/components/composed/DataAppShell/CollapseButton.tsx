@@ -5,6 +5,7 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 const CHEVRONS = {
@@ -62,4 +63,8 @@ function ShellCollapseButton({
   );
 }
 
-export { ShellCollapseButton };
+/** React 18 wrapper for {@link ShellCollapseButton}; see its documentation. */
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ShellCollapseButtonWithRef = withRef("ShellCollapseButton", ShellCollapseButton);
+
+export { ShellCollapseButtonWithRef as ShellCollapseButton };

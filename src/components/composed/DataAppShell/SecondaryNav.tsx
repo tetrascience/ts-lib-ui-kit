@@ -19,6 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -512,8 +513,12 @@ function DataAppShellSecondaryNav({
   );
 }
 
+/** React 18 wrapper for {@link DataAppShellSecondaryNav}; see its documentation. */
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DataAppShellSecondaryNavWithRef = withRef("DataAppShellSecondaryNav", DataAppShellSecondaryNav);
+
 export {
-  DataAppShellSecondaryNav,
+  DataAppShellSecondaryNavWithRef as DataAppShellSecondaryNav,
   dataAppShellSecondaryNavVariants,
   dataAppShellSecondaryNavItemVariants,
 };

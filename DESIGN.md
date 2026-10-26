@@ -309,7 +309,7 @@ npm install @tetrascience-npm/tetrascience-react-ui
 import "@tetrascience-npm/tetrascience-react-ui/index.css";
 ```
 
-Requires React 19+, Tailwind CSS 4+, and Tailwind's Vite plugin in the consumer app.
+Requires React 18.2+ or 19+, Tailwind CSS 4+, and Tailwind's Vite plugin in the consumer app.
 
 ### Overriding Theme Tokens
 

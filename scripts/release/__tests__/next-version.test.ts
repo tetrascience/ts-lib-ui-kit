@@ -12,6 +12,7 @@ import {
   commitAnalyzerConfig,
   compareVersions,
   computeNextVersion,
+  computePrereleaseVersion,
   formatTag,
   lastReleaseTag,
   parseGitLog,
@@ -170,6 +171,32 @@ describe("computeNextVersion (real git repo)", { timeout: 20_000 }, () => {
     git("tag", "kit-3.0.0");
     commit("feat: SW-8 a feature (#8)");
     await expect(computeNextVersion(dir)).resolves.toBe("3.1.0");
+  });
+
+  it("numbers betas per version, restarting at 1 whenever the version changes", async () => {
+    const beta = () => computePrereleaseVersion(dir, "beta");
+    commit("fix: SW-2 a fix (#2)");
+    await expect(beta()).resolves.toBe("1.1.1-beta.1");
+    commit("docs: SW-3 not releasable, still a beta (#3)");
+    await expect(beta()).resolves.toBe("1.1.1-beta.2");
+    commit("feat: SW-4 a feature (#4)");
+    await expect(beta()).resolves.toBe("1.2.0-beta.1");
+    commit("fix: SW-5 another fix (#5)");
+    await expect(beta()).resolves.toBe("1.2.0-beta.2");
+    commit("feat!: SW-6 drop an API (#6)");
+    await expect(beta()).resolves.toBe("2.0.0-beta.1");
+    git("tag", "v2.0.0");
+    commit("feat: SW-7 after the release (#7)");
+    await expect(beta()).resolves.toBe("2.1.0-beta.1");
+  });
+
+  it("calls the release commit itself the first beta of the next patch", async () => {
+    await expect(computePrereleaseVersion(dir, "beta")).resolves.toBe("1.1.1-beta.1");
+  });
+
+  it("rejects a tag that isn't a single semver identifier", async () => {
+    await expect(computePrereleaseVersion(dir, "beta.1")).rejects.toThrow(/Not a prerelease tag/);
+    await expect(computePrereleaseVersion(dir, "")).rejects.toThrow(/Not a prerelease tag/);
   });
 
   it("falls back to a patch bump when nothing since the tag would release", async () => {

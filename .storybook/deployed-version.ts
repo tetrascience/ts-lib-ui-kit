@@ -5,9 +5,10 @@
  *
  * package.json alone is wrong on `main`: it holds the last *released*
  * version, while what a merge to `main` actually ships is a beta named for
- * the next release (publish-public.yml → `1.2.0-beta.<run>.<attempt>`). The
- * run number only exists in GitHub Actions, and Vercel builds this Storybook
- * in parallel, so the name can't be known at build time. npm records the
+ * the next release (publish-public.yml → `1.2.0-beta.3`). Its number comes
+ * from the tags and history Vercel's shallow clone doesn't have, and Vercel
+ * builds this Storybook in parallel with the publish, which can fail, so
+ * the name isn't worked out at build time. npm records the
  * commit each version was published from (`gitHead`), so the page asks the
  * registry for the current `latest` and `beta` and checks which, if either,
  * was built from this commit.

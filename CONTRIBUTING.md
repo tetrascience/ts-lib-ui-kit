@@ -405,16 +405,30 @@ title with `!` instead. Likewise, title a revert PR `revert: SW-1234 …`, not G
 ### Beta and alpha builds
 
 - **Beta, on every merge to `main`**, published under the `beta` dist-tag to npm (`publish-public.yml`)
-  and to JFrog (`publish-merge.yml`), and named for the **next** release: after `v1.1.0`, a merge
-  publishes `1.2.0-beta.<run>.<attempt>` if a `feat:` has merged since the tag, and `1.1.1-beta.…`
-  otherwise.
+  and to JFrog (`publish-merge.yml`) with the same version. It is named for the **next** release and
+  numbered from 1 for each version:
+
+  | Merged since `v1.1.0`      | Beta           |
+  | -------------------------- | -------------- |
+  | `fix:`                     | `1.1.1-beta.1` |
+  | `docs:`                    | `1.1.1-beta.2` |
+  | `feat:`                    | `1.2.0-beta.1` |
+  | `fix:`                     | `1.2.0-beta.2` |
+  | `v1.2.0` released, `feat:` | `1.3.0-beta.1` |
+
+  A merge whose publish was still queued when a newer one arrived is skipped, leaving a gap in the
+  numbers. Re-running a beta publish that already succeeded fails, since npm won't accept the same
+  version twice; re-running a failed one works.
+
 - **Alpha, only on request.** Add the `alpha` label to a PR to publish
   `<next version>-alpha.<run>.<attempt>` to JFrog, and again on each push while the label stays. PRs
-  without the label don't publish anything.
+  without the label don't publish anything. Alphas keep the run number because open PRs share the
+  next version, so a per-version count would collide.
 
 Both are named by `next-version.yml`, a reusable workflow that runs `scripts/release/next-version.ts` (the
-same calculation semantic-release will make) and that each publish workflow calls before writing the
-result into `package.json` for the shared publish workflow.
+same calculation semantic-release will make). Betas pass the result to the shared publish workflow's
+`prerelease_version` input; alphas write the plain version into `package.json` and let it add the
+suffix.
 
 ### Dry-run locally
 

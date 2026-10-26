@@ -35,13 +35,16 @@ jobs:
     secrets:
       PUBLISH_REGISTRY: 'https://registry.npmjs.org'
 
-  # Betas are named for the next release (1.2.0-beta.N after a feat: since
-  # v1.1.0), not the released version in package.json. See next-version.yml.
+  # Betas are named for the next release and numbered per version
+  # (1.2.0-beta.1, 1.2.0-beta.2, … after a feat: since v1.1.0), not the
+  # released version in package.json plus a run number. See next-version.yml.
   beta-version:
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
     uses: ./.github/workflows/next-version.yml
+    with:
+      prerelease_tag: beta
 
   publish-beta:
     if: github.ref == 'refs/heads/main'
@@ -50,8 +53,6 @@ jobs:
     with:
       prerelease_tag: beta
       publish_to_public_npm: true
-      pre_install_command: >-
-        jq --arg v "${{ needs.beta-version.outputs.version }}" '.version = $v' package.json > package.json.tmp &&
-        mv package.json.tmp package.json
+      prerelease_version: ${{ needs.beta-version.outputs.prerelease_version }}
     secrets:
       PUBLISH_REGISTRY: 'https://registry.npmjs.org'

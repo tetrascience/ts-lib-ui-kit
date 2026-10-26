@@ -1,7 +1,12 @@
 name: Publish PR
 
+# Opt-in: publishes an installable alpha of a PR only when it carries the
+# `alpha` label (and again on each push while the label stays). Every PR used
+# to publish one, which cost a full build + test run per push for builds
+# almost nobody installed.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
     branches:
       - main
 
@@ -10,12 +15,34 @@ permissions:
   id-token: write
 
 jobs:
+  # Named for the release the PR would be part of, like the betas. See
+  # next-version.yml.
+  alpha-version:
+    # Skip for forked PRs since secrets are not available. On `labeled`, run
+    # only when the label added is `alpha`, so other labels don't republish.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'alpha') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'alpha')
+    permissions:
+      contents: read
+    uses: ./.github/workflows/next-version.yml
+
   publish:
-    # Skip for forked PRs since secrets are not available
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    needs: alpha-version
+    # A PR opened with the label already applied fires both `opened` and
+    # `labeled`, and a push supersedes the alpha still publishing; either way
+    # the newer run cancels the older. On the job, not the workflow, so a run
+    # for some other label (skipped above) cancels nothing.
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     uses: tetrascience/ts-ci-cd-lib/.github/workflows/publish-npm-package.yml@main
     with:
       prerelease_tag: alpha
+      pre_install_command: >-
+        jq --arg v "${{ needs.alpha-version.outputs.version }}" '.version = $v' package.json > package.json.tmp &&
+        mv package.json.tmp package.json
     secrets:
       AUTH_TOKEN: "${{ secrets.JFROG_ARTIFACTORY_WRITE_NPM_AUTH }}"
       REGISTRY: "https://registry.npmjs.org"

@@ -1,6 +1,7 @@
 import { Slider as SliderPrimitive } from "radix-ui";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function Slider({
@@ -55,4 +56,7 @@ function Slider({
   );
 }
 
-export { Slider };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SliderWithRef = withRef("Slider", Slider);
+
+export { SliderWithRef as Slider };

@@ -3,6 +3,7 @@ import { useMemo } from "react";
 
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
@@ -17,6 +18,9 @@ function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldSetWithRef = withRef("FieldSet", FieldSet);
 
 function FieldLegend({
   className,
@@ -33,6 +37,9 @@ function FieldLegend({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldLegendWithRef = withRef("FieldLegend", FieldLegend);
+
 function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -45,6 +52,9 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldGroupWithRef = withRef("FieldGroup", FieldGroup);
 
 const fieldVariants = cva("group/field flex w-full gap-2 data-[invalid=true]:text-destructive", {
   variants: {
@@ -77,6 +87,9 @@ function Field({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldWithRef = withRef("Field", Field);
+
 function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -86,6 +99,9 @@ function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldContentWithRef = withRef("FieldContent", FieldContent);
 
 function FieldLabel({ className, ...props }: React.ComponentProps<typeof Label>) {
   return (
@@ -101,6 +117,9 @@ function FieldLabel({ className, ...props }: React.ComponentProps<typeof Label>)
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldLabelWithRef = withRef("FieldLabel", FieldLabel);
+
 function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -113,6 +132,9 @@ function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldTitleWithRef = withRef("FieldTitle", FieldTitle);
 
 function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
@@ -128,6 +150,9 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldDescriptionWithRef = withRef("FieldDescription", FieldDescription);
 
 function FieldSeparator({
   children,
@@ -155,6 +180,9 @@ function FieldSeparator({
     </div>
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldSeparatorWithRef = withRef("FieldSeparator", FieldSeparator);
 
 function FieldError({
   className,
@@ -202,15 +230,18 @@ function FieldError({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const FieldErrorWithRef = withRef("FieldError", FieldError);
+
 export {
-  Field,
-  FieldLabel,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLegend,
-  FieldSeparator,
-  FieldSet,
-  FieldContent,
-  FieldTitle,
+  FieldWithRef as Field,
+  FieldLabelWithRef as FieldLabel,
+  FieldDescriptionWithRef as FieldDescription,
+  FieldErrorWithRef as FieldError,
+  FieldGroupWithRef as FieldGroup,
+  FieldLegendWithRef as FieldLegend,
+  FieldSeparatorWithRef as FieldSeparator,
+  FieldSetWithRef as FieldSet,
+  FieldContentWithRef as FieldContent,
+  FieldTitleWithRef as FieldTitle,
 };

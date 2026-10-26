@@ -1,6 +1,7 @@
 import { Progress as ProgressPrimitive } from "radix-ui";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function Progress({ className, value, ...props }: React.ComponentProps<typeof ProgressPrimitive.Root>) {
@@ -20,4 +21,7 @@ function Progress({ className, value, ...props }: React.ComponentProps<typeof Pr
   );
 }
 
-export { Progress };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ProgressWithRef = withRef("Progress", Progress);
+
+export { ProgressWithRef as Progress };

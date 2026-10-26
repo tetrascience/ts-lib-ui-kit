@@ -3,6 +3,7 @@ import { ChevronDownIcon } from "lucide-react";
 import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function NavigationMenu({
@@ -21,10 +22,13 @@ function NavigationMenu({
       {...props}
     >
       {children}
-      {viewport && <NavigationMenuViewport />}
+      {viewport && <NavigationMenuViewportWithRef />}
     </NavigationMenuPrimitive.Root>
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuWithRef = withRef("NavigationMenu", NavigationMenu);
 
 function NavigationMenuList({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.List>) {
   return (
@@ -36,11 +40,17 @@ function NavigationMenuList({ className, ...props }: React.ComponentProps<typeof
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuListWithRef = withRef("NavigationMenuList", NavigationMenuList);
+
 function NavigationMenuItem({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.Item>) {
   return (
     <NavigationMenuPrimitive.Item data-slot="navigation-menu-item" className={cn("relative", className)} {...props} />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuItemWithRef = withRef("NavigationMenuItem", NavigationMenuItem);
 
 const navigationMenuTriggerStyle = cva(
   "group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg bg-background px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-accent focus:bg-accent focus-visible:shadow-focus focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-accent/50 data-popup-open:hover:bg-accent data-open:bg-accent/50 data-open:hover:bg-accent data-open:focus:bg-accent",
@@ -66,6 +76,9 @@ function NavigationMenuTrigger({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuTriggerWithRef = withRef("NavigationMenuTrigger", NavigationMenuTrigger);
+
 function NavigationMenuContent({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.Content>) {
   return (
     <NavigationMenuPrimitive.Content
@@ -78,6 +91,9 @@ function NavigationMenuContent({ className, ...props }: React.ComponentProps<typ
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuContentWithRef = withRef("NavigationMenuContent", NavigationMenuContent);
 
 function NavigationMenuViewport({
   className,
@@ -97,6 +113,9 @@ function NavigationMenuViewport({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuViewportWithRef = withRef("NavigationMenuViewport", NavigationMenuViewport);
+
 function NavigationMenuLink({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.Link>) {
   return (
     <NavigationMenuPrimitive.Link
@@ -109,6 +128,9 @@ function NavigationMenuLink({ className, ...props }: React.ComponentProps<typeof
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuLinkWithRef = withRef("NavigationMenuLink", NavigationMenuLink);
 
 function NavigationMenuIndicator({
   className,
@@ -128,14 +150,17 @@ function NavigationMenuIndicator({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const NavigationMenuIndicatorWithRef = withRef("NavigationMenuIndicator", NavigationMenuIndicator);
+
 export {
-  NavigationMenu,
-  NavigationMenuList,
-  NavigationMenuItem,
-  NavigationMenuContent,
-  NavigationMenuTrigger,
-  NavigationMenuLink,
-  NavigationMenuIndicator,
-  NavigationMenuViewport,
+  NavigationMenuWithRef as NavigationMenu,
+  NavigationMenuListWithRef as NavigationMenuList,
+  NavigationMenuItemWithRef as NavigationMenuItem,
+  NavigationMenuContentWithRef as NavigationMenuContent,
+  NavigationMenuTriggerWithRef as NavigationMenuTrigger,
+  NavigationMenuLinkWithRef as NavigationMenuLink,
+  NavigationMenuIndicatorWithRef as NavigationMenuIndicator,
+  NavigationMenuViewportWithRef as NavigationMenuViewport,
   navigationMenuTriggerStyle,
 };

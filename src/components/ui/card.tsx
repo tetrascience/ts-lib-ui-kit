@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function Card({ className, size = "default", ...props }: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
@@ -16,6 +17,9 @@ function Card({ className, size = "default", ...props }: React.ComponentProps<"d
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardWithRef = withRef("Card", Card);
+
 function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -29,6 +33,9 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardHeaderWithRef = withRef("CardHeader", CardHeader);
+
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -39,9 +46,15 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardTitleWithRef = withRef("CardTitle", CardTitle);
+
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="card-description" className={cn("text-sm text-muted-foreground", className)} {...props} />;
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardDescriptionWithRef = withRef("CardDescription", CardDescription);
 
 function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -53,9 +66,15 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardActionWithRef = withRef("CardAction", CardAction);
+
 function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="card-content" className={cn("px-4 group-data-[size=sm]/card:px-3", className)} {...props} />;
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardContentWithRef = withRef("CardContent", CardContent);
 
 function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -67,4 +86,15 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CardFooterWithRef = withRef("CardFooter", CardFooter);
+
+export {
+  CardWithRef as Card,
+  CardHeaderWithRef as CardHeader,
+  CardFooterWithRef as CardFooter,
+  CardTitleWithRef as CardTitle,
+  CardActionWithRef as CardAction,
+  CardDescriptionWithRef as CardDescription,
+  CardContentWithRef as CardContent,
+};

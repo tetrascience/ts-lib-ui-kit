@@ -3,22 +3,27 @@ import { useCallback } from "react";
 import type { ComponentProps } from "react";
 
 import { Button } from "@/components/ui/button";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export type SuggestionsProps = ComponentProps<"div">;
 
-export const Suggestions = ({ className, children, ...props }: SuggestionsProps) => (
+const Suggestions = ({ className, children, ...props }: SuggestionsProps) => (
   <div className="w-full overflow-x-auto py-1" {...props}>
     <div className={cn("flex w-max flex-nowrap items-center gap-2 px-4", className)}>{children}</div>
   </div>
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SuggestionsWithRef = withRef("Suggestions", Suggestions);
+export { SuggestionsWithRef as Suggestions };
 
 export type SuggestionProps = Omit<ComponentProps<typeof Button>, "onClick"> & {
   suggestion: string;
   onClick?: (suggestion: string) => void;
 };
 
-export const Suggestion = ({
+const Suggestion = ({
   suggestion,
   onClick,
   className,
@@ -44,3 +49,7 @@ export const Suggestion = ({
     </Button>
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SuggestionWithRef = withRef("Suggestion", Suggestion);
+export { SuggestionWithRef as Suggestion };

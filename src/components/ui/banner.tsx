@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 const bannerVariants = cva("flex w-full items-start gap-3 px-4 py-3 text-sm", {
@@ -87,4 +88,7 @@ function Banner({
   );
 }
 
-export { Banner, bannerVariants };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const BannerWithRef = withRef("Banner", Banner);
+
+export { BannerWithRef as Banner, bannerVariants };

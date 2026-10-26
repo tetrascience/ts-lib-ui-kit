@@ -48,6 +48,7 @@ import * as React from "react";
 import { DataTablePagination } from "./data-table-pagination";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { isElementOfType, withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -821,7 +822,7 @@ function categorizeSlots(children: React.ReactNode) {
   const paginationSlots: React.ReactNode[] = [];
   const restSlots: React.ReactNode[] = [];
   React.Children.forEach(children, (child) => {
-    if (React.isValidElement(child) && child.type === TableToolbar) {
+    if (React.isValidElement(child) && isElementOfType(child, TableToolbar)) {
       toolbarSlots.push(child);
     } else if (React.isValidElement(child) && (child.type as React.ComponentType).displayName === "DataTableFilter") {
       filterSlots.push(child);
@@ -1087,5 +1088,8 @@ function TableToolbar({ className, children, ...props }: React.ComponentProps<"d
   );
 }
 
-export { DataTable, TableToolbar, useDataTable };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TableToolbarWithRef = withRef("TableToolbar", TableToolbar);
+
+export { DataTable, TableToolbarWithRef as TableToolbar, useDataTable };
 export type { DataTableProps, FilterCondition, FilterOperator, FilterColumnConfig, GroupColumnConfig };

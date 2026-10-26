@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -397,4 +398,12 @@ function DataAppShellPrimaryNav({
   );
 }
 
-export { DataAppShellPrimaryNav, dataAppShellPrimaryNavVariants, dataAppShellPrimaryNavItemVariants };
+/** React 18 wrapper for {@link DataAppShellPrimaryNav}; see its documentation. */
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DataAppShellPrimaryNavWithRef = withRef("DataAppShellPrimaryNav", DataAppShellPrimaryNav);
+
+export {
+  DataAppShellPrimaryNavWithRef as DataAppShellPrimaryNav,
+  dataAppShellPrimaryNavVariants,
+  dataAppShellPrimaryNavItemVariants,
+};

@@ -9,7 +9,6 @@ import type {
   ComponentProps,
   FormEvent,
   FormEventHandler,
-  HTMLAttributes,
   KeyboardEventHandler,
   PropsWithChildren,
   ReactNode,
@@ -36,6 +35,8 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } fro
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useComposedRefs } from "@/lib/compose-refs";
+import { inertProp, withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -341,7 +342,7 @@ export type PromptInputActionAddAttachmentsProps = ComponentProps<typeof Dropdow
   label?: string;
 };
 
-export const PromptInputActionAddAttachments = ({
+const PromptInputActionAddAttachments = ({
   label = "Add photos or files",
   ...props
 }: PromptInputActionAddAttachmentsProps) => {
@@ -362,11 +363,18 @@ export const PromptInputActionAddAttachments = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputActionAddAttachmentsWithRef = withRef(
+  "PromptInputActionAddAttachments",
+  PromptInputActionAddAttachments,
+);
+export { PromptInputActionAddAttachmentsWithRef as PromptInputActionAddAttachments };
+
 export type PromptInputActionAddScreenshotProps = ComponentProps<typeof DropdownMenuItem> & {
   label?: string;
 };
 
-export const PromptInputActionAddScreenshot = ({
+const PromptInputActionAddScreenshot = ({
   label = "Take screenshot",
   onSelect,
   ...props
@@ -403,12 +411,16 @@ export const PromptInputActionAddScreenshot = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputActionAddScreenshotWithRef = withRef("PromptInputActionAddScreenshot", PromptInputActionAddScreenshot);
+export { PromptInputActionAddScreenshotWithRef as PromptInputActionAddScreenshot };
+
 export interface PromptInputMessage {
   text: string;
   files: FileUIPart[];
 }
 
-export type PromptInputProps = Omit<HTMLAttributes<HTMLFormElement>, "onSubmit" | "onError"> & {
+export type PromptInputProps = Omit<ComponentProps<"form">, "onSubmit" | "onError"> & {
   // e.g., "image/*" or leave undefined for any
   accept?: string;
   multiple?: boolean;
@@ -424,7 +436,7 @@ export type PromptInputProps = Omit<HTMLAttributes<HTMLFormElement>, "onSubmit" 
   onSubmit: (message: PromptInputMessage, event: FormEvent<HTMLFormElement>) => void | Promise<void>;
 };
 
-export const PromptInput = ({
+const PromptInput = ({
   className,
   accept,
   multiple,
@@ -435,6 +447,7 @@ export const PromptInput = ({
   onError,
   onSubmit,
   children,
+  ref,
   ...props
 }: PromptInputProps) => {
   // Try to use a provider controller if present
@@ -444,6 +457,8 @@ export const PromptInput = ({
   // Refs
   const inputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
+  // Drag-and-drop listeners attach through formRef; a consumer ref must not replace it.
+  const composedFormRef = useComposedRefs(formRef, ref);
 
   // ----- Local attachments (only used when no provider)
   const [items, setItems] = useState<(FileUIPart & { id: string })[]>([]);
@@ -795,7 +810,7 @@ export const PromptInput = ({
         title="Upload files"
         type="file"
       />
-      <form className={cn("w-full", className)} onSubmit={handleSubmit} ref={formRef} {...props}>
+      <form className={cn("w-full", className)} onSubmit={handleSubmit} ref={composedFormRef} {...props}>
         <InputGroup className="border-border overflow-hidden has-[[data-slot=input-group-control]:focus-visible]:ring-0">
           {children}
         </InputGroup>
@@ -813,15 +828,23 @@ export const PromptInput = ({
   );
 };
 
-export type PromptInputBodyProps = HTMLAttributes<HTMLDivElement>;
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputWithRef = withRef("PromptInput", PromptInput);
+export { PromptInputWithRef as PromptInput };
 
-export const PromptInputBody = ({ className, ...props }: PromptInputBodyProps) => (
+export type PromptInputBodyProps = ComponentProps<"div">;
+
+const PromptInputBody = ({ className, ...props }: PromptInputBodyProps) => (
   <div className={cn("contents", className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputBodyWithRef = withRef("PromptInputBody", PromptInputBody);
+export { PromptInputBodyWithRef as PromptInputBody };
+
 export type PromptInputTextareaProps = ComponentProps<typeof InputGroupTextarea>;
 
-export const PromptInputTextarea = ({
+const PromptInputTextarea = ({
   onChange,
   onKeyDown,
   className,
@@ -930,23 +953,39 @@ export const PromptInputTextarea = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputTextareaWithRef = withRef("PromptInputTextarea", PromptInputTextarea);
+export { PromptInputTextareaWithRef as PromptInputTextarea };
+
 export type PromptInputHeaderProps = Omit<ComponentProps<typeof InputGroupAddon>, "align">;
 
-export const PromptInputHeader = ({ className, ...props }: PromptInputHeaderProps) => (
+const PromptInputHeader = ({ className, ...props }: PromptInputHeaderProps) => (
   <InputGroupAddon align="block-end" className={cn("order-first flex-wrap gap-1", className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputHeaderWithRef = withRef("PromptInputHeader", PromptInputHeader);
+export { PromptInputHeaderWithRef as PromptInputHeader };
+
 export type PromptInputFooterProps = Omit<ComponentProps<typeof InputGroupAddon>, "align">;
 
-export const PromptInputFooter = ({ className, ...props }: PromptInputFooterProps) => (
+const PromptInputFooter = ({ className, ...props }: PromptInputFooterProps) => (
   <InputGroupAddon align="block-end" className={cn("justify-between gap-1", className)} {...props} />
 );
 
-export type PromptInputToolsProps = HTMLAttributes<HTMLDivElement>;
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputFooterWithRef = withRef("PromptInputFooter", PromptInputFooter);
+export { PromptInputFooterWithRef as PromptInputFooter };
 
-export const PromptInputTools = ({ className, ...props }: PromptInputToolsProps) => (
+export type PromptInputToolsProps = ComponentProps<"div">;
+
+const PromptInputTools = ({ className, ...props }: PromptInputToolsProps) => (
   <div className={cn("flex min-w-0 items-center gap-1", className)} {...props} />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputToolsWithRef = withRef("PromptInputTools", PromptInputTools);
+export { PromptInputToolsWithRef as PromptInputTools };
 
 export type PromptInputButtonTooltip =
   | string
@@ -960,13 +999,7 @@ export type PromptInputButtonProps = ComponentProps<typeof InputGroupButton> & {
   tooltip?: PromptInputButtonTooltip;
 };
 
-export const PromptInputButton = ({
-  variant = "ghost",
-  className,
-  size,
-  tooltip,
-  ...props
-}: PromptInputButtonProps) => {
+const PromptInputButton = ({ variant = "ghost", className, size, tooltip, ...props }: PromptInputButtonProps) => {
   const newSize = size ?? (Children.count(props.children) > 1 ? "sm" : "icon-sm");
 
   const button = (
@@ -992,12 +1025,16 @@ export const PromptInputButton = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputButtonWithRef = withRef("PromptInputButton", PromptInputButton);
+export { PromptInputButtonWithRef as PromptInputButton };
+
 export type PromptInputActionMenuProps = ComponentProps<typeof DropdownMenu>;
 export const PromptInputActionMenu = (props: PromptInputActionMenuProps) => <DropdownMenu modal={false} {...props} />;
 
 export type PromptInputActionMenuTriggerProps = PromptInputButtonProps;
 
-export const PromptInputActionMenuTrigger = ({
+const PromptInputActionMenuTrigger = ({
   className,
   children,
   tooltip,
@@ -1010,22 +1047,34 @@ export const PromptInputActionMenuTrigger = ({
 
   return (
     <DropdownMenuTrigger asChild>
-      <PromptInputButton aria-label={derivedLabel} className={className} tooltip={tooltip} {...props}>
+      <PromptInputButtonWithRef aria-label={derivedLabel} className={className} tooltip={tooltip} {...props}>
         {children ?? <PlusIcon className="size-4" />}
-      </PromptInputButton>
+      </PromptInputButtonWithRef>
     </DropdownMenuTrigger>
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputActionMenuTriggerWithRef = withRef("PromptInputActionMenuTrigger", PromptInputActionMenuTrigger);
+export { PromptInputActionMenuTriggerWithRef as PromptInputActionMenuTrigger };
+
 export type PromptInputActionMenuContentProps = ComponentProps<typeof DropdownMenuContent>;
-export const PromptInputActionMenuContent = ({ className, ...props }: PromptInputActionMenuContentProps) => (
+const PromptInputActionMenuContent = ({ className, ...props }: PromptInputActionMenuContentProps) => (
   <DropdownMenuContent align="start" className={cn(className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputActionMenuContentWithRef = withRef("PromptInputActionMenuContent", PromptInputActionMenuContent);
+export { PromptInputActionMenuContentWithRef as PromptInputActionMenuContent };
+
 export type PromptInputActionMenuItemProps = ComponentProps<typeof DropdownMenuItem>;
-export const PromptInputActionMenuItem = ({ className, ...props }: PromptInputActionMenuItemProps) => (
+const PromptInputActionMenuItem = ({ className, ...props }: PromptInputActionMenuItemProps) => (
   <DropdownMenuItem className={cn(className)} {...props} />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputActionMenuItemWithRef = withRef("PromptInputActionMenuItem", PromptInputActionMenuItem);
+export { PromptInputActionMenuItemWithRef as PromptInputActionMenuItem };
 
 // Note: Actions that perform side-effects (like opening a file dialog)
 // are provided in opt-in modules (e.g., prompt-input-attachments).
@@ -1035,7 +1084,7 @@ export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
   onStop?: () => void;
 };
 
-export const PromptInputSubmit = ({
+const PromptInputSubmit = ({
   className,
   variant = "default",
   size = "icon-sm",
@@ -1084,13 +1133,17 @@ export const PromptInputSubmit = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputSubmitWithRef = withRef("PromptInputSubmit", PromptInputSubmit);
+export { PromptInputSubmitWithRef as PromptInputSubmit };
+
 export type PromptInputSelectProps = ComponentProps<typeof Select>;
 
 export const PromptInputSelect = (props: PromptInputSelectProps) => <Select {...props} />;
 
 export type PromptInputSelectTriggerProps = ComponentProps<typeof SelectTrigger>;
 
-export const PromptInputSelectTrigger = ({ className, ...props }: PromptInputSelectTriggerProps) => (
+const PromptInputSelectTrigger = ({ className, ...props }: PromptInputSelectTriggerProps) => (
   <SelectTrigger
     className={cn(
       "border-none bg-transparent font-medium text-muted-foreground shadow-none transition-colors",
@@ -1101,23 +1154,39 @@ export const PromptInputSelectTrigger = ({ className, ...props }: PromptInputSel
   />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputSelectTriggerWithRef = withRef("PromptInputSelectTrigger", PromptInputSelectTrigger);
+export { PromptInputSelectTriggerWithRef as PromptInputSelectTrigger };
+
 export type PromptInputSelectContentProps = ComponentProps<typeof SelectContent>;
 
-export const PromptInputSelectContent = ({ className, ...props }: PromptInputSelectContentProps) => (
+const PromptInputSelectContent = ({ className, ...props }: PromptInputSelectContentProps) => (
   <SelectContent className={cn(className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputSelectContentWithRef = withRef("PromptInputSelectContent", PromptInputSelectContent);
+export { PromptInputSelectContentWithRef as PromptInputSelectContent };
+
 export type PromptInputSelectItemProps = ComponentProps<typeof SelectItem>;
 
-export const PromptInputSelectItem = ({ className, ...props }: PromptInputSelectItemProps) => (
+const PromptInputSelectItem = ({ className, ...props }: PromptInputSelectItemProps) => (
   <SelectItem className={cn(className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputSelectItemWithRef = withRef("PromptInputSelectItem", PromptInputSelectItem);
+export { PromptInputSelectItemWithRef as PromptInputSelectItem };
+
 export type PromptInputSelectValueProps = ComponentProps<typeof SelectValue>;
 
-export const PromptInputSelectValue = ({ className, ...props }: PromptInputSelectValueProps) => (
+const PromptInputSelectValue = ({ className, ...props }: PromptInputSelectValueProps) => (
   <SelectValue className={cn(className)} {...props} />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputSelectValueWithRef = withRef("PromptInputSelectValue", PromptInputSelectValue);
+export { PromptInputSelectValueWithRef as PromptInputSelectValue };
 
 export type PromptInputHoverCardProps = ComponentProps<typeof HoverCard>;
 
@@ -1127,13 +1196,21 @@ export const PromptInputHoverCard = ({ openDelay = 0, closeDelay = 0, ...props }
 
 export type PromptInputHoverCardTriggerProps = ComponentProps<typeof HoverCardTrigger>;
 
-export const PromptInputHoverCardTrigger = (props: PromptInputHoverCardTriggerProps) => <HoverCardTrigger {...props} />;
+const PromptInputHoverCardTrigger = (props: PromptInputHoverCardTriggerProps) => <HoverCardTrigger {...props} />;
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputHoverCardTriggerWithRef = withRef("PromptInputHoverCardTrigger", PromptInputHoverCardTrigger);
+export { PromptInputHoverCardTriggerWithRef as PromptInputHoverCardTrigger };
 
 export type PromptInputHoverCardContentProps = ComponentProps<typeof HoverCardContent>;
 
-export const PromptInputHoverCardContent = ({ align = "start", ...props }: PromptInputHoverCardContentProps) => (
+const PromptInputHoverCardContent = ({ align = "start", ...props }: PromptInputHoverCardContentProps) => (
   <HoverCardContent align={align} {...props} />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputHoverCardContentWithRef = withRef("PromptInputHoverCardContent", PromptInputHoverCardContent);
+export { PromptInputHoverCardContentWithRef as PromptInputHoverCardContent };
 
 // ============================================================================
 // PromptInputSlotSwap
@@ -1153,7 +1230,7 @@ export const PromptInputSlotSwap = ({ a, b, show, className }: PromptInputSlotSw
   <div className={cn("relative inline-flex items-center justify-center", className)}>
     <div
       aria-hidden={show}
-      inert={show}
+      {...inertProp(show)}
       className={cn(
         "transition-all duration-200 ease-out",
         show ? "pointer-events-none scale-75 opacity-0" : "scale-100 opacity-100",
@@ -1163,7 +1240,7 @@ export const PromptInputSlotSwap = ({ a, b, show, className }: PromptInputSlotSw
     </div>
     <div
       aria-hidden={!show}
-      inert={!show}
+      {...inertProp(!show)}
       className={cn(
         "absolute transition-all duration-200 ease-out",
         show ? "scale-100 opacity-100" : "pointer-events-none scale-75 opacity-0",
@@ -1174,76 +1251,122 @@ export const PromptInputSlotSwap = ({ a, b, show, className }: PromptInputSlotSw
   </div>
 );
 
-export type PromptInputTabsListProps = HTMLAttributes<HTMLDivElement>;
+export type PromptInputTabsListProps = ComponentProps<"div">;
 
-export const PromptInputTabsList = ({ className, ...props }: PromptInputTabsListProps) => (
+const PromptInputTabsList = ({ className, ...props }: PromptInputTabsListProps) => (
   <div className={cn(className)} {...props} />
 );
 
-export type PromptInputTabProps = HTMLAttributes<HTMLDivElement>;
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputTabsListWithRef = withRef("PromptInputTabsList", PromptInputTabsList);
+export { PromptInputTabsListWithRef as PromptInputTabsList };
 
-export const PromptInputTab = ({ className, ...props }: PromptInputTabProps) => (
-  <div className={cn(className)} {...props} />
-);
+export type PromptInputTabProps = ComponentProps<"div">;
 
-export type PromptInputTabLabelProps = HTMLAttributes<HTMLHeadingElement>;
+const PromptInputTab = ({ className, ...props }: PromptInputTabProps) => <div className={cn(className)} {...props} />;
 
-export const PromptInputTabLabel = ({ className, children, ...props }: PromptInputTabLabelProps) => (
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputTabWithRef = withRef("PromptInputTab", PromptInputTab);
+export { PromptInputTabWithRef as PromptInputTab };
+
+export type PromptInputTabLabelProps = ComponentProps<"h3">;
+
+const PromptInputTabLabel = ({ className, children, ...props }: PromptInputTabLabelProps) => (
   <h3 className={cn("mb-2 px-3 font-medium text-muted-foreground text-xs", className)} {...props}>
     {children}
   </h3>
 );
 
-export type PromptInputTabBodyProps = HTMLAttributes<HTMLDivElement>;
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputTabLabelWithRef = withRef("PromptInputTabLabel", PromptInputTabLabel);
+export { PromptInputTabLabelWithRef as PromptInputTabLabel };
 
-export const PromptInputTabBody = ({ className, ...props }: PromptInputTabBodyProps) => (
+export type PromptInputTabBodyProps = ComponentProps<"div">;
+
+const PromptInputTabBody = ({ className, ...props }: PromptInputTabBodyProps) => (
   <div className={cn("space-y-1", className)} {...props} />
 );
 
-export type PromptInputTabItemProps = HTMLAttributes<HTMLDivElement>;
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputTabBodyWithRef = withRef("PromptInputTabBody", PromptInputTabBody);
+export { PromptInputTabBodyWithRef as PromptInputTabBody };
 
-export const PromptInputTabItem = ({ className, ...props }: PromptInputTabItemProps) => (
+export type PromptInputTabItemProps = ComponentProps<"div">;
+
+const PromptInputTabItem = ({ className, ...props }: PromptInputTabItemProps) => (
   <div className={cn("flex items-center gap-2 px-3 py-2 text-xs hover:bg-accent", className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputTabItemWithRef = withRef("PromptInputTabItem", PromptInputTabItem);
+export { PromptInputTabItemWithRef as PromptInputTabItem };
+
 export type PromptInputCommandProps = ComponentProps<typeof Command>;
 
-export const PromptInputCommand = ({ className, ...props }: PromptInputCommandProps) => (
+const PromptInputCommand = ({ className, ...props }: PromptInputCommandProps) => (
   <Command className={cn(className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputCommandWithRef = withRef("PromptInputCommand", PromptInputCommand);
+export { PromptInputCommandWithRef as PromptInputCommand };
+
 export type PromptInputCommandInputProps = ComponentProps<typeof CommandInput>;
 
-export const PromptInputCommandInput = ({ className, ...props }: PromptInputCommandInputProps) => (
+const PromptInputCommandInput = ({ className, ...props }: PromptInputCommandInputProps) => (
   <CommandInput className={cn(className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputCommandInputWithRef = withRef("PromptInputCommandInput", PromptInputCommandInput);
+export { PromptInputCommandInputWithRef as PromptInputCommandInput };
+
 export type PromptInputCommandListProps = ComponentProps<typeof CommandList>;
 
-export const PromptInputCommandList = ({ className, ...props }: PromptInputCommandListProps) => (
+const PromptInputCommandList = ({ className, ...props }: PromptInputCommandListProps) => (
   <CommandList className={cn(className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputCommandListWithRef = withRef("PromptInputCommandList", PromptInputCommandList);
+export { PromptInputCommandListWithRef as PromptInputCommandList };
+
 export type PromptInputCommandEmptyProps = ComponentProps<typeof CommandEmpty>;
 
-export const PromptInputCommandEmpty = ({ className, ...props }: PromptInputCommandEmptyProps) => (
+const PromptInputCommandEmpty = ({ className, ...props }: PromptInputCommandEmptyProps) => (
   <CommandEmpty className={cn(className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputCommandEmptyWithRef = withRef("PromptInputCommandEmpty", PromptInputCommandEmpty);
+export { PromptInputCommandEmptyWithRef as PromptInputCommandEmpty };
+
 export type PromptInputCommandGroupProps = ComponentProps<typeof CommandGroup>;
 
-export const PromptInputCommandGroup = ({ className, ...props }: PromptInputCommandGroupProps) => (
+const PromptInputCommandGroup = ({ className, ...props }: PromptInputCommandGroupProps) => (
   <CommandGroup className={cn(className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputCommandGroupWithRef = withRef("PromptInputCommandGroup", PromptInputCommandGroup);
+export { PromptInputCommandGroupWithRef as PromptInputCommandGroup };
+
 export type PromptInputCommandItemProps = ComponentProps<typeof CommandItem>;
 
-export const PromptInputCommandItem = ({ className, ...props }: PromptInputCommandItemProps) => (
+const PromptInputCommandItem = ({ className, ...props }: PromptInputCommandItemProps) => (
   <CommandItem className={cn(className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputCommandItemWithRef = withRef("PromptInputCommandItem", PromptInputCommandItem);
+export { PromptInputCommandItemWithRef as PromptInputCommandItem };
+
 export type PromptInputCommandSeparatorProps = ComponentProps<typeof CommandSeparator>;
 
-export const PromptInputCommandSeparator = ({ className, ...props }: PromptInputCommandSeparatorProps) => (
+const PromptInputCommandSeparator = ({ className, ...props }: PromptInputCommandSeparatorProps) => (
   <CommandSeparator className={cn(className)} {...props} />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PromptInputCommandSeparatorWithRef = withRef("PromptInputCommandSeparator", PromptInputCommandSeparator);
+export { PromptInputCommandSeparatorWithRef as PromptInputCommandSeparator };

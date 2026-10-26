@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { inertProp } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export type { AppShellSimpleNavState } from "./navState";
@@ -287,8 +288,13 @@ export function AppShellSimple({
           style={{ width: NAV_WIDTH[navState] }}
         >
           {/* `inert` keeps the collapsed nav out of the tab order and the
-              accessibility tree while it stays mounted for the drag handle. */}
-          <div data-slot="app-shell-simple-nav-content" className="h-full w-full overflow-hidden" inert={isHidden}>
+              accessibility tree while it stays mounted for the drag handle.
+              `inertProp` spells it so React 18 applies it too (UXT-77). */}
+          <div
+            data-slot="app-shell-simple-nav-content"
+            className="h-full w-full overflow-hidden"
+            {...inertProp(isHidden)}
+          >
             <DataAppShellPrimaryNav
               variant={navState === "rail" ? "rail" : "sidebar"}
               aria-label="Application navigation"

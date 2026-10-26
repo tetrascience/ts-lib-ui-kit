@@ -5,6 +5,7 @@ import { Dialog as SheetPrimitive } from "radix-ui";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
@@ -15,9 +16,15 @@ function SheetTrigger({ ...props }: React.ComponentProps<typeof SheetPrimitive.T
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetTriggerWithRef = withRef("SheetTrigger", SheetTrigger);
+
 function SheetClose({ ...props }: React.ComponentProps<typeof SheetPrimitive.Close>) {
   return <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetCloseWithRef = withRef("SheetClose", SheetClose);
 
 function SheetPortal({ ...props }: React.ComponentProps<typeof SheetPrimitive.Portal>) {
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
@@ -36,6 +43,9 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<typeof Sheet
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetOverlayWithRef = withRef("SheetOverlay", SheetOverlay);
+
 function SheetContent({
   className,
   children,
@@ -48,7 +58,7 @@ function SheetContent({
 }) {
   return (
     <SheetPortal>
-      <SheetOverlay />
+      <SheetOverlayWithRef />
       <SheetPrimitive.Content
         data-slot="sheet-content"
         data-side={side}
@@ -72,13 +82,22 @@ function SheetContent({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetContentWithRef = withRef("SheetContent", SheetContent);
+
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="sheet-header" className={cn("flex flex-col gap-0.5 p-4", className)} {...props} />;
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetHeaderWithRef = withRef("SheetHeader", SheetHeader);
+
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="sheet-footer" className={cn("mt-auto flex flex-col gap-2 p-4", className)} {...props} />;
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetFooterWithRef = withRef("SheetFooter", SheetFooter);
 
 function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Title>) {
   return (
@@ -90,6 +109,9 @@ function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPr
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetTitleWithRef = withRef("SheetTitle", SheetTitle);
+
 function SheetDescription({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Description>) {
   return (
     <SheetPrimitive.Description
@@ -100,4 +122,16 @@ function SheetDescription({ className, ...props }: React.ComponentProps<typeof S
   );
 }
 
-export { Sheet, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SheetDescriptionWithRef = withRef("SheetDescription", SheetDescription);
+
+export {
+  Sheet,
+  SheetTriggerWithRef as SheetTrigger,
+  SheetCloseWithRef as SheetClose,
+  SheetContentWithRef as SheetContent,
+  SheetHeaderWithRef as SheetHeader,
+  SheetFooterWithRef as SheetFooter,
+  SheetTitleWithRef as SheetTitle,
+  SheetDescriptionWithRef as SheetDescription,
+};

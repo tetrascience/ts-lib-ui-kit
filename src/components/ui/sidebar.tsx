@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 const SECONDS_IN_A_MINUTE = 60;
@@ -133,6 +134,9 @@ function SidebarProvider({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarProviderWithRef = withRef("SidebarProvider", SidebarProvider);
+
 function Sidebar({
   side = "left",
   variant = "sidebar",
@@ -232,6 +236,9 @@ function Sidebar({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarWithRef = withRef("Sidebar", Sidebar);
+
 function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
   const { toggleSidebar } = useSidebar();
 
@@ -253,6 +260,9 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
     </Button>
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarTriggerWithRef = withRef("SidebarTrigger", SidebarTrigger);
 
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   const { toggleSidebar } = useSidebar();
@@ -279,6 +289,9 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarRailWithRef = withRef("SidebarRail", SidebarRail);
+
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   return (
     <main
@@ -292,6 +305,9 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarInsetWithRef = withRef("SidebarInset", SidebarInset);
+
 function SidebarInput({ className, ...props }: React.ComponentProps<typeof Input>) {
   return (
     <Input
@@ -302,6 +318,9 @@ function SidebarInput({ className, ...props }: React.ComponentProps<typeof Input
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarInputWithRef = withRef("SidebarInput", SidebarInput);
 
 function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -314,6 +333,9 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarHeaderWithRef = withRef("SidebarHeader", SidebarHeader);
+
 function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -325,6 +347,9 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarFooterWithRef = withRef("SidebarFooter", SidebarFooter);
+
 function SidebarSeparator({ className, ...props }: React.ComponentProps<typeof Separator>) {
   return (
     <Separator
@@ -335,6 +360,9 @@ function SidebarSeparator({ className, ...props }: React.ComponentProps<typeof S
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarSeparatorWithRef = withRef("SidebarSeparator", SidebarSeparator);
 
 function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -350,6 +378,9 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarContentWithRef = withRef("SidebarContent", SidebarContent);
+
 function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -360,6 +391,9 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarGroupWithRef = withRef("SidebarGroup", SidebarGroup);
 
 function SidebarGroupLabel({
   className,
@@ -381,6 +415,9 @@ function SidebarGroupLabel({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarGroupLabelWithRef = withRef("SidebarGroupLabel", SidebarGroupLabel);
+
 function SidebarGroupAction({
   className,
   asChild = false,
@@ -401,6 +438,9 @@ function SidebarGroupAction({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarGroupActionWithRef = withRef("SidebarGroupAction", SidebarGroupAction);
+
 function SidebarGroupContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -411,6 +451,9 @@ function SidebarGroupContent({ className, ...props }: React.ComponentProps<"div"
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarGroupContentWithRef = withRef("SidebarGroupContent", SidebarGroupContent);
 
 function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   return (
@@ -423,6 +466,9 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarMenuWithRef = withRef("SidebarMenu", SidebarMenu);
+
 function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
@@ -433,6 +479,9 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarMenuItemWithRef = withRef("SidebarMenuItem", SidebarMenuItem);
 
 const sidebarMenuButtonVariants = cva(
   "peer/menu-button group/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate",
@@ -501,6 +550,9 @@ function SidebarMenuButton({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarMenuButtonWithRef = withRef("SidebarMenuButton", SidebarMenuButton);
+
 function SidebarMenuAction({
   className,
   asChild = false,
@@ -527,6 +579,9 @@ function SidebarMenuAction({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarMenuActionWithRef = withRef("SidebarMenuAction", SidebarMenuAction);
+
 function SidebarMenuBadge({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -540,6 +595,9 @@ function SidebarMenuBadge({ className, ...props }: React.ComponentProps<"div">) 
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarMenuBadgeWithRef = withRef("SidebarMenuBadge", SidebarMenuBadge);
 
 function SidebarMenuSkeleton({
   className,
@@ -575,6 +633,9 @@ function SidebarMenuSkeleton({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarMenuSkeletonWithRef = withRef("SidebarMenuSkeleton", SidebarMenuSkeleton);
+
 function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
@@ -589,6 +650,9 @@ function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarMenuSubWithRef = withRef("SidebarMenuSub", SidebarMenuSub);
+
 function SidebarMenuSubItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
@@ -599,6 +663,9 @@ function SidebarMenuSubItem({ className, ...props }: React.ComponentProps<"li">)
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarMenuSubItemWithRef = withRef("SidebarMenuSubItem", SidebarMenuSubItem);
 
 function SidebarMenuSubButton({
   asChild = false,
@@ -628,29 +695,32 @@ function SidebarMenuSubButton({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SidebarMenuSubButtonWithRef = withRef("SidebarMenuSubButton", SidebarMenuSubButton);
+
 export {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupAction,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInput,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuAction,
-  SidebarMenuBadge,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSkeleton,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  SidebarProvider,
-  SidebarRail,
-  SidebarSeparator,
-  SidebarTrigger,
+  SidebarWithRef as Sidebar,
+  SidebarContentWithRef as SidebarContent,
+  SidebarFooterWithRef as SidebarFooter,
+  SidebarGroupWithRef as SidebarGroup,
+  SidebarGroupActionWithRef as SidebarGroupAction,
+  SidebarGroupContentWithRef as SidebarGroupContent,
+  SidebarGroupLabelWithRef as SidebarGroupLabel,
+  SidebarHeaderWithRef as SidebarHeader,
+  SidebarInputWithRef as SidebarInput,
+  SidebarInsetWithRef as SidebarInset,
+  SidebarMenuWithRef as SidebarMenu,
+  SidebarMenuActionWithRef as SidebarMenuAction,
+  SidebarMenuBadgeWithRef as SidebarMenuBadge,
+  SidebarMenuButtonWithRef as SidebarMenuButton,
+  SidebarMenuItemWithRef as SidebarMenuItem,
+  SidebarMenuSkeletonWithRef as SidebarMenuSkeleton,
+  SidebarMenuSubWithRef as SidebarMenuSub,
+  SidebarMenuSubButtonWithRef as SidebarMenuSubButton,
+  SidebarMenuSubItemWithRef as SidebarMenuSubItem,
+  SidebarProviderWithRef as SidebarProvider,
+  SidebarRailWithRef as SidebarRail,
+  SidebarSeparatorWithRef as SidebarSeparator,
+  SidebarTriggerWithRef as SidebarTrigger,
   useSidebar,
 };

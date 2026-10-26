@@ -7,6 +7,7 @@ import type { ComponentProps } from "react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export interface QueueMessagePart {
@@ -35,7 +36,7 @@ export interface QueueTodo {
 
 export type QueueItemProps = ComponentProps<"li">;
 
-export const QueueItem = ({ className, ...props }: QueueItemProps) => (
+const QueueItem = ({ className, ...props }: QueueItemProps) => (
   <li
     className={cn(
       "group flex flex-row items-center gap-2 rounded-md px-3 py-1 text-sm transition-colors hover:bg-accent",
@@ -44,6 +45,10 @@ export const QueueItem = ({ className, ...props }: QueueItemProps) => (
     {...props}
   />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemWithRef = withRef("QueueItem", QueueItem);
+export { QueueItemWithRef as QueueItem };
 
 // ---------------------------------------------------------------------------
 // QueueItemIndicator
@@ -71,7 +76,7 @@ const INDICATOR_STATUS: Record<QueueItemStatus, string> = {
   error: "border border-destructive/30 bg-destructive/70",
 };
 
-export const QueueItemIndicator = ({ status, completed = false, className, ...props }: QueueItemIndicatorProps) => {
+const QueueItemIndicator = ({ status, completed = false, className, ...props }: QueueItemIndicatorProps) => {
   const resolvedStatus: QueueItemStatus = status ?? (completed ? "done" : "pending");
 
   return (
@@ -82,6 +87,10 @@ export const QueueItemIndicator = ({ status, completed = false, className, ...pr
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemIndicatorWithRef = withRef("QueueItemIndicator", QueueItemIndicator);
+export { QueueItemIndicatorWithRef as QueueItemIndicator };
+
 // ---------------------------------------------------------------------------
 // QueueItemContent
 // ---------------------------------------------------------------------------
@@ -90,12 +99,16 @@ export type QueueItemContentProps = ComponentProps<"span"> & {
   completed?: boolean;
 };
 
-export const QueueItemContent = ({ completed = false, className, ...props }: QueueItemContentProps) => (
+const QueueItemContent = ({ completed = false, className, ...props }: QueueItemContentProps) => (
   <span
     className={cn("min-w-0 flex-1 truncate text-muted-foreground", completed && "line-through", className)}
     {...props}
   />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemContentWithRef = withRef("QueueItemContent", QueueItemContent);
+export { QueueItemContentWithRef as QueueItemContent };
 
 // ---------------------------------------------------------------------------
 // QueueItemDescription
@@ -107,9 +120,13 @@ export type QueueItemDescriptionProps = ComponentProps<"div"> & {
   completed?: boolean;
 };
 
-export const QueueItemDescription = ({ completed = false, className, ...props }: QueueItemDescriptionProps) => (
+const QueueItemDescription = ({ completed = false, className, ...props }: QueueItemDescriptionProps) => (
   <div className={cn("text-xs text-muted-foreground", completed && "line-through", className)} {...props} />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemDescriptionWithRef = withRef("QueueItemDescription", QueueItemDescription);
+export { QueueItemDescriptionWithRef as QueueItemDescription };
 
 // ---------------------------------------------------------------------------
 // QueueItemActions / QueueItemAction
@@ -117,13 +134,17 @@ export const QueueItemDescription = ({ completed = false, className, ...props }:
 
 export type QueueItemActionsProps = ComponentProps<"div">;
 
-export const QueueItemActions = ({ className, ...props }: QueueItemActionsProps) => (
+const QueueItemActions = ({ className, ...props }: QueueItemActionsProps) => (
   <div className={cn("ml-auto flex shrink-0 gap-1", className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemActionsWithRef = withRef("QueueItemActions", QueueItemActions);
+export { QueueItemActionsWithRef as QueueItemActions };
+
 export type QueueItemActionProps = Omit<ComponentProps<typeof Button>, "variant" | "size">;
 
-export const QueueItemAction = ({ className, ...props }: QueueItemActionProps) => (
+const QueueItemAction = ({ className, ...props }: QueueItemActionProps) => (
   <Button
     className={cn(
       "size-auto rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted-foreground/10 hover:text-foreground group-hover:opacity-100",
@@ -136,30 +157,46 @@ export const QueueItemAction = ({ className, ...props }: QueueItemActionProps) =
   />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemActionWithRef = withRef("QueueItemAction", QueueItemAction);
+export { QueueItemActionWithRef as QueueItemAction };
+
 // ---------------------------------------------------------------------------
 // QueueItemAttachment / QueueItemImage / QueueItemFile
 // ---------------------------------------------------------------------------
 
 export type QueueItemAttachmentProps = ComponentProps<"div">;
 
-export const QueueItemAttachment = ({ className, ...props }: QueueItemAttachmentProps) => (
+const QueueItemAttachment = ({ className, ...props }: QueueItemAttachmentProps) => (
   <div className={cn("flex flex-wrap gap-2", className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemAttachmentWithRef = withRef("QueueItemAttachment", QueueItemAttachment);
+export { QueueItemAttachmentWithRef as QueueItemAttachment };
+
 export type QueueItemImageProps = ComponentProps<"img">;
 
-export const QueueItemImage = ({ className, ...props }: QueueItemImageProps) => (
+const QueueItemImage = ({ className, ...props }: QueueItemImageProps) => (
   <img alt="" className={cn("size-8 rounded border object-cover", className)} height={32} width={32} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemImageWithRef = withRef("QueueItemImage", QueueItemImage);
+export { QueueItemImageWithRef as QueueItemImage };
+
 export type QueueItemFileProps = ComponentProps<"span">;
 
-export const QueueItemFile = ({ children, className, ...props }: QueueItemFileProps) => (
+const QueueItemFile = ({ children, className, ...props }: QueueItemFileProps) => (
   <span className={cn("flex items-center gap-1 rounded border bg-muted px-2 py-1 text-xs", className)} {...props}>
     <PaperclipIcon size={12} />
     <span className="max-w-[100px] truncate">{children}</span>
   </span>
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueItemFileWithRef = withRef("QueueItemFile", QueueItemFile);
+export { QueueItemFileWithRef as QueueItemFile };
 
 // ---------------------------------------------------------------------------
 // QueueList
@@ -167,7 +204,7 @@ export const QueueItemFile = ({ children, className, ...props }: QueueItemFilePr
 
 export type QueueListProps = ComponentProps<typeof ScrollArea>;
 
-export const QueueList = ({ children, className, ...props }: QueueListProps) => (
+const QueueList = ({ children, className, ...props }: QueueListProps) => (
   <ScrollArea className={cn("-mb-1 mt-2", className)} {...props}>
     <div className="max-h-40 pr-4">
       <ul className="flex flex-col gap-0.5">{children}</ul>
@@ -175,19 +212,27 @@ export const QueueList = ({ children, className, ...props }: QueueListProps) => 
   </ScrollArea>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueListWithRef = withRef("QueueList", QueueList);
+export { QueueListWithRef as QueueList };
+
 // ---------------------------------------------------------------------------
 // QueueSection / QueueSectionTrigger / QueueSectionLabel / QueueSectionContent
 // ---------------------------------------------------------------------------
 
 export type QueueSectionProps = ComponentProps<typeof Collapsible>;
 
-export const QueueSection = ({ className, defaultOpen = true, ...props }: QueueSectionProps) => (
+const QueueSection = ({ className, defaultOpen = true, ...props }: QueueSectionProps) => (
   <Collapsible className={cn(className)} defaultOpen={defaultOpen} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueSectionWithRef = withRef("QueueSection", QueueSection);
+export { QueueSectionWithRef as QueueSection };
+
 export type QueueSectionTriggerProps = ComponentProps<"button">;
 
-export const QueueSectionTrigger = ({ children, className, ...props }: QueueSectionTriggerProps) => (
+const QueueSectionTrigger = ({ children, className, ...props }: QueueSectionTriggerProps) => (
   <CollapsibleTrigger asChild>
     <button
       className={cn(
@@ -202,12 +247,16 @@ export const QueueSectionTrigger = ({ children, className, ...props }: QueueSect
   </CollapsibleTrigger>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueSectionTriggerWithRef = withRef("QueueSectionTrigger", QueueSectionTrigger);
+export { QueueSectionTriggerWithRef as QueueSectionTrigger };
+
 export type QueueSectionLabelProps = ComponentProps<"span"> & {
   count?: number;
   icon?: React.ReactNode;
 };
 
-export const QueueSectionLabel = ({ count, icon, className, children, ...props }: QueueSectionLabelProps) => (
+const QueueSectionLabel = ({ count, icon, className, children, ...props }: QueueSectionLabelProps) => (
   <span className={cn("flex items-center gap-2", className)} {...props}>
     <ChevronDownIcon
       className="size-4 opacity-0 transition-all group-focus-visible:opacity-100 group-hover:opacity-100 group-data-[state=open]:opacity-100 group-data-[state=closed]:-rotate-90"
@@ -221,11 +270,19 @@ export const QueueSectionLabel = ({ count, icon, className, children, ...props }
   </span>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueSectionLabelWithRef = withRef("QueueSectionLabel", QueueSectionLabel);
+export { QueueSectionLabelWithRef as QueueSectionLabel };
+
 export type QueueSectionContentProps = ComponentProps<typeof CollapsibleContent>;
 
-export const QueueSectionContent = ({ className, ...props }: QueueSectionContentProps) => (
+const QueueSectionContent = ({ className, ...props }: QueueSectionContentProps) => (
   <CollapsibleContent className={cn(className)} {...props} />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueSectionContentWithRef = withRef("QueueSectionContent", QueueSectionContent);
+export { QueueSectionContentWithRef as QueueSectionContent };
 
 // ---------------------------------------------------------------------------
 // Queue (root)
@@ -237,7 +294,7 @@ export type QueueProps = ComponentProps<"div"> & {
   isStreaming?: boolean;
 };
 
-export const Queue = ({ className, isStreaming = false, children, style, id, ...props }: QueueProps) => {
+const Queue = ({ className, isStreaming = false, children, style, id, ref, ...props }: QueueProps) => {
   const [visible, setVisible] = useState(true);
   const hasEverStreamedRef = useRef(isStreaming);
   const [hasAutoHidden, setHasAutoHidden] = useState(false);
@@ -267,6 +324,7 @@ export const Queue = ({ className, isStreaming = false, children, style, id, ...
       {visible && (
         <motion.div
           {...passthroughProps}
+          ref={ref}
           className={cn(
             "flex flex-col gap-2 rounded-xl border border-border bg-background px-2 pb-2 pt-2 shadow-elevation-2",
             className,
@@ -290,3 +348,7 @@ export const Queue = ({ className, isStreaming = false, children, style, id, ...
     </AnimatePresence>
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const QueueWithRef = withRef("Queue", Queue);
+export { QueueWithRef as Queue };

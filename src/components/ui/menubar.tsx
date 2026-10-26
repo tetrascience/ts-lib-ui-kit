@@ -2,6 +2,7 @@ import { CheckIcon, ChevronRightIcon } from "lucide-react";
 import { Menubar as MenubarPrimitive } from "radix-ui";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function Menubar({ className, ...props }: React.ComponentProps<typeof MenubarPrimitive.Root>) {
@@ -14,6 +15,9 @@ function Menubar({ className, ...props }: React.ComponentProps<typeof MenubarPri
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarWithRef = withRef("Menubar", Menubar);
+
 function MenubarMenu({ ...props }: React.ComponentProps<typeof MenubarPrimitive.Menu>) {
   return <MenubarPrimitive.Menu data-slot="menubar-menu" {...props} />;
 }
@@ -22,6 +26,9 @@ function MenubarGroup({ ...props }: React.ComponentProps<typeof MenubarPrimitive
   return <MenubarPrimitive.Group data-slot="menubar-group" {...props} />;
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarGroupWithRef = withRef("MenubarGroup", MenubarGroup);
+
 function MenubarPortal({ ...props }: React.ComponentProps<typeof MenubarPrimitive.Portal>) {
   return <MenubarPrimitive.Portal data-slot="menubar-portal" {...props} />;
 }
@@ -29,6 +36,9 @@ function MenubarPortal({ ...props }: React.ComponentProps<typeof MenubarPrimitiv
 function MenubarRadioGroup({ ...props }: React.ComponentProps<typeof MenubarPrimitive.RadioGroup>) {
   return <MenubarPrimitive.RadioGroup data-slot="menubar-radio-group" {...props} />;
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarRadioGroupWithRef = withRef("MenubarRadioGroup", MenubarRadioGroup);
 
 function MenubarTrigger({ className, ...props }: React.ComponentProps<typeof MenubarPrimitive.Trigger>) {
   return (
@@ -42,6 +52,9 @@ function MenubarTrigger({ className, ...props }: React.ComponentProps<typeof Men
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarTriggerWithRef = withRef("MenubarTrigger", MenubarTrigger);
 
 function MenubarContent({
   className,
@@ -67,6 +80,9 @@ function MenubarContent({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarContentWithRef = withRef("MenubarContent", MenubarContent);
+
 function MenubarItem({
   className,
   inset,
@@ -89,6 +105,9 @@ function MenubarItem({
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarItemWithRef = withRef("MenubarItem", MenubarItem);
 
 function MenubarCheckboxItem({
   className,
@@ -120,6 +139,9 @@ function MenubarCheckboxItem({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarCheckboxItemWithRef = withRef("MenubarCheckboxItem", MenubarCheckboxItem);
+
 function MenubarRadioItem({
   className,
   children,
@@ -148,6 +170,9 @@ function MenubarRadioItem({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarRadioItemWithRef = withRef("MenubarRadioItem", MenubarRadioItem);
+
 function MenubarLabel({
   className,
   inset,
@@ -165,6 +190,9 @@ function MenubarLabel({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarLabelWithRef = withRef("MenubarLabel", MenubarLabel);
+
 function MenubarSeparator({ className, ...props }: React.ComponentProps<typeof MenubarPrimitive.Separator>) {
   return (
     <MenubarPrimitive.Separator
@@ -174,6 +202,9 @@ function MenubarSeparator({ className, ...props }: React.ComponentProps<typeof M
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarSeparatorWithRef = withRef("MenubarSeparator", MenubarSeparator);
 
 function MenubarShortcut({ className, ...props }: React.ComponentProps<"span">) {
   return (
@@ -187,6 +218,9 @@ function MenubarShortcut({ className, ...props }: React.ComponentProps<"span">) 
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarShortcutWithRef = withRef("MenubarShortcut", MenubarShortcut);
 
 function MenubarSub({ ...props }: React.ComponentProps<typeof MenubarPrimitive.Sub>) {
   return <MenubarPrimitive.Sub data-slot="menubar-sub" {...props} />;
@@ -216,6 +250,9 @@ function MenubarSubTrigger({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarSubTriggerWithRef = withRef("MenubarSubTrigger", MenubarSubTrigger);
+
 function MenubarSubContent({ className, ...props }: React.ComponentProps<typeof MenubarPrimitive.SubContent>) {
   return (
     <MenubarPrimitive.SubContent
@@ -229,21 +266,24 @@ function MenubarSubContent({ className, ...props }: React.ComponentProps<typeof 
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const MenubarSubContentWithRef = withRef("MenubarSubContent", MenubarSubContent);
+
 export {
-  Menubar,
+  MenubarWithRef as Menubar,
   MenubarPortal,
   MenubarMenu,
-  MenubarTrigger,
-  MenubarContent,
-  MenubarGroup,
-  MenubarSeparator,
-  MenubarLabel,
-  MenubarItem,
-  MenubarShortcut,
-  MenubarCheckboxItem,
-  MenubarRadioGroup,
-  MenubarRadioItem,
+  MenubarTriggerWithRef as MenubarTrigger,
+  MenubarContentWithRef as MenubarContent,
+  MenubarGroupWithRef as MenubarGroup,
+  MenubarSeparatorWithRef as MenubarSeparator,
+  MenubarLabelWithRef as MenubarLabel,
+  MenubarItemWithRef as MenubarItem,
+  MenubarShortcutWithRef as MenubarShortcut,
+  MenubarCheckboxItemWithRef as MenubarCheckboxItem,
+  MenubarRadioGroupWithRef as MenubarRadioGroup,
+  MenubarRadioItemWithRef as MenubarRadioItem,
   MenubarSub,
-  MenubarSubTrigger,
-  MenubarSubContent,
+  MenubarSubTriggerWithRef as MenubarSubTrigger,
+  MenubarSubContentWithRef as MenubarSubContent,
 };

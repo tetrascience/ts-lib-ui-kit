@@ -1,6 +1,7 @@
 import { Popover as PopoverPrimitive } from "radix-ui";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
@@ -11,9 +12,15 @@ function PopoverTrigger({ ...props }: React.ComponentProps<typeof PopoverPrimiti
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PopoverTriggerWithRef = withRef("PopoverTrigger", PopoverTrigger);
+
 function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />;
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PopoverAnchorWithRef = withRef("PopoverAnchor", PopoverAnchor);
 
 function PopoverContent({
   className,
@@ -37,4 +44,12 @@ function PopoverContent({
   );
 }
 
-export { Popover, PopoverTrigger, PopoverAnchor, PopoverContent };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PopoverContentWithRef = withRef("PopoverContent", PopoverContent);
+
+export {
+  Popover,
+  PopoverTriggerWithRef as PopoverTrigger,
+  PopoverAnchorWithRef as PopoverAnchor,
+  PopoverContentWithRef as PopoverContent,
+};

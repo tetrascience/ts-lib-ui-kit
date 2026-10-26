@@ -3,6 +3,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -13,6 +14,9 @@ function DialogTrigger({ ...props }: React.ComponentProps<typeof DialogPrimitive
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogTriggerWithRef = withRef("DialogTrigger", DialogTrigger);
+
 function DialogPortal({ ...props }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
@@ -20,6 +24,9 @@ function DialogPortal({ ...props }: React.ComponentProps<typeof DialogPrimitive.
 function DialogClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogCloseWithRef = withRef("DialogClose", DialogClose);
 
 function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
   return (
@@ -34,6 +41,9 @@ function DialogOverlay({ className, ...props }: React.ComponentProps<typeof Dial
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogOverlayWithRef = withRef("DialogOverlay", DialogOverlay);
+
 function DialogContent({
   className,
   children,
@@ -44,7 +54,7 @@ function DialogContent({
 }) {
   return (
     <DialogPortal>
-      <DialogOverlay />
+      <DialogOverlayWithRef />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
@@ -85,6 +95,9 @@ function DialogContent({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogContentWithRef = withRef("DialogContent", DialogContent);
+
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -95,9 +108,15 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogHeaderWithRef = withRef("DialogHeader", DialogHeader);
+
 function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="dialog-body" className={cn("flex-1 overflow-y-auto px-4 py-2", className)} {...props} />;
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogBodyWithRef = withRef("DialogBody", DialogBody);
 
 function DialogFooter({
   className,
@@ -126,6 +145,9 @@ function DialogFooter({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogFooterWithRef = withRef("DialogFooter", DialogFooter);
+
 function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
@@ -135,6 +157,9 @@ function DialogTitle({ className, ...props }: React.ComponentProps<typeof Dialog
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogTitleWithRef = withRef("DialogTitle", DialogTitle);
 
 function DialogDescription({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Description>) {
   return (
@@ -149,16 +174,19 @@ function DialogDescription({ className, ...props }: React.ComponentProps<typeof 
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DialogDescriptionWithRef = withRef("DialogDescription", DialogDescription);
+
 export {
   Dialog,
-  DialogBody,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogOverlay,
+  DialogBodyWithRef as DialogBody,
+  DialogCloseWithRef as DialogClose,
+  DialogContentWithRef as DialogContent,
+  DialogDescriptionWithRef as DialogDescription,
+  DialogFooterWithRef as DialogFooter,
+  DialogHeaderWithRef as DialogHeader,
+  DialogOverlayWithRef as DialogOverlay,
   DialogPortal,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitleWithRef as DialogTitle,
+  DialogTriggerWithRef as DialogTrigger,
 };

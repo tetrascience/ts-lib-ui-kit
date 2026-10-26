@@ -2,17 +2,24 @@ import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { Accordion as AccordionPrimitive } from "radix-ui";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function Accordion({ className, ...props }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
   return <AccordionPrimitive.Root data-slot="accordion" className={cn("flex w-full flex-col", className)} {...props} />;
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AccordionWithRef = withRef("Accordion", Accordion);
+
 function AccordionItem({ className, ...props }: React.ComponentProps<typeof AccordionPrimitive.Item>) {
   return (
     <AccordionPrimitive.Item data-slot="accordion-item" className={cn("not-last:border-b", className)} {...props} />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AccordionItemWithRef = withRef("AccordionItem", AccordionItem);
 
 function AccordionTrigger({ className, children, ...props }: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
   return (
@@ -39,6 +46,9 @@ function AccordionTrigger({ className, children, ...props }: React.ComponentProp
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AccordionTriggerWithRef = withRef("AccordionTrigger", AccordionTrigger);
+
 function AccordionContent({ className, children, ...props }: React.ComponentProps<typeof AccordionPrimitive.Content>) {
   return (
     <AccordionPrimitive.Content
@@ -58,4 +68,12 @@ function AccordionContent({ className, children, ...props }: React.ComponentProp
   );
 }
 
-export { Accordion, AccordionItem, AccordionTrigger, AccordionContent };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AccordionContentWithRef = withRef("AccordionContent", AccordionContent);
+
+export {
+  AccordionWithRef as Accordion,
+  AccordionItemWithRef as AccordionItem,
+  AccordionTriggerWithRef as AccordionTrigger,
+  AccordionContentWithRef as AccordionContent,
+};

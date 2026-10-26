@@ -3,6 +3,7 @@ import { Brain, ChevronUpIcon, ImageIcon, SearchIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -11,9 +12,13 @@ import { cn } from "@/lib/utils";
 
 export type ChainOfThoughtProps = ComponentProps<typeof Collapsible>;
 
-export const ChainOfThought = ({ className, defaultOpen = true, ...props }: ChainOfThoughtProps) => (
+const ChainOfThought = ({ className, defaultOpen = true, ...props }: ChainOfThoughtProps) => (
   <Collapsible className={cn("overflow-hidden rounded-lg text-sm", className)} defaultOpen={defaultOpen} {...props} />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtWithRef = withRef("ChainOfThought", ChainOfThought);
+export { ChainOfThoughtWithRef as ChainOfThought };
 
 // ---------------------------------------------------------------------------
 // ChainOfThoughtTrigger
@@ -26,7 +31,7 @@ export type ChainOfThoughtTriggerProps = ComponentProps<typeof CollapsibleTrigge
   isStreaming?: boolean;
 };
 
-export const ChainOfThoughtTrigger = ({
+const ChainOfThoughtTrigger = ({
   className,
   children,
   title = "Chain of Thought",
@@ -57,13 +62,17 @@ export const ChainOfThoughtTrigger = ({
   </CollapsibleTrigger>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtTriggerWithRef = withRef("ChainOfThoughtTrigger", ChainOfThoughtTrigger);
+export { ChainOfThoughtTriggerWithRef as ChainOfThoughtTrigger };
+
 // ---------------------------------------------------------------------------
 // ChainOfThoughtContent
 // ---------------------------------------------------------------------------
 
 export type ChainOfThoughtContentProps = ComponentProps<typeof CollapsibleContent>;
 
-export const ChainOfThoughtContent = ({ className, ...props }: ChainOfThoughtContentProps) => (
+const ChainOfThoughtContent = ({ className, ...props }: ChainOfThoughtContentProps) => (
   <CollapsibleContent
     className={cn(
       "flex flex-col gap-2.5 pb-4 pt-3",
@@ -75,6 +84,10 @@ export const ChainOfThoughtContent = ({ className, ...props }: ChainOfThoughtCon
     {...props}
   />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtContentWithRef = withRef("ChainOfThoughtContent", ChainOfThoughtContent);
+export { ChainOfThoughtContentWithRef as ChainOfThoughtContent };
 
 // ---------------------------------------------------------------------------
 // ChainOfThoughtStep
@@ -99,7 +112,7 @@ const STEP_ICONS: Record<ChainOfThoughtStepVariant, ReactNode> = {
   image: <ImageIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />,
 };
 
-export const ChainOfThoughtStep = ({ variant = "bullet", className, children, ...props }: ChainOfThoughtStepProps) => {
+const ChainOfThoughtStep = ({ variant = "bullet", className, children, ...props }: ChainOfThoughtStepProps) => {
   const icon = typeof variant === "string" ? STEP_ICONS[variant as ChainOfThoughtStepVariant] : variant;
 
   return (
@@ -110,22 +123,30 @@ export const ChainOfThoughtStep = ({ variant = "bullet", className, children, ..
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtStepWithRef = withRef("ChainOfThoughtStep", ChainOfThoughtStep);
+export { ChainOfThoughtStepWithRef as ChainOfThoughtStep };
+
 // ---------------------------------------------------------------------------
 // ChainOfThoughtSources — inline chip group with left bar
 // ---------------------------------------------------------------------------
 
 export type ChainOfThoughtSourcesProps = ComponentProps<"div">;
 
-export const ChainOfThoughtSources = ({ className, ...props }: ChainOfThoughtSourcesProps) => (
+const ChainOfThoughtSources = ({ className, ...props }: ChainOfThoughtSourcesProps) => (
   <div
     className={cn("ml-[6px] flex flex-wrap gap-1.5 border-l-2 border-muted-foreground/20 py-0.5 pl-3", className)}
     {...props}
   />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtSourcesWithRef = withRef("ChainOfThoughtSources", ChainOfThoughtSources);
+export { ChainOfThoughtSourcesWithRef as ChainOfThoughtSources };
+
 export type ChainOfThoughtSourceProps = ComponentProps<"a">;
 
-export const ChainOfThoughtSource = ({ className, children, ...props }: ChainOfThoughtSourceProps) => (
+const ChainOfThoughtSource = ({ className, children, ...props }: ChainOfThoughtSourceProps) => (
   <a
     className={cn(
       "inline-flex items-center rounded-full border border-border/60 bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground transition-colors",
@@ -140,6 +161,10 @@ export const ChainOfThoughtSource = ({ className, children, ...props }: ChainOfT
   </a>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtSourceWithRef = withRef("ChainOfThoughtSource", ChainOfThoughtSource);
+export { ChainOfThoughtSourceWithRef as ChainOfThoughtSource };
+
 // ---------------------------------------------------------------------------
 // ChainOfThoughtImage — inline image with optional caption
 // ---------------------------------------------------------------------------
@@ -150,12 +175,16 @@ export type ChainOfThoughtImageProps = ComponentProps<"figure"> & {
   caption?: string;
 };
 
-export const ChainOfThoughtImage = ({ src, alt = "", caption, className, ...props }: ChainOfThoughtImageProps) => (
+const ChainOfThoughtImage = ({ src, alt = "", caption, className, ...props }: ChainOfThoughtImageProps) => (
   <figure className={cn("ml-[22px] overflow-hidden rounded-lg border", className)} {...props}>
     <img alt={alt} className="max-h-64 w-full object-cover" src={src} />
     {caption && <figcaption className="border-t px-3 py-2 text-xs italic text-muted-foreground">{caption}</figcaption>}
   </figure>
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ChainOfThoughtImageWithRef = withRef("ChainOfThoughtImage", ChainOfThoughtImage);
+export { ChainOfThoughtImageWithRef as ChainOfThoughtImage };
 
 ChainOfThought.displayName = "ChainOfThought";
 ChainOfThoughtTrigger.displayName = "ChainOfThoughtTrigger";

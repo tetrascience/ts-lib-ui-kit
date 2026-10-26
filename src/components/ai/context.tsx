@@ -6,6 +6,7 @@ import type { ComponentProps } from "react";
 import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Progress } from "@/components/ui/progress";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 const PERCENT_MAX = 100;
@@ -128,7 +129,7 @@ export type ContextTriggerProps = ComponentProps<typeof Button> & {
   showPercentage?: boolean;
 };
 
-export const ContextTrigger = ({ children, showPercentage = false, ...props }: ContextTriggerProps) => {
+const ContextTrigger = ({ children, showPercentage = false, ...props }: ContextTriggerProps) => {
   const { usedTokens, maxTokens } = useContextValue();
   const usedPercent = usedTokens / maxTokens;
   const status = getUsageStatus(usedPercent);
@@ -151,15 +152,23 @@ export const ContextTrigger = ({ children, showPercentage = false, ...props }: C
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextTriggerWithRef = withRef("ContextTrigger", ContextTrigger);
+export { ContextTriggerWithRef as ContextTrigger };
+
 export type ContextContentProps = ComponentProps<typeof HoverCardContent>;
 
-export const ContextContent = ({ className, ...props }: ContextContentProps) => (
+const ContextContent = ({ className, ...props }: ContextContentProps) => (
   <HoverCardContent className={cn("min-w-60 divide-y overflow-hidden p-0", className)} {...props} />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextContentWithRef = withRef("ContextContent", ContextContent);
+export { ContextContentWithRef as ContextContent };
+
 export type ContextContentHeaderProps = ComponentProps<"div">;
 
-export const ContextContentHeader = ({ children, className, ...props }: ContextContentHeaderProps) => {
+const ContextContentHeader = ({ children, className, ...props }: ContextContentHeaderProps) => {
   const { usedTokens, maxTokens } = useContextValue();
   const usedPercent = usedTokens / maxTokens;
   const status = getUsageStatus(usedPercent);
@@ -197,17 +206,25 @@ export const ContextContentHeader = ({ children, className, ...props }: ContextC
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextContentHeaderWithRef = withRef("ContextContentHeader", ContextContentHeader);
+export { ContextContentHeaderWithRef as ContextContentHeader };
+
 export type ContextContentBodyProps = ComponentProps<"div">;
 
-export const ContextContentBody = ({ children, className, ...props }: ContextContentBodyProps) => (
+const ContextContentBody = ({ children, className, ...props }: ContextContentBodyProps) => (
   <div className={cn("w-full p-3", className)} {...props}>
     {children}
   </div>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextContentBodyWithRef = withRef("ContextContentBody", ContextContentBody);
+export { ContextContentBodyWithRef as ContextContentBody };
+
 export type ContextContentFooterProps = ComponentProps<"div">;
 
-export const ContextContentFooter = ({ children, className, ...props }: ContextContentFooterProps) => {
+const ContextContentFooter = ({ children, className, ...props }: ContextContentFooterProps) => {
   const { cost } = useContextValue();
   const totalCost = cost?.total === undefined ? "—" : USD_FORMAT.format(cost.total);
 
@@ -223,6 +240,10 @@ export const ContextContentFooter = ({ children, className, ...props }: ContextC
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextContentFooterWithRef = withRef("ContextContentFooter", ContextContentFooter);
+export { ContextContentFooterWithRef as ContextContentFooter };
+
 const TokensWithCost = ({ tokens, costText }: { tokens?: number; costText?: string }) => (
   <span>
     {tokens === undefined
@@ -236,7 +257,7 @@ const TokensWithCost = ({ tokens, costText }: { tokens?: number; costText?: stri
 
 export type ContextInputUsageProps = ComponentProps<"div">;
 
-export const ContextInputUsage = ({ className, children, ...props }: ContextInputUsageProps) => {
+const ContextInputUsage = ({ className, children, ...props }: ContextInputUsageProps) => {
   const { usage, cost } = useContextValue();
   const inputTokens = usage?.inputTokens ?? 0;
 
@@ -258,9 +279,13 @@ export const ContextInputUsage = ({ className, children, ...props }: ContextInpu
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextInputUsageWithRef = withRef("ContextInputUsage", ContextInputUsage);
+export { ContextInputUsageWithRef as ContextInputUsage };
+
 export type ContextOutputUsageProps = ComponentProps<"div">;
 
-export const ContextOutputUsage = ({ className, children, ...props }: ContextOutputUsageProps) => {
+const ContextOutputUsage = ({ className, children, ...props }: ContextOutputUsageProps) => {
   const { usage, cost } = useContextValue();
   const outputTokens = usage?.outputTokens ?? 0;
 
@@ -282,9 +307,13 @@ export const ContextOutputUsage = ({ className, children, ...props }: ContextOut
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextOutputUsageWithRef = withRef("ContextOutputUsage", ContextOutputUsage);
+export { ContextOutputUsageWithRef as ContextOutputUsage };
+
 export type ContextReasoningUsageProps = ComponentProps<"div">;
 
-export const ContextReasoningUsage = ({ className, children, ...props }: ContextReasoningUsageProps) => {
+const ContextReasoningUsage = ({ className, children, ...props }: ContextReasoningUsageProps) => {
   const { usage, cost } = useContextValue();
   const reasoningTokens = usage?.reasoningTokens ?? 0;
 
@@ -306,9 +335,13 @@ export const ContextReasoningUsage = ({ className, children, ...props }: Context
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextReasoningUsageWithRef = withRef("ContextReasoningUsage", ContextReasoningUsage);
+export { ContextReasoningUsageWithRef as ContextReasoningUsage };
+
 export type ContextCacheUsageProps = ComponentProps<"div">;
 
-export const ContextCacheUsage = ({ className, children, ...props }: ContextCacheUsageProps) => {
+const ContextCacheUsage = ({ className, children, ...props }: ContextCacheUsageProps) => {
   const { usage, cost } = useContextValue();
   const cacheTokens = usage?.cachedInputTokens ?? 0;
 
@@ -329,3 +362,7 @@ export const ContextCacheUsage = ({ className, children, ...props }: ContextCach
     </div>
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ContextCacheUsageWithRef = withRef("ContextCacheUsage", ContextCacheUsage);
+export { ContextCacheUsageWithRef as ContextCacheUsage };

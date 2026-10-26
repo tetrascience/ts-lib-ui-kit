@@ -1,6 +1,7 @@
 import { Avatar as AvatarPrimitive } from "radix-ui";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function Avatar({
@@ -23,6 +24,9 @@ function Avatar({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AvatarWithRef = withRef("Avatar", Avatar);
+
 function AvatarImage({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
   return (
     <AvatarPrimitive.Image
@@ -32,6 +36,9 @@ function AvatarImage({ className, ...props }: React.ComponentProps<typeof Avatar
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AvatarImageWithRef = withRef("AvatarImage", AvatarImage);
 
 function AvatarFallback({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
   return (
@@ -45,6 +52,9 @@ function AvatarFallback({ className, ...props }: React.ComponentProps<typeof Ava
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AvatarFallbackWithRef = withRef("AvatarFallback", AvatarFallback);
 
 function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
   return (
@@ -62,6 +72,9 @@ function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AvatarBadgeWithRef = withRef("AvatarBadge", AvatarBadge);
+
 function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -74,6 +87,9 @@ function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AvatarGroupWithRef = withRef("AvatarGroup", AvatarGroup);
 
 function AvatarGroupCount({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -88,4 +104,14 @@ function AvatarGroupCount({ className, ...props }: React.ComponentProps<"div">) 
   );
 }
 
-export { Avatar, AvatarImage, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarBadge };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const AvatarGroupCountWithRef = withRef("AvatarGroupCount", AvatarGroupCount);
+
+export {
+  AvatarWithRef as Avatar,
+  AvatarImageWithRef as AvatarImage,
+  AvatarFallbackWithRef as AvatarFallback,
+  AvatarGroupWithRef as AvatarGroup,
+  AvatarGroupCountWithRef as AvatarGroupCount,
+  AvatarBadgeWithRef as AvatarBadge,
+};

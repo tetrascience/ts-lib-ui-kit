@@ -2,6 +2,7 @@ import { CheckIcon, ChevronRightIcon } from "lucide-react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function DropdownMenu({ modal = false, ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
@@ -15,6 +16,9 @@ function DropdownMenuPortal({ ...props }: React.ComponentProps<typeof DropdownMe
 function DropdownMenuTrigger({ ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
   return <DropdownMenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />;
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DropdownMenuTriggerWithRef = withRef("DropdownMenuTrigger", DropdownMenuTrigger);
 
 function DropdownMenuContent({
   className,
@@ -38,9 +42,15 @@ function DropdownMenuContent({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DropdownMenuContentWithRef = withRef("DropdownMenuContent", DropdownMenuContent);
+
 function DropdownMenuGroup({ ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Group>) {
   return <DropdownMenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />;
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DropdownMenuGroupWithRef = withRef("DropdownMenuGroup", DropdownMenuGroup);
 
 function DropdownMenuItem({
   className,
@@ -64,6 +74,9 @@ function DropdownMenuItem({
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DropdownMenuItemWithRef = withRef("DropdownMenuItem", DropdownMenuItem);
 
 function DropdownMenuCheckboxItem({
   className,
@@ -98,9 +111,15 @@ function DropdownMenuCheckboxItem({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DropdownMenuCheckboxItemWithRef = withRef("DropdownMenuCheckboxItem", DropdownMenuCheckboxItem);
+
 function DropdownMenuRadioGroup({ ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>) {
   return <DropdownMenuPrimitive.RadioGroup data-slot="dropdown-menu-radio-group" {...props} />;
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DropdownMenuRadioGroupWithRef = withRef("DropdownMenuRadioGroup", DropdownMenuRadioGroup);
 
 function DropdownMenuRadioItem({
   className,
@@ -133,6 +152,9 @@ function DropdownMenuRadioItem({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DropdownMenuRadioItemWithRef = withRef("DropdownMenuRadioItem", DropdownMenuRadioItem);
+
 function DropdownMenuLabel({
   className,
   inset,
@@ -150,6 +172,9 @@ function DropdownMenuLabel({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DropdownMenuLabelWithRef = withRef("DropdownMenuLabel", DropdownMenuLabel);
+
 function DropdownMenuSeparator({ className, ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
   return (
     <DropdownMenuPrimitive.Separator
@@ -159,6 +184,9 @@ function DropdownMenuSeparator({ className, ...props }: React.ComponentProps<typ
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DropdownMenuSeparatorWithRef = withRef("DropdownMenuSeparator", DropdownMenuSeparator);
 
 function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<"span">) {
   return (
@@ -172,6 +200,9 @@ function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<"spa
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DropdownMenuShortcutWithRef = withRef("DropdownMenuShortcut", DropdownMenuShortcut);
 
 function DropdownMenuSub({ ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>) {
   return <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />;
@@ -201,6 +232,9 @@ function DropdownMenuSubTrigger({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DropdownMenuSubTriggerWithRef = withRef("DropdownMenuSubTrigger", DropdownMenuSubTrigger);
+
 function DropdownMenuSubContent({
   className,
   ...props
@@ -217,20 +251,23 @@ function DropdownMenuSubContent({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const DropdownMenuSubContentWithRef = withRef("DropdownMenuSubContent", DropdownMenuSubContent);
+
 export {
   DropdownMenu,
   DropdownMenuPortal,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuItem,
-  DropdownMenuCheckboxItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
+  DropdownMenuTriggerWithRef as DropdownMenuTrigger,
+  DropdownMenuContentWithRef as DropdownMenuContent,
+  DropdownMenuGroupWithRef as DropdownMenuGroup,
+  DropdownMenuLabelWithRef as DropdownMenuLabel,
+  DropdownMenuItemWithRef as DropdownMenuItem,
+  DropdownMenuCheckboxItemWithRef as DropdownMenuCheckboxItem,
+  DropdownMenuRadioGroupWithRef as DropdownMenuRadioGroup,
+  DropdownMenuRadioItemWithRef as DropdownMenuRadioItem,
+  DropdownMenuSeparatorWithRef as DropdownMenuSeparator,
+  DropdownMenuShortcutWithRef as DropdownMenuShortcut,
   DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
+  DropdownMenuSubTriggerWithRef as DropdownMenuSubTrigger,
+  DropdownMenuSubContentWithRef as DropdownMenuSubContent,
 };

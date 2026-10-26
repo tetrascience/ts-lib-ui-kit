@@ -4,6 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Tabs as TabsPrimitive } from "radix-ui";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function Tabs({ className, orientation = "horizontal", ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
@@ -16,6 +17,9 @@ function Tabs({ className, orientation = "horizontal", ...props }: React.Compone
     />
   );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TabsWithRef = withRef("Tabs", Tabs);
 
 const tabsListVariants = cva(
   "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-horizontal/tabs:h-8 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col data-[variant=line]:rounded-none",
@@ -47,6 +51,9 @@ function TabsList({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TabsListWithRef = withRef("TabsList", TabsList);
+
 function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   return (
     <TabsPrimitive.Trigger
@@ -64,6 +71,9 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TabsTriggerWithRef = withRef("TabsTrigger", TabsTrigger);
+
 function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
   return (
     <TabsPrimitive.Content
@@ -74,4 +84,13 @@ function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPr
   );
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TabsContentWithRef = withRef("TabsContent", TabsContent);
+
+export {
+  TabsWithRef as Tabs,
+  TabsListWithRef as TabsList,
+  TabsTriggerWithRef as TabsTrigger,
+  TabsContentWithRef as TabsContent,
+  tabsListVariants,
+};

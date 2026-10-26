@@ -1,3 +1,4 @@
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
@@ -13,8 +14,14 @@ function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const KbdWithRef = withRef("Kbd", Kbd);
+
 function KbdGroup({ className, ...props }: React.ComponentProps<"div">) {
   return <kbd data-slot="kbd-group" className={cn("inline-flex items-center gap-1", className)} {...props} />;
 }
 
-export { Kbd, KbdGroup };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const KbdGroupWithRef = withRef("KbdGroup", KbdGroup);
+
+export { KbdWithRef as Kbd, KbdGroupWithRef as KbdGroup };

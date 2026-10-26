@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -57,4 +58,8 @@ function TopBar({ left, center, right, sticky, className, ...props }: TopBarProp
   );
 }
 
-export { TopBar, topBarVariants };
+/** React 18 wrapper for {@link TopBar}; see its documentation. */
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const TopBarWithRef = withRef("TopBar", TopBar);
+
+export { TopBarWithRef as TopBar, topBarVariants };

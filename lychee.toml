@@ -19,4 +19,7 @@ exclude = [
   "^http://127\\.0\\.0\\.1",
   "^https?://example\\.com",
   "^https://www\\.npmjs\\.com",
+  # CHANGELOG entry headings link the compare view to the release's tag, which
+  # doesn't exist until Release runs, so a release-prep PR's link always 404s.
+  "^https://github\\.com/tetrascience/ts-lib-ui-kit/compare/",
 ]

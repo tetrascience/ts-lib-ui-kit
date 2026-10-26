@@ -1,14 +1,18 @@
 /**
- * Prints the version the next release will get, for naming beta builds.
+ * Prints the version the next release will get, for naming beta and alpha
+ * builds.
  *
- * ts-ci-cd-lib's shared publish workflow names a beta
- * `${package.json version}-beta.<run>.<attempt>`. Between releases
- * package.json holds the version already released, so every merge after
- * v1.1.0 shipped as `1.1.0-beta.N`, and semver sorts those *before* 1.1.0.
- * The publish workflows run this first (`next-version.yml`) and write the
- * result into package.json (via the shared workflow's
- * `pre_install_command`), so the merges after v1.1.0 publish as
- * `1.2.0-beta.N` or `1.1.1-beta.N` instead.
+ * Between releases package.json holds the version already released, so
+ * naming a prerelease from it (ts-ci-cd-lib's shared publish workflow's
+ * default, `${package.json version}-beta.<run>.<attempt>`) gave every merge
+ * after v1.1.0 a `1.1.0-beta.N`, which semver sorts *before* 1.1.0. The
+ * publish workflows run this first (`next-version.yml`):
+ * - betas pass `--prerelease beta` and publish the exact result
+ *   (`1.2.0-beta.3`, numbered per version) through the shared workflow's
+ *   `prerelease_version` input;
+ * - PR alphas take the plain version, written into package.json through the
+ *   shared workflow's `pre_install_command`, and keep its run-number suffix
+ *   (open PRs share a next version, so a counter would collide).
  *
  * The bump comes from semantic-release's own commit analyzer, configured
  * from `release.config.js`, over the commits since the last release tag
@@ -20,7 +24,8 @@
  * Node 24 loads this file directly (it uses only erasable TypeScript), which
  * is how the Release workflow's verify-package-version.js plugin imports it.
  *
- * Usage: yarn tsx scripts/release/next-version.ts   (prints e.g. "1.2.0")
+ * Usage: yarn tsx scripts/release/next-version.ts                    (prints e.g. "1.2.0")
+ *        yarn tsx scripts/release/next-version.ts --prerelease beta  (prints e.g. "1.2.0-beta.3")
  */
 import { execFileSync } from "node:child_process";
 import path from "node:path";
@@ -193,6 +198,35 @@ export async function computeNextVersion(cwd: string): Promise<string> {
   return bumpVersion(lastVersion, type ?? "patch");
 }
 
+const TYPE_RANK: Record<ReleaseType, number> = { patch: 1, minor: 2, major: 3 };
+const PRERELEASE_TAG = /^[0-9A-Za-z-]+$/;
+
+/**
+ * The next release's prerelease name, `X.Y.Z-<tag>.N`, where N counts the
+ * commits since the next version last changed, so it restarts at 1 for each
+ * version: after v1.1.0, a fix is 1.1.1-beta.1, a docs merge 1.1.1-beta.2,
+ * then a feat 1.2.0-beta.1. Derived from git alone, so the same commit gets
+ * the same name on every registry and on a re-run.
+ */
+export async function computePrereleaseVersion(cwd: string, tag: string): Promise<string> {
+  if (!PRERELEASE_TAG.test(tag)) throw new Error(`Not a prerelease tag: "${tag}"`);
+  const { lastVersion, commits, config } = await analyzeSinceLastRelease(cwd);
+
+  // Walk oldest to newest, tracking the version each merge would release.
+  let type: ReleaseType | null = null;
+  let version = bumpVersion(lastVersion, "patch");
+  let count = 0;
+  for (const commit of [...commits].reverse()) {
+    const commitType = await analyze(cwd, config.plugins, [commit]);
+    if (commitType && (!type || TYPE_RANK[commitType] > TYPE_RANK[type])) type = commitType;
+    const next = bumpVersion(lastVersion, type ?? "patch");
+    count = next === version ? count + 1 : 1;
+    version = next;
+  }
+  // At the release commit itself there is nothing to count; call it the first.
+  return `${version}-${tag}.${Math.max(count, 1)}`;
+}
+
 const CHANGELOG_HEADING = /^#{1,2} \[(\d+\.\d+\.\d+)\]/gm;
 
 /** Every `# [X.Y.Z]` entry heading in a CHANGELOG, newest (topmost) first. */
@@ -202,7 +236,9 @@ export function changelogEntries(changelog: string): Array<{ version: string; in
 
 // CLI
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  computeNextVersion(process.cwd()).then(
+  const tagIndex = process.argv.indexOf("--prerelease");
+  const tag = tagIndex === -1 ? undefined : (process.argv[tagIndex + 1] ?? "");
+  (tag === undefined ? computeNextVersion(process.cwd()) : computePrereleaseVersion(process.cwd(), tag)).then(
     (version) => console.log(version),
     (error: unknown) => {
       console.error(error instanceof Error ? error.message : error);

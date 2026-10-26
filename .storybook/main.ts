@@ -23,6 +23,16 @@ const config: StorybookConfig = {
   core: {
     disableTelemetry: true,
   },
+  // Vercel's build metadata, for the Introduction page's version badge: on the
+  // production deploy it shows the npm build published from this commit
+  // (see ./deployed-version.ts). The SHA and environment are empty outside
+  // Vercel.
+  env: (config) => ({
+    ...config,
+    STORYBOOK_DEPLOY_SHA: process.env.VERCEL_GIT_COMMIT_SHA ?? "",
+    STORYBOOK_DEPLOY_ENV: process.env.VERCEL_ENV ?? "",
+    STORYBOOK_BUILD_TIME: String(Date.now()),
+  }),
   async viteFinal(config) {
     // To prevent vercel from failing to build storybook omit the 'vite:dts' plugin
     config.plugins = await withoutVitePlugins(config.plugins, [

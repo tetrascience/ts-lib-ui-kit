@@ -6,7 +6,7 @@ React component library for building TetraScience applications.
 
 ## Version
 
-v1.1.0
+v1.1.1
 
 This library provides:
 

@@ -2,7 +2,7 @@
 
 ### Bug Fixes
 
-- SW-2624 wait for the Select listbox before querying its options ([#225](https://github.com/tetrascience/ts-lib-ui-kit/issues/225)) ([bff78b0](https://github.com/tetrascience/ts-lib-ui-kit/commit/bff78b008e2543d4a07b2e487b8ae12dd2cef764))
+- SW-2624 wait for the Select listbox before querying its options ([#225](https://github.com/tetrascience/ts-lib-ui-kit/pull/225)) ([bff78b0](https://github.com/tetrascience/ts-lib-ui-kit/commit/bff78b008e2543d4a07b2e487b8ae12dd2cef764))
 
 # [1.1.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v1.0.0...v1.1.0) (2026-10-16)
 

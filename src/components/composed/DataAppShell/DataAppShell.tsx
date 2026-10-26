@@ -61,7 +61,11 @@ export interface DataAppShellProps {
   appIcon?: React.ReactNode;
   /** Optional version string shown below the app name/icon in the sidebar header */
   version?: string;
-  /** Short commit SHA. When set, a build-info footer (version + SHA) renders below the content */
+  /**
+   * Short commit SHA. When set, a build-info footer (version + SHA) renders below the content.
+   * A page that fills the viewport and scrolls internally puts `data-ts-shell-fill` on its
+   * outermost element (`AssistantLayout` needs nothing).
+   */
   commitSha?: string;
   /** Navigation groups; each group contains one or more pages */
   navGroups: NavGroup[];

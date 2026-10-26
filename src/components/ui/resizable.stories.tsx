@@ -1,19 +1,15 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { Card, CardContent, CardHeader, CardTitle } from "./card"
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "./resizable"
+import { Card, CardContent, CardHeader, CardTitle } from "./card";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./resizable";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-import type { ComponentProps, ReactNode } from "react"
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ComponentProps, ReactNode } from "react";
 
 /** Args for the demos: the panel-group props plus the handle's `withHandle`. */
 type DemoArgs = ComponentProps<typeof ResizablePanelGroup> & {
-  withHandle?: boolean
-}
+  withHandle?: boolean;
+};
 
 const meta: Meta<DemoArgs> = {
   title: "Components/Layout & Structure/Resizable",
@@ -39,23 +35,15 @@ const meta: Meta<DemoArgs> = {
     orientation: "horizontal",
     withHandle: true,
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<DemoArgs>
+type Story = StoryObj<DemoArgs>;
 
 /* ---- shared panel content (mirrors the SW-2120 prototype) ---- */
 
-function PanelShell({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string
-  subtitle?: string
-  children: ReactNode
-}) {
+function PanelShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   // padded wrapper so each section reads as its own card, with the panel-group
   // background showing through the gap between them
   return (
@@ -63,14 +51,12 @@ function PanelShell({
       <div className="flex h-full flex-col gap-3 overflow-auto rounded-lg border bg-card p-4">
         <div>
           <p className="text-sm font-semibold">{title}</p>
-          {subtitle && (
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
         </div>
         {children}
       </div>
     </div>
-  )
+  );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -79,7 +65,7 @@ function Stat({ label, value }: { label: string; value: string }) {
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className="mt-0.5 text-base font-semibold">{value}</div>
     </div>
-  )
+  );
 }
 
 function SummaryPanel() {
@@ -91,16 +77,10 @@ function SummaryPanel() {
         <Stat label="Flagged aggregation" value="12" />
       </div>
     </PanelShell>
-  )
+  );
 }
 
-function LeadsPanel({
-  subtitle,
-  leads,
-}: {
-  subtitle: string
-  leads: [string, string][]
-}) {
+function LeadsPanel({ subtitle, leads }: { subtitle: string; leads: [string, string][] }) {
   return (
     <PanelShell title="Detail" subtitle={subtitle}>
       <div className="grid grid-cols-2 gap-2.5">
@@ -109,7 +89,7 @@ function LeadsPanel({
         ))}
       </div>
     </PanelShell>
-  )
+  );
 }
 
 function AssistantPanel() {
@@ -120,12 +100,11 @@ function AssistantPanel() {
           Which leads have the best developability?
         </div>
         <div className="max-w-[85%] self-start rounded-lg bg-muted px-3 py-2 text-sm">
-          Leads 3, 7 and 12 score highest on aggregation and thermostability.
-          Want me to filter the table to those?
+          Leads 3, 7 and 12 score highest on aggregation and thermostability. Want me to filter the table to those?
         </div>
       </div>
     </PanelShell>
-  )
+  );
 }
 
 /* ---- horizontal split: Summary | Detail ---- */
@@ -158,48 +137,46 @@ export const Horizontal: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const handle = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="resizable-handle"]'
-    )
-    if (!handle) throw new Error("resize handle not found")
+    const canvas = within(canvasElement);
+    const handle = canvasElement.querySelector<HTMLElement>('[data-slot="resizable-handle"]');
+    if (!handle) throw new Error("resize handle not found");
 
     await step("Panel content renders", async () => {
-      expect(canvas.getByText("Summary")).toBeInTheDocument()
-      expect(canvas.getByText("Selected leads")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Summary")).toBeInTheDocument();
+      expect(canvas.getByText("Selected leads")).toBeInTheDocument();
+    });
 
     await step("Visible divider is 1px; with a grip the handle widens to contain it", async () => {
-      const box = handle.getBoundingClientRect()
-      const cs = getComputedStyle(handle)
-      const divider = box.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
-      expect(Math.round(divider)).toBe(1)
-      const grip = handle.querySelector("div")
+      const box = handle.getBoundingClientRect();
+      const cs = getComputedStyle(handle);
+      const divider = box.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      expect(Math.round(divider)).toBe(1);
+      const grip = handle.querySelector("div");
       if (grip) {
-        expect(cs.backgroundClip).toBe("content-box")
-        const g = grip.getBoundingClientRect()
-        expect(g.left).toBeGreaterThanOrEqual(box.left - 0.01)
-        expect(g.right).toBeLessThanOrEqual(box.right + 0.01)
+        expect(cs.backgroundClip).toBe("content-box");
+        const g = grip.getBoundingClientRect();
+        expect(g.left).toBeGreaterThanOrEqual(box.left - 0.01);
+        expect(g.right).toBeLessThanOrEqual(box.right + 0.01);
       }
-    })
+    });
 
     await step("Panels clip instead of scrolling, with a 4px clip margin (SW-2648)", async () => {
       for (const panel of canvasElement.querySelectorAll("[data-panel]")) {
-        const cs = getComputedStyle(panel.firstElementChild as HTMLElement)
-        expect(cs.overflow).toBe("clip")
-        expect(cs.overflowClipMargin).toBe("4px")
+        const cs = getComputedStyle(panel.firstElementChild as HTMLElement);
+        expect(cs.overflow).toBe("clip");
+        expect(cs.overflowClipMargin).toBe("4px");
       }
-    })
+    });
 
     await step("Divider is hidden until interaction", async () => {
-      expect(getComputedStyle(handle).backgroundColor).toBe("rgba(0, 0, 0, 0)")
-    })
+      expect(getComputedStyle(handle).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    });
 
     await step("Grab area is a wide overlay that takes no layout", async () => {
-      expect(getComputedStyle(handle, "::after").width).toBe("12px")
-    })
+      expect(getComputedStyle(handle, "::after").width).toBe("12px");
+    });
   },
-}
+};
 
 /* ---- vertical split: Detail / AI Assistant ---- */
 
@@ -232,18 +209,18 @@ export const VerticalWithHandle: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Panel content renders", async () => {
-      expect(canvas.getByText("AI Assistant")).toBeInTheDocument()
-      expect(canvas.getByText("Main content area")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("AI Assistant")).toBeInTheDocument();
+      expect(canvas.getByText("Main content area")).toBeInTheDocument();
+    });
 
     await step("Resize handle is present", async () => {
-      expect(canvas.getByRole("separator")).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("separator")).toBeInTheDocument();
+    });
   },
-}
+};
 
 /* ---- option: no grip (withHandle omitted) ---- */
 
@@ -276,20 +253,18 @@ export const WithoutGrip: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const handle = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="resizable-handle"]'
-    )
-    if (!handle) throw new Error("resize handle not found")
+    const handle = canvasElement.querySelector<HTMLElement>('[data-slot="resizable-handle"]');
+    if (!handle) throw new Error("resize handle not found");
 
     await step("Handle has no grip child", async () => {
-      expect(handle.querySelector("div")).toBeNull()
-    })
+      expect(handle.querySelector("div")).toBeNull();
+    });
 
     await step("Grab area is still a wide overlay", async () => {
-      expect(getComputedStyle(handle, "::after").width).toBe("12px")
-    })
+      expect(getComputedStyle(handle, "::after").width).toBe("12px");
+    });
   },
-}
+};
 
 /* ---- option: always-visible divider (className override) ---- */
 
@@ -303,10 +278,7 @@ export const AlwaysVisibleDivider: Story = {
         <ResizablePanel defaultSize="38%" minSize="20%" maxSize="80%">
           <SummaryPanel />
         </ResizablePanel>
-        <ResizableHandle
-          withHandle={withHandle}
-          className="bg-border [&>div]:bg-border"
-        />
+        <ResizableHandle withHandle={withHandle} className="bg-border [&>div]:bg-border" />
         <ResizablePanel defaultSize="62%">
           <LeadsPanel
             subtitle="Selected leads"
@@ -322,18 +294,14 @@ export const AlwaysVisibleDivider: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const handle = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="resizable-handle"]'
-    )
-    if (!handle) throw new Error("resize handle not found")
+    const handle = canvasElement.querySelector<HTMLElement>('[data-slot="resizable-handle"]');
+    if (!handle) throw new Error("resize handle not found");
 
     await step("Divider is visible at rest", async () => {
-      expect(getComputedStyle(handle).backgroundColor).not.toBe(
-        "rgba(0, 0, 0, 0)"
-      )
-    })
+      expect(getComputedStyle(handle).backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    });
   },
-}
+};
 
 /* ---- SW-2648: Cards fill the panels — no seam scrollbar, ring intact ---- */
 
@@ -344,11 +312,7 @@ function CardPanel({ title, rows }: { title: string; rows: number }) {
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       {/* the card scrolls its own content, so no scrollbar lands on the seam */}
-      <CardContent
-        className="min-h-0 flex-1 overflow-auto"
-        tabIndex={0}
-        aria-label={`${title} rows`}
-      >
+      <CardContent className="min-h-0 flex-1 overflow-auto" tabIndex={0} aria-label={`${title} rows`}>
         <ul className="grid gap-1.5">
           {Array.from({ length: rows }, (_, i) => (
             <li key={i} className="rounded-md bg-muted/60 px-2 py-1.5">
@@ -358,7 +322,7 @@ function CardPanel({ title, rows }: { title: string; rows: number }) {
         </ul>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export const CardsInPanels: Story = {
@@ -380,26 +344,26 @@ export const CardsInPanels: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const group = canvasElement.querySelector<HTMLElement>("[data-group]")
-    if (!group) throw new Error("panel group not found")
-    const cards = [...canvasElement.querySelectorAll<HTMLElement>('[data-slot="card"]')]
+    const group = canvasElement.querySelector<HTMLElement>("[data-group]");
+    if (!group) throw new Error("panel group not found");
+    const cards = [...canvasElement.querySelectorAll<HTMLElement>('[data-slot="card"]')];
 
     await step("The panel's clip margin leaves room for each card's ring", async () => {
       for (const card of cards) {
-        const content = card.closest("[data-panel]")?.firstElementChild as HTMLElement
-        expect(getComputedStyle(content).overflow).toBe("clip")
-        expect(parseFloat(getComputedStyle(content).overflowClipMargin)).toBeGreaterThanOrEqual(1)
-        expect(group.contains(card)).toBe(true)
+        const content = card.closest("[data-panel]")?.firstElementChild as HTMLElement;
+        expect(getComputedStyle(content).overflow).toBe("clip");
+        expect(parseFloat(getComputedStyle(content).overflowClipMargin)).toBeGreaterThanOrEqual(1);
+        expect(group.contains(card)).toBe(true);
       }
-    })
+    });
 
     await step("Overflowing content scrolls inside the card, not the panel", async () => {
-      const content = cards[1].querySelector<HTMLElement>('[data-slot="card-content"]')
-      if (!content) throw new Error("card content not found")
-      expect(content.scrollHeight).toBeGreaterThan(content.clientHeight)
-    })
+      const content = cards[1].querySelector<HTMLElement>('[data-slot="card-content"]');
+      if (!content) throw new Error("card content not found");
+      expect(content.scrollHeight).toBeGreaterThan(content.clientHeight);
+    });
   },
-}
+};
 
 /* ---- SW-2648: opt back in to a scrolling panel ---- */
 
@@ -419,10 +383,7 @@ export const ScrollablePanel: Story = {
           <ul className="grid gap-1.5 p-3 text-sm">
             {Array.from({ length: 30 }, (_, i) => (
               <li key={i}>
-                <button
-                  type="button"
-                  className="w-full rounded-md bg-card px-2 py-1.5 text-left"
-                >
+                <button type="button" className="w-full rounded-md bg-card px-2 py-1.5 text-left">
                   Row {i + 1}
                 </button>
               </li>
@@ -434,16 +395,16 @@ export const ScrollablePanel: Story = {
   ),
   play: async ({ canvasElement, step }) => {
     const [plain, scrolling] = [...canvasElement.querySelectorAll("[data-panel]")].map(
-      (panel) => panel.firstElementChild as HTMLElement
-    )
+      (panel) => panel.firstElementChild as HTMLElement,
+    );
 
     await step("Only the `scrollable` panel is a scroll container", async () => {
-      expect(getComputedStyle(plain).overflow).toBe("clip")
-      expect(getComputedStyle(scrolling).overflow).toBe("auto")
-      expect(scrolling.scrollHeight).toBeGreaterThan(scrolling.clientHeight)
-    })
+      expect(getComputedStyle(plain).overflow).toBe("clip");
+      expect(getComputedStyle(scrolling).overflow).toBe("auto");
+      expect(scrolling.scrollHeight).toBeGreaterThan(scrolling.clientHeight);
+    });
   },
-}
+};
 
 /* ---- SW-2648: a collapsed panel puts the handle on the group's edge ---- */
 
@@ -466,20 +427,20 @@ export const CollapsedPanel: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const group = canvasElement.querySelector<HTMLElement>("[data-group]")
-    const handle = canvasElement.querySelector<HTMLElement>('[data-slot="resizable-handle"]')
-    if (!group || !handle) throw new Error("group or handle not found")
+    const group = canvasElement.querySelector<HTMLElement>("[data-group]");
+    const handle = canvasElement.querySelector<HTMLElement>('[data-slot="resizable-handle"]');
+    if (!group || !handle) throw new Error("group or handle not found");
 
     await step("The grip stays inside the group, so it isn't clipped", async () => {
-      const grip = handle.querySelector("div")
-      if (!grip) return
-      const g = grip.getBoundingClientRect()
-      const box = group.getBoundingClientRect()
-      expect(g.left).toBeGreaterThanOrEqual(box.left - 0.01)
-      expect(g.right).toBeLessThanOrEqual(box.right + 0.01)
-    })
+      const grip = handle.querySelector("div");
+      if (!grip) return;
+      const g = grip.getBoundingClientRect();
+      const box = group.getBoundingClientRect();
+      expect(g.left).toBeGreaterThanOrEqual(box.left - 0.01);
+      expect(g.right).toBeLessThanOrEqual(box.right + 0.01);
+    });
   },
-}
+};
 
 /* ---- SW-2648: a collapsed panel on the leading edge doesn't bleed ---- */
 
@@ -502,17 +463,17 @@ export const CollapsedLeadingPanel: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const [collapsed, main] = [...canvasElement.querySelectorAll("[data-panel]")].map(
-      (panel) => getComputedStyle(panel.firstElementChild as HTMLElement)
-    )
+    const [collapsed, main] = [...canvasElement.querySelectorAll("[data-panel]")].map((panel) =>
+      getComputedStyle(panel.firstElementChild as HTMLElement),
+    );
 
     await step("A collapsible panel clips at its edge, so nothing paints across the seam", async () => {
-      expect(collapsed.overflow).toBe("clip")
-      expect(collapsed.overflowClipMargin).toBe("0px")
-    })
+      expect(collapsed.overflow).toBe("clip");
+      expect(collapsed.overflowClipMargin).toBe("0px");
+    });
 
     await step("Non-collapsible panels keep the 4px margin for rings", async () => {
-      expect(main.overflowClipMargin).toBe("4px")
-    })
+      expect(main.overflowClipMargin).toBe("4px");
+    });
   },
-}
+};

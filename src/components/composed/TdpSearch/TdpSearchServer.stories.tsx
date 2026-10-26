@@ -337,7 +337,9 @@ export const CustomRendering: Story = {
         header: "ID",
         width: "100px",
         render: (value) => (
-          <code style={{ fontSize: 12, color: "var(--muted-foreground, #6b7280)", letterSpacing: "0.02em" }}>{value}</code>
+          <code style={{ fontSize: 12, color: "var(--muted-foreground, #6b7280)", letterSpacing: "0.02em" }}>
+            {value}
+          </code>
         ),
       },
       {

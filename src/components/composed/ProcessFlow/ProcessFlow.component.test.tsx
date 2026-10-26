@@ -127,7 +127,14 @@ describe("ProcessFlow", () => {
   });
 
   it("marks error steps with aria-invalid", () => {
-    render(<ProcessFlow steps={[{ id: "e", label: "Err", status: "error" }, { id: "b", label: "B" }]} />);
+    render(
+      <ProcessFlow
+        steps={[
+          { id: "e", label: "Err", status: "error" },
+          { id: "b", label: "B" },
+        ]}
+      />,
+    );
     expect(q('[aria-invalid="true"]')).not.toBeNull();
   });
 
@@ -147,17 +154,26 @@ describe("ProcessFlow", () => {
     act(() => {
       (qa("button")[0] as HTMLButtonElement).click();
     });
-    expect(onStepSelect).toHaveBeenCalledWith(LINEAR_STEPS[0], expect.objectContaining({ stepIndex: 0, status: "completed" }));
+    expect(onStepSelect).toHaveBeenCalledWith(
+      LINEAR_STEPS[0],
+      expect.objectContaining({ stepIndex: 0, status: "completed" }),
+    );
   });
 
   it("disables the button for disabled steps", () => {
-    const steps: ProcessFlowStep[] = [{ id: "d", label: "D", disabled: true }, { id: "b", label: "B" }];
+    const steps: ProcessFlowStep[] = [
+      { id: "d", label: "D", disabled: true },
+      { id: "b", label: "B" },
+    ];
     render(<ProcessFlow steps={steps} onStepSelect={vi.fn()} />);
     expect((qa("button")[0] as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("disables the button when selectable is false", () => {
-    const steps: ProcessFlowStep[] = [{ id: "a", label: "A", selectable: false }, { id: "b", label: "B" }];
+    const steps: ProcessFlowStep[] = [
+      { id: "a", label: "A", selectable: false },
+      { id: "b", label: "B" },
+    ];
     render(<ProcessFlow steps={steps} onStepSelect={vi.fn()} />);
     expect((qa("button")[0] as HTMLButtonElement).disabled).toBe(true);
   });
@@ -260,11 +276,7 @@ describe("ProcessFlow", () => {
 
     it("renders interactive buttons with anchored layout in branching flow", () => {
       render(
-        <ProcessFlow
-          steps={BRANCH_STEPS}
-          connections={[{ from: "start", to: "branch-a" }]}
-          onStepSelect={vi.fn()}
-        />,
+        <ProcessFlow steps={BRANCH_STEPS} connections={[{ from: "start", to: "branch-a" }]} onStepSelect={vi.fn()} />,
       );
       expect(qa("button").length).toBeGreaterThan(0);
     });
@@ -278,7 +290,10 @@ describe("ProcessFlow", () => {
       render(
         <ProcessFlow
           steps={BRANCH_STEPS}
-          connections={[{ from: "unknown", to: "start" }, { from: "start", to: "branch-a" }]}
+          connections={[
+            { from: "unknown", to: "start" },
+            { from: "start", to: "branch-a" },
+          ]}
         />,
       );
       const paths = qa("path");

@@ -6,19 +6,8 @@ import { ShellCollapseButton } from "./CollapseButton";
 import { useOptionalDataAppShell } from "./ShellContext";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
@@ -121,7 +110,7 @@ const dataAppShellSecondaryNavItemVariants = cva(
       },
     ],
     defaultVariants: { orientation: "vertical", status: "todo" },
-  }
+  },
 );
 
 // =============================================================================
@@ -129,7 +118,8 @@ const dataAppShellSecondaryNavItemVariants = cva(
 // =============================================================================
 
 export interface DataAppShellSecondaryNavProps
-  extends Omit<React.ComponentProps<"nav">, "onSelect" | "title">,
+  extends
+    Omit<React.ComponentProps<"nav">, "onSelect" | "title">,
     VariantProps<typeof dataAppShellSecondaryNavVariants> {
   /** Step entries; one level of nesting via `steps` on a step */
   steps: NavStep[];
@@ -175,28 +165,14 @@ function resolveStatus(step: NavStep, index: number, activeIndex: number): NavSt
 // Step icon — status-aware (done → check)
 // =============================================================================
 
-function StepIcon({
-  step,
-  status,
-  className,
-}: {
-  step: NavStep;
-  status: NavStepStatus;
-  className?: string;
-}) {
+function StepIcon({ step, status, className }: { step: NavStep; status: NavStepStatus; className?: string }) {
   const Icon = step.icon;
   if (status === "done") {
     return <Check className={cn("w-4 h-4 text-positive", className)} />;
   }
   if (Icon) {
     return (
-      <Icon
-        className={cn(
-          "w-4 h-4",
-          status === "active" ? "text-primary" : "text-muted-foreground",
-          className
-        )}
-      />
+      <Icon className={cn("w-4 h-4", status === "active" ? "text-primary" : "text-muted-foreground", className)} />
     );
   }
   return (
@@ -204,7 +180,7 @@ function StepIcon({
       className={cn(
         "w-2.5 h-2.5 rounded-full",
         status === "active" ? "bg-primary" : "bg-muted-foreground/40",
-        className
+        className,
       )}
     />
   );
@@ -259,8 +235,7 @@ function DataAppShellSecondaryNav({
   const flat = flattenSteps(steps);
   const indexById = new Map(flat.map((step, index) => [step.id, index] as const));
   const activeIndex = activeKey == null ? -1 : (indexById.get(activeKey) ?? -1);
-  const statusOf = (step: NavStep) =>
-    resolveStatus(step, indexById.get(step.id) ?? -1, activeIndex);
+  const statusOf = (step: NavStep) => resolveStatus(step, indexById.get(step.id) ?? -1, activeIndex);
 
   const handleSelect = (step: NavStep) => {
     if (step.disabled) return;
@@ -274,10 +249,7 @@ function DataAppShellSecondaryNav({
         data-slot="data-app-shell-secondary-nav"
         data-orientation="vertical"
         data-collapsed="true"
-        className={cn(
-          "flex flex-col shrink-0 w-[46px] bg-sidebar border-r border-sidebar-border",
-          className
-        )}
+        className={cn("flex flex-col shrink-0 w-[46px] bg-sidebar border-r border-sidebar-border", className)}
         {...props}
       >
         <TooltipProvider>
@@ -289,10 +261,7 @@ function DataAppShellSecondaryNav({
               onClick={() => setCollapsed(false)}
             />
           </div>
-          <div
-            data-slot="data-app-shell-secondary-nav-items"
-            className="flex flex-col overflow-y-auto"
-          >
+          <div data-slot="data-app-shell-secondary-nav-items" className="flex flex-col overflow-y-auto">
             {flat.map((step) => {
               const status = statusOf(step);
               return (
@@ -310,7 +279,7 @@ function DataAppShellSecondaryNav({
                       aria-disabled={step.disabled || undefined}
                       className={cn(
                         dataAppShellSecondaryNavItemVariants({ orientation: "rail", status }),
-                        step.disabled && "opacity-45 cursor-not-allowed"
+                        step.disabled && "opacity-45 cursor-not-allowed",
                       )}
                       onClick={() => handleSelect(step)}
                     >
@@ -354,9 +323,7 @@ function DataAppShellSecondaryNav({
             className="h-7 min-w-0"
           >
             <SelectValue placeholder="Select step">
-              {active
-                ? `Step ${(indexById.get(active.id) ?? 0) + 1} · ${active.label}`
-                : "Select step"}
+              {active ? `Step ${(indexById.get(active.id) ?? 0) + 1} · ${active.label}` : "Select step"}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -396,18 +363,14 @@ function DataAppShellSecondaryNav({
             const status = statusOf(step);
             return (
               <React.Fragment key={step.id}>
-                {index > 0 && (
-                  <ChevronRight aria-hidden="true" className="w-4 h-4 shrink-0 text-muted-foreground/50" />
-                )}
+                {index > 0 && <ChevronRight aria-hidden="true" className="w-4 h-4 shrink-0 text-muted-foreground/50" />}
                 <button
                   type="button"
                   data-slot="data-app-shell-secondary-nav-item"
                   data-status={status}
                   aria-current={status === "active" ? "step" : undefined}
                   title={step.disabled ? (step.disabledReason ?? step.label) : undefined}
-                  className={cn(
-                    dataAppShellSecondaryNavItemVariants({ orientation: "horizontal", status })
-                  )}
+                  className={cn(dataAppShellSecondaryNavItemVariants({ orientation: "horizontal", status }))}
                   onClick={() => handleSelect(step)}
                   disabled={step.disabled}
                 >
@@ -448,19 +411,14 @@ function DataAppShellSecondaryNav({
         data-status={status}
         aria-current={status === "active" ? "step" : undefined}
         title={step.disabled ? (step.disabledReason ?? step.label) : undefined}
-        className={cn(
-          dataAppShellSecondaryNavItemVariants({ orientation: "vertical", status }),
-          nested && "pl-8"
-        )}
+        className={cn(dataAppShellSecondaryNavItemVariants({ orientation: "vertical", status }), nested && "pl-8")}
         onClick={() => handleSelect(step)}
         disabled={step.disabled}
       >
         <span className="flex items-center justify-center w-6 h-6 shrink-0">
           <StepIcon step={step} status={status} />
         </span>
-        <span className={cn("text-sm truncate min-w-0", status === "todo" && "font-light")}>
-          {step.label}
-        </span>
+        <span className={cn("text-sm truncate min-w-0", status === "todo" && "font-light")}>{step.label}</span>
         {step.badge != null && (
           <Badge variant="secondary" className="ml-auto h-4 px-1.5 text-[10px]">
             {step.badge}
@@ -475,11 +433,7 @@ function DataAppShellSecondaryNav({
       data-slot="data-app-shell-secondary-nav"
       data-orientation="vertical"
       data-collapsed="false"
-      className={cn(
-        dataAppShellSecondaryNavVariants({ orientation: "vertical" }),
-        "w-[180px]",
-        className
-      )}
+      className={cn(dataAppShellSecondaryNavVariants({ orientation: "vertical" }), "w-[180px]", className)}
       {...props}
     >
       {(title != null || collapsible) && (
@@ -498,10 +452,7 @@ function DataAppShellSecondaryNav({
           )}
         </div>
       )}
-      <div
-        data-slot="data-app-shell-secondary-nav-items"
-        className="flex flex-col overflow-y-auto"
-      >
+      <div data-slot="data-app-shell-secondary-nav-items" className="flex flex-col overflow-y-auto">
         {steps.map((step) => (
           <React.Fragment key={step.id}>
             {renderStep(step, false)}

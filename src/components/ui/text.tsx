@@ -112,7 +112,7 @@ const DEFAULT_ELEMENT: Record<TextVariant, TextElement> = {
  * element `as` resolves to.
  */
 interface TextProps extends React.HTMLAttributes<HTMLElement>, VariantProps<typeof textVariants> {
-  ref?: React.Ref<HTMLElement>
+  ref?: React.Ref<HTMLElement>;
   /**
    * Semantic element to render. Defaults per `variant` (see `DEFAULT_ELEMENT`).
    * Set it explicitly whenever the document outline and the visual scale
@@ -153,7 +153,9 @@ function Text({
   const resolvedElement: TextElement = as ?? DEFAULT_ELEMENT[resolvedVariant];
   // Typed by what every allowed tag shares. A plain `React.ElementType` makes
   // TypeScript intersect the `ref` types of all those tags, which no ref satisfies.
-  const Comp = resolvedElement as unknown as React.ComponentType<Omit<TextProps, "as" | "icon" | "truncate" | keyof VariantProps<typeof textVariants>>>;
+  const Comp = resolvedElement as unknown as React.ComponentType<
+    Omit<TextProps, "as" | "icon" | "truncate" | keyof VariantProps<typeof textVariants>>
+  >;
 
   // An icon or a truncating label needs a flex root and a wrapper it can
   // shrink; plain text keeps the bare element so inline flow is untouched.

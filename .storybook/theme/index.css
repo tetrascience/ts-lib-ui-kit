@@ -1,9 +1,6 @@
-
 body {
   background-color: var(--card);
 }
-
-
 
 /* ============================================================
    Docs page overrides — uses CSS custom properties from the
@@ -14,7 +11,8 @@ body {
 .sbdocs.sbdocs-wrapper :where(li:not(.sb-anchor, .sb-unstyled, .sb-unstyled li)) {
   color: var(--foreground);
 }
-.sbdocs .sbdocs-preview, .sbdocs [role="toolbar"] {
+.sbdocs .sbdocs-preview,
+.sbdocs [role="toolbar"] {
   background-color: var(--card);
   color: var(--foreground) !important;
   border-color: var(--border);

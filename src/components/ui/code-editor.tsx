@@ -46,9 +46,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
 
   const monacoRef = useRef<Monaco | null>(null);
   const [copyState, setCopyState] = useState<"Copy" | "Copied">("Copy");
-  const [launchState, setLaunchState] = useState<"Launch" | "Launched">(
-    "Launch"
-  );
+  const [launchState, setLaunchState] = useState<"Launch" | "Launched">("Launch");
   /** Feedback reset delay in milliseconds */
   const FEEDBACK_RESET_DELAY_MS = 1000;
 
@@ -62,7 +60,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         }, FEEDBACK_RESET_DELAY_MS);
       }
     },
-    [onCopy, disabled]
+    [onCopy, disabled],
   );
 
   const handleLaunch = useCallback(
@@ -75,7 +73,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         }, FEEDBACK_RESET_DELAY_MS);
       }
     },
-    [onLaunch, disabled]
+    [onLaunch, disabled],
   );
 
   const handleEditorWillMount = async (monaco: Monaco) => {
@@ -94,8 +92,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     readOnly: disabled,
     ...options,
   };
-
-
 
   return (
     <div className={cn("rounded-2xl overflow-hidden relative border", disabled && "opacity-60 cursor-not-allowed")}>
@@ -116,13 +112,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                 </Button>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {copyState}
-            </TooltipContent>
+            <TooltipContent side="bottom">{copyState}</TooltipContent>
           </Tooltip>
         )}
         {onLaunch && (
-          <Tooltip >
+          <Tooltip>
             <TooltipTrigger asChild>
               <div className="w-8 h-8 flex items-center justify-center">
                 <Button
@@ -137,9 +131,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                 </Button>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {launchState}
-            </TooltipContent>
+            <TooltipContent side="bottom">{launchState}</TooltipContent>
           </Tooltip>
         )}
       </div>

@@ -1,6 +1,6 @@
-import * as ResizablePrimitive from "react-resizable-panels"
+import * as ResizablePrimitive from "react-resizable-panels";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 /**
  * Lays out `ResizablePanel`s along `orientation`, separated by
@@ -11,20 +11,14 @@ import { cn } from "@/lib/utils"
  * jsdom lacks — without a stub the component throws and nothing renders. Jest
  * consumers get one from the kit's `./jest-setup` entry; otherwise stub it.
  */
-function ResizablePanelGroup({
-  className,
-  ...props
-}: ResizablePrimitive.GroupProps) {
+function ResizablePanelGroup({ className, ...props }: ResizablePrimitive.GroupProps) {
   return (
     <ResizablePrimitive.Group
       data-slot="resizable-panel-group"
-      className={cn(
-        "flex h-full w-full aria-[orientation=vertical]:flex-col",
-        className
-      )}
+      className={cn("flex h-full w-full aria-[orientation=vertical]:flex-col", className)}
       {...props}
     />
-  )
+  );
 }
 
 /**
@@ -49,7 +43,7 @@ function ResizablePanel({
   ...props
 }: ResizablePrimitive.PanelProps & {
   /** Make the panel its own scroll container. */
-  scrollable?: boolean
+  scrollable?: boolean;
 }) {
   return (
     <ResizablePrimitive.Panel
@@ -59,16 +53,12 @@ function ResizablePanel({
       // class governs and consumers can override it with a plain utility.
       style={{ overflow: undefined, ...style }}
       className={cn(
-        scrollable
-          ? "overflow-auto"
-          : collapsible
-            ? "overflow-clip"
-            : "overflow-clip [overflow-clip-margin:4px]",
-        className
+        scrollable ? "overflow-auto" : collapsible ? "overflow-clip" : "overflow-clip [overflow-clip-margin:4px]",
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 /**
@@ -97,7 +87,7 @@ function ResizableHandle({
   className,
   ...props
 }: ResizablePrimitive.SeparatorProps & {
-  withHandle?: boolean
+  withHandle?: boolean;
 }) {
   return (
     <ResizablePrimitive.Separator
@@ -119,15 +109,13 @@ function ResizableHandle({
         "hover:[&>div]:bg-border active:[&>div]:bg-border focus-visible:[&>div]:bg-ring",
         // grip rotates for the horizontal separator
         "[&[aria-orientation=horizontal]>div]:rotate-90",
-        className
+        className,
       )}
       {...props}
     >
-      {withHandle && (
-        <div className="z-10 flex h-6 w-1 shrink-0 rounded-lg bg-transparent transition-colors" />
-      )}
+      {withHandle && <div className="z-10 flex h-6 w-1 shrink-0 rounded-lg bg-transparent transition-colors" />}
     </ResizablePrimitive.Separator>
-  )
+  );
 }
 
-export { ResizableHandle, ResizablePanel, ResizablePanelGroup }
+export { ResizableHandle, ResizablePanel, ResizablePanelGroup };

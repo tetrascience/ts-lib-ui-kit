@@ -1,32 +1,32 @@
-import { MinusIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react"
-import * as React from "react"
+import { MinusIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react";
+import * as React from "react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { withRef } from "@/lib/react18-compat"
-import { cn } from "@/lib/utils"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { withRef } from "@/lib/react18-compat";
+import { cn } from "@/lib/utils";
 
-export type StatCardTrend = "up" | "down" | "neutral"
+export type StatCardTrend = "up" | "down" | "neutral";
 
 export interface StatCardProps extends React.ComponentProps<"div"> {
-  label: string
-  value: string | number
-  delta?: string | number
-  deltaLabel?: string
-  trend?: StatCardTrend
-  description?: string
+  label: string;
+  value: string | number;
+  delta?: string | number;
+  deltaLabel?: string;
+  trend?: StatCardTrend;
+  description?: string;
 }
 
 const TREND_ICON: Record<StatCardTrend, React.ElementType> = {
   up: TrendingUpIcon,
   down: TrendingDownIcon,
   neutral: MinusIcon,
-}
+};
 
 const TREND_CLASS: Record<StatCardTrend, string> = {
   up: "text-positive",
   down: "text-destructive",
   neutral: "text-muted-foreground",
-}
+};
 
 function StatCard({
   label,
@@ -38,37 +38,31 @@ function StatCard({
   className,
   ...props
 }: StatCardProps) {
-  const TrendIcon = TREND_ICON[trend]
-  const trendClass = TREND_CLASS[trend]
+  const TrendIcon = TREND_ICON[trend];
+  const trendClass = TREND_CLASS[trend];
 
   return (
     <div data-slot="stat-card" className={cn("w-full", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            {label}
-          </CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           <p className="text-3xl font-semibold tabular-nums">{value}</p>
-          {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          )}
+          {description && <p className="text-sm text-muted-foreground">{description}</p>}
           {delta !== undefined && (
             <div className={cn("flex items-center gap-1 text-sm", trendClass)}>
               <TrendIcon className="h-4 w-4 shrink-0" />
               <span className="font-medium">{delta}</span>
-              {deltaLabel && (
-                <span className="text-muted-foreground">{deltaLabel}</span>
-              )}
+              {deltaLabel && <span className="text-muted-foreground">{deltaLabel}</span>}
             </div>
           )}
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const StatCardWithRef = withRef("StatCard", StatCard)
-export { StatCardWithRef as StatCard }
+const StatCardWithRef = withRef("StatCard", StatCard);
+export { StatCardWithRef as StatCard };

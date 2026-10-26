@@ -1,9 +1,8 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { AspectRatio } from "./aspect-ratio"
+import { AspectRatio } from "./aspect-ratio";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof AspectRatio> = {
   title: "Components/Layout & Structure/Aspect Ratio",
@@ -20,11 +19,11 @@ const meta: Meta<typeof AspectRatio> = {
   args: {
     ratio: 16 / 9,
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof AspectRatio>
+type Story = StoryObj<typeof AspectRatio>;
 
 function renderAspectRatio(args: Story["args"]) {
   return (
@@ -35,7 +34,7 @@ function renderAspectRatio(args: Story["args"]) {
         </div>
       </AspectRatio>
     </div>
-  )
+  );
 }
 
 export const Default: Story = {
@@ -44,13 +43,13 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1186" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Aspect ratio container and preview content render", async () => {
-      expect(canvas.getByText("16:9 Preview")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("16:9 Preview")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Square: Story = {
   args: {
@@ -61,10 +60,10 @@ export const Square: Story = {
     zephyr: { testCaseId: "SW-T1187" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Square aspect ratio shows 1:1 preview", async () => {
-      expect(canvas.getByText("1:1 Preview")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("1:1 Preview")).toBeInTheDocument();
+    });
   },
-}
+};

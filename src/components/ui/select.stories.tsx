@@ -1,4 +1,4 @@
-import { expect, userEvent, waitFor, within } from "storybook/test"
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import {
   Select,
@@ -9,13 +9,12 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from "./select"
+} from "./select";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 /** Returns true when running inside the Vitest test runner (not the Storybook UI). */
-const isTestRunner = () =>
-  typeof import.meta !== "undefined" && !!(import.meta as Record<string, any>).env?.VITEST
+const isTestRunner = () => typeof import.meta !== "undefined" && !!(import.meta as Record<string, any>).env?.VITEST;
 
 const meta: Meta<typeof SelectTrigger> = {
   title: "Components/Forms & Inputs/Select",
@@ -33,11 +32,11 @@ const meta: Meta<typeof SelectTrigger> = {
   args: {
     size: "default",
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof SelectTrigger>
+type Story = StoryObj<typeof SelectTrigger>;
 
 function renderSelect(args: Story["args"]) {
   return (
@@ -51,7 +50,7 @@ function renderSelect(args: Story["args"]) {
         <SelectItem value="archive">Archive</SelectItem>
       </SelectContent>
     </Select>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -64,58 +63,50 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1280" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const trigger = canvas.getByRole("combobox")
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("combobox");
 
     await step("Select trigger renders with default value", async () => {
-      expect(trigger).toBeInTheDocument()
-      expect(canvas.getByText("Workspace")).toBeInTheDocument()
-    })
+      expect(trigger).toBeInTheDocument();
+      expect(canvas.getByText("Workspace")).toBeInTheDocument();
+    });
 
     await step("Trigger has chevron icon", async () => {
-      const svg = trigger.querySelector("svg")
-      expect(svg).toBeInTheDocument()
-    })
+      const svg = trigger.querySelector("svg");
+      expect(svg).toBeInTheDocument();
+    });
 
-    if (!isTestRunner()) return
+    if (!isTestRunner()) return;
 
     await step("Opens dropdown on click", async () => {
-      await userEvent.click(trigger)
-      const listbox = await within(document.body).findByRole("listbox")
-      expect(listbox).toBeInTheDocument()
+      await userEvent.click(trigger);
+      const listbox = await within(document.body).findByRole("listbox");
+      expect(listbox).toBeInTheDocument();
 
-      const options = within(listbox).getAllByRole("option")
-      expect(options).toHaveLength(3)
-      expect(options.map((o) => o.textContent?.replace(/\s+/g, ""))).toEqual([
-        "Workspace",
-        "Report",
-        "Archive",
-      ])
-    })
+      const options = within(listbox).getAllByRole("option");
+      expect(options).toHaveLength(3);
+      expect(options.map((o) => o.textContent?.replace(/\s+/g, ""))).toEqual(["Workspace", "Report", "Archive"]);
+    });
 
     await step("Current value has check indicator", async () => {
-      const listbox = within(document.body).getByRole("listbox")
+      const listbox = within(document.body).getByRole("listbox");
       const selected = within(listbox).getByRole("option", {
         name: "Workspace",
-      })
-      expect(selected).toHaveAttribute("data-state", "checked")
-    })
+      });
+      expect(selected).toHaveAttribute("data-state", "checked");
+    });
 
     await step("Select a different item", async () => {
-      const listbox = within(document.body).getByRole("listbox")
-      await userEvent.click(
-        within(listbox).getByRole("option", { name: "Report" })
-      )
-      expect(canvas.getByText("Report")).toBeInTheDocument()
-    })
+      const listbox = within(document.body).getByRole("listbox");
+      await userEvent.click(within(listbox).getByRole("option", { name: "Report" }));
+      expect(canvas.getByText("Report")).toBeInTheDocument();
+    });
 
     await step("Dropdown closes after selection", async () => {
-      expect(
-        within(document.body).queryByRole("listbox")
-      ).not.toBeInTheDocument()
-    })
+      expect(within(document.body).queryByRole("listbox")).not.toBeInTheDocument();
+    });
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Small
@@ -130,15 +121,15 @@ export const ExtraSmall: Story = {
     zephyr: { testCaseId: "SW-T5688" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const trigger = canvas.getByRole("combobox")
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("combobox");
 
     await step("xs select trigger renders at 24px, matching Button xs", async () => {
-      expect(trigger).toHaveAttribute("data-size", "xs")
-      expect(Math.round(trigger.getBoundingClientRect().height)).toBe(24)
-    })
+      expect(trigger).toHaveAttribute("data-size", "xs");
+      expect(Math.round(trigger.getBoundingClientRect().height)).toBe(24);
+    });
   },
-}
+};
 
 export const Large: Story = {
   args: {
@@ -149,15 +140,15 @@ export const Large: Story = {
     zephyr: { testCaseId: "SW-T5689" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const trigger = canvas.getByRole("combobox")
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("combobox");
 
     await step("lg select trigger renders at 36px", async () => {
-      expect(trigger).toHaveAttribute("data-size", "lg")
-      expect(Math.round(trigger.getBoundingClientRect().height)).toBe(36)
-    })
+      expect(trigger).toHaveAttribute("data-size", "lg");
+      expect(Math.round(trigger.getBoundingClientRect().height)).toBe(36);
+    });
   },
-}
+};
 
 export const Small: Story = {
   args: {
@@ -168,30 +159,28 @@ export const Small: Story = {
     zephyr: { testCaseId: "SW-T1281" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const trigger = canvas.getByRole("combobox")
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("combobox");
 
     await step("Select trigger renders with sm size attribute", async () => {
-      expect(trigger).toBeInTheDocument()
-      expect(trigger).toHaveAttribute("data-size", "sm")
-    })
+      expect(trigger).toBeInTheDocument();
+      expect(trigger).toHaveAttribute("data-size", "sm");
+    });
 
     await step("Selected value is shown", async () => {
-      expect(canvas.getByText("Workspace")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Workspace")).toBeInTheDocument();
+    });
 
-    if (!isTestRunner()) return
+    if (!isTestRunner()) return;
 
     await step("Opens and selects correctly at small size", async () => {
-      await userEvent.click(trigger)
-      const listbox = await within(document.body).findByRole("listbox")
-      await userEvent.click(
-        within(listbox).getByRole("option", { name: "Archive" })
-      )
-      expect(canvas.getByText("Archive")).toBeInTheDocument()
-    })
+      await userEvent.click(trigger);
+      const listbox = await within(document.body).findByRole("listbox");
+      await userEvent.click(within(listbox).getByRole("option", { name: "Archive" }));
+      expect(canvas.getByText("Archive")).toBeInTheDocument();
+    });
   },
-}
+};
 
 function renderUncontrolledSelect(args: Story["args"]) {
   return (
@@ -205,7 +194,7 @@ function renderUncontrolledSelect(args: Story["args"]) {
         <SelectItem value="archive">Archive</SelectItem>
       </SelectContent>
     </Select>
-  )
+  );
 }
 
 export const OpenAndSelect: Story = {
@@ -214,32 +203,32 @@ export const OpenAndSelect: Story = {
     zephyr: { testCaseId: "SW-T4718" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Shows placeholder before selection", async () => {
-      expect(canvas.getByText("Choose a destination")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Choose a destination")).toBeInTheDocument();
+    });
 
     await step("Opens dropdown on click", async () => {
-      await userEvent.click(canvas.getByRole("combobox"))
-      const listbox = await within(document.body).findByRole("listbox")
-      expect(listbox).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByRole("combobox"));
+      const listbox = await within(document.body).findByRole("listbox");
+      expect(listbox).toBeInTheDocument();
+    });
 
     await step("Displays all options", async () => {
-      const body = within(document.body)
-      expect(body.getByText("Workspace")).toBeInTheDocument()
-      expect(body.getByText("Report")).toBeInTheDocument()
-      expect(body.getByText("Archive")).toBeInTheDocument()
-    })
+      const body = within(document.body);
+      expect(body.getByText("Workspace")).toBeInTheDocument();
+      expect(body.getByText("Report")).toBeInTheDocument();
+      expect(body.getByText("Archive")).toBeInTheDocument();
+    });
 
     await step("Selects an item on click", async () => {
-      const body = within(document.body)
-      await userEvent.click(body.getByText("Report"))
-      expect(canvas.getByText("Report")).toBeInTheDocument()
-    })
+      const body = within(document.body);
+      await userEvent.click(body.getByText("Report"));
+      expect(canvas.getByText("Report")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const KeyboardNavigation: Story = {
   render: renderUncontrolledSelect,
@@ -247,28 +236,28 @@ export const KeyboardNavigation: Story = {
     zephyr: { testCaseId: "SW-T4719" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const trigger = canvas.getByRole("combobox")
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("combobox");
 
     await step("Trigger is focusable", async () => {
-      trigger.focus()
-      expect(document.activeElement).toBe(trigger)
-    })
+      trigger.focus();
+      expect(document.activeElement).toBe(trigger);
+    });
 
     await step("Opens with Space key and shows options", async () => {
-      await userEvent.keyboard(" ")
-      const listbox = await within(document.body).findByRole("listbox")
-      expect(listbox).toBeInTheDocument()
-      const options = within(document.body).getAllByRole("option")
-      expect(options.length).toBe(3)
-    })
+      await userEvent.keyboard(" ");
+      const listbox = await within(document.body).findByRole("listbox");
+      expect(listbox).toBeInTheDocument();
+      const options = within(document.body).getAllByRole("option");
+      expect(options.length).toBe(3);
+    });
 
     await step("Closes with Escape", async () => {
-      await userEvent.keyboard("{Escape}")
-      expect(within(document.body).queryByRole("listbox")).not.toBeInTheDocument()
-    })
+      await userEvent.keyboard("{Escape}");
+      expect(within(document.body).queryByRole("listbox")).not.toBeInTheDocument();
+    });
   },
-}
+};
 
 function renderDisabledSelect(args: Story["args"]) {
   return (
@@ -281,7 +270,7 @@ function renderDisabledSelect(args: Story["args"]) {
         <SelectItem value="report">Report</SelectItem>
       </SelectContent>
     </Select>
-  )
+  );
 }
 
 export const Disabled: Story = {
@@ -290,14 +279,14 @@ export const Disabled: Story = {
     zephyr: { testCaseId: "SW-T4720" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Trigger is disabled", async () => {
-      const trigger = canvas.getByRole("combobox")
-      expect(trigger).toBeDisabled()
-    })
+      const trigger = canvas.getByRole("combobox");
+      expect(trigger).toBeDisabled();
+    });
   },
-}
+};
 
 function renderDisabledItemSelect(args: Story["args"]) {
   return (
@@ -313,7 +302,7 @@ function renderDisabledItemSelect(args: Story["args"]) {
         <SelectItem value="archive">Archive</SelectItem>
       </SelectContent>
     </Select>
-  )
+  );
 }
 
 export const DisabledItem: Story = {
@@ -322,28 +311,26 @@ export const DisabledItem: Story = {
     zephyr: { testCaseId: "SW-T4721" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Opens dropdown", async () => {
-      await userEvent.click(canvas.getByRole("combobox"))
-      const listbox = await within(document.body).findByRole("listbox")
-      expect(listbox).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByRole("combobox"));
+      const listbox = await within(document.body).findByRole("listbox");
+      expect(listbox).toBeInTheDocument();
+    });
 
     await step("Disabled item has correct attribute", async () => {
-      const body = within(document.body)
-      const disabledOption = body.getByRole("option", { name: "Report (unavailable)" })
-      expect(disabledOption).toHaveAttribute("data-disabled")
-    })
+      const body = within(document.body);
+      const disabledOption = body.getByRole("option", { name: "Report (unavailable)" });
+      expect(disabledOption).toHaveAttribute("data-disabled");
+    });
 
     await step("Close dropdown to restore resting state", async () => {
-      await userEvent.keyboard("{Escape}")
-      await waitFor(() =>
-        expect(within(document.body).queryByRole("listbox")).not.toBeInTheDocument()
-      )
-    })
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(within(document.body).queryByRole("listbox")).not.toBeInTheDocument());
+    });
   },
-}
+};
 
 function renderGroupedSelect(args: Story["args"]) {
   return (
@@ -365,7 +352,7 @@ function renderGroupedSelect(args: Story["args"]) {
         </SelectGroup>
       </SelectContent>
     </Select>
-  )
+  );
 }
 
 export const Grouped: Story = {
@@ -374,37 +361,37 @@ export const Grouped: Story = {
     zephyr: { testCaseId: "SW-T4722" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Opens and shows groups with labels", async () => {
-      await userEvent.click(canvas.getByRole("combobox"))
-      const body = within(document.body)
-      await body.findByRole("listbox")
-      expect(body.getByText("Data Targets")).toBeInTheDocument()
-      expect(body.getByText("Storage")).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByRole("combobox"));
+      const body = within(document.body);
+      await body.findByRole("listbox");
+      expect(body.getByText("Data Targets")).toBeInTheDocument();
+      expect(body.getByText("Storage")).toBeInTheDocument();
+    });
 
     await step("Shows items in each group", async () => {
-      const body = within(document.body)
-      expect(body.getByText("Workspace")).toBeInTheDocument()
-      expect(body.getByText("Cold Storage")).toBeInTheDocument()
-    })
+      const body = within(document.body);
+      expect(body.getByText("Workspace")).toBeInTheDocument();
+      expect(body.getByText("Cold Storage")).toBeInTheDocument();
+    });
 
     await step("Separator exists between groups", async () => {
-      const separator = document.body.querySelector('[data-slot="select-separator"]')
-      expect(separator).toBeTruthy()
-    })
+      const separator = document.body.querySelector('[data-slot="select-separator"]');
+      expect(separator).toBeTruthy();
+    });
 
     await step("Can select from second group", async () => {
-      const body = within(document.body)
-      await userEvent.click(body.getByText("Cold Storage"))
-      expect(canvas.getByText("Cold Storage")).toBeInTheDocument()
-    })
+      const body = within(document.body);
+      await userEvent.click(body.getByText("Cold Storage"));
+      expect(canvas.getByText("Cold Storage")).toBeInTheDocument();
+    });
   },
-}
+};
 
 function renderManyItemsSelect(args: Story["args"]) {
-  const items = Array.from({ length: 20 }, (_, i) => `Item ${i + 1}`)
+  const items = Array.from({ length: 20 }, (_, i) => `Item ${i + 1}`);
   return (
     <Select>
       <SelectTrigger {...args} aria-label="Item" className="w-[220px]">
@@ -418,7 +405,7 @@ function renderManyItemsSelect(args: Story["args"]) {
         ))}
       </SelectContent>
     </Select>
-  )
+  );
 }
 
 export const ManyItems: Story = {
@@ -427,24 +414,24 @@ export const ManyItems: Story = {
     zephyr: { testCaseId: "SW-T4723" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Opens with many items", async () => {
-      await userEvent.click(canvas.getByRole("combobox"))
-      const listbox = await within(document.body).findByRole("listbox")
-      expect(listbox).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByRole("combobox"));
+      const listbox = await within(document.body).findByRole("listbox");
+      expect(listbox).toBeInTheDocument();
+    });
 
     await step("First and last items are present", async () => {
-      const body = within(document.body)
-      expect(body.getByText("Item 1")).toBeInTheDocument()
-      expect(body.getByText("Item 20")).toBeInTheDocument()
-    })
+      const body = within(document.body);
+      expect(body.getByText("Item 1")).toBeInTheDocument();
+      expect(body.getByText("Item 20")).toBeInTheDocument();
+    });
 
     await step("Can select an item from the list", async () => {
-      const body = within(document.body)
-      await userEvent.click(body.getByText("Item 15"))
-      expect(canvas.getByText("Item 15")).toBeInTheDocument()
-    })
+      const body = within(document.body);
+      await userEvent.click(body.getByText("Item 15"));
+      expect(canvas.getByText("Item 15")).toBeInTheDocument();
+    });
   },
-}
+};

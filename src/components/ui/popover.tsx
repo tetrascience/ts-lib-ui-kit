@@ -1,32 +1,26 @@
-import { Popover as PopoverPrimitive } from "radix-ui"
-import * as React from "react"
+import { Popover as PopoverPrimitive } from "radix-ui";
+import * as React from "react";
 
-import { withRef } from "@/lib/react18-compat"
-import { cn } from "@/lib/utils"
+import { withRef } from "@/lib/react18-compat";
+import { cn } from "@/lib/utils";
 
-function Popover({
-  ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Root>) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />
+function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
+  return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 
-function PopoverTrigger({
-  ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
-  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
+function PopoverTrigger({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
+  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const PopoverTriggerWithRef = withRef("PopoverTrigger", PopoverTrigger)
+const PopoverTriggerWithRef = withRef("PopoverTrigger", PopoverTrigger);
 
-function PopoverAnchor({
-  ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
-  return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />
+function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
+  return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />;
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const PopoverAnchorWithRef = withRef("PopoverAnchor", PopoverAnchor)
+const PopoverAnchorWithRef = withRef("PopoverAnchor", PopoverAnchor);
 
 function PopoverContent({
   className,
@@ -42,15 +36,20 @@ function PopoverContent({
         sideOffset={sideOffset}
         className={cn(
           "z-50 w-72 origin-(--radix-popover-content-transform-origin) rounded-lg bg-popover p-3 text-sm text-popover-foreground shadow-elevation-4 ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          className
+          className,
         )}
         {...props}
       />
     </PopoverPrimitive.Portal>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const PopoverContentWithRef = withRef("PopoverContent", PopoverContent)
+const PopoverContentWithRef = withRef("PopoverContent", PopoverContent);
 
-export { Popover, PopoverTriggerWithRef as PopoverTrigger, PopoverAnchorWithRef as PopoverAnchor, PopoverContentWithRef as PopoverContent }
+export {
+  Popover,
+  PopoverTriggerWithRef as PopoverTrigger,
+  PopoverAnchorWithRef as PopoverAnchor,
+  PopoverContentWithRef as PopoverContent,
+};

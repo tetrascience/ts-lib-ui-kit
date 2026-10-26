@@ -1,10 +1,10 @@
-import * as React from "react"
-import { act } from "react"
-import { createRoot } from "react-dom/client"
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
+import * as React from "react";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import * as kit from "@/index"
-import { isWithRefComponent } from "@/lib/react18-compat"
+import * as kit from "@/index";
+import { isWithRefComponent } from "@/lib/react18-compat";
 
 /*
  * UXT-77 runtime guard. `scripts/build/audit-react18-compat.ts` proves statically
@@ -17,10 +17,9 @@ import { isWithRefComponent } from "@/lib/react18-compat"
  * throw or render nothing in isolation; those are skipped, not failed, and the
  * Radix `asChild` triggers they belong to are covered explicitly below.
  */
+(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
-;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true
-
-const MIN_SWEPT = 100
+const MIN_SWEPT = 100;
 
 /**
  * Props for components whose ref targets an element that only renders in some state.
@@ -30,77 +29,77 @@ const RENDER_PROPS: Record<string, Record<string, unknown>> = {
   DataAppShellRightPanel: { id: "ref-sweep", open: true, persist: false },
   // Renders nothing until a tool call asks for approval.
   Confirmation: { approval: { id: "ref-sweep" }, state: "approval-requested" },
-}
+};
 
 /** A component the sweep can render with a ref: anything withRef returned. */
 function isRefComponent(value: unknown): value is React.ComponentType<{ ref?: React.Ref<Element> }> {
-  return isWithRefComponent(value)
+  return isWithRefComponent(value);
 }
 
 class Boundary extends React.Component<{ children: React.ReactNode; onError: () => void }, { failed: boolean }> {
-  state = { failed: false }
+  state = { failed: false };
   static getDerivedStateFromError() {
-    return { failed: true }
+    return { failed: true };
   }
   componentDidCatch() {
-    this.props.onError()
+    this.props.onError();
   }
   render() {
-    return this.state.failed ? null : this.props.children
+    return this.state.failed ? null : this.props.children;
   }
 }
 
-let container: HTMLDivElement
-let root: ReturnType<typeof createRoot>
+let container: HTMLDivElement;
+let root: ReturnType<typeof createRoot>;
 
 beforeEach(() => {
-  container = document.createElement("div")
-  document.body.appendChild(container)
-  root = createRoot(container)
-})
+  container = document.createElement("div");
+  document.body.appendChild(container);
+  root = createRoot(container);
+});
 
 afterEach(() => {
-  act(() => root.unmount())
-  container.remove()
-  document.body.innerHTML = ""
-})
+  act(() => root.unmount());
+  container.remove();
+  document.body.innerHTML = "";
+});
 
 /** React's "Function components cannot be given refs" warning, on React 18. */
 function captureRefWarnings() {
-  const warnings: string[] = []
+  const warnings: string[] = [];
   const spy = vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => {
-    const message = args.map(String).join(" ")
-    if (/cannot be given refs|Function components cannot/i.test(message)) warnings.push(message)
-  })
-  return { warnings, restore: () => spy.mockRestore() }
+    const message = args.map(String).join(" ");
+    if (/cannot be given refs|Function components cannot/i.test(message)) warnings.push(message);
+  });
+  return { warnings, restore: () => spy.mockRestore() };
 }
 
 describe("every withRef export forwards its ref to a DOM node", () => {
   const exports = Object.entries(kit).filter(([, value]) => isRefComponent(value)) as Array<
     [string, React.ComponentType<{ ref?: React.Ref<Element> }>]
-  >
+  >;
   // Rendering a part without its parent throws by design; keep that noise out of the log
   // and out of jsdom's uncaught-error reporting.
-  const swallow = (event: ErrorEvent) => event.preventDefault()
-  let silence: ReturnType<typeof vi.spyOn> | undefined
+  const swallow = (event: ErrorEvent) => event.preventDefault();
+  let silence: ReturnType<typeof vi.spyOn> | undefined;
   beforeAll(() => {
-    window.addEventListener("error", swallow)
-  })
+    window.addEventListener("error", swallow);
+  });
   afterAll(() => {
-    window.removeEventListener("error", swallow)
-  })
+    window.removeEventListener("error", swallow);
+  });
 
   it("sees the public component surface", () => {
-    expect(exports.length).toBeGreaterThan(300)
-  })
+    expect(exports.length).toBeGreaterThan(300);
+  });
 
-  const swept: string[] = []
-  const broken: string[] = []
+  const swept: string[] = [];
+  const broken: string[] = [];
 
   it.each(exports)("%s", (name, Component) => {
-    silence = vi.spyOn(console, "error").mockImplementation(() => {})
-    let threw = false
-    const ref = React.createRef<Element>()
+    silence = vi.spyOn(console, "error").mockImplementation(() => {});
+    let threw = false;
+    const ref = React.createRef<Element>();
     try {
       act(() =>
         root.render(
@@ -108,24 +107,24 @@ describe("every withRef export forwards its ref to a DOM node", () => {
             <Component ref={ref} {...RENDER_PROPS[name]} />
           </Boundary>,
         ),
-      )
+      );
     } catch {
-      threw = true
+      threw = true;
     } finally {
-      silence.mockRestore()
+      silence.mockRestore();
     }
     // Rendered nothing, or needs a parent it does not have: not checkable in isolation.
-    if (threw || document.body.querySelectorAll("*").length <= 1) return
-    swept.push(name)
-    if (!(ref.current instanceof Element)) broken.push(name)
-    expect(ref.current, `${name} rendered DOM but its ref is ${String(ref.current)}`).toBeInstanceOf(Element)
-  })
+    if (threw || document.body.querySelectorAll("*").length <= 1) return;
+    swept.push(name);
+    if (!(ref.current instanceof Element)) broken.push(name);
+    expect(ref.current, `${name} rendered DOM but its ref is ${String(ref.current)}`).toBeInstanceOf(Element);
+  });
 
   it("checked a meaningful share of components in isolation", () => {
-    expect(broken).toEqual([])
-    expect(swept.length).toBeGreaterThan(MIN_SWEPT)
-  })
-})
+    expect(broken).toEqual([]);
+    expect(swept.length).toBeGreaterThan(MIN_SWEPT);
+  });
+});
 
 describe("Radix asChild triggers compose a kit Button's ref", () => {
   const {
@@ -148,7 +147,7 @@ describe("Radix asChild triggers compose a kit Button's ref", () => {
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-  } = kit
+  } = kit;
 
   const cases: Array<[string, (ref: React.Ref<HTMLButtonElement>) => React.ReactElement]> = [
     [
@@ -212,30 +211,30 @@ describe("Radix asChild triggers compose a kit Button's ref", () => {
         </Dialog>
       ),
     ],
-  ]
+  ];
 
   it.each(cases)("%s asChild keeps the consumer's ref and raises no ref warning", (_name, render) => {
-    const { warnings, restore } = captureRefWarnings()
-    const ref = React.createRef<HTMLButtonElement>()
+    const { warnings, restore } = captureRefWarnings();
+    const ref = React.createRef<HTMLButtonElement>();
     try {
-      act(() => root.render(render(ref)))
+      act(() => root.render(render(ref)));
     } finally {
-      restore()
+      restore();
     }
-    expect(warnings).toEqual([])
-    expect(ref.current).toBeInstanceOf(HTMLButtonElement)
-    expect(ref.current?.textContent).toBe("Open")
-  })
+    expect(warnings).toEqual([]);
+    expect(ref.current).toBeInstanceOf(HTMLButtonElement);
+    expect(ref.current?.textContent).toBe("Open");
+  });
 
   it("DropdownMenuTrigger asChild opens its menu from the keyboard", () => {
-    const ref = React.createRef<HTMLButtonElement>()
-    const [, render] = cases.find(([name]) => name === "DropdownMenuTrigger")!
-    act(() => root.render(render(ref)))
+    const ref = React.createRef<HTMLButtonElement>();
+    const [, render] = cases.find(([name]) => name === "DropdownMenuTrigger")!;
+    act(() => root.render(render(ref)));
     act(() => {
-      ref.current?.focus()
-      ref.current?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
-    })
-    expect(ref.current?.getAttribute("aria-expanded")).toBe("true")
-    expect(document.querySelector('[role="menu"]')).not.toBeNull()
-  })
-})
+      ref.current?.focus();
+      ref.current?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    });
+    expect(ref.current?.getAttribute("aria-expanded")).toBe("true");
+    expect(document.querySelector('[role="menu"]')).not.toBeNull();
+  });
+});

@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 
-import { COLORS, DEFAULT_CATEGORY_COLORS, DEFAULT_MARKER_SIZE, DEFAULT_MAX_POINTS, DEFAULT_SIZE_RANGE } from "../constants";
+import {
+  COLORS,
+  DEFAULT_CATEGORY_COLORS,
+  DEFAULT_MARKER_SIZE,
+  DEFAULT_MAX_POINTS,
+  DEFAULT_SIZE_RANGE,
+} from "../constants";
 import {
   applySelection,
   calculateAxisRange,
@@ -215,10 +221,7 @@ const points = (metas: Array<Record<string, unknown>>): ScatterPoint[] =>
 describe("mapColors", () => {
   it("fills with the primary token color when no mapping is provided", () => {
     let mapping: ColorMapping | undefined;
-    expect(mapColors(points([{}, {}]), mapping)).toEqual([
-      COLORS.primary,
-      COLORS.primary,
-    ]);
+    expect(mapColors(points([{}, {}]), mapping)).toEqual([COLORS.primary, COLORS.primary]);
   });
 
   it("uses the static value when provided", () => {
@@ -230,9 +233,7 @@ describe("mapColors", () => {
   });
 
   it("falls back to the primary token color for a static mapping without a value", () => {
-    expect(mapColors(points([{}]), { type: "static" })).toEqual([
-      COLORS.primary,
-    ]);
+    expect(mapColors(points([{}]), { type: "static" })).toEqual([COLORS.primary]);
   });
 
   it("uses explicit category colors and cycles defaults for the rest", () => {
@@ -243,11 +244,7 @@ describe("mapColors", () => {
       categoryColors: { b: "#abcdef" },
     });
     // Categories are sorted (a, b, c); a and c take palette defaults by index
-    expect(colors).toEqual([
-      DEFAULT_CATEGORY_COLORS[0],
-      "#abcdef",
-      DEFAULT_CATEGORY_COLORS[2],
-    ]);
+    expect(colors).toEqual([DEFAULT_CATEGORY_COLORS[0], "#abcdef", DEFAULT_CATEGORY_COLORS[2]]);
   });
 
   it("falls back to the primary token color for unhandled mapping types", () => {
@@ -328,11 +325,7 @@ describe("mapSizes", () => {
   it("assigns increasing default sizes per category", () => {
     const data = points([{ kind: "a" }, { kind: "b" }, { other: 1 }]);
     const sizes = mapSizes(data, { type: "categorical", field: "kind" });
-    expect(sizes).toEqual([
-      DEFAULT_MARKER_SIZE,
-      DEFAULT_MARKER_SIZE + 2,
-      DEFAULT_MARKER_SIZE,
-    ]);
+    expect(sizes).toEqual([DEFAULT_MARKER_SIZE, DEFAULT_MARKER_SIZE + 2, DEFAULT_MARKER_SIZE]);
   });
 
   it("interpolates continuous values into the size range", () => {

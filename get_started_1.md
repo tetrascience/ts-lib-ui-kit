@@ -31,7 +31,7 @@ After installing, you **must** import the CSS file in your application entry poi
 
 ```tsx
 // In your App.tsx or index.tsx
-import '@tetrascience-npm/tetrascience-react-ui/index.css';
+import "@tetrascience-npm/tetrascience-react-ui/index.css";
 ```
 
 Without this import, components will not be styled correctly.
@@ -42,50 +42,50 @@ Without this import, components will not be styled correctly.
 
 Simple, single-purpose components:
 
-| Component | Description |
-|-----------|-------------|
-| `Button` | Primary, secondary, and tertiary button variants |
-| `Input` | Text input with validation support |
-| `Card` | Container with optional header and actions |
-| `Modal` | Dialog overlay with customisable content |
-| `Badge` | Status indicators and labels |
-| `Checkbox` | Checkbox with label support |
-| `Toggle` | On/off switch control |
-| `Dropdown` | Select menu with options |
-| `Toast` | Notification messages |
-| `Tooltip` | Hover information popups |
-| `CodeEditor` | Monaco-based code editing |
-| `MarkdownDisplay` | Rendered markdown content |
+| Component         | Description                                      |
+| ----------------- | ------------------------------------------------ |
+| `Button`          | Primary, secondary, and tertiary button variants |
+| `Input`           | Text input with validation support               |
+| `Card`            | Container with optional header and actions       |
+| `Modal`           | Dialog overlay with customisable content         |
+| `Badge`           | Status indicators and labels                     |
+| `Checkbox`        | Checkbox with label support                      |
+| `Toggle`          | On/off switch control                            |
+| `Dropdown`        | Select menu with options                         |
+| `Toast`           | Notification messages                            |
+| `Tooltip`         | Hover information popups                         |
+| `CodeEditor`      | Monaco-based code editing                        |
+| `MarkdownDisplay` | Rendered markdown content                        |
 
 ### Molecules (Composed Components)
 
 Components that combine atoms with specific behaviour:
 
-| Component | Description |
-|-----------|-------------|
-| `FormField` | Label + Input + validation message |
-| `SelectField` | Label + Dropdown + validation |
-| `Menu` | Navigation menu with items |
-| `TabGroup` | Tabbed content switcher |
-| `Table` | Data table with sorting and filtering |
-| `Navbar` | Application navigation bar |
-| `ToastManager` | Global toast notification system |
+| Component      | Description                           |
+| -------------- | ------------------------------------- |
+| `FormField`    | Label + Input + validation message    |
+| `SelectField`  | Label + Dropdown + validation         |
+| `Menu`         | Navigation menu with items            |
+| `TabGroup`     | Tabbed content switcher               |
+| `Table`        | Data table with sorting and filtering |
+| `Navbar`       | Application navigation bar            |
+| `ToastManager` | Global toast notification system      |
 
 ### Organisms (Complex Components)
 
 Page-level components with data visualisation:
 
-| Component | Description |
-|-----------|-------------|
-| `BarGraph` | Interactive bar charts (grouped/stacked) |
-| `LineGraph` | Line charts with multiple series |
-| `ScatterGraph` | Scatter plot visualisations |
-| `AreaGraph` | Filled area charts |
-| `Heatmap` | 2D colour-coded data grids |
-| `Histogram` | Distribution visualisations |
-| `PieChart` | Pie and donut charts |
-| `Boxplot` | Statistical box plots |
-| `AppLayout` | Full application layout template |
+| Component      | Description                              |
+| -------------- | ---------------------------------------- |
+| `BarGraph`     | Interactive bar charts (grouped/stacked) |
+| `LineGraph`    | Line charts with multiple series         |
+| `ScatterGraph` | Scatter plot visualisations              |
+| `AreaGraph`    | Filled area charts                       |
+| `Heatmap`      | 2D colour-coded data grids               |
+| `Histogram`    | Distribution visualisations              |
+| `PieChart`     | Pie and donut charts                     |
+| `Boxplot`      | Statistical box plots                    |
+| `AppLayout`    | Full application layout template         |
 
 ## Step 3: Your First TetraScience App
 
@@ -107,17 +107,17 @@ yarn add @tetrascience-npm/tetrascience-react-ui
 Edit your `src/main.tsx`:
 
 ```tsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
 
 // Important: Import the CSS
-import '@tetrascience-npm/tetrascience-react-ui/index.css';
+import "@tetrascience-npm/tetrascience-react-ui/index.css";
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 ```
 
@@ -126,16 +126,16 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 Edit your `src/App.tsx`:
 
 ```tsx
-import { Button, Card } from '@tetrascience-npm/tetrascience-react-ui';
+import { Button, Card } from "@tetrascience-npm/tetrascience-react-ui";
 
 function App() {
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: "24px" }}>
       <h1>My TetraScience Application</h1>
 
       <Card title="Welcome">
         <p>This is your first TetraScience-powered React app!</p>
-        <Button variant="primary" onClick={() => alert('Hello!')}>
+        <Button variant="primary" onClick={() => alert("Hello!")}>
           Click Me
         </Button>
       </Card>
@@ -159,33 +159,33 @@ Your browser should open showing your new TetraScience app!
 Let's add a bar graph to visualise some data:
 
 ```tsx
-import { Button, Card, BarGraph } from '@tetrascience-npm/tetrascience-react-ui';
-import type { BarDataSeries } from '@tetrascience-npm/tetrascience-react-ui';
+import { Button, Card, BarGraph } from "@tetrascience-npm/tetrascience-react-ui";
+import type { BarDataSeries } from "@tetrascience-npm/tetrascience-react-ui";
 
 function App() {
   const experimentData: BarDataSeries[] = [
     {
-      name: 'Experiment A',
-      color: '#FF9500',
-      x: ['Sample 1', 'Sample 2', 'Sample 3', 'Sample 4'],
+      name: "Experiment A",
+      color: "#FF9500",
+      x: ["Sample 1", "Sample 2", "Sample 3", "Sample 4"],
       y: [140, 195, 230, 300],
     },
     {
-      name: 'Experiment B',
-      color: '#FF5C64',
-      x: ['Sample 1', 'Sample 2', 'Sample 3', 'Sample 4'],
+      name: "Experiment B",
+      color: "#FF5C64",
+      x: ["Sample 1", "Sample 2", "Sample 3", "Sample 4"],
       y: [150, 210, 130, 140],
     },
     {
-      name: 'Control',
-      color: '#A1C63C',
-      x: ['Sample 1', 'Sample 2', 'Sample 3', 'Sample 4'],
+      name: "Control",
+      color: "#A1C63C",
+      x: ["Sample 1", "Sample 2", "Sample 3", "Sample 4"],
       y: [55, 75, 105, 215],
     },
   ];
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: "24px" }}>
       <h1>Experimental Results</h1>
 
       <Card title="Sample Comparison">
@@ -211,25 +211,25 @@ export default App;
 Customise the look and feel with the ThemeProvider:
 
 ```tsx
-import { ThemeProvider, Button, Card } from '@tetrascience-npm/tetrascience-react-ui';
-import type { Theme } from '@tetrascience-npm/tetrascience-react-ui';
+import { ThemeProvider, Button, Card } from "@tetrascience-npm/tetrascience-react-ui";
+import type { Theme } from "@tetrascience-npm/tetrascience-react-ui";
 
 // Define your custom theme
 const customTheme: Partial<Theme> = {
   colors: {
-    primary: '#DC2626',      // Custom red primary colour
-    primaryHover: '#B91C1C',
+    primary: "#DC2626", // Custom red primary colour
+    primaryHover: "#B91C1C",
   },
   radius: {
-    medium: '12px',          // More rounded corners
-    large: '24px',
+    medium: "12px", // More rounded corners
+    large: "24px",
   },
 };
 
 function App() {
   return (
     <ThemeProvider theme={customTheme}>
-      <div style={{ padding: '24px' }}>
+      <div style={{ padding: "24px" }}>
         <Card title="Themed Components">
           <p>These components use your custom theme!</p>
           <Button variant="primary">Primary Button</Button>
@@ -250,18 +250,18 @@ See [THEMING.md](./THEMING.md) for the complete theming guide.
 Create interactive forms with validation:
 
 ```tsx
-import { useState } from 'react';
-import { Card, FormField, SelectField, Button, Toggle } from '@tetrascience-npm/tetrascience-react-ui';
+import { useState } from "react";
+import { Card, FormField, SelectField, Button, Toggle } from "@tetrascience-npm/tetrascience-react-ui";
 
 function SampleForm() {
-  const [sampleName, setSampleName] = useState('');
-  const [sampleType, setSampleType] = useState('');
+  const [sampleName, setSampleName] = useState("");
+  const [sampleType, setSampleType] = useState("");
   const [isActive, setIsActive] = useState(true);
 
   const typeOptions = [
-    { label: 'Biological', value: 'biological' },
-    { label: 'Chemical', value: 'chemical' },
-    { label: 'Physical', value: 'physical' },
+    { label: "Biological", value: "biological" },
+    { label: "Chemical", value: "chemical" },
+    { label: "Physical", value: "physical" },
   ];
 
   const handleSubmit = () => {
@@ -286,12 +286,8 @@ function SampleForm() {
         placeholder="Select type"
       />
 
-      <div style={{ margin: '16px 0' }}>
-        <Toggle
-          checked={isActive}
-          onChange={setIsActive}
-          label="Active Sample"
-        />
+      <div style={{ margin: "16px 0" }}>
+        <Toggle checked={isActive} onChange={setIsActive} label="Active Sample" />
       </div>
 
       <Button variant="primary" onClick={handleSubmit}>
@@ -309,14 +305,16 @@ function SampleForm() {
 The library is fully typed. Import types alongside components:
 
 ```tsx
-import { Button, BarGraph } from '@tetrascience-npm/tetrascience-react-ui';
-import type { ButtonProps, BarGraphProps, BarDataSeries } from '@tetrascience-npm/tetrascience-react-ui';
+import { Button, BarGraph } from "@tetrascience-npm/tetrascience-react-ui";
+import type { ButtonProps, BarGraphProps, BarDataSeries } from "@tetrascience-npm/tetrascience-react-ui";
 
 // Use types for props validation
 const MyButton = (props: ButtonProps) => <Button {...props} />;
 
 // Use types for data structures
-const chartData: BarDataSeries[] = [/* ... */];
+const chartData: BarDataSeries[] = [
+  /* ... */
+];
 ```
 
 ### Component Composition
@@ -324,7 +322,7 @@ const chartData: BarDataSeries[] = [/* ... */];
 Build complex UIs by composing simpler components:
 
 ```tsx
-import { Card, FormField, Button, Modal } from '@tetrascience-npm/tetrascience-react-ui';
+import { Card, FormField, Button, Modal } from "@tetrascience-npm/tetrascience-react-ui";
 
 function DataEntryCard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -343,11 +341,7 @@ function DataEntryCard() {
         <Button variant="primary">Submit</Button>
       </Card>
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Help"
-      >
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Help">
         <p>Enter the measured value from your experiment.</p>
       </Modal>
     </>
@@ -360,8 +354,8 @@ function DataEntryCard() {
 Wrap component usage in error boundaries for production apps:
 
 ```tsx
-import { ErrorBoundary } from 'react-error-boundary';
-import { BarGraph } from '@tetrascience-npm/tetrascience-react-ui';
+import { ErrorBoundary } from "react-error-boundary";
+import { BarGraph } from "@tetrascience-npm/tetrascience-react-ui";
 
 function ChartWithErrorHandling({ data }) {
   return (
@@ -379,15 +373,11 @@ Validate data before passing to visualisation components:
 ```tsx
 function validateChartData(data: BarDataSeries[]): boolean {
   if (!data || data.length === 0) {
-    console.warn('No data provided for chart');
+    console.warn("No data provided for chart");
     return false;
   }
 
-  return data.every(series =>
-    series.x?.length > 0 &&
-    series.y?.length > 0 &&
-    series.x.length === series.y.length
-  );
+  return data.every((series) => series.x?.length > 0 && series.y?.length > 0 && series.x.length === series.y.length);
 }
 
 // Use validation
@@ -404,7 +394,7 @@ if (validateChartData(myData)) {
 
 ```tsx
 // Import everything to explore
-import * as TetraScienceUI from '@tetrascience-npm/tetrascience-react-ui';
+import * as TetraScienceUI from "@tetrascience-npm/tetrascience-react-ui";
 
 // Log available exports
 console.log(Object.keys(TetraScienceUI));
@@ -430,8 +420,9 @@ Visit http://localhost:6006 to explore all components with live examples.
 **Problem**: Components render but have no styling.
 
 **Solution**: Ensure you've imported the CSS:
+
 ```tsx
-import '@tetrascience-npm/tetrascience-react-ui/index.css';
+import "@tetrascience-npm/tetrascience-react-ui/index.css";
 ```
 
 ### TypeScript Errors
@@ -439,8 +430,9 @@ import '@tetrascience-npm/tetrascience-react-ui/index.css';
 **Problem**: Type errors when using components.
 
 **Solution**: Import types explicitly:
+
 ```tsx
-import type { ButtonProps } from '@tetrascience-npm/tetrascience-react-ui';
+import type { ButtonProps } from "@tetrascience-npm/tetrascience-react-ui";
 ```
 
 ### Charts Not Rendering
@@ -448,6 +440,7 @@ import type { ButtonProps } from '@tetrascience-npm/tetrascience-react-ui';
 **Problem**: Graph components show blank area.
 
 **Solution**:
+
 1. Check that `dataSeries` has valid data
 2. Ensure `width` and `height` are specified
 3. Verify the parent container has dimensions
@@ -457,6 +450,7 @@ import type { ButtonProps } from '@tetrascience-npm/tetrascience-react-ui';
 **Problem**: Custom theme colours not showing.
 
 **Solution**: Wrap your app with `ThemeProvider`:
+
 ```tsx
 <ThemeProvider theme={customTheme}>
   <App />

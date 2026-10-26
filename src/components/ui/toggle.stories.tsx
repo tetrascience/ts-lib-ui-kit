@@ -1,9 +1,9 @@
-import { BoldIcon } from "lucide-react"
-import { expect, within } from "storybook/test"
+import { BoldIcon } from "lucide-react";
+import { expect, within } from "storybook/test";
 
-import { Toggle } from "./toggle"
+import { Toggle } from "./toggle";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Toggle> = {
   title: "Components/Actions/Toggle",
@@ -26,11 +26,11 @@ const meta: Meta<typeof Toggle> = {
     variant: "default",
     size: "default",
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Toggle>
+type Story = StoryObj<typeof Toggle>;
 
 function renderToggle(args: Story["args"]) {
   return (
@@ -38,7 +38,7 @@ function renderToggle(args: Story["args"]) {
       <BoldIcon />
       Bold
     </Toggle>
-  )
+  );
 }
 
 export const Default: Story = {
@@ -47,13 +47,13 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1322" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Toggle button renders with label", async () => {
-      expect(canvas.getByRole("button", { name: /bold/i })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: /bold/i })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Outline: Story = {
   args: {
@@ -64,13 +64,13 @@ export const Outline: Story = {
     zephyr: { testCaseId: "SW-T1323" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Outline toggle renders", async () => {
-      expect(canvas.getByRole("button", { name: /bold/i })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: /bold/i })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const ExtraSmall: Story = {
   args: {
@@ -81,14 +81,14 @@ export const ExtraSmall: Story = {
     zephyr: { testCaseId: "SW-T5685" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("xs toggle renders at 24px, matching Button xs", async () => {
-      const btn = canvas.getByRole("button", { name: /bold/i })
-      expect(Math.round(btn.getBoundingClientRect().height)).toBe(24)
-    })
+      const btn = canvas.getByRole("button", { name: /bold/i });
+      expect(Math.round(btn.getBoundingClientRect().height)).toBe(24);
+    });
   },
-}
+};
 
 export const Small: Story = {
   args: {
@@ -99,13 +99,13 @@ export const Small: Story = {
     zephyr: { testCaseId: "SW-T1324" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Small toggle renders", async () => {
-      expect(canvas.getByRole("button", { name: /bold/i })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: /bold/i })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Large: Story = {
   args: {
@@ -116,10 +116,10 @@ export const Large: Story = {
     zephyr: { testCaseId: "SW-T1325" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Large toggle renders", async () => {
-      expect(canvas.getByRole("button", { name: /bold/i })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: /bold/i })).toBeInTheDocument();
+    });
   },
-}
+};

@@ -7,7 +7,7 @@ import { DataAppShellRightPanel, DataAppShellRightPanelTrigger } from "../RightP
 
 // act() rather than flushSync: it flushes effects and every update lane on React 18
 // and 19 alike, so these assertions hold in the React 18 CI job too (UXT-77).
-;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
+(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
 // ---------------------------------------------------------------------------
 // Render harness
@@ -33,10 +33,8 @@ function render(ui: React.ReactElement) {
   act(() => root.render(ui));
 }
 
-const getPanel = () =>
-  container.querySelector<HTMLElement>("aside[data-slot='data-app-shell-right-panel']");
-const getHandle = () =>
-  container.querySelector<HTMLElement>("[data-slot='data-app-shell-right-panel-drag-handle']");
+const getPanel = () => container.querySelector<HTMLElement>("aside[data-slot='data-app-shell-right-panel']");
+const getHandle = () => container.querySelector<HTMLElement>("[data-slot='data-app-shell-right-panel-drag-handle']");
 
 function pointerEvent(type: string, init: MouseEventInit) {
   // jsdom has no PointerEvent constructor — a MouseEvent with the pointer
@@ -140,9 +138,7 @@ describe("DataAppShellRightPanel — closed rendering", () => {
   it("renders nothing while closed when showTrigger is false", () => {
     render(<DataAppShellRightPanel id="p7" open={false} showTrigger={false} title="Details" />);
     expect(getPanel()).toBeNull();
-    expect(
-      container.querySelector("[data-slot='data-app-shell-right-panel-trigger']"),
-    ).toBeNull();
+    expect(container.querySelector("[data-slot='data-app-shell-right-panel-trigger']")).toBeNull();
   });
 });
 
@@ -161,9 +157,7 @@ describe("DataAppShellRightPanelTrigger — asChild", () => {
 
     // No wrapping <button> — the anchor itself became the trigger
     expect(container.querySelector("button")).toBeNull();
-    const link = container.querySelector<HTMLAnchorElement>(
-      "a[data-slot='data-app-shell-right-panel-trigger']",
-    )!;
+    const link = container.querySelector<HTMLAnchorElement>("a[data-slot='data-app-shell-right-panel-trigger']")!;
     expect(link).not.toBeNull();
     expect(link.getAttribute("data-variant")).toBe("icon");
     expect(link.getAttribute("aria-label")).toBe("Open history");
@@ -191,9 +185,7 @@ describe("DataAppShellRightPanelTrigger — asChild", () => {
 
 describe("DataAppShellRightPanel — overlay variant", () => {
   const getDialog = () =>
-    document.body.querySelector<HTMLElement>(
-      "[data-slot='data-app-shell-right-panel'][data-variant='overlay']",
-    );
+    document.body.querySelector<HTMLElement>("[data-slot='data-app-shell-right-panel'][data-variant='overlay']");
 
   it("renders the panel inside a Sheet dialog while open, and only the FAB while closed", () => {
     render(
@@ -215,9 +207,7 @@ describe("DataAppShellRightPanel — overlay variant", () => {
       <DataAppShellRightPanel id="ov2" variant="overlay" open={false} title="Details" triggerLabel="Open details" />,
     );
     expect(getDialog()).toBeNull();
-    expect(
-      container.querySelector("[data-slot='data-app-shell-right-panel-trigger']"),
-    ).not.toBeNull();
+    expect(container.querySelector("[data-slot='data-app-shell-right-panel-trigger']")).not.toBeNull();
   });
 
   it("closes via the header close button", () => {

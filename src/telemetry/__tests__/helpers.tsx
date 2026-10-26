@@ -1,8 +1,8 @@
-import {act} from "react";
-import {createRoot} from "react-dom/client";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 
-import type {LogRecordProcessor, SdkLogRecord} from "@opentelemetry/sdk-logs";
-import type {ReactNode} from "react";
+import type { LogRecordProcessor, SdkLogRecord } from "@opentelemetry/sdk-logs";
+import type { ReactNode } from "react";
 
 /**
  * Test seam: the bindings are asserted at the processor boundary — the records
@@ -10,34 +10,34 @@ import type {ReactNode} from "react";
  * construction and teardown observable (StrictMode, `enabled={false}`).
  */
 export class RecordingProcessor implements LogRecordProcessor {
-	readonly records: SdkLogRecord[] = [];
-	flushes = 0;
-	shutdowns = 0;
+  readonly records: SdkLogRecord[] = [];
+  flushes = 0;
+  shutdowns = 0;
 
-	onEmit(record: SdkLogRecord): void {
-		this.records.push(record);
-	}
+  onEmit(record: SdkLogRecord): void {
+    this.records.push(record);
+  }
 
-	async forceFlush(): Promise<void> {
-		this.flushes += 1;
-	}
+  async forceFlush(): Promise<void> {
+    this.flushes += 1;
+  }
 
-	async shutdown(): Promise<void> {
-		this.shutdowns += 1;
-	}
+  async shutdown(): Promise<void> {
+    this.shutdowns += 1;
+  }
 
-	/** `event.name` of every captured record, in order. */
-	names(): unknown[] {
-		return this.records.map((record) => record.eventName);
-	}
+  /** `event.name` of every captured record, in order. */
+  names(): unknown[] {
+    return this.records.map((record) => record.eventName);
+  }
 
-	/** Every attribute key seen across all captured records. */
-	attributeKeys(): string[] {
-		return this.records.flatMap((record) => Object.keys(record.attributes));
-	}
+  /** Every attribute key seen across all captured records. */
+  attributeKeys(): string[] {
+    return this.records.flatMap((record) => Object.keys(record.attributes));
+  }
 }
 
-export const ARTIFACT = {namespace: "common", slug: "sandbox", version: "1.2.3"};
+export const ARTIFACT = { namespace: "common", slug: "sandbox", version: "1.2.3" };
 
 /**
  * Minimal render harness over `react-dom/client` — the repo has no React
@@ -45,22 +45,22 @@ export const ARTIFACT = {namespace: "common", slug: "sandbox", version: "1.2.3"}
  * assertions, so no extra testing-library dependency is introduced.
  */
 export function renderTree(ui: ReactNode) {
-	const container = document.createElement("div");
-	document.body.appendChild(container);
-	const root = createRoot(container);
-	act(() => {
-		root.render(ui);
-	});
-	return {
-		container,
-		text: () => container.textContent,
-		rerender: (next: ReactNode) =>
-			act(() => {
-				root.render(next);
-			}),
-		unmount: () =>
-			act(() => {
-				root.unmount();
-			}),
-	};
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  act(() => {
+    root.render(ui);
+  });
+  return {
+    container,
+    text: () => container.textContent,
+    rerender: (next: ReactNode) =>
+      act(() => {
+        root.render(next);
+      }),
+    unmount: () =>
+      act(() => {
+        root.unmount();
+      }),
+  };
 }

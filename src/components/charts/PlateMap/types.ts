@@ -361,4 +361,3 @@ export interface WellDataGridResult {
   /** Map of wellId -> tooltipData */
   tooltipData: Map<string, Record<string, unknown>>;
 }
-

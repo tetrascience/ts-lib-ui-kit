@@ -1,15 +1,6 @@
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
-import {
-  createContext,
-  memo,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Streamdown } from "streamdown";
 
 import { Shimmer } from "./shimmer";
@@ -17,11 +8,7 @@ import { useStreamdownPlugins } from "./use-streamdown-plugins";
 
 import type { ComponentProps, ReactNode } from "react";
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
@@ -104,12 +91,7 @@ const Reasoning = memo(
 
     // Auto-close when streaming ends (once only, and only if it ever streamed)
     useEffect(() => {
-      if (
-        hasEverStreamedRef.current &&
-        !isStreaming &&
-        isOpen &&
-        !hasAutoClosed
-      ) {
+      if (hasEverStreamedRef.current && !isStreaming && isOpen && !hasAutoClosed) {
         const timer = setTimeout(() => {
           setIsOpen(false);
           setHasAutoClosed(true);
@@ -123,12 +105,12 @@ const Reasoning = memo(
       (newOpen: boolean) => {
         setIsOpen(newOpen);
       },
-      [setIsOpen]
+      [setIsOpen],
     );
 
     const contextValue = useMemo(
       () => ({ duration, isOpen, isStreaming, setIsOpen }),
-      [duration, isOpen, isStreaming, setIsOpen]
+      [duration, isOpen, isStreaming, setIsOpen],
     );
 
     return (
@@ -143,7 +125,7 @@ const Reasoning = memo(
         </Collapsible>
       </ReasoningContext.Provider>
     );
-  }
+  },
 );
 
 // memo stays on the React 19 component; the React 18 export re-memoises the forwarding wrapper.
@@ -151,9 +133,7 @@ const Reasoning = memo(
 const ReasoningWithRef = memo(withRef("Reasoning", Reasoning.type));
 export { ReasoningWithRef as Reasoning };
 
-export type ReasoningTriggerProps = ComponentProps<
-  typeof CollapsibleTrigger
-> & {
+export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger> & {
   getThinkingMessage?: (isStreaming: boolean, duration?: number) => ReactNode;
 };
 
@@ -168,19 +148,14 @@ const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
 };
 
 const ReasoningTrigger = memo(
-  ({
-    className,
-    children,
-    getThinkingMessage = defaultGetThinkingMessage,
-    ...props
-  }: ReasoningTriggerProps) => {
+  ({ className, children, getThinkingMessage = defaultGetThinkingMessage, ...props }: ReasoningTriggerProps) => {
     const { isStreaming, isOpen, duration } = useReasoning();
 
     return (
       <CollapsibleTrigger
         className={cn(
           "group flex w-full items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground",
-          className
+          className,
         )}
         {...props}
       >
@@ -191,7 +166,7 @@ const ReasoningTrigger = memo(
             <ChevronDownIcon
               className={cn(
                 "size-4 opacity-0 transition-all group-focus-visible:opacity-100 group-hover:opacity-100",
-                isOpen ? "rotate-180 opacity-100" : "rotate-0"
+                isOpen ? "rotate-180 opacity-100" : "rotate-0",
               )}
               data-slot="collapsible-chevron"
             />
@@ -199,7 +174,7 @@ const ReasoningTrigger = memo(
         )}
       </CollapsibleTrigger>
     );
-  }
+  },
 );
 
 // memo stays on the React 19 component; the React 18 export re-memoises the forwarding wrapper.
@@ -207,32 +182,28 @@ const ReasoningTrigger = memo(
 const ReasoningTriggerWithRef = memo(withRef("ReasoningTrigger", ReasoningTrigger.type));
 export { ReasoningTriggerWithRef as ReasoningTrigger };
 
-export type ReasoningContentProps = ComponentProps<
-  typeof CollapsibleContent
-> & {
+export type ReasoningContentProps = ComponentProps<typeof CollapsibleContent> & {
   children: string;
 };
 
-const ReasoningContent = memo(
-  ({ className, children, ...props }: ReasoningContentProps) => {
-    // Plugins load lazily (SW-2007): markdown streams in immediately and
-    // code/math/mermaid rendering upgrades in place once the chunk arrives.
-    const plugins = useStreamdownPlugins();
+const ReasoningContent = memo(({ className, children, ...props }: ReasoningContentProps) => {
+  // Plugins load lazily (SW-2007): markdown streams in immediately and
+  // code/math/mermaid rendering upgrades in place once the chunk arrives.
+  const plugins = useStreamdownPlugins();
 
-    return (
-      <CollapsibleContent
-        className={cn(
-          "mt-4 text-sm",
-          "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-muted-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
-          className
-        )}
-        {...props}
-      >
-        <Streamdown plugins={plugins}>{children}</Streamdown>
-      </CollapsibleContent>
-    );
-  }
-);
+  return (
+    <CollapsibleContent
+      className={cn(
+        "mt-4 text-sm",
+        "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-muted-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
+        className,
+      )}
+      {...props}
+    >
+      <Streamdown plugins={plugins}>{children}</Streamdown>
+    </CollapsibleContent>
+  );
+});
 
 // memo stays on the React 19 component; the React 18 export re-memoises the forwarding wrapper.
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.

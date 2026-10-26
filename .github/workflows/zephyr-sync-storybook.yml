@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/**/*.stories.tsx'
+      - "src/**/*.stories.tsx"
   pull_request:
     types: [labeled]
 
@@ -32,8 +32,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '24'
-          cache: 'yarn'
+          node-version: "24"
+          cache: "yarn"
 
       - name: Enable Corepack
         run: corepack enable
@@ -60,11 +60,15 @@ jobs:
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
         run: npx tsx scripts/zephyr/sync-storybook-zephyr.ts
 
+      - name: Format updated story files
+        # ts-morph output is not Prettier-formatted; `yarn format:check` in CI would reject it.
+        run: npx prettier --write "src/**/*.stories.tsx"
+
       - name: Commit updated story files
         uses: stefanzweifel/git-auto-commit-action@8621497c8c39c72f3e2a999a26b4ca1b5058a842 # v5.1.0
         with:
-          commit_message: 'chore: add Zephyr test case IDs to stories'
-          file_pattern: 'src/**/*.stories.tsx'
+          commit_message: "chore: add Zephyr test case IDs to stories"
+          file_pattern: "src/**/*.stories.tsx"
           disable_globbing: true
 
       - name: Remove zephyr_sync label

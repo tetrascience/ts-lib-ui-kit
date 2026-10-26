@@ -55,9 +55,7 @@ function resolveSourceFile(relativePath: string): string {
     const candidate = path.join(SRC_DIR, `${relativePath}${suffix}`);
     if (fs.existsSync(candidate)) return candidate;
   }
-  throw new Error(
-    `[component-entries] could not resolve "@/${relativePath}" from src/index.ts to a source file`,
-  );
+  throw new Error(`[component-entries] could not resolve "@/${relativePath}" from src/index.ts to a source file`);
 }
 
 /**
@@ -95,9 +93,7 @@ function categorize(relativePath: string): { category: string; name: string } {
  * collision would silently drop one entry from the build (a reserved-key
  * collision is worse: the hand-written entry disappears with no error).
  */
-export function getComponentEntries(
-  reservedKeys: ReadonlySet<string> = new Set(),
-): Record<string, string> {
+export function getComponentEntries(reservedKeys: ReadonlySet<string> = new Set()): Record<string, string> {
   const project = new Project({ skipAddingFilesFromTsConfig: true });
   const sourceFile = project.addSourceFileAtPath(INDEX_TS);
 

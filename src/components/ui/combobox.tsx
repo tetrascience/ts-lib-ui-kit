@@ -1,31 +1,21 @@
-"use client"
+"use client";
 
-import { Combobox as ComboboxPrimitive } from "@base-ui/react"
-import { ChevronDownIcon, XIcon, CheckIcon } from "lucide-react"
-import * as React from "react"
+import { Combobox as ComboboxPrimitive } from "@base-ui/react";
+import { ChevronDownIcon, XIcon, CheckIcon } from "lucide-react";
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@/components/ui/input-group"
-import { withRef } from "@/lib/react18-compat"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
+import { withRef } from "@/lib/react18-compat";
+import { cn } from "@/lib/utils";
 
-
-const Combobox = ComboboxPrimitive.Root
+const Combobox = ComboboxPrimitive.Root;
 
 function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
-  return <ComboboxPrimitive.Value data-slot="combobox-value" {...props} />
+  return <ComboboxPrimitive.Value data-slot="combobox-value" {...props} />;
 }
 
-function ComboboxTrigger({
-  className,
-  children,
-  ...props
-}: ComboboxPrimitive.Trigger.Props) {
+function ComboboxTrigger({ className, children, ...props }: ComboboxPrimitive.Trigger.Props) {
   return (
     <ComboboxPrimitive.Trigger
       aria-label="Toggle options"
@@ -36,11 +26,11 @@ function ComboboxTrigger({
       {children}
       <ChevronDownIcon className="pointer-events-none size-4 text-muted-foreground" />
     </ComboboxPrimitive.Trigger>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxTriggerWithRef = withRef("ComboboxTrigger", ComboboxTrigger)
+const ComboboxTriggerWithRef = withRef("ComboboxTrigger", ComboboxTrigger);
 
 function ComboboxClear({ className, ...props }: ComboboxPrimitive.Clear.Props) {
   return (
@@ -53,11 +43,11 @@ function ComboboxClear({ className, ...props }: ComboboxPrimitive.Clear.Props) {
     >
       <XIcon className="pointer-events-none" />
     </ComboboxPrimitive.Clear>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxClearWithRef = withRef("ComboboxClear", ComboboxClear)
+const ComboboxClearWithRef = withRef("ComboboxClear", ComboboxClear);
 
 function ComboboxInput({
   className,
@@ -68,17 +58,14 @@ function ComboboxInput({
   size,
   ...props
 }: ComboboxPrimitive.Input.Props & {
-  showTrigger?: boolean
-  showClear?: boolean
+  showTrigger?: boolean;
+  showClear?: boolean;
   /** Shared control scale (SW-2591): xs 24 / sm 28 / default 32 / lg 36. */
-  size?: "xs" | "sm" | "default" | "lg"
+  size?: "xs" | "sm" | "default" | "lg";
 }) {
   return (
     <InputGroup size={size} className={cn("w-auto bg-card", className)}>
-      <ComboboxPrimitive.Input
-        render={<InputGroupInput disabled={disabled} />}
-        {...props}
-      />
+      <ComboboxPrimitive.Input render={<InputGroupInput disabled={disabled} />} {...props} />
       <InputGroupAddon align="inline-end">
         {showTrigger && (
           <InputGroupButton
@@ -96,11 +83,11 @@ function ComboboxInput({
       </InputGroupAddon>
       {children}
     </InputGroup>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxInputWithRef = withRef("ComboboxInput", ComboboxInput)
+const ComboboxInputWithRef = withRef("ComboboxInput", ComboboxInput);
 
 function ComboboxContent({
   className,
@@ -111,10 +98,7 @@ function ComboboxContent({
   anchor,
   ...props
 }: ComboboxPrimitive.Popup.Props &
-  Pick<
-    ComboboxPrimitive.Positioner.Props,
-    "side" | "align" | "sideOffset" | "alignOffset" | "anchor"
-  >) {
+  Pick<ComboboxPrimitive.Positioner.Props, "side" | "align" | "sideOffset" | "alignOffset" | "anchor">) {
   return (
     <ComboboxPrimitive.Portal>
       <ComboboxPrimitive.Positioner
@@ -128,16 +112,19 @@ function ComboboxContent({
         <ComboboxPrimitive.Popup
           data-slot="combobox-content"
           data-chips={!!anchor}
-          className={cn("group/combobox-content relative max-h-(--available-height) w-(--anchor-width) max-w-(--available-width) min-w-[calc(var(--anchor-width)+--spacing(7))] origin-(--transform-origin) overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-elevation-4 ring-1 ring-foreground/10 duration-100 data-[chips=true]:min-w-(--anchor-width) data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 *:data-[slot=input-group]:m-1 *:data-[slot=input-group]:mb-0 *:data-[slot=input-group]:h-8 *:data-[slot=input-group]:border-input/30 *:data-[slot=input-group]:bg-input/30 *:data-[slot=input-group]:shadow-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+          className={cn(
+            "group/combobox-content relative max-h-(--available-height) w-(--anchor-width) max-w-(--available-width) min-w-[calc(var(--anchor-width)+--spacing(7))] origin-(--transform-origin) overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-elevation-4 ring-1 ring-foreground/10 duration-100 data-[chips=true]:min-w-(--anchor-width) data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 *:data-[slot=input-group]:m-1 *:data-[slot=input-group]:mb-0 *:data-[slot=input-group]:h-8 *:data-[slot=input-group]:border-input/30 *:data-[slot=input-group]:bg-input/30 *:data-[slot=input-group]:shadow-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            className,
+          )}
           {...props}
         />
       </ComboboxPrimitive.Positioner>
     </ComboboxPrimitive.Portal>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxContentWithRef = withRef("ComboboxContent", ComboboxContent)
+const ComboboxContentWithRef = withRef("ComboboxContent", ComboboxContent);
 
 function ComboboxList({ className, ...props }: ComboboxPrimitive.List.Props) {
   return (
@@ -145,78 +132,61 @@ function ComboboxList({ className, ...props }: ComboboxPrimitive.List.Props) {
       data-slot="combobox-list"
       className={cn(
         "no-scrollbar max-h-[min(calc(--spacing(72)---spacing(9)),calc(var(--available-height)---spacing(9)))] scroll-py-1 overflow-y-auto overscroll-contain p-1 data-empty:p-0",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxListWithRef = withRef("ComboboxList", ComboboxList)
+const ComboboxListWithRef = withRef("ComboboxList", ComboboxList);
 
-function ComboboxItem({
-  className,
-  children,
-  ...props
-}: ComboboxPrimitive.Item.Props) {
+function ComboboxItem({ className, children, ...props }: ComboboxPrimitive.Item.Props) {
   return (
     <ComboboxPrimitive.Item
       data-slot="combobox-item"
       className={cn(
         "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground not-data-[variant=destructive]:data-highlighted:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
+        className,
       )}
       {...props}
     >
       {children}
       <ComboboxPrimitive.ItemIndicator
-        render={
-          <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />
-        }
+        render={<span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />}
       >
         <CheckIcon className="pointer-events-none" />
       </ComboboxPrimitive.ItemIndicator>
     </ComboboxPrimitive.Item>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxItemWithRef = withRef("ComboboxItem", ComboboxItem)
+const ComboboxItemWithRef = withRef("ComboboxItem", ComboboxItem);
 
 function ComboboxGroup({ className, ...props }: ComboboxPrimitive.Group.Props) {
-  return (
-    <ComboboxPrimitive.Group
-      data-slot="combobox-group"
-      className={cn(className)}
-      {...props}
-    />
-  )
+  return <ComboboxPrimitive.Group data-slot="combobox-group" className={cn(className)} {...props} />;
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxGroupWithRef = withRef("ComboboxGroup", ComboboxGroup)
+const ComboboxGroupWithRef = withRef("ComboboxGroup", ComboboxGroup);
 
-function ComboboxLabel({
-  className,
-  ...props
-}: ComboboxPrimitive.GroupLabel.Props) {
+function ComboboxLabel({ className, ...props }: ComboboxPrimitive.GroupLabel.Props) {
   return (
     <ComboboxPrimitive.GroupLabel
       data-slot="combobox-label"
       className={cn("px-2 py-1.5 text-xs text-muted-foreground", className)}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxLabelWithRef = withRef("ComboboxLabel", ComboboxLabel)
+const ComboboxLabelWithRef = withRef("ComboboxLabel", ComboboxLabel);
 
 function ComboboxCollection({ ...props }: ComboboxPrimitive.Collection.Props) {
-  return (
-    <ComboboxPrimitive.Collection data-slot="combobox-collection" {...props} />
-  )
+  return <ComboboxPrimitive.Collection data-slot="combobox-collection" {...props} />;
 }
 
 function ComboboxEmpty({ className, ...props }: ComboboxPrimitive.Empty.Props) {
@@ -225,20 +195,17 @@ function ComboboxEmpty({ className, ...props }: ComboboxPrimitive.Empty.Props) {
       data-slot="combobox-empty"
       className={cn(
         "hidden w-full justify-center py-2 text-center text-sm text-muted-foreground group-data-empty/combobox-content:flex",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxEmptyWithRef = withRef("ComboboxEmpty", ComboboxEmpty)
+const ComboboxEmptyWithRef = withRef("ComboboxEmpty", ComboboxEmpty);
 
-function ComboboxSeparator({
-  className,
-  ...props
-}: ComboboxPrimitive.Separator.Props) {
+function ComboboxSeparator({ className, ...props }: ComboboxPrimitive.Separator.Props) {
   return (
     <ComboboxPrimitive.Separator
       data-slot="combobox-separator"
@@ -246,11 +213,11 @@ function ComboboxSeparator({
       className={cn("-mx-1 my-1 h-px bg-border", className)}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxSeparatorWithRef = withRef("ComboboxSeparator", ComboboxSeparator)
+const ComboboxSeparatorWithRef = withRef("ComboboxSeparator", ComboboxSeparator);
 
 function ComboboxChips({
   className,
@@ -261,10 +228,10 @@ function ComboboxChips({
 }: React.ComponentPropsWithRef<typeof ComboboxPrimitive.Chips> &
   ComboboxPrimitive.Chips.Props & {
     /** Shared control scale (SW-2591): base height + chip/remove scale via group-data. */
-    size?: "xs" | "sm" | "default" | "lg"
+    size?: "xs" | "sm" | "default" | "lg";
     /** Dropdown-toggle chevron at the inline end (default `true`) — mirrors
      *  `ComboboxInput` so single- and multi-select share the affordance (SW-2583). */
-    showTrigger?: boolean
+    showTrigger?: boolean;
   }) {
   return (
     <ComboboxPrimitive.Chips
@@ -278,7 +245,7 @@ function ComboboxChips({
         // for the chevron.
         "group/chips relative flex flex-wrap items-center gap-1 border border-input bg-card bg-clip-padding py-1 pl-4 text-sm transition-colors data-[size=xs]:min-h-6 data-[size=xs]:rounded-md data-[size=sm]:min-h-7 data-[size=sm]:rounded-md data-[size=default]:min-h-8 data-[size=default]:rounded-lg data-[size=lg]:min-h-9 data-[size=lg]:rounded-lg has-[[data-slot=combobox-chip-input]:focus-visible]:border-ring has-[[data-slot=combobox-chip-input]:focus-visible]:shadow-focus has-aria-invalid:border-destructive has-aria-invalid:shadow-focus has-data-[slot=combobox-chip]:pl-1 dark:bg-input/30 dark:has-aria-invalid:border-destructive/50",
         showTrigger ? "pr-8" : "pr-4",
-        className
+        className,
       )}
       {...props}
     >
@@ -289,11 +256,11 @@ function ComboboxChips({
         <ComboboxTriggerWithRef className="absolute top-0 right-1 flex shrink-0 items-center text-muted-foreground group-data-[size=xs]/chips:h-6 group-data-[size=sm]/chips:h-7 group-data-[size=default]/chips:h-8 group-data-[size=lg]/chips:h-9" />
       )}
     </ComboboxPrimitive.Chips>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxChipsWithRef = withRef("ComboboxChips", ComboboxChips)
+const ComboboxChipsWithRef = withRef("ComboboxChips", ComboboxChips);
 
 function ComboboxChip({
   className,
@@ -301,7 +268,7 @@ function ComboboxChip({
   showRemove = true,
   ...props
 }: ComboboxPrimitive.Chip.Props & {
-  showRemove?: boolean
+  showRemove?: boolean;
 }) {
   return (
     <ComboboxPrimitive.Chip
@@ -310,7 +277,7 @@ function ComboboxChip({
         // Pill scales with the chips container (SW-2591): height / radius / text
         // step per group size; radius is concentric with the container (4/4/6/6).
         "flex w-fit items-center justify-center gap-1 bg-muted font-medium whitespace-nowrap text-foreground has-disabled:pointer-events-none has-disabled:cursor-not-allowed has-disabled:opacity-50 has-data-[slot=combobox-chip-remove]:pr-0 group-data-[size=xs]/chips:h-4 group-data-[size=xs]/chips:rounded-[4px] group-data-[size=xs]/chips:px-1 group-data-[size=xs]/chips:text-[10px] group-data-[size=sm]/chips:h-5 group-data-[size=sm]/chips:rounded-[4px] group-data-[size=sm]/chips:px-1.5 group-data-[size=sm]/chips:text-[11px] group-data-[size=default]/chips:h-6 group-data-[size=default]/chips:rounded-[6px] group-data-[size=default]/chips:px-1.5 group-data-[size=default]/chips:text-xs group-data-[size=lg]/chips:h-7 group-data-[size=lg]/chips:rounded-[6px] group-data-[size=lg]/chips:px-2 group-data-[size=lg]/chips:text-sm",
-        className
+        className,
       )}
       {...props}
     >
@@ -326,33 +293,30 @@ function ComboboxChip({
         </ComboboxPrimitive.ChipRemove>
       )}
     </ComboboxPrimitive.Chip>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxChipWithRef = withRef("ComboboxChip", ComboboxChip)
+const ComboboxChipWithRef = withRef("ComboboxChip", ComboboxChip);
 
-function ComboboxChipsInput({
-  className,
-  ...props
-}: ComboboxPrimitive.Input.Props) {
+function ComboboxChipsInput({ className, ...props }: ComboboxPrimitive.Input.Props) {
   return (
     <ComboboxPrimitive.Input
       data-slot="combobox-chip-input"
       className={cn(
         "min-w-16 flex-1 outline-none group-has-data-[slot=combobox-chip]/chips:placeholder:text-transparent",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const ComboboxChipsInputWithRef = withRef("ComboboxChipsInput", ComboboxChipsInput)
+const ComboboxChipsInputWithRef = withRef("ComboboxChipsInput", ComboboxChipsInput);
 
 function useComboboxAnchor() {
-  return React.useRef<HTMLDivElement | null>(null)
+  return React.useRef<HTMLDivElement | null>(null);
 }
 
 export {
@@ -372,4 +336,4 @@ export {
   ComboboxTriggerWithRef as ComboboxTrigger,
   ComboboxValue,
   useComboboxAnchor,
-}
+};

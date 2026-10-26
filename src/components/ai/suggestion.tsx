@@ -8,15 +8,9 @@ import { cn } from "@/lib/utils";
 
 export type SuggestionsProps = ComponentProps<"div">;
 
-const Suggestions = ({
-  className,
-  children,
-  ...props
-}: SuggestionsProps) => (
+const Suggestions = ({ className, children, ...props }: SuggestionsProps) => (
   <div className="w-full overflow-x-auto py-1" {...props}>
-    <div className={cn("flex w-max flex-nowrap items-center gap-2 px-4", className)}>
-      {children}
-    </div>
+    <div className={cn("flex w-max flex-nowrap items-center gap-2 px-4", className)}>{children}</div>
   </div>
 );
 

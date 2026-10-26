@@ -1,15 +1,8 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "./carousel"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "./carousel";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Carousel> = {
   title: "Components/Data Display/Carousel",
@@ -27,14 +20,14 @@ const meta: Meta<typeof Carousel> = {
   args: {
     orientation: "horizontal",
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Carousel>
+type Story = StoryObj<typeof Carousel>;
 
 function renderCarousel(args: Story["args"]) {
-  const vertical = args?.orientation === "vertical"
+  const vertical = args?.orientation === "vertical";
 
   return (
     <div className={vertical ? "h-[320px] px-12" : "w-[340px] px-12"}>
@@ -52,7 +45,7 @@ function renderCarousel(args: Story["args"]) {
         <CarouselNext />
       </Carousel>
     </div>
-  )
+  );
 }
 
 export const Horizontal: Story = {
@@ -61,22 +54,22 @@ export const Horizontal: Story = {
     zephyr: { testCaseId: "SW-T1214" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Carousel region renders", async () => {
-      expect(canvas.getAllByRole("region").length).toBeGreaterThanOrEqual(1)
-    })
+      expect(canvas.getAllByRole("region").length).toBeGreaterThanOrEqual(1);
+    });
 
     await step("Slide content is visible", async () => {
-      expect(canvas.getByText("Analytics")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Analytics")).toBeInTheDocument();
+    });
 
     await step("Previous and next controls are present", async () => {
-      expect(canvas.getByRole("button", { name: "Previous slide" })).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Next slide" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Previous slide" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Next slide" })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Vertical: Story = {
   args: {
@@ -87,19 +80,19 @@ export const Vertical: Story = {
     zephyr: { testCaseId: "SW-T1215" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Vertical carousel region renders", async () => {
-      expect(canvas.getAllByRole("region").length).toBeGreaterThanOrEqual(1)
-    })
+      expect(canvas.getAllByRole("region").length).toBeGreaterThanOrEqual(1);
+    });
 
     await step("Slide content is visible", async () => {
-      expect(canvas.getByText("Analytics")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Analytics")).toBeInTheDocument();
+    });
 
     await step("Previous and next controls are present", async () => {
-      expect(canvas.getByRole("button", { name: "Previous slide" })).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Next slide" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Previous slide" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Next slide" })).toBeInTheDocument();
+    });
   },
-}
+};

@@ -1,11 +1,11 @@
-import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon, XIcon } from "lucide-react"
-import { type ReactNode } from "react"
-import { expect, within } from "storybook/test"
+import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon, XIcon } from "lucide-react";
+import { type ReactNode } from "react";
+import { expect, within } from "storybook/test";
 
-import { Button } from "./button"
-import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
+import { Button } from "./button";
+import { ToggleGroup, ToggleGroupItem } from "./toggle-group";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof ToggleGroup> = {
   title: "Components/Actions/Toggle Group",
@@ -37,11 +37,11 @@ const meta: Meta<typeof ToggleGroup> = {
     orientation: "horizontal",
     spacing: 0,
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof ToggleGroup>
+type Story = StoryObj<typeof ToggleGroup>;
 
 function renderToggleGroup(args: Story["args"]) {
   return (
@@ -56,7 +56,7 @@ function renderToggleGroup(args: Story["args"]) {
         <AlignRightIcon />
       </ToggleGroupItem>
     </ToggleGroup>
-  )
+  );
 }
 
 export const Default: Story = {
@@ -65,19 +65,19 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1316" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Toggle group container renders", async () => {
-      expect(canvas.getByRole("group")).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("group")).toBeInTheDocument();
+    });
 
     await step("Alignment toggle buttons render", async () => {
-      expect(canvas.getByRole("button", { name: "Align left" })).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Align center" })).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Align right" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Align left" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Align center" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Align right" })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Outline: Story = {
   args: {
@@ -88,14 +88,14 @@ export const Outline: Story = {
     zephyr: { testCaseId: "SW-T1317" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Outline toggle group renders", async () => {
-      expect(canvas.getByRole("group")).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Align left" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("group")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Align left" })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const ExtraSmall: Story = {
   args: {
@@ -106,15 +106,15 @@ export const ExtraSmall: Story = {
     zephyr: { testCaseId: "SW-T5684" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("xs group items are 24px with 8px end corners (match Button xs)", async () => {
-      const first = canvas.getByRole("button", { name: "Align left" })
-      expect(Math.round(first.getBoundingClientRect().height)).toBe(24)
-      expect(Math.round(parseFloat(getComputedStyle(first).borderTopLeftRadius))).toBe(8)
-    })
+      const first = canvas.getByRole("button", { name: "Align left" });
+      expect(Math.round(first.getBoundingClientRect().height)).toBe(24);
+      expect(Math.round(parseFloat(getComputedStyle(first).borderTopLeftRadius))).toBe(8);
+    });
   },
-}
+};
 
 export const Small: Story = {
   args: {
@@ -125,14 +125,14 @@ export const Small: Story = {
     zephyr: { testCaseId: "SW-T1318" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Small toggle group renders", async () => {
-      expect(canvas.getByRole("group")).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Align center" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("group")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Align center" })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Large: Story = {
   args: {
@@ -143,14 +143,14 @@ export const Large: Story = {
     zephyr: { testCaseId: "SW-T1319" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Large toggle group renders", async () => {
-      expect(canvas.getByRole("group")).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Align right" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("group")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Align right" })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Vertical: Story = {
   args: {
@@ -161,15 +161,15 @@ export const Vertical: Story = {
     zephyr: { testCaseId: "SW-T1320" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Vertical toggle group renders", async () => {
-      expect(canvas.getByRole("group")).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Align left" })).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Align right" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("group")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Align left" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Align right" })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Spaced: Story = {
   args: {
@@ -180,14 +180,14 @@ export const Spaced: Story = {
     zephyr: { testCaseId: "SW-T1321" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Spaced toggle group renders", async () => {
-      expect(canvas.getByRole("group")).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Align center" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("group")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Align center" })).toBeInTheDocument();
+    });
   },
-}
+};
 
 /**
  * SW-2445: labelled multi-select. Label-only items show the dotted-ring→check
@@ -202,47 +202,41 @@ export const SelectedIndicator: Story = {
     zephyr: { testCaseId: "SW-T5647" },
   },
   render: () => (
-    <ToggleGroup
-      type="multiple"
-      variant="outline"
-      defaultValue={["samples", "controls", "blanks"]}
-    >
+    <ToggleGroup type="multiple" variant="outline" defaultValue={["samples", "controls", "blanks"]}>
       <ToggleGroupItem value="samples">Samples</ToggleGroupItem>
       <ToggleGroupItem value="controls">Controls</ToggleGroupItem>
       <ToggleGroupItem value="blanks">Blanks</ToggleGroupItem>
     </ToggleGroup>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("all three options are selected", async () => {
-      const items = canvas.getAllByRole("button")
-      expect(items).toHaveLength(3)
-      items.forEach((el) => expect(el).toHaveAttribute("data-state", "on"))
-    })
+      const items = canvas.getAllByRole("button");
+      expect(items).toHaveLength(3);
+      items.forEach((el) => expect(el).toHaveAttribute("data-state", "on"));
+    });
 
     await step("each selected item shows a check indicator", async () => {
       canvas.getAllByRole("button").forEach((el) => {
-        expect(el.querySelector(".lucide-check")).not.toBeNull()
-      })
-    })
+        expect(el.querySelector(".lucide-check")).not.toBeNull();
+      });
+    });
 
     await step("the segmented items are outlined (per-item borders)", async () => {
-      const item = canvas.getAllByRole("button")[0]
-      expect(getComputedStyle(item).borderTopWidth).not.toBe("0px")
-    })
+      const item = canvas.getAllByRole("button")[0];
+      expect(getComputedStyle(item).borderTopWidth).not.toBe("0px");
+    });
   },
-}
+};
 
 function VariationRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </span>
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
       <div className="flex flex-wrap items-center gap-4">{children}</div>
     </div>
-  )
+  );
 }
 
 /**
@@ -371,65 +365,57 @@ export const Variations: Story = {
   ),
   play: async ({ canvasElement, step }) => {
     await step("all variation groups render", async () => {
-      expect(
-        canvasElement.querySelectorAll('[data-slot="toggle-group"]').length,
-      ).toBeGreaterThanOrEqual(6)
-    })
+      expect(canvasElement.querySelectorAll('[data-slot="toggle-group"]').length).toBeGreaterThanOrEqual(6);
+    });
 
     await step("label-only selected items show a check", async () => {
-      expect(canvasElement.querySelector(".lucide-check")).not.toBeNull()
-    })
+      expect(canvasElement.querySelector(".lucide-check")).not.toBeNull();
+    });
 
     await step("the selected tint actually resolves to a paint", async () => {
       // Guards the --selected tokens. Tailwind emits NO css for bg-selected /
       // text-selected-foreground when those theme keys are missing, and it does
       // not warn — so without this assertion the selected state silently
       // renders as nothing while every check stays green.
-      const items = canvasElement.querySelectorAll<HTMLElement>(
-        '[data-slot="toggle-group-item"]',
-      )
-      const on = [...items].find((el) => el.dataset.state === "on")
-      const off = [...items].find((el) => el.dataset.state === "off")
-      expect(on).toBeDefined()
-      expect(off).toBeDefined()
+      const items = canvasElement.querySelectorAll<HTMLElement>('[data-slot="toggle-group-item"]');
+      const on = [...items].find((el) => el.dataset.state === "on");
+      const off = [...items].find((el) => el.dataset.state === "off");
+      expect(on).toBeDefined();
+      expect(off).toBeDefined();
 
-      const tint = getComputedStyle(on!).backgroundColor
-      expect(tint).not.toBe("")
-      expect(tint).not.toBe("rgba(0, 0, 0, 0)")
-      expect(tint).not.toBe(getComputedStyle(off!).backgroundColor)
-    })
+      const tint = getComputedStyle(on!).backgroundColor;
+      expect(tint).not.toBe("");
+      expect(tint).not.toBe("rgba(0, 0, 0, 0)");
+      expect(tint).not.toBe(getComputedStyle(off!).backgroundColor);
+    });
 
     await step("indicator default follows rendered content, not React children", async () => {
       const indicator = (testId: string) =>
-        canvasElement.querySelector<HTMLElement>(
-          `[data-testid="${testId}"] [data-slot="toggle-group-indicator"]`,
-        )
+        canvasElement.querySelector<HTMLElement>(`[data-testid="${testId}"] [data-slot="toggle-group-indicator"]`);
 
       // A label wrapped in a <span> is still label-only: it keeps its ring.
-      const wrapped = indicator("wrapped-label-item")
-      expect(wrapped).not.toBeNull()
-      expect(getComputedStyle(wrapped!).display).not.toBe("none")
+      const wrapped = indicator("wrapped-label-item");
+      expect(wrapped).not.toBeNull();
+      expect(getComputedStyle(wrapped!).display).not.toBe("none");
 
       // An item that renders an icon drops the ring (the icon carries the state).
-      const iconLabel = indicator("icon-label-item")
-      expect(iconLabel).not.toBeNull()
-      expect(getComputedStyle(iconLabel!).display).toBe("none")
+      const iconLabel = indicator("icon-label-item");
+      expect(iconLabel).not.toBeNull();
+      expect(getComputedStyle(iconLabel!).display).toBe("none");
 
       // An explicit selectedIndicator="dot" overrides the icon auto-hide.
-      const forced = indicator("forced-dot-item")
-      expect(forced).not.toBeNull()
-      expect(getComputedStyle(forced!).display).not.toBe("none")
-    })
+      const forced = indicator("forced-dot-item");
+      expect(forced).not.toBeNull();
+      expect(getComputedStyle(forced!).display).not.toBe("none");
+    });
 
     await step("a consumer's className still wins over the item border", async () => {
       // The segmented border must stay at plain-utility specificity, or a
       // group-scoped selector silently beats `border-r-0` passed by a consumer
       // and the item no longer sits flush against its adjacent control.
-      const joined = canvasElement.querySelector<HTMLElement>(
-        '[data-testid="joined-item"]',
-      )
-      expect(joined).not.toBeNull()
-      expect(getComputedStyle(joined!).borderRightWidth).toBe("0px")
-    })
+      const joined = canvasElement.querySelector<HTMLElement>('[data-testid="joined-item"]');
+      expect(joined).not.toBeNull();
+      expect(getComputedStyle(joined!).borderRightWidth).toBe("0px");
+    });
   },
-}
+};

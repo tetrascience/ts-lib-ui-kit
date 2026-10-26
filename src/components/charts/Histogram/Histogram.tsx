@@ -53,8 +53,7 @@ const calculateMean = (data: number[]): number => {
 
 const calculateStdDev = (data: number[], mean: number): number => {
   const squaredDiffs = data.map((value) => Math.pow(value - mean, 2));
-  const variance =
-    squaredDiffs.reduce((acc, val) => acc + val, 0) / data.length;
+  const variance = squaredDiffs.reduce((acc, val) => acc + val, 0) / data.length;
   return Math.sqrt(variance);
 };
 
@@ -63,7 +62,7 @@ const generateNormalDistributionPoints = (
   stdDev: number,
   start: number,
   end: number,
-  points = 100
+  points = 100,
 ): { x: number[]; y: number[] } => {
   const xValues: number[] = [];
   const yValues: number[] = [];
@@ -85,7 +84,7 @@ const generateNormalDistributionPoints = (
 const scaleDistributionCurve = (
   yValues: number[],
   histogramData: number[],
-  bins: { start: number; end: number; size: number }
+  bins: { start: number; end: number; size: number },
 ): number[] => {
   const binCount = Math.ceil((bins.end - bins.start) / bins.size);
   const binFrequencies = Array(binCount).fill(0);
@@ -137,22 +136,18 @@ const Histogram: React.FC<HistogramProps> = ({
   // Size last applied to the plot, so the resize effect can skip a redundant
   // relayout right after newPlot already drew at that size.
   const appliedSizeRef = useRef({ width: 0, height: 0 });
-  const seriesArray = useMemo(
-    () => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]),
-    [dataSeries],
+  const seriesArray = useMemo(() => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]), [dataSeries]);
+  const effectiveBarMode = useMemo<"stack" | "group" | "overlay" | "relative" | undefined>(
+    () => (seriesArray.length > 1 ? "stack" : undefined),
+    [seriesArray.length],
   );
-  const effectiveBarMode = useMemo<
-    "stack" | "group" | "overlay" | "relative" | undefined
-  >(() => (seriesArray.length > 1 ? "stack" : undefined), [seriesArray.length]);
 
   const defaultColors = CHART_COLORS;
 
   const seriesWithColors = useMemo(() => {
     return seriesArray.map((series, index) => {
       const hasDistributionLine =
-        typeof series.showDistributionLine === "undefined"
-          ? showDistributionLine
-          : series.showDistributionLine;
+        typeof series.showDistributionLine === "undefined" ? showDistributionLine : series.showDistributionLine;
 
       return {
         ...series,
@@ -207,19 +202,9 @@ const Histogram: React.FC<HistogramProps> = ({
             size: range / 10,
           };
 
-          const curvePoints = generateNormalDistributionPoints(
-            mean,
-            stdDev,
-            start,
-            end,
-            100,
-          );
+          const curvePoints = generateNormalDistributionPoints(mean, stdDev, start, end, 100);
 
-          const scaledYValues = scaleDistributionCurve(
-            curvePoints.y,
-            series.x,
-            bins,
-          );
+          const scaledYValues = scaleDistributionCurve(curvePoints.y, series.x, bins);
 
           return {
             type: "scatter" as const,
@@ -237,10 +222,7 @@ const Histogram: React.FC<HistogramProps> = ({
     [seriesWithColors],
   );
 
-  const plotData = useMemo(
-    () => [...histogramData, ...distributionLines],
-    [histogramData, distributionLines],
-  );
+  const plotData = useMemo(() => [...histogramData, ...distributionLines], [histogramData, distributionLines]);
 
   useEffect(() => {
     if (!plotRef.current || !hasSize) return;
@@ -343,10 +325,7 @@ const Histogram: React.FC<HistogramProps> = ({
     }
     // newPlot already drew at the current size; skip the redundant relayout
     // (it would queue an automargin redraw that can reject if we unmount first).
-    if (
-      appliedSizeRef.current.width === resolvedWidth &&
-      appliedSizeRef.current.height === resolvedHeight
-    ) {
+    if (appliedSizeRef.current.width === resolvedWidth && appliedSizeRef.current.height === resolvedHeight) {
       return;
     }
     appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };
@@ -376,7 +355,7 @@ const Histogram: React.FC<HistogramProps> = ({
       rows.push(
         <div className="histogram-legend-row" key={i}>
           {items.slice(i, i + rowSize)}
-        </div>
+        </div>,
       );
     }
 

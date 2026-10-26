@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useMemo } from "react";
 
-import { buildTdpUrl, getTdpBaseUrlFromReferrer, navigateToTdpUrl } from './tdp-url';
+import { buildTdpUrl, getTdpBaseUrlFromReferrer, navigateToTdpUrl } from "./tdp-url";
 
-import type { TdpNavigationOptions } from './tdp-url';
+import type { TdpNavigationOptions } from "./tdp-url";
 
-import { withRef } from '@/lib/react18-compat';
+import { withRef } from "@/lib/react18-compat";
 
 export interface TdpNavigationContextValue {
   /** The resolved TDP base URL (origin + org path prefix), or null if not resolved */
@@ -31,8 +31,8 @@ export function useTdpNavigationContext(): TdpNavigationContextValue {
   const context = useContext(TdpNavigationContext);
   if (!context) {
     throw new Error(
-      'useTdpNavigationContext must be used within a TdpNavigationProvider. ' +
-        'Wrap your app with <TdpNavigationProvider> or use the standalone useTdpNavigation() hook instead.',
+      "useTdpNavigationContext must be used within a TdpNavigationProvider. " +
+        "Wrap your app with <TdpNavigationProvider> or use the standalone useTdpNavigation() hook instead.",
     );
   }
   return context;
@@ -67,7 +67,7 @@ export const TdpNavigationProvider: React.FC<TdpNavigationProviderProps> = ({
 }) => {
   const tdpBaseUrl = useMemo(() => {
     if (explicitBaseUrl) {
-      return explicitBaseUrl.replace(/\/$/u, '');
+      return explicitBaseUrl.replace(/\/$/u, "");
     }
     return getTdpBaseUrlFromReferrer();
   }, [explicitBaseUrl]);
@@ -81,7 +81,7 @@ export const TdpNavigationProvider: React.FC<TdpNavigationProviderProps> = ({
       },
       navigateToTdp: (path: string, options?: TdpNavigationOptions) => {
         if (!tdpBaseUrl) {
-          console.warn('[TdpNavigation] Cannot navigate: TDP base URL not resolved');
+          console.warn("[TdpNavigation] Cannot navigate: TDP base URL not resolved");
           return;
         }
         const url = buildTdpUrl(tdpBaseUrl, path);
@@ -135,7 +135,7 @@ export function useTdpNavigation(options: UseTdpNavigationOptions = {}): UseTdpN
   const { tdpBaseUrl: explicitBaseUrl } = options;
 
   const tdpBaseUrl = useMemo(() => {
-    if (explicitBaseUrl) return explicitBaseUrl.replace(/\/$/u, '');
+    if (explicitBaseUrl) return explicitBaseUrl.replace(/\/$/u, "");
     return getTdpBaseUrlFromReferrer();
   }, [explicitBaseUrl]);
 
@@ -145,7 +145,7 @@ export function useTdpNavigation(options: UseTdpNavigationOptions = {}): UseTdpN
       getTdpUrl: (path: string) => (tdpBaseUrl ? buildTdpUrl(tdpBaseUrl, path) : null),
       navigateToTdp: (path: string, opts?: TdpNavigationOptions) => {
         if (!tdpBaseUrl) {
-          console.warn('[useTdpNavigation] Cannot navigate: TDP base URL not resolved');
+          console.warn("[useTdpNavigation] Cannot navigate: TDP base URL not resolved");
           return;
         }
         const url = buildTdpUrl(tdpBaseUrl, path);
@@ -157,7 +157,7 @@ export function useTdpNavigation(options: UseTdpNavigationOptions = {}): UseTdpN
 }
 
 /** Props for the TDPLink component */
-export interface TDPLinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
+export interface TDPLinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
   /** TDP page path (e.g., "/file/abc-123" or use tdpPaths helpers) */
   path: string;
   /** Navigation behavior. Default: { newTab: true } */
@@ -211,12 +211,12 @@ const TDPLink: React.FC<TDPLinkProps> = ({
 
   return (
     <a
-      href={href ?? '#'}
-      target={navigationOptions.newTab ? '_blank' : undefined}
-      rel={navigationOptions.newTab ? 'noopener noreferrer' : undefined}
+      href={href ?? "#"}
+      target={navigationOptions.newTab ? "_blank" : undefined}
+      rel={navigationOptions.newTab ? "noopener noreferrer" : undefined}
       onClick={handleClick}
-      className={`underline underline-offset-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:rounded-[2px] ${className ?? ''}`}
-      style={{ color: 'var(--primary)', outlineColor: 'var(--border)' }}
+      className={`underline underline-offset-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:rounded-[2px] ${className ?? ""}`}
+      style={{ color: "var(--primary)", outlineColor: "var(--border)" }}
       {...rest}
     >
       {children}
@@ -226,5 +226,5 @@ const TDPLink: React.FC<TDPLinkProps> = ({
 
 /** React 18 wrapper for {@link TDPLink}; see its documentation. */
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const TDPLinkWithRef = withRef('TDPLink', TDPLink);
+const TDPLinkWithRef = withRef("TDPLink", TDPLink);
 export { TDPLinkWithRef as TDPLink };

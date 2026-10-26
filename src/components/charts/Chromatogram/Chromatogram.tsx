@@ -3,16 +3,8 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 
-import {
-  groupOverlappingPeaks,
-  createGroupAnnotations,
-  resolveSelectionAppearance,
-} from "./annotations";
-import {
-  validateSeriesData,
-  applyBaselineCorrection,
-  processUserAnnotations,
-} from "./dataProcessing";
+import { groupOverlappingPeaks, createGroupAnnotations, resolveSelectionAppearance } from "./annotations";
+import { validateSeriesData, applyBaselineCorrection, processUserAnnotations } from "./dataProcessing";
 import { detectPeaks } from "./peakDetection";
 import {
   buildTraceData,
@@ -53,7 +45,6 @@ export type {
   PeakDetectionOptions,
   ChromatogramProps,
 };
-
 
 // Stable default so the no-annotations case keeps a constant identity; an
 // inline `[]` default would change every render, re-running the plot effect
@@ -98,8 +89,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
   // (Plotly's unified label used to render alongside it — SW-2298). The lines
   // are built from the series points, their metadata, and any hovered peak.
   const { bindTooltip, tooltipElement } = useChartTooltip({
-    getLines: (points) =>
-      buildChromatogramTooltipLines(points, { series, xAxisTitle, yAxisTitle }),
+    getLines: (points) => buildChromatogramTooltipLines(points, { series, xAxisTitle, yAxisTitle }),
   });
   // Stable refs for callbacks — avoids including them in effect dep arrays
   // (consumers often pass arrow functions that change identity every render).
@@ -173,13 +163,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
         unselected: { opacity: unselectedOpacity },
         hoverLineWidthMultiplier,
       }),
-    [
-      selectedBorderColor,
-      selectedBackgroundColor,
-      selectedBold,
-      unselectedOpacity,
-      hoverLineWidthMultiplier,
-    ]
+    [selectedBorderColor, selectedBackgroundColor, selectedBold, unselectedOpacity, hoverLineWidthMultiplier],
   );
 
   // All peaks that can be interacted with (clicked / hovered / selected),
@@ -322,19 +306,22 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
       bindTooltip(currentRef);
 
       // ── Event: peak click ────────────────────────────────────────────────
-      (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
-        "plotly_click",
-        createClickHandler(onPeakClickRef)
-      );
+      (currentRef as unknown as Plotly.PlotlyHTMLElement).on("plotly_click", createClickHandler(onPeakClickRef));
 
       (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
         "plotly_hover",
-        createHoverHandler(currentRef, processedSeries.length, thickenedSeriesRef, onPeakHoverRef, resolvedAppearance.hoverLineWidthMultiplier)
+        createHoverHandler(
+          currentRef,
+          processedSeries.length,
+          thickenedSeriesRef,
+          onPeakHoverRef,
+          resolvedAppearance.hoverLineWidthMultiplier,
+        ),
       );
 
       (currentRef as unknown as Plotly.PlotlyHTMLElement).on(
         "plotly_unhover",
-        createUnhoverHandler(currentRef, thickenedSeriesRef, onPeakHoverRef)
+        createUnhoverHandler(currentRef, thickenedSeriesRef, onPeakHoverRef),
       );
 
       // Capture ref value for cleanup
@@ -347,12 +334,34 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
       if (plotElement) getLoadedPlotly().purge(plotElement);
     };
   }, [
-    processedSeries, allDetectedPeaks, allPeaksForInteraction, series.length,
-    width, height, title, titleFontSize, titleTopMargin, xAxisTitle, yAxisTitle,
-    processedAnnotations, xRange, yRange, showLegend, showGridX, showGridY,
-    showMarkers, markerSize, showCrosshairs, enablePeakDetection, peakDetectionOptions,
-    showPeakAreas, boundaryMarkers, annotationOverlapThreshold, showExportButton,
-    theme, bindTooltip,
+    processedSeries,
+    allDetectedPeaks,
+    allPeaksForInteraction,
+    series.length,
+    width,
+    height,
+    title,
+    titleFontSize,
+    titleTopMargin,
+    xAxisTitle,
+    yAxisTitle,
+    processedAnnotations,
+    xRange,
+    yRange,
+    showLegend,
+    showGridX,
+    showGridY,
+    showMarkers,
+    markerSize,
+    showCrosshairs,
+    enablePeakDetection,
+    peakDetectionOptions,
+    showPeakAreas,
+    boundaryMarkers,
+    annotationOverlapThreshold,
+    showExportButton,
+    theme,
+    bindTooltip,
     // resolvedAppearance included so hover multiplier stays in sync with the
     // event handler closure without it being in a ref itself.
     resolvedAppearance,
@@ -379,10 +388,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
   // than looking broken while data is still loading.
   if (series.length === 0) {
     return (
-      <div
-        className="chromatogram-chart-container relative flex items-center justify-center"
-        style={{ width, height }}
-      >
+      <div className="chromatogram-chart-container relative flex items-center justify-center" style={{ width, height }}>
         <EmptyState
           variant="no-data"
           title="No chromatogram data"

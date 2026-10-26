@@ -92,11 +92,7 @@ export function buildTraceData(params: BuildTraceDataParams): Plotly.Data[] {
   });
 
   if (boundaryMarkers !== "none") {
-    const peaksWithData = collectPeaksWithBoundaryData(
-      allDetectedPeaks,
-      processedAnnotations,
-      processedSeries
-    );
+    const peaksWithData = collectPeaksWithBoundaryData(allDetectedPeaks, processedAnnotations, processedSeries);
     if (peaksWithData.length > 0) {
       plotData.push(...createBoundaryMarkerTraces(peaksWithData));
     }
@@ -192,11 +188,7 @@ export function splitAxisTitle(axisTitle: string): { label: string; unit: string
 const withUnit = (value: string, unit: string): string => (unit ? `${value} ${unit}` : value);
 
 /** "<name>: <y> <unit>" followed by the series metadata lines */
-function seriesTooltipLines(
-  seriesEntry: ChromatogramSeries,
-  y: number | string,
-  unit: string
-): string[] {
+function seriesTooltipLines(seriesEntry: ChromatogramSeries, y: number | string, unit: string): string[] {
   // buildHoverExtraContent yields "<name><br>Key: value…"; keep only the metadata
   const metadata = buildHoverExtraContent(seriesEntry.name, seriesEntry.metadata).split("<br>").slice(1);
   return [`${seriesEntry.name}: ${withUnit(formatTooltipNumber(y), unit)}`, ...metadata];
@@ -218,7 +210,7 @@ function peakTooltipLines(point: ChromatogramTooltipPoint): string[] {
  */
 export function buildChromatogramTooltipLines(
   points: ChromatogramTooltipPoint[],
-  params: ChromatogramTooltipParams
+  params: ChromatogramTooltipParams,
 ): string[] {
   const { series, xAxisTitle, yAxisTitle } = params;
   // Both axes are split the same way so the x and y lines read alike:
@@ -375,7 +367,7 @@ export function createHoverHandler(
   processedSeriesLength: number,
   thickenedSeriesRef: MutableRef<number | null>,
   onPeakHoverRef: MutableRef<((event: PeakSelectEvent | null) => void) | undefined>,
-  hoverLineWidthMultiplier: number
+  hoverLineWidthMultiplier: number,
 ): (eventData: Plotly.PlotHoverEvent) => void {
   return (eventData) => {
     const pt = eventData.points[0];
@@ -385,9 +377,15 @@ export function createHoverHandler(
         // Hover events can only fire once the plot is drawn, so the
         // lazily-loaded Plotly module is guaranteed to be available here.
         if (thickenedSeriesRef.current !== null) {
-          getLoadedPlotly().restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH } as Plotly.Data, [thickenedSeriesRef.current]);
+          getLoadedPlotly().restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH } as Plotly.Data, [
+            thickenedSeriesRef.current,
+          ]);
         }
-        getLoadedPlotly().restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH * hoverLineWidthMultiplier } as Plotly.Data, [targetIdx]);
+        getLoadedPlotly().restyle(
+          domElement,
+          { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH * hoverLineWidthMultiplier } as Plotly.Data,
+          [targetIdx],
+        );
         thickenedSeriesRef.current = targetIdx;
       }
     }
@@ -399,7 +397,7 @@ export function createHoverHandler(
 }
 
 export function createClickHandler(
-  onPeakClickRef: MutableRef<((event: PeakSelectEvent) => void) | undefined>
+  onPeakClickRef: MutableRef<((event: PeakSelectEvent) => void) | undefined>,
 ): (eventData: Plotly.PlotMouseEvent) => void {
   return (eventData) => {
     if (!onPeakClickRef.current) return;
@@ -412,14 +410,16 @@ export function createClickHandler(
 export function createUnhoverHandler(
   domElement: HTMLElement,
   thickenedSeriesRef: MutableRef<number | null>,
-  onPeakHoverRef: MutableRef<((event: PeakSelectEvent | null) => void) | undefined>
+  onPeakHoverRef: MutableRef<((event: PeakSelectEvent | null) => void) | undefined>,
 ): () => void {
   return () => {
     onPeakHoverRef.current?.(null);
     if (thickenedSeriesRef.current !== null) {
       // Unhover events can only fire once the plot is drawn, so the
       // lazily-loaded Plotly module is guaranteed to be available here.
-      getLoadedPlotly().restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH } as Plotly.Data, [thickenedSeriesRef.current]);
+      getLoadedPlotly().restyle(domElement, { "line.width": CHROMATOGRAM_TRACE.BASE_LINE_WIDTH } as Plotly.Data, [
+        thickenedSeriesRef.current,
+      ]);
       thickenedSeriesRef.current = null;
     }
   };

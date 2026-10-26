@@ -16,8 +16,7 @@ class ResizeObserverStub {
   unobserve() {}
   disconnect() {}
 }
-(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver ??=
-  ResizeObserverStub;
+(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver ??= ResizeObserverStub;
 
 // Capture the event callbacks the component registers via plotElement.on(...)
 const plotly = vi.hoisted(() => ({
@@ -249,8 +248,7 @@ describe("tooltips", () => {
     points: [{ pointIndex, x, y, data: { ids: ["a", "b", "c"] } }],
     event: { clientX: x * 10 + 5, clientY: y * 10 + 5 },
   });
-  const tooltipContent = () =>
-    document.querySelector('[data-slot="tooltip-content"]');
+  const tooltipContent = () => document.querySelector('[data-slot="tooltip-content"]');
 
   it("builds tooltip text and suppresses Plotly's native hover label by default", async () => {
     await render({ data });
@@ -276,9 +274,7 @@ describe("tooltips", () => {
       expect(tip?.textContent).toContain("id=b");
       expect(tip?.textContent).toContain("row 2");
       // Anchor positioned at the mouse coordinates (viewport, portaled to body)
-      const anchor = document.querySelector(
-        '[data-slot="chart-tooltip-anchor"]',
-      ) as HTMLElement;
+      const anchor = document.querySelector('[data-slot="chart-tooltip-anchor"]') as HTMLElement;
       expect(anchor.style.left).toBe("25px");
 
       await fire("plotly_unhover");

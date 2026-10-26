@@ -1,15 +1,15 @@
-import * as React from "react"
-import { flushSync } from "react-dom"
-import { createRoot } from "react-dom/client"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import * as React from "react";
+import { flushSync } from "react-dom";
+import { createRoot } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock useIsMobile before importing sidebar components so that the hook never
 // calls window.matchMedia (not implemented in jsdom).
-const mockUseIsMobile = vi.hoisted(() => vi.fn<[], boolean>())
+const mockUseIsMobile = vi.hoisted(() => vi.fn<[], boolean>());
 
 vi.mock("@/hooks/use-mobile", () => ({
   useIsMobile: mockUseIsMobile,
-}))
+}));
 
 import {
   Sidebar,
@@ -30,32 +30,32 @@ import {
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
-} from "./sidebar"
-import { TooltipProvider } from "./tooltip"
+} from "./sidebar";
+import { TooltipProvider } from "./tooltip";
 
 // ---------------------------------------------------------------------------
 // Setup / teardown
 // ---------------------------------------------------------------------------
 
-let container: HTMLDivElement
-let root: ReturnType<typeof createRoot>
+let container: HTMLDivElement;
+let root: ReturnType<typeof createRoot>;
 
 beforeEach(() => {
   // Default: desktop (non-mobile) environment for all tests
-  mockUseIsMobile.mockReturnValue(false)
-  container = document.createElement("div")
-  document.body.appendChild(container)
-  root = createRoot(container)
-})
+  mockUseIsMobile.mockReturnValue(false);
+  container = document.createElement("div");
+  document.body.appendChild(container);
+  root = createRoot(container);
+});
 
 afterEach(() => {
-  flushSync(() => root.unmount())
-  container.remove()
-})
+  flushSync(() => root.unmount());
+  container.remove();
+});
 
 function render(ui: React.ReactElement) {
-  flushSync(() => root.render(ui))
-  return container
+  flushSync(() => root.render(ui));
+  return container;
 }
 
 // Minimal wrapper that gives SidebarProvider all required siblings.
@@ -64,8 +64,8 @@ function WithSidebar({
   children,
   providerProps,
 }: {
-  children: React.ReactNode
-  providerProps?: Partial<React.ComponentProps<typeof SidebarProvider>>
+  children: React.ReactNode;
+  providerProps?: Partial<React.ComponentProps<typeof SidebarProvider>>;
 }) {
   return (
     <TooltipProvider>
@@ -73,7 +73,7 @@ function WithSidebar({
         <Sidebar>{children}</Sidebar>
       </SidebarProvider>
     </TooltipProvider>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -82,26 +82,26 @@ function WithSidebar({
 
 describe("useSidebar", () => {
   it("throws when used outside a SidebarProvider", () => {
-    let caughtError: Error | undefined
+    let caughtError: Error | undefined;
 
     function ThrowingComponent() {
       try {
-        useSidebar()
+        useSidebar();
       } catch (e) {
-        caughtError = e as Error
+        caughtError = e as Error;
       }
-      return null
+      return null;
     }
 
-    const c = document.createElement("div")
-    const r = createRoot(c)
-    flushSync(() => r.render(React.createElement(ThrowingComponent)))
-    r.unmount()
+    const c = document.createElement("div");
+    const r = createRoot(c);
+    flushSync(() => r.render(React.createElement(ThrowingComponent)));
+    r.unmount();
 
-    expect(caughtError).toBeDefined()
-    expect(caughtError!.message).toContain("useSidebar must be used within a SidebarProvider")
-  })
-})
+    expect(caughtError).toBeDefined();
+    expect(caughtError!.message).toContain("useSidebar must be used within a SidebarProvider");
+  });
+});
 
 // ---------------------------------------------------------------------------
 // SidebarProvider — keyboard shortcut toggles state
@@ -121,10 +121,10 @@ describe("SidebarProvider keyboard shortcut", () => {
           </SidebarContent>
         </Sidebar>
       </SidebarProvider>,
-    )
+    );
 
-    const sidebar = document.querySelector("[data-slot='sidebar']")
-    expect(sidebar?.getAttribute("data-state")).toBe("expanded")
+    const sidebar = document.querySelector("[data-slot='sidebar']");
+    expect(sidebar?.getAttribute("data-state")).toBe("expanded");
 
     // Fire the keyboard shortcut (Ctrl+b)
     window.dispatchEvent(
@@ -133,14 +133,12 @@ describe("SidebarProvider keyboard shortcut", () => {
         ctrlKey: true,
         bubbles: true,
       }),
-    )
-    flushSync(() => {}) // flush any pending state updates
+    );
+    flushSync(() => {}); // flush any pending state updates
 
-    expect(document.querySelector("[data-slot='sidebar']")?.getAttribute("data-state")).toBe(
-      "collapsed",
-    )
-  })
-})
+    expect(document.querySelector("[data-slot='sidebar']")?.getAttribute("data-state")).toBe("collapsed");
+  });
+});
 
 // ---------------------------------------------------------------------------
 // Sidebar — collapsible="none" renders a static div
@@ -154,14 +152,14 @@ describe("Sidebar collapsible=none", () => {
           <span data-testid="content">Static</span>
         </Sidebar>
       </SidebarProvider>,
-    )
+    );
     // collapsible="none" renders a plain div, not the two-panel desktop structure
-    expect(container.querySelector("[data-slot='sidebar']")).toBeTruthy()
-    expect(container.querySelector("[data-testid='content']")?.textContent).toBe("Static")
+    expect(container.querySelector("[data-slot='sidebar']")).toBeTruthy();
+    expect(container.querySelector("[data-testid='content']")?.textContent).toBe("Static");
     // No sidebar-gap element in the none mode
-    expect(container.querySelector("[data-slot='sidebar-gap']")).toBeNull()
-  })
-})
+    expect(container.querySelector("[data-slot='sidebar-gap']")).toBeNull();
+  });
+});
 
 // ---------------------------------------------------------------------------
 // Sidebar — mobile path (isMobile = true)
@@ -169,7 +167,7 @@ describe("Sidebar collapsible=none", () => {
 
 describe("Sidebar mobile mode", () => {
   it("renders Sheet component when isMobile is true", () => {
-    mockUseIsMobile.mockReturnValue(true)
+    mockUseIsMobile.mockReturnValue(true);
 
     render(
       <SidebarProvider>
@@ -178,17 +176,17 @@ describe("Sidebar mobile mode", () => {
         </Sidebar>
         <SidebarTrigger />
       </SidebarProvider>,
-    )
+    );
 
     // Click the trigger — in mobile mode this opens the Sheet (sets openMobile=true)
-    const trigger = document.querySelector("[data-slot='sidebar-trigger']") as HTMLButtonElement
-    flushSync(() => trigger.click())
+    const trigger = document.querySelector("[data-slot='sidebar-trigger']") as HTMLButtonElement;
+    flushSync(() => trigger.click());
 
     // SheetContent renders via portal with data-mobile="true" when open
-    const mobileSidebar = document.querySelector("[data-mobile='true']")
-    expect(mobileSidebar).toBeTruthy()
-  })
-})
+    const mobileSidebar = document.querySelector("[data-mobile='true']");
+    expect(mobileSidebar).toBeTruthy();
+  });
+});
 
 // ---------------------------------------------------------------------------
 // SidebarTrigger
@@ -203,20 +201,18 @@ describe("SidebarTrigger", () => {
         </Sidebar>
         <SidebarTrigger />
       </SidebarProvider>,
-    )
+    );
 
-    const trigger = document.querySelector("[data-slot='sidebar-trigger']") as HTMLButtonElement
-    expect(trigger).toBeTruthy()
+    const trigger = document.querySelector("[data-slot='sidebar-trigger']") as HTMLButtonElement;
+    expect(trigger).toBeTruthy();
 
-    const sidebar = document.querySelector("[data-slot='sidebar']")
-    expect(sidebar?.getAttribute("data-state")).toBe("expanded")
+    const sidebar = document.querySelector("[data-slot='sidebar']");
+    expect(sidebar?.getAttribute("data-state")).toBe("expanded");
 
-    flushSync(() => trigger.click())
-    expect(document.querySelector("[data-slot='sidebar']")?.getAttribute("data-state")).toBe(
-      "collapsed",
-    )
-  })
-})
+    flushSync(() => trigger.click());
+    expect(document.querySelector("[data-slot='sidebar']")?.getAttribute("data-state")).toBe("collapsed");
+  });
+});
 
 // ---------------------------------------------------------------------------
 // SidebarMenuButton — tooltip variants
@@ -232,9 +228,9 @@ describe("SidebarMenuButton tooltip", () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </WithSidebar>,
-    )
-    expect(document.querySelector("[data-slot='sidebar-menu-button']")).toBeTruthy()
-  })
+    );
+    expect(document.querySelector("[data-slot='sidebar-menu-button']")).toBeTruthy();
+  });
 
   it("renders with string tooltip", () => {
     render(
@@ -245,9 +241,9 @@ describe("SidebarMenuButton tooltip", () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </WithSidebar>,
-    )
-    expect(document.querySelector("[data-slot='sidebar-menu-button']")).toBeTruthy()
-  })
+    );
+    expect(document.querySelector("[data-slot='sidebar-menu-button']")).toBeTruthy();
+  });
 
   it("renders with object tooltip", () => {
     render(
@@ -258,9 +254,9 @@ describe("SidebarMenuButton tooltip", () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </WithSidebar>,
-    )
-    expect(document.querySelector("[data-slot='sidebar-menu-button']")).toBeTruthy()
-  })
+    );
+    expect(document.querySelector("[data-slot='sidebar-menu-button']")).toBeTruthy();
+  });
 
   it("renders isActive state", () => {
     render(
@@ -271,11 +267,11 @@ describe("SidebarMenuButton tooltip", () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </WithSidebar>,
-    )
-    const el = document.querySelector("[data-slot='sidebar-menu-button']")
-    expect(el?.getAttribute("data-active")).toBe("true")
-  })
-})
+    );
+    const el = document.querySelector("[data-slot='sidebar-menu-button']");
+    expect(el?.getAttribute("data-active")).toBe("true");
+  });
+});
 
 // ---------------------------------------------------------------------------
 // SidebarMenuSkeleton
@@ -291,10 +287,10 @@ describe("SidebarMenuSkeleton", () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </WithSidebar>,
-    )
-    expect(document.querySelector("[data-slot='sidebar-menu-skeleton']")).toBeTruthy()
-    expect(document.querySelector("[data-sidebar='menu-skeleton-icon']")).toBeNull()
-  })
+    );
+    expect(document.querySelector("[data-slot='sidebar-menu-skeleton']")).toBeTruthy();
+    expect(document.querySelector("[data-sidebar='menu-skeleton-icon']")).toBeNull();
+  });
 
   it("renders with icon when showIcon=true", () => {
     render(
@@ -305,11 +301,11 @@ describe("SidebarMenuSkeleton", () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </WithSidebar>,
-    )
-    expect(document.querySelector("[data-sidebar='menu-skeleton-icon']")).toBeTruthy()
-    expect(document.querySelector("[data-sidebar='menu-skeleton-text']")).toBeTruthy()
-  })
-})
+    );
+    expect(document.querySelector("[data-sidebar='menu-skeleton-icon']")).toBeTruthy();
+    expect(document.querySelector("[data-sidebar='menu-skeleton-text']")).toBeTruthy();
+  });
+});
 
 // ---------------------------------------------------------------------------
 // SidebarGroupLabel — asChild variant
@@ -323,10 +319,10 @@ describe("SidebarGroupLabel", () => {
           <SidebarGroupLabel>Section</SidebarGroupLabel>
         </SidebarGroup>
       </WithSidebar>,
-    )
-    const el = document.querySelector("[data-slot='sidebar-group-label']")
-    expect(el?.tagName.toLowerCase()).toBe("div")
-  })
+    );
+    const el = document.querySelector("[data-slot='sidebar-group-label']");
+    expect(el?.tagName.toLowerCase()).toBe("div");
+  });
 
   it("renders as child element when asChild=true", () => {
     render(
@@ -337,11 +333,11 @@ describe("SidebarGroupLabel", () => {
           </SidebarGroupLabel>
         </SidebarGroup>
       </WithSidebar>,
-    )
-    const el = document.querySelector("[data-slot='sidebar-group-label']")
-    expect(el?.tagName.toLowerCase()).toBe("span")
-  })
-})
+    );
+    const el = document.querySelector("[data-slot='sidebar-group-label']");
+    expect(el?.tagName.toLowerCase()).toBe("span");
+  });
+});
 
 // ---------------------------------------------------------------------------
 // SidebarGroupAction — asChild variant
@@ -355,10 +351,10 @@ describe("SidebarGroupAction", () => {
           <SidebarGroupAction aria-label="Add">+</SidebarGroupAction>
         </SidebarGroup>
       </WithSidebar>,
-    )
-    const el = document.querySelector("[data-slot='sidebar-group-action']")
-    expect(el?.tagName.toLowerCase()).toBe("button")
-  })
+    );
+    const el = document.querySelector("[data-slot='sidebar-group-action']");
+    expect(el?.tagName.toLowerCase()).toBe("button");
+  });
 
   it("renders as child element when asChild=true", () => {
     render(
@@ -369,11 +365,11 @@ describe("SidebarGroupAction", () => {
           </SidebarGroupAction>
         </SidebarGroup>
       </WithSidebar>,
-    )
-    const el = document.querySelector("[data-slot='sidebar-group-action']")
-    expect(el?.tagName.toLowerCase()).toBe("a")
-  })
-})
+    );
+    const el = document.querySelector("[data-slot='sidebar-group-action']");
+    expect(el?.tagName.toLowerCase()).toBe("a");
+  });
+});
 
 // ---------------------------------------------------------------------------
 // SidebarMenuAction — showOnHover variant
@@ -390,9 +386,9 @@ describe("SidebarMenuAction", () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </WithSidebar>,
-    )
-    expect(document.querySelector("[data-slot='sidebar-menu-action']")).toBeTruthy()
-  })
+    );
+    expect(document.querySelector("[data-slot='sidebar-menu-action']")).toBeTruthy();
+  });
 
   it("renders with showOnHover=true", () => {
     render(
@@ -406,11 +402,11 @@ describe("SidebarMenuAction", () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </WithSidebar>,
-    )
-    const el = document.querySelector("[data-slot='sidebar-menu-action']")
-    expect(el).toBeTruthy()
-  })
-})
+    );
+    const el = document.querySelector("[data-slot='sidebar-menu-action']");
+    expect(el).toBeTruthy();
+  });
+});
 
 // ---------------------------------------------------------------------------
 // SidebarMenuBadge
@@ -427,12 +423,12 @@ describe("SidebarMenuBadge", () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </WithSidebar>,
-    )
-    const el = document.querySelector("[data-slot='sidebar-menu-badge']")
-    expect(el).toBeTruthy()
-    expect(el!.textContent).toBe("5")
-  })
-})
+    );
+    const el = document.querySelector("[data-slot='sidebar-menu-badge']");
+    expect(el).toBeTruthy();
+    expect(el!.textContent).toBe("5");
+  });
+});
 
 // ---------------------------------------------------------------------------
 // SidebarMenuSub + SidebarMenuSubItem + SidebarMenuSubButton
@@ -453,11 +449,11 @@ describe("SidebarMenu sub-components", () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </WithSidebar>,
-    )
-    expect(document.querySelector("[data-slot='sidebar-menu-sub']")).toBeTruthy()
-    expect(document.querySelector("[data-slot='sidebar-menu-sub-item']")).toBeTruthy()
-    expect(document.querySelector("[data-slot='sidebar-menu-sub-button']")).toBeTruthy()
-  })
+    );
+    expect(document.querySelector("[data-slot='sidebar-menu-sub']")).toBeTruthy();
+    expect(document.querySelector("[data-slot='sidebar-menu-sub-item']")).toBeTruthy();
+    expect(document.querySelector("[data-slot='sidebar-menu-sub-button']")).toBeTruthy();
+  });
 
   it("sub-button renders with isActive and size props", () => {
     render(
@@ -475,12 +471,12 @@ describe("SidebarMenu sub-components", () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </WithSidebar>,
-    )
-    const el = document.querySelector("[data-slot='sidebar-menu-sub-button']")
-    expect(el?.getAttribute("data-active")).toBe("true")
-    expect(el?.getAttribute("data-size")).toBe("sm")
-  })
-})
+    );
+    const el = document.querySelector("[data-slot='sidebar-menu-sub-button']");
+    expect(el?.getAttribute("data-active")).toBe("true");
+    expect(el?.getAttribute("data-size")).toBe("sm");
+  });
+});
 
 // ---------------------------------------------------------------------------
 // SidebarGroupContent
@@ -496,10 +492,10 @@ describe("SidebarGroupContent", () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </WithSidebar>,
-    )
-    expect(document.querySelector("[data-slot='sidebar-group-content']")).toBeTruthy()
-  })
-})
+    );
+    expect(document.querySelector("[data-slot='sidebar-group-content']")).toBeTruthy();
+  });
+});
 
 // ---------------------------------------------------------------------------
 // SidebarProvider — controlled open prop
@@ -507,7 +503,7 @@ describe("SidebarGroupContent", () => {
 
 describe("SidebarProvider controlled mode", () => {
   it("uses controlled open prop", () => {
-    const onOpenChange = vi.fn()
+    const onOpenChange = vi.fn();
     render(
       <SidebarProvider open={false} onOpenChange={onOpenChange}>
         <Sidebar collapsible="icon">
@@ -515,14 +511,14 @@ describe("SidebarProvider controlled mode", () => {
         </Sidebar>
         <SidebarTrigger />
       </SidebarProvider>,
-    )
+    );
 
-    const sidebar = document.querySelector("[data-slot='sidebar']")
-    expect(sidebar?.getAttribute("data-state")).toBe("collapsed")
+    const sidebar = document.querySelector("[data-slot='sidebar']");
+    expect(sidebar?.getAttribute("data-state")).toBe("collapsed");
 
     // Click the trigger — should call onOpenChange
-    const trigger = document.querySelector("[data-slot='sidebar-trigger']") as HTMLButtonElement
-    flushSync(() => trigger.click())
-    expect(onOpenChange).toHaveBeenCalled()
-  })
-})
+    const trigger = document.querySelector("[data-slot='sidebar-trigger']") as HTMLButtonElement;
+    flushSync(() => trigger.click());
+    expect(onOpenChange).toHaveBeenCalled();
+  });
+});

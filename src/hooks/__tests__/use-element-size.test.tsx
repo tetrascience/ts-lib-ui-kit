@@ -55,8 +55,7 @@ function renderHook() {
 beforeEach(() => {
   observed = null;
   disconnectSpy = vi.fn();
-  (globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver =
-    ResizeObserverStub;
+  (globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver = ResizeObserverStub;
 });
 
 afterEach(() => {

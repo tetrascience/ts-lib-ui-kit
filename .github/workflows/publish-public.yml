@@ -2,7 +2,7 @@ name: Publish to Public npm
 
 on:
   push:
-    tags: '*'
+    tags: "*"
     branches:
       - main
 
@@ -33,7 +33,7 @@ jobs:
     with:
       publish_to_public_npm: true
     secrets:
-      PUBLISH_REGISTRY: 'https://registry.npmjs.org'
+      PUBLISH_REGISTRY: "https://registry.npmjs.org"
 
   # Betas are named for the next release (1.2.0-beta.N after a feat: since
   # v1.1.0), not the released version in package.json. See next-version.yml.
@@ -54,4 +54,4 @@ jobs:
         jq --arg v "${{ needs.beta-version.outputs.version }}" '.version = $v' package.json > package.json.tmp &&
         mv package.json.tmp package.json
     secrets:
-      PUBLISH_REGISTRY: 'https://registry.npmjs.org'
+      PUBLISH_REGISTRY: "https://registry.npmjs.org"

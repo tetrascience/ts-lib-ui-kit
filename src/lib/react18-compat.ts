@@ -26,7 +26,7 @@
  * when a component that accepts `ref` is not wrapped, or when JSX writes a
  * boolean `inert`, so new components cannot regress React 18 support.
  */
-import * as React from "react"
+import * as React from "react";
 
 /**
  * Whether the running React is 18, read once at module load. Checked as "18.x"
@@ -34,22 +34,22 @@ import * as React from "react"
  * as `0.0.0-experimental-…`, which would otherwise parse as 0 and get the React
  * 18 behaviour. The peer range is `^18.2.0 || ^19.0.0`, so nothing older runs.
  */
-const IS_REACT_18 = React.version.startsWith("18.")
+const IS_REACT_18 = React.version.startsWith("18.");
 
 /**
  * Any function component, including generic ones and `React.FC` (whose React 19
  * return type admits a Promise). `never` accepts every props type.
  */
-type FunctionComponentLike = (props: never) => React.ReactNode | Promise<React.ReactNode>
+type FunctionComponentLike = (props: never) => React.ReactNode | Promise<React.ReactNode>;
 
 /** Each wrapper's plain component, for `isElementOfType`. */
-const plainComponentOf = new WeakMap<object, unknown>()
+const plainComponentOf = new WeakMap<object, unknown>();
 
 /** Every component `withRef` returned, for tests that sweep the exports. */
-const withRefResults = new WeakSet<object>()
+const withRefResults = new WeakSet<object>();
 
 /** What Storybook's react-docgen plugin attaches to a component definition. */
-type WithDocgen = { displayName?: string; __docgenInfo?: unknown }
+type WithDocgen = { displayName?: string; __docgenInfo?: unknown };
 
 /**
  * Makes a React 19-style component (one that receives `ref` as an ordinary
@@ -87,19 +87,19 @@ type WithDocgen = { displayName?: string; __docgenInfo?: unknown }
  * export { ButtonWithRef as Button }
  */
 export function withRef<C extends FunctionComponentLike>(displayName: string, render: C): C {
-  const react19 = render as unknown as WithDocgen
-  react19.displayName ??= displayName
+  const react19 = render as unknown as WithDocgen;
+  react19.displayName ??= displayName;
   if (!IS_REACT_18) {
-    withRefResults.add(render)
-    return render
+    withRefResults.add(render);
+    return render;
   }
-  const renderWithProps = render as unknown as (props: object) => React.ReactNode
+  const renderWithProps = render as unknown as (props: object) => React.ReactNode;
   const Forwarded = React.forwardRef<unknown, object>(function ForwardRefRender(props, ref) {
-    return renderWithProps(ref == null ? props : { ...props, ref })
-  })
-  Forwarded.displayName = displayName
-  plainComponentOf.set(Forwarded, render)
-  withRefResults.add(Forwarded)
+    return renderWithProps(ref == null ? props : { ...props, ref });
+  });
+  Forwarded.displayName = displayName;
+  plainComponentOf.set(Forwarded, render);
+  withRefResults.add(Forwarded);
   // Storybook's react-docgen plugin attaches the props table and description to
   // the declaration it parsed, the plain component, and appends that assignment
   // at the end of the module, after this call. Read it lazily so the exported
@@ -107,15 +107,19 @@ export function withRef<C extends FunctionComponentLike>(displayName: string, re
   Object.defineProperty(Forwarded, "__docgenInfo", {
     configurable: true,
     get: () => react19.__docgenInfo,
-  })
+  });
   // The forwardRef object is callable from JSX exactly like `render`, and its
   // props are `render`'s props, so the original type is the accurate public type.
-  return Forwarded as unknown as C
+  return Forwarded as unknown as C;
 }
 
 /** Whether `component` came from `withRef`. For tests that sweep the kit's exports. */
 export function isWithRefComponent(component: unknown): boolean {
-  return (typeof component === "object" || typeof component === "function") && component !== null && withRefResults.has(component)
+  return (
+    (typeof component === "object" || typeof component === "function") &&
+    component !== null &&
+    withRefResults.has(component)
+  );
 }
 
 /**
@@ -131,8 +135,8 @@ export function isWithRefComponent(component: unknown): boolean {
  *   React.isValidElement(child) && isElementOfType(child, ItemSeparator) ? child : wrap(child))
  */
 export function isElementOfType(element: React.ReactElement, component: unknown): boolean {
-  if (element.type === component) return true
-  return typeof element.type === "object" && element.type !== null && plainComponentOf.get(element.type) === component
+  if (element.type === component) return true;
+  return typeof element.type === "object" && element.type !== null && plainComponentOf.get(element.type) === component;
 }
 
 /**
@@ -147,7 +151,7 @@ export function isElementOfType(element: React.ReactElement, component: unknown)
  * <nav {...inertProp(isCollapsed)} />
  */
 export function inertProp(inert: boolean | undefined): Pick<React.HTMLAttributes<HTMLElement>, "inert"> {
-  if (!IS_REACT_18) return { inert }
+  if (!IS_REACT_18) return { inert };
   // React 18's attribute path needs a string; the type is React 19's boolean.
-  return { inert: (inert ? "" : undefined) as unknown as boolean | undefined }
+  return { inert: (inert ? "" : undefined) as unknown as boolean | undefined };
 }

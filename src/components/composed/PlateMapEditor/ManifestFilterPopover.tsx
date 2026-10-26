@@ -94,103 +94,91 @@ export function ManifestFilterPopover({
       </PopoverTrigger>
 
       <PopoverContent align="end" className="min-w-80" aria-label="Filter conditions">
-          <div className="flex flex-col gap-2">
-            {filters.map((condition) => {
-              const colConfig = columns.find((c) => c.columnId === condition.columnId);
-              const operators = colConfig?.operators ?? DEFAULT_OPERATORS;
-              const isValueFree = VALUE_FREE_OPERATORS.includes(condition.operator);
-              return (
-                <div key={condition.id} className="flex items-center gap-2">
-                  <Select
-                    value={condition.columnId}
-                    onValueChange={(value) => {
-                      const nextConfig = columns.find((c) => c.columnId === value);
-                      const nextOperators = nextConfig?.operators ?? DEFAULT_OPERATORS;
-                      const nextOperator = nextOperators.includes(condition.operator)
-                        ? condition.operator
-                        : (nextOperators[0] ?? "contains");
-                      updateFilter(condition.id, { columnId: value, operator: nextOperator, value: "" });
-                    }}
-                  >
-                    <SelectTrigger aria-label="Filter column" size="sm" className="w-36">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {columns.map((c) => (
-                        <SelectItem key={c.columnId} value={c.columnId}>
-                          {c.label ?? labelFor(c.columnId)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+        <div className="flex flex-col gap-2">
+          {filters.map((condition) => {
+            const colConfig = columns.find((c) => c.columnId === condition.columnId);
+            const operators = colConfig?.operators ?? DEFAULT_OPERATORS;
+            const isValueFree = VALUE_FREE_OPERATORS.includes(condition.operator);
+            return (
+              <div key={condition.id} className="flex items-center gap-2">
+                <Select
+                  value={condition.columnId}
+                  onValueChange={(value) => {
+                    const nextConfig = columns.find((c) => c.columnId === value);
+                    const nextOperators = nextConfig?.operators ?? DEFAULT_OPERATORS;
+                    const nextOperator = nextOperators.includes(condition.operator)
+                      ? condition.operator
+                      : (nextOperators[0] ?? "contains");
+                    updateFilter(condition.id, { columnId: value, operator: nextOperator, value: "" });
+                  }}
+                >
+                  <SelectTrigger aria-label="Filter column" size="sm" className="w-36">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {columns.map((c) => (
+                      <SelectItem key={c.columnId} value={c.columnId}>
+                        {c.label ?? labelFor(c.columnId)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                  <Select
-                    value={condition.operator}
-                    onValueChange={(value) =>
-                      updateFilter(condition.id, { operator: value as FilterOperator, value: "" })
-                    }
-                  >
-                    <SelectTrigger aria-label="Filter operator" size="sm" className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {operators.map((op) => (
-                        <SelectItem key={op} value={op}>
-                          {OPERATOR_LABELS[op]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <Select
+                  value={condition.operator}
+                  onValueChange={(value) =>
+                    updateFilter(condition.id, { operator: value as FilterOperator, value: "" })
+                  }
+                >
+                  <SelectTrigger aria-label="Filter operator" size="sm" className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {operators.map((op) => (
+                      <SelectItem key={op} value={op}>
+                        {OPERATOR_LABELS[op]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                  {isValueFree ? (
-                    <div className="h-8 w-40" aria-hidden />
-                  ) : (
-                    <Input
-                      className="w-40"
-                      placeholder={valuePlaceholder}
-                      value={condition.value}
-                      onChange={(event) => updateFilter(condition.id, { value: event.target.value })}
-                    />
-                  )}
+                {isValueFree ? (
+                  <div className="h-8 w-40" aria-hidden />
+                ) : (
+                  <Input
+                    className="w-40"
+                    placeholder={valuePlaceholder}
+                    value={condition.value}
+                    onChange={(event) => updateFilter(condition.id, { value: event.target.value })}
+                  />
+                )}
 
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => removeFilter(condition.id)}
-                    aria-label="Remove filter"
-                  >
-                    <XIcon className="size-3.5" />
-                  </Button>
-                </div>
-              );
-            })}
-
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addFilter}
-                disabled={columns.length === 0}
-              >
-                <PlusIcon className="size-3.5" />
-                Add filter
-              </Button>
-              {filters.length > 0 ? (
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
-                  onClick={clearAll}
+                  size="icon"
+                  className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
+                  onClick={() => removeFilter(condition.id)}
+                  aria-label="Remove filter"
                 >
-                  {clearAllLabel}
+                  <XIcon className="size-3.5" />
                 </Button>
-              ) : null}
-            </div>
+              </div>
+            );
+          })}
+
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={addFilter} disabled={columns.length === 0}>
+              <PlusIcon className="size-3.5" />
+              Add filter
+            </Button>
+            {filters.length > 0 ? (
+              <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={clearAll}>
+                {clearAllLabel}
+              </Button>
+            ) : null}
           </div>
+        </div>
       </PopoverContent>
     </Popover>
   );

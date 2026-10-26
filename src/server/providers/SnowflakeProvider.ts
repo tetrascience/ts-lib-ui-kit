@@ -14,11 +14,7 @@
  * ```
  */
 
-import {
-  QueryError,
-  ProviderConnectionError,
-  InvalidProviderConfigurationError,
-} from "./exceptions";
+import { QueryError, ProviderConnectionError, InvalidProviderConfigurationError } from "./exceptions";
 
 import type { ProviderConfiguration } from "./types";
 
@@ -29,8 +25,7 @@ type SnowflakeBinds = import("snowflake-sdk").Binds;
 type SnowflakeError = import("snowflake-sdk").SnowflakeError;
 type SnowflakeConnectionOptions = import("snowflake-sdk").ConnectionOptions;
 type SnowflakeRowStatement = import("snowflake-sdk").RowStatement;
-type SnowflakeFileAndStageBindStatement =
-  import("snowflake-sdk").FileAndStageBindStatement;
+type SnowflakeFileAndStageBindStatement = import("snowflake-sdk").FileAndStageBindStatement;
 
 /**
  * Dynamically import snowflake-sdk
@@ -77,9 +72,7 @@ export class SnowflakeProvider {
   ): Promise<Array<Record<string, unknown>>> {
     // Snowflake SDK supports both positional binds (array) and named binds (object)
     // Pass params directly to preserve named bind semantics
-    const binds = Array.isArray(params)
-      ? (params as unknown as SnowflakeBinds)
-      : (params as unknown as SnowflakeBinds);
+    const binds = Array.isArray(params) ? (params as unknown as SnowflakeBinds) : (params as unknown as SnowflakeBinds);
 
     return new Promise((resolve, reject) => {
       this.connection.execute({
@@ -91,11 +84,7 @@ export class SnowflakeProvider {
           rows?: Array<Record<string, unknown>>,
         ) => {
           if (err) {
-            reject(
-              new QueryError(
-                `Snowflake provider failed to query the database. Reason: ${err.message}`,
-              ),
-            );
+            reject(new QueryError(`Snowflake provider failed to query the database. Reason: ${err.message}`));
             return;
           }
           resolve(rows ?? []);
@@ -127,21 +116,11 @@ export class SnowflakeProvider {
  * @returns Promise resolving to Snowflake data provider
  * @throws {InvalidProviderConfigurationError} If snowflake-sdk is not installed or config is invalid
  */
-export async function buildSnowflakeProvider(
-  config: ProviderConfiguration,
-): Promise<SnowflakeProvider> {
+export async function buildSnowflakeProvider(config: ProviderConfiguration): Promise<SnowflakeProvider> {
   // Dynamically import snowflake-sdk
   const snowflake = await getSnowflakeSDK();
 
-  const requiredFields = [
-    "user",
-    "password",
-    "account",
-    "warehouse",
-    "database",
-    "schema",
-    "role",
-  ] as const;
+  const requiredFields = ["user", "password", "account", "warehouse", "database", "schema", "role"] as const;
 
   for (const field of requiredFields) {
     if (!config.fields[field]) {
@@ -165,36 +144,27 @@ export async function buildSnowflakeProvider(
   return new Promise((resolve, reject) => {
     const connection = snowflake.createConnection(connectionOptions);
 
-    connection.connect(
-      (err: SnowflakeError | undefined, conn: SnowflakeConnection) => {
-        if (err) {
-          reject(
-            new ProviderConnectionError(
-              `Unable to connect to Snowflake. Reason: ${err.message}`,
-            ),
-          );
-          return;
-        }
+    connection.connect((err: SnowflakeError | undefined, conn: SnowflakeConnection) => {
+      if (err) {
+        reject(new ProviderConnectionError(`Unable to connect to Snowflake. Reason: ${err.message}`));
+        return;
+      }
 
-        // Set timezone to UTC after connection.
-        // The default timezone is America/Los_Angeles. Timestamps from delta tables will be
-        // returned with the timezone `timezone`. NOTE, this is not a timezone conversion.
-        // The timezone is replaced without translating the clock time. `timezone` is set UTC
-        // to match the timezone of delta table timestamps.
-        conn.execute({
-          sqlText: "ALTER SESSION SET TIMEZONE = 'UTC'",
-          complete: (tzErr: SnowflakeError | undefined) => {
-            if (tzErr) {
-              // Log warning but don't fail - timezone setting is not critical
-              console.warn(
-                `Warning: Failed to set timezone to UTC: ${tzErr.message}`,
-              );
-            }
-            resolve(new SnowflakeProvider(conn));
-          },
-        });
-      },
-    );
+      // Set timezone to UTC after connection.
+      // The default timezone is America/Los_Angeles. Timestamps from delta tables will be
+      // returned with the timezone `timezone`. NOTE, this is not a timezone conversion.
+      // The timezone is replaced without translating the clock time. `timezone` is set UTC
+      // to match the timezone of delta table timestamps.
+      conn.execute({
+        sqlText: "ALTER SESSION SET TIMEZONE = 'UTC'",
+        complete: (tzErr: SnowflakeError | undefined) => {
+          if (tzErr) {
+            // Log warning but don't fail - timezone setting is not critical
+            console.warn(`Warning: Failed to set timezone to UTC: ${tzErr.message}`);
+          }
+          resolve(new SnowflakeProvider(conn));
+        },
+      });
+    });
   });
 }
-

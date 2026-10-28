@@ -2,6 +2,7 @@ import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { Viz } from "@tetrascience-npm/ts-lib-viz/react";
 import { useMemo, useRef } from "react";
 
+import { useChartDeprecationWarning } from "../viz/deprecation";
 import { categoricalPalettes } from "../viz/VizChart";
 
 import { DEFAULT_MARKER_SIZE, DEFAULT_SIZE_RANGE } from "./constants";
@@ -70,6 +71,7 @@ const ScatterPlotInteractive: React.FC<ScatterPlotInteractiveProps> = ({
   height,
   className,
 }) => {
+  useChartDeprecationWarning("ScatterPlotInteractive");
   const modifiers = useRef({ shiftKey: false, ctrlKey: false, metaKey: false });
   const pointerEvent = useRef<MouseEvent | null>(null);
 

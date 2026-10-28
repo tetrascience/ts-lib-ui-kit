@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./PlateMap.scss";
 import { useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+import { useChartDeprecationWarning } from "../viz/deprecation";
 
 import {
   PLATE_CONFIGS,
@@ -100,6 +101,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   markerShape = "circle",
   onWellClick,
 }) => {
+  useChartDeprecationWarning("PlateMap");
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
   const onWellClickRef = useRef(onWellClick);

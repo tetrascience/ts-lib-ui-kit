@@ -135,12 +135,38 @@ function ThemedDocsContainer(props: ComponentProps<typeof DocsContainer>) {
   });
 }
 
+/**
+ * Every page under "Data Viz/" is an in-kit chart that is deprecated in favour of
+ * ts-lib-viz (UXT-251). The banner names the replacement on each of them.
+ */
+const chartDeprecationBanner = (title: string) =>
+  title.startsWith("Data Viz/")
+    ? createElement(
+        "div",
+        {
+          role: "note",
+          "data-testid": "chart-deprecation-banner",
+          style: {
+            margin: "0 0 12px",
+            padding: "8px 12px",
+            borderRadius: 6,
+            border: "1px solid #d97706",
+            background: "#fffbeb",
+            color: "#78350f",
+            fontSize: 13,
+          },
+        },
+        "Deprecated: this chart will be removed in 2.0. Use @tetrascience-npm/ts-lib-viz instead. See MIGRATION.md.",
+      )
+    : null;
+
 const preview: Preview = {
   decorators: [
-    (Story) =>
+    (Story, context) =>
       createElement(
         'div',
         {},
+        chartDeprecationBanner(context.title),
         createElement(TooltipProvider, null, Story()),
         createElement(Toaster, { richColors: true })
       ),

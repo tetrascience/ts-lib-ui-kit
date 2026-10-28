@@ -1,6 +1,7 @@
 import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
+import { useChartDeprecationWarning } from "../viz/deprecation";
 import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
 import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
@@ -124,6 +125,7 @@ const BarChart: React.FC<BarChartProps> = ({
   title,
   xTickText,
 }) => {
+  useChartDeprecationWarning("BarChart");
   const colors = useMemo(
     () => dataSeries.map((series, index) => seriesColor(index, series.color)),
     [dataSeries],

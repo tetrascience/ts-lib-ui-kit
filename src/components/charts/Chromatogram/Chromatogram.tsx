@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 
 import { useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+import { useChartDeprecationWarning } from "../viz/deprecation";
 
 import {
   groupOverlappingPeaks,
@@ -94,6 +95,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
   titleFontSize = 20,
   titleTopMargin,
 }) => {
+  useChartDeprecationWarning("Chromatogram");
   const enablePeakDetection = peakDetectionOptions !== undefined;
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();

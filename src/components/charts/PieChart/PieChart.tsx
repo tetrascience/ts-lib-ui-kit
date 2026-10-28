@@ -1,6 +1,7 @@
 import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
+import { useChartDeprecationWarning } from "../viz/deprecation";
 import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
 import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
@@ -78,6 +79,7 @@ const PieChart: React.FC<PieChartProps> = ({
   title,
   hole = 0,
 }) => {
+  useChartDeprecationWarning("PieChart");
   const colors = dataSeries.colors ?? CHART_COLORS;
   const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
   const rows = useMemo(() => buildPieRows(dataSeries), [dataSeries]);

@@ -1,6 +1,7 @@
 import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
+import { useChartDeprecationWarning } from "../viz/deprecation";
 import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
 import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
@@ -65,6 +66,7 @@ const ScatterPlot: React.FC<ScatterPlotProps> = ({
   variant = "default",
   markerSize = 10,
 }) => {
+  useChartDeprecationWarning("ScatterPlot");
   const seriesArray = useMemo(() => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]), [dataSeries]);
   const colors = useMemo(() => seriesArray.map((series, index) => seriesColor(index, series.color)), [seriesArray]);
   const palettes = useMemo(() => categoricalPalettes(colors), [colors]);

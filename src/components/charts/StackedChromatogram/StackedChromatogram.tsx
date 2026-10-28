@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import { Chromatogram } from "../Chromatogram";
+import { useChartDeprecationWarning } from "../viz/deprecation";
 
 import { applyStackingTransform } from "./transforms";
 
@@ -17,6 +18,7 @@ export function StackedChromatogram({
   annotations,
   ...restProps
 }: StackedChromatogramProps) {
+  useChartDeprecationWarning("StackedChromatogram");
   const {
     series: transformedSeries,
     annotations: transformedAnnotations,

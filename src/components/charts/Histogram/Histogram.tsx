@@ -1,6 +1,7 @@
 import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
+import { useChartDeprecationWarning } from "../viz/deprecation";
 import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
 import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
@@ -80,6 +81,7 @@ const Histogram: React.FC<HistogramProps> = ({
   xTitle,
   yTitle,
 }) => {
+  useChartDeprecationWarning("Histogram");
   const seriesArray = useMemo(
     () => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]),
     [dataSeries],

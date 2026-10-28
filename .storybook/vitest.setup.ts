@@ -10,6 +10,9 @@ const originalError = console.error;
 let warnings: string[] = [];
 let errors: string[] = [];
 
+const DEPRECATED_CHART_WARNING =
+  /^\[@tetrascience-npm\/tetrascience-react-ui\] \w+ is deprecated and will be removed in 2\.0\./;
+
 // Pattern to extract Zephyr IDs from test names: [SW-T123] or [SW-T100,SW-T101]
 const ZEPHYR_ID_PATTERN = /\[([A-Z]+-T\d+(?:,[A-Z]+-T\d+)*)\]/;
 const SCREENSHOT_DIR = "test-results/screenshots";
@@ -55,7 +58,8 @@ beforeEach(() => {
 
   console.warn = (...args: unknown[]) => {
     const message = args.map((arg) => String(arg)).join(" ");
-    warnings.push(message);
+    // Each in-kit chart announces its deprecation once per page (UXT-251). That notice is intended.
+    if (!DEPRECATED_CHART_WARNING.test(message)) warnings.push(message);
     originalWarn.apply(console, args);
   };
 

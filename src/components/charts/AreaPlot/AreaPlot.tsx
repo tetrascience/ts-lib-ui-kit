@@ -1,6 +1,7 @@
 import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
+import { useChartDeprecationWarning } from "../viz/deprecation";
 import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
 import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
@@ -86,6 +87,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
   title,
   xTickText,
 }) => {
+  useChartDeprecationWarning("AreaPlot");
   const colors = useMemo(() => dataSeries.map((series, index) => seriesColor(index, series.color)), [dataSeries]);
   const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
   // A ribbon from its baseline to its top, so the fill and its outline both draw

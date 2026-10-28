@@ -10,7 +10,7 @@
 ## Deprecated chart components (removed in 2.0)
 
 These chart components are deprecated and will be removed in 2.0. Each one is marked `@deprecated` in its source,
-so your editor strikes it through. New charts should use [`@tetrascience-npm/ts-lib-viz`](https://github.com/tetrascience/ts-lib-viz) directly.
+so your editor strikes it through. New charts should use `@tetrascience-npm/ts-lib-viz` directly.
 
 | Deprecated export                                                                     | Now drawn by                                                                                                           |
 | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |

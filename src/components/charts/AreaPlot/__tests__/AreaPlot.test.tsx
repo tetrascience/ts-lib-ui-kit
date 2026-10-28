@@ -2,65 +2,67 @@ import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-import { AreaPlot } from "../AreaPlot";
+import { AreaPlot, areaRows } from "../AreaPlot";
 
-import type { AreaPlotProps } from "../AreaPlot";
+import type { AreaDataSeries, AreaPlotProps } from "../AreaPlot";
+import type { ChartSpec, Palettes, VizData } from "@tetrascience-npm/ts-lib-viz/core";
 import type { Root } from "react-dom/client";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-// Controllable ResizeObserver stub — jsdom has no layout, so tests push the
-// container size in explicitly (mirrors the ScatterPlotInteractive test pattern).
-let triggerResize: (width: number, height: number) => void;
-class ResizeObserverStub {
-  constructor(
-    private callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void,
-  ) {
-    triggerResize = (width, height) => this.callback([{ contentRect: { width, height } }]);
-  }
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+// ts-lib-viz resolves its own copy of React when it is linked into this repo,
+// so the real <Viz> cannot mount under this jsdom project. The adapter's
+// contract is the spec and rows it hands to <Viz>, so capture those instead.
+interface VizCall {
+  spec: ChartSpec;
+  data: VizData;
+  palettes?: Palettes;
 }
-(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver =
-  ResizeObserverStub;
-
-const plotly = vi.hoisted(() => ({
-  newPlot: vi.fn(),
-  relayout: vi.fn(),
-  purge: vi.fn(),
+const viz = vi.hoisted(() => ({ calls: [] as VizCall[] }));
+vi.mock("@tetrascience-npm/ts-lib-viz/react", () => ({
+  Viz: (props: VizCall) => {
+    viz.calls.push(props);
+    return <div data-viz-stub="" />;
+  },
 }));
-vi.mock("plotly.js-dist", () => ({ default: plotly }));
 
-interface PlotCall {
-  el: HTMLElement;
-  layout: {
-    width: number;
-    height: number;
-    xaxis: { title: { text?: string }; automargin?: boolean };
-    yaxis: { title: { text?: string }; automargin?: boolean };
-  };
-  config: { responsive: boolean };
-}
-
-function lastPlotCall(): PlotCall {
-  const call = plotly.newPlot.mock.calls.at(-1) as unknown as [
-    HTMLElement,
-    unknown,
-    PlotCall["layout"],
-    PlotCall["config"],
-  ];
-  return { el: call[0], layout: call[2], config: call[3] };
-}
-
-const dataSeries: AreaPlotProps["dataSeries"] = [
-  { name: "Series 1", x: [0, 1, 2, 3], y: [10, 18, 14, 22] },
+const dataSeries: AreaDataSeries[] = [
+  { name: "Series 1", x: [0, 1, 2], y: [10, 18, 14] },
+  { name: "Series 2", x: [0, 1, 2], y: [3, 4, 5] },
 ];
+
+describe("areaRows", () => {
+  it("draws each series from a zero baseline to its value in the normal variant", () => {
+    expect(areaRows([dataSeries[0]], "normal")).toEqual([
+      { x: 0, y: 10, series: "Series 1", lo: 0, hi: 10 },
+      { x: 1, y: 18, series: "Series 1", lo: 0, hi: 18 },
+      { x: 2, y: 14, series: "Series 1", lo: 0, hi: 14 },
+    ]);
+  });
+
+  it("stacks each series on the running top of the series before it, per x", () => {
+    const second = areaRows(dataSeries, "stacked").filter((row) => row.series === "Series 2");
+    expect(second.map((row) => [row.x, row.lo, row.hi])).toEqual([
+      [0, 10, 13],
+      [1, 18, 22],
+      [2, 14, 19],
+    ]);
+  });
+
+  it("keeps the series' own y on stacked rows so tooltips show the value, not the sum", () => {
+    const row = areaRows(dataSeries, "stacked").find(
+      (candidate) => candidate.series === "Series 2" && candidate.x === 0,
+    );
+    expect(row?.y).toBe(3);
+  });
+
+  it("returns no rows when there are no series", () => {
+    expect(areaRows([], "stacked")).toEqual([]);
+  });
+});
 
 const roots: Array<{ root: Root; container: HTMLElement }> = [];
 
-// Async act so the lazy Plotly import (SW-2007) resolves and the draw
-// completes before assertions run.
 async function render(props: AreaPlotProps) {
   const container = document.createElement("div");
   document.body.appendChild(container);
@@ -69,17 +71,17 @@ async function render(props: AreaPlotProps) {
   await act(async () => {
     root.render(<AreaPlot {...props} />);
   });
+  return container;
+}
+
+function lastCall(): VizCall {
+  const call = viz.calls.at(-1);
+  if (!call) throw new Error("Viz was not rendered");
+  return call;
 }
 
 beforeEach(() => {
-  // useChartTooltip binds Plotly hover events via plotElement.on(...); give the
-  // mocked plot element a no-op emitter so binding doesn't throw.
-  plotly.newPlot.mockImplementation((el: HTMLElement) => {
-    (el as unknown as { on: () => void }).on = () => {};
-    return Promise.resolve();
-  });
-  // Real Plotly.relayout returns a promise; the resize effect chains .catch on it.
-  plotly.relayout.mockImplementation(() => Promise.resolve());
+  viz.calls.length = 0;
 });
 
 afterEach(() => {
@@ -89,129 +91,87 @@ afterEach(() => {
     });
     container.remove();
   }
-  vi.clearAllMocks();
 });
 
-describe("AreaPlot sizing", () => {
-  it("uses explicit width/height and disables Plotly responsiveness", async () => {
+describe("AreaPlot spec", () => {
+  it("mounts a Viz host and hands it the flattened rows", async () => {
+    const container = await render({ dataSeries, width: 800, height: 400 });
+    expect(container.querySelector("[data-viz-stub]")).not.toBeNull();
+    expect(lastCall().data).toEqual(areaRows(dataSeries, "normal"));
+  });
+
+  it("states the stated width and height on the spec", async () => {
     await render({ dataSeries, width: 800, height: 400 });
-
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    const { layout, config } = lastPlotCall();
-    expect(layout.width).toBe(800);
-    expect(layout.height).toBe(400);
-    expect(config.responsive).toBe(false);
+    expect(lastCall().spec.width).toBe(800);
+    expect(lastCall().spec.height).toBe(400);
   });
 
-  it("reserves tick/legend space via automargin on both axes", async () => {
-    await render({ dataSeries, width: 800, height: 400 });
-    const { layout } = lastPlotCall();
-    expect(layout.xaxis.automargin).toBe(true);
-    expect(layout.yaxis.automargin).toBe(true);
-  });
-
-  it("defaults axis titles to undefined instead of Columns/Rows", async () => {
-    await render({ dataSeries, width: 800, height: 400 });
-    const { layout } = lastPlotCall();
-    expect(layout.xaxis.title.text).toBeUndefined();
-    expect(layout.yaxis.title.text).toBeUndefined();
-  });
-
-  it("fills its container from the measured size when width/height are omitted", async () => {
+  it("leaves width and height off the spec when the chart fills its container", async () => {
     await render({ dataSeries });
-
-    // No measurement yet → no plot is created with a zero-size canvas.
-    expect(plotly.newPlot).not.toHaveBeenCalled();
-
-    await act(async () => {
-      triggerResize(320, 200);
-    });
-
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    const { layout } = lastPlotCall();
-    expect(layout.width).toBe(320);
-    expect(layout.height).toBe(200);
+    expect(lastCall().spec).not.toHaveProperty("width");
+    expect(lastCall().spec).not.toHaveProperty("height");
   });
 
-  it("fills only the omitted dimension (fixed width + measured height)", async () => {
-    await render({ dataSeries, width: 500 });
+  it("sets the headline from title and leaves it absent without one", async () => {
+    await render({ dataSeries, title: "Throughput" });
+    expect(lastCall().spec.headline).toBe("Throughput");
 
-    // Height is still unmeasured, so the plot must not initialize at height 0.
-    expect(plotly.newPlot).not.toHaveBeenCalled();
-
-    await act(async () => {
-      triggerResize(999, 300);
-    });
-
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    const { layout } = lastPlotCall();
-    // Fixed width wins; height comes from the measurement.
-    expect(layout.width).toBe(500);
-    expect(layout.height).toBe(300);
-  });
-
-  it("relayouts in place on resize instead of recreating the plot", async () => {
     await render({ dataSeries });
-
-    await act(async () => {
-      triggerResize(320, 200);
-    });
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-
-    // Both sizes are short *and* narrow (same compact scale), so only the
-    // pixel size changes — a scale-bucket flip would legitimately re-plot.
-    await act(async () => {
-      triggerResize(400, 300);
-    });
-
-    // Still a single newPlot; the size change went through relayout.
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 400, height: 300 }));
+    expect(lastCall().spec.headline).toBeUndefined();
   });
 
-  it("re-plots when a resize crosses a scale bucket (short → short-but-wide)", async () => {
+  it("maps xTitle, yTitle and the ranges onto the scales", async () => {
+    await render({
+      dataSeries,
+      xTitle: "Columns",
+      yTitle: "Rows",
+      xRange: [0, 10],
+      yRange: [0, 50],
+    });
+    const { scales } = lastCall().spec;
+    expect(scales?.x).toMatchObject({ title: "Columns", limits: [0, 10] });
+    expect(scales?.y).toMatchObject({ title: "Rows", limits: [0, 50] });
+  });
+
+  it("builds a ribbon from lo to hi with a line on top, colored by series", async () => {
+    await render({ dataSeries, variant: "stacked" });
+    const { layers } = lastCall().spec;
+    expect(layers.map((layer) => layer.kind)).toEqual(["ribbon", "line"]);
+    expect(layers[0].aes).toMatchObject({ x: "x", ymin: "lo", ymax: "hi", fill: "series" });
+    expect(layers[1].aes).toMatchObject({ x: "x", y: "hi", color: "series" });
+  });
+
+  it("replaces numeric x ticks with the given labels, in order of the unique x values", async () => {
+    await render({ dataSeries, xTickText: ["Mon", "Tue", "Wed"] });
+    expect(lastCall().spec.scales?.x).toMatchObject({
+      breaks: [0, 1, 2],
+      labels: { "0": "Mon", "1": "Tue", "2": "Wed" },
+    });
+  });
+
+  it("falls back to the numeric value for x ticks that have no label", async () => {
+    await render({ dataSeries, xTickText: ["Mon"] });
+    expect(lastCall().spec.scales?.x).toMatchObject({
+      labels: { "0": "Mon", "1": "1", "2": "2" },
+    });
+  });
+
+  it("leaves x breaks and labels unset without xTickText", async () => {
     await render({ dataSeries });
-
-    await act(async () => {
-      triggerResize(320, 200);
-    });
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-
-    await act(async () => {
-      triggerResize(1200, 300);
-    });
-    // Side margins switch back to full size, so the chrome is redrawn.
-    expect(plotly.newPlot).toHaveBeenCalledTimes(2);
-    const layout = plotly.newPlot.mock.calls.at(-1)?.[2] as { margin: { l: number; b: number } };
-    expect(layout.margin.l).toBe(80);
-    expect(layout.margin.b).toBe(76);
+    const x = lastCall().spec.scales?.x;
+    expect(x).not.toHaveProperty("breaks");
+    expect(x).not.toHaveProperty("labels");
   });
 
-  it("re-checks the applied size in place when only the height changes", async () => {
-    await render({ dataSeries });
-
-    await act(async () => {
-      triggerResize(320, 200);
+  it("colors each series from the palette in order, honoring a per-series color", async () => {
+    await render({
+      dataSeries: [
+        { name: "A", x: [0], y: [1], color: "#ff0000" },
+        { name: "B", x: [0], y: [2] },
+      ],
     });
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-
-    // Same width, new height: the resize effect re-runs and its width check
-    // matches the applied size, so the height comparison branch is evaluated
-    // before falling through to the relayout.
-    await act(async () => {
-      triggerResize(320, 260);
-    });
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 320, height: 260 }));
-  });
-
-  it("purges the plot on unmount", async () => {
-    await render({ dataSeries, width: 800, height: 400 });
-    const { el } = lastPlotCall();
-    act(() => {
-      roots[0].root.unmount();
-    });
-    roots.shift();
-    expect(plotly.purge).toHaveBeenCalledWith(el);
+    const palettes = lastCall().palettes;
+    expect(palettes?.categorical(0)).toBe("#ff0000");
+    expect(palettes?.categoricalSize).toBe(2);
   });
 });

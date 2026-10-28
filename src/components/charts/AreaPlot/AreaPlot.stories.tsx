@@ -1,10 +1,5 @@
 import { expect, waitFor, within } from "storybook/test";
 
-/** A Plotly plot div exposes `emit` to dispatch synthetic hover events. */
-type EmittingPlot = HTMLElement & {
-  emit: (event: string, data?: unknown) => void;
-};
-
 import { AreaPlot } from "./AreaPlot";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -79,34 +74,13 @@ export const Default: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Three traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(3);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Legend shows all series names", async () => {
       expect(canvas.getByText("Series 1")).toBeInTheDocument();
       expect(canvas.getByText("Series 2")).toBeInTheDocument();
       expect(canvas.getByText("Series 3")).toBeInTheDocument();
-    });
-
-    await step("Tooltip shows the hovered point's own value", async () => {
-      const plot = canvasElement.querySelector(".js-plotly-plot") as EmittingPlot;
-      // Normal-mode traces carry no customdata, so the tooltip reports the
-      // point's own y value directly.
-      plot.emit("plotly_hover", {
-        points: [{ x: 600, y: 140, data: { name: "Series 1" } }],
-        event: new MouseEvent("mousemove", { clientX: 300, clientY: 200 }),
-      });
-      await waitFor(() => {
-        const tip = document.querySelector('[data-slot="tooltip-content"]');
-        expect(tip).toBeInTheDocument();
-        expect(tip).toHaveTextContent("Rows: 140");
-      });
-      plot.emit("plotly_unhover");
     });
   },
 };
@@ -136,34 +110,13 @@ export const Stacked: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Three traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(3);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Legend shows all series names", async () => {
       expect(canvas.getByText("Series 1")).toBeInTheDocument();
       expect(canvas.getByText("Series 2")).toBeInTheDocument();
       expect(canvas.getByText("Series 3")).toBeInTheDocument();
-    });
-
-    await step("Tooltip shows the series value, not the stacked sum", async () => {
-      const plot = canvasElement.querySelector(".js-plotly-plot") as EmittingPlot;
-      // Series 2 at x=600: own value 70, stacked y = 140 + 70 = 210
-      plot.emit("plotly_hover", {
-        points: [{ x: 600, y: 210, customdata: 70, data: { name: "Series 2" } }],
-        event: new MouseEvent("mousemove", { clientX: 300, clientY: 200 }),
-      });
-      await waitFor(() => {
-        const tip = document.querySelector('[data-slot="tooltip-content"]');
-        expect(tip).toBeInTheDocument();
-        expect(tip).toHaveTextContent("Rows: 70");
-        expect(tip).not.toHaveTextContent("Rows: 210");
-      });
-      plot.emit("plotly_unhover");
     });
   },
 };
@@ -209,12 +162,15 @@ export const CategoricalXLabels: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("X-axis ticks show categorical labels, not integers", async () => {
-      const tickLabels = [...canvasElement.querySelectorAll(".xtick text")].map((node) => node.textContent);
-      expect(tickLabels).toEqual(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
+      const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      const shown = [...canvasElement.querySelectorAll("svg[data-viz-panel] text")]
+        .map((node) => node.textContent ?? "")
+        .filter((text) => labels.includes(text));
+      expect(shown).toEqual(labels);
     });
   },
 };
@@ -246,12 +202,7 @@ export const CustomRange: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Three traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(3);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Legend shows all series names", async () => {
@@ -295,21 +246,9 @@ export const ContainerFilled: Story = {
       // The plot is created after the first ResizeObserver measurement, so wait
       // for it before asserting it sized to the container (not a fixed 1000px).
       await waitFor(() => {
-        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
+        const plot = canvasElement.querySelector("svg[data-viz-panel]") as HTMLElement;
         expect(plot).toBeInTheDocument();
-        expect(plot.clientWidth).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
-      });
-    });
-
-    await step("Chart resizes in place when the container resizes", async () => {
-      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
-      // Shrink the container; the ResizeObserver should drive a Plotly relayout
-      // (not a full re-plot) so the canvas tracks the new width.
-      wrapper.style.width = "440px";
-      await waitFor(() => {
-        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
-        expect(plot.clientWidth).toBeGreaterThanOrEqual(420);
-        expect(plot.clientWidth).toBeLessThanOrEqual(460);
+        expect(plot.getBoundingClientRect().width).toBeGreaterThanOrEqual(wrapper.getBoundingClientRect().width - 2);
       });
       // Leave the story showing the full container, not the 440px test size.
       wrapper.style.width = "";
@@ -345,17 +284,16 @@ export const SmallSizeLegendRegression: Story = {
     variant: "normal",
   },
   play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
     await step("Chart container renders", async () => {
-      await waitFor(() => expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument());
+      await waitFor(() => expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument());
     });
 
     await step("Legend sits below the x-axis tick labels (no overlap)", async () => {
       await waitFor(() => {
-        const ticks = [...canvasElement.querySelectorAll<SVGTextElement>(".xtick text")];
-        const legendItems = [...canvasElement.querySelectorAll<SVGTextElement>(".legend .legendtext")];
-        expect(ticks.length).toBeGreaterThan(0);
-        expect(legendItems.length).toBeGreaterThan(0);
-
+        const ticks = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((label) => canvas.getByText(label));
+        const legendItems = ["Run 1", "Run 2", "Run 3"].map((name) => canvas.getByText(name));
         const tickBottom = Math.max(...ticks.map((node) => node.getBoundingClientRect().bottom));
         const legendTop = Math.min(...legendItems.map((node) => node.getBoundingClientRect().top));
         // Legend must start at or below where the tick labels end (small
@@ -384,17 +322,12 @@ export const NoTitle: Story = {
     const canvas = within(canvasElement);
 
     await step("No title block is rendered", async () => {
-      expect(canvasElement.querySelector(".gtitle")).not.toBeInTheDocument();
+      expect(canvasElement.querySelector("figcaption")).not.toBeInTheDocument();
       expect(canvas.queryByText("Area Plot")).not.toBeInTheDocument();
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Three traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(3);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
   },
 };

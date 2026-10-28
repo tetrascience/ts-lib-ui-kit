@@ -1,129 +1,106 @@
-import React, { act } from "react";
-import { createRoot } from "react-dom/client";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 
-import { BarChart } from "../BarChart";
+import { buildBarRows, buildBarSpec } from "../BarChart";
 
-import type { BarChartProps } from "../BarChart";
-import type { Root } from "react-dom/client";
+import type { BarDataSeries } from "../BarChart";
 
-(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-
-// Controllable ResizeObserver stub — jsdom has no layout, so tests push the
-// container size in explicitly (mirrors the AreaPlot test pattern).
-let triggerResize: (width: number, height: number) => void;
-class ResizeObserverStub {
-  constructor(
-    private callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void,
-  ) {
-    triggerResize = (width, height) => this.callback([{ contentRect: { width, height } }]);
-  }
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver =
-  ResizeObserverStub;
-
-const plotly = vi.hoisted(() => ({
-  newPlot: vi.fn(),
-  relayout: vi.fn(),
-  purge: vi.fn(),
-}));
-vi.mock("plotly.js-dist", () => ({ default: plotly }));
-
-const lastLayout = (): { barmode?: string; width?: number; height?: number } =>
-  (plotly.newPlot.mock.calls.at(-1)?.[2] as { barmode?: string; width?: number; height?: number }) ?? {};
-
-const lastTraces = (): Array<{ width?: number }> =>
-  (plotly.newPlot.mock.calls.at(-1)?.[1] as Array<{ width?: number }>) ?? [];
-
-const dataSeries: BarChartProps["dataSeries"] = [
+const dataSeries: BarDataSeries[] = [
   { name: "Series 1", x: [0, 1, 2], y: [10, 18, 14] },
 ];
 
-const roots: Array<{ root: Root; container: HTMLElement }> = [];
+const withError: BarDataSeries[] = [
+  {
+    name: "A",
+    x: [0, 1],
+    y: [10, 20],
+    error_y: { type: "data", array: [2, 3], visible: true },
+  },
+];
 
-async function render(props: BarChartProps) {
-  const container = document.createElement("div");
-  document.body.appendChild(container);
-  const root = createRoot(container);
-  roots.push({ root, container });
-  await act(async () => {
-    root.render(<BarChart {...props} />);
-  });
-}
+const positionOf = (layer: { position?: unknown }) =>
+  typeof layer.position === "string"
+    ? layer.position
+    : (layer.position as { kind?: string } | undefined)?.kind;
 
-beforeEach(() => {
-  plotly.newPlot.mockImplementation((el: HTMLElement) => {
-    (el as unknown as { on: () => void }).on = () => {};
-    return Promise.resolve();
+describe("buildBarRows", () => {
+  it("emits one row per point, tagged with its series name", () => {
+    const rows = buildBarRows(dataSeries);
+    expect(rows.map((row) => [row.x, row.y, row.series])).toEqual([
+      [0, 10, "Series 1"],
+      [1, 18, "Series 1"],
+      [2, 14, "Series 1"],
+    ]);
   });
-  plotly.relayout.mockImplementation(() => Promise.resolve());
+
+  it("sets the error-bar ends to y +/- the error when the error is visible", () => {
+    const rows = buildBarRows(withError);
+    expect(rows.map((row) => [row.lo, row.hi])).toEqual([
+      [8, 12],
+      [17, 23],
+    ]);
+  });
+
+  it("collapses the error-bar ends onto y when the error is hidden", () => {
+    const rows = buildBarRows([
+      { ...withError[0], error_y: { type: "data", array: [2, 3], visible: false } },
+    ]);
+    expect(rows.map((row) => [row.lo, row.hi])).toEqual([
+      [10, 10],
+      [20, 20],
+    ]);
+  });
 });
 
-afterEach(() => {
-  for (const { root, container } of roots.splice(0)) {
-    act(() => {
-      root.unmount();
+describe("buildBarSpec", () => {
+  const rows = buildBarRows(dataSeries);
+  const base = { hasErrorBars: false };
+
+  it("draws a bar layer dodged for the group variant", () => {
+    const spec = buildBarSpec(rows, { ...base, variant: "group" });
+    expect(spec.layers[0]?.kind).toBe("bar");
+    expect(positionOf(spec.layers[0] ?? {})).toBe("dodge");
+  });
+
+  it("stacks the bars for the stack variant and leaves them identity for overlay", () => {
+    const stacked = buildBarSpec(rows, { ...base, variant: "stack" });
+    const overlaid = buildBarSpec(rows, { ...base, variant: "overlay" });
+    expect(positionOf(stacked.layers[0] ?? {})).toBe("stack");
+    expect(positionOf(overlaid.layers[0] ?? {})).toBe("identity");
+  });
+
+  it("adds an errorbar layer only when error bars are present", () => {
+    const plain = buildBarSpec(rows, { ...base, variant: "group" });
+    const errored = buildBarSpec(buildBarRows(withError), { hasErrorBars: true, variant: "group" });
+    expect(plain.layers.map((layer) => layer.kind)).toEqual(["bar"]);
+    expect(errored.layers.map((layer) => layer.kind)).toEqual(["bar", "errorbar"]);
+  });
+
+  it("carries the title and axis titles onto the spec", () => {
+    const spec = buildBarSpec(rows, {
+      ...base,
+      variant: "group",
+      title: "Bar Chart",
+      xTitle: "Day",
+      yTitle: "Runs",
     });
-    container.remove();
-  }
-  vi.clearAllMocks();
-});
-
-describe("BarChart", () => {
-  it("sizes bars to about a quarter of the median x gap by default", async () => {
-    await render({ dataSeries, width: 600, height: 400 });
-    expect(lastTraces()[0]?.width).toBeCloseTo(0.24);
+    expect(spec.headline).toBe("Bar Chart");
+    expect(spec.scales?.x?.title).toBe("Day");
+    expect(spec.scales?.y?.title).toBe("Runs");
   });
 
-  it("uses the median gap so one tight pair does not shrink every bar", async () => {
-    await render({
-      dataSeries: [{ name: "S", x: [0, 1, 100], y: [1, 2, 3] }],
-      width: 600,
-      height: 400,
+  it("maps sorted x values to xTickText labels by position", () => {
+    const spec = buildBarSpec(rows, {
+      ...base,
+      variant: "group",
+      xTickText: ["Mon", "Tue"],
     });
-    // gaps [1, 99] → median 50 → 0.24 × 50
-    expect(lastTraces()[0]?.width).toBeCloseTo(12);
+    expect(spec.scales?.x?.breaks).toEqual([0, 1, 2]);
+    expect(spec.scales?.x?.labels).toEqual({ "0": "Mon", "1": "Tue", "2": "2" });
   });
 
-  it("narrows grouped bars so four or more series fit their slot", async () => {
-    const five = ["A", "B", "C", "D", "E"].map((name) => ({ name, x: [0, 1, 2], y: [1, 2, 3] }));
-    await render({ dataSeries: five, variant: "group", width: 600, height: 400 });
-    // min(0.24, 0.8 / 5) = 0.16
-    expect(lastTraces()[0]?.width).toBeCloseTo(0.16);
-    // stacked bars share the slot, so the default fraction applies
-    await render({ dataSeries: five, variant: "stack", width: 600, height: 400 });
-    expect(lastTraces()[0]?.width).toBeCloseTo(0.24);
-  });
-
-  it("honours an explicit barWidth and leaves a single bar to Plotly", async () => {
-    await render({ dataSeries, barWidth: 0.5, width: 600, height: 400 });
-    expect(lastTraces()[0]?.width).toBe(0.5);
-    await render({ dataSeries: [{ name: "S", x: [7], y: [1] }], width: 600, height: 400 });
-    expect(lastTraces()[0]?.width).toBeUndefined();
-  });
-
-  it("maps the overlay variant to Plotly's overlay barmode", async () => {
-    await render({ dataSeries, variant: "overlay", width: 600, height: 400 });
-    expect(lastLayout().barmode).toBe("overlay");
-  });
-
-  it("re-checks the applied size in place when only the height changes", async () => {
-    await render({ dataSeries });
-
-    await act(async () => {
-      triggerResize(320, 200);
-    });
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-
-    // Same width, new height: the resize effect re-runs; its width check
-    // matches the applied size, so the height comparison branch is evaluated.
-    await act(async () => {
-      triggerResize(320, 260);
-    });
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 320, height: 260 }));
+  it("leaves the x scale without breaks or labels when xTickText is omitted", () => {
+    const spec = buildBarSpec(rows, { ...base, variant: "group" });
+    expect(spec.scales?.x?.breaks).toBeUndefined();
+    expect(spec.scales?.x?.labels).toBeUndefined();
   });
 });

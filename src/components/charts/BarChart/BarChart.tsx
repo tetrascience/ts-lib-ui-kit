@@ -1,20 +1,12 @@
-import React, { useEffect, useRef, useMemo } from "react";
+import { plot } from "@tetrascience-npm/ts-lib-viz/core";
+import { useMemo } from "react";
 
-import {
-  REGULAR_SCALE,
-  Y_TICK_LABEL_SPACING,
-  maxTickCount,
-  resolveChartScale,
-  thinTicks,
-} from "../chart-scale";
-import { useChartTooltip } from "../ChartTooltip";
-import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+import { useChartDeprecationWarning } from "../viz/deprecation";
+import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
-import type Plotly from "plotly.js-dist";
+import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
-import { useElementSize } from "@/hooks/use-element-size";
-import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { cn } from "@/lib/utils";
+
 import { seriesColor } from "@/utils/colors";
 
 interface BarDataSeries {
@@ -31,29 +23,6 @@ interface BarDataSeries {
 }
 
 type BarChartVariant = "group" | "stack" | "overlay";
-
-/** Full-size chrome: the bar chart runs a larger legend and tighter top margin */
-const BAR_REGULAR_SCALE = {
-  ...REGULAR_SCALE,
-  axisTitleStandoff: 30,
-  legendFontSize: 16,
-  legendLineHeight: 21,
-  margin: { ...REGULAR_SCALE.margin, r: 30, tTitle: 60, tNoTitle: 30 },
-};
-
-/**
- * Default bar width as a fraction of the median gap between x positions. A
- * fixed data-unit width (formerly 24) only suited x spaced by ~100 and swamped
- * the axis for index-style x such as 0..6 (SW-2298). The median (not the
- * minimum) keeps one tight pair in otherwise wide-spaced data from shrinking
- * every bar to a hairline.
- */
-const DEFAULT_BAR_WIDTH_FRACTION = 0.24;
-/**
- * Grouped bars share one slot per x position; cap the group at this fraction
- * of the gap so four or more series no longer overflow into the neighbour.
- */
-const MAX_GROUP_WIDTH_FRACTION = 0.8;
 
 interface BarChartProps {
   dataSeries: BarDataSeries[];
@@ -73,13 +42,6 @@ interface BarChartProps {
   xTitle?: string;
   yTitle?: string;
   title?: string;
-  /**
-   * Bar width in x-axis data units. Defaults to about a quarter of the median
-   * gap between x positions (narrower when four or more grouped series must
-   * share a slot), so bars keep the same visual weight whether x runs 0..6 or
-   * 200..1000. With very uneven spacing the closest bars can still overlap or
-   * the widest gaps look sparse — pass an explicit width in that case.
-   */
   barWidth?: number;
   /**
    * Categorical labels for the x-axis ticks. When provided, the x data values
@@ -90,6 +52,67 @@ interface BarChartProps {
   xTickText?: string[];
 }
 
+/** One row per (series, x) point. `lo`/`hi` are the error-bar ends, equal to `y` when there is no error. */
+export interface BarRow {
+  x: number;
+  y: number;
+  series: string;
+  lo: number;
+  hi: number;
+}
+
+/** Flattens the series into the rows ts-lib-viz draws. */
+export function buildBarRows(dataSeries: BarDataSeries[]): BarRow[] {
+  return dataSeries.flatMap((series) =>
+    series.x.map((x, index) => {
+      const y = series.y[index];
+      const error = series.error_y?.visible ? (series.error_y.array[index] ?? 0) : 0;
+      return { x, y, series: series.name, lo: y - error, hi: y + error };
+    }),
+  );
+}
+
+interface BarSpecOptions {
+  variant: BarChartVariant;
+  hasErrorBars: boolean;
+  title?: string;
+  xTitle?: string;
+  yTitle?: string;
+  xRange?: [number, number];
+  yRange?: [number, number];
+  xTickText?: string[];
+}
+
+/** Builds the ts-lib-viz spec for a bar chart. `xTickText` maps the sorted unique x values to labels by position. */
+export function buildBarSpec(rows: BarRow[], options: BarSpecOptions): ChartSpec {
+  const { variant, hasErrorBars, title, xTitle, yTitle, xRange, yRange, xTickText } = options;
+  const xTicks = [...new Set(rows.map((row) => row.x))].sort((a, b) => a - b);
+  const position = variant === "stack" ? "stack" : variant === "overlay" ? "identity" : "dodge";
+  let builder = plot(rows, { x: "x", y: "y", fill: "series", color: "series" }).bar({ position });
+  if (hasErrorBars) builder = builder.errorbar({ aes: { ymin: "lo", ymax: "hi" } });
+  return builder
+    .labs({ headline: title })
+    .scales({
+      x: {
+        title: xTitle,
+        limits: xRange,
+        ...(xTickText
+          ? {
+              breaks: xTicks,
+              labels: Object.fromEntries(
+                xTicks.map((tick, index) => [String(tick), xTickText[index] ?? String(tick)]),
+              ),
+            }
+          : {}),
+      },
+      y: { title: yTitle, limits: yRange },
+    })
+    .spec();
+}
+
+/**
+ * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
+ */
 const BarChart: React.FC<BarChartProps> = ({
   dataSeries,
   width,
@@ -100,337 +123,32 @@ const BarChart: React.FC<BarChartProps> = ({
   xTitle,
   yTitle,
   title,
-  barWidth,
   xTickText,
 }) => {
-  const plotRef = useRef<HTMLDivElement>(null);
-  const theme = usePlotlyTheme();
-  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
-
-  // Omitted width/height → fill the container and track its measured size;
-  // explicit pixel values override. See AreaPlot for the reference pattern.
-  const [containerRef, measured] = useElementSize<HTMLDivElement>();
-  const resolvedWidth = width ?? measured.width;
-  const resolvedHeight = height ?? measured.height;
-  const hasSize = resolvedWidth > 0 && resolvedHeight > 0;
-  // Fill is per-dimension: omit width to fill the container width, omit height
-  // to fill its height (so e.g. a fixed width with a container-driven height works).
-  const fillWidth = width === undefined;
-  const fillHeight = height === undefined;
-  // Fonts, tick length and margins step down on small canvases so the plot
-  // area (not the chrome) gets the pixels (SW-2298).
-  const scale = resolveChartScale(resolvedWidth, resolvedHeight, BAR_REGULAR_SCALE);
-  const marginTop = title ? scale.margin.tTitle : scale.margin.tNoTitle;
-  const sizeRef = useRef({ width: resolvedWidth, height: resolvedHeight });
-  sizeRef.current = { width: resolvedWidth, height: resolvedHeight };
-  const plotInitedRef = useRef(false);
-  // Size last applied to the plot, so the resize effect can skip a redundant
-  // relayout right after newPlot already drew at that size.
-  const appliedSizeRef = useRef({ width: 0, height: 0 });
-
-  const { yMin, yMax } = useMemo(() => {
-    let minX = Number.MAX_VALUE;
-    let maxX = Number.MIN_VALUE;
-    let minY = Number.MAX_VALUE;
-    let maxY = Number.MIN_VALUE;
-
-    dataSeries.forEach((series) => {
-      series.x.forEach((x) => {
-        minX = Math.min(minX, x);
-        maxX = Math.max(maxX, x);
-      });
-      series.y.forEach((y) => {
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y);
-      });
-    });
-
-    const xPadding = (maxX - minX) * 0.1;
-    const yPadding = (maxY - minY) * 0.1;
-
-    return {
-      xMin: minX - xPadding,
-      xMax: maxX + xPadding,
-      yMin: variant === "stack" ? 0 : minY - yPadding,
-      yMax: maxY + yPadding,
-    };
-  }, [dataSeries, variant]);
-
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
-
-  const xTicks = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
+  useChartDeprecationWarning("BarChart");
+  const colors = useMemo(
+    () => dataSeries.map((series, index) => seriesColor(index, series.color)),
     [dataSeries],
   );
-
-  // Only apply categorical labels when they align 1:1 with the tick positions;
-  // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
-  const useCategoricalX = !!xTickText && xTickText.length === xTicks.length;
-
-  const resolvedBarWidth = useMemo(() => {
-    if (barWidth !== undefined) return barWidth;
-    // xTicks is the sorted, de-duplicated data x, so every gap is > 0
-    const gaps = xTicks.slice(1).map((x, i) => x - xTicks[i]).sort((a, b) => a - b);
-    // A single x position has no gap to scale from; let Plotly size the bar.
-    if (gaps.length === 0) return;
-    const mid = Math.floor(gaps.length / 2);
-    const medianGap = gaps.length % 2 === 1 ? gaps[mid] : (gaps[mid - 1] + gaps[mid]) / 2;
-    const groupedSeries = variant === "group" ? Math.max(1, dataSeries.length) : 1;
-    const fraction = Math.min(DEFAULT_BAR_WIDTH_FRACTION, MAX_GROUP_WIDTH_FRACTION / groupedSeries);
-    return medianGap * fraction;
-  }, [barWidth, xTicks, variant, dataSeries.length]);
-
-  const yTicks = useMemo(() => {
-    const range = effectiveYRange[1] - effectiveYRange[0];
-    let step = Math.pow(10, Math.floor(Math.log10(range)));
-
-    if (range / step > 10) step = step * 2;
-    if (range / step < 4) step = step / 2;
-
-    const ticks = [];
-    let current = Math.ceil(effectiveYRange[0] / step) * step;
-    while (current <= effectiveYRange[1]) {
-      ticks.push(current);
-      current += step;
-    }
-    return ticks;
-  }, [effectiveYRange]);
-
-  const barMode = useMemo((): "group" | "stack" | "overlay" => {
-    switch (variant) {
-      case "stack":
-        return "stack";
-      case "overlay":
-        return "overlay";
-      case "group":
-      default:
-        return "group";
-    }
-  }, [variant]);
-
-  // Y ticks thinned to what fits the plot height. Derived from the resolved
-  // (not last-plotted) height so an in-place resize also updates them via the
-  // relayout effect below, instead of only when the scale bucket flips.
-  const yTickVals = useMemo(
+  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
+  const hasErrorBars = dataSeries.some((series) => series.error_y?.visible);
+  const rows = useMemo(() => buildBarRows(dataSeries), [dataSeries]);
+  const spec = useMemo<ChartSpec>(
     () =>
-      thinTicks(
-        yTicks,
-        maxTickCount(
-          resolvedHeight - marginTop - scale.margin.b,
-          scale.tickFontSize * Y_TICK_LABEL_SPACING,
-        ),
-      ),
-    [yTicks, resolvedHeight, marginTop, scale],
-  );
-  const yTickKey = yTickVals.join(",");
-  const yTickValsRef = useRef(yTickVals);
-  yTickValsRef.current = yTickVals;
-
-  const tickOptions = useMemo(
-    () => ({
-      tickcolor: theme.tickColor,
-      ticklen: scale.ticklen,
-      tickwidth: 1,
-      ticks: "outside" as const,
-      tickfont: {
-        size: scale.tickFontSize,
-        color: theme.textColor,
-        family: CHART_FONT_FAMILY,
-        weight: 400,
-      },
-      linecolor: theme.lineColor,
-      linewidth: 1,
-      position: 0,
-      zeroline: false,
-    }),
-    [theme, scale],
+      buildBarSpec(rows, {
+        variant,
+        hasErrorBars,
+        title,
+        xTitle,
+        yTitle,
+        xRange,
+        yRange,
+        xTickText,
+      }),
+    [rows, variant, hasErrorBars, title, xTitle, yTitle, xRange, yRange, xTickText],
   );
 
-  useEffect(() => {
-    if (!plotRef.current || !hasSize) return;
-
-    const data = dataSeries.map((series, index) => ({
-      x: series.x,
-      y: series.y,
-      type: "bar" as const,
-      name: series.name,
-      hoverinfo: "none" as const,
-      marker: {
-        color: seriesColor(index, series.color),
-      },
-      ...(resolvedBarWidth === undefined ? {} : { width: resolvedBarWidth }),
-      error_y: series.error_y,
-    }));
-
-    const layout = {
-      ...(title
-        ? {
-            title: {
-              text: title,
-              font: {
-                size: scale.titleFontSize,
-                family: CHART_FONT_FAMILY,
-                color: theme.textColor,
-              },
-            },
-          }
-        : {}),
-      width: sizeRef.current.width,
-      height: sizeRef.current.height,
-      margin: {
-        l: scale.margin.l,
-        r: scale.margin.r,
-        // Reserve room for tick labels, the x-axis title, and the
-        // container-anchored bottom legend stacked beneath them.
-        b: scale.margin.b,
-        t: marginTop,
-        pad: 0,
-      },
-      paper_bgcolor: theme.paperBg,
-      plot_bgcolor: theme.plotBg,
-      font: {
-        family: CHART_FONT_FAMILY,
-      },
-      barmode: barMode,
-      bargap: 0.15,
-      dragmode: false as const,
-      xaxis: {
-        title: {
-          text: xTitle,
-          font: {
-            size: scale.axisTitleFontSize,
-            color: theme.textSecondary,
-            family: CHART_FONT_FAMILY,
-            weight: 400,
-          },
-          standoff: scale.axisTitleStandoff,
-        },
-        gridcolor: theme.gridColor,
-        range: xRange,
-        autorange: !xRange,
-        tickmode: "array" as const,
-        tickvals: xTicks,
-        ...(useCategoricalX ? { ticktext: xTickText } : {}),
-        showgrid: true,
-        // Reserve space for tick labels + the axis title so the bottom legend
-        // can't overlap them at small sizes (SW-2157).
-        automargin: true,
-        ...tickOptions,
-      },
-      yaxis: {
-        title: {
-          text: yTitle,
-          font: {
-            size: scale.axisTitleFontSize,
-            color: theme.textSecondary,
-            family: CHART_FONT_FAMILY,
-            weight: 400,
-          },
-          standoff: scale.axisTitleStandoff,
-        },
-        gridcolor: theme.gridColor,
-        range: yRange,
-        autorange: !yRange,
-        tickmode: "array" as const,
-        tickvals: yTickValsRef.current,
-        showgrid: true,
-        automargin: true,
-        ...tickOptions,
-      },
-      legend: {
-        // Anchor to the bottom of the container (not the plot area) so the
-        // legend always clears the x-axis tick labels + title — a paper-relative
-        // fractional offset collapses into the ticks at small heights (SW-2157).
-        x: 0.5,
-        y: 0,
-        xanchor: "center" as const,
-        yanchor: "bottom" as const,
-        yref: "container" as const,
-        orientation: "h" as const,
-        font: {
-          size: scale.legendFontSize,
-          color: theme.legendColor,
-          family: CHART_FONT_FAMILY,
-          weight: 500,
-          lineheight: scale.legendLineHeight,
-        },
-      },
-      showlegend: dataSeries.length > 1,
-    };
-
-    const config = {
-      // Sizing is driven from the measured container; disable Plotly's own
-      // window-resize responsiveness (it can't see container resizes).
-      responsive: false,
-      displayModeBar: false,
-      displaylogo: false,
-    };
-
-    // Plotly is loaded lazily so it stays out of the consumer's main chunk
-    // (SW-2007); the draw is skipped if the effect re-runs or unmounts first.
-    let cancelled = false;
-    let plotElement: HTMLDivElement | null = null;
-    void loadPlotly().then((plotly) => {
-      if (cancelled || !plotRef.current) return;
-      plotly.newPlot(plotRef.current, data, layout, config);
-      bindTooltip(plotRef.current);
-
-      // Capture ref value for cleanup
-      plotElement = plotRef.current;
-      plotInitedRef.current = true;
-      appliedSizeRef.current = { ...sizeRef.current };
-    });
-
-    return () => {
-      cancelled = true;
-      if (plotElement) {
-        getLoadedPlotly().purge(plotElement);
-        plotInitedRef.current = false;
-      }
-    };
-  }, [dataSeries, hasSize, xRange, yRange, xTitle, yTitle, title, resolvedBarWidth, barMode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, theme, scale, marginTop, bindTooltip]);
-
-  // Resize in place when the measured/overridden size changes — cheaper than
-  // recreating the plot, and it preserves tooltip/event bindings.
-  useEffect(() => {
-    const plotElement = plotRef.current;
-    if (!plotElement || !plotInitedRef.current || resolvedWidth <= 0 || resolvedHeight <= 0) {
-      return;
-    }
-    // newPlot already drew at the current size; skip the redundant relayout
-    // (it would queue an automargin redraw that can reject if we unmount first).
-    if (
-      appliedSizeRef.current.width === resolvedWidth &&
-      appliedSizeRef.current.height === resolvedHeight
-    ) {
-      return;
-    }
-    appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };
-    // Swallow rejections from a relayout that races an unmount/purge.
-    // plotInitedRef guarantees Plotly finished loading, so sync access is safe.
-    void getLoadedPlotly()
-      .relayout(plotElement, {
-        width: resolvedWidth,
-        height: resolvedHeight,
-        // Re-thin the y ticks for the new plot height (SW-2298). The flattened
-        // key is valid relayout input but not part of the Layout type.
-        "yaxis.tickvals": yTickValsRef.current,
-      } as Partial<Plotly.Layout>)
-      .catch(() => {});
-  }, [resolvedWidth, resolvedHeight, yTickKey]);
-
-  return (
-    <div
-      ref={containerRef}
-      className={cn("bar-graph-container relative", fillWidth && "w-full", fillHeight && "h-full")}
-    >
-      <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
-      {tooltipElement}
-    </div>
-  );
+  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
 export { BarChart };

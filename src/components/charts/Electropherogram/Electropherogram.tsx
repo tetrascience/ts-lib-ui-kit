@@ -2,11 +2,13 @@ import React, { useEffect, useRef, useMemo } from "react";
 
 import { useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+import { useChartDeprecationWarning } from "../viz/deprecation";
 
 import type Plotly from "plotly.js-dist";
 
 import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { CHART_COLORS } from "@/utils/colors";
+
 import "./Electropherogram.scss";
 
 /**
@@ -66,6 +68,9 @@ const determineBase = (item: PeakData): string => {
   return highestBase;
 };
 
+/**
+ * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
+ */
 const Electropherogram: React.FC<ElectropherogramProps> = ({
   data = [],
   width = 900,
@@ -76,6 +81,7 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
   colorG = CHART_COLORS[3], // red
   colorC = CHART_COLORS[1], // orange
 }) => {
+  useChartDeprecationWarning("Electropherogram");
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
   const { bindTooltip, tooltipElement } = useChartTooltip({

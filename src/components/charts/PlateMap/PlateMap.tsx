@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./PlateMap.scss";
 import { useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+import { useChartDeprecationWarning } from "../viz/deprecation";
 
 import {
   PLATE_CONFIGS,
@@ -69,6 +70,7 @@ import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
  * **Data Format:**
  * - **WellData array**: `[{ wellId: "A1", values: { RFU: 100 }, tooltipData: {...} }, ...]`
  *
+ * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
  */
 const PlateMap: React.FC<PlateMapProps> = ({
   data,
@@ -99,6 +101,7 @@ const PlateMap: React.FC<PlateMapProps> = ({
   markerShape = "circle",
   onWellClick,
 }) => {
+  useChartDeprecationWarning("PlateMap");
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();
   const onWellClickRef = useRef(onWellClick);

@@ -1,451 +1,249 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { plot } from "@tetrascience-npm/ts-lib-viz/core";
+import { Viz } from "@tetrascience-npm/ts-lib-viz/react";
+import { useMemo, useRef } from "react";
 
-import { useChartTooltip } from "../ChartTooltip";
-import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+import { useChartDeprecationWarning } from "../viz/deprecation";
+import { categoricalPalettes } from "../viz/VizChart";
 
-import { COLORS, DEFAULT_COLOR_SCALE, PLOT_CONSTANTS } from "./constants";
-import {
-  applySelection,
-  calculateAxisRange,
-  calculateRange,
-  downsampleData,
-  generateTooltipContent,
-  getPlotlyLayoutConfig,
-  getSelectionMode,
-  mapColors,
-  mapShapes,
-  mapSizes,
-} from "./utils";
+import { DEFAULT_MARKER_SIZE, DEFAULT_SIZE_RANGE } from "./constants";
+import { applySelection, calculateRange, downsampleData, getSelectionMode, getUniqueCategories } from "./utils";
 
-import type { AxisConfig, ScatterPlotInteractiveProps, SelectionMode, TooltipConfig } from "./types";
-import type Plotly from "plotly.js-dist";
+import type { AxisConfig, MarkerShape, ScatterPlotInteractiveProps, ScatterPoint, SelectionMode } from "./types";
+import type { Brushed, ChartSpec, Palettes, PointShape, Selected } from "@tetrascience-npm/ts-lib-viz/core";
 
-import { usePlotlyTheme } from "@/hooks/use-plotly-theme";
-
-// Stable default prop objects — inline defaults would create a new identity
-// on every render, retriggering the plot effect (and tearing down the
-// tooltip) whenever internal state changes
-const DEFAULT_AXIS_CONFIG: AxisConfig = {};
-const DEFAULT_TOOLTIP_CONFIG: TooltipConfig = { enabled: true };
+import { CHART_COLORS } from "@/utils/colors";
 
 /**
- * ScatterPlotInteractive component for visualizing scatter plot data with advanced interactions.
+ * Deprecated: Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
  *
- * **Features:**
- * - Data-driven and static styling (color, shape, size)
- * - Interactive selection (click, box, lasso)
- * - Keyboard modifiers for click-selection modes (Shift/Ctrl)
- * - Customizable tooltips with rich content support
- * - Axis customization (ranges, log/linear scales)
- * - Performance optimizations for large datasets
- * - Selection propagation via callbacks
- *
- * **Selection Modes (click selection only):**
- * - Default click: Replace selection
- * - Shift + click: Add to selection
- * - Ctrl/Cmd + click: Remove from selection
- * - Shift + Ctrl + click: Toggle selection
- *
- * Box/lasso selection always replaces the current selection because
- * Plotly does not expose the original keyboard event for drag operations.
+ * Drawn through ts-lib-viz. Three props have no ts-lib-viz equivalent and are
+ * not carried over: `tooltip.content` and `tooltip.enabled` (the tooltip always
+ * shows `tooltip.fields`), `showColorBar` (a continuous color always shows its
+ * legend), and `colorMapping.colorScale` (the default sequential ramp is used).
+ * A box or lasso is one gesture, so when both are enabled the lasso wins.
  */
+
+/** ts-lib-viz draws four glyphs. The other Plotly-era marker shapes fall back to a circle. */
+const POINT_SHAPES: Partial<Record<MarkerShape, PointShape>> = {
+  circle: "circle",
+  square: "square",
+  diamond: "diamond",
+  "triangle-up": "triangle",
+  "triangle-down": "triangle",
+};
+
+/** Columns the chart writes itself. A tooltip field with one of these names reads the chart column. */
+const RESERVED_COLUMNS = new Set(["key", "x", "y", "label", "color", "shape", "size"]);
+
+/** A metadata value as a table cell. Viz reads strings, numbers, booleans and null. */
+const cell = (value: unknown): string | number | boolean | null => {
+  if (value == null) return null;
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
+  return String(value);
+};
+
+/** The ink a selected point is outlined in. It draws behind the point, so the point reads larger. */
+const SELECTED_GROWTH = 6;
+
+const axisScale = (axis?: AxisConfig) => ({
+  title: axis?.title,
+  transform: axis?.scale === "log" ? ("log10" as const) : undefined,
+  limits: axis?.range,
+});
+
 const ScatterPlotInteractive: React.FC<ScatterPlotInteractiveProps> = ({
   data,
   title,
-  xAxis = DEFAULT_AXIS_CONFIG,
-  yAxis = DEFAULT_AXIS_CONFIG,
+  xAxis,
+  yAxis,
   colorMapping,
   shapeMapping,
   sizeMapping,
-  tooltip = DEFAULT_TOOLTIP_CONFIG,
-  enableClickSelection = true,
-  enableBoxSelection = true,
-  enableLassoSelection = true,
-  selectedIds: controlledSelectedIds,
+  tooltip,
+  enableClickSelection = false,
+  enableBoxSelection = false,
+  enableLassoSelection = false,
+  selectedIds,
   onSelectionChange,
   onPointClick,
   downsampling,
-  width = 800,
-  height = 600,
-  showColorBar = true,
+  width,
+  height,
   className,
 }) => {
-  const plotRef = useRef<HTMLDivElement>(null);
-  const theme = usePlotlyTheme();
-  const onSelectionChangeRef = useRef(onSelectionChange);
-  const onPointClickRef = useRef(onPointClick);
-  const selectedIdsRef = useRef<Set<string | number>>(new Set());
-  const isControlledRef = useRef(false);
+  useChartDeprecationWarning("ScatterPlotInteractive");
+  const modifiers = useRef({ shiftKey: false, ctrlKey: false, metaKey: false });
+  const pointerEvent = useRef<MouseEvent | null>(null);
 
-  // Keep refs updated
-  onSelectionChangeRef.current = onSelectionChange;
-  onPointClickRef.current = onPointClick;
+  const sampled = useMemo(
+    () => (downsampling?.enabled ? downsampleData(data, downsampling) : data),
+    [data, downsampling],
+  );
 
-  // Internal selection state (only used in uncontrolled mode)
-  const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string | number>>(new Set());
+  const categories = useMemo(
+    () =>
+      colorMapping?.type === "categorical" && colorMapping.field
+        ? getUniqueCategories(sampled, colorMapping.field)
+        : [],
+    [sampled, colorMapping],
+  );
+  const categoryColors = useMemo(
+    () =>
+      categories.map(
+        (category, index) => colorMapping?.categoryColors?.[category] ?? CHART_COLORS[index % CHART_COLORS.length],
+      ),
+    [categories, colorMapping],
+  );
+  const palettes: Palettes | undefined = useMemo(
+    () => (categoryColors.length > 0 ? categoricalPalettes(categoryColors) : undefined),
+    [categoryColors],
+  );
 
-  // Use controlled or uncontrolled selection
-  const isControlled = controlledSelectedIds !== undefined;
-  const selectedIds = isControlled ? controlledSelectedIds : internalSelectedIds;
-  selectedIdsRef.current = selectedIds;
-  isControlledRef.current = isControlled;
+  const colorField = colorMapping?.field;
+  const colorIsContinuous = colorMapping?.type === "continuous";
+  // Not reached for a static color: its one value is the layer's constant.
+  const shapeField = shapeMapping?.type === "categorical" ? shapeMapping.field : undefined;
+  const sizeField = sizeMapping?.type === "continuous" ? sizeMapping.field : undefined;
 
-  // Normalize to strings so numeric IDs passed by consumers always match the
-  // string IDs that Plotly stores (we always do String(p.id) when building the trace).
-  const normalizedSelectedIds = useMemo(() => new Set([...selectedIds].map(String)), [selectedIds]);
+  const tooltipFields = useMemo(() => tooltip?.fields ?? ["label"], [tooltip?.fields]);
+  const rows = useMemo(
+    () =>
+      sampled.map((point: ScatterPoint) => ({
+        key: String(point.id),
+        x: point.x,
+        y: point.y,
+        label: point.label ?? String(point.id),
+        color: colorField
+          ? colorIsContinuous
+            ? Number(point.metadata?.[colorField])
+            : String(point.metadata?.[colorField] ?? "")
+          : null,
+        shape: shapeField ? String(point.metadata?.[shapeField] ?? "") : null,
+        size: sizeField ? Number(point.metadata?.[sizeField]) : null,
+        ...Object.fromEntries(
+          tooltipFields
+            .filter((field) => !RESERVED_COLUMNS.has(field))
+            .map((field) => [field, cell(point.metadata?.[field])]),
+        ),
+      })),
+    [sampled, colorField, colorIsContinuous, shapeField, sizeField, tooltipFields],
+  );
 
-  // Reverse-lookup: Plotly string ID → original (possibly numeric) ScatterPoint ID.
-  // Used to restore original ID types when echoing selections back to consumers.
-  const originalIdLookup = useMemo(() => new Map(data.map((p) => [String(p.id), p.id])), [data]);
+  const selectedRows = useMemo(() => {
+    if (!selectedIds || selectedIds.size === 0) return [];
+    const keys = new Set([...selectedIds].map(String));
+    return rows.filter((row) => keys.has(row.key));
+  }, [rows, selectedIds]);
 
-  // Apply downsampling if configured
-  const processedData = useMemo(() => {
-    if (!downsampling) {
-      return data;
-    }
-    return downsampleData(data, downsampling);
-  }, [data, downsampling]);
-
-  // Map colors, shapes, and sizes based on configuration
-  const colors = useMemo(() => mapColors(processedData, colorMapping), [processedData, colorMapping]);
-
-  const shapes = useMemo(() => mapShapes(processedData, shapeMapping), [processedData, shapeMapping]);
-
-  const sizes = useMemo(() => mapSizes(processedData, sizeMapping), [processedData, sizeMapping]);
-
-  // Calculate axis ranges
-  const xRange = useMemo(() => {
-    if (xAxis.range) return xAxis.range;
-    if (xAxis.autoRange === false) return;
-    return calculateAxisRange(processedData, "x", xAxis.autoRangePadding ?? PLOT_CONSTANTS.AUTO_RANGE_PADDING, xAxis.scale);
-  }, [processedData, xAxis]);
-
-  const yRange = useMemo(() => {
-    if (yAxis.range) return yAxis.range;
-    if (yAxis.autoRange === false) return;
-    return calculateAxisRange(processedData, "y", yAxis.autoRangePadding ?? PLOT_CONSTANTS.AUTO_RANGE_PADDING, yAxis.scale);
-  }, [processedData, yAxis]);
-
-  const tooltipEnabled = tooltip.enabled !== false;
-  const nativeTooltip = tooltip.native === true;
-
-  // Build tooltip text
-  const tooltipText = useMemo(() => {
-    if (!tooltipEnabled) return [];
-
-    return processedData.map((point) =>
-      tooltip.content ? tooltip.content(point) : generateTooltipContent(point, tooltip.fields),
-    );
-  }, [processedData, tooltip, tooltipEnabled]);
-
-  // Design-system tooltip driven by Plotly hover events
-  const { bindTooltip, tooltipElement } = useChartTooltip({
-    getLines: (points) => {
-      const index = points[0]?.pointIndex;
-      if (index === undefined) return [];
-      return (tooltipText[index] ?? "").split("<br>").filter(Boolean);
-    },
-  });
-
-  // Prepare Plotly-compatible color data
-  const plotlyColors = useMemo(() => {
-    if (colorMapping?.type === "continuous" && colorMapping.field && processedData.length > 0) {
-      // For continuous mapping, extract the numeric values
-      return processedData.map((point) => {
-        const value = point.metadata?.[colorMapping.field!];
-        return typeof value === "number" && Number.isFinite(value) ? value : 0;
+  const spec = useMemo<ChartSpec>(() => {
+    const base = colorMapping?.type === "static" ? (colorMapping.value ?? CHART_COLORS[0]) : undefined;
+    const shape = shapeMapping?.type === "static" ? POINT_SHAPES[shapeMapping.value ?? "circle"] : undefined;
+    const size = sizeMapping?.type === "static" ? (sizeMapping.value ?? DEFAULT_MARKER_SIZE) : undefined;
+    const aes = {
+      x: "x",
+      y: "y",
+      ...(colorField ? { color: "color" } : {}),
+      ...(shapeField ? { shape: "shape" } : {}),
+      ...(sizeField ? { size: "size" } : {}),
+    };
+    const sizeRange = sizeMapping?.sizeRange ?? DEFAULT_SIZE_RANGE;
+    const selectedSize = (size ?? DEFAULT_MARKER_SIZE) + SELECTED_GROWTH;
+    let builder = plot(rows, aes);
+    if (selectedRows.length > 0) {
+      builder = builder.point({
+        data: selectedRows,
+        size: selectedSize,
+        color: base,
+        shape,
+        ...(sizeField ? { sizeRange: [sizeRange[0] + SELECTED_GROWTH, sizeRange[1] + SELECTED_GROWTH] } : {}),
       });
     }
-    return colors;
-  }, [processedData, colorMapping, colors]);
-
-  // Build colorscale for continuous mapping
-  const plotlyColorscale = useMemo(() => {
-    if (colorMapping?.type === "continuous") {
-      const scale = colorMapping.colorScale || DEFAULT_COLOR_SCALE;
-      return typeof scale === "string" ? scale : scale;
-    }
-  }, [colorMapping]);
-
-  // Build marker configuration for Plotly
-  const markerConfig = useMemo((): Partial<Plotly.PlotMarker> => {
-    const config: Partial<Plotly.PlotMarker> = {
-      size: sizes,
-      symbol: shapes,
-      // Points carry no outline — a flat fill (SW-2298 dropped the earlier CSS
-      // drop-shadow). Selected points re-add a line below.
-      line: {
-        width: 0,
-      },
-    };
-
-    // Configure color mapping
-    if (colorMapping?.type === "continuous" && plotlyColorscale) {
-      config.color = plotlyColors as number[];
-      config.colorscale = plotlyColorscale;
-      config.showscale = showColorBar;
-
-      if (colorMapping.field) {
-        const range =
-          colorMapping.min !== undefined && colorMapping.max !== undefined
-            ? { min: colorMapping.min, max: colorMapping.max }
-            : calculateRange(processedData, colorMapping.field);
-        config.cmin = range.min;
-        config.cmax = range.max;
-        config.colorbar = {
-          title: { text: colorMapping.field, side: "right" },
-          thickness: 20,
-          len: 0.7,
-        };
-      }
-    } else {
-      config.color = colors;
-    }
-
-    return config;
-  }, [sizes, shapes, colorMapping, plotlyColorscale, plotlyColors, showColorBar, processedData, colors]);
-
-  // Create Plotly plot
-  useEffect(() => {
-    const currentRef = plotRef.current;
-    if (!currentRef || processedData.length === 0) return;
-
-    const xValues = processedData.map((p) => p.x);
-    const yValues = processedData.map((p) => p.y);
-    const ids = processedData.map((p) => String(p.id));
-
-    // Create base trace
-    const trace: Partial<Plotly.PlotData> & {
-      unselected?: { marker?: { opacity?: number } };
-      selected?: { marker?: { opacity?: number; line?: { color?: string; width?: number } } };
-    } = {
-      x: xValues,
-      y: yValues,
-      ids,
-      mode: "markers",
-      type: "scatter",
-      marker: markerConfig,
-      // "none" keeps hover events firing for the HTML tooltip without
-      // showing Plotly's hover label; "skip" disables hover entirely
-      hoverinfo: tooltipEnabled ? (nativeTooltip ? "text" : "none") : "skip",
-      text: tooltipText,
-      hovertemplate: tooltipEnabled && nativeTooltip ? "%{text}<extra></extra>" : undefined,
-      showlegend: false,
-      unselected: {
-        marker: {
-          opacity: 0.3,
-        },
-      },
-      selected: {
-        marker: {
-          opacity: 1,
-          line: {
-            color: COLORS.selected,
-            width: 2,
-          },
-        },
-      },
-    };
-
-    const plotData: Plotly.Data[] = [trace as Plotly.Data];
-
-    // Configure layout
-    const layout: Partial<Plotly.Layout> = getPlotlyLayoutConfig({
-      title,
-      xAxis,
-      yAxis,
-      width,
-      height,
-      xRange,
-      yRange,
-      enableLassoSelection,
-      enableBoxSelection,
-      theme,
-    });
-
-    const config: Partial<Plotly.Config> = {
-      responsive: true,
-      displayModeBar: true,
-      displaylogo: false,
-      modeBarButtonsToAdd: [],
-      modeBarButtonsToRemove: ["toImage"],
-    };
-
-    // Add selection mode buttons if enabled
-    if (enableBoxSelection) {
-      config.modeBarButtonsToAdd?.push("select2d" as never);
-    }
-    if (enableLassoSelection) {
-      config.modeBarButtonsToAdd?.push("lasso2d" as never);
-    }
-
-    // Plotly is loaded lazily so it stays out of the consumer's main chunk
-    // (SW-2007); the draw is skipped if the effect re-runs or unmounts first.
-    let cancelled = false;
-    let drawnElement: HTMLDivElement | null = null;
-    void loadPlotly().then((plotly) => {
-      if (cancelled || !plotRef.current) return;
-      plotly.newPlot(currentRef, plotData, layout, config);
-
-      // Attach event handlers
-      const plotElement = currentRef as unknown as Plotly.PlotlyHTMLElement;
-
-      // Handle point click
-      if (enableClickSelection) {
-        plotElement.on("plotly_click", (eventData: Plotly.PlotMouseEvent) => {
-          const point = eventData.points[0];
-          if (point && point.data.ids) {
-            const clickedId = point.data.ids[point.pointIndex];
-            const clickedPoint = processedData.find((p) => String(p.id) === clickedId);
-
-            if (clickedPoint) {
-              // Call point click handler if provided
-              onPointClickRef.current?.(clickedPoint, eventData.event as MouseEvent);
-
-              // Handle selection. Use the original-typed ID from the matched point so
-              // numeric IDs (e.g., 123) are preserved instead of being coerced to "123".
-              const mode = getSelectionMode(eventData.event as MouseEvent);
-              const newSelection = applySelection(selectedIdsRef.current, new Set([clickedPoint.id]), mode);
-
-              if (!isControlledRef.current) {
-                setInternalSelectedIds(newSelection);
-              }
-              onSelectionChangeRef.current?.(newSelection, mode);
+    builder = builder.point({ color: base, shape, size, ...(sizeField ? { sizeRange } : {}) });
+    return builder
+      .tooltip(tooltip?.fields ?? ["label"])
+      .labs({ headline: title })
+      .scales({
+        x: axisScale(xAxis),
+        y: axisScale(yAxis),
+        ...(colorIsContinuous && colorField
+          ? {
+              color: {
+                title: colorField,
+                limits: [
+                  colorMapping?.min ?? calculateRange(sampled, colorField).min,
+                  colorMapping?.max ?? calculateRange(sampled, colorField).max,
+                ],
+              },
             }
-          }
-        });
-      }
-
-      // Handle box/lasso selection
-      if (enableBoxSelection || enableLassoSelection) {
-        plotElement.on("plotly_selected", (eventData: Plotly.PlotSelectionEvent) => {
-          if (eventData && eventData.points) {
-            const selectedPointIds = eventData.points
-              .map((p): string | number | null => {
-                if (p.data.ids && p.pointIndex !== undefined) {
-                  const strId = p.data.ids[p.pointIndex] as string;
-                  // Restore the original ID type (string or number) via the lookup.
-                  return originalIdLookup.get(strId) ?? strId;
-                }
-                return null;
-              })
-              .filter((id: string | number | null): id is string | number => id !== null);
-
-            // Get selection mode from keyboard state
-            // Note: Plotly doesn't pass the original event, so we can't detect modifiers
-            // For now, box/lasso selection always replaces
-            const mode: SelectionMode = "replace";
-            const newSelection = new Set<string | number>(selectedPointIds);
-
-            if (!isControlledRef.current) {
-              setInternalSelectedIds(newSelection);
-            }
-            onSelectionChangeRef.current?.(newSelection, mode);
-          }
-        });
-
-        // Handle deselect (clicking on background)
-        plotElement.on("plotly_deselect", () => {
-          const newSelection = new Set<string | number>();
-          if (!isControlledRef.current) {
-            setInternalSelectedIds(newSelection);
-          }
-          onSelectionChangeRef.current?.(newSelection, "replace");
-        });
-      }
-
-      // Design-system tooltip driven by Plotly hover events
-      if (tooltipEnabled && !nativeTooltip) {
-        bindTooltip(currentRef);
-      }
-
-      // Capture ref value for cleanup
-      drawnElement = currentRef;
-    });
-
-    return () => {
-      cancelled = true;
-      if (drawnElement) {
-        getLoadedPlotly().purge(drawnElement);
-      }
-    };
+          : {}),
+      })
+      .spec();
   }, [
-    processedData,
-    markerConfig,
+    rows,
+    selectedRows,
+    colorMapping,
+    shapeMapping,
+    sizeMapping,
+    colorField,
+    colorIsContinuous,
+    shapeField,
+    sizeField,
+    tooltip,
+    title,
     xAxis,
     yAxis,
-    xRange,
-    yRange,
-    title,
-    width,
-    height,
-    tooltip,
-    tooltipText,
-    enableClickSelection,
-    enableBoxSelection,
-    enableLassoSelection,
-    originalIdLookup,
-    tooltipEnabled,
-    nativeTooltip,
-    bindTooltip,
-    theme,
+    sampled,
   ]);
 
-  // Apply selection state to Plotly
-  useEffect(() => {
-    if (!plotRef.current || processedData.length === 0) return;
+  const brush = enableLassoSelection ? "lasso" : enableBoxSelection ? "box" : undefined;
 
-    // Wait for the lazily-loaded Plotly module: the draw effect registers its
-    // loadPlotly().then first, so by the time this callback runs the plot has
-    // been drawn — preserving the original "restyle right after newPlot"
-    // ordering on initial mount.
-    let cancelled = false;
-    void loadPlotly().then((plotly) => {
-      const currentRef = plotRef.current;
-      if (cancelled || !currentRef) return;
-      // Guard: skip if the chart hasn't been drawn (e.g. the draw was cancelled).
-      if (!(currentRef as { _fullLayout?: unknown })._fullLayout) return;
+  // Viz reports records by their string key. Map them back to the caller's ids
+  // so a numeric id stays a number in onSelectionChange.
+  const idByKey = useMemo(() => new Map(sampled.map((point) => [String(point.id), point.id])), [sampled]);
 
-      const plotElement = currentRef as unknown as Plotly.PlotlyHTMLElement;
+  const emit = (keys: string[], mode: SelectionMode) => {
+    if (!onSelectionChange) return;
+    const ids = keys.map((key) => idByKey.get(key) ?? key);
+    const next = applySelection(selectedIds ?? new Set(), new Set(ids), mode);
+    onSelectionChange(next, mode);
+  };
 
-      // Find indices of selected points. Use the string-normalized set to match the string IDs Plotly stores
-      const selectedIndices = processedData
-        .map((point, index) => (normalizedSelectedIds.has(String(point.id)) ? index : null))
-        .filter((index): index is number => index !== null);
+  const onSelect = (hit: Selected | null) => {
+    if (!enableClickSelection) return;
+    // A click on empty plot area clears the selection, as Viz reports it.
+    if (!hit) {
+      emit([], "replace");
+      return;
+    }
+    const mode = getSelectionMode(modifiers.current);
+    emit(hit.keys, mode);
+    const point = sampled.find((candidate) => String(candidate.id) === hit.keys[0]);
+    if (point && onPointClick && pointerEvent.current) onPointClick(point, pointerEvent.current);
+  };
 
-      // Update Plotly selection
-      if (selectedIndices.length > 0) {
-        plotly.restyle(
-          plotElement,
-          {
-            selectedpoints: [selectedIndices],
-          },
-          [0],
-        );
-      } else {
-        plotly.restyle(
-          plotElement,
-          {
-            selectedpoints: [null],
-          },
-          [0],
-        );
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [normalizedSelectedIds, processedData]);
-
-  const containerClassName = className
-    ? `scatter-plot-interactive relative ${className}`
-    : "scatter-plot-interactive relative";
+  const onBrush = (brushed: Brushed | null) => {
+    if (!brushed) return;
+    emit(brushed.keys, getSelectionMode(modifiers.current));
+  };
 
   return (
-    <div className={containerClassName}>
-      <div ref={plotRef} className="scatter-plot-interactive__plot" style={{ width, height }} />
-      {tooltipElement}
+    <div
+      className={className}
+      style={{ width: width ?? "100%", height: height ?? "100%" }}
+      onPointerDownCapture={(event) => {
+        modifiers.current = event;
+        pointerEvent.current = event.nativeEvent;
+      }}
+    >
+      <Viz
+        spec={{ ...spec, ...(width === undefined ? {} : { width }), ...(height === undefined ? {} : { height }) }}
+        data={rows}
+        keyField="key"
+        palettes={palettes}
+        brush={brush}
+        onBrush={onBrush}
+        onSelect={onSelect}
+      />
     </div>
   );
 };

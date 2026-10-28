@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 
 import { useChartTooltip } from "../ChartTooltip";
 import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+import { useChartDeprecationWarning } from "../viz/deprecation";
 
 import {
   groupOverlappingPeaks,
@@ -60,6 +61,9 @@ export type {
 // (and tearing down the hover tooltip) on each re-render.
 const EMPTY_ANNOTATIONS: PeakAnnotation[] = [];
 
+/**
+ * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
+ */
 const Chromatogram: React.FC<ChromatogramProps> = ({
   series,
   width = 900,
@@ -91,6 +95,7 @@ const Chromatogram: React.FC<ChromatogramProps> = ({
   titleFontSize = 20,
   titleTopMargin,
 }) => {
+  useChartDeprecationWarning("Chromatogram");
   const enablePeakDetection = peakDetectionOptions !== undefined;
   const plotRef = useRef<HTMLDivElement>(null);
   const theme = usePlotlyTheme();

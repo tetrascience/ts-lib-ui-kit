@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useMemo } from "react";
+import { plot } from "@tetrascience-npm/ts-lib-viz/core";
+import { useMemo } from "react";
 
-import { useChartTooltip } from "../ChartTooltip";
-import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
-import { useElementSize } from "@/hooks/use-element-size";
-import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { cn } from "@/lib/utils";
+import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
+
 import { seriesColor } from "@/utils/colors";
 
 type MarkerSymbol =
@@ -170,11 +169,21 @@ interface LineDataSeries {
   };
 }
 
-type LinePlotVariant = "lines" | "lines+markers" | "lines+markers+error_bars";
+interface LineDataSeries {
+  x: number[];
+  y: number[];
+  name: string;
+  /** Optional color override (auto-assigned from CHART_COLORS if not provided) */
+  color?: string;
+  symbol?: MarkerSymbol;
+  error_y?: {
+    type: "data";
+    array: number[];
+    visible: boolean;
+  };
+}
 
-/** Top margin reserving room for the 32px title; reduced when no title is set */
-const TITLE_MARGIN_TOP = 60;
-const NO_TITLE_MARGIN_TOP = 30;
+type LinePlotVariant = "lines" | "lines+markers" | "lines+markers+error_bars";
 
 type LinePlotProps = {
   dataSeries: LineDataSeries[];
@@ -203,6 +212,32 @@ type LinePlotProps = {
   xTickText?: string[];
 };
 
+/** One row per point: its series, x, y, and the error bar's lo/hi edges. */
+interface LineRow {
+  x: number;
+  y: number;
+  series: string;
+  lo: number;
+  hi: number;
+}
+
+/**
+ * Flattens the series into rows for ts-lib-viz. The error bar spans y +/- the
+ * per-point error when the series asks for it, and collapses to y otherwise.
+ */
+export function lineRows(dataSeries: LineDataSeries[]): LineRow[] {
+  return dataSeries.flatMap((line) =>
+    line.x.map((x, index) => {
+      const y = line.y[index];
+      const error = line.error_y?.visible ? (line.error_y.array[index] ?? 0) : 0;
+      return { x, y, series: line.name, lo: y - error, hi: y + error };
+    }),
+  );
+}
+
+/**
+ * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
+ */
 const LinePlot: React.FC<LinePlotProps> = ({
   dataSeries,
   width,
@@ -215,307 +250,37 @@ const LinePlot: React.FC<LinePlotProps> = ({
   title,
   xTickText,
 }) => {
-  const plotRef = useRef<HTMLDivElement>(null);
-  const theme = usePlotlyTheme();
-  const { bindTooltip, tooltipElement } = useChartTooltip({ xLabel: xTitle, yLabel: yTitle });
-
-  // Omitted width/height → fill the container and track its measured size;
-  // explicit pixel values override. See AreaPlot for the reference pattern.
-  const [containerRef, measured] = useElementSize<HTMLDivElement>();
-  const resolvedWidth = width ?? measured.width;
-  const resolvedHeight = height ?? measured.height;
-  const hasSize = resolvedWidth > 0 && resolvedHeight > 0;
-  // Fill is per-dimension: omit width to fill the container width, omit height
-  // to fill its height (so e.g. a fixed width with a container-driven height works).
-  const fillWidth = width === undefined;
-  const fillHeight = height === undefined;
-  const sizeRef = useRef({ width: resolvedWidth, height: resolvedHeight });
-  sizeRef.current = { width: resolvedWidth, height: resolvedHeight };
-  const plotInitedRef = useRef(false);
-  // Size last applied to the plot, so the resize effect can skip a redundant
-  // relayout right after newPlot already drew at that size.
-  const appliedSizeRef = useRef({ width: 0, height: 0 });
-
-  const { yMin, yMax } = useMemo(() => {
-    let minX = Number.MAX_VALUE;
-    let maxX = Number.MIN_VALUE;
-    let minY = Number.MAX_VALUE;
-    let maxY = Number.MIN_VALUE;
-
-    dataSeries.forEach((series) => {
-      series.x.forEach((x) => {
-        minX = Math.min(minX, x);
-        maxX = Math.max(maxX, x);
-      });
-      series.y.forEach((y) => {
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y);
-      });
-    });
-
-    const xPadding = (maxX - minX) * 0.1;
-    const yPadding = (maxY - minY) * 0.1;
-
-    return {
-      xMin: minX - xPadding,
-      xMax: maxX + xPadding,
-      yMin: minY - yPadding,
-      yMax: maxY + yPadding,
-    };
-  }, [dataSeries]);
-
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
-
-  const yTicks = useMemo(() => {
-    const range = effectiveYRange[1] - effectiveYRange[0];
-    let step = Math.pow(10, Math.floor(Math.log10(range)));
-
-    if (range / step > 10) step = step * 2;
-    if (range / step < 4) step = step / 2;
-
-    const ticks = [];
-    let current = Math.ceil(effectiveYRange[0] / step) * step;
-    while (current <= effectiveYRange[1]) {
-      ticks.push(current);
-      current += step;
+  const colors = useMemo(() => dataSeries.map((line, index) => seriesColor(index, line.color)), [dataSeries]);
+  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
+  const rows = useMemo(() => lineRows(dataSeries), [dataSeries]);
+  const spec = useMemo<ChartSpec>(() => {
+    const xTicks = [...new Set(rows.map((row) => row.x))].sort((a, b) => a - b);
+    let builder = plot(rows, { x: "x", y: "y", color: "series" }).line();
+    if (variant !== "lines") builder = builder.point();
+    if (variant === "lines+markers+error_bars") {
+      builder = builder.errorbar({ aes: { ymin: "lo", ymax: "hi" } });
     }
-    return ticks;
-  }, [effectiveYRange]);
-
-  const xTicks = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
-    [dataSeries],
-  );
-
-  // Only apply categorical labels when they align 1:1 with the tick positions;
-  // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
-  const useCategoricalX = !!xTickText && xTickText.length === xTicks.length;
-
-  const mode = useMemo((): "lines" | "lines+markers" => {
-    switch (variant) {
-      case "lines+markers":
-      case "lines+markers+error_bars":
-        return "lines+markers";
-      default:
-        return "lines";
-    }
-  }, [variant]);
-
-  const tickOptions = useMemo(
-    () => ({
-      tickcolor: theme.tickColor,
-      ticklen: 12,
-      tickwidth: 1,
-      ticks: "outside" as const,
-      tickfont: {
-        size: 16,
-        color: theme.textColor,
-        family: CHART_FONT_FAMILY,
-        weight: 400,
-      },
-      linecolor: theme.lineColor,
-      linewidth: 1,
-      position: 0,
-      zeroline: false,
-    }),
-    [theme],
-  );
-
-  useEffect(() => {
-    if (!plotRef.current || !hasSize) return;
-
-    const plotData = dataSeries.map((series, index) => {
-      const color = seriesColor(index, series.color);
-      return {
-        x: series.x,
-        y: series.y,
-        type: "scatter" as const,
-        mode: mode,
-        name: series.name,
-        hoverinfo: "none" as const,
-        line: {
-          color,
-          width: 1.5,
-        },
-        marker:
-          variant === "lines"
-            ? { opacity: 0 }
-            : {
-                color,
-                size: 8,
-                symbol: series.symbol || "triangle-up",
-              },
-        error_y:
-          variant === "lines+markers+error_bars"
-            ? series.error_y || {
-                type: "data" as const,
-                array: series.y.map(() => 10),
-                visible: true,
-                color,
-                thickness: 1,
-                width: 5,
+    return builder
+      .labs({ headline: title })
+      .scales({
+        x: {
+          title: xTitle,
+          limits: xRange,
+          ...(xTickText
+            ? {
+                breaks: xTicks,
+                labels: Object.fromEntries(
+                  xTicks.map((tick, index) => [String(tick), xTickText[index] ?? String(tick)]),
+                ),
               }
-            : undefined,
-      };
-    });
-
-    const layout = {
-      ...(title
-        ? {
-            title: {
-              text: title,
-              font: {
-                size: 32,
-                family: CHART_FONT_FAMILY,
-                color: theme.textColor,
-              },
-            },
-          }
-        : {}),
-      width: sizeRef.current.width,
-      height: sizeRef.current.height,
-      margin: {
-        l: 80,
-        r: 30,
-        // Reserve room for tick labels, the x-axis title, and the
-        // container-anchored bottom legend stacked beneath them.
-        b: 96,
-        t: title ? TITLE_MARGIN_TOP : NO_TITLE_MARGIN_TOP,
-        pad: 10,
-      },
-      paper_bgcolor: theme.paperBg,
-      plot_bgcolor: theme.plotBg,
-      font: {
-        family: CHART_FONT_FAMILY,
-      },
-      dragmode: false as const,
-      xaxis: {
-        title: {
-          text: xTitle,
-          font: {
-            size: 16,
-            color: theme.textSecondary,
-            family: CHART_FONT_FAMILY,
-            weight: 400,
-          },
-          standoff: 32,
+            : {}),
         },
-        gridcolor: theme.gridColor,
-        range: xRange,
-        autorange: !xRange,
-        tickmode: "array" as const,
-        tickvals: xTicks,
-        ticktext: useCategoricalX ? xTickText : xTicks.map(String),
-        showgrid: true,
-        // Reserve space for tick labels + the axis title so the bottom legend
-        // can't overlap them at small sizes (SW-2157).
-        automargin: true,
-        ...tickOptions,
-      },
-      yaxis: {
-        title: {
-          text: yTitle,
-          font: {
-            size: 16,
-            color: theme.textSecondary,
-            family: CHART_FONT_FAMILY,
-            weight: 400,
-          },
-          standoff: 30,
-        },
-        gridcolor: theme.gridColor,
-        range: yRange,
-        autorange: !yRange,
-        tickmode: "array" as const,
-        tickvals: yTicks,
-        showgrid: true,
-        automargin: true,
-        ...tickOptions,
-      },
-      legend: {
-        // Anchor to the bottom of the container (not the plot area) so the
-        // legend always clears the x-axis tick labels + title — a paper-relative
-        // fractional offset collapses into the ticks at small heights (SW-2157).
-        x: 0.5,
-        y: 0,
-        xanchor: "center" as const,
-        yanchor: "bottom" as const,
-        yref: "container" as const,
-        orientation: "h" as const,
-        font: {
-          size: 16,
-          color: theme.legendColor,
-          family: CHART_FONT_FAMILY,
-          weight: 500,
-        },
-      },
-      showlegend: true,
-    };
+        y: { title: yTitle, limits: yRange },
+      })
+      .spec();
+  }, [rows, variant, title, xTitle, yTitle, xRange, yRange, xTickText]);
 
-    const config = {
-      // Sizing is driven from the measured container; disable Plotly's own
-      // window-resize responsiveness (it can't see container resizes).
-      responsive: false,
-      displayModeBar: false,
-      displaylogo: false,
-    };
-
-    // Plotly is loaded lazily so it stays out of the consumer's main chunk
-    // (SW-2007); the draw is skipped if the effect re-runs or unmounts first.
-    let cancelled = false;
-    let plotElement: HTMLDivElement | null = null;
-    void loadPlotly().then((plotly) => {
-      if (cancelled || !plotRef.current) return;
-      plotly.newPlot(plotRef.current, plotData, layout, config);
-      bindTooltip(plotRef.current);
-
-      // Capture ref value for cleanup
-      plotElement = plotRef.current;
-      plotInitedRef.current = true;
-      appliedSizeRef.current = { ...sizeRef.current };
-    });
-
-    return () => {
-      cancelled = true;
-      if (plotElement) {
-        getLoadedPlotly().purge(plotElement);
-        plotInitedRef.current = false;
-      }
-    };
-  }, [dataSeries, hasSize, xRange, yRange, xTitle, yTitle, title, mode, tickOptions, xTicks, yTicks, useCategoricalX, xTickText, effectiveYRange, variant, theme, bindTooltip]);
-
-  // Resize in place when the measured/overridden size changes — cheaper than
-  // recreating the plot, and it preserves tooltip/event bindings.
-  useEffect(() => {
-    const plotElement = plotRef.current;
-    if (!plotElement || !plotInitedRef.current || resolvedWidth <= 0 || resolvedHeight <= 0) {
-      return;
-    }
-    // newPlot already drew at the current size; skip the redundant relayout
-    // (it would queue an automargin redraw that can reject if we unmount first).
-    if (
-      appliedSizeRef.current.width === resolvedWidth &&
-      appliedSizeRef.current.height === resolvedHeight
-    ) {
-      return;
-    }
-    appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };
-    // Swallow rejections from a relayout that races an unmount/purge.
-    // plotInitedRef guarantees Plotly finished loading, so sync access is safe.
-    void getLoadedPlotly()
-      .relayout(plotElement, { width: resolvedWidth, height: resolvedHeight })
-      .catch(() => {});
-  }, [resolvedWidth, resolvedHeight]);
-
-  return (
-    <div ref={containerRef} className={cn("relative", fillWidth && "w-full", fillHeight && "h-full")}>
-      <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
-      {tooltipElement}
-    </div>
-  );
+  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
 export { LinePlot };

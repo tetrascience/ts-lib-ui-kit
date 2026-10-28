@@ -69,6 +69,7 @@ import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
  * **Data Format:**
  * - **WellData array**: `[{ wellId: "A1", values: { RFU: 100 }, tooltipData: {...} }, ...]`
  *
+ * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
  */
 const PlateMap: React.FC<PlateMapProps> = ({
   data,

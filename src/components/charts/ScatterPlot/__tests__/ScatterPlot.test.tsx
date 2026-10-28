@@ -5,177 +5,157 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { ScatterPlot } from "../ScatterPlot";
 
 import type { ScatterPlotProps } from "../ScatterPlot";
+import type { Viz } from "@tetrascience-npm/ts-lib-viz/react";
 import type { Root } from "react-dom/client";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const plotly = vi.hoisted(() => ({
-  newPlot: vi.fn(),
-  relayout: vi.fn(),
-  purge: vi.fn(),
-}));
-vi.mock("plotly.js-dist", () => ({ default: plotly }));
-
-type EventHandler = (eventData?: unknown) => void;
-let handlers: Record<string, EventHandler>;
+// ts-lib-viz resolves its own copy of React when it runs under Vitest's jsdom
+// project, so the real Viz hits an invalid hook call here. The chart is
+// replaced with a stub that records the spec and data VizChart hands it. The
+// real drawing is covered by the Storybook play functions.
+type VizProps = React.ComponentProps<typeof Viz>;
+const vizCalls = vi.hoisted(() => ({ props: [] as VizProps[] }));
+vi.mock("@tetrascience-npm/ts-lib-viz/react", async () => {
+  const ReactModule = await import("react");
+  return {
+    Viz: (props: VizProps) => {
+      vizCalls.props.push(props);
+      return ReactModule.createElement("div", { "data-testid": "viz-stub" });
+    },
+  };
+});
 
 const roots: Array<{ root: Root; container: HTMLElement }> = [];
 
-const dataSeries: ScatterPlotProps["dataSeries"] = [
-  { name: "A", x: [1, 2, 3], y: [10, 20, 30] },
-];
+const dataSeries: ScatterPlotProps["dataSeries"] = [{ name: "A", x: [1, 2, 3], y: [10, 20, 30] }];
 
-// Async act so the lazy Plotly import (SW-2007) resolves and the draw
-// completes before assertions run.
 async function render(props: ScatterPlotProps) {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
   roots.push({ root, container });
-  // Explicit size keeps the chart out of container-fill mode, which would need
-  // a ResizeObserver measurement that jsdom can't provide.
   await act(async () => {
-    root.render(<ScatterPlot width={600} height={400} {...props} />);
+    root.render(<ScatterPlot {...props} />);
   });
+  return container;
 }
 
-const fire = (event: string, data?: unknown) => act(() => handlers[event]?.(data));
-
-/** All shapes passed to Plotly.relayout calls that set `shapes`. */
-function lastShapes(): Array<{ type?: string; layer?: string }> | undefined {
-  const calls = plotly.relayout.mock.calls as unknown as Array<[unknown, { shapes?: unknown }]>;
-  const withShapes = calls.filter((c) => c[1] && "shapes" in c[1]);
-  return withShapes.at(-1)?.[1].shapes as Array<{ type?: string; layer?: string }> | undefined;
-}
-
-type Trace = { name?: string; marker?: { symbol?: string; size?: number; color?: string } };
-
-/** Traces passed to the most recent Plotly.newPlot call. */
-function lastTraces(): Trace[] {
-  const calls = plotly.newPlot.mock.calls as unknown as Array<[unknown, Trace[]]>;
-  return calls.at(-1)?.[1] ?? [];
+/** The props of the most recent chart draw. */
+function lastViz(): VizProps {
+  const props = vizCalls.props.at(-1);
+  if (!props) throw new Error("Viz was never rendered");
+  return props;
 }
 
 beforeEach(() => {
-  handlers = {};
-  plotly.relayout.mockReset();
-  plotly.newPlot.mockImplementation((el: HTMLElement) => {
-    (el as unknown as { on: (event: string, cb: EventHandler) => void }).on = (event, cb) => {
-      handlers[event] = cb;
-    };
-    return Promise.resolve();
-  });
+  vizCalls.props.length = 0;
 });
 
 afterEach(() => {
-  act(() => roots.forEach(({ root }) => root.unmount()));
-  roots.length = 0;
-  document.body.innerHTML = "";
+  for (const { root, container } of roots.splice(0)) {
+    act(() => root.unmount());
+    container.remove();
+  }
 });
 
-describe("ScatterPlot crosshair", () => {
-  it("draws crosshair guide lines behind the points on hover", async () => {
-    await render({ dataSeries });
-    fire("plotly_hover", { points: [{ x: 2, y: 20 }] });
+describe("ScatterPlot rendering", () => {
+  it("mounts and hands the chart a headline and axis titles", async () => {
+    await render({ dataSeries, title: "Growth", xTitle: "Time (h)", yTitle: "OD600", width: 600, height: 400 });
 
-    const shapes = lastShapes();
-    expect(shapes).toHaveLength(2);
-    // Both rendered beneath the markers
-    expect(shapes?.every((s) => s.layer === "below")).toBe(true);
-    expect(shapes?.every((s) => s.type === "line")).toBe(true);
+    const { spec } = lastViz();
+    expect(spec.headline).toBe("Growth");
+    expect(spec.scales?.x?.title).toBe("Time (h)");
+    expect(spec.scales?.y?.title).toBe("OD600");
   });
 
-  it("clears the crosshair on unhover", async () => {
-    await render({ dataSeries });
-    fire("plotly_hover", { points: [{ x: 2, y: 20 }] });
-    fire("plotly_unhover");
-    expect(lastShapes()).toEqual([]);
+  it("passes a stated width and height into the chart spec", async () => {
+    await render({ dataSeries, width: 600, height: 400 });
+    expect(lastViz().spec.width).toBe(600);
+    expect(lastViz().spec.height).toBe(400);
   });
 
-  it("ignores hover events without points", async () => {
-    await render({ dataSeries });
-    plotly.relayout.mockClear();
-    fire("plotly_hover", { points: [] });
-    // No shape relayout for an empty hover
-    expect(lastShapes()).toBeUndefined();
+  it("omits the spec size and fills the container when no size is given", async () => {
+    const container = await render({ dataSeries });
+    const { spec } = lastViz();
+    expect(spec.width).toBeUndefined();
+    expect(spec.height).toBeUndefined();
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.style.width).toBe("100%");
+    expect(wrapper.style.height).toBe("100%");
+  });
+
+  it("applies the x and y ranges as scale limits", async () => {
+    await render({ dataSeries, xRange: [0, 10], yRange: [-1, 1] });
+    expect(lastViz().spec.scales?.x?.limits).toEqual([0, 10]);
+    expect(lastViz().spec.scales?.y?.limits).toEqual([-1, 1]);
   });
 });
 
 describe("ScatterPlot series handling", () => {
-  it("accepts a single series object (normalized to one trace)", async () => {
+  it("draws every point as a point layer colored by series name", async () => {
+    await render({
+      dataSeries: [
+        { name: "A", x: [1, 2], y: [3, 4] },
+        { name: "B", x: [5], y: [6] },
+      ],
+    });
+
+    const { spec, data } = lastViz();
+    expect(spec.layers).toHaveLength(1);
+    expect(spec.layers[0].kind).toBe("point");
+    expect(spec.layers[0].aes).toMatchObject({ x: "x", y: "y", color: "series" });
+    expect(spec.layers[0].aes.shape).toBeUndefined();
+    expect(data).toEqual([
+      { x: 1, y: 3, series: "A" },
+      { x: 2, y: 4, series: "A" },
+      { x: 5, y: 6, series: "B" },
+    ]);
+  });
+
+  it("accepts a single series object", async () => {
     await render({ dataSeries: { name: "Solo", x: [1, 2], y: [3, 4] } });
-    const traces = lastTraces();
-    expect(traces).toHaveLength(1);
-    expect(traces[0].name).toBe("Solo");
-    expect(traces[0].marker?.symbol).toBe("circle");
+    expect(lastViz().data).toEqual([
+      { x: 1, y: 3, series: "Solo" },
+      { x: 2, y: 4, series: "Solo" },
+    ]);
   });
 
-  it("renders all series as circles in the default variant", async () => {
+  it("maps series to marker shape only in the stacked variant", async () => {
+    await render({ dataSeries, variant: "stacked" });
+    expect(lastViz().spec.layers[0].aes).toMatchObject({ color: "series", shape: "series" });
+  });
+
+  it("uses markerSize for the point layer, defaulting to 10", async () => {
+    await render({ dataSeries });
+    expect(lastViz().spec.layers[0].style?.size).toBe(10);
+
+    await render({ dataSeries, markerSize: 14 });
+    expect(lastViz().spec.layers[0].style?.size).toBe(14);
+  });
+
+  it("uses a per-series color override as that series' palette entry", async () => {
     await render({
       dataSeries: [
-        { name: "A", x: [1], y: [1] },
+        { name: "A", x: [1], y: [1], color: "#123456" },
         { name: "B", x: [2], y: [2] },
       ],
     });
-    const traces = lastTraces();
-    expect(traces.map((t) => t.marker?.symbol)).toEqual(["circle", "circle"]);
+    const { palettes } = lastViz();
+    expect(palettes?.categorical(0)).toBe("#123456");
+    expect(palettes?.categorical(1)).not.toBe("#123456");
   });
 
-  it("cycles marker symbols per series in the stacked variant", async () => {
-    await render({
-      variant: "stacked",
-      dataSeries: [
-        { name: "A", x: [1], y: [1] },
-        { name: "B", x: [2], y: [2] },
-        { name: "C", x: [3], y: [3] },
-      ],
-    });
-    const traces = lastTraces();
-    expect(traces.map((t) => t.marker?.symbol)).toEqual(["circle", "square", "diamond"]);
-  });
-
-  it("honors per-series symbol, size, and color overrides", async () => {
+  it("does not carry per-series symbol or size overrides into the chart", async () => {
+    // Documents the Plotly-era overrides that ts-lib-viz does not take. The
+    // series' size and symbol are ignored, and the shared markerSize applies.
     await render({
       variant: "stacked",
       markerSize: 12,
-      dataSeries: [
-        { name: "A", x: [1], y: [1], symbol: "star", size: 20, color: "#123456" },
-        { name: "B", x: [2], y: [2] },
-      ],
+      dataSeries: [{ name: "A", x: [1], y: [1], symbol: "star", size: 20 }],
     });
-    const traces = lastTraces();
-    expect(traces[0].marker?.symbol).toBe("star");
-    expect(traces[0].marker?.size).toBe(20);
-    expect(traces[0].marker?.color).toBe("#123456");
-    // Second series falls back to the shared markerSize and cycled symbol
-    expect(traces[1].marker?.size).toBe(12);
-    expect(traces[1].marker?.symbol).toBe("square");
-  });
-});
-
-describe("ScatterPlot resize skip-guard", () => {
-  it("re-checks the applied size in place when only the height changes", async () => {
-    plotly.relayout.mockImplementation(() => Promise.resolve());
-    // Stable dataSeries reference so re-rendering doesn't re-run the draw
-    // effect — only the size-driven resize effect should react.
-    const stableSeries = [{ name: "A", x: [1, 2, 3], y: [10, 20, 30] }];
-
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = createRoot(container);
-    roots.push({ root, container });
-
-    await act(async () => {
-      root.render(<ScatterPlot dataSeries={stableSeries} width={600} height={400} />);
-    });
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-
-    // Same width, new height: the resize effect re-runs; its width check
-    // matches the applied size, so the height comparison branch is evaluated.
-    await act(async () => {
-      root.render(<ScatterPlot dataSeries={stableSeries} width={600} height={480} />);
-    });
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), { width: 600, height: 480 });
+    const { spec, data } = lastViz();
+    expect(spec.layers[0].style?.size).toBe(12);
+    expect(data[0]).toEqual({ x: 1, y: 1, series: "A" });
   });
 });

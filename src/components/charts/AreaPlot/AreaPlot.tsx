@@ -1,14 +1,10 @@
-import React, { useEffect, useRef, useMemo } from "react";
+import { plot } from "@tetrascience-npm/ts-lib-viz/core";
+import { useMemo } from "react";
 
-import { Y_TICK_LABEL_SPACING, maxTickCount, resolveChartScale, thinTicks } from "../chart-scale";
-import { chartTooltipLines, useChartTooltip } from "../ChartTooltip";
-import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
-import type Plotly from "plotly.js-dist";
+import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
-import { useElementSize } from "@/hooks/use-element-size";
-import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
-import { cn } from "@/lib/utils";
 import { seriesColor } from "@/utils/colors";
 
 interface AreaDataSeries {
@@ -49,6 +45,35 @@ interface AreaPlotProps {
   xTickText?: string[];
 }
 
+/** One row per reading: its series, x, and the ribbon's lo/hi edges. */
+interface AreaRow {
+  x: number;
+  y: number;
+  series: string;
+  lo: number;
+  hi: number;
+}
+
+/**
+ * Flattens the series into rows for ts-lib-viz. In the stacked variant each
+ * series sits on the running top of the series before it, per x value.
+ */
+export function areaRows(dataSeries: AreaDataSeries[], variant: AreaPlotVariant): AreaRow[] {
+  const stackTop = new Map<number, number>();
+  return dataSeries.flatMap((series) =>
+    series.x.map((x, index) => {
+      const y = series.y[index];
+      const base = variant === "stacked" ? (stackTop.get(x) ?? 0) : 0;
+      if (variant === "stacked") stackTop.set(x, base + y);
+      return { x, y, series: series.name, lo: base, hi: base + y };
+    }),
+  );
+}
+
+/**
+ * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
+ */
+
 const AreaPlot: React.FC<AreaPlotProps> = ({
   dataSeries,
   width,
@@ -61,398 +86,36 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
   title,
   xTickText,
 }) => {
-  const plotRef = useRef<HTMLDivElement>(null);
-  const theme = usePlotlyTheme();
-
-  // When width/height are omitted the chart fills its container; otherwise the
-  // explicit pixel size wins. The container is measured either way (cheap) but
-  // only used as the resolved size for the omitted dimension(s).
-  const [containerRef, measured] = useElementSize<HTMLDivElement>();
-  const resolvedWidth = width ?? measured.width;
-  const resolvedHeight = height ?? measured.height;
-  const hasSize = resolvedWidth > 0 && resolvedHeight > 0;
-  // Fill is per-dimension: omit width to fill the container width, omit height
-  // to fill its height (so e.g. a fixed width with a container-driven height works).
-  const fillWidth = width === undefined;
-  const fillHeight = height === undefined;
-  // Fonts, tick length and margins step down on small canvases so the plot
-  // area (not the chrome) gets the pixels (SW-2298).
-  const scale = resolveChartScale(resolvedWidth, resolvedHeight);
-  const marginTop = title ? scale.margin.tTitle : scale.margin.tNoTitle;
-
-  // Hold the latest resolved size in a ref so the newPlot effect can read it
-  // without listing it as a dependency — size changes are handled by a
-  // separate relayout effect rather than by tearing down and recreating the plot.
-  const sizeRef = useRef({ width: resolvedWidth, height: resolvedHeight });
-  sizeRef.current = { width: resolvedWidth, height: resolvedHeight };
-  const plotInitedRef = useRef(false);
-  // Size last applied to the plot, so the resize effect can skip a redundant
-  // relayout right after newPlot already drew at that size.
-  const appliedSizeRef = useRef({ width: 0, height: 0 });
-  const { bindTooltip, tooltipElement } = useChartTooltip({
-    // Stacked traces carry the original series values as customdata;
-    // display those instead of the cumulative stack heights
-    getLines: (points) =>
-      chartTooltipLines(
-        points.map((point) =>
-          typeof point.customdata === "number"
-            ? { ...point, y: point.customdata }
-            : point,
-        ),
-        { xLabel: xTitle, yLabel: yTitle },
-      ),
-  });
-
-  const { xMin, xMax, yMin, yMax } = useMemo(() => {
-    let minX = Number.MAX_VALUE;
-    let maxX = Number.MIN_VALUE;
-    let minY = Number.MAX_VALUE;
-    let maxY = Number.MIN_VALUE;
-
-    dataSeries.forEach((series) => {
-      series.x.forEach((x) => {
-        minX = Math.min(minX, x);
-        maxX = Math.max(maxX, x);
-      });
-      series.y.forEach((y) => {
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y);
-      });
-    });
-
-    const xPadding = (maxX - minX) * 0.1;
-    const yPadding = (maxY - minY) * 0.1;
-
-    return {
-      xMin: minX - xPadding,
-      xMax: maxX + xPadding,
-      yMin: variant === "stacked" ? 0 : minY - yPadding,
-      yMax: maxY + yPadding,
-    };
-  }, [dataSeries, variant]);
-
-  const effectiveXRange = useMemo(
-    () => xRange || [xMin, xMax],
-    [xRange, xMin, xMax],
-  );
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
-
-  const xTicks = useMemo(() => {
-    const range = effectiveXRange[1] - effectiveXRange[0];
-    let step = Math.pow(10, Math.floor(Math.log10(range)));
-
-    if (range / step > 10) step = step * 2;
-    if (range / step < 4) step = step / 2;
-
-    const ticks = [];
-    let current = Math.ceil(effectiveXRange[0] / step) * step;
-    while (current <= effectiveXRange[1]) {
-      ticks.push(current);
-      current += step;
-    }
-    return ticks;
-  }, [effectiveXRange]);
-
-  const yTicks = useMemo(() => {
-    const range = effectiveYRange[1] - effectiveYRange[0];
-    let step = Math.pow(10, Math.floor(Math.log10(range)));
-
-    if (range / step > 10) step = step * 2;
-    if (range / step < 4) step = step / 2;
-
-    const ticks = [];
-    let current = Math.ceil(effectiveYRange[0] / step) * step;
-    while (current <= effectiveYRange[1]) {
-      ticks.push(current);
-      current += step;
-    }
-    return ticks;
-  }, [effectiveYRange]);
-
-  // When categorical labels are supplied, ticks must sit on the actual data
-  // x-positions rather than the computed nice-step values above. Sorted
-  // ascending so labels map deterministically to x regardless of series order.
-  const xDataValues = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
-    [dataSeries],
-  );
-
-  // Only apply categorical labels when they align 1:1 with the tick positions;
-  // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
-  const useCategoricalX = !!xTickText && xTickText.length === xDataValues.length;
-
-  // Y ticks thinned to what fits the plot height. Derived from the resolved
-  // (not last-plotted) height so an in-place resize also updates them via the
-  // relayout effect below, instead of only when the scale bucket flips.
-  const yTickVals = useMemo(
-    () =>
-      thinTicks(
-        yTicks,
-        maxTickCount(
-          resolvedHeight - marginTop - scale.margin.b,
-          scale.tickFontSize * Y_TICK_LABEL_SPACING,
-        ),
-      ),
-    [yTicks, resolvedHeight, marginTop, scale],
-  );
-  const yTickKey = yTickVals.join(",");
-  const yTickValsRef = useRef(yTickVals);
-  yTickValsRef.current = yTickVals;
-
-  const tickOptions = useMemo(
-    () => ({
-      tickcolor: theme.tickColor,
-      ticklen: scale.ticklen,
-      tickwidth: 1,
-      ticks: "outside" as const,
-      tickfont: {
-        size: scale.tickFontSize,
-        color: theme.textColor,
-        family: CHART_FONT_FAMILY,
-        weight: 400,
-      },
-      linecolor: theme.lineColor,
-      linewidth: 1,
-      position: 0,
-      zeroline: false,
-    }),
-    [theme, scale],
-  );
-
-  const titleOptions = useMemo(
-    () =>
-      title
-        ? {
-            text: title,
-            x: 0.5,
-            y: 0.95,
-            xanchor: "center" as const,
-            yanchor: "top" as const,
-            font: {
-              size: scale.titleFontSize,
-              weight: 600,
-              family: CHART_FONT_FAMILY,
-              color: theme.textColor,
-              lineheight: 1.2,
-              standoff: 30,
-            },
-          }
-        : undefined,
-    [title, theme, scale],
-  );
-
-  useEffect(() => {
-    if (!plotRef.current || !hasSize) return;
-
-    let data;
-
-    if (variant === "stacked") {
-      // For stacked mode, we need to calculate cumulative values
-      const cumulativeY = new Array(dataSeries[0]?.x.length || 0).fill(0);
-
-      data = dataSeries.map((series, index) => {
-        // Calculate cumulative values for this series
-        const stackedY = series.y.map((value, i) => {
-          const result = cumulativeY[i] + value;
-          cumulativeY[i] = result;
-          return result;
-        });
-
-        const color = seriesColor(index, series.color);
-        return {
-          x: series.x,
-          y: stackedY,
-          // Tooltips report the series' own values, not the stacked sums
-          customdata: series.y,
-          type: "scatter" as const,
-          mode: "lines" as const,
-          name: series.name,
-          hoverinfo: "none" as const,
-          fill: index === 0 ? ("tozeroy" as const) : ("tonexty" as const),
-          fillcolor: color,
-          line: {
-            color,
-            width: 2,
-          },
-        };
-      });
-    } else {
-      // Normal mode - each area fills independently from zero
-      data = dataSeries.map((series, index) => {
-        const color = seriesColor(index, series.color);
-        return {
-          x: series.x,
-          y: series.y,
-          type: "scatter" as const,
-          mode: "lines" as const,
-          name: series.name,
-          hoverinfo: "none" as const,
-          fill: series.fill || ("tozeroy" as const),
-          fillcolor: color,
-          line: {
-            color,
-            width: 2,
-          },
-        };
-      });
-    }
-
-    const layout = {
-      width: sizeRef.current.width,
-      height: sizeRef.current.height,
-      ...(titleOptions ? { title: titleOptions } : {}),
-      margin: {
-        l: scale.margin.l,
-        r: scale.margin.r,
-        // Reserve room for tick labels, the x-axis title, and the
-        // container-anchored bottom legend stacked beneath them.
-        b: scale.margin.b,
-        t: marginTop,
-        pad: 0,
-      },
-      paper_bgcolor: theme.paperBg,
-      plot_bgcolor: theme.plotBg,
-      font: {
-        family: CHART_FONT_FAMILY,
-      },
-      dragmode: false as const,
-      xaxis: {
-        title: {
-          text: xTitle,
-          font: {
-            size: scale.axisTitleFontSize,
-            color: theme.textSecondary,
-            family: CHART_FONT_FAMILY,
-            weight: 400,
-          },
-          standoff: scale.axisTitleStandoff,
+  const colors = useMemo(() => dataSeries.map((series, index) => seriesColor(index, series.color)), [dataSeries]);
+  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
+  // A ribbon from its baseline to its top, so the fill and its outline both draw
+  // the readings one by one. An area geom would summarize them into bins.
+  const rows = useMemo(() => areaRows(dataSeries, variant), [dataSeries, variant]);
+  const spec = useMemo<ChartSpec>(() => {
+    const xTicks = [...new Set(rows.map((row) => row.x))].sort((a, b) => a - b);
+    return plot(rows, { x: "x", color: "series", fill: "series" })
+      .ribbon({ aes: { ymin: "lo", ymax: "hi" } })
+      .line({ aes: { y: "hi" } })
+      .labs({ headline: title })
+      .scales({
+        x: {
+          title: xTitle,
+          limits: xRange,
+          ...(xTickText
+            ? {
+                breaks: xTicks,
+                labels: Object.fromEntries(
+                  xTicks.map((tick, index) => [String(tick), xTickText[index] ?? String(tick)]),
+                ),
+              }
+            : {}),
         },
-        gridcolor: theme.gridColor,
-        range: xRange,
-        autorange: !xRange,
-        tickmode: "array" as const,
-        tickvals: useCategoricalX ? xDataValues : xTicks,
-        ...(useCategoricalX ? { ticktext: xTickText } : {}),
-        showgrid: true,
-        // Reserve space for tick labels + the axis title so the bottom legend
-        // can't overlap them at small sizes (SW-2157).
-        automargin: true,
-        ...tickOptions,
-      },
-      yaxis: {
-        title: {
-          text: yTitle,
-          font: {
-            size: scale.axisTitleFontSize,
-            color: theme.textSecondary,
-            family: CHART_FONT_FAMILY,
-            weight: 400,
-          },
-          standoff: scale.axisTitleStandoff,
-        },
-        gridcolor: theme.gridColor,
-        range: yRange,
-        autorange: !yRange,
-        tickmode: "array" as const,
-        tickvals: yTickValsRef.current,
-        showgrid: true,
-        automargin: true,
-        ...tickOptions,
-      },
-      legend: {
-        // Anchor to the bottom of the container (not the plot area) so the
-        // legend always clears the x-axis tick labels + title — a paper-relative
-        // fractional offset collapses into the ticks at small heights (SW-2157).
-        x: 0.5,
-        y: 0,
-        xanchor: "center" as const,
-        yanchor: "bottom" as const,
-        yref: "container" as const,
-        orientation: "h" as const,
-        font: {
-          size: scale.legendFontSize,
-          color: theme.legendColor,
-          family: CHART_FONT_FAMILY,
-          weight: 500,
-          lineheight: scale.legendLineHeight,
-        },
-      },
-      showlegend: true,
-    };
+        y: { title: yTitle, limits: yRange },
+      })
+      .spec();
+  }, [rows, title, xTitle, yTitle, xRange, yRange, xTickText]);
 
-    const config = {
-      // We drive sizing explicitly from the measured container, so Plotly's own
-      // window-resize responsiveness is disabled (it can't see container resizes).
-      responsive: false,
-      displayModeBar: false,
-      displaylogo: false,
-    };
-
-    // Plotly is loaded lazily so it stays out of the consumer's main chunk
-    // (SW-2007); the draw is skipped if the effect re-runs or unmounts first.
-    let cancelled = false;
-    let plotElement: HTMLDivElement | null = null;
-    void loadPlotly().then((plotly) => {
-      if (cancelled || !plotRef.current) return;
-      plotly.newPlot(plotRef.current, data, layout, config);
-      bindTooltip(plotRef.current);
-
-      // Capture ref value for cleanup
-      plotElement = plotRef.current;
-      plotInitedRef.current = true;
-      appliedSizeRef.current = { ...sizeRef.current };
-    });
-
-    return () => {
-      cancelled = true;
-      if (plotElement) {
-        getLoadedPlotly().purge(plotElement);
-        plotInitedRef.current = false;
-      }
-    };
-  }, [dataSeries, hasSize, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, scale, marginTop, bindTooltip]);
-
-  // Resize in place when the measured/overridden size changes — far cheaper
-  // than recreating the plot (and it preserves tooltip/event bindings).
-  useEffect(() => {
-    const plotElement = plotRef.current;
-    if (!plotElement || !plotInitedRef.current || resolvedWidth <= 0 || resolvedHeight <= 0) {
-      return;
-    }
-    // newPlot already drew at the current size; skip the redundant relayout
-    // (it would queue an automargin redraw that can reject if we unmount first).
-    if (
-      appliedSizeRef.current.width === resolvedWidth &&
-      appliedSizeRef.current.height === resolvedHeight
-    ) {
-      return;
-    }
-    appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };
-    // Swallow rejections from a relayout that races an unmount/purge.
-    // plotInitedRef guarantees Plotly finished loading, so sync access is safe.
-    void getLoadedPlotly()
-      .relayout(plotElement, {
-        width: resolvedWidth,
-        height: resolvedHeight,
-        // Re-thin the y ticks for the new plot height (SW-2298). The flattened
-        // key is valid relayout input but not part of the Layout type.
-        "yaxis.tickvals": yTickValsRef.current,
-      } as Partial<Plotly.Layout>)
-      .catch(() => {});
-  }, [resolvedWidth, resolvedHeight, yTickKey]);
-
-  return (
-    <div
-      ref={containerRef}
-      className={cn("area-graph-container relative", fillWidth && "w-full", fillHeight && "h-full")}
-    >
-      <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
-      {tooltipElement}
-    </div>
-  );
+  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
 export { AreaPlot };

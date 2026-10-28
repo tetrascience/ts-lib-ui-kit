@@ -7,6 +7,19 @@
 
 ---
 
+## Deprecated chart components (removed in 2.0)
+
+These chart components are deprecated and will be removed in 2.0. Each one is marked `@deprecated` in its source,
+so your editor strikes it through. New charts should use [`@tetrascience-npm/ts-lib-viz`](https://github.com/tetrascience/ts-lib-viz) directly.
+
+| Deprecated export                                                                     | Now drawn by                                                                                                           |
+| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `AreaPlot`, `LinePlot`, `ScatterPlot`, `BarChart`, `Histogram`, `BoxPlot`, `PieChart` | ts-lib-viz, same props. Some props have no ts-lib-viz equivalent and are ignored; see each component's JSDoc           |
+| `ScatterPlotInteractive`                                                              | ts-lib-viz, same props. `tooltip.content`, `tooltip.enabled`, `showColorBar` and `colorMapping.colorScale` are ignored |
+| `Chromatogram`, `StackedChromatogram`, `Electropherogram`, `PlateMap`                 | Still Plotly. ts-lib-viz has no chromatogram, electropherogram or plate-map layer yet                                  |
+
+Plotly stays an optional peer while `Chromatogram`, `StackedChromatogram`, `Electropherogram` or `PlateMap` are in use.
+
 ## Migrating from v0.7.x to v1.0.0
 
 > **Jira:** [SW-2244](https://tetrascience.atlassian.net/browse/SW-2244) (renames) ·

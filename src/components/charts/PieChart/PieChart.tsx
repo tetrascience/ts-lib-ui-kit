@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useMemo } from "react";
+import { plot } from "@tetrascience-npm/ts-lib-viz/core";
+import { useMemo } from "react";
 
-import { useChartTooltip } from "../ChartTooltip";
-import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
+import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
-import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
+import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
+
+
 import { CHART_COLORS } from "@/utils/colors";
 
 interface PieDataSeries {
@@ -28,172 +30,60 @@ type PieChartProps = {
   width?: number;
   height?: number;
   title?: string;
+  /**
+   * Accepted for compatibility and not applied. ts-lib-viz has no equivalent, so slice labels
+   * are not drawn from this value.
+   */
   textInfo?: PieTextInfo;
   hole?: number;
+  /**
+   * Accepted for compatibility and not applied. ts-lib-viz has no equivalent, so the start
+   * angle stays at its default.
+   */
   rotation?: number;
 };
 
-const DEFAULT_COLORS = CHART_COLORS;
+/** One row per slice. */
+export interface PieRow {
+  label: string;
+  value: number;
+}
 
+/** Pairs each label with its value. */
+export function buildPieRows(dataSeries: PieDataSeries): PieRow[] {
+  return dataSeries.labels.map((label, index) => ({ label, value: dataSeries.values[index] }));
+}
+
+interface PieSpecOptions {
+  hole: number;
+  title?: string;
+}
+
+/** Builds the ts-lib-viz pie spec. `hole` sets the inner radius, so 0 gives a full pie. */
+export function buildPieSpec(rows: PieRow[], options: PieSpecOptions): ChartSpec {
+  const { hole, title } = options;
+  return plot(rows, { x: "label", y: "value", fill: "label" })
+    .pie({ innerRadius: hole })
+    .labs({ headline: title })
+    .spec();
+}
+
+/**
+ * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
+ */
 const PieChart: React.FC<PieChartProps> = ({
   dataSeries,
-  width = 400,
-  height = 400,
+  width,
+  height,
   title,
-  textInfo = "percent",
   hole = 0,
-  rotation = 0,
 }) => {
-  const plotRef = useRef<HTMLDivElement>(null);
-  const theme = usePlotlyTheme();
-  // Slices are large hover targets, so the tooltip tracks the cursor (clamped
-  // to the viewport) rather than pinning to the slice centroid
-  const { bindTooltip, tooltipElement } = useChartTooltip({ followCursor: true });
+  const colors = dataSeries.colors ?? CHART_COLORS;
+  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
+  const rows = useMemo(() => buildPieRows(dataSeries), [dataSeries]);
+  const spec = useMemo<ChartSpec>(() => buildPieSpec(rows, { hole, title }), [rows, hole, title]);
 
-  const colors = useMemo(() => {
-    if (
-      dataSeries.colors &&
-      dataSeries.colors.length >= dataSeries.labels.length
-    ) {
-      return dataSeries.colors;
-    }
-
-    const result = [...(dataSeries.colors || [])];
-    const missingColors = dataSeries.labels.length - result.length;
-
-    if (missingColors <= 0) return result;
-
-    for (let i = 0; i < missingColors; i++) {
-      result.push(DEFAULT_COLORS[i % DEFAULT_COLORS.length]);
-    }
-
-    return result;
-  }, [dataSeries.colors, dataSeries.labels.length]);
-
-  useEffect(() => {
-    if (!plotRef.current) return;
-
-    const plotData = [
-      {
-        type: "pie" as const,
-        labels: dataSeries.labels,
-        values: dataSeries.values,
-        name: dataSeries.name,
-        marker: {
-          colors: colors,
-        },
-        textinfo: textInfo,
-        hoverinfo: "none" as const,
-        insidetextfont: {
-          size: 0,
-          family: CHART_FONT_FAMILY,
-          color: "transparent",
-        },
-        hole: hole,
-        rotation: rotation,
-      },
-    ];
-
-    const layout = {
-      width,
-      height,
-      font: {
-        family: CHART_FONT_FAMILY,
-        color: theme.textColor,
-      },
-      showlegend: false,
-      margin: { l: 40, r: 40, b: 40, t: 40 },
-      paper_bgcolor: theme.paperBg,
-      plot_bgcolor: theme.plotBg,
-    };
-
-    const config = {
-      responsive: true,
-      displayModeBar: false,
-      displaylogo: false,
-    };
-
-    // Plotly is loaded lazily so it stays out of the consumer's main chunk
-    // (SW-2007); the draw is skipped if the effect re-runs or unmounts first.
-    let cancelled = false;
-    let plotElement: HTMLDivElement | null = null;
-    void loadPlotly().then((plotly) => {
-      if (cancelled || !plotRef.current) return;
-      plotly.newPlot(plotRef.current, plotData, layout, config);
-      bindTooltip(plotRef.current);
-
-      // Capture ref value for cleanup
-      plotElement = plotRef.current;
-    });
-
-    return () => {
-      cancelled = true;
-      if (plotElement) {
-        getLoadedPlotly().purge(plotElement);
-      }
-    };
-  }, [colors, dataSeries.labels, dataSeries.name, dataSeries.values, width, height, textInfo, hole, rotation, theme, bindTooltip]);
-
-  const PieChartLegend: React.FC<{ labels: string[]; colors: string[] }> = ({
-    labels,
-    colors,
-  }) => {
-    const items = labels.map((label, i) => (
-      <React.Fragment key={`${label}-${i}`}>
-        <div className="flex items-center text-[13px] leading-[18px] font-medium">
-          <span
-            data-slot="pie-legend-swatch"
-            className="mr-1.5 inline-block size-3 rounded-[4px]"
-            style={{ background: colors[i] }}
-          />
-          {label}
-          {i < labels.length - 1 && (
-            <span className="mx-3 inline-block h-6 w-0.5 bg-border" />
-          )}
-        </div>
-      </React.Fragment>
-    ));
-
-    const rowSize = 6;
-    const rows = [];
-    for (let i = 0; i < items.length; i += rowSize) {
-      rows.push(
-        <div
-          className="mb-2 flex w-full max-w-full flex-wrap items-center justify-center gap-y-3 break-words px-10"
-          key={i}
-        >
-          {items.slice(i, i + rowSize)}
-        </div>
-      );
-    }
-    return (
-      <div data-slot="pie-legend" className="flex w-full flex-wrap text-foreground">
-        {rows}
-      </div>
-    );
-  };
-
-  return (
-    <div className="relative" style={{ width: width }}>
-      <div className="size-full">
-        {title && (
-          <div className="px-10 text-center">
-            <h2 className="m-0 text-[32px] leading-tight font-semibold">{title}</h2>
-          </div>
-        )}
-        <div
-          ref={plotRef}
-          style={{
-            width: "100%",
-            height: "100%",
-            margin: "0",
-          }}
-        />
-        <PieChartLegend labels={dataSeries.labels} colors={colors} />
-      </div>
-      {tooltipElement}
-    </div>
-  );
+  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
 export { PieChart };

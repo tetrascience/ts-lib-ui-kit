@@ -60,6 +60,9 @@ export type {
 // (and tearing down the hover tooltip) on each re-render.
 const EMPTY_ANNOTATIONS: PeakAnnotation[] = [];
 
+/**
+ * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
+ */
 const Chromatogram: React.FC<ChromatogramProps> = ({
   series,
   width = 900,

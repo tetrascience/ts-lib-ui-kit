@@ -1,125 +1,62 @@
-import React, { act } from "react";
-import { createRoot } from "react-dom/client";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 
-import { BoxPlot } from "../BoxPlot";
+import { buildBoxRows, buildBoxSpec } from "../BoxPlot";
 
-import type { BoxPlotProps } from "../BoxPlot";
-import type { Root } from "react-dom/client";
+import type { BoxDataSeries } from "../BoxPlot";
 
-(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+const dataSeries: BoxDataSeries[] = [{ name: "Series 1", y: [10, 18, 14, 22, 9] }];
 
-// Controllable ResizeObserver stub — jsdom has no layout, so tests push the
-// container size in explicitly (mirrors the AreaPlot test pattern).
-let triggerResize: (width: number, height: number) => void;
-class ResizeObserverStub {
-  constructor(
-    private callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void,
-  ) {
-    triggerResize = (width, height) => this.callback([{ contentRect: { width, height } }]);
-  }
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver =
-  ResizeObserverStub;
-
-const plotly = vi.hoisted(() => ({
-  newPlot: vi.fn(),
-  relayout: vi.fn(),
-  purge: vi.fn(),
-}));
-vi.mock("plotly.js-dist", () => ({ default: plotly }));
-
-const lastTraces = (): Array<{ fillcolor?: string; x?: unknown[] }> =>
-  (plotly.newPlot.mock.calls.at(-1)?.[1] as Array<{ fillcolor?: string; x?: unknown[] }>) ?? [];
-
-const dataSeries: BoxPlotProps["dataSeries"] = [
-  { name: "Series 1", y: [10, 18, 14, 22, 9] },
-];
-
-const roots: Array<{ root: Root; container: HTMLElement }> = [];
-
-async function render(props: BoxPlotProps) {
-  const container = document.createElement("div");
-  document.body.appendChild(container);
-  const root = createRoot(container);
-  roots.push({ root, container });
-  await act(async () => {
-    root.render(<BoxPlot {...props} />);
+describe("buildBoxRows", () => {
+  it("emits one row per observation, categorised by the series name when no x is given", () => {
+    const rows = buildBoxRows(dataSeries);
+    expect(rows).toHaveLength(5);
+    expect(rows.every((row) => row.x === "Series 1" && row.series === "Series 1")).toBe(true);
+    expect(rows.map((row) => row.y)).toEqual([10, 18, 14, 22, 9]);
   });
-}
 
-beforeEach(() => {
-  plotly.newPlot.mockImplementation((el: HTMLElement) => {
-    (el as unknown as { on: () => void }).on = () => {};
-    return Promise.resolve();
+  it("uses the per-point x category when one is given", () => {
+    const rows = buildBoxRows([{ name: "S", y: [1, 2], x: ["200", "350"] }]);
+    expect(rows.map((row) => row.x)).toEqual(["200", "350"]);
   });
-  plotly.relayout.mockImplementation(() => Promise.resolve());
+
+  it("stringifies numeric x categories", () => {
+    const rows = buildBoxRows([{ name: "S", y: [1], x: [200] }]);
+    expect(rows[0]?.x).toBe("200");
+  });
 });
 
-afterEach(() => {
-  for (const { root, container } of roots.splice(0)) {
-    act(() => {
-      root.unmount();
-    });
-    container.remove();
-  }
-  vi.clearAllMocks();
-});
+describe("buildBoxSpec", () => {
+  const rows = buildBoxRows(dataSeries);
 
-describe("BoxPlot", () => {
-  it("uses a non-hex color as the fill color without appending transparency", async () => {
-    await render({
-      dataSeries: [{ name: "S", y: [1, 2, 3], color: "rgb(10, 20, 30)" }],
-      width: 600,
-      height: 400,
-    });
-    // Non-hex colors take the ternary's else branch: the raw color, no `40` alpha.
-    expect(lastTraces()[0]?.fillcolor).toBe("rgb(10, 20, 30)");
+  it("draws a boxplot layer alone when points are hidden", () => {
+    const spec = buildBoxSpec(rows, { showPoints: false });
+    expect(spec.layers.map((layer) => layer.kind)).toEqual(["boxplot"]);
   });
 
-  it("broadcasts a single x label across every sample", async () => {
-    await render({
-      dataSeries: [{ name: "G1", y: [1, 2, 3, 4], x: ["Group 1"] }],
-      width: 600,
-      height: 400,
-    });
-    expect(lastTraces()[0]?.x).toEqual(["Group 1", "Group 1", "Group 1", "Group 1"]);
+  it("adds a point layer on top of the boxes when showPoints is set", () => {
+    const spec = buildBoxSpec(rows, { showPoints: true });
+    expect(spec.layers.map((layer) => layer.kind)).toEqual(["boxplot", "point"]);
   });
 
-  it("passes an aligned x through untouched and warns on any other length mismatch", async () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    await render({
-      dataSeries: [
-        { name: "Aligned", y: [1, 2], x: ["a", "b"] },
-        { name: "Short", y: [1, 2, 3, 4], x: ["a", "b"] },
-      ],
-      width: 600,
-      height: 400,
+  it("carries the title and axis titles onto the spec", () => {
+    const spec = buildBoxSpec(rows, {
+      showPoints: false,
+      title: "Box Plot",
+      xTitle: "Group",
+      yTitle: "Signal",
     });
-    expect(lastTraces()[0]?.x).toEqual(["a", "b"]);
-    expect(lastTraces()[1]?.x).toEqual(["a", "b"]);
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toContain(`Series "Short" has 2 x values for 4 y values`);
-    warn.mockRestore();
+    expect(spec.headline).toBe("Box Plot");
+    expect(spec.scales?.x?.title).toBe("Group");
+    expect(spec.scales?.y?.title).toBe("Signal");
   });
 
-  it("re-checks the applied size in place when only the height changes", async () => {
-    await render({ dataSeries });
-
-    await act(async () => {
-      triggerResize(320, 200);
+  it("applies the axis ranges as scale limits", () => {
+    const spec = buildBoxSpec(rows, {
+      showPoints: false,
+      xRange: [0, 5],
+      yRange: [0, 30],
     });
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-
-    // Same width, new height: the resize effect re-runs; its width check
-    // matches the applied size, so the height comparison branch is evaluated.
-    await act(async () => {
-      triggerResize(320, 260);
-    });
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 320, height: 260 }));
+    expect(spec.scales?.x?.limits).toEqual([0, 5]);
+    expect(spec.scales?.y?.limits).toEqual([0, 30]);
   });
 });

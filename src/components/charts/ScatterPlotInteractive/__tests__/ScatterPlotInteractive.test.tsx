@@ -2,85 +2,33 @@ import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-import { COLORS, DEFAULT_COLOR_SCALE, DEFAULT_MARKER_SIZE } from "../constants";
+import { COLORS, DEFAULT_MARKER_SIZE } from "../constants";
 import { ScatterPlotInteractive } from "../ScatterPlotInteractive";
 
 import type { ScatterPlotInteractiveProps, ScatterPoint, SelectionMode } from "../types";
+import type { Brushed, Selected } from "@tetrascience-npm/ts-lib-viz/core";
+import type { Viz } from "@tetrascience-npm/ts-lib-viz/react";
 import type { Root } from "react-dom/client";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-// Radix tooltip positioning (floating-ui) requires ResizeObserver, which jsdom lacks
-class ResizeObserverStub {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver ??=
-  ResizeObserverStub;
-
-// Capture the event callbacks the component registers via plotElement.on(...)
-const plotly = vi.hoisted(() => ({
-  newPlot: vi.fn(),
-  restyle: vi.fn(),
-  relayout: vi.fn(),
-  purge: vi.fn(),
-}));
-
-vi.mock("plotly.js-dist", () => ({ default: plotly }));
-
-type EventHandler = (eventData?: unknown) => void;
-
-let handlers: Record<string, EventHandler>;
-
-/** Shape of the trace object the component hands to Plotly.newPlot */
-interface CapturedTrace {
-  x: number[];
-  y: number[];
-  ids: string[];
-  mode: string;
-  type: string;
-  marker: {
-    size: number[];
-    symbol: string[];
-    color: string[] | number[];
-    colorscale?: string | Array<[number, string]>;
-    showscale?: boolean;
-    cmin?: number;
-    cmax?: number;
-    colorbar?: { title: { text: string } };
-    line: { color: string; width: number };
+// ts-lib-viz resolves its own copy of React when it runs under Vitest's jsdom
+// project, so the real Viz hits an invalid hook call here. The chart is
+// replaced with a stub that records the spec, data and gesture callbacks that
+// ScatterPlotInteractive hands it. Tests then drive those callbacks the way Viz
+// would after a click or a brush. Real drawing and gestures are covered by the
+// Storybook play functions.
+type VizProps = React.ComponentProps<typeof Viz>;
+const vizCalls = vi.hoisted(() => ({ props: [] as VizProps[] }));
+vi.mock("@tetrascience-npm/ts-lib-viz/react", async () => {
+  const ReactModule = await import("react");
+  return {
+    Viz: (props: VizProps) => {
+      vizCalls.props.push(props);
+      return ReactModule.createElement("div", { "data-testid": "viz-stub" });
+    },
   };
-  hoverinfo: string;
-  text: string[];
-  hovertemplate?: string;
-  unselected: { marker: { opacity: number } };
-  selected: { marker: { opacity: number; line: { color: string; width: number } } };
-}
-
-function lastPlotCall(): {
-  el: HTMLElement;
-  trace: CapturedTrace;
-  layout: Partial<Plotly.Layout>;
-  config: Partial<Plotly.Config>;
-} {
-  const call = plotly.newPlot.mock.calls.at(-1) as unknown as [
-    HTMLElement,
-    [CapturedTrace],
-    Partial<Plotly.Layout>,
-    Partial<Plotly.Config>,
-  ];
-  return { el: call[0], trace: call[1][0], layout: call[2], config: call[3] };
-}
-
-function lastRestyleCall(): { selectedpoints: [number[] | null] } {
-  const call = plotly.restyle.mock.calls.at(-1) as unknown as [
-    HTMLElement,
-    { selectedpoints: [number[] | null] },
-    number[],
-  ];
-  return call[1];
-}
+});
 
 const data: ScatterPoint[] = [
   { id: "a", x: 1, y: 10, label: "Point A", metadata: { group: "g1", v: 0 } },
@@ -90,9 +38,6 @@ const data: ScatterPoint[] = [
 
 const roots: Array<{ root: Root; container: HTMLElement }> = [];
 
-// Async act so the lazy Plotly import (SW-2007) resolves and the draw —
-// plus the loadPlotly().then(...) selection-sync effect — completes before
-// assertions run.
 async function render(props: ScatterPlotInteractiveProps) {
   const container = document.createElement("div");
   document.body.appendChild(container);
@@ -103,52 +48,62 @@ async function render(props: ScatterPlotInteractiveProps) {
   });
   return {
     container,
-    rerender: (nextProps: ScatterPlotInteractiveProps) =>
-      act(async () => {
+    rerender: async (nextProps: ScatterPlotInteractiveProps) => {
+      await act(async () => {
         root.render(<ScatterPlotInteractive {...nextProps} />);
-      }),
-    unmount: () =>
-      act(() => {
-        root.unmount();
-      }),
+      });
+    },
   };
 }
 
-// Async act so the selection-sync effect's loadPlotly().then(restyle) flushes
-// before assertions run (SW-2007).
-async function fire(event: string, eventData?: unknown) {
-  await act(async () => {
-    handlers[event]?.(eventData);
+/** The props of the most recent chart draw. */
+function lastViz(): VizProps {
+  const props = vizCalls.props.at(-1);
+  if (!props) throw new Error("Viz was never rendered");
+  return props;
+}
+
+type Modifiers = Partial<{ shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }>;
+
+/** A pointerdown on the chart wrapper, which is where the component reads modifier keys. */
+function pressOn(container: HTMLElement, modifiers: Modifiers = {}) {
+  const wrapper = container.firstElementChild as HTMLElement;
+  act(() => {
+    wrapper.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, ...modifiers }));
   });
 }
 
-const mouseEvent = (mods: Partial<{ shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }> = {}) => ({
-  shiftKey: false,
-  ctrlKey: false,
-  metaKey: false,
-  ...mods,
-});
+function clickSelected(keys: string[]): Selected {
+  return { layerId: "points", kind: "point", datum: null, rows: keys.map((_, i) => i), keys, predicate: null };
+}
 
-const clickEvent = (
-  ids: string[],
-  pointIndex: number,
-  mods?: Partial<{ shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }>,
-) => ({
-  points: [{ data: { ids }, pointIndex }],
-  event: mouseEvent(mods),
-});
+function brushed(shape: "box" | "lasso", keys: string[]): Brushed {
+  return {
+    shape,
+    region: [
+      { x: 0, y: 0 },
+      { x: 5, y: 5 },
+    ],
+    rows: keys.map((_, i) => i),
+    keys,
+    predicate: null,
+  };
+}
+
+function fireSelect(selected: Selected | null) {
+  act(() => {
+    lastViz().onSelect?.(selected);
+  });
+}
+
+function fireBrush(region: Brushed | null) {
+  act(() => {
+    lastViz().onBrush?.(region);
+  });
+}
 
 beforeEach(() => {
-  handlers = {};
-  plotly.newPlot.mockImplementation((el: HTMLElement) => {
-    (el as unknown as { on: (event: string, cb: EventHandler) => void }).on = (event, cb) => {
-      handlers[event] = cb;
-    };
-    // Real Plotly stamps _fullLayout on the element after drawing; the
-    // selection-sync effect uses it to detect that the plot exists (SW-2007).
-    (el as unknown as { _fullLayout?: object })._fullLayout = {};
-    return Promise.resolve();
-  });
+  vizCalls.props.length = 0;
 });
 
 afterEach(() => {
@@ -161,315 +116,305 @@ afterEach(() => {
 });
 
 describe("ScatterPlotInteractive rendering", () => {
-  it("creates a plot with token-backed default and selected colors", async () => {
+  it("hands the chart one point layer keyed by each record's id", async () => {
     await render({ data, title: "My Scatter" });
 
-    expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    const { trace, layout, config } = lastPlotCall();
-
-    expect(trace.x).toEqual([1, 2, 3]);
-    expect(trace.y).toEqual([10, 20, 30]);
-    expect(trace.ids).toEqual(["a", "b", "c"]);
-    expect(trace.marker.color).toEqual([COLORS.primary, COLORS.primary, COLORS.primary]);
-    expect(trace.marker.size).toEqual([DEFAULT_MARKER_SIZE, DEFAULT_MARKER_SIZE, DEFAULT_MARKER_SIZE]);
-    expect(trace.selected.marker.line.color).toBe(COLORS.selected);
-    expect(trace.unselected.marker.opacity).toBe(0.3);
-
-    expect(layout.title).toMatchObject({ text: "My Scatter" });
-    // Lasso wins when both selection tools are enabled (the defaults)
-    expect(layout.dragmode).toBe("lasso");
-    expect(config.modeBarButtonsToAdd).toEqual(["select2d", "lasso2d"]);
-
-    // Initial selection sync clears any stale Plotly selection
-    expect(lastRestyleCall()).toEqual({ selectedpoints: [null] });
+    const { spec, data: rows, keyField } = lastViz();
+    expect(keyField).toBe("key");
+    expect(rows).toEqual([
+      expect.objectContaining({ key: "a", x: 1, y: 10, label: "Point A" }),
+      expect.objectContaining({ key: "b", x: 2, y: 20, label: "b" }),
+      expect.objectContaining({ key: "c", x: 3, y: 30, label: "c" }),
+    ]);
+    expect(spec.headline).toBe("My Scatter");
+    expect(spec.layers).toHaveLength(1);
+    expect(spec.layers[0].kind).toBe("point");
+    expect(spec.layers[0].aes).toMatchObject({ x: "x", y: "y" });
+    // No size mapping is set, so the marker size is left to the chart default.
+    expect(spec.layers[0].style?.size).toBeUndefined();
   });
 
-  it("does not create a plot for empty data", async () => {
+  it("uses a static color for the layer when no color mapping is set", async () => {
+    await render({ data, colorMapping: { type: "static", value: COLORS.primary } });
+    expect(lastViz().spec.layers[0].style?.color).toBe(COLORS.primary);
+  });
+
+  it("mounts with no rows and still declares the point layer", async () => {
     await render({ data: [] });
-    expect(plotly.newPlot).not.toHaveBeenCalled();
-    expect(plotly.restyle).not.toHaveBeenCalled();
+    expect(lastViz().data).toEqual([]);
+    expect(lastViz().spec.layers[0].kind).toBe("point");
   });
 
-  it("applies explicit and disabled axis ranges", async () => {
+  it("maps axis titles, explicit ranges and log scales onto the spec", async () => {
     await render({
       data,
-      xAxis: { range: [0, 5] },
-      yAxis: { autoRange: false },
+      xAxis: { title: "Time (s)", range: [0, 5] },
+      yAxis: { scale: "log" },
     });
 
-    const { layout } = lastPlotCall();
-    expect(layout.xaxis?.range).toEqual([0, 5]);
-    expect(layout.xaxis?.autorange).toBe(false);
-    expect(layout.yaxis?.range).toBeUndefined();
-    expect(layout.yaxis?.autorange).toBe(true);
+    const { spec } = lastViz();
+    expect(spec.scales?.x).toMatchObject({ title: "Time (s)", limits: [0, 5] });
+    expect(spec.scales?.y?.transform).toBe("log10");
+    expect(spec.scales?.y?.limits).toBeUndefined();
   });
 
-  it("disables selection tooling when both box and lasso are off", async () => {
-    await render({ data, enableBoxSelection: false, enableLassoSelection: false, enableClickSelection: false });
-
-    const { layout, config } = lastPlotCall();
-    expect(layout.dragmode).toBe(false);
-    expect(config.modeBarButtonsToAdd).toEqual([]);
-    expect(handlers.plotly_click).toBeUndefined();
-    expect(handlers.plotly_selected).toBeUndefined();
-    expect(handlers.plotly_deselect).toBeUndefined();
+  it("writes tooltip fields into the chart rows, reading metadata by name", async () => {
+    await render({ data, tooltip: { fields: ["group", "v"] } });
+    expect(lastViz().data[0]).toMatchObject({ key: "a", group: "g1", v: 0 });
+    expect(lastViz().data[1]).toMatchObject({ key: "b", group: "g2", v: 5 });
   });
 
-  it("uses box-select dragmode when only box selection is enabled", async () => {
-    await render({ data, enableLassoSelection: false });
-    expect(lastPlotCall().layout.dragmode).toBe("select");
+  it("does not let a tooltip field overwrite a chart column", async () => {
+    await render({ data, tooltip: { fields: ["x", "label"] } });
+    expect(lastViz().data[1]).toMatchObject({ key: "b", x: 2, label: "b" });
   });
 
-  it("appends a custom className to the container", async () => {
+  it("uses the tooltip fields, defaulting to the label", async () => {
+    await render({ data });
+    expect(lastViz().spec.tooltip).toEqual(["label"]);
+
+    await render({ data, tooltip: { fields: ["group", "v"] } });
+    expect(lastViz().spec.tooltip).toEqual(["group", "v"]);
+  });
+
+  it("passes a stated width and height into the spec", async () => {
+    await render({ data, width: 500, height: 300 });
+    expect(lastViz().spec.width).toBe(500);
+    expect(lastViz().spec.height).toBe(300);
+  });
+
+  it("appends a custom className to the wrapper", async () => {
     const { container } = await render({ data, className: "custom" });
-    expect(container.querySelector(".scatter-plot-interactive.custom")).not.toBeNull();
-
-    const plain = await render({ data });
-    expect(plain.container.firstElementChild?.className).toBe("scatter-plot-interactive relative");
+    expect(container.querySelector(".custom")).not.toBeNull();
   });
 
-  it("downsamples the plotted data when configured", async () => {
+  it("downsamples the plotted rows when configured", async () => {
     const many: ScatterPoint[] = Array.from({ length: 20 }, (_, i) => ({ id: i, x: i, y: i % 7 }));
     await render({ data: many, downsampling: { enabled: true, maxPoints: 5 } });
-
-    const { trace } = lastPlotCall();
-    expect(trace.x).toHaveLength(5);
-  });
-
-  it("purges the plot on unmount", async () => {
-    const { unmount } = await render({ data });
-    const { el } = lastPlotCall();
-    unmount();
-    expect(plotly.purge).toHaveBeenCalledWith(el);
+    expect(lastViz().data).toHaveLength(5);
   });
 });
 
-describe("tooltips", () => {
-  const hoverEvent = (pointIndex: number, x: number, y: number) => ({
-    points: [{ pointIndex, x, y, data: { ids: ["a", "b", "c"] } }],
-    event: { clientX: x * 10 + 5, clientY: y * 10 + 5 },
+describe("brush mode", () => {
+  it("uses lasso when both box and lasso are enabled, since lasso wins", async () => {
+    await render({ data, enableBoxSelection: true, enableLassoSelection: true });
+    expect(lastViz().brush).toBe("lasso");
   });
-  const tooltipContent = () =>
-    document.querySelector('[data-slot="tooltip-content"]');
 
-  it("builds tooltip text and suppresses Plotly's native hover label by default", async () => {
+  it("uses box when only box selection is enabled", async () => {
+    await render({ data, enableBoxSelection: true, enableLassoSelection: false });
+    expect(lastViz().brush).toBe("box");
+  });
+
+  it("uses lasso when only lasso is enabled", async () => {
+    await render({ data, enableBoxSelection: false, enableLassoSelection: true });
+    expect(lastViz().brush).toBe("lasso");
+  });
+
+  it("disables the brush when neither box nor lasso is enabled (the defaults)", async () => {
     await render({ data });
-    const { trace } = lastPlotCall();
-    // "none" keeps hover events firing for the themed HTML tooltip
-    expect(trace.hoverinfo).toBe("none");
-    expect(trace.hovertemplate).toBeUndefined();
-    expect(trace.text[0]).toContain("X: 1.00");
-    expect(trace.text[0]).toContain("Label: Point A");
-  });
-
-  it("shows and hides the design-system tooltip on hover/unhover", async () => {
-    vi.useFakeTimers();
-    try {
-      await render({
-        data,
-        tooltip: { enabled: true, content: (p) => `id=${p.id}<br>row 2` },
-      });
-
-      await fire("plotly_hover", hoverEvent(1, 2, 20));
-      const tip = tooltipContent();
-      expect(tip).not.toBeNull();
-      expect(tip?.textContent).toContain("id=b");
-      expect(tip?.textContent).toContain("row 2");
-      // Anchor positioned at the mouse coordinates (viewport, portaled to body)
-      const anchor = document.querySelector(
-        '[data-slot="chart-tooltip-anchor"]',
-      ) as HTMLElement;
-      expect(anchor.style.left).toBe("25px");
-
-      await fire("plotly_unhover");
-      // Still visible during the grace period, hidden afterwards
-      expect(tooltipContent()).not.toBeNull();
-      act(() => {
-        vi.runAllTimers();
-      });
-      expect(tooltipContent()).toBeNull();
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it("ignores hover events without points and out-of-range indices", async () => {
-    await render({ data });
-
-    await fire("plotly_hover", { points: [] });
-    expect(tooltipContent()).toBeNull();
-
-    // Out-of-range index produces no lines, so no tooltip is shown
-    await fire("plotly_hover", hoverEvent(99, 1, 10));
-    expect(tooltipContent()).toBeNull();
-  });
-
-  it("uses Plotly's native hover labels when tooltip.native is set", async () => {
-    await render({ data, tooltip: { enabled: true, native: true, content: (p) => `id=${p.id}` } });
-    const { trace } = lastPlotCall();
-    expect(trace.hoverinfo).toBe("text");
-    expect(trace.hovertemplate).toBe("%{text}<extra></extra>");
-    expect(trace.text).toEqual(["id=a", "id=b", "id=c"]);
-    expect(handlers.plotly_hover).toBeUndefined();
-    expect(handlers.plotly_unhover).toBeUndefined();
-  });
-
-  it("skips hover info entirely when tooltips are disabled", async () => {
-    await render({ data, tooltip: { enabled: false } });
-    const { trace } = lastPlotCall();
-    expect(trace.hoverinfo).toBe("skip");
-    expect(trace.hovertemplate).toBeUndefined();
-    expect(trace.text).toEqual([]);
-    expect(handlers.plotly_hover).toBeUndefined();
-  });
-});
-
-describe("continuous color mapping", () => {
-  it("maps numeric field values onto the default diverging colorscale", async () => {
-    await render({ data, colorMapping: { type: "continuous", field: "v" } });
-
-    const { trace } = lastPlotCall();
-    expect(trace.marker.color).toEqual([0, 5, 10]);
-    expect(trace.marker.colorscale).toEqual(DEFAULT_COLOR_SCALE);
-    expect(trace.marker.showscale).toBe(true);
-    expect(trace.marker.cmin).toBe(0);
-    expect(trace.marker.cmax).toBe(10);
-    expect(trace.marker.colorbar).toMatchObject({ title: { text: "v" } });
-  });
-
-  it("zeroes non-numeric values and respects explicit min/max and showColorBar", async () => {
-    const mixed: ScatterPoint[] = [
-      { id: 1, x: 0, y: 0, metadata: { v: 4 } },
-      { id: 2, x: 1, y: 1, metadata: { v: "bad" } },
-    ];
-    await render({
-      data: mixed,
-      colorMapping: { type: "continuous", field: "v", min: -10, max: 10, colorScale: "Viridis" },
-      showColorBar: false,
-    });
-
-    const { trace } = lastPlotCall();
-    expect(trace.marker.color).toEqual([4, 0]);
-    expect(trace.marker.colorscale).toBe("Viridis");
-    expect(trace.marker.showscale).toBe(false);
-    expect(trace.marker.cmin).toBe(-10);
-    expect(trace.marker.cmax).toBe(10);
-  });
-
-  it("falls back to flat token colors for a continuous mapping without a field", async () => {
-    await render({ data, colorMapping: { type: "continuous" } });
-
-    const { trace } = lastPlotCall();
-    expect(trace.marker.color).toEqual([COLORS.primary, COLORS.primary, COLORS.primary]);
-    expect(trace.marker.cmin).toBeUndefined();
-    expect(trace.marker.colorbar).toBeUndefined();
+    expect(lastViz().brush).toBeUndefined();
   });
 });
 
 describe("click selection", () => {
-  it("replaces the selection on plain click and reports the clicked point", async () => {
+  it("replaces the selection on a plain click and reports the clicked point", async () => {
     const onSelectionChange = vi.fn();
     const onPointClick = vi.fn();
-    await render({ data, onSelectionChange, onPointClick });
+    const { container } = await render({
+      data,
+      enableClickSelection: true,
+      onSelectionChange,
+      onPointClick,
+    });
 
-    await fire("plotly_click", clickEvent(["a", "b", "c"], 1));
+    pressOn(container);
+    fireSelect(clickSelected(["b"]));
 
-    expect(onPointClick).toHaveBeenCalledWith(data[1], expect.objectContaining({ shiftKey: false }));
     expect(onSelectionChange).toHaveBeenCalledWith(new Set(["b"]), "replace");
-    // Internal (uncontrolled) state syncs back into Plotly
-    expect(lastRestyleCall()).toEqual({ selectedpoints: [[1]] });
+    expect(onPointClick).toHaveBeenCalledWith(data[1], expect.objectContaining({ type: "pointerdown" }));
   });
 
   it("adds to the selection on shift-click", async () => {
     const onSelectionChange = vi.fn();
-    await render({ data, onSelectionChange });
+    const { container } = await render({
+      data,
+      enableClickSelection: true,
+      selectedIds: new Set(["a"]),
+      onSelectionChange,
+    });
 
-    await fire("plotly_click", clickEvent(["a", "b", "c"], 0));
-    await fire("plotly_click", clickEvent(["a", "b", "c"], 2, { shiftKey: true }));
+    pressOn(container, { shiftKey: true });
+    fireSelect(clickSelected(["c"]));
 
     expect(onSelectionChange).toHaveBeenLastCalledWith(new Set(["a", "c"]), "add");
-    expect(lastRestyleCall()).toEqual({ selectedpoints: [[0, 2]] });
   });
 
-  it("ignores clicks without ids or with unknown ids", async () => {
+  it("removes from the selection on ctrl-click and on meta-click", async () => {
     const onSelectionChange = vi.fn();
-    await render({ data, onSelectionChange });
+    const { container } = await render({
+      data,
+      enableClickSelection: true,
+      selectedIds: new Set(["a", "b"]),
+      onSelectionChange,
+    });
 
-    await fire("plotly_click", { points: [{ data: {}, pointIndex: 0 }], event: mouseEvent() });
-    await fire("plotly_click", clickEvent(["nope"], 0));
+    pressOn(container, { ctrlKey: true });
+    fireSelect(clickSelected(["a"]));
+    expect(onSelectionChange).toHaveBeenLastCalledWith(new Set(["b"]), "remove");
 
-    expect(onSelectionChange).not.toHaveBeenCalled();
+    pressOn(container, { metaKey: true });
+    fireSelect(clickSelected(["b"]));
+    expect(onSelectionChange).toHaveBeenLastCalledWith(new Set(["a"]), "remove");
   });
-});
 
-describe("box/lasso selection", () => {
-  it("replaces the selection and restores original (numeric) id types", async () => {
-    const numericData: ScatterPoint[] = [
+  it("toggles on shift and ctrl together", async () => {
+    const onSelectionChange = vi.fn();
+    const { container } = await render({
+      data,
+      enableClickSelection: true,
+      selectedIds: new Set(["a"]),
+      onSelectionChange,
+    });
+
+    pressOn(container, { shiftKey: true, ctrlKey: true });
+    fireSelect(clickSelected(["a"]));
+    expect(onSelectionChange).toHaveBeenLastCalledWith(new Set<string>(), "toggle" satisfies SelectionMode);
+  });
+
+  it("keeps numeric ids as numbers in the selection", async () => {
+    const numeric: ScatterPoint[] = [
       { id: 1, x: 0, y: 0 },
       { id: 2, x: 1, y: 1 },
     ];
     const onSelectionChange = vi.fn();
-    await render({ data: numericData, onSelectionChange });
+    await render({ data: numeric, enableClickSelection: true, onSelectionChange });
 
-    await fire("plotly_selected", {
-      points: [
-        { data: { ids: ["1", "2"] }, pointIndex: 0 },
-        { data: { ids: ["1", "2"] }, pointIndex: 1 },
-        // No ids on the trace — dropped from the selection
-        { data: {}, pointIndex: 0 },
-        // Unknown id — kept as the raw string Plotly reported
-        { data: { ids: ["999"] }, pointIndex: 0 },
-      ],
-    });
-
-    expect(onSelectionChange).toHaveBeenCalledWith(new Set<string | number>([1, 2, "999"]), "replace");
-    expect(lastRestyleCall()).toEqual({ selectedpoints: [[0, 1]] });
+    fireSelect(clickSelected(["2"]));
+    expect(onSelectionChange).toHaveBeenCalledWith(new Set([2]), "replace");
   });
 
-  it("ignores selection events without points", async () => {
+  it("clears the selection when a click lands on empty plot area", async () => {
     const onSelectionChange = vi.fn();
-    await render({ data, onSelectionChange });
+    await render({ data, enableClickSelection: true, selectedIds: new Set(["a", "b"]), onSelectionChange });
+    fireSelect(null);
+    expect(onSelectionChange).toHaveBeenCalledWith(new Set(), "replace");
+  });
 
-    await fire("plotly_selected");
-    await fire("plotly_selected", {});
-
+  it("does nothing on a click when click selection is off", async () => {
+    const onSelectionChange = vi.fn();
+    await render({ data, enableClickSelection: false, onSelectionChange });
+    fireSelect(clickSelected(["a"]));
+    fireSelect(null);
     expect(onSelectionChange).not.toHaveBeenCalled();
   });
+});
 
-  it("clears the selection on deselect", async () => {
+describe("box and lasso selection", () => {
+  it("reports the brushed records as a replace selection", async () => {
     const onSelectionChange = vi.fn();
-    await render({ data, onSelectionChange });
+    await render({ data, enableBoxSelection: true, onSelectionChange });
 
-    await fire("plotly_click", clickEvent(["a", "b", "c"], 0));
-    await fire("plotly_deselect");
+    fireBrush(brushed("box", ["a", "c"]));
+    expect(onSelectionChange).toHaveBeenCalledWith(new Set(["a", "c"]), "replace");
+  });
 
-    expect(onSelectionChange).toHaveBeenLastCalledWith(new Set(), "replace");
-    expect(lastRestyleCall()).toEqual({ selectedpoints: [null] });
+  it("uses the modifier keys held when the brush starts", async () => {
+    const onSelectionChange = vi.fn();
+    const { container } = await render({
+      data,
+      enableLassoSelection: true,
+      selectedIds: new Set(["b"]),
+      onSelectionChange,
+    });
+
+    pressOn(container, { shiftKey: true });
+    fireBrush(brushed("lasso", ["a"]));
+    expect(onSelectionChange).toHaveBeenLastCalledWith(new Set(["a", "b"]), "add");
+  });
+
+  it("ignores a brush that has been cleared", async () => {
+    const onSelectionChange = vi.fn();
+    await render({ data, enableBoxSelection: true, onSelectionChange });
+    fireBrush(null);
+    expect(onSelectionChange).not.toHaveBeenCalled();
   });
 });
 
 describe("controlled selection", () => {
-  it("syncs the selectedIds prop into Plotly without internal state", async () => {
-    const onSelectionChange = vi.fn();
-    const { rerender } = await render({ data, selectedIds: new Set(["b"]), onSelectionChange });
+  it("draws the selectedIds prop as an extra highlighted layer over the points", async () => {
+    await render({ data, selectedIds: new Set(["b"]) });
 
-    expect(lastRestyleCall()).toEqual({ selectedpoints: [[1]] });
-
-    // Clicking notifies the consumer but does not change the plot until the prop does
-    await fire("plotly_click", clickEvent(["a", "b", "c"], 2));
-    expect(onSelectionChange).toHaveBeenCalledWith(new Set(["c"]), "replace" satisfies SelectionMode);
-    expect(lastRestyleCall()).toEqual({ selectedpoints: [[1]] });
-
-    await rerender({ data, selectedIds: new Set(), onSelectionChange });
-    expect(lastRestyleCall()).toEqual({ selectedpoints: [null] });
+    const { spec } = lastViz();
+    expect(spec.layers).toHaveLength(2);
+    const [highlight] = spec.layers;
+    expect(highlight.kind).toBe("point");
+    expect(highlight.data).toEqual([expect.objectContaining({ key: "b", x: 2, y: 20 })]);
+    expect(highlight.style?.size).toBe(DEFAULT_MARKER_SIZE + 6);
   });
 
-  it("matches numeric selectedIds against string ids via normalization", async () => {
-    const numericData: ScatterPoint[] = [
+  it("matches numeric selectedIds against string ids", async () => {
+    const numeric: ScatterPoint[] = [
       { id: 1, x: 0, y: 0 },
       { id: 2, x: 1, y: 1 },
     ];
-    await render({ data: numericData, selectedIds: new Set([2]) });
-    expect(lastRestyleCall()).toEqual({ selectedpoints: [[1]] });
+    await render({ data: numeric, selectedIds: new Set([2]) });
+    expect(lastViz().spec.layers[0].data).toEqual([expect.objectContaining({ key: "2" })]);
+  });
+
+  it("notifies the consumer on click without changing the drawn selection until the prop does", async () => {
+    const onSelectionChange = vi.fn();
+    const { container, rerender } = await render({
+      data,
+      enableClickSelection: true,
+      selectedIds: new Set(["b"]),
+      onSelectionChange,
+    });
+
+    pressOn(container);
+    fireSelect(clickSelected(["c"]));
+    expect(onSelectionChange).toHaveBeenCalledWith(new Set(["c"]), "replace");
+    expect(lastViz().spec.layers).toHaveLength(2);
+    expect(lastViz().spec.layers[0].data).toEqual([expect.objectContaining({ key: "b" })]);
+
+    await rerender({ data, enableClickSelection: true, selectedIds: new Set(), onSelectionChange });
+    expect(lastViz().spec.layers).toHaveLength(1);
+  });
+});
+
+describe("continuous color mapping", () => {
+  it("scales the color legend to the data range when no min and max are given", async () => {
+    await render({ data, colorMapping: { type: "continuous", field: "v" } });
+
+    const { spec, data: rows } = lastViz();
+    expect(rows.map((row) => row.color)).toEqual([0, 5, 10]);
+    expect(spec.scales?.color).toMatchObject({ title: "v", limits: [0, 10] });
+  });
+
+  it("uses explicit min and max for the color scale", async () => {
+    await render({
+      data,
+      colorMapping: { type: "continuous", field: "v", min: -10, max: 10 },
+    });
+    expect(lastViz().spec.scales?.color?.limits).toEqual([-10, 10]);
+  });
+
+  it("coerces a non-numeric color value to NaN", async () => {
+    const mixed: ScatterPoint[] = [
+      { id: 1, x: 0, y: 0, metadata: { v: 4 } },
+      { id: 2, x: 1, y: 1, metadata: { v: "bad" } },
+    ];
+    await render({ data: mixed, colorMapping: { type: "continuous", field: "v" } });
+    expect(lastViz().data.map((row) => row.color)).toEqual([4, NaN]);
+  });
+
+  it("colors categories with the categorical palette in order", async () => {
+    await render({
+      data,
+      colorMapping: { type: "categorical", field: "group", categoryColors: { g2: "#abcdef" } },
+    });
+    // Categories sort to g1, g2. The palette follows that order.
+    expect(lastViz().palettes?.categorical(0)).not.toBe("#abcdef");
+    expect(lastViz().palettes?.categorical(1)).toBe("#abcdef");
   });
 });

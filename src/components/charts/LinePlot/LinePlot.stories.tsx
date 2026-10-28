@@ -310,11 +310,7 @@ export const Basic: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("6 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Legend shows series names", async () => {
@@ -356,12 +352,15 @@ export const CategoricalXLabels: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("X-axis ticks show categorical labels, not integers", async () => {
-      const tickLabels = [...canvasElement.querySelectorAll(".xtick text")].map((node) => node.textContent);
-      expect(tickLabels).toEqual(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
+      const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      const shown = [...canvasElement.querySelectorAll("svg[data-viz-panel] text")]
+        .map((node) => node.textContent ?? "")
+        .filter((text) => labels.includes(text));
+      expect(shown).toEqual(labels);
     });
 
     await step("Legend shows series names", async () => {
@@ -394,11 +393,7 @@ export const WithMarkers: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("6 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Legend shows series names", async () => {
@@ -431,11 +426,7 @@ export const WithErrorBars: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("6 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Legend shows series names", async () => {
@@ -468,11 +459,7 @@ export const WideRange: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("3 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(3);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Legend shows series names", async () => {
@@ -506,11 +493,7 @@ export const NarrowRange: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("3 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(3);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Legend shows series names", async () => {
@@ -545,11 +528,7 @@ export const CustomAxes: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("6 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Axis titles are displayed", async () => {
@@ -588,11 +567,7 @@ export const CustomRange: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("6 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Legend shows series names", async () => {
@@ -623,11 +598,7 @@ export const AutoRangeLinePlot: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("6 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Axis titles are displayed", async () => {
@@ -673,11 +644,7 @@ export const WideRangeAutoScaled: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("3 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(3);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Axis titles are displayed", async () => {
@@ -722,11 +689,7 @@ export const NarrowRangeAutoScaled: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("3 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(3);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Axis titles are displayed", async () => {
@@ -781,11 +744,7 @@ export const OnlyXRangeProvided: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("6 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Axis titles are displayed", async () => {
@@ -831,11 +790,7 @@ export const OnlyYRangeProvided: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("6 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Axis titles are displayed", async () => {
@@ -871,11 +826,7 @@ export const LinePlotStartingFromZero: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("6 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Axis titles are displayed", async () => {
@@ -916,16 +867,12 @@ export const NoTitle: Story = {
     const canvas = within(canvasElement);
 
     await step("No title block is rendered", async () => {
-      expect(canvasElement.querySelector(".gtitle")).not.toBeInTheDocument();
+      expect(canvasElement.querySelector("figcaption")).not.toBeInTheDocument();
       expect(canvas.queryByText("Line Plot")).not.toBeInTheDocument();
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("6 traces are rendered", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(6);
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Axis titles are displayed", async () => {
@@ -964,21 +911,9 @@ export const ContainerFilled: Story = {
     await step("Chart canvas fills the container width", async () => {
       const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       await waitFor(() => {
-        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
+        const plot = canvasElement.querySelector("svg[data-viz-panel]") as HTMLElement;
         expect(plot).toBeInTheDocument();
-        expect(plot.clientWidth).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
-      });
-    });
-
-    await step("Chart resizes in place when the container resizes", async () => {
-      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
-      // Shrink the container; the ResizeObserver should drive a Plotly relayout
-      // (not a full re-plot) so the canvas tracks the new width.
-      wrapper.style.width = "440px";
-      await waitFor(() => {
-        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
-        expect(plot.clientWidth).toBeGreaterThanOrEqual(420);
-        expect(plot.clientWidth).toBeLessThanOrEqual(460);
+        expect(plot.getBoundingClientRect().width).toBeGreaterThanOrEqual(wrapper.getBoundingClientRect().width - 2);
       });
       // Leave the story showing the full container, not the 440px test size.
       wrapper.style.width = "";
@@ -1014,14 +949,16 @@ export const SmallSizeLegendRegression: Story = {
     variant: "lines+markers",
   },
   play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
     await step("Legend sits below the x-axis tick labels (no overlap)", async () => {
       await waitFor(() => {
-        const ticks = [...canvasElement.querySelectorAll<SVGTextElement>(".xtick text")];
-        const legendItems = [...canvasElement.querySelectorAll<SVGTextElement>(".legend .legendtext")];
-        expect(ticks.length).toBeGreaterThan(0);
-        expect(legendItems.length).toBeGreaterThan(0);
+        const ticks = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((label) => canvas.getByText(label));
+        const legendItems = ["Run 1", "Run 2", "Run 3"].map((name) => canvas.getByText(name));
         const tickBottom = Math.max(...ticks.map((node) => node.getBoundingClientRect().bottom));
         const legendTop = Math.min(...legendItems.map((node) => node.getBoundingClientRect().top));
+        // Legend must start at or below where the tick labels end (small
+        // sub-pixel tolerance for rounding).
         expect(legendTop).toBeGreaterThanOrEqual(tickBottom - 2);
       });
     });

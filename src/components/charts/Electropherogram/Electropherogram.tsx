@@ -66,6 +66,9 @@ const determineBase = (item: PeakData): string => {
   return highestBase;
 };
 
+/**
+ * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
+ */
 const Electropherogram: React.FC<ElectropherogramProps> = ({
   data = [],
   width = 900,

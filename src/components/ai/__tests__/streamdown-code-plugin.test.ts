@@ -8,9 +8,7 @@ const getCodeBlockHighlighter = vi.fn(async (lang: string) => ({
   highlighter: { codeToTokens },
   lang: lang === "cobol" ? "text" : lang,
 }));
-const resolveCodeBlockLanguage = vi.fn((lang: string) =>
-  lang === "cobol" ? null : lang,
-);
+const resolveCodeBlockLanguage = vi.fn((lang: string) => (lang === "cobol" ? null : lang));
 
 vi.mock("@/lib/shiki", () => ({
   getCodeBlockHighlighter,
@@ -53,10 +51,7 @@ describe("streamdownCodePlugin", () => {
 
     await flush();
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(codeToTokens).toHaveBeenCalledWith(
-      "print(1)",
-      expect.objectContaining({ lang: "python" }),
-    );
+    expect(codeToTokens).toHaveBeenCalledWith("print(1)", expect.objectContaining({ lang: "python" }));
 
     // Same code+language now resolves synchronously from cache.
     const cached = streamdownCodePlugin.highlight(

@@ -1,4 +1,4 @@
-import type { RDKitModule } from "@rdkit/rdkit"
+import type { RDKitModule } from "@rdkit/rdkit";
 
 /**
  * Loader for the RDKit.js WebAssembly module.
@@ -26,10 +26,10 @@ import type { RDKitModule } from "@rdkit/rdkit"
 
 /** The `initRDKitModule` factory exported by `@rdkit/rdkit`. */
 type RDKitFactory = (options?: {
-  locateFile?: () => string
-  print?: (msg: string) => void
-  printErr?: (msg: string) => void
-}) => Promise<RDKitModule>
+  locateFile?: () => string;
+  print?: (msg: string) => void;
+  printErr?: (msg: string) => void;
+}) => Promise<RDKitModule>;
 
 /** Options controlling how the RDKit module is located and loaded. */
 export interface RDKitLoaderConfig {
@@ -39,21 +39,21 @@ export interface RDKitLoaderConfig {
    * (e.g. copy it into your app's public dir and point here). When omitted,
    * RDKit's own default resolution is used.
    */
-  wasmSrc?: string
+  wasmSrc?: string;
   /**
    * A module already initialised by the consumer (e.g. shared with other parts
    * of the app). When provided, no import or network work is done.
    */
-  instance?: RDKitModule
+  instance?: RDKitModule;
   /**
    * Override how the `initRDKitModule` factory is obtained. Defaults to
    * `import("@rdkit/rdkit")`. Provide this only for unusual setups (custom
    * bundler resolution, a vendored copy, etc.).
    */
-  importFactory?: () => Promise<RDKitFactory>
+  importFactory?: () => Promise<RDKitFactory>;
 }
 
-const defaultConfig: RDKitLoaderConfig = {}
+const defaultConfig: RDKitLoaderConfig = {};
 
 /**
  * Set process-wide defaults for how RDKit is loaded. Call once, before the
@@ -72,19 +72,19 @@ const defaultConfig: RDKitLoaderConfig = {}
  * ```
  */
 export function configureRDKit(config: RDKitLoaderConfig): void {
-  if (loadPromise) return
-  Object.assign(defaultConfig, config)
+  if (loadPromise) return;
+  Object.assign(defaultConfig, config);
 }
 
-let loadPromise: Promise<RDKitModule> | null = null
+let loadPromise: Promise<RDKitModule> | null = null;
 
 /** Dynamically import the installed `@rdkit/rdkit` and return its factory. */
 async function importRDKitFactory(): Promise<RDKitFactory> {
   const mod = (await import("@rdkit/rdkit")) as unknown as {
-    default?: RDKitFactory
-  } & RDKitFactory
+    default?: RDKitFactory;
+  } & RDKitFactory;
   // The package exports the factory as both `module.exports` and `.default`.
-  return mod.default ?? (mod as RDKitFactory)
+  return mod.default ?? (mod as RDKitFactory);
 }
 
 /**
@@ -97,24 +97,24 @@ async function importRDKitFactory(): Promise<RDKitFactory> {
  */
 export function loadRDKit(): Promise<RDKitModule> {
   if (defaultConfig.instance) {
-    return Promise.resolve(defaultConfig.instance)
+    return Promise.resolve(defaultConfig.instance);
   }
-  if (loadPromise) return loadPromise
+  if (loadPromise) return loadPromise;
 
   loadPromise = (async () => {
     if (typeof window === "undefined" || typeof document === "undefined") {
-      throw new Error("RDKit can only be loaded in a browser environment")
+      throw new Error("RDKit can only be loaded in a browser environment");
     }
 
-    let initRDKitModule: RDKitFactory
+    let initRDKitModule: RDKitFactory;
     try {
-      initRDKitModule = await (defaultConfig.importFactory ?? importRDKitFactory)()
+      initRDKitModule = await (defaultConfig.importFactory ?? importRDKitFactory)();
     } catch (cause) {
-      const detail = cause instanceof Error ? ` (${cause.message})` : ""
+      const detail = cause instanceof Error ? ` (${cause.message})` : "";
       throw new Error(
         `Failed to load @rdkit/rdkit${detail}. Install it as a dependency to ` +
           "render molecule structures: `yarn add @rdkit/rdkit`.",
-      )
+      );
     }
 
     // RDKit is an Emscripten module: its C++ stdout/stderr (including the noisy
@@ -123,38 +123,36 @@ export function loadRDKit(): Promise<RDKitModule> {
     // Route them to console.debug so a bad SMILES never spams the host app's
     // console — invalid input is surfaced through the renderer's fallback UI.
     return initRDKitModule({
-      ...(defaultConfig.wasmSrc
-        ? { locateFile: () => defaultConfig.wasmSrc as string }
-        : {}),
+      ...(defaultConfig.wasmSrc ? { locateFile: () => defaultConfig.wasmSrc as string } : {}),
       print: (msg: string) => console.debug("[RDKit]", msg),
       printErr: (msg: string) => console.debug("[RDKit]", msg),
-    })
-  })()
+    });
+  })();
 
   // Let a failed attempt be retried on the next call rather than caching the
   // rejection forever.
   loadPromise.catch(() => {
-    loadPromise = null
-  })
+    loadPromise = null;
+  });
 
-  return loadPromise
+  return loadPromise;
 }
 
 /** Drawing options for {@link moleculeToSvg}. */
 export interface MoleculeSvgOptions {
   /** Rendered width in pixels. @default 250 */
-  width?: number
+  width?: number;
   /** Rendered height in pixels. @default 200 */
-  height?: number
+  height?: number;
   /** Lighten carbons/bonds so the structure is legible on dark surfaces. */
-  dark?: boolean
+  dark?: boolean;
   /** Optional caption drawn beneath the structure by RDKit. */
-  legend?: string
+  legend?: string;
   /**
    * Extra RDKit MolDraw2D options, merged last. See
    * https://www.rdkitjs.com/#drawing-molecules-all-options
    */
-  drawOptions?: Record<string, unknown>
+  drawOptions?: Record<string, unknown>;
 }
 
 /**
@@ -166,18 +164,14 @@ export interface MoleculeSvgOptions {
  * string (e.g. the interactive scatter's `tooltip.content`) — load RDKit ahead
  * of time with {@link loadRDKit} or {@link useRDKit}, then call this.
  */
-export function moleculeToSvg(
-  rdkit: RDKitModule,
-  smiles: string,
-  options: MoleculeSvgOptions = {},
-): string | null {
-  const { width = 250, height = 200, dark = false, legend, drawOptions } = options
+export function moleculeToSvg(rdkit: RDKitModule, smiles: string, options: MoleculeSvgOptions = {}): string | null {
+  const { width = 250, height = 200, dark = false, legend, drawOptions } = options;
 
-  const mol = rdkit.get_mol(smiles)
-  if (!mol) return null
+  const mol = rdkit.get_mol(smiles);
+  if (!mol) return null;
 
   try {
-    if (!mol.is_valid()) return null
+    if (!mol.is_valid()) return null;
 
     const details: Record<string, unknown> = {
       width,
@@ -188,20 +182,18 @@ export function moleculeToSvg(
       ...(legend ? { legend } : {}),
       ...(dark ? { atomColourPalette: DARK_ATOM_PALETTE } : {}),
       ...drawOptions,
-    }
+    };
 
     // RDKit prefixes an XML prolog (`<?xml …?>`) which is invalid inside inline
     // HTML; strip it so the SVG embeds cleanly whether injected via
     // dangerouslySetInnerHTML or dropped into a chart tooltip string.
-    return mol
-      .get_svg_with_highlights(JSON.stringify(details))
-      .replace(/^\s*<\?xml[^>]*\?>\s*/i, "")
+    return mol.get_svg_with_highlights(JSON.stringify(details)).replace(/^\s*<\?xml[^>]*\?>\s*/i, "");
   } finally {
-    mol.delete()
+    mol.delete();
   }
 }
 
-const RGB_MAX = 255
+const RGB_MAX = 255;
 
 /** Parse a `#rrggbb` string into RDKit's 0–1 RGB triple. */
 function hexToRgb01(hex: string): [number, number, number] {
@@ -209,7 +201,7 @@ function hexToRgb01(hex: string): [number, number, number] {
     parseInt(hex.slice(1, 3), 16) / RGB_MAX,
     parseInt(hex.slice(3, 5), 16) / RGB_MAX,
     parseInt(hex.slice(5, 7), 16) / RGB_MAX,
-  ]
+  ];
 }
 
 /**
@@ -229,8 +221,8 @@ const DARK_ATOM_HEX: Record<string, string> = {
   "17": "#8ceb99", // Cl
   "35": "#e69e73", // Br
   "53": "#c499f2", // I
-}
+};
 
 const DARK_ATOM_PALETTE = Object.fromEntries(
   Object.entries(DARK_ATOM_HEX).map(([key, hex]) => [key, hexToRgb01(hex)]),
-) as Record<string, [number, number, number]>
+) as Record<string, [number, number, number]>;

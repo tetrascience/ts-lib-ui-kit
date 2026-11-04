@@ -120,7 +120,4 @@ export * from "@/components/ai/tool";
 // Utils
 export * from "@/utils/colors";
 // Extend the slim code-highlighting language set (SW-2007)
-export {
-  getSupportedCodeBlockLanguages,
-  registerCodeBlockLanguage,
-} from "@/lib/shiki";
+export { getSupportedCodeBlockLanguages, registerCodeBlockLanguage } from "@/lib/shiki";

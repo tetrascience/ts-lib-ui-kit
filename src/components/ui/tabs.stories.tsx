@@ -1,9 +1,8 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Tabs> = {
   title: "Components/Navigation & Menus/Tabs",
@@ -15,11 +14,11 @@ const meta: Meta<typeof Tabs> = {
     docs: { source: { type: "dynamic" } },
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Tabs>
+type Story = StoryObj<typeof Tabs>;
 
 function renderTabs(variant: "default" | "line", orientation: "horizontal" | "vertical") {
   return (
@@ -43,7 +42,7 @@ function renderTabs(variant: "default" | "line", orientation: "horizontal" | "ve
         Team members and permissions.
       </TabsContent>
     </Tabs>
-  )
+  );
 }
 
 export const HorizontalDefault: Story = {
@@ -52,26 +51,21 @@ export const HorizontalDefault: Story = {
     zephyr: { testCaseId: "SW-T1310" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Tab list and tabs render", async () => {
-      expect(canvas.getByRole("tablist")).toBeInTheDocument()
-      expect(canvas.getByRole("tab", { name: "Overview" })).toBeInTheDocument()
-      expect(canvas.getByRole("tab", { name: "Activity" })).toBeInTheDocument()
-      expect(canvas.getByRole("tab", { name: "Members" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("tablist")).toBeInTheDocument();
+      expect(canvas.getByRole("tab", { name: "Overview" })).toBeInTheDocument();
+      expect(canvas.getByRole("tab", { name: "Activity" })).toBeInTheDocument();
+      expect(canvas.getByRole("tab", { name: "Members" })).toBeInTheDocument();
+    });
 
     await step("Default tab panel shows overview content", async () => {
-      expect(canvas.getByRole("tab", { name: "Overview" })).toHaveAttribute(
-        "aria-selected",
-        "true",
-      )
-      expect(
-        canvas.getByText("Overview content for the selected workspace."),
-      ).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("tab", { name: "Overview" })).toHaveAttribute("aria-selected", "true");
+      expect(canvas.getByText("Overview content for the selected workspace.")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const HorizontalLine: Story = {
   render: () => renderTabs("line", "horizontal"),
@@ -79,20 +73,18 @@ export const HorizontalLine: Story = {
     zephyr: { testCaseId: "SW-T1311" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Line variant tab list renders", async () => {
-      expect(canvas.getByRole("tablist")).toBeInTheDocument()
-      expect(canvas.getByRole("tab", { name: "Overview" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("tablist")).toBeInTheDocument();
+      expect(canvas.getByRole("tab", { name: "Overview" })).toBeInTheDocument();
+    });
 
     await step("Overview panel is visible", async () => {
-      expect(
-        canvas.getByText("Overview content for the selected workspace."),
-      ).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Overview content for the selected workspace.")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const VerticalDefault: Story = {
   render: () => renderTabs("default", "vertical"),
@@ -100,20 +92,18 @@ export const VerticalDefault: Story = {
     zephyr: { testCaseId: "SW-T1312" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Vertical tab list renders", async () => {
-      expect(canvas.getByRole("tablist")).toBeInTheDocument()
-      expect(canvas.getByRole("tab", { name: "Members" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("tablist")).toBeInTheDocument();
+      expect(canvas.getByRole("tab", { name: "Members" })).toBeInTheDocument();
+    });
 
     await step("Default vertical tab content shows", async () => {
-      expect(
-        canvas.getByText("Overview content for the selected workspace."),
-      ).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Overview content for the selected workspace.")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const VerticalLine: Story = {
   render: () => renderTabs("line", "vertical"),
@@ -121,17 +111,15 @@ export const VerticalLine: Story = {
     zephyr: { testCaseId: "SW-T1313" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Vertical line tabs render", async () => {
-      expect(canvas.getByRole("tablist")).toBeInTheDocument()
-      expect(canvas.getByRole("tab", { name: "Activity" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("tablist")).toBeInTheDocument();
+      expect(canvas.getByRole("tab", { name: "Activity" })).toBeInTheDocument();
+    });
 
     await step("Overview panel is visible", async () => {
-      expect(
-        canvas.getByText("Overview content for the selected workspace."),
-      ).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Overview content for the selected workspace.")).toBeInTheDocument();
+    });
   },
-}
+};

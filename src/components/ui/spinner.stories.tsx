@@ -1,10 +1,9 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { Button } from "./button"
-import { Spinner } from "./spinner"
+import { Button } from "./button";
+import { Spinner } from "./spinner";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Spinner> = {
   title: "Components/Feedback & Status/Spinner",
@@ -17,26 +16,27 @@ const meta: Meta<typeof Spinner> = {
     size: {
       control: { type: "select" },
       options: ["sm", "default", "md", "lg"],
-      description: "Controls the spinner diameter. sm (20px) for inline use, default (24px) general purpose, md (32px) for panels, lg (48px) for full-page loading.",
+      description:
+        "Controls the spinner diameter. sm (20px) for inline use, default (24px) general purpose, md (32px) for panels, lg (48px) for full-page loading.",
     },
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Spinner>
+type Story = StoryObj<typeof Spinner>;
 
 const playSpinner: Story["play"] = async ({ canvasElement, step }) => {
-  const canvas = within(canvasElement)
+  const canvas = within(canvasElement);
 
   await step("Spinner renders with status role", async () => {
-    expect(canvas.getByRole("status", { name: "Loading" })).toBeInTheDocument()
-  })
+    expect(canvas.getByRole("status", { name: "Loading" })).toBeInTheDocument();
+  });
 
   await step("Spinner is an SVG element", async () => {
-    expect(canvas.getByRole("status", { name: "Loading" }).tagName.toLowerCase()).toBe("svg")
-  })
-}
+    expect(canvas.getByRole("status", { name: "Loading" }).tagName.toLowerCase()).toBe("svg");
+  });
+};
 
 export const Default: Story = {
   args: { size: "default" },
@@ -44,7 +44,7 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1302" },
   },
   play: playSpinner,
-}
+};
 
 export const Large: Story = {
   args: { size: "lg" },
@@ -52,7 +52,7 @@ export const Large: Story = {
     zephyr: { testCaseId: "SW-T1303" },
   },
   play: playSpinner,
-}
+};
 
 export const Small: Story = {
   args: { size: "sm" },
@@ -60,7 +60,7 @@ export const Small: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1405" },
   },
-}
+};
 
 export const Medium: Story = {
   args: { size: "md" },
@@ -68,7 +68,7 @@ export const Medium: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T1406" },
   },
-}
+};
 
 export const InlineWithText: Story = {
   render: () => (
@@ -78,17 +78,17 @@ export const InlineWithText: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Spinner and text render together", async () => {
-      expect(canvas.getByRole("status")).toBeInTheDocument()
-      expect(canvas.getByText("Loading results...")).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("status")).toBeInTheDocument();
+      expect(canvas.getByText("Loading results...")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1407" },
   },
-}
+};
 
 export const FullPageLoader: Story = {
   render: () => (
@@ -98,17 +98,17 @@ export const FullPageLoader: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Full page loader renders", async () => {
-      expect(canvas.getByRole("status")).toBeInTheDocument()
-      expect(canvas.getByText("Loading...")).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("status")).toBeInTheDocument();
+      expect(canvas.getByText("Loading...")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1408" },
   },
-}
+};
 
 export const InsideButton: Story = {
   render: () => (
@@ -124,22 +124,22 @@ export const InsideButton: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Both buttons with spinners render", async () => {
-      const spinners = canvas.getAllByRole("status")
-      expect(spinners).toHaveLength(2)
-    })
+      const spinners = canvas.getAllByRole("status");
+      expect(spinners).toHaveLength(2);
+    });
 
     await step("Buttons are disabled while loading", async () => {
-      const buttons = canvas.getAllByRole("button")
-      buttons.forEach((btn) => expect(btn).toBeDisabled())
-    })
+      const buttons = canvas.getAllByRole("button");
+      buttons.forEach((btn) => expect(btn).toBeDisabled());
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1409" },
   },
-}
+};
 
 export const CustomColor: Story = {
   args: { size: "md" },
@@ -151,14 +151,14 @@ export const CustomColor: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Three custom-colored spinners render", async () => {
-      const spinners = canvas.getAllByRole("status")
-      expect(spinners).toHaveLength(3)
-    })
+      const spinners = canvas.getAllByRole("status");
+      expect(spinners).toHaveLength(3);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1410" },
   },
-}
+};

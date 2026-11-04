@@ -32,9 +32,7 @@ describe("storybook docs source audit", () => {
     expect(results.length).toBeGreaterThan(500);
 
     const violations = findViolations(results);
-    const report = violations
-      .map((v) => `${v.file} › ${v.exportName}: [${v.verdict}] ${v.detail}`)
-      .join("\n");
+    const report = violations.map((v) => `${v.file} › ${v.exportName}: [${v.verdict}] ${v.detail}`).join("\n");
     expect(violations, `\n${report}\n`).toEqual([]);
   });
 });

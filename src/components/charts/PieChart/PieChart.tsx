@@ -51,10 +51,7 @@ const PieChart: React.FC<PieChartProps> = ({
   const { bindTooltip, tooltipElement } = useChartTooltip({ followCursor: true });
 
   const colors = useMemo(() => {
-    if (
-      dataSeries.colors &&
-      dataSeries.colors.length >= dataSeries.labels.length
-    ) {
+    if (dataSeries.colors && dataSeries.colors.length >= dataSeries.labels.length) {
       return dataSeries.colors;
     }
 
@@ -132,12 +129,21 @@ const PieChart: React.FC<PieChartProps> = ({
         getLoadedPlotly().purge(plotElement);
       }
     };
-  }, [colors, dataSeries.labels, dataSeries.name, dataSeries.values, width, height, textInfo, hole, rotation, theme, bindTooltip]);
-
-  const PieChartLegend: React.FC<{ labels: string[]; colors: string[] }> = ({
-    labels,
+  }, [
     colors,
-  }) => {
+    dataSeries.labels,
+    dataSeries.name,
+    dataSeries.values,
+    width,
+    height,
+    textInfo,
+    hole,
+    rotation,
+    theme,
+    bindTooltip,
+  ]);
+
+  const PieChartLegend: React.FC<{ labels: string[]; colors: string[] }> = ({ labels, colors }) => {
     const items = labels.map((label, i) => (
       <React.Fragment key={`${label}-${i}`}>
         <div className="flex items-center text-[13px] leading-[18px] font-medium">
@@ -147,9 +153,7 @@ const PieChart: React.FC<PieChartProps> = ({
             style={{ background: colors[i] }}
           />
           {label}
-          {i < labels.length - 1 && (
-            <span className="mx-3 inline-block h-6 w-0.5 bg-border" />
-          )}
+          {i < labels.length - 1 && <span className="mx-3 inline-block h-6 w-0.5 bg-border" />}
         </div>
       </React.Fragment>
     ));
@@ -163,7 +167,7 @@ const PieChart: React.FC<PieChartProps> = ({
           key={i}
         >
           {items.slice(i, i + rowSize)}
-        </div>
+        </div>,
       );
     }
     return (

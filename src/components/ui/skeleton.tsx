@@ -1,5 +1,5 @@
-import { withRef } from "@/lib/react18-compat"
-import { cn } from "@/lib/utils"
+import { withRef } from "@/lib/react18-compat";
+import { cn } from "@/lib/utils";
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -16,10 +16,10 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
       )}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const SkeletonWithRef = withRef("Skeleton", Skeleton)
+const SkeletonWithRef = withRef("Skeleton", Skeleton);
 
-export { SkeletonWithRef as Skeleton }
+export { SkeletonWithRef as Skeleton };

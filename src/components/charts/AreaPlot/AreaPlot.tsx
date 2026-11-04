@@ -94,11 +94,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
     // display those instead of the cumulative stack heights
     getLines: (points) =>
       chartTooltipLines(
-        points.map((point) =>
-          typeof point.customdata === "number"
-            ? { ...point, y: point.customdata }
-            : point,
-        ),
+        points.map((point) => (typeof point.customdata === "number" ? { ...point, y: point.customdata } : point)),
         { xLabel: xTitle, yLabel: yTitle },
       ),
   });
@@ -131,14 +127,8 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
     };
   }, [dataSeries, variant]);
 
-  const effectiveXRange = useMemo(
-    () => xRange || [xMin, xMax],
-    [xRange, xMin, xMax],
-  );
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
+  const effectiveXRange = useMemo(() => xRange || [xMin, xMax], [xRange, xMin, xMax]);
+  const effectiveYRange = useMemo(() => yRange || [yMin, yMax], [yRange, yMin, yMax]);
 
   const xTicks = useMemo(() => {
     const range = effectiveXRange[1] - effectiveXRange[0];
@@ -175,10 +165,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
   // When categorical labels are supplied, ticks must sit on the actual data
   // x-positions rather than the computed nice-step values above. Sorted
   // ascending so labels map deterministically to x regardless of series order.
-  const xDataValues = useMemo(
-    () => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b),
-    [dataSeries],
-  );
+  const xDataValues = useMemo(() => [...new Set(dataSeries.flatMap((s) => s.x))].sort((a, b) => a - b), [dataSeries]);
 
   // Only apply categorical labels when they align 1:1 with the tick positions;
   // a mismatch would silently mis-label ticks, so fall back to numeric ticks.
@@ -191,10 +178,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
     () =>
       thinTicks(
         yTicks,
-        maxTickCount(
-          resolvedHeight - marginTop - scale.margin.b,
-          scale.tickFontSize * Y_TICK_LABEL_SPACING,
-        ),
+        maxTickCount(resolvedHeight - marginTop - scale.margin.b, scale.tickFontSize * Y_TICK_LABEL_SPACING),
       ),
     [yTicks, resolvedHeight, marginTop, scale],
   );
@@ -413,7 +397,29 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, hasSize, xRange, yRange, effectiveXRange, effectiveYRange, variant, xTitle, yTitle, title, titleOptions, tickOptions, xTicks, yTicks, xDataValues, useCategoricalX, xTickText, theme, scale, marginTop, bindTooltip]);
+  }, [
+    dataSeries,
+    hasSize,
+    xRange,
+    yRange,
+    effectiveXRange,
+    effectiveYRange,
+    variant,
+    xTitle,
+    yTitle,
+    title,
+    titleOptions,
+    tickOptions,
+    xTicks,
+    yTicks,
+    xDataValues,
+    useCategoricalX,
+    xTickText,
+    theme,
+    scale,
+    marginTop,
+    bindTooltip,
+  ]);
 
   // Resize in place when the measured/overridden size changes — far cheaper
   // than recreating the plot (and it preserves tooltip/event bindings).
@@ -424,10 +430,7 @@ const AreaPlot: React.FC<AreaPlotProps> = ({
     }
     // newPlot already drew at the current size; skip the redundant relayout
     // (it would queue an automargin redraw that can reject if we unmount first).
-    if (
-      appliedSizeRef.current.width === resolvedWidth &&
-      appliedSizeRef.current.height === resolvedHeight
-    ) {
+    if (appliedSizeRef.current.width === resolvedWidth && appliedSizeRef.current.height === resolvedHeight) {
       return;
     }
     appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };

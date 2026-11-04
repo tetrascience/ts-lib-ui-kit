@@ -321,9 +321,9 @@ function ChartRamps() {
       <h2 className="text-lg font-semibold text-foreground">Chart Ramps</h2>
       <p className="max-w-2xl text-sm text-muted-foreground">
         CVD-friendly continuous palettes for heatmaps and gradients. Tuned for white / Light Gray backgrounds; on dark
-        surfaces lift the bottom 2–3 steps. Available as <code className="rounded bg-muted px-1 py-0.5 text-xs">
-          var(--chart-seq-blue-01)
-        </code> … and as <code className="rounded bg-muted px-1 py-0.5 text-xs">CHART_SEQUENTIAL</code> /{" "}
+        surfaces lift the bottom 2–3 steps. Available as{" "}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">var(--chart-seq-blue-01)</code> … and as{" "}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">CHART_SEQUENTIAL</code> /{" "}
         <code className="rounded bg-muted px-1 py-0.5 text-xs">CHART_DIVERGING</code> arrays for chart colorscales.
       </p>
       <div className="space-y-4 rounded-lg border border-border bg-card p-4">

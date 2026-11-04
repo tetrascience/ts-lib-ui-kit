@@ -1,9 +1,9 @@
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 export interface TetraScienceIconProps extends React.SVGProps<SVGSVGElement> {
-  size?: number | string
+  size?: number | string;
 }
 
 const TetraScienceIcon = React.forwardRef<SVGSVGElement, TetraScienceIconProps>(
@@ -34,11 +34,10 @@ const TetraScienceIcon = React.forwardRef<SVGSVGElement, TetraScienceIconProps>(
         strokeLinejoin="round"
       />
     </svg>
-  )
-)
+  ),
+);
 
-TetraScienceIcon.displayName = "TetraScienceIcon"
+TetraScienceIcon.displayName = "TetraScienceIcon";
 
-export { TetraScienceIcon }
-export default TetraScienceIcon
-
+export { TetraScienceIcon };
+export default TetraScienceIcon;

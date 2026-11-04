@@ -4,25 +4,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ComponentProps } from "react";
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export type TaskItemFileProps = ComponentProps<"div">;
 
-const TaskItemFile = ({
-  children,
-  className,
-  ...props
-}: TaskItemFileProps) => (
+const TaskItemFile = ({ children, className, ...props }: TaskItemFileProps) => (
   <div
     className={cn(
       "inline-flex items-center gap-1 rounded-md border bg-secondary px-1.5 py-0.5 text-foreground text-xs",
-      className
+      className,
     )}
     {...props}
   >
@@ -52,14 +44,7 @@ export type TaskProps = ComponentProps<typeof Collapsible> & {
   isStreaming?: boolean;
 };
 
-const Task = ({
-  defaultOpen = true,
-  isStreaming = false,
-  open,
-  onOpenChange,
-  className,
-  ...props
-}: TaskProps) => {
+const Task = ({ defaultOpen = true, isStreaming = false, open, onOpenChange, className, ...props }: TaskProps) => {
   const [isOpen, setIsOpen] = useControllableState<boolean>({
     defaultProp: defaultOpen,
     onChange: onOpenChange,
@@ -83,19 +68,9 @@ const Task = ({
     }
   }, [isStreaming, isOpen, setIsOpen, hasAutoClosed]);
 
-  const handleOpenChange = useCallback(
-    (newOpen: boolean) => setIsOpen(newOpen),
-    [setIsOpen]
-  );
+  const handleOpenChange = useCallback((newOpen: boolean) => setIsOpen(newOpen), [setIsOpen]);
 
-  return (
-    <Collapsible
-      className={cn(className)}
-      onOpenChange={handleOpenChange}
-      open={isOpen}
-      {...props}
-    />
-  );
+  return <Collapsible className={cn(className)} onOpenChange={handleOpenChange} open={isOpen} {...props} />;
 };
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
@@ -106,12 +81,7 @@ export type TaskTriggerProps = ComponentProps<typeof CollapsibleTrigger> & {
   title: string;
 };
 
-const TaskTrigger = ({
-  children,
-  className,
-  title,
-  ...props
-}: TaskTriggerProps) => (
+const TaskTrigger = ({ children, className, title, ...props }: TaskTriggerProps) => (
   <CollapsibleTrigger asChild className={cn("group", className)} {...props}>
     {children ?? (
       <button
@@ -135,21 +105,15 @@ export { TaskTriggerWithRef as TaskTrigger };
 
 export type TaskContentProps = ComponentProps<typeof CollapsibleContent>;
 
-const TaskContent = ({
-  children,
-  className,
-  ...props
-}: TaskContentProps) => (
+const TaskContent = ({ children, className, ...props }: TaskContentProps) => (
   <CollapsibleContent
     className={cn(
       "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
-      className
+      className,
     )}
     {...props}
   >
-    <div className="mt-4 space-y-2 border-border border-l-2 pl-4">
-      {children}
-    </div>
+    <div className="mt-4 space-y-2 border-border border-l-2 pl-4">{children}</div>
   </CollapsibleContent>
 );
 

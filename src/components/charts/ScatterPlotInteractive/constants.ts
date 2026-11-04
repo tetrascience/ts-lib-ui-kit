@@ -1,9 +1,5 @@
 import { CHART_FONT_FAMILY } from "@/hooks/use-plotly-theme";
-import {
-  CHART_COLORS,
-  CHART_DIVERGING,
-  toPlotlyColorscale,
-} from "@/utils/colors";
+import { CHART_COLORS, CHART_DIVERGING, toPlotlyColorscale } from "@/utils/colors";
 
 /**
  * Default colors for the scatter plot. Background, grid, and axis colors
@@ -17,8 +13,7 @@ export const COLORS = {
 /**
  * Default color scale for continuous color mapping (CVD-friendly diverging ramp)
  */
-export const DEFAULT_COLOR_SCALE: Array<[number, string]> =
-  toPlotlyColorscale(CHART_DIVERGING.blueOrange);
+export const DEFAULT_COLOR_SCALE: Array<[number, string]> = toPlotlyColorscale(CHART_DIVERGING.blueOrange);
 
 /**
  * Default category colors (cycle through these)

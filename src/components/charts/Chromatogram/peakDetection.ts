@@ -7,22 +7,14 @@ import type { PeakAnnotation, PeakDetectionOptions } from "./types";
 /**
  * Calculate prominence of a peak (how much it stands out from neighbors)
  */
-export function calculateProminence(
-  y: number[],
-  peakIndex: number,
-  searchWindow: number
-): number {
+export function calculateProminence(y: number[], peakIndex: number, searchWindow: number): number {
   let leftMin = y[peakIndex];
   let rightMin = y[peakIndex];
 
   for (let j = peakIndex - 1; j >= Math.max(0, peakIndex - searchWindow); j--) {
     leftMin = Math.min(leftMin, y[j]);
   }
-  for (
-    let j = peakIndex + 1;
-    j < Math.min(y.length, peakIndex + searchWindow);
-    j++
-  ) {
+  for (let j = peakIndex + 1; j < Math.min(y.length, peakIndex + searchWindow); j++) {
     rightMin = Math.min(rightMin, y[j]);
   }
 
@@ -32,10 +24,7 @@ export function calculateProminence(
 /**
  * Find peak boundary indices by walking outward from peak
  */
-export function findPeakBoundaries(
-  y: number[],
-  peakIndex: number
-): { startIndex: number; endIndex: number } {
+export function findPeakBoundaries(y: number[], peakIndex: number): { startIndex: number; endIndex: number } {
   let startIndex = peakIndex;
   let endIndex = peakIndex;
 
@@ -63,12 +52,7 @@ export function findPeakBoundaries(
 /**
  * Calculate peak area using trapezoidal integration
  */
-export function calculatePeakArea(
-  x: number[],
-  y: number[],
-  startIndex: number,
-  endIndex: number
-): number {
+export function calculatePeakArea(x: number[], y: number[], startIndex: number, endIndex: number): number {
   const baselineY = Math.min(y[startIndex], y[endIndex]);
   let area = 0;
 
@@ -90,7 +74,7 @@ export function calculateWidthAtHalfMax(
   y: number[],
   peakIndex: number,
   startIndex: number,
-  endIndex: number
+  endIndex: number,
 ): number {
   const baselineY = Math.min(y[startIndex], y[endIndex]);
   const halfMax = (y[peakIndex] + baselineY) / 2;
@@ -116,22 +100,16 @@ export function calculateWidthAtHalfMax(
 /**
  * Filter peaks by minimum distance, keeping more intense peaks
  */
-export function filterPeaksByDistance(
-  peaks: PeakAnnotation[],
-  minDistance: number
-): PeakAnnotation[] {
+export function filterPeaksByDistance(peaks: PeakAnnotation[], minDistance: number): PeakAnnotation[] {
   const filtered: PeakAnnotation[] = [];
 
   for (const peak of peaks) {
     const tooClose = filtered.some(
-      (p) => Math.abs((p._computed?.index ?? 0) - (peak._computed?.index ?? 0)) < minDistance
+      (p) => Math.abs((p._computed?.index ?? 0) - (peak._computed?.index ?? 0)) < minDistance,
     );
     if (!tooClose) {
       filtered.push(peak);
-    } else if (
-      filtered.length > 0 &&
-      peak.y > filtered[filtered.length - 1].y
-    ) {
+    } else if (filtered.length > 0 && peak.y > filtered[filtered.length - 1].y) {
       filtered.pop();
       filtered.push(peak);
     }
@@ -148,17 +126,8 @@ export function filterPeaksByDistance(
  * - minDistance (5 points): Prevents detecting noise as multiple peaks
  * - prominence (0.02 = 2%): Ensures peaks stand out from baseline/shoulders
  */
-export function detectPeaks(
-  x: number[],
-  y: number[],
-  options: PeakDetectionOptions = {}
-): PeakAnnotation[] {
-  const {
-    minHeight = 0.05,
-    minDistance = 5,
-    prominence = 0.02,
-    relativeThreshold = true,
-  } = options;
+export function detectPeaks(x: number[], y: number[], options: PeakDetectionOptions = {}): PeakAnnotation[] {
+  const { minHeight = 0.05, minDistance = 5, prominence = 0.02, relativeThreshold = true } = options;
 
   if (y.length < 3) return [];
 
@@ -171,8 +140,7 @@ export function detectPeaks(
 
   // Find local maxima
   for (let i = 1; i < y.length - 1; i++) {
-    const isLocalMax =
-      y[i] > y[i - 1] && y[i] > y[i + 1] && y[i] >= threshold;
+    const isLocalMax = y[i] > y[i - 1] && y[i] > y[i + 1] && y[i] >= threshold;
     if (!isLocalMax) continue;
 
     const peakProminence = calculateProminence(y, i, searchWindow);
@@ -180,13 +148,7 @@ export function detectPeaks(
 
     const { startIndex, endIndex } = findPeakBoundaries(y, i);
     const area = calculatePeakArea(x, y, startIndex, endIndex);
-    const widthAtHalfMax = calculateWidthAtHalfMax(
-      x,
-      y,
-      i,
-      startIndex,
-      endIndex
-    );
+    const widthAtHalfMax = calculateWidthAtHalfMax(x, y, i, startIndex, endIndex);
 
     peaks.push({
       x: x[i],
@@ -203,4 +165,3 @@ export function detectPeaks(
 
   return filterPeaksByDistance(peaks, minDistance);
 }
-

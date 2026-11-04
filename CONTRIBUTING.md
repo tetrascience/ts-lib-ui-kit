@@ -222,12 +222,14 @@ See [`DESIGN.md`](./DESIGN.md) §3.1 for the full rationale.
 
 The project uses [Husky](https://typicode.github.io/husky/) to run two git hooks automatically:
 
-| Hook         | Trigger                         | What it does                                                                                          |
-| ------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `pre-commit` | Before every commit             | Runs `lint-staged` — auto-fixes ESLint issues on staged `*.{js,jsx,ts,tsx}` files                     |
-| `commit-msg` | After you type a commit message | Runs `commitlint` — rejects messages that don't follow [Conventional Commits](#commit-message-format) |
+| Hook         | Trigger                         | What it does                                                                                                                               |
+| ------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pre-commit` | Before every commit             | Runs `lint-staged` — `eslint --fix` then `prettier --write` on staged JS/TS; `prettier --write` on staged JSON/CSS/SCSS/Markdown/YAML/HTML |
+| `commit-msg` | After you type a commit message | Runs `commitlint` — rejects messages that don't follow [Conventional Commits](#commit-message-format)                                      |
 
 If a hook fails, the commit is aborted. Fix the reported issue and try again.
+
+CI runs `yarn format:check` before lint, so run `yarn format:check` (or `npx prettier --write <paths>`) before pushing if you committed with hooks skipped.
 
 ### Commit Message Format
 

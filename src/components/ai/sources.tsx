@@ -3,21 +3,14 @@ import { BookIcon, ChevronDownIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export type SourcesProps = ComponentProps<"div">;
 
 const Sources = ({ className, ...props }: SourcesProps) => (
-  <Collapsible
-    className={cn("not-prose mb-4 text-primary text-xs", className)}
-    {...props}
-  />
+  <Collapsible className={cn("not-prose mb-4 text-primary text-xs", className)} {...props} />
 );
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
@@ -28,16 +21,8 @@ export type SourcesTriggerProps = ComponentProps<typeof CollapsibleTrigger> & {
   count: number;
 };
 
-const SourcesTrigger = ({
-  className,
-  count,
-  children,
-  ...props
-}: SourcesTriggerProps) => (
-  <CollapsibleTrigger
-    className={cn("flex items-center gap-2", className)}
-    {...props}
-  >
+const SourcesTrigger = ({ className, count, children, ...props }: SourcesTriggerProps) => (
+  <CollapsibleTrigger className={cn("flex items-center gap-2", className)} {...props}>
     {children ?? (
       <>
         <p className="font-medium">Used {count} sources</p>
@@ -53,15 +38,12 @@ export { SourcesTriggerWithRef as SourcesTrigger };
 
 export type SourcesContentProps = ComponentProps<typeof CollapsibleContent>;
 
-const SourcesContent = ({
-  className,
-  ...props
-}: SourcesContentProps) => (
+const SourcesContent = ({ className, ...props }: SourcesContentProps) => (
   <CollapsibleContent
     className={cn(
       "mt-3 flex w-fit flex-col gap-2",
       "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
-      className
+      className,
     )}
     {...props}
   />

@@ -348,7 +348,12 @@ function getZephyrToken(): string {
  */
 async function createZephyrClient(): Promise<ZephyrClient> {
   const { ZephyrClient } = await getZephyrLib();
-  return new ZephyrClient({ baseUrl: ZEPHYR_BASE_URL, apiToken: getZephyrToken(), projectKey: PROJECT_KEY, cycleKey: "" });
+  return new ZephyrClient({
+    baseUrl: ZEPHYR_BASE_URL,
+    apiToken: getZephyrToken(),
+    projectKey: PROJECT_KEY,
+    cycleKey: "",
+  });
 }
 
 /** Gets the GitHub Actions run URL from environment variable */
@@ -510,10 +515,7 @@ export function determineTestStatus(testCase: JUnitTestCase): { status: TestResu
 }
 
 /** Parses JUnit XML content and extracts test results with Zephyr IDs */
-export function parseJUnitXML(
-  xmlContent: string,
-  mappingOverride?: ZephyrMapping,
-): TestResult[] {
+export function parseJUnitXML(xmlContent: string, mappingOverride?: ZephyrMapping): TestResult[] {
   const results: TestResult[] = [];
 
   // Use provided mapping or generate from story files (parameters.zephyr.testCaseId)

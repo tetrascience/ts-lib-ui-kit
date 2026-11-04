@@ -1,8 +1,8 @@
-import { cva, type VariantProps } from "class-variance-authority"
-import { Loader2Icon } from "lucide-react"
+import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2Icon } from "lucide-react";
 
-import { withRef } from "@/lib/react18-compat"
-import { cn } from "@/lib/utils"
+import { withRef } from "@/lib/react18-compat";
+import { cn } from "@/lib/utils";
 
 const spinnerVariants = cva("animate-spin", {
   variants: {
@@ -16,7 +16,7 @@ const spinnerVariants = cva("animate-spin", {
   defaultVariants: {
     size: "default",
   },
-})
+});
 
 function Spinner({
   className,
@@ -32,10 +32,10 @@ function Spinner({
       className={cn(spinnerVariants({ size }), className)}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const SpinnerWithRef = withRef("Spinner", Spinner)
+const SpinnerWithRef = withRef("Spinner", Spinner);
 
-export { SpinnerWithRef as Spinner, spinnerVariants }
+export { SpinnerWithRef as Spinner, spinnerVariants };

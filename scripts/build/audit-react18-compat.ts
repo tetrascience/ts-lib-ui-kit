@@ -183,7 +183,11 @@ type Reporter = (node: Node, name: string, kind: ViolationKind, detail: string) 
 /** The declaration a `withRef` render argument names: `X`, or `X` from `X.type`. */
 function renderTarget(render: Node): string | undefined {
   if (Node.isIdentifier(render)) return render.getText();
-  if (Node.isPropertyAccessExpression(render) && render.getName() === "type" && Node.isIdentifier(render.getExpression()))
+  if (
+    Node.isPropertyAccessExpression(render) &&
+    render.getName() === "type" &&
+    Node.isIdentifier(render.getExpression())
+  )
     return render.getExpression().getText();
   return undefined;
 }
@@ -228,7 +232,16 @@ interface FileContext {
 }
 
 /** Wrapping, naming, markers and DOM props, per top-level component. */
-function checkDeclarations({ sourceFile, file, result, report, targets, exportedLocals, refComponents, wrapHint }: FileContext) {
+function checkDeclarations({
+  sourceFile,
+  file,
+  result,
+  report,
+  targets,
+  exportedLocals,
+  refComponents,
+  wrapHint,
+}: FileContext) {
   for (const statement of sourceFile.getStatements()) {
     if (Node.isFunctionDeclaration(statement)) {
       const name = statement.getName();
@@ -260,7 +273,12 @@ function checkDeclarations({ sourceFile, file, result, report, targets, exported
           const component = classified.displayName ?? name;
           const leading = statement.getLeadingCommentRanges().map((c) => c.getText().trim());
           if (leading.at(-1) !== REACT18_MARKER)
-            report(declaration, name, "missing-marker", `put "${REACT18_MARKER}" on the line directly above the ${name} wrapper`);
+            report(
+              declaration,
+              name,
+              "missing-marker",
+              `put "${REACT18_MARKER}" on the line directly above the ${name} wrapper`,
+            );
           result.wrapped.push(`${file}:${component}`);
           // withRef keeps the render function's own props type, so wrapping a component
           // typed HTMLAttributes<T> still leaves `ref` out of its public props.
@@ -268,12 +286,22 @@ function checkDeclarations({ sourceFile, file, result, report, targets, exported
           if (name !== `${component}WithRef`)
             report(declaration, name, "wrapper-name", `the wrapper for ${component} must be named ${component}WithRef`);
           if (renderTarget(classified.render) !== component)
-            report(declaration, name, "render-name", `withRef("${component}", …) must wrap ${component} itself (or ${component}.type when it is memoised), not ${classified.render.getText().slice(0, 40)}`);
+            report(
+              declaration,
+              name,
+              "render-name",
+              `withRef("${component}", …) must wrap ${component} itself (or ${component}.type when it is memoised), not ${classified.render.getText().slice(0, 40)}`,
+            );
           break;
         }
         case "forwardRef":
           if (!FORWARD_REF_ALLOWED.has(name))
-            report(declaration, name, "direct-forward-ref", `use withRef from @/lib/react18-compat instead of forwardRef: const ${name}WithRef = withRef("${name}", ${name})`);
+            report(
+              declaration,
+              name,
+              "direct-forward-ref",
+              `use withRef from @/lib/react18-compat instead of forwardRef: const ${name}WithRef = withRef("${name}", ${name})`,
+            );
           break;
         case "other":
           break;
@@ -287,9 +315,15 @@ function checkExports({ sourceFile, report, targets }: FileContext) {
   // A wrapped component must reach consumers only through its wrapper.
   for (const [exportedName, declarations] of sourceFile.getExportedDeclarations()) {
     for (const exported of declarations) {
-      const localName = Node.isFunctionDeclaration(exported) || Node.isVariableDeclaration(exported) ? exported.getName() : undefined;
+      const localName =
+        Node.isFunctionDeclaration(exported) || Node.isVariableDeclaration(exported) ? exported.getName() : undefined;
       if (localName && targets.has(localName))
-        report(exported, exportedName, "exported-unwrapped", `${localName} is exported without its wrapper; export { ${localName}WithRef as ${exportedName} } instead`);
+        report(
+          exported,
+          exportedName,
+          "exported-unwrapped",
+          `${localName} is exported without its wrapper; export { ${localName}WithRef as ${exportedName} } instead`,
+        );
     }
   }
 }
@@ -299,11 +333,19 @@ function checkSameFileJsx({ sourceFile, report, targets, refComponents }: FileCo
   // Inside the file, X is the plain component, so every JSX use renders XWithRef.
   // "Only where a ref reaches it" is not checkable: libraries hand refs to children
   // implicitly (Radix Presence inside a Portal clones its child with one).
-  for (const element of [...sourceFile.getDescendantsOfKind(SyntaxKind.JsxOpeningElement), ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement)]) {
+  for (const element of [
+    ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxOpeningElement),
+    ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement),
+  ]) {
     const tag = element.getTagNameNode().getText();
     if (!refComponents.has(tag)) continue;
     const addWrapper = targets.has(tag) ? "" : `, adding const ${tag}WithRef = withRef("${tag}", ${tag})`;
-    report(element, tag, "same-file-unwrapped", `inside this file ${tag} is the plain component, which drops refs on React 18; render <${tag}WithRef>${addWrapper}`);
+    report(
+      element,
+      tag,
+      "same-file-unwrapped",
+      `inside this file ${tag} is the plain component, which drops refs on React 18; render <${tag}WithRef>${addWrapper}`,
+    );
   }
 }
 
@@ -317,7 +359,8 @@ function checkPlainReferences({ sourceFile, report, targets }: FileContext) {
   // `Primitive.CollapsibleTrigger` shares a name with a target but is a different thing.
   const targetDeclarations = new Map<string, Node>();
   for (const statement of sourceFile.getStatements()) {
-    if (Node.isFunctionDeclaration(statement) && statement.getName() && targets.has(statement.getName()!)) targetDeclarations.set(statement.getName()!, statement);
+    if (Node.isFunctionDeclaration(statement) && statement.getName() && targets.has(statement.getName()!))
+      targetDeclarations.set(statement.getName()!, statement);
     if (Node.isVariableStatement(statement))
       for (const d of statement.getDeclarations()) if (targets.has(d.getName())) targetDeclarations.set(d.getName(), d);
   }
@@ -329,16 +372,22 @@ function checkPlainReferences({ sourceFile, report, targets }: FileContext) {
     const parent = identifier.getParent();
     if (!parent) continue;
     // Declarations and export specifiers (exported-unwrapped covers the latter).
-    if ((Node.isFunctionDeclaration(parent) || Node.isVariableDeclaration(parent)) && parent.getNameNode() === identifier) continue;
+    if (
+      (Node.isFunctionDeclaration(parent) || Node.isVariableDeclaration(parent)) &&
+      parent.getNameNode() === identifier
+    )
+      continue;
     if (Node.isExportSpecifier(parent)) continue;
     // JSX tags are the same-file rule's job.
-    if (Node.isJsxOpeningElement(parent) || Node.isJsxSelfClosingElement(parent) || Node.isJsxClosingElement(parent)) continue;
+    if (Node.isJsxOpeningElement(parent) || Node.isJsxSelfClosingElement(parent) || Node.isJsxClosingElement(parent))
+      continue;
     // Doc comments: {@link X} pointers on the wrappers.
     if (identifier.getFirstAncestor((a) => Node.isJSDoc(a))) continue;
     // Type positions: ComponentProps<typeof X>, X in a type annotation.
     if (identifier.getFirstAncestor((a) => Node.isTypeNode(a) && !Node.isExpressionWithTypeArguments(a))) continue;
     // withRef("X", X) / withRef("X", X.type), isElementOfType(child, X), X.displayName = …
-    const call = parent.getParentIfKind(SyntaxKind.CallExpression) ?? (Node.isCallExpression(parent) ? parent : undefined);
+    const call =
+      parent.getParentIfKind(SyntaxKind.CallExpression) ?? (Node.isCallExpression(parent) ? parent : undefined);
     const callee = Node.isCallExpression(parent) ? calleeName(parent) : call ? calleeName(call) : undefined;
     if (Node.isCallExpression(parent) && (callee === "withRef" || callee === "isElementOfType")) continue;
     if (Node.isPropertyAccessExpression(parent) && parent.getExpression() === identifier) {
@@ -346,21 +395,34 @@ function checkPlainReferences({ sourceFile, report, targets }: FileContext) {
       if (member === "displayName") continue;
       if (member === "type" && call && calleeName(call) === "withRef") continue;
     }
-    report(identifier, name, "plain-reference", `${name} is used as a value here, but consumers hold ${name}WithRef; compare elements with isElementOfType(child, ${name}) or use ${name}WithRef`);
+    report(
+      identifier,
+      name,
+      "plain-reference",
+      `${name} is used as a value here, but consumers hold ${name}WithRef; compare elements with isElementOfType(child, ${name}) or use ${name}WithRef`,
+    );
   }
 }
 
 /** An element's own ref and a ref-carrying spread must not collide. */
 function checkRefClobbering({ sourceFile, report }: FileContext) {
   // ref={internal} next to a spread that carries the consumer's ref: one of them is lost.
-  for (const element of [...sourceFile.getDescendantsOfKind(SyntaxKind.JsxOpeningElement), ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement)]) {
+  for (const element of [
+    ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxOpeningElement),
+    ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement),
+  ]) {
     const attributes = element.getAttributes();
     const explicit = attributes.find((a) => Node.isJsxAttribute(a) && a.getNameNode().getText() === "ref");
     if (!explicit) continue;
     const spread = attributes.find((a) => Node.isJsxSpreadAttribute(a) && typeHas(a.getExpression().getType(), "ref"));
     if (!spread || !Node.isJsxSpreadAttribute(spread)) continue;
     const lost = explicit.getStart() < spread.getStart() ? "the component's own ref" : "the consumer's ref";
-    report(element, element.getTagNameNode().getText(), "ref-clobbered", `${explicit.getText()} and {...${spread.getExpression().getText()}} both set ref, so ${lost} is lost; destructure ref and pass useComposedRefs(...)`);
+    report(
+      element,
+      element.getTagNameNode().getText(),
+      "ref-clobbered",
+      `${explicit.getText()} and {...${spread.getExpression().getText()}} both set ref, so ${lost} is lost; destructure ref and pass useComposedRefs(...)`,
+    );
   }
 }
 
@@ -380,8 +442,9 @@ export function auditSourceFile(sourceFile: SourceFile, root = repoRoot): AuditR
   // A React 19 declaration wrapped by withRef is checked at its withRef call.
   const targets = withRefTargets(sourceFile);
   const exportedLocals = new Set(
-    [...sourceFile.getExportedDeclarations().values()].flat().map((d) =>
-      Node.isFunctionDeclaration(d) || Node.isVariableDeclaration(d) ? d.getName() : undefined),
+    [...sourceFile.getExportedDeclarations().values()]
+      .flat()
+      .map((d) => (Node.isFunctionDeclaration(d) || Node.isVariableDeclaration(d) ? d.getName() : undefined)),
   );
   /** Plain components in this file whose props accept ref: wrapped targets and internal ones. */
   const refComponents = new Set(targets);
@@ -418,7 +481,8 @@ export function auditReact18Compat(root = repoRoot): AuditResult {
       line: 0,
       name,
       kind: "stale-exception",
-      detail: "listed in REF_EXCEPTIONS but no component by that name has DOM props without ref; remove the entry and its README row",
+      detail:
+        "listed in REF_EXCEPTIONS but no component by that name has DOM props without ref; remove the entry and its README row",
     });
   }
   return result;
@@ -434,7 +498,9 @@ const MIN_WRAPPED_COMPONENTS = 350;
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { wrapped, violations } = auditReact18Compat();
   if (wrapped.length < MIN_WRAPPED_COMPONENTS) {
-    console.error(`React 18 compatibility audit saw only ${wrapped.length} wrapped components; expected at least ${MIN_WRAPPED_COMPONENTS}. Is the tsconfig include still src?`);
+    console.error(
+      `React 18 compatibility audit saw only ${wrapped.length} wrapped components; expected at least ${MIN_WRAPPED_COMPONENTS}. Is the tsconfig include still src?`,
+    );
     process.exit(1);
   }
   if (violations.length > 0) {

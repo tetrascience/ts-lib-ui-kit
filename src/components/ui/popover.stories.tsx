@@ -1,9 +1,9 @@
-import { expect, userEvent, within } from "storybook/test"
+import { expect, userEvent, within } from "storybook/test";
 
-import { Button } from "./button"
-import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "./popover"
+import { Button } from "./button";
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "./popover";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof PopoverContent> = {
   title: "Components/Overlays/Popover",
@@ -30,11 +30,11 @@ const meta: Meta<typeof PopoverContent> = {
     side: "bottom",
     sideOffset: 4,
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof PopoverContent>
+type Story = StoryObj<typeof PopoverContent>;
 
 function renderPopover(args: Story["args"]) {
   return (
@@ -55,28 +55,28 @@ function renderPopover(args: Story["args"]) {
         </PopoverContent>
       </Popover>
     </div>
-  )
+  );
 }
 
 export const Default: Story = {
   render: renderPopover,
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Popover trigger renders", async () => {
-      expect(canvas.getByRole("button", { name: "Open settings" })).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Open settings" })).toBeInTheDocument();
+    });
 
     await step("Click trigger reveals portaled content", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Open settings" }))
-      expect(body.getByText("Notifications")).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByRole("button", { name: "Open settings" }));
+      expect(body.getByText("Notifications")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5209" },
   },
-}
+};
 
 export const WithAnchor: Story = {
   render: (args) => (
@@ -95,30 +95,28 @@ export const WithAnchor: Story = {
             <div id="popover-anchored-content-title" className="font-medium">
               Anchored content
             </div>
-            <p className="text-sm text-muted-foreground">
-              This popover is positioned relative to the anchor element.
-            </p>
+            <p className="text-sm text-muted-foreground">This popover is positioned relative to the anchor element.</p>
           </div>
         </PopoverContent>
       </Popover>
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Anchor element renders with data-slot", async () => {
-      const anchor = canvas.getByTestId("popover-anchor")
-      expect(anchor).toBeInTheDocument()
-      expect(anchor).toHaveAttribute("data-slot", "popover-anchor")
-    })
+      const anchor = canvas.getByTestId("popover-anchor");
+      expect(anchor).toBeInTheDocument();
+      expect(anchor).toHaveAttribute("data-slot", "popover-anchor");
+    });
 
     await step("Click trigger reveals content anchored to the anchor", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Open from anchor" }))
-      expect(body.getByText("Anchored content")).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByRole("button", { name: "Open from anchor" }));
+      expect(body.getByText("Anchored content")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5300" },
   },
-}
+};

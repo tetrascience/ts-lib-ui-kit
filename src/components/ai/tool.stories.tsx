@@ -1,10 +1,9 @@
-import { useState } from "react"
-import { expect, userEvent, waitFor, within } from "storybook/test"
+import { useState } from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
-import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "./tool"
+import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "./tool";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta = {
   title: "AI Elements/Agent Activity/Tool",
@@ -12,26 +11,22 @@ const meta: Meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
-const expectCollapsedChevronConfiguredForHoverReveal = async (
-  trigger: HTMLElement
-) => {
-  const chevron = trigger.querySelector<SVGElement>(
-    '[data-slot="collapsible-chevron"]'
-  )
+const expectCollapsedChevronConfiguredForHoverReveal = async (trigger: HTMLElement) => {
+  const chevron = trigger.querySelector<SVGElement>('[data-slot="collapsible-chevron"]');
 
   if (!chevron) {
-    throw new Error("Expected collapsible chevron to render")
+    throw new Error("Expected collapsible chevron to render");
   }
 
-  await expect(chevron).toHaveClass("opacity-0")
-  await expect(chevron).toHaveClass("group-hover:opacity-100")
-}
+  await expect(chevron).toHaveClass("opacity-0");
+  await expect(chevron).toHaveClass("group-hover:opacity-100");
+};
 
 export const InputStreaming: Story = {
   render: () => (
@@ -45,15 +40,15 @@ export const InputStreaming: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Tool with streaming input renders", async () => {
-      await expect(canvas.getByText(/get_weather/i)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/get_weather/i)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4648" },
   },
-}
+};
 
 export const InputAvailable: Story = {
   render: () => (
@@ -67,15 +62,15 @@ export const InputAvailable: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Tool with available input renders", async () => {
-      await expect(canvas.getByText(/search_web/i)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/search_web/i)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4649" },
   },
-}
+};
 
 export const OutputAvailable: Story = {
   render: () => (
@@ -97,15 +92,15 @@ export const OutputAvailable: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Tool with output renders", async () => {
-      await expect(canvas.getByText(/get_weather/i)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/get_weather/i)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4650" },
   },
-}
+};
 
 export const OutputError: Story = {
   render: () => (
@@ -120,25 +115,21 @@ export const OutputError: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Tool with error output renders", async () => {
-      await expect(canvas.getByText(/read_file/i)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/read_file/i)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4651" },
   },
-}
+};
 
 export const CustomTitle: Story = {
   render: () => (
     <div className="w-full max-w-lg space-y-2">
       <Tool defaultOpen>
-        <ToolHeader
-          type="tool-execute_code"
-          state="output-available"
-          title="Run Python Script"
-        />
+        <ToolHeader type="tool-execute_code" state="output-available" title="Run Python Script" />
         <ToolContent>
           <ToolInput input={{ code: "print('Hello, world!')", language: "python" }} />
           <ToolOutput output={{ stdout: "Hello, world!\n", exitCode: 0 }} />
@@ -147,15 +138,15 @@ export const CustomTitle: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Custom title tool renders", async () => {
-      await expect(canvas.getByText("Run Python Script")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Run Python Script")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4652" },
   },
-}
+};
 
 export const Collapsed: Story = {
   render: () => (
@@ -170,25 +161,25 @@ export const Collapsed: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const trigger = canvas.getByText("search_web").closest("button")
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByText("search_web").closest("button");
 
     if (!trigger) {
-      throw new Error("Expected tool trigger button to render")
+      throw new Error("Expected tool trigger button to render");
     }
 
     await step("Collapsed chevron appears on hover", async () => {
-      await expectCollapsedChevronConfiguredForHoverReveal(trigger)
-    })
+      await expectCollapsedChevronConfiguredForHoverReveal(trigger);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4653" },
   },
-}
+};
 
 export const StreamingAutoClose: Story = {
   render: () => {
-    const [isStreaming, setIsStreaming] = useState(true)
+    const [isStreaming, setIsStreaming] = useState(true);
 
     return (
       <div className="w-full max-w-lg space-y-2">
@@ -196,42 +187,39 @@ export const StreamingAutoClose: Story = {
           Finish tool
         </button>
         <Tool defaultOpen isStreaming={isStreaming}>
-          <ToolHeader
-            state={isStreaming ? "input-available" : "output-available"}
-            type="tool-search_web"
-          />
+          <ToolHeader state={isStreaming ? "input-available" : "output-available"} type="tool-search_web" />
           <ToolContent>
             <ToolInput input={{ query: "lab notebook entries" }} />
             {!isStreaming && <ToolOutput errorText={undefined} output={{ matches: 3 }} />}
           </ToolContent>
         </Tool>
       </div>
-    )
+    );
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const toolTrigger = canvas.getByText("search_web").closest("button")
+    const canvas = within(canvasElement);
+    const toolTrigger = canvas.getByText("search_web").closest("button");
 
     if (!toolTrigger) {
-      throw new Error("Expected tool trigger button to render")
+      throw new Error("Expected tool trigger button to render");
     }
 
     await step("Streaming tool starts open", async () => {
-      await expect(toolTrigger).toHaveAttribute("aria-expanded", "true")
-      await expect(canvas.getByText("Running")).toBeInTheDocument()
-    })
+      await expect(toolTrigger).toHaveAttribute("aria-expanded", "true");
+      await expect(canvas.getByText("Running")).toBeInTheDocument();
+    });
 
     await step("Stopping streaming auto-closes the tool", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Finish tool" }))
+      await userEvent.click(canvas.getByRole("button", { name: "Finish tool" }));
       await waitFor(() => expect(toolTrigger).toHaveAttribute("aria-expanded", "false"), {
         timeout: 1800,
-      })
-    })
+      });
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4654" },
   },
-}
+};
 
 export const OutputEdgeCases: Story = {
   render: () => (
@@ -258,22 +246,22 @@ export const OutputEdgeCases: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Dynamic tool names and approval states render", async () => {
-      await expect(canvas.getAllByText("customLookup")).toHaveLength(2)
-      await expect(canvas.getByText("Awaiting Approval")).toBeInTheDocument()
-      await expect(canvas.getByText("Responded")).toBeInTheDocument()
-    })
+      await expect(canvas.getAllByText("customLookup")).toHaveLength(2);
+      await expect(canvas.getByText("Awaiting Approval")).toBeInTheDocument();
+      await expect(canvas.getByText("Responded")).toBeInTheDocument();
+    });
 
     await step("Denied and element outputs render with expected labels", async () => {
-      await expect(canvas.getByText("Error")).toBeInTheDocument()
-      await expect(canvas.getByText("Denied by policy")).toBeInTheDocument()
-      await expect(canvas.getByText("Denied")).toBeInTheDocument()
-      await expect(canvas.getByText("Manual review required")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Error")).toBeInTheDocument();
+      await expect(canvas.getByText("Denied by policy")).toBeInTheDocument();
+      await expect(canvas.getByText("Denied")).toBeInTheDocument();
+      await expect(canvas.getByText("Manual review required")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4655" },
   },
-}
+};

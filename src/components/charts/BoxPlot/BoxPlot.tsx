@@ -125,10 +125,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
     };
   }, [dataSeries]);
 
-  const effectiveYRange = useMemo(
-    () => yRange || [yMin, yMax],
-    [yRange, yMin, yMax],
-  );
+  const effectiveYRange = useMemo(() => yRange || [yMin, yMax], [yRange, yMin, yMax]);
 
   const yTicks = useMemo(() => {
     const range = effectiveYRange[1] - effectiveYRange[0];
@@ -153,10 +150,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
     () =>
       thinTicks(
         yTicks,
-        maxTickCount(
-          resolvedHeight - marginTop - scale.margin.b,
-          scale.tickFontSize * Y_TICK_LABEL_SPACING,
-        ),
+        maxTickCount(resolvedHeight - marginTop - scale.margin.b, scale.tickFontSize * Y_TICK_LABEL_SPACING),
       ),
     [yTicks, resolvedHeight, marginTop, scale],
   );
@@ -224,13 +218,8 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         line: {
           color,
         },
-        fillcolor:
-          typeof color === "string" && color.startsWith("#") && color.length === 7
-            ? `${color}40`
-            : color, // Add transparency for hex colors only
-        boxpoints: showPoints
-          ? series.boxpoints || "outliers"
-          : (false as const),
+        fillcolor: typeof color === "string" && color.startsWith("#") && color.length === 7 ? `${color}40` : color, // Add transparency for hex colors only
+        boxpoints: showPoints ? series.boxpoints || "outliers" : (false as const),
         jitter: series.jitter || 0.3,
         pointpos: series.pointpos || DEFAULT_POINT_POSITION,
       };
@@ -346,7 +335,24 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
         plotInitedRef.current = false;
       }
     };
-  }, [dataSeries, resolvedX, hasSize, xRange, yRange, effectiveYRange, xTitle, yTitle, showPoints, titleOptions, tickOptions, yTicks, theme, scale, marginTop, bindTooltip]);
+  }, [
+    dataSeries,
+    resolvedX,
+    hasSize,
+    xRange,
+    yRange,
+    effectiveYRange,
+    xTitle,
+    yTitle,
+    showPoints,
+    titleOptions,
+    tickOptions,
+    yTicks,
+    theme,
+    scale,
+    marginTop,
+    bindTooltip,
+  ]);
 
   // Resize in place when the measured/overridden size changes — cheaper than
   // recreating the plot, and it preserves tooltip/event bindings.
@@ -357,10 +363,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
     }
     // newPlot already drew at the current size; skip the redundant relayout
     // (it would queue an automargin redraw that can reject if we unmount first).
-    if (
-      appliedSizeRef.current.width === resolvedWidth &&
-      appliedSizeRef.current.height === resolvedHeight
-    ) {
+    if (appliedSizeRef.current.width === resolvedWidth && appliedSizeRef.current.height === resolvedHeight) {
       return;
     }
     appliedSizeRef.current = { width: resolvedWidth, height: resolvedHeight };
@@ -378,10 +381,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
   }, [resolvedWidth, resolvedHeight, yTickKey]);
 
   return (
-    <div
-      ref={containerRef}
-      className={cn("boxplot-container relative", fillWidth && "w-full", fillHeight && "h-full")}
-    >
+    <div ref={containerRef} className={cn("boxplot-container relative", fillWidth && "w-full", fillHeight && "h-full")}>
       <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
       {tooltipElement}
     </div>

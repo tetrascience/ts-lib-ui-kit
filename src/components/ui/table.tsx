@@ -1,7 +1,7 @@
-import * as React from "react"
+import * as React from "react";
 
-import { withRef } from "@/lib/react18-compat"
-import { cn } from "@/lib/utils"
+import { withRef } from "@/lib/react18-compat";
+import { cn } from "@/lib/utils";
 
 function Table({
   className,
@@ -10,9 +10,9 @@ function Table({
   layout = "auto",
   ...props
 }: React.ComponentProps<"table"> & {
-  containerClassName?: string
-  variant?: "default" | "card"
-  layout?: "auto" | "fixed"
+  containerClassName?: string;
+  variant?: "default" | "card";
+  layout?: "auto" | "fixed";
 }) {
   return (
     <div
@@ -31,18 +31,18 @@ function Table({
         {...props}
       />
     </div>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const TableWithRef = withRef("Table", Table)
+const TableWithRef = withRef("Table", Table);
 
 function TableHeader({
   className,
   variant,
   ...props
 }: React.ComponentProps<"thead"> & {
-  variant?: "default" | "sticky"
+  variant?: "default" | "sticky";
 }) {
   return (
     <thead
@@ -54,40 +54,31 @@ function TableHeader({
       )}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const TableHeaderWithRef = withRef("TableHeader", TableHeader)
+const TableHeaderWithRef = withRef("TableHeader", TableHeader);
 
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
-  return (
-    <tbody
-      data-slot="table-body"
-      className={cn("[&_tr:last-child]:border-0", className)}
-      {...props}
-    />
-  )
+  return <tbody data-slot="table-body" className={cn("[&_tr:last-child]:border-0", className)} {...props} />;
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const TableBodyWithRef = withRef("TableBody", TableBody)
+const TableBodyWithRef = withRef("TableBody", TableBody);
 
 function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
     <tfoot
       data-slot="table-footer"
-      className={cn(
-        "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
-        className
-      )}
+      className={cn("border-t bg-muted/50 font-medium [&>tr]:last:border-b-0", className)}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const TableFooterWithRef = withRef("TableFooter", TableFooter)
+const TableFooterWithRef = withRef("TableFooter", TableFooter);
 
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
@@ -95,15 +86,15 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
       data-slot="table-row"
       className={cn(
         "group/row border-b transition-colors hover:bg-accent/50 data-[state=selected]:bg-muted in-data-[striped]:even:bg-muted/30 in-data-[striped]:hover:bg-accent/50",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const TableRowWithRef = withRef("TableRow", TableRow)
+const TableRowWithRef = withRef("TableRow", TableRow);
 
 function TableHead({
   className,
@@ -111,8 +102,8 @@ function TableHead({
   truncate,
   ...props
 }: React.ComponentProps<"th"> & {
-  variant?: "default" | "numeric" | "action"
-  truncate?: boolean
+  variant?: "default" | "numeric" | "action";
+  truncate?: boolean;
 }) {
   return (
     <th
@@ -127,11 +118,11 @@ function TableHead({
       )}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const TableHeadWithRef = withRef("TableHead", TableHead)
+const TableHeadWithRef = withRef("TableHead", TableHead);
 
 function TableCell({
   className,
@@ -139,8 +130,8 @@ function TableCell({
   truncate,
   ...props
 }: React.ComponentProps<"td"> & {
-  variant?: "default" | "numeric" | "action"
-  truncate?: boolean
+  variant?: "default" | "numeric" | "action";
+  truncate?: boolean;
 }) {
   return (
     <td
@@ -158,27 +149,20 @@ function TableCell({
       )}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const TableCellWithRef = withRef("TableCell", TableCell)
+const TableCellWithRef = withRef("TableCell", TableCell);
 
-function TableCaption({
-  className,
-  ...props
-}: React.ComponentProps<"caption">) {
+function TableCaption({ className, ...props }: React.ComponentProps<"caption">) {
   return (
-    <caption
-      data-slot="table-caption"
-      className={cn("mt-4 text-sm text-muted-foreground", className)}
-      {...props}
-    />
-  )
+    <caption data-slot="table-caption" className={cn("mt-4 text-sm text-muted-foreground", className)} {...props} />
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const TableCaptionWithRef = withRef("TableCaption", TableCaption)
+const TableCaptionWithRef = withRef("TableCaption", TableCaption);
 
 export {
   TableWithRef as Table,
@@ -189,4 +173,4 @@ export {
   TableRowWithRef as TableRow,
   TableCellWithRef as TableCell,
   TableCaptionWithRef as TableCaption,
-}
+};

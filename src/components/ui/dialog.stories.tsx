@@ -1,6 +1,6 @@
-import { expect, userEvent, waitFor, within } from "storybook/test"
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
-import { Button } from "./button"
+import { Button } from "./button";
 import {
   Dialog,
   DialogClose,
@@ -11,9 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./dialog"
+} from "./dialog";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof DialogContent> = {
   title: "Components/Overlays/Dialog",
@@ -31,14 +31,14 @@ const meta: Meta<typeof DialogContent> = {
   args: {
     showCloseButton: true,
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof DialogContent>
+type Story = StoryObj<typeof DialogContent>;
 
 function renderDialog(args: Story["args"]) {
-  const { ...contentArgs } = args ?? {}
+  const { ...contentArgs } = args ?? {};
   return (
     <Dialog open>
       <DialogContent {...contentArgs}>
@@ -57,7 +57,7 @@ function renderDialog(args: Story["args"]) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 export const Default: Story = {
@@ -66,37 +66,37 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1230" },
   },
   play: async ({ canvasElement, step }) => {
-    const body = within(canvasElement.ownerDocument.body)
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Dialog portal content renders", async () => {
-      expect(body.getByRole("dialog")).toBeInTheDocument()
-      expect(body.getByText("Share workspace")).toBeInTheDocument()
-    })
+      expect(body.getByRole("dialog")).toBeInTheDocument();
+      expect(body.getByText("Share workspace")).toBeInTheDocument();
+    });
 
     await step("Description, body, and save action render", async () => {
       expect(
         body.getByText(
           "Invite teammates, manage permissions, and choose the default access level for new collaborators.",
         ),
-      ).toBeInTheDocument()
-      expect(body.getByText("Members: 12 active users")).toBeInTheDocument()
-      expect(body.getByRole("button", { name: "Save changes" })).toBeInTheDocument()
-    })
+      ).toBeInTheDocument();
+      expect(body.getByText("Members: 12 active users")).toBeInTheDocument();
+      expect(body.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
+    });
 
     await step("Header close button is present", async () => {
-      expect(body.getByRole("button", { name: "Close" })).toBeInTheDocument()
-    })
+      expect(body.getByRole("button", { name: "Close" })).toBeInTheDocument();
+    });
 
     await step("Dialog has correct data-slot on content", async () => {
-      const dialog = body.getByRole("dialog")
-      expect(dialog).toHaveAttribute("data-slot", "dialog-content")
-    })
+      const dialog = body.getByRole("dialog");
+      expect(dialog).toHaveAttribute("data-slot", "dialog-content");
+    });
   },
-}
+};
 
 export const FooterCloseButton: Story = {
   render: (args) => {
-    const { ...contentArgs } = args ?? {}
+    const { ...contentArgs } = args ?? {};
     return (
       <Dialog open>
         <DialogContent {...contentArgs}>
@@ -115,26 +115,26 @@ export const FooterCloseButton: Story = {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    )
+    );
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1231" },
   },
   play: async ({ canvasElement, step }) => {
-    const body = within(canvasElement.ownerDocument.body)
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Dialog portal content renders", async () => {
-      expect(body.getByRole("dialog")).toBeInTheDocument()
-      expect(body.getByText("Share workspace")).toBeInTheDocument()
-    })
+      expect(body.getByRole("dialog")).toBeInTheDocument();
+      expect(body.getByText("Share workspace")).toBeInTheDocument();
+    });
 
     await step("Footer close button and save button both render", async () => {
-      const footer = body.getByText("Save changes").closest("[data-slot='dialog-footer']")!
-      expect(within(footer).getByRole("button", { name: "Close" })).toBeInTheDocument()
-      expect(body.getByRole("button", { name: "Save changes" })).toBeInTheDocument()
-    })
+      const footer = body.getByText("Save changes").closest("[data-slot='dialog-footer']")!;
+      expect(within(footer).getByRole("button", { name: "Close" })).toBeInTheDocument();
+      expect(body.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const WithoutCloseButton: Story = {
   args: {
@@ -145,18 +145,18 @@ export const WithoutCloseButton: Story = {
     zephyr: { testCaseId: "SW-T1232" },
   },
   play: async ({ canvasElement, step }) => {
-    const body = within(canvasElement.ownerDocument.body)
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Dialog portal content renders", async () => {
-      expect(body.getByRole("dialog")).toBeInTheDocument()
-      expect(body.getByText("Share workspace")).toBeInTheDocument()
-    })
+      expect(body.getByRole("dialog")).toBeInTheDocument();
+      expect(body.getByText("Share workspace")).toBeInTheDocument();
+    });
 
     await step("Header close control is not shown", async () => {
-      expect(body.queryByRole("button", { name: "Close" })).not.toBeInTheDocument()
-    })
+      expect(body.queryByRole("button", { name: "Close" })).not.toBeInTheDocument();
+    });
   },
-}
+};
 
 export const WithTrigger: Story = {
   render: () => (
@@ -167,9 +167,7 @@ export const WithTrigger: Story = {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Triggered dialog</DialogTitle>
-          <DialogDescription>
-            This dialog was opened via a trigger button.
-          </DialogDescription>
+          <DialogDescription>This dialog was opened via a trigger button.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
@@ -181,36 +179,36 @@ export const WithTrigger: Story = {
     </Dialog>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Trigger button renders and dialog is initially closed", async () => {
-      expect(canvas.getByRole("button", { name: "Open Dialog" })).toBeInTheDocument()
-      expect(body.queryByRole("dialog")).not.toBeInTheDocument()
-    })
+      expect(canvas.getByRole("button", { name: "Open Dialog" })).toBeInTheDocument();
+      expect(body.queryByRole("dialog")).not.toBeInTheDocument();
+    });
 
     await step("Clicking trigger opens the dialog", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Open Dialog" }))
-      expect(body.getByRole("dialog")).toBeInTheDocument()
-      expect(body.getByText("Triggered dialog")).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByRole("button", { name: "Open Dialog" }));
+      expect(body.getByRole("dialog")).toBeInTheDocument();
+      expect(body.getByText("Triggered dialog")).toBeInTheDocument();
+    });
 
     await step("Dialog footer has cancel and confirm buttons", async () => {
-      expect(body.getByRole("button", { name: "Cancel" })).toBeInTheDocument()
-      expect(body.getByRole("button", { name: "Confirm" })).toBeInTheDocument()
-    })
+      expect(body.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+      expect(body.getByRole("button", { name: "Confirm" })).toBeInTheDocument();
+    });
 
     await step("Clicking cancel closes the dialog", async () => {
-      await userEvent.click(body.getByRole("button", { name: "Cancel" }))
+      await userEvent.click(body.getByRole("button", { name: "Cancel" }));
       await waitFor(() => {
-        expect(body.queryByRole("dialog")).not.toBeInTheDocument()
-      })
-    })
+        expect(body.queryByRole("dialog")).not.toBeInTheDocument();
+      });
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1478" },
   },
-}
+};
 
 export const CloseViaHeaderButton: Story = {
   render: () => (
@@ -221,33 +219,31 @@ export const CloseViaHeaderButton: Story = {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Closable dialog</DialogTitle>
-          <DialogDescription>
-            Click the X button to close this dialog.
-          </DialogDescription>
+          <DialogDescription>Click the X button to close this dialog.</DialogDescription>
         </DialogHeader>
       </DialogContent>
     </Dialog>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
-    const body = within(canvasElement.ownerDocument.body)
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
 
     await step("Open the dialog", async () => {
-      await userEvent.click(canvas.getByRole("button", { name: "Open" }))
-      expect(body.getByRole("dialog")).toBeInTheDocument()
-    })
+      await userEvent.click(canvas.getByRole("button", { name: "Open" }));
+      expect(body.getByRole("dialog")).toBeInTheDocument();
+    });
 
     await step("Clicking the header close button closes the dialog", async () => {
-      await userEvent.click(body.getByRole("button", { name: "Close" }))
+      await userEvent.click(body.getByRole("button", { name: "Close" }));
       await waitFor(() => {
-        expect(body.queryByRole("dialog")).not.toBeInTheDocument()
-      })
-    })
+        expect(body.queryByRole("dialog")).not.toBeInTheDocument();
+      });
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T1479" },
   },
-}
+};
 
 // SW-2528 — content placed straight into DialogContent (no DialogBody) must still
 // be inset from the edges and not butt onto the footer.
@@ -257,19 +253,13 @@ export const RawContentPadding: Story = {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete run 4821?</DialogTitle>
-          <DialogDescription>
-            This permanently removes the run and its results.
-          </DialogDescription>
+          <DialogDescription>This permanently removes the run and its results.</DialogDescription>
         </DialogHeader>
         {/* Deliberately NOT wrapped in DialogBody — DialogContent's safeguard
             insets it and keeps a gap before the footer. `w-full` proves the
             safeguard shrinks a full-width child instead of letting it overflow. */}
-        <div
-          data-testid="raw-block"
-          className="w-full rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground"
-        >
-          This block sits directly in DialogContent, yet stays inset from the side edges and off
-          the footer.
+        <div data-testid="raw-block" className="w-full rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+          This block sits directly in DialogContent, yet stays inset from the side edges and off the footer.
         </div>
         <DialogFooter>
           <DialogClose asChild>
@@ -284,22 +274,22 @@ export const RawContentPadding: Story = {
     zephyr: { testCaseId: "SW-T5651" },
   },
   play: async ({ canvasElement, step }) => {
-    const body = within(canvasElement.ownerDocument.body)
-    const dialog = body.getByRole("dialog")
-    const raw = dialog.querySelector('[data-testid="raw-block"]') as HTMLElement
-    const footer = dialog.querySelector('[data-slot="dialog-footer"]') as HTMLElement
+    const body = within(canvasElement.ownerDocument.body);
+    const dialog = body.getByRole("dialog");
+    const raw = dialog.querySelector('[data-testid="raw-block"]') as HTMLElement;
+    const footer = dialog.querySelector('[data-slot="dialog-footer"]') as HTMLElement;
 
     await step("raw content is inset from both side edges (not flush)", async () => {
-      const dr = dialog.getBoundingClientRect()
-      const rr = raw.getBoundingClientRect()
-      expect(Math.round(rr.left - dr.left)).toBeGreaterThanOrEqual(12)
-      expect(Math.round(dr.right - rr.right)).toBeGreaterThanOrEqual(12)
-    })
+      const dr = dialog.getBoundingClientRect();
+      const rr = raw.getBoundingClientRect();
+      expect(Math.round(rr.left - dr.left)).toBeGreaterThanOrEqual(12);
+      expect(Math.round(dr.right - rr.right)).toBeGreaterThanOrEqual(12);
+    });
 
     await step("raw content is not butted onto the footer", async () => {
-      const rr = raw.getBoundingClientRect()
-      const fr = footer.getBoundingClientRect()
-      expect(Math.round(fr.top - rr.bottom)).toBeGreaterThan(0)
-    })
+      const rr = raw.getBoundingClientRect();
+      const fr = footer.getBoundingClientRect();
+      expect(Math.round(fr.top - rr.bottom)).toBeGreaterThan(0);
+    });
   },
-}
+};

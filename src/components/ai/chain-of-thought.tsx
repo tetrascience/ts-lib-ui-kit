@@ -2,11 +2,7 @@ import { Brain, ChevronUpIcon, ImageIcon, SearchIcon } from "lucide-react";
 
 import type { ComponentProps, ReactNode } from "react";
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
@@ -16,16 +12,8 @@ import { cn } from "@/lib/utils";
 
 export type ChainOfThoughtProps = ComponentProps<typeof Collapsible>;
 
-const ChainOfThought = ({
-  className,
-  defaultOpen = true,
-  ...props
-}: ChainOfThoughtProps) => (
-  <Collapsible
-    className={cn("overflow-hidden rounded-lg text-sm", className)}
-    defaultOpen={defaultOpen}
-    {...props}
-  />
+const ChainOfThought = ({ className, defaultOpen = true, ...props }: ChainOfThoughtProps) => (
+  <Collapsible className={cn("overflow-hidden rounded-lg text-sm", className)} defaultOpen={defaultOpen} {...props} />
 );
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
@@ -54,7 +42,7 @@ const ChainOfThoughtTrigger = ({
   <CollapsibleTrigger
     className={cn(
       "group flex w-full items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground",
-      className
+      className,
     )}
     {...props}
   >
@@ -63,9 +51,7 @@ const ChainOfThoughtTrigger = ({
         {icon ?? <Brain className="size-4 text-muted-foreground" />}
         <span className="flex-1 text-left items-center gap-2">
           {title}
-          {isStreaming && (
-            <span className="size-1.5 animate-pulse rounded-full bg-primary" />
-          )}
+          {isStreaming && <span className="size-1.5 animate-pulse rounded-full bg-primary" />}
         </span>
         <ChevronUpIcon
           className="size-4 text-muted-foreground opacity-0 transition-all group-focus-visible:opacity-100 group-hover:opacity-100 group-data-[state=open]:opacity-100 group-data-[state=closed]:rotate-180"
@@ -86,17 +72,14 @@ export { ChainOfThoughtTriggerWithRef as ChainOfThoughtTrigger };
 
 export type ChainOfThoughtContentProps = ComponentProps<typeof CollapsibleContent>;
 
-const ChainOfThoughtContent = ({
-  className,
-  ...props
-}: ChainOfThoughtContentProps) => (
+const ChainOfThoughtContent = ({ className, ...props }: ChainOfThoughtContentProps) => (
   <CollapsibleContent
     className={cn(
       "flex flex-col gap-2.5 pb-4 pt-3",
       "data-[state=closed]:animate-out data-[state=open]:animate-in",
       "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       "data-[state=closed]:slide-out-to-top-1 data-[state=open]:slide-in-from-top-1",
-      className
+      className,
     )}
     {...props}
   />
@@ -124,29 +107,16 @@ export type ChainOfThoughtStepProps = ComponentProps<"div"> & {
 };
 
 const STEP_ICONS: Record<ChainOfThoughtStepVariant, ReactNode> = {
-  bullet: (
-    <span className="mt-[7px] ml-1 size-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
-  ),
+  bullet: <span className="mt-[7px] ml-1 size-1.5 shrink-0 rounded-full bg-muted-foreground/50" />,
   search: <SearchIcon className="mt-0.5 w-[18px] size-3.5 shrink-0 text-muted-foreground" />,
   image: <ImageIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />,
 };
 
-const ChainOfThoughtStep = ({
-  variant = "bullet",
-  className,
-  children,
-  ...props
-}: ChainOfThoughtStepProps) => {
-  const icon =
-    typeof variant === "string"
-      ? STEP_ICONS[variant as ChainOfThoughtStepVariant]
-      : variant;
+const ChainOfThoughtStep = ({ variant = "bullet", className, children, ...props }: ChainOfThoughtStepProps) => {
+  const icon = typeof variant === "string" ? STEP_ICONS[variant as ChainOfThoughtStepVariant] : variant;
 
   return (
-    <div
-      className={cn("flex items-start gap-2 text-muted-foreground", className)}
-      {...props}
-    >
+    <div className={cn("flex items-start gap-2 text-muted-foreground", className)} {...props}>
       <span className="flex shrink-0">{icon}</span>
       <span className="min-w-0 flex-1 leading-relaxed">{children}</span>
     </div>
@@ -163,15 +133,9 @@ export { ChainOfThoughtStepWithRef as ChainOfThoughtStep };
 
 export type ChainOfThoughtSourcesProps = ComponentProps<"div">;
 
-const ChainOfThoughtSources = ({
-  className,
-  ...props
-}: ChainOfThoughtSourcesProps) => (
+const ChainOfThoughtSources = ({ className, ...props }: ChainOfThoughtSourcesProps) => (
   <div
-    className={cn(
-      "ml-[6px] flex flex-wrap gap-1.5 border-l-2 border-muted-foreground/20 py-0.5 pl-3",
-      className
-    )}
+    className={cn("ml-[6px] flex flex-wrap gap-1.5 border-l-2 border-muted-foreground/20 py-0.5 pl-3", className)}
     {...props}
   />
 );
@@ -182,16 +146,12 @@ export { ChainOfThoughtSourcesWithRef as ChainOfThoughtSources };
 
 export type ChainOfThoughtSourceProps = ComponentProps<"a">;
 
-const ChainOfThoughtSource = ({
-  className,
-  children,
-  ...props
-}: ChainOfThoughtSourceProps) => (
+const ChainOfThoughtSource = ({ className, children, ...props }: ChainOfThoughtSourceProps) => (
   <a
     className={cn(
       "inline-flex items-center rounded-full border border-border/60 bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground transition-colors",
       props.href && "cursor-pointer hover:bg-accent hover:text-accent-foreground",
-      className
+      className,
     )}
     rel="noreferrer"
     target="_blank"
@@ -215,23 +175,10 @@ export type ChainOfThoughtImageProps = ComponentProps<"figure"> & {
   caption?: string;
 };
 
-const ChainOfThoughtImage = ({
-  src,
-  alt = "",
-  caption,
-  className,
-  ...props
-}: ChainOfThoughtImageProps) => (
-  <figure
-    className={cn("ml-[22px] overflow-hidden rounded-lg border", className)}
-    {...props}
-  >
+const ChainOfThoughtImage = ({ src, alt = "", caption, className, ...props }: ChainOfThoughtImageProps) => (
+  <figure className={cn("ml-[22px] overflow-hidden rounded-lg border", className)} {...props}>
     <img alt={alt} className="max-h-64 w-full object-cover" src={src} />
-    {caption && (
-      <figcaption className="border-t px-3 py-2 text-xs italic text-muted-foreground">
-        {caption}
-      </figcaption>
-    )}
+    {caption && <figcaption className="border-t px-3 py-2 text-xs italic text-muted-foreground">{caption}</figcaption>}
   </figure>
 );
 

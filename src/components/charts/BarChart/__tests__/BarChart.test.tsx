@@ -13,17 +13,14 @@ import type { Root } from "react-dom/client";
 // container size in explicitly (mirrors the AreaPlot test pattern).
 let triggerResize: (width: number, height: number) => void;
 class ResizeObserverStub {
-  constructor(
-    private callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void,
-  ) {
+  constructor(private callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void) {
     triggerResize = (width, height) => this.callback([{ contentRect: { width, height } }]);
   }
   observe() {}
   unobserve() {}
   disconnect() {}
 }
-(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver =
-  ResizeObserverStub;
+(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver = ResizeObserverStub;
 
 const plotly = vi.hoisted(() => ({
   newPlot: vi.fn(),
@@ -38,9 +35,7 @@ const lastLayout = (): { barmode?: string; width?: number; height?: number } =>
 const lastTraces = (): Array<{ width?: number }> =>
   (plotly.newPlot.mock.calls.at(-1)?.[1] as Array<{ width?: number }>) ?? [];
 
-const dataSeries: BarChartProps["dataSeries"] = [
-  { name: "Series 1", x: [0, 1, 2], y: [10, 18, 14] },
-];
+const dataSeries: BarChartProps["dataSeries"] = [{ name: "Series 1", x: [0, 1, 2], y: [10, 18, 14] }];
 
 const roots: Array<{ root: Root; container: HTMLElement }> = [];
 
@@ -124,6 +119,9 @@ describe("BarChart", () => {
       triggerResize(320, 260);
     });
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 320, height: 260 }));
+    expect(plotly.relayout).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ width: 320, height: 260 }),
+    );
   });
 });

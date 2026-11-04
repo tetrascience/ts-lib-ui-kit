@@ -6,3 +6,6 @@ storybook-static
 
 .claude
 .agents
+
+# Vendored ts-lib-viz copy (UXT-251). Temporary; remove with src/vendor.
+src/vendor

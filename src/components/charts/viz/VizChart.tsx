@@ -5,7 +5,6 @@ import type { ChartSpec, Palettes, VizData } from "@/vendor/ts-lib-viz/core";
 import { palettesFor } from "@/vendor/ts-lib-viz/core";
 import { Viz } from "@/vendor/ts-lib-viz/react";
 
-
 import "@/vendor/ts-lib-viz/theme/default.css";
 
 /**
@@ -45,10 +44,7 @@ export function VizChart({ spec, data, palettes, width, height }: VizChartProps)
   );
 
   return (
-    <div
-      style={{ width: width ?? "100%", height: height ?? "100%" }}
-      className="relative min-h-0 min-w-0"
-    >
+    <div style={{ width: width ?? "100%", height: height ?? "100%" }} className="relative min-h-0 min-w-0">
       <Viz spec={sized} data={data} palettes={palettes} />
     </div>
   );

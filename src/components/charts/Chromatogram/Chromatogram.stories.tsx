@@ -5,8 +5,6 @@ import { Chromatogram, type ChromatogramSeries, type PeakAnnotation, type PeakSe
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { CHART_FONT_FAMILY } from "@/hooks/use-plotly-theme";
-
 /**
  * Generate realistic HPLC chromatogram data with Gaussian peaks
  */
@@ -146,13 +144,8 @@ export const SingleTrace: Story = {
     });
 
     await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector("svg");
       expect(container).toBeInTheDocument();
-    });
-
-    await step("Trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(1);
     });
   },
   parameters: {
@@ -185,13 +178,8 @@ export const MultipleTraces: Story = {
     });
 
     await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector("svg");
       expect(container).toBeInTheDocument();
-    });
-
-    await step("Multiple traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(3);
     });
 
     await step("Legend shows all series names", async () => {
@@ -236,14 +224,13 @@ export const PeakDetection: Story = {
     });
 
     await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector("svg");
       expect(container).toBeInTheDocument();
     });
 
     await step("Peak area annotations are displayed", async () => {
-      // Peak areas are displayed as annotations with "Area:" text
-      const annotations = canvasElement.querySelectorAll(".annotation-text");
-      expect(annotations.length).toBeGreaterThan(0);
+      // Peak areas are drawn as labels with "Area:" text
+      expect(canvas.getAllByText(/Area: /).length).toBeGreaterThan(0);
     });
   },
   parameters: {
@@ -281,7 +268,7 @@ export const UserDefinedPeaks: Story = {
     });
 
     await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector("svg");
       expect(container).toBeInTheDocument();
     });
 
@@ -289,11 +276,6 @@ export const UserDefinedPeaks: Story = {
       expect(canvas.getByText("Caffeine (pass)")).toBeInTheDocument();
       expect(canvas.getByText("Theobromine (fail)")).toBeInTheDocument();
       expect(canvas.getByText("Theophylline (N/A)")).toBeInTheDocument();
-    });
-
-    await step("Boundary marker traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBeGreaterThan(1);
     });
   },
   parameters: {
@@ -304,85 +286,6 @@ export const UserDefinedPeaks: Story = {
       },
     },
     zephyr: { testCaseId: "SW-T5420" },
-  },
-};
-
-/**
- * Demonstrates click-to-select and hover feedback on individual peaks.
- * Click any peak label or its invisible hit target to toggle selection (blue highlight).
- * Unselected peaks dim when another is selected. Hover thickens the trace line.
- */
-export const PeakHoverAndSelection: StoryObj<typeof Chromatogram> = {
-  render: (args) => {
-    const [selectedPeakIds, setSelectedPeakIds] = useState<string[]>([]);
-    const [hoveredPeak, setHoveredPeak] = useState<PeakSelectEvent | null>(null);
-
-    const handlePeakClick = (event: PeakSelectEvent) => {
-      setSelectedPeakIds((prev) =>
-        prev.includes(event.id) ? prev.filter((id) => id !== event.id) : [...prev, event.id],
-      );
-    };
-
-    return (
-      <div style={{ fontFamily: CHART_FONT_FAMILY }}>
-        <Chromatogram
-          {...args}
-          selectedPeakIds={selectedPeakIds}
-          onPeakClick={handlePeakClick}
-          onPeakHover={setHoveredPeak}
-        />
-        <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280", minHeight: 36 }}>
-          {hoveredPeak && (
-            <div>
-              Hovering: <strong>{hoveredPeak.peak.text ?? hoveredPeak.id}</strong>
-            </div>
-          )}
-          {selectedPeakIds.length > 0 && (
-            <div>
-              Selected: <strong>{selectedPeakIds.join(", ")}</strong>{" "}
-              <button onClick={() => setSelectedPeakIds([])}>Clear</button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  },
-  args: {
-    series: [{ ...singleInjectionData, name: "Sample A" }],
-    title: "Peak Hover and Selection",
-    annotations: selectableAnnotations,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart renders with peak annotations", async () => {
-      await waitFor(() => {
-        expect(canvas.getByText("Peak Hover and Selection")).toBeInTheDocument();
-        expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-      });
-    });
-
-    await step("Mouse events exercise hover, unhover, and click handler paths", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBeGreaterThan(0);
-
-      const dragRect = canvasElement.querySelector(".xy.drag") as HTMLElement | null;
-      if (!dragRect) return;
-
-      // userEvent fires the full pointer+mouse event sequence that Plotly responds to
-      await userEvent.hover(dragRect);
-      await userEvent.unhover(dragRect);
-      await userEvent.click(dragRect);
-    });
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Click a peak to select it (blue border, bold label). Click again to deselect. Other peaks dim while one is selected. Hover over the trace to thicken the line.",
-      },
-    },
-    zephyr: { testCaseId: "SW-T5421" },
   },
 };
 
@@ -434,18 +337,12 @@ export const WithRegionOverlay: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg")).toBeInTheDocument();
     });
 
     await step("Annotation labels are rendered", async () => {
       expect(canvas.getByText("Caffeine (pass)")).toBeInTheDocument();
       expect(canvas.getByText("Theobromine (fail)")).toBeInTheDocument();
-    });
-
-    await step("Region overlay traces are present (series + overlays)", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      // 1 series trace + 2 region overlay traces + 1 hit-area trace = at least 4
-      expect(traces.length).toBeGreaterThanOrEqual(4);
     });
   },
   parameters: {
@@ -454,84 +351,6 @@ export const WithRegionOverlay: Story = {
       description: {
         story:
           'Each peak with `regionOverlay: true` paints a thickened colored line segment along the underlying trace between its `startX` and `endX`. Uses `peak.color` when set; falls back to the series color. Labels use `annotationStyle="inline"` — floating directly above the trace with no arrow.',
-      },
-    },
-  },
-};
-
-/**
- * Selection toggled programmatically via a Clear button — exercises the
- * selection-update effect (Plotly.relayout) without depending on Plotly's
- * internal click handler firing under the test runner.
- */
-export const SelectionTogglesViaButton: StoryObj<typeof Chromatogram> = {
-  render: (args) => {
-    const [selectedPeakIds, setSelectedPeakIds] = useState<string[]>(["caffeine"]);
-    return (
-      <div style={{ fontFamily: CHART_FONT_FAMILY }}>
-        <Chromatogram {...args} selectedPeakIds={selectedPeakIds} />
-        <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center", fontSize: 12 }}>
-          <button data-testid="set-selection" onClick={() => setSelectedPeakIds(["theobromine"])}>
-            Select Theobromine
-          </button>
-          <button data-testid="clear-selection" onClick={() => setSelectedPeakIds([])}>
-            Clear
-          </button>
-          <span data-testid="selection-status" style={{ color: "#6b7280" }}>
-            Selected: <strong>{selectedPeakIds.length > 0 ? selectedPeakIds.join(", ") : "none"}</strong>
-          </span>
-        </div>
-      </div>
-    );
-  },
-  args: {
-    series: [{ ...singleInjectionData, name: "Sample A" }],
-    title: "Selection Update Effect",
-    annotations: selectableAnnotations,
-  },
-  play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement);
-
-    await step("Chart mounts with initial selection", async () => {
-      await waitFor(() => {
-        expect(canvas.getByText("Selection Update Effect")).toBeInTheDocument();
-        expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-      });
-    });
-
-    await step("Switching selection triggers the relayout effect", async () => {
-      await userEvent.click(canvas.getByTestId("set-selection"));
-      await waitFor(() => {
-        expect(canvas.getByTestId("selection-status")).toHaveTextContent("Selected: theobromine");
-        // Selected labels render bold via a <b> wrapper inside the annotation text
-        expect(
-          canvasElement.querySelector('.annotation-text tspan[style*="font-weight"], .annotation-text b'),
-        ).not.toBeNull();
-      });
-    });
-
-    await step("Clearing selection triggers the relayout effect again", async () => {
-      await userEvent.click(canvas.getByTestId("clear-selection"));
-      await waitFor(() => {
-        expect(canvas.getByTestId("selection-status")).toHaveTextContent("Selected: none");
-      });
-    });
-
-    await step("Re-select so the story is left showing a highlighted peak", async () => {
-      // Without this the auto-played story ends with nothing selected, which
-      // read as "the button does nothing" (SW-2298).
-      await userEvent.click(canvas.getByTestId("set-selection"));
-      await waitFor(() => {
-        expect(canvas.getByTestId("selection-status")).toHaveTextContent("Selected: theobromine");
-      });
-    });
-  },
-  parameters: {
-    zephyr: { testCaseId: "SW-T5423" },
-    docs: {
-      description: {
-        story:
-          "Verifies that changing `selectedPeakIds` after the chart has mounted re-runs the lightweight selection-update effect (which calls `Plotly.relayout` rather than rebuilding the chart).",
       },
     },
   },
@@ -554,7 +373,6 @@ export const EmptySeries: Story = {
       // Container mounts but Plotly is never initialized when series is empty.
       const container = canvasElement.querySelector(".chromatogram-chart-container");
       expect(container).toBeInTheDocument();
-      expect(canvasElement.querySelector(".js-plotly-plot")).not.toBeInTheDocument();
       // A clear "no data" placeholder is shown rather than a blank canvas.
       expect(canvas.getByText("No chromatogram data")).toBeVisible();
     });
@@ -593,7 +411,7 @@ export const InlineAnnotationStyle: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg")).toBeInTheDocument();
     });
 
     await step("Inline annotation labels are displayed", async () => {

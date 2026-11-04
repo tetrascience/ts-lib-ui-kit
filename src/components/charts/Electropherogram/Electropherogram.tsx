@@ -1,23 +1,17 @@
-import React, { useEffect, useRef, useMemo } from "react";
+import { useMemo } from "react";
 
-import { useChartTooltip } from "../ChartTooltip";
-import { getLoadedPlotly, loadPlotly } from "../plotly-loader";
 import { useChartDeprecationWarning } from "../viz/deprecation";
+import { VizChart } from "../viz/VizChart";
 
-import type Plotly from "plotly.js-dist";
+import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
-import { CHART_FONT_FAMILY, usePlotlyTheme } from "@/hooks/use-plotly-theme";
 import { CHART_COLORS } from "@/utils/colors";
+import { plot } from "@/vendor/ts-lib-viz/core";
 
-import "./Electropherogram.scss";
-
-/**
- * Height of the sequence header above the plot (see Electropherogram.scss:
- * 12 + 6 padding, 35 + 6 letters row, 30 numbers row). The plot gets the rest.
- */
-const PLOT_HEIGHT_OFFSET = 89;
 /** Scale factor for y-axis range to add padding above max value */
 const Y_AXIS_PADDING_FACTOR = 1.05;
+/** Where the base letters sit, as a fraction of the y range: near the top, above the traces. */
+const LETTER_HEIGHT = 0.96;
 
 interface PeakData {
   position: number;
@@ -68,13 +62,91 @@ const determineBase = (item: PeakData): string => {
   return highestBase;
 };
 
+/** One row per position: the four trace heights, and the base letter in its own column. */
+interface TraceRow {
+  position: number;
+  peakA: number;
+  peakT: number;
+  peakG: number;
+  peakC: number;
+  lettersY: number;
+  letterA: string;
+  letterT: string;
+  letterG: string;
+  letterC: string;
+}
+
+type BaseColors = Record<"A" | "T" | "G" | "C", string>;
+
+/** Builds the rows and spec ts-lib-viz draws the trace from. */
+function buildElectropherogramSpec(
+  data: PeakData[],
+  positionInterval: number,
+  colors: BaseColors,
+): { rows: TraceRow[]; spec: ChartSpec } {
+  const maxValue = Math.max(0, ...data.flatMap((item) => [item.peakA, item.peakT, item.peakG, item.peakC]));
+  const yMax = maxValue * Y_AXIS_PADDING_FACTOR;
+  const positions = data.map((item) => item.position);
+  const minPosition = Math.min(...positions);
+  const maxPosition = Math.max(...positions);
+
+  // Pad by half a sample step on each side so the outermost peaks are not clipped (SW-2298).
+  const step = positions.length > 1 ? (maxPosition - minPosition) / (positions.length - 1) : 1;
+
+  const rows: TraceRow[] = data.map((item) => {
+    const base = determineBase(item);
+    return {
+      position: item.position,
+      peakA: item.peakA,
+      peakT: item.peakT,
+      peakG: item.peakG,
+      peakC: item.peakC,
+      lettersY: yMax * LETTER_HEIGHT,
+      letterA: base === "A" ? "A" : "",
+      letterT: base === "T" ? "T" : "",
+      letterG: base === "G" ? "G" : "",
+      letterC: base === "C" ? "C" : "",
+    };
+  });
+
+  const startPos = Math.ceil(minPosition / positionInterval) * positionInterval;
+  const tickPositions: number[] = [];
+  for (let pos = startPos; pos <= maxPosition; pos += positionInterval) {
+    tickPositions.push(pos);
+  }
+
+  const spec = plot(rows, { x: "position" })
+    .line({ aes: { y: "peakA" }, color: colors.A, linewidth: 2 })
+    .line({ aes: { y: "peakT" }, color: colors.T, linewidth: 2 })
+    .line({ aes: { y: "peakG" }, color: colors.G, linewidth: 2 })
+    .line({ aes: { y: "peakC" }, color: colors.C, linewidth: 2 })
+    .text({ aes: { y: "lettersY", label: "letterA" }, color: colors.A })
+    .text({ aes: { y: "lettersY", label: "letterT" }, color: colors.T })
+    .text({ aes: { y: "lettersY", label: "letterG" }, color: colors.G })
+    .text({ aes: { y: "lettersY", label: "letterC" }, color: colors.C })
+    .scales({
+      x: { limits: [minPosition - step / 2, maxPosition + step / 2], breaks: tickPositions, grid: false },
+      y: { limits: [0, yMax], breaks: [], grid: false },
+    })
+    .spec();
+
+  return { rows, spec };
+}
+
 /**
+ * Plotly-era electropherogram: four base traces, with the called base lettered
+ * along the top and position numbers on the x-axis.
+ *
+ * ts-lib-viz draws the traces as straight segments; the Plotly spline is not
+ * supported. `colorA`–`colorC` colour each trace and its letters. The Plotly
+ * hover readout is replaced by ts-lib-viz's own.
+ *
  * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
  */
 const Electropherogram: React.FC<ElectropherogramProps> = ({
   data = [],
-  width = 900,
-  height = 600,
+  width,
+  height,
   positionInterval = 10,
   colorA = CHART_COLORS[0], // blue
   colorT = CHART_COLORS[2], // teal/green
@@ -82,242 +154,21 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
   colorC = CHART_COLORS[1], // orange
 }) => {
   useChartDeprecationWarning("Electropherogram");
-  const plotRef = useRef<HTMLDivElement>(null);
-  const theme = usePlotlyTheme();
-  const { bindTooltip, tooltipElement } = useChartTooltip({
-    xLabel: "Position",
-    yLabel: "Intensity",
-  });
 
-  const positions = useMemo(() => data.map((item) => item.position), [data]);
-  const sequence = useMemo(() => data.map((item) => determineBase(item)), [data]);
-  const peakA = useMemo(() => data.map((item) => item.peakA), [data]);
-  const peakT = useMemo(() => data.map((item) => item.peakT), [data]);
-  const peakG = useMemo(() => data.map((item) => item.peakG), [data]);
-  const peakC = useMemo(() => data.map((item) => item.peakC), [data]);
-
-  const aTrace = useMemo(
-    () => ({
-      x: positions,
-      y: peakA,
-      type: "scatter" as const,
-      mode: "lines" as const,
-      hoverinfo: "none" as const,
-      name: "A",
-      line: { color: colorA, width: 2, shape: "spline" as const },
-    }),
-    [positions, peakA, colorA],
+  const colors = useMemo<BaseColors>(
+    () => ({ A: colorA, T: colorT, G: colorG, C: colorC }),
+    [colorA, colorT, colorG, colorC],
+  );
+  const built = useMemo(
+    () => (data.length === 0 ? null : buildElectropherogramSpec(data, positionInterval, colors)),
+    [data, positionInterval, colors],
   );
 
-  const tTrace = useMemo(
-    () => ({
-      x: positions,
-      y: peakT,
-      type: "scatter" as const,
-      mode: "lines" as const,
-      hoverinfo: "none" as const,
-      name: "T",
-      line: { color: colorT, width: 2, shape: "spline" as const },
-    }),
-    [positions, peakT, colorT],
-  );
-
-  const gTrace = useMemo(
-    () => ({
-      x: positions,
-      y: peakG,
-      type: "scatter" as const,
-      mode: "lines" as const,
-      hoverinfo: "none" as const,
-      name: "G",
-      line: { color: colorG, width: 2, shape: "spline" as const },
-    }),
-    [positions, peakG, colorG],
-  );
-
-  const cTrace = useMemo(
-    () => ({
-      x: positions,
-      y: peakC,
-      type: "scatter" as const,
-      mode: "lines" as const,
-      hoverinfo: "none" as const,
-      name: "C",
-      line: { color: colorC, width: 2, shape: "spline" as const },
-    }),
-    [positions, peakC, colorC],
-  );
-
-  const maxValue = useMemo(() => Math.max(...peakA, ...peakT, ...peakG, ...peakC), [peakA, peakT, peakG, peakC]);
-
-  // The plot has no side margins, so an x-range that ends exactly on the first
-  // and last sample clips the outermost peaks and pushes their base letters
-  // half off the canvas (SW-2298). Pad by half a sample step on each side; the
-  // header letters/numbers share this mapping so they stay aligned to peaks.
-  const { xMin, xMax } = useMemo(() => {
-    if (positions.length === 0) return { xMin: 0, xMax: 1 };
-    const min = Math.min(...positions);
-    const max = Math.max(...positions);
-    const step = positions.length > 1 ? (max - min) / (positions.length - 1) : 1;
-    const pad = step / 2;
-    return { xMin: min - pad, xMax: max + pad };
-  }, [positions]);
-  const xToPx = (position: number) => ((position - xMin) / (xMax - xMin)) * width;
-
-  useEffect(() => {
-    if (!plotRef.current || data.length === 0) return;
-
-    const plotData = [aTrace, tTrace, gTrace, cTrace];
-
-    const layout: Partial<Plotly.Layout> = {
-      width: width,
-      height: height - PLOT_HEIGHT_OFFSET,
-      margin: { l: 0, r: 0, b: 20, t: 10, pad: 0 },
-      paper_bgcolor: theme.paperBg,
-      plot_bgcolor: theme.plotBg,
-      font: {
-        family: CHART_FONT_FAMILY,
-      },
-      showlegend: false,
-      xaxis: {
-        showgrid: false,
-        zeroline: false,
-        showticklabels: false,
-        showline: false,
-        range: [xMin, xMax],
-        fixedrange: true,
-      },
-      yaxis: {
-        showgrid: false,
-        zeroline: false,
-        showticklabels: false,
-        showline: false,
-        range: [0, maxValue * Y_AXIS_PADDING_FACTOR],
-        fixedrange: true,
-      },
-    };
-
-    const config = {
-      responsive: true,
-      displayModeBar: false,
-      displaylogo: false,
-      fillFrame: true,
-    };
-
-    // Plotly is loaded lazily so it stays out of the consumer's main chunk
-    // (SW-2007); the draw is skipped if the effect re-runs or unmounts first.
-    let cancelled = false;
-    let plotElement: HTMLDivElement | null = null;
-    void loadPlotly().then((plotly) => {
-      if (cancelled || !plotRef.current) return;
-      plotly.newPlot(plotRef.current, plotData, layout, config);
-      bindTooltip(plotRef.current);
-
-      // Capture ref value for cleanup
-      plotElement = plotRef.current;
-    });
-
-    return () => {
-      cancelled = true;
-      if (plotElement) {
-        getLoadedPlotly().purge(plotElement);
-      }
-    };
-  }, [data, width, height, aTrace, tTrace, gTrace, cTrace, maxValue, xMin, xMax, theme, bindTooltip]);
-
-  if (data.length === 0) {
+  if (built === null) {
     return <div className="electropherogram-empty">No data available</div>;
   }
 
-  const renderSequence = () => {
-    const renderSequenceLetters = () => {
-      return (
-        <div className="electropherogram-sequence-letters">
-          {sequence.map((base, index) => {
-            const position = positions[index];
-            const color =
-              base === "A"
-                ? colorA
-                : base === "T"
-                  ? colorT
-                  : base === "G"
-                    ? colorG
-                    : base === "C"
-                      ? colorC
-                      : theme.textColor;
-
-            const leftPosition = xToPx(position);
-
-            return (
-              <span
-                key={`base-${index}`}
-                className="electropherogram-sequence-letter"
-                style={{
-                  left: `${leftPosition}px`,
-                  color,
-                }}
-              >
-                {base}
-              </span>
-            );
-          })}
-        </div>
-      );
-    };
-
-    const renderPositionNumbers = () => {
-      const minPosition = Math.min(...positions);
-      const maxPosition = Math.max(...positions);
-
-      const startPos = Math.ceil(minPosition / positionInterval) * positionInterval;
-
-      const regularPositionLabels: Array<{ position: number; label: string }> = [];
-
-      for (let pos = startPos; pos <= maxPosition; pos += positionInterval) {
-        regularPositionLabels.push({
-          position: pos,
-          label: pos.toString(),
-        });
-      }
-
-      return (
-        <div className="electropherogram-position-numbers">
-          {regularPositionLabels.map((label) => {
-            const leftPosition = xToPx(label.position);
-
-            return (
-              <span
-                key={`pos-${label.position}`}
-                className="electropherogram-position-number"
-                style={{
-                  left: `${leftPosition}px`,
-                }}
-              >
-                {label.label}
-              </span>
-            );
-          })}
-        </div>
-      );
-    };
-
-    return (
-      <div className="electropherogram-sequence-header">
-        {renderSequenceLetters()}
-        {renderPositionNumbers()}
-      </div>
-    );
-  };
-
-  return (
-    <div className="electropherogram-container relative" style={{ width, height }}>
-      {renderSequence()}
-      <div className="electropherogram-chart">
-        <div ref={plotRef} style={{ width: "100%", height: "100%" }} />
-      </div>
-      {tooltipElement}
-    </div>
-  );
+  return <VizChart spec={built.spec} data={built.rows} width={width ?? 900} height={height ?? 600} />;
 };
 
 export { Electropherogram };

@@ -136,6 +136,7 @@ export function buildHistogramSpec(rows: HistogramRow[], options: HistogramSpecO
       aes: { x: "x", y: "y" },
       color: curve.color,
       linewidth: CURVE_LINE_WIDTH,
+      showLegend: false,
     });
   }
   return builder

@@ -1,7 +1,7 @@
 # Vendored ts-lib-viz (temporary)
 
 A copy of the `core`, `react` and `theme` sources of `@tetrascience-npm/ts-lib-viz` from
-https://github.com/tetrascience/ts-lib-viz (commit `d928ee6`), so this kit's chart components build on
+the private tetrascience ts-lib-viz repo (commit `d928ee6`), so this kit's chart components build on
 Vercel and CI without a `portal:` dependency on a sibling checkout.
 
 - Do not edit these files here. Change ts-lib-viz and re-copy.

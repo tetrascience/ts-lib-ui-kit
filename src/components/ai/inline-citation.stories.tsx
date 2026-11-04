@@ -1,4 +1,4 @@
-import { expect, screen, userEvent, within } from "storybook/test"
+import { expect, screen, userEvent, within } from "storybook/test";
 
 import {
   InlineCitation,
@@ -15,10 +15,9 @@ import {
   InlineCitationQuote,
   InlineCitationSource,
   InlineCitationText,
-} from "./inline-citation"
+} from "./inline-citation";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta = {
   title: "AI Elements/Attribution/Inline Citation",
@@ -26,26 +25,25 @@ const meta: Meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
 const WikiSource = {
   title: "Photosynthesis — Wikipedia",
   url: "https://en.wikipedia.org/wiki/Photosynthesis",
   description: "The free encyclopedia covering all aspects of photosynthesis.",
-  quote:
-    "Photosynthesis is a process used by plants and other organisms to convert light energy into chemical energy.",
-}
+  quote: "Photosynthesis is a process used by plants and other organisms to convert light energy into chemical energy.",
+};
 
 const NatureSource = {
   title: "Chlorophyll and Light Absorption — Nature",
   url: "https://www.nature.com/articles/photosynthesis",
   description: "Peer-reviewed research on chlorophyll's role in photosynthesis.",
   quote: "Chlorophyll absorbs light most strongly in the blue and red portions of the spectrum.",
-}
+};
 
 export const Single: Story = {
   render: () => (
@@ -74,15 +72,15 @@ export const Single: Story = {
     </p>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Inline citation renders in text", async () => {
-      await expect(canvas.getByText(/Plants convert sunlight/)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/Plants convert sunlight/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4551" },
   },
-}
+};
 
 export const MultipleInText: Story = {
   render: () => (
@@ -131,15 +129,15 @@ export const MultipleInText: Story = {
     </p>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Multiple citations render in text", async () => {
-      await expect(canvas.getByText(/relies on chlorophyll/)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/relies on chlorophyll/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4552" },
   },
-}
+};
 
 export const WithCarousel: Story = {
   render: () => (
@@ -181,15 +179,15 @@ export const WithCarousel: Story = {
     </p>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Citation with carousel renders", async () => {
-      await expect(canvas.getByText(/supported by multiple studies/)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/supported by multiple studies/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4553" },
   },
-}
+};
 
 export const OpenCardWithCarouselControls: Story = {
   render: () => (
@@ -231,19 +229,19 @@ export const OpenCardWithCarouselControls: Story = {
   ),
   play: async ({ step }) => {
     await step("Carousel contents are visible", async () => {
-      await expect(await screen.findByText(WikiSource.title)).toBeInTheDocument()
-    })
+      await expect(await screen.findByText(WikiSource.title)).toBeInTheDocument();
+    });
     await step("Next/Prev buttons scroll the carousel", async () => {
-      const next = screen.getByRole("button", { name: "Next" })
-      const prev = screen.getByRole("button", { name: "Previous" })
-      await userEvent.click(next)
-      await userEvent.click(prev)
-    })
+      const next = screen.getByRole("button", { name: "Next" });
+      const prev = screen.getByRole("button", { name: "Previous" });
+      await userEvent.click(next);
+      await userEvent.click(prev);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4554" },
   },
-}
+};
 
 export const CustomIndexChildren: Story = {
   render: () => (
@@ -269,13 +267,13 @@ export const CustomIndexChildren: Story = {
   ),
   play: async ({ step }) => {
     await step("Custom index renders", async () => {
-      await expect(await screen.findByText("Custom index")).toBeInTheDocument()
-    })
+      await expect(await screen.findByText("Custom index")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4555" },
   },
-}
+};
 
 export const EmptySourcesTrigger: Story = {
   render: () => (
@@ -301,13 +299,13 @@ export const EmptySourcesTrigger: Story = {
     </p>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Empty sources renders 'unknown' label", async () => {
-      await expect(canvas.getByText("unknown")).toBeInTheDocument()
-      await expect(canvas.getByText("highlighted text")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("unknown")).toBeInTheDocument();
+      await expect(canvas.getByText("highlighted text")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4556" },
   },
-}
+};

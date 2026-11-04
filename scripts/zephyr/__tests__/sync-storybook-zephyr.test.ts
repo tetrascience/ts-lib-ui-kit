@@ -355,7 +355,8 @@ export const Warning: Story = {
 
   describe("normalizeZephyrObjective", () => {
     it("normalizes Zephyr objective HTML variants for stable identity matching", () => {
-      const objective = "Component: Elevation &amp; Shape<br/>Story: Brand &mdash; Active<br>File: `src/foo.stories.tsx`";
+      const objective =
+        "Component: Elevation &amp; Shape<br/>Story: Brand &mdash; Active<br>File: `src/foo.stories.tsx`";
 
       expect(normalizeZephyrObjective(objective)).toBe(
         "Component: Elevation & Shape<br>Story: Brand — Active<br>File: `src/foo.stories.tsx`",

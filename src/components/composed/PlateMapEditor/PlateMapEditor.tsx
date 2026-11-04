@@ -8,7 +8,6 @@ import { PlateMapPlateSelector } from "./PlateMapPlateSelector";
 import { defaultColorForWell, getPlateMapScopedWellId, usePlateMapEditorState } from "./usePlateMapEditorState";
 import { WellQuickPaint } from "./WellQuickPaint";
 
-
 import type { PlateMapActionsMenuProps } from "./PlateMapActionsMenu";
 import type { PlateMapPlateSelectorVariant } from "./PlateMapPlateSelector";
 import type { WellShape } from "./PlatePaintGrid";
@@ -27,6 +26,7 @@ import type { FilterColumnConfig } from "@/components/ui/data-table/data-table";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_PLATE_BARCODE_FIELD = "plateBarcode";
@@ -475,7 +475,7 @@ function PlateMapEditorManifestCard({
  * />
  * ```
  */
-export function PlateMapEditor<T extends WellRecord = WellRecord>({
+function PlateMapEditor<T extends WellRecord = WellRecord>({
   format,
   rows,
   columns,
@@ -695,7 +695,8 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
 
   // The legend rides with the grid when `legendPlacement="plate"`, stacked
   // above whatever the caller put in `plateFooter`.
-  const plateGridFooter = legendPlacement === "plate" && legend ? <div className="mt-3 border-t pt-3">{legend}</div> : undefined;
+  const plateGridFooter =
+    legendPlacement === "plate" && legend ? <div className="mt-3 border-t pt-3">{legend}</div> : undefined;
 
   const isStackedPlacement = formPlacement === "top" || formPlacement === "bottom";
   const isFormFirst = formPlacement === "start" || formPlacement === "top";
@@ -899,5 +900,10 @@ export function PlateMapEditor<T extends WellRecord = WellRecord>({
     </div>
   );
 }
+
+/** React 18 wrapper for {@link PlateMapEditor}; see its documentation. */
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PlateMapEditorWithRef = withRef("PlateMapEditor", PlateMapEditor);
+export { PlateMapEditorWithRef as PlateMapEditor };
 
 export { Badge as PlateBadge };

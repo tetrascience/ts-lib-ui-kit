@@ -13,17 +13,14 @@ import type { Root } from "react-dom/client";
 // container size in explicitly (mirrors the ScatterPlotInteractive test pattern).
 let triggerResize: (width: number, height: number) => void;
 class ResizeObserverStub {
-  constructor(
-    private callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void,
-  ) {
+  constructor(private callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void) {
     triggerResize = (width, height) => this.callback([{ contentRect: { width, height } }]);
   }
   observe() {}
   unobserve() {}
   disconnect() {}
 }
-(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver =
-  ResizeObserverStub;
+(globalThis as unknown as { ResizeObserver?: typeof ResizeObserverStub }).ResizeObserver = ResizeObserverStub;
 
 const plotly = vi.hoisted(() => ({
   newPlot: vi.fn(),
@@ -53,9 +50,7 @@ function lastPlotCall(): PlotCall {
   return { el: call[0], layout: call[2], config: call[3] };
 }
 
-const dataSeries: AreaPlotProps["dataSeries"] = [
-  { name: "Series 1", x: [0, 1, 2, 3], y: [10, 18, 14, 22] },
-];
+const dataSeries: AreaPlotProps["dataSeries"] = [{ name: "Series 1", x: [0, 1, 2, 3], y: [10, 18, 14, 22] }];
 
 const roots: Array<{ root: Root; container: HTMLElement }> = [];
 
@@ -166,7 +161,10 @@ describe("AreaPlot sizing", () => {
 
     // Still a single newPlot; the size change went through relayout.
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 400, height: 300 }));
+    expect(plotly.relayout).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ width: 400, height: 300 }),
+    );
   });
 
   it("re-plots when a resize crosses a scale bucket (short → short-but-wide)", async () => {
@@ -202,7 +200,10 @@ describe("AreaPlot sizing", () => {
       triggerResize(320, 260);
     });
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
-    expect(plotly.relayout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ width: 320, height: 260 }));
+    expect(plotly.relayout).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ width: 320, height: 260 }),
+    );
   });
 
   it("purges the plot on unmount", async () => {

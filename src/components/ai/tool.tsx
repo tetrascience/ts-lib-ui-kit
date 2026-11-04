@@ -1,14 +1,6 @@
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
-import {
-  CheckCircleIcon,
-  ChevronDownIcon,
-  CircleIcon,
-  ClockIcon,
-  WrenchIcon,
-  XCircleIcon,
-} from "lucide-react";
+import { CheckCircleIcon, ChevronDownIcon, CircleIcon, ClockIcon, WrenchIcon, XCircleIcon } from "lucide-react";
 import { isValidElement, useCallback, useEffect, useRef, useState } from "react";
-
 
 import type { DynamicToolUIPart, ToolUIPart } from "ai";
 import type { ComponentProps, ReactNode } from "react";
@@ -16,15 +8,9 @@ import type { ComponentProps, ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Banner } from "@/components/ui/banner";
 import { CodeBlock } from "@/components/ui/code-block";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
-
-
-
 
 const AUTO_CLOSE_DELAY = 1000;
 
@@ -32,14 +18,7 @@ export type ToolProps = ComponentProps<typeof Collapsible> & {
   isStreaming?: boolean;
 };
 
-export const Tool = ({
-  className,
-  isStreaming = false,
-  open,
-  onOpenChange,
-  defaultOpen,
-  ...props
-}: ToolProps) => {
+const Tool = ({ className, isStreaming = false, open, onOpenChange, defaultOpen, ...props }: ToolProps) => {
   const [isOpen, setIsOpen] = useControllableState<boolean>({
     defaultProp: defaultOpen ?? true,
     onChange: onOpenChange,
@@ -63,10 +42,7 @@ export const Tool = ({
     }
   }, [isStreaming, isOpen, setIsOpen, hasAutoClosed]);
 
-  const handleOpenChange = useCallback(
-    (newOpen: boolean) => setIsOpen(newOpen),
-    [setIsOpen]
-  );
+  const handleOpenChange = useCallback((newOpen: boolean) => setIsOpen(newOpen), [setIsOpen]);
 
   return (
     <Collapsible
@@ -77,6 +53,10 @@ export const Tool = ({
     />
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToolWithRef = withRef("Tool", Tool);
+export { ToolWithRef as Tool };
 
 export type ToolPart = ToolUIPart | DynamicToolUIPart;
 
@@ -119,25 +99,11 @@ export const getStatusBadge = (status: ToolPart["state"]) => (
   </Badge>
 );
 
-export const ToolHeader = ({
-  className,
-  title,
-  type,
-  state,
-  toolName,
-  ...props
-}: ToolHeaderProps) => {
-  const derivedName =
-    type === "dynamic-tool" ? toolName : type.split("-").slice(1).join("-");
+export const ToolHeader = ({ className, title, type, state, toolName, ...props }: ToolHeaderProps) => {
+  const derivedName = type === "dynamic-tool" ? toolName : type.split("-").slice(1).join("-");
 
   return (
-    <CollapsibleTrigger
-      className={cn(
-        "flex w-full items-center justify-between gap-4 p-3",
-        className
-      )}
-      {...props}
-    >
+    <CollapsibleTrigger className={cn("flex w-full items-center justify-between gap-4 p-3", className)} {...props}>
       <div className="flex items-center gap-2">
         <WrenchIcon className="size-4 text-muted-foreground" />
         <span className="font-medium text-sm">{title ?? derivedName}</span>
@@ -153,42 +119,43 @@ export const ToolHeader = ({
 
 export type ToolContentProps = ComponentProps<typeof CollapsibleContent>;
 
-export const ToolContent = ({ className, ...props }: ToolContentProps) => (
+const ToolContent = ({ className, ...props }: ToolContentProps) => (
   <CollapsibleContent
     className={cn(
       "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 space-y-4 p-4 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
-      className
+      className,
     )}
     {...props}
   />
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToolContentWithRef = withRef("ToolContent", ToolContent);
+export { ToolContentWithRef as ToolContent };
+
 export type ToolInputProps = ComponentProps<"div"> & {
   input: ToolPart["input"];
 };
 
-export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
+const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
   <div className={cn("space-y-2 overflow-hidden", className)} {...props}>
-    <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-      Parameters
-    </h4>
+    <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Parameters</h4>
     <div className="rounded-md bg-muted/50">
       <CodeBlock code={JSON.stringify(input, null, 2)} language="json" />
     </div>
   </div>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToolInputWithRef = withRef("ToolInput", ToolInput);
+export { ToolInputWithRef as ToolInput };
+
 export type ToolOutputProps = ComponentProps<"div"> & {
   output: ToolPart["output"];
   errorText: ToolPart["errorText"];
 };
 
-export const ToolOutput = ({
-  className,
-  output,
-  errorText,
-  ...props
-}: ToolOutputProps) => {
+const ToolOutput = ({ className, output, errorText, ...props }: ToolOutputProps) => {
   if (!(output || errorText)) {
     return null;
   }
@@ -196,9 +163,7 @@ export const ToolOutput = ({
   let Output = <div>{output as ReactNode}</div>;
 
   if (typeof output === "object" && !isValidElement(output)) {
-    Output = (
-      <CodeBlock code={JSON.stringify(output, null, 2)} language="json" />
-    );
+    Output = <CodeBlock code={JSON.stringify(output, null, 2)} language="json" />;
   } else if (typeof output === "string") {
     Output = <CodeBlock code={output} language="json" />;
   }
@@ -209,16 +174,14 @@ export const ToolOutput = ({
         {errorText ? "Error" : "Result"}
       </h4>
       {errorText ? (
-        <Banner
-          variant="destructive"
-          description={errorText}
-          className="rounded-md text-xs"
-        />
+        <Banner variant="destructive" description={errorText} className="rounded-md text-xs" />
       ) : (
-        <div className="overflow-x-auto rounded-md bg-muted/50 text-foreground text-xs [&_table]:w-full">
-          {Output}
-        </div>
+        <div className="overflow-x-auto rounded-md bg-muted/50 text-foreground text-xs [&_table]:w-full">{Output}</div>
       )}
     </div>
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ToolOutputWithRef = withRef("ToolOutput", ToolOutput);
+export { ToolOutputWithRef as ToolOutput };

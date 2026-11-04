@@ -6,7 +6,6 @@ import type { TdpSearchBarRenderProps } from "../types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-
 export const DefaultSearchBar: React.FC<TdpSearchBarRenderProps> = ({
   query,
   setQuery,

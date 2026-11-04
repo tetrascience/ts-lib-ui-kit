@@ -6,6 +6,7 @@ import type { UIMessage } from "ai";
 import type { ComponentProps } from "react";
 
 import { Button } from "@/components/ui/button";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export type ConversationProps = ComponentProps<typeof StickToBottom>;
@@ -20,18 +21,10 @@ export const Conversation = ({ className, ...props }: ConversationProps) => (
   />
 );
 
-export type ConversationContentProps = ComponentProps<
-  typeof StickToBottom.Content
->;
+export type ConversationContentProps = ComponentProps<typeof StickToBottom.Content>;
 
-export const ConversationContent = ({
-  className,
-  ...props
-}: ConversationContentProps) => (
-  <StickToBottom.Content
-    className={cn("flex flex-col gap-8 p-4", className)}
-    {...props}
-  />
+export const ConversationContent = ({ className, ...props }: ConversationContentProps) => (
+  <StickToBottom.Content className={cn("flex flex-col gap-8 p-4", className)} {...props} />
 );
 
 export type ConversationEmptyStateProps = ComponentProps<"div"> & {
@@ -40,7 +33,7 @@ export type ConversationEmptyStateProps = ComponentProps<"div"> & {
   icon?: React.ReactNode;
 };
 
-export const ConversationEmptyState = ({
+const ConversationEmptyState = ({
   className,
   title = "No messages yet",
   description = "Start a conversation to see messages here",
@@ -49,10 +42,7 @@ export const ConversationEmptyState = ({
   ...props
 }: ConversationEmptyStateProps) => (
   <div
-    className={cn(
-      "flex size-full flex-col items-center justify-center gap-3 p-8 text-center",
-      className
-    )}
+    className={cn("flex size-full flex-col items-center justify-center gap-3 p-8 text-center", className)}
     {...props}
   >
     {children ?? (
@@ -60,21 +50,20 @@ export const ConversationEmptyState = ({
         {icon && <div className="text-muted-foreground">{icon}</div>}
         <div className="space-y-1">
           <h3 className="font-medium text-sm">{title}</h3>
-          {description && (
-            <p className="text-muted-foreground text-sm">{description}</p>
-          )}
+          {description && <p className="text-muted-foreground text-sm">{description}</p>}
         </div>
       </>
     )}
   </div>
 );
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConversationEmptyStateWithRef = withRef("ConversationEmptyState", ConversationEmptyState);
+export { ConversationEmptyStateWithRef as ConversationEmptyState };
+
 export type ConversationScrollButtonProps = ComponentProps<typeof Button>;
 
-export const ConversationScrollButton = ({
-  className,
-  ...props
-}: ConversationScrollButtonProps) => {
+const ConversationScrollButton = ({ className, ...props }: ConversationScrollButtonProps) => {
   const { isAtBottom, scrollToBottom } = useStickToBottomContext();
 
   const handleScrollToBottom = useCallback(() => {
@@ -86,7 +75,7 @@ export const ConversationScrollButton = ({
       <Button
         className={cn(
           "absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full dark:bg-background dark:hover:bg-accent",
-          className
+          className,
         )}
         onClick={handleScrollToBottom}
         size="icon"
@@ -100,36 +89,33 @@ export const ConversationScrollButton = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConversationScrollButtonWithRef = withRef("ConversationScrollButton", ConversationScrollButton);
+export { ConversationScrollButtonWithRef as ConversationScrollButton };
+
 const getMessageText = (message: UIMessage): string =>
   message.parts
     .filter((part) => part.type === "text")
     .map((part) => part.text)
     .join("");
 
-export type ConversationDownloadProps = Omit<
-  ComponentProps<typeof Button>,
-  "onClick"
-> & {
+export type ConversationDownloadProps = Omit<ComponentProps<typeof Button>, "onClick"> & {
   messages: UIMessage[];
   filename?: string;
   formatMessage?: (message: UIMessage, index: number) => string;
 };
 
 const defaultFormatMessage = (message: UIMessage): string => {
-  const roleLabel =
-    message.role.charAt(0).toUpperCase() + message.role.slice(1);
+  const roleLabel = message.role.charAt(0).toUpperCase() + message.role.slice(1);
   return `**${roleLabel}:** ${getMessageText(message)}`;
 };
 
 export const messagesToMarkdown = (
   messages: UIMessage[],
-  formatMessage: (
-    message: UIMessage,
-    index: number
-  ) => string = defaultFormatMessage
+  formatMessage: (message: UIMessage, index: number) => string = defaultFormatMessage,
 ): string => messages.map((msg, i) => formatMessage(msg, i)).join("\n\n");
 
-export const ConversationDownload = ({
+const ConversationDownload = ({
   messages,
   filename = "conversation.md",
   formatMessage = defaultFormatMessage,
@@ -152,10 +138,7 @@ export const ConversationDownload = ({
 
   return (
     <Button
-      className={cn(
-        "absolute top-4 right-4 rounded-full dark:bg-background dark:hover:bg-accent",
-        className
-      )}
+      className={cn("absolute top-4 right-4 rounded-full dark:bg-background dark:hover:bg-accent", className)}
       onClick={handleDownload}
       size="icon"
       type="button"
@@ -166,3 +149,7 @@ export const ConversationDownload = ({
     </Button>
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConversationDownloadWithRef = withRef("ConversationDownload", ConversationDownload);
+export { ConversationDownloadWithRef as ConversationDownload };

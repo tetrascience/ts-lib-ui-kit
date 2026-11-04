@@ -1,31 +1,14 @@
 import { CheckIcon, CopyIcon } from "lucide-react";
-import {
-  createContext,
-  memo,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import type { ComponentProps, CSSProperties, HTMLAttributes } from "react";
+import type { ComponentProps, CSSProperties } from "react";
 import type { BundledLanguage, ThemedToken } from "shiki";
 
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { withRef } from "@/lib/react18-compat";
 import { getCodeBlockHighlighter } from "@/lib/shiki";
 import { cn } from "@/lib/utils";
-
-
-
 
 // Shiki uses bitflags for font styles: 1=italic, 2=bold, 4=underline
 // oxlint-disable-next-line eslint(no-bitwise)
@@ -85,28 +68,20 @@ const LINE_NUMBER_CLASSES = cn(
   "before:text-right",
   "before:text-muted-foreground/50",
   "before:font-mono",
-  "before:select-none"
+  "before:select-none",
 );
 
 // Line rendering component
-const LineSpan = ({
-  keyedLine,
-  showLineNumbers,
-}: {
-  keyedLine: KeyedLine;
-  showLineNumbers: boolean;
-}) => (
+const LineSpan = ({ keyedLine, showLineNumbers }: { keyedLine: KeyedLine; showLineNumbers: boolean }) => (
   <span className={showLineNumbers ? LINE_NUMBER_CLASSES : "block"}>
     {keyedLine.tokens.length === 0
       ? "\n"
-      : keyedLine.tokens.map(({ token, key }) => (
-          <TokenSpan key={key} token={token} />
-        ))}
+      : keyedLine.tokens.map(({ token, key }) => <TokenSpan key={key} token={token} />)}
   </span>
 );
 
 // Types
-type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
+type CodeBlockProps = ComponentProps<"div"> & {
   code: string;
   language: BundledLanguage;
   showLineNumbers?: boolean;
@@ -185,7 +160,7 @@ const createRawTokens = (code: string): TokenizedCode => ({
             color: "inherit",
             content: line,
           } as ThemedToken,
-        ]
+        ],
   ),
 });
 
@@ -194,7 +169,7 @@ export const highlightCode = (
   code: string,
   language: BundledLanguage,
   // oxlint-disable-next-line eslint-plugin-promise(prefer-await-to-callbacks)
-  callback?: (result: TokenizedCode) => void
+  callback?: (result: TokenizedCode) => void,
 ): TokenizedCode | null => {
   const tokensCacheKey = getTokensCacheKey(code, language);
 
@@ -265,10 +240,7 @@ const CodeBlockBody = memo(
     showLineNumbers: boolean;
     className?: string;
   }) => {
-    const keyedLines = useMemo(
-      () => addKeysToTokens(tokenized.tokens),
-      [tokenized.tokens]
-    );
+    const keyedLines = useMemo(() => addKeysToTokens(tokenized.tokens), [tokenized.tokens]);
 
     return (
       <pre
@@ -279,21 +251,12 @@ const CodeBlockBody = memo(
           // --shiki-bg/--shiki-fg re-resolve under .dark, so no dark: variant
           // is needed here.
           "!bg-[var(--shiki-bg)] !text-[var(--shiki-fg)] m-0 p-4 text-sm",
-          className
+          className,
         )}
       >
-        <code
-          className={cn(
-            "font-mono text-sm",
-            showLineNumbers && "[counter-increment:line_0] [counter-reset:line]"
-          )}
-        >
+        <code className={cn("font-mono text-sm", showLineNumbers && "[counter-increment:line_0] [counter-reset:line]")}>
           {keyedLines.map((keyedLine) => (
-            <LineSpan
-              key={keyedLine.key}
-              keyedLine={keyedLine}
-              showLineNumbers={showLineNumbers}
-            />
+            <LineSpan key={keyedLine.key} keyedLine={keyedLine} showLineNumbers={showLineNumbers} />
           ))}
         </code>
       </pre>
@@ -302,22 +265,14 @@ const CodeBlockBody = memo(
   (prevProps, nextProps) =>
     prevProps.tokenized === nextProps.tokenized &&
     prevProps.showLineNumbers === nextProps.showLineNumbers &&
-    prevProps.className === nextProps.className
+    prevProps.className === nextProps.className,
 );
 
 CodeBlockBody.displayName = "CodeBlockBody";
 
-export const CodeBlockContainer = ({
-  className,
-  language,
-  style,
-  ...props
-}: HTMLAttributes<HTMLDivElement> & { language: string }) => (
+const CodeBlockContainer = ({ className, language, style, ...props }: ComponentProps<"div"> & { language: string }) => (
   <div
-    className={cn(
-      "group relative w-full overflow-hidden rounded-md border bg-background text-foreground",
-      className
-    )}
+    className={cn("group relative w-full overflow-hidden rounded-md border bg-background text-foreground", className)}
     data-language={language}
     style={{
       containIntrinsicSize: "auto 200px",
@@ -328,15 +283,15 @@ export const CodeBlockContainer = ({
   />
 );
 
-export const CodeBlockHeader = ({
-  children,
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>) => (
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockContainerWithRef = withRef("CodeBlockContainer", CodeBlockContainer);
+export { CodeBlockContainerWithRef as CodeBlockContainer };
+
+const CodeBlockHeader = ({ children, className, ...props }: ComponentProps<"div">) => (
   <div
     className={cn(
       "flex items-center justify-between border-b bg-muted/80 px-3 py-2 text-muted-foreground text-xs",
-      className
+      className,
     )}
     {...props}
   >
@@ -344,38 +299,39 @@ export const CodeBlockHeader = ({
   </div>
 );
 
-export const CodeBlockTitle = ({
-  children,
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>) => (
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockHeaderWithRef = withRef("CodeBlockHeader", CodeBlockHeader);
+export { CodeBlockHeaderWithRef as CodeBlockHeader };
+
+const CodeBlockTitle = ({ children, className, ...props }: ComponentProps<"div">) => (
   <div className={cn("flex items-center gap-2", className)} {...props}>
     {children}
   </div>
 );
 
-export const CodeBlockFilename = ({
-  children,
-  className,
-  ...props
-}: HTMLAttributes<HTMLSpanElement>) => (
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockTitleWithRef = withRef("CodeBlockTitle", CodeBlockTitle);
+export { CodeBlockTitleWithRef as CodeBlockTitle };
+
+const CodeBlockFilename = ({ children, className, ...props }: ComponentProps<"span">) => (
   <span className={cn("font-mono", className)} {...props}>
     {children}
   </span>
 );
 
-export const CodeBlockActions = ({
-  children,
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn("-my-1 -mr-1 flex items-center gap-2", className)}
-    {...props}
-  >
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockFilenameWithRef = withRef("CodeBlockFilename", CodeBlockFilename);
+export { CodeBlockFilenameWithRef as CodeBlockFilename };
+
+const CodeBlockActions = ({ children, className, ...props }: ComponentProps<"div">) => (
+  <div className={cn("-my-1 -mr-1 flex items-center gap-2", className)} {...props}>
     {children}
   </div>
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockActionsWithRef = withRef("CodeBlockActions", CodeBlockActions);
+export { CodeBlockActionsWithRef as CodeBlockActions };
 
 export const CodeBlockContent = ({
   code,
@@ -390,20 +346,14 @@ export const CodeBlockContent = ({
   const rawTokens = useMemo(() => createRawTokens(code), [code]);
 
   // Synchronous cache lookup — avoids setState in effect for cached results
-  const syncTokens = useMemo(
-    () => highlightCode(code, language) ?? rawTokens,
-    [code, language, rawTokens]
-  );
+  const syncTokens = useMemo(() => highlightCode(code, language) ?? rawTokens, [code, language, rawTokens]);
 
   // Async highlighting result (populated after shiki loads)
   const [asyncTokens, setAsyncTokens] = useState<TokenizedCode | null>(null);
   const asyncKeyRef = useRef({ code, language });
 
   // Invalidate stale async tokens synchronously during render
-  if (
-    asyncKeyRef.current.code !== code ||
-    asyncKeyRef.current.language !== language
-  ) {
+  if (asyncKeyRef.current.code !== code || asyncKeyRef.current.language !== language) {
     asyncKeyRef.current = { code, language };
     setAsyncTokens(null);
   }
@@ -431,29 +381,22 @@ export const CodeBlockContent = ({
   );
 };
 
-export const CodeBlock = ({
-  code,
-  language,
-  showLineNumbers = false,
-  className,
-  children,
-  ...props
-}: CodeBlockProps) => {
+const CodeBlock = ({ code, language, showLineNumbers = false, className, children, ...props }: CodeBlockProps) => {
   const contextValue = useMemo(() => ({ code }), [code]);
 
   return (
     <CodeBlockContext.Provider value={contextValue}>
-      <CodeBlockContainer className={className} language={language} {...props}>
+      <CodeBlockContainerWithRef className={className} language={language} {...props}>
         {children}
-        <CodeBlockContent
-          code={code}
-          language={language}
-          showLineNumbers={showLineNumbers}
-        />
-      </CodeBlockContainer>
+        <CodeBlockContent code={code} language={language} showLineNumbers={showLineNumbers} />
+      </CodeBlockContainerWithRef>
     </CodeBlockContext.Provider>
   );
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockWithRef = withRef("CodeBlock", CodeBlock);
+export { CodeBlockWithRef as CodeBlock };
 
 export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
   onCopy?: () => void;
@@ -461,7 +404,7 @@ export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
   timeout?: number;
 };
 
-export const CodeBlockCopyButton = ({
+const CodeBlockCopyButton = ({
   onCopy,
   onError,
   timeout = 2000,
@@ -484,10 +427,7 @@ export const CodeBlockCopyButton = ({
         await navigator.clipboard.writeText(code);
         setIsCopied(true);
         onCopy?.();
-        timeoutRef.current = window.setTimeout(
-          () => setIsCopied(false),
-          timeout
-        );
+        timeoutRef.current = window.setTimeout(() => setIsCopied(false), timeout);
       }
     } catch (error) {
       onError?.(error as Error);
@@ -498,7 +438,7 @@ export const CodeBlockCopyButton = ({
     () => () => {
       window.clearTimeout(timeoutRef.current);
     },
-    []
+    [],
   );
 
   const Icon = isCopied ? CheckIcon : CopyIcon;
@@ -517,54 +457,57 @@ export const CodeBlockCopyButton = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockCopyButtonWithRef = withRef("CodeBlockCopyButton", CodeBlockCopyButton);
+export { CodeBlockCopyButtonWithRef as CodeBlockCopyButton };
+
 export type CodeBlockLanguageSelectorProps = ComponentProps<typeof Select>;
 
-export const CodeBlockLanguageSelector = (
-  props: CodeBlockLanguageSelectorProps
-) => <Select {...props} />;
+export const CodeBlockLanguageSelector = (props: CodeBlockLanguageSelectorProps) => <Select {...props} />;
 
-export type CodeBlockLanguageSelectorTriggerProps = ComponentProps<
-  typeof SelectTrigger
->;
+export type CodeBlockLanguageSelectorTriggerProps = ComponentProps<typeof SelectTrigger>;
 
-export const CodeBlockLanguageSelectorTrigger = ({
-  className,
-  ...props
-}: CodeBlockLanguageSelectorTriggerProps) => (
+const CodeBlockLanguageSelectorTrigger = ({ className, ...props }: CodeBlockLanguageSelectorTriggerProps) => (
   <SelectTrigger
     aria-label="Select language"
-    className={cn(
-      "h-7 border-none bg-transparent px-2 text-xs shadow-none",
-      className
-    )}
+    className={cn("h-7 border-none bg-transparent px-2 text-xs shadow-none", className)}
     size="sm"
     {...props}
   />
 );
 
-export type CodeBlockLanguageSelectorValueProps = ComponentProps<
-  typeof SelectValue
->;
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockLanguageSelectorTriggerWithRef = withRef(
+  "CodeBlockLanguageSelectorTrigger",
+  CodeBlockLanguageSelectorTrigger,
+);
+export { CodeBlockLanguageSelectorTriggerWithRef as CodeBlockLanguageSelectorTrigger };
 
-export const CodeBlockLanguageSelectorValue = (
-  props: CodeBlockLanguageSelectorValueProps
-) => <SelectValue {...props} />;
+export type CodeBlockLanguageSelectorValueProps = ComponentProps<typeof SelectValue>;
 
-export type CodeBlockLanguageSelectorContentProps = ComponentProps<
-  typeof SelectContent
->;
+const CodeBlockLanguageSelectorValue = (props: CodeBlockLanguageSelectorValueProps) => <SelectValue {...props} />;
 
-export const CodeBlockLanguageSelectorContent = ({
-  align = "end",
-  ...props
-}: CodeBlockLanguageSelectorContentProps) => (
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockLanguageSelectorValueWithRef = withRef("CodeBlockLanguageSelectorValue", CodeBlockLanguageSelectorValue);
+export { CodeBlockLanguageSelectorValueWithRef as CodeBlockLanguageSelectorValue };
+
+export type CodeBlockLanguageSelectorContentProps = ComponentProps<typeof SelectContent>;
+
+const CodeBlockLanguageSelectorContent = ({ align = "end", ...props }: CodeBlockLanguageSelectorContentProps) => (
   <SelectContent align={align} {...props} />
 );
 
-export type CodeBlockLanguageSelectorItemProps = ComponentProps<
-  typeof SelectItem
->;
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockLanguageSelectorContentWithRef = withRef(
+  "CodeBlockLanguageSelectorContent",
+  CodeBlockLanguageSelectorContent,
+);
+export { CodeBlockLanguageSelectorContentWithRef as CodeBlockLanguageSelectorContent };
 
-export const CodeBlockLanguageSelectorItem = (
-  props: CodeBlockLanguageSelectorItemProps
-) => <SelectItem {...props} />;
+export type CodeBlockLanguageSelectorItemProps = ComponentProps<typeof SelectItem>;
+
+const CodeBlockLanguageSelectorItem = (props: CodeBlockLanguageSelectorItemProps) => <SelectItem {...props} />;
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const CodeBlockLanguageSelectorItemWithRef = withRef("CodeBlockLanguageSelectorItem", CodeBlockLanguageSelectorItem);
+export { CodeBlockLanguageSelectorItemWithRef as CodeBlockLanguageSelectorItem };

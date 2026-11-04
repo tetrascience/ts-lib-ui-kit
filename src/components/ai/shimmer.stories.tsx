@@ -1,9 +1,8 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { Shimmer, TS_SHIMMER_GRADIENT } from "./shimmer"
+import { Shimmer, TS_SHIMMER_GRADIENT } from "./shimmer";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Shimmer> = {
   title: "AI Elements/Status & Effects/Shimmer",
@@ -12,26 +11,26 @@ const meta: Meta<typeof Shimmer> = {
     layout: "centered",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Shimmer>
+type Story = StoryObj<typeof Shimmer>;
 
 export const Default: Story = {
   args: {
     children: "Generating response...",
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Shimmer text renders", async () => {
-      await expect(canvas.getByText("Generating response...")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Generating response...")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4607" },
   },
-}
+};
 
 export const Heading: Story = {
   args: {
@@ -40,32 +39,31 @@ export const Heading: Story = {
     className: "text-2xl font-bold",
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Shimmer heading renders", async () => {
-      await expect(canvas.getByRole("heading", { level: 2 })).toBeInTheDocument()
-    })
+      await expect(canvas.getByRole("heading", { level: 2 })).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4608" },
   },
-}
+};
 
 export const LongText: Story = {
   args: {
-    children:
-      "The model is carefully reasoning through the problem and formulating a detailed response for you.",
+    children: "The model is carefully reasoning through the problem and formulating a detailed response for you.",
     className: "max-w-sm text-sm text-muted-foreground",
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Long shimmer text renders", async () => {
-      await expect(canvas.getByText(/carefully reasoning/)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/carefully reasoning/)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4609" },
   },
-}
+};
 
 export const CustomDuration: Story = {
   args: {
@@ -73,15 +71,15 @@ export const CustomDuration: Story = {
     duration: 3,
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Custom duration shimmer renders", async () => {
-      await expect(canvas.getByText("Processing...")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Processing...")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4610" },
   },
-}
+};
 
 export const BrandGradient: Story = {
   args: {
@@ -89,32 +87,38 @@ export const BrandGradient: Story = {
     gradient: TS_SHIMMER_GRADIENT,
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Brand gradient shimmer renders", async () => {
-      await expect(canvas.getByText("Thinking about your question...")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Thinking about your question...")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4611" },
   },
-}
+};
 
 export const InContext: Story = {
   render: () => (
     <div className="max-w-md space-y-2 rounded-lg border p-4">
-      <Shimmer as="p" className="text-sm">Analyzing your data...</Shimmer>
-      <Shimmer as="p" className="text-sm opacity-80">Cross-referencing sources...</Shimmer>
-      <Shimmer as="p" className="text-sm opacity-60">Preparing summary...</Shimmer>
+      <Shimmer as="p" className="text-sm">
+        Analyzing your data...
+      </Shimmer>
+      <Shimmer as="p" className="text-sm opacity-80">
+        Cross-referencing sources...
+      </Shimmer>
+      <Shimmer as="p" className="text-sm opacity-60">
+        Preparing summary...
+      </Shimmer>
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Multiple shimmers render", async () => {
-      await expect(canvas.getByText("Analyzing your data...")).toBeInTheDocument()
-      await expect(canvas.getByText("Preparing summary...")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Analyzing your data...")).toBeInTheDocument();
+      await expect(canvas.getByText("Preparing summary...")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4612" },
   },
-}
+};

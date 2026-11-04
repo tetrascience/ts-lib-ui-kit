@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { Text, type TextVariant } from "@/components/ui/text";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 /**
@@ -25,10 +26,11 @@ type PageHeaderVariant = Extract<TextVariant, "display" | "title-lg" | "title" |
  * Props are based on `HTMLAttributes<HTMLElement>` for the same reason `Text`'s
  * are (see the comment in `src/components/ui/text.tsx`): handlers and `ref` on a
  * concrete tag are parameterised by that one element type, which cannot hold
- * across a polymorphic `as`. No `ref` is forwarded; the kit is migrating off
- * `forwardRef`.
+ * across a polymorphic `as`. `ref` targets the wrapping `<div>`, whose type does
+ * not vary with `as`.
  */
 interface PageHeaderProps extends Omit<React.HTMLAttributes<HTMLElement>, "title"> {
+  ref?: React.Ref<HTMLDivElement>;
   /**
    * The page title. Renders inside the heading element, so its text *is* the
    * heading's accessible name.
@@ -154,5 +156,9 @@ function PageHeader({
   );
 }
 
-export { PageHeader };
+/** React 18 wrapper for {@link PageHeader}; see its documentation. */
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const PageHeaderWithRef = withRef("PageHeader", PageHeader);
+
+export { PageHeaderWithRef as PageHeader };
 export type { PageHeaderProps, PageHeaderHeading, PageHeaderVariant };

@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { expect, userEvent, waitFor, within } from "storybook/test"
+import { useState } from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import {
   CodeBlock,
@@ -16,11 +16,10 @@ import {
   CodeBlockLanguageSelectorValue,
   CodeBlockTitle,
   highlightCode,
-} from "./code-block"
+} from "./code-block";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-import type { BundledLanguage } from "shiki"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { BundledLanguage } from "shiki";
 
 const meta: Meta = {
   title: "Components/Data Display/Code Block",
@@ -28,11 +27,11 @@ const meta: Meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
 const tsExample = `export function greet(name: string): string {
   return \`Hello, \${name}!\`
@@ -40,7 +39,7 @@ const tsExample = `export function greet(name: string): string {
 
 // Say hi to the user
 const message = greet("world")
-console.log(message)`
+console.log(message)`;
 
 const pythonExample = `def fibonacci(n: int) -> int:
     """Return the nth Fibonacci number."""
@@ -50,50 +49,41 @@ const pythonExample = `def fibonacci(n: int) -> int:
 
 
 for i in range(10):
-    print(fibonacci(i))`
+    print(fibonacci(i))`;
 
 export const Default: Story = {
-  render: () => (
-    <CodeBlock className="max-w-2xl" code={tsExample} language="ts" />
-  ),
+  render: () => <CodeBlock className="max-w-2xl" code={tsExample} language="ts" />,
   play: async ({ canvasElement, step }) => {
     await step("Code block renders code", async () => {
       await waitFor(
         () => {
-          expect(canvasElement.querySelector("code")?.textContent ?? "").toContain("greet")
+          expect(canvasElement.querySelector("code")?.textContent ?? "").toContain("greet");
         },
-        { timeout: 5000 }
-      )
-    })
+        { timeout: 5000 },
+      );
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4691" },
   },
-}
+};
 
 export const WithLineNumbers: Story = {
-  render: () => (
-    <CodeBlock
-      className="max-w-2xl"
-      code={pythonExample}
-      language="python"
-      showLineNumbers
-    />
-  ),
+  render: () => <CodeBlock className="max-w-2xl" code={pythonExample} language="python" showLineNumbers />,
   play: async ({ canvasElement, step }) => {
     await step("Code block renders with line numbers", async () => {
       await waitFor(
         () => {
-          expect(canvasElement.querySelector("code")?.textContent ?? "").toContain("fibonacci")
+          expect(canvasElement.querySelector("code")?.textContent ?? "").toContain("fibonacci");
         },
-        { timeout: 5000 }
-      )
-    })
+        { timeout: 5000 },
+      );
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4692" },
   },
-}
+};
 
 export const WithHeader: Story = {
   render: () => (
@@ -109,31 +99,31 @@ export const WithHeader: Story = {
     </CodeBlock>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Filename renders", async () => {
-      await expect(canvas.getByText("greet.ts")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("greet.ts")).toBeInTheDocument();
+    });
     await step("Clicking the copy button invokes clipboard", async () => {
-      const button = canvas.getByRole("button")
-      await userEvent.click(button)
-      await expect(button).toBeInTheDocument()
-    })
+      const button = canvas.getByRole("button");
+      await userEvent.click(button);
+      await expect(button).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4693" },
   },
-}
+};
 
 export const WithLanguageSelector: Story = {
   render: () => {
     const languages: { id: BundledLanguage; label: string; code: string }[] = [
       { id: "ts", label: "TypeScript", code: tsExample },
       { id: "python", label: "Python", code: pythonExample },
-    ]
+    ];
 
     const Example = () => {
-      const [lang, setLang] = useState<BundledLanguage>("ts")
-      const current = languages.find((l) => l.id === lang) ?? languages[0]
+      const [lang, setLang] = useState<BundledLanguage>("ts");
+      const current = languages.find((l) => l.id === lang) ?? languages[0];
 
       return (
         <CodeBlock className="max-w-2xl" code={current.code} language={current.id}>
@@ -142,10 +132,7 @@ export const WithLanguageSelector: Story = {
               <CodeBlockFilename>example</CodeBlockFilename>
             </CodeBlockTitle>
             <CodeBlockActions>
-              <CodeBlockLanguageSelector
-                onValueChange={(v) => setLang(v as BundledLanguage)}
-                value={lang}
-              >
+              <CodeBlockLanguageSelector onValueChange={(v) => setLang(v as BundledLanguage)} value={lang}>
                 <CodeBlockLanguageSelectorTrigger>
                   <CodeBlockLanguageSelectorValue />
                 </CodeBlockLanguageSelectorTrigger>
@@ -161,35 +148,33 @@ export const WithLanguageSelector: Story = {
             </CodeBlockActions>
           </CodeBlockHeader>
         </CodeBlock>
-      )
-    }
+      );
+    };
 
-    return <Example />
+    return <Example />;
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Language selector renders", async () => {
-      await expect(canvas.getByRole("combobox")).toBeInTheDocument()
-    })
+      await expect(canvas.getByRole("combobox")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4694" },
   },
-}
+};
 
 export const EmptyCode: Story = {
-  render: () => (
-    <CodeBlock className="max-w-2xl" code={""} language="ts" />
-  ),
+  render: () => <CodeBlock className="max-w-2xl" code={""} language="ts" />,
   play: async ({ canvasElement, step }) => {
     await step("Empty code block renders without errors", async () => {
-      await expect(canvasElement.querySelector('[data-language="ts"]')).toBeInTheDocument()
-    })
+      await expect(canvasElement.querySelector('[data-language="ts"]')).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4695" },
   },
-}
+};
 
 export const ManualContent: Story = {
   render: () => (
@@ -203,26 +188,26 @@ export const ManualContent: Story = {
     </CodeBlockContainer>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Manual code block renders", async () => {
-      await expect(canvas.getByText("manual.ts")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("manual.ts")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4696" },
   },
-}
+};
 
 export const SubscribesToHighlight: Story = {
   render: () => <CodeBlock className="max-w-2xl" code={tsExample} language="ts" />,
   play: async ({ step }) => {
     await step("highlightCode subscription path executes", async () => {
-      const result = highlightCode(tsExample, "ts", () => {})
+      const result = highlightCode(tsExample, "ts", () => {});
       // Either cached (non-null) or pending; both exercise branches.
-      await expect(result === null || typeof result === "object").toBe(true)
-    })
+      await expect(result === null || typeof result === "object").toBe(true);
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4697" },
   },
-}
+};

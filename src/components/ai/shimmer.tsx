@@ -4,16 +4,12 @@ import { memo, useMemo } from "react";
 import type { MotionProps } from "motion/react";
 import type { CSSProperties, ElementType, JSX } from "react";
 
-
 import { cn } from "@/lib/utils";
 
 type MotionHTMLProps = MotionProps & Record<string, unknown>;
 
 // Cache motion components at module level to avoid creating during render
-const motionComponentCache = new Map<
-  keyof JSX.IntrinsicElements,
-  React.ComponentType<MotionHTMLProps>
->();
+const motionComponentCache = new Map<keyof JSX.IntrinsicElements, React.ComponentType<MotionHTMLProps>>();
 
 const getMotionComponent = (element: keyof JSX.IntrinsicElements) => {
   let component = motionComponentCache.get(element);
@@ -25,8 +21,7 @@ const getMotionComponent = (element: keyof JSX.IntrinsicElements) => {
 };
 
 /** TetraScience brand gradient — Light Blue 300 → Purple 500 → Violet Marble */
-export const TS_SHIMMER_GRADIENT =
-  "linear-gradient(90deg, #549DFF, #8243BA, #9665F4)";
+export const TS_SHIMMER_GRADIENT = "linear-gradient(90deg, #549DFF, #8243BA, #9665F4)";
 
 export interface TextShimmerProps {
   children: string;
@@ -50,14 +45,9 @@ const ShimmerComponent = ({
   spread = 2,
   gradient,
 }: TextShimmerProps) => {
-  const MotionComponent = getMotionComponent(
-    Component as keyof JSX.IntrinsicElements
-  );
+  const MotionComponent = getMotionComponent(Component as keyof JSX.IntrinsicElements);
 
-  const dynamicSpread = useMemo(
-    () => (children?.length ?? 0) * spread,
-    [children, spread]
-  );
+  const dynamicSpread = useMemo(() => (children?.length ?? 0) * spread, [children, spread]);
 
   const baseGradient = gradient
     ? gradient
@@ -69,7 +59,7 @@ const ShimmerComponent = ({
       className={cn(
         "relative inline-block bg-[length:250%_100%,auto] bg-clip-text text-transparent",
         "[--bg:linear-gradient(90deg,#0000_calc(50%-var(--spread)),var(--color-background),#0000_calc(50%+var(--spread)))] [background-repeat:no-repeat,padding-box]",
-        className
+        className,
       )}
       initial={{ backgroundPosition: "100% center" }}
       style={

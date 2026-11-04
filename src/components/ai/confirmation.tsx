@@ -1,15 +1,14 @@
 import { AnimatePresence, motion } from "motion/react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-
 import type { ToolUIPart } from "ai";
 import type { ComponentProps, PropsWithChildren, ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/ui/code-block";
 import { Kbd } from "@/components/ui/kbd";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
-
 
 type ToolUIPartApproval =
   | { id: string; approved?: never; reason?: never }
@@ -44,21 +43,13 @@ export type ConfirmationProps = ComponentProps<"div"> & {
 
 const ACCEPTED_HIDE_DELAY = 1500;
 
-export const Confirmation = ({
-  className,
-  approval,
-  state,
-  children,
-  ...props
-}: ConfirmationProps) => {
+const Confirmation = ({ className, approval, state, children, ref, ...props }: ConfirmationProps) => {
   const contextValue = useMemo(() => ({ approval, state }), [approval, state]);
   const [visible, setVisible] = useState(true);
 
   const isAccepted =
     approval?.approved === true &&
-    (state === "approval-responded" ||
-      state === "output-available" ||
-      state === "output-denied");
+    (state === "approval-responded" || state === "output-available" || state === "output-denied");
 
   useEffect(() => {
     if (isAccepted) {
@@ -74,7 +65,7 @@ export const Confirmation = ({
   // Pass through data-* and aria-* only; drop event handlers to avoid
   // onDrag type conflict between React and framer-motion.
   const passthroughProps = Object.fromEntries(
-    Object.entries(props).filter(([k]) => k.startsWith("data-") || k.startsWith("aria-"))
+    Object.entries(props).filter(([k]) => k.startsWith("data-") || k.startsWith("aria-")),
   );
 
   return (
@@ -83,10 +74,8 @@ export const Confirmation = ({
         {visible && (
           <motion.div
             {...passthroughProps}
-            className={cn(
-              "flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-elevation-3",
-              className
-            )}
+            ref={ref}
+            className={cn("flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-elevation-3", className)}
             exit={{ opacity: 0, scale: 0.96 }}
             id={props.id}
             style={props.style}
@@ -100,24 +89,25 @@ export const Confirmation = ({
   );
 };
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConfirmationWithRef = withRef("Confirmation", Confirmation);
+export { ConfirmationWithRef as Confirmation };
+
 // ---------------------------------------------------------------------------
 // ConfirmationTitle
 // ---------------------------------------------------------------------------
 
 export type ConfirmationTitleProps = PropsWithChildren<ComponentProps<"h3">>;
 
-export const ConfirmationTitle = ({
-  className,
-  children,
-  ...props
-}: ConfirmationTitleProps) => (
-  <h3
-    className={cn("font-semibold text-base text-foreground", className)}
-    {...props}
-  >
+const ConfirmationTitle = ({ className, children, ...props }: ConfirmationTitleProps) => (
+  <h3 className={cn("font-semibold text-base text-foreground", className)} {...props}>
     {children}
   </h3>
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConfirmationTitleWithRef = withRef("ConfirmationTitle", ConfirmationTitle);
+export { ConfirmationTitleWithRef as ConfirmationTitle };
 
 // ---------------------------------------------------------------------------
 // ConfirmationCode — monospace command/code block
@@ -125,13 +115,13 @@ export const ConfirmationTitle = ({
 
 export type ConfirmationCodeProps = ComponentProps<typeof CodeBlock>;
 
-export const ConfirmationCode = ({
-  className,
-  children,
-  ...props
-}: ConfirmationCodeProps) => (
-  <CodeBlock className={cn(className)} {...props} language="bash" code={children?.toString() ?? ''} />
+const ConfirmationCode = ({ className, children, ...props }: ConfirmationCodeProps) => (
+  <CodeBlock className={cn(className)} {...props} language="bash" code={children?.toString() ?? ""} />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConfirmationCodeWithRef = withRef("ConfirmationCode", ConfirmationCode);
+export { ConfirmationCodeWithRef as ConfirmationCode };
 
 // ---------------------------------------------------------------------------
 // ConfirmationRequest / Accepted / Rejected — conditional renderers
@@ -147,9 +137,7 @@ export const ConfirmationAccepted = ({ children }: { children?: ReactNode }) => 
   const { approval, state } = useConfirmation();
   if (
     !approval?.approved ||
-    (state !== "approval-responded" &&
-      state !== "output-denied" &&
-      state !== "output-available")
+    (state !== "approval-responded" && state !== "output-denied" && state !== "output-available")
   ) {
     return null;
   }
@@ -160,9 +148,7 @@ export const ConfirmationRejected = ({ children }: { children?: ReactNode }) => 
   const { approval, state } = useConfirmation();
   if (
     approval?.approved !== false ||
-    (state !== "approval-responded" &&
-      state !== "output-denied" &&
-      state !== "output-available")
+    (state !== "approval-responded" && state !== "output-denied" && state !== "output-available")
   ) {
     return null;
   }
@@ -175,19 +161,15 @@ export const ConfirmationRejected = ({ children }: { children?: ReactNode }) => 
 
 export type ConfirmationActionsProps = ComponentProps<"div">;
 
-export const ConfirmationActions = ({
-  className,
-  ...props
-}: ConfirmationActionsProps) => {
+const ConfirmationActions = ({ className, ...props }: ConfirmationActionsProps) => {
   const { state } = useConfirmation();
   if (state !== "approval-requested") return null;
-  return (
-    <div
-      className={cn("flex items-center justify-between gap-2", className)}
-      {...props}
-    />
-  );
+  return <div className={cn("flex items-center justify-between gap-2", className)} {...props} />;
 };
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConfirmationActionsWithRef = withRef("ConfirmationActions", ConfirmationActions);
+export { ConfirmationActionsWithRef as ConfirmationActions };
 
 // ---------------------------------------------------------------------------
 // ConfirmationAction — individual button
@@ -195,18 +177,13 @@ export const ConfirmationActions = ({
 
 export type ConfirmationActionProps = ComponentProps<typeof Button>;
 
-export const ConfirmationAction = ({
-  className,
-  size = "sm",
-  ...props
-}: ConfirmationActionProps) => (
-  <Button
-    className={cn("gap-1.5", className)}
-    size={size}
-    type="button"
-    {...props}
-  />
+const ConfirmationAction = ({ className, size = "sm", ...props }: ConfirmationActionProps) => (
+  <Button className={cn("gap-1.5", className)} size={size} type="button" {...props} />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConfirmationActionWithRef = withRef("ConfirmationAction", ConfirmationAction);
+export { ConfirmationActionWithRef as ConfirmationAction };
 
 // ---------------------------------------------------------------------------
 // ConfirmationShortcut — keyboard shortcut label inside a button
@@ -214,9 +191,10 @@ export const ConfirmationAction = ({
 
 export type ConfirmationShortcutProps = ComponentProps<typeof Kbd>;
 
-export const ConfirmationShortcut = ({
-  className,
-  ...props
-}: ConfirmationShortcutProps) => (
+const ConfirmationShortcut = ({ className, ...props }: ConfirmationShortcutProps) => (
   <Kbd className={cn("ml-0.5", className)} {...props} />
 );
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ConfirmationShortcutWithRef = withRef("ConfirmationShortcut", ConfirmationShortcut);
+export { ConfirmationShortcutWithRef as ConfirmationShortcut };

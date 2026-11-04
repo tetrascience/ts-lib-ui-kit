@@ -1,12 +1,12 @@
-import { BrainIcon, ChevronDownIcon, CopyIcon, RefreshCcwIcon } from "lucide-react"
-import { useEffect, useState } from "react"
-import { expect, fn, userEvent, waitFor, within } from "storybook/test"
+import { BrainIcon, ChevronDownIcon, CopyIcon, RefreshCcwIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
-import { Chat } from "./Chat"
+import { Chat } from "./Chat";
 
-import type { ChatMessage, ChatProps } from "./Chat"
-import type { AttachmentData } from "@/components/ai/attachments"
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { ChatMessage, ChatProps } from "./Chat";
+import type { AttachmentData } from "@/components/ai/attachments";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import {
   Attachment,
@@ -14,7 +14,7 @@ import {
   AttachmentPreview,
   AttachmentRemove,
   Attachments,
-} from "@/components/ai/attachments"
+} from "@/components/ai/attachments";
 import {
   Confirmation,
   ConfirmationAccepted,
@@ -25,7 +25,7 @@ import {
   ConfirmationRequest,
   ConfirmationShortcut,
   ConfirmationTitle,
-} from "@/components/ai/confirmation"
+} from "@/components/ai/confirmation";
 import {
   Context,
   ContextContent,
@@ -36,8 +36,8 @@ import {
   ContextOutputUsage,
   ContextReasoningUsage,
   ContextTrigger,
-} from "@/components/ai/context"
-import { Conversation, ConversationContent } from "@/components/ai/conversation"
+} from "@/components/ai/context";
+import { Conversation, ConversationContent } from "@/components/ai/conversation";
 import {
   InlineCitation,
   InlineCitationCard,
@@ -53,8 +53,8 @@ import {
   InlineCitationQuote,
   InlineCitationSource,
   InlineCitationText,
-} from "@/components/ai/inline-citation"
-import { Message, MessageAction, MessageActions, MessageContent, MessageResponse } from "@/components/ai/message"
+} from "@/components/ai/inline-citation";
+import { Message, MessageAction, MessageActions, MessageContent, MessageResponse } from "@/components/ai/message";
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -74,7 +74,7 @@ import {
   PromptInputTools,
   usePromptInputAttachments,
   type PromptInputMessage,
-} from "@/components/ai/prompt-input"
+} from "@/components/ai/prompt-input";
 import {
   Queue,
   QueueItem,
@@ -82,14 +82,14 @@ import {
   QueueItemIndicator,
   QueueList,
   type QueueItemStatus,
-} from "@/components/ai/queue"
-import { Reasoning, ReasoningContent, ReasoningTrigger, useReasoning } from "@/components/ai/reasoning"
-import { Shimmer, TS_SHIMMER_GRADIENT } from "@/components/ai/shimmer"
-import { Source, Sources, SourcesContent, SourcesTrigger } from "@/components/ai/sources"
-import { StreamStatus } from "@/components/ai/stream-status"
-import { Task, TaskContent, TaskItem, TaskItemFile, TaskTrigger } from "@/components/ai/task"
-import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "@/components/ai/tool"
-import { cn } from "@/lib/utils"
+} from "@/components/ai/queue";
+import { Reasoning, ReasoningContent, ReasoningTrigger, useReasoning } from "@/components/ai/reasoning";
+import { Shimmer, TS_SHIMMER_GRADIENT } from "@/components/ai/shimmer";
+import { Source, Sources, SourcesContent, SourcesTrigger } from "@/components/ai/sources";
+import { StreamStatus } from "@/components/ai/stream-status";
+import { Task, TaskContent, TaskItem, TaskItemFile, TaskTrigger } from "@/components/ai/task";
+import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "@/components/ai/tool";
+import { cn } from "@/lib/utils";
 
 const meta: Meta<typeof Chat> = {
   title: "AI Elements/Conversation/Chat",
@@ -98,11 +98,11 @@ const meta: Meta<typeof Chat> = {
     layout: "fullscreen",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Chat>
+type Story = StoryObj<typeof Chat>;
 
 // ---------------------------------------------------------------------------
 // Shared mock data
@@ -155,20 +155,20 @@ The overall equation: **6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂**`,
     content:
       "Chlorophyll is a green pigment found in plant cells, specifically inside organelles called **chloroplasts**. It absorbs light most efficiently in the red and blue wavelengths, reflecting green light — which is why plants appear green.",
   },
-]
+];
 
 const MOCK_MODELS = [
   { id: "claude-sonnet-4-6", name: "Claude Sonnet" },
   { id: "claude-opus-4-7", name: "Claude Opus" },
   { id: "gpt-4o", name: "GPT-4o" },
-]
+];
 
 const MOCK_SUGGESTIONS = [
   "Explain quantum entanglement",
   "Write a haiku about the ocean",
   "What is the Turing test?",
   "Summarise the French Revolution",
-]
+];
 
 // ---------------------------------------------------------------------------
 // Stories
@@ -185,20 +185,20 @@ export const Empty: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Empty state renders with suggestions", async () => {
-      await expect(canvas.getByText("Start a conversation")).toBeInTheDocument()
-      await expect(canvas.getByText("Explain quantum entanglement")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Start a conversation")).toBeInTheDocument();
+      await expect(canvas.getByText("Explain quantum entanglement")).toBeInTheDocument();
+    });
     await step("Clicking a suggestion fills the textarea", async () => {
-      await userEvent.click(canvas.getByText("Explain quantum entanglement"))
-      await expect(canvas.getByPlaceholderText("Ask anything...")).toHaveValue("Explain quantum entanglement")
-    })
+      await userEvent.click(canvas.getByText("Explain quantum entanglement"));
+      await expect(canvas.getByPlaceholderText("Ask anything...")).toHaveValue("Explain quantum entanglement");
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4656" },
   },
-}
+};
 
 export const WithMessages: Story = {
   args: {
@@ -212,22 +212,22 @@ export const WithMessages: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("User and assistant messages render", async () => {
-      await expect(canvas.getByText(/How does photosynthesis/)).toBeInTheDocument()
-      await expect(canvas.getByText(/Photosynthesis is the process/)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/How does photosynthesis/)).toBeInTheDocument();
+      await expect(canvas.getByText(/Photosynthesis is the process/)).toBeInTheDocument();
+    });
     await step("Branch navigation is visible for multi-branch message", async () => {
-      await expect(canvas.getByText(/1 of 2/)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/1 of 2/)).toBeInTheDocument();
+    });
     await step("Sources panel renders", async () => {
-      await expect(canvas.getByText(/Used 2 sources/i)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/Used 2 sources/i)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4657" },
   },
-}
+};
 
 export const SingleModel: Story = {
   args: {
@@ -240,15 +240,15 @@ export const SingleModel: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Model selector hidden with single model", async () => {
-      await expect(canvas.queryByRole("combobox")).not.toBeInTheDocument()
-    })
+      await expect(canvas.queryByRole("combobox")).not.toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4658" },
   },
-}
+};
 
 export const SubmitAndStreamLifecycle: Story = {
   args: {
@@ -256,8 +256,8 @@ export const SubmitAndStreamLifecycle: Story = {
     defaultModel: "gpt-4o",
     suggestions: [],
     onSend: fn(async (message: string, model: string) => {
-      await new Promise((resolve) => setTimeout(resolve, 50))
-      return `Assistant heard "${message}" using ${model}.`
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      return `Assistant heard "${message}" using ${model}.`;
     }),
   },
   render: (args) => (
@@ -266,30 +266,30 @@ export const SubmitAndStreamLifecycle: Story = {
     </div>
   ),
   play: async ({ args, canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Submitting prompt calls onSend with selected model", async () => {
-      await userEvent.type(canvas.getByPlaceholderText("Ask anything..."), "Trace streamStart")
-      await userEvent.click(canvas.getByRole("button", { name: "Submit" }))
-      await waitFor(() => expect(args.onSend).toHaveBeenCalledWith("Trace streamStart", "gpt-4o"))
-    })
+      await userEvent.type(canvas.getByPlaceholderText("Ask anything..."), "Trace streamStart");
+      await userEvent.click(canvas.getByRole("button", { name: "Submit" }));
+      await waitFor(() => expect(args.onSend).toHaveBeenCalledWith("Trace streamStart", "gpt-4o"));
+    });
 
     await step("streamStart renders status while reply is pending", async () => {
-      await expect(canvas.getByText("Trace streamStart")).toBeInTheDocument()
-      await expect(canvas.getByText(/^\d+s$/)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Trace streamStart")).toBeInTheDocument();
+      await expect(canvas.getByText(/^\d+s$/)).toBeInTheDocument();
+    });
 
     await step("Assistant reply renders and streamStart clears after linger", async () => {
-      await expect(await canvas.findByText('Assistant heard "Trace streamStart" using gpt-4o.')).toBeInTheDocument()
+      await expect(await canvas.findByText('Assistant heard "Trace streamStart" using gpt-4o.')).toBeInTheDocument();
       await waitFor(() => expect(canvas.queryByText(/^\d+s$/)).not.toBeInTheDocument(), {
         timeout: 3600,
-      })
-    })
+      });
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4659" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Advanced composition helpers
@@ -305,10 +305,10 @@ const TsBrainGradientDef = () => (
       </linearGradient>
     </defs>
   </svg>
-)
+);
 
 const GradientReasoningTrigger = () => {
-  const { isStreaming, isOpen, duration } = useReasoning()
+  const { isStreaming, isOpen, duration } = useReasoning();
   return (
     <>
       <TsBrainGradientDef />
@@ -327,20 +327,20 @@ const GradientReasoningTrigger = () => {
         )}
       />
     </>
-  )
-}
+  );
+};
 
 const INTERACTIVE_MODELS = [
   { id: "claude-sonnet-4-6", name: "Sonnet 4.6" },
   { id: "claude-opus-4-7", name: "Opus 4.7" },
   { id: "claude-haiku-4-5", name: "Haiku 4.5" },
   { id: "gpt-4o", name: "GPT-4o" },
-]
+];
 
 /** Inline attachment chips rendered in the PromptInputHeader after files are picked. */
 const AttachmentsHeader = () => {
-  const { files, remove } = usePromptInputAttachments()
-  if (files.length === 0) return null
+  const { files, remove } = usePromptInputAttachments();
+  if (files.length === 0) return null;
   return (
     <Attachments variant="inline">
       {files.map((file) => (
@@ -351,8 +351,8 @@ const AttachmentsHeader = () => {
         </Attachment>
       ))}
     </Attachments>
-  )
-}
+  );
+};
 
 /**
  * Wraps children and overlays the ts-border-pulse glow in a
@@ -365,9 +365,9 @@ const PulseWrapper = ({
   radius = "rounded-md",
   children,
 }: {
-  active: boolean
-  radius?: string
-  children: React.ReactNode
+  active: boolean;
+  radius?: string;
+  children: React.ReactNode;
 }) => (
   <div className="relative">
     <div
@@ -380,7 +380,7 @@ const PulseWrapper = ({
     />
     {children}
   </div>
-)
+);
 
 const ChatShell = ({ children }: { children: React.ReactNode }) => (
   <div className="mx-auto h-screen w-full">
@@ -388,16 +388,16 @@ const ChatShell = ({ children }: { children: React.ReactNode }) => (
       <ConversationContent>{children}</ConversationContent>
     </Conversation>
   </div>
-)
+);
 
 // ---------------------------------------------------------------------------
 // ReasoningCitationsAndQueue — thinking → queue → message w/ inline citation
 // ---------------------------------------------------------------------------
 
 const QUEUE_STEPS: {
-  id: string
-  title: string
-  status: QueueItemStatus
+  id: string;
+  title: string;
+  status: QueueItemStatus;
 }[][] = [
   [
     { id: "1", title: "Parse user question", status: "loading" },
@@ -423,33 +423,36 @@ const QUEUE_STEPS: {
     { id: "3", title: "Validate auth token", status: "error" },
     { id: "4", title: "Draft response", status: "done" },
   ],
-]
+];
 
 const ReasoningCitationsQueueDemo = () => {
-  const [phase, setPhase] = useState<"thinking" | "queue" | "done">("thinking")
-  const [queueStep, setQueueStep] = useState(0)
+  const [phase, setPhase] = useState<"thinking" | "queue" | "done">("thinking");
+  const [queueStep, setQueueStep] = useState(0);
 
   useEffect(() => {
-    const thinkingTimer = setTimeout(() => setPhase("queue"), 2500)
-    return () => clearTimeout(thinkingTimer)
-  }, [])
+    const thinkingTimer = setTimeout(() => setPhase("queue"), 2500);
+    return () => clearTimeout(thinkingTimer);
+  }, []);
 
   useEffect(() => {
-    if (phase !== "queue") return
+    if (phase !== "queue") return;
     const interval = setInterval(() => {
       setQueueStep((s) => {
         if (s >= QUEUE_STEPS.length - 1) {
-          clearInterval(interval)
-          setTimeout(() => setPhase("done"), 800)
-          return s
+          clearInterval(interval);
+          setTimeout(() => setPhase("done"), 800);
+          return s;
         }
-        return s + 1
-      })
-    }, 1250)
-    return () => clearInterval(interval)
-  }, [phase])
+        return s + 1;
+      });
+    }, 1250);
+    return () => clearInterval(interval);
+  }, [phase]);
 
-  const sources = ["https://en.wikipedia.org/wiki/Photosynthesis", "https://www.khanacademy.org/science/photosynthesis"]
+  const sources = [
+    "https://en.wikipedia.org/wiki/Photosynthesis",
+    "https://www.khanacademy.org/science/photosynthesis",
+  ];
 
   return (
     <ChatShell>
@@ -547,8 +550,8 @@ const ReasoningCitationsQueueDemo = () => {
         )}
       </div>
     </ChatShell>
-  )
-}
+  );
+};
 
 // Docs "Show code": the story renders a timer-driven local demo, so
 // hand-written usage code is shown instead (same approach as DataAppShell).
@@ -593,7 +596,7 @@ const REASONING_CITATIONS_QUEUE_CODE = `<Message from="user">
       <Source href={href} key={href} title={new URL(href).hostname} />
     ))}
   </SourcesContent>
-</Sources>`
+</Sources>`;
 
 export const WithReasoningCitationsAndQueue: Story = {
   name: "With Reasoning, Citations & Queue",
@@ -602,31 +605,31 @@ export const WithReasoningCitationsAndQueue: Story = {
     docs: { source: { code: REASONING_CITATIONS_QUEUE_CODE, language: "tsx" } },
     zephyr: { testCaseId: "SW-T4660" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // TaskAndTools — task breakdown + tool calling
 // ---------------------------------------------------------------------------
 
 const TaskAndToolsDemo = () => {
-  const [phase, setPhase] = useState<"thinking" | "running" | "done">("thinking")
+  const [phase, setPhase] = useState<"thinking" | "running" | "done">("thinking");
   const [toolState, setToolState] = useState<"input-streaming" | "input-available" | "output-available">(
     "input-streaming",
-  )
+  );
 
   useEffect(() => {
     const t1 = setTimeout(() => {
-      setPhase("running")
-      setToolState("input-available")
-    }, 2000)
-    const t2 = setTimeout(() => setToolState("output-available"), 4500)
-    const t3 = setTimeout(() => setPhase("done"), 5500)
+      setPhase("running");
+      setToolState("input-available");
+    }, 2000);
+    const t2 = setTimeout(() => setToolState("output-available"), 4500);
+    const t3 = setTimeout(() => setPhase("done"), 5500);
     return () => {
-      clearTimeout(t1)
-      clearTimeout(t2)
-      clearTimeout(t3)
-    }
-  }, [])
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, []);
 
   return (
     <ChatShell>
@@ -691,8 +694,8 @@ const TaskAndToolsDemo = () => {
         )}
       </div>
     </ChatShell>
-  )
-}
+  );
+};
 
 // Docs "Show code": timer-driven local demo — hand-written usage code instead.
 const TASK_AND_TOOLS_CODE = `<Reasoning defaultOpen isStreaming={isThinking}>
@@ -726,7 +729,7 @@ const TASK_AND_TOOLS_CODE = `<Reasoning defaultOpen isStreaming={isThinking}>
   <MessageContent>
     <MessageResponse>It's 68°F and partly cloudy in San Francisco.</MessageResponse>
   </MessageContent>
-</Message>`
+</Message>`;
 
 export const WithTaskAndTools: Story = {
   name: "With Task & Tool Calling",
@@ -735,7 +738,7 @@ export const WithTaskAndTools: Story = {
     docs: { source: { code: TASK_AND_TOOLS_CODE, language: "tsx" } },
     zephyr: { testCaseId: "SW-T4661" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Attachments — user message with file attachments
@@ -761,7 +764,7 @@ const MOCK_ATTACHMENTS: AttachmentData[] = [
     filename: "notes.txt",
     mediaType: "text/plain",
   },
-]
+];
 
 export const WithAttachments: Story = {
   name: "With Attachments in Message",
@@ -801,7 +804,7 @@ export const WithAttachments: Story = {
   parameters: {
     zephyr: { testCaseId: "SW-T4662" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // HumanInTheLoop — assistant proposes a tool call that needs user approval
@@ -809,51 +812,51 @@ export const WithAttachments: Story = {
 // tool-input and tool-output phases.
 // ---------------------------------------------------------------------------
 
-type HumanInLoopPhase = "thinking" | "awaiting-approval" | "approved" | "running" | "done" | "denied"
+type HumanInLoopPhase = "thinking" | "awaiting-approval" | "approved" | "running" | "done" | "denied";
 
 const HUMAN_IN_LOOP_PHASE_TRANSITIONS: Partial<Record<HumanInLoopPhase, { next: HumanInLoopPhase; delay: number }>> = {
   thinking: { next: "awaiting-approval", delay: 1800 },
   approved: { next: "running", delay: 600 },
   running: { next: "done", delay: 1400 },
-}
+};
 
 function getHumanInLoopApproval(phase: HumanInLoopPhase) {
-  if (phase === "awaiting-approval") return { id: "approval-1" }
+  if (phase === "awaiting-approval") return { id: "approval-1" };
   if (phase === "approved" || phase === "running" || phase === "done")
-    return { id: "approval-1", approved: true as const }
-  if (phase === "denied") return { id: "approval-1", approved: false as const }
+    return { id: "approval-1", approved: true as const };
+  if (phase === "denied") return { id: "approval-1", approved: false as const };
 }
 
 function getHumanInLoopConfirmationState(
   phase: HumanInLoopPhase,
 ): "approval-requested" | "approval-responded" | "output-available" | "output-denied" {
-  if (phase === "awaiting-approval") return "approval-requested"
-  if (phase === "denied") return "output-denied"
-  if (phase === "done") return "output-available"
-  return "approval-responded"
+  if (phase === "awaiting-approval") return "approval-requested";
+  if (phase === "denied") return "output-denied";
+  if (phase === "done") return "output-available";
+  return "approval-responded";
 }
 
 function getHumanInLoopToolState(phase: HumanInLoopPhase): "input-streaming" | "input-available" | "output-available" {
-  if (phase === "thinking") return "input-streaming"
-  if (phase === "done") return "output-available"
-  return "input-available"
+  if (phase === "thinking") return "input-streaming";
+  if (phase === "done") return "output-available";
+  return "input-available";
 }
 
 const HumanInTheLoopDemo = () => {
-  const [phase, setPhase] = useState<HumanInLoopPhase>("thinking")
+  const [phase, setPhase] = useState<HumanInLoopPhase>("thinking");
 
   useEffect(() => {
-    const transition = HUMAN_IN_LOOP_PHASE_TRANSITIONS[phase]
-    if (!transition) return
-    const t = setTimeout(() => setPhase(transition.next), transition.delay)
-    return () => clearTimeout(t)
-  }, [phase])
+    const transition = HUMAN_IN_LOOP_PHASE_TRANSITIONS[phase];
+    if (!transition) return;
+    const t = setTimeout(() => setPhase(transition.next), transition.delay);
+    return () => clearTimeout(t);
+  }, [phase]);
 
-  const isStreaming = phase !== "done" && phase !== "denied" && phase !== "awaiting-approval"
+  const isStreaming = phase !== "done" && phase !== "denied" && phase !== "awaiting-approval";
 
-  const approval = getHumanInLoopApproval(phase)
-  const confirmationState = getHumanInLoopConfirmationState(phase)
-  const toolState = getHumanInLoopToolState(phase)
+  const approval = getHumanInLoopApproval(phase);
+  const confirmationState = getHumanInLoopConfirmationState(phase);
+  const toolState = getHumanInLoopToolState(phase);
 
   return (
     <div className="flex h-screen w-full flex-col">
@@ -957,8 +960,8 @@ const HumanInTheLoopDemo = () => {
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
 // Docs "Show code": timer-driven local demo — hand-written usage code instead.
 const HUMAN_IN_LOOP_CODE = `<Tool defaultOpen isStreaming={toolState !== "output-available"}>
@@ -982,7 +985,7 @@ const HUMAN_IN_LOOP_CODE = `<Tool defaultOpen isStreaming={toolState !== "output
       Allow once <ConfirmationShortcut>⌘⇧↩</ConfirmationShortcut>
     </ConfirmationAction>
   </ConfirmationActions>
-</Confirmation>`
+</Confirmation>`;
 
 export const WithHumanInTheLoop: Story = {
   name: "With Human-in-the-Loop Confirmation",
@@ -991,7 +994,7 @@ export const WithHumanInTheLoop: Story = {
     docs: { source: { code: HUMAN_IN_LOOP_CODE, language: "tsx" } },
     zephyr: { testCaseId: "SW-T4663" },
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // Interactive — the full end-to-end demo. When the user sends a message,
@@ -1001,14 +1004,14 @@ export const WithHumanInTheLoop: Story = {
 // output), stream status, sources, and an inline citation in the reply.
 // ---------------------------------------------------------------------------
 
-type FullPhase = "idle" | "thinking" | "planning" | "awaiting-approval" | "denied" | "tooling" | "writing" | "done"
+type FullPhase = "idle" | "thinking" | "planning" | "awaiting-approval" | "denied" | "tooling" | "writing" | "done";
 
 const FULL_QUEUE_BASE = [
   { id: "1", title: "Parse user question" },
   { id: "2", title: "Search knowledge base" },
   { id: "3", title: "Validate auth token" },
   { id: "4", title: "Draft response" },
-]
+];
 
 const getQueueStatuses = (step: number): QueueItemStatus[] => {
   // 5 steps over ~5s. index 2 errors, step 4 is skipped → draft still completes.
@@ -1018,21 +1021,21 @@ const getQueueStatuses = (step: number): QueueItemStatus[] => {
     ["done", "done", "loading", "pending"],
     ["done", "done", "error", "loading"],
     ["done", "done", "error", "done"],
-  ]
-  return frames[Math.min(step, frames.length - 1)]
-}
+  ];
+  return frames[Math.min(step, frames.length - 1)];
+};
 
 const FULL_SOURCES = [
   "https://en.wikipedia.org/wiki/Photosynthesis",
   "https://www.khanacademy.org/science/photosynthesis",
-]
+];
 
 const FULL_THOUGHT_TEXT = `The user is asking a biology question, so I'll plan a sourced answer.
 
 1. **Break the question down** — what's the real ask? They want the mechanism, not just a definition, so I should cover the inputs (light, water, CO₂), the process (light-dependent + light-independent reactions), and the outputs (glucose, oxygen).
 2. **Pull references** — Wikipedia and Khan Academy are both authoritative and widely cited, so I'll call the knowledge-base tool and surface them as sources.
 3. **Check safety** — this is a benign informational query, so no extra guardrails needed.
-4. **Draft structure** — lead with a one-sentence summary, then a short numbered list of the key steps, and finish with the overall chemical equation as a cited callout.`
+4. **Draft structure** — lead with a one-sentence summary, then a short numbered list of the key steps, and finish with the overall chemical equation as a cited callout.`;
 
 const FULL_ANSWER_TEXT = `**Photosynthesis** converts sunlight into chemical energy stored in glucose. Plants use it to feed themselves — and, as a useful side effect, to release the oxygen the rest of us breathe.
 
@@ -1044,100 +1047,100 @@ Here's the process end-to-end:
 4. **Sugar built** — Those fixed carbons are assembled into glucose and other sugars that the plant stores or uses for growth.
 5. **Oxygen released** — The oxygen produced when water was split is vented out through the stomata.
 
-The whole thing runs inside chloroplasts, and it is remarkably efficient: a single leaf can fix thousands of CO₂ molecules per second under bright light`
+The whole thing runs inside chloroplasts, and it is remarkably efficient: a single leaf can fix thousands of CO₂ molecules per second under bright light`;
 
-const WRITING_TICK_MS = 20
-const WRITING_CHARS_PER_TICK = 4
-const THINKING_TICK_MS = 20
-const THINKING_CHARS_PER_TICK = 6
+const WRITING_TICK_MS = 20;
+const WRITING_CHARS_PER_TICK = 4;
+const THINKING_TICK_MS = 20;
+const THINKING_CHARS_PER_TICK = 6;
 
 interface FullTurn {
-  id: number
-  userText: string
-  userAttachments?: AttachmentData[]
-  phase: FullPhase
-  queueStep: number
-  toolState: "input-streaming" | "input-available" | "output-available"
-  streamStart: Date
-  approval?: { id: string; approved?: boolean }
-  writtenChars: number
-  thoughtChars: number
+  id: number;
+  userText: string;
+  userAttachments?: AttachmentData[];
+  phase: FullPhase;
+  queueStep: number;
+  toolState: "input-streaming" | "input-available" | "output-available";
+  streamStart: Date;
+  approval?: { id: string; approved?: boolean };
+  writtenChars: number;
+  thoughtChars: number;
 }
 
-const MAX_CONTEXT_TOKENS = 200_000
+const MAX_CONTEXT_TOKENS = 200_000;
 
 interface LiveUsage {
-  inputTokens: number
-  outputTokens: number
-  reasoningTokens: number
+  inputTokens: number;
+  outputTokens: number;
+  reasoningTokens: number;
 }
 
 const InteractiveFullDemo = () => {
-  const [turns, setTurns] = useState<FullTurn[]>([])
-  const [text, setText] = useState("")
-  const [model, setModel] = useState(INTERACTIVE_MODELS[0].id)
+  const [turns, setTurns] = useState<FullTurn[]>([]);
+  const [text, setText] = useState("");
+  const [model, setModel] = useState(INTERACTIVE_MODELS[0].id);
   const [usage, setUsage] = useState<LiveUsage>({
     inputTokens: 0,
     outputTokens: 0,
     reasoningTokens: 0,
-  })
+  });
 
-  const activeTurn = turns[turns.length - 1]
+  const activeTurn = turns[turns.length - 1];
   const isStreaming =
     activeTurn &&
     activeTurn.phase !== "done" &&
     activeTurn.phase !== "denied" &&
-    activeTurn.phase !== "awaiting-approval"
-  const [showStreamStatus, setShowStreamStatus] = useState(false)
+    activeTurn.phase !== "awaiting-approval";
+  const [showStreamStatus, setShowStreamStatus] = useState(false);
 
   useEffect(() => {
-    if (!activeTurn) return
+    if (!activeTurn) return;
     if (activeTurn.phase === "done" || activeTurn.phase === "denied") {
       // Let the confirm-ripple play, then fade out.
-      const t = setTimeout(() => setShowStreamStatus(false), 1500)
-      return () => clearTimeout(t)
+      const t = setTimeout(() => setShowStreamStatus(false), 1500);
+      return () => clearTimeout(t);
     }
-    setShowStreamStatus(true)
-  }, [activeTurn, activeTurn?.phase])
+    setShowStreamStatus(true);
+  }, [activeTurn, activeTurn?.phase]);
 
   // Live token ticker — each phase grows a different bucket so the Context
   // gauge in the footer mirrors what the assistant is doing in real time.
   useEffect(() => {
-    if (!activeTurn || activeTurn.phase === "done") return
+    if (!activeTurn || activeTurn.phase === "done") return;
     const id = setInterval(() => {
       setUsage((u) => {
         switch (activeTurn.phase) {
           case "thinking":
-            return { ...u, reasoningTokens: u.reasoningTokens + 180 }
+            return { ...u, reasoningTokens: u.reasoningTokens + 180 };
           case "planning":
-            return { ...u, inputTokens: u.inputTokens + 90 }
+            return { ...u, inputTokens: u.inputTokens + 90 };
           case "tooling":
             return {
               ...u,
               inputTokens: u.inputTokens + 60,
               outputTokens: u.outputTokens + 40,
-            }
+            };
           case "writing":
-            return { ...u, outputTokens: u.outputTokens + 220 }
+            return { ...u, outputTokens: u.outputTokens + 220 };
           default:
-            return u
+            return u;
         }
-      })
-    }, 150)
-    return () => clearInterval(id)
-  }, [activeTurn])
+      });
+    }, 150);
+    return () => clearInterval(id);
+  }, [activeTurn]);
 
   // Drive the active turn through all phases.
   useEffect(() => {
-    if (!activeTurn || activeTurn.phase === "done") return
+    if (!activeTurn || activeTurn.phase === "done") return;
 
     const setTurn = (patch: Partial<FullTurn>) =>
-      setTurns((prev) => prev.map((t) => (t.id === activeTurn.id ? { ...t, ...patch } : t)))
+      setTurns((prev) => prev.map((t) => (t.id === activeTurn.id ? { ...t, ...patch } : t)));
 
     if (activeTurn.phase === "thinking") {
       if (activeTurn.thoughtChars >= FULL_THOUGHT_TEXT.length) {
-        const t = setTimeout(() => setTurn({ phase: "planning", queueStep: 0 }), 400)
-        return () => clearTimeout(t)
+        const t = setTimeout(() => setTurn({ phase: "planning", queueStep: 0 }), 400);
+        return () => clearTimeout(t);
       }
       const t = setTimeout(
         () =>
@@ -1145,8 +1148,8 @@ const InteractiveFullDemo = () => {
             thoughtChars: Math.min(activeTurn.thoughtChars + THINKING_CHARS_PER_TICK, FULL_THOUGHT_TEXT.length),
           }),
         THINKING_TICK_MS,
-      )
-      return () => clearTimeout(t)
+      );
+      return () => clearTimeout(t);
     }
 
     if (activeTurn.phase === "planning") {
@@ -1160,26 +1163,26 @@ const InteractiveFullDemo = () => {
               approval: { id: `appr-${activeTurn.id}` },
             }),
           700,
-        )
-        return () => clearTimeout(t)
+        );
+        return () => clearTimeout(t);
       }
-      const t = setTimeout(() => setTurn({ queueStep: activeTurn.queueStep + 1 }), 1100)
-      return () => clearTimeout(t)
+      const t = setTimeout(() => setTurn({ queueStep: activeTurn.queueStep + 1 }), 1100);
+      return () => clearTimeout(t);
     }
 
     if (activeTurn.phase === "tooling") {
       if (activeTurn.toolState === "input-available") {
-        const t = setTimeout(() => setTurn({ toolState: "output-available" }), 1600)
-        return () => clearTimeout(t)
+        const t = setTimeout(() => setTurn({ toolState: "output-available" }), 1600);
+        return () => clearTimeout(t);
       }
-      const t = setTimeout(() => setTurn({ phase: "writing" }), 700)
-      return () => clearTimeout(t)
+      const t = setTimeout(() => setTurn({ phase: "writing" }), 700);
+      return () => clearTimeout(t);
     }
 
     if (activeTurn.phase === "writing") {
       if (activeTurn.writtenChars >= FULL_ANSWER_TEXT.length) {
-        const t = setTimeout(() => setTurn({ phase: "done" }), 250)
-        return () => clearTimeout(t)
+        const t = setTimeout(() => setTurn({ phase: "done" }), 250);
+        return () => clearTimeout(t);
       }
       const t = setTimeout(
         () =>
@@ -1187,10 +1190,10 @@ const InteractiveFullDemo = () => {
             writtenChars: Math.min(activeTurn.writtenChars + WRITING_CHARS_PER_TICK, FULL_ANSWER_TEXT.length),
           }),
         WRITING_TICK_MS,
-      )
-      return () => clearTimeout(t)
+      );
+      return () => clearTimeout(t);
     }
-  }, [activeTurn])
+  }, [activeTurn]);
 
   const respondApproval = (turnId: number, approved: boolean) => {
     setTurns((prev) =>
@@ -1204,23 +1207,23 @@ const InteractiveFullDemo = () => {
             }
           : t,
       ),
-    )
-  }
+    );
+  };
 
   const handleSubmit = (msg: PromptInputMessage) => {
-    const trimmed = (msg.text ?? text).trim()
-    if (!trimmed || isStreaming) return
+    const trimmed = (msg.text ?? text).trim();
+    if (!trimmed || isStreaming) return;
     const submittedAttachments: AttachmentData[] | undefined =
       msg.files && msg.files.length > 0
         ? msg.files.map((f, i) => ({
             ...f,
             id: `attach-${turns.length}-${i}`,
           }))
-        : undefined
+        : undefined;
     // Seed: rough estimate for the prompt + attachments.
-    const attachmentTokens = (submittedAttachments?.length ?? 0) * 900
-    const seed = Math.ceil(trimmed.length / 4) + attachmentTokens
-    setUsage((u) => ({ ...u, inputTokens: u.inputTokens + seed }))
+    const attachmentTokens = (submittedAttachments?.length ?? 0) * 900;
+    const seed = Math.ceil(trimmed.length / 4) + attachmentTokens;
+    setUsage((u) => ({ ...u, inputTokens: u.inputTokens + seed }));
     setTurns((prev) => [
       ...prev,
       {
@@ -1234,29 +1237,29 @@ const InteractiveFullDemo = () => {
         writtenChars: 0,
         thoughtChars: 0,
       },
-    ])
-    setText("")
-  }
+    ]);
+    setText("");
+  };
 
-  const totalUsed = usage.inputTokens + usage.outputTokens + usage.reasoningTokens
+  const totalUsed = usage.inputTokens + usage.outputTokens + usage.reasoningTokens;
 
   // Fake per-phase pricing so the footer shows a meaningful cost instead of $0.
   // Roughly mirrors Claude Sonnet 4.5 pricing ($3 / $15 per 1M tok).
-  const INPUT_COST_PER_TOKEN = 3 / 1_000_000
-  const OUTPUT_COST_PER_TOKEN = 15 / 1_000_000
-  const REASONING_COST_PER_TOKEN = 15 / 1_000_000
+  const INPUT_COST_PER_TOKEN = 3 / 1_000_000;
+  const OUTPUT_COST_PER_TOKEN = 15 / 1_000_000;
+  const REASONING_COST_PER_TOKEN = 15 / 1_000_000;
   const formatCost = (n: number) =>
     new Intl.NumberFormat("en-US", {
       currency: "USD",
       style: "currency",
       minimumFractionDigits: 4,
       maximumFractionDigits: 4,
-    }).format(n)
-  const inputCost = usage.inputTokens * INPUT_COST_PER_TOKEN
-  const outputCost = usage.outputTokens * OUTPUT_COST_PER_TOKEN
-  const reasoningCost = usage.reasoningTokens * REASONING_COST_PER_TOKEN
-  const totalCost = inputCost + outputCost + reasoningCost
-  const formatTokens = (n: number) => new Intl.NumberFormat("en-US", { notation: "compact" }).format(n)
+    }).format(n);
+  const inputCost = usage.inputTokens * INPUT_COST_PER_TOKEN;
+  const outputCost = usage.outputTokens * OUTPUT_COST_PER_TOKEN;
+  const reasoningCost = usage.reasoningTokens * REASONING_COST_PER_TOKEN;
+  const totalCost = inputCost + outputCost + reasoningCost;
+  const formatTokens = (n: number) => new Intl.NumberFormat("en-US", { notation: "compact" }).format(n);
 
   return (
     <div className="h-screen w-full mx-auto flex w-full max-w-[980px] flex-col">
@@ -1285,7 +1288,7 @@ const InteractiveFullDemo = () => {
           )}
 
           {turns.map((turn) => {
-            const isActiveTurn = turn.id === activeTurn?.id
+            const isActiveTurn = turn.id === activeTurn?.id;
 
             return (
               <div className="space-y-3" key={turn.id}>
@@ -1320,9 +1323,9 @@ const InteractiveFullDemo = () => {
                     <Queue isStreaming={turn.phase === "planning"}>
                       <QueueList>
                         {FULL_QUEUE_BASE.map((item, i) => {
-                          const statuses = getQueueStatuses(turn.queueStep)
+                          const statuses = getQueueStatuses(turn.queueStep);
                           const status =
-                            turn.phase === "planning" ? statuses[i] : statuses[i] === "loading" ? "done" : statuses[i]
+                            turn.phase === "planning" ? statuses[i] : statuses[i] === "loading" ? "done" : statuses[i];
                           return (
                             <QueueItem key={item.id}>
                               <QueueItemIndicator status={status} />
@@ -1334,7 +1337,7 @@ const InteractiveFullDemo = () => {
                                 {status === "error" && " — skipped"}
                               </QueueItemContent>
                             </QueueItem>
-                          )
+                          );
                         })}
                       </QueueList>
                     </Queue>
@@ -1543,7 +1546,7 @@ const InteractiveFullDemo = () => {
                   </div>
                 )}
               </div>
-            )
+            );
           })}
         </ConversationContent>
       </Conversation>
@@ -1555,8 +1558,8 @@ const InteractiveFullDemo = () => {
           accept="image/*,application/pdf,text/*"
           multiple
           onSubmit={(msg, e) => {
-            e.preventDefault()
-            handleSubmit(msg)
+            e.preventDefault();
+            handleSubmit(msg);
           }}
         >
           <PromptInputHeader>
@@ -1587,11 +1590,7 @@ const InteractiveFullDemo = () => {
               </PromptInputSelect>
             </PromptInputTools>
             <div className="flex items-center gap-1">
-              <Context
-                maxTokens={MAX_CONTEXT_TOKENS}
-                usage={usage}
-                usedTokens={totalUsed}
-              >
+              <Context maxTokens={MAX_CONTEXT_TOKENS} usage={usage} usedTokens={totalUsed}>
                 <ContextTrigger />
                 <ContextContent>
                   <ContextContentHeader />
@@ -1636,8 +1635,8 @@ const InteractiveFullDemo = () => {
         </PromptInput>
       </div>
     </div>
-  )
-}
+  );
+};
 
 // Docs "Show code": the full interactive demo is a story-local app — show
 // the idiomatic Chat composition it demonstrates instead.
@@ -1658,7 +1657,7 @@ const INTERACTIVE_CODE = `<Chat>
     onSubmit={handleSubmit}
     placeholder="Ask anything..."
   />
-</Chat>`
+</Chat>`;
 
 export const Interactive: Story = {
   name: "Interactive — Full demo",
@@ -1668,23 +1667,23 @@ export const Interactive: Story = {
     zephyr: { testCaseId: "SW-T4664" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Prompt input is present", async () => {
-      await expect(canvas.getByPlaceholderText("Ask anything...")).toBeInTheDocument()
-    })
+      await expect(canvas.getByPlaceholderText("Ask anything...")).toBeInTheDocument();
+    });
     await step("Context trigger sits before submit in the prompt footer", async () => {
-      const contextTrigger = canvas.getByRole("img", { name: "Model context usage" }).closest("button")
+      const contextTrigger = canvas.getByRole("img", { name: "Model context usage" }).closest("button");
       const submitButton = canvas.getByRole("button", {
         name: /send|submit/i,
-      })
-      const buttons = canvas.getAllByRole("button")
+      });
+      const buttons = canvas.getAllByRole("button");
 
-      await expect(contextTrigger).toBeInTheDocument()
-      await expect(buttons.indexOf(contextTrigger as HTMLButtonElement)).toBeLessThan(buttons.indexOf(submitButton))
-    })
+      await expect(contextTrigger).toBeInTheDocument();
+      await expect(buttons.indexOf(contextTrigger as HTMLButtonElement)).toBeLessThan(buttons.indexOf(submitButton));
+    });
     await step("Typing enables the submit button", async () => {
-      await userEvent.type(canvas.getByPlaceholderText("Ask anything..."), "Hello")
-      await expect(canvas.getByRole("button", { name: /send|submit/i })).not.toBeDisabled()
-    })
+      await userEvent.type(canvas.getByPlaceholderText("Ask anything..."), "Hello");
+      await expect(canvas.getByRole("button", { name: /send|submit/i })).not.toBeDisabled();
+    });
   },
-}
+};

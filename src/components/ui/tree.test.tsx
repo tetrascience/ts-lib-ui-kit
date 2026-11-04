@@ -53,15 +53,19 @@ function Fixture({
   onExpandedChange,
   defaultSelectedId,
   draftsKey = "drafts",
+  treeRef,
 }: {
   expandedIds?: Set<string>;
   onExpandedChange?: (ids: Set<string>) => void;
   defaultSelectedId?: string;
   /** Remounting `Drafts` under a new React key simulates a lazy fetch that swaps the node out. */
   draftsKey?: string;
+  /** A consumer ref on the root; the tree must keep its own internal one. */
+  treeRef?: React.Ref<HTMLDivElement>;
 }) {
   return (
     <Tree
+      ref={treeRef}
       aria-label="Files"
       expandedIds={expandedIds}
       onExpandedChange={onExpandedChange}
@@ -98,6 +102,30 @@ function Fixture({
     </Tree>
   );
 }
+
+describe("Tree with a consumer ref (UXT-77)", () => {
+  it("keeps keyboard navigation and the roving tab stop when a consumer passes a ref", () => {
+    const ref = React.createRef<HTMLDivElement>();
+    render(<Fixture treeRef={ref} />);
+    expect(ref.current?.getAttribute("role")).toBe("tree");
+
+    focus("documents");
+    press("ArrowDown");
+    expect(document.activeElement).toBe(item("reports"));
+    expect(tabStops()).toEqual([item("reports")]);
+    press("End");
+    expect(document.activeElement).toBe(item("archive"));
+  });
+
+  it("calls a callback ref with the root and keeps navigation working", () => {
+    const nodes: Array<HTMLDivElement | null> = [];
+    render(<Fixture treeRef={(node) => void nodes.push(node)} />);
+    expect(nodes.at(-1)?.getAttribute("role")).toBe("tree");
+    focus("documents");
+    press("ArrowDown");
+    expect(document.activeElement).toBe(item("reports"));
+  });
+});
 
 describe("Tree roving tabindex", () => {
   it("has exactly one tab stop, and it follows focus", () => {

@@ -2,13 +2,7 @@ import React from "react";
 
 import type { TdpFiltersRenderProps } from "../types";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const EMPTY_OPTION_SENTINEL_PREFIX = "__tdp-search-empty__";
 

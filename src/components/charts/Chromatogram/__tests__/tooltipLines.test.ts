@@ -20,7 +20,7 @@ describe("htmlToTooltipLines", () => {
   });
 
   it("decodes entities and drops nested or unclosed tags", () => {
-    expect(htmlToTooltipLines("S/N: 42 &amp; up<br><span style=\"color:red\">FAIL<script>x()</script></span>")).toEqual([
+    expect(htmlToTooltipLines('S/N: 42 &amp; up<br><span style="color:red">FAIL<script>x()</script></span>')).toEqual([
       "S/N: 42 & up",
       "FAILx()",
     ]);
@@ -54,7 +54,7 @@ describe("buildChromatogramTooltipLines", () => {
         { curveNumber: 0, x: 1.234, y: 10 },
         { curveNumber: 1, x: 1.234, y: 5.5 },
       ],
-      params
+      params,
     );
     expect(lines).toEqual([
       "Retention Time: 1.23 min",
@@ -76,14 +76,21 @@ describe("buildChromatogramTooltipLines", () => {
 
   it("appends hit-area peak hoverText as plain text, falling back to peak text", () => {
     const withHoverText = buildChromatogramTooltipLines(
-      [{ curveNumber: 2, x: 5.8, y: 420, customdata: { peak: { x: 5.8, y: 420, hoverText: "<b>Caffeine</b><br>Area: 1" } } }],
-      params
+      [
+        {
+          curveNumber: 2,
+          x: 5.8,
+          y: 420,
+          customdata: { peak: { x: 5.8, y: 420, hoverText: "<b>Caffeine</b><br>Area: 1" } },
+        },
+      ],
+      params,
     );
     expect(withHoverText).toEqual(["Retention Time: 5.80 min", "Caffeine", "Area: 1"]);
 
     const withText = buildChromatogramTooltipLines(
       [{ curveNumber: 2, x: 5.8, y: 420, customdata: { peak: { x: 5.8, y: 420, text: "Caffeine" } } }],
-      params
+      params,
     );
     expect(withText).toEqual(["Retention Time: 5.80 min", "Caffeine"]);
   });
@@ -96,7 +103,7 @@ describe("buildChromatogramTooltipLines", () => {
         { curveNumber: 3, x: 5.8, y: 420, text: "Caffeine<br>Pass" },
         { curveNumber: 4, x: 5.8, y: 420, customdata: { peak: { x: 5.8, y: 420, hoverText: "Caffeine<br>Pass" } } },
       ],
-      params
+      params,
     );
     expect(lines).toEqual([
       "Retention Time: 5.80 min",
@@ -115,7 +122,7 @@ describe("buildChromatogramTooltipLines", () => {
         { curveNumber: 5, x: 1, y: 1, customdata: null },
         { curveNumber: 6, x: 1, y: 1 },
       ],
-      params
+      params,
     );
     expect(lines).toEqual(["Retention Time: 1.00 min"]);
   });

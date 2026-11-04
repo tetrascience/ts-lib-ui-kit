@@ -92,9 +92,7 @@ describe("DataAppShellSecondaryNav — status derivation", () => {
 
   it("marks every step todo when there is no active key and no explicit status", () => {
     render(<DataAppShellSecondaryNav steps={steps} />);
-    expect(new Set(itemsOf().map((b) => b.getAttribute("data-status")))).toEqual(
-      new Set(["todo"])
-    );
+    expect(new Set(itemsOf().map((b) => b.getAttribute("data-status")))).toEqual(new Set(["todo"]));
   });
 });
 
@@ -109,9 +107,7 @@ describe("DataAppShellSecondaryNav — selection", () => {
       { id: "one", label: "One" },
       { id: "two", label: "Two", disabled: true, disabledReason: "Finish One first" },
     ];
-    render(
-      <DataAppShellSecondaryNav steps={withDisabled} activeKey="one" onSelect={onSelect} />
-    );
+    render(<DataAppShellSecondaryNav steps={withDisabled} activeKey="one" onSelect={onSelect} />);
 
     const [one, two] = itemsOf();
     click(one);
@@ -136,7 +132,7 @@ describe("DataAppShellSecondaryNav — selection", () => {
         onSelect={onSelect}
         collapsible
         defaultCollapsed
-      />
+      />,
     );
 
     const [, two] = itemsOf();
@@ -155,8 +151,7 @@ describe("DataAppShellSecondaryNav — selection", () => {
 
 describe("DataAppShellSecondaryNav — collapse", () => {
   const nav = () => container.querySelector("[data-slot='data-app-shell-secondary-nav']");
-  const toggle = () =>
-    container.querySelector("[data-slot='data-app-shell-secondary-nav-toggle']");
+  const toggle = () => container.querySelector("[data-slot='data-app-shell-secondary-nav-toggle']");
 
   it("collapses to an icon-only rail and expands back (uncontrolled)", () => {
     const onCollapsedChange = vi.fn();
@@ -167,7 +162,7 @@ describe("DataAppShellSecondaryNav — collapse", () => {
         title="Steps"
         collapsible
         onCollapsedChange={onCollapsedChange}
-      />
+      />,
     );
 
     expect(nav()?.getAttribute("data-collapsed")).toBe("false");
@@ -187,14 +182,7 @@ describe("DataAppShellSecondaryNav — collapse", () => {
 
   it("respects a controlled collapsed prop without flipping internally", () => {
     const onCollapsedChange = vi.fn();
-    render(
-      <DataAppShellSecondaryNav
-        steps={steps}
-        collapsible
-        collapsed
-        onCollapsedChange={onCollapsedChange}
-      />
-    );
+    render(<DataAppShellSecondaryNav steps={steps} collapsible collapsed onCollapsedChange={onCollapsedChange} />);
 
     expect(nav()?.getAttribute("data-collapsed")).toBe("true");
     click(toggle());
@@ -215,9 +203,7 @@ describe("DataAppShellSecondaryNav — collapse", () => {
 
 describe("DataAppShellSecondaryNav — horizontal", () => {
   it("renders a flattened stepper row with separators, badges, and statuses", () => {
-    render(
-      <DataAppShellSecondaryNav orientation="horizontal" steps={steps} activeKey="global" />
-    );
+    render(<DataAppShellSecondaryNav orientation="horizontal" steps={steps} activeKey="global" />);
 
     const nav = container.querySelector("[data-slot='data-app-shell-secondary-nav']");
     expect(nav?.getAttribute("data-orientation")).toBe("horizontal");
@@ -229,8 +215,6 @@ describe("DataAppShellSecondaryNav — horizontal", () => {
     expect(container.textContent).toContain("12"); // badge
 
     // No collapse affordance on the horizontal axis
-    expect(
-      container.querySelector("[data-slot='data-app-shell-secondary-nav-toggle']")
-    ).toBeNull();
+    expect(container.querySelector("[data-slot='data-app-shell-secondary-nav-toggle']")).toBeNull();
   });
 });

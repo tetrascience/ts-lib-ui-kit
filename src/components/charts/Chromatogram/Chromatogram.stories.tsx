@@ -504,7 +504,9 @@ export const SelectionTogglesViaButton: StoryObj<typeof Chromatogram> = {
       await waitFor(() => {
         expect(canvas.getByTestId("selection-status")).toHaveTextContent("Selected: theobromine");
         // Selected labels render bold via a <b> wrapper inside the annotation text
-        expect(canvasElement.querySelector(".annotation-text tspan[style*=\"font-weight\"], .annotation-text b")).not.toBeNull();
+        expect(
+          canvasElement.querySelector('.annotation-text tspan[style*="font-weight"], .annotation-text b'),
+        ).not.toBeNull();
       });
     });
 

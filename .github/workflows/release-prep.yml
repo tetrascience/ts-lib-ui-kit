@@ -1,0 +1,144 @@
+name: Release prep
+
+# Opens the release-prep PR, so nobody has to work out the version or write
+# the CHANGELOG entry by hand. scripts/release/prepare-release.ts computes the
+# next version and its notes with semantic-release's own analyzer and notes
+# generator, then bumps package.json, CHANGELOG.md and the README. Review the
+# PR, add any upgrade notes to its CHANGELOG entry, merge it, then dispatch
+# Release. If more releasable commits merge in between, Release refuses to
+# tag (verify-package-version.js); run this again and it replaces the
+# unreleased entry, showing the old one in the PR body.
+
+on:
+  workflow_dispatch:
+    inputs:
+      jira_key:
+        description: "Jira key for the branch and PR title (e.g. UXT-83)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-prep
+  cancel-in-progress: false
+
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Jira key
+        env:
+          JIRA_KEY: ${{ inputs.jira_key }}
+        run: |
+          if [[ ! "$JIRA_KEY" =~ ^[A-Z][A-Z0-9]*-[1-9][0-9]*$ ]]; then
+            echo "jira_key must look like UXT-83, got '$JIRA_KEY'"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0 # Needs the tags and the commits since the last one
+          # No token in .git/config while dependencies install; the push
+          # step below supplies GH_TOKEN for that one command only.
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "yarn"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      # Public npm only (.yarnrc.yml), so no registry credential; skip-build
+      # runs no lifecycle scripts while GH_TOKEN is in this job's secrets.
+      - name: Install
+        run: yarn install --immutable --mode=skip-build
+
+      - name: Bump version and write CHANGELOG entry
+        id: prep
+        run: |
+          VERSION=$(yarn tsx scripts/release/prepare-release.ts \
+            --notes-file "$RUNNER_TEMP/notes.md" --replaced-file "$RUNNER_TEMP/replaced.md")
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Unexpected version: '$VERSION'"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          git diff --stat
+
+      - name: Open the prep PR
+        env:
+          # A PAT, not GITHUB_TOKEN: a PR opened with GITHUB_TOKEN starts no
+          # workflows, so CI and the PR title check would never run on it.
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          JIRA_KEY: ${{ inputs.jira_key }}
+          VERSION: ${{ steps.prep.outputs.version }}
+          ACTOR: ${{ github.actor }}
+          ACTOR_ID: ${{ github.actor_id }}
+        run: |
+          BRANCH="${JIRA_KEY}-v${VERSION}-release-prep"
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code --heads "$REMOTE" "$BRANCH" > /dev/null; then
+            echo "Branch $BRANCH already exists. Merge or close its PR (and delete the branch) first."
+            exit 1
+          fi
+
+          git config user.name "$ACTOR"
+          git config user.email "${ACTOR_ID}+${ACTOR}@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git commit -am "chore: ${JIRA_KEY} Bump to ${VERSION} and add the v${VERSION} CHANGELOG entry"
+          git push "$REMOTE" "HEAD:refs/heads/${BRANCH}"
+
+          {
+            echo "<!-- Opened by the Release prep workflow (.github/workflows/release-prep.yml). -->"
+            echo
+            echo "## Summary"
+            echo
+            echo "Release prep for **v${VERSION}**, dispatched by @${ACTOR}. The version and the CHANGELOG entry"
+            echo "come from semantic-release's own analyzer and notes generator, so they match what the"
+            echo "\`Release\` run will compute."
+            echo
+            echo "- \`package.json\` → \`${VERSION}\`"
+            echo "- \`CHANGELOG.md\` → generated v${VERSION} entry (below)"
+            echo "- \`README.md\` → version line, and a compatibility row when a new minor line starts"
+            echo
+            echo "### Before merging"
+            echo
+            echo "- [ ] Add upgrade notes to the CHANGELOG entry (and \`MIGRATION.md\`) for anything consumers"
+            echo "      must act on. Edits to this PR are kept; nothing regenerates it."
+            echo "- [ ] Check the README compatibility row if React, Node.js or TDP support changed."
+            echo
+            echo "### After merging"
+            echo
+            echo "1. Dispatch **Release** from the Actions tab. It tags \`v${VERSION}\` and creates the GitHub release."
+            echo "   If more \`feat:\`/\`fix:\` PRs merge after this one, it refuses to tag (they would be missing"
+            echo "   from this entry): run **Release prep** again (it replaces this entry). Likewise, if that happens"
+            echo "   before this PR merges, close it and run **Release prep** again."
+            echo "2. Approve the \`PROD\` environment on the \`Publish to Public npm\` run."
+            echo
+            if [[ -s "$RUNNER_TEMP/replaced.md" ]]; then
+              echo "> [!WARNING]"
+              echo "> This replaces an entry for a version that was never released. Copy any hand-written"
+              echo "> notes from it (below) into the new entry before merging."
+              echo
+            fi
+            echo "## Generated CHANGELOG entry"
+            echo
+            cat "$RUNNER_TEMP/notes.md"
+            if [[ -s "$RUNNER_TEMP/replaced.md" ]]; then
+              echo
+              echo "<details><summary>Replaced unreleased entry</summary>"
+              echo
+              cat "$RUNNER_TEMP/replaced.md"
+              echo
+              echo "</details>"
+            fi
+          } > "$RUNNER_TEMP/body.md"
+
+          gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" \
+            --title "chore: ${JIRA_KEY} Bump to ${VERSION} and add the v${VERSION} CHANGELOG entry" \
+            --body-file "$RUNNER_TEMP/body.md"

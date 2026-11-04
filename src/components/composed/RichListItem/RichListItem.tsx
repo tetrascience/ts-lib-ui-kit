@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
+import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
 export interface RichListItemProps extends Omit<React.ComponentProps<typeof Item>, "asChild" | "children"> {
@@ -79,6 +80,9 @@ function RichListItem({
   );
 }
 
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const RichListItemWithRef = withRef("RichListItem", RichListItem);
+
 export interface RichListItemAvatarProps extends Omit<React.ComponentProps<typeof Avatar>, "children"> {
   initials: string;
   fallbackClassName?: string;
@@ -100,4 +104,7 @@ function RichListItemAvatar({
   );
 }
 
-export { RichListItem, RichListItemAvatar };
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const RichListItemAvatarWithRef = withRef("RichListItemAvatar", RichListItemAvatar);
+
+export { RichListItemWithRef as RichListItem, RichListItemAvatarWithRef as RichListItemAvatar };

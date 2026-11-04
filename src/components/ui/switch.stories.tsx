@@ -1,9 +1,8 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { Switch } from "./switch"
+import { Switch } from "./switch";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Switch> = {
   title: "Components/Forms & Inputs/Switch",
@@ -22,11 +21,11 @@ const meta: Meta<typeof Switch> = {
     size: "default",
     "aria-label": "Enable notifications",
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Switch>
+type Story = StoryObj<typeof Switch>;
 
 export const Default: Story = {
   parameters: {
@@ -34,13 +33,13 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1304" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Switch renders", async () => {
-      expect(canvas.getByRole("switch")).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("switch")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Small: Story = {
   args: {
@@ -50,13 +49,13 @@ export const Small: Story = {
     zephyr: { testCaseId: "SW-T1305" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Small switch renders", async () => {
-      expect(canvas.getByRole("switch")).toBeInTheDocument()
-    })
+      expect(canvas.getByRole("switch")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const Checked: Story = {
   args: {
@@ -66,15 +65,15 @@ export const Checked: Story = {
     zephyr: { testCaseId: "SW-T1306" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Switch renders in checked state", async () => {
-      const sw = canvas.getByRole("switch")
-      expect(sw).toBeInTheDocument()
-      expect(sw).toHaveAttribute("data-state", "checked")
-    })
+      const sw = canvas.getByRole("switch");
+      expect(sw).toBeInTheDocument();
+      expect(sw).toHaveAttribute("data-state", "checked");
+    });
   },
-}
+};
 
 export const Disabled: Story = {
   args: {
@@ -84,13 +83,13 @@ export const Disabled: Story = {
     zephyr: { testCaseId: "SW-T1307" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Disabled switch renders", async () => {
-      expect(canvas.getByRole("switch")).toBeDisabled()
-    })
+      expect(canvas.getByRole("switch")).toBeDisabled();
+    });
   },
-}
+};
 
 export const ExtraSmall: Story = {
   args: {
@@ -100,15 +99,15 @@ export const ExtraSmall: Story = {
     zephyr: { testCaseId: "SW-T5699" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("xs switch track is 12px tall", async () => {
-      const sw = canvas.getByRole("switch")
-      expect(sw).toHaveAttribute("data-size", "xs")
-      expect(Math.round(sw.getBoundingClientRect().height)).toBe(12)
-    })
+      const sw = canvas.getByRole("switch");
+      expect(sw).toHaveAttribute("data-size", "xs");
+      expect(Math.round(sw.getBoundingClientRect().height)).toBe(12);
+    });
   },
-}
+};
 
 export const Large: Story = {
   args: {
@@ -118,11 +117,11 @@ export const Large: Story = {
     zephyr: { testCaseId: "SW-T5700" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("lg switch track is 22px tall", async () => {
-      const sw = canvas.getByRole("switch")
-      expect(Math.round(sw.getBoundingClientRect().height)).toBe(22)
-    })
+      const sw = canvas.getByRole("switch");
+      expect(Math.round(sw.getBoundingClientRect().height)).toBe(22);
+    });
   },
-}
+};

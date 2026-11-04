@@ -46,7 +46,10 @@ describe("DatabricksProvider", () => {
       const expectedRows = [{ id: 1, name: "test" }];
       mockOperation.fetchAll.mockResolvedValueOnce(expectedRows);
 
-      const provider = new DatabricksProvider(mockClient as unknown as import("@databricks/sql").DBSQLClient, mockSession as unknown as import("@databricks/sql/dist/contracts/IDBSQLSession").default);
+      const provider = new DatabricksProvider(
+        mockClient as unknown as import("@databricks/sql").DBSQLClient,
+        mockSession as unknown as import("@databricks/sql/dist/contracts/IDBSQLSession").default,
+      );
       const result = await provider.query("SELECT * FROM test");
 
       expect(mockSession.executeStatement).toHaveBeenCalledWith("SELECT * FROM test");
@@ -56,7 +59,10 @@ describe("DatabricksProvider", () => {
     });
 
     it("should close session and client", async () => {
-      const provider = new DatabricksProvider(mockClient as unknown as import("@databricks/sql").DBSQLClient, mockSession as unknown as import("@databricks/sql/dist/contracts/IDBSQLSession").default);
+      const provider = new DatabricksProvider(
+        mockClient as unknown as import("@databricks/sql").DBSQLClient,
+        mockSession as unknown as import("@databricks/sql/dist/contracts/IDBSQLSession").default,
+      );
       await provider.close();
 
       expect(mockSession.close).toHaveBeenCalled();
@@ -125,9 +131,7 @@ describe("DatabricksProvider", () => {
         },
       };
 
-      await expect(buildDatabricksProvider(incompleteConfig)).rejects.toThrow(
-        InvalidProviderConfigurationError,
-      );
+      await expect(buildDatabricksProvider(incompleteConfig)).rejects.toThrow(InvalidProviderConfigurationError);
     });
 
     it("should throw error when catalog is missing", async () => {
@@ -143,10 +147,7 @@ describe("DatabricksProvider", () => {
         },
       };
 
-      await expect(buildDatabricksProvider(configMissingCatalog)).rejects.toThrow(
-        "Missing field 'catalog'",
-      );
+      await expect(buildDatabricksProvider(configMissingCatalog)).rejects.toThrow("Missing field 'catalog'");
     });
   });
 });
-

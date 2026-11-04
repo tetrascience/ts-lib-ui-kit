@@ -1,6 +1,6 @@
 # CLAUDE.md — ts-lib-ui-kit
 
-React 19 + TypeScript UI component library (`@tetrascience-npm/tetrascience-react-ui`).
+React 19 + TypeScript UI component library (`@tetrascience-npm/tetrascience-react-ui`), also supported on React 18.2+ for consumers (see "React 18 support").
 Built with Vite 7, Tailwind CSS 4, shadcn/ui, Storybook 10, Vitest, Yarn 4.
 
 ## Quick Commands
@@ -21,10 +21,14 @@ yarn format            # Prettier
 Before committing, always run:
 
 ```bash
-yarn lint && yarn typecheck && yarn test:all
+yarn format:check && yarn lint && yarn typecheck && yarn test:all
 ```
 
-Husky + lint-staged auto-runs ESLint on staged `*.{js,jsx,ts,tsx}` files.
+Husky + lint-staged runs `eslint --fix` then `prettier --write` on staged
+`*.{js,jsx,ts,tsx}` files, and `prettier --write` on staged
+`*.{json,css,scss,md,mdx,yml,yaml,html}` files. CI runs `yarn format:check`
+before lint, so unformatted files fail the build. ESLint must run first: its
+autofixes (import merging/ordering) are not Prettier-formatted.
 
 ## Project Structure
 
@@ -181,6 +185,108 @@ title, a heading) as their own props — they are content, not strings — and
 guard the work with a story asserting no English survives in the rendered
 subtree, not just that the replacements appear.
 
+## React 18 support: every DOM component goes through `withRef` (UXT-77)
+
+The kit is written against React 19, but the TDP platform shell and its Module
+Federation apps share a React 18 singleton, so the peer range is
+`^18.2.0 || ^19.0.0`. React 18 strips `ref` from a function component's props.
+A plain function component therefore drops a consumer's `ref`, and Radix
+`asChild` triggers (`<TooltipTrigger asChild><Button /></TooltipTrigger>`) lose
+the ref they need for positioning, focus and outside-click. React logs
+"Function components cannot be given refs".
+
+React 18 support is temporary: it will be deprecated in favour of React 19
+exports, then removed. So it stays out of the components themselves, and
+everything it needs lives in [`src/lib/react18-compat.ts`](./src/lib/react18-compat.ts):
+
+- **Leave the component untouched and export a wrapper under its name.** The
+  declaration is exactly what the component is on React 19, with `ref` arriving
+  in props. Below it, one commented line adds the React 18 wrapper, and the file
+  exports the wrapper under the component's name:
+
+  ```tsx
+  function Button({ className, ...props }: ButtonProps) {
+    return <button className={cn(buttonVariants(), className)} {...props} />;
+  }
+
+  // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+  const ButtonWithRef = withRef("Button", Button);
+
+  export { ButtonWithRef as Button };
+  ```
+
+  Pass the name as a **string literal**, because the build mangles function
+  names; `withRef` also sets it as the plain component's `displayName`. On
+  React 19 `withRef` returns the plain component itself, so there is no extra
+  layer and the declared type is exact. On React 18 it returns a `forwardRef`
+  object typed as the plain function: it renders identically from JSX but is not
+  callable, so never call a kit component as a function (`items.map(Item)`,
+  `Badge({…})`). The version check is "is React 18", not "major below 19",
+  because React 19 prereleases report `0.0.0-experimental-…`. For a memoised component, keep `memo` on the plain one and
+  re-memoise the wrapper: `memo(withRef("X", X.type))`. Never call
+  `React.forwardRef` directly; `TetraScienceIcon` and `TetraMoleculeIcon`
+  predate this and are allowlisted.
+
+- **Inside the file, `X` is the plain component, so every JSX use renders
+  `XWithRef`.** Libraries hand refs to children implicitly: an `asChild` parent,
+  a props spread, or Radix `Presence` inside a `Portal`, which is how
+  `<DialogOverlay />` inside `DialogContent` broke on React 18. A component that is
+  never exported and never rendered in its own file needs no wrapper.
+- **Compare children with `isElementOfType(child, X)`, never by identity.**
+  On React 18 consumers render the wrapper, so `child.type === X`, `switch`/`case`,
+  `[X, Y].includes(child.type)` and `Object.is` against the plain component all
+  silently stop matching: `Tree` counted its "Load more" row, `ItemGroup` gave
+  separators `role="listitem"`, and `DataTable` lost its toolbar slot.
+  `isElementOfType` matches the plain component and its wrapper.
+- **JSDoc stays on the component; the wrapper gets a one-line pointer.**
+  Storybook's react-docgen reads the description from the plain declaration, and
+  `withRef` exposes that docgen info on the wrapper, so prop tables and
+  descriptions are unchanged. Editors read hover docs from the wrapper's `const`,
+  so a documented component's wrapper carries
+  `/** React 18 wrapper for {@link X}; see its documentation. */` above the
+  marker, rather than a copy that would drift.
+- **An element with its own `ref` and a `{...props}` spread composes them.**
+  `<div ref={internalRef} {...props}>` lets a consumer's `ref` replace the internal
+  one, and the reverse order drops the consumer's. Destructure `ref` and pass
+  `useComposedRefs(internalRef, ref)` from `src/lib/compose-refs.ts`. This broke
+  `Tree`'s keyboard navigation and `PromptInput`'s drop handling whenever a
+  consumer passed a ref, on React 19 as well as 18.
+- **Deprecating and dropping React 18.** To deprecate: also export the plain
+  components (for example from a React 19 entry point) and mark the `WithRef`
+  exports deprecated. To drop: delete each wrapper line, its marker and JSDoc
+  pointer, export `X` itself, delete `src/lib/react18-compat.ts`, swap
+  `{...inertProp(v)}` back to `inert={v}`, and `isElementOfType(c, X)` back to
+  `c.type === X`.
+- **`{...inertProp(value)}`** instead of `inert={value}`: React 18 drops a boolean
+  `inert`, leaving "inert" content focusable.
+- A component that spreads DOM props types them as `ComponentProps<"tag">`, not
+  `HTMLAttributes<HTMLTagElement>`. The latter has no `ref`, so the component
+  silently fails as an `asChild` child on React 18. This is how `Attachment` broke
+  inside `HoverCardTrigger`.
+- Effects that `setState` during mount, and updates fired from continuous events
+  such as `pointermove`, flush later on React 18 than inside a React 19
+  `flushSync`. Unit tests drive renders with `act()`, which flushes everything on
+  both versions.
+
+Guards: `yarn check:react18-compat`
+([`scripts/build/audit-react18-compat.ts`](./scripts/build/audit-react18-compat.ts),
+a step of CI's build job; its unit test only runs the rules against fixtures)
+uses the type checker to fail on an unwrapped component
+whose props accept `ref`, a component whose props carry DOM attributes but no
+`ref`, a direct `forwardRef` or a boolean `inert`. It also requires each wrapper
+to be named `XWithRef` around `X` itself with the marker comment directly above
+it, fails if a wrapped component is exported unwrapped, fails if a ref-accepting
+component is rendered as the plain `X` inside its own file or used there as a
+value (any identity check), and fails if an element's own `ref` and a
+ref-carrying spread collide. The only components allowed
+DOM props without a `ref` are listed, with the reason,
+in its `REF_EXCEPTIONS`; that list and the "Refs" section of README.md (every
+component without a ref, grouped by why) must change together, and a stale entry
+fails the audit. [`src/__tests__/react18-ref-forwarding.test.tsx`](./src/__tests__/react18-ref-forwarding.test.tsx)
+renders every `withRef` export with a ref and checks the Radix `asChild`
+triggers. CI's `react-18` job reruns the unit and Storybook suites on React
+18.3, where Storybook's console-error check catches any ref warning.
+
 ## Component Patterns
 
 **`ui/` components**: Single `kebab-case.tsx` file. shadcn/ui pattern — wraps radix-ui or @base-ui/react with CVA variants and Tailwind classes via `cn()`.
@@ -314,6 +420,16 @@ Consumer contract: apps that use these components must install the matching peer
 - Unit tests (`*.test.ts` / `*.test.tsx`) for pure utilities, hooks, and non-visual logic only
 - Do not manually assign `parameters.zephyr.testCaseId` values — generate or repair them through `sync-storybook-zephyr`
 
+### Driving a `Select` from a play function
+
+Use `selectOption(trigger, name)` / `openSelect(trigger)` from
+[`.storybook/select-interactions.ts`](./.storybook/select-interactions.ts) —
+never `userEvent.click(trigger)` followed by a bare
+`body.findByRole("option", …)`. `SelectContent` is portal-rendered and
+positioned in a layout effect, so the option is not in the DOM on the next
+tick; Testing Library's default 1000 ms `asyncUtilTimeout` is enough locally
+but not on a loaded CI runner under coverage instrumentation
+
 ### Docs "Show code" must show component code
 
 Storybook prints the raw story-object source (play function, zephyr ids and
@@ -357,11 +473,38 @@ It deliberately does **not** install the packed tarball as a normal npm dependen
 ## Publishing
 
 ```bash
-yarn release          # semantic-release: auto-determines version from commits, publishes to npm
-yarn release:dry-run  # Validate what would be published without actually publishing
+yarn release          # semantic-release (CI use only — the Release workflow runs it)
+yarn release:dry-run  # Preview the next version without publishing
 ```
 
 Convention: uses [Conventional Commits](https://www.conventionalcommits.org/) for versioning — `feat:` → minor bump, `fix:` → patch bump, `feat!:` / `BREAKING CHANGE:` → major bump.
+
+Process: [CONTRIBUTING.md › Release Process](./CONTRIBUTING.md#release-process). Load-bearing details:
+
+- **semantic-release never commits.** `main` is push-protected, so a prep PR bumps `package.json` and
+  `CHANGELOG.md` before `Release` is dispatched. The `Release prep` workflow opens it:
+  `scripts/release/prepare-release.ts` computes the version and notes with semantic-release's own
+  commit analyzer and notes generator (`release.config.js`'s options), so nobody types a version.
+  `scripts/release/verify-package-version.js` (a local plugin in `release.config.js`) fails `Release`
+  before tagging unless `package.json` and the newest `CHANGELOG.md` entry match and nothing
+  releasable merged after that entry. It imports `next-version.ts` directly, which works because
+  Node 24 strips its types: keep that file to erasable TypeScript with no extensionless imports. The
+  shared publish workflow rejects a tag that doesn't match `package.json`.
+- **Betas and alphas are named for the next release.** The reusable `next-version.yml` runs
+  `scripts/release/next-version.ts` — semantic-release's own commit analyzer with `release.config.js`'s
+  options and `tagFormat` — and each publish workflow (`publish-public.yml`, `publish-merge.yml`,
+  `publish-pr.yml`) writes the result into `package.json` through the shared workflow's
+  `pre_install_command`. A new caller of the shared publish workflow needs the same two steps. Keep
+  the two in step: a change to the analyzer config changes both.
+- **Alphas are opt-in** via the `alpha` PR label (`publish-pr.yml`).
+- **Storybook's version badge shows the npm build it was built with.** On the production deploy
+  (ui-toolkit.tetrascience.com, built from `main`), the Introduction page asks the npm registry for
+  the current `latest` and `beta` and shows whichever has this build's commit as its `gitHead` (the
+  release once the commit is tagged). Otherwise it shows the newest beta, flagged as still publishing
+  for an hour after the build and as from an earlier commit after that, and the install snippet adds
+  `@beta` whenever a beta is shown. Previews and local runs show `package.json`'s version. The commit,
+  environment and build time come from Vercel's `VERCEL_GIT_COMMIT_SHA` / `VERCEL_ENV` and the build
+  clock via `.storybook/main.ts`'s `env`; the logic is in `.storybook/deployed-version.ts`.
 
 ## Zephyr Integration
 

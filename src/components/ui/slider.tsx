@@ -1,7 +1,8 @@
-import { Slider as SliderPrimitive } from "radix-ui"
-import * as React from "react"
+import { Slider as SliderPrimitive } from "radix-ui";
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { withRef } from "@/lib/react18-compat";
+import { cn } from "@/lib/utils";
 
 function Slider({
   className,
@@ -13,17 +14,12 @@ function Slider({
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> & {
   // SW-2591: default (thumb 12 / track 4) unchanged; xs and lg scale around it.
-  size?: "xs" | "sm" | "default" | "lg"
+  size?: "xs" | "sm" | "default" | "lg";
 }) {
   const _values = React.useMemo(
-    () =>
-      Array.isArray(value)
-        ? value
-        : Array.isArray(defaultValue)
-          ? defaultValue
-          : [min, max],
-    [value, defaultValue, min, max]
-  )
+    () => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]),
+    [value, defaultValue, min, max],
+  );
 
   return (
     <SliderPrimitive.Root
@@ -35,7 +31,7 @@ function Slider({
       max={max}
       className={cn(
         "group/slider relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col",
-        className
+        className,
       )}
       {...props}
     >
@@ -57,7 +53,10 @@ function Slider({
         />
       ))}
     </SliderPrimitive.Root>
-  )
+  );
 }
 
-export { Slider }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const SliderWithRef = withRef("Slider", Slider);
+
+export { SliderWithRef as Slider };

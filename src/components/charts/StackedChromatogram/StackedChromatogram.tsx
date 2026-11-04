@@ -19,24 +19,12 @@ export function StackedChromatogram({
     annotations: transformedAnnotations,
     yRange,
   } = useMemo(
-    () =>
-      applyStackingTransform(
-        series,
-        annotations,
-        stackingMode,
-        stackOffset,
-        stackingOrder
-      ),
-    [series, annotations, stackingMode, stackOffset, stackingOrder]
+    () => applyStackingTransform(series, annotations, stackingMode, stackOffset, stackingOrder),
+    [series, annotations, stackingMode, stackOffset, stackingOrder],
   );
 
   return (
-    <Chromatogram
-      {...restProps}
-      series={transformedSeries}
-      annotations={transformedAnnotations}
-      yRange={yRange}
-    />
+    <Chromatogram {...restProps} series={transformedSeries} annotations={transformedAnnotations} yRange={yRange} />
   );
 }
 

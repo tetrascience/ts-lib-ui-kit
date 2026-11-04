@@ -138,7 +138,7 @@ const OBJECTIVE_ENTITY_REPLACEMENTS: Record<string, string> = {
   amp: "&",
   mdash: "—",
   ndash: "–",
-  quot: "\"",
+  quot: '"',
 };
 
 function findStoryFiles(dir: string): string[] {
@@ -556,7 +556,9 @@ async function getExecutionCount(testCaseKey: string): Promise<number> {
   const cached = executionCountCache.get(testCaseKey);
   if (cached !== undefined) return cached;
 
-  const page = await (await getClient()).request<{ total?: number; values?: unknown[] }>(
+  const page = await (
+    await getClient()
+  ).request<{ total?: number; values?: unknown[] }>(
     "GET",
     `/testexecutions?projectKey=${PROJECT_KEY}&testCase=${encodeURIComponent(testCaseKey)}&maxResults=1`,
   );

@@ -18,9 +18,7 @@ const plotly = vi.hoisted(() => ({
 vi.mock("plotly.js-dist", () => ({ default: plotly }));
 
 const lastColorScale = (): unknown => {
-  const traces = plotly.newPlot.mock.calls.at(-1)?.[1] as
-    | Array<{ marker?: { colorscale?: unknown } }>
-    | undefined;
+  const traces = plotly.newPlot.mock.calls.at(-1)?.[1] as Array<{ marker?: { colorscale?: unknown } }> | undefined;
   return traces?.[0]?.marker?.colorscale;
 };
 
@@ -64,13 +62,7 @@ describe("PlateMap categorical mode", () => {
       // A3 intentionally omitted → null category cell
     ];
     await render(
-      <PlateMap
-        data={data}
-        plateFormat={PLATE_FORMAT_CUSTOM}
-        rows={1}
-        columns={3}
-        visualizationMode="categorical"
-      />,
+      <PlateMap data={data} plateFormat={PLATE_FORMAT_CUSTOM} rows={1} columns={3} visualizationMode="categorical" />,
     );
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
   });
@@ -79,13 +71,7 @@ describe("PlateMap categorical mode", () => {
     // 1x1 plate with a single category and no blanks → the single-type branch.
     const data: WellData[] = [{ wellId: "A1", values: { type: "sample" } }];
     await render(
-      <PlateMap
-        data={data}
-        plateFormat={PLATE_FORMAT_CUSTOM}
-        rows={1}
-        columns={1}
-        visualizationMode="categorical"
-      />,
+      <PlateMap data={data} plateFormat={PLATE_FORMAT_CUSTOM} rows={1} columns={1} visualizationMode="categorical" />,
     );
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
   });
@@ -100,13 +86,7 @@ describe("PlateMap heatmap mode", () => {
       // A2 omitted → null value cell
     ];
     await render(
-      <PlateMap
-        data={data}
-        plateFormat={PLATE_FORMAT_CUSTOM}
-        rows={1}
-        columns={2}
-        colorScale="TotallyUnknownScale"
-      />,
+      <PlateMap data={data} plateFormat={PLATE_FORMAT_CUSTOM} rows={1} columns={2} colorScale="TotallyUnknownScale" />,
     );
     expect(plotly.newPlot).toHaveBeenCalledTimes(1);
     expect(lastColorScale()).toBe("TotallyUnknownScale");

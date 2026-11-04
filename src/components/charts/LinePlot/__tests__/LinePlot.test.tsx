@@ -32,8 +32,7 @@ async function render(props: LinePlotProps) {
 }
 
 type Trace = { mode?: string; error_y?: { array?: number[]; visible?: boolean } };
-const lastTraces = (): Trace[] =>
-  (plotly.newPlot.mock.calls.at(-1)?.[1] as Trace[]) ?? [];
+const lastTraces = (): Trace[] => (plotly.newPlot.mock.calls.at(-1)?.[1] as Trace[]) ?? [];
 
 beforeEach(() => {
   plotly.newPlot.mockImplementation((el: HTMLElement) => {

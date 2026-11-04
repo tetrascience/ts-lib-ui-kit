@@ -4,10 +4,10 @@
 
 Only the latest release of `@tetrascience-npm/tetrascience-react-ui` receives security fixes.
 
-| Version | Supported |
-| --- | --- |
-| Latest | Yes |
-| Older releases | No |
+| Version        | Supported |
+| -------------- | --------- |
+| Latest         | Yes       |
+| Older releases | No        |
 
 ## Reporting a Vulnerability
 

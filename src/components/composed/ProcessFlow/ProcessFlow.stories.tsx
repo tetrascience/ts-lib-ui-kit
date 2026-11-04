@@ -67,7 +67,6 @@ const reviewSteps: ProcessFlowStep[] = [
   },
 ];
 
-
 const longWorkflowSteps: ProcessFlowStep[] = [
   {
     id: "upload",
@@ -413,7 +412,11 @@ export const DynamicState: Story = {
 
     return (
       <div className="flex w-full flex-col gap-4">
-        <ProcessFlow steps={steps} selectedStepId={selectedStepId} onStepSelect={(step) => setSelectedStepId(step.id)} />
+        <ProcessFlow
+          steps={steps}
+          selectedStepId={selectedStepId}
+          onStepSelect={(step) => setSelectedStepId(step.id)}
+        />
         <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => {
@@ -603,7 +606,6 @@ export const MiniLongWorkflow: Story = {
   },
 };
 
-
 export const SingleStep: Story = {
   args: {
     steps: [{ id: "only", label: "Process", description: "Only step", status: "active" }],
@@ -710,9 +712,7 @@ export const VerticalWithErrorAndPendingConnections: Story = {
     await step("Vertical flow renders error, pending, and active connection styles", async () => {
       expect(canvas.getByText("Upload").closest("[data-status='error']")).toBeInTheDocument();
       expect(canvasElement.querySelector("[data-orientation='vertical']")).toBeInTheDocument();
-      const connections = canvasElement.querySelectorAll(
-        "[data-slot='process-flow-list'] > li[aria-hidden='true']",
-      );
+      const connections = canvasElement.querySelectorAll("[data-slot='process-flow-list'] > li[aria-hidden='true']");
       expect(connections.length).toBeGreaterThan(0);
     });
   },

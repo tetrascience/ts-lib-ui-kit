@@ -1,6 +1,6 @@
-import {createContext} from "react";
+import { createContext } from "react";
 
-import type {Telemetry} from "@tetrascience-npm/request/telemetry";
+import type { Telemetry } from "@tetrascience-npm/request/telemetry";
 
 /**
  * `null` outside a {@link TelemetryProvider} — consumers no-op rather than

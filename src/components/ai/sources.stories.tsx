@@ -1,15 +1,14 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { Source, Sources, SourcesContent, SourcesTrigger } from "./sources"
+import { Source, Sources, SourcesContent, SourcesTrigger } from "./sources";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const mockSources = [
   { href: "https://en.wikipedia.org/wiki/Photosynthesis", title: "Photosynthesis — Wikipedia" },
   { href: "https://www.khanacademy.org/science/photosynthesis", title: "Photosynthesis — Khan Academy" },
   { href: "https://www.nature.com/articles/photosynthesis", title: "The role of chlorophyll — Nature" },
-]
+];
 
 const meta: Meta = {
   title: "AI Elements/Attribution/Sources",
@@ -17,11 +16,11 @@ const meta: Meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
 export const Default: Story = {
   render: () => (
@@ -37,15 +36,15 @@ export const Default: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Sources trigger renders with count", async () => {
-      await expect(canvas.getByText(/3 sources/i)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/3 sources/i)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4613" },
   },
-}
+};
 
 export const Expanded: Story = {
   render: () => (
@@ -61,16 +60,16 @@ export const Expanded: Story = {
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("All sources visible when expanded", async () => {
-      await expect(canvas.getByText("Photosynthesis — Wikipedia")).toBeInTheDocument()
-      await expect(canvas.getByText("The role of chlorophyll — Nature")).toBeInTheDocument()
-    })
+      await expect(canvas.getByText("Photosynthesis — Wikipedia")).toBeInTheDocument();
+      await expect(canvas.getByText("The role of chlorophyll — Nature")).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4614" },
   },
-}
+};
 
 export const SingleSource: Story = {
   render: () => (
@@ -78,21 +77,18 @@ export const SingleSource: Story = {
       <Sources defaultOpen>
         <SourcesTrigger count={1} />
         <SourcesContent>
-          <Source
-            href="https://arxiv.org/abs/2301.00001"
-            title="Large Language Models: A Survey — arXiv"
-          />
+          <Source href="https://arxiv.org/abs/2301.00001" title="Large Language Models: A Survey — arXiv" />
         </SourcesContent>
       </Sources>
     </div>
   ),
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
     await step("Single source renders", async () => {
-      await expect(canvas.getByText(/1 source/i)).toBeInTheDocument()
-    })
+      await expect(canvas.getByText(/1 source/i)).toBeInTheDocument();
+    });
   },
   parameters: {
     zephyr: { testCaseId: "SW-T4615" },
   },
-}
+};

@@ -1,21 +1,14 @@
-"use client"
+"use client";
 
-import { ScrollArea as ScrollAreaPrimitive } from "radix-ui"
-import * as React from "react"
+import { ScrollArea as ScrollAreaPrimitive } from "radix-ui";
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { withRef } from "@/lib/react18-compat";
+import { cn } from "@/lib/utils";
 
-function ScrollArea({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<typeof ScrollAreaPrimitive.Root>) {
+function ScrollArea({ className, children, ...props }: React.ComponentProps<typeof ScrollAreaPrimitive.Root>) {
   return (
-    <ScrollAreaPrimitive.Root
-      data-slot="scroll-area"
-      className={cn("relative", className)}
-      {...props}
-    >
+    <ScrollAreaPrimitive.Root data-slot="scroll-area" className={cn("relative", className)} {...props}>
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
         tabIndex={0}
@@ -23,11 +16,14 @@ function ScrollArea({
       >
         {children}
       </ScrollAreaPrimitive.Viewport>
-      <ScrollBar />
+      <ScrollBarWithRef />
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
-  )
+  );
 }
+
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ScrollAreaWithRef = withRef("ScrollArea", ScrollArea);
 
 function ScrollBar({
   className,
@@ -41,7 +37,7 @@ function ScrollBar({
       orientation={orientation}
       className={cn(
         "flex touch-none p-px transition-colors select-none data-horizontal:h-2.5 data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-t-transparent data-vertical:h-full data-vertical:w-2.5 data-vertical:border-l data-vertical:border-l-transparent",
-        className
+        className,
       )}
       {...props}
     >
@@ -50,7 +46,10 @@ function ScrollBar({
         className="relative flex-1 rounded-full bg-border"
       />
     </ScrollAreaPrimitive.ScrollAreaScrollbar>
-  )
+  );
 }
 
-export { ScrollArea, ScrollBar }
+// React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
+const ScrollBarWithRef = withRef("ScrollBar", ScrollBar);
+
+export { ScrollAreaWithRef as ScrollArea, ScrollBarWithRef as ScrollBar };

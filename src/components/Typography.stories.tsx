@@ -1,7 +1,7 @@
-import { Badge } from "./ui/badge"
+import { Badge } from "./ui/badge";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-import type { ReactNode } from "react"
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ReactNode } from "react";
 
 // ---------------------------------------------------------------------------
 // Typography reference — Inter Variable on the Tailwind font-size scale.
@@ -11,13 +11,13 @@ import type { ReactNode } from "react"
 // (unused) MD3 typescale utilities.
 // ---------------------------------------------------------------------------
 
-const SAMPLE_TEXT = "The quick brown fox jumps over the lazy dog"
+const SAMPLE_TEXT = "The quick brown fox jumps over the lazy dog";
 
 interface FontSize {
-  cssClass: string
-  size: string
-  note: string
-  tag?: "New" | "Default"
+  cssClass: string;
+  size: string;
+  note: string;
+  tag?: "New" | "Default";
 }
 
 // Tailwind v4 built-in font sizes; only `text-2xs` is custom (src/index.tailwind.css).
@@ -31,12 +31,12 @@ const FONT_SIZES: FontSize[] = [
   { cssClass: "text-2xl", size: "24px", note: "Page titles" },
   { cssClass: "text-3xl", size: "30px", note: "Display headings" },
   { cssClass: "text-4xl", size: "36px", note: "Largest — hero / marketing" },
-]
+];
 
 interface FontWeight {
-  cssClass: string
-  weight: number
-  note: string
+  cssClass: string;
+  weight: number;
+  note: string;
 }
 
 // Inter Variable ships the full 100–900 range; these are the weights the kit uses.
@@ -45,14 +45,14 @@ const FONT_WEIGHTS: FontWeight[] = [
   { cssClass: "font-medium", weight: 500, note: "Labels, buttons, emphasis" },
   { cssClass: "font-semibold", weight: 600, note: "Section headings" },
   { cssClass: "font-bold", weight: 700, note: "Page titles" },
-]
+];
 
 // ---------------------------------------------------------------------------
 // Components
 // ---------------------------------------------------------------------------
 
 function Code({ children }: { children: ReactNode }) {
-  return <code className="rounded bg-muted px-1 py-0.5 text-xs">{children}</code>
+  return <code className="rounded bg-muted px-1 py-0.5 text-xs">{children}</code>;
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -65,7 +65,7 @@ function CopyButton({ text }: { text: string }) {
     >
       {text}
     </button>
-  )
+  );
 }
 
 function TagBadge({ tag }: { tag: "New" | "Default" }) {
@@ -73,12 +73,12 @@ function TagBadge({ tag }: { tag: "New" | "Default" }) {
     <Badge variant={tag === "New" ? "positive" : "info"} className="rounded-full">
       {tag}
     </Badge>
-  )
+  );
 }
 
-const TH = "px-4 py-2.5 text-left font-medium text-muted-foreground"
-const TD = "px-4 py-2.5"
-const TR = "border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
+const TH = "px-4 py-2.5 text-left font-medium text-muted-foreground";
+const TD = "px-4 py-2.5";
+const TR = "border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors";
 
 function TypographyPage() {
   return (
@@ -86,9 +86,9 @@ function TypographyPage() {
       <div className="space-y-2">
         <h1 className="text-2xl font-bold text-foreground">Typography</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          The UI kit uses <span className="font-medium text-foreground">Inter Variable</span> on Tailwind's
-          native font-size scale — there is no custom type scale. Compose size and weight utilities directly
-          (e.g. <Code>text-sm font-medium</Code>). The one addition is <Code>text-2xs</Code> (10px) for dense UI.
+          The UI kit uses <span className="font-medium text-foreground">Inter Variable</span> on Tailwind's native
+          font-size scale — there is no custom type scale. Compose size and weight utilities directly (e.g.{" "}
+          <Code>text-sm font-medium</Code>). The one addition is <Code>text-2xs</Code> (10px) for dense UI.
         </p>
       </div>
 
@@ -108,8 +108,8 @@ function TypographyPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground">Font Sizes</h2>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Tailwind's built-in <Code>text-*</Code> scale, plus the kit's <Code>text-2xs</Code>. Sized for
-          data-dense scientific UIs — <Code>text-sm</Code> is the de-facto body size.
+          Tailwind's built-in <Code>text-*</Code> scale, plus the kit's <Code>text-2xs</Code>. Sized for data-dense
+          scientific UIs — <Code>text-sm</Code> is the de-facto body size.
         </p>
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full text-sm">
@@ -176,7 +176,7 @@ function TypographyPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -191,11 +191,11 @@ const meta: Meta = {
     controls: { disable: true },
     actions: { disable: true },
   },
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj
+type Story = StoryObj;
 
 export const Overview: Story = {
   render: () => <TypographyPage />,
@@ -204,4 +204,4 @@ export const Overview: Story = {
     docs: { canvas: { sourceState: "none" } },
     zephyr: { testCaseId: "SW-T1471" },
   },
-}
+};

@@ -18,26 +18,95 @@ This library provides:
 
 ## Requirements
 
-- **React 19+**
+- **React 18.2+ or 19+**
 - **Node.js 18+**
 - **TypeScript 5.5+** (optional, but recommended)
 
 ## Compatibility
 
-| Library version | React | Node.js | TDP (server utilities) |
-| --------------- | ----- | ------- | ---------------------- |
-| v1.1.x          | 19+   | 18+     | v4.x+                  |
-| v1.0.x          | 19+   | 18+     | v4.x+                  |
-| v0.7.x          | 19+   | 18+     | v4.x+                  |
-| v0.6.x          | 19+   | 18+     | v4.x+                  |
-| v0.5.x          | 19+   | 18+     | v4.x+                  |
-| v0.4.x          | 19+   | 18+     | v4.x+                  |
+| Library version | React       | Node.js | TDP (server utilities) |
+| --------------- | ----------- | ------- | ---------------------- |
+| v1.2.x          | 18.2+ / 19+ | 18+     | v4.x+                  |
+| v1.1.x          | 19+         | 18+     | v4.x+                  |
+| v1.0.x          | 19+         | 18+     | v4.x+                  |
+| v0.7.x          | 19+         | 18+     | v4.x+                  |
+| v0.6.x          | 19+         | 18+     | v4.x+                  |
+| v0.5.x          | 19+         | 18+     | v4.x+                  |
+| v0.4.x          | 19+         | 18+     | v4.x+                  |
 
 > **Note:** The client-side components have no TDP version dependency.
 > The `/server` utilities (JWT auth, provider helpers) require a running TDP instance of v4.x or later.
 > Browser support follows React 19's matrix (modern evergreen browsers).
 >
+> React 18 support (v1.2.0+) exists for hosts that cannot upgrade yet, such as the TDP platform shell whose Module Federation apps share its React 18 singleton. Refs and Radix `asChild` composition work on both versions, and CI runs the full test suite on React 18.3 and 19.
+>
 > As of v1.0.0, heavy dependencies are **optional peer dependencies** — see [Optional peer dependencies](#optional-peer-dependencies) below for what to install and when. Upgrading from v0.7.x? Chart components were renamed and four components were removed: read the [v0.7.x → v1.0.0 migration guide](./MIGRATION.md#migrating-from-v07x-to-v100) first.
+
+### Refs
+
+Every component that renders a DOM element from DOM props forwards `ref` to that
+element, on React 18 and 19. That covers about 400 components, including every
+primitive you would put under a Radix `asChild`, such as
+`<TooltipTrigger asChild><Button /></TooltipTrigger>`.
+
+The components below do not take a `ref`. `yarn check:react18-compat` keeps this
+list honest: it fails when a component that spreads DOM props lacks a `ref`
+without being listed as an exception.
+
+**They render no element of their own.** These components hold state, provide
+context, or move their children into a portal, so there is nothing to attach a
+ref to. This matches the Radix roots they wrap. Put the ref on the `Trigger` or
+`Content` part instead.
+
+- Overlay and menu roots: `Dialog`, `DialogPortal`, `AlertDialog`,
+  `AlertDialogPortal`, `Sheet`, `Popover`, `HoverCard`, `Tooltip`,
+  `TooltipProvider`, `DropdownMenu`, `DropdownMenuPortal`, `DropdownMenuSub`,
+  `ContextMenu`, `ContextMenuPortal`, `ContextMenuSub`, `MenubarMenu`,
+  `MenubarPortal`, `MenubarSub`, `Select`, `Combobox`, `ComboboxCollection`,
+  `ComboboxValue`, `CommandDialog`, `ConfirmDialog`
+- AI element roots: `ModelSelector`, `ModelSelectorDialog`,
+  `AttachmentHoverCard`, `InlineCitationCard`, `PromptInputHoverCard`,
+  `PromptInputActionMenu`, `PromptInputSelect`, `CodeBlockLanguageSelector`
+- Providers and conditional wrappers: `Context`, `PromptInputProvider`,
+  `AssistantLayoutProvider`, `TdpNavigationProvider`, `ConfirmationRequest`,
+  `ConfirmationAccepted`, `ConfirmationRejected`
+
+**Their root belongs to a library that does not accept `ref`.** These take DOM
+props, but the element is rendered by a third-party component whose props have
+no `ref` slot. Each library offers its own handle.
+
+| Component             | Root                                        | Use instead                                                                                                              |
+| --------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `Conversation`        | use-stick-to-bottom `StickToBottom`         | `contextRef`, whose `scrollRef` holds the scroll container                                                               |
+| `ConversationContent` | use-stick-to-bottom `StickToBottom.Content` | `contextRef` on `Conversation`, whose `contentRef` holds this node                                                       |
+| `ResizablePanelGroup` | react-resizable-panels `Group`              | `elementRef` for the DOM node, `groupRef` for the imperative handle                                                      |
+| `ResizablePanel`      | react-resizable-panels `Panel`              | `elementRef` for the DOM node, `panelRef` for the imperative handle                                                      |
+| `ResizableHandle`     | react-resizable-panels `Separator`          | `elementRef` for the DOM node                                                                                            |
+| `CalendarDayButton`   | react-day-picker `DayButton`                | Not rendered by consumers. `Calendar` passes it to DayPicker, which supplies no ref. It keeps its own ref to move focus. |
+
+**They take data, not DOM props.** Their props are data and callbacks rather than
+DOM attributes. They are never placed directly under an `asChild`, and most of them
+have no single obvious element to expose: a chart has both its own wrapper and
+Plotly's graph node. This is a design choice, not a React 18 limitation. To measure
+or focus one, wrap it in your own element. Adding a `ref` later would be an additive
+change, so ask if you need one.
+
+- Charts: `AreaPlot`, `BarChart`, `BoxPlot`, `Chromatogram`,
+  `StackedChromatogram`, `Electropherogram`, `Histogram`, `LinePlot`, `PieChart`,
+  `PlateMap`, `ScatterPlot`, `ScatterPlotInteractive`, `ChartTooltip`
+- Shells and layouts: `AppShellSimple`, `DataAppShell`, `AssistantLayout`,
+  `AssistantDockControls`, `Chat`, `TdpSearch`, `UserMenu`
+- Plate map editor parts: `PlateMapForm`, `PlateMapGrid`, `PlateMapManifest`,
+  `PlateMapPlateSelector`, `PlatePaintGrid`, `PlateZoomControl`,
+  `TemplateIOPanel`, `WellLegend`, `WellManifestTable`, `WellMetadataForm`,
+  `WellQuickPaint`, `ManifestFilterPopover`, `PlateMapActionsMenu`.
+  `PlateMapEditor` itself forwards a ref to its imperative handle.
+- Data table: `DataTable`, `DataTableColumnToggle`, `DataTableFilter`,
+  `DataTableGroup`, `DataTablePagination`
+- Wrappers around a library's own renderer: `Calendar` (react-day-picker),
+  `CodeEditor` (Monaco), `Toaster` (sonner), `MessageResponse` (Streamdown)
+- Other: `Shimmer`, `StreamStatus`, `ToolHeader`, `CodeBlockContent`,
+  `PromptInputSlotSwap`
 
 ## Installation
 
@@ -328,11 +397,11 @@ function PlateScreen() {
 
 ##### Choosing a level
 
-| You need | Use |
-| --- | --- |
-| The standard surface, tuned by props | `PlateMapEditor` |
-| The form somewhere the editor can't reach | `PlateMapEditor` + `hideForm` + the imperative handle |
-| A layout no prop combination expresses | `usePlateMapEditorState` + `PlateMapForm` / `PlateMapGrid` / `PlateMapManifest` |
+| You need                                  | Use                                                                             |
+| ----------------------------------------- | ------------------------------------------------------------------------------- |
+| The standard surface, tuned by props      | `PlateMapEditor`                                                                |
+| The form somewhere the editor can't reach | `PlateMapEditor` + `hideForm` + the imperative handle                           |
+| A layout no prop combination expresses    | `usePlateMapEditorState` + `PlateMapForm` / `PlateMapGrid` / `PlateMapManifest` |
 
 Dropping to the hook keeps the apply/clear semantics, plate scoping, and barcode
 stamping — you only take over layout. Do not re-implement staged edits by hand.
@@ -348,9 +417,9 @@ stamping — you only take over layout. Do not re-implement staged edits by hand
 - **Edit state** — `staged` / `onStagedChange` for a controlled staged record,
   `mergeOnApply` for custom merge semantics, `applyScope="all-plates"` to write
   across every plate at once.
-- **Manifest** — one `manifest` object: `{ filterable, filterColumns, groupable,
-  defaultGroupBy, pageSize, pageSizeOptions, enableFillDown }`. Structural bits
-  stay top-level: `hideManifest`, `manifestTitle`, `manifestSlot`.
+- **Manifest** — one `manifest` object:
+  `{ filterable, filterColumns, groupable, defaultGroupBy, pageSize, pageSizeOptions, enableFillDown }`.
+  Structural bits stay top-level: `hideManifest`, `manifestTitle`, `manifestSlot`.
 - **Labels** — one `labels` object covers every string the editor and its
   manifest render, typed as the exported `PlateMapEditorLabels`, so an app's
   translation table is a type error away from going stale:
@@ -358,8 +427,8 @@ stamping — you only take over layout. Do not re-implement staged edits by hand
   the import/export menu labels are separate props (they take `ReactNode`, not
   plain text).
 - **Styling** — `className` / `style` on the root, plus one `classNames` map for
-  the regions (`PlateMapEditorClassNames`): `{ layout, formCard, plateCard,
-  manifestCard, form, grid, manifest }`. Each card also carries
+  the regions (`PlateMapEditorClassNames`):
+  `{ layout, formCard, plateCard, manifestCard, form, grid, manifest }`. Each card also carries
   `data-plate-map-region="form|plate|manifest"`, so plain CSS can target the
   same regions without threading props.
 
@@ -730,7 +799,7 @@ up.
 
 ## Tech Stack
 
-- React 19
+- React 19 (React 18.2+ supported for consumers)
 - TypeScript
 - Tailwind CSS 4
 - shadcn/ui (Radix UI)

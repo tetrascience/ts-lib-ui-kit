@@ -1,5 +1,3 @@
-import { plot } from "@tetrascience-npm/ts-lib-viz/core";
-import { Viz } from "@tetrascience-npm/ts-lib-viz/react";
 import { useMemo, useRef } from "react";
 
 import { useChartDeprecationWarning } from "../viz/deprecation";
@@ -9,9 +7,11 @@ import { DEFAULT_MARKER_SIZE, DEFAULT_SIZE_RANGE } from "./constants";
 import { applySelection, calculateRange, downsampleData, getSelectionMode, getUniqueCategories } from "./utils";
 
 import type { AxisConfig, MarkerShape, ScatterPlotInteractiveProps, ScatterPoint, SelectionMode } from "./types";
-import type { Brushed, ChartSpec, Palettes, PointShape, Selected } from "@tetrascience-npm/ts-lib-viz/core";
+import type { Brushed, ChartSpec, Palettes, PointShape, Selected } from "@/vendor/ts-lib-viz/core";
 
 import { CHART_COLORS } from "@/utils/colors";
+import { plot } from "@/vendor/ts-lib-viz/core";
+import { Viz } from "@/vendor/ts-lib-viz/react";
 
 /**
  * Deprecated: Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.

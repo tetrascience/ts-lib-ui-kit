@@ -1,10 +1,12 @@
-import { palettesFor } from "@tetrascience-npm/ts-lib-viz/core";
-import { Viz } from "@tetrascience-npm/ts-lib-viz/react";
 import { useMemo } from "react";
 
-import type { ChartSpec, Palettes, VizData } from "@tetrascience-npm/ts-lib-viz/core";
+import type { ChartSpec, Palettes, VizData } from "@/vendor/ts-lib-viz/core";
 
-import "@tetrascience-npm/ts-lib-viz/theme.css";
+import { palettesFor } from "@/vendor/ts-lib-viz/core";
+import { Viz } from "@/vendor/ts-lib-viz/react";
+
+
+import "@/vendor/ts-lib-viz/theme/default.css";
 
 /**
  * Shared bridge from the Plotly-era chart props to ts-lib-viz (SW-deprecation).

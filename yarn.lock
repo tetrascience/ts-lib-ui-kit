@@ -3641,7 +3641,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@modelcontextprotocol/sdk@npm:1.32.2":
+"@modelcontextprotocol/sdk@npm:^1.26.0, @modelcontextprotocol/sdk@npm:^1.29.0":
   version: 1.32.2
   resolution: "@modelcontextprotocol/sdk@npm:1.32.2"
   dependencies:
@@ -6119,135 +6119,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@resvg/resvg-js-android-arm-eabi@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js-android-arm-eabi@npm:2.6.2"
-  conditions: os=android & cpu=arm
-  languageName: node
-  linkType: hard
-
-"@resvg/resvg-js-android-arm64@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js-android-arm64@npm:2.6.2"
-  conditions: os=android & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@resvg/resvg-js-darwin-arm64@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js-darwin-arm64@npm:2.6.2"
-  conditions: os=darwin & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@resvg/resvg-js-darwin-x64@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js-darwin-x64@npm:2.6.2"
-  conditions: os=darwin & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@resvg/resvg-js-linux-arm-gnueabihf@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js-linux-arm-gnueabihf@npm:2.6.2"
-  conditions: os=linux & cpu=arm
-  languageName: node
-  linkType: hard
-
-"@resvg/resvg-js-linux-arm64-gnu@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js-linux-arm64-gnu@npm:2.6.2"
-  conditions: os=linux & cpu=arm64 & libc=glibc
-  languageName: node
-  linkType: hard
-
-"@resvg/resvg-js-linux-arm64-musl@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js-linux-arm64-musl@npm:2.6.2"
-  conditions: os=linux & cpu=arm64 & libc=musl
-  languageName: node
-  linkType: hard
-
-"@resvg/resvg-js-linux-x64-gnu@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js-linux-x64-gnu@npm:2.6.2"
-  conditions: os=linux & cpu=x64 & libc=glibc
-  languageName: node
-  linkType: hard
-
-"@resvg/resvg-js-linux-x64-musl@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js-linux-x64-musl@npm:2.6.2"
-  conditions: os=linux & cpu=x64 & libc=musl
-  languageName: node
-  linkType: hard
-
-"@resvg/resvg-js-win32-arm64-msvc@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js-win32-arm64-msvc@npm:2.6.2"
-  conditions: os=win32 & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@resvg/resvg-js-win32-ia32-msvc@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js-win32-ia32-msvc@npm:2.6.2"
-  conditions: os=win32 & cpu=ia32
-  languageName: node
-  linkType: hard
-
-"@resvg/resvg-js-win32-x64-msvc@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js-win32-x64-msvc@npm:2.6.2"
-  conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@resvg/resvg-js@npm:^2.6.2":
-  version: 2.6.2
-  resolution: "@resvg/resvg-js@npm:2.6.2"
-  dependencies:
-    "@resvg/resvg-js-android-arm-eabi": "npm:2.6.2"
-    "@resvg/resvg-js-android-arm64": "npm:2.6.2"
-    "@resvg/resvg-js-darwin-arm64": "npm:2.6.2"
-    "@resvg/resvg-js-darwin-x64": "npm:2.6.2"
-    "@resvg/resvg-js-linux-arm-gnueabihf": "npm:2.6.2"
-    "@resvg/resvg-js-linux-arm64-gnu": "npm:2.6.2"
-    "@resvg/resvg-js-linux-arm64-musl": "npm:2.6.2"
-    "@resvg/resvg-js-linux-x64-gnu": "npm:2.6.2"
-    "@resvg/resvg-js-linux-x64-musl": "npm:2.6.2"
-    "@resvg/resvg-js-win32-arm64-msvc": "npm:2.6.2"
-    "@resvg/resvg-js-win32-ia32-msvc": "npm:2.6.2"
-    "@resvg/resvg-js-win32-x64-msvc": "npm:2.6.2"
-  dependenciesMeta:
-    "@resvg/resvg-js-android-arm-eabi":
-      optional: true
-    "@resvg/resvg-js-android-arm64":
-      optional: true
-    "@resvg/resvg-js-darwin-arm64":
-      optional: true
-    "@resvg/resvg-js-darwin-x64":
-      optional: true
-    "@resvg/resvg-js-linux-arm-gnueabihf":
-      optional: true
-    "@resvg/resvg-js-linux-arm64-gnu":
-      optional: true
-    "@resvg/resvg-js-linux-arm64-musl":
-      optional: true
-    "@resvg/resvg-js-linux-x64-gnu":
-      optional: true
-    "@resvg/resvg-js-linux-x64-musl":
-      optional: true
-    "@resvg/resvg-js-win32-arm64-msvc":
-      optional: true
-    "@resvg/resvg-js-win32-ia32-msvc":
-      optional: true
-    "@resvg/resvg-js-win32-x64-msvc":
-      optional: true
-  checksum: 10c0/f04192e98d7ead730f9474f07e81aa9d9b28dc18218028f2a15c808e1ab0de511f07d8a77e01d058534e78f0ef7e9f33201f15f052e28bbaabaf159c68698a5e
-  languageName: node
-  linkType: hard
-
 "@rolldown/pluginutils@npm:1.0.0-beta.27":
   version: 1.0.0-beta.27
   resolution: "@rolldown/pluginutils@npm:1.0.0-beta.27"
@@ -8224,7 +8095,10 @@ __metadata:
     "@tanstack/react-table": "npm:^8.21.3"
     "@tetrascience-npm/request": "npm:0.4.0"
     "@tetrascience-npm/ts-connectors-sdk": "npm:^3.2.0"
-    "@tetrascience-npm/ts-lib-viz": "portal:../ts-lib-viz"
+    "@types/d3-contour": "npm:^3.0.6"
+    "@types/d3-format": "npm:^3.0.4"
+    "@types/d3-quadtree": "npm:^3.0.6"
+    "@types/d3-scale": "npm:^4.0.9"
     "@types/eslint-plugin-jsx-a11y": "npm:^6"
     "@types/jsdom": "npm:^27"
     "@types/node": "npm:^25.3.3"
@@ -8232,6 +8106,7 @@ __metadata:
     "@types/react": "npm:^19.0.0"
     "@types/react-dom": "npm:^19.0.0"
     "@vercel/node": "npm:^5.4.5"
+    "@visx/annotation": "npm:^4.0.0"
     "@vitejs/plugin-react": "npm:^4.3.1"
     "@vitest/browser": "npm:^3"
     "@vitest/coverage-v8": "npm:^3"
@@ -8242,6 +8117,10 @@ __metadata:
     cmdk: "npm:^1.1.1"
     conventional-changelog-conventionalcommits: "npm:^9.3.1"
     cookie-parser: "npm:^1.4.7"
+    d3-contour: "npm:^4.0.2"
+    d3-format: "npm:^3.1.2"
+    d3-quadtree: "npm:^3.0.1"
+    d3-scale: "npm:^4.0.2"
     date-fns: "npm:^4.1.0"
     embla-carousel-react: "npm:^8.6.0"
     eslint: "npm:^9.9.0"
@@ -8348,39 +8227,6 @@ __metadata:
   checksum: 10c0/5642835b55a01eec9a8d7f6c1b1be20c26c7b044da497d43dadf770cf90e724235384df39ab510af79170cb97fa5059edb4c778e606cc88d85498081e6584861
   languageName: node
   linkType: hard
-
-"@tetrascience-npm/ts-lib-viz@portal:../ts-lib-viz::locator=%40tetrascience-npm%2Ftetrascience-react-ui%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@tetrascience-npm/ts-lib-viz@portal:../ts-lib-viz::locator=%40tetrascience-npm%2Ftetrascience-react-ui%40workspace%3A."
-  dependencies:
-    "@modelcontextprotocol/sdk": "npm:^1.30.0"
-    "@resvg/resvg-js": "npm:^2.6.2"
-    "@visx/annotation": "npm:^4.0.0"
-    d3-contour: "npm:^4.0.2"
-    d3-format: "npm:^3.1.2"
-    d3-quadtree: "npm:^3.0.1"
-    d3-scale: "npm:^4.0.2"
-    zod: "npm:^3.25 || ^4.0"
-  peerDependencies:
-    "@cosmos.gl/graph": ^3.3.0
-    "@luma.gl/webgl": ~9.3.6
-    "@tetrascience-npm/tetrascience-react-ui": ^1.0.0
-    lucide-react: ^0.577.0 || ^1.0.0
-    react: ^18 || ^19
-    react-dom: ^18 || ^19
-  peerDependenciesMeta:
-    "@cosmos.gl/graph":
-      optional: true
-    "@luma.gl/webgl":
-      optional: true
-    "@tetrascience-npm/tetrascience-react-ui":
-      optional: true
-    lucide-react:
-      optional: true
-  bin:
-    ts-lib-viz-mcp: ./dist/src/mcp/server.js
-  languageName: node
-  linkType: soft
 
 "@tmcp/adapter-valibot@npm:^0.1.5":
   version: 0.1.6
@@ -8650,7 +8496,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/d3-contour@npm:*":
+"@types/d3-contour@npm:*, @types/d3-contour@npm:^3.0.6":
   version: 3.0.6
   resolution: "@types/d3-contour@npm:3.0.6"
   dependencies:
@@ -8713,7 +8559,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/d3-format@npm:*":
+"@types/d3-format@npm:*, @types/d3-format@npm:^3.0.4":
   version: 3.0.4
   resolution: "@types/d3-format@npm:3.0.4"
   checksum: 10c0/3ac1600bf9061a59a228998f7cd3f29e85cbf522997671ba18d4d84d10a2a1aff4f95aceb143fa9960501c3ec351e113fc75884e6a504ace44dc1744083035ee
@@ -8759,7 +8605,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/d3-quadtree@npm:*":
+"@types/d3-quadtree@npm:*, @types/d3-quadtree@npm:^3.0.6":
   version: 3.0.6
   resolution: "@types/d3-quadtree@npm:3.0.6"
   checksum: 10c0/7eaa0a4d404adc856971c9285e1c4ab17e9135ea669d847d6db7e0066126a28ac751864e7ce99c65d526e130f56754a2e437a1617877098b3bdcc3ef23a23616
@@ -8780,7 +8626,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/d3-scale@npm:*":
+"@types/d3-scale@npm:*, @types/d3-scale@npm:^4.0.9":
   version: 4.0.9
   resolution: "@types/d3-scale@npm:4.0.9"
   dependencies:
@@ -23590,10 +23436,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:3.25.76":
+"zod@npm:3.22.4":
+  version: 3.22.4
+  resolution: "zod@npm:3.22.4"
+  checksum: 10c0/7578ab283dac0eee66a0ad0fc4a7f28c43e6745aadb3a529f59a4b851aa10872b3890398b3160f257f4b6817b4ce643debdda4fb21a2c040adda7862cab0a587
+  languageName: node
+  linkType: hard
+
+"zod@npm:^3.22.4, zod@npm:^3.24.1, zod@npm:^3.25.76":
   version: 3.25.76
   resolution: "zod@npm:3.25.76"
   checksum: 10c0/5718ec35e3c40b600316c5b4c5e4976f7fee68151bc8f8d90ec18a469be9571f072e1bbaace10f1e85cf8892ea12d90821b200e980ab46916a6166a4260a983c
+  languageName: node
+  linkType: hard
+
+"zod@npm:^3.25 || ^4.0":
+  version: 4.6.7
+  resolution: "zod@npm:4.6.7"
+  checksum: 10c0/4ce2eb14034317b7254e347ca37b5ad591cf8333147030cf05b9b5d31692d45073f7f2747aa50cf8c6b29012194d2b22978cecc89969cf34a0d18e89d0ee7d7b
   languageName: node
   linkType: hard
 

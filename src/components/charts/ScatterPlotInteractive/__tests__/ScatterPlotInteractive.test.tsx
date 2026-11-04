@@ -6,8 +6,8 @@ import { COLORS, DEFAULT_MARKER_SIZE } from "../constants";
 import { ScatterPlotInteractive } from "../ScatterPlotInteractive";
 
 import type { ScatterPlotInteractiveProps, ScatterPoint, SelectionMode } from "../types";
-import type { Brushed, Selected } from "@tetrascience-npm/ts-lib-viz/core";
-import type { Viz } from "@tetrascience-npm/ts-lib-viz/react";
+import type { Brushed, Selected } from "@/vendor/ts-lib-viz/core";
+import type { Viz } from "@/vendor/ts-lib-viz/react";
 import type { Root } from "react-dom/client";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -20,7 +20,7 @@ import type { Root } from "react-dom/client";
 // Storybook play functions.
 type VizProps = React.ComponentProps<typeof Viz>;
 const vizCalls = vi.hoisted(() => ({ props: [] as VizProps[] }));
-vi.mock("@tetrascience-npm/ts-lib-viz/react", async () => {
+vi.mock("@/vendor/ts-lib-viz/react", async () => {
   const ReactModule = await import("react");
   return {
     Viz: (props: VizProps) => {

@@ -1,13 +1,13 @@
-import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
 import { useChartDeprecationWarning } from "../viz/deprecation";
 import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
-import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
+import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
 
 import { CHART_COLORS } from "@/utils/colors";
+import { plot } from "@/vendor/ts-lib-viz/core";
 
 interface HistogramDataSeries {
   x: number[];

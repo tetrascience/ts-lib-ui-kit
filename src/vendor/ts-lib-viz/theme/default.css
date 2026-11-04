@@ -1,0 +1,52 @@
+@layer properties, theme, base, components, utilities, ts-ui-kit;
+
+@layer ts-ui-kit {
+  /*
+   * The values the package ships.
+   *
+   * Import once near the root of a consuming app. A host restyles a chart by declaring any of these
+   * properties further down the tree; nothing in the package names a color, so overriding the token
+   * is the whole of the mechanism.
+   *
+   * There is no chart background token. A chart draws on a transparent background per chart-design
+   * rule 3, and `--viz-paper` is the color of the page it is sitting on, read for the gap between
+   * stacked segments and the hairline around a large point.
+   *
+   * The tooltip tokens are the one surface the package does paint, because the hover card floats over
+   * marks and has to separate from them. It stays dark under both schemes, which is the treatment the
+   * reference charts record; a host that would sooner have the card match its own popover points
+   * these four at its surface colors.
+   *
+   * The dark values are declared twice and the media query is scoped. A host with its own switch
+   * writes `.dark` on the root and wants that to win; a host without one wants the system setting.
+   * Declaring the dark values in the media query alone left a light override unable to reach them,
+   * which is the `:root:not(.light)` guard below.
+   */
+
+  :root {
+  	--viz-paper: #ffffff;
+  	--viz-ink: #171717;
+  	--viz-ink-muted: #737373;
+  	--viz-rule: #e5e5e5;
+  	--viz-annotation: #404040;
+  	--viz-leader: #a3a3a3;
+  	--viz-status-fail: #dc2626;
+  	--viz-status-warn: #d97706;
+  	--viz-tooltip-bg: #171717;
+  	--viz-tooltip-ink: #ffffff;
+  	--viz-tooltip-ink-muted: #d4d4d4;
+  	--viz-tooltip-ring: #ffffff1a;
+  }
+
+  .dark {
+  	--viz-paper: #0a0a0a;
+  	--viz-ink: #fafafa;
+  	--viz-ink-muted: #a3a3a3;
+  	--viz-rule: #262626;
+  	--viz-annotation: #d4d4d4;
+  	--viz-leader: #525252;
+  	--viz-status-fail: #f87171;
+  	--viz-status-warn: #fbbf24;
+  	--viz-tooltip-bg: #262626;
+  }
+}

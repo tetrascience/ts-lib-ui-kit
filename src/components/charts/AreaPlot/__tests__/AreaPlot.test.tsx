@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { AreaPlot, areaRows } from "../AreaPlot";
 
 import type { AreaDataSeries, AreaPlotProps } from "../AreaPlot";
-import type { ChartSpec, Palettes, VizData } from "@tetrascience-npm/ts-lib-viz/core";
+import type { ChartSpec, Palettes, VizData } from "@/vendor/ts-lib-viz/core";
 import type { Root } from "react-dom/client";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -19,7 +19,7 @@ interface VizCall {
   palettes?: Palettes;
 }
 const viz = vi.hoisted(() => ({ calls: [] as VizCall[] }));
-vi.mock("@tetrascience-npm/ts-lib-viz/react", () => ({
+vi.mock("@/vendor/ts-lib-viz/react", () => ({
   Viz: (props: VizCall) => {
     viz.calls.push(props);
     return <div data-viz-stub="" />;

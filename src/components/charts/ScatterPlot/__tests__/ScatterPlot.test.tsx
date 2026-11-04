@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { ScatterPlot } from "../ScatterPlot";
 
 import type { ScatterPlotProps } from "../ScatterPlot";
-import type { Viz } from "@tetrascience-npm/ts-lib-viz/react";
+import type { Viz } from "@/vendor/ts-lib-viz/react";
 import type { Root } from "react-dom/client";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -16,7 +16,7 @@ import type { Root } from "react-dom/client";
 // real drawing is covered by the Storybook play functions.
 type VizProps = React.ComponentProps<typeof Viz>;
 const vizCalls = vi.hoisted(() => ({ props: [] as VizProps[] }));
-vi.mock("@tetrascience-npm/ts-lib-viz/react", async () => {
+vi.mock("@/vendor/ts-lib-viz/react", async () => {
   const ReactModule = await import("react");
   return {
     Viz: (props: VizProps) => {

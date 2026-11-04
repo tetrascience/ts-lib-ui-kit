@@ -10,6 +10,9 @@ import { plot } from "@/vendor/ts-lib-viz/core";
 
 /** Scale factor for y-axis range to add padding above max value */
 const Y_AXIS_PADDING_FACTOR = 1.05;
+/** Size used when the caller states neither a width nor a height, in pixels. */
+const DEFAULT_WIDTH = 900;
+const DEFAULT_HEIGHT = 600;
 /** Where the base letters sit, as a fraction of the y range: near the top, above the traces. */
 const LETTER_HEIGHT = 0.96;
 
@@ -168,7 +171,9 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
     return <div className="electropherogram-empty">No data available</div>;
   }
 
-  return <VizChart spec={built.spec} data={built.rows} width={width ?? 900} height={height ?? 600} />;
+  return (
+    <VizChart spec={built.spec} data={built.rows} width={width ?? DEFAULT_WIDTH} height={height ?? DEFAULT_HEIGHT} />
+  );
 };
 
 export { Electropherogram };

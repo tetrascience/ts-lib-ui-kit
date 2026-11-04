@@ -1,10 +1,9 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 
 import { Electropherogram } from "../Electropherogram";
 
-import type { PeakData } from "../Electropherogram";
 import type { ChartSpec, Palettes, VizData } from "@/vendor/ts-lib-viz/core";
 import type { Root } from "react-dom/client";
 

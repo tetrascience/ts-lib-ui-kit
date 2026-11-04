@@ -16,6 +16,10 @@ const DEFAULT_REGION_OVERLAY_WIDTH = 3.5;
 
 type Row = Record<string, string | number | boolean | null>;
 
+const emptyRows: Row[] = [];
+const newBuilder = () => plot(emptyRows, { x: "x", y: "y" });
+type Builder = ReturnType<typeof newBuilder>;
+
 export interface DetectedPeaks {
   peaks: PeakAnnotation[];
   seriesIndex: number;
@@ -75,121 +79,122 @@ function groupRows<K extends string>(entries: Array<{ key: K; row: Row }>): Map<
   return groups;
 }
 
-/**
- * Builds the ts-lib-viz spec for a chromatogram. Layers do not share one table:
- * each carries the rows it draws, so a region or a boundary marker can use its
- * own slice of a series without a null-padded column.
- */
-export function buildChromatogramSpec(input: ChromatogramSpecInput): ChromatogramSpec {
-  const {
-    processedSeries,
-    processedAnnotations,
-    allDetectedPeaks,
-    showPeakAreas,
-    enablePeakDetection,
-    boundaryMarkers,
-    showMarkers,
-    markerSize,
-    title,
-    xAxisTitle,
-    yAxisTitle,
-    xRange,
-    yRange,
-    showGridX,
-    showGridY,
-  } = input;
-
-  const emptyRows: Row[] = [];
-  let builder = plot(emptyRows, { x: "x", y: "y" });
-
-  processedSeries.forEach((series, index) => {
+/** One line per series, and a point layer over it when markers are shown. */
+function addSeriesLayers(builder: Builder, input: ChromatogramSpecInput): Builder {
+  let next = builder;
+  input.processedSeries.forEach((series, index) => {
     const color = seriesColor(series, index);
     const rows = seriesRows(series);
-    builder = builder.line({
+    next = next.line({
       data: rows,
       aes: { x: "x", y: "y" },
       color,
       linewidth: CHROMATOGRAM_TRACE.BASE_LINE_WIDTH,
       name: series.name,
     });
-    if (showMarkers) {
-      builder = builder.point({ data: rows, aes: { x: "x", y: "y" }, color, size: markerSize });
+    if (input.showMarkers) {
+      next = next.point({ data: rows, aes: { x: "x", y: "y" }, color, size: input.markerSize });
     }
   });
+  return next;
+}
 
-  // Region overlays draw over the trace between a peak's start and end.
+/** Region overlays draw over the trace between a peak's start and end. */
+function addRegionLayers(builder: Builder, input: ChromatogramSpecInput): Builder {
+  const { processedSeries, processedAnnotations, allDetectedPeaks } = input;
   const overlayPeaks: Array<{ peak: PeakAnnotation; seriesIndex: number }> = [
     ...processedAnnotations.map((peak) => ({ peak, seriesIndex: 0 })),
     ...allDetectedPeaks.flatMap(({ peaks, seriesIndex }) => peaks.map((peak) => ({ peak, seriesIndex }))),
   ];
+  let next = builder;
   for (const { peak, seriesIndex } of overlayPeaks) {
     const series = processedSeries[seriesIndex];
     const startIdx = peak._computed?.startIndex;
     const endIdx = peak._computed?.endIndex;
     if (!peak.regionOverlay || !series || startIdx === undefined || endIdx === undefined) continue;
-    builder = builder.line({
+    next = next.line({
       data: seriesRows(series, startIdx, endIdx),
       aes: { x: "x", y: "y" },
       color: peak.color ?? seriesColor(series, seriesIndex),
       linewidth: peak.regionOverlayWidth ?? DEFAULT_REGION_OVERLAY_WIDTH,
     });
   }
+  return next;
+}
 
-  if (boundaryMarkers !== "none") {
-    const peaksWithData = collectPeaksWithBoundaryData(allDetectedPeaks, processedAnnotations, processedSeries);
-    const markerEntries: Array<{ key: string; row: Row }> = [];
-    for (const { peaks, seriesIndex, x } of peaksWithData) {
-      const fallbackColor = seriesColor(processedSeries[seriesIndex] ?? { name: "", x: [], y: [] }, seriesIndex);
-      const startY = BOUNDARY_MARKER_START_Y + seriesIndex * BOUNDARY_MARKER_SERIES_OFFSET;
-      const endY = BOUNDARY_MARKER_END_Y + seriesIndex * BOUNDARY_MARKER_SERIES_OFFSET;
-      for (const peak of peaks) {
-        const startX = x[peak._computed?.startIndex ?? 0];
-        const endX = x[peak._computed?.endIndex ?? 0];
-        const color = peak.color ?? fallbackColor;
-        const startShape: BoundaryMarkerType = peak.startMarker ?? "triangle";
-        const endShape: BoundaryMarkerType = peak.endMarker ?? "diamond";
-        markerEntries.push({ key: `${color}|${startShape}`, row: { x: startX, y: startY } });
-        markerEntries.push({ key: `${color}|${endShape}`, row: { x: endX, y: endY } });
-      }
-    }
-    for (const [key, rows] of groupRows(markerEntries)) {
-      const [color, shape] = key.split("|") as [string, BoundaryMarkerType];
-      if (shape === "none") continue;
-      builder = builder.point({ data: rows, aes: { x: "x", y: "y" }, color, shape });
+/** Start and end markers, one point layer per colour and shape, staggered below each series. */
+function addBoundaryLayers(builder: Builder, input: ChromatogramSpecInput): Builder {
+  const { processedSeries, processedAnnotations, allDetectedPeaks } = input;
+  const peaksWithData = collectPeaksWithBoundaryData(allDetectedPeaks, processedAnnotations, processedSeries);
+  const entries: Array<{ key: string; row: Row }> = [];
+  for (const { peaks, seriesIndex, x } of peaksWithData) {
+    const fallbackColor = seriesColor(processedSeries[seriesIndex] ?? { name: "", x: [], y: [] }, seriesIndex);
+    const startY = BOUNDARY_MARKER_START_Y + seriesIndex * BOUNDARY_MARKER_SERIES_OFFSET;
+    const endY = BOUNDARY_MARKER_END_Y + seriesIndex * BOUNDARY_MARKER_SERIES_OFFSET;
+    for (const peak of peaks) {
+      const color = peak.color ?? fallbackColor;
+      const startShape: BoundaryMarkerType = peak.startMarker ?? "triangle";
+      const endShape: BoundaryMarkerType = peak.endMarker ?? "diamond";
+      entries.push({ key: `${color}|${startShape}`, row: { x: x[peak._computed?.startIndex ?? 0], y: startY } });
+      entries.push({ key: `${color}|${endShape}`, row: { x: x[peak._computed?.endIndex ?? 0], y: endY } });
     }
   }
+  let next = builder;
+  for (const [key, rows] of groupRows(entries)) {
+    const [color, shape] = key.split("|") as [string, BoundaryMarkerType];
+    if (shape === "none") continue;
+    next = next.point({ data: rows, aes: { x: "x", y: "y" }, color, shape });
+  }
+  return next;
+}
 
-  // Peak labels: user annotations always, detected peaks only when their areas are shown.
-  const labelPeaks: Array<{ peak: PeakAnnotation; seriesIndex: number; userDefined: boolean }> = [
+/** The colour a peak's label is drawn in, when the peak does not state one. */
+function labelColor(processedSeries: ChromatogramSeries[], seriesIndex: number, userDefined: boolean): string {
+  if (userDefined) return CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_TEXT_COLOR;
+  const series = processedSeries[seriesIndex];
+  return series ? seriesColor(series, seriesIndex) : CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_TEXT_COLOR;
+}
+
+/** Peak labels: user annotations always, detected peaks only when their areas are shown. */
+function addLabelLayers(builder: Builder, input: ChromatogramSpecInput): Builder {
+  const { processedSeries, processedAnnotations, allDetectedPeaks, showPeakAreas, enablePeakDetection } = input;
+  const detected = showPeakAreas && enablePeakDetection ? allDetectedPeaks : [];
+  const labelPeaks = [
     ...processedAnnotations.map((peak) => ({ peak, seriesIndex: 0, userDefined: true })),
-    ...(showPeakAreas && enablePeakDetection
-      ? allDetectedPeaks.flatMap(({ peaks, seriesIndex }) =>
-          peaks.map((peak) => ({ peak, seriesIndex, userDefined: false })),
-        )
-      : []),
+    ...detected.flatMap(({ peaks, seriesIndex }) => peaks.map((peak) => ({ peak, seriesIndex, userDefined: false }))),
   ];
-  const labelEntries: Array<{ key: string; row: Row }> = [];
+  const entries: Array<{ key: string; row: Row }> = [];
   for (const { peak, seriesIndex, userDefined } of labelPeaks) {
     const text = peakLabel(peak);
     if (text === "") continue;
-    const series = processedSeries[seriesIndex];
-    const defaultColor =
-      userDefined && !peak.color
-        ? CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_TEXT_COLOR
-        : series
-          ? seriesColor(series, seriesIndex)
-          : CHROMATOGRAM_ANNOTATION.USER_ANNOTATION_TEXT_COLOR;
-    labelEntries.push({ key: peak.color ?? defaultColor, row: { x: peak.x, y: peak.y, label: text } });
+    const color = peak.color ?? labelColor(processedSeries, seriesIndex, userDefined && !peak.color);
+    entries.push({ key: color, row: { x: peak.x, y: peak.y, label: text } });
   }
-  for (const [color, rows] of groupRows(labelEntries)) {
-    builder = builder.text({ data: rows, aes: { x: "x", y: "y", label: "label" }, color, vjust: 0 });
+  let next = builder;
+  for (const [color, rows] of groupRows(entries)) {
+    next = next.text({ data: rows, aes: { x: "x", y: "y", label: "label" }, color, vjust: 0 });
   }
+  return next;
+}
+
+/**
+ * Builds the ts-lib-viz spec for a chromatogram. Layers do not share one table:
+ * each carries the rows it draws, so a region or a boundary marker can use its
+ * own slice of a series without a null-padded column.
+ */
+export function buildChromatogramSpec(input: ChromatogramSpecInput): ChromatogramSpec {
+  let builder = addSeriesLayers(newBuilder(), input);
+  builder = addRegionLayers(builder, input);
+  if (input.boundaryMarkers !== "none") {
+    builder = addBoundaryLayers(builder, input);
+  }
+  builder = addLabelLayers(builder, input);
 
   const spec = builder
-    .labs({ headline: title })
+    .labs({ headline: input.title })
     .scales({
-      x: { title: xAxisTitle, limits: xRange, grid: showGridX },
-      y: { title: yAxisTitle, limits: yRange, grid: showGridY },
+      x: { title: input.xAxisTitle, limits: input.xRange, grid: input.showGridX },
+      y: { title: input.yAxisTitle, limits: input.yRange, grid: input.showGridY },
     })
     .spec();
 

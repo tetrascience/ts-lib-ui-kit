@@ -33,10 +33,21 @@ export interface VizChartProps {
   height?: number;
 }
 
+/**
+ * The Plotly charts ran a titled y-axis along its rule. ts-lib-viz defaults to a
+ * horizontal caption above the ticks, so a y title that does not state its own
+ * alignment is moved onto the rule to match.
+ */
+function alongTheRule(spec: ChartSpec): ChartSpec {
+  const y = spec.scales?.y;
+  if (!y?.title || y.titleAlign !== undefined) return spec;
+  return { ...spec, scales: { ...spec.scales, y: { ...y, titleAlign: "center" } } };
+}
+
 export function VizChart({ spec, data, palettes, width, height }: VizChartProps) {
   const sized = useMemo<ChartSpec>(
     () => ({
-      ...spec,
+      ...alongTheRule(spec),
       ...(width === undefined ? {} : { width }),
       ...(height === undefined ? {} : { height }),
     }),

@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 
-import { Chromatogram, type ChromatogramSeries, type PeakAnnotation, type PeakSelectEvent } from "./Chromatogram";
+import { Chromatogram, type ChromatogramSeries, type PeakAnnotation } from "./Chromatogram";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 

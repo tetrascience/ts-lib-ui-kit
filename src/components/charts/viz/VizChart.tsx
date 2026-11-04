@@ -44,10 +44,25 @@ function alongTheRule(spec: ChartSpec): ChartSpec {
   return { ...spec, scales: { ...spec.scales, y: { ...y, titleAlign: "center" } } };
 }
 
+/**
+ * Matches the Plotly defaults the charts shipped with. Gridlines are on unless
+ * the caller turns them off. An axis with no title gets an empty one, because
+ * ts-lib-viz otherwise captions the axis with its field name ("x", "y", "series").
+ */
+function plotlyDefaults(spec: ChartSpec): ChartSpec {
+  if (spec.scales === undefined) return spec;
+  const axis = (scale: NonNullable<ChartSpec["scales"]>["x"]) => ({
+    ...scale,
+    title: scale?.title ?? "",
+    grid: scale?.grid ?? true,
+  });
+  return { ...spec, scales: { ...spec.scales, x: axis(spec.scales.x), y: axis(spec.scales.y) } };
+}
+
 export function VizChart({ spec, data, palettes, width, height }: VizChartProps) {
   const sized = useMemo<ChartSpec>(
     () => ({
-      ...alongTheRule(spec),
+      ...alongTheRule(plotlyDefaults(spec)),
       ...(width === undefined ? {} : { width }),
       ...(height === undefined ? {} : { height }),
     }),

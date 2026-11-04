@@ -10,6 +10,8 @@ import { plot } from "@/vendor/ts-lib-viz/core";
 
 /** Points in the fitted normal curve, and the stroke width of the curve in pixels. */
 const CURVE_POINTS = 100;
+/** Exponent coefficient of the normal density: exp(-\frac12 z^2). */
+const NORMAL_EXPONENT = -0.5;
 const CURVE_LINE_WIDTH = 2;
 
 interface HistogramDataSeries {
@@ -80,7 +82,7 @@ function normalDensity(average: number, deviation: number, start: number, end: n
   for (let i = 0; i < CURVE_POINTS; i++) {
     const at = start + i * step;
     x.push(at);
-    y.push((1 / (deviation * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((at - average) / deviation) ** 2));
+    y.push((1 / (deviation * Math.sqrt(2 * Math.PI))) * Math.exp(NORMAL_EXPONENT * ((at - average) / deviation) ** 2));
   }
   return { x, y };
 }

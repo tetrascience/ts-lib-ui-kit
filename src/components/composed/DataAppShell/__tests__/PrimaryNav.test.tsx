@@ -46,16 +46,12 @@ const navGroups: NavGroup[] = [
 
 describe("DataAppShellPrimaryNav — top variant", () => {
   it("renders horizontal items with visible labels and badge counts", () => {
-    render(
-      <DataAppShellPrimaryNav variant="top" navGroups={navGroups} activeKey="projects" />
-    );
+    render(<DataAppShellPrimaryNav variant="top" navGroups={navGroups} activeKey="projects" />);
 
     const nav = container.querySelector("[data-slot='data-app-shell-primary-nav']");
     expect(nav?.getAttribute("data-variant")).toBe("top");
 
-    const items = container.querySelectorAll(
-      "[data-slot='data-app-shell-primary-nav-item']"
-    );
+    const items = container.querySelectorAll("[data-slot='data-app-shell-primary-nav-item']");
     expect(items).toHaveLength(3);
     expect(items[0].textContent).toContain("Projects");
     expect(items[0].querySelector("[data-slot='badge']")?.textContent).toBe("3");
@@ -67,15 +63,22 @@ describe("DataAppShellPrimaryNav — top variant", () => {
     render(
       <DataAppShellPrimaryNav
         variant="top"
-        navGroups={[{ pages: [{ id: "a", label: "A", onClick }, { id: "b", label: "B" }] }]}
+        navGroups={[
+          {
+            pages: [
+              { id: "a", label: "A", onClick },
+              { id: "b", label: "B" },
+            ],
+          },
+        ]}
         activeKey="a"
         onSelect={onSelect}
-      />
+      />,
     );
 
-    const [itemA, itemB] = [...container.querySelectorAll<HTMLButtonElement>(
-        "[data-slot='data-app-shell-primary-nav-item']"
-      )];
+    const [itemA, itemB] = [
+      ...container.querySelectorAll<HTMLButtonElement>("[data-slot='data-app-shell-primary-nav-item']"),
+    ];
     expect(itemA.getAttribute("aria-current")).toBe("page");
     expect(itemB.getAttribute("aria-current")).toBeNull();
 
@@ -91,12 +94,10 @@ describe("DataAppShellPrimaryNav — top variant", () => {
         navGroups={navGroups}
         actions={<button type="button">Help</button>}
         user={<span data-testid="user-slot">GP</span>}
-      />
+      />,
     );
 
-    const userArea = container.querySelector(
-      "[data-slot='data-app-shell-primary-nav-user']"
-    );
+    const userArea = container.querySelector("[data-slot='data-app-shell-primary-nav-user']");
     expect(userArea?.textContent).toContain("Help");
     expect(userArea?.querySelector("[data-testid='user-slot']")).not.toBeNull();
   });
@@ -105,16 +106,11 @@ describe("DataAppShellPrimaryNav — top variant", () => {
     render(
       <DataAppShellPrimaryNav
         variant="top"
-        navGroups={[
-          { pages: [{ id: "a", label: "A" }] },
-          { pages: [{ id: "b", label: "B" }] },
-        ]}
-      />
+        navGroups={[{ pages: [{ id: "a", label: "A" }] }, { pages: [{ id: "b", label: "B" }] }]}
+      />,
     );
 
-    const itemsArea = container.querySelector(
-      "[data-slot='data-app-shell-primary-nav-items']"
-    );
+    const itemsArea = container.querySelector("[data-slot='data-app-shell-primary-nav-items']");
     expect(itemsArea?.querySelector(".border-l")).not.toBeNull();
   });
 });
@@ -125,26 +121,18 @@ describe("DataAppShellPrimaryNav — top variant", () => {
 
 describe("DataAppShellPrimaryNav — rail and sidebar", () => {
   it("rail overlays badge counts on the icon box and falls back to a dot when a page has no icon", () => {
-    render(
-      <DataAppShellPrimaryNav variant="rail" navGroups={navGroups} activeKey="misc" />
-    );
+    render(<DataAppShellPrimaryNav variant="rail" navGroups={navGroups} activeKey="misc" />);
 
-    const items = container.querySelectorAll(
-      "[data-slot='data-app-shell-primary-nav-item']"
-    );
+    const items = container.querySelectorAll("[data-slot='data-app-shell-primary-nav-item']");
     expect(items[0].querySelector("[data-slot='badge']")?.textContent).toBe("3");
     // The icon-less active page renders the dot indicator
     expect(items[2].querySelector(".rounded-full.bg-primary")).not.toBeNull();
   });
 
   it("sidebar renders badge counts at the end of the row", () => {
-    render(
-      <DataAppShellPrimaryNav variant="sidebar" navGroups={navGroups} activeKey="runs" />
-    );
+    render(<DataAppShellPrimaryNav variant="sidebar" navGroups={navGroups} activeKey="runs" />);
 
-    const items = container.querySelectorAll(
-      "[data-slot='data-app-shell-primary-nav-item']"
-    );
+    const items = container.querySelectorAll("[data-slot='data-app-shell-primary-nav-item']");
     expect(items[0].textContent).toContain("Projects");
     expect(items[0].querySelector("[data-slot='badge']")?.textContent).toBe("3");
     expect(items[1].getAttribute("aria-current")).toBe("page");
@@ -158,7 +146,7 @@ describe("DataAppShellPrimaryNav — rail and sidebar", () => {
           { label: "Platform", pages: [{ id: "a", label: "Overview", icon: FolderKanban }] },
           { label: "Workspace", pages: [{ id: "b", label: "Reports", icon: Beaker }] },
         ]}
-      />
+      />,
     );
 
     const labels = [...container.querySelectorAll("span")]
@@ -185,17 +173,11 @@ describe("DataAppShellPrimaryNav — renderItem", () => {
             {active ? " (active)" : ""}
           </a>
         )}
-      />
+      />,
     );
 
-    expect(
-      container.querySelectorAll("[data-slot='data-app-shell-primary-nav-item']")
-    ).toHaveLength(0);
-    expect(
-      container.querySelector("[data-testid='custom-runs']")?.textContent
-    ).toContain("(active)");
-    expect(
-      container.querySelector("[data-testid='custom-projects']")?.textContent
-    ).not.toContain("(active)");
+    expect(container.querySelectorAll("[data-slot='data-app-shell-primary-nav-item']")).toHaveLength(0);
+    expect(container.querySelector("[data-testid='custom-runs']")?.textContent).toContain("(active)");
+    expect(container.querySelector("[data-testid='custom-projects']")?.textContent).not.toContain("(active)");
   });
 });

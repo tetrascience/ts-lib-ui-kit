@@ -4,9 +4,7 @@ import { buildBarRows, buildBarSpec } from "../BarChart";
 
 import type { BarDataSeries } from "../BarChart";
 
-const dataSeries: BarDataSeries[] = [
-  { name: "Series 1", x: [0, 1, 2], y: [10, 18, 14] },
-];
+const dataSeries: BarDataSeries[] = [{ name: "Series 1", x: [0, 1, 2], y: [10, 18, 14] }];
 
 const withError: BarDataSeries[] = [
   {
@@ -18,9 +16,7 @@ const withError: BarDataSeries[] = [
 ];
 
 const positionOf = (layer: { position?: unknown }) =>
-  typeof layer.position === "string"
-    ? layer.position
-    : (layer.position as { kind?: string } | undefined)?.kind;
+  typeof layer.position === "string" ? layer.position : (layer.position as { kind?: string } | undefined)?.kind;
 
 describe("buildBarRows", () => {
   it("emits one row per point, tagged with its series name", () => {
@@ -41,9 +37,7 @@ describe("buildBarRows", () => {
   });
 
   it("collapses the error-bar ends onto y when the error is hidden", () => {
-    const rows = buildBarRows([
-      { ...withError[0], error_y: { type: "data", array: [2, 3], visible: false } },
-    ]);
+    const rows = buildBarRows([{ ...withError[0], error_y: { type: "data", array: [2, 3], visible: false } }]);
     expect(rows.map((row) => [row.lo, row.hi])).toEqual([
       [10, 10],
       [20, 20],

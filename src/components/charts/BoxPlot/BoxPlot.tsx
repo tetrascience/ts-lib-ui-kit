@@ -5,7 +5,6 @@ import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
-
 import { seriesColor } from "@/utils/colors";
 import { plot } from "@/vendor/ts-lib-viz/core";
 
@@ -97,10 +96,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({
   showPoints = false,
 }) => {
   useChartDeprecationWarning("BoxPlot");
-  const colors = useMemo(
-    () => dataSeries.map((series, index) => seriesColor(index, series.color)),
-    [dataSeries],
-  );
+  const colors = useMemo(() => dataSeries.map((series, index) => seriesColor(index, series.color)), [dataSeries]);
   const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
   const rows = useMemo(() => buildBoxRows(dataSeries), [dataSeries]);
   const spec = useMemo<ChartSpec>(

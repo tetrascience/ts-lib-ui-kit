@@ -93,9 +93,7 @@ describe("SnowflakeProvider", () => {
         },
       };
 
-      await expect(buildSnowflakeProvider(incompleteConfig)).rejects.toThrow(
-        InvalidProviderConfigurationError,
-      );
+      await expect(buildSnowflakeProvider(incompleteConfig)).rejects.toThrow(InvalidProviderConfigurationError);
     });
 
     it("should validate all required fields are present", async () => {
@@ -113,10 +111,7 @@ describe("SnowflakeProvider", () => {
         },
       };
 
-      await expect(buildSnowflakeProvider(configMissingUser)).rejects.toThrow(
-        "Missing field 'user'",
-      );
+      await expect(buildSnowflakeProvider(configMissingUser)).rejects.toThrow("Missing field 'user'");
     });
   });
 });
-

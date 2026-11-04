@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
-import tailwindcss from "@tailwindcss/vite"
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
@@ -41,13 +41,9 @@ export const alias = {
   "@": path.resolve(__dirname, "./src"),
 };
 
-const externalNames = [
-  ...Object.keys(pkg.dependencies),
-  ...Object.keys(pkg.peerDependencies),
-];
+const externalNames = [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)];
 
-const external = (id: string) =>
-  externalNames.some((name) => id === name || id.startsWith(`${name}/`));
+const external = (id: string) => externalNames.some((name) => id === name || id.startsWith(`${name}/`));
 
 const SCREENSHOT_DIR = path.resolve(process.cwd(), "test-results/screenshots");
 const storybookZephyrMapping = generateZephyrMapping();
@@ -105,7 +101,7 @@ export default defineConfig({
         banner,
         globals: { react: "React", "react-dom": "ReactDOM" },
         preserveModules: true,
-        preserveModulesRoot: 'src',
+        preserveModulesRoot: "src",
         // Rollup's CJS output otherwise keeps external dynamic `import()`
         // calls (plotly-loader.ts, lib/shiki.ts) as native `import()` —
         // outside Jest's CJS module registry, so `jest.mock` can never
@@ -123,10 +119,10 @@ export default defineConfig({
       // Unit tests — jsdom environment, with server tests overridden to node
       {
         resolve: {
-    alias,
-    // ts-lib-viz is linked by portal and carries its own React copy; dedupe keeps one React for hooks.
-    dedupe: ["react", "react-dom"],
-  },
+          alias,
+          // ts-lib-viz is linked by portal and carries its own React copy; dedupe keeps one React for hooks.
+          dedupe: ["react", "react-dom"],
+        },
         test: {
           name: "unit",
           globals: true,
@@ -188,7 +184,7 @@ export default defineConfig({
           },
           setupFiles: [".storybook/vitest.setup.ts"],
         },
-      }
+      },
     ],
     coverage: {
       provider: "v8",

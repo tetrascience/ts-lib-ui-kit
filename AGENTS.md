@@ -21,10 +21,14 @@ yarn format            # Prettier
 Before committing, always run:
 
 ```bash
-yarn lint && yarn typecheck && yarn test:all
+yarn format:check && yarn lint && yarn typecheck && yarn test:all
 ```
 
-Husky + lint-staged auto-runs ESLint on staged `*.{js,jsx,ts,tsx}` files.
+Husky + lint-staged runs `eslint --fix` then `prettier --write` on staged
+`*.{js,jsx,ts,tsx}` files, and `prettier --write` on staged
+`*.{json,css,scss,md,mdx,yml,yaml,html}` files. CI runs `yarn format:check`
+before lint, so unformatted files fail the build. ESLint must run first: its
+autofixes (import merging/ordering) are not Prettier-formatted.
 
 ## Project Structure
 
@@ -202,13 +206,13 @@ everything it needs lives in [`src/lib/react18-compat.ts`](./src/lib/react18-com
 
   ```tsx
   function Button({ className, ...props }: ButtonProps) {
-    return <button className={cn(buttonVariants(), className)} {...props} />
+    return <button className={cn(buttonVariants(), className)} {...props} />;
   }
 
   // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-  const ButtonWithRef = withRef("Button", Button)
+  const ButtonWithRef = withRef("Button", Button);
 
-  export { ButtonWithRef as Button }
+  export { ButtonWithRef as Button };
   ```
 
   Pass the name as a **string literal**, because the build mangles function
@@ -222,6 +226,7 @@ everything it needs lives in [`src/lib/react18-compat.ts`](./src/lib/react18-com
   re-memoise the wrapper: `memo(withRef("X", X.type))`. Never call
   `React.forwardRef` directly; `TetraScienceIcon` and `TetraMoleculeIcon`
   predate this and are allowlisted.
+
 - **Inside the file, `X` is the plain component, so every JSX use renders
   `XWithRef`.** Libraries hand refs to children implicitly: an `asChild` parent,
   a props spread, or Radix `Presence` inside a `Portal`, which is how

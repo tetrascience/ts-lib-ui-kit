@@ -76,8 +76,7 @@ const dataAppShellRightPanelTriggerVariants = cva(
 );
 
 export interface DataAppShellRightPanelTriggerProps
-  extends React.ComponentProps<"button">,
-    VariantProps<typeof dataAppShellRightPanelTriggerVariants> {
+  extends React.ComponentProps<"button">, VariantProps<typeof dataAppShellRightPanelTriggerVariants> {
   /** Merge the trigger styling/props onto the child element instead of
    *  rendering a `<button>` — makes anything clickable a panel trigger. */
   asChild?: boolean;
@@ -505,4 +504,8 @@ function DataAppShellRightPanel({
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
 const DataAppShellRightPanelWithRef = withRef("DataAppShellRightPanel", DataAppShellRightPanel);
 
-export { DataAppShellRightPanelWithRef as DataAppShellRightPanel, DataAppShellRightPanelTriggerWithRef as DataAppShellRightPanelTrigger, dataAppShellRightPanelTriggerVariants };
+export {
+  DataAppShellRightPanelWithRef as DataAppShellRightPanel,
+  DataAppShellRightPanelTriggerWithRef as DataAppShellRightPanelTrigger,
+  dataAppShellRightPanelTriggerVariants,
+};

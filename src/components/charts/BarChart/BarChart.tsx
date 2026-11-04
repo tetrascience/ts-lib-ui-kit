@@ -5,7 +5,6 @@ import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
-
 import { seriesColor } from "@/utils/colors";
 import { plot } from "@/vendor/ts-lib-viz/core";
 
@@ -99,9 +98,7 @@ export function buildBarSpec(rows: BarRow[], options: BarSpecOptions): ChartSpec
         ...(xTickText
           ? {
               breaks: xTicks,
-              labels: Object.fromEntries(
-                xTicks.map((tick, index) => [String(tick), xTickText[index] ?? String(tick)]),
-              ),
+              labels: Object.fromEntries(xTicks.map((tick, index) => [String(tick), xTickText[index] ?? String(tick)])),
             }
           : {}),
       },
@@ -126,10 +123,7 @@ const BarChart: React.FC<BarChartProps> = ({
   xTickText,
 }) => {
   useChartDeprecationWarning("BarChart");
-  const colors = useMemo(
-    () => dataSeries.map((series, index) => seriesColor(index, series.color)),
-    [dataSeries],
-  );
+  const colors = useMemo(() => dataSeries.map((series, index) => seriesColor(index, series.color)), [dataSeries]);
   const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
   const hasErrorBars = dataSeries.some((series) => series.error_y?.visible);
   const rows = useMemo(() => buildBarRows(dataSeries), [dataSeries]);

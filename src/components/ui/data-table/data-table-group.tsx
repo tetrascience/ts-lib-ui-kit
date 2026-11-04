@@ -1,22 +1,16 @@
-"use client"
+"use client";
 
-import { GroupIcon, XIcon } from "lucide-react"
-import { Popover } from "radix-ui"
-import { useId } from "react"
+import { GroupIcon, XIcon } from "lucide-react";
+import { Popover } from "radix-ui";
+import { useId } from "react";
 
-import { useDataTable } from "./data-table"
+import { useDataTable } from "./data-table";
 
-import type { Column } from "@tanstack/react-table"
+import type { Column } from "@tanstack/react-table";
 
-import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -27,59 +21,52 @@ function getColumnLabel(
   columnLabels: Record<string, string>,
   col: Column<unknown, unknown> | undefined,
 ): string {
-  const meta = col?.columnDef.meta as { label?: string } | undefined
+  const meta = col?.columnDef.meta as { label?: string } | undefined;
   return (
     columnLabels[colId] ??
     meta?.label ??
     (typeof col?.columnDef.header === "string" ? col.columnDef.header : undefined) ??
     colId
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
 // DataTableGroup
 // ---------------------------------------------------------------------------
 
-const NO_GROUPING = "__none__"
+const NO_GROUPING = "__none__";
 
 interface DataTableGroupProps {
-  className?: string
+  className?: string;
 }
 
 function DataTableGroup({ className }: DataTableGroupProps) {
-  const selectId = useId()
-  const {
-    table,
-    columnLabels,
-    grouping,
-    setGrouping,
-    groupConfig,
-    enableGrouping,
-  } = useDataTable()
+  const selectId = useId();
+  const { table, columnLabels, grouping, setGrouping, groupConfig, enableGrouping } = useDataTable();
 
-  if (!enableGrouping) return null
+  if (!enableGrouping) return null;
 
-  const allLeafColumns = table.getAllLeafColumns()
+  const allLeafColumns = table.getAllLeafColumns();
 
   const resolvedColumns =
     groupConfig.length > 0
       ? groupConfig
       : allLeafColumns
           .filter((col) => "accessorKey" in col.columnDef || "accessorFn" in col.columnDef)
-          .map((col) => ({ columnId: col.id, label: undefined as string | undefined }))
+          .map((col) => ({ columnId: col.id, label: undefined as string | undefined }));
 
   const activeColumn = grouping
-    ? resolvedColumns.find((c) => c.columnId === grouping) ?? { columnId: grouping }
-    : null
+    ? (resolvedColumns.find((c) => c.columnId === grouping) ?? { columnId: grouping })
+    : null;
 
   const activeColumnLabel = activeColumn
-    ? activeColumn.label ??
+    ? (activeColumn.label ??
       getColumnLabel(
         activeColumn.columnId,
         columnLabels,
         allLeafColumns.find((lc) => lc.id === activeColumn.columnId),
-      )
-    : null
+      ))
+    : null;
 
   return (
     <Popover.Root>
@@ -90,9 +77,7 @@ function DataTableGroup({ className }: DataTableGroupProps) {
           size="sm"
           data-slot="data-table-group"
           className={cn(className)}
-          aria-label={
-            activeColumnLabel ? `Grouped by ${activeColumnLabel}` : "Group by"
-          }
+          aria-label={activeColumnLabel ? `Grouped by ${activeColumnLabel}` : "Group by"}
         >
           <GroupIcon className="size-3.5" />
           {activeColumnLabel ? (
@@ -123,33 +108,23 @@ function DataTableGroup({ className }: DataTableGroupProps) {
           )}
         >
           <div className="flex flex-col gap-2">
-            <label
-              className="text-xs font-medium text-muted-foreground"
-              htmlFor={selectId}
-            >
+            <label className="text-xs font-medium text-muted-foreground" htmlFor={selectId}>
               Group rows by
             </label>
             <div className="flex items-center gap-2">
-              <Select
-                value={grouping ?? NO_GROUPING}
-                onValueChange={(v) => setGrouping(v === NO_GROUPING ? null : v)}
-              >
-                <SelectTrigger
-                  id={selectId}
-                  size="sm"
-                  className="w-44"
-                >
+              <Select value={grouping ?? NO_GROUPING} onValueChange={(v) => setGrouping(v === NO_GROUPING ? null : v)}>
+                <SelectTrigger id={selectId} size="sm" className="w-44">
                   <SelectValue placeholder="Select column" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NO_GROUPING}>None</SelectItem>
                   {resolvedColumns.map((c) => {
-                    const col = allLeafColumns.find((lc) => lc.id === c.columnId)
+                    const col = allLeafColumns.find((lc) => lc.id === c.columnId);
                     return (
                       <SelectItem key={c.columnId} value={c.columnId}>
                         {c.label ?? getColumnLabel(c.columnId, columnLabels, col)}
                       </SelectItem>
-                    )
+                    );
                   })}
                 </SelectContent>
               </Select>
@@ -170,10 +145,10 @@ function DataTableGroup({ className }: DataTableGroupProps) {
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
-  )
+  );
 }
 
-DataTableGroup.displayName = "DataTableGroup"
+DataTableGroup.displayName = "DataTableGroup";
 
-export { DataTableGroup }
-export type { DataTableGroupProps }
+export { DataTableGroup };
+export type { DataTableGroupProps };

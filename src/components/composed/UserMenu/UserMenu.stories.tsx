@@ -31,9 +31,7 @@ const meta: Meta<typeof UserMenu> = {
         ],
       },
       {
-        items: [
-          { id: "logout", label: "Log out", icon: LogOut, variant: "destructive" },
-        ],
+        items: [{ id: "logout", label: "Log out", icon: LogOut, variant: "destructive" }],
       },
     ],
   },
@@ -88,9 +86,7 @@ export const MenuOpen: Story = {
       expect(await menu.findByRole("menu")).toBeInTheDocument();
       await userEvent.keyboard("{ArrowDown}");
       // Radix roving focus moves real DOM focus onto a menu item.
-      await waitFor(() =>
-        expect(document.activeElement).toHaveAttribute("role", "menuitem")
-      );
+      await waitFor(() => expect(document.activeElement).toHaveAttribute("role", "menuitem"));
       await userEvent.keyboard("{Escape}");
     });
   },

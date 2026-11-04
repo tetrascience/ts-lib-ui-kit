@@ -1,9 +1,9 @@
-import { expect, within } from "storybook/test"
+import { expect, within } from "storybook/test";
 
-import { Input } from "./input"
-import { Label } from "./label"
+import { Input } from "./input";
+import { Label } from "./label";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof Label> = {
   title: "Components/Forms & Inputs/Label",
@@ -12,11 +12,11 @@ const meta: Meta<typeof Label> = {
     layout: "centered",
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof Label>
+type Story = StoryObj<typeof Label>;
 
 export const Default: Story = {
   render: () => (
@@ -29,14 +29,14 @@ export const Default: Story = {
     zephyr: { testCaseId: "SW-T1268" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Label and associated input render", async () => {
-      expect(canvas.getByText("Email address")).toBeInTheDocument()
-      expect(canvas.getByPlaceholderText("name@company.com")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Email address")).toBeInTheDocument();
+      expect(canvas.getByPlaceholderText("name@company.com")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const DisabledField: Story = {
   render: () => (
@@ -49,11 +49,11 @@ export const DisabledField: Story = {
     zephyr: { testCaseId: "SW-T1269" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Label and disabled input render", async () => {
-      expect(canvas.getByText("Workspace")).toBeInTheDocument()
-      expect(canvas.getByDisplayValue("Production")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("Workspace")).toBeInTheDocument();
+      expect(canvas.getByDisplayValue("Production")).toBeInTheDocument();
+    });
   },
-}
+};

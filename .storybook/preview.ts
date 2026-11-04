@@ -46,8 +46,7 @@ const previewChannel = addons.getChannel();
  */
 const readInitialTheme = (): string => {
   try {
-    const globalsParam =
-      new URLSearchParams(window.location.search).get("globals") ?? "";
+    const globalsParam = new URLSearchParams(window.location.search).get("globals") ?? "";
     const entry = globalsParam.split(";").find((p) => p.startsWith("theme:"));
     if (entry) return entry.slice("theme:".length);
   } catch {
@@ -65,10 +64,7 @@ let currentTheme = readInitialTheme();
  */
 const parentIsDark = () => {
   try {
-    return (
-      window.parent !== window &&
-      window.parent.document.documentElement.classList.contains("dark")
-    );
+    return window.parent !== window && window.parent.document.documentElement.classList.contains("dark");
   } catch {
     return false;
   }
@@ -164,11 +160,11 @@ const preview: Preview = {
   decorators: [
     (Story, context) =>
       createElement(
-        'div',
+        "div",
         {},
         chartDeprecationBanner(context.title),
         createElement(TooltipProvider, null, Story()),
-        createElement(Toaster, { richColors: true })
+        createElement(Toaster, { richColors: true }),
       ),
   ],
   parameters: {
@@ -181,7 +177,7 @@ const preview: Preview = {
       source: { transform: transformStorySource },
     },
     a11y: {
-      test: 'error',
+      test: "error",
     },
     backgrounds: {
       disable: true,
@@ -204,15 +200,7 @@ const preview: Preview = {
             "*",
           ],
           "AI Elements",
-          [
-            "Conversation",
-            ["Chat", "*"],
-            "Input",
-            "Agent Activity",
-            "Attribution",
-            "Status & Effects",
-            "*",
-          ],
+          ["Conversation", ["Chat", "*"], "Input", "Agent Activity", "Attribution", "Status & Effects", "*"],
           "*",
           "Legacy",
         ],

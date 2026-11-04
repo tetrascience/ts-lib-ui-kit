@@ -59,9 +59,7 @@ export const FullPanel: Story = {
 
     await step("Opens template select and picks a template", async () => {
       await selectOption(canvas.getByRole("combobox"), /3-point AUC/);
-      await waitFor(() =>
-        expect(args.onTemplateChange).toHaveBeenCalledWith("three-point"),
-      );
+      await waitFor(() => expect(args.onTemplateChange).toHaveBeenCalledWith("three-point"));
     });
 
     await step("Click 'Clear template'", async () => {

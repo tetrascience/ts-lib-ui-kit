@@ -1,16 +1,9 @@
-import { SearchIcon } from "lucide-react"
-import { expect, within } from "storybook/test"
+import { SearchIcon } from "lucide-react";
+import { expect, within } from "storybook/test";
 
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-  InputGroupText,
-} from "./input-group"
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText } from "./input-group";
 
-import type { Meta, StoryObj } from "@storybook/react-vite"
-
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const meta: Meta<typeof InputGroup> = {
   title: "Components/Forms & Inputs/Input Group",
@@ -22,18 +15,18 @@ const meta: Meta<typeof InputGroup> = {
     docs: { source: { type: "dynamic" } },
   },
   tags: ["autodocs"],
-}
+};
 
-export default meta
+export default meta;
 
-type Story = StoryObj<typeof InputGroup>
+type Story = StoryObj<typeof InputGroup>;
 
 function renderAddon(align: "inline-start" | "inline-end" | "block-start" | "block-end") {
   const addon = (
     <InputGroupAddon align={align}>
       <InputGroupText>https://</InputGroupText>
     </InputGroupAddon>
-  )
+  );
 
   return (
     <div className="w-[320px]">
@@ -43,11 +36,11 @@ function renderAddon(align: "inline-start" | "inline-end" | "block-start" | "blo
         {(align === "inline-end" || align === "block-end") && addon}
       </InputGroup>
     </div>
-  )
+  );
 }
 
 function renderButton(size: "xs" | "sm" | "icon-xs" | "icon-sm") {
-  const isIcon = size === "icon-xs" || size === "icon-sm"
+  const isIcon = size === "icon-xs" || size === "icon-sm";
 
   return (
     <div className="w-[320px]">
@@ -60,7 +53,7 @@ function renderButton(size: "xs" | "sm" | "icon-xs" | "icon-sm") {
         </InputGroupAddon>
       </InputGroup>
     </div>
-  )
+  );
 }
 
 export const InlineStart: Story = {
@@ -69,14 +62,14 @@ export const InlineStart: Story = {
     zephyr: { testCaseId: "SW-T1247" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Addon prefix and input render", async () => {
-      expect(canvas.getByText("https://")).toBeInTheDocument()
-      expect(canvas.getByPlaceholderText("app.tetrascience.com")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("https://")).toBeInTheDocument();
+      expect(canvas.getByPlaceholderText("app.tetrascience.com")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const InlineEnd: Story = {
   render: () => renderAddon("inline-end"),
@@ -84,14 +77,14 @@ export const InlineEnd: Story = {
     zephyr: { testCaseId: "SW-T1248" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Addon suffix and input render", async () => {
-      expect(canvas.getByText("https://")).toBeInTheDocument()
-      expect(canvas.getByPlaceholderText("app.tetrascience.com")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("https://")).toBeInTheDocument();
+      expect(canvas.getByPlaceholderText("app.tetrascience.com")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const BlockStart: Story = {
   render: () => renderAddon("block-start"),
@@ -99,14 +92,14 @@ export const BlockStart: Story = {
     zephyr: { testCaseId: "SW-T1249" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Block-start addon and input render", async () => {
-      expect(canvas.getByText("https://")).toBeInTheDocument()
-      expect(canvas.getByPlaceholderText("app.tetrascience.com")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("https://")).toBeInTheDocument();
+      expect(canvas.getByPlaceholderText("app.tetrascience.com")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const BlockEnd: Story = {
   render: () => renderAddon("block-end"),
@@ -114,14 +107,14 @@ export const BlockEnd: Story = {
     zephyr: { testCaseId: "SW-T1250" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Block-end addon and input render", async () => {
-      expect(canvas.getByText("https://")).toBeInTheDocument()
-      expect(canvas.getByPlaceholderText("app.tetrascience.com")).toBeInTheDocument()
-    })
+      expect(canvas.getByText("https://")).toBeInTheDocument();
+      expect(canvas.getByPlaceholderText("app.tetrascience.com")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const ButtonXs: Story = {
   render: () => renderButton("xs"),
@@ -129,14 +122,14 @@ export const ButtonXs: Story = {
     zephyr: { testCaseId: "SW-T1251" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Search input and Go button render", async () => {
-      expect(canvas.getByPlaceholderText("Search")).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Go" })).toBeInTheDocument()
-    })
+      expect(canvas.getByPlaceholderText("Search")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Go" })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const ButtonSm: Story = {
   render: () => renderButton("sm"),
@@ -144,14 +137,14 @@ export const ButtonSm: Story = {
     zephyr: { testCaseId: "SW-T1252" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Search input and Go button render", async () => {
-      expect(canvas.getByPlaceholderText("Search")).toBeInTheDocument()
-      expect(canvas.getByRole("button", { name: "Go" })).toBeInTheDocument()
-    })
+      expect(canvas.getByPlaceholderText("Search")).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Go" })).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const ButtonIconXs: Story = {
   render: () => renderButton("icon-xs"),
@@ -159,14 +152,14 @@ export const ButtonIconXs: Story = {
     zephyr: { testCaseId: "SW-T1253" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Search input and icon suffix button render", async () => {
-      expect(canvas.getByPlaceholderText("Search")).toBeInTheDocument()
-      expect(canvas.getByRole("button")).toBeInTheDocument()
-    })
+      expect(canvas.getByPlaceholderText("Search")).toBeInTheDocument();
+      expect(canvas.getByRole("button")).toBeInTheDocument();
+    });
   },
-}
+};
 
 export const ButtonIconSm: Story = {
   render: () => renderButton("icon-sm"),
@@ -174,11 +167,11 @@ export const ButtonIconSm: Story = {
     zephyr: { testCaseId: "SW-T1254" },
   },
   play: async ({ canvasElement, step }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
     await step("Search input and icon suffix button render", async () => {
-      expect(canvas.getByPlaceholderText("Search")).toBeInTheDocument()
-      expect(canvas.getByRole("button")).toBeInTheDocument()
-    })
+      expect(canvas.getByPlaceholderText("Search")).toBeInTheDocument();
+      expect(canvas.getByRole("button")).toBeInTheDocument();
+    });
   },
-}
+};

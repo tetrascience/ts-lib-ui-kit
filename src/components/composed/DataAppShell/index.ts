@@ -15,12 +15,7 @@ export type {
   DataAppShellRightPanelTriggerProps,
   DataAppShellRightPanelVariant,
 } from "./RightPanel";
-export type {
-  DataAppShellPrimaryNavProps,
-  DataAppShellPrimaryNavVariant,
-  NavPage,
-  NavGroup,
-} from "./PrimaryNav";
+export type { DataAppShellPrimaryNavProps, DataAppShellPrimaryNavVariant, NavPage, NavGroup } from "./PrimaryNav";
 export {
   DataAppShellSecondaryNav,
   dataAppShellSecondaryNavVariants,

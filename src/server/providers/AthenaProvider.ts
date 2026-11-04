@@ -14,11 +14,7 @@
  * ```
  */
 
-import {
-  QueryError,
-  MissingTableError,
-  InvalidProviderConfigurationError,
-} from "./exceptions";
+import { QueryError, MissingTableError, InvalidProviderConfigurationError } from "./exceptions";
 
 /** Milliseconds per second */
 const MILLISECONDS_PER_SECOND = 1000;
@@ -64,13 +60,7 @@ export class AthenaProvider {
    * @param database - Default database/schema
    * @param outputLocation - Optional S3 output location
    */
-  constructor(
-    client: AthenaClient,
-    sdk: AthenaSDK,
-    workgroup: string,
-    database: string,
-    outputLocation?: string,
-  ) {
+  constructor(client: AthenaClient, sdk: AthenaSDK, workgroup: string, database: string, outputLocation?: string) {
     this.client = client;
     this.sdk = sdk;
     this.workgroup = workgroup;
@@ -92,10 +82,7 @@ export class AthenaProvider {
    * before constructing the SQL query string. This is a known limitation of the
    * Athena service, not a design flaw in this implementation.
    */
-  async query(
-    sqlQuery: string,
-    _params: Record<string, unknown> = {},
-  ): Promise<Array<Record<string, unknown>>> {
+  async query(sqlQuery: string, _params: Record<string, unknown> = {}): Promise<Array<Record<string, unknown>>> {
     if (sqlQuery.length > MAX_QUERY_LENGTH) {
       throw new Error("Query length exceeds the maximum allowed limit.");
     }
@@ -109,9 +96,7 @@ export class AthenaProvider {
       QueryExecutionContext: {
         Database: this.database,
       },
-      ResultConfiguration: this.outputLocation
-        ? { OutputLocation: this.outputLocation }
-        : undefined,
+      ResultConfiguration: this.outputLocation ? { OutputLocation: this.outputLocation } : undefined,
     });
 
     const startResponse = await this.client.send(startCommand);
@@ -131,10 +116,7 @@ export class AthenaProvider {
   /**
    * Wait for query to complete
    */
-  private async waitForQueryCompletion(
-    queryExecutionId: string,
-    originalQuery: string,
-  ): Promise<void> {
+  private async waitForQueryCompletion(queryExecutionId: string, originalQuery: string): Promise<void> {
     const maxWaitTime = 300000; // 5 minutes
     const pollInterval = 1000; // 1 second
     const startTime = Date.now();
@@ -150,12 +132,8 @@ export class AthenaProvider {
         return;
       }
 
-      if (
-        state === this.sdk.QueryExecutionState.FAILED ||
-        state === this.sdk.QueryExecutionState.CANCELLED
-      ) {
-        const reason =
-          response.QueryExecution?.Status?.StateChangeReason ?? "Unknown error";
+      if (state === this.sdk.QueryExecutionState.FAILED || state === this.sdk.QueryExecutionState.CANCELLED) {
+        const reason = response.QueryExecution?.Status?.StateChangeReason ?? "Unknown error";
 
         if (reason.includes("TABLE_NOT_FOUND")) {
           const errorTail = reason.split(":").pop()?.trim() ?? "";
@@ -167,25 +145,19 @@ export class AthenaProvider {
           );
         }
 
-        throw new QueryError(
-          `Query failed: ${originalQuery}. Reason: ${reason}`,
-        );
+        throw new QueryError(`Query failed: ${originalQuery}. Reason: ${reason}`);
       }
 
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
 
-    throw new QueryError(
-      `Query timed out after ${maxWaitTime / MILLISECONDS_PER_SECOND} seconds`,
-    );
+    throw new QueryError(`Query timed out after ${maxWaitTime / MILLISECONDS_PER_SECOND} seconds`);
   }
 
   /**
    * Fetch all results from a completed query
    */
-  private async fetchAllResults(
-    queryExecutionId: string,
-  ): Promise<Array<Record<string, unknown>>> {
+  private async fetchAllResults(queryExecutionId: string): Promise<Array<Record<string, unknown>>> {
     const results: Array<Record<string, unknown>> = [];
     let nextToken: string | undefined;
     let columnNames: string[] = [];
@@ -200,13 +172,11 @@ export class AthenaProvider {
       const response = await this.client.send(command);
 
       if (isFirstPage && response.ResultSet?.ResultSetMetadata?.ColumnInfo) {
-        columnNames = response.ResultSet.ResultSetMetadata.ColumnInfo.map(
-          (col, idx) => {
-            // Handle empty or missing column names by using a fallback
-            const name = col.Name;
-            return name && name.trim() !== "" ? name : `column_${idx}`;
-          },
-        );
+        columnNames = response.ResultSet.ResultSetMetadata.ColumnInfo.map((col, idx) => {
+          // Handle empty or missing column names by using a fallback
+          const name = col.Name;
+          return name && name.trim() !== "" ? name : `column_${idx}`;
+        });
       }
 
       const rows = response.ResultSet?.Rows ?? [];
@@ -283,13 +253,6 @@ export async function getTdpAthenaProvider(): Promise<AthenaProvider> {
     }
 
     const athenaOutputLocation = `s3://${athenaQueryBucket}/${orgSlugDbFriendly}/`;
-    return new AthenaProvider(
-      client,
-      athenaSDK,
-      "primary",
-      athenaSchema,
-      athenaOutputLocation,
-    );
+    return new AthenaProvider(client, athenaSDK, "primary", athenaSchema, athenaOutputLocation);
   }
 }
-

@@ -200,7 +200,10 @@ describe("React 18 compatibility audit", () => {
         }
       `);
       const clobbered = violations.filter((v) => v.kind === "ref-clobbered");
-      expect(clobbered.map((v) => v.detail.match(/so (.*) is lost/)?.[1])).toEqual(["the component's own ref", "the consumer's ref"]);
+      expect(clobbered.map((v) => v.detail.match(/so (.*) is lost/)?.[1])).toEqual([
+        "the component's own ref",
+        "the consumer's ref",
+      ]);
     });
 
     it("requires the React 18 marker directly above each wrapper", () => {

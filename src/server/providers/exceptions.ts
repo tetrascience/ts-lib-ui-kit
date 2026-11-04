@@ -54,4 +54,3 @@ export class InvalidProviderConfigurationError extends ProviderError {
     this.name = "InvalidProviderConfigurationError";
   }
 }
-

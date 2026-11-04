@@ -35,13 +35,7 @@ import { Project, SyntaxKind } from "ts-morph";
 
 import { transformStorySource } from "../../.storybook/source-transform";
 
-import type {
-  ArrowFunction,
-  FunctionExpression,
-  Node,
-  ObjectLiteralExpression,
-  SourceFile,
-} from "ts-morph";
+import type { ArrowFunction, FunctionExpression, Node, ObjectLiteralExpression, SourceFile } from "ts-morph";
 
 export type Verdict =
   | "component-code"
@@ -60,9 +54,7 @@ export interface StoryAuditResult {
 
 const getProperty = (obj: ObjectLiteralExpression, name: string) => {
   const prop = obj.getProperty(name);
-  return prop?.isKind(SyntaxKind.PropertyAssignment)
-    ? prop.getInitializer()
-    : undefined;
+  return prop?.isKind(SyntaxKind.PropertyAssignment) ? prop.getInitializer() : undefined;
 };
 
 /** Chase parameters.docs.{source,canvas} through nested object literals. */
@@ -122,9 +114,7 @@ const collectJsxTags = (node: Node): Set<string> => {
   for (const el of node.getDescendantsOfKind(SyntaxKind.JsxOpeningElement)) {
     record(el.getTagNameNode().getText());
   }
-  for (const el of node.getDescendantsOfKind(
-    SyntaxKind.JsxSelfClosingElement,
-  )) {
+  for (const el of node.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement)) {
     record(el.getTagNameNode().getText());
   }
   return tags;
@@ -140,9 +130,7 @@ const classifyRenderContents = (
 
   if (tags.size === 0) {
     // No JSX at all — the body is a call like `renderTabs("line")`.
-    const calls = render
-      .getDescendantsOfKind(SyntaxKind.CallExpression)
-      .map((call) => call.getExpression().getText());
+    const calls = render.getDescendantsOfKind(SyntaxKind.CallExpression).map((call) => call.getExpression().getText());
     const localCall = calls.find((name) => localNames.has(name.split(".")[0]));
     return {
       verdict: "helper-call",
@@ -154,12 +142,8 @@ const classifyRenderContents = (
   // `<div><LocalWrapper /></div>` snippet is still opaque. Require at least
   // one imported (kit) component unless the snippet has no local wrappers
   // at all.
-  const importedTags = [...tags].filter(
-    (tag) => !isHostTag(tag) && !localNames.has(tag),
-  );
-  const localTags = [...tags].filter(
-    (tag) => !isHostTag(tag) && localNames.has(tag),
-  );
+  const importedTags = [...tags].filter((tag) => !isHostTag(tag) && !localNames.has(tag));
+  const localTags = [...tags].filter((tag) => !isHostTag(tag) && localNames.has(tag));
   if (importedTags.length === 0 && localTags.length > 0) {
     return {
       verdict: "local-wrapper",
@@ -175,9 +159,7 @@ export const auditStoryFile = (sourceFile: SourceFile): StoryAuditResult[] => {
   const localNames = collectLocalDeclarations(sourceFile);
 
   const metaDeclaration = sourceFile.getVariableDeclaration("meta");
-  const metaObject = metaDeclaration
-    ?.getInitializer()
-    ?.asKind(SyntaxKind.ObjectLiteralExpression);
+  const metaObject = metaDeclaration?.getInitializer()?.asKind(SyntaxKind.ObjectLiteralExpression);
   const metaOverride = getDocsSourceOverride(metaObject);
 
   for (const variable of sourceFile.getVariableDeclarations()) {
@@ -191,10 +173,7 @@ export const auditStoryFile = (sourceFile: SourceFile): StoryAuditResult[] => {
     };
 
     // CSF2 function story.
-    if (
-      initializer.isKind(SyntaxKind.ArrowFunction) ||
-      initializer.isKind(SyntaxKind.FunctionExpression)
-    ) {
+    if (initializer.isKind(SyntaxKind.ArrowFunction) || initializer.isKind(SyntaxKind.FunctionExpression)) {
       if (initializer.getParameters().length > 0) {
         finish("dynamic");
         continue;
@@ -224,9 +203,7 @@ export const auditStoryFile = (sourceFile: SourceFile): StoryAuditResult[] => {
     }
 
     const renderValue = getProperty(initializer, "render");
-    const render =
-      renderValue?.asKind(SyntaxKind.ArrowFunction) ??
-      renderValue?.asKind(SyntaxKind.FunctionExpression);
+    const render = renderValue?.asKind(SyntaxKind.ArrowFunction) ?? renderValue?.asKind(SyntaxKind.FunctionExpression);
 
     if (!renderValue) {
       // Args story (or pure-args variant): Storybook auto-generates
@@ -245,14 +222,9 @@ export const auditStoryFile = (sourceFile: SourceFile): StoryAuditResult[] => {
       // tree's root is a local component (the serializer stops there).
       if (render) {
         const tags = collectJsxTags(render);
-        const opaqueRoot =
-          tags.size > 0 &&
-          [...tags].every((tag) => !isHostTag(tag) && localNames.has(tag));
+        const opaqueRoot = tags.size > 0 && [...tags].every((tag) => !isHostTag(tag) && localNames.has(tag));
         if (opaqueRoot) {
-          finish(
-            "local-wrapper",
-            `dynamic snippet stops at file-local component(s): ${[...tags].join(", ")}`,
-          );
+          finish("local-wrapper", `dynamic snippet stops at file-local component(s): ${[...tags].join(", ")}`);
           continue;
         }
       }
@@ -291,11 +263,8 @@ export const auditStoryFile = (sourceFile: SourceFile): StoryAuditResult[] => {
         const name = renderValue.getText();
         const declared =
           sourceFile.getFunction(name)?.getParameters().length ??
-          sourceFile
-            .getVariableDeclaration(name)
-            ?.getInitializer()
-            ?.asKind(SyntaxKind.ArrowFunction)
-            ?.getParameters().length ??
+          sourceFile.getVariableDeclaration(name)?.getInitializer()?.asKind(SyntaxKind.ArrowFunction)?.getParameters()
+            .length ??
           sourceFile
             .getVariableDeclaration(name)
             ?.getInitializer()
@@ -305,10 +274,7 @@ export const auditStoryFile = (sourceFile: SourceFile): StoryAuditResult[] => {
           finish("dynamic", `args-based render via ${name}()`);
           continue;
         }
-        finish(
-          "story-object-dump",
-          `render references ${name} (arity 0 or unresolved) — static story source shown`,
-        );
+        finish("story-object-dump", `render references ${name} (arity 0 or unresolved) — static story source shown`);
         continue;
       }
       finish("story-object-dump", "render is not an inline function");
@@ -340,22 +306,13 @@ export const auditAllStories = (): StoryAuditResult[] => {
     .flatMap((sourceFile) => auditStoryFile(sourceFile));
 };
 
-const BAD_VERDICTS: Verdict[] = [
-  "helper-call",
-  "local-wrapper",
-  "story-object-dump",
-];
+const BAD_VERDICTS: Verdict[] = ["helper-call", "local-wrapper", "story-object-dump"];
 
-export const findViolations = (
-  results: StoryAuditResult[],
-): StoryAuditResult[] =>
+export const findViolations = (results: StoryAuditResult[]): StoryAuditResult[] =>
   results.filter((result) => BAD_VERDICTS.includes(result.verdict));
 
 // CLI: `yarn tsx scripts/storybook-docs/audit-story-sources.ts`
-if (
-  process.argv[1] &&
-  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
-) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const results = auditAllStories();
   const violations = findViolations(results);
   const byVerdict = new Map<Verdict, number>();
@@ -369,9 +326,7 @@ if (
   if (violations.length > 0) {
     console.log(`\n${violations.length} stories need attention:`);
     for (const violation of violations) {
-      console.log(
-        `  ${violation.file} › ${violation.exportName}: [${violation.verdict}] ${violation.detail}`,
-      );
+      console.log(`  ${violation.file} › ${violation.exportName}: [${violation.verdict}] ${violation.detail}`);
     }
     process.exitCode = 1;
   }

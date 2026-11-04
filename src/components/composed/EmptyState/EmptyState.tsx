@@ -1,10 +1,4 @@
-import {
-  Database,
-  FolderOpen,
-  Lock,
-  SearchX,
-  ServerCrash,
-} from "lucide-react";
+import { Database, FolderOpen, Lock, SearchX, ServerCrash } from "lucide-react";
 import * as React from "react";
 
 import type { LucideIcon } from "lucide-react";
@@ -12,17 +6,9 @@ import type { LucideIcon } from "lucide-react";
 import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
-export type EmptyStateVariant =
-  | "no-data"
-  | "no-results"
-  | "no-access"
-  | "empty-folder"
-  | "server-error";
+export type EmptyStateVariant = "no-data" | "no-results" | "no-access" | "empty-folder" | "server-error";
 
-const VARIANT_DEFAULTS: Record<
-  EmptyStateVariant,
-  { icon: LucideIcon; title: string; description: string }
-> = {
+const VARIANT_DEFAULTS: Record<EmptyStateVariant, { icon: LucideIcon; title: string; description: string }> = {
   "no-data": {
     icon: Database,
     title: "No records yet",
@@ -31,26 +17,22 @@ const VARIANT_DEFAULTS: Record<
   "no-results": {
     icon: SearchX,
     title: "No results found",
-    description:
-      "Nothing matches your current search. Try adjusting your filters or search terms.",
+    description: "Nothing matches your current search. Try adjusting your filters or search terms.",
   },
   "no-access": {
     icon: Lock,
     title: "Access restricted",
-    description:
-      "You don't have permission to view this resource. Contact your admin.",
+    description: "You don't have permission to view this resource. Contact your admin.",
   },
   "empty-folder": {
     icon: FolderOpen,
     title: "This folder is empty",
-    description:
-      "Drag files here or use the upload button to add content.",
+    description: "Drag files here or use the upload button to add content.",
   },
   "server-error": {
     icon: ServerCrash,
     title: "Something went wrong",
-    description:
-      "An unexpected error occurred. Refresh the page or try again later.",
+    description: "An unexpected error occurred. Refresh the page or try again later.",
   },
 };
 
@@ -62,15 +44,7 @@ export interface EmptyStateProps extends React.ComponentProps<"div"> {
   action?: React.ReactNode;
 }
 
-function EmptyState({
-  variant = "no-data",
-  title,
-  description,
-  icon,
-  action,
-  className,
-  ...props
-}: EmptyStateProps) {
+function EmptyState({ variant = "no-data", title, description, icon, action, className, ...props }: EmptyStateProps) {
   const defaults = VARIANT_DEFAULTS[variant];
   const Icon = icon ?? defaults.icon;
   const resolvedTitle = title ?? defaults.title;
@@ -79,10 +53,7 @@ function EmptyState({
   return (
     <div
       data-slot="empty-state"
-      className={cn(
-        "flex flex-col items-center justify-center gap-4 px-6 py-14 text-center",
-        className
-      )}
+      className={cn("flex flex-col items-center justify-center gap-4 px-6 py-14 text-center", className)}
       {...props}
     >
       {Icon && (
@@ -92,12 +63,8 @@ function EmptyState({
       )}
       {(Boolean(resolvedTitle) || Boolean(resolvedDescription)) && (
         <div className="max-w-xs space-y-1">
-          {resolvedTitle && (
-            <p className="text-sm font-semibold">{resolvedTitle}</p>
-          )}
-          {resolvedDescription && (
-            <p className="text-sm text-muted-foreground">{resolvedDescription}</p>
-          )}
+          {resolvedTitle && <p className="text-sm font-semibold">{resolvedTitle}</p>}
+          {resolvedDescription && <p className="text-sm text-muted-foreground">{resolvedDescription}</p>}
         </div>
       )}
       {action}

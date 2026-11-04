@@ -71,22 +71,15 @@ export function WellLegend({
                 aria-hidden
                 className={cn(
                   "mt-0.5 size-3.5 shrink-0 rounded-sm border border-foreground/20",
-                  item.disabled && "opacity-50"
+                  item.disabled && "opacity-50",
                 )}
                 style={{ backgroundColor: item.color ?? PLATE_MAP_EMPTY_WELL_FILL }}
               />
               <div className="min-w-0 flex-1">
-                <div
-                  className={cn(
-                    "truncate text-xs font-medium",
-                    item.disabled && "text-muted-foreground"
-                  )}
-                >
+                <div className={cn("truncate text-xs font-medium", item.disabled && "text-muted-foreground")}>
                   {item.label}
                 </div>
-                {item.meta ? (
-                  <div className="truncate text-[0.65rem] text-muted-foreground">{item.meta}</div>
-                ) : null}
+                {item.meta ? <div className="truncate text-[0.65rem] text-muted-foreground">{item.meta}</div> : null}
               </div>
               {onRemove ? (
                 <Button

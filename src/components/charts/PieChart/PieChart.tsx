@@ -5,7 +5,6 @@ import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
-
 import { CHART_COLORS } from "@/utils/colors";
 import { plot } from "@/vendor/ts-lib-viz/core";
 
@@ -72,13 +71,7 @@ export function buildPieSpec(rows: PieRow[], options: PieSpecOptions): ChartSpec
 /**
  * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
  */
-const PieChart: React.FC<PieChartProps> = ({
-  dataSeries,
-  width,
-  height,
-  title,
-  hole = 0,
-}) => {
+const PieChart: React.FC<PieChartProps> = ({ dataSeries, width, height, title, hole = 0 }) => {
   useChartDeprecationWarning("PieChart");
   const colors = dataSeries.colors ?? CHART_COLORS;
   const palettes = useMemo(() => categoricalPalettes(colors), [colors]);

@@ -25,26 +25,20 @@ describe("createRegionOverlayTraces", () => {
   });
 
   it("skips peaks with only startIndex defined (endIndex missing)", () => {
-    const peaks: PeakAnnotation[] = [
-      { x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1 } },
-    ];
+    const peaks: PeakAnnotation[] = [{ x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1 } }];
     const result = createRegionOverlayTraces(peaks, 0, makeSeries());
     expect(result).toHaveLength(0);
   });
 
   it("creates one trace per peak with regionOverlay=true and valid indices", () => {
-    const peaks: PeakAnnotation[] = [
-      { x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1, endIndex: 3 } },
-    ];
+    const peaks: PeakAnnotation[] = [{ x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1, endIndex: 3 } }];
     const result = createRegionOverlayTraces(peaks, 0, makeSeries());
     expect(result).toHaveLength(1);
   });
 
   it("slices series data between startIndex and endIndex (inclusive)", () => {
     const series = makeSeries();
-    const peaks: PeakAnnotation[] = [
-      { x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1, endIndex: 3 } },
-    ];
+    const peaks: PeakAnnotation[] = [{ x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1, endIndex: 3 } }];
     const result = createRegionOverlayTraces(peaks, 0, series);
     const trace = result[0] as { x: number[]; y: number[] };
     expect(trace.x).toEqual([1, 2, 3]);
@@ -62,9 +56,7 @@ describe("createRegionOverlayTraces", () => {
 
   it("falls back to series color when no peak color", () => {
     const series = makeSeries({ color: "#00ff00" });
-    const peaks: PeakAnnotation[] = [
-      { x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1, endIndex: 3 } },
-    ];
+    const peaks: PeakAnnotation[] = [{ x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1, endIndex: 3 } }];
     const result = createRegionOverlayTraces(peaks, 0, series);
     const trace = result[0] as { line: { color: string } };
     expect(trace.line.color).toBe("#00ff00");
@@ -72,9 +64,7 @@ describe("createRegionOverlayTraces", () => {
 
   it("falls back to CHART_COLORS when series has no color", () => {
     const series = makeSeries({ color: undefined });
-    const peaks: PeakAnnotation[] = [
-      { x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1, endIndex: 3 } },
-    ];
+    const peaks: PeakAnnotation[] = [{ x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1, endIndex: 3 } }];
     const result = createRegionOverlayTraces(peaks, 0, series);
     const trace = result[0] as { line: { color: string } };
     expect(typeof trace.line.color).toBe("string");
@@ -82,9 +72,7 @@ describe("createRegionOverlayTraces", () => {
   });
 
   it("uses default line width of 3.5 when regionOverlayWidth not set", () => {
-    const peaks: PeakAnnotation[] = [
-      { x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1, endIndex: 3 } },
-    ];
+    const peaks: PeakAnnotation[] = [{ x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1, endIndex: 3 } }];
     const result = createRegionOverlayTraces(peaks, 0, makeSeries());
     const trace = result[0] as { line: { width: number } };
     expect(trace.line.width).toBe(3.5);
@@ -111,9 +99,7 @@ describe("createRegionOverlayTraces", () => {
   });
 
   it("sets hoverinfo skip when hoverText is absent", () => {
-    const peaks: PeakAnnotation[] = [
-      { x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1, endIndex: 3 } },
-    ];
+    const peaks: PeakAnnotation[] = [{ x: 2, y: 20, regionOverlay: true, _computed: { startIndex: 1, endIndex: 3 } }];
     const result = createRegionOverlayTraces(peaks, 0, makeSeries());
     const trace = result[0] as { hoverinfo: string };
     expect(trace.hoverinfo).toBe("skip");

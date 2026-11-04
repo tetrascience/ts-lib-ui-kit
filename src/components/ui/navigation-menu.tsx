@@ -1,11 +1,10 @@
-import { cva } from "class-variance-authority"
-import { ChevronDownIcon } from "lucide-react"
-import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui"
-import * as React from "react"
+import { cva } from "class-variance-authority";
+import { ChevronDownIcon } from "lucide-react";
+import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui";
+import * as React from "react";
 
-import { withRef } from "@/lib/react18-compat"
-import { cn } from "@/lib/utils"
-
+import { withRef } from "@/lib/react18-compat";
+import { cn } from "@/lib/utils";
 
 function NavigationMenu({
   className,
@@ -13,65 +12,49 @@ function NavigationMenu({
   viewport = true,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Root> & {
-  viewport?: boolean
+  viewport?: boolean;
 }) {
   return (
     <NavigationMenuPrimitive.Root
       data-slot="navigation-menu"
       data-viewport={viewport}
-      className={cn(
-        "group/navigation-menu relative flex max-w-max flex-1 items-center justify-center",
-        className
-      )}
+      className={cn("group/navigation-menu relative flex max-w-max flex-1 items-center justify-center", className)}
       {...props}
     >
       {children}
       {viewport && <NavigationMenuViewportWithRef />}
     </NavigationMenuPrimitive.Root>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const NavigationMenuWithRef = withRef("NavigationMenu", NavigationMenu)
+const NavigationMenuWithRef = withRef("NavigationMenu", NavigationMenu);
 
-function NavigationMenuList({
-  className,
-  ...props
-}: React.ComponentProps<typeof NavigationMenuPrimitive.List>) {
+function NavigationMenuList({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.List>) {
   return (
     <NavigationMenuPrimitive.List
       data-slot="navigation-menu-list"
-      className={cn(
-        "group flex flex-1 list-none items-center justify-center gap-0",
-        className
-      )}
+      className={cn("group flex flex-1 list-none items-center justify-center gap-0", className)}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const NavigationMenuListWithRef = withRef("NavigationMenuList", NavigationMenuList)
+const NavigationMenuListWithRef = withRef("NavigationMenuList", NavigationMenuList);
 
-function NavigationMenuItem({
-  className,
-  ...props
-}: React.ComponentProps<typeof NavigationMenuPrimitive.Item>) {
+function NavigationMenuItem({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.Item>) {
   return (
-    <NavigationMenuPrimitive.Item
-      data-slot="navigation-menu-item"
-      className={cn("relative", className)}
-      {...props}
-    />
-  )
+    <NavigationMenuPrimitive.Item data-slot="navigation-menu-item" className={cn("relative", className)} {...props} />
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const NavigationMenuItemWithRef = withRef("NavigationMenuItem", NavigationMenuItem)
+const NavigationMenuItemWithRef = withRef("NavigationMenuItem", NavigationMenuItem);
 
 const navigationMenuTriggerStyle = cva(
-  "group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg bg-background px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-accent focus:bg-accent focus-visible:shadow-focus focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-accent/50 data-popup-open:hover:bg-accent data-open:bg-accent/50 data-open:hover:bg-accent data-open:focus:bg-accent"
-)
+  "group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg bg-background px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-accent focus:bg-accent focus-visible:shadow-focus focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-accent/50 data-popup-open:hover:bg-accent data-open:bg-accent/50 data-open:hover:bg-accent data-open:focus:bg-accent",
+);
 
 function NavigationMenuTrigger({
   className,
@@ -85,76 +68,69 @@ function NavigationMenuTrigger({
       {...props}
     >
       {children}{" "}
-      <ChevronDownIcon className="relative top-px ml-1 size-3 transition duration-300 group-data-popup-open/navigation-menu-trigger:rotate-180 group-data-open/navigation-menu-trigger:rotate-180" aria-hidden="true" />
+      <ChevronDownIcon
+        className="relative top-px ml-1 size-3 transition duration-300 group-data-popup-open/navigation-menu-trigger:rotate-180 group-data-open/navigation-menu-trigger:rotate-180"
+        aria-hidden="true"
+      />
     </NavigationMenuPrimitive.Trigger>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const NavigationMenuTriggerWithRef = withRef("NavigationMenuTrigger", NavigationMenuTrigger)
+const NavigationMenuTriggerWithRef = withRef("NavigationMenuTrigger", NavigationMenuTrigger);
 
-function NavigationMenuContent({
-  className,
-  ...props
-}: React.ComponentProps<typeof NavigationMenuPrimitive.Content>) {
+function NavigationMenuContent({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.Content>) {
   return (
     <NavigationMenuPrimitive.Content
       data-slot="navigation-menu-content"
       className={cn(
         "top-0 left-0 w-full p-1 ease-[cubic-bezier(0.22,1,0.36,1)] group-data-[viewport=false]/navigation-menu:top-full group-data-[viewport=false]/navigation-menu:mt-1.5 group-data-[viewport=false]/navigation-menu:overflow-hidden group-data-[viewport=false]/navigation-menu:rounded-lg group-data-[viewport=false]/navigation-menu:bg-popover group-data-[viewport=false]/navigation-menu:text-popover-foreground group-data-[viewport=false]/navigation-menu:shadow group-data-[viewport=false]/navigation-menu:ring-1 group-data-[viewport=false]/navigation-menu:ring-foreground/10 group-data-[viewport=false]/navigation-menu:duration-300 data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 data-[motion^=from-]:animate-in data-[motion^=from-]:fade-in data-[motion^=to-]:animate-out data-[motion^=to-]:fade-out **:data-[slot=navigation-menu-link]:focus:ring-0 **:data-[slot=navigation-menu-link]:focus:outline-none md:absolute md:w-auto group-data-[viewport=false]/navigation-menu:data-open:animate-in group-data-[viewport=false]/navigation-menu:data-open:fade-in-0 group-data-[viewport=false]/navigation-menu:data-open:zoom-in-95 group-data-[viewport=false]/navigation-menu:data-closed:animate-out group-data-[viewport=false]/navigation-menu:data-closed:fade-out-0 group-data-[viewport=false]/navigation-menu:data-closed:zoom-out-95",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const NavigationMenuContentWithRef = withRef("NavigationMenuContent", NavigationMenuContent)
+const NavigationMenuContentWithRef = withRef("NavigationMenuContent", NavigationMenuContent);
 
 function NavigationMenuViewport({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Viewport>) {
   return (
-    <div
-      className={cn(
-        "absolute top-full left-0 isolate z-50 flex justify-center"
-      )}
-    >
+    <div className={cn("absolute top-full left-0 isolate z-50 flex justify-center")}>
       <NavigationMenuPrimitive.Viewport
         data-slot="navigation-menu-viewport"
         className={cn(
           "origin-top-center relative mt-1.5 h-(--radix-navigation-menu-viewport-height) w-full overflow-hidden rounded-lg bg-popover text-popover-foreground shadow ring-1 ring-foreground/10 duration-100 md:w-(--radix-navigation-menu-viewport-width) data-open:animate-in data-open:zoom-in-90 data-closed:animate-out data-closed:zoom-out-95",
-          className
+          className,
         )}
         {...props}
       />
     </div>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const NavigationMenuViewportWithRef = withRef("NavigationMenuViewport", NavigationMenuViewport)
+const NavigationMenuViewportWithRef = withRef("NavigationMenuViewport", NavigationMenuViewport);
 
-function NavigationMenuLink({
-  className,
-  ...props
-}: React.ComponentProps<typeof NavigationMenuPrimitive.Link>) {
+function NavigationMenuLink({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.Link>) {
   return (
     <NavigationMenuPrimitive.Link
       data-slot="navigation-menu-link"
       className={cn(
         "flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none hover:bg-accent focus:bg-accent focus-visible:shadow-focus focus-visible:outline-1 in-data-[slot=navigation-menu-content]:rounded-md data-active:bg-accent/50 data-active:hover:bg-accent data-active:focus:bg-accent [&_svg:not([class*='size-'])]:size-4",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const NavigationMenuLinkWithRef = withRef("NavigationMenuLink", NavigationMenuLink)
+const NavigationMenuLinkWithRef = withRef("NavigationMenuLink", NavigationMenuLink);
 
 function NavigationMenuIndicator({
   className,
@@ -165,17 +141,17 @@ function NavigationMenuIndicator({
       data-slot="navigation-menu-indicator"
       className={cn(
         "top-full z-1 flex h-1.5 items-end justify-center overflow-hidden data-[state=hidden]:animate-out data-[state=hidden]:fade-out data-[state=visible]:animate-in data-[state=visible]:fade-in",
-        className
+        className,
       )}
       {...props}
     >
       <div className="relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm bg-border shadow-elevation-4" />
     </NavigationMenuPrimitive.Indicator>
-  )
+  );
 }
 
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const NavigationMenuIndicatorWithRef = withRef("NavigationMenuIndicator", NavigationMenuIndicator)
+const NavigationMenuIndicatorWithRef = withRef("NavigationMenuIndicator", NavigationMenuIndicator);
 
 export {
   NavigationMenuWithRef as NavigationMenu,
@@ -187,4 +163,4 @@ export {
   NavigationMenuIndicatorWithRef as NavigationMenuIndicator,
   NavigationMenuViewportWithRef as NavigationMenuViewport,
   navigationMenuTriggerStyle,
-}
+};

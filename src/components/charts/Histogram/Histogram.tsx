@@ -5,7 +5,6 @@ import { categoricalPalettes, VizChart } from "../viz/VizChart";
 
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
-
 import { CHART_COLORS } from "@/utils/colors";
 import { plot } from "@/vendor/ts-lib-viz/core";
 
@@ -73,19 +72,9 @@ export function buildHistogramSpec(rows: HistogramRow[], options: HistogramSpecO
 /**
  * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
  */
-const Histogram: React.FC<HistogramProps> = ({
-  dataSeries,
-  width,
-  height,
-  title,
-  xTitle,
-  yTitle,
-}) => {
+const Histogram: React.FC<HistogramProps> = ({ dataSeries, width, height, title, xTitle, yTitle }) => {
   useChartDeprecationWarning("Histogram");
-  const seriesArray = useMemo(
-    () => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]),
-    [dataSeries],
-  );
+  const seriesArray = useMemo(() => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]), [dataSeries]);
   const colors = useMemo(
     () => seriesArray.map((series, index) => series.color ?? CHART_COLORS[index % CHART_COLORS.length]),
     [seriesArray],

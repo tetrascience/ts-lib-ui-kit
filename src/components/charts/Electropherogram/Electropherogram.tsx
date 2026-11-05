@@ -108,6 +108,71 @@ function yAxisBreaks(max: number, targetCount: number = Y_TICK_TARGET): number[]
   return breaks;
 }
 
+/** Points drawn between two called positions, so each trace curves through every peak. */
+const CURVE_SAMPLES = 8;
+const HERMITE_SQUARE_LIMIT = 9;
+
+type CurvePoint = { x: number; y: number };
+
+/**
+ * Tangent at each point for a monotone cubic (Fritsch–Carlson). A tangent is zero
+ * where the trace turns, so the curve never overshoots a peak or dips below the
+ * baseline between peaks. Expects at least two points.
+ */
+function monotoneTangents(xs: number[], slopes: number[]): number[] {
+  const last = xs.length - 1;
+  const tangents = xs.map((_, k) => {
+    if (k === 0) return slopes[0];
+    if (k === last) return slopes[last - 1];
+    return slopes[k - 1] * slopes[k] <= 0 ? 0 : (slopes[k - 1] + slopes[k]) / 2;
+  });
+  for (let k = 0; k < last; k++) {
+    const slope = slopes[k];
+    if (slope === 0) {
+      tangents[k] = 0;
+      tangents[k + 1] = 0;
+      continue;
+    }
+    const alpha = tangents[k] / slope;
+    const beta = tangents[k + 1] / slope;
+    const magnitude = alpha * alpha + beta * beta;
+    if (magnitude > HERMITE_SQUARE_LIMIT) {
+      const scale = 3 / Math.sqrt(magnitude);
+      tangents[k] = scale * alpha * slope;
+      tangents[k + 1] = scale * beta * slope;
+    }
+  }
+  return tangents;
+}
+
+/** Cubic Hermite interpolation across one segment of width `width`, at fraction `t`. */
+function hermite(y0: number, y1: number, m0: number, m1: number, width: number, t: number): number {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  return (2 * t3 - 3 * t2 + 1) * y0 + (t3 - 2 * t2 + t) * width * m0 + (3 * t2 - 2 * t3) * y1 + (t3 - t2) * width * m1;
+}
+
+/**
+ * A smooth curve through every point, sampled densely enough to read as a curve.
+ * `xs` must be ascending. The curve passes through each peak exactly.
+ */
+function monotoneCurve(xs: number[], ys: number[]): CurvePoint[] {
+  if (xs.length < 2) return xs.map((x, k) => ({ x, y: ys[k] }));
+  const slopes = xs.slice(1).map((x, k) => (ys[k + 1] - ys[k]) / (x - xs[k]));
+  const tangents = monotoneTangents(xs, slopes);
+  const curve: CurvePoint[] = [];
+  for (let k = 0; k < xs.length - 1; k++) {
+    const width = xs[k + 1] - xs[k];
+    for (let i = 0; i < CURVE_SAMPLES; i++) {
+      const t = i / CURVE_SAMPLES;
+      curve.push({ x: xs[k] + t * width, y: hermite(ys[k], ys[k + 1], tangents[k], tangents[k + 1], width, t) });
+    }
+  }
+  const end = xs.length - 1;
+  curve.push({ x: xs[end], y: ys[end] });
+  return curve;
+}
+
 /** Builds the rows and spec ts-lib-viz draws the trace from. */
 function buildElectropherogramSpec(
   data: PeakData[],
@@ -146,13 +211,23 @@ function buildElectropherogramSpec(
     tickPositions.push(pos);
   }
 
+  const ordered = [...data].sort((a, b) => a.position - b.position);
+  const xs = ordered.map((item) => item.position);
+  const traceCurve = (pick: (item: PeakData) => number) => monotoneCurve(xs, ordered.map(pick));
+  const curves = {
+    A: traceCurve((item) => item.peakA),
+    T: traceCurve((item) => item.peakT),
+    G: traceCurve((item) => item.peakG),
+    C: traceCurve((item) => item.peakC),
+  };
+
   const letter = { fontSize: LETTER_SIZE, hjust: 0.5, vjust: 0 };
   const spec = plot(rows, { x: "position" })
-    // The subtitle names each colour, so the field-named legend ts-lib-viz would draw is hidden.
-    .line({ aes: { y: "peakA" }, color: colors.A, linewidth: TRACE_WIDTH, showLegend: false })
-    .line({ aes: { y: "peakT" }, color: colors.T, linewidth: TRACE_WIDTH, showLegend: false })
-    .line({ aes: { y: "peakG" }, color: colors.G, linewidth: TRACE_WIDTH, showLegend: false })
-    .line({ aes: { y: "peakC" }, color: colors.C, linewidth: TRACE_WIDTH, showLegend: false })
+    // Each trace is its own curve. The subtitle names each colour, so the field-named legend is hidden.
+    .line({ data: curves.A, aes: { x: "x", y: "y" }, color: colors.A, linewidth: TRACE_WIDTH, showLegend: false })
+    .line({ data: curves.T, aes: { x: "x", y: "y" }, color: colors.T, linewidth: TRACE_WIDTH, showLegend: false })
+    .line({ data: curves.G, aes: { x: "x", y: "y" }, color: colors.G, linewidth: TRACE_WIDTH, showLegend: false })
+    .line({ data: curves.C, aes: { x: "x", y: "y" }, color: colors.C, linewidth: TRACE_WIDTH, showLegend: false })
     .text({ aes: { y: "callY", label: "letterA" }, color: colors.A, showLegend: false, ...letter })
     .text({ aes: { y: "callY", label: "letterT" }, color: colors.T, showLegend: false, ...letter })
     .text({ aes: { y: "callY", label: "letterG" }, color: colors.G, showLegend: false, ...letter })

@@ -98,12 +98,7 @@ describe("Electropherogram", () => {
     const layers = lastCall().spec.layers;
     const lines = layers.filter((layer) => layer.kind === "line");
     const letters = layers.filter((layer) => layer.kind === "text");
-    expect(lines.map((layer) => [layer.aes.y, layer.style?.color])).toEqual([
-      ["peakA", "#111111"],
-      ["peakT", "#222222"],
-      ["peakG", "#333333"],
-      ["peakC", "#444444"],
-    ]);
+    expect(lines.map((layer) => layer.style?.color)).toEqual(["#111111", "#222222", "#333333", "#444444"]);
     expect(letters.map((layer) => [layer.aes.label, layer.style?.color])).toEqual([
       ["letterA", "#111111"],
       ["letterT", "#222222"],
@@ -139,5 +134,72 @@ describe("Electropherogram", () => {
     );
     const xScale = lastCall().spec.scales?.x;
     expect(xScale?.breaks).toEqual([15, 20]);
+  });
+
+  it("curves each trace through every peak it was given", async () => {
+    await render(
+      <Electropherogram
+        data={[
+          { position: 1, base: "A", peakA: 0, peakT: 0, peakG: 0, peakC: 0 },
+          { position: 2, base: "A", peakA: 50, peakT: 0, peakG: 0, peakC: 0 },
+          { position: 3, base: "A", peakA: 20, peakT: 0, peakG: 0, peakC: 0 },
+        ]}
+      />,
+    );
+    const trace = lastCall().spec.layers.find((layer) => layer.kind === "line");
+    const curve = (trace?.data ?? []) as Array<{ x: number; y: number }>;
+    for (const [x, y] of [
+      [1, 0],
+      [2, 50],
+      [3, 20],
+    ]) {
+      expect(curve).toContainEqual({ x, y });
+    }
+    expect(curve.length).toBeGreaterThan(3);
+  });
+
+  it("never overshoots a peak or dips below the baseline between peaks", async () => {
+    await render(
+      <Electropherogram
+        data={[0, 100, 0, 100, 0].map((peakA, index) => ({
+          position: index + 1,
+          base: "A",
+          peakA,
+          peakT: 0,
+          peakG: 0,
+          peakC: 0,
+        }))}
+      />,
+    );
+    const trace = lastCall().spec.layers.find((layer) => layer.kind === "line");
+    const heights = ((trace?.data ?? []) as Array<{ y: number }>).map((point) => point.y);
+    expect(Math.min(...heights)).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...heights)).toBeLessThanOrEqual(100);
+  });
+
+  it("keeps a flat run flat and handles a sharp rise after it", async () => {
+    await render(
+      <Electropherogram
+        data={[10, 10, 50, 1, 100].map((peakA, index) => ({
+          position: index + 1,
+          base: "A",
+          peakA,
+          peakT: 0,
+          peakG: 0,
+          peakC: 0,
+        }))}
+      />,
+    );
+    const trace = lastCall().spec.layers.find((layer) => layer.kind === "line");
+    const curve = (trace?.data ?? []) as Array<{ x: number; y: number }>;
+    const flat = curve.filter((point) => point.x <= 2);
+    expect(flat.every((point) => point.y === 10)).toBe(true);
+    expect(curve.every((point) => Number.isFinite(point.y))).toBe(true);
+  });
+
+  it("returns a single point as its own curve when there is only one position", async () => {
+    await render(<Electropherogram data={[{ position: 7, base: "A", peakA: 30, peakT: 0, peakG: 0, peakC: 0 }]} />);
+    const trace = lastCall().spec.layers.find((layer) => layer.kind === "line");
+    expect(trace?.data).toEqual([{ x: 7, y: 30 }]);
   });
 });

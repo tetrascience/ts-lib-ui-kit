@@ -58,6 +58,8 @@ export interface PlateSpecInput {
   zMax: number;
   /** Title over the colour bar. */
   legendTitle: string;
+  /** The value unit with its leading space, as the colour bar labels print it: " AU". */
+  valueUnit: string;
   regions: readonly PlateRegion[];
   /** Where the colour bar sits, or "none" to hide it. */
   legendPosition: "right" | "left" | "top" | "bottom" | "none";
@@ -176,6 +178,28 @@ const addRegionLayers = (builder: Builder, regions: readonly PlateRegion[]): Bui
 const axisLabels = (labels: readonly (string | number)[], offset: number): Record<string, string> =>
   Object.fromEntries(labels.map((label, index) => [String(index + offset), String(label)]));
 
+/** Round colour-bar breaks inside the range, on a step of 1, 2 or 5 times a power of ten. */
+export function colorBreaks(min: number, max: number, targetCount = 6): number[] {
+  if (!(max > min)) return [min];
+  const rough = (max - min) / targetCount;
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  const step =
+    [1, 2, 5, 10].map((factor) => factor * magnitude).find((candidate) => candidate >= rough) ?? magnitude * 10;
+  const first = Math.ceil(min / step) * step;
+  const breaks: number[] = [];
+  for (let value = first; value <= max; value += step) breaks.push(Number(value.toPrecision(12)));
+  return breaks;
+}
+
+/** A colour-bar label as the Plotly charts wrote it: thousands as `25k`, then the unit. */
+const THOUSAND = 1000;
+
+export function colorLabel(value: number, valueUnit: string): string {
+  const shown =
+    Math.abs(value) >= THOUSAND ? `${Number((value / THOUSAND).toFixed(1))}k` : String(Number(value.toFixed(1)));
+  return `${shown}${valueUnit}`;
+}
+
 const positions = (count: number, offset: number): number[] => Array.from({ length: count }, (_, i) => i + offset);
 
 /** Builds the ts-lib-viz spec for a plate: one point per well, then the region outlines. */
@@ -184,7 +208,19 @@ export function buildPlateSpec(input: PlateSpecInput): ChartSpec {
   const coloured = input.mode === "categorical" ? addCategoryLayers(base, input) : addHeatLayers(base, input);
   const outlined = addRegionLayers(coloured, input.regions);
   const heatScale =
-    input.mode === "heatmap" ? { color: { title: input.legendTitle, limits: [input.zMin, input.zMax] as const } } : {};
+    input.mode === "heatmap"
+      ? (() => {
+          const breaks = colorBreaks(input.zMin, input.zMax);
+          return {
+            color: {
+              title: input.legendTitle,
+              limits: [input.zMin, input.zMax] as const,
+              breaks,
+              labels: Object.fromEntries(breaks.map((value) => [String(value), colorLabel(value, input.valueUnit)])),
+            },
+          };
+        })()
+      : {};
   const spec = outlined
     .labs({ headline: input.title })
     .scales({
@@ -205,7 +241,11 @@ export function buildPlateSpec(input: PlateSpecInput): ChartSpec {
       },
       ...heatScale,
     })
-    .legend({ position: input.mode === "heatmap" ? input.legendPosition : "none" })
+    .legend({
+      position: input.mode === "heatmap" ? input.legendPosition : "none",
+      // A side legend runs the colour bar tall, as the Plotly colour bar did.
+      direction: input.legendPosition === "left" || input.legendPosition === "right" ? "vertical" : "horizontal",
+    })
     .spec();
   // The tooltip names the well through the chart key and adds its hover text.
   return { ...spec, tooltip: ["details"] };

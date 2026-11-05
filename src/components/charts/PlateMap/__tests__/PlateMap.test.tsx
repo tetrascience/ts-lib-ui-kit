@@ -67,7 +67,7 @@ describe("PlateMap categorical mode", () => {
     const layers = pointLayers();
     expect(layers).toHaveLength(3);
     expect(lastCall().spec.scales?.color).toBeUndefined();
-    expect(lastCall().spec.legend).toEqual({ position: "none" });
+    expect(lastCall().spec.legend).toMatchObject({ position: "none" });
   });
 
   it("colours each category's wells in that category's colour", async () => {
@@ -109,13 +109,15 @@ describe("PlateMap heatmap mode", () => {
     const [filled, blank] = pointLayers();
     expect(filled.aes.color).toBe("value");
     expect(blank.style?.color).toBe("#cccccc");
-    expect(lastCall().spec.legend).toEqual({ position: "right" });
+    expect(lastCall().spec.legend).toMatchObject({ position: "none" });
+    // The colour bar is React-drawn, beside the plate.
+    expect(document.querySelector(".platemap-colour-bar")).not.toBeNull();
   });
 
   it("hides the colour bar when showColorBar is off", async () => {
     const data: WellData[] = [{ wellId: "A1", values: { signal: 5 } }];
     await render(<PlateMap data={data} plateFormat={PLATE_FORMAT_CUSTOM} rows={1} columns={1} showColorBar={false} />);
-    expect(lastCall().spec.legend).toEqual({ position: "none" });
+    expect(lastCall().spec.legend).toMatchObject({ position: "none" });
   });
 
   it("uses the palette of a named colourscale, and the default one for an unknown name", async () => {

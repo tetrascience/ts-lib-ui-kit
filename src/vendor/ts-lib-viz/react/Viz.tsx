@@ -807,6 +807,7 @@ function TraceGeoms({trace, child, ctx}: {trace: Trace; child: FrameChildProps; 
 					stroke={style?.color}
 					lineWidth={style?.linewidth}
 					opacity={style?.alpha}
+					fillOpacity={style?.alpha}
 				/>
 			);
 		}

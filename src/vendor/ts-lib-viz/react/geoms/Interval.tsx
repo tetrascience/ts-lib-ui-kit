@@ -31,9 +31,11 @@ export interface IntervalProps {
 	stroke?: string;
 	lineWidth?: number;
 	opacity?: number;
+	/** Fill opacity of the band. Absent takes the band's default wash. */
+	fillOpacity?: number;
 }
 
-export function Interval({points, x, y, color, stroke, lineWidth = 1.5, opacity = 1}: IntervalProps) {
+export function Interval({points, x, y, color, stroke, lineWidth = 1.5, opacity = 1, fillOpacity}: IntervalProps) {
 	const {band, estimate} = useMemo(() => {
 		/* Forward along the high bound and back along the low one, which closes the region in one path. */
 		let top = "";
@@ -57,7 +59,7 @@ export function Interval({points, x, y, color, stroke, lineWidth = 1.5, opacity 
 			<path
 				d={band}
 				fill={color}
-				fillOpacity={BAND_OPACITY * opacity}
+				fillOpacity={fillOpacity ?? BAND_OPACITY * opacity}
 				stroke={stroke ?? "none"}
 				{...(stroke ? {strokeWidth: lineWidth, strokeOpacity: opacity} : {})}
 			/>

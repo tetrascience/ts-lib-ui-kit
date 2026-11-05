@@ -119,6 +119,37 @@ interface HistogramSpecOptions {
   xTitle?: string;
   yTitle?: string;
   curves?: DistributionCurve[];
+  /** Bins shared by every series, so their bars sit on the same edges and stack. */
+  binning?: HistogramBinning;
+}
+
+/** Bin width and the edge the bins start from. Every series bins on the same grid. */
+export interface HistogramBinning {
+  binwidth: number;
+  boundary: number;
+}
+
+/** Bins across the chart's data, aiming for about ten, on a round step. */
+const TARGET_BINS = 20;
+const BIN_STEP_FACTORS = [1, 2, 5, 10];
+
+/**
+ * The bins every series shares. A series that states its own `xbins` sets them; otherwise
+ * the bins cover the data from every series. Each series bins on its own range without this,
+ * and its bars then miss the others' edges and do not stack.
+ */
+export function sharedBinning(seriesArray: HistogramDataSeries[]): HistogramBinning {
+  const stated = seriesArray.find((series) => series.xbins !== undefined)?.xbins;
+  if (stated) return { binwidth: stated.size, boundary: stated.start };
+  const values = seriesArray.flatMap((series) => series.x);
+  if (values.length === 0) return { binwidth: 1, boundary: 0 };
+  const min = Math.min(...values);
+  const range = Math.max(...values) - min;
+  if (!(range > 0)) return { binwidth: 1, boundary: min };
+  const rough = range / TARGET_BINS;
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  const binwidth = BIN_STEP_FACTORS.map((factor) => factor * magnitude).find((step) => step >= rough) ?? magnitude * 10;
+  return { binwidth, boundary: Math.floor(min / binwidth) * binwidth };
 }
 
 /**
@@ -126,10 +157,14 @@ interface HistogramSpecOptions {
  * with any fitted curves drawn over them.
  */
 export function buildHistogramSpec(rows: HistogramRow[], options: HistogramSpecOptions): ChartSpec {
-  const { title, xTitle, yTitle, curves = [] } = options;
+  const { title, xTitle, yTitle, curves = [], binning } = options;
   // Several series stack, as the Plotly histograms did; a single series draws alone.
   const stacked = new Set(rows.map((row) => row.series)).size > 1;
-  let builder = plot(rows, { x: "x", fill: "series" }).histogram({ position: stacked ? "stack" : "identity" });
+  const bins = binning ? { binwidth: binning.binwidth, boundary: binning.boundary } : {};
+  let builder = plot(rows, { x: "x", fill: "series" }).histogram({
+    position: stacked ? "stack" : "identity",
+    ...bins,
+  });
   for (const curve of curves) {
     builder = builder.line({
       data: curve.rows,
@@ -170,9 +205,10 @@ const HistogramChart: React.FC<HistogramProps> = ({
       }),
     [seriesArray, showDistributionLine, colors],
   );
+  const binning = useMemo(() => sharedBinning(seriesArray), [seriesArray]);
   const spec = useMemo<ChartSpec>(
-    () => buildHistogramSpec(rows, { title, xTitle, yTitle, curves }),
-    [rows, title, xTitle, yTitle, curves],
+    () => buildHistogramSpec(rows, { title, xTitle, yTitle, curves, binning }),
+    [rows, title, xTitle, yTitle, curves, binning],
   );
 
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;

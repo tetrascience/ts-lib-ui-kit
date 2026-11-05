@@ -88,26 +88,29 @@ const AreaPlotChart: React.FC<AreaPlotProps> = ({
   const rows = useMemo(() => areaRows(dataSeries, variant), [dataSeries, variant]);
   const spec = useMemo<ChartSpec>(() => {
     const xTicks = [...new Set(rows.map((row) => row.x))].sort((a, b) => a - b);
-    return plot(rows, { x: "x", color: "series", fill: "series" })
-      .ribbon({ aes: { ymin: "lo", ymax: "hi" } })
-      .line({ aes: { y: "hi" } })
-      .labs({ headline: title })
-      .scales({
-        x: {
-          title: xTitle,
-          limits: xRange,
-          ...(xTickText
-            ? {
-                breaks: xTicks,
-                labels: Object.fromEntries(
-                  xTicks.map((tick, index) => [String(tick), xTickText[index] ?? String(tick)]),
-                ),
-              }
-            : {}),
-        },
-        y: { title: yTitle, limits: yRange },
-      })
-      .spec();
+    return (
+      plot(rows, { x: "x", color: "series", fill: "series" })
+        // Solid fills, as the Plotly areas were: a later series covers an earlier one.
+        .ribbon({ aes: { ymin: "lo", ymax: "hi" }, alpha: 1 })
+        .line({ aes: { y: "hi" } })
+        .labs({ headline: title })
+        .scales({
+          x: {
+            title: xTitle,
+            limits: xRange,
+            ...(xTickText
+              ? {
+                  breaks: xTicks,
+                  labels: Object.fromEntries(
+                    xTicks.map((tick, index) => [String(tick), xTickText[index] ?? String(tick)]),
+                  ),
+                }
+              : {}),
+          },
+          y: { title: yTitle, limits: yRange },
+        })
+        .spec()
+    );
   }, [rows, title, xTitle, yTitle, xRange, yRange, xTickText]);
 
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;

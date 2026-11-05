@@ -13,7 +13,7 @@ import {
   PLATEMAP_CONSTANTS,
   NAMED_COLORSCALES,
 } from "@/components/charts/PlateMap/constants";
-import { buildPlateSpec, colorRampFrom } from "@/components/charts/PlateMap/plate-spec";
+import { buildPlateSpec, colorBreaks, colorLabel, colorRampFrom } from "@/components/charts/PlateMap/plate-spec";
 import { PLATE_FORMAT_96, PLATE_FORMAT_CUSTOM } from "@/components/charts/PlateMap/types";
 import {
   generateRowLabels,
@@ -33,6 +33,80 @@ import { palettesFor } from "@/vendor/ts-lib-viz/core";
 // Re-export types and constants for external consumers
 export * from "@/components/charts/PlateMap/types";
 export { DEFAULT_CATEGORY_COLORS } from "@/components/charts/PlateMap/constants";
+
+/** Colour-bar sizing: the sample count of the gradient, its thickness, and its length against the plot. */
+const COLOUR_BAR_SAMPLES = 16;
+const COLOUR_BAR_THICKNESS = 16;
+const COLOUR_BAR_PLOT_RATIO = 0.8;
+const COLOUR_LABEL_WIDTH = 72;
+
+interface PlateColourBarProps {
+  ramp: (t: number) => string;
+  min: number;
+  max: number;
+  breaks: readonly number[];
+  labels: Record<string, string>;
+  title: string;
+  /** Length of the bar in pixels, along its own direction. */
+  length: number;
+  vertical: boolean;
+}
+
+/**
+ * The colour bar a heatmap plate reads by. Drawn here rather than by ts-lib-viz, which only
+ * lays its colour bar out horizontally. Vertical, it runs beside the plate with its labels.
+ */
+function PlateColourBar({ ramp, min, max, breaks, labels, title, length, vertical }: PlateColourBarProps) {
+  const span = max - min || 1;
+  const gradient = Array.from({ length: COLOUR_BAR_SAMPLES + 1 }, (_, index) => {
+    const t = index / COLOUR_BAR_SAMPLES;
+    return `${ramp(t)} ${t * 100}%`;
+  }).join(", ");
+  const place = (value: number) => `${((value - min) / span) * 100}%`;
+  const barSize = vertical
+    ? { width: COLOUR_BAR_THICKNESS, height: length, background: `linear-gradient(to top, ${gradient})` }
+    : { width: length, height: COLOUR_BAR_THICKNESS, background: `linear-gradient(to right, ${gradient})` };
+  const labelFrame = vertical
+    ? { position: "relative" as const, width: COLOUR_LABEL_WIDTH, height: length }
+    : { position: "relative" as const, width: length, height: COLOUR_BAR_THICKNESS };
+  return (
+    <div
+      className="platemap-colour-bar"
+      style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", fontSize: 12 }}
+    >
+      {title && <div style={{ marginBottom: 4 }}>{title}</div>}
+      <div style={{ display: "flex", flexDirection: vertical ? "row" : "column", gap: 6 }}>
+        <div style={{ ...barSize, borderRadius: 2, flexShrink: 0 }} />
+        <div style={labelFrame}>
+          {breaks.map((value) => (
+            <span
+              key={value}
+              style={
+                vertical
+                  ? {
+                      position: "absolute",
+                      left: 0,
+                      bottom: place(value),
+                      transform: "translateY(50%)",
+                      whiteSpace: "nowrap",
+                    }
+                  : {
+                      position: "absolute",
+                      top: 0,
+                      left: place(value),
+                      transform: "translateX(-50%)",
+                      whiteSpace: "nowrap",
+                    }
+              }
+            >
+              {labels[String(value)] ?? String(value)}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /** Separates the lines of a well's hover text once they are shown as one tooltip. */
 const TOOLTIP_SEPARATOR = " · ";
@@ -311,12 +385,11 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
         zMin,
         zMax,
         legendTitle,
-        legendPosition: showColorBar ? (legendConfig?.position ?? "right") : "none",
+        valueUnit,
+        legendPosition: "none",
         regions: plateRegions,
       }),
     [
-      showColorBar,
-      legendConfig?.position,
       visualizationMode,
       cells,
       rows,
@@ -335,6 +408,7 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
       zMin,
       zMax,
       legendTitle,
+      valueUnit,
       plateRegions,
     ],
   );
@@ -398,7 +472,7 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
 
     if (!showLegend || (!hasCategoricalItems && !hasRegions)) {
       // Return empty placeholder to maintain consistent width (only for vertical legends)
-      if (!isHorizontalLegend) {
+      if (!isHorizontalLegend && !showBar) {
         return <div className="platemap-legend-placeholder" style={{ width: legendWidth }} />;
       }
       return null;
@@ -488,6 +562,20 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
       </div>
     </div>
   );
+  const showBar = showColorBar && visualizationMode !== "categorical";
+  const barVertical = legendPosition === "left" || legendPosition === "right";
+  const colourBar = showBar ? (
+    <PlateColourBar
+      ramp={colorRamp}
+      min={zMin}
+      max={zMax}
+      breaks={colorBreaks(zMin, zMax)}
+      labels={Object.fromEntries(colorBreaks(zMin, zMax).map((value) => [String(value), colorLabel(value, valueUnit)]))}
+      title={legendTitle}
+      length={barVertical ? Math.round(height * COLOUR_BAR_PLOT_RATIO) : Math.round(width * COLOUR_BAR_PLOT_RATIO)}
+      vertical={barVertical}
+    />
+  ) : null;
   const legendContent = renderLegend();
 
   const renderPlotWithLegend = () => {
@@ -495,6 +583,7 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
       case "left":
         return (
           <div className="platemap-plot-wrapper platemap-plot-wrapper--vertical">
+            {colourBar}
             {legendContent}
             {plotContent}
           </div>
@@ -502,6 +591,7 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
       case "top":
         return (
           <div className="platemap-plot-wrapper platemap-plot-wrapper--horizontal">
+            {colourBar}
             {legendContent}
             {plotContent}
           </div>
@@ -511,6 +601,7 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
           <div className="platemap-plot-wrapper platemap-plot-wrapper--horizontal">
             {plotContent}
             {legendContent}
+            {colourBar}
           </div>
         );
       case "right":
@@ -519,6 +610,7 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
           <div className="platemap-plot-wrapper platemap-plot-wrapper--vertical">
             {plotContent}
             {legendContent}
+            {colourBar}
           </div>
         );
     }

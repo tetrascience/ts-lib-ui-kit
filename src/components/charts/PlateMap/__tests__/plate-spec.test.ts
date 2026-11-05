@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { colorRampFrom, regionSegments } from "../plate-spec";
+import { colorBreaks, colorLabel, colorRampFrom, regionSegments } from "../plate-spec";
 
 describe("colorRampFrom", () => {
   it("returns the end colours exactly and blends between them", () => {
@@ -71,5 +71,21 @@ describe("regionSegments", () => {
       { x: 2.49, y: 1.49, xend: 0.51, yend: 1.49 },
       { x: 0.51, y: 1.49, xend: 0.51, yend: -0.49 },
     ]);
+  });
+});
+
+describe("colorBreaks and colorLabel", () => {
+  it("places round breaks inside the range", () => {
+    expect(colorBreaks(1000, 29000)).toEqual([5000, 10000, 15000, 20000, 25000]);
+  });
+
+  it("answers a single break for a range with no width", () => {
+    expect(colorBreaks(5, 5)).toEqual([5]);
+  });
+
+  it("labels thousands as k and keeps the unit", () => {
+    expect(colorLabel(20000, " AU")).toBe("20k AU");
+    expect(colorLabel(1500, " AU")).toBe("1.5k AU");
+    expect(colorLabel(250, "")).toBe("250");
   });
 });

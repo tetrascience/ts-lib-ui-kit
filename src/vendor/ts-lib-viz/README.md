@@ -22,5 +22,7 @@ Kept minimal so a re-copy is easy to redo:
   kit's CSS audit (`yarn check:css-leaks`) rejects unlayered `:root` and `.dark` rules.
 - Removed the `@media (prefers-color-scheme: dark)` block from `theme/default.css`. The kit's dark mode is the
   `.dark` class only, and the scoped-CSS audit cannot anchor the `:root:not(.light)` selector it used.
+- `core/build.ts` copies layers and drafts with a plain-object copy instead of `structuredClone`, which Jest's
+  jsdom environment does not provide. The specs hold only plain values, so the copy is the same.
 - `react/ColorLegend.tsx` keys the tick labels by position as well as value. A single-box median ramp has two
   ticks with the same value, which React reported as a duplicate key.

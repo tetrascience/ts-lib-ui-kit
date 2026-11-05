@@ -298,6 +298,31 @@ export interface JestMockApi {
 }
 
 /**
+ * The d3 packages the vendored ts-lib-viz draws with, with their transitive closure. Each ships a
+ * UMD build beside its ESM entry, which Jest's CommonJS runtime cannot load, so the mock loads the
+ * UMD build instead. The real code still draws; only the module format changes.
+ */
+const D3_UMD_PACKAGES = [
+  "d3-array",
+  "d3-color",
+  "d3-contour",
+  "d3-format",
+  "d3-interpolate",
+  "d3-quadtree",
+  "d3-scale",
+  "d3-time",
+  "d3-time-format",
+] as const;
+
+/** The UMD build of an ESM-only d3 package, found from its own entry point (`<pkg>/src/index.js`). */
+function loadD3Umd(name: string): unknown {
+  const entry = require.resolve(name);
+  const umd = entry.replace(/\/src\/index\.js$/, `/dist/${name}.js`);
+  if (umd === entry) throw new Error(`Unexpected entry point for ${name}: ${entry}`);
+  return module.require(umd);
+}
+
+/**
  * Register stubs for every ESM-only / optional-peer module the kit reaches.
  * Non-virtual when the module resolves, virtual fallback when it doesn't —
  * see the module docblock.
@@ -311,6 +336,7 @@ export function installUiKitJestMocks(jestApi: JestMockApi): void {
     }
   };
   tryMock("plotly.js-dist", () => plotlyStub);
+  for (const name of D3_UMD_PACKAGES) tryMock(name, () => loadD3Umd(name));
   // Same interop shape as plotly: MoleculeStructure's loader does
   // `mod.default ?? mod`, so the factory returns the raw function directly.
   tryMock("@rdkit/rdkit", () => rdkitFactoryStub);

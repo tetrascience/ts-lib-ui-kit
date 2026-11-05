@@ -95,6 +95,15 @@ describe("installUiKitJestMocks", () => {
       "@shikijs/themes/github-light",
       "@shikijs/themes/github-dark",
       ...KIT_SHIKI_LANGUAGES.map((lang) => `@shikijs/langs/${lang}`),
+      "d3-array",
+      "d3-color",
+      "d3-contour",
+      "d3-format",
+      "d3-interpolate",
+      "d3-quadtree",
+      "d3-scale",
+      "d3-time",
+      "d3-time-format",
     ];
     expect([...registrations.keys()].sort()).toEqual([...expected].sort());
   });

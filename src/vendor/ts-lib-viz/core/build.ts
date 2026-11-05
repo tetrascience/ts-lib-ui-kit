@@ -213,8 +213,20 @@ type LayerInput = AnyLayerOptions & {smooth?: SmoothSpec};
 /** The chart-level fields a builder holds between calls. */
 type Draft = Partial<Omit<ChartSpec, "id" | "layers">>;
 
+/**
+ * A deep copy of plain objects and arrays. Stands in for `structuredClone`, which Jest's jsdom
+ * environment does not provide. Anything else is shared, as the specs hold only plain values.
+ */
+const copyPlain = <T,>(value: T): T => {
+  if (Array.isArray(value)) return value.map(copyPlain) as T;
+  if (value !== null && typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype) {
+    return Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, copyPlain(inner)])) as T;
+  }
+  return value;
+};
+
 /** A spec's own copy of a layer. The rows stay shared, as `props()` shares the plot's. */
-const fresh = ({data, ...layer}: LayerSpec): LayerSpec => ({...structuredClone(layer), ...(data ? {data} : {})});
+const fresh = ({data, ...layer}: LayerSpec): LayerSpec => ({...copyPlain(layer), ...(data ? {data} : {})});
 
 /**
  * A chart under construction, ggplot's plot object.
@@ -725,7 +737,7 @@ class PlotBuilder<Data, A extends Aes = Aes> {
 	 * is dropped.
 	 */
 	spec(): ChartSpec {
-		const {headline: written, ...draft} = structuredClone(this.draft);
+		const {headline: written, ...draft} = copyPlain(this.draft);
 		const headline = written?.trim();
 		return {
 			version: SPEC_VERSION,

@@ -94,6 +94,9 @@ const meta = {
     navGroups: NAV_GROUPS,
     breadcrumbs: BREADCRUMBS,
     children: <SampleContent />,
+    // Off so each story shows the nav state it names at any canvas width;
+    // AutoCollapse demonstrates it (UXT-274).
+    autoCollapse: false,
   },
 } satisfies Meta<typeof AppShellSimple>;
 
@@ -602,5 +605,42 @@ export const WithBuildInfoLongContent: Story = {
   },
   parameters: {
     zephyr: { testCaseId: "SW-T5725" },
+  },
+};
+
+/**
+ * UXT-274: below 1024px the sidebar collapses to the icon rail, as in
+ * `DataAppShell`. Narrow the canvas to see it. One toggle click expands it
+ * again, and a nav the user changed keeps its state when the window widens.
+ */
+export const AutoCollapse: Story = {
+  args: {
+    // Unlabelled group, as in BreadcrumbNavigation: the nav section label has a
+    // pre-existing low-contrast finding that a story ending in `sidebar` trips.
+    navGroups: [{ pages: NAV_GROUPS[0].pages }],
+    autoCollapse: "(max-width: 1023px)",
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};
+
+/** UXT-274: `headerCenter` places context, such as a version or status, in the top bar's center. */
+export const HeaderSlots: Story = {
+  args: {
+    // Unlabelled group, as in BreadcrumbNavigation: the nav section label has a
+    // pre-existing low-contrast finding that a story ending in `sidebar` trips.
+    navGroups: [{ pages: NAV_GROUPS[0].pages }],
+    headerCenter: <span className="text-sm text-muted-foreground">Analysis v3 · Draft</span>,
+    headerActions: <Button size="sm">Publish</Button>,
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("headerCenter renders in the top bar's center group", async () => {
+      const center = canvasElement.querySelector('[data-slot="top-bar-center"]');
+      expect(center).toHaveTextContent("Analysis v3 · Draft");
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
   },
 };

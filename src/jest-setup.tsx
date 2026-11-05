@@ -314,12 +314,14 @@ const D3_UMD_PACKAGES = [
   "d3-time-format",
 ] as const;
 
-/** The UMD build of an ESM-only d3 package, found from its own entry point (`<pkg>/src/index.js`). */
-function loadD3Umd(name: string): unknown {
-  const entry = require.resolve(name);
-  const umd = entry.replace(/\/src\/index\.js$/, `/dist/${name}.js`);
-  if (umd === entry) throw new Error(`Unexpected entry point for ${name}: ${entry}`);
-  return module.require(umd);
+/**
+ * The UMD build of an ESM-only d3 package, found from its own entry point (`<pkg>/src/index.js`).
+ * `req` is the CommonJS `require` of the caller; it is a parameter so the loader can be tested
+ * outside Jest.
+ */
+export function loadD3Umd(name: string, req: NodeRequire = require): unknown {
+  const entry = req.resolve(name);
+  return req(entry.replace(/\/src\/index\.js$/, `/dist/${name}.js`));
 }
 
 /**

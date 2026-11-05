@@ -202,4 +202,23 @@ describe("Electropherogram", () => {
     const trace = lastCall().spec.layers.find((layer) => layer.kind === "line");
     expect(trace?.data).toEqual([{ x: 7, y: 30 }]);
   });
+
+  it("does not overshoot a peak after a steep rise from a low point", async () => {
+    await render(
+      <Electropherogram
+        data={[0, 1, 100].map((peakA, index) => ({
+          position: index + 1,
+          base: "A",
+          peakA,
+          peakT: 0,
+          peakG: 0,
+          peakC: 0,
+        }))}
+      />,
+    );
+    const trace = lastCall().spec.layers.find((layer) => layer.kind === "line");
+    const heights = ((trace?.data ?? []) as Array<{ y: number }>).map((point) => point.y);
+    expect(Math.max(...heights)).toBeLessThanOrEqual(100);
+    expect(Math.min(...heights)).toBeGreaterThanOrEqual(0);
+  });
 });

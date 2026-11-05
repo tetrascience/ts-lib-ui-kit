@@ -417,4 +417,12 @@ describe("continuous color mapping", () => {
     expect(lastViz().palettes?.categorical(0)).not.toBe("#abcdef");
     expect(lastViz().palettes?.categorical(1)).toBe("#abcdef");
   });
+
+  it("writes a non-primitive metadata value as text, and keeps booleans and missing values", async () => {
+    await render({
+      data: [{ id: "a", x: 1, y: 2, metadata: { nested: { k: 1 }, flag: true } }],
+      tooltip: { fields: ["nested", "flag", "missing"] },
+    });
+    expect(lastViz().data[0]).toMatchObject({ nested: "[object Object]", flag: true, missing: null });
+  });
 });

@@ -15,6 +15,7 @@ import {
   createHighlighterCoreStub,
   installUiKitDomShims,
   installUiKitJestMocks,
+  loadD3Umd,
   plotlyStub,
   rdkitFactoryStub,
   rdkitModuleStub,
@@ -466,3 +467,22 @@ describe("shiki stub", () => {
 // verified end-to-end under actual Jest in
 // scripts/verify-jest-consumer/ — see AGENTS.md's "Shipped Jest support"
 // section.
+
+describe("loadD3Umd", () => {
+  // Jest loads each d3 package through its UMD build, which Node itself would read as ESM. The
+  // loader's job is the path mapping, so this drives it with a stand-in require.
+  it("maps a package entry point to the UMD build beside it, and loads that", () => {
+    const requested: string[] = [];
+    const standIn = Object.assign(
+      (id: string) => {
+        requested.push(id);
+        return { loaded: id };
+      },
+      { resolve: (name: string) => `/deps/${name}/src/index.js` },
+    );
+    expect(loadD3Umd("d3-scale", standIn as unknown as NodeRequire)).toEqual({
+      loaded: "/deps/d3-scale/dist/d3-scale.js",
+    });
+    expect(requested).toEqual(["/deps/d3-scale/dist/d3-scale.js"]);
+  });
+});

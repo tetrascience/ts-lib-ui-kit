@@ -5,16 +5,30 @@ import { VizChart } from "../viz/VizChart";
 
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
-import { CHART_COLORS } from "@/utils/colors";
 import { plot } from "@/vendor/ts-lib-viz/core";
 
-/** Scale factor for y-axis range to add padding above max value */
-const Y_AXIS_PADDING_FACTOR = 1.05;
+/** Headroom above the tallest peak, so the base letters have room above the traces. */
+const Y_HEADROOM_FACTOR = 1.2;
+/** A base letter sits just above the tallest peak at its position, as a multiple of that peak. */
+const LETTER_HEIGHT_FACTOR = 1.06;
+/** Target number of y-axis ticks. */
+const Y_TICK_TARGET = 4;
+const LETTER_SIZE = 12;
+const TRACE_WIDTH = 1.5;
 /** Size used when the caller states neither a width nor a height, in pixels. */
 const DEFAULT_WIDTH = 900;
 const DEFAULT_HEIGHT = 600;
-/** Where the base letters sit, as a fraction of the y range: near the top, above the traces. */
-const LETTER_HEIGHT = 0.96;
+
+/**
+ * Okabe-Ito colour-blind-safe defaults, one per base. Each clears 3:1 against both
+ * the light and dark surfaces, so the traces stay distinct for deuteranopic readers.
+ */
+const DEFAULT_BASE_COLORS = {
+  A: "#009E73", // bluish green
+  T: "#D55E00", // vermillion
+  G: "#CC79A7", // reddish purple
+  C: "#0072B2", // blue
+} as const;
 
 interface PeakData {
   position: number;
@@ -72,7 +86,8 @@ interface TraceRow {
   peakT: number;
   peakG: number;
   peakC: number;
-  lettersY: number;
+  /** Height the called base's letter sits at: just above the tallest peak here. */
+  callY: number;
   letterA: string;
   letterT: string;
   letterG: string;
@@ -81,6 +96,18 @@ interface TraceRow {
 
 type BaseColors = Record<"A" | "T" | "G" | "C", string>;
 
+/** Evenly spaced y-axis ticks from zero to `max`, on a round step. */
+function yAxisBreaks(max: number, targetCount: number = Y_TICK_TARGET): number[] {
+  if (!(max > 0)) return [0];
+  const rough = max / targetCount;
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  const step =
+    [1, 2, 5, 10].map((factor) => factor * magnitude).find((candidate) => candidate >= rough) ?? magnitude * 10;
+  const breaks: number[] = [];
+  for (let value = 0; value <= max; value += step) breaks.push(value);
+  return breaks;
+}
+
 /** Builds the rows and spec ts-lib-viz draws the trace from. */
 function buildElectropherogramSpec(
   data: PeakData[],
@@ -88,7 +115,7 @@ function buildElectropherogramSpec(
   colors: BaseColors,
 ): { rows: TraceRow[]; spec: ChartSpec } {
   const maxValue = Math.max(0, ...data.flatMap((item) => [item.peakA, item.peakT, item.peakG, item.peakC]));
-  const yMax = maxValue * Y_AXIS_PADDING_FACTOR;
+  const yMax = maxValue * Y_HEADROOM_FACTOR;
   const positions = data.map((item) => item.position);
   const minPosition = Math.min(...positions);
   const maxPosition = Math.max(...positions);
@@ -98,13 +125,14 @@ function buildElectropherogramSpec(
 
   const rows: TraceRow[] = data.map((item) => {
     const base = determineBase(item);
+    const tallest = Math.max(item.peakA, item.peakT, item.peakG, item.peakC);
     return {
       position: item.position,
       peakA: item.peakA,
       peakT: item.peakT,
       peakG: item.peakG,
       peakC: item.peakC,
-      lettersY: yMax * LETTER_HEIGHT,
+      callY: tallest * LETTER_HEIGHT_FACTOR,
       letterA: base === "A" ? "A" : "",
       letterT: base === "T" ? "T" : "",
       letterG: base === "G" ? "G" : "",
@@ -118,18 +146,29 @@ function buildElectropherogramSpec(
     tickPositions.push(pos);
   }
 
+  const letter = { fontSize: LETTER_SIZE, hjust: 0.5, vjust: 0 };
   const spec = plot(rows, { x: "position" })
-    .line({ aes: { y: "peakA" }, color: colors.A, linewidth: 2 })
-    .line({ aes: { y: "peakT" }, color: colors.T, linewidth: 2 })
-    .line({ aes: { y: "peakG" }, color: colors.G, linewidth: 2 })
-    .line({ aes: { y: "peakC" }, color: colors.C, linewidth: 2 })
-    .text({ aes: { y: "lettersY", label: "letterA" }, color: colors.A })
-    .text({ aes: { y: "lettersY", label: "letterT" }, color: colors.T })
-    .text({ aes: { y: "lettersY", label: "letterG" }, color: colors.G })
-    .text({ aes: { y: "lettersY", label: "letterC" }, color: colors.C })
+    // The subtitle names each colour, so the field-named legend ts-lib-viz would draw is hidden.
+    .line({ aes: { y: "peakA" }, color: colors.A, linewidth: TRACE_WIDTH, showLegend: false })
+    .line({ aes: { y: "peakT" }, color: colors.T, linewidth: TRACE_WIDTH, showLegend: false })
+    .line({ aes: { y: "peakG" }, color: colors.G, linewidth: TRACE_WIDTH, showLegend: false })
+    .line({ aes: { y: "peakC" }, color: colors.C, linewidth: TRACE_WIDTH, showLegend: false })
+    .text({ aes: { y: "callY", label: "letterA" }, color: colors.A, showLegend: false, ...letter })
+    .text({ aes: { y: "callY", label: "letterT" }, color: colors.T, showLegend: false, ...letter })
+    .text({ aes: { y: "callY", label: "letterG" }, color: colors.G, showLegend: false, ...letter })
+    .text({ aes: { y: "callY", label: "letterC" }, color: colors.C, showLegend: false, ...letter })
+    .labs({
+      headline: "Called sequence",
+      subtitle: "Each trace is one base (A green, C blue, G pink, T orange). The letter marks the called base.",
+    })
     .scales({
-      x: { limits: [minPosition - step / 2, maxPosition + step / 2], breaks: tickPositions, grid: false },
-      y: { limits: [0, yMax], breaks: [], grid: false },
+      x: {
+        title: "Position",
+        limits: [minPosition - step / 2, maxPosition + step / 2],
+        breaks: tickPositions,
+        grid: false,
+      },
+      y: { title: "Signal intensity", limits: [0, yMax], breaks: yAxisBreaks(maxValue), grid: false },
     })
     .spec();
 
@@ -138,7 +177,7 @@ function buildElectropherogramSpec(
 
 /**
  * Plotly-era electropherogram: four base traces, with the called base lettered
- * along the top and position numbers on the x-axis.
+ * just above its peak and position numbers on the x-axis.
  *
  * ts-lib-viz draws the traces as straight segments; the Plotly spline is not
  * supported. `colorA`–`colorC` colour each trace and its letters. The Plotly
@@ -151,10 +190,10 @@ const Electropherogram: React.FC<ElectropherogramProps> = ({
   width,
   height,
   positionInterval = 10,
-  colorA = CHART_COLORS[0], // blue
-  colorT = CHART_COLORS[2], // teal/green
-  colorG = CHART_COLORS[3], // red
-  colorC = CHART_COLORS[1], // orange
+  colorA = DEFAULT_BASE_COLORS.A,
+  colorT = DEFAULT_BASE_COLORS.T,
+  colorG = DEFAULT_BASE_COLORS.G,
+  colorC = DEFAULT_BASE_COLORS.C,
 }) => {
   useChartDeprecationWarning("Electropherogram");
 

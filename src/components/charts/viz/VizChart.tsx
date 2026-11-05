@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import type { ChartSpec, Palettes, VizData } from "@/vendor/ts-lib-viz/core";
+import type { VizProps } from "@/vendor/ts-lib-viz/react";
 
 import { palettesFor } from "@/vendor/ts-lib-viz/core";
 import { Viz } from "@/vendor/ts-lib-viz/react";
@@ -31,6 +32,10 @@ export interface VizChartProps {
   palettes?: Palettes;
   width?: number;
   height?: number;
+  /** Column naming each record, for the tooltip title and a click. */
+  keyField?: string;
+  /** Called with the geom a reader clicked, or null when a click clears it. */
+  onSelect?: VizProps["onSelect"];
 }
 
 /**
@@ -59,7 +64,7 @@ function plotlyDefaults(spec: ChartSpec): ChartSpec {
   return { ...spec, scales: { ...spec.scales, x: axis(spec.scales.x), y: axis(spec.scales.y) } };
 }
 
-export function VizChart({ spec, data, palettes, width, height }: VizChartProps) {
+export function VizChart({ spec, data, palettes, width, height, keyField, onSelect }: VizChartProps) {
   const sized = useMemo<ChartSpec>(
     () => ({
       ...alongTheRule(plotlyDefaults(spec)),
@@ -71,7 +76,7 @@ export function VizChart({ spec, data, palettes, width, height }: VizChartProps)
 
   return (
     <div style={{ width: width ?? "100%", height: height ?? "100%" }} className="relative min-h-0 min-w-0">
-      <Viz spec={sized} data={data} palettes={palettes} />
+      <Viz spec={sized} data={data} palettes={palettes} keyField={keyField} onSelect={onSelect} />
     </div>
   );
 }

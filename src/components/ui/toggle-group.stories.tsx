@@ -313,7 +313,7 @@ export const Variations: Story = {
               value="plate-1"
               data-testid="joined-item"
               selectedIndicator="none"
-              className="rounded-r-none border-r-0"
+              className="rounded-r-none border-border"
             >
               <span className="truncate">Plate 1</span>
             </ToggleGroupItem>
@@ -322,7 +322,7 @@ export const Variations: Story = {
               variant="outline"
               size="icon-sm"
               aria-label="Remove Plate 1"
-              className="rounded-l-none"
+              className="-ml-px rounded-l-none focus-visible:z-10"
             >
               <XIcon />
             </Button>
@@ -409,13 +409,32 @@ export const Variations: Story = {
       expect(getComputedStyle(forced!).display).not.toBe("none");
     });
 
+    const joined = canvasElement.querySelector<HTMLElement>('[data-testid="joined-item"]')!;
+    const remove = within(canvasElement).getByRole("button", { name: "Remove Plate 1" });
+
+    await step("the joined item's selected outline closes over the shared edge", async () => {
+      // The button overlaps the item's edge instead of the item dropping it
+      // (UXT-298), so the raised selected item paints the seam.
+      expect(getComputedStyle(joined).borderRightWidth).toBe("1px");
+      const seam = remove.getBoundingClientRect();
+      await waitFor(() =>
+        expect(
+          document.elementFromPoint(seam.x + 0.5, seam.y + seam.height / 2)?.closest('[data-testid="joined-item"]'),
+        ).toBe(joined),
+      );
+    });
+
     await step("a consumer's className still wins over the item border", async () => {
       // The segmented border must stay at plain-utility specificity, or a
-      // group-scoped selector silently beats `border-r-0` passed by a consumer
-      // and the item no longer sits flush against its adjacent control.
-      const joined = canvasElement.querySelector<HTMLElement>('[data-testid="joined-item"]');
-      expect(joined).not.toBeNull();
-      expect(getComputedStyle(joined!).borderRightWidth).toBe("0px");
+      // group-scoped selector beats the consumer's `border-border` and the
+      // item's resting outline no longer matches the control it joins.
+      await userEvent.click(joined); // deselect, then blur: resting is neither selected nor focused
+      joined.blur();
+      await waitFor(() =>
+        expect(getComputedStyle(joined).borderTopColor).toBe(getComputedStyle(remove).borderTopColor),
+      );
+      await userEvent.click(joined); // leave the story showing its selected join
+      joined.blur();
     });
   },
 };

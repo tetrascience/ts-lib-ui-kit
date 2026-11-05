@@ -131,6 +131,19 @@ describe("AppShellSimple — responsive auto-collapse (UXT-274)", () => {
 });
 
 describe("AppShellSimple — header slots (UXT-274)", () => {
+  it("places headerStart between the toggle and the breadcrumb, and headerLeft after it", () => {
+    render(shell({ headerStart: <span>switcher</span>, headerLeft: <span>step</span> }));
+    const order = [...container.querySelector("[data-slot='top-bar-left']")!.children].map((el) =>
+      el.getAttribute("data-slot"),
+    );
+    expect(order).toEqual([
+      "app-shell-simple-nav-toggle",
+      "app-shell-simple-header-start",
+      "breadcrumb",
+      "app-shell-simple-header-left",
+    ]);
+  });
+
   it("renders headerCenter in the top bar's center group", () => {
     render(shell({ headerCenter: <span data-testid="ctx">v3 · Draft</span> }));
     expect(container.querySelector("[data-slot='top-bar-center'] [data-testid='ctx']")).not.toBeNull();

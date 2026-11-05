@@ -78,6 +78,10 @@ export interface AppShellSimpleProps {
   onSelect?: (key: string, page: NavPage) => void;
   /** Breadcrumb trail — the top bar name */
   breadcrumbs: AppShellSimpleCrumb[];
+  /** Top-bar slot between the nav toggle and the breadcrumb (e.g. an app switcher) */
+  headerStart?: React.ReactNode;
+  /** Slot after the breadcrumb in the top bar's left group, as in `DataAppShell` */
+  headerLeft?: React.ReactNode;
   /** Center "context" slot in the top bar (e.g. a version or status selector) */
   headerCenter?: React.ReactNode;
   /** Right-side top bar actions (e.g. notifications, user menu) */
@@ -186,6 +190,8 @@ export function AppShellSimple({
   activeKey,
   onSelect,
   breadcrumbs,
+  headerStart,
+  headerLeft,
   headerCenter,
   headerActions,
   userMenu,
@@ -303,7 +309,18 @@ export function AppShellSimple({
           left={
             <>
               {showNav && <SideNavToggle label={nextLabel} onCycle={cycleNav} />}
+              {/* shrink-0: only the breadcrumb gives up width when the left group is tight. */}
+              {headerStart != null && (
+                <div data-slot="app-shell-simple-header-start" className="shrink-0">
+                  {headerStart}
+                </div>
+              )}
               <ShellBreadcrumb items={breadcrumbs} />
+              {headerLeft != null && (
+                <div data-slot="app-shell-simple-header-left" className="shrink-0">
+                  {headerLeft}
+                </div>
+              )}
             </>
           }
           center={headerCenter}

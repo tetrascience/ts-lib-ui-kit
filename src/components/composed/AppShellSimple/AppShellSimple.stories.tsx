@@ -625,16 +625,41 @@ export const AutoCollapse: Story = {
   },
 };
 
-/** UXT-274: `headerCenter` places context, such as a version or status, in the top bar's center. */
+/**
+ * UXT-274: `headerStart` sits between the nav toggle and the breadcrumb (app
+ * identity, such as a switcher), `headerLeft` follows the breadcrumb as in
+ * `DataAppShell`, and `headerCenter` holds context such as a version or status.
+ */
 export const HeaderSlots: Story = {
   args: {
     // Unlabelled group, as in BreadcrumbNavigation: the nav section label has a
     // pre-existing low-contrast finding that a story ending in `sidebar` trips.
     navGroups: [{ pages: NAV_GROUPS[0].pages }],
+    headerStart: (
+      <Button size="sm" variant="ghost">
+        Biologics ▾
+      </Button>
+    ),
+    headerLeft: (
+      <Button size="sm" variant="outline">
+        Step 2 of 4 ▾
+      </Button>
+    ),
     headerCenter: <span className="text-sm text-muted-foreground">Analysis v3 · Draft</span>,
     headerActions: <Button size="sm">Publish</Button>,
   },
   play: async ({ canvasElement, step }) => {
+    await step("headerStart precedes the breadcrumb and headerLeft follows it", async () => {
+      const left = canvasElement.querySelector('[data-slot="top-bar-left"]')!;
+      const slots = [...left.children].map((el) => el.getAttribute("data-slot"));
+      expect(slots).toEqual([
+        "app-shell-simple-nav-toggle",
+        "app-shell-simple-header-start",
+        "breadcrumb",
+        "app-shell-simple-header-left",
+      ]);
+    });
+
     await step("headerCenter renders in the top bar's center group", async () => {
       const center = canvasElement.querySelector('[data-slot="top-bar-center"]');
       expect(center).toHaveTextContent("Analysis v3 · Draft");

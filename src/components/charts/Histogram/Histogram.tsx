@@ -129,7 +129,9 @@ interface HistogramSpecOptions {
  */
 export function buildHistogramSpec(rows: HistogramRow[], options: HistogramSpecOptions): ChartSpec {
   const { title, xTitle, yTitle, curves = [] } = options;
-  let builder = plot(rows, { x: "x", fill: "series" }).histogram({ position: "identity" });
+  // Several series stack, as the Plotly histograms did; a single series draws alone.
+  const stacked = new Set(rows.map((row) => row.series)).size > 1;
+  let builder = plot(rows, { x: "x", fill: "series" }).histogram({ position: stacked ? "stack" : "identity" });
   for (const curve of curves) {
     builder = builder.line({
       data: curve.rows,
@@ -141,7 +143,7 @@ export function buildHistogramSpec(rows: HistogramRow[], options: HistogramSpecO
   }
   return builder
     .labs({ headline: title })
-    .scales({ x: { title: xTitle }, y: { title: yTitle } })
+    .scales({ x: { title: xTitle }, y: { title: yTitle }, fill: { title: "" } })
     .spec();
 }
 

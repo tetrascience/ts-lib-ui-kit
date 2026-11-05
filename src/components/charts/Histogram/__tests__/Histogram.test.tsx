@@ -35,11 +35,13 @@ describe("buildHistogramRows", () => {
 });
 
 describe("buildHistogramSpec", () => {
-  it("draws a histogram layer with identity positioning", () => {
-    const spec = buildHistogramSpec(buildHistogramRows(pair), {});
-    expect(spec.layers.map((layer) => layer.kind)).toEqual(["histogram"]);
-    const position = spec.layers[0]?.position;
-    expect(typeof position === "string" ? position : position?.kind).toBe("identity");
+  it("stacks several series and draws a single series alone", () => {
+    const positionOf = (input: Parameters<typeof buildHistogramRows>[0]) => {
+      const position = buildHistogramSpec(buildHistogramRows(input), {}).layers[0]?.position;
+      return typeof position === "string" ? position : position?.kind;
+    };
+    expect(positionOf(pair)).toBe("stack");
+    expect(positionOf([single])).toBe("identity");
   });
 
   it("carries the title and axis titles onto the spec", () => {

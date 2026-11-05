@@ -9,7 +9,7 @@ import { Viz } from "@/vendor/ts-lib-viz/react";
 import "@/vendor/ts-lib-viz/theme/default.css";
 
 /**
- * Shared bridge from the Plotly-era chart props to ts-lib-viz (SW-deprecation).
+ * Shared bridge from the chart props to ts-lib-viz.
  *
  * Each deprecated chart builds a `ChartSpec` and rows, then draws them here. The
  * wrapper owns the size: a stated width or height is fixed, and an omitted one

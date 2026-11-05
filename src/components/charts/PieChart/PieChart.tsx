@@ -1,85 +1,11 @@
-import { useMemo } from "react";
+import type { PieChartProps } from "@/components/composed/Chart/kinds/PieChart";
 
-import { useChartDeprecationWarning } from "../viz/deprecation";
-import { categoricalPalettes, VizChart } from "../viz/VizChart";
+import { Chart } from "@/components/composed/Chart";
 
-import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
+export { buildPieRows, buildPieSpec } from "@/components/composed/Chart/kinds/PieChart";
+export type { PieChartProps, PieDataSeries, PieRow, PieTextInfo } from "@/components/composed/Chart/kinds/PieChart";
 
-import { CHART_COLORS } from "@/utils/colors";
-import { plot } from "@/vendor/ts-lib-viz/core";
-
-interface PieDataSeries {
-  labels: string[];
-  values: number[];
-  name: string;
-  colors?: string[];
+/** Draws a pie chart through the shared `Chart` component. */
+export function PieChart(props: PieChartProps) {
+  return <Chart type="pie" {...props} />;
 }
-
-type PieTextInfo =
-  | "none"
-  | "label"
-  | "percent"
-  | "value"
-  | "label+percent"
-  | "label+value"
-  | "value+percent"
-  | "label+value+percent";
-
-type PieChartProps = {
-  dataSeries: PieDataSeries;
-  width?: number;
-  height?: number;
-  title?: string;
-  /**
-   * Accepted for compatibility and not applied. ts-lib-viz has no equivalent, so slice labels
-   * are not drawn from this value.
-   */
-  textInfo?: PieTextInfo;
-  hole?: number;
-  /**
-   * Accepted for compatibility and not applied. ts-lib-viz has no equivalent, so the start
-   * angle stays at its default.
-   */
-  rotation?: number;
-};
-
-/** One row per slice. */
-export interface PieRow {
-  label: string;
-  value: number;
-}
-
-/** Pairs each label with its value. */
-export function buildPieRows(dataSeries: PieDataSeries): PieRow[] {
-  return dataSeries.labels.map((label, index) => ({ label, value: dataSeries.values[index] }));
-}
-
-interface PieSpecOptions {
-  hole: number;
-  title?: string;
-}
-
-/** Builds the ts-lib-viz pie spec. `hole` sets the inner radius, so 0 gives a full pie. */
-export function buildPieSpec(rows: PieRow[], options: PieSpecOptions): ChartSpec {
-  const { hole, title } = options;
-  return plot(rows, { x: "label", y: "value", fill: "label" })
-    .pie({ innerRadius: hole })
-    .labs({ headline: title })
-    .spec();
-}
-
-/**
- * @deprecated Plotly-backed. Removed in 2.0. Use `@tetrascience-npm/ts-lib-viz` instead; see MIGRATION.md.
- */
-const PieChart: React.FC<PieChartProps> = ({ dataSeries, width, height, title, hole = 0 }) => {
-  useChartDeprecationWarning("PieChart");
-  const colors = dataSeries.colors ?? CHART_COLORS;
-  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
-  const rows = useMemo(() => buildPieRows(dataSeries), [dataSeries]);
-  const spec = useMemo<ChartSpec>(() => buildPieSpec(rows, { hole, title }), [rows, hole, title]);
-
-  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
-};
-
-export { PieChart };
-export type { PieDataSeries, PieTextInfo, PieChartProps };

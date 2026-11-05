@@ -7,17 +7,24 @@
 
 ---
 
-## Deprecated chart components (removed in 2.0)
+## Charts: one `Chart` component
 
-These chart components are deprecated and will be removed in 2.0. Each one is marked `@deprecated` in its source,
-so your editor strikes it through. New charts should use `@tetrascience-npm/ts-lib-viz` directly.
+Every chart the kit draws is available from one component, `Chart`. Pick the chart with `type` and pass the props that chart documents:
 
-| Deprecated export                                                                     | Now drawn by                                                                                                                            |
-| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `AreaPlot`, `LinePlot`, `ScatterPlot`, `BarChart`, `Histogram`, `BoxPlot`, `PieChart` | ts-lib-viz, same props. Some props have no ts-lib-viz equivalent and are ignored; see each component's JSDoc                            |
-| `ScatterPlotInteractive`                                                              | ts-lib-viz, same props. `tooltip.content`, `tooltip.enabled`, `showColorBar` and `colorMapping.colorScale` are ignored                  |
-| `Chromatogram`, `StackedChromatogram`, `Electropherogram`                             | ts-lib-viz. Click and hover selection, annotation arrows and the Plotly spline are not supported; see each component's JSDoc            |
-| `PlateMap`                                                                            | ts-lib-viz, one point per well. Region fills, the x-axis title position and the colour-bar placement differ; see each component's JSDoc |
+```tsx
+<Chart type="histogram" dataSeries={[{ name: "Peaks", x: heights }]} title="Peak heights" />
+<Chart type="plateMap" data={wells} plateFormat="384" title="Screen" />
+```
+
+The chart components (`LinePlot`, `Histogram`, `PlateMap`, and the rest) are still exported with the same props. Each one renders
+through `Chart`, so nothing you already use changes. Prefer `Chart` in new code.
+
+| `type`                                                          | Component it renders              | Differences from the Plotly charts                                                              |
+| --------------------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `line`, `area`, `bar`, `histogram`, `boxplot`, `scatter`, `pie` | `LinePlot`, `AreaPlot`, and so on | Some props have no ts-lib-viz equivalent and are ignored; see each component's JSDoc            |
+| `scatterInteractive`                                            | `ScatterPlotInteractive`          | `tooltip.content`, `tooltip.enabled`, `showColorBar` and `colorMapping.colorScale` are ignored  |
+| `chromatogram`, `stackedChromatogram`, `electropherogram`       | `Chromatogram`, and so on         | Click and hover selection, annotation arrows and the Plotly spline are not supported            |
+| `plateMap`                                                      | `PlateMap`                        | One point per well. Region fills, the x-axis title position and the colour-bar placement differ |
 
 Plotly is still needed only by `ChartTooltip`, a public export that reads Plotly hover events. It and the Plotly peer go with the 2.0 removal.
 

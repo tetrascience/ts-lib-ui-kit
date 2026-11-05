@@ -104,29 +104,37 @@ const EMPTY_NAV_GROUPS: NavGroup[] = [];
 
 function ShellBreadcrumb({ items }: { items: AppShellSimpleCrumb[] }) {
   return (
-    <Breadcrumb className="min-w-0">
+    // UXT-178: clip at the trail's own edge instead of painting over the header
+    // actions. -m-1/p-1 leaves room for the links' 3px focus outline.
+    <Breadcrumb className="-m-1 min-w-0 overflow-hidden p-1">
       <BreadcrumbList className="flex-nowrap min-w-0">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
           const isClickable = !isLast && (!!item.href || !!item.onClick);
+          const title = typeof item.label === "string" ? item.label : undefined;
           return (
             <React.Fragment key={`${item.label}-${index}`}>
               {index > 0 && <BreadcrumbSeparator className="shrink-0">/</BreadcrumbSeparator>}
-              <BreadcrumbItem className={isLast ? "min-w-0" : "shrink-0"}>
+              {/* Every crumb truncates; ancestors shrink first, so the current page stays readable longest. */}
+              <BreadcrumbItem className={isLast ? "min-w-0" : "min-w-[1em] shrink-4"}>
                 {isLast ? (
-                  <BreadcrumbPage className="truncate font-medium">{item.label}</BreadcrumbPage>
+                  <BreadcrumbPage className="truncate font-medium" title={title}>
+                    {item.label}
+                  </BreadcrumbPage>
                 ) : isClickable && item.href ? (
-                  <BreadcrumbLink href={item.href} className="whitespace-nowrap text-primary">
+                  <BreadcrumbLink href={item.href} className="truncate text-primary" title={title}>
                     {item.label}
                   </BreadcrumbLink>
                 ) : isClickable && item.onClick ? (
-                  <BreadcrumbLink asChild className="whitespace-nowrap text-primary">
-                    <button type="button" className="cursor-pointer" onClick={item.onClick}>
+                  <BreadcrumbLink asChild className="truncate text-primary">
+                    <button type="button" className="cursor-pointer" onClick={item.onClick} title={title}>
                       {item.label}
                     </button>
                   </BreadcrumbLink>
                 ) : (
-                  <span className="whitespace-nowrap">{item.label}</span>
+                  <span className="truncate" title={title}>
+                    {item.label}
+                  </span>
                 )}
               </BreadcrumbItem>
             </React.Fragment>

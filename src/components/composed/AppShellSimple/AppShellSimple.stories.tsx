@@ -604,3 +604,64 @@ export const WithBuildInfoLongContent: Story = {
     zephyr: { testCaseId: "SW-T5725" },
   },
 };
+
+/**
+ * UXT-178: at a narrow width with header actions the trail truncates inside its
+ * own box. Ancestors give up width first, so the current page stays readable,
+ * and nothing paints over the actions.
+ */
+export const NarrowWithHeaderActions: Story = {
+  args: {
+    // Unlabelled nav group, as in BreadcrumbNavigation: a group header pulls in
+    // the nav section label's unrelated, pre-existing low-contrast finding.
+    navGroups: [{ pages: NAV_GROUPS[0].pages }],
+    headerActions: (
+      <>
+        <Button size="sm" variant="outline">
+          Save as
+        </Button>
+        <Button size="sm">Save analysis</Button>
+      </>
+    ),
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: 375 }}>
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement, step }) => {
+    const actions = canvasElement.querySelector<HTMLElement>('[data-slot="top-bar-right"]')!;
+    const crumbs = [...canvasElement.querySelectorAll<HTMLElement>('[data-slot="breadcrumb-item"]')];
+    const current = crumbs[crumbs.length - 1];
+
+    await step("no crumb reaches into the header actions", async () => {
+      const actionsLeft = actions.getBoundingClientRect().left;
+      for (const crumb of crumbs) expect(crumb.getBoundingClientRect().right).toBeLessThanOrEqual(actionsLeft);
+    });
+
+    await step("the current page keeps at least as much room as any ancestor", async () => {
+      const width = (el: HTMLElement) => el.getBoundingClientRect().width;
+      expect(width(current)).toBeGreaterThan(0);
+      for (const ancestor of crumbs.slice(0, -1)) expect(width(current)).toBeGreaterThanOrEqual(width(ancestor));
+    });
+
+    await step("a squeezed ancestor keeps an ellipsis instead of vanishing", async () => {
+      for (const ancestor of crumbs.slice(0, -1)) {
+        const em = parseFloat(getComputedStyle(ancestor).fontSize);
+        expect(ancestor.getBoundingClientRect().width).toBeGreaterThanOrEqual(em - 0.5);
+      }
+    });
+
+    await step("a truncated crumb keeps its full name as a tooltip", async () => {
+      for (const crumb of crumbs) {
+        const text = crumb.firstElementChild as HTMLElement;
+        if (text.scrollWidth > text.clientWidth) expect(text).toHaveAttribute("title", text.textContent);
+      }
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};

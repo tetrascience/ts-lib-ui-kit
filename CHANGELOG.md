@@ -1,3 +1,9 @@
+# [1.1.1](https://github.com/tetrascience/ts-lib-ui-kit/compare/v1.1.0...v1.1.1) (2026-10-26)
+
+### Bug Fixes
+
+- SW-2624 wait for the Select listbox before querying its options ([#225](https://github.com/tetrascience/ts-lib-ui-kit/pull/225)) ([bff78b0](https://github.com/tetrascience/ts-lib-ui-kit/commit/bff78b008e2543d4a07b2e487b8ae12dd2cef764))
+
 # [1.1.0](https://github.com/tetrascience/ts-lib-ui-kit/compare/v1.0.0...v1.1.0) (2026-10-16)
 
 No breaking API changes, but the first two notes below change what you see without opting in. Read

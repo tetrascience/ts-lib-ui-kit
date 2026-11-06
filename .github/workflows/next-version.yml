@@ -2,12 +2,15 @@ name: Next release version
 
 # Reusable: works out the version the next release will get, the way the
 # Release workflow will (scripts/release/next-version.ts), so the publish
-# workflows can name prereleases for it. ts-ci-cd-lib's shared publish
-# workflow names a prerelease `<package.json version>-<tag>.<run>.<attempt>`,
-# and between releases package.json holds the version already released, so
-# without this every beta and alpha after v1.1.0 would sort *before* 1.1.0.
-# Callers write the output into package.json through the shared workflow's
-# `pre_install_command`.
+# workflows can name prereleases for it. Between releases package.json holds
+# the version already released, so without this every beta and alpha after
+# v1.1.0 would sort *before* 1.1.0.
+# - Betas pass `prerelease_tag: beta` and hand `prerelease_version`
+#   (1.2.0-beta.3, restarting at 1 for each version) to the shared publish
+#   workflow's `prerelease_version` input.
+# - PR alphas write `version` into package.json through the shared
+#   workflow's `pre_install_command`, which then appends its
+#   `-alpha.<run>.<attempt>` suffix.
 #
 # Callers give this job `permissions: contents: read` and no secrets: it
 # installs dependencies, and needs neither an OIDC token nor a registry
@@ -15,10 +18,19 @@ name: Next release version
 
 on:
   workflow_call:
+    inputs:
+      prerelease_tag:
+        description: "Also compute X.Y.Z-<tag>.N, numbered per version (scripts/release/next-version.ts)"
+        type: string
+        default: ""
+        required: false
     outputs:
       version:
         description: "The next release's X.Y.Z"
         value: ${{ jobs.next-version.outputs.version }}
+      prerelease_version:
+        description: "X.Y.Z-<prerelease_tag>.N, when prerelease_tag is set"
+        value: ${{ jobs.next-version.outputs.prerelease_version }}
 
 permissions:
   contents: read
@@ -28,6 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.next.outputs.version }}
+      prerelease_version: ${{ steps.next.outputs.prerelease_version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,9 +59,23 @@ jobs:
         run: yarn install --immutable --mode=skip-build
       - name: Compute next release version
         id: next
+        env:
+          PRERELEASE_TAG: ${{ inputs.prerelease_tag }}
         run: |
-          VERSION=$(yarn tsx scripts/release/next-version.ts)
-          # Callers interpolate it into a shell command, so accept only X.Y.Z.
+          # Callers interpolate these into shell commands, so accept only the
+          # exact shapes.
+          if [[ -n "$PRERELEASE_TAG" ]]; then
+            PRERELEASE_VERSION=$(yarn tsx scripts/release/next-version.ts --prerelease "$PRERELEASE_TAG")
+            if [[ ! "$PRERELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z-]+\.[0-9]+$ ]]; then
+              echo "Unexpected prerelease version: '$PRERELEASE_VERSION'"
+              exit 1
+            fi
+            VERSION="${PRERELEASE_VERSION%%-*}"
+            echo "Next prerelease: $PRERELEASE_VERSION"
+            echo "prerelease_version=$PRERELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          else
+            VERSION=$(yarn tsx scripts/release/next-version.ts)
+          fi
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Unexpected version: '$VERSION'"
             exit 1

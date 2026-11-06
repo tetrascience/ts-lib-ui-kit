@@ -492,10 +492,13 @@ Process: [CONTRIBUTING.md › Release Process](./CONTRIBUTING.md#release-process
   shared publish workflow rejects a tag that doesn't match `package.json`.
 - **Betas and alphas are named for the next release.** The reusable `next-version.yml` runs
   `scripts/release/next-version.ts` — semantic-release's own commit analyzer with `release.config.js`'s
-  options and `tagFormat` — and each publish workflow (`publish-public.yml`, `publish-merge.yml`,
-  `publish-pr.yml`) writes the result into `package.json` through the shared workflow's
-  `pre_install_command`. A new caller of the shared publish workflow needs the same two steps. Keep
-  the two in step: a change to the analyzer config changes both.
+  options and `tagFormat`. Betas (`publish-public.yml`, `publish-merge.yml`) take
+  `--prerelease beta`'s `X.Y.Z-beta.N` — N counts merges since the next version last changed, so it
+  restarts at 1 per version — and pass it to the shared workflow's `prerelease_version` input
+  (ts-ci-cd-lib), which publishes it verbatim. PR alphas (`publish-pr.yml`) write the plain version
+  through `pre_install_command` and keep the shared `-alpha.<run>.<attempt>` suffix, since open PRs
+  share a next version. A new caller of the shared publish workflow needs the same steps. Keep the
+  two in step: a change to the analyzer config changes both.
 - **Alphas are opt-in** via the `alpha` PR label (`publish-pr.yml`).
 - **Storybook's version badge shows the npm build it was built with.** On the production deploy
   (ui-toolkit.tetrascience.com, built from `main`), the Introduction page asks the npm registry for

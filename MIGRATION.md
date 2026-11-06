@@ -7,6 +7,27 @@
 
 ---
 
+## Charts: one `Chart` component
+
+Every chart the kit draws is available from one component, `Chart`. Pick the chart with `type` and pass the props that chart documents:
+
+```tsx
+<Chart type="histogram" dataSeries={[{ name: "Peaks", x: heights }]} title="Peak heights" />
+<Chart type="plateMap" data={wells} plateFormat="384" title="Screen" />
+```
+
+The chart components (`LinePlot`, `Histogram`, `PlateMap`, and the rest) are still exported with the same props. Each one renders
+through `Chart`, so nothing you already use changes. Prefer `Chart` in new code.
+
+| `type`                                                          | Component it renders              | Differences from the Plotly charts                                                              |
+| --------------------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `line`, `area`, `bar`, `histogram`, `boxplot`, `scatter`, `pie` | `LinePlot`, `AreaPlot`, and so on | Some props have no ts-lib-viz equivalent and are ignored; see each component's JSDoc            |
+| `scatterInteractive`                                            | `ScatterPlotInteractive`          | `tooltip.content`, `tooltip.enabled`, `showColorBar` and `colorMapping.colorScale` are ignored  |
+| `chromatogram`, `stackedChromatogram`, `electropherogram`       | `Chromatogram`, and so on         | Click and hover selection, annotation arrows and the Plotly spline are not supported            |
+| `plateMap`                                                      | `PlateMap`                        | One point per well. Region fills, the x-axis title position and the colour-bar placement differ |
+
+Plotly is still needed only by `ChartTooltip`, a public export that reads Plotly hover events. It and the Plotly peer go with the 2.0 removal.
+
 ## Migrating from v0.7.x to v1.0.0
 
 > **Jira:** [SW-2244](https://tetrascience.atlassian.net/browse/SW-2244) (renames) ·
@@ -58,12 +79,12 @@ TS2724: no exported member named 'Boxplot'. Did you mean 'BoxPlot'?
 
 ### 2. Removed components
 
-| v0.7.0     | Replacement                                                                      | Why                                                                                                          |
-| ---------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `Drawer`   | `Sheet`                                                                          | Long deprecated ([SW-1917](https://tetrascience.atlassian.net/browse/SW-1917))                               |
-| `InputOTP` | `Input` (or your own composition)                                                | Long deprecated ([SW-1917](https://tetrascience.atlassian.net/browse/SW-1917))                               |
-| `DotPlot`  | **None.** Closest is `ScatterPlot`                                               | Dropped in the chart cleanup ([SW-2244](https://tetrascience.atlassian.net/browse/SW-2244)) — see note below |
-| `Heatmap`  | **None.** Closest is `PlateMap` for plate-shaped data, otherwise Plotly directly | Dropped in the chart cleanup ([SW-2244](https://tetrascience.atlassian.net/browse/SW-2244)) — see note below |
+| v0.7.0     | Replacement                                                                          | Why                                                                                                          |
+| ---------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `Drawer`   | `Sheet`                                                                              | Long deprecated ([SW-1917](https://tetrascience.atlassian.net/browse/SW-1917))                               |
+| `InputOTP` | `Input` (or your own composition)                                                    | Long deprecated ([SW-1917](https://tetrascience.atlassian.net/browse/SW-1917))                               |
+| `DotPlot`  | **None.** Closest is `ScatterPlot`                                                   | Dropped in the chart cleanup ([SW-2244](https://tetrascience.atlassian.net/browse/SW-2244)) — see note below |
+| `Heatmap`  | **None.** Closest is `PlateMap` for plate-shaped data, otherwise ts-lib-viz directly | Dropped in the chart cleanup ([SW-2244](https://tetrascience.atlassian.net/browse/SW-2244)) — see note below |
 
 `DotPlot` and `Heatmap` have no drop-in successor, and unlike `Drawer`/`InputOTP` they were never
 formally deprecated — they disappeared as part of a Storybook rename cleanup. Whether that removal

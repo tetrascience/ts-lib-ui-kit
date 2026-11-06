@@ -19,7 +19,15 @@ export default {
     // release has merged (package.json, CHANGELOG.md, nothing releasable
     // merged after it). See the file's header.
     "./scripts/release/verify-package-version.js",
-    ["@semantic-release/release-notes-generator", { preset: "conventionalcommits" }],
+    // `(#123)` in a squash-merge title is always a PR, and GitHub redirects
+    // /issues/<n> to /pull/<n> for one, which the link check reports.
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        preset: "conventionalcommits",
+        presetConfig: { issueUrlFormat: "{{host}}/{{owner}}/{{repository}}/pull/{{id}}" },
+      },
+    ],
     ["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }],
     ["@semantic-release/npm", { npmPublish: false }],
     // Disabled, and not merely pending: an org ruleset forbids pushing to

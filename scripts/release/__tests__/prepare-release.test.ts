@@ -176,6 +176,9 @@ describe("prepareRelease (real git repo)", { timeout: 30_000 }, () => {
     expect(changelog).not.toContain("SW-3");
     expect(changelog).toContain("# [1.1.0](c) (d)\n\nold entry\n");
     expect(notes).toContain("SW-1 A feature");
+    // Squash-merge `(#n)` references link to the PR, not an /issues/ URL GitHub redirects.
+    expect(changelog).toContain("([#2](https://github.com/tetrascience/ts-lib-ui-kit/pull/2))");
+    expect(changelog).not.toContain("/issues/");
   });
 
   it("replaces a merged-but-unreleased prep entry when the version moved on", async () => {

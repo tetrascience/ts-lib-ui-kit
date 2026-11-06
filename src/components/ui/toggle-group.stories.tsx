@@ -1,6 +1,6 @@
 import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon, XIcon } from "lucide-react";
 import { type ReactNode } from "react";
-import { expect, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import { Button } from "./button";
 import { ToggleGroup, ToggleGroupItem } from "./toggle-group";
@@ -313,7 +313,7 @@ export const Variations: Story = {
               value="plate-1"
               data-testid="joined-item"
               selectedIndicator="none"
-              className="rounded-r-none border-r-0"
+              className="rounded-r-none border-border"
             >
               <span className="truncate">Plate 1</span>
             </ToggleGroupItem>
@@ -322,7 +322,7 @@ export const Variations: Story = {
               variant="outline"
               size="icon-sm"
               aria-label="Remove Plate 1"
-              className="rounded-l-none"
+              className="-ml-px rounded-l-none focus-visible:z-10"
             >
               <XIcon />
             </Button>
@@ -409,13 +409,97 @@ export const Variations: Story = {
       expect(getComputedStyle(forced!).display).not.toBe("none");
     });
 
+    const joined = canvasElement.querySelector<HTMLElement>('[data-testid="joined-item"]')!;
+    const remove = within(canvasElement).getByRole("button", { name: "Remove Plate 1" });
+
+    await step("the joined item's selected outline closes over the shared edge", async () => {
+      // The button overlaps the item's edge instead of the item dropping it
+      // (UXT-298), so the raised selected item paints the seam.
+      expect(getComputedStyle(joined).borderRightWidth).toBe("1px");
+      const seam = remove.getBoundingClientRect();
+      await waitFor(() =>
+        expect(
+          document.elementFromPoint(seam.x + 0.5, seam.y + seam.height / 2)?.closest('[data-testid="joined-item"]'),
+        ).toBe(joined),
+      );
+    });
+
     await step("a consumer's className still wins over the item border", async () => {
       // The segmented border must stay at plain-utility specificity, or a
-      // group-scoped selector silently beats `border-r-0` passed by a consumer
-      // and the item no longer sits flush against its adjacent control.
-      const joined = canvasElement.querySelector<HTMLElement>('[data-testid="joined-item"]');
-      expect(joined).not.toBeNull();
-      expect(getComputedStyle(joined!).borderRightWidth).toBe("0px");
+      // group-scoped selector beats the consumer's `border-border` and the
+      // item's resting outline no longer matches the control it joins.
+      await userEvent.click(joined); // deselect, then blur: resting is neither selected nor focused
+      joined.blur();
+      await waitFor(() =>
+        expect(getComputedStyle(joined).borderTopColor).toBe(getComputedStyle(remove).borderTopColor),
+      );
+      await userEvent.click(joined); // leave the story showing its selected join
+      joined.blur();
+    });
+  },
+};
+
+/** Which item paints the 1px seam where `item` meets the item before it. */
+function seamOwner(item: HTMLElement, vertical: boolean) {
+  const r = item.getBoundingClientRect();
+  const x = vertical ? r.x + r.width / 2 : r.x + 0.5;
+  const y = vertical ? r.y + 0.5 : r.y + r.height / 2;
+  return document.elementFromPoint(x, y)?.closest('[data-slot="toggle-group-item"]');
+}
+
+/**
+ * UXT-298: focus is shown by the border colour alone, so a segmented item that
+ * dropped its shared edge was outlined on three sides. Items now overlap that
+ * edge instead, and stacking decides which item paints it.
+ */
+export const KeyboardFocus: Story = {
+  args: { variant: "outline" },
+  render: (args) => (
+    <div className="flex items-start gap-8">
+      <div data-testid="horizontal">{renderToggleGroup(args)}</div>
+      <div data-testid="vertical">{renderToggleGroup({ ...args, orientation: "vertical" })}</div>
+    </div>
+  ),
+  parameters: {
+    docs: { source: { type: "dynamic" } },
+    zephyr: { testCaseId: "" },
+  },
+  play: async ({ canvasElement, step }) => {
+    const items = (testId: string) => [
+      ...canvasElement.querySelectorAll<HTMLElement>(`[data-testid="${testId}"] [data-slot="toggle-group-item"]`),
+    ];
+
+    await step("every segmented item keeps all four edges", async () => {
+      for (const testId of ["horizontal", "vertical"]) {
+        for (const item of items(testId)) {
+          const s = getComputedStyle(item);
+          const widths = [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth];
+          await expect(widths, `${testId} item "${item.getAttribute("aria-label")}"`).not.toContain("0px");
+        }
+      }
+    });
+
+    const [left, center] = items("horizontal");
+
+    await step("a focused item paints its shared edge over a selected neighbour", async () => {
+      await userEvent.click(canvasElement); // reset, then reach the group by keyboard
+      await userEvent.tab();
+      await userEvent.keyboard("{ArrowRight}");
+      await expect(center).toHaveFocus();
+      await expect(center.matches(":focus-visible")).toBe(true);
+      await expect(left).toHaveAttribute("data-state", "on");
+      // transition-all animates z-index, so wait for the stacking to settle.
+      await waitFor(() => expect(seamOwner(center, false)).toBe(center));
+    });
+
+    await step("a focused and selected item still wins over a selected neighbour", async () => {
+      // Without the not-focus-visible guard, data-[state=on] overrides
+      // focus-visible:z-10 and the later neighbour paints over the focus ring.
+      await userEvent.keyboard(" "); // select center too
+      await userEvent.keyboard("{ArrowLeft}");
+      await expect(left).toHaveFocus();
+      await expect(center).toHaveAttribute("data-state", "on");
+      await waitFor(() => expect(seamOwner(center, false)).toBe(left));
     });
   },
 };

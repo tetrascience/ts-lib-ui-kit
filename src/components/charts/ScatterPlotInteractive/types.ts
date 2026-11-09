@@ -1,3 +1,5 @@
+import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
+
 /**
  * A single data point in the scatter plot
  */
@@ -142,7 +144,7 @@ export interface DownsamplingConfig {
 /**
  * Props for ScatterPlotInteractive component
  */
-export interface ScatterPlotInteractiveProps {
+export interface ScatterPlotInteractiveProps extends ChartAnnotationProps {
   /**
    * Array of data points to plot
    */

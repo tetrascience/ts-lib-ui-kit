@@ -118,3 +118,36 @@ export const ReferenceLines: Story = {
     });
   },
 };
+
+/**
+ * A Levey-Jennings control chart: the centre line and the sigma bands come from `controlChart`.
+ * The centre and sigma are the qualified mean and standard deviation, not estimated from the runs.
+ */
+export const ControlChart: Story = {
+  args: {
+    type: "line",
+    title: "QC control chart",
+    xTitle: "Run",
+    yTitle: "Recovery (%)",
+    dataSeries: [
+      {
+        name: "QC sample",
+        symbol: "circle",
+        x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        y: [100.4, 99.1, 101.8, 98.2, 103.5, 100.9, 97.6, 100.2, 105.1, 99.8],
+      },
+    ],
+    controlChart: { center: 100, sigma: 1.5 },
+    variant: "lines+markers",
+  } as Story["args"],
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    await step("The centre and sigma labels render", async () => {
+      await waitFor(() => {
+        expect(canvas.getByText("Mean")).toBeInTheDocument();
+        expect(canvas.getByText("+2σ")).toBeInTheDocument();
+        expect(canvas.getByText("-3σ")).toBeInTheDocument();
+      });
+    });
+  },
+};

@@ -171,3 +171,90 @@ describe("PlateMap heatmap mode", () => {
     expect(outline[0].data).toHaveLength(4);
   });
 });
+
+describe("PlateMap side-by-side channels", () => {
+  // Two channels of the same two wells: fluorescence and luminescence, on different ranges.
+  const channelData: WellData[] = [
+    { wellId: "A1", values: { fluor: 100, lum: 5000 } },
+    { wellId: "A2", values: { fluor: 200, lum: 9000 } },
+  ];
+  const channelConfigs = [
+    { id: "fluor", name: "Fluorescence", colorScale: "Blues" as const },
+    { id: "lum", name: "Luminescence", colorScale: "Viridis" as const },
+  ];
+
+  it("draws one plate per channel, each scaled to its own channel", async () => {
+    await render(
+      <PlateMap
+        data={channelData}
+        layerConfigs={channelConfigs}
+        layerDisplay="sideBySide"
+        plateFormat={PLATE_FORMAT_CUSTOM}
+        rows={1}
+        columns={2}
+      />,
+    );
+    const plates = viz.calls.slice(-2);
+    expect(plates.map((plate) => plate.spec.scales?.color)).toEqual([
+      expect.objectContaining({ limits: [100, 200] }),
+      expect.objectContaining({ limits: [5000, 9000] }),
+    ]);
+    expect(document.querySelectorAll(".platemap-channel")).toHaveLength(2);
+  });
+
+  it("gives each plate its own colour bar and no layer tabs", async () => {
+    await render(
+      <PlateMap
+        data={channelData}
+        layerConfigs={channelConfigs}
+        layerDisplay="sideBySide"
+        plateFormat={PLATE_FORMAT_CUSTOM}
+        rows={1}
+        columns={2}
+      />,
+    );
+    expect(document.querySelectorAll(".platemap-colour-bar")).toHaveLength(2);
+    expect(document.querySelector(".platemap-layer-selector")).toBeNull();
+  });
+
+  it("names each plate after its channel and shows the shared title once above the row", async () => {
+    await render(
+      <PlateMap
+        data={channelData}
+        layerConfigs={channelConfigs}
+        layerDisplay="sideBySide"
+        title="Assay 7"
+        plateFormat={PLATE_FORMAT_CUSTOM}
+        rows={1}
+        columns={2}
+      />,
+    );
+    const plates = viz.calls.slice(-2);
+    expect(plates.map((plate) => plate.spec.headline)).toEqual(["Fluorescence", "Luminescence"]);
+    expect(document.querySelector(".platemap-channels__title")?.textContent).toBe("Assay 7");
+  });
+
+  it("keeps one plate with layer tabs in the default tabs mode", async () => {
+    await render(
+      <PlateMap
+        data={channelData}
+        layerConfigs={channelConfigs}
+        plateFormat={PLATE_FORMAT_CUSTOM}
+        rows={1}
+        columns={2}
+      />,
+    );
+    expect(document.querySelector(".platemap-channels")).toBeNull();
+    expect(document.querySelector(".platemap-layer-selector")).not.toBeNull();
+    expect(document.querySelectorAll(".platemap-colour-bar")).toHaveLength(1);
+  });
+
+  it("falls back to a single plate when the data has one layer", async () => {
+    const single: WellData[] = [{ wellId: "A1", values: { fluor: 100 } }];
+    await render(
+      <PlateMap data={single} layerDisplay="sideBySide" plateFormat={PLATE_FORMAT_CUSTOM} rows={1} columns={1} />,
+    );
+    expect(document.querySelector(".platemap-channels")).toBeNull();
+    expect(document.querySelectorAll(".platemap-colour-bar")).toHaveLength(1);
+  });
+});

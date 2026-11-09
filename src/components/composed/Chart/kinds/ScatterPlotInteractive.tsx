@@ -18,7 +18,6 @@ import {
   getUniqueCategories,
 } from "@/components/charts/ScatterPlotInteractive/utils";
 import { categoricalPalettes } from "@/components/charts/viz/VizChart";
-import { withAnnotations } from "@/components/composed/Chart/annotations";
 import { CHART_COLORS } from "@/utils/colors";
 import { plot } from "@/vendor/ts-lib-viz/core";
 import { Viz } from "@/vendor/ts-lib-viz/react";
@@ -61,8 +60,6 @@ const axisScale = (axis?: AxisConfig) => ({
 });
 
 const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
-  referenceLines,
-  annotations,
   data,
   title,
   xAxis,
@@ -246,11 +243,7 @@ const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
       }}
     >
       <Viz
-        spec={withAnnotations(
-          { ...spec, ...(width === undefined ? {} : { width }), ...(height === undefined ? {} : { height }) },
-          referenceLines,
-          annotations,
-        )}
+        spec={{ ...spec, ...(width === undefined ? {} : { width }), ...(height === undefined ? {} : { height }) }}
         data={rows}
         keyField="key"
         palettes={palettes}

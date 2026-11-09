@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 
-import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
 import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
@@ -23,7 +22,7 @@ interface ScatterPlotDataSeries {
 
 type ScatterPlotVariant = "default" | "stacked";
 
-interface ScatterPlotProps extends ChartAnnotationProps {
+interface ScatterPlotProps {
   /** One or more data series to plot */
   dataSeries: ScatterPlotDataSeries | ScatterPlotDataSeries[];
   /**
@@ -51,8 +50,6 @@ interface ScatterPlotProps extends ChartAnnotationProps {
 }
 
 const ScatterPlotChart: React.FC<ScatterPlotProps> = ({
-  referenceLines,
-  annotations,
   dataSeries,
   width,
   height,
@@ -86,17 +83,7 @@ const ScatterPlotChart: React.FC<ScatterPlotProps> = ({
       .spec();
   }, [rows, variant, markerSize, title, xTitle, yTitle, xRange, yRange]);
 
-  return (
-    <VizChart
-      spec={spec}
-      data={rows}
-      palettes={palettes}
-      width={width}
-      height={height}
-      referenceLines={referenceLines}
-      annotations={annotations}
-    />
-  );
+  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
 export { ScatterPlotChart };

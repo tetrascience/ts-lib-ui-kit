@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 
-import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
 import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
@@ -18,7 +17,7 @@ interface AreaDataSeries {
 
 type AreaPlotVariant = "normal" | "stacked";
 
-interface AreaPlotProps extends ChartAnnotationProps {
+interface AreaPlotProps {
   dataSeries: AreaDataSeries[];
   /**
    * Fixed width in pixels. When omitted, the chart fills its container and
@@ -71,8 +70,6 @@ export function areaRows(dataSeries: AreaDataSeries[], variant: AreaPlotVariant)
 }
 
 const AreaPlotChart: React.FC<AreaPlotProps> = ({
-  referenceLines,
-  annotations,
   dataSeries,
   width,
   height,
@@ -116,17 +113,7 @@ const AreaPlotChart: React.FC<AreaPlotProps> = ({
     );
   }, [rows, title, xTitle, yTitle, xRange, yRange, xTickText]);
 
-  return (
-    <VizChart
-      spec={spec}
-      data={rows}
-      palettes={palettes}
-      width={width}
-      height={height}
-      referenceLines={referenceLines}
-      annotations={annotations}
-    />
-  );
+  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
 export { AreaPlotChart };

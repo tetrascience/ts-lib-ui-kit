@@ -1,10 +1,8 @@
 import { useMemo } from "react";
 
-import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
 import type { ChartSpec, Palettes, VizData } from "@/vendor/ts-lib-viz/core";
 import type { VizProps } from "@/vendor/ts-lib-viz/react";
 
-import { withAnnotations } from "@/components/composed/Chart/annotations";
 import { palettesFor } from "@/vendor/ts-lib-viz/core";
 import { Viz } from "@/vendor/ts-lib-viz/react";
 
@@ -28,7 +26,7 @@ export function categoricalPalettes(colors: readonly string[]): Palettes {
   };
 }
 
-export interface VizChartProps extends ChartAnnotationProps {
+export interface VizChartProps {
   spec: ChartSpec;
   data: VizData;
   palettes?: Palettes;
@@ -66,24 +64,14 @@ function plotlyDefaults(spec: ChartSpec): ChartSpec {
   return { ...spec, scales: { ...spec.scales, x: axis(spec.scales.x), y: axis(spec.scales.y) } };
 }
 
-export function VizChart({
-  spec,
-  data,
-  palettes,
-  width,
-  height,
-  keyField,
-  onSelect,
-  referenceLines,
-  annotations,
-}: VizChartProps) {
+export function VizChart({ spec, data, palettes, width, height, keyField, onSelect }: VizChartProps) {
   const sized = useMemo<ChartSpec>(
     () => ({
-      ...withAnnotations(alongTheRule(plotlyDefaults(spec)), referenceLines, annotations),
+      ...alongTheRule(plotlyDefaults(spec)),
       ...(width === undefined ? {} : { width }),
       ...(height === undefined ? {} : { height }),
     }),
-    [spec, width, height, referenceLines, annotations],
+    [spec, width, height],
   );
 
   return (

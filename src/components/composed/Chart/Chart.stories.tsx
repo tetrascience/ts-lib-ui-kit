@@ -118,3 +118,35 @@ export const ReferenceLines: Story = {
     });
   },
 };
+
+/**
+ * A histogram coloured by a cut-off. Bins at or above the threshold take its colour and the rest
+ * keep the series colour; the line at the cut-off comes from `referenceLines`.
+ */
+export const HistogramThreshold: Story = {
+  args: {
+    type: "histogram",
+    title: "Peak heights against a cut-off",
+    xTitle: "Height",
+    dataSeries: [{ name: "Peaks", x: [2, 3, 3, 4, 4, 4, 5, 5, 6, 7, 7, 8, 9, 9, 10] }],
+    threshold: { value: 6, above: "#b91c1c" },
+    referenceLines: [{ axis: "x", value: 6, label: "cut-off", linetype: "dashed" }],
+  } as Story["args"],
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    await step("The legend names the bins on each side of the cut-off", async () => {
+      await waitFor(() => {
+        expect(canvas.getByText("Peaks < 6")).toBeInTheDocument();
+      });
+      expect(canvas.getByText("Peaks ≥ 6")).toBeInTheDocument();
+    });
+    await step("The bins at or above the cut-off take the threshold colour", async () => {
+      await waitFor(() => {
+        expect(canvasElement.querySelector('[fill="#b91c1c"]')).toBeInTheDocument();
+      });
+    });
+    await step("The cut-off line renders", async () => {
+      expect(canvas.getByText("cut-off")).toBeInTheDocument();
+    });
+  },
+};

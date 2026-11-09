@@ -2,6 +2,7 @@ import { AreaPlotChart } from "./kinds/AreaPlot";
 import { BarChartChart } from "./kinds/BarChart";
 import { BoxPlotChart } from "./kinds/BoxPlot";
 import { ChromatogramChart } from "./kinds/Chromatogram";
+import { DoseResponseChart } from "./kinds/DoseResponse";
 import { ElectropherogramChart } from "./kinds/Electropherogram";
 import { HistogramChart } from "./kinds/Histogram";
 import { LinePlotChart } from "./kinds/LinePlot";
@@ -15,6 +16,7 @@ import type { AreaPlotProps } from "./kinds/AreaPlot";
 import type { BarChartProps } from "./kinds/BarChart";
 import type { BoxPlotProps } from "./kinds/BoxPlot";
 import type { ChromatogramProps } from "./kinds/Chromatogram";
+import type { DoseResponseProps } from "./kinds/DoseResponse";
 import type { ElectropherogramProps } from "./kinds/Electropherogram";
 import type { HistogramProps } from "./kinds/Histogram";
 import type { LinePlotProps } from "./kinds/LinePlot";
@@ -36,6 +38,7 @@ export type ChartProps =
   | ({ type: "boxplot" } & BoxPlotProps)
   | ({ type: "scatter" } & ScatterPlotProps)
   | ({ type: "scatterInteractive" } & ScatterPlotInteractiveProps)
+  | ({ type: "doseResponse" } & DoseResponseProps)
   | ({ type: "pie" } & PieChartProps)
   | ({ type: "electropherogram" } & ElectropherogramProps)
   | ({ type: "chromatogram" } & ChromatogramProps)
@@ -68,6 +71,8 @@ export function Chart(props: ChartProps) {
       return <ScatterPlotChart {...props} />;
     case "scatterInteractive":
       return <ScatterPlotInteractiveChart {...props} />;
+    case "doseResponse":
+      return <DoseResponseChart {...props} />;
     case "pie":
       return <PieChartChart {...props} />;
     case "electropherogram":

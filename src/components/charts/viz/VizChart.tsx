@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
-import type { ChartSpec, Palettes, VizData } from "@/vendor/ts-lib-viz/core";
+import type { ChartSpec, Fitter, Palettes, VizData } from "@/vendor/ts-lib-viz/core";
 import type { VizProps } from "@/vendor/ts-lib-viz/react";
 
 import { withAnnotations } from "@/components/composed/Chart/annotations";
@@ -38,6 +38,8 @@ export interface VizChartProps extends ChartAnnotationProps {
   keyField?: string;
   /** Called with the geom a reader clicked, or null when a click clears it. */
   onSelect?: VizProps["onSelect"];
+  /** Computes the curves a spec's `fit` asks for. Absent draws the geoms and no curve. */
+  fitter?: Fitter;
 }
 
 /**
@@ -76,6 +78,7 @@ export function VizChart({
   onSelect,
   referenceLines,
   annotations,
+  fitter,
 }: VizChartProps) {
   const sized = useMemo<ChartSpec>(
     () => ({
@@ -88,7 +91,7 @@ export function VizChart({
 
   return (
     <div style={{ width: width ?? "100%", height: height ?? "100%" }} className="relative min-h-0 min-w-0">
-      <Viz spec={sized} data={data} palettes={palettes} keyField={keyField} onSelect={onSelect} />
+      <Viz spec={sized} data={data} palettes={palettes} keyField={keyField} onSelect={onSelect} fitter={fitter} />
     </div>
   );
 }

@@ -101,7 +101,11 @@ export interface AppShellSimpleProps {
    * `"(max-width: 1023px)"`.
    */
   autoCollapse?: string | false;
-  /** App version, shown in the build-info footer (rendered when this or `commitSha` is set) */
+  /**
+   * App version, shown in the build-info footer (rendered when this or `commitSha` is set).
+   * The footer follows the content; a page that fills the viewport and scrolls internally
+   * puts `data-ts-shell-fill` on its outermost element (`AssistantLayout` needs nothing).
+   */
   version?: string;
   /** Short commit SHA, shown in the build-info footer */
   commitSha?: string;

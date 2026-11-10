@@ -43,6 +43,11 @@ export function BuildInfoFooter({ version, commitSha }: BuildInfo) {
  * Lays out a shell's scrolling content with the footer after it: the footer
  * follows the content, and is pinned to the bottom when the content is shorter
  * than the viewport. Renders `children` untouched when `show` is false.
+ *
+ * A page that fills the viewport and scrolls internally (a chat, an editor)
+ * marks its outermost element with `data-ts-shell-fill`; `AssistantLayout` is detected
+ * without one. The content row then gets a definite height for `h-full` to
+ * resolve against (UXT-271).
  */
 export function WithBuildInfoFooter({
   show,
@@ -53,8 +58,16 @@ export function WithBuildInfoFooter({
 }: BuildInfo & { show: boolean; className?: string; children: React.ReactNode }) {
   if (!show) return <>{children}</>;
   return (
-    <div data-slot="build-info-layout" className={cn("grid min-h-full grid-rows-[1fr_auto]", className)}>
-      <div className="min-w-0">{children}</div>
+    <div
+      data-slot="build-info-layout"
+      className={cn(
+        "grid min-h-full grid-rows-[1fr_auto] has-[>[data-slot=build-info-content]>:is([data-ts-shell-fill],[data-slot=assistant-layout])]:h-full",
+        className
+      )}
+    >
+      <div data-slot="build-info-content" className="min-h-0 min-w-0">
+        {children}
+      </div>
       <BuildInfoFooter version={version} commitSha={commitSha} />
     </div>
   );

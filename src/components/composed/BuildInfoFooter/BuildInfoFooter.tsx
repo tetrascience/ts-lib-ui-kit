@@ -62,7 +62,7 @@ export function WithBuildInfoFooter({
       data-slot="build-info-layout"
       className={cn(
         "grid min-h-full grid-rows-[1fr_auto] has-[>[data-slot=build-info-content]>:is([data-ts-shell-fill],[data-slot=assistant-layout])]:h-full",
-        className
+        className,
       )}
     >
       <div data-slot="build-info-content" className="min-h-0 min-w-0">

@@ -8,7 +8,7 @@ export const tetrascienceDark = create({
   brandTitle: "TetraScience UI",
   brandImage,
 
-  fontBase: '"Inter", sans-serif',
+  fontBase: '"Inter Tight Variable", "Inter Tight", sans-serif',
   fontCode: "SFMono-Regular, Menlo, Monaco, Consolas, monospace",
 
   // Primary Brand Colors

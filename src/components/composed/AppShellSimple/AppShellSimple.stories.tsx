@@ -95,6 +95,9 @@ const meta = {
     navGroups: NAV_GROUPS,
     breadcrumbs: BREADCRUMBS,
     children: <SampleContent />,
+    // Off so each story shows the nav state it names at any canvas width;
+    // AutoCollapse demonstrates it (UXT-274).
+    autoCollapse: false,
   },
 } satisfies Meta<typeof AppShellSimple>;
 
@@ -609,7 +612,10 @@ export const WithBuildInfoLongContent: Story = {
 const TRANSCRIPT = Array.from({ length: 40 }, (_, i) => `Message ${i + 1}`);
 
 /** Asserts a full-height page stays inside the shell with the footer below it. */
-async function expectBoundedPage(canvasElement: HTMLElement, step: (name: string, fn: () => Promise<void>) => Promise<void>) {
+async function expectBoundedPage(
+  canvasElement: HTMLElement,
+  step: (name: string, fn: () => Promise<void>) => Promise<void>,
+) {
   const main = canvasElement.querySelector('[data-slot="app-shell-simple-content"]');
   const footer = canvasElement.querySelector('[data-slot="build-info-footer"]');
   const composer = canvasElement.querySelector('[data-testid="composer"]');
@@ -672,7 +678,12 @@ export const WithBuildInfoAssistantLayout: Story = {
           assistantTitle="AI Assistant"
           assistant={
             <div className="flex h-full min-h-0 flex-col">
-              <div role="group" aria-label="Transcript" tabIndex={0} className="min-h-0 flex-1 space-y-2 overflow-auto p-3">
+              <div
+                role="group"
+                aria-label="Transcript"
+                tabIndex={0}
+                className="min-h-0 flex-1 space-y-2 overflow-auto p-3"
+              >
                 {TRANSCRIPT.map((message) => (
                   <p key={message} className="rounded-md bg-muted/60 px-3 py-2 text-sm">
                     {message}
@@ -691,4 +702,66 @@ export const WithBuildInfoAssistantLayout: Story = {
     ),
   },
   play: async ({ canvasElement, step }) => expectBoundedPage(canvasElement, step),
+};
+
+/**
+ * UXT-274: below 1024px the sidebar collapses to the icon rail, as in
+ * `DataAppShell`. Narrow the canvas to see it. One toggle click expands it
+ * again, and a nav the user changed keeps its state when the window widens.
+ */
+export const AutoCollapse: Story = {
+  args: {
+    // Unlabelled group, as in BreadcrumbNavigation: the nav section label has a
+    // pre-existing low-contrast finding that a story ending in `sidebar` trips.
+    navGroups: [{ pages: NAV_GROUPS[0].pages }],
+    autoCollapse: "(max-width: 1023px)",
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};
+
+/**
+ * UXT-274: `headerStart` sits between the nav toggle and the breadcrumb (app
+ * identity, such as a switcher), `headerLeft` follows the breadcrumb as in
+ * `DataAppShell`, and `headerCenter` holds context such as a version or status.
+ */
+export const HeaderSlots: Story = {
+  args: {
+    // Unlabelled group, as in BreadcrumbNavigation: the nav section label has a
+    // pre-existing low-contrast finding that a story ending in `sidebar` trips.
+    navGroups: [{ pages: NAV_GROUPS[0].pages }],
+    headerStart: (
+      <Button size="sm" variant="ghost">
+        Biologics ▾
+      </Button>
+    ),
+    headerLeft: (
+      <Button size="sm" variant="outline">
+        Step 2 of 4 ▾
+      </Button>
+    ),
+    headerCenter: <span className="text-sm text-muted-foreground">Analysis v3 · Draft</span>,
+    headerActions: <Button size="sm">Publish</Button>,
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("headerStart precedes the breadcrumb and headerLeft follows it", async () => {
+      const left = canvasElement.querySelector('[data-slot="top-bar-left"]')!;
+      const slots = [...left.children].map((el) => el.getAttribute("data-slot"));
+      expect(slots).toEqual([
+        "app-shell-simple-nav-toggle",
+        "app-shell-simple-header-start",
+        "breadcrumb",
+        "app-shell-simple-header-left",
+      ]);
+    });
+
+    await step("headerCenter renders in the top bar's center group", async () => {
+      const center = canvasElement.querySelector('[data-slot="top-bar-center"]');
+      expect(center).toHaveTextContent("Analysis v3 · Draft");
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
 };

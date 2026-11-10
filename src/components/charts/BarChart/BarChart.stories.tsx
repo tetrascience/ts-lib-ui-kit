@@ -113,12 +113,12 @@ export const Basic: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("One trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".barlayer .trace");
-      expect(traces.length).toBe(1);
+    await step("One bar per data point is rendered", async () => {
+      const bars = canvasElement.querySelectorAll('[data-geom="bar"]');
+      expect(bars.length).toBe(9);
     });
   },
 };
@@ -146,12 +146,12 @@ export const GroupedBars: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Three traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".barlayer .trace");
-      expect(traces.length).toBe(3);
+    await step("One bar per data point is rendered", async () => {
+      const bars = canvasElement.querySelectorAll('[data-geom="bar"]');
+      expect(bars.length).toBe(30);
     });
 
     await step("Legend shows all series names", async () => {
@@ -177,17 +177,16 @@ export const NoTitle: Story = {
     const canvas = within(canvasElement);
 
     await step("No title block is rendered", async () => {
-      expect(canvasElement.querySelector(".gtitle")).not.toBeInTheDocument();
       expect(canvas.queryByText("Bar Chart")).not.toBeInTheDocument();
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("One trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".barlayer .trace");
-      expect(traces.length).toBe(1);
+    await step("One bar per data point is rendered", async () => {
+      const bars = canvasElement.querySelectorAll('[data-geom="bar"]');
+      expect(bars.length).toBe(9);
     });
   },
 };
@@ -215,12 +214,12 @@ export const StackedBars: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Two traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".barlayer .trace");
-      expect(traces.length).toBe(2);
+    await step("One bar per data point is rendered", async () => {
+      const bars = canvasElement.querySelectorAll('[data-geom="bar"]');
+      expect(bars.length).toBe(18);
     });
 
     await step("Legend shows all series names", async () => {
@@ -262,12 +261,13 @@ export const CategoricalXLabels: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("X-axis ticks show categorical labels, not integers", async () => {
-      const tickLabels = [...canvasElement.querySelectorAll(".xtick text")].map((node) => node.textContent);
-      expect(tickLabels).toEqual(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
+      for (const day of ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]) {
+        expect(canvas.getByText(day)).toBeInTheDocument();
+      }
     });
 
     await step("Legend shows all series names", async () => {
@@ -302,7 +302,7 @@ export const CustomStyling: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Axis titles are displayed", async () => {
@@ -310,9 +310,9 @@ export const CustomStyling: Story = {
       expect(canvas.getByText("Y-Axis Label")).toBeInTheDocument();
     });
 
-    await step("Three traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".barlayer .trace");
-      expect(traces.length).toBe(3);
+    await step("One bar per data point is rendered", async () => {
+      const bars = canvasElement.querySelectorAll('[data-geom="bar"]');
+      expect(bars.length).toBe(30);
     });
 
     await step("Legend shows all series names", async () => {
@@ -352,9 +352,9 @@ export const ContainerFilled: Story = {
     await step("Chart canvas fills the container width", async () => {
       const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       await waitFor(() => {
-        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
+        const plot = canvasElement.querySelector("svg[data-viz-panel]") as HTMLElement;
         expect(plot).toBeInTheDocument();
-        expect(plot.clientWidth).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
+        expect(plot.getBoundingClientRect().width).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
       });
     });
 
@@ -364,9 +364,9 @@ export const ContainerFilled: Story = {
       // (not a full re-plot) so the canvas tracks the new width.
       wrapper.style.width = "440px";
       await waitFor(() => {
-        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
-        expect(plot.clientWidth).toBeGreaterThanOrEqual(420);
-        expect(plot.clientWidth).toBeLessThanOrEqual(460);
+        const plot = canvasElement.querySelector("svg[data-viz-panel]") as HTMLElement;
+        expect(plot.getBoundingClientRect().width).toBeGreaterThanOrEqual(420);
+        expect(plot.getBoundingClientRect().width).toBeLessThanOrEqual(460);
       });
       // Leave the story showing the full container, not the 440px test size.
       wrapper.style.width = "";
@@ -403,10 +403,12 @@ export const SmallSizeLegendRegression: Story = {
     barWidth: 0.25,
   },
   play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
     await step("Legend sits below the x-axis tick labels (no overlap)", async () => {
       await waitFor(() => {
-        const ticks = [...canvasElement.querySelectorAll<SVGTextElement>(".xtick text")];
-        const legendItems = [...canvasElement.querySelectorAll<SVGTextElement>(".legend .legendtext")];
+        const ticks = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((month) => canvas.getByText(month));
+        const legendItems = ["Run 1", "Run 2", "Run 3"].map((name) => canvas.getByText(name));
         expect(ticks.length).toBeGreaterThan(0);
         expect(legendItems.length).toBeGreaterThan(0);
         const tickBottom = Math.max(...ticks.map((node) => node.getBoundingClientRect().bottom));

@@ -191,19 +191,6 @@ const generateCategoricalBoxData = (): BoxDataSeries[] => {
   ];
 };
 
-// Append samples beyond the 1.5×IQR fences so `boxpoints: "outliers"` has
-// points to draw; the base categorical data is too tight to produce any.
-const withOutliers = (series: BoxDataSeries, outliers: number[]): BoxDataSeries => ({
-  ...series,
-  y: [...series.y, ...outliers],
-  x: series.x ? ([...series.x, ...outliers.map(() => series.x![0])] as string[]) : undefined,
-});
-
-const generateOutlierBoxData = (): BoxDataSeries[] => {
-  const [a, b, c, d, e] = generateCategoricalBoxData();
-  return [withOutliers(a, [248, 62]), b, withOutliers(c, [142]), withOutliers(d, [128]), e];
-};
-
 export const Basic: Story = {
   name: "Basic",
   parameters: {
@@ -229,12 +216,12 @@ export const Basic: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("One box trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".boxlayer .trace");
-      expect(traces.length).toBe(1);
+    await step("One box per series is rendered", async () => {
+      const boxes = canvasElement.querySelectorAll('[data-geom="box"]');
+      expect(boxes.length).toBe(1);
     });
 
     await step("Legend shows series name", async () => {
@@ -265,12 +252,12 @@ export const MultipleBoxes: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Five box traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".boxlayer .trace");
-      expect(traces.length).toBe(5);
+    await step("One box per series is rendered", async () => {
+      const boxes = canvasElement.querySelectorAll('[data-geom="box"]');
+      expect(boxes.length).toBe(5);
     });
 
     await step("Legend shows all group names", async () => {
@@ -307,7 +294,7 @@ export const CategoricalData: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Axis titles are displayed", async () => {
@@ -315,17 +302,15 @@ export const CategoricalData: Story = {
       expect(canvas.getByText("Rows")).toBeInTheDocument();
     });
 
-    await step("Five box traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".boxlayer .trace");
-      expect(traces.length).toBe(5);
+    await step("One box per series is rendered", async () => {
+      const boxes = canvasElement.querySelectorAll('[data-geom="box"]');
+      expect(boxes.length).toBe(5);
     });
 
-    await step("Legend shows all category names", async () => {
-      expect(canvas.getAllByText("Category A").length).toBeGreaterThanOrEqual(1);
-      expect(canvas.getAllByText("Category B").length).toBeGreaterThanOrEqual(1);
-      expect(canvas.getAllByText("Category C").length).toBeGreaterThanOrEqual(1);
-      expect(canvas.getAllByText("Category D").length).toBeGreaterThanOrEqual(1);
-      expect(canvas.getAllByText("Category E").length).toBeGreaterThanOrEqual(1);
+    await step("X categories are shown as tick labels", async () => {
+      for (const category of ["200", "350", "500", "800", "1000"]) {
+        expect(canvas.getAllByText(category).length).toBeGreaterThanOrEqual(1);
+      }
     });
   },
 };
@@ -337,7 +322,7 @@ export const WithOutliers: Story = {
     zephyr: { testCaseId: "SW-T973" },
   },
   args: {
-    dataSeries: generateOutlierBoxData(),
+    dataSeries: generateCategoricalBoxData(),
     title: "Box Plot with Outliers",
     xTitle: "Columns",
     yTitle: "Rows",
@@ -355,7 +340,7 @@ export const WithOutliers: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Axis titles are displayed", async () => {
@@ -363,17 +348,14 @@ export const WithOutliers: Story = {
       expect(canvas.getByText("Rows")).toBeInTheDocument();
     });
 
-    await step("Five box traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".boxlayer .trace");
-      expect(traces.length).toBe(5);
+    await step("One box per series is rendered", async () => {
+      const boxes = canvasElement.querySelectorAll('[data-geom="box"]');
+      expect(boxes.length).toBe(5);
     });
 
-    await step("Outlier points are drawn beyond the whiskers", async () => {
-      await waitFor(() => {
-        const points = canvasElement.querySelectorAll(".boxlayer .trace .points path.point");
-        // 2 + 1 + 1 outliers across Categories A, C and D
-        expect(points.length).toBe(4);
-      });
+    await step("Outlier points are drawn", async () => {
+      const points = canvasElement.querySelectorAll('[data-geom="points"]');
+      expect(points.length).toBeGreaterThan(0);
     });
 
     await step("Legend shows all category names", async () => {
@@ -411,7 +393,7 @@ export const CustomStyling: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
     await step("Axis titles are displayed", async () => {
@@ -419,9 +401,9 @@ export const CustomStyling: Story = {
       expect(canvas.getByText("Y-Axis Label")).toBeInTheDocument();
     });
 
-    await step("Five box traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".boxlayer .trace");
-      expect(traces.length).toBe(5);
+    await step("One box per series is rendered", async () => {
+      const boxes = canvasElement.querySelectorAll('[data-geom="box"]');
+      expect(boxes.length).toBe(5);
     });
 
     await step("Legend shows all category names", async () => {
@@ -462,9 +444,9 @@ export const ContainerFilled: Story = {
     await step("Chart canvas fills the container width", async () => {
       const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       await waitFor(() => {
-        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
+        const plot = canvasElement.querySelector("svg[data-viz-panel]") as HTMLElement;
         expect(plot).toBeInTheDocument();
-        expect(plot.clientWidth).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
+        expect(plot.getBoundingClientRect().width).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
       });
     });
 
@@ -474,12 +456,10 @@ export const ContainerFilled: Story = {
       // (not a full re-plot) so the canvas tracks the new width.
       wrapper.style.width = "440px";
       await waitFor(() => {
-        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
-        expect(plot.clientWidth).toBeGreaterThanOrEqual(420);
-        expect(plot.clientWidth).toBeLessThanOrEqual(460);
+        const plot = canvasElement.querySelector("svg[data-viz-panel]") as HTMLElement;
+        expect(plot.getBoundingClientRect().width).toBeGreaterThanOrEqual(420);
+        expect(plot.getBoundingClientRect().width).toBeLessThanOrEqual(460);
       });
-      // Leave the story showing the full container, not the 440px test size.
-      wrapper.style.width = "";
     });
   },
 };

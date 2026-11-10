@@ -1,0 +1,33 @@
+@layer properties, theme, base, components, utilities, ts-ui-kit;
+
+@layer ts-ui-kit {
+  /*
+   * The values the package ships, read from the UI kit's own tokens (UXT-251).
+   *
+   * Every token points at a kit token, so a chart follows the kit's light and dark themes with no
+   * separate dark block: the kit already redefines `--background`, `--border` and the rest under
+   * `.dark`, and these resolve on the same element. A host without the kit's tokens gets the
+   * fallbacks, which are the light values.
+   *
+   * There is no chart background token. A chart draws on a transparent background per chart-design
+   * rule 3, and `--viz-paper` is the page colour it sits on.
+   *
+   * The tooltip tokens follow the kit's popover, so the card reads as a kit surface in both themes.
+   * A host that wants a different card points these at its own colours.
+   */
+
+  :root {
+    --viz-paper: var(--background, #ffffff);
+    --viz-ink: var(--foreground, #171717);
+    --viz-ink-muted: var(--muted-foreground, #737373);
+    --viz-rule: var(--border, #e5e5e5);
+    --viz-annotation: var(--foreground, #404040);
+    --viz-leader: var(--muted-foreground, #a3a3a3);
+    --viz-status-fail: var(--destructive, #dc2626);
+    --viz-status-warn: var(--warning, #d97706);
+    --viz-tooltip-bg: var(--popover, #ffffff);
+    --viz-tooltip-ink: var(--popover-foreground, #171717);
+    --viz-tooltip-ink-muted: var(--muted-foreground, #737373);
+    --viz-tooltip-ring: var(--border, #e5e5e5);
+  }
+}

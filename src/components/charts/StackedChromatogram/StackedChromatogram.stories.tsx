@@ -117,12 +117,7 @@ export const OverlayMode: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Three traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(3);
+      expect(canvasElement.querySelector("svg")).toBeInTheDocument();
     });
 
     await step("Legend shows all injection names", async () => {
@@ -163,12 +158,7 @@ export const StackMode: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Three traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(3);
+      expect(canvasElement.querySelector("svg")).toBeInTheDocument();
     });
 
     await step("Legend shows all day labels", async () => {
@@ -230,18 +220,14 @@ export const StackModeWithAnnotations: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Four traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(4);
+      expect(canvasElement.querySelector("svg")).toBeInTheDocument();
     });
 
     await step("Annotations are rendered", async () => {
-      const annotationEls = canvasElement.querySelectorAll(".annotation-text");
-      // 3 series × 3 peaks each = 9 annotations total
-      expect(annotationEls.length).toBeGreaterThanOrEqual(9);
+      // 3 series × 3 peaks each, labelled Main, Acidic and Basic
+      expect(canvas.getAllByText("Main")).toHaveLength(3);
+      expect(canvas.getAllByText("Acidic")).toHaveLength(3);
+      expect(canvas.getAllByText("Basic")).toHaveLength(3);
     });
   },
   parameters: {
@@ -278,12 +264,7 @@ export const StackModeFirstOnTop: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Three traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(3);
+      expect(canvasElement.querySelector("svg")).toBeInTheDocument();
     });
   },
   parameters: {

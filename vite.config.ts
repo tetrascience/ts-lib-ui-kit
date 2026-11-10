@@ -61,7 +61,11 @@ export default defineConfig({
       rollupTypes: false,
     }),
   ],
-  resolve: { alias },
+  resolve: {
+    alias,
+    // ts-lib-viz is linked by portal and carries its own React copy; dedupe keeps one React for hooks.
+    dedupe: ["react", "react-dom"],
+  },
   build: {
     lib: {
       // Generated entries are spread first, hand-written ones last, so a
@@ -114,7 +118,11 @@ export default defineConfig({
     projects: [
       // Unit tests — jsdom environment, with server tests overridden to node
       {
-        resolve: { alias },
+        resolve: {
+          alias,
+          // ts-lib-viz is linked by portal and carries its own React copy; dedupe keeps one React for hooks.
+          dedupe: ["react", "react-dom"],
+        },
         test: {
           name: "unit",
           globals: true,
@@ -183,6 +191,8 @@ export default defineConfig({
       reporter: ["text", "json", "json-summary", "html"],
       include: ["src/**/*.ts", "src/**/*.tsx"],
       exclude: [
+        // Vendored ts-lib-viz copy (UXT-251). Temporary; remove with src/vendor.
+        "src/vendor/**",
         "**/*.test.ts",
         "**/*.test.tsx",
         "**/*.spec.ts",

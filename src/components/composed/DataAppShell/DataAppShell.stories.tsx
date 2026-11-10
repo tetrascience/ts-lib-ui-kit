@@ -1121,4 +1121,7 @@ export const WithBuildInfoFullHeightPage: Story = {
       expect(transcript.scrollHeight).toBeGreaterThan(transcript.clientHeight);
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5784" },
+  },
 };

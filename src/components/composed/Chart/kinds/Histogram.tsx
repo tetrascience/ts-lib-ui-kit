@@ -49,7 +49,22 @@ type HistogramProps = ChartAnnotationProps & {
   bargap?: number;
   /** Fit a normal curve to each series. A series' own `showDistributionLine` wins. */
   showDistributionLine?: boolean;
+  /**
+   * Colours the bins by a cut-off. Observations at or above `value` take `above`; the rest keep
+   * their series colour. Draw the threshold line itself with `referenceLines`.
+   */
+  threshold?: HistogramThreshold;
 };
+
+/** A cut-off on the histogram's x values, and the colour of the bins at or above it. */
+export interface HistogramThreshold {
+  value: number;
+  /** Any CSS colour. Absent takes the chart's caution colour. */
+  above?: string;
+}
+
+/** The colour of bins at or above a threshold when the caller names none: the chart's caution hue. */
+const DEFAULT_ABOVE_COLOR = CHART_COLORS[1];
 
 /** One row per observation, tagged with its series name so each series gets its own fill. */
 export interface HistogramRow {
@@ -66,6 +81,34 @@ export interface DistributionCurve {
 /** Flattens the series into the rows ts-lib-viz bins. */
 export function buildHistogramRows(seriesArray: HistogramDataSeries[]): HistogramRow[] {
   return seriesArray.flatMap((series) => series.x.map((x) => ({ x, series: series.name })));
+}
+
+/**
+ * The rows ts-lib-viz bins, and the colour of each fill group in the order the rows first name it.
+ *
+ * Without a threshold a group is a series and keeps its colour. With one, every series splits into
+ * a group below the cut and a group at or above it, so each side bins and colours on its own. The
+ * two sides stack in each bin, so a bin that straddles the cut shows both colours and its full count.
+ * The groups are named by their side, so the legend says which bins each swatch covers.
+ */
+export function buildHistogramGroups(
+  seriesArray: HistogramDataSeries[],
+  colors: readonly string[],
+  threshold?: HistogramThreshold,
+): { rows: HistogramRow[]; colors: string[] } {
+  const rows: HistogramRow[] = [];
+  const groupColors = new Map<string, string>();
+  seriesArray.forEach((series, index) => {
+    for (const x of series.x) {
+      const above = threshold !== undefined && x >= threshold.value;
+      const group = threshold === undefined ? series.name : `${series.name} ${above ? "≥" : "<"} ${threshold.value}`;
+      rows.push({ x, series: group });
+      if (!groupColors.has(group)) {
+        groupColors.set(group, above ? (threshold?.above ?? DEFAULT_ABOVE_COLOR) : colors[index]);
+      }
+    }
+  });
+  return { rows, colors: [...groupColors.values()] };
 }
 
 const mean = (data: number[]): number => data.reduce((acc, val) => acc + val, 0) / data.length;
@@ -191,14 +234,16 @@ const HistogramChart: React.FC<HistogramProps> = ({
   xTitle = "X Axis",
   yTitle = "Frequency",
   showDistributionLine = false,
+  threshold,
 }) => {
   const seriesArray = useMemo(() => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]), [dataSeries]);
   const colors = useMemo(
     () => seriesArray.map((series, index) => series.color ?? CHART_COLORS[index % CHART_COLORS.length]),
     [seriesArray],
   );
-  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
-  const rows = useMemo(() => buildHistogramRows(seriesArray), [seriesArray]);
+  const groups = useMemo(() => buildHistogramGroups(seriesArray, colors, threshold), [seriesArray, colors, threshold]);
+  const palettes = useMemo(() => categoricalPalettes(groups.colors), [groups]);
+  const rows = groups.rows;
   const curves = useMemo<DistributionCurve[]>(
     () =>
       seriesArray.flatMap((series, index) => {

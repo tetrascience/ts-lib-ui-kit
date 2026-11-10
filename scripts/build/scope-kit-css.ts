@@ -37,7 +37,7 @@ export const SCOPED_LAYERS: ReadonlySet<string> = new Set(["base", KIT_LAYER]);
  * At-rules whose contents are not selector-matched; scoping them only breaks
  * them. `@keyframes` and `@font-face` names are therefore still global in the
  * scoped entry — which is why every kit-authored keyframe is `ts-`-prefixed
- * (`ts-shimmer`, `ts-border-sweep`, …) and the `Inter Variable` face keeps its
+ * (`ts-shimmer`, `ts-border-sweep`, …) and the `Inter Tight Variable` face keeps its
  * vendor name. The remaining unprefixed names (`spin`, `pulse`, `enter`,
  * `accordion-down`, …) are Tailwind's and tw-animate-css's own, shared by any
  * host running the same libraries.

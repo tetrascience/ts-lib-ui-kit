@@ -94,8 +94,7 @@ export function fitDistributionCurve(series: HistogramDataSeries): Array<{ x: nu
   const deviation = standardDeviation(series.x, average);
   if (!(deviation > 0)) return [];
 
-  const min = Math.min(...series.x);
-  const max = Math.max(...series.x);
+  const [min, max] = extent(series.x);
   const range = max - min;
   const start = min - range * 0.1;
   const end = max + range * 0.1;
@@ -110,7 +109,7 @@ export function fitDistributionCurve(series: HistogramDataSeries): Array<{ x: nu
       frequencies[index] += 1;
     }
   }
-  const scale = Math.max(...frequencies) / Math.max(...curve.y);
+  const scale = extent(frequencies)[1] / extent(curve.y)[1];
   return curve.x.map((x, i) => ({ x, y: curve.y[i] * scale }));
 }
 
@@ -133,6 +132,17 @@ export interface HistogramBinning {
 const TARGET_BINS = 20;
 const BIN_STEP_FACTORS = [1, 2, 5, 10];
 
+/** Smallest and largest value, found in a loop: spreading a large array into Math.min/max throws. */
+function extent(values: readonly number[]): [number, number] {
+  let min = Infinity;
+  let max = -Infinity;
+  for (const value of values) {
+    if (value < min) min = value;
+    if (value > max) max = value;
+  }
+  return [min, max];
+}
+
 /**
  * The bins every series shares. A series that states its own `xbins` sets them; otherwise
  * the bins cover the data from every series. Each series bins on its own range without this,
@@ -143,8 +153,8 @@ export function sharedBinning(seriesArray: HistogramDataSeries[]): HistogramBinn
   if (stated) return { binwidth: stated.size, boundary: stated.start };
   const values = seriesArray.flatMap((series) => series.x);
   if (values.length === 0) return { binwidth: 1, boundary: 0 };
-  const min = Math.min(...values);
-  const range = Math.max(...values) - min;
+  const [min, maxValue] = extent(values);
+  const range = maxValue - min;
   if (!(range > 0)) return { binwidth: 1, boundary: min };
   const rough = range / TARGET_BINS;
   const magnitude = 10 ** Math.floor(Math.log10(rough));

@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import type { ChartSpec, Palettes, VizData } from "@/vendor/ts-lib-viz/core";
 import type { VizProps } from "@/vendor/ts-lib-viz/react";
 
+import { useElementSize } from "@/hooks/use-element-size";
 import { palettesFor } from "@/vendor/ts-lib-viz/core";
 import { Viz } from "@/vendor/ts-lib-viz/react";
 
@@ -36,6 +37,10 @@ export interface VizChartProps {
   keyField?: string;
   /** Called with the geom a reader clicked, or null when a click clears it. */
   onSelect?: VizProps["onSelect"];
+  /** The shape a reader drags out, when the chart selects by brush. */
+  brush?: VizProps["brush"];
+  /** Called with the records a brush covers, or null when the brush clears. */
+  onBrush?: VizProps["onBrush"];
 }
 
 /**
@@ -64,19 +69,36 @@ function plotlyDefaults(spec: ChartSpec): ChartSpec {
   return { ...spec, scales: { ...spec.scales, x: axis(spec.scales.x), y: axis(spec.scales.y) } };
 }
 
-export function VizChart({ spec, data, palettes, width, height, keyField, onSelect }: VizChartProps) {
+export function VizChart({ spec, data, palettes, width, height, keyField, onSelect, brush, onBrush }: VizChartProps) {
+  // Viz draws 320px tall unless the spec states a height, and it does not measure its parent. An
+  // omitted height is therefore measured from the wrapper, so the chart fills the space it is given.
+  const [wrapperRef, measured] = useElementSize<HTMLDivElement>();
+  const resolvedHeight = height ?? (measured.height > 0 ? measured.height : undefined);
+
   const sized = useMemo<ChartSpec>(
     () => ({
       ...alongTheRule(plotlyDefaults(spec)),
       ...(width === undefined ? {} : { width }),
-      ...(height === undefined ? {} : { height }),
+      ...(resolvedHeight === undefined ? {} : { height: resolvedHeight }),
     }),
-    [spec, width, height],
+    [spec, width, resolvedHeight],
   );
 
   return (
-    <div style={{ width: width ?? "100%", height: height ?? "100%" }} className="relative min-h-0 min-w-0">
-      <Viz spec={sized} data={data} palettes={palettes} keyField={keyField} onSelect={onSelect} />
+    <div
+      ref={wrapperRef}
+      style={{ width: width ?? "100%", height: height ?? "100%" }}
+      className="relative min-h-0 min-w-0"
+    >
+      <Viz
+        spec={sized}
+        data={data}
+        palettes={palettes}
+        keyField={keyField}
+        onSelect={onSelect}
+        brush={brush}
+        onBrush={onBrush}
+      />
     </div>
   );
 }

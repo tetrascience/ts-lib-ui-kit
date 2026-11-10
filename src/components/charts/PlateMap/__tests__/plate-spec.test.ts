@@ -39,12 +39,22 @@ describe("colorRampFrom", () => {
     expect(ramp(0)).toBe("#000000");
   });
 
-  it("returns a stop unblended when its colour is not hex", () => {
+  it("blends stops written as rgb() or as CSS colour names, as Plotly did", () => {
     const ramp = colorRampFrom([
-      [0, "rebeccapurple"],
+      [0, "rgb(0, 0, 255)"],
+      [1, "red"],
+    ]);
+    expect(ramp(0)).toBe("#0000ff");
+    expect(ramp(0.5)).toBe("#800080");
+    expect(ramp(1)).toBe("#ff0000");
+  });
+
+  it("returns a stop it cannot parse as it is", () => {
+    const ramp = colorRampFrom([
+      [0, "not-a-colour"],
       [1, "#ffffff"],
     ]);
-    expect(ramp(0.5)).toBe("rebeccapurple");
+    expect(ramp(0.5)).toBe("not-a-colour");
   });
 
   it("returns the start colour where two stops share a position", () => {

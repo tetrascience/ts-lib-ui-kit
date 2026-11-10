@@ -126,12 +126,12 @@ describe("ScatterPlot series handling", () => {
     expect(lastViz().spec.layers[0].aes).toMatchObject({ color: "series", shape: "series" });
   });
 
-  it("uses markerSize for the point layer, defaulting to 10", async () => {
+  it("draws markerSize as a diameter, defaulting to 10, so the radius is half of it", async () => {
     await render({ dataSeries });
-    expect(lastViz().spec.layers[0].style?.size).toBe(10);
+    expect(lastViz().spec.layers[0].style?.size).toBe(5);
 
     await render({ dataSeries, markerSize: 14 });
-    expect(lastViz().spec.layers[0].style?.size).toBe(14);
+    expect(lastViz().spec.layers[0].style?.size).toBe(7);
   });
 
   it("uses a per-series color override as that series' palette entry", async () => {
@@ -155,7 +155,7 @@ describe("ScatterPlot series handling", () => {
       dataSeries: [{ name: "A", x: [1], y: [1], symbol: "star", size: 20 }],
     });
     const { spec, data } = lastViz();
-    expect(spec.layers[0].style?.size).toBe(12);
+    expect(spec.layers[0].style?.size).toBe(6);
     expect(data[0]).toEqual({ x: 1, y: 1, series: "A" });
   });
 });

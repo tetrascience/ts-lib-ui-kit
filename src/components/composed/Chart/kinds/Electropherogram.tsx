@@ -46,7 +46,30 @@ interface ElectropherogramProps {
   colorT?: string;
   colorG?: string;
   colorC?: string;
+  /** Headline over the chart. */
+  headlineLabel?: string;
+  /** Line under the headline. */
+  subtitleLabel?: string;
+  /** Title of the x-axis. */
+  positionLabel?: string;
+  /** Title of the y-axis. */
+  signalIntensityLabel?: string;
 }
+
+/** The words the chart shows, each overridable through its `xxxLabel` prop. */
+interface ElectropherogramLabels {
+  headline: string;
+  subtitle: string;
+  position: string;
+  signalIntensity: string;
+}
+
+const DEFAULT_LABELS: ElectropherogramLabels = {
+  headline: "Called sequence",
+  subtitle: "Each coloured trace is one base. The letter above a peak is the base called there.",
+  position: "Position",
+  signalIntensity: "Signal intensity",
+};
 
 const determineBase = (item: PeakData): string => {
   if (item.base !== undefined) return item.base;
@@ -176,8 +199,15 @@ function buildElectropherogramSpec(
   data: PeakData[],
   positionInterval: number,
   colors: BaseColors,
+  labels: ElectropherogramLabels,
 ): { rows: TraceRow[]; spec: ChartSpec } {
-  const maxValue = Math.max(0, ...data.flatMap((item) => [item.peakA, item.peakT, item.peakG, item.peakC]));
+  // A loop, not a spread: Math.max over a large array of arguments throws.
+  let maxValue = 0;
+  for (const item of data) {
+    for (const peak of [item.peakA, item.peakT, item.peakG, item.peakC]) {
+      if (peak > maxValue) maxValue = peak;
+    }
+  }
   const yMax = maxValue * Y_HEADROOM_FACTOR;
   const positions = data.map((item) => item.position);
   const minPosition = Math.min(...positions);
@@ -221,7 +251,7 @@ function buildElectropherogramSpec(
 
   const letter = { fontSize: LETTER_SIZE, hjust: 0.5, vjust: 0 };
   const spec = plot(rows, { x: "position" })
-    // Each trace is its own curve. The subtitle names each colour, so the field-named legend is hidden.
+    // Each trace is its own curve, and the subtitle explains them, so the field-named legend is hidden.
     .line({ data: curves.A, aes: { x: "x", y: "y" }, color: colors.A, linewidth: TRACE_WIDTH, showLegend: false })
     .line({ data: curves.T, aes: { x: "x", y: "y" }, color: colors.T, linewidth: TRACE_WIDTH, showLegend: false })
     .line({ data: curves.G, aes: { x: "x", y: "y" }, color: colors.G, linewidth: TRACE_WIDTH, showLegend: false })
@@ -230,18 +260,15 @@ function buildElectropherogramSpec(
     .text({ aes: { y: "callY", label: "letterT" }, color: colors.T, showLegend: false, ...letter })
     .text({ aes: { y: "callY", label: "letterG" }, color: colors.G, showLegend: false, ...letter })
     .text({ aes: { y: "callY", label: "letterC" }, color: colors.C, showLegend: false, ...letter })
-    .labs({
-      headline: "Called sequence",
-      subtitle: "Each trace is one base (A green, C blue, G pink, T orange). The letter marks the called base.",
-    })
+    .labs({ headline: labels.headline, subtitle: labels.subtitle })
     .scales({
       x: {
-        title: "Position",
+        title: labels.position,
         limits: [minPosition - step / 2, maxPosition + step / 2],
         breaks: tickPositions,
         grid: false,
       },
-      y: { title: "Signal intensity", limits: [0, yMax], breaks: yAxisBreaks(maxValue), grid: false },
+      y: { title: labels.signalIntensity, limits: [0, yMax], breaks: yAxisBreaks(maxValue), grid: false },
     })
     .spec();
 
@@ -265,14 +292,27 @@ const ElectropherogramChart: React.FC<ElectropherogramProps> = ({
   colorT = DEFAULT_BASE_COLORS.T,
   colorG = DEFAULT_BASE_COLORS.G,
   colorC = DEFAULT_BASE_COLORS.C,
+  headlineLabel = DEFAULT_LABELS.headline,
+  subtitleLabel = DEFAULT_LABELS.subtitle,
+  positionLabel = DEFAULT_LABELS.position,
+  signalIntensityLabel = DEFAULT_LABELS.signalIntensity,
 }) => {
   const colors = useMemo<BaseColors>(
     () => ({ A: colorA, T: colorT, G: colorG, C: colorC }),
     [colorA, colorT, colorG, colorC],
   );
+  const labels = useMemo<ElectropherogramLabels>(
+    () => ({
+      headline: headlineLabel,
+      subtitle: subtitleLabel,
+      position: positionLabel,
+      signalIntensity: signalIntensityLabel,
+    }),
+    [headlineLabel, subtitleLabel, positionLabel, signalIntensityLabel],
+  );
   const built = useMemo(
-    () => (data.length === 0 ? null : buildElectropherogramSpec(data, positionInterval, colors)),
-    [data, positionInterval, colors],
+    () => (data.length === 0 ? null : buildElectropherogramSpec(data, positionInterval, colors, labels)),
+    [data, positionInterval, colors, labels],
   );
 
   if (built === null) {

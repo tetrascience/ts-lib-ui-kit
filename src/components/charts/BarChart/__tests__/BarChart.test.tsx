@@ -86,10 +86,20 @@ describe("buildBarSpec", () => {
     const spec = buildBarSpec(rows, {
       ...base,
       variant: "group",
-      xTickText: ["Mon", "Tue"],
+      xTickText: ["Mon", "Tue", "Wed"],
     });
     expect(spec.scales?.x?.breaks).toEqual([0, 1, 2]);
-    expect(spec.scales?.x?.labels).toEqual({ "0": "Mon", "1": "Tue", "2": "2" });
+    expect(spec.scales?.x?.labels).toEqual({ "0": "Mon", "1": "Tue", "2": "Wed" });
+  });
+
+  it("ignores xTickText when it does not give one label per tick, rather than mislabelling them", () => {
+    const spec = buildBarSpec(rows, {
+      ...base,
+      variant: "group",
+      xTickText: ["Mon", "Tue"],
+    });
+    expect(spec.scales?.x?.breaks).toBeUndefined();
+    expect(spec.scales?.x?.labels).toBeUndefined();
   });
 
   it("leaves the x scale without breaks or labels when xTickText is omitted", () => {

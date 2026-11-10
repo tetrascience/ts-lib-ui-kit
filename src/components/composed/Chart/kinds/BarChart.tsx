@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 
+import { seriesPalettes, uniqueSeriesNames } from "./series";
+
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
-import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
-import { seriesColor } from "@/utils/colors";
+import { VizChart } from "@/components/charts/viz/VizChart";
 import { plot } from "@/vendor/ts-lib-viz/core";
 
 interface BarDataSeries {
@@ -60,11 +61,12 @@ export interface BarRow {
 
 /** Flattens the series into the rows ts-lib-viz draws. */
 export function buildBarRows(dataSeries: BarDataSeries[]): BarRow[] {
-  return dataSeries.flatMap((series) =>
+  const names = uniqueSeriesNames(dataSeries);
+  return dataSeries.flatMap((series, seriesIndex) =>
     series.x.map((x, index) => {
       const y = series.y[index];
       const error = series.error_y?.visible ? (series.error_y.array[index] ?? 0) : 0;
-      return { x, y, series: series.name, lo: y - error, hi: y + error };
+      return { x, y, series: names[seriesIndex], lo: y - error, hi: y + error };
     }),
   );
 }
@@ -93,7 +95,7 @@ export function buildBarSpec(rows: BarRow[], options: BarSpecOptions): ChartSpec
       x: {
         title: xTitle,
         limits: xRange,
-        ...(xTickText
+        ...(xTickText?.length === xTicks.length
           ? {
               breaks: xTicks,
               labels: Object.fromEntries(xTicks.map((tick, index) => [String(tick), xTickText[index] ?? String(tick)])),
@@ -117,8 +119,14 @@ const BarChartChart: React.FC<BarChartProps> = ({
   title,
   xTickText,
 }) => {
-  const colors = useMemo(() => dataSeries.map((series, index) => seriesColor(index, series.color)), [dataSeries]);
-  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
+  const palettes = useMemo(
+    () =>
+      seriesPalettes(
+        dataSeries,
+        dataSeries.map((series) => series.x.length > 0),
+      ),
+    [dataSeries],
+  );
   const hasErrorBars = dataSeries.some((series) => series.error_y?.visible);
   const rows = useMemo(() => buildBarRows(dataSeries), [dataSeries]);
   const spec = useMemo<ChartSpec>(

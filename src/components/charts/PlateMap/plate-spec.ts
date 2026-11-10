@@ -1,3 +1,6 @@
+import { color, rgb } from "d3-color";
+import { interpolateRgb } from "d3-interpolate";
+
 import type { ChartSpec, Palettes } from "@/vendor/ts-lib-viz/core";
 
 import { plot } from "@/vendor/ts-lib-viz/core";
@@ -71,24 +74,9 @@ type Builder = ReturnType<typeof plot<PlateCell[], { x: "x"; y: "y" }>>;
 const REGION_INSET = 0.49;
 /** Half a well, the distance from a well's centre to its edge. */
 const HALF_CELL = 0.5;
-const BYTE_MAX = 255;
-const BITS_PER_BYTE = 8;
-const HEX_RADIX = 16;
-const HEX_DIGITS = 6;
-
-const toChannels = (hex: string): number[] | null => {
-  const match = new RegExp(`^#?([0-9a-f]{${HEX_DIGITS}})$`, "i").exec(hex);
-  if (!match) return null;
-  const packed = parseInt(match[1], HEX_RADIX);
-  return [(packed >> (2 * BITS_PER_BYTE)) & BYTE_MAX, (packed >> BITS_PER_BYTE) & BYTE_MAX, packed & BYTE_MAX];
-};
-
-const toHex = (channels: number[]): string =>
-  `#${channels.map((value) => Math.round(value).toString(HEX_RADIX).padStart(2, "0")).join("")}`;
-
 /**
- * A colour ramp that interpolates between the stops of a Plotly-style colorscale.
- * Stops that are not hex colours are returned as they are, without blending.
+ * A colour ramp that interpolates between the stops of a Plotly-style colorscale. Any CSS colour
+ * blends (hex, rgb(), named), as Plotly accepted. A stop that does not parse is returned as it is.
  */
 export function colorRampFrom(stops: ReadonlyArray<readonly [number, string]>): ColorRamp {
   const sorted = [...stops].sort((a, b) => a[0] - b[0]);
@@ -99,11 +87,9 @@ export function colorRampFrom(stops: ReadonlyArray<readonly [number, string]>): 
     while (k < sorted.length - 2 && at > sorted[k + 1][0]) k++;
     const [start, startColor] = sorted[k];
     const [end, endColor] = sorted[Math.min(k + 1, sorted.length - 1)];
-    const from = toChannels(startColor);
-    const to = toChannels(endColor);
-    if (!from || !to || end === start) return startColor;
+    if (!color(startColor) || !color(endColor) || end === start) return startColor;
     const fraction = (at - start) / (end - start);
-    return toHex(from.map((value, index) => value + (to[index] - value) * fraction));
+    return rgb(interpolateRgb(startColor, endColor)(fraction)).formatHex();
   };
   return ramp as ColorRamp;
 }

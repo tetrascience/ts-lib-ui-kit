@@ -1,6 +1,6 @@
 import type { ScatterPlotProps } from "@/components/composed/Chart/kinds/ScatterPlot";
 
-import { Chart } from "@/components/composed/Chart";
+import { ScatterPlotChart } from "@/components/composed/Chart/kinds/ScatterPlot";
 
 export type {
   MarkerSymbol,
@@ -11,5 +11,5 @@ export type {
 
 /** Draws a scatter plot through the shared `Chart` component. */
 export function ScatterPlot(props: ScatterPlotProps) {
-  return <Chart type="scatter" {...props} />;
+  return <ScatterPlotChart {...props} />;
 }

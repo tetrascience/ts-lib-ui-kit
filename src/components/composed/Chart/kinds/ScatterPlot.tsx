@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 
+import { seriesPalettes, uniqueSeriesNames } from "./series";
+
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
-import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
-import { seriesColor } from "@/utils/colors";
+import { VizChart } from "@/components/charts/viz/VizChart";
 import { plot } from "@/vendor/ts-lib-viz/core";
 
 type MarkerSymbol = "circle" | "square" | "diamond" | "triangle-up" | "triangle-down" | "star";
@@ -45,7 +46,7 @@ interface ScatterPlotProps {
    * distinct marker symbols per series so overlapping series stay legible.
    */
   variant?: ScatterPlotVariant;
-  /** Default marker size in pixels (per-series `size` takes precedence) */
+  /** Default marker diameter in pixels, as Plotly sized it (per-series `size` takes precedence) */
   markerSize?: number;
 }
 
@@ -62,19 +63,27 @@ const ScatterPlotChart: React.FC<ScatterPlotProps> = ({
   markerSize = 10,
 }) => {
   const seriesArray = useMemo(() => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]), [dataSeries]);
-  const colors = useMemo(() => seriesArray.map((series, index) => seriesColor(index, series.color)), [seriesArray]);
-  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
-  const rows = useMemo(
-    () => seriesArray.flatMap((series) => series.x.map((x, index) => ({ x, y: series.y[index], series: series.name }))),
+  const palettes = useMemo(
+    () =>
+      seriesPalettes(
+        seriesArray,
+        seriesArray.map((series) => series.x.length > 0),
+      ),
     [seriesArray],
   );
+  const rows = useMemo(() => {
+    const names = uniqueSeriesNames(seriesArray);
+    return seriesArray.flatMap((series, seriesIndex) =>
+      series.x.map((x, index) => ({ x, y: series.y[index], series: names[seriesIndex] })),
+    );
+  }, [seriesArray]);
   const spec = useMemo<ChartSpec>(() => {
     const aes =
       variant === "stacked"
         ? { x: "x", y: "y", color: "series", shape: "series" }
         : { x: "x", y: "y", color: "series" };
     return plot(rows, aes)
-      .point({ size: markerSize })
+      .point({ size: markerSize / 2 })
       .labs({ headline: title })
       .scales({
         x: { title: xTitle, limits: xRange },

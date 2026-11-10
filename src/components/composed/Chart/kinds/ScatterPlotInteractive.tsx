@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import type {
   AxisConfig,
@@ -15,12 +15,10 @@ import {
   calculateRange,
   downsampleData,
   getSelectionMode,
-  getUniqueCategories,
 } from "@/components/charts/ScatterPlotInteractive/utils";
-import { categoricalPalettes } from "@/components/charts/viz/VizChart";
+import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
 import { CHART_COLORS } from "@/utils/colors";
 import { plot } from "@/vendor/ts-lib-viz/core";
-import { Viz } from "@/vendor/ts-lib-viz/react";
 
 /**
  *
@@ -50,8 +48,25 @@ const cell = (value: unknown): string | number | boolean | null => {
   return String(value);
 };
 
-/** The ink a selected point is outlined in. It draws behind the point, so the point reads larger. */
-const SELECTED_GROWTH = 6;
+/**
+ * Plotly sized markers by diameter; ts-lib-viz sizes them by radius. Every size the caller
+ * states is halved here, so a point keeps the diameter the Plotly chart drew it at.
+ */
+const toRadius = (diameter: number): number => diameter / 2;
+const toRadiusRange = (range: readonly [number, number]): [number, number] => [toRadius(range[0]), toRadius(range[1])];
+
+/** Radius added to a selected point, so it draws larger than the points around it. */
+const SELECTED_GROWTH = 3;
+
+/** Categories in the order the rows first show them, which is the order ts-lib-viz numbers them in. */
+function firstSeenCategories(points: ScatterPoint[], field: string): string[] {
+  const seen = new Set<string>();
+  for (const point of points) {
+    const value = point.metadata?.[field];
+    if (typeof value === "string") seen.add(value);
+  }
+  return [...seen];
+}
 
 const axisScale = (axis?: AxisConfig) => ({
   title: axis?.title,
@@ -68,19 +83,23 @@ const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
   shapeMapping,
   sizeMapping,
   tooltip,
-  enableClickSelection = false,
-  enableBoxSelection = false,
-  enableLassoSelection = false,
-  selectedIds,
+  enableClickSelection = true,
+  enableBoxSelection = true,
+  enableLassoSelection = true,
+  selectedIds: controlledSelectedIds,
   onSelectionChange,
   onPointClick,
   downsampling,
-  width,
-  height,
+  width = 800,
+  height = 600,
   className,
 }) => {
   const modifiers = useRef({ shiftKey: false, ctrlKey: false, metaKey: false });
   const pointerEvent = useRef<MouseEvent | null>(null);
+  // Without a `selectedIds` prop the chart keeps its own selection, as the Plotly chart did.
+  const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string | number>>(() => new Set());
+  const isControlled = controlledSelectedIds !== undefined;
+  const selectedIds = isControlled ? controlledSelectedIds : internalSelectedIds;
 
   const sampled = useMemo(
     () => (downsampling?.enabled ? downsampleData(data, downsampling) : data),
@@ -90,7 +109,7 @@ const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
   const categories = useMemo(
     () =>
       colorMapping?.type === "categorical" && colorMapping.field
-        ? getUniqueCategories(sampled, colorMapping.field)
+        ? firstSeenCategories(sampled, colorMapping.field)
         : [],
     [sampled, colorMapping],
   );
@@ -145,7 +164,7 @@ const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
   const spec = useMemo<ChartSpec>(() => {
     const base = colorMapping?.type === "static" ? (colorMapping.value ?? CHART_COLORS[0]) : undefined;
     const shape = shapeMapping?.type === "static" ? POINT_SHAPES[shapeMapping.value ?? "circle"] : undefined;
-    const size = sizeMapping?.type === "static" ? (sizeMapping.value ?? DEFAULT_MARKER_SIZE) : undefined;
+    const size = sizeMapping?.type === "static" ? toRadius(sizeMapping.value ?? DEFAULT_MARKER_SIZE) : undefined;
     const aes = {
       x: "x",
       y: "y",
@@ -153,8 +172,8 @@ const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
       ...(shapeField ? { shape: "shape" } : {}),
       ...(sizeField ? { size: "size" } : {}),
     };
-    const sizeRange = sizeMapping?.sizeRange ?? DEFAULT_SIZE_RANGE;
-    const selectedSize = (size ?? DEFAULT_MARKER_SIZE) + SELECTED_GROWTH;
+    const sizeRange = toRadiusRange(sizeMapping?.sizeRange ?? DEFAULT_SIZE_RANGE);
+    const selectedSize = (size ?? toRadius(DEFAULT_MARKER_SIZE)) + SELECTED_GROWTH;
     let builder = plot(rows, aes);
     if (selectedRows.length > 0) {
       builder = builder.point({
@@ -203,31 +222,33 @@ const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
   ]);
 
   const brush = enableLassoSelection ? "lasso" : enableBoxSelection ? "box" : undefined;
+  const anySelection = enableClickSelection || enableBoxSelection || enableLassoSelection;
 
   // Viz reports records by their string key. Map them back to the caller's ids
   // so a numeric id stays a number in onSelectionChange.
   const idByKey = useMemo(() => new Map(sampled.map((point) => [String(point.id), point.id])), [sampled]);
 
   const emit = (keys: string[], mode: SelectionMode) => {
-    if (!onSelectionChange) return;
     const ids = keys.map((key) => idByKey.get(key) ?? key);
     const next = applySelection(selectedIds ?? new Set(), new Set(ids), mode);
-    onSelectionChange(next, mode);
+    if (!isControlled) setInternalSelectedIds(next);
+    onSelectionChange?.(next, mode);
   };
 
   const onSelect = (hit: Selected | null) => {
-    if (!enableClickSelection) return;
-    // A click on empty plot area clears the selection, as Viz reports it.
+    // A click on empty plot area clears the selection, whichever gesture made it.
     if (!hit) {
-      emit([], "replace");
+      if (anySelection) emit([], "replace");
       return;
     }
+    if (!enableClickSelection) return;
     const mode = getSelectionMode(modifiers.current);
     emit(hit.keys, mode);
     const point = sampled.find((candidate) => String(candidate.id) === hit.keys[0]);
     if (point && onPointClick && pointerEvent.current) onPointClick(point, pointerEvent.current);
   };
 
+  // A brush that clears on a mode change is not a deselect; a click on empty area is, and reaches onSelect.
   const onBrush = (brushed: Brushed | null) => {
     if (!brushed) return;
     emit(brushed.keys, getSelectionMode(modifiers.current));
@@ -236,17 +257,18 @@ const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
   return (
     <div
       className={className}
-      style={{ width: width ?? "100%", height: height ?? "100%" }}
       onPointerDownCapture={(event) => {
         modifiers.current = event;
         pointerEvent.current = event.nativeEvent;
       }}
     >
-      <Viz
-        spec={{ ...spec, ...(width === undefined ? {} : { width }), ...(height === undefined ? {} : { height }) }}
+      <VizChart
+        spec={spec}
         data={rows}
         keyField="key"
         palettes={palettes}
+        width={width}
+        height={height}
         brush={brush}
         onBrush={onBrush}
         onSelect={onSelect}

@@ -1,6 +1,6 @@
 import type { LinePlotProps } from "@/components/composed/Chart/kinds/LinePlot";
 
-import { Chart } from "@/components/composed/Chart";
+import { LinePlotChart } from "@/components/composed/Chart/kinds/LinePlot";
 
 export { lineRows } from "@/components/composed/Chart/kinds/LinePlot";
 export type {
@@ -12,5 +12,5 @@ export type {
 
 /** Draws a line plot through the shared `Chart` component. */
 export function LinePlot(props: LinePlotProps) {
-  return <Chart type="line" {...props} />;
+  return <LinePlotChart {...props} />;
 }

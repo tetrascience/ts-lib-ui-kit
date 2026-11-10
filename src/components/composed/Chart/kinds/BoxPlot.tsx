@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 
+import { seriesPalettes, uniqueSeriesNames } from "./series";
+
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
-import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
-import { seriesColor } from "@/utils/colors";
+import { VizChart } from "@/components/charts/viz/VizChart";
 import { plot } from "@/vendor/ts-lib-viz/core";
 
 interface BoxDataSeries {
@@ -46,12 +47,13 @@ export interface BoxRow {
 
 /** Flattens the series into the rows ts-lib-viz draws. */
 export function buildBoxRows(dataSeries: BoxDataSeries[]): BoxRow[] {
-  return dataSeries.flatMap((series) =>
+  const names = uniqueSeriesNames(dataSeries);
+  return dataSeries.flatMap((series, seriesIndex) =>
     series.y.map((y, index) => ({
       // A single x labels the whole box, as in SW-2298; otherwise one x per sample.
       x: String(series.x?.length === 1 ? series.x[0] : (series.x?.[index] ?? series.name)),
       y,
-      series: series.name,
+      series: names[seriesIndex],
     })),
   );
 }
@@ -90,8 +92,14 @@ const BoxPlotChart: React.FC<BoxPlotProps> = ({
   title,
   showPoints = false,
 }) => {
-  const colors = useMemo(() => dataSeries.map((series, index) => seriesColor(index, series.color)), [dataSeries]);
-  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
+  const palettes = useMemo(
+    () =>
+      seriesPalettes(
+        dataSeries,
+        dataSeries.map((series) => series.y.length > 0),
+      ),
+    [dataSeries],
+  );
   const rows = useMemo(() => buildBoxRows(dataSeries), [dataSeries]);
   const spec = useMemo<ChartSpec>(
     () => buildBoxSpec(rows, { showPoints, title, xTitle, yTitle, xRange, yRange }),

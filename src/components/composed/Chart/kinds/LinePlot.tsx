@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 
+import { seriesPalettes, uniqueSeriesNames } from "./series";
+
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
-import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
-import { seriesColor } from "@/utils/colors";
+import { VizChart } from "@/components/charts/viz/VizChart";
 import { plot } from "@/vendor/ts-lib-viz/core";
 
 type MarkerSymbol =
@@ -225,11 +226,12 @@ interface LineRow {
  * per-point error when the series asks for it, and collapses to y otherwise.
  */
 export function lineRows(dataSeries: LineDataSeries[]): LineRow[] {
-  return dataSeries.flatMap((line) =>
+  const names = uniqueSeriesNames(dataSeries);
+  return dataSeries.flatMap((line, seriesIndex) =>
     line.x.map((x, index) => {
       const y = line.y[index];
       const error = line.error_y?.visible ? (line.error_y.array[index] ?? 0) : 0;
-      return { x, y, series: line.name, lo: y - error, hi: y + error };
+      return { x, y, series: names[seriesIndex], lo: y - error, hi: y + error };
     }),
   );
 }
@@ -246,8 +248,14 @@ const LinePlotChart: React.FC<LinePlotProps> = ({
   title,
   xTickText,
 }) => {
-  const colors = useMemo(() => dataSeries.map((line, index) => seriesColor(index, line.color)), [dataSeries]);
-  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
+  const palettes = useMemo(
+    () =>
+      seriesPalettes(
+        dataSeries,
+        dataSeries.map((line) => line.x.length > 0),
+      ),
+    [dataSeries],
+  );
   const rows = useMemo(() => lineRows(dataSeries), [dataSeries]);
   const spec = useMemo<ChartSpec>(() => {
     const xTicks = [...new Set(rows.map((row) => row.x))].sort((a, b) => a - b);
@@ -262,7 +270,7 @@ const LinePlotChart: React.FC<LinePlotProps> = ({
         x: {
           title: xTitle,
           limits: xRange,
-          ...(xTickText
+          ...(xTickText?.length === xTicks.length
             ? {
                 breaks: xTicks,
                 labels: Object.fromEntries(

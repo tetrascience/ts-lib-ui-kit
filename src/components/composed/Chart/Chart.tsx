@@ -10,6 +10,7 @@ import { PlateMapChart } from "./kinds/PlateMap";
 import { ScatterPlotChart } from "./kinds/ScatterPlot";
 import { ScatterPlotInteractiveChart } from "./kinds/ScatterPlotInteractive";
 import { StackedChromatogramChart } from "./kinds/StackedChromatogram";
+import { ViolinChart } from "./kinds/Violin";
 
 import type { AreaPlotProps } from "./kinds/AreaPlot";
 import type { BarChartProps } from "./kinds/BarChart";
@@ -23,6 +24,7 @@ import type { PlateMapProps } from "./kinds/PlateMap";
 import type { ScatterPlotProps } from "./kinds/ScatterPlot";
 import type { ScatterPlotInteractiveProps } from "./kinds/ScatterPlotInteractive";
 import type { StackedChromatogramProps } from "./kinds/StackedChromatogram";
+import type { ViolinProps } from "./kinds/Violin";
 
 /**
  * The chart to draw, and the props that chart takes. `type` picks the chart; every
@@ -34,6 +36,7 @@ export type ChartProps =
   | ({ type: "bar" } & BarChartProps)
   | ({ type: "histogram" } & HistogramProps)
   | ({ type: "boxplot" } & BoxPlotProps)
+  | ({ type: "violin" } & ViolinProps)
   | ({ type: "scatter" } & ScatterPlotProps)
   | ({ type: "scatterInteractive" } & ScatterPlotInteractiveProps)
   | ({ type: "pie" } & PieChartProps)
@@ -64,6 +67,8 @@ export function Chart(props: ChartProps) {
       return <HistogramChart {...props} />;
     case "boxplot":
       return <BoxPlotChart {...props} />;
+    case "violin":
+      return <ViolinChart {...props} />;
     case "scatter":
       return <ScatterPlotChart {...props} />;
     case "scatterInteractive":

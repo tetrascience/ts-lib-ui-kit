@@ -52,6 +52,7 @@ const cases: Array<{ props: ChartProps; layer: string }> = [
   { props: { type: "bar", dataSeries: [{ name: "Counts", x: [1, 2], y: [3, 4] }] }, layer: "bar" },
   { props: { type: "histogram", dataSeries: [{ name: "H", x: [1, 2, 2, 3] }] }, layer: "histogram" },
   { props: { type: "boxplot", dataSeries: [{ name: "B", y: [1, 2, 3, 4, 5] }] }, layer: "boxplot" },
+  { props: { type: "violin", dataSeries: [{ name: "V", y: [1, 2, 3, 4, 5] }] }, layer: "violin" },
   { props: { type: "scatter", dataSeries: [{ name: "S", x: [1, 2], y: [3, 4] }] }, layer: "point" },
   {
     props: {
@@ -92,6 +93,29 @@ describe("Chart", () => {
   it("gives every chart type the same entry point, so a type switch swaps only the chart", async () => {
     await render(<Chart type="histogram" dataSeries={[{ name: "H", x: [1, 2, 2, 3] }]} title="Peaks" />);
     expect(lastCall().spec.headline).toBe("Peaks");
+  });
+});
+
+describe("Chart violin", () => {
+  it("draws one violin per group, with its readings as the rows", async () => {
+    await render(
+      <Chart
+        type="violin"
+        dataSeries={[
+          { name: "Control", y: [1, 2, 3] },
+          { name: "Treated", y: [4, 5] },
+        ]}
+      />,
+    );
+    const { spec, data } = lastCall();
+    expect(spec.layers.map((drawn) => drawn.kind)).toEqual(["violin"]);
+    expect(data).toHaveLength(5);
+    expect(data.filter((row) => row.x === "Treated")).toHaveLength(2);
+  });
+
+  it("adds a jittered point layer over the violins when showPoints is set", async () => {
+    await render(<Chart type="violin" dataSeries={[{ name: "Control", y: [1, 2, 3] }]} showPoints />);
+    expect(lastCall().spec.layers.map((drawn) => drawn.kind)).toEqual(["violin", "point"]);
   });
 });
 

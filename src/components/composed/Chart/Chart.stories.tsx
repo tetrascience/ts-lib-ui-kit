@@ -130,3 +130,39 @@ export const ReferenceLines: Story = {
     zephyr: { testCaseId: "SW-T5800" },
   },
 };
+
+/** Deterministic samples around a centre, so the story draws the same shapes on every run. */
+const samples = (centre: number, spread: number, count: number) =>
+  Array.from({ length: count }, (_, index) => centre + spread * Math.sin(index * 1.7) * Math.cos(index * 0.6));
+
+/**
+ * One violin per group, drawn from the raw readings. The median tick and the quartile lines
+ * come from the violin itself; `showPoints` adds each reading as a jittered point.
+ */
+export const Violin: Story = {
+  args: {
+    type: "violin",
+    title: "Expression by group",
+    yTitle: "Signal",
+    showPoints: true,
+    dataSeries: [
+      { name: "Control", y: samples(10, 2, 40) },
+      { name: "Low dose", y: samples(13, 2.5, 40) },
+      { name: "High dose", y: samples(18, 1.5, 40) },
+    ],
+  } as Story["args"],
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    await step("The title renders and one violin is drawn per group", async () => {
+      await waitFor(() => {
+        expect(canvas.getByText("Expression by group")).toBeInTheDocument();
+      });
+      await waitFor(() => {
+        expect(canvasElement.querySelectorAll('[data-geom="violin"]')).toHaveLength(3);
+      });
+    });
+    await step("Each reading is drawn as a point", async () => {
+      expect(canvasElement.querySelectorAll("circle").length).toBeGreaterThanOrEqual(120);
+    });
+  },
+};

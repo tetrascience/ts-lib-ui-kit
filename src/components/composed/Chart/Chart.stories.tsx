@@ -47,6 +47,9 @@ export const Line: Story = {
       expect(canvasElement.querySelector("svg")).toBeInTheDocument();
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5797" },
+  },
 };
 
 /** The same component, switched to a histogram by changing `type` alone. */
@@ -65,6 +68,9 @@ export const Histogram: Story = {
       });
       expect(canvasElement.querySelector("svg")).toBeInTheDocument();
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5798" },
   },
 };
 
@@ -89,6 +95,9 @@ export const PlateMap: Story = {
       });
       expect(canvasElement.querySelectorAll(".platemap-plot circle")).toHaveLength(24);
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5799" },
   },
 };
 
@@ -116,6 +125,9 @@ export const ReferenceLines: Story = {
         expect(canvas.getByText("limit")).toBeInTheDocument();
       });
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5800" },
   },
 };
 
@@ -152,5 +164,8 @@ export const Violin: Story = {
     await step("Each reading is drawn as a point", async () => {
       expect(canvasElement.querySelectorAll("circle").length).toBeGreaterThanOrEqual(120);
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5801" },
   },
 };

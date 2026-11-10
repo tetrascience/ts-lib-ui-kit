@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 
+import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
 import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
@@ -21,7 +22,7 @@ interface BarDataSeries {
 
 type BarChartVariant = "group" | "stack" | "overlay";
 
-interface BarChartProps {
+interface BarChartProps extends ChartAnnotationProps {
   dataSeries: BarDataSeries[];
   /**
    * Fixed width in pixels. When omitted, the chart fills its container and
@@ -106,6 +107,8 @@ export function buildBarSpec(rows: BarRow[], options: BarSpecOptions): ChartSpec
 }
 
 const BarChartChart: React.FC<BarChartProps> = ({
+  referenceLines,
+  annotations,
   dataSeries,
   width,
   height,
@@ -136,7 +139,17 @@ const BarChartChart: React.FC<BarChartProps> = ({
     [rows, variant, hasErrorBars, title, xTitle, yTitle, xRange, yRange, xTickText],
   );
 
-  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
+  return (
+    <VizChart
+      spec={spec}
+      data={rows}
+      palettes={palettes}
+      width={width}
+      height={height}
+      referenceLines={referenceLines}
+      annotations={annotations}
+    />
+  );
 };
 
 export { BarChartChart };

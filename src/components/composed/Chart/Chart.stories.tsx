@@ -47,6 +47,9 @@ export const Line: Story = {
       expect(canvasElement.querySelector("svg")).toBeInTheDocument();
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5797" },
+  },
 };
 
 /** The same component, switched to a histogram by changing `type` alone. */
@@ -65,6 +68,9 @@ export const Histogram: Story = {
       });
       expect(canvasElement.querySelector("svg")).toBeInTheDocument();
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5798" },
   },
 };
 
@@ -89,5 +95,38 @@ export const PlateMap: Story = {
       });
       expect(canvasElement.querySelectorAll(".platemap-plot circle")).toHaveLength(24);
     });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5799" },
+  },
+};
+
+/**
+ * A line chart with a threshold and a note. Reference lines and annotations work on every
+ * line-based chart type; the threshold stays where its value puts it.
+ */
+export const ReferenceLines: Story = {
+  args: {
+    type: "line",
+    title: "Signal against a limit",
+    xTitle: "Time (s)",
+    yTitle: "Signal",
+    dataSeries: [{ name: "Run", x: [0, 1, 2, 3, 4], y: [2, 5, 3, 8, 6] }],
+    referenceLines: [
+      { axis: "y", value: 5, label: "limit", color: "#b91c1c", linetype: "dashed" },
+      { axis: "x", value: 3, label: "dose" },
+    ],
+    annotations: [{ x: 3, y: 8, text: "peak" }],
+  } as Story["args"],
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    await step("The threshold label renders", async () => {
+      await waitFor(() => {
+        expect(canvas.getByText("limit")).toBeInTheDocument();
+      });
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5800" },
   },
 };

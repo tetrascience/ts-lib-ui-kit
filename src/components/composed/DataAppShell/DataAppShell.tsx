@@ -386,34 +386,42 @@ function TopNavBreadcrumb({ items }: { items: BreadcrumbItemConfig[] }) {
     // flex-nowrap keeps it one line instead of Breadcrumb's default wrap
     // (which, combined with a squeezed left group, wrapped mid-trail and
     // pushed the rest of the top bar around — SW-2118).
-    <Breadcrumb className="min-w-0">
+    // UXT-178: clip at the trail's own edge instead of painting over the header
+    // actions. -m-1/p-1 leaves room for the links' 3px focus outline.
+    <Breadcrumb className="-m-1 min-w-0 overflow-hidden p-1">
       <BreadcrumbList className="flex-nowrap min-w-0">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
           const isClickable = !isLast && (!!item.href || !!item.onClick);
-          // Only the current (last) crumb truncates — earlier crumbs keep
-          // their natural width so the trail reads left-to-right.
-          const itemClassName = isLast ? "min-w-0" : "shrink-0";
+          // Every crumb truncates; ancestors shrink first, so the current page
+          // stays readable longest.
+          const itemClassName = isLast ? "min-w-0" : "min-w-[1em] shrink-4";
+          const title = typeof item.label === "string" ? item.label : undefined;
           return (
             <React.Fragment key={`${item.label}-${index}`}>
               {index > 0 && <BreadcrumbSeparator className="shrink-0">/</BreadcrumbSeparator>}
               <BreadcrumbItem className={itemClassName}>
                 {isLast ? (
-                  <BreadcrumbPage className="truncate">{item.label}</BreadcrumbPage>
+                  <BreadcrumbPage className="truncate" title={title}>
+                    {item.label}
+                  </BreadcrumbPage>
                 ) : isClickable && item.href ? (
-                  <BreadcrumbLink href={item.href} className="whitespace-nowrap">
+                  <BreadcrumbLink href={item.href} className="truncate" title={title}>
                     {item.label}
                   </BreadcrumbLink>
                 ) : isClickable && item.onClick ? (
                   <button
                     type="button"
-                    className="text-sm text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal whitespace-nowrap"
+                    className="text-sm text-primary hover:underline cursor-pointer bg-transparent border-none p-0 font-normal truncate"
                     onClick={item.onClick}
+                    title={title}
                   >
                     {item.label}
                   </button>
                 ) : (
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">{item.label}</span>
+                  <span className="text-sm text-muted-foreground truncate" title={title}>
+                    {item.label}
+                  </span>
                 )}
               </BreadcrumbItem>
             </React.Fragment>

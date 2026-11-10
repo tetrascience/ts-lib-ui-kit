@@ -1122,3 +1122,55 @@ export const WithBuildInfoFullHeightPage: Story = {
     });
   },
 };
+
+/**
+ * UXT-178: at a narrow width with header actions the trail truncates inside its
+ * own box. Ancestors give up width first, so the current page stays readable,
+ * and nothing paints over the actions.
+ */
+export const NarrowWithHeaderActions: Story = {
+  render: () => (
+    <div style={{ width: 375 }}>
+      <DataAppShell
+        appName="HTS"
+        navGroups={htsNavGroups}
+        breadcrumbs={htsBreadcrumbs}
+        headerActions={
+          <>
+            <Button size="sm" variant="outline">
+              Save as
+            </Button>
+            <Button size="sm">Save analysis</Button>
+          </>
+        }
+      >
+        <div className="p-6">Main content area</div>
+      </DataAppShell>
+    </div>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const actions = canvasElement.querySelector<HTMLElement>('[data-slot="top-bar-right"]')!;
+    const crumbs = [...canvasElement.querySelectorAll<HTMLElement>('[data-slot="breadcrumb-item"]')];
+    const current = crumbs[crumbs.length - 1];
+    const width = (el: HTMLElement) => el.getBoundingClientRect().width;
+
+    await step("no crumb reaches into the header actions", async () => {
+      const actionsLeft = actions.getBoundingClientRect().left;
+      for (const crumb of crumbs) expect(crumb.getBoundingClientRect().right).toBeLessThanOrEqual(actionsLeft);
+    });
+
+    await step("the current page keeps at least as much room as any ancestor", async () => {
+      expect(width(current)).toBeGreaterThan(0);
+      for (const ancestor of crumbs.slice(0, -1)) expect(width(current)).toBeGreaterThanOrEqual(width(ancestor));
+    });
+
+    await step("a squeezed ancestor keeps an ellipsis instead of vanishing", async () => {
+      for (const ancestor of crumbs.slice(0, -1)) {
+        expect(width(ancestor)).toBeGreaterThanOrEqual(parseFloat(getComputedStyle(ancestor).fontSize) - 0.5);
+      }
+    });
+  },
+  parameters: {
+    zephyr: { testCaseId: "" },
+  },
+};

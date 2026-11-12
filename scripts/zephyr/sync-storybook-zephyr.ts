@@ -650,6 +650,39 @@ async function getFolderId(componentType: string): Promise<string | null> {
   return folderIdCache[componentType] || null;
 }
 
+const TRANSIENT_ATTEMPTS = 3;
+const TRANSIENT_RETRY_DELAY_MS = 2000;
+
+/**
+ * Zephyr's cloud backend answers some calls with a 5xx ("Error calling cloud backend API")
+ * or runs past the client timeout under load. Those failures pass on a repeat.
+ */
+export function isTransientZephyrError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /→ 5\d\d\b|aborted due to timeout|timed out|ETIMEDOUT|ECONNRESET/i.test(message);
+}
+
+/**
+ * Runs an action again when Zephyr fails transiently. Only call it for work that is safe to
+ * repeat: a create must look for the case it may already have made before creating another.
+ */
+export async function withTransientRetry<T>(
+  label: string,
+  action: () => Promise<T>,
+  delayMs: number = TRANSIENT_RETRY_DELAY_MS,
+): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await action();
+    } catch (error: unknown) {
+      if (attempt >= TRANSIENT_ATTEMPTS || !isTransientZephyrError(error)) throw error;
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`  [RETRY] ${label}: ${message} (attempt ${attempt + 1} of ${TRANSIENT_ATTEMPTS})`);
+      await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
+    }
+  }
+}
+
 async function createTestCase(testName: string, objective: string, folderId: string | null): Promise<ZephyrTestCase> {
   // Uses the generic request (not the library's typed createTestCase) to preserve
   // this repo's custom objective format and label set.
@@ -998,10 +1031,15 @@ async function main(): Promise<void> {
         const testName = `${story.componentName} - ${humanName}`;
 
         console.log(`  [API] Looking for an existing Zephyr test case...`);
-        const reusableTestCase = await findReusableTestCase(testName, objective);
-        const result = reusableTestCase ?? (await createTestCase(testName, objective, folderId));
+        // Look again on every attempt: a create that failed after the server accepted it
+        // would otherwise leave a duplicate behind.
+        const { result, reused } = await withTransientRetry(testName, async () => {
+          const existing = await findReusableTestCase(testName, objective);
+          if (existing) return { result: existing, reused: true };
+          return { result: await createTestCase(testName, objective, folderId), reused: false };
+        });
 
-        if (reusableTestCase) {
+        if (reused) {
           reusedCount++;
           console.log(`  [SUCCESS] Reused ${result.key}`);
         } else {
@@ -1012,7 +1050,8 @@ async function main(): Promise<void> {
         if (story.steps.length > 0) {
           try {
             console.log(`  [STEPS] Uploading ${story.steps.length} step(s) to ${result.key}...`);
-            await uploadTestSteps(result.key, story.steps);
+            // Uploading steps overwrites them, so a repeat is safe.
+            await withTransientRetry(`steps ${result.key}`, () => uploadTestSteps(result.key, story.steps));
             console.log(`  [STEPS] Uploaded successfully`);
             stepSyncCount++;
           } catch (error: unknown) {

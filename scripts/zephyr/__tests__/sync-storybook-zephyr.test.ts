@@ -13,9 +13,11 @@ import {
   extractZephyrIdsFromParameters,
   findDuplicateZephyrIds,
   findStoryNameAssignment,
+  isTransientZephyrError,
   normalizeZephyrObjective,
   selectReusableTestCase,
   updateStoryFile,
+  withTransientRetry,
 } from "../sync-storybook-zephyr";
 
 const tempDirs: string[] = [];
@@ -515,5 +517,66 @@ export const Primary: Story = {
       expect(result.hasZephyrProperty).toBe(false);
       expect(result.ids).toEqual([]);
     });
+  });
+});
+
+describe("isTransientZephyrError", () => {
+  it("treats a Zephyr 5xx and a client timeout as transient", () => {
+    expect(
+      isTransientZephyrError(new Error('POST /testcases → 500: {"message":"Error calling cloud backend API"}')),
+    ).toBe(true);
+    expect(isTransientZephyrError(new Error("The operation was aborted due to timeout"))).toBe(true);
+  });
+
+  it("does not retry a 4xx or an unrelated error", () => {
+    expect(isTransientZephyrError(new Error("POST /testcases → 400: bad request"))).toBe(false);
+    expect(isTransientZephyrError(new Error("Story has no name"))).toBe(false);
+  });
+});
+
+describe("withTransientRetry", () => {
+  it("runs the action again after a transient failure and returns its result", async () => {
+    let calls = 0;
+    const result = await withTransientRetry(
+      "create SW-T1",
+      async () => {
+        calls++;
+        if (calls === 1) throw new Error("POST /testcases → 500: cloud backend");
+        return "SW-T1";
+      },
+      0,
+    );
+    expect(result).toBe("SW-T1");
+    expect(calls).toBe(2);
+  });
+
+  it("gives up after the last attempt and rethrows", async () => {
+    let calls = 0;
+    await expect(
+      withTransientRetry(
+        "steps SW-T1",
+        async () => {
+          calls++;
+          throw new Error("The operation was aborted due to timeout");
+        },
+        0,
+      ),
+    ).rejects.toThrow("aborted due to timeout");
+    expect(calls).toBe(3);
+  });
+
+  it("does not repeat a non-transient failure", async () => {
+    let calls = 0;
+    await expect(
+      withTransientRetry(
+        "create SW-T1",
+        async () => {
+          calls++;
+          throw new Error("POST /testcases → 400: bad request");
+        },
+        0,
+      ),
+    ).rejects.toThrow("400");
+    expect(calls).toBe(1);
   });
 });

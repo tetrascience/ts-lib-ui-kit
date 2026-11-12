@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
+import type { ChartAnnotationProps, ReferenceLine } from "@/components/composed/Chart/annotations";
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
 import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
@@ -185,6 +185,66 @@ interface LineDataSeries {
 
 type LinePlotVariant = "lines" | "lines+markers" | "lines+markers+error_bars";
 
+/**
+ * A Levey-Jennings control chart over the series: a centre line and shaded sigma bands.
+ *
+ * `center` and `sigma` are the caller's. Take them from the reference period the lab has
+ * qualified (its mean and standard deviation). The chart does not estimate them from the
+ * plotted data, because the plotted data is what the limits are meant to judge. One centre
+ * and sigma apply to every series on the chart.
+ */
+export interface ControlChart {
+  /** The centre line, in the y units: the target or the mean. */
+  center: number;
+  /** One standard deviation, in the y units. Must be positive, or no bands or sigma lines are drawn. */
+  sigma: number;
+  /** Sigma multiples to shade and mark on each side of the centre. Defaults to `[1, 2, 3]`. */
+  bands?: readonly number[];
+  /** Text beside the centre line. Defaults to "Mean". */
+  centerLabel?: string;
+}
+
+/** A shaded band from `lo` to `hi`, `multiple` sigma either side of the centre. */
+export interface ControlBand {
+  multiple: number;
+  lo: number;
+  hi: number;
+}
+
+const CONTROL_BANDS: readonly number[] = [1, 2, 3];
+/** A neutral grey that reads on both themes. The bands stack, so the inner ones darken. */
+const CONTROL_INK = "#737373";
+const CONTROL_BAND_ALPHA = 0.1;
+
+/**
+ * The bands and reference lines a control chart draws. A centre without a usable sigma gives
+ * the centre line alone. Bands come back widest first, so each inner band draws over the outer ones.
+ */
+export function controlChartMarks(control?: ControlChart): {
+  bands: ControlBand[];
+  lines: ReferenceLine[];
+} {
+  if (control === undefined || !Number.isFinite(control.center)) return { bands: [], lines: [] };
+  const { center, sigma } = control;
+  const lines: ReferenceLine[] = [{ axis: "y", value: center, label: control.centerLabel ?? "Mean" }];
+  if (!Number.isFinite(sigma) || sigma <= 0) return { bands: [], lines };
+
+  const multiples = [...new Set((control.bands ?? CONTROL_BANDS).filter((m) => Number.isFinite(m) && m > 0))].sort(
+    (a, b) => a - b,
+  );
+  for (const multiple of multiples) {
+    const label = String(multiple);
+    lines.push(
+      { axis: "y", value: center + multiple * sigma, label: `+${label}σ`, color: CONTROL_INK, linetype: "dashed" },
+      { axis: "y", value: center - multiple * sigma, label: `-${label}σ`, color: CONTROL_INK, linetype: "dashed" },
+    );
+  }
+  const bands = multiples
+    .map((multiple) => ({ multiple, lo: center - multiple * sigma, hi: center + multiple * sigma }))
+    .reverse();
+  return { bands, lines };
+}
+
 type LinePlotProps = ChartAnnotationProps & {
   dataSeries: LineDataSeries[];
   /**
@@ -210,6 +270,8 @@ type LinePlotProps = ChartAnnotationProps & {
    * unique, ordered x values across all series.
    */
   xTickText?: string[];
+  /** A centre line and sigma bands drawn over the series, for a control chart. */
+  controlChart?: ControlChart;
 };
 
 /** One row per point: its series, x, y, and the error bar's lo/hi edges. */
@@ -248,13 +310,33 @@ const LinePlotChart: React.FC<LinePlotProps> = ({
   yTitle,
   title,
   xTickText,
+  controlChart,
 }) => {
   const colors = useMemo(() => dataSeries.map((line, index) => seriesColor(index, line.color)), [dataSeries]);
   const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
   const rows = useMemo(() => lineRows(dataSeries), [dataSeries]);
+  const control = useMemo(() => controlChartMarks(controlChart), [controlChart]);
+  const allReferenceLines = useMemo(
+    () => [...control.lines, ...(referenceLines ?? [])],
+    [control.lines, referenceLines],
+  );
   const spec = useMemo<ChartSpec>(() => {
     const xTicks = [...new Set(rows.map((row) => row.x))].sort((a, b) => a - b);
-    let builder = plot(rows, { x: "x", y: "y", color: "series" }).line();
+    let builder = plot(rows, { x: "x", y: "y", color: "series" });
+    // The bands go in before the series, so the lines and points draw over them.
+    if (control.bands.length > 0 && xTicks.length > 0) {
+      const x = [xTicks[0], xTicks[xTicks.length - 1]];
+      for (const band of control.bands) {
+        builder = builder.annotate("ribbon", {
+          x,
+          ymin: [band.lo, band.lo],
+          ymax: [band.hi, band.hi],
+          fill: CONTROL_INK,
+          alpha: CONTROL_BAND_ALPHA,
+        });
+      }
+    }
+    builder = builder.line();
     if (variant !== "lines") builder = builder.point();
     if (variant === "lines+markers+error_bars") {
       builder = builder.errorbar({ aes: { ymin: "lo", ymax: "hi" } });
@@ -277,7 +359,7 @@ const LinePlotChart: React.FC<LinePlotProps> = ({
         y: { title: yTitle, limits: yRange },
       })
       .spec();
-  }, [rows, variant, title, xTitle, yTitle, xRange, yRange, xTickText]);
+  }, [rows, control, variant, title, xTitle, yTitle, xRange, yRange, xTickText]);
 
   return (
     <VizChart
@@ -286,7 +368,7 @@ const LinePlotChart: React.FC<LinePlotProps> = ({
       palettes={palettes}
       width={width}
       height={height}
-      referenceLines={referenceLines}
+      referenceLines={allReferenceLines}
       annotations={annotations}
     />
   );

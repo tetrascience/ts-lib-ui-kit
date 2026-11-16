@@ -290,6 +290,30 @@ import { Table } from "@/components/ui/table";
 | `TaskScripts`        | —                    | Removed                                       |
 | All chart components | `charts/`            | Moved to dedicated folder                     |
 
+## TDP `DiffViewer` (`@tetrascience/ui-components`) → `DiffViewer`
+
+The platform's diff viewer wraps `react-diff-viewer`; the kit's is built on Monaco's diff editor (the
+dependency `CodeEditor` already uses), so there is nothing extra to install.
+
+| Legacy prop                    | Kit `DiffViewer`                                                                              |
+| ------------------------------ | --------------------------------------------------------------------------------------------- |
+| `oldValue` / `newValue`        | `original` / `modified`                                                                       |
+| `splitView` (default `true`)   | `mode="split"` (default) or `mode="unified"`                                                  |
+| `showDiffOnly`                 | `collapseUnchanged`                                                                           |
+| `hideLineNumbers`              | `lineNumbers={false}`                                                                         |
+| `useDarkTheme`                 | Not needed — follows the `.dark` class                                                        |
+| `compareMethod`                | Not needed — changed characters are always emphasised within a line                           |
+| `diffStyles` (color variables) | Override the `--diff-added*` / `--diff-removed*` tokens (DESIGN.md §2)                        |
+| `leftTitle` / `rightTitle`     | Render your own headings; `originalLabel` / `modifiedLabel` name the panes for assistive tech |
+
+New with the kit's viewer: syntax highlighting (`language`), `wordWrap`, `ignoreTrimWhitespace`, and an
+`options` passthrough to Monaco. In `split` mode a viewer narrower than 900px shows the unified layout;
+pass `options={{ useInlineViewWhenSpaceIsLimited: false }}` to always split.
+
+Monaco themes are page-global: every `DiffViewer` on a page shares one set of diff colors, and a
+`CodeEditor` mounted on the same page afterwards switches the page back to Monaco's stock theme (the
+diff stays red/green, but no longer token-derived) until the viewer next re-themes.
+
 ## New Components (No Old Equivalent)
 
 These shadcn components are new additions with no prior equivalent:

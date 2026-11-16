@@ -287,7 +287,7 @@ Accordion, Alert, AlertDialog, AspectRatio, Avatar, Badge, Breadcrumb, Button, B
 
 TetraScience-specific compositions built from UI primitives:
 
-AppShellSimple, AssistantLayout, Chat, ConfirmDialog, DataAppShell (with PrimaryNav, SecondaryNav, RightPanel), EmptyState, FormPatterns, MoleculeStructure, PlateMapEditor, ProcessFlow, RichListItem, StatCard, TdpLink, TdpSearch, TdpUrl, TopBar, UserMenu
+AppShellSimple, AssistantLayout, Chat, ConfirmDialog, DataAppShell (with PrimaryNav, SecondaryNav, RightPanel), DiffViewer, EmptyState, FormPatterns, MoleculeStructure, PlateMapEditor, ProcessFlow, RichListItem, StatCard, TdpLink, TdpSearch, TdpUrl, TopBar, UserMenu
 
 #### Full-height pages in an app shell with a build-info footer
 

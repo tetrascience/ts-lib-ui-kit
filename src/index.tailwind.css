@@ -159,6 +159,13 @@
   --color-positive-foreground: var(--positive-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  /* UXT-53 diff utilities: bg-diff-added-line / text-diff-removed / … */
+  --color-diff-added: var(--diff-added);
+  --color-diff-added-line: var(--diff-added-line);
+  --color-diff-added-text: var(--diff-added-text);
+  --color-diff-removed: var(--diff-removed);
+  --color-diff-removed-line: var(--diff-removed-line);
+  --color-diff-removed-text: var(--diff-removed-text);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -359,6 +366,20 @@
     --positive-foreground: oklch(1 0 0); /* #FFFFFF — 5.0:1 on --positive */
     --warning: oklch(0.5716 0.1335 60.41); /* #AF6100 — darkened amber, AA 4.6:1 on white */
     --warning-foreground: oklch(1 0 0); /* #FFFFFF — 4.6:1 on --warning */
+    /* Diff (UXT-53) — green = added, red = removed. `--diff-added` / `--diff-removed`
+       are the solid hues (gutter markers, overview ruler); `-line` tints a whole
+       changed line and `-text` the changed characters inside it. All derive from
+       --positive / --destructive, so they track the theme without a separate
+       .dark definition (var() resolves in the element's scope). The tints are
+       translucent on purpose: code keeps its own AA text colour on top of them.
+       To re-colour diffs, override the two solid tokens on :root, or all six on
+       a narrower scope. */
+    --diff-added: var(--positive);
+    --diff-added-line: color-mix(in oklab, var(--diff-added) 10%, transparent);
+    --diff-added-text: color-mix(in oklab, var(--diff-added) 18%, transparent);
+    --diff-removed: var(--destructive);
+    --diff-removed-line: color-mix(in oklab, var(--diff-removed) 10%, transparent);
+    --diff-removed-text: color-mix(in oklab, var(--diff-removed) 18%, transparent);
     /* Shiki syntax highlighting — code tokens mapped onto design tokens, AA on --shiki-bg in both modes */
     --shiki-bg: var(--card); /* #FFFFFF */
     --shiki-fg: var(--foreground); /* #0D1B3E — 16.9:1 */

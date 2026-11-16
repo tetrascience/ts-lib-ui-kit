@@ -21,6 +21,22 @@
 
 > Dark mode is handled via the `.dark` class on `<html>`. All variables are redefined under `.dark { }` in `src/index.tailwind.css` — no separate stylesheet needed.
 
+#### Diff colors
+
+`DiffViewer` paints additions and removals from six tokens, all derived from `--positive` (green) and
+`--destructive` (red), so they follow light and dark mode with no separate `.dark` values:
+
+| CSS Variable                                | Tailwind utility                     | Role                                    |
+| ------------------------------------------- | ------------------------------------ | --------------------------------------- |
+| `--diff-added` / `--diff-removed`           | `bg-diff-added`, `text-diff-removed` | Solid hue — overview ruler, your own UI |
+| `--diff-added-line` / `--diff-removed-line` | `bg-diff-added-line`, …              | 10% tint behind a whole changed line    |
+| `--diff-added-text` / `--diff-removed-text` | `bg-diff-added-text`, …              | 18% tint behind the changed characters  |
+
+The tints are translucent so code keeps its own text color on top of them; the viewer's syntax colors
+(the `--shiki-*` tokens, mixed towards `--foreground`) are AA on both tints stacked. To re-color diffs,
+override `--diff-added` / `--diff-removed` on `:root`, or all six on a narrower scope. Change is never
+signalled by color alone: every changed line also carries a `+` or `-` gutter marker.
+
 ### Typography
 
 - **Font family**: Inter Variable (`@fontsource-variable/inter`), variable weight 100–900
@@ -117,6 +133,7 @@ import {
 | `Badge`                  | Data Display       | `badge`                    | —                                                        | Stable |
 | `Carousel`               | Data Display       | `carousel`                 | —                                                        | Stable |
 | `CodeBlock`              | Data Display       | —                          | Read-only highlighted code, slim Shiki highlighter       | Stable |
+| `DiffViewer`             | Data Display       | —                          | Read-only text diff (split / unified) on Monaco          | Beta   |
 | `DataTable`              | Data Display       | —                          | TanStack Table wrapper, pagination, column toggle        | In Dev |
 | `Item`                   | Data Display       | —                          | Generic list/menu item                                   | Stable |
 | `Kbd`                    | Data Display       | —                          | Keyboard shortcut indicator                              | Stable |

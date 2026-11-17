@@ -78,6 +78,12 @@ export interface AppShellSimpleProps {
   onSelect?: (key: string, page: NavPage) => void;
   /** Breadcrumb trail — the top bar name */
   breadcrumbs: AppShellSimpleCrumb[];
+  /** Top-bar slot between the nav toggle and the breadcrumb (e.g. an app switcher) */
+  headerStart?: React.ReactNode;
+  /** Slot after the breadcrumb in the top bar's left group, as in `DataAppShell` */
+  headerLeft?: React.ReactNode;
+  /** Center "context" slot in the top bar (e.g. a version or status selector) */
+  headerCenter?: React.ReactNode;
   /** Right-side top bar actions (e.g. notifications, user menu) */
   headerActions?: React.ReactNode;
   /** Bottom-of-nav user slot */
@@ -88,6 +94,13 @@ export interface AppShellSimpleProps {
   nav?: AppShellSimpleNavState;
   /** Fired whenever the nav state changes (toggle, drag, or keyboard resize) */
   onNavChange?: (nav: AppShellSimpleNavState) => void;
+  /**
+   * Media query that collapses the sidebar to the icon rail while it matches,
+   * as `DataAppShell` does. Leaving it restores the sidebar unless the user
+   * changed the nav meanwhile. Pass `false` to disable. Defaults to
+   * `"(max-width: 1023px)"`.
+   */
+  autoCollapse?: string | false;
   /**
    * App version, shown in the build-info footer (rendered when this or `commitSha` is set).
    * The footer follows the content; a page that fills the viewport and scrolls internally
@@ -181,11 +194,15 @@ export function AppShellSimple({
   activeKey,
   onSelect,
   breadcrumbs,
+  headerStart,
+  headerLeft,
+  headerCenter,
   headerActions,
   userMenu,
   defaultNav = "sidebar",
   nav: navProp,
   onNavChange,
+  autoCollapse = "(max-width: 1023px)",
   version,
   commitSha,
   children,
@@ -202,13 +219,40 @@ export function AppShellSimple({
   const { index, dir } = resolveCursor(cursor, navProp);
   const navState = NAV_ORDER[index];
 
+  // Set while the media query, not the user, collapsed the nav. Any user
+  // change clears it, so the user's own choice outlives the breakpoint.
+  const autoCollapsedRef = React.useRef(false);
+
   const applyNav = React.useCallback(
-    (next: NavCursor) => {
+    (next: NavCursor, { auto = false } = {}) => {
+      if (!auto) autoCollapsedRef.current = false;
       setCursor(next);
       if (next.index !== index) onNavChange?.(NAV_ORDER[next.index]);
     },
     [index, onNavChange],
   );
+
+  // UXT-274: collapse sidebar → rail below the breakpoint, as DataAppShell
+  // does. dir -1 makes one toggle click undo it. The handler lives in a ref so
+  // the subscription doesn't re-run on every render.
+  const applyAutoCollapseRef = React.useRef((matches: boolean) => void matches);
+  applyAutoCollapseRef.current = (matches: boolean) => {
+    if (matches && navState === "sidebar") {
+      applyNav({ index: indexOfNav("rail"), dir: -1 }, { auto: true });
+      autoCollapsedRef.current = true;
+    } else if (!matches && autoCollapsedRef.current) {
+      applyNav({ index: indexOfNav("sidebar"), dir: dirFor(indexOfNav("sidebar")) });
+    }
+  };
+
+  React.useEffect(() => {
+    if (autoCollapse === false || !showNav) return;
+    const mql = window.matchMedia(autoCollapse);
+    applyAutoCollapseRef.current(mql.matches);
+    const onChange = (e: MediaQueryListEvent) => applyAutoCollapseRef.current(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, [autoCollapse, showNav]);
 
   const nextCursor = nextNav({ index, dir });
   const cycleNav = () => applyNav(nextCursor);
@@ -269,9 +313,21 @@ export function AppShellSimple({
           left={
             <>
               {showNav && <SideNavToggle label={nextLabel} onCycle={cycleNav} />}
+              {/* shrink-0: only the breadcrumb gives up width when the left group is tight. */}
+              {headerStart != null && (
+                <div data-slot="app-shell-simple-header-start" className="shrink-0">
+                  {headerStart}
+                </div>
+              )}
               <ShellBreadcrumb items={breadcrumbs} />
+              {headerLeft != null && (
+                <div data-slot="app-shell-simple-header-left" className="shrink-0">
+                  {headerLeft}
+                </div>
+              )}
             </>
           }
+          center={headerCenter}
           right={headerActions}
         />
       </div>

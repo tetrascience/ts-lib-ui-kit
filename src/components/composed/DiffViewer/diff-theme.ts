@@ -58,7 +58,7 @@ export function cssColorToHex(color: string, doc: Document = document): string |
  * a tint. Mixing each one towards `--foreground` (darker in light mode, lighter
  * in dark) buys the headroom while keeping the hue.
  */
-const boosted = (token: string) => `color-mix(in oklab, var(${token}) 30%, var(--foreground))`;
+const boosted = (token: string) => `color-mix(in oklab, var(${token}) 28%, var(--foreground))`;
 
 /** Monaco theme colours other than the diff roles: the editor surface, from kit tokens. */
 const EDITOR_COLORS: Record<string, { requires: string; css: string }> = {

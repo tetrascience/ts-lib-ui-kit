@@ -60,7 +60,6 @@ const meta: Meta<typeof CodeDiff> = {
     original: ORIGINAL,
     modified: MODIFIED,
     language: "json",
-    height: 280,
   },
   argTypes: {
     mode: { control: { type: "inline-radio" }, options: ["split", "unified"] },
@@ -132,6 +131,12 @@ export const Default: Story = {
       expect(viewer.querySelectorAll("th")).toHaveLength(2);
     });
 
+    await step("Is as tall as the diff, with nothing to scroll", async () => {
+      const scroller = viewer.querySelector('[data-slot="code-diff-scroller"]');
+      expect(scroller?.scrollHeight).toBe(scroller?.clientHeight);
+      expect(scroller).not.toHaveAttribute("tabindex");
+    });
+
     await step("Marks changes with + / - signs, not colour alone", async () => {
       expect(markers(viewer)).toContain("+");
       expect(markers(viewer)).toContain("-");
@@ -184,6 +189,26 @@ export const CollapseUnchanged: Story = {
   },
 };
 
+/** With `maxHeight`, a diff taller than the limit scrolls inside the viewer and becomes a tab stop. */
+export const MaxHeight: Story = {
+  args: {
+    original: longText(20, "sample_20 = read_well(20)"),
+    modified: longText(20, "sample_20 = read_well(20, gain=1.5)"),
+    language: "python",
+    maxHeight: 240,
+  },
+  play: async ({ canvasElement }) => {
+    const viewer = getViewer(canvasElement);
+    await waitForDiff(viewer);
+    expect(viewer.getBoundingClientRect().height).toBe(240);
+    const scroller = viewer.querySelector('[data-slot="code-diff-scroller"]');
+    if (!scroller) throw new Error("scroller not found");
+    expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight);
+    await waitFor(() => expect(scroller).toHaveAttribute("tabindex", "0"));
+    expect(scroller).toHaveAccessibleName("Diff, scrollable");
+  },
+};
+
 export const WordWrapWithoutLineNumbers: Story = {
   args: {
     original: "The assay buffer is prepared fresh each day and kept on ice until the plate is loaded into the reader.",
@@ -191,7 +216,6 @@ export const WordWrapWithoutLineNumbers: Story = {
     language: "plaintext",
     wordWrap: true,
     lineNumbers: false,
-    height: 160,
   },
   decorators: [
     (Story) => (
@@ -221,7 +245,6 @@ const lineId = (line: CodeDiffLine) => `${line.side === "original" ? "L" : "R"}$
  * in a row beneath the line. Which lines are open is the consumer's state.
  */
 export const LineActionsAndAnnotations: Story = {
-  args: { height: 360 },
   render: (args) => {
     const [open, setOpen] = React.useState<string[]>([]);
     const toggle = (id: string) =>

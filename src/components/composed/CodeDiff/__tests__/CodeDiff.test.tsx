@@ -105,6 +105,15 @@ describe("CodeDiff", () => {
     expect(all("row")).toHaveLength(13);
   });
 
+  it("grows with the diff unless given a maximum height", async () => {
+    await render(<CodeDiff original="a" modified="b" />);
+    expect((viewer() as HTMLElement).style.maxHeight).toBe("");
+    expect((viewer() as HTMLElement).style.height).toBe("");
+
+    await render(<CodeDiff original="a" modified="b" maxHeight={240} />);
+    expect((viewer() as HTMLElement).style.maxHeight).toBe("240px");
+  });
+
   it("becomes a named tab stop only while the diff scrolls", async () => {
     await render(<CodeDiff original="a" modified="b" scrollRegionLabel="Diff défilant" />);
     const scroller = all("scroller")[0];

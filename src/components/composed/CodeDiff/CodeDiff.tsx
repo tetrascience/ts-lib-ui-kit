@@ -31,8 +31,11 @@ export interface CodeDiffProps extends Omit<React.ComponentProps<"div">, "childr
   language?: string;
   /** Layout of the diff. `split` stays side by side at every width. */
   mode?: CodeDiffMode;
-  /** Height of the viewer. A number is pixels. Longer diffs scroll inside it. */
-  height?: number | string;
+  /**
+   * Tallest the viewer may grow. A number is pixels. By default it is as tall
+   * as the diff; with a limit, a longer diff scrolls inside the viewer.
+   */
+  maxHeight?: number | string;
   /** Show line numbers. */
   lineNumbers?: boolean;
   /** Wrap long lines instead of scrolling horizontally. */
@@ -502,7 +505,7 @@ function CodeDiff({
   modified,
   language = "plaintext",
   mode = "split",
-  height = 400,
+  maxHeight,
   lineNumbers = true,
   wordWrap = false,
   collapseUnchanged = false,
@@ -554,8 +557,8 @@ function CodeDiff({
       data-mode={mode}
       data-state={content ? "ready" : "loading"}
       aria-busy={!content}
-      className={cn("overflow-hidden rounded-lg border bg-card text-sm", className)}
-      style={{ height, ...style }}
+      className={cn("flex flex-col overflow-hidden rounded-lg border bg-card text-sm", className)}
+      style={{ maxHeight, ...style }}
       {...props}
     >
       {content ? (
@@ -563,7 +566,7 @@ function CodeDiff({
           ref={scrollerRef}
           data-slot="code-diff-scroller"
           className={cn(
-            "relative size-full overflow-auto",
+            "relative min-h-0 flex-1 overflow-auto",
             isScrollable && "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
           )}
           {...scrollRegionProps}
@@ -582,7 +585,7 @@ function CodeDiff({
           />
         </div>
       ) : (
-        <div className="flex size-full items-center justify-center text-muted-foreground">{loadingLabel}</div>
+        <div className="flex items-center justify-center px-3 py-6 text-muted-foreground">{loadingLabel}</div>
       )}
     </div>
   );

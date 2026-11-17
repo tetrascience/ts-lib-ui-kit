@@ -45,30 +45,39 @@ export interface DiffViewer2Props extends Omit<React.ComponentProps<"div">, "chi
 }
 
 /**
- * Text on a diff sits on the red and green tints as well as on the plain
- * surface, so every colour is mixed towards `--foreground` for AA headroom,
- * the same 28% the Monaco `DiffViewer` uses.
+ * How much of its own colour text keeps, as `--diff-ink`; the rest is mixed
+ * towards `--foreground`. On the plain surface every colour is used as it is.
+ * The tints lower contrast, so text gives up only what each one costs: 88% on a
+ * changed line, 40% on changed characters, where the line and character tints
+ * stack. Those are the highest steps at which every `--shiki-*` colour stays AA
+ * in both light and dark.
  */
-const SUBTLE_TEXT = "[color:color-mix(in_oklab,var(--muted-foreground)_28%,var(--foreground))]";
+const CHANGED_LINE_INK = "[--diff-ink:88%]";
+
+/** Line numbers and the fold button. `--muted-foreground` alone is under AA on a dark tint. */
+const SUBTLE_TEXT = "[color:color-mix(in_oklab,var(--muted-foreground)_68%,var(--foreground))]";
 const TOKEN_TEXT = cn(
-  "[color:color-mix(in_oklab,var(--shiki-light)_28%,var(--foreground))]",
-  "dark:[color:color-mix(in_oklab,var(--shiki-dark)_28%,var(--foreground))]",
+  "[color:color-mix(in_oklab,var(--shiki-light)_var(--diff-ink,100%),var(--foreground))]",
+  "dark:[color:color-mix(in_oklab,var(--shiki-dark)_var(--diff-ink,100%),var(--foreground))]",
   "[font-style:var(--shiki-light-font-style)] dark:[font-style:var(--shiki-dark-font-style)]",
 );
 
 type CellKind = ReturnType<typeof lineKindOf> | "filler";
 
 const CELL_TINT: Record<CellKind, string | undefined> = {
-  added: "bg-diff-added-line",
-  removed: "bg-diff-removed-line",
+  added: cn("bg-diff-added-line", CHANGED_LINE_INK),
+  removed: cn("bg-diff-removed-line", CHANGED_LINE_INK),
   unchanged: undefined,
   // The other side has a line here and this one does not.
   filler: "bg-muted/40",
 };
 
 const MARKER: Record<CellKind, { sign: string; className?: string }> = {
-  added: { sign: "+", className: "[color:color-mix(in_oklab,var(--diff-added)_28%,var(--foreground))]" },
-  removed: { sign: "-", className: "[color:color-mix(in_oklab,var(--diff-removed)_28%,var(--foreground))]" },
+  added: { sign: "+", className: "[color:color-mix(in_oklab,var(--diff-added)_var(--diff-ink),var(--foreground))]" },
+  removed: {
+    sign: "-",
+    className: "[color:color-mix(in_oklab,var(--diff-removed)_var(--diff-ink),var(--foreground))]",
+  },
   unchanged: { sign: "" },
   filler: { sign: "" },
 };

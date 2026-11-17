@@ -89,8 +89,10 @@ function ToggleGroupItem({
   // utilities stay at (0,1,0), so `className` keeps winning — which is the
   // contract every other component here follows.
   const segmented = (context.spacing ?? 0) === 0;
-  const collapseLeadingEdge =
-    context.orientation === "vertical" ? "[&:not(:first-child)]:border-t-0" : "[&:not(:first-child)]:border-l-0";
+  // UXT-298: overlap shared edges rather than dropping one. Focus is shown by the
+  // border colour alone, so a missing edge left the focus ring open on that side.
+  const overlapLeadingEdge =
+    context.orientation === "vertical" ? "[&:not(:first-child)]:-mt-px" : "[&:not(:first-child)]:-ml-px";
 
   return (
     <ToggleGroupPrimitive.Item
@@ -109,11 +111,12 @@ function ToggleGroupItem({
         }),
         // SW-2445: every segmented item is bordered (not only variant=outline),
         // so the group always reads as outlined and stays countable when all are
-        // selected. Non-first items drop their shared (leading) edge so adjacent
-        // borders collapse to a single divider. Border + rounded corners live on
-        // the same element, so the selected fill always aligns with the outline.
-        segmented && "border border-input",
-        segmented && collapseLeadingEdge,
+        // selected. Border + rounded corners live on the same element, so the
+        // selected fill always aligns with the outline. Overlapping items paint
+        // over their left neighbour, so a selected item is raised to keep its
+        // edge — below focus, which wins the shared edge.
+        segmented && "border border-input data-[state=on]:not-focus-visible:z-5",
+        segmented && overlapLeadingEdge,
         className,
       )}
       {...props}

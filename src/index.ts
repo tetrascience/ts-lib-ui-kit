@@ -18,6 +18,7 @@ export * from "@/components/composed/AssistantLayout";
 export * from "@/components/composed/MoleculeStructure";
 export * from "@/components/composed/PageHeader";
 export * from "@/components/composed/DiffViewer";
+export * from "@/components/composed/DiffViewer2";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";

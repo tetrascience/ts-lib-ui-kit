@@ -136,6 +136,7 @@ import {
 | `Carousel`               | Data Display       | `carousel`                 | —                                                        | Stable |
 | `CodeBlock`              | Data Display       | —                          | Read-only highlighted code, slim Shiki highlighter       | Stable |
 | `DiffViewer`             | Data Display       | —                          | Read-only text diff (split / unified) on Monaco          | Beta   |
+| `DiffViewer2`            | Data Display       | —                          | Experimental Shiki-based comparison to `DiffViewer`      | In Dev |
 | `DataTable`              | Data Display       | —                          | TanStack Table wrapper, pagination, column toggle        | In Dev |
 | `Item`                   | Data Display       | —                          | Generic list/menu item                                   | Stable |
 | `Kbd`                    | Data Display       | —                          | Keyboard shortcut indicator                              | Stable |

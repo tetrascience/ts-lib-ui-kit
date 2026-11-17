@@ -92,6 +92,7 @@ describe("installUiKitJestMocks", () => {
       "@streamdown/mermaid",
       "shiki/core",
       "shiki/engine/javascript",
+      "@shikijs/transformers",
       "@shikijs/themes/github-light",
       "@shikijs/themes/github-dark",
       ...KIT_SHIKI_LANGUAGES.map((lang) => `@shikijs/langs/${lang}`),
@@ -182,6 +183,8 @@ describe("installUiKitJestMocks", () => {
     expect(factoryOutputObject("shiki/core").createHighlighterCore).toBe(createHighlighterCoreStub);
     const engine = factoryOutputObject("shiki/engine/javascript").createJavaScriptRegexEngine as () => unknown;
     expect(engine()).toEqual({});
+    const transformer = factoryOutputObject("@shikijs/transformers").transformerCompactLineOptions as () => unknown;
+    expect(transformer()).toEqual({});
 
     // Consumed via `.default` after Rollup's dynamic-import interop, which
     // unconditionally sets `namespace.default = <raw factory return>` with

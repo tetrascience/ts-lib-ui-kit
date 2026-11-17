@@ -1,9 +1,13 @@
+import * as React from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import { AssistantDockControls, AssistantLayout, AssistantLayoutProvider } from "./AssistantLayout";
 
 import type { AssistantDock } from "./dockLayout";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 const meta: Meta<typeof AssistantLayout> = {
   title: "AI Elements/Conversation/Layout Manager",
@@ -188,6 +192,81 @@ export const ResizeByKeyboard: Story = {
       separator().focus();
       await userEvent.keyboard("{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}");
       await waitFor(() => expect(assistant().getBoundingClientRect().width).not.toBe(widthBefore));
+    });
+  },
+};
+
+const noAssistantCode = `// \`assistant\` is null until the status request says one is available.
+// The layout then shows the content alone and leaves the persisted
+// visibility as it was, so the pane comes back the way it was left.
+<AssistantLayoutProvider>
+  <AssistantLayout assistant={assistantAvailable ? <YourAssistantPanel /> : null} assistantTitle="AI Assistant">
+    <YourMainContent />
+  </AssistantLayout>
+</AssistantLayoutProvider>`;
+
+function NoAssistantDemo() {
+  const [available, setAvailable] = React.useState(false);
+  return (
+    <AssistantLayoutProvider defaultDock="right" persist={false}>
+      <div className="flex h-screen w-full flex-col gap-2 p-3">
+        <div className="flex shrink-0 items-center justify-between">
+          <span className="text-sm font-semibold">Workspace</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch id="assistant-available" checked={available} onCheckedChange={setAvailable} />
+              <Label htmlFor="assistant-available">Assistant available</Label>
+            </div>
+            {available && <AssistantDockControls />}
+          </div>
+        </div>
+        <AssistantLayout assistant={available ? <MockAssistant /> : null} assistantTitle="AI Assistant">
+          <MockContent />
+        </AssistantLayout>
+      </div>
+    </AssistantLayoutProvider>
+  );
+}
+
+/**
+ * With `assistant` null (not yet known, or switched off) the content fills the
+ * body and no empty pane is drawn. `visible` is left untouched, so the pane
+ * returns in the state it was left once an assistant is available again.
+ */
+export const NoAssistant: Story = {
+  render: () => <NoAssistantDemo />,
+  parameters: {
+    docs: { source: { code: noAssistantCode, language: "tsx" } },
+  },
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const assistant = () => canvasElement.querySelector('[data-slot="assistant-layout-assistant"]');
+    const separator = () => canvasElement.querySelector('[role="separator"]');
+    const toggle = () => canvas.getByRole("switch", { name: "Assistant available" });
+
+    await step("No assistant: content alone, no pane, no handle", async () => {
+      expect(assistant()).toBeNull();
+      expect(separator()).toBeNull();
+      expect(canvasElement.querySelector('[data-slot="assistant-layout-content"]')).toBeVisible();
+    });
+
+    await step("Assistant available: the pane opens, since it was never hidden", async () => {
+      await userEvent.click(toggle());
+      await waitFor(() => expect(assistant()).toBeVisible());
+      expect(separator()).not.toBeNull();
+    });
+
+    await step("Hidden by the person, then taken away and back: stays hidden", async () => {
+      await userEvent.click(canvas.getByRole("button", { name: "Hide assistant" }));
+      await waitFor(() => expect(assistant()).toBeNull());
+      await userEvent.click(toggle());
+      await waitFor(() => expect(toggle()).not.toBeChecked());
+      await userEvent.click(toggle());
+      await waitFor(() => expect(toggle()).toBeChecked());
+      expect(assistant()).toBeNull();
+      // Re-docking from the controls brings it back.
+      await userEvent.click(canvas.getByRole("button", { name: "Dock assistant left" }));
+      await waitFor(() => expect(assistant()).toBeVisible());
     });
   },
 };

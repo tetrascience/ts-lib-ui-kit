@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { AssistantDockControls, AssistantLayoutProvider, useAssistantLayout } from "./AssistantLayout";
+import { AssistantDockControls, AssistantLayout, AssistantLayoutProvider, useAssistantLayout } from "./AssistantLayout";
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
 let container: HTMLDivElement;
@@ -28,6 +28,15 @@ function installLocalStorage() {
       return store.size;
     },
   };
+  Object.defineProperty(window, "localStorage", { configurable: true, value: storage });
+}
+
+/** A browser that blocks storage throws on access (privacy mode, sandboxed iframe). */
+function installThrowingLocalStorage() {
+  const blocked = () => {
+    throw new DOMException("The operation is insecure.", "SecurityError");
+  };
+  const storage = { getItem: blocked, setItem: blocked, removeItem: blocked, clear: blocked, key: blocked, length: 0 };
   Object.defineProperty(window, "localStorage", { configurable: true, value: storage });
 }
 
@@ -81,16 +90,24 @@ function probe() {
 function Harness({
   dock = "left",
   size,
+  visible,
   persist = true,
   showLabel = true,
 }: {
   dock?: "left" | "right" | "bottom";
   size?: number;
+  visible?: boolean;
   persist?: boolean;
   showLabel?: boolean;
 }) {
   return (
-    <AssistantLayoutProvider storageKey="spec.assistant" defaultDock={dock} defaultSize={size} persist={persist}>
+    <AssistantLayoutProvider
+      storageKey="spec.assistant"
+      defaultDock={dock}
+      defaultSize={size}
+      defaultVisible={visible}
+      persist={persist}
+    >
       <AssistantDockControls label={showLabel ? undefined : null} />
       <Probe />
     </AssistantLayoutProvider>
@@ -157,5 +174,78 @@ describe("AssistantLayout", () => {
     expect(probe().visible).toBe(true);
     expect(probe().dock).toBe("right");
     expect(window.localStorage.getItem("spec.assistant.dock")).toBe("right");
+  });
+
+  it("reads persisted visibility", () => {
+    window.localStorage.setItem("spec.assistant.visible", "false");
+
+    render(<Harness visible={true} />);
+
+    expect(probe().visible).toBe(false);
+  });
+
+  it("falls back to defaultVisible when nothing valid is persisted", () => {
+    window.localStorage.setItem("spec.assistant.visible", "maybe");
+
+    render(<Harness visible={false} />);
+
+    expect(probe().visible).toBe(false);
+  });
+
+  it("persists visibility beside dock and size", () => {
+    render(<Harness dock="left" />);
+
+    click('button[aria-label="Hide AI Assistant"]');
+    expect(window.localStorage.getItem("spec.assistant.visible")).toBe("false");
+
+    click('button[aria-label="Dock assistant right"]');
+    expect(window.localStorage.getItem("spec.assistant.visible")).toBe("true");
+  });
+
+  it("neither reads nor writes visibility when persist is false", () => {
+    window.localStorage.setItem("spec.assistant.visible", "false");
+
+    render(<Harness persist={false} />);
+    expect(probe().visible).toBe(true);
+
+    click('button[aria-label="Hide AI Assistant"]');
+    expect(probe().visible).toBe(false);
+    // Showing it again would write "true" if persistence were on.
+    click('button[aria-label="Dock assistant right"]');
+    expect(probe().visible).toBe(true);
+    expect(window.localStorage.getItem("spec.assistant.visible")).toBe("false");
+  });
+
+  it("falls back to the defaults and keeps working when storage throws", () => {
+    installThrowingLocalStorage();
+
+    render(<Harness dock="right" size={40} visible={true} />);
+    expect(probe().dock).toBe("right");
+    expect(probe().size).toBe(40);
+    expect(probe().visible).toBe(true);
+
+    click('button[aria-label="Hide AI Assistant"]');
+    expect(probe().visible).toBe(false);
+
+    click('button[aria-label="Dock assistant bottom"]');
+    expect(probe().dock).toBe("bottom");
+    expect(probe().visible).toBe(true);
+  });
+
+  it("shows the content alone when there is no assistant, leaving visible untouched", () => {
+    render(
+      <AssistantLayoutProvider storageKey="spec.assistant" defaultVisible={true}>
+        <AssistantLayout assistant={null}>
+          <span>main content</span>
+        </AssistantLayout>
+        <Probe />
+      </AssistantLayoutProvider>,
+    );
+
+    expect(q('[data-slot="assistant-layout-assistant"]')).toBeNull();
+    expect(q('[role="separator"]')).toBeNull();
+    expect(q('[data-slot="assistant-layout-content"]')?.textContent).toBe("main content");
+    expect(probe().visible).toBe(true);
+    expect(window.localStorage.getItem("spec.assistant.visible")).toBeNull();
   });
 });

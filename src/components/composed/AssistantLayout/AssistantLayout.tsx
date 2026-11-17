@@ -20,7 +20,7 @@ interface AssistantLayoutContextValue {
   /** Assistant size as a percentage of the layout along the dock axis. Persisted. */
   size: number;
   setSize: (size: number) => void;
-  /** Whether the assistant is shown. In-memory by default (resets to visible on reload). */
+  /** Whether the assistant is shown. Persisted. */
   visible: boolean;
   setVisible: (visible: boolean) => void;
 }
@@ -29,30 +29,53 @@ const AssistantLayoutContext = React.createContext<AssistantLayoutContextValue |
 
 export interface AssistantLayoutProviderProps {
   children: React.ReactNode;
-  /** localStorage key prefix for the persisted dock + size. */
+  /** localStorage key prefix for the persisted dock, size and visibility. */
   storageKey?: string;
   /** Default dock when nothing is persisted. */
   defaultDock?: AssistantDock;
   /** Default assistant size as a percentage (1–99) of the layout. */
   defaultSize?: number;
-  /** Whether the assistant starts visible. */
+  /** Whether the assistant starts visible when nothing is persisted. */
   defaultVisible?: boolean;
-  /** Persist dock + size to localStorage. Defaults to `true`. */
+  /** Persist dock, size and visibility to localStorage. Defaults to `true`. */
   persist?: boolean;
 }
 
+// Storage can be blocked (privacy mode, sandboxed iframe) or full. A failed
+// read falls back to the default; a failed write leaves the state in memory.
+function readStored(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStored(key: string, value: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Not persisted; the in-memory state still applies for this session.
+  }
+}
+
 function readDock(key: string, fallback: AssistantDock): AssistantDock {
-  if (typeof window === "undefined") return fallback;
-  const v = window.localStorage.getItem(`${key}.dock`);
+  const v = readStored(`${key}.dock`);
   return v === "right" || v === "bottom" || v === "left" ? v : fallback;
 }
 
 function readSize(key: string, fallback: number): number {
-  if (typeof window === "undefined") return fallback;
-  const v = Number(window.localStorage.getItem(`${key}.size`));
+  const v = Number(readStored(`${key}.size`));
   // Persisted as a percentage; ignore anything outside the open (0, 100) range.
   if (!Number.isFinite(v) || v <= 0 || v >= 100) return fallback;
   return v;
+}
+
+function readVisible(key: string, fallback: boolean): boolean {
+  const v = readStored(`${key}.visible`);
+  return v === "true" || v === "false" ? v === "true" : fallback;
 }
 
 export function AssistantLayoutProvider({
@@ -69,12 +92,14 @@ export function AssistantLayoutProvider({
   const [size, setSizeState] = React.useState<number>(() =>
     persist ? readSize(storageKey, defaultSize) : defaultSize,
   );
-  const [visible, setVisible] = React.useState(defaultVisible);
+  const [visible, setVisibleState] = React.useState<boolean>(() =>
+    persist ? readVisible(storageKey, defaultVisible) : defaultVisible,
+  );
 
   const setDock = React.useCallback(
     (next: AssistantDock) => {
       setDockState(next);
-      if (persist && typeof window !== "undefined") window.localStorage.setItem(`${storageKey}.dock`, next);
+      if (persist) writeStored(`${storageKey}.dock`, next);
     },
     [storageKey, persist],
   );
@@ -82,15 +107,22 @@ export function AssistantLayoutProvider({
   const setSize = React.useCallback(
     (next: number) => {
       setSizeState(next);
-      if (persist && typeof window !== "undefined")
-        window.localStorage.setItem(`${storageKey}.size`, String(Math.round(next)));
+      if (persist) writeStored(`${storageKey}.size`, String(Math.round(next)));
+    },
+    [storageKey, persist],
+  );
+
+  const setVisible = React.useCallback(
+    (next: boolean) => {
+      setVisibleState(next);
+      if (persist) writeStored(`${storageKey}.visible`, String(next));
     },
     [storageKey, persist],
   );
 
   const value = React.useMemo(
     () => ({ dock, setDock, size, setSize, visible, setVisible }),
-    [dock, setDock, size, setSize, visible],
+    [dock, setDock, size, setSize, visible, setVisible],
   );
 
   return <AssistantLayoutContext.Provider value={value}>{children}</AssistantLayoutContext.Provider>;
@@ -175,7 +207,12 @@ const CARD_CLASS =
 const ASSISTANT_PANEL_ID = "assistant";
 
 export interface AssistantLayoutProps {
-  /** The AI Assistant panel content (e.g. a `<Chat />`). */
+  /**
+   * The AI Assistant panel content (e.g. a `<Chat />`). Pass `null` while no
+   * assistant is available: the layout then shows the content alone, as when
+   * hidden, without touching the persisted `visible` — so the pane comes back
+   * the way it was left once an assistant is passed again.
+   */
   assistant: React.ReactNode;
   /** The main content; fills the remaining space (and the whole body when the assistant is hidden). */
   children: React.ReactNode;
@@ -211,6 +248,9 @@ export interface AssistantLayoutProps {
  * assistant panel is therefore re-created on redock (its transient state is not
  * preserved across a dock change) — a deliberate trade-off for using the shared
  * resizable primitive rather than a bespoke splitter.
+ *
+ * Dock, size and visibility persist through the provider. With `assistant`
+ * null the content fills the body regardless of `visible`.
  */
 export function AssistantLayout({
   assistant,
@@ -227,6 +267,25 @@ export function AssistantLayout({
 }: AssistantLayoutProps) {
   const { dock, size, setSize, visible, setVisible } = useAssistantLayout();
   const { orientation, assistantFirst } = dockPanels(dock);
+
+  // Hidden, or nothing to show: no resizable group, content fills the whole body.
+  // A missing assistant (anything React renders as nothing) leaves `visible`
+  // alone so the pane is restored, not re-opened, once one is available again.
+  const hasAssistant = assistant != null && typeof assistant !== "boolean" && assistant !== "";
+  if (!visible || !hasAssistant) {
+    return (
+      <div data-slot="assistant-layout" className={cn("flex min-h-0 flex-1 overflow-hidden", className)}>
+        {/* flex-1 so the lone content panel fills the width (the ResizablePanel
+            self-sizes when visible; this plain div needs to be told to grow).
+            Padded to match the inset the visible panels carry. */}
+        <div className={cn(PANEL_PAD, "flex-1")}>
+          <div data-slot="assistant-layout-content" className={cn(CARD_CLASS, contentClassName)}>
+            {children}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Accent header cap — the assistant panel's brand band. Only rendered when a
   // title is provided; content panel never gets one, so the two panels read as
@@ -253,22 +312,6 @@ export function AssistantLayout({
       )}
     </div>
   );
-
-  // Hidden: no resizable group, content fills the whole body.
-  if (!visible) {
-    return (
-      <div data-slot="assistant-layout" className={cn("flex min-h-0 flex-1 overflow-hidden", className)}>
-        {/* flex-1 so the lone content panel fills the width (the ResizablePanel
-            self-sizes when visible; this plain div needs to be told to grow).
-            Padded to match the inset the visible panels carry. */}
-        <div className={cn(PANEL_PAD, "flex-1")}>
-          <div data-slot="assistant-layout-content" className={cn(CARD_CLASS, contentClassName)}>
-            {children}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const assistantPanel = (
     <ResizablePanel

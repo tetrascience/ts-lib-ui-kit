@@ -4,7 +4,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 
 // ---------------------------------------------------------------------------
-// Typography reference — Inter Variable on the Tailwind font-size scale.
+// Typography reference — Inter Tight on the Tailwind font-size scale.
 // The kit intentionally has NO custom type scale (see DESIGN.md); components
 // compose Tailwind's `text-*` size + `font-*` weight utilities directly, plus
 // the `text-2xs` (10px) extension for dense UI. SW-2254 retired the former
@@ -39,7 +39,7 @@ interface FontWeight {
   note: string;
 }
 
-// Inter Variable ships the full 100–900 range; these are the weights the kit uses.
+// Inter Tight Variable ships the full 100–900 range; these are the weights the kit uses.
 const FONT_WEIGHTS: FontWeight[] = [
   { cssClass: "font-normal", weight: 400, note: "Body text" },
   { cssClass: "font-medium", weight: 500, note: "Labels, buttons, emphasis" },
@@ -86,7 +86,7 @@ function TypographyPage() {
       <div className="space-y-2">
         <h1 className="text-2xl font-bold text-foreground">Typography</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          The UI kit uses <span className="font-medium text-foreground">Inter Variable</span> on Tailwind's native
+          The UI kit uses <span className="font-medium text-foreground">Inter Tight</span> on Tailwind's native
           font-size scale — there is no custom type scale. Compose size and weight utilities directly (e.g.{" "}
           <Code>text-sm font-medium</Code>). The one addition is <Code>text-2xs</Code> (10px) for dense UI.
         </p>
@@ -96,10 +96,12 @@ function TypographyPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground">Font Family</h2>
         <div className="space-y-1 rounded-lg border border-border bg-card p-6">
-          <p className="text-3xl text-foreground">Inter Variable</p>
+          <p className="text-3xl text-foreground">Inter Tight</p>
           <p className="text-sm text-muted-foreground">
             Self-hosted variable font (weights 100–900), applied globally via <Code>--font-sans</Code> /{" "}
-            <Code>font-sans</Code>.
+            <Code>font-sans</Code>. Inter Tight is the TetraScience brand typeface, so product UI, decks and marketing
+            share one face. The kit shipped Inter (the wider text cut) through 1.1.x; 1.2.0 switched (UXT-255). Inter
+            Tight sets dense UI text about 8–10% narrower.
           </p>
         </div>
       </section>
@@ -146,7 +148,7 @@ function TypographyPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground">Font Weights</h2>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Inter Variable supports 100–900; these are the weights the kit uses. Pair with any size.
+          Inter Tight Variable supports 100–900; these are the weights the kit uses. Pair with any size.
         </p>
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full text-sm">

@@ -23,7 +23,7 @@
 
 ### Typography
 
-- **Font family**: Inter Variable (`@fontsource-variable/inter`), variable weight 100–900
+- **Font family**: Inter Tight (`@fontsource-variable/inter-tight`, face name `Inter Tight Variable`), variable weight 100–900. Inter Tight is the TetraScience brand typeface (Style Guide v1.0, May 2024) and the `--font-sans` of the TetraScience Design System, so product UI and brand surfaces set in the same face. The kit shipped Inter (the wider text cut) through 1.1.x; 1.2.0 switched (UXT-255). Inter Tight runs about 8–10% narrower at 11–14px, which is where column widths and truncation points move for consumers.
 - Scale follows Tailwind defaults (`text-xs` → `text-4xl`), plus a kit-added `text-2xs` (10px) for dense UI
 - No custom type scale — lean on Tailwind utilities directly
 

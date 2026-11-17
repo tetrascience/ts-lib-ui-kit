@@ -1,15 +1,24 @@
 import * as React from "react";
 
 import { diffTexts, foldUnchangedRows, toDiffRows } from "./diff-model";
+import {
+  ADDED_LINE_TINT,
+  ADDED_MARKER_TEXT,
+  QUIET_SURFACE,
+  REMOVED_LINE_TINT,
+  REMOVED_MARKER_TEXT,
+  SUBTLE_TEXT,
+  TOKEN_TEXT,
+} from "./diff-styles";
 import { classesOf, highlightDiff, lineKindOf } from "./highlight-diff";
 
-import type { DiffFold, DiffRow, DiffViewer2Mode, TextDiff } from "./diff-model";
+import type { DiffFold, DiffRow, CodeDiffMode, TextDiff } from "./diff-model";
 import type { DiffLineNode, HighlightedDiff } from "./highlight-diff";
 
 import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
 
-export interface DiffViewer2Props extends Omit<React.ComponentProps<"div">, "children"> {
+export interface CodeDiffProps extends Omit<React.ComponentProps<"div">, "children"> {
   /** The "before" text, shown on the left in `split` mode. */
   original: string;
   /** The "after" text, shown on the right in `split` mode. */
@@ -21,7 +30,7 @@ export interface DiffViewer2Props extends Omit<React.ComponentProps<"div">, "chi
    */
   language?: string;
   /** Layout of the diff. `split` stays side by side at every width. */
-  mode?: DiffViewer2Mode;
+  mode?: CodeDiffMode;
   /** Height of the viewer. A number is pixels. Longer diffs scroll inside it. */
   height?: number | string;
   /** Show line numbers. */
@@ -42,44 +51,65 @@ export interface DiffViewer2Props extends Omit<React.ComponentProps<"div">, "chi
   scrollRegionLabel?: string;
   /** Text of the button that reveals a folded run of unchanged lines, given how many it hides. */
   expandUnchangedLabel?: (hiddenLineCount: number) => string;
+  /**
+   * Controls for one line, such as an "add comment" button or a menu, rendered
+   * in a gutter column beside the line's code. Called for every line shown;
+   * return `null` for a line that has none. Declaring the prop adds the column.
+   */
+  renderLineActions?: (line: CodeDiffLine) => React.ReactNode;
+  /**
+   * When a line's actions show: `hover` (default) reveals them while the
+   * pointer is over the line on that side, while focus is inside them, or
+   * while one of them is expanded (`aria-expanded="true"`); on a device
+   * without hover they always show.
+   */
+  lineActionsVisibility?: "hover" | "always";
+  /**
+   * Content attached to one line and rendered in a full-width row beneath it,
+   * such as a comment thread or a lint message. Called for every line shown;
+   * return `null` for a line that has none. In `split` mode it sits under its
+   * own side of the diff.
+   */
+  renderLineAnnotation?: (line: CodeDiffLine) => React.ReactNode;
 }
 
-/**
- * How much of its own colour text keeps, as `--diff-ink`; the rest is mixed
- * towards `--foreground`. On the plain surface every colour is used as it is.
- * The tints lower contrast, so text gives up only what each one costs: 88% on a
- * changed line, 40% on changed characters, where the line and character tints
- * stack. Those are the highest steps at which every `--shiki-*` colour stays AA
- * in both light and dark.
- */
-const CHANGED_LINE_INK = "[--diff-ink:88%]";
+/** One line of the diff, as handed to `renderLineActions` and `renderLineAnnotation`. */
+export interface CodeDiffLine {
+  /**
+   * Which text the line belongs to. An unchanged line in `unified` mode is
+   * shown once and reported as `modified`.
+   */
+  side: "original" | "modified";
+  /** One-based line number within that text. */
+  lineNumber: number;
+  /** Whether the line was added, removed or left as it was. */
+  kind: "added" | "removed" | "unchanged";
+  /** The line's text, without its line break. */
+  text: string;
+}
 
-/** Line numbers and the fold button. `--muted-foreground` alone is under AA on a dark tint. */
-const SUBTLE_TEXT = "[color:color-mix(in_oklab,var(--muted-foreground)_68%,var(--foreground))]";
-const TOKEN_TEXT = cn(
-  "[color:color-mix(in_oklab,var(--shiki-light)_var(--diff-ink,100%),var(--foreground))]",
-  "dark:[color:color-mix(in_oklab,var(--shiki-dark)_var(--diff-ink,100%),var(--foreground))]",
-  "[font-style:var(--shiki-light-font-style)] dark:[font-style:var(--shiki-dark-font-style)]",
-);
-
-type CellKind = ReturnType<typeof lineKindOf> | "filler";
+type DiffSideName = CodeDiffLine["side"];
+type CellKind = CodeDiffLine["kind"] | "filler";
 
 const CELL_TINT: Record<CellKind, string | undefined> = {
-  added: cn("bg-diff-added-line", CHANGED_LINE_INK),
-  removed: cn("bg-diff-removed-line", CHANGED_LINE_INK),
+  added: ADDED_LINE_TINT,
+  removed: REMOVED_LINE_TINT,
   unchanged: undefined,
   // The other side has a line here and this one does not.
-  filler: "bg-muted/40",
+  filler: QUIET_SURFACE,
 };
 
 const MARKER: Record<CellKind, { sign: string; className?: string }> = {
-  added: { sign: "+", className: "[color:color-mix(in_oklab,var(--diff-added)_var(--diff-ink),var(--foreground))]" },
-  removed: {
-    sign: "-",
-    className: "[color:color-mix(in_oklab,var(--diff-removed)_var(--diff-ink),var(--foreground))]",
-  },
+  added: { sign: "+", className: ADDED_MARKER_TEXT },
+  removed: { sign: "-", className: REMOVED_MARKER_TEXT },
   unchanged: { sign: "" },
   filler: { sign: "" },
+};
+
+// Spelled out per side: Tailwind reads class names from the source text.
+const REVEAL_ON_HOVER: Record<DiffSideName, string> = {
+  original: "in-[tr:has([data-side=original]:hover)]:opacity-100",
+  modified: "in-[tr:has([data-side=modified]:hover)]:opacity-100",
 };
 
 /** Shiki writes inline styles as a `prop:value;…` string; React wants an object. */
@@ -104,26 +134,50 @@ function renderNode(node: DiffLineNode, key: number): React.ReactNode {
   );
 }
 
+/** A line as it is drawn: what consumers are told about it, and its highlighted content. */
+interface DrawnLine extends CodeDiffLine {
+  node: DiffLineNode;
+}
+
+interface LineSlots {
+  renderLineActions?: (line: CodeDiffLine) => React.ReactNode;
+  lineActionsVisibility: "hover" | "always";
+  renderLineAnnotation?: (line: CodeDiffLine) => React.ReactNode;
+}
+
+/** What a render prop is told about a line: everything but the viewer's own hast node. */
+const describeLine = ({ side, lineNumber, kind, text }: DrawnLine): CodeDiffLine => ({
+  side,
+  lineNumber,
+  kind,
+  text,
+});
+
 interface LineCellsProps {
-  /** The `.line` element to show, or `undefined` where this side has no line on the row. */
-  node: DiffLineNode | undefined;
+  /** The line to show, or `undefined` where this side has no line on the row. */
+  line: DrawnLine | undefined;
+  /** Which side's hover reveals the actions. */
+  side: DiffSideName;
   /** Line numbers to print, one cell each. Pass none to hide the number column. */
   numbers: Array<number | undefined>;
   wordWrap: boolean;
+  slots: LineSlots;
   className?: string;
 }
 
-/** The cells of one line: its number(s), its `+` / `-` marker and its code. */
-function LineCells({ node, numbers, wordWrap, className }: LineCellsProps) {
-  const kind: CellKind = node ? lineKindOf(node) : "filler";
+/** The cells of one line: its number(s), its actions, its `+` / `-` marker and its code. */
+function LineCells({ line, side, numbers, wordWrap, slots, className }: LineCellsProps) {
+  const kind: CellKind = line?.kind ?? "filler";
   const tint = CELL_TINT[kind];
+  const { renderLineActions } = slots;
   return (
     <>
       {numbers.map((number, index) => (
         <td
           // The cells of one line are positional and never reorder.
           key={index === 0 ? "first" : "second"}
-          data-slot="diff-viewer-2-line-number"
+          data-slot="code-diff-line-number"
+          data-side={side}
           className={cn(
             "px-[1ch] text-right align-top whitespace-nowrap tabular-nums select-none",
             SUBTLE_TEXT,
@@ -134,19 +188,39 @@ function LineCells({ node, numbers, wordWrap, className }: LineCellsProps) {
           {number === undefined ? null : number + 1}
         </td>
       ))}
+      {renderLineActions && (
+        <td data-slot="code-diff-line-actions" data-side={side} className={cn("p-0 align-top font-sans", tint)}>
+          {line && (
+            <div
+              className={cn(
+                "flex h-5 items-center justify-center",
+                slots.lineActionsVisibility === "hover" && [
+                  "opacity-0 focus-within:opacity-100 has-[[aria-expanded=true]]:opacity-100",
+                  "[@media(hover:none)]:opacity-100",
+                  REVEAL_ON_HOVER[side],
+                ],
+              )}
+            >
+              {renderLineActions(describeLine(line))}
+            </div>
+          )}
+        </td>
+      )}
       <td
-        data-slot="diff-viewer-2-marker"
+        data-slot="code-diff-marker"
+        data-side={side}
         className={cn(
           "text-center align-top select-none",
           MARKER[kind].className,
           tint,
-          numbers.length === 0 && className,
+          numbers.length === 0 && !renderLineActions && className,
         )}
       >
         {MARKER[kind].sign}
       </td>
       <td
-        data-slot="diff-viewer-2-line"
+        data-slot="code-diff-line"
+        data-side={side}
         data-diff={kind}
         className={cn(
           "pr-4 align-top",
@@ -154,7 +228,7 @@ function LineCells({ node, numbers, wordWrap, className }: LineCellsProps) {
           tint,
         )}
       >
-        {node?.children?.map(renderNode)}
+        {line?.node.children?.map(renderNode)}
       </td>
     </>
   );
@@ -164,7 +238,12 @@ interface DiffContent extends HighlightedDiff {
   diff: TextDiff;
 }
 
-const lineAt = (lines: DiffLineNode[], index: number | undefined) => (index === undefined ? undefined : lines[index]);
+/** The line at `index` of one side, or `undefined` where a row has no line on that side. */
+function drawnLine(content: DiffContent, side: DiffSideName, index: number | undefined): DrawnLine | undefined {
+  const node = index === undefined ? undefined : content[side][index];
+  if (index === undefined || !node) return undefined;
+  return { side, lineNumber: index + 1, kind: lineKindOf(node), text: content.diff[side].lines[index], node };
+}
 
 const isFold = (row: DiffRow | DiffFold): row is DiffFold => "hidden" in row;
 
@@ -207,6 +286,88 @@ function ColumnHeading({ label, span }: { label: string; span: number }) {
   );
 }
 
+interface DiffLineRowsProps {
+  /** The line on each side of the row. `unified` rows carry one line, as `modified` when unchanged. */
+  original: DrawnLine | undefined;
+  modified: DrawnLine | undefined;
+  row: DiffRow;
+  isSplit: boolean;
+  lineNumbers: boolean;
+  wordWrap: boolean;
+  /** Columns one side spans, for an annotation under it. */
+  sideColumns: number;
+  slots: LineSlots;
+}
+
+/** One row of the diff, and the row of annotations under it when a line has one. */
+function DiffLineRows({
+  original,
+  modified,
+  row,
+  isSplit,
+  lineNumbers,
+  wordWrap,
+  sideColumns,
+  slots,
+}: DiffLineRowsProps) {
+  const annotate = (line: DrawnLine | undefined) => (line ? slots.renderLineAnnotation?.(describeLine(line)) : null);
+  const annotations = [annotate(original), annotate(modified)];
+  const hasAnnotation = annotations.some((annotation) => annotation != null && annotation !== false);
+  const annotationCell = "border-y p-0 align-top font-sans whitespace-normal";
+
+  return (
+    <>
+      <tr data-slot="code-diff-row" className="h-5">
+        {isSplit ? (
+          <>
+            <LineCells
+              line={original}
+              side="original"
+              numbers={lineNumbers ? [row.original] : []}
+              wordWrap={wordWrap}
+              slots={slots}
+            />
+            <LineCells
+              line={modified}
+              side="modified"
+              numbers={lineNumbers ? [row.modified] : []}
+              wordWrap={wordWrap}
+              slots={slots}
+              className="border-l"
+            />
+          </>
+        ) : (
+          <LineCells
+            line={modified ?? original}
+            side={modified ? "modified" : "original"}
+            numbers={lineNumbers ? [row.original, row.modified] : []}
+            wordWrap={wordWrap}
+            slots={slots}
+          />
+        )}
+      </tr>
+      {hasAnnotation && (
+        <tr data-slot="code-diff-annotation">
+          {isSplit ? (
+            <>
+              <td colSpan={sideColumns} data-side="original" className={annotationCell}>
+                {annotations[0]}
+              </td>
+              <td colSpan={sideColumns} data-side="modified" className={cn(annotationCell, "border-l")}>
+                {annotations[1]}
+              </td>
+            </>
+          ) : (
+            <td colSpan={sideColumns} data-side={modified ? "modified" : "original"} className={annotationCell}>
+              {annotations[1] ?? annotations[0]}
+            </td>
+          )}
+        </tr>
+      )}
+    </>
+  );
+}
+
 interface DiffTableProps {
   content: DiffContent;
   rows: Array<DiffRow | DiffFold>;
@@ -217,6 +378,7 @@ interface DiffTableProps {
   modifiedLabel: string;
   expandUnchangedLabel: (hiddenLineCount: number) => string;
   onExpandFold: (key: string) => void;
+  slots: LineSlots;
 }
 
 /** The diff itself: one table row per line, or per pair of lines in `split` mode. */
@@ -230,9 +392,11 @@ function DiffTable({
   modifiedLabel,
   expandUnchangedLabel,
   onExpandFold,
+  slots,
 }: DiffTableProps) {
   const numberColumns = isSplit ? 1 : 2;
-  const sideColumns = (lineNumbers ? numberColumns : 0) + 2;
+  const hasActions = slots.renderLineActions !== undefined;
+  const sideColumns = (lineNumbers ? numberColumns : 0) + (hasActions ? 1 : 0) + 2;
   const lineCount = Math.max(content.diff.original.lines.length, content.diff.modified.lines.length);
   const numberWidth = `${String(lineCount).length + 2}ch`;
   // Without wrapping, the code columns take the room that is left and grow with their longest line.
@@ -242,31 +406,11 @@ function DiffTable({
     <>
       {lineNumbers && <col style={{ width: numberWidth }} />}
       {lineNumbers && !isSplit && <col style={{ width: numberWidth }} />}
+      {hasActions && <col style={{ width: "1.75rem" }} />}
       <col style={{ width: "3ch" }} />
       <col style={wordWrap ? undefined : { width: codeWidth }} />
     </>
   );
-
-  const renderLine = (row: DiffRow) => {
-    const originalLine = lineAt(content.original, row.original);
-    const modifiedLine = lineAt(content.modified, row.modified);
-    if (!isSplit) {
-      // An unchanged row shows the modified text; a changed row has one side only.
-      const numbers = lineNumbers ? [row.original, row.modified] : [];
-      return <LineCells node={modifiedLine ?? originalLine} numbers={numbers} wordWrap={wordWrap} />;
-    }
-    return (
-      <>
-        <LineCells node={originalLine} numbers={lineNumbers ? [row.original] : []} wordWrap={wordWrap} />
-        <LineCells
-          node={modifiedLine}
-          numbers={lineNumbers ? [row.modified] : []}
-          wordWrap={wordWrap}
-          className="border-l"
-        />
-      </>
-    );
-  };
 
   return (
     <table
@@ -293,15 +437,15 @@ function DiffTable({
           <tr>
             <ColumnHeading label={originalLabel} span={1} />
             <ColumnHeading label={modifiedLabel} span={1} />
-            <td colSpan={2} className="p-0" />
+            <td colSpan={sideColumns - 2} className="p-0" />
           </tr>
         </thead>
       )}
       <tbody>
         {rows.map((row) =>
           isFold(row) ? (
-            <tr key={`fold-${foldKey(row)}`} data-slot="diff-viewer-2-fold">
-              <td colSpan={isSplit ? sideColumns * 2 : sideColumns} className="border-y bg-muted/40 p-0">
+            <tr key={`fold-${foldKey(row)}`} data-slot="code-diff-fold">
+              <td colSpan={isSplit ? sideColumns * 2 : sideColumns} className={cn("border-y p-0", QUIET_SURFACE)}>
                 <button
                   type="button"
                   className={cn(
@@ -316,9 +460,18 @@ function DiffTable({
               </td>
             </tr>
           ) : (
-            <tr key={`${row.original ?? ""}:${row.modified ?? ""}`} data-slot="diff-viewer-2-row" className="h-5">
-              {renderLine(row)}
-            </tr>
+            <DiffLineRows
+              key={`${row.original ?? ""}:${row.modified ?? ""}`}
+              // In `unified` an unchanged row is drawn once, from the modified text.
+              original={isSplit || row.changed ? drawnLine(content, "original", row.original) : undefined}
+              modified={drawnLine(content, "modified", row.modified)}
+              row={row}
+              isSplit={isSplit}
+              lineNumbers={lineNumbers}
+              wordWrap={wordWrap}
+              sideColumns={sideColumns}
+              slots={slots}
+            />
           ),
         )}
       </tbody>
@@ -329,9 +482,7 @@ function DiffTable({
 /**
  * Read-only diff of two texts, highlighted with Shiki: side-by-side or unified,
  * with line numbers, `+` / `-` markers, changed characters emphasised inside a
- * changed line, and optional folding of unchanged regions. An experimental
- * counterpart to the Monaco-based `DiffViewer`, with the same props, kept so
- * the two can be compared.
+ * changed line, and optional folding of unchanged regions.
  *
  * The diff is plain DOM, a table, styled from the kit's tokens in CSS:
  * `--diff-added*` / `--diff-removed*` for the tints, `--card` and
@@ -339,11 +490,14 @@ function DiffTable({
  * mode and token overrides on any ancestor therefore apply without JavaScript,
  * and each viewer on a page can be themed on its own.
  *
- * `DiffViewer`'s `options` and `onMount` are Monaco's and have no equivalent
- * here. The viewer has no editor behind it: no find widget, minimap or overview
- * ruler, and in `split` mode the two sides scroll together.
+ * `renderLineActions` and `renderLineAnnotation` put your own components on a
+ * line: controls in its gutter, and content in a row beneath it. The viewer
+ * keeps no state for them; which lines have a comment box open is yours.
+ *
+ * The viewer has no editor behind it: no find widget or minimap, every line is
+ * in the DOM, and in `split` mode the two sides scroll together.
  */
-function DiffViewer2({
+function CodeDiff({
   original,
   modified,
   language = "plaintext",
@@ -358,10 +512,13 @@ function DiffViewer2({
   loadingLabel = "Loading diff…",
   scrollRegionLabel = "Diff, scrollable",
   expandUnchangedLabel = defaultExpandUnchangedLabel,
+  renderLineActions,
+  lineActionsVisibility = "hover",
+  renderLineAnnotation,
   className,
   style,
   ...props
-}: DiffViewer2Props) {
+}: CodeDiffProps) {
   const [content, setContent] = React.useState<DiffContent | null>(null);
   const [expandedFolds, setExpandedFolds] = React.useState(NO_FOLDS);
 
@@ -393,7 +550,7 @@ function DiffViewer2({
 
   return (
     <div
-      data-slot="diff-viewer-2"
+      data-slot="code-diff"
       data-mode={mode}
       data-state={content ? "ready" : "loading"}
       aria-busy={!content}
@@ -404,7 +561,7 @@ function DiffViewer2({
       {content ? (
         <div
           ref={scrollerRef}
-          data-slot="diff-viewer-2-scroller"
+          data-slot="code-diff-scroller"
           className={cn(
             "relative size-full overflow-auto",
             isScrollable && "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
@@ -421,6 +578,7 @@ function DiffViewer2({
             modifiedLabel={modifiedLabel}
             expandUnchangedLabel={expandUnchangedLabel}
             onExpandFold={(key) => setExpandedFolds((expanded) => new Set(expanded).add(key))}
+            slots={{ renderLineActions, lineActionsVisibility, renderLineAnnotation }}
           />
         </div>
       ) : (
@@ -430,8 +588,8 @@ function DiffViewer2({
   );
 }
 
-/** React 18 wrapper for {@link DiffViewer2}; see its documentation. */
+/** React 18 wrapper for {@link CodeDiff}; see its documentation. */
 // React 18 compatibility: forwards `ref` on React 18. Deprecated in a future release.
-const DiffViewer2WithRef = withRef("DiffViewer2", DiffViewer2);
+const CodeDiffWithRef = withRef("CodeDiff", CodeDiff);
 
-export { DiffViewer2WithRef as DiffViewer2 };
+export { CodeDiffWithRef as CodeDiff };

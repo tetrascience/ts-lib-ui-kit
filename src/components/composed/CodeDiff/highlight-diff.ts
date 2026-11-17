@@ -1,3 +1,5 @@
+import { ADDED_CHARS_CLASS, REMOVED_CHARS_CLASS } from "./diff-styles";
+
 import type { DiffSide, TextDiff } from "./diff-model";
 
 import { getCodeBlockHighlighter } from "@/lib/shiki";
@@ -21,10 +23,6 @@ export interface HighlightedDiff {
 // `diff remove`), so the markup matches what Shiki users already style.
 const REMOVED_LINE_CLASSES = ["diff", "remove"];
 const ADDED_LINE_CLASSES = ["diff", "add"];
-// `--diff-ink` is the viewer's contrast step for text on the stacked line and character tints.
-const REMOVED_CHARS_CLASS = "diff-chars rounded-xs bg-diff-removed-text [--diff-ink:40%]";
-const ADDED_CHARS_CLASS = "diff-chars rounded-xs bg-diff-added-text [--diff-ink:40%]";
-
 /** A node's classes. Shiki writes `class` as a string or as a list, depending on who set it. */
 export function classesOf(node: DiffLineNode): string[] {
   const value = node.properties?.class;

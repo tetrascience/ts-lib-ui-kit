@@ -23,21 +23,24 @@
 
 #### Diff colors
 
-`DiffViewer` paints additions and removals from six tokens, all derived from `--positive` (green) and
+`CodeDiff` paints additions and removals from six tokens, all derived from `--positive` (green) and
 `--destructive` (red). They are declared under both `:root` and `.dark`, because a `var()` reference
 resolves where a token is declared: a dark panel nested in a light page then derives them from its own
 colors.
 
-| CSS Variable                                | Tailwind utility                     | Role                                    |
-| ------------------------------------------- | ------------------------------------ | --------------------------------------- |
-| `--diff-added` / `--diff-removed`           | `bg-diff-added`, `text-diff-removed` | Solid hue — overview ruler, your own UI |
-| `--diff-added-line` / `--diff-removed-line` | `bg-diff-added-line`, …              | 8% tint behind a whole changed line     |
-| `--diff-added-text` / `--diff-removed-text` | `bg-diff-added-text`, …              | 16% tint behind the changed characters  |
+| CSS Variable                                | Tailwind utility                     | Role                                       |
+| ------------------------------------------- | ------------------------------------ | ------------------------------------------ |
+| `--diff-added` / `--diff-removed`           | `bg-diff-added`, `text-diff-removed` | Solid hue — `+` / `-` markers, your own UI |
+| `--diff-added-line` / `--diff-removed-line` | `bg-diff-added-line`, …              | 8% tint behind a whole changed line        |
+| `--diff-added-text` / `--diff-removed-text` | `bg-diff-added-text`, …              | 16% tint behind the changed characters     |
 
-The tints are translucent so code keeps its own text color on top of them; the viewer's syntax colors
-(the `--shiki-*` tokens, mixed towards `--foreground`) are AA on both tints stacked. To re-color diffs,
-override all six on the scope you want re-colored. Change is never
-signalled by color alone: every changed line also carries a `+` or `-` gutter marker.
+The tints are translucent so code keeps its own text color on top of them. Syntax colors (the
+`--shiki-*` tokens) are used as they are on unchanged lines; on a tint each keeps only as much of itself
+as stays AA there and takes the rest from `--foreground`: 88% on a changed line, 40% on changed
+characters, where both tints stack. The `Token Contrast` story checks every token on every tint in
+light and dark, so a palette change that breaks AA fails CI. To re-color diffs, override all six on the
+scope you want re-colored. Change is never signalled by color alone: every changed line also carries a
+`+` or `-` gutter marker.
 
 ### Typography
 
@@ -135,8 +138,7 @@ import {
 | `Badge`                  | Data Display       | `badge`                    | —                                                        | Stable |
 | `Carousel`               | Data Display       | `carousel`                 | —                                                        | Stable |
 | `CodeBlock`              | Data Display       | —                          | Read-only highlighted code, slim Shiki highlighter       | Stable |
-| `DiffViewer`             | Data Display       | —                          | Read-only text diff (split / unified) on Monaco          | Beta   |
-| `DiffViewer2`            | Data Display       | —                          | Experimental Shiki-based comparison to `DiffViewer`      | In Dev |
+| `CodeDiff`               | Data Display       | —                          | Read-only text diff (split / unified), Shiki-highlighted | Beta   |
 | `DataTable`              | Data Display       | —                          | TanStack Table wrapper, pagination, column toggle        | In Dev |
 | `Item`                   | Data Display       | —                          | Generic list/menu item                                   | Stable |
 | `Kbd`                    | Data Display       | —                          | Keyboard shortcut indicator                              | Stable |

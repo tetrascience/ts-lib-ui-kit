@@ -343,7 +343,7 @@ export function installUiKitJestMocks(jestApi: JestMockApi): void {
   tryMock("shiki/engine/javascript", () => ({
     createJavaScriptRegexEngine: () => ({}),
   }));
-  // `DiffViewer2` loads its line transformer from here. The stub highlighter
+  // `CodeDiff` loads its line transformer from here. The stub highlighter
   // has no `codeToHast`, so the viewer renders its plain-text diff instead.
   tryMock("@shikijs/transformers", () => ({
     transformerCompactLineOptions: () => ({}),

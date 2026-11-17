@@ -1,7 +1,7 @@
 import { diffArrays, diffWordsWithSpace } from "diff";
 
 /** `split` shows the two texts side by side; `unified` interleaves them in one column. */
-export type DiffViewer2Mode = "split" | "unified";
+export type CodeDiffMode = "split" | "unified";
 
 /** A run of changed characters inside one line: `[start, end)` in UTF-16 units. */
 export interface DiffCharRange {
@@ -142,7 +142,7 @@ export function diffTexts(original: string, modified: string, ignoreTrimWhitespa
  * Lay the hunks out as rows. `split` puts a removed line and the added line it
  * pairs with on one row; `unified` lists the removed lines, then the added ones.
  */
-export function toDiffRows(hunks: DiffHunk[], mode: DiffViewer2Mode): DiffRow[] {
+export function toDiffRows(hunks: DiffHunk[], mode: CodeDiffMode): DiffRow[] {
   return hunks.flatMap((hunk): DiffRow[] => {
     if (!hunk.changed) {
       return hunk.original.map((line, i) => ({ original: line, modified: hunk.modified[i], changed: false }));

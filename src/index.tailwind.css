@@ -367,7 +367,7 @@
     --warning: oklch(0.5716 0.1335 60.41); /* #AF6100 — darkened amber, AA 4.6:1 on white */
     --warning-foreground: oklch(1 0 0); /* #FFFFFF — 4.6:1 on --warning */
     /* Diff (UXT-53) — green = added, red = removed. `--diff-added` / `--diff-removed`
-       are the solid hues (gutter markers, overview ruler); `-line` tints a whole
+       are the solid hues (gutter markers, your own UI); `-line` tints a whole
        changed line and `-text` the changed characters inside it. All derive from
        --positive / --destructive. A var() reference resolves where the token is
        declared, not where it is used, so the six are declared again under .dark:

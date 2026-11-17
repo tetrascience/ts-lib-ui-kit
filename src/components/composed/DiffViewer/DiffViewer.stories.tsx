@@ -118,12 +118,18 @@ export const Default: Story = {
 };
 
 export const Unified: Story = {
-  args: { mode: "unified" },
+  // "dimmed" is Monaco's default on Linux only; opting in here checks it on every platform.
+  args: { mode: "unified", options: { renderFinalNewline: "dimmed" } },
   play: async ({ canvasElement }) => {
     const viewer = getViewer(canvasElement);
     await waitForDiff(viewer);
     expect(viewer).toHaveAttribute("data-mode", "unified");
     expect(viewer.querySelector(".monaco-diff-editor")).not.toHaveClass("side-by-side");
+    // A dimmed line number (the trailing empty line) must stay as legible as the rest.
+    const dimmed = viewer.querySelector(".line-numbers.dimmed-line-number");
+    const regular = viewer.querySelector(".line-numbers:not(.dimmed-line-number):not(.active-line-number)");
+    if (!dimmed || !regular) throw new Error("line numbers not found");
+    expect(getComputedStyle(dimmed).color).toBe(getComputedStyle(regular).color);
     await expectTokenColors(viewer);
   },
 };
@@ -190,6 +196,74 @@ export const FollowsTheme: Story = {
       await waitFor(() => expect(paintedAddedLine()).toBe(before), MONACO_TIMEOUT);
       await expectTokenColors(viewer);
     });
+  },
+};
+
+/**
+ * Dark mode is read where the viewer is mounted, not only from `<html>`: a
+ * themed shell or a dark panel nested in a light page re-themes the viewer too.
+ */
+export const FollowsLocalTheme: Story = {
+  decorators: [
+    (Story) => (
+      <div data-testid="shell" className="rounded-lg bg-background p-4 text-foreground">
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement, step }) => {
+    const viewer = getViewer(canvasElement);
+    const shell = canvasElement.querySelector('[data-testid="shell"]') as HTMLElement;
+    const paintedAddedLine = () => getComputedStyle(viewer.querySelector(".line-insert") as Element).backgroundColor;
+    await waitForDiff(viewer);
+    await expectTokenColors(viewer);
+    const before = paintedAddedLine();
+    const tokensBefore = resolveDiffColors(viewer);
+
+    await step("Repaints from the shell's tokens when the shell's theme flips", async () => {
+      shell.classList.toggle("dark");
+      await waitFor(() => expect(paintedAddedLine()).not.toBe(before), MONACO_TIMEOUT);
+      expect(resolveDiffColors(viewer)).not.toEqual(tokensBefore);
+      await expectTokenColors(viewer);
+    });
+
+    await step("Restores the shell's theme", async () => {
+      shell.classList.toggle("dark");
+      await waitFor(() => expect(paintedAddedLine()).toBe(before), MONACO_TIMEOUT);
+      await expectTokenColors(viewer);
+    });
+  },
+};
+
+/**
+ * A dark panel nested in a light page: the viewer takes the panel's tokens. The
+ * removed and added comment lines are the lowest-contrast text a diff can show
+ * (muted text on stacked tints), so the accessibility check on this story is
+ * the dark-mode contrast guard. Kept off the docs page because Monaco themes
+ * are page-global.
+ */
+export const NestedDarkPanel: Story = {
+  tags: ["!autodocs"],
+  args: {
+    language: "python",
+    mode: "unified",
+    original: "import os\n# a removed comment line\n# another one\ngain = 1\n",
+    modified: "import os\ngain = 1\n# an added comment line\n",
+    height: 200,
+  },
+  decorators: [
+    (Story) => (
+      <div className="dark rounded-lg bg-background p-4 text-foreground">
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const viewer = getViewer(canvasElement);
+    await waitForDiff(viewer);
+    await expectTokenColors(viewer);
+    // The panel's tokens, not the light page's, are what was resolved.
+    expect(resolveDiffColors(viewer).added).not.toBe(resolveDiffColors(document.body).added);
   },
 };
 

@@ -24,7 +24,9 @@
 #### Diff colors
 
 `DiffViewer` paints additions and removals from six tokens, all derived from `--positive` (green) and
-`--destructive` (red), so they follow light and dark mode with no separate `.dark` values:
+`--destructive` (red). They are declared under both `:root` and `.dark`, because a `var()` reference
+resolves where a token is declared: a dark panel nested in a light page then derives them from its own
+colors.
 
 | CSS Variable                                | Tailwind utility                     | Role                                    |
 | ------------------------------------------- | ------------------------------------ | --------------------------------------- |
@@ -34,7 +36,7 @@
 
 The tints are translucent so code keeps its own text color on top of them; the viewer's syntax colors
 (the `--shiki-*` tokens, mixed towards `--foreground`) are AA on both tints stacked. To re-color diffs,
-override `--diff-added` / `--diff-removed` on `:root`, or all six on a narrower scope. Change is never
+override all six on the scope you want re-colored. Change is never
 signalled by color alone: every changed line also carries a `+` or `-` gutter marker.
 
 ### Typography

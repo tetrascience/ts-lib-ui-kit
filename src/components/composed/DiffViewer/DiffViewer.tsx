@@ -2,11 +2,11 @@ import { DiffEditor } from "@monaco-editor/react";
 import * as React from "react";
 
 import { defineDiffTheme, diffThemeName } from "./diff-theme";
+import { useIsDarkAt } from "./use-is-dark-at";
 
 import type { DiffOnMount, Monaco } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 
-import { useIsDark } from "@/hooks/use-is-dark";
 import { useComposedRefs } from "@/lib/compose-refs";
 import { withRef } from "@/lib/react18-compat";
 import { cn } from "@/lib/utils";
@@ -79,8 +79,8 @@ function DiffViewer({
   ref,
   ...props
 }: DiffViewerProps) {
-  const isDark = useIsDark();
   const scopeRef = React.useRef<HTMLDivElement>(null);
+  const isDark = useIsDarkAt(scopeRef);
   const [monaco, setMonaco] = React.useState<Monaco | null>(null);
 
   const defineTheme = React.useCallback(
@@ -117,6 +117,8 @@ function DiffViewer({
       modifiedAriaLabel: modifiedLabel,
       minimap: { enabled: false },
       scrollBeyondLastLine: false,
+      // Monaco dims the trailing empty line's number on Linux only; keep every platform alike.
+      renderFinalNewline: "on",
       ...options,
     }),
     [mode, lineNumbers, wrap, collapseUnchanged, ignoreTrimWhitespace, originalLabel, modifiedLabel, options],

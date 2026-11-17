@@ -65,6 +65,8 @@ const EDITOR_COLORS: Record<string, { requires: string; css: string }> = {
   "editor.background": { requires: "--card", css: "var(--card)" },
   "editor.foreground": { requires: "--foreground", css: "var(--foreground)" },
   "editorLineNumber.foreground": { requires: "--muted-foreground", css: boosted("--muted-foreground") },
+  // Monaco dims the number of a trailing empty line to a colour that is not AA.
+  "editorLineNumber.dimmedForeground": { requires: "--muted-foreground", css: boosted("--muted-foreground") },
   "editorLineNumber.activeForeground": { requires: "--foreground", css: "var(--foreground)" },
 };
 

@@ -128,18 +128,35 @@ export function AssistantDockControls({ label = "AI Assistant", className }: Ass
   return (
     <div className={cn("flex items-center gap-2", className)}>
       {label != null && <span className="text-sm font-medium">{label}</span>}
-      <div className="inline-flex overflow-hidden rounded-lg border border-border">
-        {DOCK_OPTIONS.map(({ value, label: optionLabel, Icon }) => {
+      <div className="inline-flex">
+        {DOCK_OPTIONS.map(({ value, label: optionLabel, Icon }, index) => {
           const active = visible && dock === value;
           return (
             <Button
               key={value}
-              variant={active ? "secondary" : "ghost"}
+              // Always ghost: the active icon is marked with aria-pressed, which carries the
+              // kit-wide selected state (SW-2445). A secondary fill here opted out of it.
+              variant="ghost"
               size="icon-sm"
-              // bg-clip-border so the filled (active/hover) state reaches the
-              // cell edge instead of leaving a 1px gap from the button's
-              // transparent border + default bg-clip-padding.
-              className="rounded-none bg-clip-border"
+              className={cn(
+                // Border and rounding live on the segment itself, as they do on
+                // ToggleGroupItem (SW-2445). They used to live on a wrapper that clipped
+                // the segments with overflow-hidden, which rasterises the fill and the
+                // outline as two separate rounded boxes — so the selected tint and its
+                // pressed inset never quite met the corner. bg-clip-border keeps the fill
+                // under the segment's own border rather than stopping at the padding edge.
+                "rounded-none border border-border bg-clip-border focus:z-10 focus-visible:z-10",
+                index === 0 && "rounded-l-lg",
+                index === DOCK_OPTIONS.length - 1 && "rounded-r-lg",
+                // Adjacent borders overlap into a single divider. ToggleGroupItem drops
+                // the leading edge instead (`border-l-0`), but the focus indicator here is
+                // `focus-visible:border-ring` — a border colour, not a ring shadow — so a
+                // missing edge leaves the focused segment outlined on three sides. The
+                // overlap keeps all four. `z-10` then paints the focused outline over the
+                // neighbour's border rather than under it. ToggleGroup has the same gap:
+                // UXT-298 — converge on whichever treatment lands there.
+                index > 0 && "-ml-px",
+              )}
               aria-label={active ? "Hide AI Assistant" : optionLabel}
               aria-pressed={active}
               title={active ? "Hide AI Assistant" : optionLabel}

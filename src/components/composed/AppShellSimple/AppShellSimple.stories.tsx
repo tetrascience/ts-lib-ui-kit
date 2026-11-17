@@ -609,7 +609,10 @@ export const WithBuildInfoLongContent: Story = {
 const TRANSCRIPT = Array.from({ length: 40 }, (_, i) => `Message ${i + 1}`);
 
 /** Asserts a full-height page stays inside the shell with the footer below it. */
-async function expectBoundedPage(canvasElement: HTMLElement, step: (name: string, fn: () => Promise<void>) => Promise<void>) {
+async function expectBoundedPage(
+  canvasElement: HTMLElement,
+  step: (name: string, fn: () => Promise<void>) => Promise<void>,
+) {
   const main = canvasElement.querySelector('[data-slot="app-shell-simple-content"]');
   const footer = canvasElement.querySelector('[data-slot="build-info-footer"]');
   const composer = canvasElement.querySelector('[data-testid="composer"]');
@@ -672,7 +675,12 @@ export const WithBuildInfoAssistantLayout: Story = {
           assistantTitle="AI Assistant"
           assistant={
             <div className="flex h-full min-h-0 flex-col">
-              <div role="group" aria-label="Transcript" tabIndex={0} className="min-h-0 flex-1 space-y-2 overflow-auto p-3">
+              <div
+                role="group"
+                aria-label="Transcript"
+                tabIndex={0}
+                className="min-h-0 flex-1 space-y-2 overflow-auto p-3"
+              >
                 {TRANSCRIPT.map((message) => (
                   <p key={message} className="rounded-md bg-muted/60 px-3 py-2 text-sm">
                     {message}

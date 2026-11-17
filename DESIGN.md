@@ -31,8 +31,8 @@ colors.
 | CSS Variable                                | Tailwind utility                     | Role                                    |
 | ------------------------------------------- | ------------------------------------ | --------------------------------------- |
 | `--diff-added` / `--diff-removed`           | `bg-diff-added`, `text-diff-removed` | Solid hue — overview ruler, your own UI |
-| `--diff-added-line` / `--diff-removed-line` | `bg-diff-added-line`, …              | 10% tint behind a whole changed line    |
-| `--diff-added-text` / `--diff-removed-text` | `bg-diff-added-text`, …              | 18% tint behind the changed characters  |
+| `--diff-added-line` / `--diff-removed-line` | `bg-diff-added-line`, …              | 8% tint behind a whole changed line     |
+| `--diff-added-text` / `--diff-removed-text` | `bg-diff-added-text`, …              | 16% tint behind the changed characters  |
 
 The tints are translucent so code keeps its own text color on top of them; the viewer's syntax colors
 (the `--shiki-*` tokens, mixed towards `--foreground`) are AA on both tints stacked. To re-color diffs,

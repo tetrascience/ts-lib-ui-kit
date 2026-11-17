@@ -113,7 +113,7 @@ function withColorResolver<T>(
   const view = doc.defaultView;
   const scopeStyle = view?.getComputedStyle(scope);
   // A probe turns the expression into a computed colour: a custom property
-  // itself computes to its source text (`color-mix(in oklab, oklch(…) 10%, transparent)`).
+  // itself computes to its source text (`color-mix(in oklab, oklch(…) 8%, transparent)`).
   const probe = doc.createElement("span");
   probe.style.display = "none";
   scope.appendChild(probe);

@@ -376,11 +376,11 @@
        translucent on purpose: code keeps its own AA text colour on top of them.
        To re-colour diffs, override all six on the scope you want re-coloured. */
     --diff-added: var(--positive);
-    --diff-added-line: color-mix(in oklab, var(--diff-added) 10%, transparent);
-    --diff-added-text: color-mix(in oklab, var(--diff-added) 18%, transparent);
+    --diff-added-line: color-mix(in oklab, var(--diff-added) 8%, transparent);
+    --diff-added-text: color-mix(in oklab, var(--diff-added) 16%, transparent);
     --diff-removed: var(--destructive);
-    --diff-removed-line: color-mix(in oklab, var(--diff-removed) 10%, transparent);
-    --diff-removed-text: color-mix(in oklab, var(--diff-removed) 18%, transparent);
+    --diff-removed-line: color-mix(in oklab, var(--diff-removed) 8%, transparent);
+    --diff-removed-text: color-mix(in oklab, var(--diff-removed) 16%, transparent);
     /* Shiki syntax highlighting — code tokens mapped onto design tokens, AA on --shiki-bg in both modes */
     --shiki-bg: var(--card); /* #FFFFFF */
     --shiki-fg: var(--foreground); /* #0D1B3E — 16.9:1 */
@@ -613,11 +613,11 @@
     /* Diff (UXT-53) — same derivation as :root, declared again so it resolves
        against the dark --positive / --destructive on a nested dark panel too. */
     --diff-added: var(--positive);
-    --diff-added-line: color-mix(in oklab, var(--diff-added) 10%, transparent);
-    --diff-added-text: color-mix(in oklab, var(--diff-added) 18%, transparent);
+    --diff-added-line: color-mix(in oklab, var(--diff-added) 8%, transparent);
+    --diff-added-text: color-mix(in oklab, var(--diff-added) 16%, transparent);
     --diff-removed: var(--destructive);
-    --diff-removed-line: color-mix(in oklab, var(--diff-removed) 10%, transparent);
-    --diff-removed-text: color-mix(in oklab, var(--diff-removed) 18%, transparent);
+    --diff-removed-line: color-mix(in oklab, var(--diff-removed) 8%, transparent);
+    --diff-removed-text: color-mix(in oklab, var(--diff-removed) 16%, transparent);
     /* Shiki syntax highlighting (dark) — the same aliases as :root, declared again:
        a var() reference resolves where the token is declared, so a dark panel
        nested in a light page would otherwise inherit the page's light colours

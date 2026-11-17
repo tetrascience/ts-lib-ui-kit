@@ -97,11 +97,14 @@ describe("CodeDiff", () => {
         expandUnchangedLabel={(count) => `Afficher ${count} lignes`}
       />,
     );
-    expect(all("fold").map((fold) => fold.textContent)).toEqual(["Afficher 6 lignes", "Afficher 7 lignes"]);
+    const foldNames = () => all("fold").map((fold) => fold.querySelector("button")?.getAttribute("aria-label"));
+    expect(foldNames()).toEqual(["Afficher 6 lignes", "Afficher 7 lignes"]);
+    // Only a fold with lines after it has a hunk header to show.
+    expect(all("fold").map((fold) => fold.textContent)).toEqual(["@@ -7,7 +7,7 @@", ""]);
     expect(all("row")).toHaveLength(7);
 
     act(() => all("fold")[0].querySelector("button")?.click());
-    expect(all("fold").map((fold) => fold.textContent)).toEqual(["Afficher 7 lignes"]);
+    expect(foldNames()).toEqual(["Afficher 7 lignes"]);
     expect(all("row")).toHaveLength(13);
   });
 
@@ -112,6 +115,50 @@ describe("CodeDiff", () => {
 
     await render(<CodeDiff original="a" modified="b" maxHeight={240} />);
     expect((viewer() as HTMLElement).style.maxHeight).toBe("240px");
+  });
+
+  it("opens a long fold twenty lines at a time, from the side each button points to", async () => {
+    const lines = (edits: Record<number, string>) =>
+      Array.from({ length: 120 }, (_, i) => edits[i + 1] ?? `line ${i + 1}`).join("\n");
+    await render(
+      <CodeDiff
+        original={lines({})}
+        modified={lines({ 30: "line thirty", 90: "line ninety" })}
+        collapseUnchanged
+        expandUpLabel="Vers le haut"
+        expandDownLabel="Vers le bas"
+      />,
+    );
+    const names = () => [...container.querySelectorAll("[data-slot=code-diff-fold] button")].map((b) => b.ariaLabel);
+    const foldButtons = () => [...container.querySelectorAll<HTMLElement>("[data-slot=code-diff-fold] button")];
+    const press = (name: string) =>
+      act(() =>
+        foldButtons()
+          .find((button) => button.ariaLabel === name)
+          ?.click(),
+      );
+    const numbers = () => all("line-number").map((cell) => cell.textContent);
+
+    // Lines 1-26 above the first change, 34-86 between the two, 94-120 below the second.
+    expect(names()).toEqual(["Vers le haut", "Vers le bas", "Vers le haut", "Vers le bas"]);
+    expect(all("fold").map((fold) => fold.textContent)).toEqual(["@@ -27,7 +27,7 @@", "@@ -87,7 +87,7 @@", ""]);
+
+    // Up from the first change: lines 7-26 appear, and the six left open in one go.
+    press("Vers le haut");
+    expect(numbers()[0]).toBe("7");
+    expect(names()[0]).toBe("Show 6 unchanged lines");
+
+    // Down into the middle fold continues the code above it: lines 34-53.
+    press("Vers le bas");
+    expect(numbers()).toContain("53");
+    expect(numbers()).not.toContain("54");
+
+    // Up from the second change: lines 67-86, leaving 54-66, few enough to open at once.
+    press("Vers le haut");
+    expect(numbers()).toContain("67");
+    expect(names()).toEqual(["Show 6 unchanged lines", "Show 13 unchanged lines", "Vers le bas"]);
+    press("Show 13 unchanged lines");
+    expect(numbers()).toContain("60");
   });
 
   it("becomes a named tab stop only while the diff scrolls", async () => {

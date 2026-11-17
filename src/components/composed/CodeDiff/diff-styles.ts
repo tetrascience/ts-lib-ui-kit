@@ -21,7 +21,11 @@ export const REMOVED_LINE_TINT = cn("bg-diff-removed-line", CHANGED_LINE_INK);
 export const ADDED_CHARS_CLASS = cn("diff-chars rounded-xs bg-diff-added-text", CHANGED_CHARS_INK);
 export const REMOVED_CHARS_CLASS = cn("diff-chars rounded-xs bg-diff-removed-text", CHANGED_CHARS_INK);
 
-/** A row with no line on this side, the fold row, and an annotation's surround. */
+/** The fold row: a band in the brand hue, with a stronger step behind its expand button. */
+export const FOLD_SURFACE = "bg-primary/8";
+export const FOLD_GUTTER = "bg-primary/16";
+
+/** A row with no line on this side. */
 export const QUIET_SURFACE = "bg-muted/40";
 
 /** A syntax token. Shiki sets `--shiki-light` / `--shiki-dark` inline on each one. */

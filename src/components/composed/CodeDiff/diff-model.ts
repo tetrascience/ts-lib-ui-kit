@@ -44,8 +44,19 @@ export interface DiffRow {
 
 /** A run of unchanged rows folded away by `collapseUnchanged`. */
 export interface DiffFold {
+  /** Identifies the run the fold came from, however much of it has since been revealed. */
+  key: string;
   hidden: DiffRow[];
 }
+
+/** How many rows of a folded run have been revealed again, from each end. */
+export interface FoldReveal {
+  top: number;
+  bottom: number;
+}
+
+/** Rows one press of an expand-up or expand-down button reveals. */
+export const FOLD_EXPAND_STEP = 20;
 
 /** Unchanged lines kept visible around each change when folding. */
 export const FOLD_CONTEXT_LINES = 3;
@@ -162,6 +173,26 @@ export function toDiffRows(hunks: DiffHunk[], mode: CodeDiffMode): DiffRow[] {
 }
 
 /**
+ * The unified-diff hunk header (`@@ -17,7 +17,7 @@`) for the lines shown after
+ * the fold at `index`: where they start on each side and how many there are.
+ * `undefined` when nothing follows the fold.
+ */
+export function hunkHeaderAfter(rows: Array<DiffRow | DiffFold>, index: number): string | undefined {
+  const shown: DiffRow[] = [];
+  for (let i = index + 1; i < rows.length; i++) {
+    const row = rows[i];
+    if ("hidden" in row) break;
+    shown.push(row);
+  }
+  if (shown.length === 0) return undefined;
+  const span = (side: "original" | "modified") => {
+    const lines = shown.map((row) => row[side]).filter((line) => line !== undefined);
+    return lines.length > 0 ? `${lines[0] + 1},${lines.length}` : "0,0";
+  };
+  return `@@ -${span("original")} +${span("modified")} @@`;
+}
+
+/**
  * Fold each run of unchanged rows, keeping {@link FOLD_CONTEXT_LINES} rows of
  * context next to a change. Runs that would hide fewer than
  * {@link FOLD_MIN_LINES} rows are left alone.
@@ -181,11 +212,37 @@ export function foldUnchangedRows(rows: DiffRow[]): Array<DiffRow | DiffFold> {
     const hideFrom = start === 0 ? start : start + FOLD_CONTEXT_LINES;
     const hideTo = end === rows.length ? end : end - FOLD_CONTEXT_LINES;
     if (hideTo - hideFrom >= FOLD_MIN_LINES) {
-      folded.push(...rows.slice(start, hideFrom), { hidden: rows.slice(hideFrom, hideTo) }, ...rows.slice(hideTo, end));
+      const hidden = rows.slice(hideFrom, hideTo);
+      const fold: DiffFold = { key: `${hidden[0].original}`, hidden };
+      folded.push(...rows.slice(start, hideFrom), fold, ...rows.slice(hideTo, end));
     } else {
       folded.push(...rows.slice(start, end));
     }
     start = end;
   }
   return folded;
+}
+
+/**
+ * Bring back the rows that were expanded out of each fold: `top` rows from the
+ * start of the run and `bottom` rows from its end. A fold with nothing left
+ * hidden disappears.
+ */
+export function revealFoldedRows(
+  rows: Array<DiffRow | DiffFold>,
+  revealed: Readonly<Record<string, FoldReveal>>,
+): Array<DiffRow | DiffFold> {
+  return rows.flatMap((row) => {
+    if (!("hidden" in row)) return row;
+    const reveal = revealed[row.key];
+    if (!reveal) return row;
+    const { hidden } = row;
+    if (reveal.top + reveal.bottom >= hidden.length) return hidden;
+    const until = hidden.length - reveal.bottom;
+    return [
+      ...hidden.slice(0, reveal.top),
+      { key: row.key, hidden: hidden.slice(reveal.top, until) },
+      ...hidden.slice(until),
+    ];
+  });
 }

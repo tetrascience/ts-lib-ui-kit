@@ -7,7 +7,7 @@ import {
   ADDED_CHARS_CLASS,
   ADDED_LINE_TINT,
   ADDED_MARKER_TEXT,
-  QUIET_SURFACE,
+  FOLD_SURFACE,
   REMOVED_CHARS_CLASS,
   REMOVED_LINE_TINT,
   REMOVED_MARKER_TEXT,
@@ -43,11 +43,15 @@ const MODIFIED = `{
 }
 `;
 
-/** Forty numbered lines, so there is a long unchanged run to fold. */
-const longText = (changedLine: number, replacement: string) =>
-  Array.from({ length: 40 }, (_, i) =>
-    i + 1 === changedLine ? replacement : `sample_${i + 1} = read_well(${i + 1})`,
-  ).join("\n");
+/** Eighty numbered lines, with long unchanged runs to fold, except the lines given. */
+const longText = (edits: Record<number, string> = {}) =>
+  Array.from({ length: 80 }, (_, i) => edits[i + 1] ?? `sample_${i + 1} = read_well(${i + 1})`).join("\n");
+
+const LONG_ORIGINAL = longText();
+const LONG_MODIFIED = longText({
+  20: "sample_20 = read_well(20, gain=1.5)",
+  60: "sample_60 = read_well(60, gain=2.0)",
+});
 
 const meta: Meta<typeof CodeDiff> = {
   title: "Components/Data Display/Code Diff",
@@ -172,8 +176,8 @@ export const Unified: Story = {
 
 export const CollapseUnchanged: Story = {
   args: {
-    original: longText(20, "sample_20 = read_well(20)"),
-    modified: longText(20, "sample_20 = read_well(20, gain=1.5)"),
+    original: LONG_ORIGINAL,
+    modified: LONG_MODIFIED,
     language: "python",
     collapseUnchanged: true,
   },
@@ -181,19 +185,26 @@ export const CollapseUnchanged: Story = {
     const viewer = getViewer(canvasElement);
     await waitForDiff(viewer);
     const folds = viewer.querySelectorAll('[data-slot="code-diff-fold"]');
-    expect(folds).toHaveLength(2);
-    expect(folds[0]).toHaveTextContent("Show 16 unchanged lines");
-    expect(folds[1]).toHaveTextContent("Show 17 unchanged lines");
+    expect(folds).toHaveLength(3);
+    // Short runs open in one go; the long one between the changes opens a step at a time, either way.
+    const buttons = (fold: Element) => within(fold as HTMLElement).getAllByRole("button");
+    expect(buttons(folds[0]).map((button) => button.ariaLabel)).toEqual(["Show 16 unchanged lines"]);
+    expect(buttons(folds[1]).map((button) => button.ariaLabel)).toEqual(["Expand down", "Expand up"]);
+    expect(buttons(folds[2]).map((button) => button.ariaLabel)).toEqual(["Show 17 unchanged lines"]);
+    // Like GitHub, a fold names the lines shown after it; the last one has none.
+    expect(folds[0]).toHaveTextContent("@@ -17,7 +17,7 @@");
+    expect(folds[1]).toHaveTextContent("@@ -57,7 +57,7 @@");
+    expect(folds[2]).toHaveTextContent("");
     // The changed line and three lines of context on each side stay visible.
-    expect(viewer.querySelectorAll('[data-slot="code-diff-row"]')).toHaveLength(7);
+    expect(viewer.querySelectorAll('[data-slot="code-diff-row"]')).toHaveLength(14);
   },
 };
 
 /** With `maxHeight`, a diff taller than the limit scrolls inside the viewer and becomes a tab stop. */
 export const MaxHeight: Story = {
   args: {
-    original: longText(20, "sample_20 = read_well(20)"),
-    modified: longText(20, "sample_20 = read_well(20, gain=1.5)"),
+    original: LONG_ORIGINAL,
+    modified: LONG_MODIFIED,
     language: "python",
     maxHeight: 240,
   },
@@ -410,9 +421,9 @@ export const TokenContrast: Story = {
                 <th scope="row" className="pr-3 text-left font-sans font-normal whitespace-nowrap">
                   Fold row
                 </th>
-                <td className={cn("px-2 font-sans", QUIET_SURFACE)}>
+                <td className={cn("px-2", FOLD_SURFACE)}>
                   <span data-contrast-sample className={SUBTLE_TEXT}>
-                    Show 16 unchanged lines
+                    @@ -17,7 +17,7 @@
                   </span>
                 </td>
               </tr>

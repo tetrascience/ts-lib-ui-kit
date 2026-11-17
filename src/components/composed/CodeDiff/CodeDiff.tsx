@@ -1,9 +1,19 @@
+import { ArrowDownFromLineIcon, ArrowUpFromLineIcon, UnfoldVerticalIcon } from "lucide-react";
 import * as React from "react";
 
-import { diffTexts, foldUnchangedRows, toDiffRows } from "./diff-model";
+import {
+  diffTexts,
+  FOLD_EXPAND_STEP,
+  foldUnchangedRows,
+  hunkHeaderAfter,
+  revealFoldedRows,
+  toDiffRows,
+} from "./diff-model";
 import {
   ADDED_LINE_TINT,
   ADDED_MARKER_TEXT,
+  FOLD_GUTTER,
+  FOLD_SURFACE,
   QUIET_SURFACE,
   REMOVED_LINE_TINT,
   REMOVED_MARKER_TEXT,
@@ -12,7 +22,7 @@ import {
 } from "./diff-styles";
 import { classesOf, highlightDiff, lineKindOf } from "./highlight-diff";
 
-import type { DiffFold, DiffRow, CodeDiffMode, TextDiff } from "./diff-model";
+import type { CodeDiffMode, DiffFold, DiffRow, FoldReveal, TextDiff } from "./diff-model";
 import type { DiffLineNode, HighlightedDiff } from "./highlight-diff";
 
 import { withRef } from "@/lib/react18-compat";
@@ -52,8 +62,15 @@ export interface CodeDiffProps extends Omit<React.ComponentProps<"div">, "childr
   loadingLabel?: string;
   /** Accessible name of the diff while it is large enough to scroll, when it becomes a tab stop. */
   scrollRegionLabel?: string;
-  /** Text of the button that reveals a folded run of unchanged lines, given how many it hides. */
+  /** Accessible name and tooltip of the button that reveals a folded run of unchanged lines, given how many it hides. */
   expandUnchangedLabel?: (hiddenLineCount: number) => string;
+  /**
+   * Accessible name and tooltip of the button that reveals the next 20 hidden
+   * lines above the code below a fold. Folds of more than 20 lines open in steps.
+   */
+  expandUpLabel?: string;
+  /** As `expandUpLabel`, for the button that reveals the next 20 hidden lines below the code above a fold. */
+  expandDownLabel?: string;
   /**
    * Controls for one line, such as an "add comment" button or a menu, rendered
    * in a gutter column beside the line's code. Called for every line shown;
@@ -250,11 +267,25 @@ function drawnLine(content: DiffContent, side: DiffSideName, index: number | und
 
 const isFold = (row: DiffRow | DiffFold): row is DiffFold => "hidden" in row;
 
-const foldKey = (fold: DiffFold) => `${fold.hidden[0].original}`;
+/** Where a fold sits in the diff. One that is both first and last has lines on neither side. */
+function foldPosition(index: number, rowCount: number): "top" | "middle" | "bottom" {
+  if (rowCount === 1) return "middle";
+  if (index === 0) return "top";
+  return index === rowCount - 1 ? "bottom" : "middle";
+}
 
 const defaultExpandUnchangedLabel = (hiddenLineCount: number) => `Show ${hiddenLineCount} unchanged lines`;
 
-const NO_FOLDS: ReadonlySet<string> = new Set();
+const NO_REVEALS: Readonly<Record<string, FoldReveal>> = {};
+
+/** A fold's reveal after one press of an expand button. */
+function expandFold(reveal: FoldReveal = { top: 0, bottom: 0 }, direction: FoldDirection): FoldReveal {
+  if (direction === "all") return { top: Number.POSITIVE_INFINITY, bottom: 0 };
+  // Expanding down continues the code above the fold; expanding up, the code below it.
+  return direction === "down"
+    ? { ...reveal, top: reveal.top + FOLD_EXPAND_STEP }
+    : { ...reveal, bottom: reveal.bottom + FOLD_EXPAND_STEP };
+}
 
 /**
  * Whether the element behind the returned ref overflows. The diff scrolls
@@ -371,6 +402,86 @@ function DiffLineRows({
   );
 }
 
+type FoldDirection = "up" | "down" | "all";
+
+interface FoldLabels {
+  expandUnchangedLabel: (hiddenLineCount: number) => string;
+  expandUpLabel: string;
+  expandDownLabel: string;
+}
+
+const FOLD_BUTTON = cn(
+  "flex w-10 flex-1 items-center justify-center outline-none",
+  SUBTLE_TEXT,
+  "hover:bg-primary hover:[color:var(--primary-foreground)]",
+  "focus-visible:bg-primary focus-visible:[color:var(--primary-foreground)]",
+);
+
+/**
+ * The buttons a fold offers. A short run, or one with no lines on either side,
+ * opens in one go. A longer one opens a step at a time towards the lines it
+ * hides: up from the code below it, down from the code above it, or both when
+ * it sits between two changes.
+ */
+function foldButtons(position: "top" | "middle" | "bottom", hiddenCount: number, labels: FoldLabels) {
+  const up = { direction: "up", label: labels.expandUpLabel, Icon: ArrowUpFromLineIcon } as const;
+  const down = { direction: "down", label: labels.expandDownLabel, Icon: ArrowDownFromLineIcon } as const;
+  if (hiddenCount <= FOLD_EXPAND_STEP) {
+    const all = {
+      direction: "all",
+      label: labels.expandUnchangedLabel(hiddenCount),
+      Icon: UnfoldVerticalIcon,
+    } as const;
+    return [all];
+  }
+  if (position === "top") return [up];
+  return position === "bottom" ? [down] : [down, up];
+}
+
+interface FoldRowProps {
+  fold: DiffFold;
+  /** Hunk header of the lines shown after the fold, if any follow. */
+  header: string | undefined;
+  position: "top" | "middle" | "bottom";
+  columns: number;
+  labels: FoldLabels;
+  onExpand: (direction: FoldDirection) => void;
+}
+
+/** A folded run of unchanged lines: expand buttons in the gutter and the next hunk's header. */
+function FoldRow({ fold, header, position, columns, labels, onExpand }: FoldRowProps) {
+  return (
+    <tr data-slot="code-diff-fold">
+      <td colSpan={columns} className={cn("p-0", FOLD_SURFACE)}>
+        <div className="flex items-stretch">
+          <div className={cn("flex shrink-0 flex-col", FOLD_GUTTER)}>
+            {foldButtons(position, fold.hidden.length, labels).map(({ direction, label, Icon }) => (
+              <button
+                key={direction}
+                type="button"
+                aria-label={label}
+                title={label}
+                className={cn(FOLD_BUTTON, "min-h-5")}
+                onClick={() => onExpand(direction)}
+              >
+                <Icon aria-hidden className="size-3.5" />
+              </button>
+            ))}
+          </div>
+          {header && (
+            <span
+              data-slot="code-diff-hunk-header"
+              className={cn("flex min-h-6 items-center px-3 select-none", SUBTLE_TEXT)}
+            >
+              {header}
+            </span>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 interface DiffTableProps {
   content: DiffContent;
   rows: Array<DiffRow | DiffFold>;
@@ -379,8 +490,8 @@ interface DiffTableProps {
   wordWrap: boolean;
   originalLabel: string;
   modifiedLabel: string;
-  expandUnchangedLabel: (hiddenLineCount: number) => string;
-  onExpandFold: (key: string) => void;
+  foldLabels: FoldLabels;
+  onExpandFold: (key: string, direction: FoldDirection) => void;
   slots: LineSlots;
 }
 
@@ -393,7 +504,7 @@ function DiffTable({
   wordWrap,
   originalLabel,
   modifiedLabel,
-  expandUnchangedLabel,
+  foldLabels,
   onExpandFold,
   slots,
 }: DiffTableProps) {
@@ -445,23 +556,17 @@ function DiffTable({
         </thead>
       )}
       <tbody>
-        {rows.map((row) =>
+        {rows.map((row, index) =>
           isFold(row) ? (
-            <tr key={`fold-${foldKey(row)}`} data-slot="code-diff-fold">
-              <td colSpan={isSplit ? sideColumns * 2 : sideColumns} className={cn("border-y p-0", QUIET_SURFACE)}>
-                <button
-                  type="button"
-                  className={cn(
-                    "block w-full px-3 py-1 text-left font-sans text-xs outline-none hover:bg-muted",
-                    "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-                    SUBTLE_TEXT,
-                  )}
-                  onClick={() => onExpandFold(foldKey(row))}
-                >
-                  {expandUnchangedLabel(row.hidden.length)}
-                </button>
-              </td>
-            </tr>
+            <FoldRow
+              key={`fold-${row.key}`}
+              fold={row}
+              header={hunkHeaderAfter(rows, index)}
+              position={foldPosition(index, rows.length)}
+              columns={isSplit ? sideColumns * 2 : sideColumns}
+              labels={foldLabels}
+              onExpand={(direction) => onExpandFold(row.key, direction)}
+            />
           ) : (
             <DiffLineRows
               key={`${row.original ?? ""}:${row.modified ?? ""}`}
@@ -515,6 +620,8 @@ function CodeDiff({
   loadingLabel = "Loading diff…",
   scrollRegionLabel = "Diff, scrollable",
   expandUnchangedLabel = defaultExpandUnchangedLabel,
+  expandUpLabel = "Expand up",
+  expandDownLabel = "Expand down",
   renderLineActions,
   lineActionsVisibility = "hover",
   renderLineAnnotation,
@@ -523,7 +630,7 @@ function CodeDiff({
   ...props
 }: CodeDiffProps) {
   const [content, setContent] = React.useState<DiffContent | null>(null);
-  const [expandedFolds, setExpandedFolds] = React.useState(NO_FOLDS);
+  const [revealedFolds, setRevealedFolds] = React.useState(NO_REVEALS);
 
   React.useEffect(() => {
     let stale = false;
@@ -532,7 +639,7 @@ function CodeDiff({
       const highlighted = await highlightDiff(diff, language);
       if (stale) return;
       setContent({ diff, ...highlighted });
-      setExpandedFolds(NO_FOLDS);
+      setRevealedFolds(NO_REVEALS);
     };
     void load();
     return () => {
@@ -543,9 +650,8 @@ function CodeDiff({
   const rows = React.useMemo(() => {
     if (!content) return [];
     const all = toDiffRows(content.diff.hunks, mode);
-    if (!collapseUnchanged) return all;
-    return foldUnchangedRows(all).flatMap((row) => (isFold(row) && expandedFolds.has(foldKey(row)) ? row.hidden : row));
-  }, [content, mode, collapseUnchanged, expandedFolds]);
+    return collapseUnchanged ? revealFoldedRows(foldUnchangedRows(all), revealedFolds) : all;
+  }, [content, mode, collapseUnchanged, revealedFolds]);
 
   const [scrollerRef, isScrollable] = useIsScrollable(content !== null);
   // `group`, not `region`: `region` is a landmark, and two viewers on a page would share its name.
@@ -579,8 +685,10 @@ function CodeDiff({
             wordWrap={wordWrap}
             originalLabel={originalLabel}
             modifiedLabel={modifiedLabel}
-            expandUnchangedLabel={expandUnchangedLabel}
-            onExpandFold={(key) => setExpandedFolds((expanded) => new Set(expanded).add(key))}
+            foldLabels={{ expandUnchangedLabel, expandUpLabel, expandDownLabel }}
+            onExpandFold={(key, direction) =>
+              setRevealedFolds((revealed) => ({ ...revealed, [key]: expandFold(revealed[key], direction) }))
+            }
             slots={{ renderLineActions, lineActionsVisibility, renderLineAnnotation }}
           />
         </div>

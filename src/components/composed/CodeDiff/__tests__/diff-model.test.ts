@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { diffTexts, foldUnchangedRows, toDiffRows } from "../diff-model";
+import { diffTexts, foldUnchangedRows, hunkHeaderAfter, revealFoldedRows, toDiffRows } from "../diff-model";
 
 import type { DiffRow } from "../diff-model";
 
@@ -78,11 +78,11 @@ describe("foldUnchangedRows", () => {
     const folded = foldUnchangedRows([...unchanged(10), change, ...unchanged(10, 11)]);
 
     expect(folded).toEqual([
-      { hidden: unchanged(7) },
+      { key: "0", hidden: unchanged(7) },
       ...unchanged(3, 7),
       change,
       ...unchanged(3, 11),
-      { hidden: unchanged(7, 14) },
+      { key: "14", hidden: unchanged(7, 14) },
     ]);
   });
 
@@ -94,6 +94,55 @@ describe("foldUnchangedRows", () => {
   });
 
   it("folds a diff with no changes into one row", () => {
-    expect(foldUnchangedRows(unchanged(5))).toEqual([{ hidden: unchanged(5) }]);
+    expect(foldUnchangedRows(unchanged(5))).toEqual([{ key: "0", hidden: unchanged(5) }]);
+  });
+});
+
+describe("hunkHeaderAfter", () => {
+  it("gives the start and length of the lines shown after a fold, per side", () => {
+    const rows = [
+      { key: "0", hidden: unchanged(7) },
+      ...unchanged(3, 7),
+      { original: 10, changed: true },
+      { modified: 10, changed: true },
+      { modified: 11, changed: true },
+      { key: "11", hidden: unchanged(4, 11) },
+    ];
+    expect(hunkHeaderAfter(rows, 0)).toBe("@@ -8,4 +8,5 @@");
+    expect(hunkHeaderAfter(rows, rows.length - 1)).toBeUndefined();
+  });
+
+  it("writes 0,0 for a side with no lines in the hunk", () => {
+    expect(
+      hunkHeaderAfter(
+        [
+          { key: "0", hidden: unchanged(3) },
+          { modified: 3, changed: true },
+        ],
+        0,
+      ),
+    ).toBe("@@ -0,0 +4,1 @@");
+  });
+});
+
+describe("revealFoldedRows", () => {
+  const change: DiffRow = { original: 50, modified: 50, changed: true };
+  const rows = [{ key: "0", hidden: unchanged(50) }, change];
+
+  it("leaves a fold alone until something is revealed from it", () => {
+    expect(revealFoldedRows(rows, {})).toEqual(rows);
+  });
+
+  it("reveals rows from either end of the run and keeps the fold's key", () => {
+    expect(revealFoldedRows(rows, { "0": { top: 5, bottom: 20 } })).toEqual([
+      ...unchanged(5),
+      { key: "0", hidden: unchanged(25, 5) },
+      ...unchanged(20, 30),
+      change,
+    ]);
+  });
+
+  it("drops the fold once nothing is left hidden", () => {
+    expect(revealFoldedRows(rows, { "0": { top: 40, bottom: 20 } })).toEqual([...unchanged(50), change]);
   });
 });

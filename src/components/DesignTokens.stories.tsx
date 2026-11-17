@@ -1,5 +1,6 @@
 import { Check, Copy, Info } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { expect } from "storybook/test";
 
 import { cn } from "../lib/utils";
 
@@ -452,5 +453,181 @@ export const Overview: Story = {
     // Full-page foundations showcase — a code snippet is meaningless here.
     docs: { canvas: { sourceState: "none" } },
     zephyr: { testCaseId: "SW-T1467" },
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Contrast audit (UXT-297)
+// ---------------------------------------------------------------------------
+
+/**
+ * Foreground/surface pairings the kit actually renders text on. Each must clear
+ * WCAG AA for normal text (4.5:1) in both themes.
+ *
+ * This is deliberately wider than the `bgPair` column above, which pairs each
+ * `*-foreground` with its own surface. The dark-theme regression UXT-297 fixed
+ * was `muted-foreground` on the *lifted* surfaces — card, popover, accent,
+ * secondary — none of which is any token's declared pair, so a by-pair check
+ * could not have caught it.
+ */
+const CONTRAST_PAIRS: { fg: string; bg: string }[] = [
+  { fg: "foreground", bg: "background" },
+  { fg: "foreground", bg: "card" },
+  { fg: "foreground", bg: "popover" },
+  { fg: "card-foreground", bg: "card" },
+  { fg: "popover-foreground", bg: "popover" },
+  { fg: "muted-foreground", bg: "background" },
+  { fg: "muted-foreground", bg: "card" },
+  { fg: "muted-foreground", bg: "popover" },
+  { fg: "muted-foreground", bg: "muted" },
+  { fg: "muted-foreground", bg: "accent" },
+  { fg: "muted-foreground", bg: "secondary" },
+  { fg: "primary-foreground", bg: "primary" },
+  { fg: "secondary-foreground", bg: "secondary" },
+  { fg: "accent-foreground", bg: "accent" },
+  { fg: "tertiary-foreground", bg: "tertiary" },
+  { fg: "destructive-foreground", bg: "destructive" },
+  { fg: "positive-foreground", bg: "positive" },
+  { fg: "warning-foreground", bg: "warning" },
+  { fg: "info-foreground", bg: "info" },
+  { fg: "primary", bg: "background" },
+  { fg: "primary", bg: "card" },
+  { fg: "selected-foreground", bg: "card" },
+  { fg: "selected-foreground", bg: "background" },
+];
+
+const AA_NORMAL = 4.5;
+
+/**
+ * Resolve a stack of CSS colours to sRGB by painting them, so `oklch()`,
+ * `color-mix()` and alpha all composite exactly as the browser renders them —
+ * `getComputedStyle` alone would hand back an unparsed `oklch()` string.
+ */
+function paint(ctx: CanvasRenderingContext2D, layers: string[]): [number, number, number] {
+  ctx.clearRect(0, 0, 1, 1);
+  for (const layer of layers) {
+    ctx.fillStyle = layer;
+    ctx.fillRect(0, 0, 1, 1);
+  }
+  const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+  return [r, g, b];
+}
+
+function relativeLuminance([r, g, b]: [number, number, number]): number {
+  const channel = (v: number) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+}
+
+function contrastRatio(a: [number, number, number], b: [number, number, number]): number {
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+interface AuditRow {
+  fg: string;
+  bg: string;
+  ratio: number;
+  passes: boolean;
+}
+
+function auditContrast(): AuditRow[] {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 1;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return [];
+  const read = getComputedStyle(document.documentElement);
+  const token = (name: string) => read.getPropertyValue(`--${name}`).trim();
+  // Surfaces may be translucent, so every stack starts from the page background.
+  const page = token("background");
+
+  return CONTRAST_PAIRS.map(({ fg, bg }) => {
+    const background = paint(ctx, [page, token(bg)]);
+    const foreground = paint(ctx, [page, token(bg), token(fg)]);
+    const ratio = contrastRatio(foreground, background);
+    return { fg, bg, ratio, passes: ratio >= AA_NORMAL };
+  });
+}
+
+function ContrastAuditTable() {
+  const [rows, setRows] = useState<AuditRow[]>([]);
+
+  useEffect(() => {
+    const run = () => setRows(auditContrast());
+    run();
+    // The theme toolbar toggles `.dark` on <html>; re-measure when it does.
+    const observer = new MutationObserver(run);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div className="p-6">
+      <h2 className="text-lg font-semibold">Contrast audit</h2>
+      <p className="mt-1 mb-4 text-sm text-muted-foreground">
+        Every foreground/surface pairing the kit renders text on, measured live in the current theme. Each must clear
+        WCAG AA for normal text ({AA_NORMAL}:1). Switch the theme toolbar to re-measure.
+      </p>
+      <table className="w-full max-w-2xl text-sm">
+        <thead>
+          <tr className="border-b border-border text-left">
+            <th className="py-1.5 font-medium">Foreground</th>
+            <th className="py-1.5 font-medium">Surface</th>
+            <th className="py-1.5 text-right font-medium">Ratio</th>
+            <th className="py-1.5 pl-4 font-medium">AA</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(({ fg, bg, ratio, passes }) => (
+            <tr key={`${fg}-on-${bg}`} className="border-b border-border/50">
+              <td className="py-1 font-mono text-xs">--{fg}</td>
+              <td className="py-1 font-mono text-xs">--{bg}</td>
+              <td className="py-1 text-right tabular-nums">{ratio.toFixed(2)}</td>
+              <td className={cn("py-1 pl-4 font-medium", passes ? "text-positive" : "text-destructive")}>
+                {passes ? "pass" : "FAIL"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/**
+ * Guards the token table against contrast regressions in both themes.
+ *
+ * The play function measures light and dark itself rather than relying on the
+ * theme toolbar, so one run covers both — a story fixed to one theme would let
+ * the other rot, which is exactly how UXT-297 survived: light was corrected
+ * under SW-1925 and dark was never revisited.
+ */
+export const ContrastAudit: Story = {
+  render: () => <ContrastAuditTable />,
+  parameters: {
+    docs: { canvas: { sourceState: "none" } },
+    zephyr: { testCaseId: "" },
+  },
+  play: async () => {
+    const root = document.documentElement;
+    const hadDark = root.classList.contains("dark");
+
+    try {
+      for (const theme of ["light", "dark"] as const) {
+        root.classList.toggle("dark", theme === "dark");
+        const failures = auditContrast()
+          .filter((row) => !row.passes)
+          .map((row) => `--${row.fg} on --${row.bg} = ${row.ratio.toFixed(2)}:1`);
+
+        await expect(
+          failures,
+          `${theme} theme: these pairings fall below WCAG AA (${AA_NORMAL}:1) for normal text`,
+        ).toEqual([]);
+      }
+    } finally {
+      root.classList.toggle("dark", hadDark);
+    }
   },
 };

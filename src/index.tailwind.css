@@ -572,7 +572,13 @@
     --secondary-foreground: var(--on-secondary); /* #DADEFD */
     /* Muted — Neutral tone 5 */
     --muted: oklch(0.18 0.0102 285.33); /* #111116 */
-    --muted-foreground: oklch(0.6569 0.0162 285.95); /* #90909B */
+    /* UXT-297: lightened for contrast, the dark-theme counterpart of SW-1925.
+       Dark `--surface-bright` is *lighter* than `--surface`, so a mid-grey muted tone that
+       clears AA on the page background falls under it on every lifted surface. At the old
+       0.6569 this measured 4.14:1 on --card/--popover, 4.15 on --accent and 4.28 on
+       --secondary; at 0.70 the worst of those is 4.87:1. Guarded by the Contrast Audit
+       story in DesignTokens.stories.tsx. */
+    --muted-foreground: oklch(0.7 0.0162 285.95); /* #9D9DA8 */
     /* Accent — subtle primary tint for hover/focus (dark) */
     --accent: oklch(0.3126 0.0307 270.54); /* Dark primary tint */
     --accent-foreground: oklch(0.9152 0.0115 308.32); /* #E5E1E9 */

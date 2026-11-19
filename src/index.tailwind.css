@@ -159,6 +159,13 @@
   --color-positive-foreground: var(--positive-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  /* UXT-53 diff utilities: bg-diff-added-line / text-diff-removed / … */
+  --color-diff-added: var(--diff-added);
+  --color-diff-added-line: var(--diff-added-line);
+  --color-diff-added-text: var(--diff-added-text);
+  --color-diff-removed: var(--diff-removed);
+  --color-diff-removed-line: var(--diff-removed-line);
+  --color-diff-removed-text: var(--diff-removed-text);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -359,6 +366,21 @@
     --positive-foreground: oklch(1 0 0); /* #FFFFFF — 5.0:1 on --positive */
     --warning: oklch(0.5716 0.1335 60.41); /* #AF6100 — darkened amber, AA 4.6:1 on white */
     --warning-foreground: oklch(1 0 0); /* #FFFFFF — 4.6:1 on --warning */
+    /* Diff (UXT-53) — green = added, red = removed. `--diff-added` / `--diff-removed`
+       are the solid hues (gutter markers, your own UI); `-line` tints a whole
+       changed line and `-text` the changed characters inside it. All derive from
+       --positive / --destructive. A var() reference resolves where the token is
+       declared, not where it is used, so the six are declared again under .dark:
+       a dark panel nested in a light page then derives them from its own
+       --positive / --destructive instead of inheriting the page's. The tints are
+       translucent on purpose: code keeps its own AA text colour on top of them.
+       To re-colour diffs, override all six on the scope you want re-coloured. */
+    --diff-added: var(--positive);
+    --diff-added-line: color-mix(in oklab, var(--diff-added) 8%, transparent);
+    --diff-added-text: color-mix(in oklab, var(--diff-added) 16%, transparent);
+    --diff-removed: var(--destructive);
+    --diff-removed-line: color-mix(in oklab, var(--diff-removed) 8%, transparent);
+    --diff-removed-text: color-mix(in oklab, var(--diff-removed) 16%, transparent);
     /* Shiki syntax highlighting — code tokens mapped onto design tokens, AA on --shiki-bg in both modes */
     --shiki-bg: var(--card); /* #FFFFFF */
     --shiki-fg: var(--foreground); /* #0D1B3E — 16.9:1 */
@@ -588,9 +610,28 @@
     --positive-foreground: oklch(0.3002 0.0893 146.98); /* #00390F — 6.2:1 on --positive */
     --warning: oklch(0.7856 0.1606 64.14); /* #FFA033 */
     --warning-foreground: oklch(0.2843 0.0638 64.91); /* #3F2200 — 7.2:1 on --warning */
-    /* Shiki syntax highlighting (dark) — the other --shiki-* re-resolve via their source tokens;
-       only comment needs an override, its light source staying too dark on the dark --shiki-bg */
+    /* Diff (UXT-53) — same derivation as :root, declared again so it resolves
+       against the dark --positive / --destructive on a nested dark panel too. */
+    --diff-added: var(--positive);
+    --diff-added-line: color-mix(in oklab, var(--diff-added) 8%, transparent);
+    --diff-added-text: color-mix(in oklab, var(--diff-added) 16%, transparent);
+    --diff-removed: var(--destructive);
+    --diff-removed-line: color-mix(in oklab, var(--diff-removed) 8%, transparent);
+    --diff-removed-text: color-mix(in oklab, var(--diff-removed) 16%, transparent);
+    /* Shiki syntax highlighting (dark) — the same aliases as :root, declared again:
+       a var() reference resolves where the token is declared, so a dark panel
+       nested in a light page would otherwise inherit the page's light colours
+       (UXT-53). Only comment differs, its light source staying too dark on the
+       dark --shiki-bg. */
+    --shiki-bg: var(--card);
+    --shiki-fg: var(--foreground);
     --shiki-comment: oklch(0.7092 0.0158 285.99); /* #A0A0AB — muted-foreground family lightened, 5.1:1 */
+    --shiki-keyword: var(--destructive);
+    --shiki-constant: var(--primary);
+    --shiki-entity: var(--tertiary);
+    --shiki-tag: var(--positive);
+    --shiki-string: var(--secondary-foreground);
+    --shiki-variable: var(--warning);
     /* Borders & inputs — Neutral-variant outline (dark) */
     --border: var(--outline-variant); /* #454650 */
     --input: var(--outline-variant); /* #454650 */

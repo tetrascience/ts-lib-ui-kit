@@ -21,6 +21,27 @@
 
 > Dark mode is handled via the `.dark` class on `<html>`. All variables are redefined under `.dark { }` in `src/index.tailwind.css` — no separate stylesheet needed.
 
+#### Diff colors
+
+`CodeDiff` paints additions and removals from six tokens, all derived from `--positive` (green) and
+`--destructive` (red). They are declared under both `:root` and `.dark`, because a `var()` reference
+resolves where a token is declared: a dark panel nested in a light page then derives them from its own
+colors.
+
+| CSS Variable                                | Tailwind utility                     | Role                                       |
+| ------------------------------------------- | ------------------------------------ | ------------------------------------------ |
+| `--diff-added` / `--diff-removed`           | `bg-diff-added`, `text-diff-removed` | Solid hue — `+` / `-` markers, your own UI |
+| `--diff-added-line` / `--diff-removed-line` | `bg-diff-added-line`, …              | 8% tint behind a whole changed line        |
+| `--diff-added-text` / `--diff-removed-text` | `bg-diff-added-text`, …              | 16% tint behind the changed characters     |
+
+The tints are translucent so code keeps its own text color on top of them. Syntax colors (the
+`--shiki-*` tokens) are used as they are on unchanged lines; on a tint each keeps only as much of itself
+as stays AA there and takes the rest from `--foreground`: 88% on a changed line, 40% on changed
+characters, where both tints stack. A test-only `TokenContrast` story checks every token on every tint in
+light and dark, so a palette change that breaks AA fails CI. To re-color diffs, override all six on the
+scope you want re-colored. Change is never signalled by color alone: every changed line also carries a
+`+` or `-` gutter marker.
+
 ### Typography
 
 - **Font family**: Inter Variable (`@fontsource-variable/inter`), variable weight 100–900
@@ -117,6 +138,7 @@ import {
 | `Badge`                  | Data Display       | `badge`                    | —                                                        | Stable |
 | `Carousel`               | Data Display       | `carousel`                 | —                                                        | Stable |
 | `CodeBlock`              | Data Display       | —                          | Read-only highlighted code, slim Shiki highlighter       | Stable |
+| `CodeDiff`               | Data Display       | —                          | Read-only text diff (split / unified), Shiki-highlighted | Beta   |
 | `DataTable`              | Data Display       | —                          | TanStack Table wrapper, pagination, column toggle        | In Dev |
 | `Item`                   | Data Display       | —                          | Generic list/menu item                                   | Stable |
 | `Kbd`                    | Data Display       | —                          | Keyboard shortcut indicator                              | Stable |

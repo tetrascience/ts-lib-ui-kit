@@ -6635,6 +6635,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@shikijs/transformers@npm:4.0.2":
+  version: 4.0.2
+  resolution: "@shikijs/transformers@npm:4.0.2"
+  dependencies:
+    "@shikijs/core": "npm:4.0.2"
+    "@shikijs/types": "npm:4.0.2"
+  checksum: 10c0/7c3ce7d356d1b02061b5ab4ff5d91098b45cca1f961e64a496c5fb9d2854fce6c7e033f113819b9290cd188efb4016f625fb70f590572ccb1f36983768fca3ff
+  languageName: node
+  linkType: hard
+
 "@shikijs/types@npm:4.0.2":
   version: 4.0.2
   resolution: "@shikijs/types@npm:4.0.2"
@@ -8080,6 +8090,7 @@ __metadata:
     "@semantic-release/release-notes-generator": "npm:^14.1.0"
     "@shikijs/langs": "npm:^4.0.2"
     "@shikijs/themes": "npm:^4.0.2"
+    "@shikijs/transformers": "npm:4.0.2"
     "@storybook/addon-a11y": "npm:^10.4.6"
     "@storybook/addon-docs": "npm:^10.4.6"
     "@storybook/addon-links": "npm:^10.4.6"
@@ -8113,6 +8124,7 @@ __metadata:
     conventional-changelog-conventionalcommits: "npm:^9.3.1"
     cookie-parser: "npm:^1.4.7"
     date-fns: "npm:^4.1.0"
+    diff: "npm:^8.0.2"
     embla-carousel-react: "npm:^8.6.0"
     eslint: "npm:^9.9.0"
     eslint-plugin-import: "npm:^2.31.0"

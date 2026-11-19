@@ -343,6 +343,11 @@ export function installUiKitJestMocks(jestApi: JestMockApi): void {
   tryMock("shiki/engine/javascript", () => ({
     createJavaScriptRegexEngine: () => ({}),
   }));
+  // `CodeDiff` loads its line transformer from here. The stub highlighter
+  // has no `codeToHast`, so the viewer renders its plain-text diff instead.
+  tryMock("@shikijs/transformers", () => ({
+    transformerCompactLineOptions: () => ({}),
+  }));
   // These four are consumed via dynamic `import()`, which Rollup's CJS
   // output rewrites to an interop-wrapped `require()` (see
   // `dynamicImportInCjs: false` in vite.config.ts) — and that interop

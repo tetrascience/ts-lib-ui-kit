@@ -290,6 +290,27 @@ import { Table } from "@/components/ui/table";
 | `TaskScripts`        | —                    | Removed                                       |
 | All chart components | `charts/`            | Moved to dedicated folder                     |
 
+## TDP `DiffViewer` (`@tetrascience/ui-components`) → `CodeDiff`
+
+The platform's diff viewer wraps `react-diff-viewer`; the kit's `CodeDiff` renders the diff as plain DOM,
+highlighted by the same lazy Shiki highlighter `CodeBlock` uses.
+
+| Legacy prop                    | Kit `CodeDiff`                                                                                  |
+| ------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `oldValue` / `newValue`        | `original` / `modified`                                                                         |
+| `splitView` (default `true`)   | `mode="split"` (default) or `mode="unified"`                                                    |
+| `showDiffOnly`                 | `collapseUnchanged`                                                                             |
+| `hideLineNumbers`              | `lineNumbers={false}`                                                                           |
+| `useDarkTheme`                 | Not needed — follows the `.dark` class                                                          |
+| `compareMethod`                | Not needed — changed words are emphasised within an edited line                                 |
+| `diffStyles` (color variables) | Override the `--diff-added*` / `--diff-removed*` tokens (DESIGN.md §2)                          |
+| `leftTitle` / `rightTitle`     | Render your own headings; `originalLabel` / `modifiedLabel` name the columns for assistive tech |
+
+New with the kit's viewer: syntax highlighting (`language`), `wordWrap`, `ignoreTrimWhitespace`, and two
+render props for your own components on a line: `renderLineActions` (gutter controls, such as an "add
+comment" button or a menu) and `renderLineAnnotation` (content in a row beneath the line, such as a
+comment thread).
+
 ## New Components (No Old Equivalent)
 
 These shadcn components are new additions with no prior equivalent:

@@ -253,6 +253,16 @@ export interface PlateMapProps {
    */
   onLayerChange?: (layerId: string) => void;
 
+  /**
+   * How multiple layers are shown (default: "tabs").
+   * - "tabs": one layer at a time, switched with the layer tabs.
+   * - "sideBySide": one plate per layer, in a row, each with its own colour scale and colour bar.
+   *   Use it to compare channels of the same wells, such as fluorescence and luminescence.
+   *   Each plate takes `width` and `height`, so the row is `layers × width` wide plus gaps.
+   *   Ignored when the data has at most one layer.
+   */
+  layerDisplay?: "tabs" | "sideBySide";
+
   /** Plate format preset (default: "96") */
   plateFormat?: PlateFormat;
 

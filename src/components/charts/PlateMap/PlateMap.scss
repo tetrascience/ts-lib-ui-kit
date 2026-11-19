@@ -40,6 +40,24 @@ $platemap-text-dark: #333;
     margin-bottom: 8px;
   }
 
+  // Side-by-side channels: a title over a row of plates that wraps when there is no room
+  .platemap-channels {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &__title {
+      font-weight: 600;
+    }
+
+    &__row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 24px;
+    }
+  }
+
   // Legend container
   .platemap-legend {
     display: flex;

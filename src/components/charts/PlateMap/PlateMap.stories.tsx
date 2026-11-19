@@ -590,6 +590,65 @@ export const LayerToggling: Story = {
 };
 
 /**
+ * Two measurement channels of the same wells, drawn side by side
+ * Each channel is its own plate with its own colour scale and colour bar, so the reader compares them without switching layers
+ */
+export const SideBySideChannels: Story = {
+  args: {
+    data: (() => {
+      const wells: WellData[] = [];
+      const rows = "ABCDEFGH";
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 1; c <= 12; c++) {
+          const wellId = `${rows[r]}${c}`;
+          const fluorescence = 2000 + r * 900 + c * 150;
+          const luminescence = 40000 + (r * 12 + c) * 1800;
+
+          wells.push({
+            wellId,
+            values: {
+              Fluorescence: fluorescence,
+              // One well has no luminescence read, so it draws as an empty well on that plate only
+              Luminescence: r === 7 && c === 12 ? null : luminescence,
+            },
+            tooltipData: { sampleId: `S${r * 12 + c}` },
+          });
+        }
+      }
+      return wells;
+    })(),
+    plateFormat: "96",
+    title: "Reporter read, same wells",
+    layerConfigs: [
+      { id: "Fluorescence", name: "Fluorescence", valueUnit: "RFU", colorScale: "Blues" },
+      { id: "Luminescence", name: "Luminescence", valueUnit: "RLU", colorScale: "Viridis" },
+    ],
+    layerDisplay: "sideBySide",
+    width: 380,
+    height: 340,
+  },
+  play: async ({ canvasElement, step }) => {
+    await step("One plate is drawn per channel", async () => {
+      expect(canvasElement.querySelectorAll(".platemap-channel")).toHaveLength(2);
+      expect(canvasElement.querySelectorAll(".platemap-plot")).toHaveLength(2);
+    });
+
+    await step("The shared title sits above the row of plates", async () => {
+      expect(canvasElement.querySelector(".platemap-channels__title")?.textContent).toBe("Reporter read, same wells");
+    });
+
+    await step("Each plate has its own colour bar", async () => {
+      expect(canvasElement.querySelectorAll(".platemap-colour-bar")).toHaveLength(2);
+    });
+
+    await step("Layer tabs are not drawn, since each plate shows its own channel", async () => {
+      expect(canvasElement.querySelector(".platemap-layer-selector")).toBeNull();
+    });
+  },
+};
+
+/**
  * Region highlighting with PlateRegions
  * Demonstrates rectangular region overlays with borders and fill colors
  */

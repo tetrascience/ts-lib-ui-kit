@@ -111,6 +111,25 @@ function PlateColourBar({ ramp, min, max, breaks, labels, title, length, vertica
 /** Separates the lines of a well's hover text once they are shown as one tooltip. */
 const TOOLTIP_SEPARATOR = " · ";
 
+/** The layers auto-generated from wells that carry several values, or null when there are none. */
+function autoLayers(data: PlateMapProps["data"], layerConfigs: LayerConfig[] | undefined): LayerConfig[] | null {
+  // Check if data contains multi-value wells
+  if (Array.isArray(data) && data.length > 0 && "wellId" in (data[0] as WellData)) {
+    const wellDataArray = data as WellData[];
+    if (hasMultiValueWells(wellDataArray)) {
+      return extractLayers(wellDataArray, layerConfigs);
+    }
+  }
+
+  return null;
+}
+
+/** A single plate: one layer at a time, or one fixed layer when embedded in a side-by-side row. */
+type SinglePlateProps = PlateMapProps & {
+  /** Whether the layer tabs are drawn. A side-by-side plate has its own layer, so it has none. */
+  showLayerTabs?: boolean;
+};
+
 /**
  * PlateMap component for visualizing well plate data as a heatmap or categorical display.
  *
@@ -140,11 +159,12 @@ const TOOLTIP_SEPARATOR = " · ";
  *   The category legend and layer tabs stay React-rendered and follow the same position.
  * - Wells draw as points, so `markerShape` picks `circle` or `square` only.
  */
-const PlateMapChart: React.FC<PlateMapProps> = ({
+const SinglePlate: React.FC<SinglePlateProps> = ({
   data,
   layerConfigs,
   initialLayerId,
   onLayerChange,
+  showLayerTabs = true,
   plateFormat = PLATE_FORMAT_96,
   rows: customRows,
   columns: customColumns,
@@ -195,17 +215,7 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
   );
 
   // Auto-generate layers from multi-value WellData
-  const effectiveLayers = useMemo((): LayerConfig[] | null => {
-    // Check if data contains multi-value wells
-    if (Array.isArray(data) && data.length > 0 && "wellId" in (data[0] as WellData)) {
-      const wellDataArray = data as WellData[];
-      if (hasMultiValueWells(wellDataArray)) {
-        return extractLayers(wellDataArray, layerConfigs);
-      }
-    }
-
-    return null;
-  }, [data, layerConfigs]);
+  const effectiveLayers = useMemo(() => autoLayers(data, layerConfigs), [data, layerConfigs]);
 
   // Handle layer toggling - determine active layer
   const activeLayer = useMemo((): LayerConfig | null => {
@@ -426,7 +436,7 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
 
   // Render layer selector tabs
   const renderLayerSelector = () => {
-    if (!effectiveLayers || effectiveLayers.length <= 1) {
+    if (!showLayerTabs || !effectiveLayers || effectiveLayers.length <= 1) {
       return null;
     }
 
@@ -620,6 +630,40 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
     <div className="platemap-container" style={{ width: isHorizontalLegend ? undefined : width }}>
       {renderLayerSelector()}
       {renderPlotWithLegend()}
+    </div>
+  );
+};
+
+/**
+ * A plate map. With `layerDisplay="sideBySide"` and several layers, it draws one plate per layer in a
+ * row, sharing the title. Each plate is a full plate with its own colour scale, colour bar and labels.
+ */
+const PlateMapChart: React.FC<PlateMapProps> = (props) => {
+  const { data, layerConfigs, layerDisplay = "tabs", title } = props;
+  const channels = useMemo(
+    () => (layerDisplay === "sideBySide" ? autoLayers(data, layerConfigs) : null),
+    [layerDisplay, data, layerConfigs],
+  );
+
+  if (!channels || channels.length <= 1) {
+    return <SinglePlate {...props} />;
+  }
+
+  return (
+    <div className="platemap-channels">
+      {title && <div className="platemap-channels__title">{title}</div>}
+      <div className="platemap-channels__row">
+        {channels.map((channel) => (
+          <div key={channel.id} className="platemap-channel">
+            <SinglePlate
+              {...props}
+              title={channel.name ?? channel.id}
+              initialLayerId={channel.id}
+              showLayerTabs={false}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

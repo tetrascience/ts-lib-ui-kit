@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { seriesPalettes, uniqueSeriesNames } from "./series";
 
+import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
 import { VizChart } from "@/components/charts/viz/VizChart";
@@ -18,7 +19,7 @@ interface BoxDataSeries {
   pointpos?: number;
 }
 
-interface BoxPlotProps {
+interface BoxPlotProps extends ChartAnnotationProps {
   dataSeries: BoxDataSeries[];
   /**
    * Fixed width in pixels. When omitted, the chart fills its container and
@@ -82,6 +83,8 @@ export function buildBoxSpec(rows: BoxRow[], options: BoxSpecOptions): ChartSpec
 }
 
 const BoxPlotChart: React.FC<BoxPlotProps> = ({
+  referenceLines,
+  annotations,
   dataSeries,
   width,
   height,
@@ -106,7 +109,17 @@ const BoxPlotChart: React.FC<BoxPlotProps> = ({
     [rows, showPoints, title, xTitle, yTitle, xRange, yRange],
   );
 
-  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
+  return (
+    <VizChart
+      spec={spec}
+      data={rows}
+      palettes={palettes}
+      width={width}
+      height={height}
+      referenceLines={referenceLines}
+      annotations={annotations}
+    />
+  );
 };
 
 export { BoxPlotChart };

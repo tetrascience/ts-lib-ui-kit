@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { seriesPalettes, uniqueSeriesNames } from "./series";
 
+import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
 import { VizChart } from "@/components/charts/viz/VizChart";
@@ -185,7 +186,7 @@ interface LineDataSeries {
 
 type LinePlotVariant = "lines" | "lines+markers" | "lines+markers+error_bars";
 
-type LinePlotProps = {
+type LinePlotProps = ChartAnnotationProps & {
   dataSeries: LineDataSeries[];
   /**
    * Fixed width in pixels. When omitted, the chart fills its container and
@@ -237,6 +238,8 @@ export function lineRows(dataSeries: LineDataSeries[]): LineRow[] {
 }
 
 const LinePlotChart: React.FC<LinePlotProps> = ({
+  referenceLines,
+  annotations,
   dataSeries,
   width,
   height,
@@ -284,7 +287,17 @@ const LinePlotChart: React.FC<LinePlotProps> = ({
       .spec();
   }, [rows, variant, title, xTitle, yTitle, xRange, yRange, xTickText]);
 
-  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
+  return (
+    <VizChart
+      spec={spec}
+      data={rows}
+      palettes={palettes}
+      width={width}
+      height={height}
+      referenceLines={referenceLines}
+      annotations={annotations}
+    />
+  );
 };
 
 export { LinePlotChart };

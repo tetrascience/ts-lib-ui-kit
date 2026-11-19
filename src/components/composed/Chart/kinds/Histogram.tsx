@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 
+import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
 import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
@@ -27,7 +28,7 @@ interface HistogramDataSeries {
   lineWidth?: number;
 }
 
-type HistogramProps = {
+type HistogramProps = ChartAnnotationProps & {
   dataSeries: HistogramDataSeries | HistogramDataSeries[];
   /**
    * Fixed width in pixels. When omitted, the chart fills its container and
@@ -191,6 +192,8 @@ export function buildHistogramSpec(rows: HistogramRow[], options: HistogramSpecO
 }
 
 const HistogramChart: React.FC<HistogramProps> = ({
+  referenceLines,
+  annotations,
   dataSeries,
   width,
   height,
@@ -221,7 +224,17 @@ const HistogramChart: React.FC<HistogramProps> = ({
     [rows, title, xTitle, yTitle, curves, binning],
   );
 
-  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
+  return (
+    <VizChart
+      spec={spec}
+      data={rows}
+      palettes={palettes}
+      width={width}
+      height={height}
+      referenceLines={referenceLines}
+      annotations={annotations}
+    />
+  );
 };
 
 export { HistogramChart };

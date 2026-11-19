@@ -94,3 +94,18 @@ describe("Chart", () => {
     expect(lastCall().spec.headline).toBe("Peaks");
   });
 });
+
+describe("Chart reference lines", () => {
+  it("draws a reference line and a note on a line chart", async () => {
+    await render(
+      <Chart
+        type="line"
+        dataSeries={[{ name: "Run", x: [1, 2, 3], y: [4, 5, 6] }]}
+        referenceLines={[{ axis: "y", value: 5, label: "limit" }]}
+        annotations={[{ x: 2, y: 5, text: "crossed" }]}
+      />,
+    );
+    expect(lastCall().spec.layers.map((drawn) => drawn.kind)).toContain("hline");
+    expect(lastCall().spec.annotations).toContainEqual({ kind: "note", text: "crossed", at: { x: 2, y: 5 } });
+  });
+});

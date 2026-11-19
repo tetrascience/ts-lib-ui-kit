@@ -191,8 +191,6 @@ export default defineConfig({
       reporter: ["text", "json", "json-summary", "html"],
       include: ["src/**/*.ts", "src/**/*.tsx"],
       exclude: [
-        // Vendored ts-lib-viz copy (UXT-251). Temporary; remove with src/vendor.
-        "src/vendor/**",
         "**/*.test.ts",
         "**/*.test.tsx",
         "**/*.spec.ts",

@@ -1,4 +1,4 @@
-import type { Palettes } from "@/vendor/ts-lib-viz/core";
+import type { Palettes } from "@tetrascience-npm/ts-lib-viz/core";
 
 import { categoricalPalettes } from "@/components/charts/viz/VizChart";
 import { seriesColor } from "@/utils/colors";

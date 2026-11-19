@@ -1,9 +1,10 @@
+import { palettesFor } from "@tetrascience-npm/ts-lib-viz/core";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import "@/components/charts/PlateMap/PlateMap.scss";
 
 import type { PlateCell, PlateRegion } from "@/components/charts/PlateMap/plate-spec";
 import type { PlateMapProps, LayerConfig, WellData } from "@/components/charts/PlateMap/types";
-import type { Selected } from "@/vendor/ts-lib-viz/core";
+import type { Selected } from "@tetrascience-npm/ts-lib-viz/core";
 
 import {
   PLATE_CONFIGS,
@@ -28,7 +29,6 @@ import {
 } from "@/components/charts/PlateMap/utils";
 import { VizChart } from "@/components/charts/viz/VizChart";
 import { Button } from "@/components/ui/button";
-import { palettesFor } from "@/vendor/ts-lib-viz/core";
 
 // Re-export types and constants for external consumers
 export * from "@/components/charts/PlateMap/types";

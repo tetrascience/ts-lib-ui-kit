@@ -1,10 +1,10 @@
+import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
-import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
+import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
 import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
 import { CHART_COLORS } from "@/utils/colors";
-import { plot } from "@/vendor/ts-lib-viz/core";
 
 /** Points in the fitted normal curve, and the stroke width of the curve in pixels. */
 const CURVE_POINTS = 100;

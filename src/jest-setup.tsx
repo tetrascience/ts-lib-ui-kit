@@ -298,7 +298,7 @@ export interface JestMockApi {
 }
 
 /**
- * The d3 packages the vendored ts-lib-viz draws with, with their transitive closure. Each ships a
+ * The d3 packages ts-lib-viz draws with, with their transitive closure. Each ships a
  * UMD build beside its ESM entry, which Jest's CommonJS runtime cannot load, so the mock loads the
  * UMD build instead. The real code still draws; only the module format changes.
  */

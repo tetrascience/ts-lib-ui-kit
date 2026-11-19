@@ -1,9 +1,8 @@
+import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { color, rgb } from "d3-color";
 import { interpolateRgb } from "d3-interpolate";
 
-import type { ChartSpec, Palettes } from "@/vendor/ts-lib-viz/core";
-
-import { plot } from "@/vendor/ts-lib-viz/core";
+import type { ChartSpec, Palettes } from "@tetrascience-npm/ts-lib-viz/core";
 
 type ColorRamp = Palettes["sequential"];
 

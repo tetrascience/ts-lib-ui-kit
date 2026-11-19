@@ -1,3 +1,4 @@
+import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo, useRef, useState } from "react";
 
 import type {
@@ -7,7 +8,7 @@ import type {
   ScatterPoint,
   SelectionMode,
 } from "@/components/charts/ScatterPlotInteractive/types";
-import type { Brushed, ChartSpec, Palettes, PointShape, Selected } from "@/vendor/ts-lib-viz/core";
+import type { Brushed, ChartSpec, Palettes, PointShape, Selected } from "@tetrascience-npm/ts-lib-viz/core";
 
 import { DEFAULT_MARKER_SIZE, DEFAULT_SIZE_RANGE } from "@/components/charts/ScatterPlotInteractive/constants";
 import {
@@ -18,7 +19,6 @@ import {
 } from "@/components/charts/ScatterPlotInteractive/utils";
 import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
 import { CHART_COLORS } from "@/utils/colors";
-import { plot } from "@/vendor/ts-lib-viz/core";
 
 /**
  *

@@ -1,11 +1,11 @@
+import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
 import { seriesPalettes, uniqueSeriesNames } from "./series";
 
-import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
+import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
 import { VizChart } from "@/components/charts/viz/VizChart";
-import { plot } from "@/vendor/ts-lib-viz/core";
 
 type MarkerSymbol = "circle" | "square" | "diamond" | "triangle-up" | "triangle-down" | "star";
 

@@ -1,11 +1,12 @@
+import { plot } from "@tetrascience-npm/ts-lib-viz/core";
+
 import { CHROMATOGRAM_ANNOTATION, CHROMATOGRAM_TRACE } from "./constants";
 import { collectPeaksWithBoundaryData } from "./dataProcessing";
 
 import type { ChromatogramSeries, PeakAnnotation, BoundaryMarkerStyle, BoundaryMarkerType } from "./types";
-import type { ChartSpec, VizData } from "@/vendor/ts-lib-viz/core";
+import type { ChartSpec, VizData } from "@tetrascience-npm/ts-lib-viz/core";
 
 import { CHART_COLORS } from "@/utils/colors";
-import { plot } from "@/vendor/ts-lib-viz/core";
 
 /** Marker rows sit below the baseline, staggered per series so they do not overlap. */
 const BOUNDARY_MARKER_START_Y = -5;

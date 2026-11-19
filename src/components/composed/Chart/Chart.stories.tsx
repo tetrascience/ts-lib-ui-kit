@@ -126,4 +126,7 @@ export const ReferenceLines: Story = {
       });
     });
   },
+  parameters: {
+    zephyr: { testCaseId: "SW-T5800" },
+  },
 };

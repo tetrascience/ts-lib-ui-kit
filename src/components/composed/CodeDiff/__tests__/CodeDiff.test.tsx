@@ -209,6 +209,39 @@ describe("CodeDiff", () => {
     expect(container.querySelector("thead td")?.getAttribute("colspan")).toBe("3");
   });
 
+  it("adds a column after the code for end actions, which an annotation also spans", async () => {
+    await render(
+      <CodeDiff
+        original="a"
+        modified={"a\nb"}
+        renderLineEndActions={(line) => <button type="button">{`menu ${line.side} ${line.lineNumber}`}</button>}
+        renderLineAnnotation={(line) => (line.kind === "added" ? <p>note</p> : null)}
+      />,
+    );
+    const [firstRow, addedRow] = all("row");
+    // Each side ends with its end actions, straight after its code.
+    expect([...firstRow.children].map((cell) => cell.getAttribute("data-slot")?.replace("code-diff-", ""))).toEqual([
+      "line-number",
+      "marker",
+      "line",
+      "line-end-actions",
+      "line-number",
+      "marker",
+      "line",
+      "line-end-actions",
+    ]);
+    expect(all("line-end-actions").map((cell) => cell.textContent)).toEqual([
+      "menu original 1",
+      "menu modified 1",
+      "",
+      "menu modified 2",
+    ]);
+    // The annotation skips the line number and spans marker, code and end actions.
+    const cells = [...(addedRow.nextElementSibling?.querySelectorAll("td") ?? [])];
+    expect(cells.map((cell) => cell.getAttribute("colspan"))).toEqual(["1", "3", "1", "3"]);
+    expect(container.querySelector("th")?.getAttribute("colspan")).toBe("4");
+  });
+
   it("gives a row with no line on one side neither actions nor an annotation there", async () => {
     await render(
       <CodeDiff

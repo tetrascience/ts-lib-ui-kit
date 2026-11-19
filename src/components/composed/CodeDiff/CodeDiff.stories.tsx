@@ -1,4 +1,4 @@
-import { PlusIcon } from "lucide-react";
+import { ChevronDownIcon, CopyIcon, LinkIcon, MessageSquareIcon, PlusIcon } from "lucide-react";
 import * as React from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 
@@ -18,7 +18,17 @@ import {
 import type { CodeDiffLine } from "./CodeDiff";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 const ORIGINAL = `{
@@ -70,6 +80,7 @@ const meta: Meta<typeof CodeDiff> = {
     language: { control: { type: "select" }, options: ["plaintext", "json", "python", "javascript", "markdown"] },
     expandUnchangedLabel: { control: false },
     renderLineActions: { control: false },
+    renderLineEndActions: { control: false },
     renderLineAnnotation: { control: false },
   },
 };
@@ -250,12 +261,101 @@ export const WordWrapWithoutLineNumbers: Story = {
 
 const lineId = (line: CodeDiffLine) => `${line.side === "original" ? "L" : "R"}${line.lineNumber}`;
 
+/** A comment form in the style of a code review, built from kit components. */
+function CommentBox({ line, onClose }: { line: CodeDiffLine; onClose: () => void }) {
+  const [draft, setDraft] = React.useState("");
+  return (
+    <div className="py-2 pr-2">
+      <div className="max-w-xl rounded-lg border bg-card p-3 text-sm shadow-sm">
+        <div className="mb-3 flex items-center gap-2">
+          <Avatar size="sm">
+            <AvatarFallback>TS</AvatarFallback>
+          </Avatar>
+          <span className="font-medium">Add a comment on line {lineId(line)}</span>
+        </div>
+        <Tabs defaultValue="write">
+          <TabsList>
+            <TabsTrigger value="write">Write</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+          </TabsList>
+          <TabsContent value="write">
+            <Textarea
+              aria-label={`Comment on line ${lineId(line)}`}
+              placeholder="Leave a comment"
+              rows={4}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+            />
+          </TabsContent>
+          <TabsContent value="preview" className="min-h-24 rounded-md border p-3 whitespace-pre-wrap">
+            {draft || "Nothing to preview"}
+          </TabsContent>
+        </Tabs>
+        <div className="mt-3 flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="sm" disabled={!draft.trim()} onClick={onClose}>
+            <MessageSquareIcon />
+            Comment
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
- * Your own components on a line. `renderLineActions` puts a control in the
- * line's gutter, shown on hover or focus; `renderLineAnnotation` puts content
- * in a row beneath the line. Which lines are open is the consumer's state.
+ * Your own components on a line, here arranged like a code review.
+ * `renderLineActions` puts a control in the line's gutter and
+ * `renderLineEndActions` one at its right-hand end, both shown on hover or
+ * focus; `renderLineAnnotation` puts content in a row beneath the line. Which
+ * lines are open is the consumer's state.
  */
 export const LineActionsAndAnnotations: Story = {
+  parameters: {
+    docs: {
+      source: {
+        language: "tsx",
+        code: `const [open, setOpen] = React.useState<string[]>([]);
+const toggle = (id: string) =>
+  setOpen((ids) => (ids.includes(id) ? ids.filter((other) => other !== id) : [...ids, id]));
+const lineId = (line: CodeDiffLine) => \`\${line.side === "original" ? "L" : "R"}\${line.lineNumber}\`;
+
+<CodeDiff
+  original={original}
+  modified={modified}
+  language="json"
+  renderLineActions={(line) => (
+    <Button
+      size="icon-xs"
+      aria-label={\`Comment on line \${lineId(line)}\`}
+      aria-expanded={open.includes(lineId(line))}
+      onClick={() => toggle(lineId(line))}
+    >
+      <PlusIcon />
+    </Button>
+  )}
+  renderLineEndActions={(line) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="icon-xs" aria-label={\`More actions for line \${lineId(line)}\`}>
+          <ChevronDownIcon />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={() => toggle(lineId(line))}>Add comment on line {lineId(line)}</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigator.clipboard.writeText(line.text)}>Copy</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )}
+  renderLineAnnotation={(line) =>
+    open.includes(lineId(line)) ? <CommentBox line={line} onClose={() => toggle(lineId(line))} /> : null
+  }
+/>`,
+      },
+    },
+  },
   render: (args) => {
     const [open, setOpen] = React.useState<string[]>([]);
     const toggle = (id: string) =>
@@ -274,17 +374,37 @@ export const LineActionsAndAnnotations: Story = {
             <PlusIcon />
           </Button>
         )}
-        renderLineAnnotation={(line) =>
-          open.includes(lineId(line)) ? (
-            <div className="flex items-center justify-between gap-3 py-2 pr-3 text-sm">
-              <span>
-                Comment on line {lineId(line)}: <code className="font-mono text-xs">{line.text.trim()}</code>
-              </span>
-              <Button size="xs" variant="outline" onClick={() => toggle(lineId(line))}>
-                Cancel
+        renderLineEndActions={(line) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon-xs"
+                className="size-4 rounded-sm"
+                aria-label={`More actions for line ${lineId(line)}`}
+              >
+                <ChevronDownIcon />
               </Button>
-            </div>
-          ) : null
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => toggle(lineId(line))}>
+                <PlusIcon />
+                {open.includes(lineId(line)) ? "Close" : "Add"} comment on line {lineId(line)}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => void navigator.clipboard?.writeText(line.text)}>
+                <CopyIcon />
+                Copy
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <LinkIcon />
+                Copy link
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        renderLineAnnotation={(line) =>
+          open.includes(lineId(line)) ? <CommentBox line={line} onClose={() => toggle(lineId(line))} /> : null
         }
       />
     );
@@ -294,32 +414,46 @@ export const LineActionsAndAnnotations: Story = {
     await waitForDiff(viewer);
     const canvas = within(viewer);
 
-    await step("Offers the action on every line, on its own side, and on no filler cell", async () => {
+    await step("Offers both sets of actions on every line, on its own side, and on no filler cell", async () => {
       expect(canvas.getAllByRole("button", { name: /^Comment on line L/ })).toHaveLength(10);
       expect(canvas.getAllByRole("button", { name: /^Comment on line R/ })).toHaveLength(10);
+      expect(canvas.getAllByRole("button", { name: /^More actions for line/ })).toHaveLength(20);
     });
 
     const action = canvas.getByRole("button", { name: "Comment on line R3" });
+    const menuButton = canvas.getByRole("button", { name: "More actions for line R3" });
 
     await step("Keeps actions out of sight until the line is hovered or focused", async () => {
-      const slot = action.parentElement;
-      if (!slot) throw new Error("actions slot not found");
-      expect(getComputedStyle(slot).opacity).toBe("0");
-      action.focus();
-      expect(getComputedStyle(slot).opacity).toBe("1");
+      for (const control of [action, menuButton]) {
+        const slot = control.parentElement;
+        if (!slot) throw new Error("actions slot not found");
+        expect(getComputedStyle(slot).opacity).toBe("0");
+        control.focus();
+        expect(getComputedStyle(slot).opacity).toBe("1");
+      }
     });
 
-    await step("Renders the annotation in a row beneath its line, under its own side", async () => {
-      await userEvent.click(action);
-      const annotation = viewer.querySelector('[data-slot="code-diff-annotation"]');
-      expect(annotation?.previousElementSibling).toContainElement(action);
-      expect(annotation?.querySelector('[data-side="modified"]')).toHaveTextContent(
-        'Comment on line R3: "version": "1.5.0",',
-      );
-      expect(annotation?.querySelector('[data-side="original"]')).toBeEmptyDOMElement();
-      // It starts at the actions column, so its text lines up with the button above it.
-      const text = annotation?.querySelector('[data-side="modified"] span');
-      expect(text?.getBoundingClientRect().left).toBeCloseTo(action.getBoundingClientRect().left, 0);
+    await step("Puts the end actions after the line's code", async () => {
+      const code = menuButton.closest("tr")?.querySelector('[data-slot="code-diff-line"][data-side="modified"]');
+      expect(menuButton.getBoundingClientRect().left).toBeGreaterThanOrEqual(code?.getBoundingClientRect().right ?? 0);
+    });
+
+    await step("Opens the comment box from the line's menu, in a row beneath the line", async () => {
+      await userEvent.click(menuButton);
+      const item = await within(document.body).findByRole("menuitem", { name: "Add comment on line R3" });
+      await userEvent.click(item);
+      const annotation = await waitFor(() => {
+        const row = viewer.querySelector('[data-slot="code-diff-annotation"]');
+        if (!row) throw new Error("annotation row not found");
+        return row;
+      });
+      expect(annotation.previousElementSibling).toContainElement(action);
+      expect(annotation.querySelector('[data-side="modified"]')).toHaveTextContent("Add a comment on line R3");
+      expect(annotation.querySelector('[data-side="original"]')).toBeEmptyDOMElement();
+      // It starts at the actions column, so the box lines up with the button above it.
+      const box = annotation.querySelector('[data-side="modified"] > div');
+      expect(box?.getBoundingClientRect().left).toBeCloseTo(action.getBoundingClientRect().left, 0);
+      await waitFor(() => expect(action).toHaveAttribute("aria-expanded", "true"));
     });
   },
 };

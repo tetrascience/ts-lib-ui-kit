@@ -78,7 +78,13 @@ export interface CodeDiffProps extends Omit<React.ComponentProps<"div">, "childr
    */
   renderLineActions?: (line: CodeDiffLine) => React.ReactNode;
   /**
-   * When a line's actions show: `hover` (default) reveals them while the
+   * Controls at the right-hand end of a line, such as a menu button, rendered
+   * in a column after the line's code. Called for every line shown; return
+   * `null` for a line that has none. Declaring the prop adds the column.
+   */
+  renderLineEndActions?: (line: CodeDiffLine) => React.ReactNode;
+  /**
+   * When a line's actions show, at either end: `hover` (default) reveals them while the
    * pointer is over the line on that side, while focus is inside them, or
    * while one of them is expanded (`aria-expanded="true"`); on a device
    * without hover they always show.
@@ -94,7 +100,7 @@ export interface CodeDiffProps extends Omit<React.ComponentProps<"div">, "childr
   renderLineAnnotation?: (line: CodeDiffLine) => React.ReactNode;
 }
 
-/** One line of the diff, as handed to `renderLineActions` and `renderLineAnnotation`. */
+/** One line of the diff, as handed to the `renderLine…` props. */
 export interface CodeDiffLine {
   /**
    * Which text the line belongs to. An unchanged line in `unified` mode is
@@ -162,6 +168,7 @@ interface DrawnLine extends CodeDiffLine {
 
 interface LineSlots {
   renderLineActions?: (line: CodeDiffLine) => React.ReactNode;
+  renderLineEndActions?: (line: CodeDiffLine) => React.ReactNode;
   lineActionsVisibility: "hover" | "always";
   renderLineAnnotation?: (line: CodeDiffLine) => React.ReactNode;
 }
@@ -186,11 +193,42 @@ interface LineCellsProps {
   className?: string;
 }
 
-/** The cells of one line: its number(s), its actions, its `+` / `-` marker and its code. */
+interface ActionsCellProps {
+  slot: "code-diff-line-actions" | "code-diff-line-end-actions";
+  line: DrawnLine | undefined;
+  side: DiffSideName;
+  render: (line: CodeDiffLine) => React.ReactNode;
+  visibility: "hover" | "always";
+  className?: string;
+}
+
+/** A cell holding a consumer's controls for one line, at either end of it. */
+function ActionsCell({ slot, line, side, render, visibility, className }: ActionsCellProps) {
+  return (
+    <td data-slot={slot} data-side={side} className={cn("p-0 align-top font-sans", className)}>
+      {line && (
+        <div
+          className={cn(
+            "flex h-5 items-center justify-center",
+            visibility === "hover" && [
+              "opacity-0 focus-within:opacity-100 has-[[aria-expanded=true]]:opacity-100",
+              "[@media(hover:none)]:opacity-100",
+              REVEAL_ON_HOVER[side],
+            ],
+          )}
+        >
+          {render(describeLine(line))}
+        </div>
+      )}
+    </td>
+  );
+}
+
+/** The cells of one line: its number(s), its actions, its `+` / `-` marker, its code and its end actions. */
 function LineCells({ line, side, numbers, wordWrap, slots, className }: LineCellsProps) {
   const kind: CellKind = line?.kind ?? "filler";
   const tint = CELL_TINT[kind];
-  const { renderLineActions } = slots;
+  const { renderLineActions, renderLineEndActions, lineActionsVisibility } = slots;
   return (
     <>
       {numbers.map((number, index) => (
@@ -210,22 +248,14 @@ function LineCells({ line, side, numbers, wordWrap, slots, className }: LineCell
         </td>
       ))}
       {renderLineActions && (
-        <td data-slot="code-diff-line-actions" data-side={side} className={cn("p-0 align-top font-sans", tint)}>
-          {line && (
-            <div
-              className={cn(
-                "flex h-5 items-center justify-center",
-                slots.lineActionsVisibility === "hover" && [
-                  "opacity-0 focus-within:opacity-100 has-[[aria-expanded=true]]:opacity-100",
-                  "[@media(hover:none)]:opacity-100",
-                  REVEAL_ON_HOVER[side],
-                ],
-              )}
-            >
-              {renderLineActions(describeLine(line))}
-            </div>
-          )}
-        </td>
+        <ActionsCell
+          slot="code-diff-line-actions"
+          line={line}
+          side={side}
+          render={renderLineActions}
+          visibility={lineActionsVisibility}
+          className={tint}
+        />
       )}
       <td
         data-slot="code-diff-marker"
@@ -251,6 +281,16 @@ function LineCells({ line, side, numbers, wordWrap, slots, className }: LineCell
       >
         {line?.node.children?.map(renderNode)}
       </td>
+      {renderLineEndActions && (
+        <ActionsCell
+          slot="code-diff-line-end-actions"
+          line={line}
+          side={side}
+          render={renderLineEndActions}
+          visibility={lineActionsVisibility}
+          className={cn("pr-1", tint)}
+        />
+      )}
     </>
   );
 }
@@ -321,6 +361,38 @@ function ColumnHeading({ label, span }: { label: string; span: number }) {
   );
 }
 
+interface AnnotationRowProps {
+  /** One entry per side shown: the side an annotation belongs to, and its content if it has any. */
+  cells: Array<{ side: DiffSideName; content: React.ReactNode }>;
+  /** Line-number columns each side starts with, which an annotation stays clear of. */
+  numberColumns: number;
+  /** Columns the annotation spans: the line's actions, marker and code. */
+  contentColumns: number;
+}
+
+/** The row under a line that holds its annotation, starting where the line's actions and code do. */
+function AnnotationRow({ cells, numberColumns, contentColumns }: AnnotationRowProps) {
+  return (
+    <tr data-slot="code-diff-annotation">
+      {cells.map(({ side, content }, index) => {
+        const divider = index > 0 && "border-l";
+        return (
+          <React.Fragment key={side}>
+            {numberColumns > 0 && <td colSpan={numberColumns} className={cn("border-y p-0", divider)} />}
+            <td
+              colSpan={contentColumns}
+              data-side={side}
+              className={cn("border-y p-0 align-top font-sans whitespace-normal", numberColumns === 0 && divider)}
+            >
+              {content}
+            </td>
+          </React.Fragment>
+        );
+      })}
+    </tr>
+  );
+}
+
 interface DiffLineRowsProps {
   /** The line on each side of the row. `unified` rows carry one line, as `modified` when unchanged. */
   original: DrawnLine | undefined;
@@ -345,73 +417,37 @@ function DiffLineRows({
   sideColumns,
   slots,
 }: DiffLineRowsProps) {
-  const annotate = (line: DrawnLine | undefined) => (line ? slots.renderLineAnnotation?.(describeLine(line)) : null);
-  const annotations = [annotate(original), annotate(modified)];
-  const hasAnnotation = annotations.some((annotation) => annotation != null && annotation !== false);
-  const annotationCell = "border-y p-0 align-top font-sans whitespace-normal";
-  // An annotation starts where the line's actions and code do, clear of the line numbers.
-  const numberColumns = lineNumbers ? (isSplit ? 1 : 2) : 0;
-  const contentColumns = sideColumns - numberColumns;
-  const gutter = (className?: string) =>
-    numberColumns > 0 && <td colSpan={numberColumns} className={cn("border-y p-0", className)} />;
+  // `split` draws both sides; `unified` draws the one line the row carries.
+  const sides: Array<{ side: DiffSideName; line: DrawnLine | undefined; numbers: Array<number | undefined> }> = isSplit
+    ? [
+        { side: "original", line: original, numbers: [row.original] },
+        { side: "modified", line: modified, numbers: [row.modified] },
+      ]
+    : [{ side: modified ? "modified" : "original", line: modified ?? original, numbers: [row.original, row.modified] }];
+  const annotations = sides.map(({ side, line }) => ({
+    side,
+    content: line ? slots.renderLineAnnotation?.(describeLine(line)) : null,
+  }));
+  const hasAnnotation = annotations.some(({ content }) => content != null && content !== false);
+  const numberColumns = lineNumbers ? sides[0].numbers.length : 0;
 
   return (
     <>
       <tr data-slot="code-diff-row" className="h-5">
-        {isSplit ? (
-          <>
-            <LineCells
-              line={original}
-              side="original"
-              numbers={lineNumbers ? [row.original] : []}
-              wordWrap={wordWrap}
-              slots={slots}
-            />
-            <LineCells
-              line={modified}
-              side="modified"
-              numbers={lineNumbers ? [row.modified] : []}
-              wordWrap={wordWrap}
-              slots={slots}
-              className="border-l"
-            />
-          </>
-        ) : (
+        {sides.map(({ side, line, numbers }, index) => (
           <LineCells
-            line={modified ?? original}
-            side={modified ? "modified" : "original"}
-            numbers={lineNumbers ? [row.original, row.modified] : []}
+            key={side}
+            line={line}
+            side={side}
+            numbers={lineNumbers ? numbers : []}
             wordWrap={wordWrap}
             slots={slots}
+            className={index > 0 ? "border-l" : undefined}
           />
-        )}
+        ))}
       </tr>
       {hasAnnotation && (
-        <tr data-slot="code-diff-annotation">
-          {isSplit ? (
-            <>
-              {gutter()}
-              <td colSpan={contentColumns} data-side="original" className={annotationCell}>
-                {annotations[0]}
-              </td>
-              {gutter("border-l")}
-              <td
-                colSpan={contentColumns}
-                data-side="modified"
-                className={cn(annotationCell, numberColumns === 0 && "border-l")}
-              >
-                {annotations[1]}
-              </td>
-            </>
-          ) : (
-            <>
-              {gutter()}
-              <td colSpan={contentColumns} data-side={modified ? "modified" : "original"} className={annotationCell}>
-                {annotations[1] ?? annotations[0]}
-              </td>
-            </>
-          )}
-        </tr>
+        <AnnotationRow cells={annotations} numberColumns={numberColumns} contentColumns={sideColumns - numberColumns} />
       )}
     </>
   );
@@ -525,7 +561,8 @@ function DiffTable({
 }: DiffTableProps) {
   const numberColumns = isSplit ? 1 : 2;
   const hasActions = slots.renderLineActions !== undefined;
-  const sideColumns = (lineNumbers ? numberColumns : 0) + (hasActions ? 1 : 0) + 2;
+  const hasEndActions = slots.renderLineEndActions !== undefined;
+  const sideColumns = (lineNumbers ? numberColumns : 0) + (hasActions ? 1 : 0) + 2 + (hasEndActions ? 1 : 0);
   const lineCount = Math.max(content.diff.original.lines.length, content.diff.modified.lines.length);
   const numberWidth = `${String(lineCount).length + 2}ch`;
   // Without wrapping, the code columns take the room that is left and grow with their longest line.
@@ -538,6 +575,7 @@ function DiffTable({
       {hasActions && <col style={{ width: "1.75rem" }} />}
       <col style={{ width: "3ch" }} />
       <col style={wordWrap ? undefined : { width: codeWidth }} />
+      {hasEndActions && <col style={{ width: "1.75rem" }} />}
     </>
   );
 
@@ -613,8 +651,9 @@ function DiffTable({
  * mode and token overrides on any ancestor therefore apply without JavaScript,
  * and each viewer on a page can be themed on its own.
  *
- * `renderLineActions` and `renderLineAnnotation` put your own components on a
- * line: controls in its gutter, and content in a row beneath it. The viewer
+ * `renderLineActions`, `renderLineEndActions` and `renderLineAnnotation` put
+ * your own components on a line: controls in its gutter and at its right-hand
+ * end, and content in a row beneath it. The viewer
  * keeps no state for them; which lines have a comment box open is yours.
  *
  * The viewer has no editor behind it: no find widget or minimap, every line is
@@ -638,6 +677,7 @@ function CodeDiff({
   expandUpLabel = "Expand up",
   expandDownLabel = "Expand down",
   renderLineActions,
+  renderLineEndActions,
   lineActionsVisibility = "hover",
   renderLineAnnotation,
   className,
@@ -704,7 +744,7 @@ function CodeDiff({
             onExpandFold={(key, direction) =>
               setRevealedFolds((revealed) => ({ ...revealed, [key]: expandFold(revealed[key], direction) }))
             }
-            slots={{ renderLineActions, lineActionsVisibility, renderLineAnnotation }}
+            slots={{ renderLineActions, renderLineEndActions, lineActionsVisibility, renderLineAnnotation }}
           />
         </div>
       ) : (

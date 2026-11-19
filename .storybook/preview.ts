@@ -171,6 +171,9 @@ const preview: Preview = {
             "Overlays",
             "Feedback & Status",
             "Data Display",
+            // Unlisted stories keep file order, which puts `composed/` before `ui/`.
+            // Code Diff lives in `composed/`, so it is placed by name.
+            ["Avatar", "Badge", "Carousel", "Code Block", "Code Diff", "*"],
             "*",
           ],
           "AI Elements",

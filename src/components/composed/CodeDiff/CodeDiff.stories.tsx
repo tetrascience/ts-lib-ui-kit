@@ -505,8 +505,10 @@ function contrastOf(element: Element, root: Element) {
  * Every colour the viewer writes text in, on every background it can sit on, in
  * light and dark, built from the viewer's own classes. The play test fails if
  * any combination drops under WCAG AA (4.5:1), and axe checks the same samples.
+ * A test only: it is kept out of the Storybook sidebar and the docs page.
  */
 export const TokenContrast: Story = {
+  tags: ["!dev", "!autodocs"],
   parameters: { docs: { canvas: { sourceState: "none" } } },
   render: () => (
     <div className="grid gap-4 md:grid-cols-2">

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
  * what each one costs: 88% on a changed line, 40% on changed characters, where
  * the line and character tints stack. Those are the highest steps at which every
  * `--shiki-*` colour stays WCAG AA (4.5:1) in both light and dark; the
- * `Token Contrast` story checks each combination.
+ * test-only `TokenContrast` story checks each combination.
  */
 
 /** Set on every cell of a changed line. */

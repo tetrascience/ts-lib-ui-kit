@@ -37,7 +37,7 @@ colors.
 The tints are translucent so code keeps its own text color on top of them. Syntax colors (the
 `--shiki-*` tokens) are used as they are on unchanged lines; on a tint each keeps only as much of itself
 as stays AA there and takes the rest from `--foreground`: 88% on a changed line, 40% on changed
-characters, where both tints stack. The `Token Contrast` story checks every token on every tint in
+characters, where both tints stack. A test-only `TokenContrast` story checks every token on every tint in
 light and dark, so a palette change that breaks AA fails CI. To re-color diffs, override all six on the
 scope you want re-colored. Change is never signalled by color alone: every changed line also carries a
 `+` or `-` gutter marker.

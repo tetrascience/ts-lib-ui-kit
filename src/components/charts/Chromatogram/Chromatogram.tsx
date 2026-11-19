@@ -1,6 +1,6 @@
 import type { ChromatogramProps } from "@/components/composed/Chart/kinds/Chromatogram";
 
-import { Chart } from "@/components/composed/Chart";
+import { ChromatogramChart } from "@/components/composed/Chart/kinds/Chromatogram";
 
 export type {
   BaselineCorrectionMethod,
@@ -16,5 +16,5 @@ export type {
 
 /** Draws a chromatogram through the shared `Chart` component. */
 export function Chromatogram(props: ChromatogramProps) {
-  return <Chart type="chromatogram" {...props} />;
+  return <ChromatogramChart {...props} />;
 }

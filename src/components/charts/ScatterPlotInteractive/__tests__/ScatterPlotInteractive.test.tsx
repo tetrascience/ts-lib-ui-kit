@@ -211,8 +211,13 @@ describe("brush mode", () => {
     expect(lastViz().brush).toBe("lasso");
   });
 
-  it("disables the brush when neither box nor lasso is enabled (the defaults)", async () => {
+  it("uses the lasso by default, as the Plotly chart did", async () => {
     await render({ data });
+    expect(lastViz().brush).toBe("lasso");
+  });
+
+  it("disables the brush when neither box nor lasso is enabled", async () => {
+    await render({ data, enableBoxSelection: false, enableLassoSelection: false });
     expect(lastViz().brush).toBeUndefined();
   });
 });
@@ -303,10 +308,22 @@ describe("click selection", () => {
 
   it("does nothing on a click when click selection is off", async () => {
     const onSelectionChange = vi.fn();
-    await render({ data, enableClickSelection: false, onSelectionChange });
+    await render({
+      data,
+      enableClickSelection: false,
+      enableBoxSelection: false,
+      enableLassoSelection: false,
+      onSelectionChange,
+    });
     fireSelect(clickSelected(["a"]));
-    fireSelect(null);
     expect(onSelectionChange).not.toHaveBeenCalled();
+  });
+
+  it("clears the selection on an empty click when only a brush is on, since box and lasso have no other way to clear", async () => {
+    const onSelectionChange = vi.fn();
+    await render({ data, enableClickSelection: false, selectedIds: new Set(["a"]), onSelectionChange });
+    fireSelect(null);
+    expect(onSelectionChange).toHaveBeenCalledWith(new Set(), "replace");
   });
 });
 
@@ -350,7 +367,8 @@ describe("controlled selection", () => {
     const [highlight] = spec.layers;
     expect(highlight.kind).toBe("point");
     expect(highlight.data).toEqual([expect.objectContaining({ key: "b", x: 2, y: 20 })]);
-    expect(highlight.style?.size).toBe(DEFAULT_MARKER_SIZE + 6);
+    // Sizes are diameters at the API and radii in the chart: a selected point is its radius plus 3.
+    expect(highlight.style?.size).toBe(DEFAULT_MARKER_SIZE / 2 + 3);
   });
 
   it("matches numeric selectedIds against string ids", async () => {

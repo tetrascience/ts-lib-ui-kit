@@ -136,6 +136,23 @@ describe("Electropherogram", () => {
     expect(xScale?.breaks).toEqual([15, 20]);
   });
 
+  it("takes the headline, subtitle and axis titles from its label props", async () => {
+    await render(
+      <Electropherogram
+        data={[{ position: 1, base: "A", peakA: 50, peakT: 10, peakG: 10, peakC: 10 }]}
+        headlineLabel="Séquence appelée"
+        subtitleLabel="Chaque trace est une base."
+        positionLabel="Position"
+        signalIntensityLabel="Intensité"
+      />,
+    );
+    const { spec } = lastCall();
+    expect(spec.headline).toBe("Séquence appelée");
+    expect(spec.subtitle).toBe("Chaque trace est une base.");
+    expect(spec.scales?.x?.title).toBe("Position");
+    expect(spec.scales?.y?.title).toBe("Intensité");
+  });
+
   it("curves each trace through every peak it was given", async () => {
     await render(
       <Electropherogram

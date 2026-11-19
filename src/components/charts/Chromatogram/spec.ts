@@ -93,7 +93,7 @@ function addSeriesLayers(builder: Builder, input: ChromatogramSpecInput): Builde
       name: series.name,
     });
     if (input.showMarkers) {
-      next = next.point({ data: rows, aes: { x: "x", y: "y" }, color, size: input.markerSize });
+      next = next.point({ data: rows, aes: { x: "x", y: "y" }, color, size: input.markerSize / 2 });
     }
   });
   return next;

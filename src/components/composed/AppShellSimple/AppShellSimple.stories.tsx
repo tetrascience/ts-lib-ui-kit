@@ -661,6 +661,9 @@ export const WithBuildInfoFullHeightPage: Story = {
     ),
   },
   play: async ({ canvasElement, step }) => expectBoundedPage(canvasElement, step),
+  parameters: {
+    zephyr: { testCaseId: "SW-T5782" },
+  },
 };
 
 /** `AssistantLayout` fills the shell with no marker — it's detected by its `data-slot`. */
@@ -699,4 +702,7 @@ export const WithBuildInfoAssistantLayout: Story = {
     ),
   },
   play: async ({ canvasElement, step }) => expectBoundedPage(canvasElement, step),
+  parameters: {
+    zephyr: { testCaseId: "SW-T5783" },
+  },
 };

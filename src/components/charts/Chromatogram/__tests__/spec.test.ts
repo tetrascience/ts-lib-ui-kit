@@ -52,7 +52,8 @@ describe("buildChromatogramSpec", () => {
   it("adds a point layer per series when markers are shown", () => {
     const layers = layersOf(baseInput({ showMarkers: true, markerSize: 7 }));
     expect(layers.map((layer) => layer.kind)).toEqual(["line", "point"]);
-    expect(layers[1]).toMatchObject({ style: { color: "#123456", size: 7 } });
+    // markerSize is a diameter, as Plotly sized it; ts-lib-viz takes a radius.
+    expect(layers[1]).toMatchObject({ style: { color: "#123456", size: 3.5 } });
   });
 
   it("draws a region overlay as a line over only the peak's own points", () => {

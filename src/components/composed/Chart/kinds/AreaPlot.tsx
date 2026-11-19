@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 
+import { seriesPalettes, uniqueSeriesNames } from "./series";
+
 import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
 import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
 
-import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
-import { seriesColor } from "@/utils/colors";
+import { VizChart } from "@/components/charts/viz/VizChart";
 import { plot } from "@/vendor/ts-lib-viz/core";
 
 interface AreaDataSeries {
@@ -60,12 +61,13 @@ interface AreaRow {
  */
 export function areaRows(dataSeries: AreaDataSeries[], variant: AreaPlotVariant): AreaRow[] {
   const stackTop = new Map<number, number>();
-  return dataSeries.flatMap((series) =>
+  const names = uniqueSeriesNames(dataSeries);
+  return dataSeries.flatMap((series, seriesIndex) =>
     series.x.map((x, index) => {
       const y = series.y[index];
       const base = variant === "stacked" ? (stackTop.get(x) ?? 0) : 0;
       if (variant === "stacked") stackTop.set(x, base + y);
-      return { x, y, series: series.name, lo: base, hi: base + y };
+      return { x, y, series: names[seriesIndex], lo: base, hi: base + y };
     }),
   );
 }
@@ -84,8 +86,14 @@ const AreaPlotChart: React.FC<AreaPlotProps> = ({
   title,
   xTickText,
 }) => {
-  const colors = useMemo(() => dataSeries.map((series, index) => seriesColor(index, series.color)), [dataSeries]);
-  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
+  const palettes = useMemo(
+    () =>
+      seriesPalettes(
+        dataSeries,
+        dataSeries.map((series) => series.x.length > 0),
+      ),
+    [dataSeries],
+  );
   // A ribbon from its baseline to its top, so the fill and its outline both draw
   // the readings one by one. An area geom would summarize them into bins.
   const rows = useMemo(() => areaRows(dataSeries, variant), [dataSeries, variant]);
@@ -101,7 +109,7 @@ const AreaPlotChart: React.FC<AreaPlotProps> = ({
           x: {
             title: xTitle,
             limits: xRange,
-            ...(xTickText
+            ...(xTickText?.length === xTicks.length
               ? {
                   breaks: xTicks,
                   labels: Object.fromEntries(

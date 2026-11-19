@@ -149,11 +149,10 @@ describe("AreaPlot spec", () => {
     });
   });
 
-  it("falls back to the numeric value for x ticks that have no label", async () => {
+  it("ignores x tick labels that do not match the number of ticks, rather than mislabelling them", async () => {
     await render({ dataSeries, xTickText: ["Mon"] });
-    expect(lastCall().spec.scales?.x).toMatchObject({
-      labels: { "0": "Mon", "1": "1", "2": "2" },
-    });
+    expect(lastCall().spec.scales?.x?.labels).toBeUndefined();
+    expect(lastCall().spec.scales?.x?.breaks).toBeUndefined();
   });
 
   it("leaves x breaks and labels unset without xTickText", async () => {

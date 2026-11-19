@@ -318,10 +318,22 @@ const D3_UMD_PACKAGES = [
  * The UMD build of an ESM-only d3 package, found from its own entry point (`<pkg>/src/index.js`).
  * `req` is the CommonJS `require` of the caller; it is a parameter so the loader can be tested
  * outside Jest.
+ *
+ * A package the kit does not depend on directly (d3-array under pnpm's strict layout) is looked
+ * up from `d3-scale`, the d3 package that depends on it. The entry is matched with either path
+ * separator, so Windows paths resolve too.
  */
 export function loadD3Umd(name: string, req: NodeRequire = require): unknown {
-  const entry = req.resolve(name);
-  return req(entry.replace(/\/src\/index\.js$/, `/dist/${name}.js`));
+  const entry = resolveD3(name, req);
+  return req(entry.replace(/[\\/]src[\\/]index\.js$/, `/dist/${name}.js`));
+}
+
+function resolveD3(name: string, req: NodeRequire): string {
+  try {
+    return req.resolve(name);
+  } catch {
+    return req.resolve(name, { paths: [req.resolve("d3-scale")] });
+  }
 }
 
 /**

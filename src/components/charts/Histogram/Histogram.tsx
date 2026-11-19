@@ -1,6 +1,6 @@
 import type { HistogramProps } from "@/components/composed/Chart/kinds/Histogram";
 
-import { Chart } from "@/components/composed/Chart";
+import { HistogramChart } from "@/components/composed/Chart/kinds/Histogram";
 
 export {
   buildHistogramRows,
@@ -16,5 +16,5 @@ export type {
 
 /** Draws a histogram through the shared `Chart` component. */
 export function Histogram(props: HistogramProps) {
-  return <Chart type="histogram" {...props} />;
+  return <HistogramChart {...props} />;
 }

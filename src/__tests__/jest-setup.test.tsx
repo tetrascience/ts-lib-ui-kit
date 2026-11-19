@@ -212,6 +212,31 @@ describe("KIT_SHIKI_LANGUAGES", () => {
   });
 });
 
+describe("installUiKitDomShims structuredClone", () => {
+  it("installs a structuredClone that copies a chart spec without sharing its objects", () => {
+    const globalRef = globalThis as unknown as MutableGlobal;
+    const saved = globalRef.structuredClone;
+    try {
+      delete globalRef.structuredClone;
+      installUiKitDomShims();
+      const clone = globalRef.structuredClone as <T>(value: T) => T;
+      const spec = { layers: [{ kind: "line", data: [1, 2] }], when: new Date(0), tags: new Set(["a"]) };
+      const copy = clone(spec);
+      expect(copy).toEqual(spec);
+      expect(copy.layers).not.toBe(spec.layers);
+      expect(copy.layers[0].data).not.toBe(spec.layers[0].data);
+      expect(copy.when).not.toBe(spec.when);
+      const cyclic: { self?: unknown } = {};
+      cyclic.self = cyclic;
+      const cyclicCopy = clone(cyclic);
+      expect(cyclicCopy.self).toBe(cyclicCopy);
+      expect(() => clone({ onClick: () => {} })).toThrow("function could not be cloned");
+    } finally {
+      globalRef.structuredClone = saved;
+    }
+  });
+});
+
 describe("installUiKitDomShims", () => {
   const OBSERVER_KEYS = ["ResizeObserver", "IntersectionObserver"] as const;
   const ELEMENT_KEYS = [

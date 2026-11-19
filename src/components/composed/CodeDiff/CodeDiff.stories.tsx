@@ -276,7 +276,7 @@ export const LineActionsAndAnnotations: Story = {
         )}
         renderLineAnnotation={(line) =>
           open.includes(lineId(line)) ? (
-            <div className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+            <div className="flex items-center justify-between gap-3 py-2 pr-3 text-sm">
               <span>
                 Comment on line {lineId(line)}: <code className="font-mono text-xs">{line.text.trim()}</code>
               </span>
@@ -317,6 +317,9 @@ export const LineActionsAndAnnotations: Story = {
         'Comment on line R3: "version": "1.5.0",',
       );
       expect(annotation?.querySelector('[data-side="original"]')).toBeEmptyDOMElement();
+      // It starts at the actions column, so its text lines up with the button above it.
+      const text = annotation?.querySelector('[data-side="modified"] span');
+      expect(text?.getBoundingClientRect().left).toBeCloseTo(action.getBoundingClientRect().left, 0);
     });
   },
 };

@@ -87,8 +87,9 @@ export interface CodeDiffProps extends Omit<React.ComponentProps<"div">, "childr
   /**
    * Content attached to one line and rendered in a full-width row beneath it,
    * such as a comment thread or a lint message. Called for every line shown;
-   * return `null` for a line that has none. In `split` mode it sits under its
-   * own side of the diff.
+   * return `null` for a line that has none. It starts where the line's actions
+   * and code do, to the right of the line numbers, and in `split` mode sits
+   * under its own side of the diff.
    */
   renderLineAnnotation?: (line: CodeDiffLine) => React.ReactNode;
 }
@@ -348,6 +349,11 @@ function DiffLineRows({
   const annotations = [annotate(original), annotate(modified)];
   const hasAnnotation = annotations.some((annotation) => annotation != null && annotation !== false);
   const annotationCell = "border-y p-0 align-top font-sans whitespace-normal";
+  // An annotation starts where the line's actions and code do, clear of the line numbers.
+  const numberColumns = lineNumbers ? (isSplit ? 1 : 2) : 0;
+  const contentColumns = sideColumns - numberColumns;
+  const gutter = (className?: string) =>
+    numberColumns > 0 && <td colSpan={numberColumns} className={cn("border-y p-0", className)} />;
 
   return (
     <>
@@ -384,17 +390,26 @@ function DiffLineRows({
         <tr data-slot="code-diff-annotation">
           {isSplit ? (
             <>
-              <td colSpan={sideColumns} data-side="original" className={annotationCell}>
+              {gutter()}
+              <td colSpan={contentColumns} data-side="original" className={annotationCell}>
                 {annotations[0]}
               </td>
-              <td colSpan={sideColumns} data-side="modified" className={cn(annotationCell, "border-l")}>
+              {gutter("border-l")}
+              <td
+                colSpan={contentColumns}
+                data-side="modified"
+                className={cn(annotationCell, numberColumns === 0 && "border-l")}
+              >
                 {annotations[1]}
               </td>
             </>
           ) : (
-            <td colSpan={sideColumns} data-side={modified ? "modified" : "original"} className={annotationCell}>
-              {annotations[1] ?? annotations[0]}
-            </td>
+            <>
+              {gutter()}
+              <td colSpan={contentColumns} data-side={modified ? "modified" : "original"} className={annotationCell}>
+                {annotations[1] ?? annotations[0]}
+              </td>
+            </>
           )}
         </tr>
       )}

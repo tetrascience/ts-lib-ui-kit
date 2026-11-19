@@ -202,7 +202,10 @@ describe("CodeDiff", () => {
     expect(all("annotation")).toHaveLength(1);
     expect(all("annotation")[0].previousElementSibling).toBe(all("row")[1]);
     expect(all("annotation")[0].textContent).toBe("note on b");
-    expect(all("annotation")[0].querySelector("td")?.getAttribute("colspan")).toBe("5");
+    // It spans the actions, marker and code columns, clear of the two line-number columns.
+    const cells = [...all("annotation")[0].querySelectorAll("td")];
+    expect(cells.map((cell) => cell.getAttribute("colspan"))).toEqual(["2", "3"]);
+    expect(cells[0].textContent).toBe("");
     expect(container.querySelector("thead td")?.getAttribute("colspan")).toBe("3");
   });
 

@@ -308,6 +308,11 @@
       "optional": true
     }
   },
+  "dependenciesMeta": {
+    "lz4": {
+      "built": false
+    }
+  },
   "devDependencies": {
     "@aws-sdk/client-athena": "^3.975.0",
     "@aws-sdk/client-cloudwatch": "^3.699.0",

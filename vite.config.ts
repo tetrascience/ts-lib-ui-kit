@@ -4,7 +4,7 @@ import path from "path";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import dts from "vite-plugin-dts";
 
 import pkg from "./package.json" with { type: "json" };
@@ -50,11 +50,39 @@ const storybookZephyrMapping = generateZephyrMapping();
 
 fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
+/**
+ * ts-lib-viz's theme adds an OS dark-mode block, `:root:not(.light)` under
+ * `prefers-color-scheme: dark`. The kit's dark mode is the `.dark` class only, and the scoped-CSS
+ * audit cannot anchor that selector, so `check:css-leaks` fails on it. Drop the block from the
+ * emitted CSS. Remove this plugin once ts-lib-viz no longer ships the block.
+ */
+function dropVizOsDarkMode(): Plugin {
+  const block =
+    /@media\s*\(prefers-color-scheme:\s*dark\)\s*\{\s*:root:not\(\.light\)\s*\{[^}]*--viz-paper[^}]*\}\s*\}/g;
+  return {
+    name: "drop-ts-lib-viz-os-dark-mode",
+    apply: "build",
+    enforce: "post",
+    // Written to disk after the bundle, where the emitted CSS is final.
+    writeBundle(options, bundle) {
+      if (!options.dir) return;
+      for (const item of Object.values(bundle)) {
+        if (item.type !== "asset" || !item.fileName.endsWith(".css")) continue;
+        const file = path.join(options.dir, item.fileName);
+        const source = fs.readFileSync(file, "utf8");
+        const next = source.replace(block, "");
+        if (next !== source) fs.writeFileSync(file, next);
+      }
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    dropVizOsDarkMode(),
     // Must stay false at this entry count — see "Per-Component Entries" in
     // AGENTS.md for why.
     dts({

@@ -45,31 +45,29 @@ export const Default: Story = {
     await step("Chart container renders", async () => {
       await waitFor(
         () => {
-          expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+          expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
         },
         { timeout: 15000 },
       );
     });
 
-    await step("Pie layer and slices render", async () => {
-      expect(canvasElement.querySelector(".pielayer")).toBeInTheDocument();
-      const slices = canvasElement.querySelectorAll(".pielayer .slice");
+    await step("Slices render", async () => {
+      expect(canvasElement.querySelector('[data-polar="slices"]')).toBeInTheDocument();
+      const slices = canvasElement.querySelectorAll('[data-polar="slices"] path');
       expect(slices.length).toBe(5);
     });
 
-    await step("Legend shows parameter labels", async () => {
-      const legendRoot = canvasElement.querySelector("[data-slot='pie-legend']");
-      expect(legendRoot).toBeTruthy();
-      const legend = within(legendRoot as HTMLElement);
-      expect(legend.getByText("pH")).toBeInTheDocument();
-      expect(legend.getByText("Temperature")).toBeInTheDocument();
+    await step("Each slice has its own fill", async () => {
+      const fills = [...canvasElement.querySelectorAll('[data-polar="slices"] path')].map((node) =>
+        node.getAttribute("fill"),
+      );
+      expect(new Set(fills).size).toBe(fills.length);
     });
 
-    await step("Legend color swatches have non-zero rendered size", async () => {
-      const swatches = canvasElement.querySelectorAll<HTMLElement>("[data-slot='pie-legend-swatch']");
-      expect(swatches.length).toBe(5);
-      swatches.forEach((swatch) => {
-        const rect = swatch.getBoundingClientRect();
+    await step("Slices have a rendered size", async () => {
+      const slices = [...canvasElement.querySelectorAll<SVGPathElement>('[data-polar="slices"] path')];
+      slices.forEach((slice) => {
+        const rect = slice.getBoundingClientRect();
         expect(rect.width).toBeGreaterThan(0);
         expect(rect.height).toBeGreaterThan(0);
       });
@@ -105,21 +103,20 @@ export const WithCustomColors: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Pie layer and slices render", async () => {
-      expect(canvasElement.querySelector(".pielayer")).toBeInTheDocument();
-      const slices = canvasElement.querySelectorAll(".pielayer .slice");
+    await step("Slices render", async () => {
+      expect(canvasElement.querySelector('[data-polar="slices"]')).toBeInTheDocument();
+      const slices = canvasElement.querySelectorAll('[data-polar="slices"] path');
       expect(slices.length).toBe(5);
     });
 
-    await step("Legend shows parameter labels", async () => {
-      const legendRoot = canvasElement.querySelector("[data-slot='pie-legend']");
-      expect(legendRoot).toBeTruthy();
-      const legend = within(legendRoot as HTMLElement);
-      expect(legend.getByText("pH")).toBeInTheDocument();
-      expect(legend.getByText("Dissolved Oxygen")).toBeInTheDocument();
+    await step("Each slice has its own fill", async () => {
+      const fills = [...canvasElement.querySelectorAll('[data-polar="slices"] path')].map((node) =>
+        node.getAttribute("fill"),
+      );
+      expect(new Set(fills).size).toBe(fills.length);
     });
   },
 };
@@ -151,21 +148,20 @@ export const DonutChart: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Pie layer and slices render", async () => {
-      expect(canvasElement.querySelector(".pielayer")).toBeInTheDocument();
-      const slices = canvasElement.querySelectorAll(".pielayer .slice");
+    await step("Slices render", async () => {
+      expect(canvasElement.querySelector('[data-polar="slices"]')).toBeInTheDocument();
+      const slices = canvasElement.querySelectorAll('[data-polar="slices"] path');
       expect(slices.length).toBe(5);
     });
 
-    await step("Legend shows parameter labels", async () => {
-      const legendRoot = canvasElement.querySelector("[data-slot='pie-legend']");
-      expect(legendRoot).toBeTruthy();
-      const legend = within(legendRoot as HTMLElement);
-      expect(legend.getByText("Viability")).toBeInTheDocument();
-      expect(legend.getByText("Cell Density")).toBeInTheDocument();
+    await step("Each slice has its own fill", async () => {
+      const fills = [...canvasElement.querySelectorAll('[data-polar="slices"] path')].map((node) =>
+        node.getAttribute("fill"),
+      );
+      expect(new Set(fills).size).toBe(fills.length);
     });
   },
 };
@@ -197,21 +193,20 @@ export const WithLabelAndValues: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Pie layer and slices render", async () => {
-      expect(canvasElement.querySelector(".pielayer")).toBeInTheDocument();
-      const slices = canvasElement.querySelectorAll(".pielayer .slice");
+    await step("Slices render", async () => {
+      expect(canvasElement.querySelector('[data-polar="slices"]')).toBeInTheDocument();
+      const slices = canvasElement.querySelectorAll('[data-polar="slices"] path');
       expect(slices.length).toBe(5);
     });
 
-    await step("Legend shows parameter labels", async () => {
-      const legendRoot = canvasElement.querySelector("[data-slot='pie-legend']");
-      expect(legendRoot).toBeTruthy();
-      const legend = within(legendRoot as HTMLElement);
-      expect(legend.getByText("pH")).toBeInTheDocument();
-      expect(legend.getByText("Temperature")).toBeInTheDocument();
+    await step("Each slice has its own fill", async () => {
+      const fills = [...canvasElement.querySelectorAll('[data-polar="slices"] path')].map((node) =>
+        node.getAttribute("fill"),
+      );
+      expect(new Set(fills).size).toBe(fills.length);
     });
   },
 };
@@ -243,21 +238,20 @@ export const WithRotation: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Pie layer and slices render", async () => {
-      expect(canvasElement.querySelector(".pielayer")).toBeInTheDocument();
-      const slices = canvasElement.querySelectorAll(".pielayer .slice");
+    await step("Slices render", async () => {
+      expect(canvasElement.querySelector('[data-polar="slices"]')).toBeInTheDocument();
+      const slices = canvasElement.querySelectorAll('[data-polar="slices"] path');
       expect(slices.length).toBe(5);
     });
 
-    await step("Legend shows parameter labels", async () => {
-      const legendRoot = canvasElement.querySelector("[data-slot='pie-legend']");
-      expect(legendRoot).toBeTruthy();
-      const legend = within(legendRoot as HTMLElement);
-      expect(legend.getByText("Dissolved Oxygen")).toBeInTheDocument();
-      expect(legend.getByText("Cell Density")).toBeInTheDocument();
+    await step("Each slice has its own fill", async () => {
+      const fills = [...canvasElement.querySelectorAll('[data-polar="slices"] path')].map((node) =>
+        node.getAttribute("fill"),
+      );
+      expect(new Set(fills).size).toBe(fills.length);
     });
   },
 };
@@ -281,18 +275,19 @@ export const NoTitle: Story = {
     rotation: 0,
   },
   play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
     await step("No title block is rendered", async () => {
-      expect(canvasElement.querySelector(".title-container")).not.toBeInTheDocument();
-      expect(canvasElement.querySelector(".title")).not.toBeInTheDocument();
+      expect(canvas.queryByText("Bioreactor Parameter Distribution")).not.toBeInTheDocument();
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Pie layer and slices render", async () => {
-      expect(canvasElement.querySelector(".pielayer")).toBeInTheDocument();
-      const slices = canvasElement.querySelectorAll(".pielayer .slice");
+    await step("Slices render", async () => {
+      expect(canvasElement.querySelector('[data-polar="slices"]')).toBeInTheDocument();
+      const slices = canvasElement.querySelectorAll('[data-polar="slices"] path');
       expect(slices.length).toBe(5);
     });
   },

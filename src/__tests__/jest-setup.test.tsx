@@ -15,6 +15,7 @@ import {
   createHighlighterCoreStub,
   installUiKitDomShims,
   installUiKitJestMocks,
+  loadD3Umd,
   plotlyStub,
   rdkitFactoryStub,
   rdkitModuleStub,
@@ -95,6 +96,15 @@ describe("installUiKitJestMocks", () => {
       "@shikijs/themes/github-light",
       "@shikijs/themes/github-dark",
       ...KIT_SHIKI_LANGUAGES.map((lang) => `@shikijs/langs/${lang}`),
+      "d3-array",
+      "d3-color",
+      "d3-contour",
+      "d3-format",
+      "d3-interpolate",
+      "d3-quadtree",
+      "d3-scale",
+      "d3-time",
+      "d3-time-format",
     ];
     expect([...registrations.keys()].sort()).toEqual([...expected].sort());
   });
@@ -199,6 +209,31 @@ describe("KIT_SHIKI_LANGUAGES", () => {
     // extending src/lib/shiki.ts's language set without extending this
     // constant leaves the new language unmockable, silently.
     expect([...KIT_SHIKI_LANGUAGES].sort()).toEqual([...getSupportedCodeBlockLanguages()].sort());
+  });
+});
+
+describe("installUiKitDomShims structuredClone", () => {
+  it("installs a structuredClone that copies a chart spec without sharing its objects", () => {
+    const globalRef = globalThis as unknown as MutableGlobal;
+    const saved = globalRef.structuredClone;
+    try {
+      delete globalRef.structuredClone;
+      installUiKitDomShims();
+      const clone = globalRef.structuredClone as <T>(value: T) => T;
+      const spec = { layers: [{ kind: "line", data: [1, 2] }], when: new Date(0), tags: new Set(["a"]) };
+      const copy = clone(spec);
+      expect(copy).toEqual(spec);
+      expect(copy.layers).not.toBe(spec.layers);
+      expect(copy.layers[0].data).not.toBe(spec.layers[0].data);
+      expect(copy.when).not.toBe(spec.when);
+      const cyclic: { self?: unknown } = {};
+      cyclic.self = cyclic;
+      const cyclicCopy = clone(cyclic);
+      expect(cyclicCopy.self).toBe(cyclicCopy);
+      expect(() => clone({ onClick: () => {} })).toThrow("function could not be cloned");
+    } finally {
+      globalRef.structuredClone = saved;
+    }
   });
 });
 
@@ -457,3 +492,22 @@ describe("shiki stub", () => {
 // verified end-to-end under actual Jest in
 // scripts/verify-jest-consumer/ — see AGENTS.md's "Shipped Jest support"
 // section.
+
+describe("loadD3Umd", () => {
+  // Jest loads each d3 package through its UMD build, which Node itself would read as ESM. The
+  // loader's job is the path mapping, so this drives it with a stand-in require.
+  it("maps a package entry point to the UMD build beside it, and loads that", () => {
+    const requested: string[] = [];
+    const standIn = Object.assign(
+      (id: string) => {
+        requested.push(id);
+        return { loaded: id };
+      },
+      { resolve: (name: string) => `/deps/${name}/src/index.js` },
+    );
+    expect(loadD3Umd("d3-scale", standIn as unknown as NodeRequire)).toEqual({
+      loaded: "/deps/d3-scale/dist/d3-scale.js",
+    });
+    expect(requested).toEqual(["/deps/d3-scale/dist/d3-scale.js"]);
+  });
+});

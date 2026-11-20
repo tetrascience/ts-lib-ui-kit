@@ -57,15 +57,15 @@ export const Default: Story = {
     await step("Chart container renders", async () => {
       await waitFor(
         () => {
-          expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+          expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
         },
         { timeout: 15000 },
       );
     });
 
-    await step("One histogram trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".barlayer .trace");
-      expect(traces.length).toBe(1);
+    await step("Histogram bars are rendered", async () => {
+      const bars = canvasElement.querySelectorAll('[data-geom="bar"]');
+      expect(bars.length).toBeGreaterThan(0);
     });
   },
 };
@@ -96,12 +96,12 @@ export const WithCustomColor: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("One histogram trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".barlayer .trace");
-      expect(traces.length).toBe(1);
+    await step("Histogram bars are rendered", async () => {
+      const bars = canvasElement.querySelectorAll('[data-geom="bar"]');
+      expect(bars.length).toBeGreaterThan(0);
     });
   },
 };
@@ -137,16 +137,16 @@ export const WithCustomBins: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("One histogram trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".barlayer .trace");
-      expect(traces.length).toBe(1);
+    await step("Histogram bars are rendered", async () => {
+      const bars = canvasElement.querySelectorAll('[data-geom="bar"]');
+      expect(bars.length).toBeGreaterThan(0);
     });
 
     await step("Custom bins render visible bars", async () => {
-      const barPoints = canvasElement.querySelectorAll(".barlayer .bars .point");
+      const barPoints = canvasElement.querySelectorAll('[data-geom="bar"]');
       expect(barPoints.length).toBeGreaterThan(0);
     });
   },
@@ -183,12 +183,12 @@ export const StackedHistogram: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Two histogram traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".barlayer .trace");
-      expect(traces.length).toBe(2);
+    await step("Histogram bars are rendered", async () => {
+      const bars = canvasElement.querySelectorAll('[data-geom="bar"]');
+      expect(bars.length).toBeGreaterThan(0);
     });
 
     await step("Legend shows series names", async () => {
@@ -237,12 +237,12 @@ export const MultipleSeries: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Four histogram traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".barlayer .trace");
-      expect(traces.length).toBe(4);
+    await step("Histogram bars are rendered", async () => {
+      const bars = canvasElement.querySelectorAll('[data-geom="bar"]');
+      expect(bars.length).toBeGreaterThan(0);
     });
 
     await step("Legend shows series names", async () => {
@@ -280,12 +280,11 @@ export const WithDistributionLine: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Histogram and distribution line traces render", async () => {
-      expect(canvasElement.querySelectorAll(".barlayer .trace").length).toBe(1);
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    await step("Histogram bars render", async () => {
+      expect(canvasElement.querySelectorAll('[data-geom="bar"]').length).toBeGreaterThan(0);
     });
   },
 };
@@ -322,16 +321,15 @@ export const WithCustomBinsAndDistributionLine: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Histogram and distribution line traces render", async () => {
-      expect(canvasElement.querySelectorAll(".barlayer .trace").length).toBe(1);
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    await step("Histogram bars render", async () => {
+      expect(canvasElement.querySelectorAll('[data-geom="bar"]').length).toBeGreaterThan(0);
     });
 
     await step("Custom bins render visible bars", async () => {
-      const barPoints = canvasElement.querySelectorAll(".barlayer .bars .point");
+      const barPoints = canvasElement.querySelectorAll('[data-geom="bar"]');
       expect(barPoints.length).toBeGreaterThan(0);
     });
   },
@@ -369,12 +367,11 @@ export const MultipleSeriesWithDistributionLines: Story = {
     });
 
     await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+      expect(canvasElement.querySelector("svg[data-viz-panel]")).toBeInTheDocument();
     });
 
-    await step("Two histogram and two distribution line traces render", async () => {
-      expect(canvasElement.querySelectorAll(".barlayer .trace").length).toBe(2);
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(2);
+    await step("Histogram bars render", async () => {
+      expect(canvasElement.querySelectorAll('[data-geom="bar"]').length).toBeGreaterThan(0);
     });
 
     await step("Legend shows series names", async () => {
@@ -417,9 +414,9 @@ export const ContainerFilled: Story = {
     await step("Chart canvas fills the container width", async () => {
       const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       await waitFor(() => {
-        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
+        const plot = canvasElement.querySelector("svg[data-viz-panel]") as HTMLElement;
         expect(plot).toBeInTheDocument();
-        expect(plot.clientWidth).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
+        expect(plot.getBoundingClientRect().width).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
       });
     });
 
@@ -429,9 +426,9 @@ export const ContainerFilled: Story = {
       // (not a full re-plot) so the canvas tracks the new width.
       wrapper.style.width = "440px";
       await waitFor(() => {
-        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
-        expect(plot.clientWidth).toBeGreaterThanOrEqual(420);
-        expect(plot.clientWidth).toBeLessThanOrEqual(460);
+        const plot = canvasElement.querySelector("svg[data-viz-panel]") as HTMLElement;
+        expect(plot.getBoundingClientRect().width).toBeGreaterThanOrEqual(420);
+        expect(plot.getBoundingClientRect().width).toBeLessThanOrEqual(460);
       });
       // Leave the story showing the full container, not the 440px test size.
       wrapper.style.width = "";

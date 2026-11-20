@@ -55,18 +55,17 @@ test("CodeBlock highlighting resolves through the shiki mock, not a broken dynam
   }
 });
 
-test("loadPlotly resolves via the mock (plotly.js-dist is not installed here)", async () => {
-  // Requires the compiled dist file by absolute path — not a package
-  // specifier — to exercise loadPlotly() directly, since the chart
-  // components' own ResizeObserver-gated draw effects don't fire in jsdom
-  // without a real layout and would otherwise mask whether the import
-  // itself resolved.
-  const { loadPlotly } = require(path.join(pkgDir, "dist", "components", "charts", "plotly-loader.cjs"));
-  const plotly = await loadPlotly();
-  expect(typeof plotly.newPlot).toBe("function");
-  const el = document.createElement("div");
-  const plotEl = await plotly.newPlot(el);
-  expect(plotEl).toBe(el);
+test("charts draw through ts-lib-viz without plotly.js-dist installed", async () => {
+  // The Plotly loader is no longer on any chart's path, so the built package
+  // must render a chart with plotly.js-dist absent. Requires the compiled
+  // entry by package specifier, as a consumer would.
+  const { Chart } = require("@tetrascience-npm/tetrascience-react-ui/composed/Chart");
+  const { container } = render(
+    React.createElement(Chart, { type: "histogram", dataSeries: [{ name: "H", x: [1, 2, 2, 3] }], title: "Peaks" }),
+  );
+  await waitFor(() => {
+    expect(container.textContent).toContain("Peaks");
+  });
 });
 
 test("MoleculeStructure mounts via the rdkit mock (rdkit is not installed here)", async () => {

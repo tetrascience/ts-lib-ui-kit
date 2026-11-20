@@ -18,6 +18,8 @@ export default tseslint.config(
       "node_modules/**/*",
       "examples/**/*",
       "storybook-static/**/*",
+      // Vendored copy of ts-lib-viz (src/vendor/ts-lib-viz/README.md). Temporary; not held to the kit lint rules.
+      "src/vendor/**/*",
       // A separate, self-contained npm project (own package.json, own
       // node_modules, deliberately outside the Yarn workspace) — see
       // AGENTS.md's "Shipped Jest support" section.

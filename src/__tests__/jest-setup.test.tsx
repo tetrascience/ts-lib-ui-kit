@@ -496,18 +496,32 @@ describe("shiki stub", () => {
 describe("loadD3Umd", () => {
   // Jest loads each d3 package through its UMD build, which Node itself would read as ESM. The
   // loader's job is the path mapping, so this drives it with a stand-in require.
-  it("maps a package entry point to the UMD build beside it, and loads that", () => {
+  function standInFor(entry: (name: string) => string) {
     const requested: string[] = [];
     const standIn = Object.assign(
       (id: string) => {
         requested.push(id);
         return { loaded: id };
       },
-      { resolve: (name: string) => `/deps/${name}/src/index.js` },
+      { resolve: entry },
     );
-    expect(loadD3Umd("d3-scale", standIn as unknown as NodeRequire)).toEqual({
-      loaded: "/deps/d3-scale/dist/d3-scale.js",
-    });
-    expect(requested).toEqual(["/deps/d3-scale/dist/d3-scale.js"]);
+    return { standIn: standIn as unknown as NodeRequire, requested };
+  }
+
+  it("maps a package entry point to the UMD build beside it, and loads that", () => {
+    const { standIn, requested } = standInFor((name) => `/w/node_modules/${name}/src/index.js`);
+    expect(loadD3Umd("d3-scale", standIn)).toEqual({ loaded: "/w/node_modules/d3-scale/dist/d3-scale.js" });
+    expect(requested).toEqual(["/w/node_modules/d3-scale/dist/d3-scale.js"]);
+  });
+
+  it("finds the UMD build from a module entry, which newer d3 releases resolve to", () => {
+    const { standIn, requested } = standInFor((name) => `/w/node_modules/${name}/dist/${name}.mjs`);
+    expect(loadD3Umd("d3-scale", standIn)).toEqual({ loaded: "/w/node_modules/d3-scale/dist/d3-scale.js" });
+    expect(requested).toEqual(["/w/node_modules/d3-scale/dist/d3-scale.js"]);
+  });
+
+  it("refuses an entry that is not inside node_modules", () => {
+    const { standIn } = standInFor(() => "/w/vendor/d3-scale/index.js");
+    expect(() => loadD3Umd("d3-scale", standIn)).toThrow(/did not resolve inside node_modules/);
   });
 });

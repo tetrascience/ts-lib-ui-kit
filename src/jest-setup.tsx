@@ -324,8 +324,13 @@ const D3_UMD_PACKAGES = [
  * separator, so Windows paths resolve too.
  */
 export function loadD3Umd(name: string, req: NodeRequire = require): unknown {
-  const entry = resolveD3(name, req);
-  return req(entry.replace(/[\\/]src[\\/]index\.js$/, `/dist/${name}.js`));
+  // The UMD build sits in the package root, whatever entry the package's exports map resolves to:
+  // d3 packages moved from src/index.js to dist/*.mjs, and an entry-relative rewrite then missed.
+  const entry = resolveD3(name, req).replace(/\\/g, "/");
+  const marker = `node_modules/${name}/`;
+  const at = entry.lastIndexOf(marker);
+  if (at < 0) throw new Error(`loadD3Umd: ${name} did not resolve inside node_modules (${entry})`);
+  return req(`${entry.slice(0, at)}${marker}dist/${name}.js`);
 }
 
 function resolveD3(name: string, req: NodeRequire): string {

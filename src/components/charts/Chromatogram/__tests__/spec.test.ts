@@ -130,4 +130,21 @@ describe("buildChromatogramSpec", () => {
     expect(spec.scales?.x).toMatchObject({ title: "Retention Time (min)", limits: [0, 4], grid: false });
     expect(spec.scales?.y).toMatchObject({ title: "Signal (mAU)", limits: [0, 10], grid: true });
   });
+
+  it("reports metadata values as table cells, and the keys as the tooltip", () => {
+    const spec = buildChromatogramSpec(
+      baseInput({
+        processedSeries: [
+          {
+            ...trace,
+            metadata: { sampleName: "S1", vial: 3, flagged: true, empty: null, nested: { a: 1 }, x: "skip" },
+          },
+        ],
+      }),
+    ).spec;
+    expect(spec.tooltip).toEqual(["sampleName", "vial", "flagged", "empty", "nested"]);
+    const row = (spec.layers[0].data as Array<Record<string, unknown>>)[0];
+    expect(row).toMatchObject({ sampleName: "S1", vial: 3, flagged: true, empty: null, nested: "[object Object]" });
+    expect(row.x).not.toBe("skip");
+  });
 });

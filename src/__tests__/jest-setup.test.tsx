@@ -3,7 +3,7 @@ import path from "path";
 
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   KIT_SHIKI_LANGUAGES,
@@ -209,6 +209,30 @@ describe("KIT_SHIKI_LANGUAGES", () => {
     // extending src/lib/shiki.ts's language set without extending this
     // constant leaves the new language unmockable, silently.
     expect([...KIT_SHIKI_LANGUAGES].sort()).toEqual([...getSupportedCodeBlockLanguages()].sort());
+  });
+});
+
+describe("module activation and the window guard", () => {
+  it("does nothing to the DOM when there is no window", () => {
+    vi.stubGlobal("window");
+    try {
+      expect(() => installUiKitDomShims()).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("installs the Jest mocks itself when a Jest global exists at import", async () => {
+    const mock = vi.fn();
+    vi.stubGlobal("jest", { mock });
+    try {
+      vi.resetModules();
+      await import("../jest-setup");
+      expect(mock).toHaveBeenCalledWith("plotly.js-dist", expect.any(Function));
+    } finally {
+      vi.unstubAllGlobals();
+      vi.resetModules();
+    }
   });
 });
 

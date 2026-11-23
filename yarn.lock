@@ -8224,7 +8224,7 @@ __metadata:
     "@tanstack/react-table": "npm:^8.21.3"
     "@tetrascience-npm/request": "npm:0.4.0"
     "@tetrascience-npm/ts-connectors-sdk": "npm:^3.2.0"
-    "@tetrascience-npm/ts-lib-viz": "npm:0.1.4"
+    "@tetrascience-npm/ts-lib-viz": "npm:0.1.5"
     "@types/d3-contour": "npm:^3.0.6"
     "@types/d3-format": "npm:^3.0.4"
     "@types/d3-quadtree": "npm:^3.0.6"
@@ -8363,9 +8363,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tetrascience-npm/ts-lib-viz@npm:0.1.4":
-  version: 0.1.4
-  resolution: "@tetrascience-npm/ts-lib-viz@npm:0.1.4"
+"@tetrascience-npm/ts-lib-viz@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@tetrascience-npm/ts-lib-viz@npm:0.1.5"
   dependencies:
     "@modelcontextprotocol/sdk": "npm:^1.30.0"
     "@resvg/resvg-js": "npm:^2.6.2"
@@ -8393,7 +8393,7 @@ __metadata:
       optional: true
   bin:
     ts-lib-viz-mcp: dist/src/mcp/server.js
-  checksum: 10c0/00a323004b3d0c8074efc465254768275b0d27ccf61a9083e8ec5c8838c7efe7471f18328695757273f96e85a0c545e1fc93d24d9780cae36d7e1ecd4f5c60b0
+  checksum: 10c0/950c4ba8760ed007775569609cf2f85ab79a160187d80c4e4670cb3fe75d8764a0f734d4874034a94fe19e52382a0571fabacfb564141bcbf3e86a8fd10f710a
   languageName: node
   linkType: hard
 

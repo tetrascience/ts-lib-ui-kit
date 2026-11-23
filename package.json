@@ -239,7 +239,7 @@
     "@streamdown/cjk": "^1.0.3",
     "@tanstack/react-table": "^8.21.3",
     "@tetrascience-npm/ts-connectors-sdk": "^3.2.0",
-    "@tetrascience-npm/ts-lib-viz": "0.1.4",
+    "@tetrascience-npm/ts-lib-viz": "0.1.5",
     "@visx/annotation": "^4.0.0",
     "@xyflow/react": "^12.6.4",
     "ai": "^6.0.168",

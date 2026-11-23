@@ -430,8 +430,16 @@ function cloneStructured<T>(value: T, seen = new Map<unknown, unknown>()): T {
   }
   if (value === null || typeof value !== "object") return value;
   if (seen.has(value)) return seen.get(value) as T;
-  if (value instanceof Date) return new Date(value.getTime()) as T;
-  if (value instanceof RegExp) return new RegExp(value.source, value.flags) as T;
+  if (value instanceof Date) {
+    const copy = new Date(value.getTime());
+    seen.set(value, copy);
+    return copy as T;
+  }
+  if (value instanceof RegExp) {
+    const copy = new RegExp(value.source, value.flags);
+    seen.set(value, copy);
+    return copy as T;
+  }
   if (value instanceof Map) {
     const copy = new Map();
     seen.set(value, copy);

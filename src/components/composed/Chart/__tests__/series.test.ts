@@ -12,6 +12,16 @@ describe("uniqueSeriesNames", () => {
   });
 });
 
+describe("uniqueSeriesNames with reserved names", () => {
+  it("never counts a name onto a series the caller already named that way", () => {
+    expect(uniqueSeriesNames([{ name: "Run" }, { name: "Run" }, { name: "Run (2)" }])).toEqual([
+      "Run",
+      "Run (3)",
+      "Run (2)",
+    ]);
+  });
+});
+
 describe("seriesPalettes", () => {
   it("skips a series with no rows, so the series after it keep their own colour", () => {
     const palettes = seriesPalettes(

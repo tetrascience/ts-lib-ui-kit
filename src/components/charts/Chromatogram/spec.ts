@@ -53,11 +53,31 @@ export interface ChromatogramSpec {
 const seriesColor = (series: ChromatogramSeries, index: number): string =>
   series.color || CHART_COLORS[index % CHART_COLORS.length];
 
-/** The points of one series as rows, with the x and y columns the layers read. */
-function seriesRows(series: ChromatogramSeries, from = 0, to = series.x.length): Row[] {
+/** Metadata keys across every series, in first-seen order. Each key is a row column and a tooltip field. */
+function metadataKeys(series: ChromatogramSeries[]): string[] {
+  const keys = new Set<string>();
+  for (const item of series) {
+    for (const key of Object.keys(item.metadata ?? {})) {
+      if (key !== "x" && key !== "y") keys.add(key);
+    }
+  }
+  return [...keys];
+}
+
+/** A metadata value as a table cell. Viz reads strings, numbers, booleans and null. */
+function metadataCell(value: unknown): string | number | boolean | null {
+  if (value == null) return null;
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
+  return String(value);
+}
+
+/** The points of one series as rows: the x and y columns the layers read, then one column per metadata key. */
+function seriesRows(series: ChromatogramSeries, keys: readonly string[], from = 0, to = series.x.length): Row[] {
   const rows: Row[] = [];
   for (let i = from; i <= to && i < series.x.length; i++) {
-    rows.push({ x: series.x[i], y: series.y[i] });
+    const row: Row = { x: series.x[i], y: series.y[i] };
+    for (const key of keys) row[key] = metadataCell(series.metadata?.[key]);
+    rows.push(row);
   }
   return rows;
 }
@@ -83,9 +103,10 @@ function groupRows<K extends string>(entries: Array<{ key: K; row: Row }>): Map<
 /** One line per series, and a point layer over it when markers are shown. */
 function addSeriesLayers(builder: Builder, input: ChromatogramSpecInput): Builder {
   let next = builder;
+  const keys = metadataKeys(input.processedSeries);
   input.processedSeries.forEach((series, index) => {
     const color = seriesColor(series, index);
-    const rows = seriesRows(series);
+    const rows = seriesRows(series, keys);
     next = next.line({
       data: rows,
       aes: { x: "x", y: "y" },
@@ -108,13 +129,14 @@ function addRegionLayers(builder: Builder, input: ChromatogramSpecInput): Builde
     ...allDetectedPeaks.flatMap(({ peaks, seriesIndex }) => peaks.map((peak) => ({ peak, seriesIndex }))),
   ];
   let next = builder;
+  const keys = metadataKeys(processedSeries);
   for (const { peak, seriesIndex } of overlayPeaks) {
     const series = processedSeries[seriesIndex];
     const startIdx = peak._computed?.startIndex;
     const endIdx = peak._computed?.endIndex;
     if (!peak.regionOverlay || !series || startIdx === undefined || endIdx === undefined) continue;
     next = next.line({
-      data: seriesRows(series, startIdx, endIdx),
+      data: seriesRows(series, keys, startIdx, endIdx),
       aes: { x: "x", y: "y" },
       color: peak.color ?? seriesColor(series, seriesIndex),
       linewidth: peak.regionOverlayWidth ?? DEFAULT_REGION_OVERLAY_WIDTH,
@@ -191,13 +213,16 @@ export function buildChromatogramSpec(input: ChromatogramSpecInput): Chromatogra
   }
   builder = addLabelLayers(builder, input);
 
-  const spec = builder
+  const built = builder
     .labs({ headline: input.title })
     .scales({
       x: { title: input.xAxisTitle, limits: input.xRange, grid: input.showGridX },
       y: { title: input.yAxisTitle, limits: input.yRange, grid: input.showGridY },
     })
     .spec();
+  // The hover card shows each series' metadata, as the Plotly hover template did.
+  const keys = metadataKeys(input.processedSeries);
+  const spec = keys.length > 0 ? { ...built, tooltip: keys } : built;
 
   return { spec, data: [] };
 }

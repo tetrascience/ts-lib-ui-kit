@@ -66,9 +66,13 @@ export function buildPieSpec(rows: PieRow[], options: PieSpecOptions): ChartSpec
     .spec();
 }
 
+/** One colour per slice: the caller's colours in order, padded with the default colours. */
+function sliceColors(dataSeries: PieDataSeries): string[] {
+  return dataSeries.labels.map((_, index) => dataSeries.colors?.[index] ?? CHART_COLORS[index % CHART_COLORS.length]);
+}
+
 const PieChartChart: React.FC<PieChartProps> = ({ dataSeries, width, height, title, hole = 0 }) => {
-  const colors = dataSeries.colors ?? CHART_COLORS;
-  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
+  const palettes = useMemo(() => categoricalPalettes(sliceColors(dataSeries)), [dataSeries]);
   const rows = useMemo(() => buildPieRows(dataSeries), [dataSeries]);
   const spec = useMemo<ChartSpec>(() => buildPieSpec(rows, { hole, title }), [rows, hole, title]);
 

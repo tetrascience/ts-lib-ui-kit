@@ -1,10 +1,12 @@
 import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
+import { seriesPalettes, uniqueSeriesNames } from "./series";
+
 import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
-import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
-import { CHART_COLORS } from "@/utils/colors";
+import { VizChart } from "@/components/charts/viz/VizChart";
+import { seriesColor } from "@/utils/colors";
 
 /** Points in the fitted normal curve, and the stroke width of the curve in pixels. */
 const CURVE_POINTS = 100;
@@ -62,9 +64,10 @@ export interface DistributionCurve {
   color: string;
 }
 
-/** Flattens the series into the rows ts-lib-viz bins. */
+/** Flattens the series into the rows ts-lib-viz bins. Each series groups under its own unique name. */
 export function buildHistogramRows(seriesArray: HistogramDataSeries[]): HistogramRow[] {
-  return seriesArray.flatMap((series) => series.x.map((x) => ({ x, series: series.name })));
+  const names = uniqueSeriesNames(seriesArray);
+  return seriesArray.flatMap((series, index) => series.x.map((x) => ({ x, series: names[index] })));
 }
 
 const mean = (data: number[]): number => data.reduce((acc, val) => acc + val, 0) / data.length;
@@ -86,30 +89,21 @@ function normalDensity(average: number, deviation: number, start: number, end: n
 }
 
 /**
- * The normal curve fitted to a series, scaled so its peak matches the tallest bin.
- * Bins are the series' own `xbins`, or ten equal bins across its range padded by a tenth.
+ * The normal curve fitted to a series, drawn at the scale of the bars: the count a normal of this
+ * mean and spread puts in each bin of `binning`, so its height matches the histogram it is laid over.
  */
-export function fitDistributionCurve(series: HistogramDataSeries): Array<{ x: number; y: number }> {
+export function fitDistributionCurve(
+  series: HistogramDataSeries,
+  binning: HistogramBinning,
+): Array<{ x: number; y: number }> {
   const average = mean(series.x);
   const deviation = standardDeviation(series.x, average);
   if (!(deviation > 0)) return [];
 
   const [min, max] = extent(series.x);
   const range = max - min;
-  const start = min - range * 0.1;
-  const end = max + range * 0.1;
-  const bins = series.xbins ?? { start, end, size: range / 10 };
-
-  const curve = normalDensity(average, deviation, start, end);
-  const binCount = Math.ceil((bins.end - bins.start) / bins.size);
-  const frequencies = Array.from({ length: binCount }, () => 0);
-  for (const value of series.x) {
-    if (value >= bins.start && value <= bins.end) {
-      const index = Math.min(Math.floor((value - bins.start) / bins.size), binCount - 1);
-      frequencies[index] += 1;
-    }
-  }
-  const scale = extent(frequencies)[1] / extent(curve.y)[1];
+  const curve = normalDensity(average, deviation, min - range * 0.1, max + range * 0.1);
+  const scale = series.x.length * binning.binwidth;
   return curve.x.map((x, i) => ({ x, y: curve.y[i] * scale }));
 }
 
@@ -200,22 +194,26 @@ const HistogramChart: React.FC<HistogramProps> = ({
   showDistributionLine = false,
 }) => {
   const seriesArray = useMemo(() => (Array.isArray(dataSeries) ? dataSeries : [dataSeries]), [dataSeries]);
-  const colors = useMemo(
-    () => seriesArray.map((series, index) => series.color ?? CHART_COLORS[index % CHART_COLORS.length]),
+  const binning = useMemo(() => sharedBinning(seriesArray), [seriesArray]);
+  // Palette slots go to the series that have rows, as ts-lib-viz numbers them.
+  const palettes = useMemo(
+    () =>
+      seriesPalettes(
+        seriesArray,
+        seriesArray.map((series) => series.x.length > 0),
+      ),
     [seriesArray],
   );
-  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
   const rows = useMemo(() => buildHistogramRows(seriesArray), [seriesArray]);
   const curves = useMemo<DistributionCurve[]>(
     () =>
       seriesArray.flatMap((series, index) => {
         const wanted = series.showDistributionLine ?? showDistributionLine;
         if (!wanted) return [];
-        return [{ rows: fitDistributionCurve(series), color: colors[index] }];
+        return [{ rows: fitDistributionCurve(series, binning), color: seriesColor(index, series.color) }];
       }),
-    [seriesArray, showDistributionLine, colors],
+    [seriesArray, showDistributionLine, binning],
   );
-  const binning = useMemo(() => sharedBinning(seriesArray), [seriesArray]);
   const spec = useMemo<ChartSpec>(
     () => buildHistogramSpec(rows, { title, xTitle, yTitle, curves, binning }),
     [rows, title, xTitle, yTitle, curves, binning],

@@ -235,6 +235,26 @@ describe("installUiKitDomShims structuredClone", () => {
       globalRef.structuredClone = saved;
     }
   });
+
+  it("keeps shared Dates and RegExps, including a Date used as a Map key", () => {
+    const globalRef = globalThis as unknown as MutableGlobal;
+    const saved = globalRef.structuredClone;
+    try {
+      delete globalRef.structuredClone;
+      installUiKitDomShims();
+      const clone = globalRef.structuredClone as <T>(value: T) => T;
+      const when = new Date(0);
+      const pattern = /a/g;
+      const copy = clone({ when, byDate: new Map([[when, "value"]]), pattern, again: pattern });
+      expect(copy.when).not.toBe(when);
+      expect(copy.byDate.get(copy.when)).toBe("value");
+      expect(copy.again).toBe(copy.pattern);
+      expect(copy.pattern).not.toBe(pattern);
+      expect(copy.pattern.flags).toBe("g");
+    } finally {
+      globalRef.structuredClone = saved;
+    }
+  });
 });
 
 describe("installUiKitDomShims", () => {
@@ -518,6 +538,25 @@ describe("loadD3Umd", () => {
     const { standIn, requested } = standInFor((name) => `/w/node_modules/${name}/dist/${name}.mjs`);
     expect(loadD3Umd("d3-scale", standIn)).toEqual({ loaded: "/w/node_modules/d3-scale/dist/d3-scale.js" });
     expect(requested).toEqual(["/w/node_modules/d3-scale/dist/d3-scale.js"]);
+  });
+
+  it("resolves a package the kit does not depend on from d3-scale, which does", () => {
+    const requested: string[] = [];
+    const standIn = Object.assign(
+      (id: string) => {
+        requested.push(id);
+        return { loaded: id };
+      },
+      {
+        resolve: (name: string, options?: { paths?: string[] }) => {
+          if (name === "d3-scale") return "/w/node_modules/d3-scale/src/index.js";
+          if (options?.paths) return `/w/node_modules/${name}/src/index.js`;
+          throw new Error(`Cannot find module '${name}'`);
+        },
+      },
+    ) as unknown as NodeRequire;
+    expect(loadD3Umd("d3-array", standIn)).toEqual({ loaded: "/w/node_modules/d3-array/dist/d3-array.js" });
+    expect(requested).toEqual(["/w/node_modules/d3-array/dist/d3-array.js"]);
   });
 
   it("refuses an entry that is not inside node_modules", () => {

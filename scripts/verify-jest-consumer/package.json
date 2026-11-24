@@ -10,7 +10,7 @@
     "@babel/preset-env": "^7.28.0",
     "@babel/preset-react": "^7.27.1",
     "@testing-library/react": "^16.3.0",
-    "@tetrascience-npm/ts-lib-viz": "0.1.5",
+    "@tetrascience-npm/ts-lib-viz": "0.1.6",
     "babel-jest": "^30.2.0",
     "class-variance-authority": "^0.7.1",
     "d3-color": "3",

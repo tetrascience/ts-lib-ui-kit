@@ -38,6 +38,8 @@ export { DEFAULT_CATEGORY_COLORS } from "@/components/charts/PlateMap/constants"
 const COLOUR_BAR_SAMPLES = 16;
 const COLOUR_BAR_THICKNESS = 16;
 const COLOUR_BAR_PLOT_RATIO = 0.8;
+/** Height the chart's headline takes above the plate. A side colour bar drops by it to start level with the wells. */
+const PLATE_HEADLINE_HEIGHT = 24;
 const COLOUR_LABEL_WIDTH = 72;
 
 interface PlateColourBarProps {
@@ -50,13 +52,15 @@ interface PlateColourBarProps {
   /** Length of the bar in pixels, along its own direction. */
   length: number;
   vertical: boolean;
+  /** Pixels to drop the bar by, so it starts level with the plate and not with the headline above it. */
+  offsetTop: number;
 }
 
 /**
  * The colour bar a heatmap plate reads by. Drawn here rather than by ts-lib-viz, which only
  * lays its colour bar out horizontally. Vertical, it runs beside the plate with its labels.
  */
-function PlateColourBar({ ramp, min, max, breaks, labels, title, length, vertical }: PlateColourBarProps) {
+function PlateColourBar({ ramp, min, max, breaks, labels, title, length, vertical, offsetTop }: PlateColourBarProps) {
   const span = max - min || 1;
   const gradient = Array.from({ length: COLOUR_BAR_SAMPLES + 1 }, (_, index) => {
     const t = index / COLOUR_BAR_SAMPLES;
@@ -72,7 +76,13 @@ function PlateColourBar({ ramp, min, max, breaks, labels, title, length, vertica
   return (
     <div
       className="platemap-colour-bar"
-      style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", fontSize: 12 }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        fontSize: 12,
+        marginTop: offsetTop,
+      }}
     >
       {title && <div style={{ marginBottom: 4 }}>{title}</div>}
       <div style={{ display: "flex", flexDirection: vertical ? "row" : "column", gap: 6 }}>
@@ -574,6 +584,7 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
       title={legendTitle}
       length={barVertical ? Math.round(height * COLOUR_BAR_PLOT_RATIO) : Math.round(width * COLOUR_BAR_PLOT_RATIO)}
       vertical={barVertical}
+      offsetTop={barVertical && title ? PLATE_HEADLINE_HEIGHT : 0}
     />
   ) : null;
   const legendContent = renderLegend();

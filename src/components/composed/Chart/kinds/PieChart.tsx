@@ -76,7 +76,7 @@ function PieLegend({ labels, colors }: { labels: string[]; colors: string[] }) {
   return (
     <div
       data-slot="pie-legend"
-      className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 pt-2 text-foreground"
+      className="flex w-full flex-wrap items-center justify-center gap-x-5 gap-y-2 px-4 pt-6 text-foreground"
     >
       {labels.map((label, index) => (
         <div key={`${label}-${index}`} className="flex items-center text-[13px] leading-[18px] font-medium">

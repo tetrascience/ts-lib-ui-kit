@@ -222,7 +222,7 @@ const HistogramChart: React.FC<HistogramProps> = ({
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
-const HistogramChartLazy = withViz("HistogramChart", HistogramChart);
+const HistogramChartLazy = withViz("HistogramChart", HistogramChart, "histogram");
 
 export { HistogramChartLazy as HistogramChart };
 export type { HistogramDataSeries, HistogramProps };

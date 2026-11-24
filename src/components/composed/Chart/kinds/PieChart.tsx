@@ -79,7 +79,7 @@ const PieChartChart: React.FC<PieChartProps> = ({ dataSeries, width, height, tit
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
-const PieChartChartLazy = withViz("PieChartChart", PieChartChart);
+const PieChartChartLazy = withViz("PieChartChart", PieChartChart, "pie");
 
 export { PieChartChartLazy as PieChartChart };
 export type { PieDataSeries, PieTextInfo, PieChartProps };

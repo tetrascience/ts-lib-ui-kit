@@ -324,7 +324,7 @@ const ElectropherogramChart: React.FC<ElectropherogramProps> = ({
   );
 };
 
-const ElectropherogramChartLazy = withViz("ElectropherogramChart", ElectropherogramChart);
+const ElectropherogramChartLazy = withViz("ElectropherogramChart", ElectropherogramChart, "trace");
 
 export { ElectropherogramChartLazy as ElectropherogramChart };
 export type { PeakData, ElectropherogramProps };

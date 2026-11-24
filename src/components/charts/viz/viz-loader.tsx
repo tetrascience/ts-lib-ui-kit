@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
+import type { ChartSkeletonShape } from "@/components/charts/viz/ChartSkeleton";
 import type { ComponentType, FC } from "react";
+
+import { ChartSkeleton } from "@/components/charts/viz/ChartSkeleton";
 
 /**
  * Lazy ts-lib-viz loader (SW-2007).
@@ -11,8 +14,8 @@ import type { ComponentType, FC } from "react";
  * optional peer fails the consumer's build, so every chart reaches it through this module's
  * dynamic `import()`.
  *
- * A chart component is wrapped in `withViz`, which loads the library and draws a sized, empty
- * placeholder until it arrives. Code that only runs under that wrapper (spec builders, `VizChart`)
+ * A chart component is wrapped in `withViz`, which loads the library and draws the chart's
+ * skeleton until it arrives. Code that only runs under that wrapper (spec builders, `VizChart`)
  * uses the synchronous `plot`, `palettesFor` and `getLoadedViz`.
  *
  * A missing peer does not fail the consumer's build: the dynamic import resolves to an empty stub.
@@ -96,18 +99,18 @@ interface Sized {
   height?: unknown;
 }
 
-const sizeOf = (value: unknown): number | string => (typeof value === "number" ? value : "100%");
+const pixels = (value: unknown): number | undefined => (typeof value === "number" ? value : undefined);
 
 /**
- * The chart, drawn once ts-lib-viz has loaded. Until then it holds the chart's place with an
- * empty box of the same size, so the page does not shift when the chart arrives.
+ * The chart, drawn once ts-lib-viz has loaded. Until then it draws `skeleton`, the outline of the
+ * chart to come at the chart's own size, so the page does not shift when the chart arrives.
  */
-export function withViz<P extends object>(name: string, Chart: ComponentType<P>): FC<P> {
+export function withViz<P extends object>(name: string, Chart: ComponentType<P>, skeleton: ChartSkeletonShape): FC<P> {
   const Lazy: FC<P> = (props) => {
     const viz = useViz();
     if (viz) return <Chart {...props} />;
     const { width, height } = props as Sized;
-    return <div data-ts-chart-loading="" aria-busy="true" style={{ width: sizeOf(width), height: sizeOf(height) }} />;
+    return <ChartSkeleton shape={skeleton} width={pixels(width)} height={pixels(height)} />;
   };
   Lazy.displayName = name;
   return Lazy;

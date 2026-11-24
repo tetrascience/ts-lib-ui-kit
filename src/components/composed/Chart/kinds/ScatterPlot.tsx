@@ -95,7 +95,7 @@ const ScatterPlotChart: React.FC<ScatterPlotProps> = ({
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
-const ScatterPlotChartLazy = withViz("ScatterPlotChart", ScatterPlotChart);
+const ScatterPlotChartLazy = withViz("ScatterPlotChart", ScatterPlotChart, "scatter");
 
 export { ScatterPlotChartLazy as ScatterPlotChart };
 export type { MarkerSymbol, ScatterPlotDataSeries, ScatterPlotProps, ScatterPlotVariant };

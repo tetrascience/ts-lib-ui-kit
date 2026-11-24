@@ -287,7 +287,7 @@ const LinePlotChart: React.FC<LinePlotProps> = ({
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
-const LinePlotChartLazy = withViz("LinePlotChart", LinePlotChart);
+const LinePlotChartLazy = withViz("LinePlotChart", LinePlotChart, "line");
 
 export { LinePlotChartLazy as LinePlotChart };
 export type { LineDataSeries, LinePlotVariant, LinePlotProps, MarkerSymbol };

@@ -277,7 +277,7 @@ const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
   );
 };
 
-const ScatterPlotInteractiveChartLazy = withViz("ScatterPlotInteractiveChart", ScatterPlotInteractiveChart);
+const ScatterPlotInteractiveChartLazy = withViz("ScatterPlotInteractiveChart", ScatterPlotInteractiveChart, "scatter");
 
 export { ScatterPlotInteractiveChartLazy as ScatterPlotInteractiveChart };
 export type { ScatterPlotInteractiveProps };

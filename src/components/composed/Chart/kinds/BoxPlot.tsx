@@ -109,7 +109,7 @@ const BoxPlotChart: React.FC<BoxPlotProps> = ({
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
-const BoxPlotChartLazy = withViz("BoxPlotChart", BoxPlotChart);
+const BoxPlotChartLazy = withViz("BoxPlotChart", BoxPlotChart, "box");
 
 export { BoxPlotChartLazy as BoxPlotChart };
 export type { BoxDataSeries, BoxPlotProps };

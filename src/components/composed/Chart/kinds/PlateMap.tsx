@@ -624,7 +624,7 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
   );
 };
 
-const PlateMapChartLazy = withViz("PlateMapChart", PlateMapChart);
+const PlateMapChartLazy = withViz("PlateMapChart", PlateMapChart, "plate");
 
 export { PlateMapChartLazy as PlateMapChart };
 export type { PlateMapProps };

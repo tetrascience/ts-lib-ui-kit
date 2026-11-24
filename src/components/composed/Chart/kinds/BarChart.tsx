@@ -147,7 +147,7 @@ const BarChartChart: React.FC<BarChartProps> = ({
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
-const BarChartChartLazy = withViz("BarChartChart", BarChartChart);
+const BarChartChartLazy = withViz("BarChartChart", BarChartChart, "bar");
 
 export { BarChartChartLazy as BarChartChart };
 export type { BarDataSeries, BarChartVariant, BarChartProps };

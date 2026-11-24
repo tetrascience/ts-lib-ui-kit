@@ -84,11 +84,13 @@ describe("loadViz", () => {
 });
 
 describe("withViz", () => {
-  it("holds the chart's place at its size, then draws the chart once the library loads", async () => {
+  it("draws the skeleton first, then the chart once the library loads", async () => {
     const { withViz, loadViz } = await freshLoader();
-    const Lazy = withViz("Demo", ({ label }: { label: string; width?: number; height?: number }) => (
-      <p data-chart="">{label}</p>
-    ));
+    const Lazy = withViz(
+      "Demo",
+      ({ label }: { label: string; width?: number; height?: number }) => <p data-chart="">{label}</p>,
+      "line",
+    );
     expect(Lazy.displayName).toBe("Demo");
 
     const host = await mount(<Lazy label="drawn" width={320} />);
@@ -102,23 +104,24 @@ describe("withViz", () => {
   it("draws at once when the library is already loaded", async () => {
     const { withViz, loadViz } = await freshLoader();
     await loadViz();
-    const Lazy = withViz("Demo", () => <p data-chart="" />);
+    const Lazy = withViz("Demo", () => <p data-chart="" />, "bar");
     const host = await mount(<Lazy />);
     expect(host.querySelector("[data-chart]")).not.toBeNull();
   });
 
-  it("stays a sized placeholder when the library cannot load", async () => {
+  it("stays the chart's skeleton, at its size, when the library cannot load", async () => {
     vi.doMock(CORE, () => ({}));
     vi.spyOn(console, "error").mockImplementation(() => {});
     const { withViz } = await freshLoader();
-    const Lazy = withViz("Demo", (_props: { width?: number; height?: number }) => <p data-chart="" />);
-    const host = await mount(<Lazy width={320} />);
+    const Lazy = withViz("Demo", (_props: { width?: number; height?: number }) => <p data-chart="" />, "pie");
+    const host = await mount(<Lazy width={320} height={180} />);
     await act(async () => {
       await Promise.resolve();
     });
     const placeholder = host.querySelector<HTMLElement>("[data-ts-chart-loading]");
     expect(placeholder?.style.width).toBe("320px");
-    expect(placeholder?.style.height).toBe("100%");
+    expect(placeholder?.style.height).toBe("180px");
+    expect(placeholder?.getAttribute("data-ts-chart-loading")).toBe("pie");
     expect(placeholder?.getAttribute("aria-busy")).toBe("true");
     expect(host.querySelector("[data-chart]")).toBeNull();
   });

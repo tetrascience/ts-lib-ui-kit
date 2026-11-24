@@ -124,7 +124,7 @@ const AreaPlotChart: React.FC<AreaPlotProps> = ({
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
-const AreaPlotChartLazy = withViz("AreaPlotChart", AreaPlotChart);
+const AreaPlotChartLazy = withViz("AreaPlotChart", AreaPlotChart, "area");
 
 export { AreaPlotChartLazy as AreaPlotChart };
 export type { AreaDataSeries, AreaPlotVariant, AreaPlotProps };

@@ -164,6 +164,6 @@ const ChromatogramChart: React.FC<ChromatogramProps> = ({
   return <VizChart spec={built.spec} data={built.data} width={width} height={height} />;
 };
 
-const ChromatogramChartLazy = withViz("ChromatogramChart", ChromatogramChart);
+const ChromatogramChartLazy = withViz("ChromatogramChart", ChromatogramChart, "trace");
 
 export { ChromatogramChartLazy as ChromatogramChart };

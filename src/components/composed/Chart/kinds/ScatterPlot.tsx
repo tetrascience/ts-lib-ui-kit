@@ -88,6 +88,8 @@ const ScatterPlotChart: React.FC<ScatterPlotProps> = ({
       .scales({
         x: { title: xTitle, limits: xRange },
         y: { title: yTitle, limits: yRange },
+        // The legend names each series, so its field-name caption is blanked.
+        color: { title: "" },
       })
       .spec();
   }, [rows, variant, markerSize, title, xTitle, yTitle, xRange, yRange]);

@@ -103,6 +103,9 @@ export function buildBarSpec(rows: BarRow[], options: BarSpecOptions): ChartSpec
           : {}),
       },
       y: { title: yTitle, limits: yRange },
+      // The legend names each series, so its field-name caption is blanked.
+      color: { title: "" },
+      fill: { title: "" },
     })
     .spec();
 }

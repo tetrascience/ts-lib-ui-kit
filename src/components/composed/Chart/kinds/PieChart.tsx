@@ -29,8 +29,8 @@ type PieChartProps = {
   height?: number;
   title?: string;
   /**
-   * Accepted for compatibility and not applied. ts-lib-viz has no equivalent, so slice labels
-   * are not drawn from this value.
+   * Accepted for compatibility and not drawn. The Plotly pie hid its slice text, so the slices
+   * stay unlabelled and the legend below names them.
    */
   textInfo?: PieTextInfo;
   hole?: number;
@@ -71,12 +71,39 @@ function sliceColors(dataSeries: PieDataSeries): string[] {
   return dataSeries.labels.map((_, index) => dataSeries.colors?.[index] ?? CHART_COLORS[index % CHART_COLORS.length]);
 }
 
+/** The key under the pie: one swatch and label per slice, as the Plotly pie drew it. */
+function PieLegend({ labels, colors }: { labels: string[]; colors: string[] }) {
+  return (
+    <div
+      data-slot="pie-legend"
+      className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 pt-2 text-foreground"
+    >
+      {labels.map((label, index) => (
+        <div key={`${label}-${index}`} className="flex items-center text-[13px] leading-[18px] font-medium">
+          <span
+            data-slot="pie-legend-swatch"
+            className="mr-1.5 inline-block size-3 rounded-[4px]"
+            style={{ background: colors[index] }}
+          />
+          {label}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const PieChartChart: React.FC<PieChartProps> = ({ dataSeries, width, height, title, hole = 0 }) => {
-  const palettes = useMemo(() => categoricalPalettes(sliceColors(dataSeries)), [dataSeries]);
+  const colors = useMemo(() => sliceColors(dataSeries), [dataSeries]);
+  const palettes = useMemo(() => categoricalPalettes(colors), [colors]);
   const rows = useMemo(() => buildPieRows(dataSeries), [dataSeries]);
   const spec = useMemo<ChartSpec>(() => buildPieSpec(rows, { hole, title }), [rows, hole, title]);
 
-  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
+  return (
+    <div style={{ width: width ?? "100%" }}>
+      <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />
+      <PieLegend labels={dataSeries.labels} colors={colors} />
+    </div>
+  );
 };
 
 const PieChartChartLazy = withViz("PieChartChart", PieChartChart, "pie");

@@ -280,6 +280,8 @@ const LinePlotChart: React.FC<LinePlotProps> = ({
             : {}),
         },
         y: { title: yTitle, limits: yRange },
+        // The legend names each series, so its field-name caption is blanked.
+        color: { title: "" },
       })
       .spec();
   }, [rows, variant, title, xTitle, yTitle, xRange, yRange, xTickText]);

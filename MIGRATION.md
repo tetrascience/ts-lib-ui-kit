@@ -7,6 +7,27 @@
 
 ---
 
+## Charts: one `Chart` component
+
+Every chart the kit draws is available from one component, `Chart`. Pick the chart with `type` and pass the props that chart documents:
+
+```tsx
+<Chart type="histogram" dataSeries={[{ name: "Peaks", x: heights }]} title="Peak heights" />
+<Chart type="plateMap" data={wells} plateFormat="384" title="Screen" />
+```
+
+The chart components (`LinePlot`, `Histogram`, `PlateMap`, and the rest) are still exported with the same props. Each one renders
+through `Chart`, so nothing you already use changes. Prefer `Chart` in new code.
+
+| `type`                                                          | Component it renders              | Differences from the Plotly charts                                                              |
+| --------------------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `line`, `area`, `bar`, `histogram`, `boxplot`, `scatter`, `pie` | `LinePlot`, `AreaPlot`, and so on | Some props have no ts-lib-viz equivalent and are ignored; see each component's JSDoc            |
+| `scatterInteractive`                                            | `ScatterPlotInteractive`          | `tooltip.content`, `tooltip.enabled`, `showColorBar` and `colorMapping.colorScale` are ignored  |
+| `chromatogram`, `stackedChromatogram`, `electropherogram`       | `Chromatogram`, and so on         | Click and hover selection, annotation arrows and the Plotly spline are not supported            |
+| `plateMap`                                                      | `PlateMap`                        | One point per well. Region fills, the x-axis title position and the colour-bar placement differ |
+
+Plotly is still needed only by `ChartTooltip`, a public export that reads Plotly hover events. It and the Plotly peer go with the 2.0 removal.
+
 ## Migrating from v0.7.x to v1.0.0
 
 > **Jira:** [SW-2244](https://tetrascience.atlassian.net/browse/SW-2244) (renames) ·
@@ -28,7 +49,8 @@ Nothing else in the public API changed. React 19, Node 18+ and the TDP v4.x requ
 yarn add @tetrascience-npm/tetrascience-react-ui@^1.0.0
 
 # 2. Install only the optional peers your app actually uses (see table below)
-yarn add plotly.js-dist                        # if you render any chart
+yarn add @tetrascience-npm/ts-lib-viz          # if you render any chart
+yarn add plotly.js-dist                        # if you use ChartTooltip
 yarn add @streamdown/math @streamdown/mermaid  # if you import from the package root (see note)
 yarn add @rdkit/rdkit                          # if you use MoleculeStructure
 
@@ -58,12 +80,12 @@ TS2724: no exported member named 'Boxplot'. Did you mean 'BoxPlot'?
 
 ### 2. Removed components
 
-| v0.7.0     | Replacement                                                                      | Why                                                                                                          |
-| ---------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `Drawer`   | `Sheet`                                                                          | Long deprecated ([SW-1917](https://tetrascience.atlassian.net/browse/SW-1917))                               |
-| `InputOTP` | `Input` (or your own composition)                                                | Long deprecated ([SW-1917](https://tetrascience.atlassian.net/browse/SW-1917))                               |
-| `DotPlot`  | **None.** Closest is `ScatterPlot`                                               | Dropped in the chart cleanup ([SW-2244](https://tetrascience.atlassian.net/browse/SW-2244)) — see note below |
-| `Heatmap`  | **None.** Closest is `PlateMap` for plate-shaped data, otherwise Plotly directly | Dropped in the chart cleanup ([SW-2244](https://tetrascience.atlassian.net/browse/SW-2244)) — see note below |
+| v0.7.0     | Replacement                                                                          | Why                                                                                                          |
+| ---------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `Drawer`   | `Sheet`                                                                              | Long deprecated ([SW-1917](https://tetrascience.atlassian.net/browse/SW-1917))                               |
+| `InputOTP` | `Input` (or your own composition)                                                    | Long deprecated ([SW-1917](https://tetrascience.atlassian.net/browse/SW-1917))                               |
+| `DotPlot`  | **None.** Closest is `ScatterPlot`                                                   | Dropped in the chart cleanup ([SW-2244](https://tetrascience.atlassian.net/browse/SW-2244)) — see note below |
+| `Heatmap`  | **None.** Closest is `PlateMap` for plate-shaped data, otherwise ts-lib-viz directly | Dropped in the chart cleanup ([SW-2244](https://tetrascience.atlassian.net/browse/SW-2244)) — see note below |
 
 `DotPlot` and `Heatmap` have no drop-in successor, and unlike `Drawer`/`InputOTP` they were never
 formally deprecated — they disappeared as part of a Storybook rename cleanup. Whether that removal
@@ -95,7 +117,8 @@ RDKit or the markdown plugin stack into your `node_modules`. Install what you us
 
 | You use…                                                                         | Install                                                          |
 | -------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Any `charts/` component                                                          | `plotly.js-dist`                                                 |
+| `Chart` or any `charts/` component                                               | `@tetrascience-npm/ts-lib-viz`                                   |
+| `ChartTooltip`                                                                   | `plotly.js-dist`                                                 |
 | `MessageResponse` / `Reasoning` (AI markdown)                                    | `@streamdown/math`, `@streamdown/mermaid`                        |
 | `MoleculeStructure`                                                              | `@rdkit/rdkit` (**plus a served WASM — see §5**)                 |
 | **Any import from the package root** (`@tetrascience-npm/tetrascience-react-ui`) | `@streamdown/math`, `@streamdown/mermaid` — see the caveat below |
@@ -117,10 +140,11 @@ RDKit or the markdown plugin stack into your `node_modules`. Install what you us
 > the barrel entirely. This fails loudly at build time, so it can never reach production silently.
 > Tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
 
-A missing peer that _is_ only reached dynamically — `plotly.js-dist` — does **not** fail the build.
-Under Vite/Rollup it resolves to an empty stub and surfaces at runtime as a console error from the
-loader (`Failed to load 'plotly.js-dist' …`) with the chart never rendering. If your charts render
-blank after upgrading, check that `plotly.js-dist` is installed.
+A missing peer that _is_ only reached dynamically — `@tetrascience-npm/ts-lib-viz` for the charts,
+`plotly.js-dist` for `ChartTooltip` — does **not** fail the build. Under Vite/Rollup it resolves to a
+stub and surfaces at runtime as a console error from the loader
+(`Failed to load '@tetrascience-npm/ts-lib-viz' …`), with the chart staying an empty box of its own
+size. If your charts render blank after upgrading, check that `@tetrascience-npm/ts-lib-viz` is installed.
 
 ### 5. `MoleculeStructure` also needs the RDKit WASM served
 

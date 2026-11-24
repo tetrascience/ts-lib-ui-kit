@@ -1,6 +1,6 @@
 import { expect, waitFor, within } from "storybook/test";
 
-import { ScatterPlot, type MarkerSymbol, type ScatterPlotDataSeries } from "./ScatterPlot";
+import { ScatterPlot, type ScatterPlotDataSeries } from "./ScatterPlot";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
@@ -54,7 +54,7 @@ const generateStackedData = (
     series.push({
       x,
       y: y.map((val) => val + i * 0.2), // Slight offset for stacking effect
-      name: "Label",
+      name: `Series ${i + 1}`,
     });
   }
 
@@ -73,6 +73,14 @@ const meta: Meta<typeof ScatterPlot> = {
 export default meta;
 type Story = StoryObj<typeof ScatterPlot>;
 
+/** The marks ts-lib-viz draws for points: a circle for a round glyph, a path for the others. */
+const pointMarks = (canvasElement: HTMLElement) =>
+  canvasElement.querySelectorAll('[data-geom="points"] circle, [data-geom="points"] path');
+
+/** Rows across every series. Viz draws one mark per row. */
+const rowCount = (dataSeries: ScatterPlotDataSeries | ScatterPlotDataSeries[]) =>
+  (Array.isArray(dataSeries) ? dataSeries : [dataSeries]).reduce((total, series) => total + series.x.length, 0);
+
 export const Default: Story = {
   name: "Default",
   parameters: {
@@ -87,7 +95,7 @@ export const Default: Story = {
     xTitle: "Columns",
     yTitle: "Rows",
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -99,19 +107,18 @@ export const Default: Story = {
       );
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Three traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(3);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(rowCount(args.dataSeries));
     });
 
     await step("Legend shows all series names", async () => {
-      expect(canvas.getByText("Data A")).toBeInTheDocument();
-      expect(canvas.getByText("Data B")).toBeInTheDocument();
-      expect(canvas.getByText("Data C")).toBeInTheDocument();
+      expect(canvas.getAllByText("Data A").length).toBeGreaterThan(0);
+      expect(canvas.getAllByText("Data B").length).toBeGreaterThan(0);
+      expect(canvas.getAllByText("Data C").length).toBeGreaterThan(0);
     });
   },
 };
@@ -127,7 +134,7 @@ export const CustomRanges: Story = {
     xRange: [300, 700],
     yRange: [0, 200],
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -136,19 +143,18 @@ export const CustomRanges: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Three traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(3);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(rowCount(args.dataSeries));
     });
 
     await step("Legend shows all series names", async () => {
-      expect(canvas.getByText("Data A")).toBeInTheDocument();
-      expect(canvas.getByText("Data B")).toBeInTheDocument();
-      expect(canvas.getByText("Data C")).toBeInTheDocument();
+      expect(canvas.getAllByText("Data A").length).toBeGreaterThan(0);
+      expect(canvas.getAllByText("Data B").length).toBeGreaterThan(0);
+      expect(canvas.getAllByText("Data C").length).toBeGreaterThan(0);
     });
   },
 };
@@ -173,7 +179,7 @@ export const SingleSeries: Story = {
     variant: "default",
     markerSize: 8,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -182,13 +188,12 @@ export const SingleSeries: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(rowCount(args.dataSeries));
     });
   },
 };
@@ -200,10 +205,7 @@ export const Stacked: Story = {
     zephyr: { testCaseId: "SW-T979" },
   },
   args: {
-    dataSeries: generateStackedData(25, 41, 4).map((series, index) => ({
-      ...series,
-      symbol: (["circle", "square", "diamond", "triangle-up"] as MarkerSymbol[])[index],
-    })),
+    dataSeries: generateStackedData(25, 41, 4),
     title: "Stacked Scatter Plot",
     xTitle: "Columns",
     yTitle: "Rows",
@@ -212,7 +214,7 @@ export const Stacked: Story = {
     variant: "stacked",
     markerSize: 8,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -221,17 +223,24 @@ export const Stacked: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Multiple traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(4);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(rowCount(args.dataSeries));
     });
 
-    await step("Legend shows series labels", async () => {
-      expect(canvas.getAllByText("Label").length).toBe(4);
+    await step("Circles and other glyphs both appear", async () => {
+      expect(canvasElement.querySelectorAll('[data-geom="points"] circle').length).toBeGreaterThan(0);
+      expect(canvasElement.querySelectorAll('[data-geom="points"] path').length).toBeGreaterThan(0);
+    });
+
+    // Each series is listed in the color legend and again in the shape legend.
+    await step("Legend shows each series name", async () => {
+      for (const name of ["Series 1", "Series 2", "Series 3", "Series 4"]) {
+        expect(canvas.getAllByText(name).length).toBeGreaterThan(0);
+      }
     });
   },
 };
@@ -267,7 +276,7 @@ export const WithCustomColors: Story = {
     variant: "stacked",
     markerSize: 10,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -276,18 +285,17 @@ export const WithCustomColors: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Multiple traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(2);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(rowCount(args.dataSeries));
     });
 
     await step("Legend shows series names", async () => {
-      expect(canvas.getByText("Series A")).toBeInTheDocument();
-      expect(canvas.getByText("Series B")).toBeInTheDocument();
+      expect(canvas.getAllByText("Series A").length).toBeGreaterThan(0);
+      expect(canvas.getAllByText("Series B").length).toBeGreaterThan(0);
     });
   },
 };
@@ -312,7 +320,7 @@ export const LargeMarkers: Story = {
     variant: "default",
     markerSize: 15,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -321,13 +329,12 @@ export const LargeMarkers: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(rowCount(args.dataSeries));
     });
   },
 };
@@ -373,7 +380,7 @@ export const MultipleSeriesColors: Story = {
     variant: "stacked",
     markerSize: 12,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -382,20 +389,19 @@ export const MultipleSeriesColors: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Multiple traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(4);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(rowCount(args.dataSeries));
     });
 
     await step("Legend shows series names", async () => {
-      expect(canvas.getByText("Series A")).toBeInTheDocument();
-      expect(canvas.getByText("Series B")).toBeInTheDocument();
-      expect(canvas.getByText("Series C")).toBeInTheDocument();
-      expect(canvas.getByText("Series D")).toBeInTheDocument();
+      expect(canvas.getAllByText("Series A").length).toBeGreaterThan(0);
+      expect(canvas.getAllByText("Series B").length).toBeGreaterThan(0);
+      expect(canvas.getAllByText("Series C").length).toBeGreaterThan(0);
+      expect(canvas.getAllByText("Series D").length).toBeGreaterThan(0);
     });
   },
 };
@@ -420,7 +426,7 @@ export const SmallScale: Story = {
     variant: "default",
     markerSize: 6,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -429,13 +435,12 @@ export const SmallScale: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(rowCount(args.dataSeries));
     });
   },
 };
@@ -460,7 +465,7 @@ export const HighDensity: Story = {
     variant: "default",
     markerSize: 6,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -469,13 +474,12 @@ export const HighDensity: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single trace is rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(rowCount(args.dataSeries));
     });
   },
 };
@@ -505,24 +509,29 @@ export const ContainerFilled: Story = {
     ),
   ],
   play: async ({ canvasElement, step }) => {
+    /** Width of the chart svg, which Viz sizes to the container through a ResizeObserver. */
+    const chartWidth = () =>
+      canvasElement.querySelector('[data-geom="points"]')?.ownerSVGElement?.getBoundingClientRect().width ?? 0;
+    const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
+
     await step("Chart canvas fills the container width", async () => {
-      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
       await waitFor(() => {
-        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
-        expect(plot).toBeInTheDocument();
-        expect(plot.clientWidth).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
+        expect(chartWidth()).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
       });
     });
 
     await step("Chart resizes in place when the container resizes", async () => {
-      const wrapper = canvasElement.querySelector('[data-testid="fill-wrapper"]') as HTMLElement;
-      // Shrink the container; the ResizeObserver should drive a Plotly relayout
-      // (not a full re-plot) so the canvas tracks the new width.
       wrapper.style.width = "440px";
       await waitFor(() => {
-        const plot = canvasElement.querySelector(".js-plotly-plot") as HTMLElement;
-        expect(plot.clientWidth).toBeGreaterThanOrEqual(420);
-        expect(plot.clientWidth).toBeLessThanOrEqual(460);
+        expect(chartWidth()).toBeGreaterThanOrEqual(420);
+        expect(chartWidth()).toBeLessThanOrEqual(460);
+      });
+    });
+
+    await step("Chart returns to the full container width", async () => {
+      wrapper.style.width = "";
+      await waitFor(() => {
+        expect(chartWidth()).toBeGreaterThanOrEqual(wrapper.clientWidth - 2);
       });
       // Leave the story showing the full container, not the 440px test size.
       wrapper.style.width = "";

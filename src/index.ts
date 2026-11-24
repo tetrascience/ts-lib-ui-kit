@@ -17,6 +17,7 @@ export * from "@/components/composed/ProcessFlow";
 export * from "@/components/composed/AssistantLayout";
 export * from "@/components/composed/MoleculeStructure";
 export * from "@/components/composed/PageHeader";
+export * from "@/components/composed/Chart";
 
 // Tetra Data Platform (TDP) Specific
 export * from "@/components/composed/TdpSearch";

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { expect, waitFor, within } from "storybook/test";
+import { expect, fireEvent, waitFor, within } from "storybook/test";
 
 import { ScatterPlotInteractive } from "./ScatterPlotInteractive";
 
@@ -17,6 +17,80 @@ const meta: Meta<typeof ScatterPlotInteractive> = {
 
 export default meta;
 type Story = StoryObj<typeof ScatterPlotInteractive>;
+
+/** The marks ts-lib-viz draws for points: a circle for a round glyph, a path for the others. */
+const pointMarks = (canvasElement: HTMLElement) =>
+  canvasElement.querySelectorAll('[data-geom="points"] circle, [data-geom="points"] path');
+
+/** The transparent layer over the points, which takes the pointer. */
+const pointerLayer = (canvasElement: HTMLElement) =>
+  canvasElement.querySelector('[data-geom="points"] rect') as SVGRectElement;
+
+/** Lets Viz take a hover before the next event reads it. */
+const settle = () => new Promise((resolve) => setTimeout(resolve, 50));
+
+type Modifiers = { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean };
+
+/** Where a pointer lands on the middle of an element. */
+const centerOf = (element: Element) => {
+  const box = element.getBoundingClientRect();
+  return { clientX: box.left + box.width / 2, clientY: box.top + box.height / 2, pointerId: 1, button: 0 };
+};
+
+/** Moves onto a point and clicks it, with any modifier keys held. The event goes to whatever is on top under the pointer. */
+async function clickPoint(canvasElement: HTMLElement, mark: Element, modifiers: Modifiers = {}) {
+  const at = { ...centerOf(mark), ...modifiers };
+  const target = canvasElement.ownerDocument.elementFromPoint(at.clientX, at.clientY) ?? pointerLayer(canvasElement);
+  fireEvent.pointerMove(target, at);
+  await settle();
+  fireEvent.pointerDown(target, at);
+  fireEvent.pointerUp(target, at);
+  fireEvent.click(target, at);
+  await settle();
+}
+
+/** Drags a lasso through the corners given, closes it on the first, and releases. */
+async function lassoAround(canvasElement: HTMLElement, corners: Array<{ clientX: number; clientY: number }>) {
+  const brush = canvasElement.querySelector("[data-brush]") as SVGGElement;
+  const start = { ...corners[0], pointerId: 1, button: 0 };
+  fireEvent.pointerDown(brush, start);
+  for (const corner of [...corners.slice(1), corners[0]]) {
+    fireEvent.pointerMove(brush, { ...corner, pointerId: 1 });
+    await settle();
+  }
+  fireEvent.pointerUp(brush, start);
+  // A drag ends in a click on the common ancestor, which is what clears the drag state.
+  fireEvent.click(brush);
+  await settle();
+}
+
+/** Corners of a rectangle that holds the given marks, with a little room to spare. */
+function boxAround(marks: Element[], pad = 8) {
+  const boxes = marks.map((mark) => mark.getBoundingClientRect());
+  const left = Math.min(...boxes.map((box) => box.left)) - pad;
+  const right = Math.max(...boxes.map((box) => box.right)) + pad;
+  const top = Math.min(...boxes.map((box) => box.top)) - pad;
+  const bottom = Math.max(...boxes.map((box) => box.bottom)) + pad;
+  return [
+    { clientX: left, clientY: top },
+    { clientX: right, clientY: top },
+    { clientX: right, clientY: bottom },
+    { clientX: left, clientY: bottom },
+  ];
+}
+
+/** A lasso over the lower-left quarter of the plot, from its center down to its corner. */
+function lowerLeftQuarter(canvasElement: HTMLElement) {
+  const area = pointerLayer(canvasElement).getBoundingClientRect();
+  const midX = area.left + area.width / 2;
+  const midY = area.top + area.height / 2;
+  return [
+    { clientX: midX, clientY: midY },
+    { clientX: area.left + 4, clientY: midY },
+    { clientX: area.left + 4, clientY: area.bottom - 4 },
+    { clientX: midX, clientY: area.bottom - 4 },
+  ];
+}
 
 const CATEGORIES = ["Group A", "Group B", "Group C"];
 const STATUSES = ["Active", "Inactive", "Pending"];
@@ -146,7 +220,7 @@ export const BasicScatter: Story = {
     yAxis: { title: "Y Axis" },
     ...DEFAULT_DIMS,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -158,12 +232,12 @@ export const BasicScatter: Story = {
       );
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single scatter trace renders", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(args.data.length);
     });
 
     await step("Axis titles are displayed", async () => {
@@ -199,7 +273,7 @@ export const DataDrivenStyling: Story = {
     sizeMapping: { type: "continuous", field: "intensity", sizeRange: [4, 20] },
     ...DEFAULT_DIMS,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -208,12 +282,12 @@ export const DataDrivenStyling: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single scatter trace renders", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(args.data.length);
     });
 
     await step("Axis titles are displayed", async () => {
@@ -238,7 +312,7 @@ export const StaticStyling: Story = {
     sizeMapping: { type: "static", value: 12 },
     ...DEFAULT_DIMS,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -247,12 +321,12 @@ export const StaticStyling: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single scatter trace renders", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(args.data.length);
     });
 
     await step("Axis titles are displayed", async () => {
@@ -291,7 +365,7 @@ export const Selection: Story = {
     enableLassoSelection: true,
     ...DEFAULT_DIMS,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -300,16 +374,39 @@ export const Selection: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single scatter trace renders", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(args.data.length);
     });
 
     await step("Selection count is displayed", async () => {
       expect(canvas.getByText(/Selected:\s*0\s+point\(s\)/)).toBeInTheDocument();
+    });
+
+    await step("Clicking a point selects it", async () => {
+      await clickPoint(canvasElement, pointMarks(canvasElement)[0]);
+      await waitFor(() => {
+        expect(canvas.getByText("Selected: 1 point(s)")).toBeInTheDocument();
+      });
+    });
+
+    await step("A lasso over the lower-left cluster selects its 50 points", async () => {
+      await lassoAround(canvasElement, lowerLeftQuarter(canvasElement));
+      await waitFor(() => {
+        expect(canvas.getByText("Selected: 50 point(s)")).toBeInTheDocument();
+      });
+    });
+
+    // Leave the pointer off the plot so the hover card from the clicks above closes.
+    await step("Pointer leaves the plot and the hover card closes", async () => {
+      fireEvent.pointerOut(pointerLayer(canvasElement));
+      await waitFor(() => {
+        // The card is titled with the record's key, which the clicks above hovered.
+        expect(canvas.queryByText("point-0")).not.toBeInTheDocument();
+      });
     });
   },
   parameters: {
@@ -361,7 +458,7 @@ export const KeyboardModifierSelection: Story = {
     enableLassoSelection: true,
     ...DEFAULT_DIMS,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -370,17 +467,25 @@ export const KeyboardModifierSelection: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single scatter trace renders", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(args.data.length);
     });
 
     await step("Selection status and mode are displayed", async () => {
       expect(canvas.getByText(/Selected:\s*0/)).toBeInTheDocument();
       expect(canvas.getByText("replace", { selector: "strong" })).toBeInTheDocument();
+    });
+
+    await step("A plain click replaces the selection with the clicked point", async () => {
+      await clickPoint(canvasElement, pointMarks(canvasElement)[0]);
+      await waitFor(() => {
+        expect(canvas.getByText(/Selected:\s*1\s*\|/)).toBeInTheDocument();
+        expect(canvas.getByText("replace", { selector: "strong" })).toBeInTheDocument();
+      });
     });
   },
   parameters: {
@@ -444,7 +549,7 @@ export const SelectionWithDataGrid: Story = {
     width: 700,
     height: 600,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -453,16 +558,23 @@ export const SelectionWithDataGrid: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single scatter trace renders", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(args.data.length);
     });
 
     await step("Data grid heading is displayed", async () => {
       expect(canvas.getByText("Selected Points (0)")).toBeInTheDocument();
+    });
+
+    await step("Clicking a point adds it to the data grid", async () => {
+      await clickPoint(canvasElement, pointMarks(canvasElement)[0]);
+      await waitFor(() => {
+        expect(canvas.getByText("Selected Points (1)")).toBeInTheDocument();
+      });
     });
   },
   parameters: {
@@ -470,7 +582,10 @@ export const SelectionWithDataGrid: Story = {
   },
 };
 
-/** Uses `tooltip.content` to render rich HTML tooltips with status badges. */
+/**
+ * The hover card lists the metadata fields named in `tooltip.fields`. ts-lib-viz does not draw
+ * Plotly-era `tooltip.content` HTML, so this story names the fields it shows.
+ */
 export const CustomTooltips: Story = {
   args: {
     data: TOOLTIP_DATA,
@@ -483,23 +598,10 @@ export const CustomTooltips: Story = {
       categoryColors: { "Group A": "#4575b4", "Group B": "#d73027", "Group C": "#1a9850" },
     },
     sizeMapping: { type: "continuous", field: "intensity", sizeRange: [5, 18] },
-    tooltip: {
-      enabled: true,
-      content: (point: ScatterPoint) => {
-        const status = point.metadata?.status ?? "Unknown";
-        const value = typeof point.metadata?.value === "number" ? (point.metadata.value as number).toFixed(1) : "–";
-        const badge = status === "Active" ? "#1a9850" : status === "Inactive" ? "#d73027" : "#fdae61";
-        return [
-          `<b>${point.label ?? point.id}</b>`,
-          `<span style="background:${badge};color:#fff;padding:1px 6px;border-radius:3px;font-size:11px">${String(status)}</span>`,
-          `X: ${point.x.toFixed(2)} · Y: ${point.y.toFixed(2)}`,
-          `Value: <b>${value}</b> · Conc: ${String(point.metadata?.concentration ?? "–")}`,
-        ].join("<br>");
-      },
-    },
+    tooltip: { fields: ["category", "status"] },
     ...DEFAULT_DIMS,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -508,17 +610,24 @@ export const CustomTooltips: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single scatter trace renders", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(args.data.length);
     });
 
     await step("Axis titles are displayed", async () => {
       expect(canvas.getByText("X Axis")).toBeInTheDocument();
       expect(canvas.getByText("Y Axis")).toBeInTheDocument();
+    });
+
+    await step("Hovering a point lists its configured fields", async () => {
+      fireEvent.pointerMove(pointerLayer(canvasElement), centerOf(pointMarks(canvasElement)[0]));
+      await waitFor(() => {
+        expect(within(canvasElement).getByText(String(args.data[0].metadata?.status))).toBeInTheDocument();
+      });
     });
   },
   parameters: {
@@ -536,7 +645,7 @@ export const AxisFixedRanges: Story = {
     colorMapping: { type: "categorical", field: "category" },
     ...DEFAULT_DIMS,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -545,12 +654,12 @@ export const AxisFixedRanges: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single scatter trace renders", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(args.data.length);
     });
 
     await step("Axis titles are displayed", async () => {
@@ -573,7 +682,7 @@ export const AxisLogScale: Story = {
     colorMapping: { type: "categorical", field: "category" },
     ...DEFAULT_DIMS,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
     await step("Chart title is displayed", async () => {
@@ -582,12 +691,12 @@ export const AxisLogScale: Story = {
       });
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+    await step("Points are drawn", async () => {
+      expect(pointMarks(canvasElement).length).toBeGreaterThan(0);
     });
 
-    await step("Single scatter trace renders", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    await step("Marks do not outnumber the rows", async () => {
+      expect(pointMarks(canvasElement).length).toBeLessThanOrEqual(args.data.length);
     });
 
     await step("Log axis titles are displayed", async () => {
@@ -704,12 +813,14 @@ export const Downsampling: Story = {
       expect(await canvas.findByText("Downsampling (10k → 1k via LTTB)", {}, { timeout: 15000 })).toBeInTheDocument();
     });
 
-    await step("Chart container renders", async () => {
-      expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-    });
-
-    await step("Single scatter trace renders", async () => {
-      expect(canvasElement.querySelectorAll(".scatterlayer .trace").length).toBe(1);
+    // The generated 10k rows arrive after the first frame, then LTTB keeps 1k of them.
+    await step("Chart draws the 1k points LTTB keeps", async () => {
+      await waitFor(
+        () => {
+          expect(pointMarks(canvasElement).length).toBe(1000);
+        },
+        { timeout: 15000 },
+      );
     });
 
     await step("Upload control is displayed", async () => {
@@ -774,24 +885,25 @@ export const ContinuousColorMapping: Story = {
     xAxis: { title: "X Axis" },
     yAxis: { title: "Y Axis" },
     colorMapping: { type: "continuous", field: "value" },
-    showColorBar: true,
     ...DEFAULT_DIMS,
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
-    await step("Chart renders with a continuous trace", async () => {
+    await step("Every row is drawn as a point", async () => {
       await waitFor(() => {
-        expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
-        expect(canvasElement.querySelectorAll(".scatterlayer .trace .points path").length).toBeGreaterThan(0);
+        expect(pointMarks(canvasElement).length).toBe(args.data.length);
       });
     });
 
-    await step("Colorbar legend is displayed with the field name", async () => {
-      await waitFor(() => {
-        expect(canvasElement.querySelector(".colorbar")).toBeInTheDocument();
-        expect(canvas.getByText("value")).toBeInTheDocument();
-      });
+    await step("Marks take colors from the ramp, not one color", async () => {
+      const fills = new Set([...pointMarks(canvasElement)].map((mark) => mark.getAttribute("fill")));
+      expect(fills.size).toBeGreaterThan(1);
+    });
+
+    await step("Color legend is titled with the field name and draws a ramp", async () => {
+      expect(canvas.getByText("value")).toBeInTheDocument();
+      expect(canvasElement.querySelector("linearGradient")).toBeInTheDocument();
     });
   },
   parameters: {
@@ -808,8 +920,9 @@ const EVENT_DATA: ScatterPoint[] = Array.from({ length: 6 }, (_, i) => ({
 }));
 
 /**
- * Drives Plotly's click / box-select / deselect events programmatically to
- * verify the full selection pipeline (handler → state → restyle → callback).
+ * Drives the pointer the way a reader does: a click on a point, a lasso around
+ * two points, then a click on empty plot area. Each step checks the selection
+ * the chart reports back.
  */
 export const SelectionEvents: Story = {
   render: function Render(args) {
@@ -841,44 +954,31 @@ export const SelectionEvents: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
-    type EmittingPlot = HTMLElement & {
-      emit: (event: string, data?: unknown) => void;
-      data: Array<{ ids?: string[] }>;
-    };
-
-    const plot = await waitFor(() => {
-      const gd = canvasElement.querySelector(".js-plotly-plot") as EmittingPlot | null;
-      expect(gd).toBeInTheDocument();
-      expect(gd?.data?.[0]?.ids?.length).toBeGreaterThan(0);
-      return gd as EmittingPlot;
-    });
-
     await step("Clicking a point replaces the selection", async () => {
-      plot.emit("plotly_click", {
-        points: [{ data: plot.data[0], pointIndex: 1 }],
-        event: new MouseEvent("click"),
-      });
+      await clickPoint(canvasElement, pointMarks(canvasElement)[1]);
       await waitFor(() => {
-        expect(canvas.getByText(/Selected: 1 \| Mode: replace \| Ids: 2/)).toBeInTheDocument();
+        expect(canvas.getByText("Selected: 1 | Mode: replace | Ids: 2")).toBeInTheDocument();
       });
     });
 
-    await step("Box/lasso selection replaces with all enclosed points", async () => {
-      plot.emit("plotly_selected", {
-        points: [
-          { data: plot.data[0], pointIndex: 2 },
-          { data: plot.data[0], pointIndex: 3 },
-        ],
-      });
-      await waitFor(() => {
-        expect(canvas.getByText(/Selected: 2 \| Mode: replace \| Ids: 3,4/)).toBeInTheDocument();
-      });
-    });
-
-    await step("Deselect clears the selection", async () => {
-      plot.emit("plotly_deselect");
+    await step("A click on empty plot area clears the selection", async () => {
+      const box = pointerLayer(canvasElement).getBoundingClientRect();
+      const at = { clientX: box.left + 4, clientY: box.top + 4, pointerId: 1, button: 0 };
+      const target =
+        canvasElement.ownerDocument.elementFromPoint(at.clientX, at.clientY) ?? pointerLayer(canvasElement);
+      fireEvent.pointerOut(target, at);
+      await settle();
+      fireEvent.click(target, at);
       await waitFor(() => {
         expect(canvas.getByText(/Selected: 0 \| Mode: replace/)).toBeInTheDocument();
+      });
+    });
+
+    await step("A lasso around two points replaces it with both", async () => {
+      const [, , third, fourth] = [...pointMarks(canvasElement)];
+      await lassoAround(canvasElement, boxAround([third, fourth]));
+      await waitFor(() => {
+        expect(canvas.getByText("Selected: 2 | Mode: replace | Ids: 3,4")).toBeInTheDocument();
       });
     });
   },
@@ -888,9 +988,8 @@ export const SelectionEvents: Story = {
 };
 
 /**
- * The theme-styled HTML tooltip (default) replaces Plotly's hover labels —
- * it follows the design tokens in light and dark mode. Set
- * `tooltip.native: true` to restore Plotly's built-in labels.
+ * The hover card follows the design tokens in light and dark mode and lists the
+ * columns named in `tooltip.fields`. It replaces Plotly's hover labels.
  */
 export const ThemedTooltip: Story = {
   args: {
@@ -900,47 +999,23 @@ export const ThemedTooltip: Story = {
     ...DEFAULT_DIMS,
   },
   play: async ({ canvasElement, step }) => {
-    type EmittingPlot = HTMLElement & {
-      emit: (event: string, data?: unknown) => void;
-      data: Array<{ ids?: string[] }>;
-    };
+    const canvas = within(canvasElement);
 
-    const plot = await waitFor(() => {
-      const gd = canvasElement.querySelector(".js-plotly-plot") as EmittingPlot | null;
-      expect(gd).toBeInTheDocument();
-      expect(gd?.data?.[0]?.ids?.length).toBeGreaterThan(0);
-      return gd as EmittingPlot;
-    });
-
-    await step("Hovering a point shows the design-system tooltip", async () => {
-      plot.emit("plotly_hover", {
-        points: [
-          {
-            data: plot.data[0],
-            pointIndex: 0,
-            x: EVENT_DATA[0].x,
-            y: EVENT_DATA[0].y,
-          },
-        ],
-        event: new MouseEvent("mousemove", { clientX: 200, clientY: 200 }),
-      });
-      // The tooltip content portals to document.body
+    await step("Hovering a point shows the configured field in the card", async () => {
+      fireEvent.pointerMove(pointerLayer(canvasElement), centerOf(pointMarks(canvasElement)[0]));
       await waitFor(() => {
-        const tip = document.querySelector('[data-slot="tooltip-content"]');
-        expect(tip).toBeInTheDocument();
-        expect(tip).toHaveTextContent("Label: Point 1");
-        expect(tip).toHaveTextContent("category: Group A");
+        expect(canvas.getByText("Group A")).toBeInTheDocument();
       });
     });
 
-    await step("No native Plotly hover label is rendered", async () => {
-      expect(canvasElement.querySelector(".hoverlayer .hovertext")).not.toBeInTheDocument();
+    await step("Fields that are not configured stay out of the card", async () => {
+      expect(canvas.queryByText("Point 1")).not.toBeInTheDocument();
     });
 
-    await step("Unhover hides the tooltip after the grace period", async () => {
-      plot.emit("plotly_unhover");
+    await step("Moving off the point hides the card", async () => {
+      fireEvent.pointerOut(pointerLayer(canvasElement));
       await waitFor(() => {
-        expect(document.querySelector('[data-slot="tooltip-content"]')).not.toBeInTheDocument();
+        expect(canvas.queryByText("Group A")).not.toBeInTheDocument();
       });
     });
   },

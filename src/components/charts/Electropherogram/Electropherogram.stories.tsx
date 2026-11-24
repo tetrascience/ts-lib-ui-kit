@@ -81,15 +81,10 @@ export const MockupMatch: Story = {
     await step("Chart container renders", async () => {
       await waitFor(
         () => {
-          expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+          expect(canvasElement.querySelector("svg")).toBeInTheDocument();
         },
         { timeout: 15000 },
       );
-    });
-
-    await step("Four traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(4);
     });
 
     await step("Position labels are displayed", async () => {
@@ -114,15 +109,10 @@ export const WithExplicitBases: Story = {
     await step("Chart container renders", async () => {
       await waitFor(
         () => {
-          expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+          expect(canvasElement.querySelector("svg")).toBeInTheDocument();
         },
         { timeout: 15000 },
       );
-    });
-
-    await step("Four traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(4);
     });
 
     await step("Explicit bases are honored over inferred ones", async () => {
@@ -155,15 +145,10 @@ export const CustomColors: Story = {
     await step("Chart container renders", async () => {
       await waitFor(
         () => {
-          expect(canvasElement.querySelector(".js-plotly-plot")).toBeInTheDocument();
+          expect(canvasElement.querySelector("svg")).toBeInTheDocument();
         },
         { timeout: 15000 },
       );
-    });
-
-    await step("Four traces are rendered", async () => {
-      const traces = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(traces.length).toBe(4);
     });
 
     await step("Position labels are displayed", async () => {

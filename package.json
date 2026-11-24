@@ -269,6 +269,7 @@
     "@streamdown/math": "^1.0.2",
     "@streamdown/mermaid": "^1.0.2",
     "@tetrascience-npm/request": ">=0.4.0",
+    "@tetrascience-npm/ts-lib-viz": "^0.1.6",
     "plotly.js-dist": "^2.35.2",
     "react": "^18.2.0 || ^19.0.0",
     "react-dom": "^18.2.0 || ^19.0.0",
@@ -293,11 +294,19 @@
     "@tetrascience-npm/request": {
       "optional": true
     },
+    "@tetrascience-npm/ts-lib-viz": {
+      "optional": true
+    },
     "plotly.js-dist": {
       "optional": true
     },
     "snowflake-sdk": {
       "optional": true
+    }
+  },
+  "dependenciesMeta": {
+    "lz4": {
+      "built": false
     }
   },
   "devDependencies": {
@@ -329,6 +338,7 @@
     "@streamdown/mermaid": "^1.0.2",
     "@tailwindcss/vite": "^4.2.2",
     "@tetrascience-npm/request": "0.4.0",
+    "@tetrascience-npm/ts-lib-viz": "0.1.6",
     "@types/eslint-plugin-jsx-a11y": "^6",
     "@types/jsdom": "^27",
     "@types/node": "^25.3.3",

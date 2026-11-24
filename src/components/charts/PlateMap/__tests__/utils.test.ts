@@ -12,11 +12,6 @@ import {
   extractLayers,
   parseRegionWells,
   buildWellHoverText,
-  buildColorbarConfig,
-  buildPlotMargins,
-  calculateTitleX,
-  calculateAxisDomain,
-  flattenGridData,
   calculateMarkerSize,
 } from "../utils";
 
@@ -381,111 +376,6 @@ describe("buildWellHoverText", () => {
       valueUnit: "",
     });
     expect(text).toContain("Type: Sample");
-  });
-});
-
-// ─── buildColorbarConfig ───────────────────────────────────────────────────
-
-describe("buildColorbarConfig", () => {
-  it("returns horizontal config for bottom position", () => {
-    const config = buildColorbarConfig("bottom", " RFU");
-    expect(config.orientation).toBe("h");
-    expect(config.ticksuffix).toBe(" RFU");
-    expect(config.yanchor).toBe("top");
-  });
-
-  it("returns horizontal config for top position", () => {
-    const config = buildColorbarConfig("top", " AU");
-    expect(config.orientation).toBe("h");
-    expect(config.yanchor).toBe("bottom");
-  });
-
-  it("returns vertical config for right position", () => {
-    const config = buildColorbarConfig("right", "");
-    expect(config.orientation).toBeUndefined();
-    expect(config.xanchor).toBe("left");
-  });
-
-  it("includes title when provided", () => {
-    const config = buildColorbarConfig("bottom", "", "Signal");
-    expect(config.title).toBeDefined();
-    expect(config.title?.text).toBe("Signal");
-  });
-});
-
-// ─── buildPlotMargins ──────────────────────────────────────────────────────
-
-describe("buildPlotMargins", () => {
-  it("returns margin object with expected keys", () => {
-    const margins = buildPlotMargins("right", true, true);
-    expect(margins).toHaveProperty("t");
-    expect(margins).toHaveProperty("r");
-    expect(margins).toHaveProperty("b");
-    expect(margins).toHaveProperty("l");
-  });
-
-  it("uses the no-title top margins when hasTitle is false", () => {
-    const withTitle = buildPlotMargins("top", true, false);
-    const withoutTitle = buildPlotMargins("top", false, false);
-    // The hasTitle branch and its else branch pick different top margins.
-    expect(withoutTitle.t).not.toBe(withTitle.t);
-    expect(typeof withoutTitle.t).toBe("number");
-  });
-
-  it("adds extra room on the side matching the legend position", () => {
-    const left = buildPlotMargins("left", false, true);
-    const bottom = buildPlotMargins("bottom", false, false);
-    expect(left.l).toBeGreaterThan(0);
-    expect(bottom.b).toBeGreaterThan(0);
-  });
-});
-
-// ─── calculateTitleX ───────────────────────────────────────────────────────
-
-describe("calculateTitleX", () => {
-  it("returns a number", () => {
-    const x = calculateTitleX("right", true, true);
-    expect(typeof x).toBe("number");
-  });
-});
-
-// ─── calculateAxisDomain ───────────────────────────────────────────────────
-
-describe("calculateAxisDomain", () => {
-  it("returns a [min, max] tuple", () => {
-    const domain = calculateAxisDomain("right", true, true);
-    expect(domain).toHaveLength(2);
-    expect(domain[0]).toBeLessThan(domain[1]);
-  });
-});
-
-// ─── flattenGridData ───────────────────────────────────────────────────────
-
-describe("flattenGridData", () => {
-  it("flattens 2D grid into scatter plot data", () => {
-    const plotZ = [
-      [1, 2],
-      [3, 4],
-    ];
-    const rowLabels = ["A", "B"];
-    const hoverText = [
-      ["A1", "A2"],
-      ["B1", "B2"],
-    ];
-    const result = flattenGridData(plotZ, rowLabels, hoverText, 2, 2, 0);
-    expect(result.xData).toEqual([1, 2, 1, 2]);
-    expect(result.yData).toEqual(["A", "A", "B", "B"]);
-    expect(result.colorData).toEqual([1, 2, 3, 4]);
-    expect(result.textData).toEqual(["A1", "A2", "B1", "B2"]);
-  });
-
-  it("replaces null values with plotZMin", () => {
-    const plotZ: (number | null)[][] = [[null, 5]];
-    const rowLabels = ["A"];
-    const hoverText = [["empty", "val"]];
-    const result = flattenGridData(plotZ, rowLabels, hoverText, 1, 2, -1);
-    expect(result.colorData[0]).toBe(-1);
-    expect(result.colorData[1]).toBe(5);
   });
 });
 

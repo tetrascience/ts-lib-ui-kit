@@ -3,6 +3,7 @@ import { DecoratorHelpers } from "@storybook/addon-themes";
 import { createElement, useEffect, useState } from "react";
 import { addons } from "storybook/preview-api";
 
+import { loadViz } from "../src/components/charts/viz/viz-loader";
 import { Toaster } from "../src/components/ui/sonner";
 import { TooltipProvider } from "../src/components/ui/tooltip";
 
@@ -132,6 +133,14 @@ function ThemedDocsContainer(props: ComponentProps<typeof DocsContainer>) {
 }
 
 const preview: Preview = {
+  // The charts load ts-lib-viz lazily and hold their place until it arrives. Loading it before a
+  // story renders means a chart story draws on its first frame, which the play tests rely on.
+  loaders: [
+    async () => {
+      await loadViz();
+      return {};
+    },
+  ],
   decorators: [
     (Story) =>
       createElement(

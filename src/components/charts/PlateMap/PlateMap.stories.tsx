@@ -117,8 +117,8 @@ export const Plate96Well: Story = {
     });
 
     await step("Chart container renders", async () => {
-      // Verify the Plotly chart rendered by checking for chart title in the DOM
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      // Verify the chart rendered by checking for chart title in the DOM
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },
@@ -153,7 +153,7 @@ export const Plate384Well: Story = {
     });
 
     await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },
@@ -203,7 +203,7 @@ export const Plate1536Well: Story = {
     });
 
     await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },
@@ -247,7 +247,7 @@ export const CustomDimensions: Story = {
     });
 
     await step("Chart container renders with custom dimensions", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },
@@ -293,7 +293,7 @@ export const PartialPlate: Story = {
     });
 
     await step("Chart container renders with sparse data", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },
@@ -388,7 +388,7 @@ export const RandomData: Story = {
     });
 
     await step("Chart container renders with auto-generated data", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
 
@@ -531,7 +531,7 @@ export const LayerToggling: Story = {
     });
 
     await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
 
@@ -710,7 +710,7 @@ export const CustomCategoryColors: Story = {
     });
 
     await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },
@@ -940,7 +940,7 @@ export const HiddenUIElements: Story = {
     });
 
     await step("Chart container renders without legend/colorbar", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },
@@ -983,7 +983,7 @@ export const EdgeCases: Story = {
     });
 
     await step("Chart renders without errors despite NaN/Infinity/null values", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },
@@ -1029,7 +1029,7 @@ export const UniformValuesAndLeftLegend: Story = {
     });
 
     await step("Chart renders with uniform values", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },
@@ -1093,7 +1093,7 @@ export const CategoricalLeftLegend: Story = {
 
 /**
  * Well click interaction
- * Tests the onWellClick callback by simulating Plotly click events
+ * Tests the onWellClick callback by clicking a well
  */
 export const WellClickInteraction: Story = {
   args: {
@@ -1125,32 +1125,13 @@ export const WellClickInteraction: Story = {
     });
 
     await step("Chart container renders with click handler", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
 
-    await step("Simulate Plotly click event on well A1", async () => {
-      const plotContainer = canvasElement.querySelector(".js-plotly-plot") as HTMLElement & {
-        emit?: (eventName: string, data: unknown) => void;
-      };
-      expect(plotContainer).toBeInTheDocument();
-
-      // Trigger a plotly_click event with mock data for well A1
-      // Plotly attaches event handlers that we can trigger directly
-      if (plotContainer && typeof plotContainer.emit === "function") {
-        plotContainer.emit("plotly_click", {
-          points: [{ x: 1, y: "A", pointIndex: 0 }],
-        });
-      }
-    });
-
-    await step("Wells are clickable (chart accepts pointer events)", async () => {
-      // Verify the plot has interactive elements by checking for marker points
-      const plotContainer = canvasElement.querySelector(".js-plotly-plot");
-      expect(plotContainer).toBeInTheDocument();
-      // Plotly renders SVG elements for scatter markers
-      const markers = canvasElement.querySelectorAll(".scatterlayer .trace");
-      expect(markers.length).toBeGreaterThan(0);
+    await step("Each well draws as its own marker", async () => {
+      // Clicks are reported by the chart and covered by the unit tests; play tests cannot drive its hover layer.
+      expect(canvasElement.querySelectorAll(".platemap-plot circle")).toHaveLength(4);
     });
   },
   parameters: {
@@ -1182,7 +1163,7 @@ export const StringColorscale: Story = {
     });
 
     await step("Chart renders with string colorscale", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },
@@ -1240,14 +1221,13 @@ export const StringColorscaleWithEmptyWells: Story = {
     });
 
     await step("Chart renders with Viridis colorscale", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
 
     await step("Colorbar is present", async () => {
-      // Verify colorbar is rendered
-      const colorbar = canvasElement.querySelector(".cbfill");
-      expect(colorbar).toBeInTheDocument();
+      // The colour bar is titled with the value unit it shades
+      expect(canvas.getAllByText("RFU")[0]).toBeInTheDocument();
     });
   },
   parameters: {
@@ -1289,7 +1269,7 @@ export const ValueRangeOverride: Story = {
     });
 
     await step("Chart renders with custom range", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },
@@ -1325,7 +1305,7 @@ export const ColorbarWithTitle: Story = {
     });
 
     await step("Chart container renders", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },
@@ -1392,7 +1372,7 @@ export const InvalidRegions: Story = {
     });
 
     await step("Chart still renders despite invalid regions", async () => {
-      const container = canvasElement.querySelector(".js-plotly-plot");
+      const container = canvasElement.querySelector(".platemap-plot");
       expect(container).toBeInTheDocument();
     });
   },

@@ -380,6 +380,51 @@ class IntersectionObserverShim {
 }
 
 /**
+ * A `structuredClone` for environments that lack one (Jest's jsdom). It copies what a
+ * chart spec holds: plain objects, arrays, Dates, Maps, Sets and RegExps, keeping shared
+ * and cyclic references as the native function does. Functions throw, as they do natively.
+ */
+function cloneStructured<T>(value: T, seen = new Map<unknown, unknown>()): T {
+  if (typeof value === "function") {
+    throw new Error("structuredClone: function could not be cloned");
+  }
+  if (value === null || typeof value !== "object") return value;
+  if (seen.has(value)) return seen.get(value) as T;
+  if (value instanceof Date) {
+    const copy = new Date(value.getTime());
+    seen.set(value, copy);
+    return copy as T;
+  }
+  if (value instanceof RegExp) {
+    const copy = new RegExp(value.source, value.flags);
+    seen.set(value, copy);
+    return copy as T;
+  }
+  if (value instanceof Map) {
+    const copy = new Map();
+    seen.set(value, copy);
+    for (const [key, inner] of value) copy.set(cloneStructured(key, seen), cloneStructured(inner, seen));
+    return copy as T;
+  }
+  if (value instanceof Set) {
+    const copy = new Set();
+    seen.set(value, copy);
+    for (const inner of value) copy.add(cloneStructured(inner, seen));
+    return copy as T;
+  }
+  if (Array.isArray(value)) {
+    const copy: unknown[] = [];
+    seen.set(value, copy);
+    for (const inner of value) copy.push(cloneStructured(inner, seen));
+    return copy as T;
+  }
+  const copy: Record<string, unknown> = {};
+  seen.set(value, copy);
+  for (const [key, inner] of Object.entries(value)) copy[key] = cloneStructured(inner, seen);
+  return copy as T;
+}
+
+/**
  * Install the browser APIs jsdom lacks but the kit's components touch —
  * ResizeObserver (charts, sidebar), matchMedia (sonner, hooks),
  * IntersectionObserver, pointer capture and scrollIntoView (Radix menus and
@@ -393,6 +438,9 @@ export function installUiKitDomShims(): void {
   }
   if (typeof globalRef.IntersectionObserver === "undefined") {
     globalRef.IntersectionObserver = IntersectionObserverShim;
+  }
+  if (typeof globalRef.structuredClone === "undefined") {
+    globalRef.structuredClone = cloneStructured;
   }
 
   if (typeof window === "undefined") {

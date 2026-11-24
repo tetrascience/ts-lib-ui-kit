@@ -1,8 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 
 import { buildHistogramRows, buildHistogramSpec } from "../Histogram";
 
 import type { HistogramDataSeries } from "../Histogram";
+
+import { loadViz } from "@/components/charts/viz/viz-loader";
 
 const single: HistogramDataSeries = { name: "Series 1", x: [1, 2, 3, 4, 5, 6] };
 const pair: HistogramDataSeries[] = [
@@ -54,4 +56,9 @@ describe("buildHistogramSpec", () => {
     expect(spec.scales?.x?.title).toBe("Torque");
     expect(spec.scales?.y?.title).toBe("Frequency");
   });
+});
+
+// The charts load ts-lib-viz lazily. Loading it first lets each test render and build specs at once.
+beforeAll(async () => {
+  await loadViz();
 });

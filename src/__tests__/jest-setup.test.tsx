@@ -15,7 +15,6 @@ import {
   createHighlighterCoreStub,
   installUiKitDomShims,
   installUiKitJestMocks,
-  loadD3Umd,
   plotlyStub,
   rdkitFactoryStub,
   rdkitModuleStub,
@@ -96,15 +95,6 @@ describe("installUiKitJestMocks", () => {
       "@shikijs/themes/github-light",
       "@shikijs/themes/github-dark",
       ...KIT_SHIKI_LANGUAGES.map((lang) => `@shikijs/langs/${lang}`),
-      "d3-array",
-      "d3-color",
-      "d3-contour",
-      "d3-format",
-      "d3-interpolate",
-      "d3-quadtree",
-      "d3-scale",
-      "d3-time",
-      "d3-time-format",
     ];
     expect([...registrations.keys()].sort()).toEqual([...expected].sort());
   });
@@ -123,8 +113,11 @@ describe("installUiKitJestMocks", () => {
     const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../package.json"), "utf8")) as {
       peerDependenciesMeta?: Record<string, { optional?: boolean }>;
     };
+    // ts-lib-viz ships a CommonJS build, so Jest loads the real package and the charts draw.
+    // It needs no mock, and a mock would stop `verify-jest-consumer` drawing a real chart.
+    const loadsUnderJest = new Set(["@tetrascience-npm/ts-lib-viz"]);
     const optionalPeers = Object.entries(pkg.peerDependenciesMeta ?? {})
-      .filter(([, meta]) => meta.optional)
+      .filter(([name, meta]) => meta.optional && !loadsUnderJest.has(name))
       .map(([name]) => name);
     expect(optionalPeers.length).toBeGreaterThan(0);
 
@@ -536,55 +529,3 @@ describe("shiki stub", () => {
 // verified end-to-end under actual Jest in
 // scripts/verify-jest-consumer/ — see AGENTS.md's "Shipped Jest support"
 // section.
-
-describe("loadD3Umd", () => {
-  // Jest loads each d3 package through its UMD build, which Node itself would read as ESM. The
-  // loader's job is the path mapping, so this drives it with a stand-in require.
-  function standInFor(entry: (name: string) => string) {
-    const requested: string[] = [];
-    const standIn = Object.assign(
-      (id: string) => {
-        requested.push(id);
-        return { loaded: id };
-      },
-      { resolve: entry },
-    );
-    return { standIn: standIn as unknown as NodeRequire, requested };
-  }
-
-  it("maps a package entry point to the UMD build beside it, and loads that", () => {
-    const { standIn, requested } = standInFor((name) => `/w/node_modules/${name}/src/index.js`);
-    expect(loadD3Umd("d3-scale", standIn)).toEqual({ loaded: "/w/node_modules/d3-scale/dist/d3-scale.js" });
-    expect(requested).toEqual(["/w/node_modules/d3-scale/dist/d3-scale.js"]);
-  });
-
-  it("finds the UMD build from a module entry, which newer d3 releases resolve to", () => {
-    const { standIn, requested } = standInFor((name) => `/w/node_modules/${name}/dist/${name}.mjs`);
-    expect(loadD3Umd("d3-scale", standIn)).toEqual({ loaded: "/w/node_modules/d3-scale/dist/d3-scale.js" });
-    expect(requested).toEqual(["/w/node_modules/d3-scale/dist/d3-scale.js"]);
-  });
-
-  it("resolves a package the kit does not depend on from d3-scale, which does", () => {
-    const requested: string[] = [];
-    const standIn = Object.assign(
-      (id: string) => {
-        requested.push(id);
-        return { loaded: id };
-      },
-      {
-        resolve: (name: string, options?: { paths?: string[] }) => {
-          if (name === "d3-scale") return "/w/node_modules/d3-scale/src/index.js";
-          if (options?.paths) return `/w/node_modules/${name}/src/index.js`;
-          throw new Error(`Cannot find module '${name}'`);
-        },
-      },
-    ) as unknown as NodeRequire;
-    expect(loadD3Umd("d3-array", standIn)).toEqual({ loaded: "/w/node_modules/d3-array/dist/d3-array.js" });
-    expect(requested).toEqual(["/w/node_modules/d3-array/dist/d3-array.js"]);
-  });
-
-  it("refuses an entry that is not inside node_modules", () => {
-    const { standIn } = standInFor(() => "/w/vendor/d3-scale/index.js");
-    expect(() => loadD3Umd("d3-scale", standIn)).toThrow(/did not resolve inside node_modules/);
-  });
-});

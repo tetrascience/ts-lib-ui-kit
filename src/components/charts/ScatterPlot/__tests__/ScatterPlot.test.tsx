@@ -1,12 +1,14 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from "vitest";
 
 import { ScatterPlot } from "../ScatterPlot";
 
 import type { ScatterPlotProps } from "../ScatterPlot";
 import type { Viz } from "@tetrascience-npm/ts-lib-viz/react";
 import type { Root } from "react-dom/client";
+
+import { loadViz } from "@/components/charts/viz/viz-loader";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -158,4 +160,9 @@ describe("ScatterPlot series handling", () => {
     expect(spec.layers[0].style?.size).toBe(6);
     expect(data[0]).toEqual({ x: 1, y: 1, series: "A" });
   });
+});
+
+// The charts load ts-lib-viz lazily. Loading it first lets each test render and build specs at once.
+beforeAll(async () => {
+  await loadViz();
 });

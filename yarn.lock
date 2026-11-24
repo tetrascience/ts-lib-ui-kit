@@ -8225,10 +8225,6 @@ __metadata:
     "@tetrascience-npm/request": "npm:0.4.0"
     "@tetrascience-npm/ts-connectors-sdk": "npm:^3.2.0"
     "@tetrascience-npm/ts-lib-viz": "npm:0.1.6"
-    "@types/d3-contour": "npm:^3.0.6"
-    "@types/d3-format": "npm:^3.0.4"
-    "@types/d3-quadtree": "npm:^3.0.6"
-    "@types/d3-scale": "npm:^4.0.9"
     "@types/eslint-plugin-jsx-a11y": "npm:^6"
     "@types/jsdom": "npm:^27"
     "@types/node": "npm:^25.3.3"
@@ -8236,7 +8232,6 @@ __metadata:
     "@types/react": "npm:^19.0.0"
     "@types/react-dom": "npm:^19.0.0"
     "@vercel/node": "npm:^5.4.5"
-    "@visx/annotation": "npm:^4.0.0"
     "@vitejs/plugin-react": "npm:^4.3.1"
     "@vitest/browser": "npm:^3"
     "@vitest/coverage-v8": "npm:^3"
@@ -8247,12 +8242,6 @@ __metadata:
     cmdk: "npm:^1.1.1"
     conventional-changelog-conventionalcommits: "npm:^9.3.1"
     cookie-parser: "npm:^1.4.7"
-    d3-color: "npm:3"
-    d3-contour: "npm:^4.0.2"
-    d3-format: "npm:^3.1.2"
-    d3-interpolate: "npm:^3.0.1"
-    d3-quadtree: "npm:^3.0.1"
-    d3-scale: "npm:^4.0.2"
     date-fns: "npm:^4.1.0"
     embla-carousel-react: "npm:^8.6.0"
     eslint: "npm:^9.9.0"
@@ -8312,6 +8301,7 @@ __metadata:
     "@streamdown/math": ^1.0.2
     "@streamdown/mermaid": ^1.0.2
     "@tetrascience-npm/request": ">=0.4.0"
+    "@tetrascience-npm/ts-lib-viz": ^0.1.6
     plotly.js-dist: ^2.35.2
     react: ^18.2.0 || ^19.0.0
     react-dom: ^18.2.0 || ^19.0.0
@@ -8331,6 +8321,8 @@ __metadata:
     "@streamdown/mermaid":
       optional: true
     "@tetrascience-npm/request":
+      optional: true
+    "@tetrascience-npm/ts-lib-viz":
       optional: true
     plotly.js-dist:
       optional: true
@@ -8665,7 +8657,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/d3-contour@npm:*, @types/d3-contour@npm:^3.0.6":
+"@types/d3-contour@npm:*":
   version: 3.0.6
   resolution: "@types/d3-contour@npm:3.0.6"
   dependencies:
@@ -8728,7 +8720,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/d3-format@npm:*, @types/d3-format@npm:^3.0.4":
+"@types/d3-format@npm:*":
   version: 3.0.4
   resolution: "@types/d3-format@npm:3.0.4"
   checksum: 10c0/3ac1600bf9061a59a228998f7cd3f29e85cbf522997671ba18d4d84d10a2a1aff4f95aceb143fa9960501c3ec351e113fc75884e6a504ace44dc1744083035ee
@@ -8774,7 +8766,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/d3-quadtree@npm:*, @types/d3-quadtree@npm:^3.0.6":
+"@types/d3-quadtree@npm:*":
   version: 3.0.6
   resolution: "@types/d3-quadtree@npm:3.0.6"
   checksum: 10c0/7eaa0a4d404adc856971c9285e1c4ab17e9135ea669d847d6db7e0066126a28ac751864e7ce99c65d526e130f56754a2e437a1617877098b3bdcc3ef23a23616
@@ -8795,7 +8787,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/d3-scale@npm:*, @types/d3-scale@npm:^4.0.9":
+"@types/d3-scale@npm:*":
   version: 4.0.9
   resolution: "@types/d3-scale@npm:4.0.9"
   dependencies:

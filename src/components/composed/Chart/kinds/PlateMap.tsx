@@ -1,4 +1,3 @@
-import { palettesFor } from "@tetrascience-npm/ts-lib-viz/core";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import "@/components/charts/PlateMap/PlateMap.scss";
 
@@ -27,6 +26,7 @@ import {
   buildWellHoverText,
   calculateMarkerSize,
 } from "@/components/charts/PlateMap/utils";
+import { palettesFor, withViz } from "@/components/charts/viz/viz-loader";
 import { VizChart } from "@/components/charts/viz/VizChart";
 import { Button } from "@/components/ui/button";
 
@@ -624,5 +624,7 @@ const PlateMapChart: React.FC<PlateMapProps> = ({
   );
 };
 
-export { PlateMapChart };
+const PlateMapChartLazy = withViz("PlateMapChart", PlateMapChart);
+
+export { PlateMapChartLazy as PlateMapChart };
 export type { PlateMapProps };

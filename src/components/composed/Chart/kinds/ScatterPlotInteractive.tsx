@@ -1,4 +1,3 @@
-import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo, useRef, useState } from "react";
 
 import type {
@@ -17,6 +16,7 @@ import {
   downsampleData,
   getSelectionMode,
 } from "@/components/charts/ScatterPlotInteractive/utils";
+import { plot, withViz } from "@/components/charts/viz/viz-loader";
 import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
 import { CHART_COLORS } from "@/utils/colors";
 
@@ -277,5 +277,7 @@ const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
   );
 };
 
-export { ScatterPlotInteractiveChart };
+const ScatterPlotInteractiveChartLazy = withViz("ScatterPlotInteractiveChart", ScatterPlotInteractiveChart);
+
+export { ScatterPlotInteractiveChartLazy as ScatterPlotInteractiveChart };
 export type { ScatterPlotInteractiveProps };

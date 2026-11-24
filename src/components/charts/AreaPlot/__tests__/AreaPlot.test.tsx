@@ -1,12 +1,14 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from "vitest";
 
 import { AreaPlot, areaRows } from "../AreaPlot";
 
 import type { AreaDataSeries, AreaPlotProps } from "../AreaPlot";
 import type { ChartSpec, Palettes, VizData } from "@tetrascience-npm/ts-lib-viz/core";
 import type { Root } from "react-dom/client";
+
+import { loadViz } from "@/components/charts/viz/viz-loader";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -173,4 +175,9 @@ describe("AreaPlot spec", () => {
     expect(palettes?.categorical(0)).toBe("#ff0000");
     expect(palettes?.categoricalSize).toBe(2);
   });
+});
+
+// The charts load ts-lib-viz lazily. Loading it first lets each test render and build specs at once.
+beforeAll(async () => {
+  await loadViz();
 });

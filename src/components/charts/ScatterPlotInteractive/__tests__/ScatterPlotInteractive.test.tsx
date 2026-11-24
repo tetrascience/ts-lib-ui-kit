@@ -1,6 +1,6 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from "vitest";
 
 import { COLORS, DEFAULT_MARKER_SIZE } from "../constants";
 import { ScatterPlotInteractive } from "../ScatterPlotInteractive";
@@ -9,6 +9,8 @@ import type { ScatterPlotInteractiveProps, ScatterPoint, SelectionMode } from ".
 import type { Brushed, Selected } from "@tetrascience-npm/ts-lib-viz/core";
 import type { Viz } from "@tetrascience-npm/ts-lib-viz/react";
 import type { Root } from "react-dom/client";
+
+import { loadViz } from "@/components/charts/viz/viz-loader";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -443,4 +445,9 @@ describe("continuous color mapping", () => {
     });
     expect(lastViz().data[0]).toMatchObject({ nested: "[object Object]", flag: true, missing: null });
   });
+});
+
+// The charts load ts-lib-viz lazily. Loading it first lets each test render and build specs at once.
+beforeAll(async () => {
+  await loadViz();
 });

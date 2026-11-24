@@ -1,10 +1,10 @@
-import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
 import { seriesPalettes, uniqueSeriesNames } from "./series";
 
 import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
+import { plot, withViz } from "@/components/charts/viz/viz-loader";
 import { VizChart } from "@/components/charts/viz/VizChart";
 
 type MarkerSymbol = "circle" | "square" | "diamond" | "triangle-up" | "triangle-down" | "star";
@@ -95,5 +95,7 @@ const ScatterPlotChart: React.FC<ScatterPlotProps> = ({
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
-export { ScatterPlotChart };
+const ScatterPlotChartLazy = withViz("ScatterPlotChart", ScatterPlotChart);
+
+export { ScatterPlotChartLazy as ScatterPlotChart };
 export type { MarkerSymbol, ScatterPlotDataSeries, ScatterPlotProps, ScatterPlotVariant };

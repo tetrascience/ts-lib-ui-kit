@@ -1,8 +1,8 @@
-import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
 import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
+import { withViz, plot } from "@/components/charts/viz/viz-loader";
 import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
 import { CHART_COLORS } from "@/utils/colors";
 
@@ -79,5 +79,7 @@ const PieChartChart: React.FC<PieChartProps> = ({ dataSeries, width, height, tit
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
-export { PieChartChart };
+const PieChartChartLazy = withViz("PieChartChart", PieChartChart);
+
+export { PieChartChartLazy as PieChartChart };
 export type { PieDataSeries, PieTextInfo, PieChartProps };

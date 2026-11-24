@@ -1,10 +1,10 @@
-import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
 import { seriesPalettes, uniqueSeriesNames } from "./series";
 
 import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
+import { plot, withViz } from "@/components/charts/viz/viz-loader";
 import { VizChart } from "@/components/charts/viz/VizChart";
 
 interface AreaDataSeries {
@@ -124,5 +124,7 @@ const AreaPlotChart: React.FC<AreaPlotProps> = ({
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
-export { AreaPlotChart };
+const AreaPlotChartLazy = withViz("AreaPlotChart", AreaPlotChart);
+
+export { AreaPlotChartLazy as AreaPlotChart };
 export type { AreaDataSeries, AreaPlotVariant, AreaPlotProps };

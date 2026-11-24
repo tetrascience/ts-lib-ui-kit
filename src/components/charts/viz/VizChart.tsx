@@ -1,10 +1,9 @@
-import { palettesFor } from "@tetrascience-npm/ts-lib-viz/core";
-import { Viz } from "@tetrascience-npm/ts-lib-viz/react";
 import { useMemo } from "react";
 
 import type { ChartSpec, Palettes, VizData } from "@tetrascience-npm/ts-lib-viz/core";
 import type { VizProps } from "@tetrascience-npm/ts-lib-viz/react";
 
+import { getLoadedViz, palettesFor } from "@/components/charts/viz/viz-loader";
 import { useElementSize } from "@/hooks/use-element-size";
 
 import "./viz-theme.css";
@@ -72,6 +71,7 @@ function plotlyDefaults(spec: ChartSpec): ChartSpec {
 export function VizChart({ spec, data, palettes, width, height, keyField, onSelect, brush, onBrush }: VizChartProps) {
   // Viz draws 320px tall unless the spec states a height, and it does not measure its parent. An
   // omitted height is therefore measured from the wrapper, so the chart fills the space it is given.
+  const { Viz } = getLoadedViz().react;
   const [wrapperRef, measured] = useElementSize<HTMLDivElement>();
   const resolvedHeight = height ?? (measured.height > 0 ? measured.height : undefined);
 

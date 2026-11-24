@@ -1,10 +1,10 @@
-import { plot } from "@tetrascience-npm/ts-lib-viz/core";
 import { useMemo } from "react";
 
 import { seriesPalettes, uniqueSeriesNames } from "./series";
 
 import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
+import { plot, withViz } from "@/components/charts/viz/viz-loader";
 import { VizChart } from "@/components/charts/viz/VizChart";
 
 interface BarDataSeries {
@@ -147,5 +147,7 @@ const BarChartChart: React.FC<BarChartProps> = ({
   return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
 };
 
-export { BarChartChart };
+const BarChartChartLazy = withViz("BarChartChart", BarChartChart);
+
+export { BarChartChartLazy as BarChartChart };
 export type { BarDataSeries, BarChartVariant, BarChartProps };

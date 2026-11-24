@@ -1,9 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 
 import { buildChromatogramSpec } from "../spec";
 
 import type { ChromatogramSpecInput } from "../spec";
 import type { ChromatogramSeries, PeakAnnotation } from "../types";
+
+import { loadViz } from "@/components/charts/viz/viz-loader";
 
 const trace: ChromatogramSeries = {
   name: "Injection 1",
@@ -147,4 +149,9 @@ describe("buildChromatogramSpec", () => {
     expect(row).toMatchObject({ sampleName: "S1", vial: 3, flagged: true, empty: null, nested: "[object Object]" });
     expect(row.x).not.toBe("skip");
   });
+});
+
+// The charts load ts-lib-viz lazily. Loading it first lets each test render and build specs at once.
+beforeAll(async () => {
+  await loadViz();
 });

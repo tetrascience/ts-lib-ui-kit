@@ -1,8 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 
 import { buildBarRows, buildBarSpec } from "../BarChart";
 
 import type { BarDataSeries } from "../BarChart";
+
+import { loadViz } from "@/components/charts/viz/viz-loader";
 
 const dataSeries: BarDataSeries[] = [{ name: "Series 1", x: [0, 1, 2], y: [10, 18, 14] }];
 
@@ -107,4 +109,9 @@ describe("buildBarSpec", () => {
     expect(spec.scales?.x?.breaks).toBeUndefined();
     expect(spec.scales?.x?.labels).toBeUndefined();
   });
+});
+
+// The charts load ts-lib-viz lazily. Loading it first lets each test render and build specs at once.
+beforeAll(async () => {
+  await loadViz();
 });

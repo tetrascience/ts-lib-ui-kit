@@ -1,8 +1,14 @@
-import { describe, it, expect } from "vitest";
+import { plot } from "@tetrascience-npm/ts-lib-viz/core";
+import { beforeAll, describe, it, expect } from "vitest";
 
 import { withAnnotations } from "../annotations";
 
-import { plot } from "@/vendor/ts-lib-viz/core";
+import { loadViz } from "@/components/charts/viz/viz-loader";
+
+// `withAnnotations` builds through the lazily loaded library, so load it before the tests run.
+beforeAll(async () => {
+  await loadViz();
+});
 
 const base = plot([{ x: 1, y: 2 }], { x: "x", y: "y" })
   .line()

@@ -1,8 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 
 import { buildBoxRows, buildBoxSpec } from "../BoxPlot";
 
 import type { BoxDataSeries } from "../BoxPlot";
+
+import { loadViz } from "@/components/charts/viz/viz-loader";
 
 const dataSeries: BoxDataSeries[] = [{ name: "Series 1", y: [10, 18, 14, 22, 9] }];
 
@@ -59,4 +61,9 @@ describe("buildBoxSpec", () => {
     expect(spec.scales?.x?.limits).toEqual([0, 5]);
     expect(spec.scales?.y?.limits).toEqual([0, 30]);
   });
+});
+
+// The charts load ts-lib-viz lazily. Loading it first lets each test render and build specs at once.
+beforeAll(async () => {
+  await loadViz();
 });

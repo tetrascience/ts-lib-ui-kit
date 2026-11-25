@@ -49,7 +49,8 @@ Nothing else in the public API changed. React 19, Node 18+ and the TDP v4.x requ
 yarn add @tetrascience-npm/tetrascience-react-ui@^1.0.0
 
 # 2. Install only the optional peers your app actually uses (see table below)
-yarn add plotly.js-dist                        # if you render any chart
+yarn add @tetrascience-npm/ts-lib-viz          # if you render any chart
+yarn add plotly.js-dist                        # if you use ChartTooltip
 yarn add @streamdown/math @streamdown/mermaid  # if you import from the package root (see note)
 yarn add @rdkit/rdkit                          # if you use MoleculeStructure
 
@@ -116,7 +117,8 @@ RDKit or the markdown plugin stack into your `node_modules`. Install what you us
 
 | You use…                                                                         | Install                                                          |
 | -------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Any `charts/` component                                                          | `plotly.js-dist`                                                 |
+| `Chart` or any `charts/` component                                               | `@tetrascience-npm/ts-lib-viz`                                   |
+| `ChartTooltip`                                                                   | `plotly.js-dist`                                                 |
 | `MessageResponse` / `Reasoning` (AI markdown)                                    | `@streamdown/math`, `@streamdown/mermaid`                        |
 | `MoleculeStructure`                                                              | `@rdkit/rdkit` (**plus a served WASM — see §5**)                 |
 | **Any import from the package root** (`@tetrascience-npm/tetrascience-react-ui`) | `@streamdown/math`, `@streamdown/mermaid` — see the caveat below |
@@ -138,10 +140,11 @@ RDKit or the markdown plugin stack into your `node_modules`. Install what you us
 > the barrel entirely. This fails loudly at build time, so it can never reach production silently.
 > Tracked in [SW-2472](https://tetrascience.atlassian.net/browse/SW-2472).
 
-A missing peer that _is_ only reached dynamically — `plotly.js-dist` — does **not** fail the build.
-Under Vite/Rollup it resolves to an empty stub and surfaces at runtime as a console error from the
-loader (`Failed to load 'plotly.js-dist' …`) with the chart never rendering. If your charts render
-blank after upgrading, check that `plotly.js-dist` is installed.
+A missing peer that _is_ only reached dynamically — `@tetrascience-npm/ts-lib-viz` for the charts,
+`plotly.js-dist` for `ChartTooltip` — does **not** fail the build. Under Vite/Rollup it resolves to a
+stub and surfaces at runtime as a console error from the loader
+(`Failed to load '@tetrascience-npm/ts-lib-viz' …`), with the chart staying an empty box of its own
+size. If your charts render blank after upgrading, check that `@tetrascience-npm/ts-lib-viz` is installed.
 
 ### 5. `MoleculeStructure` also needs the RDKit WASM served
 

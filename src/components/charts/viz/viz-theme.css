@@ -1,0 +1,4 @@
+@layer properties, theme, base, components, utilities, ts-ui-kit;
+
+/* ts-lib-viz tokens, layered so they never outrank a consumer's own CSS. */
+@import "@tetrascience-npm/ts-lib-viz/theme.css" layer(ts-ui-kit);

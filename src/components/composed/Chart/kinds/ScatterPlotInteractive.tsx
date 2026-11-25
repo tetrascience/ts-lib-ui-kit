@@ -7,7 +7,7 @@ import type {
   ScatterPoint,
   SelectionMode,
 } from "@/components/charts/ScatterPlotInteractive/types";
-import type { Brushed, ChartSpec, Palettes, PointShape, Selected } from "@/vendor/ts-lib-viz/core";
+import type { Brushed, ChartSpec, Palettes, PointShape, Selected } from "@tetrascience-npm/ts-lib-viz/core";
 
 import { DEFAULT_MARKER_SIZE, DEFAULT_SIZE_RANGE } from "@/components/charts/ScatterPlotInteractive/constants";
 import {
@@ -16,9 +16,9 @@ import {
   downsampleData,
   getSelectionMode,
 } from "@/components/charts/ScatterPlotInteractive/utils";
+import { plot, withViz } from "@/components/charts/viz/viz-loader";
 import { categoricalPalettes, VizChart } from "@/components/charts/viz/VizChart";
 import { CHART_COLORS } from "@/utils/colors";
-import { plot } from "@/vendor/ts-lib-viz/core";
 
 /**
  *
@@ -281,5 +281,7 @@ const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
   );
 };
 
-export { ScatterPlotInteractiveChart };
+const ScatterPlotInteractiveChartLazy = withViz("ScatterPlotInteractiveChart", ScatterPlotInteractiveChart, "scatter");
+
+export { ScatterPlotInteractiveChartLazy as ScatterPlotInteractiveChart };
 export type { ScatterPlotInteractiveProps };

@@ -1,13 +1,15 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, afterEach, vi, beforeAll } from "vitest";
 
 import { PlateMap } from "../PlateMap";
 import { PLATE_FORMAT_CUSTOM } from "../types";
 
 import type { WellData } from "../types";
-import type { ChartSpec, Palettes, Selected, VizData } from "@/vendor/ts-lib-viz/core";
+import type { ChartSpec, Palettes, Selected, VizData } from "@tetrascience-npm/ts-lib-viz/core";
 import type { Root } from "react-dom/client";
+
+import { loadViz } from "@/components/charts/viz/viz-loader";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -22,7 +24,7 @@ interface VizCall {
   onSelect?: (selected: Selected | null) => void;
 }
 const viz = vi.hoisted(() => ({ calls: [] as VizCall[] }));
-vi.mock("@/vendor/ts-lib-viz/react", () => ({
+vi.mock("@tetrascience-npm/ts-lib-viz/react", () => ({
   Viz: (props: VizCall) => {
     viz.calls.push(props);
     return <div data-viz-stub="" />;
@@ -170,4 +172,9 @@ describe("PlateMap heatmap mode", () => {
     expect(outline[0].style?.color).toBe("#123456");
     expect(outline[0].data).toHaveLength(4);
   });
+});
+
+// The charts load ts-lib-viz lazily. Loading it first lets each test render and build specs at once.
+beforeAll(async () => {
+  await loadViz();
 });

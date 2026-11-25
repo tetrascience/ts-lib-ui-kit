@@ -1,15 +1,14 @@
 import { useMemo } from "react";
 
 import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
-import type { ChartSpec, Palettes, VizData } from "@/vendor/ts-lib-viz/core";
-import type { VizProps } from "@/vendor/ts-lib-viz/react";
+import type { ChartSpec, Palettes, VizData } from "@tetrascience-npm/ts-lib-viz/core";
+import type { VizProps } from "@tetrascience-npm/ts-lib-viz/react";
 
+import { getLoadedViz, palettesFor } from "@/components/charts/viz/viz-loader";
 import { withAnnotations } from "@/components/composed/Chart/annotations";
 import { useElementSize } from "@/hooks/use-element-size";
-import { palettesFor } from "@/vendor/ts-lib-viz/core";
-import { Viz } from "@/vendor/ts-lib-viz/react";
 
-import "@/vendor/ts-lib-viz/theme/default.css";
+import "./viz-theme.css";
 
 /**
  * Shared bridge from the chart props to ts-lib-viz.
@@ -86,6 +85,7 @@ export function VizChart({
 }: VizChartProps) {
   // Viz draws 320px tall unless the spec states a height, and it does not measure its parent. An
   // omitted height is therefore measured from the wrapper, so the chart fills the space it is given.
+  const { Viz } = getLoadedViz().react;
   const [wrapperRef, measured] = useElementSize<HTMLDivElement>();
   const resolvedHeight = height ?? (measured.height > 0 ? measured.height : undefined);
 

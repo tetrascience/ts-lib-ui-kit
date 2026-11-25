@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeAll } from "vitest";
 
 import { seriesPalettes, uniqueSeriesNames } from "../kinds/series";
+
+import { loadViz } from "@/components/charts/viz/viz-loader";
 
 describe("uniqueSeriesNames", () => {
   it("counts a repeated name, so ts-lib-viz does not merge the two series", () => {
@@ -8,6 +10,16 @@ describe("uniqueSeriesNames", () => {
       "Run",
       "Run (2)",
       "Control",
+    ]);
+  });
+});
+
+describe("uniqueSeriesNames with reserved names", () => {
+  it("never counts a name onto a series the caller already named that way", () => {
+    expect(uniqueSeriesNames([{ name: "Run" }, { name: "Run" }, { name: "Run (2)" }])).toEqual([
+      "Run",
+      "Run (3)",
+      "Run (2)",
     ]);
   });
 });
@@ -35,4 +47,9 @@ describe("seriesPalettes", () => {
     expect(palettes.categorical?.(0)).toBe("#111111");
     expect(palettes.categorical?.(1)).toBe("#222222");
   });
+});
+
+// The charts load ts-lib-viz lazily. Loading it first lets each test render and build specs at once.
+beforeAll(async () => {
+  await loadViz();
 });

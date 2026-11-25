@@ -400,6 +400,7 @@ would shadow a consumer's `:root` token overrides inside every dialog.
 
 The kit ships preserved ES modules with all deps externalized, so a static import of a heavy library lands it in every consumer's **main** chunk. Never statically import these — use the established lazy paths:
 
+- **ts-lib-viz**: never import a value from `"@tetrascience-npm/ts-lib-viz/*"` (types via `import type` are fine). Wrap the chart component in `withViz()` and use `plot` / `palettesFor` / `getLoadedViz()` from `src/components/charts/viz/viz-loader.tsx`. Unit tests call `await loadViz()` in `beforeAll`, and Storybook preloads it in `.storybook/preview.ts`.
 - **Plotly**: never `import Plotly from "plotly.js-dist"` (types via `import type` are fine). Draw via `loadPlotly()` / `getLoadedPlotly()` from `src/components/charts/plotly-loader.ts` (see any chart component for the pattern).
 - **Shiki**: never import from `"shiki"` at runtime (full bundle ≈ 200 grammars; OOMs consumer builds). Use the shared slim highlighter in `src/lib/shiki.ts` (`shiki/core` + explicit language set; extend via `registerCodeBlockLanguage`).
 - **mermaid / KaTeX / streamdown plugins**: only via `useStreamdownPlugins()` (`src/components/ai/use-streamdown-plugins.ts`), which dynamic-imports the plugin set. Do not statically import `@streamdown/*` plugins or `src/components/ai/streamdown-plugins.ts` from component code.
@@ -408,7 +409,8 @@ The kit ships preserved ES modules with all deps externalized, so a static impor
 
 The lazy paths above keep heavy deps out of a consumer's **bundle** when the component is unused, but a hard `dependency` is still **installed** for everyone. To also keep them out of `node_modules` when unused, the heaviest, narrowest-used ones are declared as **optional `peerDependencies`** (`peerDependenciesMeta.<pkg>.optional = true`) and duplicated in `devDependencies` (so the kit's own Storybook/tests/build still resolve them):
 
-- `plotly.js-dist` — required only by `charts/` components.
+- `@tetrascience-npm/ts-lib-viz` — required only by `Chart` and the `charts/` components. It ships a CommonJS build, so Jest loads the real package and `jest-setup` registers no mock for it.
+- `plotly.js-dist` — required only by `ChartTooltip`.
 - `@streamdown/mermaid`, `@streamdown/math` — required only by `MessageResponse` / `Reasoning` (markdown).
 - `@tetrascience-npm/request` — required only by the `./telemetry` entry. Not heavy, but narrow: nothing outside `src/telemetry/` imports it, and that entry is not in the root barrel.
 

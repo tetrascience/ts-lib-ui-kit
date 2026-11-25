@@ -1,12 +1,14 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, afterEach, vi, beforeAll } from "vitest";
 
 import { Chart } from "../Chart";
 
 import type { ChartProps } from "../Chart";
-import type { ChartSpec, VizData } from "@/vendor/ts-lib-viz/core";
+import type { ChartSpec, VizData } from "@tetrascience-npm/ts-lib-viz/core";
 import type { Root } from "react-dom/client";
+
+import { loadViz } from "@/components/charts/viz/viz-loader";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -17,7 +19,7 @@ interface VizCall {
   data: VizData;
 }
 const viz = vi.hoisted(() => ({ calls: [] as VizCall[] }));
-vi.mock("@/vendor/ts-lib-viz/react", () => ({
+vi.mock("@tetrascience-npm/ts-lib-viz/react", () => ({
   Viz: (props: VizCall) => {
     viz.calls.push(props);
     return <div data-viz-stub="" />;
@@ -93,6 +95,11 @@ describe("Chart", () => {
     await render(<Chart type="histogram" dataSeries={[{ name: "H", x: [1, 2, 2, 3] }]} title="Peaks" />);
     expect(lastCall().spec.headline).toBe("Peaks");
   });
+});
+
+// The charts load ts-lib-viz lazily. Loading it first lets each test render and build specs at once.
+beforeAll(async () => {
+  await loadViz();
 });
 
 describe("Chart reference lines", () => {

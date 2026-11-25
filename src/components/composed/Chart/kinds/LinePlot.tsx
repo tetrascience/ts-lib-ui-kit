@@ -3,10 +3,10 @@ import { useMemo } from "react";
 import { seriesPalettes, uniqueSeriesNames } from "./series";
 
 import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
-import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
+import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
+import { plot, withViz } from "@/components/charts/viz/viz-loader";
 import { VizChart } from "@/components/charts/viz/VizChart";
-import { plot } from "@/vendor/ts-lib-viz/core";
 
 type MarkerSymbol =
   | "circle"
@@ -283,6 +283,8 @@ const LinePlotChart: React.FC<LinePlotProps> = ({
             : {}),
         },
         y: { title: yTitle, limits: yRange },
+        // The legend names each series, so its field-name caption is blanked.
+        color: { title: "" },
       })
       .spec();
   }, [rows, variant, title, xTitle, yTitle, xRange, yRange, xTickText]);
@@ -300,5 +302,7 @@ const LinePlotChart: React.FC<LinePlotProps> = ({
   );
 };
 
-export { LinePlotChart };
+const LinePlotChartLazy = withViz("LinePlotChart", LinePlotChart, "line");
+
+export { LinePlotChartLazy as LinePlotChart };
 export type { LineDataSeries, LinePlotVariant, LinePlotProps, MarkerSymbol };

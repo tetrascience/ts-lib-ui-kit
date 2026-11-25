@@ -19,6 +19,7 @@ import {
 } from "@/components/charts/Chromatogram/dataProcessing";
 import { detectPeaks } from "@/components/charts/Chromatogram/peakDetection";
 import { buildChromatogramSpec } from "@/components/charts/Chromatogram/spec";
+import { withViz } from "@/components/charts/viz/viz-loader";
 import { VizChart } from "@/components/charts/viz/VizChart";
 import { EmptyState } from "@/components/composed/EmptyState";
 
@@ -163,4 +164,6 @@ const ChromatogramChart: React.FC<ChromatogramProps> = ({
   return <VizChart spec={built.spec} data={built.data} width={width} height={height} />;
 };
 
-export { ChromatogramChart };
+const ChromatogramChartLazy = withViz("ChromatogramChart", ChromatogramChart, "trace");
+
+export { ChromatogramChartLazy as ChromatogramChart };

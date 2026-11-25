@@ -3,10 +3,10 @@ import { useMemo } from "react";
 import { seriesPalettes, uniqueSeriesNames } from "./series";
 
 import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
-import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
+import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
+import { plot, withViz } from "@/components/charts/viz/viz-loader";
 import { VizChart } from "@/components/charts/viz/VizChart";
-import { plot } from "@/vendor/ts-lib-viz/core";
 
 type MarkerSymbol = "circle" | "square" | "diamond" | "triangle-up" | "triangle-down" | "star";
 
@@ -91,6 +91,8 @@ const ScatterPlotChart: React.FC<ScatterPlotProps> = ({
       .scales({
         x: { title: xTitle, limits: xRange },
         y: { title: yTitle, limits: yRange },
+        // The legend names each series, so its field-name caption is blanked.
+        color: { title: "" },
       })
       .spec();
   }, [rows, variant, markerSize, title, xTitle, yTitle, xRange, yRange]);
@@ -108,5 +110,7 @@ const ScatterPlotChart: React.FC<ScatterPlotProps> = ({
   );
 };
 
-export { ScatterPlotChart };
+const ScatterPlotChartLazy = withViz("ScatterPlotChart", ScatterPlotChart, "scatter");
+
+export { ScatterPlotChartLazy as ScatterPlotChart };
 export type { MarkerSymbol, ScatterPlotDataSeries, ScatterPlotProps, ScatterPlotVariant };

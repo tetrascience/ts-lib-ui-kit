@@ -1,4 +1,4 @@
-import type { Palettes } from "@/vendor/ts-lib-viz/core";
+import type { Palettes } from "@tetrascience-npm/ts-lib-viz/core";
 
 import { categoricalPalettes } from "@/components/charts/viz/VizChart";
 import { seriesColor } from "@/utils/colors";
@@ -14,11 +14,19 @@ interface NamedSeries {
  * a repeated name gets a count: "Run", then "Run (2)". The legend shows the counted name.
  */
 export function uniqueSeriesNames(dataSeries: readonly NamedSeries[]): string[] {
-  const seen = new Map<string, number>();
+  // Every name the caller gave is reserved, so a counted name never takes another series' own name.
+  const reserved = new Set(dataSeries.map(({ name }) => name));
+  const emitted = new Set<string>();
   return dataSeries.map(({ name }) => {
-    const count = (seen.get(name) ?? 0) + 1;
-    seen.set(name, count);
-    return count === 1 ? name : `${name} (${count})`;
+    if (!emitted.has(name)) {
+      emitted.add(name);
+      return name;
+    }
+    let count = 2;
+    while (reserved.has(`${name} (${count})`) || emitted.has(`${name} (${count})`)) count++;
+    const counted = `${name} (${count})`;
+    emitted.add(counted);
+    return counted;
   });
 }
 

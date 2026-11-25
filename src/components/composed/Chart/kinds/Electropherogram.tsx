@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 
-import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
+import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
+import { withViz, plot } from "@/components/charts/viz/viz-loader";
 import { VizChart } from "@/components/charts/viz/VizChart";
-import { plot } from "@/vendor/ts-lib-viz/core";
 
 /** Headroom above the tallest peak, so the base letters have room above the traces. */
 const Y_HEADROOM_FACTOR = 1.2;
@@ -324,5 +324,7 @@ const ElectropherogramChart: React.FC<ElectropherogramProps> = ({
   );
 };
 
-export { ElectropherogramChart };
+const ElectropherogramChartLazy = withViz("ElectropherogramChart", ElectropherogramChart, "trace");
+
+export { ElectropherogramChartLazy as ElectropherogramChart };
 export type { PeakData, ElectropherogramProps };

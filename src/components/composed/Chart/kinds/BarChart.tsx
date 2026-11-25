@@ -3,10 +3,10 @@ import { useMemo } from "react";
 import { seriesPalettes, uniqueSeriesNames } from "./series";
 
 import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
-import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
+import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
+import { plot, withViz } from "@/components/charts/viz/viz-loader";
 import { VizChart } from "@/components/charts/viz/VizChart";
-import { plot } from "@/vendor/ts-lib-viz/core";
 
 interface BarDataSeries {
   x: number[];
@@ -104,6 +104,9 @@ export function buildBarSpec(rows: BarRow[], options: BarSpecOptions): ChartSpec
           : {}),
       },
       y: { title: yTitle, limits: yRange },
+      // The legend names each series, so its field-name caption is blanked.
+      color: { title: "" },
+      fill: { title: "" },
     })
     .spec();
 }
@@ -160,5 +163,7 @@ const BarChartChart: React.FC<BarChartProps> = ({
   );
 };
 
-export { BarChartChart };
+const BarChartChartLazy = withViz("BarChartChart", BarChartChart, "bar");
+
+export { BarChartChartLazy as BarChartChart };
 export type { BarDataSeries, BarChartVariant, BarChartProps };

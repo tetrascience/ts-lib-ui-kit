@@ -298,45 +298,6 @@ export interface JestMockApi {
 }
 
 /**
- * The d3 packages the vendored ts-lib-viz draws with, with their transitive closure. Each ships a
- * UMD build beside its ESM entry, which Jest's CommonJS runtime cannot load, so the mock loads the
- * UMD build instead. The real code still draws; only the module format changes.
- */
-const D3_UMD_PACKAGES = [
-  "d3-array",
-  "d3-color",
-  "d3-contour",
-  "d3-format",
-  "d3-interpolate",
-  "d3-quadtree",
-  "d3-scale",
-  "d3-time",
-  "d3-time-format",
-] as const;
-
-/**
- * The UMD build of an ESM-only d3 package, found from its own entry point (`<pkg>/src/index.js`).
- * `req` is the CommonJS `require` of the caller; it is a parameter so the loader can be tested
- * outside Jest.
- *
- * A package the kit does not depend on directly (d3-array under pnpm's strict layout) is looked
- * up from `d3-scale`, the d3 package that depends on it. The entry is matched with either path
- * separator, so Windows paths resolve too.
- */
-export function loadD3Umd(name: string, req: NodeRequire = require): unknown {
-  const entry = resolveD3(name, req);
-  return req(entry.replace(/[\\/]src[\\/]index\.js$/, `/dist/${name}.js`));
-}
-
-function resolveD3(name: string, req: NodeRequire): string {
-  try {
-    return req.resolve(name);
-  } catch {
-    return req.resolve(name, { paths: [req.resolve("d3-scale")] });
-  }
-}
-
-/**
  * Register stubs for every ESM-only / optional-peer module the kit reaches.
  * Non-virtual when the module resolves, virtual fallback when it doesn't —
  * see the module docblock.
@@ -350,7 +311,6 @@ export function installUiKitJestMocks(jestApi: JestMockApi): void {
     }
   };
   tryMock("plotly.js-dist", () => plotlyStub);
-  for (const name of D3_UMD_PACKAGES) tryMock(name, () => loadD3Umd(name));
   // Same interop shape as plotly: MoleculeStructure's loader does
   // `mod.default ?? mod`, so the factory returns the raw function directly.
   tryMock("@rdkit/rdkit", () => rdkitFactoryStub);
@@ -420,6 +380,51 @@ class IntersectionObserverShim {
 }
 
 /**
+ * A `structuredClone` for environments that lack one (Jest's jsdom). It copies what a
+ * chart spec holds: plain objects, arrays, Dates, Maps, Sets and RegExps, keeping shared
+ * and cyclic references as the native function does. Functions throw, as they do natively.
+ */
+function cloneStructured<T>(value: T, seen = new Map<unknown, unknown>()): T {
+  if (typeof value === "function") {
+    throw new Error("structuredClone: function could not be cloned");
+  }
+  if (value === null || typeof value !== "object") return value;
+  if (seen.has(value)) return seen.get(value) as T;
+  if (value instanceof Date) {
+    const copy = new Date(value.getTime());
+    seen.set(value, copy);
+    return copy as T;
+  }
+  if (value instanceof RegExp) {
+    const copy = new RegExp(value.source, value.flags);
+    seen.set(value, copy);
+    return copy as T;
+  }
+  if (value instanceof Map) {
+    const copy = new Map();
+    seen.set(value, copy);
+    for (const [key, inner] of value) copy.set(cloneStructured(key, seen), cloneStructured(inner, seen));
+    return copy as T;
+  }
+  if (value instanceof Set) {
+    const copy = new Set();
+    seen.set(value, copy);
+    for (const inner of value) copy.add(cloneStructured(inner, seen));
+    return copy as T;
+  }
+  if (Array.isArray(value)) {
+    const copy: unknown[] = [];
+    seen.set(value, copy);
+    for (const inner of value) copy.push(cloneStructured(inner, seen));
+    return copy as T;
+  }
+  const copy: Record<string, unknown> = {};
+  seen.set(value, copy);
+  for (const [key, inner] of Object.entries(value)) copy[key] = cloneStructured(inner, seen);
+  return copy as T;
+}
+
+/**
  * Install the browser APIs jsdom lacks but the kit's components touch —
  * ResizeObserver (charts, sidebar), matchMedia (sonner, hooks),
  * IntersectionObserver, pointer capture and scrollIntoView (Radix menus and
@@ -433,6 +438,9 @@ export function installUiKitDomShims(): void {
   }
   if (typeof globalRef.IntersectionObserver === "undefined") {
     globalRef.IntersectionObserver = IntersectionObserverShim;
+  }
+  if (typeof globalRef.structuredClone === "undefined") {
+    globalRef.structuredClone = cloneStructured;
   }
 
   if (typeof window === "undefined") {

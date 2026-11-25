@@ -120,7 +120,8 @@ The kit does not install heavy dependencies for you. Add only the ones your app 
 
 | You use…                                           | Install                                                                                               |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Any `charts/` component                            | `plotly.js-dist`                                                                                      |
+| `Chart` or any `charts/` component                 | `@tetrascience-npm/ts-lib-viz`                                                                        |
+| `ChartTooltip`                                     | `plotly.js-dist`                                                                                      |
 | `MessageResponse` / `Reasoning` (AI markdown)      | `@streamdown/math`, `@streamdown/mermaid`                                                             |
 | `MoleculeStructure`                                | `@rdkit/rdkit` — **plus a served WASM, [see below](#moleculestructure-requires-a-served-rdkit-wasm)** |
 | `/server` Athena / Snowflake / Databricks provider | `@aws-sdk/client-athena` / `snowflake-sdk` / `@databricks/sql`                                        |
@@ -132,9 +133,11 @@ The kit does not install heavy dependencies for you. Add only the ones your app 
 > math or mermaid. On v1.0.x, install both or use [per-component imports](#per-component-imports)
 > ([SW-2472](https://tetrascience.atlassian.net/browse/SW-2472)).
 
-A missing `plotly.js-dist` behaves differently: it does **not** fail the build under Vite/Rollup — it
-resolves to an empty stub and the chart fails at runtime with a console error from the loader
-(`Failed to load 'plotly.js-dist' …`). If your charts render blank after upgrading, check this first.
+A missing `@tetrascience-npm/ts-lib-viz` behaves differently: it does **not** fail the build under
+Vite/Rollup. The charts load it with `import()`, so the build succeeds, the chart stays an empty box
+of its own size, and the loader logs a console error (`Failed to load '@tetrascience-npm/ts-lib-viz' …`).
+If your charts render blank after upgrading, check this first. `plotly.js-dist` behaves the same way
+for `ChartTooltip`.
 
 ## Quick Start
 

@@ -1,14 +1,16 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from "vitest";
 
 import { COLORS, DEFAULT_MARKER_SIZE } from "../constants";
 import { ScatterPlotInteractive } from "../ScatterPlotInteractive";
 
 import type { ScatterPlotInteractiveProps, ScatterPoint, SelectionMode } from "../types";
-import type { Brushed, Selected } from "@/vendor/ts-lib-viz/core";
-import type { Viz } from "@/vendor/ts-lib-viz/react";
+import type { Brushed, Selected } from "@tetrascience-npm/ts-lib-viz/core";
+import type { Viz } from "@tetrascience-npm/ts-lib-viz/react";
 import type { Root } from "react-dom/client";
+
+import { loadViz } from "@/components/charts/viz/viz-loader";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -20,7 +22,7 @@ import type { Root } from "react-dom/client";
 // Storybook play functions.
 type VizProps = React.ComponentProps<typeof Viz>;
 const vizCalls = vi.hoisted(() => ({ props: [] as VizProps[] }));
-vi.mock("@/vendor/ts-lib-viz/react", async () => {
+vi.mock("@tetrascience-npm/ts-lib-viz/react", async () => {
   const ReactModule = await import("react");
   return {
     Viz: (props: VizProps) => {
@@ -443,4 +445,9 @@ describe("continuous color mapping", () => {
     });
     expect(lastViz().data[0]).toMatchObject({ nested: "[object Object]", flag: true, missing: null });
   });
+});
+
+// The charts load ts-lib-viz lazily. Loading it first lets each test render and build specs at once.
+beforeAll(async () => {
+  await loadViz();
 });

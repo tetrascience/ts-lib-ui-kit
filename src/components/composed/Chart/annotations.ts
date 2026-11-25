@@ -1,6 +1,6 @@
-import type { ChartSpec } from "@/vendor/ts-lib-viz/core";
+import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
-import { plot } from "@/vendor/ts-lib-viz/core";
+import { plot } from "@/components/charts/viz/viz-loader";
 
 /**
  * A line drawn across the whole plot at a fixed value: a threshold, a target, a limit.

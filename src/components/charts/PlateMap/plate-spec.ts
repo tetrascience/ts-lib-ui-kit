@@ -1,9 +1,7 @@
-import { color, rgb } from "d3-color";
-import { interpolateRgb } from "d3-interpolate";
+import type { ChartSpec, Palettes } from "@tetrascience-npm/ts-lib-viz/core";
 
-import type { ChartSpec, Palettes } from "@/vendor/ts-lib-viz/core";
-
-import { plot } from "@/vendor/ts-lib-viz/core";
+import { mixRgb, parseCssColor, toHex } from "@/components/charts/PlateMap/css-color";
+import { plot } from "@/components/charts/viz/viz-loader";
 
 type ColorRamp = Palettes["sequential"];
 
@@ -87,9 +85,10 @@ export function colorRampFrom(stops: ReadonlyArray<readonly [number, string]>): 
     while (k < sorted.length - 2 && at > sorted[k + 1][0]) k++;
     const [start, startColor] = sorted[k];
     const [end, endColor] = sorted[Math.min(k + 1, sorted.length - 1)];
-    if (!color(startColor) || !color(endColor) || end === start) return startColor;
-    const fraction = (at - start) / (end - start);
-    return rgb(interpolateRgb(startColor, endColor)(fraction)).formatHex();
+    const from = parseCssColor(startColor);
+    const to = parseCssColor(endColor);
+    if (!from || !to || end === start) return startColor;
+    return toHex(mixRgb(from, to, (at - start) / (end - start)));
   };
   return ramp as ColorRamp;
 }

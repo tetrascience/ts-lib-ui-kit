@@ -3,7 +3,7 @@ import path from "path";
 
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   KIT_SHIKI_LANGUAGES,
@@ -15,7 +15,6 @@ import {
   createHighlighterCoreStub,
   installUiKitDomShims,
   installUiKitJestMocks,
-  loadD3Umd,
   plotlyStub,
   rdkitFactoryStub,
   rdkitModuleStub,
@@ -96,15 +95,6 @@ describe("installUiKitJestMocks", () => {
       "@shikijs/themes/github-light",
       "@shikijs/themes/github-dark",
       ...KIT_SHIKI_LANGUAGES.map((lang) => `@shikijs/langs/${lang}`),
-      "d3-array",
-      "d3-color",
-      "d3-contour",
-      "d3-format",
-      "d3-interpolate",
-      "d3-quadtree",
-      "d3-scale",
-      "d3-time",
-      "d3-time-format",
     ];
     expect([...registrations.keys()].sort()).toEqual([...expected].sort());
   });
@@ -123,8 +113,11 @@ describe("installUiKitJestMocks", () => {
     const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../package.json"), "utf8")) as {
       peerDependenciesMeta?: Record<string, { optional?: boolean }>;
     };
+    // ts-lib-viz ships a CommonJS build, so Jest loads the real package and the charts draw.
+    // It needs no mock, and a mock would stop `verify-jest-consumer` drawing a real chart.
+    const loadsUnderJest = new Set(["@tetrascience-npm/ts-lib-viz"]);
     const optionalPeers = Object.entries(pkg.peerDependenciesMeta ?? {})
-      .filter(([, meta]) => meta.optional)
+      .filter(([name, meta]) => meta.optional && !loadsUnderJest.has(name))
       .map(([name]) => name);
     expect(optionalPeers.length).toBeGreaterThan(0);
 
@@ -209,6 +202,75 @@ describe("KIT_SHIKI_LANGUAGES", () => {
     // extending src/lib/shiki.ts's language set without extending this
     // constant leaves the new language unmockable, silently.
     expect([...KIT_SHIKI_LANGUAGES].sort()).toEqual([...getSupportedCodeBlockLanguages()].sort());
+  });
+});
+
+describe("module activation and the window guard", () => {
+  it("does nothing to the DOM when there is no window", () => {
+    vi.stubGlobal("window");
+    try {
+      expect(() => installUiKitDomShims()).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("installs the Jest mocks itself when a Jest global exists at import", async () => {
+    const mock = vi.fn();
+    vi.stubGlobal("jest", { mock });
+    try {
+      vi.resetModules();
+      await import("../jest-setup");
+      expect(mock).toHaveBeenCalledWith("plotly.js-dist", expect.any(Function));
+    } finally {
+      vi.unstubAllGlobals();
+      vi.resetModules();
+    }
+  });
+});
+
+describe("installUiKitDomShims structuredClone", () => {
+  it("installs a structuredClone that copies a chart spec without sharing its objects", () => {
+    const globalRef = globalThis as unknown as MutableGlobal;
+    const saved = globalRef.structuredClone;
+    try {
+      delete globalRef.structuredClone;
+      installUiKitDomShims();
+      const clone = globalRef.structuredClone as <T>(value: T) => T;
+      const spec = { layers: [{ kind: "line", data: [1, 2] }], when: new Date(0), tags: new Set(["a"]) };
+      const copy = clone(spec);
+      expect(copy).toEqual(spec);
+      expect(copy.layers).not.toBe(spec.layers);
+      expect(copy.layers[0].data).not.toBe(spec.layers[0].data);
+      expect(copy.when).not.toBe(spec.when);
+      const cyclic: { self?: unknown } = {};
+      cyclic.self = cyclic;
+      const cyclicCopy = clone(cyclic);
+      expect(cyclicCopy.self).toBe(cyclicCopy);
+      expect(() => clone({ onClick: () => {} })).toThrow("function could not be cloned");
+    } finally {
+      globalRef.structuredClone = saved;
+    }
+  });
+
+  it("keeps shared Dates and RegExps, including a Date used as a Map key", () => {
+    const globalRef = globalThis as unknown as MutableGlobal;
+    const saved = globalRef.structuredClone;
+    try {
+      delete globalRef.structuredClone;
+      installUiKitDomShims();
+      const clone = globalRef.structuredClone as <T>(value: T) => T;
+      const when = new Date(0);
+      const pattern = /a/g;
+      const copy = clone({ when, byDate: new Map([[when, "value"]]), pattern, again: pattern });
+      expect(copy.when).not.toBe(when);
+      expect(copy.byDate.get(copy.when)).toBe("value");
+      expect(copy.again).toBe(copy.pattern);
+      expect(copy.pattern).not.toBe(pattern);
+      expect(copy.pattern.flags).toBe("g");
+    } finally {
+      globalRef.structuredClone = saved;
+    }
   });
 });
 
@@ -467,22 +529,3 @@ describe("shiki stub", () => {
 // verified end-to-end under actual Jest in
 // scripts/verify-jest-consumer/ — see AGENTS.md's "Shipped Jest support"
 // section.
-
-describe("loadD3Umd", () => {
-  // Jest loads each d3 package through its UMD build, which Node itself would read as ESM. The
-  // loader's job is the path mapping, so this drives it with a stand-in require.
-  it("maps a package entry point to the UMD build beside it, and loads that", () => {
-    const requested: string[] = [];
-    const standIn = Object.assign(
-      (id: string) => {
-        requested.push(id);
-        return { loaded: id };
-      },
-      { resolve: (name: string) => `/deps/${name}/src/index.js` },
-    );
-    expect(loadD3Umd("d3-scale", standIn as unknown as NodeRequire)).toEqual({
-      loaded: "/deps/d3-scale/dist/d3-scale.js",
-    });
-    expect(requested).toEqual(["/deps/d3-scale/dist/d3-scale.js"]);
-  });
-});

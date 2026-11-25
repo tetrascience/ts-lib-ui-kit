@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { seriesPalettes, uniqueSeriesNames } from "./series";
 
+import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
 import type { ChartSpec } from "@tetrascience-npm/ts-lib-viz/core";
 
 import { plot, withViz } from "@/components/charts/viz/viz-loader";
@@ -18,7 +19,7 @@ interface AreaDataSeries {
 
 type AreaPlotVariant = "normal" | "stacked";
 
-interface AreaPlotProps {
+interface AreaPlotProps extends ChartAnnotationProps {
   dataSeries: AreaDataSeries[];
   /**
    * Fixed width in pixels. When omitted, the chart fills its container and
@@ -72,6 +73,8 @@ export function areaRows(dataSeries: AreaDataSeries[], variant: AreaPlotVariant)
 }
 
 const AreaPlotChart: React.FC<AreaPlotProps> = ({
+  referenceLines,
+  annotations,
   dataSeries,
   width,
   height,
@@ -124,7 +127,17 @@ const AreaPlotChart: React.FC<AreaPlotProps> = ({
     );
   }, [rows, title, xTitle, yTitle, xRange, yRange, xTickText]);
 
-  return <VizChart spec={spec} data={rows} palettes={palettes} width={width} height={height} />;
+  return (
+    <VizChart
+      spec={spec}
+      data={rows}
+      palettes={palettes}
+      width={width}
+      height={height}
+      referenceLines={referenceLines}
+      annotations={annotations}
+    />
+  );
 };
 
 const AreaPlotChartLazy = withViz("AreaPlotChart", AreaPlotChart, "area");

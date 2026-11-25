@@ -1,9 +1,11 @@
 import { useMemo } from "react";
 
+import type { ChartAnnotationProps } from "@/components/composed/Chart/annotations";
 import type { ChartSpec, Palettes, VizData } from "@tetrascience-npm/ts-lib-viz/core";
 import type { VizProps } from "@tetrascience-npm/ts-lib-viz/react";
 
 import { getLoadedViz, palettesFor } from "@/components/charts/viz/viz-loader";
+import { withAnnotations } from "@/components/composed/Chart/annotations";
 import { useElementSize } from "@/hooks/use-element-size";
 
 import "./viz-theme.css";
@@ -26,7 +28,7 @@ export function categoricalPalettes(colors: readonly string[]): Palettes {
   };
 }
 
-export interface VizChartProps {
+export interface VizChartProps extends ChartAnnotationProps {
   spec: ChartSpec;
   data: VizData;
   palettes?: Palettes;
@@ -68,7 +70,19 @@ function plotlyDefaults(spec: ChartSpec): ChartSpec {
   return { ...spec, scales: { ...spec.scales, x: axis(spec.scales.x), y: axis(spec.scales.y) } };
 }
 
-export function VizChart({ spec, data, palettes, width, height, keyField, onSelect, brush, onBrush }: VizChartProps) {
+export function VizChart({
+  spec,
+  data,
+  palettes,
+  width,
+  height,
+  keyField,
+  onSelect,
+  brush,
+  onBrush,
+  referenceLines,
+  annotations,
+}: VizChartProps) {
   // Viz draws 320px tall unless the spec states a height, and it does not measure its parent. An
   // omitted height is therefore measured from the wrapper, so the chart fills the space it is given.
   const { Viz } = getLoadedViz().react;
@@ -77,11 +91,11 @@ export function VizChart({ spec, data, palettes, width, height, keyField, onSele
 
   const sized = useMemo<ChartSpec>(
     () => ({
-      ...alongTheRule(plotlyDefaults(spec)),
+      ...withAnnotations(alongTheRule(plotlyDefaults(spec)), referenceLines, annotations),
       ...(width === undefined ? {} : { width }),
       ...(resolvedHeight === undefined ? {} : { height: resolvedHeight }),
     }),
-    [spec, width, resolvedHeight],
+    [spec, width, resolvedHeight, referenceLines, annotations],
   );
 
   return (

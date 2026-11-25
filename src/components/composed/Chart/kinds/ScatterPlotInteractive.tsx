@@ -75,6 +75,8 @@ const axisScale = (axis?: AxisConfig) => ({
 });
 
 const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
+  referenceLines,
+  annotations,
   data,
   title,
   xAxis,
@@ -264,6 +266,8 @@ const ScatterPlotInteractiveChart: React.FC<ScatterPlotInteractiveProps> = ({
     >
       <VizChart
         spec={spec}
+        referenceLines={referenceLines}
+        annotations={annotations}
         data={rows}
         keyField="key"
         palettes={palettes}
